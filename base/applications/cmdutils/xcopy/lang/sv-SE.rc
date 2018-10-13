@@ -48,6 +48,7 @@ Där:\n\
 [/A]  Kopiera enbart filer markerade som arkiv\n\
 [/M]  Kopiera enbart filer markerade som arkiv, ta bort\n\
       markeringen\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Kopiera nya filer eller de ändrade efter angivet datum.\n\
 \t\tOm inget datum angivits utförs endast kopiering om målet är\n\
 \t\täldre än källan\n\n"

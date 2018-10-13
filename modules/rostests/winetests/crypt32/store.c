@@ -385,7 +385,7 @@ static void testRegStoreSavedCerts(void)
     BOOL ret;
     DWORD res,i;
 
-    for (i = 0; i < sizeof(reg_store_saved_certs) / sizeof(reg_store_saved_certs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(reg_store_saved_certs); i++)
     {
         DWORD err;
 
@@ -2081,7 +2081,7 @@ static void testCertRegisterSystemStore(void)
     const CERT_CONTEXT *cert, *cert2;
     unsigned int i;
 
-    for (i = 0; i < sizeof(reg_system_store_test_data) / sizeof(reg_system_store_test_data[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(reg_system_store_test_data); i++) {
         cur_flag = reg_system_store_test_data[i].cert_store;
         ret = CertRegisterSystemStore(WineTestW, cur_flag, NULL, NULL);
         if (!ret)
@@ -2469,7 +2469,7 @@ static void delete_test_key(void)
     RegQueryInfoKeyW(test_key, NULL, NULL, NULL, &num_subkeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     for (idx = num_subkeys; idx-- > 0;)
     {
-        subkey_name_len = sizeof(subkey_name)/sizeof(WCHAR);
+        subkey_name_len = ARRAY_SIZE(subkey_name);
         RegEnumKeyExW(test_key, idx, subkey_name, &subkey_name_len, NULL, NULL, NULL, NULL);
         RegDeleteKeyW(test_key, subkey_name);
     }

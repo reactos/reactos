@@ -1,0 +1,25 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Utilisation : dwnl URL [DESTINATION]\n"
+    IDS_RESOLVING "Résolution de %s... "
+    IDS_DONE "terminé.\n"
+    IDS_LENGTH_FULL "Longueur : %I64u [%s]\n"
+    IDS_LENGTH "Longueur : %I64u\n"
+    IDS_FILE_SAVED "\nFichier enregistré.\n"
+    IDS_CONNECTING_TO_FULL "Connexion à %s [%s]... "
+    IDS_CONNECTING_TO "Connexion à %s... "
+    IDS_REDIRECTING_TO "Redirection vers %s... "
+    IDS_SEND_REQUEST "Envoi de la requête... "
+    IDS_BYTES_DOWNLOADED "%I64u octets téléchargés"
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (%I64u octet(s) téléchargés)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\nERREUR : échec du téléchargement.\n"
+    IDS_ERROR_CODE "\n ERREUR : %u\n"
+    IDS_ERROR_FILENAME "\nERREUR : impossible de déterminer le nom du fichier, veuillez spécifier un nom de fichier de destination.\n"
+    IDS_ERROR_PROTOCOL "\nERREUR : protocole non supporté.\n"
+END

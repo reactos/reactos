@@ -386,7 +386,7 @@ LsapAllocateClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                          OUT PVOID *ClientBaseAddress)
 {
     PLSAP_LOGON_CONTEXT LogonContext;
-    ULONG Length;
+    SIZE_T Length;
 
     *ClientBaseAddress = NULL;
 
@@ -409,7 +409,7 @@ LsapFreeClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                      IN PVOID ClientBaseAddress)
 {
     PLSAP_LOGON_CONTEXT LogonContext;
-    ULONG Length;
+    SIZE_T Length;
 
     if (ClientBaseAddress == NULL)
         return STATUS_SUCCESS;
@@ -1570,7 +1570,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         Status = NtCreateToken(&TokenHandle,
                                TOKEN_ALL_ACCESS,
                                &ObjectAttributes,
-                               TokenPrimary,
+                               (RequestMsg->LogonUser.Request.LogonType == Network) ? TokenImpersonation : TokenPrimary,
                                &RequestMsg->LogonUser.Reply.LogonId,
                                &TokenInfo1->ExpirationTime,
                                &TokenInfo1->User,

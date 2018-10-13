@@ -116,6 +116,10 @@
 #define IDS_CONFIG_WORKSTATION_DOMAIN   244
 #define IDS_CONFIG_WORKSTATION_LOGON    245
 
+#define IDS_GROUP_GROUPS                260
+#define IDS_GROUP_NAME                  261
+#define IDS_GROUP_COMMENT               262
+#define IDS_GROUP_MEMBERS               263
 
 #define IDS_LOCALGROUP_ALIASES          300
 #define IDS_LOCALGROUP_ALIAS_NAME       301

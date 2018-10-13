@@ -97,7 +97,7 @@ CreateNewMDIChild(PCONSOLE_MAINFRAME_WND Info,
     mcs.y = mcs.cy = CW_USEDEFAULT;
     mcs.style = MDIS_ALLCHILDSTYLES;
 
-    hChild = (HWND)SendMessage(hwndMDIClient, WM_MDICREATE, 0, (LONG)&mcs);
+    hChild = (HWND)SendMessage(hwndMDIClient, WM_MDICREATE, 0, (LPARAM)&mcs);
     if (hChild)
     {
         Info->nConsoleCount++;

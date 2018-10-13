@@ -187,10 +187,10 @@ BEGIN
     LTEXT "Wyświetla informacje szczegółowe.", -1, 106, 110, 132, 17, SS_NOPREFIX
     PUSHBUTTON "Akt&ualizuj sterownik...", IDC_UPDATEDRIVER, 7, 134, 90, 15
     LTEXT "Aktualizuje oprogramowanie sterownika.", -1, 106, 138, 132, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 106, 162, 132, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 106, 194, 132, 17, SS_NOPREFIX
+    PUSHBUTTON "&Przywróć sterownik", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
+    LTEXT "Przywraca poprzednio zainstalowany sterownik, jeśli po zaktualizowaniu sterownika urządzenie nie działa.", -1, 106, 162, 132, 25, SS_NOPREFIX
+    PUSHBUTTON "&Odinstaluj", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
+    LTEXT "Odinstalowuje sterownik (zaawansowane).", -1, 106, 194, 132, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

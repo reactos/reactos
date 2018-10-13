@@ -939,6 +939,120 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 #endif
 }
 
+#ifdef _WIN32K_
+/***********************************************************************
+ *                      UserExtTextOutW
+ *
+ *  Callback to usermode to use ExtTextOut, which will apply complex
+ *  script processing if needed and then draw it
+ *
+ * Parameters
+ *   hdc        [in] The handle of the DC for drawing
+ *   x          [in] The x location of the string
+ *   y          [in] The y location of the string
+ *   flags      [in] ExtTextOut flags
+ *   lprc       [in] Clipping rectangle (if not NULL)
+ *   lpString   [in] String to be drawn
+ *   count      [in] String length
+ */
+BOOL UserExtTextOutW(HDC hdc,
+                     INT x,
+                     INT y,
+                     UINT flags,
+                     PRECTL lprc,
+                     LPCWSTR lpString,
+                     UINT count)
+{
+    PVOID ResultPointer;
+    ULONG ResultLength;
+    ULONG ArgumentLength;
+    ULONG_PTR pStringBuffer;
+    NTSTATUS Status;
+    PLPK_CALLBACK_ARGUMENTS Argument;
+    BOOL bResult;
+
+    ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
+
+    pStringBuffer = ArgumentLength;
+    ArgumentLength += sizeof(WCHAR) * (count + 2);
+
+    Argument = IntCbAllocateMemory(ArgumentLength);
+
+    if (!Argument)
+    {
+        goto fallback;
+    }
+
+    /* Initialize struct members */
+    Argument->hdc   = hdc;
+    Argument->x     = x;
+    Argument->y     = y;
+    Argument->flags = flags;
+    Argument->count = count;
+
+    if (lprc)
+    {
+        Argument->rect = *lprc;
+        Argument->bRect = TRUE;
+    }
+    else
+    {
+        RtlZeroMemory(&Argument->rect, sizeof(RECT));
+        Argument->bRect = FALSE;
+    }
+
+    /* Align lpString
+       mimicks code from co_IntClientLoadLibrary */
+    Argument->lpString = (LPWSTR)pStringBuffer;
+    pStringBuffer += (ULONG_PTR)Argument;
+
+    Status = RtlStringCchCopyNW((LPWSTR)pStringBuffer, count + 1, lpString, count);
+
+    if (!NT_SUCCESS(Status))
+    {
+        IntCbFreeMemory(Argument);
+        goto fallback;
+    }
+
+    UserLeaveCo();
+
+    Status = KeUserModeCallback(USER32_CALLBACK_LPK,
+                                Argument,
+                                ArgumentLength,
+                                &ResultPointer,
+                                &ResultLength);
+
+    UserEnterCo();
+ 
+    IntCbFreeMemory(Argument);
+
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(ResultPointer, sizeof(BOOL), 1);
+            bResult = *(LPBOOL)ResultPointer;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ERR("Failed to copy result from user mode!\n");
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        goto fallback;
+    }
+
+    return bResult;
+
+fallback:
+    return GreExtTextOutW(hdc, x, y, flags, lprc, lpString, count, NULL, 0);
+}
+#endif
+
 /***********************************************************************
  *           DrawTextExW    (USER32.@)
  *
@@ -1148,24 +1262,27 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 
 	if (flags & DT_SINGLELINE)
 	{
-            if (flags & DT_VCENTER)
 #ifdef __REACTOS__
+        if (flags & DT_VCENTER)
+        {
+            if (flags & DT_CALCRECT)
             {
-                if (((rect->bottom - rect->top) < (invert_y ? -size.cy : size.cy)) && (flags & DT_CALCRECT))
-                {
-                    y = rect->top + (invert_y ? -size.cy : size.cy);
-                }
-                else
-                {
-#endif
-                    y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
-#ifdef __REACTOS__
-                }
+                if (rect->bottom - rect->top < size.cy / 2)
+                    y = rect->top + (invert_y ? size.cy : -size.cy) / 2;
             }
-#endif
-            else if (flags & DT_BOTTOM)
-                y = rect->bottom + (invert_y ? 0 : -size.cy);
+            else
+            {
+                y = rect->top + (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
+            }
         }
+        else if (flags & DT_BOTTOM)
+            y = rect->bottom + (invert_y ? 0 : -size.cy);
+#else
+	    if (flags & DT_VCENTER) y = rect->top +
+	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
+	    else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
+#endif
+    }
 
 	if (!(flags & DT_CALCRECT))
 	{
@@ -1198,10 +1315,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 else
                     len_seg = len;
 #ifdef _WIN32K_
-                if (!GreExtTextOutW( hdc, xseg, y,
-                                    ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
-                                    ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                    rect, str, len_seg, NULL, 0 ))
+                if (!UserExtTextOutW( hdc, xseg, y,
+                                     ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
+                                     ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
+                                     rect, str, len_seg))
 #else
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |

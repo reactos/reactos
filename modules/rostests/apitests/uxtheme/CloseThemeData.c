@@ -23,7 +23,7 @@ START_TEST(CloseThemeData)
 
     pVEH = AddVectoredExceptionHandler(1, VEHandler);
 
-    hr = CloseThemeData((HTHEME)0xdeaddead);
+    hr = CloseThemeData((HTHEME)(ULONG_PTR)0xdeaddeaddeaddeadULL);
     ok( hr == E_HANDLE, "Expected E_HANDLE, got 0x%lx\n", hr);
 
     RemoveVectoredExceptionHandler(pVEH);

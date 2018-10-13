@@ -172,15 +172,20 @@ DllMain(HANDLE hDll,
             BaseWindowsSystemDirectory = BaseStaticServerData->WindowsSystemDirectory;
 
             /* Construct the default path (using the static buffer) */
-            _snwprintf(BaseDefaultPathBuffer,
-                       sizeof(BaseDefaultPathBuffer) / sizeof(WCHAR),
-                       L".;%wZ;%wZ\\system;%wZ;",
-                       &BaseWindowsSystemDirectory,
-                       &BaseWindowsDirectory,
-                       &BaseWindowsDirectory);
+            Status = RtlStringCbPrintfW(BaseDefaultPathBuffer,
+                                     sizeof(BaseDefaultPathBuffer),
+                                     L".;%wZ;%wZ\\system;%wZ;",
+                                     &BaseWindowsSystemDirectory,
+                                     &BaseWindowsDirectory,
+                                     &BaseWindowsDirectory);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NLS Init failed\n");
+                return FALSE;
+            }
 
             BaseDefaultPath.Buffer = BaseDefaultPathBuffer;
-            BaseDefaultPath.Length = wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
+            BaseDefaultPath.Length = (USHORT)wcslen(BaseDefaultPathBuffer) * sizeof(WCHAR);
             BaseDefaultPath.MaximumLength = sizeof(BaseDefaultPathBuffer);
 
             /* Use remaining part of the default path buffer for the append path */

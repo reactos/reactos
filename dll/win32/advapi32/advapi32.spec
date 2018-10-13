@@ -682,3 +682,5 @@
 682 stub WmiSetSingleItemW
 683 stub Wow64Win32ApiEntry
 684 stdcall WriteEncryptedFileRaw(ptr ptr ptr)
+685 stdcall -version=0x600+ RegLoadMUIStringW(ptr wstr wstr long ptr long wstr) advapi32_vista.RegLoadMUIStringW
+686 stdcall -version=0x600+ RegLoadMUIStringA(ptr str str long ptr long str) advapi32_vista.RegLoadMUIStringA

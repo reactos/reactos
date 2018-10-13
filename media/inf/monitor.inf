@@ -20,6 +20,7 @@ AddReg = MonitorClass.NT.AddReg
 [MonitorClass.NT.AddReg]
 HKR, , ,                0, %MonitorClassName%
 HKR, , Icon,            0, "-1"
+HKR, , Installer32,     0, "desk.cpl,MonitorClassInstaller"
 
 [Manufacturer]
 %StdMfg% = StdMfg

@@ -12,33 +12,33 @@ BEGIN
 Sposób użycia: ping [-t] [-a] [-n ilość] [-l bajtów] [-f] [-i TTL] [-v TOS]\n\
                     [-w czas] [-4] [-6] host-docelowy\n\
 \n\
-Options:\n\
-    -t        Ping the specified host until stopped.\n\
-              To see statistics and continue - type Control-Break;\n\
-              To stop - type Control-C.\n\
-    -a        Resolve addresses to hostnames.\n\
+Opcje:\n\
+    -t        Odpytuje określonego hosta do czasu zatrzymania.\n\
+              Aby przejrzeć statystyki i kontynuować - naciśnij Control+Break;\n\
+              Aby zakończyć - naciśnij klawisze Control+C.\n\
+    -a        Tłumacz adresy na nazwy hostów.\n\
     -n ilość  Ilość prób pingowania.\n\
     -l bajtów Rozmiar pakietu echo w bajtach.\n\
-    -f        Set Don't Fragment flag in packet (IPv4-only).\n\
-    -i TTL    Time To Live.\n\
-    -v TOS    Type Of Service (IPv4-only. This setting has been deprecated\n\
-              and has no effect on the type of service field in the IP\n\
-              Header).\n\
+    -f        Ustaw w pakiecie flagę „Nie fragmentuj” (tylko IPv4).\n\
+    -i TTL    Czas wygaśnięcia.\n\
+    -v TOS    Typ usługi (tylko IPv4. To ustawienie jest przestarzałe \n\
+              i nie ma wpływu na typ pola usługi w\n\
+              nagłówku IP).\n\
     -w czas   Opóźnienie oczekiwanej odpowiedzi, w milisekundach.\n\
-    -4        Force using IPv4.\n\
-    -6        Force using IPv6.\n\
+    -4        Wymuś używanie IPv4.\n\
+    -6        Wymuś używanie IPv6.\n\
 \n"
 
     IDS_CTRL_BREAK "Control-Break\n"
     IDS_CTRL_C "Control-C\n"
     IDS_NO_RESOURCES "Brak dostępnych zasobów.\n"
-    IDS_MISSING_ADDRESS "IP address must be specified.\n"
-    IDS_MISSING_VALUE "Value must be supplied for option %s.\n"
+    IDS_MISSING_ADDRESS "Adres IP musi być określony.\n"
+    IDS_MISSING_VALUE "Dla opcji %s musi być podana wartość.\n"
     IDS_BAD_OPTION "Nieprawidłowa opcja %s.\n"
     IDS_BAD_PARAMETER "Nieprawidłowy parametr %s.\n"
     IDS_BAD_VALUE "Nieprawidłowa wartość dla opcji %s, wymagana liczba naturalna od %u do %u.\n"
-    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
-    IDS_UNKNOWN_HOST "Ping could not find host %s. Please check the name and try again.\n"
+    IDS_WRONG_FAMILY "Opcja %s jest obsługiwana tylko dla %s.\n"
+    IDS_UNKNOWN_HOST "Żądanie polecenia ping nie może znaleźć hosta %s. Sprawdź nazwę i ponów próbę.\n"
     IDS_PINGING_ADDRESS "\nPingowanie %s "
     IDS_PINGING_HOSTNAME "\nPingowanie %s [%s] "
     IDS_SOURCE_ADDRESS "z %s %s"
@@ -48,12 +48,12 @@ Options:\n\
     IDS_REPLY_TIME_MS "czas=%lums "
     IDS_REPLY_TIME_0MS "czas<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
+    IDS_REPLY_STATUS "Odpowiedź echo zwróciła %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Host docelowy jest nieosiągalny.\n"
+    IDS_DEST_NET_UNREACHABLE "Sieć docelowa jest nieosiągalna.\n"
     IDS_REQUEST_TIMED_OUT "Brak odpowiedzi.\n"
-    IDS_TTL_EXPIRED "TTL expired in transit.\n"
-    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
+    IDS_TTL_EXPIRED "Limit czasu wygaśnięcia (TTL) upłynął podczas tranzytu.\n"
+    IDS_TRANSMIT_FAILED "PING: transmisja nie powiodła się. (Błąd %u)\n"
 
     IDS_STATISTICS "\n\
 Statystyka rezultatu badania hosta %s:\n\
@@ -62,5 +62,5 @@ Statystyka rezultatu badania hosta %s:\n\
     IDS_APPROXIMATE_RTT "Całkowity, przybliżony czas podróży pakietu w millisekundach:\n\
     Minimum = %lums, Maksimum = %lums, Uśredniony = %lums\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
+    IDS_WINSOCK_FAIL "Nie można zainicjować interfejsu WinSock: %i\n"
 END

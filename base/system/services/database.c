@@ -17,6 +17,8 @@
 #include <userenv.h>
 #include <strsafe.h>
 
+#include <reactos/undocuser.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -149,16 +151,23 @@ ScmIsSameServiceAccount(
     _In_ PCWSTR pszAccountName1,
     _In_ PCWSTR pszAccountName2)
 {
-    if (pszAccountName1 == NULL && pszAccountName2 == NULL)
+    if (pszAccountName1 == NULL &&
+        pszAccountName2 == NULL)
         return TRUE;
 
-    if (pszAccountName1 == NULL && pszAccountName2 && wcscmp(pszAccountName2, L"LocalSystem") == 0)
+    if (pszAccountName1 == NULL &&
+        pszAccountName2 != NULL &&
+        _wcsicmp(pszAccountName2, L"LocalSystem") == 0)
         return TRUE;
 
-    if (pszAccountName2 == NULL && pszAccountName1 && wcscmp(pszAccountName1, L"LocalSystem") == 0)
+    if (pszAccountName1 != NULL &&
+        pszAccountName2 == NULL &&
+        _wcsicmp(pszAccountName1, L"LocalSystem") == 0)
         return TRUE;
 
-    if (pszAccountName1 && pszAccountName2 && wcscmp(pszAccountName1, pszAccountName2) == 0)
+    if (pszAccountName1 != NULL &&
+        pszAccountName2 != NULL &&
+        _wcsicmp(pszAccountName1, pszAccountName2) == 0)
         return TRUE;
 
     return FALSE;
@@ -171,7 +180,7 @@ ScmIsLocalSystemAccount(
     _In_ PCWSTR pszAccountName)
 {
     if (pszAccountName == NULL ||
-        wcscmp(pszAccountName, L"LocalSystem") == 0)
+        _wcsicmp(pszAccountName, L"LocalSystem") == 0)
         return TRUE;
 
     return FALSE;
@@ -1670,13 +1679,6 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cb = sizeof(StartupInfo);
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
-    /* Use the interactive desktop if the service is interactive */
-    if ((NoInteractiveServices == 0) &&
-        (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
-    {
-        StartupInfo.lpDesktop = L"WinSta0\\Default";
-    }
-
     if (Service->lpImage->hToken)
     {
         /* User token: Run the service under the user account */
@@ -1727,6 +1729,14 @@ ScmStartUserModeService(PSERVICE Service,
             DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
                     GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
+        }
+
+        /* Use the interactive desktop if the service is interactive */
+        if ((NoInteractiveServices == 0) &&
+            (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
+        {
+            StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+            StartupInfo.lpDesktop = L"WinSta0\\Default";
         }
 
         Result = CreateProcessW(NULL,

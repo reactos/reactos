@@ -791,3 +791,10 @@ void STATIC_Register(void)
     wndClass.lpszClassName = WC_STATICW;
     RegisterClassW(&wndClass);
 }
+
+#ifdef __REACTOS__
+void STATIC_Unregister(void)
+{
+    UnregisterClassW(WC_STATICW, NULL);
+}
+#endif

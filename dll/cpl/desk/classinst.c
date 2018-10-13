@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/classinst.c
- * PURPOSE:         Display class installer
+ * PURPOSE:         Class installers
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
@@ -251,4 +251,13 @@ cleanup:
         RegCloseKey(hDeviceSubKey);
 
     return rc;
+}
+
+DWORD WINAPI
+MonitorClassInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    return ERROR_DI_DO_DEFAULT;
 }

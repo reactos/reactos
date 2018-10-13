@@ -254,7 +254,7 @@ STRINGTABLE
 BEGIN
     IDS_FIRSTCOLUMN "Nazwa"
     IDS_SECONDCOLUMN "Opis"
-    IDS_THIRDCOLUMN "Status"
+    IDS_THIRDCOLUMN "Stan"
     IDS_FOURTHCOLUMN "Typ uruchomienia"
     IDS_FITHCOLUMN "Logowanie jako"
 END

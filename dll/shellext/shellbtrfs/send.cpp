@@ -547,6 +547,10 @@ void BtrfsSend::Open(HWND hwnd, LPWSTR path) {
         ShowError(hwnd, GetLastError());
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     HANDLE token;
     TOKEN_PRIVILEGES tp;
@@ -584,6 +588,10 @@ void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int
 
     CloseHandle(token);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif
 
 static void send_subvol(std::wstring subvol, std::wstring file, std::wstring parent, std::vector<std::wstring> clones) {
     char* buf;
@@ -697,6 +705,10 @@ end3:
     free(buf);
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     LPWSTR* args;
     int num_args;
@@ -755,3 +767,7 @@ void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
 end:
     LocalFree(args);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif

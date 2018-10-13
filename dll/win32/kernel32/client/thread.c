@@ -176,6 +176,7 @@ CreateRemoteThread(IN HANDLE hProcess,
     ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
     ULONG_PTR Cookie;
     ULONG ReturnLength;
+    SIZE_T ReturnSize;
     DPRINT("CreateRemoteThread: hProcess: %p dwStackSize: %lu lpStartAddress"
             ": %p lpParameter: %p, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
@@ -267,7 +268,7 @@ CreateRemoteThread(IN HANDLE hProcess,
                                                       ActivationContextBasicInformation,
                                                       &ActCtxInfo,
                                                       sizeof(ActCtxInfo),
-                                                      &ReturnLength);
+                                                      &ReturnSize);
         if (!NT_SUCCESS(Status))
         {
             /* Fail */

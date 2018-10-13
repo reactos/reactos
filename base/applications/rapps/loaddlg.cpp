@@ -190,11 +190,12 @@ public:
         Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
         if (Item && szStatusText && wcslen(szStatusText) > 0 && m_UrlHasBeenCopied == FALSE)
         {
-            DWORD len = wcslen(szStatusText) + 1;
+            SIZE_T len = wcslen(szStatusText) + 1;
             ATL::CStringW buf;
+            DWORD dummyLen;
 
             /* beautify our url for display purposes */
-            if (!InternetCanonicalizeUrlW(szStatusText, buf.GetBuffer(len), &len, ICU_DECODE | ICU_NO_ENCODE))
+            if (!InternetCanonicalizeUrlW(szStatusText, buf.GetBuffer(len), &dummyLen, ICU_DECODE | ICU_NO_ENCODE))
             {
                 /* just use the original */
                 buf.ReleaseBuffer();
@@ -405,8 +406,8 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         HICON hIconSm, hIconBg;
         ATL::CStringW szTempCaption;
 
-        hIconBg = (HICON) GetClassLongW(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongW(hMainWnd, GCLP_HICONSM);
+        hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
+        hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
 
         if (hIconBg && hIconSm)
         {

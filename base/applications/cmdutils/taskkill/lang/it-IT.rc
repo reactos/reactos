@@ -1,0 +1,26 @@
+/*
+ * PROJECT:     Task termination utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Uso: taskkill [/?] [/f] [/im NomeProcesso | /pid IDProcesso]\n"
+    STRING_INVALID_OPTION, "Errore: L'opzione specificata è invalida o sconosciuta.\n"
+    STRING_INVALID_PARAM, "Errore: Il parametro di comando a riga è invalido.\n"
+    STRING_MISSING_OPTION, "Errore: Specifica una delle opzioni /im oppure /pid.\n"
+    STRING_MISSING_PARAM, "Errore: L'opzione %1 necessita un parametro a riga di comando.\n"
+    STRING_MUTUAL_EXCLUSIVE, "Errore: Le opzioni /im e /pid si escludono reciprocamente.\n"
+    STRING_CLOSE_PID_SEARCH, "Alla finestra del processo con PID %1!u! è stato inviato un messaggio di chiusura.\n"
+    STRING_CLOSE_PROC_SRCH, "Alla finestra del processo ""%1"" con PID %2!u! è stato inviato un messaggio di chiusura.\n"
+    STRING_TERM_PID_SEARCH, "Il processo con PID %1!u! è stato terminato forzatamente.\n"
+    STRING_TERM_PROC_SEARCH, "Il processo ""%1"" con PID %2!u! è stato terminato con forza.\n"
+    STRING_SEARCH_FAILED, "Errore: Impossibile trovare il processo ""%1"".\n"
+    STRING_ENUM_FAILED, "Errore: Impossibile enumerare la lista dei processi.\n"
+    STRING_TERMINATE_FAILED, "Errore: Impossibile terminare il processo ""%1"".\n"
+    STRING_SELF_TERMINATION, "Errore: L'auto-terminazione non è consentita.\n"
+}

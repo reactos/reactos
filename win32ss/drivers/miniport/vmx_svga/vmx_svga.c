@@ -125,7 +125,7 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
     }
 
     /* Zero the frame buffer */
-    VideoPortZeroMemory((PVOID)DeviceExtension->FrameBuffer.LowPart,
+    VideoPortZeroMemory((PVOID)(ULONG_PTR)DeviceExtension->FrameBuffer.QuadPart,
                         DeviceExtension->VramSize.LowPart);
 
     /* Initialize the video modes */

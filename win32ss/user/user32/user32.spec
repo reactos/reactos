@@ -675,7 +675,7 @@
 666 stdcall ShowStartGlass(long)
 667 stdcall ShowWindow(long long) NtUserShowWindow
 668 stdcall ShowWindowAsync(long long) NtUserShowWindowAsync
-669 stdcall SoftModalMessageBox(long)
+669 stdcall SoftModalMessageBox(ptr)
 670 stdcall SubtractRect(ptr ptr ptr)
 671 stdcall SwapMouseButton(long)
 672 stdcall SwitchDesktop(long) NtUserSwitchDesktop
@@ -719,7 +719,7 @@
 710 stdcall User32InitializeImmEntryTable(ptr)
 711 stdcall UserClientDllInitialize(long long ptr) DllMain
 712 stdcall UserHandleGrantAccess(ptr ptr long) NtUserUserHandleGrantAccess
-713 stdcall UserLpkPSMTextOut(long long long long long long)
+713 stdcall UserLpkPSMTextOut(long long long wstr long long)
 714 stdcall UserLpkTabbedTextOut(long long long long long long long long long long long long)
 715 stdcall UserRealizePalette(long)
 716 stdcall UserRegisterWowHandlers(ptr ptr)

@@ -1563,7 +1563,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 BasicInfo->SecurityDescriptorSize = 0; /* FIXME*/
 
                 /* Check if this is a symlink */
-                if (ObjectHeader->Type == ObSymbolicLinkType)
+                if (ObjectHeader->Type == ObpSymbolicLinkObjectType)
                 {
                     /* Return the creation time */
                     BasicInfo->CreationTime.QuadPart =
@@ -1798,7 +1798,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
                 /* Get the object directory */
                 Status = ObReferenceObjectByHandle(ObjectHandle,
                                                    0,
-                                                   ObDirectoryType,
+                                                   ObpDirectoryObjectType,
                                                    PreviousMode,
                                                    (PVOID*)&Directory,
                                                    NULL);

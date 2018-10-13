@@ -218,7 +218,7 @@ INT InputWait(BOOL bNoBreak, INT timerValue)
                 break;
             }
 
-            /* Be sure there is someting in the console input queue */
+            /* Be sure there is something in the console input queue */
             if (!PeekConsoleInputW(hInput, InputRecords, ARRAYSIZE(InputRecords), &NumRecords))
             {
                 /* An error happened, bail out */

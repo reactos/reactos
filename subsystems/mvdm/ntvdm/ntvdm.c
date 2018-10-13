@@ -95,7 +95,7 @@ NtVdmConfigureFloppy(IN PWSTR ValueName,
 {
     BOOLEAN Success;
     PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
-    ULONG DiskNumber = (ULONG)EntryContext;
+    ULONG DiskNumber = PtrToUlong(EntryContext);
 
     ASSERT(DiskNumber < ARRAYSIZE(Settings->FloppyDisks));
 
@@ -131,7 +131,7 @@ NtVdmConfigureHDD(IN PWSTR ValueName,
 {
     BOOLEAN Success;
     PNTVDM_SETTINGS Settings = (PNTVDM_SETTINGS)Context;
-    ULONG DiskNumber = (ULONG)EntryContext;
+    ULONG DiskNumber = PtrToUlong(EntryContext);
 
     ASSERT(DiskNumber < ARRAYSIZE(Settings->HardDisks));
 

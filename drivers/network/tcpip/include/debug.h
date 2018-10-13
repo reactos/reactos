@@ -72,7 +72,7 @@
 #define CP CHECKPOINT
 
 #define ASSERT_KM_POINTER(_x) \
-   ASSERT(((PVOID)_x) != (PVOID)0xcccccccc); \
-   ASSERT(((PVOID)_x) >= (PVOID)0x80000000);
+   ASSERT(((ULONG_PTR)(_x)) != (ULONG_PTR)0xccccccccccccccccULL); \
+   ASSERT(((PVOID)(_x)) >= MmSystemRangeStart);
 
 /* EOF */

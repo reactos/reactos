@@ -484,7 +484,7 @@ WndProc(HWND hWnd,
                                           BUTTONS_W,
                                           BUTTONS_H,
                                           hWnd,
-                                          (HMENU)i,
+                                          (HMENU)UlongToPtr(i),
                                           hInst,
                                           0);
                 if (!buttons[i])

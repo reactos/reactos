@@ -731,7 +731,7 @@ HRGN
 DRIVER_PathToRegion(PHYSDEV physdev)
 {
     DPRINT1("DRIVER_PathToRegion\n");
-    return (HRGN)physdev->funcs->pAbortPath( physdev );
+    return (HRGN)(ULONG_PTR)physdev->funcs->pAbortPath( physdev );
 }
 
 

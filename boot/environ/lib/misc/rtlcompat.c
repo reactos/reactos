@@ -72,11 +72,24 @@ RtlAssert (
     IN PCHAR Message OPTIONAL
     )
 {
-    EfiPrintf(L"*** ASSERTION %s FAILED AT %d in %s (%s) ***\r\n",
-              FailedAssertion,
-              LineNumber,
-              FileName,
-              Message);
+    if (Message != NULL)
+    {
+        EfiPrintf(L"*** ASSERTION \'%S\' FAILED AT line %lu in %S (%S) ***\r\n",
+                  (PCHAR)FailedAssertion,
+                  LineNumber,
+                  (PCHAR)FileName,
+                  Message);
+    }
+    else
+    {
+        EfiPrintf(L"*** ASSERTION \'%S\' FAILED AT line %lu in %S ***\r\n",
+                  (PCHAR)FailedAssertion,
+                  LineNumber,
+                  (PCHAR)FileName);
+    }
+
+    /* Issue a breakpoint */
+    __debugbreak();
 }
 
 ULONG
@@ -85,7 +98,7 @@ DbgPrint (
     ...
     )
 {
-    EfiPrintf(L"%s\r\n", Format);
+    EfiPrintf(L"%S\r\n", Format);
     return 0;
 }
 

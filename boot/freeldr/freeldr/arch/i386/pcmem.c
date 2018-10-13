@@ -322,7 +322,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             /* Warn user, unless wrong case is "first and not too big entry", which is otherwise harmless. */
             if (PcBiosMapCount > 0 || Regs.x.ecx > sizeof(BIOS_MEMORY_MAP))
             {
-                ASSERTMSG("Int 15h AX=E820h returned an invalid entry length!", FALSE);
+                ASSERTMSG("Int 15h AX=E820h returned an invalid entry length!\n", FALSE);
             }
             /* We keep previous entries (if any), but do not dare trying next entries.
              * We assume these entries are good to use as is. If they are not, we are in trouble...
@@ -360,7 +360,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
                   PcBiosMemoryMap[PcBiosMapCount].Length,
                   PcBiosMemoryMap[PcBiosMapCount].Type,
                   PcBiosMemoryMap[PcBiosMapCount].ExtendedAttributesAsULONG);
-            // NotWantedForPublicBuilds: ASSERTMSG("EA.ErrorLog = 1. Check/Report then CONTinue.", FALSE);
+            // NotWantedForPublicBuilds: ASSERTMSG("EA.ErrorLog = 1. Check/Report then CONTinue.\n", FALSE);
         }
 
         if (PcBiosMemoryMap[PcBiosMapCount].Length == 0)
@@ -433,7 +433,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         {
             ERR("PcMemoryMap is already full! (PcBiosMapCount = %lu, PcMapCount = %lu (>= %lu))\n",
                 PcBiosMapCount, PcMapCount, MaxMemoryMapSize);
-            // NotWantedForPublicBuilds: ASSERTMSG("PcMemoryMap is already full!", FALSE);
+            // NotWantedForPublicBuilds: ASSERTMSG("PcMemoryMap is already full!\n", FALSE);
             /* We keep previous entries, and half-retrieve current/next entries.
              * We assume all these entries are good to use as is. If they are not, we are in trouble...
              *
@@ -466,7 +466,7 @@ nextRange:
     {
         ERR("PcBiosMemoryMap is already full! (PcBiosMapCount = %lu (>= %lu), PcMapCount = %lu)\n",
             PcBiosMapCount, MAX_BIOS_DESCRIPTORS, PcMapCount);
-        // NotWantedForPublicBuilds: ASSERTMSG("PcBiosMemoryMap is already full!", FALSE);
+        // NotWantedForPublicBuilds: ASSERTMSG("PcBiosMemoryMap is already full!\n", FALSE);
         /* We keep retrieved entries, but ignore next entries.
          * We assume these entries are good to use as is. If they are not, we are in trouble...
          *

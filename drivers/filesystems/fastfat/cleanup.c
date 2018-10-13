@@ -4,6 +4,7 @@
  * FILE:             drivers/fs/vfat/cleanup.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -127,6 +128,26 @@ VfatCleanupFile(
         {
             IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
         }
+/* FIXME: causes FS corruption and breaks selfhosting/testbots and so on */
+#if 0
+        /* If that's the last open handle we just closed, try to see whether
+         * we can delay close operation
+         */
+        else if (!BooleanFlagOn(pFcb->Flags, FCB_DELETE_PENDING) && !BooleanFlagOn(pFcb->Flags, FCB_IS_PAGE_FILE) &&
+                 !BooleanFlagOn(pFcb->Flags, FCB_IS_FAT) && !BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME))
+        {
+            /* This is only allowed if that's a directory with no open files
+             * OR if it's a file with no section opened
+             */
+            if ((vfatFCBIsDirectory(pFcb) && IsListEmpty(&pFcb->ParentListHead)) ||
+                (!vfatFCBIsDirectory(pFcb) && FileObject->SectionObjectPointer->DataSectionObject == NULL &&
+                 FileObject->SectionObjectPointer->ImageSectionObject == NULL))
+            {
+                DPRINT("Delaying close of: %wZ\n", &pFcb->PathNameU);
+                SetFlag(pFcb->Flags, FCB_DELAYED_CLOSE);
+            }
+        }
+#endif
 
         FileObject->Flags |= FO_CLEANUP_COMPLETE;
 #ifdef KDBG

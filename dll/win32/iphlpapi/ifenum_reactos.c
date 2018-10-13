@@ -62,8 +62,8 @@ NTSTATUS tdiGetMibForIfEntity
     NTSTATUS status = STATUS_SUCCESS;
     DWORD returnSize;
 
-    WARN("TdiGetMibForIfEntity(tcpFile %x,entityId %x)\n",
-           (int)tcpFile, (int)ent->tei_instance);
+    WARN("TdiGetMibForIfEntity(tcpFile %p,entityId %p)\n",
+           tcpFile, ent->tei_instance);
 
     req.ID.toi_class                = INFO_CLASS_PROTOCOL;
     req.ID.toi_type                 = INFO_TYPE_PROVIDER;

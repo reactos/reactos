@@ -81,22 +81,25 @@ NTAPI
 CcReadVirtualAddress (
     PROS_VACB Vacb)
 {
-    ULONG Size, Pages;
+    ULONG Size;
     PMDL Mdl;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
+    ULARGE_INTEGER LargeSize;
 
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
-    if (Size > VACB_MAPPING_GRANULARITY)
+    LargeSize.QuadPart = Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
+    if (LargeSize.QuadPart > VACB_MAPPING_GRANULARITY)
     {
-        Size = VACB_MAPPING_GRANULARITY;
+        LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
+    Size = LargeSize.LowPart;
 
-    Pages = BYTES_TO_PAGES(Size);
-    ASSERT(Pages * PAGE_SIZE <= VACB_MAPPING_GRANULARITY);
+    Size = ROUND_TO_PAGES(Size);
+    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
+    ASSERT(Size > 0);
 
-    Mdl = IoAllocateMdl(Vacb->BaseAddress, Pages * PAGE_SIZE, FALSE, FALSE, NULL);
+    Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -155,12 +158,14 @@ CcWriteVirtualAddress (
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
+    ULARGE_INTEGER LargeSize;
 
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
-    if (Size > VACB_MAPPING_GRANULARITY)
+    LargeSize.QuadPart = Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
+    if (LargeSize.QuadPart > VACB_MAPPING_GRANULARITY)
     {
-        Size = VACB_MAPPING_GRANULARITY;
+        LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
+    Size = LargeSize.LowPart;
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
     // MmGlobalPageDirectory and the real system PDE directory. What a mess...
@@ -172,6 +177,10 @@ CcWriteVirtualAddress (
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
+
+    Size = ROUND_TO_PAGES(Size);
+    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
+    ASSERT(Size > 0);
 
     Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)

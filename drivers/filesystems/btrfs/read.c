@@ -3237,7 +3237,7 @@ NTSTATUS do_read(PIRP Irp, BOOLEAN wait, ULONG* bytes_read) {
 
 _Dispatch_type_(IRP_MJ_READ)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+NTSTATUS NTAPI drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     device_extension* Vcb = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;

@@ -108,7 +108,7 @@ mxdMessage(
                                    DeviceId,
                                    (LPWAVEOPENDESC) Parameter1, /* unused */
                                    Parameter2,
-                                   (DWORD*) PrivateHandle);
+                                   (DWORD_PTR*) PrivateHandle);
             VALIDATE_MMSYS_PARAMETER(*(DWORD_PTR*)PrivateHandle);
             break;
         }

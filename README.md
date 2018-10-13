@@ -62,11 +62,17 @@ build directory. This will create a CD image with a filename `bootcd.iso`.
 
 See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
 
+You can always download fresh binary builds of bootable images from the ["Daily builds"](https://www.reactos.org/getbuilds/) page.
+
 ## Installing
 
-ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition. 
+By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition. 
 The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32. 
 ReactOS Setup can format the partitions if needed.
+
+Starting 0.4.10, ReactOS can be installed using the BtrFS file system. But
+consider this as an experimental feature and thus regressions not triggered on
+FAT setup may be observed.
 
 To install ReactOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
 

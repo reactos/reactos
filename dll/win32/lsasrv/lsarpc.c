@@ -707,21 +707,29 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
         case PolicyAuditEventsInformation:   /* 2 */
             Status = LsarSetAuditEvents(PolicyObject,
                                         (PLSAPR_POLICY_AUDIT_EVENTS_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyAuditEventsInformation);
             break;
 
         case PolicyPrimaryDomainInformation: /* 3 */
             Status = LsarSetPrimaryDomain(PolicyObject,
                                           (PLSAPR_POLICY_PRIMARY_DOM_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyDnsDomainInformation);
             break;
 
         case PolicyAccountDomainInformation: /* 5 */
             Status = LsarSetAccountDomain(PolicyObject,
                                           (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyAccountDomainInformation);
             break;
 
         case PolicyLsaServerRoleInformation: /* 6 */
             Status = LsarSetServerRole(PolicyObject,
                                        (PPOLICY_LSA_SERVER_ROLE_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyServerRoleInformation);
             break;
 
         case PolicyReplicaSourceInformation: /* 7 */
@@ -747,6 +755,8 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
         case PolicyDnsDomainInformation:      /* 12 (0xC) */
             Status = LsarSetDnsDomain(PolicyObject,
                                       (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyDnsDomainInformation);
             break;
 
         case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
@@ -1399,7 +1409,7 @@ LsarpOpenAccount(
                               AccountObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
+        ERR("LsapOpenDbObject(Accounts/%S) failed (Status 0x%08lx)\n", SidString, Status);
     }
 
     if (SidString != NULL)
@@ -3908,8 +3918,13 @@ NTSTATUS WINAPI CredrReadDomainCredentials(
 
 
 /* Function 65 */
-NTSTATUS WINAPI CredrDelete(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrDelete(
+    handle_t hBinding,
+    LPWSTR TargetName,
+    DWORD Type,
+    DWORD Flags)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3917,8 +3932,13 @@ NTSTATUS WINAPI CredrDelete(
 
 
 /* Function 66 */
-NTSTATUS WINAPI CredrGetTargetInfo(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrGetTargetInfo(
+    handle_t hBinding,
+    LPWSTR TargetName,
+    DWORD Flags,
+    CREDPR_TARGET_INFORMATION *TargetInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3926,7 +3946,9 @@ NTSTATUS WINAPI CredrGetTargetInfo(
 
 
 /* Function 67 */
-NTSTATUS WINAPI CredrProfileLoaded(
+NTSTATUS
+WINAPI
+CredrProfileLoaded(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -3973,8 +3995,12 @@ NTSTATUS WINAPI LsarLookupNames3(
 
 
 /* Function 69 */
-NTSTATUS WINAPI CredrGetSessionTypes(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrGetSessionTypes(
+    handle_t hBinding,
+    DWORD MaximumPersistCount,
+    DWORD *MaximumPersist)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4035,8 +4061,14 @@ NTSTATUS WINAPI LsarSetForestTrustInformation(
 
 
 /* Function 75 */
-NTSTATUS WINAPI CredrRename(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrRename(
+    handle_t hBinding,
+    LPWSTR OldTargetName,
+    LPWSTR NewTargetName,
+    DWORD Type,
+    DWORD Flags)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

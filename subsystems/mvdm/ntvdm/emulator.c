@@ -304,7 +304,7 @@ static VOID
 DumpMemoryRaw(HANDLE hFile)
 {
     PVOID  Buffer;
-    SIZE_T Size;
+    DWORD Size;
 
     /* Dump the VM memory */
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
@@ -321,7 +321,7 @@ DumpMemoryTxt(HANDLE hFile)
     PBYTE  Ptr1, Ptr2;
     CHAR   LineBuffer[LINE_SIZE];
     PCHAR  Line;
-    SIZE_T LineSize;
+    DWORD LineSize;
 
     /* Dump the VM memory */
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
@@ -332,7 +332,7 @@ DumpMemoryTxt(HANDLE hFile)
         Line = LineBuffer;
 
         /* Print the address */
-        Line += snprintf(Line, LINE_SIZE + LineBuffer - Line, "%08x ", PHYS_TO_REAL(Ptr1));
+        Line += snprintf(Line, LINE_SIZE + LineBuffer - Line, "%08Ix ", (ULONG_PTR)PHYS_TO_REAL(Ptr1));
 
         /* Print up to 16 bytes... */
 

@@ -370,8 +370,12 @@ static inline unsigned int wined3d_popcount(unsigned int x)
 
 static inline void wined3d_pause(void)
 {
+#ifdef __REACTOS__
+    Sleep(0);
+#else
 #if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
     __asm__ __volatile__( "rep;nop" : : : "memory" );
+#endif
 #endif
 }
 
@@ -3544,7 +3548,11 @@ enum wined3d_push_constants
 
 #define WINED3D_CS_QUERY_POLL_INTERVAL  10u
 #define WINED3D_CS_QUEUE_SIZE           0x100000u
+#ifdef __REACTOS__
+#define WINED3D_CS_SPIN_COUNT           1u
+#else
 #define WINED3D_CS_SPIN_COUNT           10000000u
+#endif
 
 struct wined3d_cs_queue
 {

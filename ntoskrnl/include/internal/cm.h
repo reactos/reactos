@@ -40,7 +40,7 @@
 // Hack since bigkeys are not yet supported
 //
 #define ASSERT_VALUE_BIG(h, s)                          \
-    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+    ASSERTMSG("Big keys not supported!\n", !CmpIsKeyValueBig(h, s));
 
 //
 // CM_KEY_CONTROL_BLOCK Signatures

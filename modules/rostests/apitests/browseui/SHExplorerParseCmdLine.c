@@ -35,7 +35,7 @@ typedef struct _EXPLORER_INFO
     ULONG Padding[PADDING_SIZE];
 } EXPLORER_INFO, *PEXPLORER_INFO;
 
-UINT (WINAPI *SHExplorerParseCmdLine)(_Out_ PEXPLORER_INFO Info);
+UINT_PTR (WINAPI *SHExplorerParseCmdLine)(_Out_ PEXPLORER_INFO Info);
 
 #define PIDL_IS_UNTOUCHED -1
 #define PIDL_IS_NULL -2
@@ -87,7 +87,7 @@ _In_ PCWSTR PidlPath,
 _Out_opt_ PUINT PWriteEnd)
 {
     EXPLORER_INFO Info;
-    UINT Ret;
+    UINT_PTR Ret;
     ULONG i;
     PDWORD InfoWords = (PDWORD) &Info;
 
@@ -99,7 +99,7 @@ _Out_opt_ PUINT PWriteEnd)
     if (ExpectedRet == -1)
         ok((LPITEMIDLIST) Ret == Info.pidl, "Ret = %x, expected %p\n", Ret, Info.pidl);
     else
-        ok(Ret == ExpectedRet, "Ret = %x, expected %p\n", Ret, (PVOID) ExpectedRet);
+        ok(Ret == ExpectedRet, "Ret = %x, expected %08x\n", Ret, ExpectedRet);
 
     if (ExpectedFileName == NULL)
         ok(Info.FileName == InvalidPointer, "FileName = %p\n", Info.FileName);
@@ -410,7 +410,7 @@ START_TEST(SHExplorerParseCmdLine)
     WCHAR winDir[MAX_PATH];
 
     HMODULE browseui = LoadLibraryA("browseui.dll");
-    SHExplorerParseCmdLine = (UINT (__stdcall *)(PEXPLORER_INFO))GetProcAddress(browseui, MAKEINTRESOURCEA(107));
+    SHExplorerParseCmdLine = (UINT_PTR (__stdcall *)(PEXPLORER_INFO))GetProcAddress(browseui, MAKEINTRESOURCEA(107));
     if (!SHExplorerParseCmdLine)
     {
         skip("SHExplorerParseCmdLine not found, NT 6.0?\n");

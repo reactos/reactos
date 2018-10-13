@@ -1458,6 +1458,16 @@ PATH_FillPath(
     PDC dc,
     PPATH pPath)
 {
+    return PATH_FillPathEx(dc, pPath, NULL);
+}
+
+BOOL
+FASTCALL
+PATH_FillPathEx(
+    PDC dc,
+    PPATH pPath,
+    PBRUSH pbrFill)
+{
     INT   mapMode, graphicsMode;
     SIZE  ptViewportExt, ptWindowExt;
     POINTL ptViewportOrg, ptWindowOrg;
@@ -1517,7 +1527,7 @@ PATH_FillPath(
     pdcattr->iGraphicsMode =  graphicsMode;
 
     /* Paint the region */
-    IntGdiPaintRgn(dc, Rgn);
+    IntGdiFillRgn(dc, Rgn, pbrFill);
     REGION_Delete(Rgn);
     /* Restore the old mapping mode */
     IntGdiSetMapMode(dc, mapMode);

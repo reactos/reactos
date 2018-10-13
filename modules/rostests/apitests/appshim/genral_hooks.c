@@ -71,7 +71,7 @@ static const char* safe_str(const char* ptr)
         return ptr;
 
     index ^= 1;
-    StringCchPrintfA(buffer[index], _countof(buffer[index]), "#%d", (int)ptr);
+    StringCchPrintfA(buffer[index], _countof(buffer[index]), "#%Id", (intptr_t)ptr);
     return buffer[index];
 }
 

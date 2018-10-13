@@ -1777,6 +1777,8 @@ MUI_STRING enUSStrings[] =
     "   Done..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Reboot computer"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Unable to open the console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

@@ -22,7 +22,6 @@ extern void func_CreateRectRgn(void);
 extern void func_DPtoLP(void);
 extern void func_EngAcquireSemaphore(void);
 extern void func_EngCreateSemaphore(void);
-extern void func_EngDeleteSemaphore(void);
 extern void func_EngReleaseSemaphore(void);
 extern void func_EnumFontFamilies(void);
 extern void func_ExcludeClipRect(void);
@@ -48,6 +47,7 @@ extern void func_GetDIBColorTable(void);
 extern void func_GetDIBits(void);
 extern void func_GetFontResourceInfoW(void);
 extern void func_GetGlyphIndices(void);
+extern void func_GetGlyphOutline(void);
 extern void func_GetObject(void);
 extern void func_GetPixel(void);
 extern void func_GetRandomRgn(void);
@@ -96,7 +96,6 @@ const struct test winetest_testlist[] =
     { "DPtoLP", func_DPtoLP },
     { "EngAcquireSemaphore", func_EngAcquireSemaphore },
     { "EngCreateSemaphore", func_EngCreateSemaphore },
-    { "EngDeleteSemaphore", func_EngDeleteSemaphore },
     { "EngReleaseSemaphore", func_EngReleaseSemaphore },
     { "EnumFontFamilies", func_EnumFontFamilies },
     { "ExcludeClipRect", func_ExcludeClipRect },
@@ -122,6 +121,7 @@ const struct test winetest_testlist[] =
     { "GetDIBits", func_GetDIBits },
     { "GetFontResourceInfoW", func_GetFontResourceInfoW },
     { "GetGlyphIndices", func_GetGlyphIndices },
+    { "GetGlyphOutline", func_GetGlyphOutline },
     { "GetPixel", func_GetPixel },
     { "GetObject", func_GetObject },
     { "GetRandomRgn", func_GetRandomRgn },

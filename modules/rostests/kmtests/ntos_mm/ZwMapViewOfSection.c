@@ -124,31 +124,31 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
 
     //section handle
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
-    TestMapView((HANDLE)0xDEADBEEF, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+    TestMapView((HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEFull, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
     TestMapView(INVALID_HANDLE_VALUE, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_OBJECT_TYPE_MISMATCH, IGNORE);
     TestMapView(NULL, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
 
     //process handle
-    TestMapView(WriteSectionHandle, (HANDLE)0xDEADBEEF, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+    TestMapView(WriteSectionHandle, (HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEFull, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
     TestMapView(WriteSectionHandle, (HANDLE)NULL, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
 
     //base address
-    BaseAddress = (PVOID)0x00567A20;
+    BaseAddress = (PVOID)(ULONG_PTR)0x00567A20;
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_MAPPED_ALIGNMENT, IGNORE);
 
-    BaseAddress = (PVOID) 0x60000000;
+    BaseAddress = (PVOID)(ULONG_PTR)0x60000000;
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_SUCCESS, STATUS_SUCCESS);
 
     BaseAddress = (PVOID)((char *)MmSystemRangeStart + 200);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_PARAMETER_3, IGNORE);
 
     //invalid section handle AND unaligned base address
-    BaseAddress = (PVOID)0x00567A20;
-    TestMapView((HANDLE)0xDEADBEEF, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+    BaseAddress = (PVOID)(ULONG_PTR)0x00567A20;
+    TestMapView((HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEFull, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
 
     //invalid process handle AND unaligned base address
-    BaseAddress = (PVOID)0x00567A20;
-    TestMapView(WriteSectionHandle, (HANDLE)0xDEADBEEF, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+    BaseAddress = (PVOID)(ULONG_PTR)0x00567A20;
+    TestMapView(WriteSectionHandle, (HANDLE)(ULONG_PTR)0xDEADBEEFDEADBEEFull, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
 
     //try mapping section to an already mapped address
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &AllocBase, 0, &AllocSize, MEM_COMMIT, PAGE_READWRITE);

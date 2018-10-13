@@ -99,6 +99,10 @@ VOID
 RxpReleasePrefixTableLock(
    _In_ PRX_PREFIX_TABLE pTable,
    _In_ BOOLEAN ProcessBufferingStateChangeRequests);
+#else
+#define RxAcquirePrefixTableLockShared(T, W) ExAcquireResourceSharedLite(&(T)->TableLock, (W))
+#define RxAcquirePrefixTableLockExclusive(T, W) ExAcquireResourceExclusiveLite(&(T)->TableLock, (W))
+#define RxReleasePrefixTableLock(T) ExReleaseResourceLite(&(T)->TableLock)
 #endif
 
 VOID

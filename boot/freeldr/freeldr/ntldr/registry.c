@@ -204,7 +204,7 @@ GetNextPathElement(
         RemainingPath->Length -= sizeof(WCHAR);
     }
 
-    NextElement->Length = (RemainingPath->Buffer - NextElement->Buffer) * sizeof(WCHAR);
+    NextElement->Length = (USHORT)(RemainingPath->Buffer - NextElement->Buffer) * sizeof(WCHAR);
     NextElement->MaximumLength = NextElement->Length;
 
     /* Check if the path element ended with a path separator */

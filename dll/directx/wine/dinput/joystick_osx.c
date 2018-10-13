@@ -932,18 +932,31 @@ static INT find_joystick_devices(void)
     return  joystick_devices_count;
 }
 
+static DWORD make_vid_pid(IOHIDDeviceRef device)
+{
+    long vendID, prodID;
+
+    vendID = get_device_property_long(device, CFSTR(kIOHIDVendorIDKey));
+    prodID = get_device_property_long(device, CFSTR(kIOHIDProductIDKey));
+
+    return MAKELONG(vendID, prodID);
+}
+
 static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
+    IOHIDDeviceRef device;
+
     TRACE("dwDevType %u dwFlags 0x%08x version 0x%04x id %d\n", dwDevType, dwFlags, version, id);
 
     if (id >= find_joystick_devices()) return E_FAIL;
+
+    device = get_device_ref(id);
 
     if ((dwDevType == 0) ||
     ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
     (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800)))
     {
         if (dwFlags & DIEDFL_FORCEFEEDBACK) {
-            IOHIDDeviceRef device = get_device_ref(id);
             if(!device)
                 return S_FALSE;
             if(get_ff(device, NULL) != S_OK)
@@ -953,6 +966,7 @@ static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
         lpddi->guidInstance = DInput_Wine_OsX_Joystick_GUID;
         lpddi->guidInstance.Data3 = id;
         lpddi->guidProduct = DInput_Wine_OsX_Joystick_GUID;
+        lpddi->guidProduct.Data1 = make_vid_pid(device);
         /* we only support traditional joysticks for now */
         if (version >= 0x0800)
             lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
@@ -974,16 +988,19 @@ static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
 {
     char name[MAX_PATH];
     char friendly[32];
+    IOHIDDeviceRef device;
 
     TRACE("dwDevType %u dwFlags 0x%08x version 0x%04x id %d\n", dwDevType, dwFlags, version, id);
 
     if (id >= find_joystick_devices()) return E_FAIL;
 
+    device = get_device_ref(id);
+
     if ((dwDevType == 0) ||
     ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
     (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))) {
+
         if (dwFlags & DIEDFL_FORCEFEEDBACK) {
-            IOHIDDeviceRef device = get_device_ref(id);
             if(!device)
                 return S_FALSE;
             if(get_ff(device, NULL) != S_OK)
@@ -993,6 +1010,7 @@ static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINS
         lpddi->guidInstance = DInput_Wine_OsX_Joystick_GUID;
         lpddi->guidInstance.Data3 = id;
         lpddi->guidProduct = DInput_Wine_OsX_Joystick_GUID;
+        lpddi->guidProduct.Data1 = make_vid_pid(device);
         /* we only support traditional joysticks for now */
         if (version >= 0x0800)
             lpddi->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
@@ -1060,9 +1078,12 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
 
     newDevice->id = index;
 
+    device = get_device_ref(index);
+
     newDevice->generic.guidInstance = DInput_Wine_OsX_Joystick_GUID;
     newDevice->generic.guidInstance.Data3 = index;
     newDevice->generic.guidProduct = DInput_Wine_OsX_Joystick_GUID;
+    newDevice->generic.guidProduct.Data1 = make_vid_pid(device);
     newDevice->generic.joy_polldev = poll_osx_device_state;
 
     /* get the device name */
@@ -1074,7 +1095,6 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
     strcpy(newDevice->generic.name, name);
 
     list_init(&newDevice->effects);
-    device = get_device_ref(index);
     if(get_ff(device, &newDevice->ff) == S_OK){
         newDevice->generic.devcaps.dwFlags |= DIDC_FORCEFEEDBACK;
 

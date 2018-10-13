@@ -93,7 +93,7 @@
 @ stub I_NetServerPasswordSet2
 @ stub I_NetServerPasswordSet
 @ stub I_NetServerReqChallenge
-@ stub I_NetServerSetServiceBits
+@ stdcall I_NetServerSetServiceBits(wstr wstr long long)
 @ stub I_NetServerSetServiceBitsEx
 @ stub I_NetServerTrustPasswordsGet
 @ stub I_NetlogonComputeClientDigest
@@ -114,31 +114,31 @@
 @ stdcall NetConfigGetAll(wstr wstr ptr)
 @ stdcall NetConfigSet(wstr wstr wstr long long ptr long)
 @ stdcall NetConnectionEnum(wstr wstr long ptr long ptr ptr ptr)
-@ stub NetDfsAdd
-@ stub NetDfsAddFtRoot
-@ stub NetDfsAddStdRoot
-@ stub NetDfsAddStdRootForced
-@ stub NetDfsEnum
-@ stub NetDfsGetClientInfo
-@ stub NetDfsGetDcAddress
-@ stub NetDfsGetFtContainerSecurity
-@ stub NetDfsGetInfo
-@ stub NetDfsGetSecurity
-@ stub NetDfsGetStdContainerSecurity
+@ stdcall NetDfsAdd(wstr wstr wstr wstr long)
+@ stdcall NetDfsAddFtRoot(wstr wstr wstr wstr long)
+@ stdcall NetDfsAddStdRoot(wstr wstr wstr long)
+@ stdcall NetDfsAddStdRootForced(wstr wstr wstr wstr)
+@ stdcall NetDfsEnum(wstr long long ptr ptr ptr)
+@ stdcall NetDfsGetClientInfo(wstr wstr wstr long ptr)
+@ stdcall NetDfsGetDcAddress(wstr ptr ptr ptr)
+@ stdcall NetDfsGetFtContainerSecurity(wstr long ptr ptr);
+@ stdcall NetDfsGetInfo(wstr wstr wstr long ptr)
+@ stdcall NetDfsGetSecurity(wstr ptr ptr ptr)
+@ stdcall NetDfsGetStdContainerSecurity(wstr ptr ptr ptr)
 @ stub NetDfsManagerGetConfigInfo
-@ stub NetDfsManagerInitialize
+@ stdcall NetDfsManagerInitialize(wstr long)
 @ stub NetDfsManagerSendSiteInfo
-@ stub NetDfsMove
-@ stub NetDfsRemove
-@ stub NetDfsRemoveFtRoot
-@ stub NetDfsRemoveFtRootForced
-@ stub NetDfsRemoveStdRoot
-@ stub NetDfsRename
-@ stub NetDfsSetClientInfo
-@ stub NetDfsSetFtContainerSecurity
-@ stub NetDfsSetInfo
-@ stub NetDfsSetSecurity
-@ stub NetDfsSetStdContainerSecurity
+@ stdcall NetDfsMove(wstr wstr long)
+@ stdcall NetDfsRemove(wstr wstr wstr)
+@ stdcall NetDfsRemoveFtRoot(wstr wstr wstr long)
+@ stdcall NetDfsRemoveFtRootForced(wstr wstr wstr wstr long)
+@ stdcall NetDfsRemoveStdRoot(wstr wstr long)
+@ stdcall NetDfsRename(wstr wstr)
+@ stdcall NetDfsSetClientInfo(wstr wstr wstr long ptr)
+@ stdcall NetDfsSetFtContainerSecurity(wstr ptr ptr)
+@ stdcall NetDfsSetInfo(wstr wstr wstr long ptr)
+@ stdcall NetDfsSetSecurity(wstr ptr ptr)
+@ stdcall NetDfsSetStdContainerSecurity(wstr ptr ptr)
 @ stdcall NetEnumerateComputerNames(wstr long long ptr ptr)
 @ stdcall NetEnumerateTrustedDomains(wstr ptr)
 @ stdcall NetErrorLogClear(wstr wstr ptr)
@@ -173,7 +173,7 @@
 @ stdcall NetLocalGroupGetMembers(wstr wstr long ptr long ptr ptr ptr)
 @ stdcall NetLocalGroupSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetLocalGroupSetMembers(wstr wstr long ptr long)
-@ stub NetLogonGetTimeServiceParentDomain
+@ stdcall NetLogonGetTimeServiceParentDomain(wstr ptr ptr)
 @ stdcall NetLogonSetServiceBits(wstr long long)
 @ stdcall NetMessageBufferSend(wstr wstr wstr ptr long)
 @ stdcall NetMessageNameAdd(wstr wstr)

@@ -15,6 +15,10 @@
 
 #include <wine/debug.h>
 
+
+extern DWORD dwServiceBits;
+
+
 DWORD
 WINAPI
 RpcThreadRoutine(

@@ -1791,6 +1791,8 @@ MUI_STRING skSKStrings[] =
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = ReÁtart poü°taüa"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Nemoßno otvoriú konzolu\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

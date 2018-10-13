@@ -15,7 +15,7 @@
 
 /* GLOBALS ******************************************************************/
 
-POBJECT_TYPE ObSymbolicLinkType = NULL;
+POBJECT_TYPE ObpSymbolicLinkObjectType = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -150,12 +150,12 @@ ObpParseSymbolicLinkToIoDeviceObject(IN POBJECT_DIRECTORY SymbolicLinkDirectory,
         if (! *Object)
             break;
 
-        if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObDirectoryType)
+        if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObpDirectoryObjectType)
         {
             /* Make this current directory, and continue search */
             *Directory = (POBJECT_DIRECTORY)*Object;
         }
-        else if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObSymbolicLinkType &&
+        else if (OBJECT_TO_OBJECT_HEADER(*Object)->Type == ObpSymbolicLinkObjectType &&
             (((POBJECT_SYMBOLIC_LINK)*Object)->DosDeviceDriveIndex == 0))
         {
             /* Symlink points to another initialized symlink, ask caller to reparse */
@@ -574,7 +574,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
     /* Create the object */
     Status = ObCreateObject(PreviousMode,
-                            ObSymbolicLinkType,
+                            ObpSymbolicLinkObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -696,7 +696,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
     /* Open the object */
     Status = ObOpenObjectByName(ObjectAttributes,
-                                ObSymbolicLinkType,
+                                ObpSymbolicLinkObjectType,
                                 PreviousMode,
                                 NULL,
                                 DesiredAccess,
@@ -784,7 +784,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
     /* Reference the object */
     Status = ObReferenceObjectByHandle(LinkHandle,
                                        SYMBOLIC_LINK_QUERY,
-                                       ObSymbolicLinkType,
+                                       ObpSymbolicLinkObjectType,
                                        PreviousMode,
                                        (PVOID *)&SymlinkObject,
                                        NULL);

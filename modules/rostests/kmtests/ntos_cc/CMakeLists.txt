@@ -30,3 +30,33 @@ add_importlibs(ccmapdata_drv ntoskrnl hal)
 add_target_compile_definitions(ccmapdata_drv KMT_STANDALONE_DRIVER)
 #add_pch(ccmapdata_drv ../include/kmt_test.h)
 add_rostests_file(TARGET ccmapdata_drv)
+
+#
+# CcPinMappedData
+#
+list(APPEND CCPINMAPPEDDATA_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    CcPinMappedData_drv.c)
+
+add_library(ccpinmappeddata_drv SHARED ${CCPINMAPPEDDATA_DRV_SOURCE})
+set_module_type(ccpinmappeddata_drv kernelmodedriver)
+target_link_libraries(ccpinmappeddata_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(ccpinmappeddata_drv ntoskrnl hal)
+add_target_compile_definitions(ccpinmappeddata_drv KMT_STANDALONE_DRIVER)
+#add_pch(ccpinmappeddata_drv ../include/kmt_test.h)
+add_rostests_file(TARGET ccpinmappeddata_drv)
+
+#
+# CcPinRead
+#
+list(APPEND CCPINREAD_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    CcPinRead_drv.c)
+
+add_library(ccpinread_drv SHARED ${CCPINREAD_DRV_SOURCE})
+set_module_type(ccpinread_drv kernelmodedriver)
+target_link_libraries(ccpinread_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(ccpinread_drv ntoskrnl hal)
+add_target_compile_definitions(ccpinread_drv KMT_STANDALONE_DRIVER)
+#add_pch(ccmapdata_drv ../include/kmt_test.h)
+add_rostests_file(TARGET ccpinread_drv)

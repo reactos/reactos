@@ -120,14 +120,14 @@ static WCHAR evVar[MAX_PATH];
     expectedPathOut = NULL;
     for (i1 = 0; i1 <= 1; i1++)
     {
-        if (i1 == 1) /* Usually SLGP_RAWPATH */
+        if (i1 == 0) /* Usually SLGP_SHORTPATH */
         {
             flags = testDef->flags1;
             expandPathOut = testDef->expandPathOut1;
             expectedPathOut = testDef->pathOut1;
             expectedHr = testDef->hrGetPath1;
         }
-        else /* Usually SLGP_SHORTPATH */
+        else // if (i1 == 1) /* Usually SLGP_RAWPATH */
         {
             flags = testDef->flags2;
             expandPathOut = testDef->expandPathOut2;

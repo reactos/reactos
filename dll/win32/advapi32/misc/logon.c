@@ -145,9 +145,30 @@ CreateProcessAsUserCommon(
 
     if (hToken != NULL)
     {
+        TOKEN_TYPE Type;
+        ULONG ReturnLength;
         OBJECT_ATTRIBUTES ObjectAttributes;
         HANDLE hTokenDup;
-        BOOLEAN PrivilegeSet = FALSE;
+        BOOLEAN PrivilegeSet = FALSE, HavePrivilege;
+
+        /* Check whether the user-provided token is a primary token */
+        // GetTokenInformation();
+        Status = NtQueryInformationToken(hToken,
+                                         TokenType,
+                                         &Type,
+                                         sizeof(Type),
+                                         &ReturnLength);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtQueryInformationToken() failed, Status 0x%08x\n", Status);
+            goto Quit;
+        }
+        if (Type != TokenPrimary)
+        {
+            ERR("Wrong token type for token 0x%p, expected TokenPrimary, got %ld\n", hToken, Type);
+            Status = STATUS_BAD_TOKEN_TYPE;
+            goto Quit;
+        }
 
         /* Duplicate the token for this new process */
         InitializeObjectAttributes(&ObjectAttributes,
@@ -163,32 +184,43 @@ CreateProcessAsUserCommon(
                                   &hTokenDup);
         if (!NT_SUCCESS(Status))
         {
-            ERR("NtDuplicateToken failed, Status 0x%08x\n", Status);
-            TerminateProcess(lpProcessInformation->hProcess, Status);
-            SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
+            ERR("NtDuplicateToken() failed, Status 0x%08x\n", Status);
+            goto Quit;
         }
 
         // FIXME: Do we always need SecurityImpersonation?
-        if (!ImpersonateSelf(SecurityImpersonation))
-        {
-            ERR("ImpersonateSelf(SecurityImpersonation) failed, last error: %d\n", GetLastError());
-            NtClose(hTokenDup);
-            TerminateProcess(lpProcessInformation->hProcess, RtlGetLastNtStatus());
-            // SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
-        }
-
-        /* Acquire the process primary token assignment privilege */
-        Status = RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, TRUE, &PrivilegeSet);
+        Status = RtlImpersonateSelf(SecurityImpersonation);
         if (!NT_SUCCESS(Status))
         {
-            ERR("RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE) failed, Status 0x%08lx\n", Status);
-            RevertToSelf();
+            ERR("RtlImpersonateSelf(SecurityImpersonation) failed, Status 0x%08x\n", Status);
             NtClose(hTokenDup);
-            TerminateProcess(lpProcessInformation->hProcess, Status);
-            SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
+            goto Quit;
+        }
+
+        /*
+         * Attempt to acquire the process primary token assignment privilege
+         * in case we actually need it.
+         * The call will either succeed or fail when the caller has (or has not)
+         * enough rights.
+         * The last situation may not be dramatic for us. Indeed it may happen
+         * that the user-provided token is a restricted version of the caller's
+         * primary token (aka. a "child" token), or both tokens inherit (i.e. are
+         * children, and are together "siblings") from a common parent token.
+         * In this case the NT kernel allows us to assign the token to the child
+         * process without the need for the assignment privilege, which is fine.
+         * On the contrary, if the user-provided token is completely arbitrary,
+         * then the NT kernel will enforce the presence of the assignment privilege:
+         * because we failed (by assumption) to assign the privilege, the process
+         * token assignment will fail as required. It is then the job of the
+         * caller to manually acquire the necessary privileges.
+         */
+        Status = RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
+                                    TRUE, TRUE, &PrivilegeSet);
+        HavePrivilege = NT_SUCCESS(Status);
+        if (!HavePrivilege)
+        {
+            ERR("RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE) failed, Status 0x%08lx, "
+                "attempting to continue without it...\n", Status);
         }
 
         AccessToken.Token  = hTokenDup;
@@ -200,8 +232,12 @@ CreateProcessAsUserCommon(
                                          (PVOID)&AccessToken,
                                          sizeof(AccessToken));
 
-        /* Restore the privileges */
-        RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, PrivilegeSet, TRUE, &PrivilegeSet);
+        /* Restore the privilege */
+        if (HavePrivilege)
+        {
+            RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
+                               PrivilegeSet, TRUE, &PrivilegeSet);
+        }
 
         RevertToSelf();
 
@@ -211,7 +247,13 @@ CreateProcessAsUserCommon(
         /* Check whether NtSetInformationProcess() failed */
         if (!NT_SUCCESS(Status))
         {
-            ERR("NtSetInformationProcess failed, Status 0x%08x\n", Status);
+            ERR("NtSetInformationProcess() failed, Status 0x%08x\n", Status);
+            goto Quit;
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+Quit:
             TerminateProcess(lpProcessInformation->hProcess, Status);
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
@@ -469,7 +511,21 @@ LogonUserExW(
     NTSTATUS SubStatus = STATUS_SUCCESS;
     NTSTATUS Status;
 
-    *phToken = NULL;
+    if ((ppProfileBuffer != NULL && pdwProfileLength == NULL) ||
+        (ppProfileBuffer == NULL && pdwProfileLength != NULL))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (ppProfileBuffer != NULL && pdwProfileLength != NULL)
+    {
+        *ppProfileBuffer = NULL;
+        *pdwProfileLength = 0;
+    }
+
+    if (phToken != NULL)
+        *phToken = NULL;
 
     switch (dwLogonType)
     {
@@ -654,9 +710,10 @@ LogonUserExW(
         TRACE("TokenHandle: %p\n", TokenHandle);
     }
 
-    *phToken = TokenHandle;
+    if (phToken != NULL)
+        *phToken = TokenHandle;
 
-    /* FIXME: return ppLogonSid, ppProfileBuffer, pdwProfileLength and pQuotaLimits */
+    /* FIXME: return ppLogonSid and pQuotaLimits */
 
 done:
     if (ProfileBuffer != NULL)

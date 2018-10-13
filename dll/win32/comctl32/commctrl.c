@@ -231,6 +231,12 @@ static void UnregisterControls(BOOL bV6)
     else
     {
         BUTTON_Unregister();
+        COMBO_Unregister ();
+        COMBOLBOX_Unregister ();
+        EDIT_Unregister ();
+        LISTBOX_Unregister ();
+        STATIC_Unregister ();
+
         TOOLBARv6_Unregister ();
     }
 

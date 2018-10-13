@@ -9,10 +9,12 @@ list(APPEND SOURCE
     DllMain.c
     RegDeleteTree.c
     RegSetKeyValue.c
+    RegLoadMUIString.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
 
 add_library(advapi32_vista SHARED ${SOURCE})
 set_module_type(advapi32_vista win32dll ENTRYPOINT DllMain 12)
+target_link_libraries(advapi32_vista wine)
 add_importlibs(advapi32_vista advapi32 kernel32 ntdll)
 add_dependencies(advapi32_vista psdk)
 add_cd_file(TARGET advapi32_vista DESTINATION reactos/system32 FOR all)

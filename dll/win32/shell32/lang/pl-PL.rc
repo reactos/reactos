@@ -71,6 +71,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Wytnij", IDM_CUT
         MENUITEM "&Kopiuj", IDM_COPY
+        MENUITEM "Wklej", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Utwórz &Skrót", IDM_CREATELINK
         MENUITEM "&Usuń", IDM_DELETE
@@ -407,7 +408,7 @@ BEGIN
     LTEXT "Wybierz program, którego chcesz użyć do otwarcia tego pliku:", -1, 44, 12, 211, 10
     LTEXT "Plik:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
-    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programy", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Zawsze używaj danego programu do otwierania tego typu plików", 14003, 20, 193, 225, 10
     PUSHBUTTON "&Przeglądaj...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -627,7 +628,7 @@ BEGIN
     PUSHBUTTON "Przeglądaj...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
     LTEXT "Wybierz ikonę z poniższej listy:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 135, 179, 50, 14
 END
@@ -697,24 +698,24 @@ BEGIN
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Dostosowywanie"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Jakiego rodzaju folderu potrzebujesz?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "&Użyj tego typu folderu jako szablonu:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    AUTOCHECKBOX "Z&astosuj ten szablon także do wszystkich podfolderów", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Obrazy folderów", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Dla widoku miniatur możesz umieścić na tym folderze obraz, który będzie przypominał o zawartości folderu.", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "&Wybierz obraz...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "&Przywróć domyślny", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    LTEXT "Podgląd:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Ikony folderów", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Dla wszystkich widoków z wyjątkiem widoku miniatur możesz zmienić standardową ikonę ""folderu"" na inną.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "Z&mień ikonę...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -879,14 +880,14 @@ BEGIN
     IDS_COM_FILE "Aplikacja DOS"
     IDS_CPL_FILE "Element Panelu sterowania"
     IDS_CUR_FILE "Kursor"
-    IDS_DB__FILE "Database File"
+    IDS_DB__FILE "Plik bazy danych"
     IDS_DLL_FILE "Rozszerzenie aplikacji"
     IDS_DRV_FILE "Sterownik urządzenia"
-    IDS_EFI_FILE "Extensible Firmware Interface Executable"
+    IDS_EFI_FILE "Aplikacja EFI (Extensible Firmware Interface)"
     IDS_EXE_FILE "Aplikacja"
-    IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
-    IDS_TLB_FILE "Type Library"
+    IDS_NLS_FILE "Plik obsługi języków narodowych"
+    IDS_OCX_FILE "Kontrolka ActiveX"
+    IDS_TLB_FILE "Biblioteka typów"
     IDS_FON_FILE "Plik czcionki"
     IDS_TTF_FILE "Plik czcionki TrueType"
     IDS_OTF_FILE "Plik czcionki OpenType"
@@ -894,7 +895,7 @@ BEGIN
     IDS_ICO_FILE "Ikona"
     IDS_INI_FILE "Ustawienia konfiguracji"
     IDS_LNK_FILE "Skrót"
-    IDS_NT__FILE "NT DOS32 Configuration File"
+    IDS_NT__FILE "Plik konfiguracji NT DOS32"
     IDS_PIF_FILE "Plik informacyjny o programie NT VDM"
     IDS_SCR_FILE "Wygaszacz ekranu"
     IDS_SYS_FILE "Plik systemowy"

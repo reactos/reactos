@@ -512,7 +512,7 @@ MiniRequestComplete(
         /* We are doing this internally, so we'll signal this event we've stashed in the MacBlock */
         ASSERT(MacBlock->Unknown1 != NULL);
         ASSERT(MacBlock->Unknown3 == NULL);
-        MacBlock->Unknown3 = (PVOID)Status;
+        MacBlock->Unknown3 = UlongToPtr(Status);
         KeSetEvent(MacBlock->Unknown1, IO_NO_INCREMENT, FALSE);
     }
 
@@ -789,7 +789,7 @@ MiniSetInformation(
   if (NdisStatus == NDIS_STATUS_PENDING)
   {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      NdisStatus = (NDIS_STATUS)MacBlock->Unknown3;
+      NdisStatus = PtrToUlong(MacBlock->Unknown3);
   }
 
   *BytesRead = NdisRequest->DATA.SET_INFORMATION.BytesRead;
@@ -849,7 +849,7 @@ MiniQueryInformation(
   if (NdisStatus == NDIS_STATUS_PENDING)
   {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-      NdisStatus = (NDIS_STATUS)MacBlock->Unknown3;
+      NdisStatus = PtrToUlong(MacBlock->Unknown3);
   }
 
   *BytesWritten = NdisRequest->DATA.QUERY_INFORMATION.BytesWritten;

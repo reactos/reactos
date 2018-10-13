@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     ReactOS Font Text
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Italian translation resource
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+ 
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_REACTOS_FONTS_FOLDER "Cartella dei font di ReactOS"
+END

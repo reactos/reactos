@@ -258,8 +258,6 @@ MI_MAKE_SUBSECTION_PTE(
     _Out_ PMMPTE NewPte,
     _In_ PVOID Segment)
 {
-    ULONG_PTR Offset;
-
     /* Mark this as a prototype */
     NewPte->u.Long = 0;
     NewPte->u.Subsect.Prototype = 1;

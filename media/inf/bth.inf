@@ -6,16 +6,22 @@ Provider=%ReactOS%
 DriverVer=03/27/2012,1.0.0
 
 [DestinationDirs]
-DefaultDestDir = 12
+DefaultDestDir = 11
+BluetoothClass.NT.Files = 11
+FreeBT.Files = 12
 
 [ClassInstall32.NT]
 AddReg=BluetoothClass.NT.AddReg
+CopyFiles=BluetoothClass.NT.Files
 
 [BluetoothClass.NT.AddReg]
 HKR, , , 0, %BluetoothClassName%
 HKR, , NoInstallClass, 0, 1
-;HKR,,Installer32,,"bthci.dll,BluetoothClassInstaller"
-;HKR, , Icon, 0, "201"
+HKR, , Installer32, , "bthci.dll,BluetoothClassInstaller"
+HKR, , Icon, 0, "201"
+
+[BluetoothClass.NT.Files]
+bthci.dll
 
 [Manufacturer]
 %ReactOS%=ReactOS
@@ -59,6 +65,10 @@ BluetoothClassName="Bluetooth Radios"
 [Strings.0405]
 BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
 BluetoothClassName="Bluetooth vysílače"
+
+[Strings.0407]
+BTUSB.DeviceDesc="USB-Treiber für Bluetooth-Funkgerät"
+BluetoothClassName="Bluetooth Funkgeräte"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"

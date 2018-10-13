@@ -404,7 +404,7 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
     PVOID hMapped;
     ULONG Ordinal = 0;
 
-    if (HIWORD(lpProcName) != 0)
+    if ((ULONG_PTR)lpProcName > MAXUSHORT)
     {
         /* Look up by name */
         RtlInitAnsiString(&ProcedureName, (LPSTR)lpProcName);
@@ -413,7 +413,7 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
     else
     {
         /* Look up by ordinal */
-        Ordinal = (ULONG)lpProcName;
+        Ordinal = PtrToUlong(lpProcName);
     }
 
     /* Map provided handle */
@@ -463,6 +463,7 @@ FreeLibrary(HINSTANCE hLibModule)
     if (LDR_IS_DATAFILE(hLibModule))
     {
         // FIXME: This SEH should go inside RtlImageNtHeader instead
+        // See https://jira.reactos.org/browse/CORE-14857
         _SEH2_TRY
         {
             /* This is a LOAD_LIBRARY_AS_DATAFILE module, check if it's a valid one */
@@ -1139,8 +1140,9 @@ NTSTATUS
 WINAPI
 BaseProcessInitPostImport(VOID)
 {
+    DPRINT("Post-init called\n");
+
     /* Check if this is a terminal server */
-    DPRINT1("Post-init called\n");
     if (SharedUserData->SuiteMask & VER_SUITE_TERMINAL)
     {
         /* Initialize TS pointers */

@@ -1781,6 +1781,8 @@ MUI_STRING deDEStrings[] =
     "   Fertig..."},
     {STRING_REBOOTCOMPUTER2,
     "   EINGABETASTE = Computer neu starten"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Konsole konnte nicht ge”ffnet werden\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

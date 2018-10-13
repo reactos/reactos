@@ -260,7 +260,7 @@ DxDdCreateDirectDrawObject(
 {
     PDC pDC = NULL;
     HDEV hDev = NULL;
-    DWORD retVal = 0;
+    DWORD_PTR retVal = 0;
 
     pDC = gpEngFuncs.DxEngLockDC(hDC);
     if (!pDC)
@@ -284,7 +284,7 @@ DxDdCreateDirectDrawObject(
 
     // create object only for 8BPP and more
     if (gpEngFuncs.DxEngGetHdevData(hDev, DxEGShDevData_DitherFmt) >= BMF_8BPP)
-        retVal = (DWORD)intDdCreateDirectDrawLocal(hDev);
+        retVal = (DWORD_PTR)intDdCreateDirectDrawLocal(hDev);
 
     gpEngFuncs.DxEngUnlockHdev(hDev);
     gpEngFuncs.DxEngUnlockDC(pDC);
@@ -458,8 +458,8 @@ DxDdQueryDirectDrawObject(
         if (pCallBackFlags)
         {
             *(DWORD*)pCallBackFlags = peDdGl->ddCallbacks.dwFlags;
-            *(DWORD*)((ULONG)pCallBackFlags + 4) = peDdGl->ddSurfaceCallbacks.dwFlags;
-            *(DWORD*)((ULONG)pCallBackFlags + 8) = peDdGl->ddPaletteCallbacks.dwFlags;
+            *(DWORD*)((ULONG_PTR)pCallBackFlags + 4) = peDdGl->ddSurfaceCallbacks.dwFlags;
+            *(DWORD*)((ULONG_PTR)pCallBackFlags + 8) = peDdGl->ddPaletteCallbacks.dwFlags;
         }
 
         if (pd3dNtHalCallbacks)
@@ -636,7 +636,7 @@ intDdCreateNewSurfaceObject(PEDD_DIRECTDRAW_LOCAL peDdL, HANDLE hDirectDrawLocal
         pSurface->hSecure = (VOID*)1;
 
         peDdL->peSurface_DdList = pSurface;
-        peDdL->hSurface = (ULONG)pSurface->pobj.hHmgr;
+        peDdL->hSurface = (ULONG_PTR)pSurface->pobj.hHmgr;
     }
 
     return pSurface;

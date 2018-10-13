@@ -46,12 +46,12 @@ BEGIN
         MENUITEM "Wyjdź\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Edit"
+    POPUP "&Edycja"
     BEGIN
-        MENUITEM "Copy\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "Paste\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "Kopiuj\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "Wklej\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Edit Glyph...", ID_EDIT_GLYPH
+        MENUITEM "Edytuj glif...", ID_EDIT_GLYPH
     END
 
     POPUP "&Okna"
@@ -88,6 +88,6 @@ BEGIN
     IDS_TOOLTIP_OPEN, "Otwórz"
     IDS_TOOLTIP_SAVE, "Zapisz"
     IDS_TOOLTIP_EDIT_GLYPH, "Edytuj Glify"
-    IDS_TOOLTIP_COPY, "Copy"
-    IDS_TOOLTIP_PASTE, "Paste"
+    IDS_TOOLTIP_COPY, "Kopiuj"
+    IDS_TOOLTIP_PASTE, "Wklej"
 END

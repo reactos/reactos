@@ -24,7 +24,7 @@ static void Test_LockUnlockServiceDatabase(void)
     ok_err(ERROR_INVALID_HANDLE);
 
     SetLastError(0xdeadbeef);
-    hScm  = (SC_HANDLE)0xdeadbeef;
+    hScm  = (SC_HANDLE)(ULONG_PTR)0xdeadbeefdeadbeefull;
     hLock = LockServiceDatabase(hScm);
     ok(hLock == NULL, "hLock = 0x%p, expected 0\n", hLock);
     ok_err(ERROR_INVALID_HANDLE);
@@ -38,7 +38,7 @@ static void Test_LockUnlockServiceDatabase(void)
 /*****************************************************************************************/
 
     SetLastError(0xdeadbeef);
-    hLock = (SC_LOCK)0xdeadbeef;
+    hLock = (SC_LOCK)(ULONG_PTR)0xdeadbeefdeadbeefull;
     bError = UnlockServiceDatabase(hLock);
     ok(bError == FALSE, "bError = %u, expected FALSE\n", bError);
     ok_err(ERROR_INVALID_SERVICE_LOCK);

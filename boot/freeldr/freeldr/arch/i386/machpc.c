@@ -643,7 +643,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     for (i = 0; i < MAX_COM_PORTS; i++, BasePtr++)
     {
         Base = (ULONG) * BasePtr;
-        if (Base == 0 || !CpDoesPortExist((PUCHAR)Base))
+        if ((Base == 0) || !CpDoesPortExist(UlongToPtr(Base)))
             continue;
 
         TRACE("Found COM%u port at 0x%x\n", i + 1, Base);

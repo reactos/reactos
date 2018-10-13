@@ -77,7 +77,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     {
         PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
         LARGE_INTEGER SectionSize;
-        ULONG ViewSize = 0;
+        SIZE_T ViewSize = 0;
         PCONSOLE_STATE_INFO pSharedInfo = NULL;
 
         /*
@@ -262,7 +262,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PCONSOLE_STATE_INFO pConInfo = NULL;
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;

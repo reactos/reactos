@@ -36,7 +36,7 @@ PciPmeInterfaceInitializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG("PCI PciPmeInterfaceInitializer, unexpected call.", FALSE);
+    ASSERTMSG("PCI PciPmeInterfaceInitializer, unexpected call.\n", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

@@ -317,7 +317,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.CloseProcedure = IopCloseFile;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
     ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
-    ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
+    ObjectTypeInitializer.QueryNameProcedure = IopQueryName;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,
@@ -649,6 +649,14 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Return success */
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+IoInitializeCrashDump(IN HANDLE PageFileHandle)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

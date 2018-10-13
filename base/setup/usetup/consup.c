@@ -54,7 +54,7 @@ CONSOLE_Init(
     if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
         return FALSE;
     xScreen = csbi.dwSize.X;
-    yScreen = 50;//csbi.dwSize.Y;
+    yScreen = csbi.dwSize.Y;
     return TRUE;
 }
 
@@ -66,11 +66,39 @@ CONSOLE_ConInKey(
 
     while (TRUE)
     {
+        /* Wait for a key press */
         ReadConsoleInput(StdInput, Buffer, 1, &Read);
 
-        if ((Buffer->EventType == KEY_EVENT)
-         && (Buffer->Event.KeyEvent.bKeyDown != FALSE))
+        if ((Buffer->EventType == KEY_EVENT) &&
+            (Buffer->Event.KeyEvent.bKeyDown != FALSE))
+        {
             break;
+        }
+    }
+}
+
+BOOLEAN
+CONSOLE_ConInKeyPeek(
+    OUT PINPUT_RECORD Buffer)
+{
+    DWORD Read = 0;
+
+    while (TRUE)
+    {
+        /* Try to get a key press without blocking */
+        if (!PeekConsoleInput(StdInput, Buffer, 1, &Read))
+            return FALSE;
+        if (Read == 0)
+            return FALSE;
+
+        /* Consume it */
+        ReadConsoleInput(StdInput, Buffer, 1, &Read);
+
+        if ((Buffer->EventType == KEY_EVENT) &&
+            (Buffer->Event.KeyEvent.bKeyDown != FALSE))
+        {
+            return TRUE;
+        }
     }
 }
 

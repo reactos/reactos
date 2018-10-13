@@ -397,7 +397,7 @@ GetRegistryValueBuffer(IN PCWSTR KeyName,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DestinationString;
     HANDLE Handle;
-    SIZE_T ResultLength = 0;
+    ULONG ResultLength = 0;
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC GetRegistryValueBuffer: Entering.\n");
     CHECK_PARAMETER1(KeyName);
     CHECK_PARAMETER2(ValueName);
@@ -539,7 +539,7 @@ TranslateMachineInformationXML(IN PWCHAR *Buffer,
                                IN PWCHAR ExtraData)
 {
     NTSTATUS Status;
-    ULONG Size;
+    SIZE_T Size;
     PWCHAR p;
     CHECK_PARAMETER1(Buffer);
 
@@ -694,7 +694,7 @@ InitializeMachineInformation(VOID)
     ULONG SuiteTypeMessage;
     BOOLEAN SetupInProgress = FALSE;
     GUID SystemGuid;
-    ULONG RealSize, Size, OutputSize;
+    SIZE_T RealSize, Size, OutputSize;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
     RTL_OSVERSIONINFOEXW VersionInformation;
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC Initialize Machine Information : Entering.\n");
@@ -1102,7 +1102,7 @@ RegisterBlueScreenMachineInformation(VOID)
 {
     PWCHAR XmlBuffer;
     PHEADLESS_CMD_SET_BLUE_SCREEN_DATA BsBuffer;
-    ULONG Length, HeaderLength, TotalLength;
+    SIZE_T Length, HeaderLength, TotalLength;
     NTSTATUS Status;
     ULONG i;
 

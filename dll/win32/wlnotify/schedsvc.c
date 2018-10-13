@@ -9,8 +9,7 @@
 #include "precomp.h"
 #include <winsvc.h>
 
-#define _NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wlnotify);
 
 
 VOID
@@ -18,37 +17,40 @@ WINAPI
 SchedEventLogoff(
     PWLX_NOTIFICATION_INFO pInfo)
 {
+#if 0
     SC_HANDLE hManager = NULL;
     SC_HANDLE hService = NULL;
     SERVICE_STATUS ServiceStatus;
+#endif
 
-    DPRINT("SchedStartShellEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SchedEventLogoff\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 
+#if 0
     hManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
-        DPRINT1("OpenSCManagerW() failed (Error %lu)\n", GetLastError());
+        WARN("OpenSCManagerW() failed (Error %lu)\n", GetLastError());
         goto done;
     }
 
     hService = OpenServiceW(hManager, L"Schedule", SERVICE_USER_DEFINED_CONTROL);
     if (hManager == NULL)
     {
-        DPRINT1("OpenServiceW() failed (Error %lu)\n", GetLastError());
+        WARN("OpenServiceW() failed (Error %lu)\n", GetLastError());
         goto done;
     }
 
     if (!ControlService(hService, 129, &ServiceStatus))
     {
-        DPRINT1("ControlService() failed (Error %lu)\n", GetLastError());
+        WARN("ControlService() failed (Error %lu)\n", GetLastError());
     }
 
 done:
@@ -57,6 +59,7 @@ done:
 
     if (hManager != NULL)
         CloseServiceHandle(hManager);
+#endif
 }
 
 
@@ -69,33 +72,33 @@ SchedStartShell(
     SC_HANDLE hService = NULL;
     SERVICE_STATUS ServiceStatus;
 
-    DPRINT("SchedStartShellEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SchedStartShell\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 
     hManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
-        DPRINT1("OpenSCManagerW() failed (Error %lu)\n", GetLastError());
+        WARN("OpenSCManagerW() failed (Error %lu)\n", GetLastError());
         goto done;
     }
 
     hService = OpenServiceW(hManager, L"Schedule", SERVICE_USER_DEFINED_CONTROL);
     if (hManager == NULL)
     {
-        DPRINT1("OpenServiceW() failed (Error %lu)\n", GetLastError());
+        WARN("OpenServiceW() failed (Error %lu)\n", GetLastError());
         goto done;
     }
 
     if (!ControlService(hService, 128, &ServiceStatus))
     {
-        DPRINT1("ControlService() failed (Error %lu)\n", GetLastError());
+        WARN("ControlService() failed (Error %lu)\n", GetLastError());
     }
 
 done:

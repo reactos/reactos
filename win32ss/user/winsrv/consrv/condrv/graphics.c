@@ -50,7 +50,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
     PGRAPHICS_SCREEN_BUFFER NewBuffer = NULL;
 
     LARGE_INTEGER SectionSize;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
 
     if (Buffer == NULL || Console == NULL || GraphicsInfo == NULL)
         return STATUS_INVALID_PARAMETER;

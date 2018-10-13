@@ -1,0 +1,581 @@
+/*
+ * Distributed File System service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef DWORD NET_API_STATUS;
+
+typedef WCHAR *NETDFS_SERVER_OR_DOMAIN_HANDLE;
+
+typedef [v1_enum] enum _DFS_TARGET_PRIORITY_CLASS
+{
+    DfsInvalidPriorityClass = -1,
+    DfsSiteCostNormalPriorityClass = 0,
+    DfsGlobalHighPriorityClass = 1,
+    DfsSiteCostHighPriorityClass = 2,
+    DfsSiteCostLowPriorityClass = 3,
+    DfsGlobalLowPriorityClass = 4
+} DFS_TARGET_PRIORITY_CLASS;
+
+typedef struct _DFS_TARGET_PRIORITY
+{
+    DFS_TARGET_PRIORITY_CLASS TargetPriorityClass;
+    unsigned short TargetPriorityRank;
+    unsigned short Reserved;
+} DFS_TARGET_PRIORITY;
+
+typedef struct _DFS_STORAGE_INFO
+{
+    unsigned long State;
+    [string] WCHAR *ServerName;
+    [string] WCHAR *ShareName;
+} DFS_STORAGE_INFO;
+
+typedef struct _DFS_STORAGE_INFO_1
+{
+    unsigned long State;
+    [string] WCHAR *ServerName;
+    [string] WCHAR * ShareName;
+    DFS_TARGET_PRIORITY TargetPriority;
+} DFS_STORAGE_INFO_1, *PDFS_STORAGE_INFO_1, *LPDFS_STORAGE_INFO_1;
+
+typedef struct _DFSM_ROOT_LIST_ENTRY
+{
+    [string, unique] WCHAR *ServerShare;
+} DFSM_ROOT_LIST_ENTRY;
+
+typedef struct _DFSM_ROOT_LIST
+{
+    DWORD cEntries;
+    [size_is(cEntries)] DFSM_ROOT_LIST_ENTRY Entry[];
+} DFSM_ROOT_LIST;
+
+typedef enum
+{
+    DFS_NAMESPACE_VERSION_ORIGIN_COMBINED = 0,
+    DFS_NAMESPACE_VERSION_ORIGIN_SERVER,
+    DFS_NAMESPACE_VERSION_ORIGIN_DOMAIN
+} DFS_NAMESPACE_VERSION_ORIGIN;
+
+typedef struct _DFS_SUPPORTED_NAMESPACE_VERSION_INFO
+{
+    unsigned long DomainDfsMajorVersion;
+    unsigned long DomainDfsMinorVersion;
+    ULONGLONG DomainDfsCapabilities;
+    unsigned long StandaloneDfsMajorVersion;
+    unsigned long StandaloneDfsMinorVersion;
+    ULONGLONG StandaloneDfsCapabilities;
+} DFS_SUPPORTED_NAMESPACE_VERSION_INFO, *PDFS_SUPPORTED_NAMESPACE_VERSION_INFO;
+
+typedef struct _DFS_INFO_1
+{
+    [string] WCHAR *EntryPath;
+} DFS_INFO_1;
+
+typedef struct _DFS_INFO_2
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    DWORD NumberOfStorages;
+} DFS_INFO_2;
+
+typedef struct _DFS_INFO_3
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    DWORD NumberOfStorages;
+    [size_is(NumberOfStorages)] DFS_STORAGE_INFO *Storage;
+} DFS_INFO_3;
+
+typedef struct _DFS_INFO_4
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    GUID Guid;
+    DWORD NumberOfStorages;
+    [size_is(NumberOfStorages)] DFS_STORAGE_INFO *Storage;
+} DFS_INFO_4;
+
+typedef struct _DFS_INFO_5
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    GUID Guid;
+    unsigned long PropertyFlags;
+    unsigned long MetadataSize;
+    DWORD NumberOfStorages;
+} DFS_INFO_5;
+
+typedef struct _DFS_INFO_6
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    GUID Guid;
+    unsigned long PropertyFlags;
+    unsigned long MetadataSize;
+    DWORD NumberOfStorages;
+    [size_is(NumberOfStorages)] DFS_STORAGE_INFO_1 *Storage;
+} DFS_INFO_6;
+
+typedef struct _DFS_INFO_7
+{
+    GUID GenerationGuid;
+} DFS_INFO_7;
+
+typedef struct _DFS_INFO_8
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout; GUID Guid;
+    unsigned long PropertyFlags;
+    unsigned long MetadataSize;
+    ULONG SecurityDescriptorLength;
+    [size_is(SecurityDescriptorLength)] PUCHAR pSecurityDescriptor;
+    DWORD NumberOfStorages;
+} DFS_INFO_8, *LPDFS_INFO_8;
+
+typedef struct _DFS_INFO_9
+{
+    [string] WCHAR *EntryPath;
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    GUID Guid;
+    unsigned long PropertyFlags;
+    unsigned long MetadataSize;
+    ULONG SecurityDescriptorLength;
+    [size_is(SecurityDescriptorLength)] PUCHAR pSecurityDescriptor;
+    DWORD NumberOfStorages;
+    [size_is(NumberOfStorages)] LPDFS_STORAGE_INFO_1 Storage;
+} DFS_INFO_9, *LPDFS_INFO_9;
+
+typedef struct _DFS_INFO_50
+{
+     unsigned long NamespaceMajorVersion;
+     unsigned long NamespaceMinorVersion;
+     unsigned __int64 NamespaceCapabilities;
+} DFS_INFO_50;
+
+typedef struct _DFS_INFO_100
+{
+    [string] WCHAR *Comment;
+} DFS_INFO_100;
+
+typedef struct _DFS_INFO_101
+{
+    unsigned long State;
+} DFS_INFO_101;
+
+typedef struct _DFS_INFO_102
+{
+    unsigned long Timeout;
+} DFS_INFO_102;
+
+typedef struct _DFS_INFO_103
+{
+    unsigned long PropertyFlagMask;
+    unsigned long PropertyFlags;
+} DFS_INFO_103;
+
+typedef struct _DFS_INFO_104
+{
+    DFS_TARGET_PRIORITY TargetPriority;
+} DFS_INFO_104;
+
+typedef struct _DFS_INFO_105
+{
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    unsigned long PropertyFlagMask;
+    unsigned long PropertyFlags;
+} DFS_INFO_105;
+
+typedef struct _DFS_INFO_106
+{
+    DWORD State;
+    DFS_TARGET_PRIORITY TargetPriority;
+} DFS_INFO_106;
+
+typedef struct _DFS_INFO_107
+{
+    [string] WCHAR *Comment;
+    DWORD State;
+    unsigned long Timeout;
+    unsigned long PropertyFlagMask;
+    unsigned long PropertyFlags;
+    ULONG SecurityDescriptorLength;
+    [size_is(SecurityDescriptorLength)] PUCHAR pSecurityDescriptor;
+} DFS_INFO_107;
+
+typedef struct _DFS_INFO_150
+{
+    ULONG SecurityDescriptorLength;
+    [size_is(SecurityDescriptorLength)] PUCHAR pSecurityDescriptor;
+} DFS_INFO_150;
+
+typedef struct _DFS_INFO_200
+{
+    [string] WCHAR *FtDfsName;
+} DFS_INFO_200;
+
+typedef struct _DFS_INFO_300
+{
+    DWORD Flags;
+    [string] WCHAR *DfsName;
+} DFS_INFO_300;
+
+typedef [switch_type(unsigned long)] union _DFS_INFO_STRUCT
+{
+    [case(1)] DFS_INFO_1 *DfsInfo1;
+    [case(2)] DFS_INFO_2 *DfsInfo2;
+    [case(3)] DFS_INFO_3 *DfsInfo3;
+    [case(4)] DFS_INFO_4 *DfsInfo4;
+    [case(5)] DFS_INFO_5 *DfsInfo5;
+    [case(6)] DFS_INFO_6 *DfsInfo6;
+    [case(7)] DFS_INFO_7 *DfsInfo7;
+    [case(8)] DFS_INFO_8 *DfsInfo8;
+    [case(9)] DFS_INFO_9 *DfsInfo9;
+    [case(50)] DFS_INFO_50 *DfsInfo50;
+    [case(100)] DFS_INFO_100 *DfsInfo100;
+    [case(101)] DFS_INFO_101 *DfsInfo101;
+    [case(102)] DFS_INFO_102 *DfsInfo102;
+    [case(103)] DFS_INFO_103 *DfsInfo103;
+    [case(104)] DFS_INFO_104 *DfsInfo104;
+    [case(105)] DFS_INFO_105 *DfsInfo105;
+    [case(106)] DFS_INFO_106 *DfsInfo106;
+    [case(107)] DFS_INFO_107 *DfsInfo107;
+    [case(150)] DFS_INFO_150 *DfsInfo150;
+    [default];
+} DFS_INFO_STRUCT;
+
+typedef struct _DFS_INFO_1_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_1 *Buffer;
+} DFS_INFO_1_CONTAINER;
+
+typedef struct _DFS_INFO_2_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_2 *Buffer;
+} DFS_INFO_2_CONTAINER;
+
+typedef struct _DFS_INFO_3_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_3 *Buffer;
+} DFS_INFO_3_CONTAINER;
+
+typedef struct _DFS_INFO_4_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_4 *Buffer;
+} DFS_INFO_4_CONTAINER;
+
+typedef struct _DFS_INFO_5_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_5 *Buffer;
+} DFS_INFO_5_CONTAINER;
+
+typedef struct _DFS_INFO_6_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_6 *Buffer;
+} DFS_INFO_6_CONTAINER;
+
+typedef struct _DFS_INFO_8_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPDFS_INFO_8 Buffer;
+} DFS_INFO_8_CONTAINER, *LPDFS_INFO_8_CONTAINER;
+
+typedef struct _DFS_INFO_9_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPDFS_INFO_9 Buffer;
+} DFS_INFO_9_CONTAINER, *LPDFS_INFO_9_CONTAINER;
+
+typedef struct _DFS_INFO_200_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_200 *Buffer;
+} DFS_INFO_200_CONTAINER;
+
+typedef struct _DFS_INFO_300_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] DFS_INFO_300 *Buffer;
+} DFS_INFO_300_CONTAINER;
+
+typedef struct _DFS_INFO_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union
+    {
+        [case(1)] DFS_INFO_1_CONTAINER *DfsInfo1Container;
+        [case(2)] DFS_INFO_2_CONTAINER *DfsInfo2Container;
+        [case(3)] DFS_INFO_3_CONTAINER *DfsInfo3Container;
+        [case(4)] DFS_INFO_4_CONTAINER *DfsInfo4Container;
+        [case(5)] DFS_INFO_5_CONTAINER *DfsInfo5Container;
+        [case(6)] DFS_INFO_6_CONTAINER *DfsInfo6Container;
+        [case(8)] DFS_INFO_8_CONTAINER *DfsInfo8Container;
+        [case(9)] DFS_INFO_9_CONTAINER *DfsInfo9Container;
+        [case(200)] DFS_INFO_200_CONTAINER *DfsInfo200Container;
+        [case(300)] DFS_INFO_300_CONTAINER *DfsInfo300Container;
+    } DfsInfoContainer;
+} DFS_INFO_ENUM_STRUCT;
+
+[
+    uuid(4fc742e0-4a10-11cf-8273-00aa004ae673),
+    version(3.0),
+    pointer_default(unique),
+#ifdef __midl
+    ms_union,
+#endif
+    endpoint("ncacn_np:[\\pipe\\netdfs]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+]
+interface netdfs
+{
+    /* Function 0 */
+    DWORD
+    __stdcall
+    NetrDfsManagerGetVersion();
+
+    /* Function 1 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAdd(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in, unique, string] WCHAR *Comment,
+        [in] DWORD Flags);
+
+    /* Function 2 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRemove(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, unique, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName);
+
+    /* Function 3 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsSetInfo(
+        [in, string] WCHAR * DfsEntryPath,
+        [in, unique, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] DFS_INFO_STRUCT *DfsInfo);
+
+    /* Function 4 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsGetInfo(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, unique, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in] DWORD Level,
+        [out, switch_is(Level)] DFS_INFO_STRUCT *DfsInfo);
+
+    /* Function 5 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsEnum(
+        [in] DWORD Level,
+        [in] DWORD PrefMaxLen,
+        [in, out, unique] DFS_INFO_ENUM_STRUCT *DfsEnum,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    /* Function 6 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRename(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, string] WCHAR *NewDfsEntryPath,
+        [in] unsigned long Flags);
+
+    /* Function 7 - Not used on wire */
+    void
+    __stdcall
+    NetrDfsMove(void);
+
+    /* Function 8 - Not used on wire */
+    void
+    __stdcall
+    NetrDfsManagerGetConfigInfo(void);
+
+    /* Function 9 - Not used on wire */
+    void
+    __stdcall
+    NetrDfsManagerSendSiteInfo(void);
+
+    /* Function 10 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAddFtRoot(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *DcName,
+        [in, string] WCHAR *RootShare,
+        [in, string] WCHAR *FtDfsName,
+        [in, string] WCHAR *Comment,
+        [in, string] WCHAR *ConfigDN,
+        [in] BOOLEAN NewFtDfs,
+        [in] DWORD ApiFlags,
+        [in, out, unique] DFSM_ROOT_LIST **ppRootList);
+
+    /* Function 11 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRemoveFtRoot(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *DcName,
+        [in, string] WCHAR *RootShare,
+        [in, string] WCHAR *FtDfsName,
+        [in] DWORD ApiFlags,
+        [in, out, unique] DFSM_ROOT_LIST **ppRootList);
+
+    /* Function 12 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAddStdRoot(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *RootShare,
+        [in, string] WCHAR *Comment,
+        [in] DWORD ApiFlags);
+
+    /* Function 13 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRemoveStdRoot(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *RootShare,
+        [in] DWORD ApiFlags);
+
+    /* Function 14 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsManagerInitialize(
+        [in, string] WCHAR *ServerName,
+        [in] DWORD Flags);
+
+    /* Function 15 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAddStdRootForced(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *RootShare,
+        [in, string] WCHAR *Comment,
+        [in, string] WCHAR *Share);
+
+    /* Function 16 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsGetDcAddress(
+        [in, string] WCHAR *ServerName,
+        [in, out, string] WCHAR **DcName,
+        [in, out] BOOLEAN *IsRoot,
+        [in, out] unsigned long *Timeout);
+
+    /* Function 17 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsSetDcAddress(
+        [in, string] WCHAR *ServerName,
+        [in, string] WCHAR *DcName,
+        [in] DWORD Timeout,
+        [in] DWORD Flags);
+
+    /* Function 18 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsFlushFtTable(
+        [in, string] WCHAR *DcName,
+        [in, string] WCHAR *wszFtDfsName);
+
+    /* Function 19 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAdd2(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, string] WCHAR *DcName,
+        [in, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in, unique, string] WCHAR *Comment,
+        [in] DWORD Flags,
+        [in, out, unique] DFSM_ROOT_LIST **ppRootList);
+
+    /* Function 20 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRemove2(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, string] WCHAR *DcName,
+        [in, unique, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in, out, unique] DFSM_ROOT_LIST **ppRootList);
+
+    /* Function 21 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsEnumEx(
+        [in, string] WCHAR *DfsEntryPath,
+        [in] DWORD Level,
+        [in] DWORD PrefMaxLen,
+        [in, out, unique] DFS_INFO_ENUM_STRUCT *DfsEnum,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    /* Function 22 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsSetInfo2(
+        [in, string] WCHAR *DfsEntryPath,
+        [in, string] WCHAR *DcName,
+        [in, unique, string] WCHAR *ServerName,
+        [in, unique, string] WCHAR *ShareName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] DFS_INFO_STRUCT *pDfsInfo,
+        [in, out, unique] DFSM_ROOT_LIST **ppRootList);
+
+    /* Function 23 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsAddRootTarget(
+        [in, unique, string] LPWSTR pDfsPath,
+        [in, unique, string] LPWSTR pTargetPath,
+        [in] ULONG MajorVersion,
+        [in, unique, string] LPWSTR pComment,
+        [in] BOOLEAN NewNamespace, [in] ULONG Flags);
+
+    /* Function 24 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsRemoveRootTarget(
+        [in, unique, string] LPWSTR pDfsPath,
+        [in, unique, string] LPWSTR pTargetPath,
+        [in] ULONG Flags);
+
+    /* Function 25 */
+    NET_API_STATUS
+    __stdcall
+    NetrDfsGetSupportedNamespaceVersion(
+        [in] DFS_NAMESPACE_VERSION_ORIGIN Origin,
+        [in, unique, string] NETDFS_SERVER_OR_DOMAIN_HANDLE pName,
+        [out] PDFS_SUPPORTED_NAMESPACE_VERSION_INFO pVersionInfo);
+}

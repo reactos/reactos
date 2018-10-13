@@ -1321,7 +1321,7 @@ BOOL WINAPI SnmpExtensionInit(DWORD dwUptimeReference,
         pFirstSupportedRegion);
 
     minSupportedIDLength = UINT_MAX;
-    for (i = 0; i < sizeof(supportedIDs) / sizeof(supportedIDs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(supportedIDs); i++)
     {
         if (supportedIDs[i].init)
             supportedIDs[i].init();
@@ -1337,7 +1337,7 @@ static void cleanup(void)
 {
     UINT i;
 
-    for (i = 0; i < sizeof(supportedIDs) / sizeof(supportedIDs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(supportedIDs); i++)
         if (supportedIDs[i].cleanup)
             supportedIDs[i].cleanup();
 }

@@ -3,6 +3,7 @@ environment:
     - BuildType: "msvc-x64"
     - BuildType: "msvc"
     - BuildType: "clang-cl"
+#     - BuildType: vssolution
 
 version: reactos.appveyor.{build}
 skip_branch_with_pr: true
@@ -39,3 +40,18 @@ build_script:
 
 test: off
 deploy: off
+
+for:
+-
+  matrix:
+    only:
+      - BuildType: vssolution
+
+  build_script:
+    - set PATH=C:\RosCMakeNinja\bin;%PATH%
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+    - cmake --version
+    - md C:\ros_build
+    - cd C:\ros_build
+    - call %APPVEYOR_BUILD_FOLDER%\configure.cmd VSSolution -DENABLE_ROSTESTS=1
+    - msbuild /verbosity:quiet /target:bootcd REACTOS.sln

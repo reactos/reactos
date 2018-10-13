@@ -99,9 +99,9 @@ USBSTOR_IsCSWValid(
         return FALSE;
     }
 
-    if (Context->csw->Tag != (ULONG)Context->csw)
+    if (Context->csw->Tag != (ULONG_PTR)Context->csw)
     {
-        DPRINT1("[USBSTOR] Expected Tag %x but got %x\n", (ULONG)Context->csw, Context->csw->Tag);
+        DPRINT1("[USBSTOR] Expected Tag %Ix but got %x\n", (ULONG_PTR)Context->csw, Context->csw->Tag);
         return FALSE;
     }
 
@@ -660,7 +660,7 @@ USBSTOR_SendRequest(
     //
     // now build the cbw
     //
-    USBSTOR_BuildCBW((ULONG)Context->cbw,
+    USBSTOR_BuildCBW(PtrToUlong(Context->cbw),
                      TransferDataLength,
                      PDODeviceExtension->LUN,
                      CommandLength,

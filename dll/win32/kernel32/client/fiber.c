@@ -1,13 +1,14 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS System Libraries
- * FILE:        dll/win32/kernel32/client/fiber.c
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Fiber Implementation
- * PROGRAMMERS:
- *              Alex Ionescu (alex@relsoft.net)
- *              KJK::Hyperion <noog@libero.it>
+ * COPYRIGHT:   Copyright 2005-2011 Alex Ionescu (alex@relsoft.net)
+ *              Copyright 2003-2008 KJK::Hyperion (noog@libero.it)
+ *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
  */
+
 #include <k32.h>
+#include <ndk/rtltypes.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,6 +22,7 @@ C_ASSERT(FIELD_OFFSET(FIBER, FiberContext) == 0x14);
 C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2E0);
 C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E4);
 C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E8);
+C_ASSERT(RTL_FLS_MAXIMUM_AVAILABLE == FLS_MAXIMUM_AVAILABLE);
 #endif // _M_IX86
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -29,7 +31,27 @@ VOID
 WINAPI
 BaseRundownFls(_In_ PVOID FlsData)
 {
-    /* No FLS support yet */
+    ULONG n, FlsHighIndex;
+    PRTL_FLS_DATA pFlsData;
+    PFLS_CALLBACK_FUNCTION lpCallback;
+
+    pFlsData = FlsData;
+
+    RtlAcquirePebLock();
+    FlsHighIndex = NtCurrentPeb()->FlsHighIndex;
+    RemoveEntryList(&pFlsData->ListEntry);
+    RtlReleasePebLock();
+
+    for (n = 1; n <= FlsHighIndex; ++n)
+    {
+        lpCallback = NtCurrentPeb()->FlsCallback[n];
+        if (lpCallback && pFlsData->Data[n])
+        {
+            lpCallback(pFlsData->Data[n]);
+        }
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FlsData);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -61,7 +83,7 @@ ConvertFiberToThread(VOID)
 
     /* Free the fiber */
     ASSERT(FiberData != NULL);
-    RtlFreeHeap(GetProcessHeap(),
+    RtlFreeHeap(RtlGetProcessHeap(),
                 0,
                 FiberData);
 
@@ -295,7 +317,7 @@ DeleteFiber(_In_ LPVOID lpFiber)
     RtlFreeActivationContextStack(Fiber->ActivationContextStackPointer);
 
     /* Free the fiber data */
-    RtlFreeHeap(GetProcessHeap(),
+    RtlFreeHeap(RtlGetProcessHeap(),
                 0,
                 lpFiber);
 }
@@ -320,11 +342,11 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
 {
     DWORD dwFlsIndex;
     PPEB Peb = NtCurrentPeb();
-    PVOID *ppFlsSlots;
+    PRTL_FLS_DATA pFlsData;
 
     RtlAcquirePebLock();
 
-    ppFlsSlots = NtCurrentTeb()->FlsData;
+    pFlsData = NtCurrentTeb()->FlsData;
 
     if (!Peb->FlsCallback &&
         !(Peb->FlsCallback = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -338,9 +360,8 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
         dwFlsIndex = RtlFindClearBitsAndSet(Peb->FlsBitmap, 1, 1);
         if (dwFlsIndex != FLS_OUT_OF_INDEXES)
         {
-            if (!ppFlsSlots &&
-                !(ppFlsSlots = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                                               (FLS_MAXIMUM_AVAILABLE + 2) * sizeof(PVOID))))
+            if (!pFlsData &&
+                !(pFlsData = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RTL_FLS_DATA))))
             {
                 RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
                 dwFlsIndex = FLS_OUT_OF_INDEXES;
@@ -349,13 +370,16 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
             else
             {
                 if (!NtCurrentTeb()->FlsData)
-                    NtCurrentTeb()->FlsData = ppFlsSlots;
+                {
+                    NtCurrentTeb()->FlsData = pFlsData;
+                    InsertTailList(&Peb->FlsListHead, &pFlsData->ListEntry);
+                }
 
-                if (lpCallback)
-                    DPRINT1("FlsAlloc: Got lpCallback 0x%p, UNIMPLEMENTED!\n", lpCallback);
-
-                ppFlsSlots[dwFlsIndex + 2] = NULL; /* clear the value */
+                pFlsData->Data[dwFlsIndex] = NULL; /* clear the value */
                 Peb->FlsCallback[dwFlsIndex] = lpCallback;
+
+                if (dwFlsIndex > Peb->FlsHighIndex)
+                    Peb->FlsHighIndex = dwFlsIndex;
             }
         }
         else
@@ -377,7 +401,6 @@ FlsFree(DWORD dwFlsIndex)
 {
     BOOL ret;
     PPEB Peb = NtCurrentPeb();
-    PVOID *ppFlsSlots;
 
     if (dwFlsIndex >= FLS_MAXIMUM_AVAILABLE)
     {
@@ -387,21 +410,44 @@ FlsFree(DWORD dwFlsIndex)
 
     RtlAcquirePebLock();
 
-    ppFlsSlots = NtCurrentTeb()->FlsData;
-    ret = RtlAreBitsSet(Peb->FlsBitmap, dwFlsIndex, 1);
-    if (ret)
+    _SEH2_TRY
     {
-        RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
-        /* FIXME: call Fls callback */
-        /* FIXME: add equivalent of ThreadZeroTlsCell here */
-        if (ppFlsSlots)
-            ppFlsSlots[dwFlsIndex + 2] = NULL;
+        ret = RtlAreBitsSet(Peb->FlsBitmap, dwFlsIndex, 1);
+        if (ret)
+        {
+            PLIST_ENTRY Entry;
+            PFLS_CALLBACK_FUNCTION lpCallback;
+
+            RtlClearBits(Peb->FlsBitmap, dwFlsIndex, 1);
+            lpCallback = Peb->FlsCallback[dwFlsIndex];
+
+            for (Entry = Peb->FlsListHead.Flink; Entry != &Peb->FlsListHead; Entry = Entry->Flink)
+            {
+                PRTL_FLS_DATA pFlsData;
+
+                pFlsData = CONTAINING_RECORD(Entry, RTL_FLS_DATA, ListEntry);
+                if (pFlsData->Data[dwFlsIndex])
+                {
+                    if (lpCallback)
+                    {
+                        lpCallback(pFlsData->Data[dwFlsIndex]);
+                    }
+                    pFlsData->Data[dwFlsIndex] = NULL;
+                }
+            }
+            Peb->FlsCallback[dwFlsIndex] = NULL;
+        }
+        else
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+        }
     }
-    else
+    _SEH2_FINALLY
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        RtlReleasePebLock();
     }
-    RtlReleasePebLock();
+    _SEH2_END;
+
     return ret;
 }
 
@@ -413,17 +459,17 @@ PVOID
 WINAPI
 FlsGetValue(DWORD dwFlsIndex)
 {
-    PVOID *ppFlsSlots;
+    PRTL_FLS_DATA pFlsData;
 
-    ppFlsSlots = NtCurrentTeb()->FlsData;
-    if (!dwFlsIndex || dwFlsIndex >= FLS_MAXIMUM_AVAILABLE || !ppFlsSlots)
+    pFlsData = NtCurrentTeb()->FlsData;
+    if (!dwFlsIndex || dwFlsIndex >= FLS_MAXIMUM_AVAILABLE || !pFlsData)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
     SetLastError(ERROR_SUCCESS);
-    return ppFlsSlots[dwFlsIndex + 2];
+    return pFlsData->Data[dwFlsIndex];
 }
 
 
@@ -435,22 +481,31 @@ WINAPI
 FlsSetValue(DWORD dwFlsIndex,
             PVOID lpFlsData)
 {
-    PVOID *ppFlsSlots;
+    PRTL_FLS_DATA pFlsData;
 
     if (!dwFlsIndex || dwFlsIndex >= FLS_MAXIMUM_AVAILABLE)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    pFlsData = NtCurrentTeb()->FlsData;
+
     if (!NtCurrentTeb()->FlsData &&
         !(NtCurrentTeb()->FlsData = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                    (FLS_MAXIMUM_AVAILABLE + 2) * sizeof(PVOID))))
+                                                    sizeof(RTL_FLS_DATA))))
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
-    ppFlsSlots = NtCurrentTeb()->FlsData;
-    ppFlsSlots[dwFlsIndex + 2] = lpFlsData;
+    if (!pFlsData)
+    {
+        pFlsData = NtCurrentTeb()->FlsData;
+        RtlAcquirePebLock();
+        InsertTailList(&NtCurrentPeb()->FlsListHead, &pFlsData->ListEntry);
+        RtlReleasePebLock();
+    }
+    pFlsData->Data[dwFlsIndex] = lpFlsData;
     return TRUE;
 }
 

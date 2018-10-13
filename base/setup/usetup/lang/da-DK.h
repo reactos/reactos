@@ -1791,6 +1791,8 @@ MUI_STRING daDKStrings[] =
     "   Udf›rt..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Genstart"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Kunne ikke †bne konsollen\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

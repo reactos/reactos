@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -199,5 +199,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "&Afișează ferestrele deschise"
 END

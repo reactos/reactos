@@ -174,7 +174,7 @@ static WORD DosCopyEnvironmentBlock(IN LPCSTR Environment OPTIONAL,
                                     IN LPCSTR ProgramName)
 {
     PCHAR Ptr, DestBuffer = NULL;
-    ULONG TotalSize = 0;
+    SIZE_T TotalSize = 0;
     WORD DestSegment;
 
     /* If we have an environment strings list, compute its size */

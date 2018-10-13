@@ -2256,7 +2256,7 @@ MmArmInitSystem(IN ULONG Phase,
         ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);
 
         /* Set commit limit */
-        MmTotalCommitLimit = 2 * _1GB;
+        MmTotalCommitLimit = (2 * _1GB) >> PAGE_SHIFT;
         MmTotalCommitLimitMaximum = MmTotalCommitLimit;
 
         /* Has the allocation fragment been setup? */

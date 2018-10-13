@@ -1785,6 +1785,8 @@ MUI_STRING csCZStrings[] =
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Restartovat poŸ¡taŸ"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Nelze otevý¡t konzoli\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

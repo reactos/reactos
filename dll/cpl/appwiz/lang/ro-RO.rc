@@ -1,7 +1,7 @@
 /* 
  * FILE:             dll/cpl/appwiz/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot md)
+ * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -84,7 +84,8 @@ BEGIN
     IDS_DOWNLOADING "În curs de descărcare…"
     IDS_INSTALLING "În curs de instalare…"
     IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_NEW_INTERNET_SHORTCUT "Creare scurtătură la Internet"
+    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Eșec în crearea scurtăturii la Internet."
+    IDS_CANTMAKESHORTCUT "Eșec în crearea scurtăturii."
 END

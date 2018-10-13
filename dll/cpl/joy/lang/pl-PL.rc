@@ -78,8 +78,8 @@ BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
     DEFPUSHBUTTON "OK", IDOK, 106, 65, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 163, 65, 50, 14
-    LTEXT "Wybierz urządzenie, którego chcesz używać domyślnie ze starszymi programami.", -1, 7, 7, 208, 10
-    LTEXT "&Urządzenie preferowane:", -1, 34, 24, 70, 10
+    LTEXT "Wybierz urządzenie, którego chcesz używać domyślnie ze starszymi programami.", -1, 7, 2, 208, 16
+    LTEXT "&Urządzenie preferowane:", -1, 34, 24, 100, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END
 

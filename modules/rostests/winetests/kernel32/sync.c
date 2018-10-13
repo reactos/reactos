@@ -2644,6 +2644,9 @@ START_TEST(sync)
     int argc;
     HMODULE hdll = GetModuleHandleA("kernel32.dll");
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
+#ifdef __REACTOS__
+    HMODULE hdll_vista = GetModuleHandleA("kernel32_vista.dll");
+#endif
 
     pInitOnceInitialize = (void *)GetProcAddress(hdll, "InitOnceInitialize");
     pInitOnceExecuteOnce = (void *)GetProcAddress(hdll, "InitOnceExecuteOnce");
@@ -2667,6 +2670,28 @@ START_TEST(sync)
     pNtWaitForMultipleObjects = (void *)GetProcAddress(hntdll, "NtWaitForMultipleObjects");
     pRtlInterlockedPushListSList = (void *)GetProcAddress(hntdll, "RtlInterlockedPushListSList");
     pRtlInterlockedPushListSListEx = (void *)GetProcAddress(hntdll, "RtlInterlockedPushListSListEx");
+
+#ifdef __REACTOS__
+    if (!pInitializeConditionVariable)
+    {
+        pInitializeConditionVariable = (void *)GetProcAddress(hdll_vista, "InitializeConditionVariable");
+        pSleepConditionVariableCS = (void *)GetProcAddress(hdll_vista, "SleepConditionVariableCS");
+        pSleepConditionVariableSRW = (void *)GetProcAddress(hdll_vista, "SleepConditionVariableSRW");
+        pWakeAllConditionVariable = (void *)GetProcAddress(hdll_vista, "WakeAllConditionVariable");
+        pWakeConditionVariable = (void *)GetProcAddress(hdll_vista, "WakeConditionVariable");
+    }
+
+    if (!pInitializeSRWLock)
+    {
+        pInitializeSRWLock = (void *)GetProcAddress(hdll_vista, "InitializeSRWLock");
+        pAcquireSRWLockExclusive = (void *)GetProcAddress(hdll_vista, "AcquireSRWLockExclusive");
+        pAcquireSRWLockShared = (void *)GetProcAddress(hdll_vista, "AcquireSRWLockShared");
+        pReleaseSRWLockExclusive = (void *)GetProcAddress(hdll_vista, "ReleaseSRWLockExclusive");
+        pReleaseSRWLockShared = (void *)GetProcAddress(hdll_vista, "ReleaseSRWLockShared");
+        pTryAcquireSRWLockExclusive = (void *)GetProcAddress(hdll_vista, "TryAcquireSRWLockExclusive");
+        pTryAcquireSRWLockShared = (void *)GetProcAddress(hdll_vista, "TryAcquireSRWLockShared");
+    }
+#endif
 
     argc = winetest_get_mainargs( &argv );
     if (argc >= 3)

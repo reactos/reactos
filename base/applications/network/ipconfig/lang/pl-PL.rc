@@ -9,7 +9,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_BCAST "Broadcast"
+    IDS_BCAST "Transmisja"
     IDS_P2P "Peer To Peer"
     IDS_MIXED "Mieszany"
     IDS_HYBRID "Hybrydowy"

@@ -453,8 +453,8 @@ ContinueDebugEvent(IN DWORD dwProcessId,
     NTSTATUS Status;
 
     /* Set the Client ID */
-    ClientId.UniqueProcess = (HANDLE)dwProcessId;
-    ClientId.UniqueThread = (HANDLE)dwThreadId;
+    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
+    ClientId.UniqueThread = UlongToHandle(dwThreadId);
 
     /* Continue debugging */
     Status = DbgUiContinue(&ClientId, dwContinueStatus);

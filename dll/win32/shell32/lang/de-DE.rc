@@ -457,8 +457,8 @@ BEGIN
     PUSHBUTTON "&Löschen", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
     GROUPBOX "Details zum Dateityp '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 170, 249, 70
     LTEXT "Öffnen mit:", -1, 12, 180, 40, 10
-    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
-    LTEXT "Name", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
+    CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
+    LTEXT "Name", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
     PUSHBUTTON "Än&dern...", IDC_FILETYPES_CHANGE, 200, 180, 50, 14, WS_TABSTOP
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 30
     PUSHBUTTON "&Erweitert", IDC_FILETYPES_ADVANCED, 200, 215, 50, 14, WS_TABSTOP
@@ -622,7 +622,7 @@ BEGIN
     PUSHBUTTON "Durchsuchen...", IDC_BUTTON_PATH, 126, 17, 59, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 114, 14, ES_AUTOHSCROLL
     LTEXT "Wählen Sie ein Symbol aus der folgenden Liste:", -1, 7, 36, 179, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 122, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 135, 179, 50, 14
 END
@@ -643,74 +643,74 @@ Sind Sie sicher, dass Sie diese Datei öffnen möchten?", IDC_STATIC, 35, 5, 230
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Eine neue Erweiterung erstellen"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Dateierweiterung:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< Er&weitert", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Verknüpfung mir Dateityp:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "Dateityp bearbeiten"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Anderes &Symbol...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "A&ktionen:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    PUSHBUTTON "&Neu...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Bearbeiten...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Entfernen", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "&Als Standard", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "Ö&ffnen nach dem Download bestätigen", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "E&rweiterung immer anzeigen", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "Im selben Fenster &durchsuchen", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "Neue Aktion"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "&Vorgang:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "An&wendung für diesen Vorgang:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    PUSHBUTTON "D&urchsuchen...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&DDE verwenden", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Anpassen"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Anpassen", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "Diesen Ordner optimieren für:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    AUTOCHECKBOX "&Vorlage für alle Unterordner übernehmen", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Ordnerbilder", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Wählen Sie eine Datei aus, die auf diesem Ordnersymbol angezeigt wird.", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "&Datei auswählen...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "&Wiederherstellen", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
     LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Ordnersymbole", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Sie können das Ordnersymbol ändern. Wenn Sie das Symbol ändern, wird keine Vorschau der Ordnerinhalte mehr angezeigt.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "Anderes &Symbol...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -951,20 +951,20 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Verschlüsselte oder komprimierte NTFS-Dateien farbig anzeigen"
     IDS_ADVANCED_SHOW_INFO_TIP "Popupinformationen für Ordner- und Desktop-Elemente anzeigen"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< Er&weitert"
+    IDS_NEWEXT_ADVANCED_RIGHT "&Erweitert >>"
+    IDS_NEWEXT_NEW "<Neu>"
+    IDS_NEWEXT_SPECIFY_EXT "Es muss eine Erweiterung angegeben werden."
+    IDS_NEWEXT_ALREADY_ASSOC "Die Erweiterung %s ist bereits mit dem Dateityp %s verknüpft. Möchten Sie die Verknüpfung von %s mit %s entfernen und einen neuen Dateityp erstellen?"
+    IDS_NEWEXT_EXT_IN_USE "Erweiterung wird bereits verwendet"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_REMOVE_EXT "Nach dem Entfernen einer registrierten Dateinamenerweiterung können Dateien mit dieser Erweiterung nicht mehr durch Doppelklicken auf das Dateisymbol geöffnet werden.\n\nSoll die Erweiterung trotzdem entfernt werden?"
+    IDS_SPECIFY_ACTION "Geben Sie einen Vorgang an."
+    IDS_INVALID_PROGRAM "Das angegebene Programm wurde nicht gefunden. Stellen Sie sicher, dass die Dateinamen- und Pfadangabe richtig sind."
+    IDS_REMOVE_ACTION "Soll diese Aktion wirklich entfernt werden?"
+    IDS_ACTION_EXISTS "Die Aktion '%s' ist für diesen Dateityp bereits registriert. Geben Sie einen anderen Namen ein und versuchen Sie es dann erneut."
+    IDS_EXE_FILTER "Programme\0*.exe\0All Files\0*.*\0"
+    IDS_EDITING_ACTION "Vorgang bearbeiten für Typ: "
+    IDS_NO_ICONS "Die Datei '%s' enthält keine Symbole.\n\nWählen Sie ein Symbol aus der Liste oder wählen Sie eine andere Datei."
+    IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
 END

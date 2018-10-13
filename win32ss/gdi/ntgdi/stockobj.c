@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/stockobj.c
  * PURPOSE:         Stock objects functions
- * PROGRAMMER:
+ * PROGRAMMERS:     Colin Finck <colin@reactos.org>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
@@ -67,33 +68,33 @@ static LOGFONTW OEMFixedFont =
     };
 
 static LOGFONTW AnsiFixedFont =
-    { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       OUT_DEFAULT_PRECIS, /*CLIP_DEFAULT_PRECIS*/ CLIP_STROKE_PRECIS, /*DEFAULT_QUALITY*/ PROOF_QUALITY, FF_DONTCARE | FIXED_PITCH, L"Courier"
     };
 
 static LOGFONTW AnsiVarFont =
-    { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
       OUT_DEFAULT_PRECIS, /*CLIP_DEFAULT_PRECIS*/ CLIP_STROKE_PRECIS, /*DEFAULT_QUALITY*/ PROOF_QUALITY, FF_DONTCARE | VARIABLE_PITCH, L"MS Sans Serif"
     };
 
 static LOGFONTW SystemFont =
-    { 12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
       OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | VARIABLE_PITCH, L"System"
     };
 
 static LOGFONTW DeviceDefaultFont =
-    { 12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
-      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | VARIABLE_PITCH, L"System"
+    { 16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_SWISS | VARIABLE_PITCH, L"System"
     };
 
 static LOGFONTW SystemFixedFont =
-    { 16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
       OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | FIXED_PITCH, L"Fixedsys"
     };
 
 static LOGFONTW DefaultGuiFont =
-    { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, /*DEFAULT_QUALITY*/ PROOF_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Shell Dlg"
+    { -11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, /*DEFAULT_QUALITY*/ PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"MS Shell Dlg"
     };
 
 HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
@@ -140,6 +141,105 @@ IntCreateStockPen(DWORD dwPenStyle,
     return hPen;
 }
 
+static VOID FASTCALL
+CreateStockFonts(void)
+{
+    USHORT ActiveCodePage, OemCodePage;
+    BYTE bActiveCharSet, bOemCharSet;
+    BOOL bIsCJK;
+    static const WCHAR SimSun[] = { 0x5B8B, 0x4F53, 0 };
+    static const WCHAR MingLiU[] = { 0x7D30, 0x660E, 0x9AD4, 0 };
+    static const WCHAR Batang[] = { 0xBC14, 0xD0D5, 0 };
+
+    RtlGetDefaultCodePage(&ActiveCodePage, &OemCodePage);
+    bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
+    bOemCharSet = IntCharSetFromCodePage(OemCodePage);
+
+    if (bOemCharSet == DEFAULT_CHARSET)
+        bOemCharSet = OEM_CHARSET;
+
+    switch (ActiveCodePage)
+    {
+        case 936:
+            /* Simplified Chinese */
+            bIsCJK = TRUE;
+            wcscpy(DefaultGuiFont.lfFaceName, SimSun);
+            break;
+
+        case 950:
+            /* Traditional Chinese */
+            bIsCJK = TRUE;
+            wcscpy(DefaultGuiFont.lfFaceName, MingLiU);
+            break;
+
+        case 932:
+            /* Japanese */
+            bIsCJK = TRUE;
+            wcscpy(DefaultGuiFont.lfFaceName, L"MS UI Gothic");
+            break;
+
+        case 949:
+        case 1361:
+            /* Korean */
+            bIsCJK = TRUE;
+            wcscpy(DefaultGuiFont.lfFaceName, Batang);
+            break;
+
+        default:
+            /* Otherwise */
+            bIsCJK = FALSE;
+            wcscpy(DefaultGuiFont.lfFaceName, L"MS Shell Dlg");
+            break;
+    }
+
+    if (bIsCJK)
+    {
+        OEMFixedFont.lfHeight = 18;
+        OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+        SystemFont.lfHeight = 18;
+        SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+        DeviceDefaultFont.lfHeight = 18;
+        DeviceDefaultFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+        SystemFixedFont.lfHeight = 18;
+        SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+        DefaultGuiFont.lfHeight = -12;
+    }
+    else
+    {
+        OEMFixedFont.lfHeight = 12;
+        OEMFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+        SystemFont.lfHeight = 16;
+        SystemFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
+        DeviceDefaultFont.lfHeight = 16;
+        DeviceDefaultFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
+        if (bActiveCharSet == RUSSIAN_CHARSET)
+        {
+            SystemFixedFont.lfHeight = 16;
+            SystemFixedFont.lfPitchAndFamily = FF_SWISS | FIXED_PITCH;
+        }
+        else
+        {
+            SystemFixedFont.lfHeight = 15;
+            SystemFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+        }
+        DefaultGuiFont.lfHeight = -11;
+    }
+
+    OEMFixedFont.lfCharSet = bOemCharSet;
+    SystemFont.lfCharSet = bActiveCharSet;
+    DeviceDefaultFont.lfCharSet = bActiveCharSet;
+    SystemFixedFont.lfCharSet = bActiveCharSet;
+    DefaultGuiFont.lfCharSet = bActiveCharSet;
+
+    TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
+    TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
+    TextIntCreateFontIndirect(&AnsiVarFont, (HFONT*)&StockObjects[ANSI_VAR_FONT]);
+    TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
+    TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
+    TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
+    TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+}
+
 /*!
  * Creates a bunch of stock objects: brushes, pens, fonts.
 */
@@ -168,13 +268,7 @@ CreateStockObjects(void)
     StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
     StockObjects[DEFAULT_BITMAP] = GreCreateBitmap(1, 1, 1, 1, NULL);
 
-    (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&AnsiVarFont, (HFONT*)&StockObjects[ANSI_VAR_FONT]);
-    (void) TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
-    (void) TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
-    (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+    CreateStockFonts();
 
     StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)gppalDefault->BaseObject.hHmgr;
 

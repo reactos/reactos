@@ -814,6 +814,7 @@ BOOL FASTCALL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfQuality = NONANTIALIASED_QUALITY;
     RtlCopyMemory(lf.lfFaceName, L"Marlett", sizeof(L"Marlett"));
     hFont = GreCreateFontIndirectW(&lf);
     /* save font and text color */

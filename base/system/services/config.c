@@ -15,6 +15,25 @@
 #define NDEBUG
 #include <debug.h>
 
+struct ustring
+{
+    DWORD Length;
+    DWORD MaximumLength;
+    unsigned char *Buffer;
+};
+
+NTSTATUS
+WINAPI
+SystemFunction005(
+    const struct ustring *in,
+    const struct ustring *key,
+    struct ustring *out);
+
+NTSTATUS
+WINAPI
+SystemFunction028(
+    IN PVOID ContextHandle,
+    OUT LPBYTE SessionKey);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -675,6 +694,73 @@ done:
         dwError = RegDeleteKeyW(hKey, pszSubKey);
 
     return dwError;
+}
+
+
+DWORD
+ScmDecryptPassword(
+    _In_ PBYTE pPassword,
+    _In_ DWORD dwPasswordSize,
+    _Out_ PWSTR *pClearTextPassword)
+{
+    struct ustring inData, keyData, outData;
+    BYTE SessionKey[16];
+    PWSTR pBuffer;
+    NTSTATUS Status;
+
+    /* Get the session key */
+    Status = SystemFunction028(NULL,
+                               SessionKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SystemFunction028 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    inData.Length = dwPasswordSize;
+    inData.MaximumLength = inData.Length;
+    inData.Buffer = pPassword;
+
+    keyData.Length = sizeof(SessionKey);
+    keyData.MaximumLength = keyData.Length;
+    keyData.Buffer = SessionKey;
+
+    outData.Length = 0;
+    outData.MaximumLength = 0;
+    outData.Buffer = NULL;
+
+    /* Get the required buffer size */
+    Status = SystemFunction005(&inData,
+                               &keyData,
+                               &outData);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        DPRINT1("SystemFunction005 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Allocate a buffer for the clear text password */
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, outData.Length);
+    if (pBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    outData.MaximumLength = outData.Length;
+    outData.Buffer = (unsigned char *)pBuffer;
+
+    /* Decrypt the password */
+    Status = SystemFunction005(&inData,
+                               &keyData,
+                               &outData);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SystemFunction005 failed (Status 0x%08lx)\n", Status);
+        HeapFree(GetProcessHeap(), 0, pBuffer);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    *pClearTextPassword = pBuffer;
+
+    return ERROR_SUCCESS;
 }
 
 /* EOF */

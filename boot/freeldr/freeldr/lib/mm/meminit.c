@@ -415,13 +415,15 @@ PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount)
 {
     const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
     SIZE_T PageLookupTableSize;
-    PFN_NUMBER PageLookupTablePages;
-    PFN_NUMBER PageLookupTableStartPage = 0;
+    PFN_NUMBER RequiredPages;
+    PFN_NUMBER CandidateBasePage = 0;
+    PFN_NUMBER CandidatePageCount;
+    PFN_NUMBER PageLookupTableEndPage;
     PVOID PageLookupTableMemAddress = NULL;
 
     // Calculate how much pages we need to keep the page lookup table
     PageLookupTableSize = TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM);
-    PageLookupTablePages = PageLookupTableSize / MM_PAGE_SIZE;
+    RequiredPages = PageLookupTableSize / MM_PAGE_SIZE;
 
     // Search the highest memory block big enough to contain lookup table
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
@@ -429,21 +431,27 @@ PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount)
         // Continue, if memory is not free
         if (MemoryDescriptor->MemoryType != LoaderFree) continue;
 
-        // Continue, if the block is not big enough?
-        if (MemoryDescriptor->PageCount < PageLookupTablePages) continue;
+        // Continue, if the block is not big enough
+        if (MemoryDescriptor->PageCount < RequiredPages) continue;
 
         // Continue, if it is not at a higher address than previous address
-        if (MemoryDescriptor->BasePage < PageLookupTableStartPage) continue;
+        if (MemoryDescriptor->BasePage < CandidateBasePage) continue;
 
         // Continue, if the address is too high
-        if (MemoryDescriptor->BasePage >= MM_MAX_PAGE) continue;
+        if (MemoryDescriptor->BasePage + RequiredPages >= MM_MAX_PAGE) continue;
 
         // Memory block is more suitable than the previous one
-        PageLookupTableStartPage = MemoryDescriptor->BasePage;
-        PageLookupTableMemAddress = (PVOID)((ULONG_PTR)
-            (MemoryDescriptor->BasePage + MemoryDescriptor->PageCount) * MM_PAGE_SIZE
-            - PageLookupTableSize);
+        CandidateBasePage = MemoryDescriptor->BasePage;
+        CandidatePageCount = MemoryDescriptor->PageCount;
     }
+
+    // Calculate the end address for the lookup table
+    PageLookupTableEndPage = min(CandidateBasePage + CandidatePageCount,
+                                 MM_MAX_PAGE);
+
+    // Calculate the virtual address
+    PageLookupTableMemAddress = (PVOID)((PageLookupTableEndPage * PAGE_SIZE)
+                                        - PageLookupTableSize);
 
     TRACE("MmFindLocationForPageLookupTable() returning 0x%x\n", PageLookupTableMemAddress);
 

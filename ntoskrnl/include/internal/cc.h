@@ -62,6 +62,7 @@ extern ULONG CcMapDataWait;
 extern ULONG CcMapDataNoWait;
 extern ULONG CcPinReadWait;
 extern ULONG CcPinReadNoWait;
+extern ULONG CcPinMappedDataCount;
 extern ULONG CcDataPages;
 extern ULONG CcDataFlushes;
 
@@ -172,6 +173,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     CSHORT NodeByteSize;
     ULONG OpenCount;
     LARGE_INTEGER FileSize;
+    LIST_ENTRY BcbList;
     LARGE_INTEGER SectionSize;
     PFILE_OBJECT FileObject;
     ULONG DirtyPages;
@@ -181,6 +183,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
     ULONG DirtyPageThreshold;
+    KSPIN_LOCK BcbSpinLock;
     PRIVATE_CACHE_MAP PrivateCacheMap;
 
     /* ROS specific */
@@ -219,8 +222,6 @@ typedef struct _ROS_VACB
     LARGE_INTEGER FileOffset;
     /* Number of references. */
     volatile ULONG ReferenceCount;
-    /* How many times was it pinned? */
-    LONG PinCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
@@ -233,8 +234,9 @@ typedef struct _INTERNAL_BCB
     PUBLIC_BCB PFCB;
     PROS_VACB Vacb;
     BOOLEAN Dirty;
-    BOOLEAN Pinned;
+    ULONG PinCount;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+    LIST_ENTRY BcbEntry;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 typedef struct _LAZY_WRITER

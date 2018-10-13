@@ -1122,7 +1122,6 @@ IntGdiBitBltRgn(
     return bResult;
 }
 
-static
 BOOL
 IntGdiFillRgn(
     _In_ PDC pdc,

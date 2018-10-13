@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB OHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBOHCI declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #ifndef USBOHCI_H__
 #define USBOHCI_H__
 
@@ -58,8 +65,8 @@ typedef struct _OHCI_HCD_TD {
   /* Software part */
   ULONG PhysicalAddress;
   ULONG Flags;
-  ULONG OhciTransfer;
-  ULONG NextHcdTD;
+  POHCI_TRANSFER OhciTransfer;
+  struct _OHCI_HCD_TD *NextHcdTD;
   ULONG TransferLen;
   LIST_ENTRY DoneLink;
   ULONG Pad[1];
@@ -144,7 +151,7 @@ typedef struct _OHCI_EXTENSION {
   ULONG FrameHighPart;
   ULONG HcdFmNumber;
   POHCI_HC_RESOURCES HcResourcesVA;
-  POHCI_HC_RESOURCES HcResourcesPA;
+  ULONG HcResourcesPA;
   OHCI_STATIC_ED IntStaticED[63];
   OHCI_STATIC_ED ControlStaticED;
   OHCI_STATIC_ED BulkStaticED;

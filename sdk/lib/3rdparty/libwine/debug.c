@@ -35,6 +35,7 @@
 #include <rtlfuncs.h>
 #include <cmfuncs.h>
 
+WINE_DECLARE_DEBUG_CHANNEL(pid);
 WINE_DECLARE_DEBUG_CHANNEL(tid);
 
 ULONG
@@ -58,6 +59,18 @@ static struct __wine_debug_channel debug_options[MAX_DEBUG_OPTIONS];
 static struct __wine_debug_functions funcs;
 
 static void debug_init(void);
+
+
+/* Wine format */
+static int winefmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                     const char *file, const char *func, const int line, const char *format, va_list args );
+/* ReactOS format (default) */
+static int rosfmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                    const char *file, const char *func, const int line, const char *format, va_list args );
+/* Extended format */
+static int extfmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                    const char *file, const char *func, const int line, const char *format, va_list args );
+
 
 static int __cdecl cmp_name( const void *p1, const void *p2 )
 {
@@ -184,6 +197,25 @@ static void parse_options( const char *str )
     free( options );
 }
 
+/*
+ * The syntax of the DEBUGCHANNEL environment variable is:
+ *   DEBUGCHANNEL=[class]+xxx,[class]-yyy,...
+ *
+ * For example: DEBUGCHANNEL=+all,warn-heap
+ *     turns on all messages except warning heap messages.
+ *
+ * The available message classes are: err, warn, fixme, trace.
+ *
+ * In order to select a different debug trace format, the
+ * DEBUGFORMAT environment variable should be used:
+ *
+ *   DEBUGFORMAT=fmt
+ *
+ * where fmt is the format name: 'wine', or 'extended' (abbreviation: 'ext').
+ * If no format or an invalid one is specified, the fall-back default format
+ * is used instead.
+ */
+
 /* initialize all options at startup */
 static void debug_init(void)
 {
@@ -206,6 +238,34 @@ static void debug_init(void)
             free(wine_debug);
         }
     }
+
+    dwLength = GetEnvironmentVariableA("DEBUGFORMAT", NULL, 0);
+    if (dwLength)
+    {
+        wine_debug = malloc(dwLength);
+        if (wine_debug)
+        {
+            if (GetEnvironmentVariableA("DEBUGFORMAT", wine_debug, dwLength) < dwLength)
+            {
+                if (strcmp(wine_debug, "wine") == 0)
+                {
+                    funcs.dbg_vlog = winefmt_default_dbg_vlog;
+                }
+                else
+                if (strcmp(wine_debug, "extended") == 0 ||
+                    strcmp(wine_debug, "ext") == 0)
+                {
+                    funcs.dbg_vlog = extfmt_default_dbg_vlog;
+                }
+                else
+                {
+                    funcs.dbg_vlog = rosfmt_default_dbg_vlog;
+                }
+            }
+            free(wine_debug);
+        }
+    }
+
     SetLastError(LastError);
 }
 
@@ -413,21 +473,63 @@ static int default_dbg_vprintf( const char *format, va_list args )
 
 
 /* default implementation of wine_dbg_vlog */
-static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                             const char *file, const char *func, const int line, const char *format, va_list args )
+/* Wine format */
+static int winefmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                     const char *file, const char *func, const int line, const char *format, va_list args )
+{
+    int ret = 0;
+
+    if (TRACE_ON(pid))
+        ret += wine_dbg_printf( "%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueProcess) );
+    ret += wine_dbg_printf( "%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread) );
+
+    if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
+        ret += wine_dbg_printf( "%s:%s:%s ", debug_classes[cls], channel->name, func );
+    if (format)
+        ret += funcs.dbg_vprintf( format, args );
+    return ret;
+}
+/* ReactOS format (default) */
+static int rosfmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                    const char *file, const char *func, const int line, const char *format, va_list args )
 {
     int ret = 0;
 
     if (TRACE_ON(tid))
-        ret += wine_dbg_printf("%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread));
+        ret += wine_dbg_printf( "%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread) );
 
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
         ret += wine_dbg_printf( "%s:", debug_classes[cls] );
 
     if (file && line)
-        ret += wine_dbg_printf ( "(%s:%d) ", file, line );
+        ret += wine_dbg_printf( "(%s:%d) ", file, line );
     else
         ret += wine_dbg_printf( "%s:%s: ", channel->name, func );
+
+    if (format)
+        ret += funcs.dbg_vprintf( format, args );
+    return ret;
+}
+/* Extended format */
+static int extfmt_default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
+                                    const char *file, const char *func, const int line, const char *format, va_list args )
+{
+    int ret = 0;
+
+    if (TRACE_ON(pid) || TRACE_ON(tid))
+    {
+        ret += wine_dbg_printf( "[%04x:%04x]:",
+                                (TRACE_ON(pid) ? HandleToULong(NtCurrentTeb()->ClientId.UniqueProcess) : 0),
+                                (TRACE_ON(tid) ? HandleToULong(NtCurrentTeb()->ClientId.UniqueThread)  : 0) );
+    }
+
+    if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
+        ret += wine_dbg_printf( "%s:", debug_classes[cls] );
+
+    if (file && line)
+        ret += wine_dbg_printf( "(%s:%d):", file, line );
+
+    ret += wine_dbg_printf( "%s:%s ", channel->name, func );
 
     if (format)
         ret += funcs.dbg_vprintf( format, args );
@@ -460,5 +562,5 @@ static struct __wine_debug_functions funcs =
     default_dbgstr_an,
     default_dbgstr_wn,
     default_dbg_vprintf,
-    default_dbg_vlog
+    rosfmt_default_dbg_vlog
 };

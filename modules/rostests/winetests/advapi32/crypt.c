@@ -20,6 +20,8 @@
 
 #include <stdarg.h>
 
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
@@ -27,6 +29,12 @@
 #include "winreg.h"
 
 #include "wine/test.h"
+
+struct ustring {
+    DWORD Length;
+    DWORD MaximumLength;
+    unsigned char *Buffer;
+};
 
 static const char szRsaBaseProv[] = MS_DEF_PROV_A;
 static const char szNonExistentProv[] = "Wine Nonexistent Cryptographic Provider v11.2";
@@ -64,6 +72,8 @@ static BOOL (WINAPI *pCryptSetHashParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetKeyParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptVerifySignatureW)(HCRYPTHASH, BYTE*, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
+static NTSTATUS (WINAPI *pSystemFunction004)(struct ustring*,struct ustring*, struct ustring*);
+static NTSTATUS (WINAPI *pSystemFunction005)(struct ustring*,struct ustring*, struct ustring*);
 static BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG);
 
 static void init_function_pointers(void)
@@ -100,6 +110,8 @@ static void init_function_pointers(void)
     pCryptSetKeyParam = (void*)GetProcAddress(hadvapi32, "CryptSetKeyParam");
     pCryptSetProvParam = (void*)GetProcAddress(hadvapi32, "CryptSetProvParam");
     pCryptVerifySignatureW = (void*)GetProcAddress(hadvapi32, "CryptVerifySignatureW");
+    pSystemFunction004 = (void*)GetProcAddress(hadvapi32, "SystemFunction004");
+    pSystemFunction005 = (void*)GetProcAddress(hadvapi32, "SystemFunction005");
     pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
 }
 
@@ -1120,6 +1132,114 @@ static void test_rc2_keylen(void)
     }
 }
 
+static void test_SystemFunction004(void)
+{
+    struct ustring inData;
+    struct ustring keyData;
+    struct ustring outData;
+    char inString[] = "Testdata for encryption";
+    char keyString[] = "EncryptionKey";
+    unsigned char outBuffer[32];
+    NTSTATUS Status;
+#if 0
+    int i;
+#endif
+
+    if (!pSystemFunction004)
+    {
+        win_skip("SystemFunction004 is not available\n");
+        return;
+    }
+
+    inData.Length = strlen(inString) + 1;
+    inData.MaximumLength = inData.Length;
+    inData.Buffer = (unsigned char *)inString;
+
+    keyData.Length = strlen(keyString) + 1;
+    keyData.MaximumLength = keyData.Length;
+    keyData.Buffer = (unsigned char *)keyString;
+
+    outData.Length = 0;
+    outData.MaximumLength = 0;
+    outData.Buffer = NULL;
+
+    Status = pSystemFunction004(&inData, &keyData, &outData);
+    ok(Status == STATUS_BUFFER_TOO_SMALL, "Expected SystemFunction004 to return STATUS_BUFFER_TOO_SMALL, got 0x%08lx\n", Status);
+    ok(outData.Length == 32, "Expected outData.Length to be 32, got %lu\n", outData.Length);
+    ok(outData.MaximumLength == 0, "Expected outData.MaximumLength to be 0, got %lu\n", outData.MaximumLength);
+    ok(outData.Buffer == NULL, "Expected outData.Length to be NULL, got %p\n", outData.Buffer);
+
+    outData.Length = sizeof(outBuffer);
+    outData.MaximumLength = outData.Length;
+    outData.Buffer = outBuffer;
+
+    Status = pSystemFunction004(&inData, &keyData, &outData);
+    ok(Status == STATUS_SUCCESS, "Expected SystemFunction004 to return STATUS_SUCCESS, got 0x%08lx\n", Status);
+    ok(outData.Length == 32, "Expected outData.Length to be 32, got %lu\n", outData.Length);
+    ok(outData.MaximumLength == 32, "Expected outData.MaximumLength to be 32, got %lu\n", outData.MaximumLength);
+    ok(outData.Buffer != NULL, "Expected outData.Buffer not to be NULL, got %p\n", outData.Buffer);
+#if 0
+    if (Status == STATUS_SUCCESS)
+    {
+         printf("outData.Buffer:\n");
+         for (i = 0; i < sizeof(outBuffer); i++)
+              printf("0x%02x ", outBuffer[i]);
+         printf("\n");
+    }
+#endif
+}
+
+static void test_SystemFunction005(void)
+{
+    struct ustring inData;
+    struct ustring keyData;
+    struct ustring outData;
+    unsigned char inBuffer[32] = {0xdc, 0xff, 0x05, 0x8d, 0xaf, 0xb6, 0xe2, 0x8c, 0x4f, 0xee, 0x00, 0x06, 0xac, 0x1d, 0x56, 0xf1,
+                                  0x24, 0xbd, 0x17, 0xe0, 0xf6, 0xb8, 0x6d, 0x3a, 0x69, 0x5d, 0x14, 0xf9, 0x5a, 0x54, 0x93, 0xd1};
+    char keyString[] = "EncryptionKey";
+    char outBuffer[24];
+    NTSTATUS Status;
+
+    if (!pSystemFunction005)
+    {
+        win_skip("SystemFunction005 is not available\n");
+        return;
+    }
+
+    inData.Length = sizeof(inBuffer);
+    inData.MaximumLength = inData.Length;
+    inData.Buffer = inBuffer;
+
+    keyData.Length = strlen(keyString) + 1;
+    keyData.MaximumLength = keyData.Length;
+    keyData.Buffer = (unsigned char *)keyString;
+
+    outData.Length = 0;
+    outData.MaximumLength = 0;
+    outData.Buffer = NULL;
+
+    Status = pSystemFunction005(&inData, &keyData, &outData);
+    ok(Status == STATUS_BUFFER_TOO_SMALL, "Expected SystemFunction005 to return STATUS_BUFFER_TOO_SMALL, got 0x%08lx\n", Status);
+    ok(outData.Length == 24, "Expected outData.Length to be 24, got %lu\n", outData.Length);
+    ok(outData.MaximumLength == 0, "Expected outData.MaximumLength to be 0, got %lu\n", outData.MaximumLength);
+    ok(outData.Buffer == NULL, "Expected outData.Buffer to be NULL, got %p\n", outData.Buffer);
+
+    outData.Length = sizeof(outBuffer);
+    outData.MaximumLength = outData.Length;
+    outData.Buffer = (unsigned char *)outBuffer;
+
+    Status = pSystemFunction005(&inData, &keyData, &outData);
+    ok(Status == STATUS_SUCCESS, "Expected SystemFunction005 to return STATUS_SUCCESS, got 0x%08lx\n", Status);
+    ok(outData.Length == 24, "Expected outData.Length to be 24, got %lu\n", outData.Length);
+    ok(outData.MaximumLength == 24, "Expected outData.MaximumLength to be 24, got %lu\n", outData.MaximumLength);
+    ok(outData.Buffer != NULL, "Expected outData.Buffer not to be NULL, got %p\n", outData.Buffer);
+#if 0
+    if (Status == STATUS_SUCCESS)
+        printf("outData.Buffer: '%s'\n", outData.Buffer);
+#endif
+}
+
+
 static void test_SystemFunction036(void)
 {
     BOOL ret;
@@ -1200,5 +1320,7 @@ START_TEST(crypt)
 	test_enum_provider_types();
 	test_get_default_provider();
 	test_set_provider_ex();
+	test_SystemFunction004();
+	test_SystemFunction005();
 	test_SystemFunction036();
 }

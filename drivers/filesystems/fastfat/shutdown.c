@@ -61,6 +61,7 @@ VfatShutdown(
     FsRtlEnterFileSystem();
 
     /* FIXME: block new mount requests */
+    VfatGlobalData->ShutdownStarted = TRUE;
 
     if (DeviceObject == VfatGlobalData->DeviceObject)
     {

@@ -1388,10 +1388,16 @@ interface srvsvc
         [in] DWORD Level,
         [in, switch_is(Level)] LPTRANSPORT_INFO Buffer);
 
-    // This method not used on the wire
-    void
+    /* Function 42 - Not used on wire */
+    NET_API_STATUS
     __stdcall
-    Opnum42NotUsedOnWire(void);
+    NetrServerSetServiceBitsEx(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *EmulatedServer,
+        [in, string, unique] WCHAR *Transport,
+        [in] DWORD ServiceBitsOfInterest,
+        [in] DWORD ServiceBits,
+        [in] DWORD UpdateImmediately);
 
     NET_API_STATUS
     __stdcall
@@ -1425,10 +1431,10 @@ interface srvsvc
         [in, string] WCHAR *Prefix,
         [in] unsigned long State);
 
-    // This method not used on the wire
-    void
+    /* Function 47 - Not used on wire */
+    NET_API_STATUS
     __stdcall
-    Opnum47NotUsedOnWire(void);
+    NetrDfsSetServerInfo(void);
 
     NET_API_STATUS
     __stdcall

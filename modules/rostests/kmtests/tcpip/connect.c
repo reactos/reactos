@@ -59,7 +59,7 @@ TestTcpConnect(void)
     ULONG FileInfoSize;
     IN_ADDR InAddr;
     LPCWSTR AddressTerminator;
-    CONNECTION_CONTEXT ConnectionContext = (CONNECTION_CONTEXT)0xC0CAC01A;
+    CONNECTION_CONTEXT ConnectionContext = (CONNECTION_CONTEXT)(ULONG_PTR)0xC0CAC01AC0CAC01AULL;
     KEVENT Event;
     TDI_CONNECTION_INFORMATION RequestInfo, ReturnInfo;
 
@@ -166,6 +166,7 @@ TestTcpConnect(void)
             FALSE,
             NULL);
         Status = Irp->IoStatus.Status;
+        trace("Associate address IRP completed.\n");
     }
     ok_eq_hex(Status, STATUS_SUCCESS);
     IoFreeIrp(Irp);
@@ -229,11 +230,11 @@ TestTcpConnect(void)
     ok_eq_long(ReturnInfo.UserDataLength, 0);
     ok_eq_pointer(ReturnInfo.UserData, NULL);
 
-    ok_eq_long(ReturnAddress.TAAddressCount, 0);
-    ok_eq_hex(ReturnAddress.Address[0].AddressType, 0);
-    ok_eq_hex(ReturnAddress.Address[0].AddressLength, 0);
-    ok_eq_hex(ReturnAddress.Address[0].Address[0].sin_port, 0);
-    ok_eq_hex(ReturnAddress.Address[0].Address[0].in_addr, 0);
+    ok_eq_long(ReturnAddress.TAAddressCount, 1);
+    ok_eq_hex(ReturnAddress.Address[0].AddressType, TDI_ADDRESS_TYPE_IP);
+    ok_eq_hex(ReturnAddress.Address[0].AddressLength, TDI_ADDRESS_LENGTH_IP);
+    ok_eq_hex(ReturnAddress.Address[0].Address[0].sin_port, htons(TEST_CONNECT_SERVER_PORT));
+    ok_eq_hex(ReturnAddress.Address[0].Address[0].in_addr, InAddr.S_un.S_addr);
 
     ObDereferenceObject(ConnectionFileObject);
 

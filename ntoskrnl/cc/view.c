@@ -808,7 +808,6 @@ CcRosCreateVacb (
 #endif
     current->MappedCount = 0;
     current->ReferenceCount = 0;
-    current->PinCount = 0;
     InitializeListHead(&current->CacheMapVacbListEntry);
     InitializeListHead(&current->DirtyVacbListEntry);
     InitializeListHead(&current->VacbLruListEntry);
@@ -1056,16 +1055,15 @@ CcRosInternalFreeVacb (
                      NULL);
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
-    if (Vacb->PinCount != 0 || Vacb->ReferenceCount != 0)
+    if (Vacb->ReferenceCount != 0)
     {
-        DPRINT1("Invalid free: %ld, %ld\n", Vacb->ReferenceCount, Vacb->PinCount);
+        DPRINT1("Invalid free: %ld\n", Vacb->ReferenceCount);
         if (Vacb->SharedCacheMap->FileObject && Vacb->SharedCacheMap->FileObject->FileName.Length)
         {
             DPRINT1("For file: %wZ\n", &Vacb->SharedCacheMap->FileObject->FileName);
         }
     }
 
-    ASSERT(Vacb->PinCount == 0);
     ASSERT(Vacb->ReferenceCount == 0);
     ASSERT(IsListEmpty(&Vacb->CacheMapVacbListEntry));
     ASSERT(IsListEmpty(&Vacb->DirtyVacbListEntry));
@@ -1229,7 +1227,7 @@ CcRosDeleteFileCache (
             {
                 DPRINT1("Leaking VACB %p attached to %p (%I64d)\n", current, FileObject, current->FileOffset.QuadPart);
                 DPRINT1("There are: %d references left\n", Refs);
-                DPRINT1("Pin: %d, Map: %d\n", current->PinCount, current->MappedCount);
+                DPRINT1("Map: %d\n", current->MappedCount);
                 DPRINT1("Dirty: %d\n", current->Dirty);
                 if (FileObject->FileName.Length != 0)
                 {
@@ -1417,6 +1415,7 @@ CcRosInitializeFileCache (
         InitializeListHead(&SharedCacheMap->PrivateList);
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
+        InitializeListHead(&SharedCacheMap->BcbList);
     }
 
     KeAcquireGuardedMutex(&ViewLock);

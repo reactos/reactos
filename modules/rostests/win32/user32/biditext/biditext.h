@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <strsafe.h>
 
 /* Global instance handle */
 extern HINSTANCE g_hInstance;

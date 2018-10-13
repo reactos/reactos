@@ -153,12 +153,12 @@ static LPCWSTR skip_schema(LPCWSTR url)
     static const WCHAR msits_schema[] = {'m','s','-','i','t','s',':'};
     static const WCHAR mk_schema[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':'};
 
-    if(!strncmpiW(its_schema, url, sizeof(its_schema)/sizeof(WCHAR)))
-        return url+sizeof(its_schema)/sizeof(WCHAR);
-    if(!strncmpiW(msits_schema, url, sizeof(msits_schema)/sizeof(WCHAR)))
-        return url+sizeof(msits_schema)/sizeof(WCHAR);
-    if(!strncmpiW(mk_schema, url, sizeof(mk_schema)/sizeof(WCHAR)))
-        return url+sizeof(mk_schema)/sizeof(WCHAR);
+    if(!strncmpiW(its_schema, url, ARRAY_SIZE(its_schema)))
+        return url + ARRAY_SIZE(its_schema);
+    if(!strncmpiW(msits_schema, url, ARRAY_SIZE(msits_schema)))
+        return url + ARRAY_SIZE(msits_schema);
+    if(!strncmpiW(mk_schema, url, ARRAY_SIZE(mk_schema)))
+        return url + ARRAY_SIZE(mk_schema);
 
     return NULL;
 }

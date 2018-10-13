@@ -391,7 +391,14 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     HANDLE KeyHandle;
+    SIZE_T StringLength;
     NTSTATUS Status;
+
+    StringLength = wcslen(lpBuffer);
+    if (StringLength > ((MAXULONG / sizeof(WCHAR)) - 1))
+    {
+        return FALSE;
+    }
 
     RtlInitUnicodeString(&KeyName, RegistryKey);
     InitializeObjectAttributes(&ObjectAttributes,
@@ -416,7 +423,7 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
                            0,
                            REG_SZ,
                            (PVOID)lpBuffer,
-                           (wcslen (lpBuffer) + 1) * sizeof(WCHAR));
+                           (StringLength + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         NtClose(KeyHandle);

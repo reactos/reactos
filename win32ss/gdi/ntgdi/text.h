@@ -64,9 +64,7 @@ typedef struct _LFONT
    LFTYPE        lft;
    FLONG         fl;
    FONTOBJ      *Font;
-   WCHAR         FullName[LF_FULLFACESIZE];
-   WCHAR         Style[LF_FACESIZE];
-   WCHAR         FaceName[LF_FACESIZE];
+   WCHAR         TextFace[LF_FACESIZE];
    DWORD         dwOffsetEndArray;
 // Fixed:
    ENUMLOGFONTEXDVW logfont;
@@ -106,6 +104,7 @@ TEXTOBJ_UnlockText(PLFONT plfnt)
 PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
+BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);

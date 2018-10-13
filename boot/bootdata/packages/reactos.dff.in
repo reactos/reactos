@@ -17,10 +17,10 @@ Signature = "$ReactOS$"
 ; For specifying absolute directories, use the SystemPartitionFiles section,
 ; or use names starting with \.
 [Directories]
-1 = system32
-2 = system32\drivers
-3 = Fonts
-4 = "\"
+1 = "\"
+2 = system32
+3 = system32\drivers
+4 = Fonts
 5 = system32\drivers\etc
 6 = inf
 7 = bin
@@ -78,6 +78,8 @@ Signature = "$ReactOS$"
 58 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 59 = winsxs\x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
 60 = winsxs\x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef
+61 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
+62 = Resources\Themes\Modern
 
 .InfEnd
 
@@ -87,41 +89,41 @@ Signature = "$ReactOS$"
 .InfEnd
 
 ; Optional/proprietary files
-"modules/optional/DroidSansFallback.ttf"              3  optional
-"modules/optional/NOTICE_for_Droid_Font.txt"          4  optional
+"modules/optional/DroidSansFallback.ttf"              4  optional
+"modules/optional/NOTICE_for_Droid_Font.txt"          1  optional
 "modules/optional/netkvm.inf"                         6  optional
 "modules/optional/netkvm.cat"                         6  optional
-"modules/optional/netkvm.sys"                         2  optional
+"modules/optional/netkvm.sys"                         3  optional
 "modules/optional/viostor.inf"                        6  optional
 "modules/optional/viostor.cat"                        6  optional
-"modules/optional/viostor.sys"                        2  optional
+"modules/optional/viostor.sys"                        3  optional
 "modules/optional/qxl.inf"                            6  optional
 "modules/optional/qxl.cat"                            6  optional
-"modules/optional/qxl.sys"                            2  optional
-"modules/optional/qxldd.dll"                          1  optional
+"modules/optional/qxl.sys"                            3  optional
+"modules/optional/qxldd.dll"                          2  optional
 "modules/optional/b57win32.inf"                       6  optional
 "modules/optional/b57win32.cat"                       6  optional
-"modules/optional/b57xp32.sys"                        2  optional
+"modules/optional/b57xp32.sys"                        3  optional
 "modules/optional/bcmwl5.inf"                         6  optional
 "modules/optional/bcm43xx.cat"                        6  optional
-"modules/optional/bcmwl5.sys"                         2  optional
+"modules/optional/bcmwl5.sys"                         3  optional
 "modules/optional/alcxwdm.inf"                        6  optional
-"modules/optional/alcxwdm.sys"                        2  optional
+"modules/optional/alcxwdm.sys"                        3  optional
 "modules/optional/net21x4.inf"                        6  optional
-"modules/optional/dc21x4.sys"                         2  optional
-"modules/optional/mfc42.dll"                          1  optional
-"modules/optional/mfc42u.dll"                         1  optional
-"modules/optional/mfc71.dll"                          1  optional
-"modules/optional/mfc71u.dll"                         1  optional
-"modules/optional/msvbvm50.dll"                       1  optional
-"modules/optional/msvbvm60.dll"                       1  optional
-"modules/optional/msvcirt.dll"                        1  optional
-"modules/optional/msvcp71.dll"                        1  optional
-"modules/optional/msvcr71.dll"                        1  optional
-"modules/optional/vmx_fb.dll"                         1  optional
-"modules/optional/vmx_mode.dll"                       1  optional
+"modules/optional/dc21x4.sys"                         3  optional
+"modules/optional/mfc42.dll"                          2  optional
+"modules/optional/mfc42u.dll"                         2  optional
+"modules/optional/mfc71.dll"                          2  optional
+"modules/optional/mfc71u.dll"                         2  optional
+"modules/optional/msvbvm50.dll"                       2  optional
+"modules/optional/msvbvm60.dll"                       2  optional
+"modules/optional/msvcirt.dll"                        2  optional
+"modules/optional/msvcp71.dll"                        2  optional
+"modules/optional/msvcr71.dll"                        2  optional
+"modules/optional/vmx_fb.dll"                         2  optional
+"modules/optional/vmx_mode.dll"                       2  optional
 "modules/optional/vmx_svga.inf"                       6  optional
-"modules/optional/vmx_svga.sys"                       2  optional
-"modules/optional/wine_gecko-2.40-x86.msi"            4  optional
+"modules/optional/vmx_svga.sys"                       3  optional
+"modules/optional/wine_gecko-2.40-x86.msi"            1  optional
 "boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
 ; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !

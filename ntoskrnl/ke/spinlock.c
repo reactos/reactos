@@ -415,13 +415,13 @@ KeReleaseSpinLockForDpc(IN PKSPIN_LOCK SpinLock,
 /*
  * @unimplemented
  */
-KIRQL
+VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockForDpc(IN PKSPIN_LOCK SpinLock,
                                      IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     UNIMPLEMENTED;
-    return 0;
+    return;
 }
 
 /*

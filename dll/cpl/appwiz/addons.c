@@ -351,6 +351,7 @@ static IBindStatusCallback InstallCallback = { &InstallCallbackVtbl };
 
 static DWORD WINAPI download_proc(PVOID arg)
 {
+    WCHAR message[256];
     WCHAR tmp_dir[MAX_PATH], tmp_file[MAX_PATH];
     HRESULT hres;
 
@@ -362,12 +363,13 @@ static DWORD WINAPI download_proc(PVOID arg)
     hres = URLDownloadToFileW(NULL, GeckoUrl, tmp_file, 0, &InstallCallback);
     if(FAILED(hres)) {
         ERR("URLDownloadToFile failed: %08x\n", hres);
+        if (LoadStringW(hApplet, IDS_DWL_FAILED, message, sizeof(message) / sizeof(WCHAR))) {
+            MessageBoxW(NULL, message, NULL, MB_ICONERROR);
+        }
     } else {
         if(sha_check(tmp_file)) {
             install_file(tmp_file);
         }else {
-            WCHAR message[256];
-
             if(LoadStringW(hApplet, IDS_INVALID_SHA, message, sizeof(message)/sizeof(WCHAR))) {
                 MessageBoxW(NULL, message, NULL, MB_ICONERROR);
             }

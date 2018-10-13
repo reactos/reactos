@@ -702,7 +702,7 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus.Information = STATUS_SUCCESS;
     }
 
-    /* We're done */
+    /* We are done */
     return Status;
 }
 
@@ -1025,7 +1025,7 @@ DoCopy:
         CurrentOffset.QuadPart += BytesRead;
         CurrentBase = (PVOID)((ULONG_PTR)CurrentBase + BytesRead);
 
-        /* Check if we're done */
+        /* Check if we are done */
         if (!BytesLeft) return Status;
     }
 }
@@ -1195,7 +1195,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 DiskGeometry->MediaType = DriveExtension->DiskOptions.Fixed ?
                                           FixedMedia : RemovableMedia;
 
-                /* We're done */
+                /* We are done */
                 Status = STATUS_SUCCESS;
                 Information = sizeof(DISK_GEOMETRY);
                 break;
@@ -1225,7 +1225,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 Toc->TrackData[0].Control = TOC_DATA_TRACK;
                 Toc->TrackData[0].TrackNumber = 1;
 
-                /* We're done */
+                /* We are done */
                 Status = STATUS_SUCCESS;
                 Information = RAMDISK_TOC_SIZE;
                 break;
@@ -1260,13 +1260,62 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                     goto CallWorker;
                 }
 
-                /* We're done */
+                /* We are done */
                 Information = Irp->IoStatus.Information;
                 break;
             }
 
-            case IOCTL_DISK_GET_DRIVE_LAYOUT:
             case IOCTL_DISK_GET_LENGTH_INFO:
+            {
+                PGET_LENGTH_INFORMATION LengthInformation = Irp->AssociatedIrp.SystemBuffer;
+
+                /* Validate the length */
+                if (IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_LENGTH_INFORMATION))
+                {
+                    /* Invalid length */
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+
+                /* Fill it out */
+                LengthInformation->Length = DriveExtension->DiskLength;
+
+                /* We are done */
+                Status = STATUS_SUCCESS;
+                Information = sizeof(GET_LENGTH_INFORMATION);
+                break;
+            }
+            case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
+            {
+                PVOLUME_GET_GPT_ATTRIBUTES_INFORMATION GptInformation;
+
+                /* Validate the length */
+                if (IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength < sizeof(VOLUME_GET_GPT_ATTRIBUTES_INFORMATION))
+                {
+                    /* Invalid length */
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
+                }
+
+                /* Fill it out */
+                GptInformation = Irp->AssociatedIrp.SystemBuffer;
+                GptInformation->GptAttributes = 0;
+
+                /* Translate the Attributes */
+                if (DriveExtension->DiskOptions.Readonly)
+                    GptInformation->GptAttributes |= GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY;
+                if (DriveExtension->DiskOptions.Hidden)
+                    GptInformation->GptAttributes |= GPT_BASIC_DATA_ATTRIBUTE_HIDDEN;
+                if (DriveExtension->DiskOptions.NoDriveLetter)
+                    GptInformation->GptAttributes |= GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER;
+
+                /* We are done */
+                Status = STATUS_SUCCESS;
+                Information = sizeof(VOLUME_GET_GPT_ATTRIBUTES_INFORMATION);
+                break;
+            }
+
+            case IOCTL_DISK_GET_DRIVE_LAYOUT:
             case IOCTL_DISK_IS_WRITABLE:
             case IOCTL_SCSI_MINIPORT:
             case IOCTL_STORAGE_QUERY_PROPERTY:
@@ -1274,7 +1323,6 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
             case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
             case IOCTL_VOLUME_SET_GPT_ATTRIBUTES:
-            case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
             case IOCTL_VOLUME_OFFLINE:
             {
                 UNIMPLEMENTED_DBGBREAK("IOCTL: 0x%lx is UNIMPLEMENTED!\n",
@@ -2456,7 +2504,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             Status = RamdiskAddDevice(DriverObject, PhysicalDeviceObject);
             if (NT_SUCCESS(Status))
             {
-                /* We're done */
+                /* We are done */
                 PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
                 Status = STATUS_SUCCESS;
             }

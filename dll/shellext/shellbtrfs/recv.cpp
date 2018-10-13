@@ -1987,6 +1987,10 @@ void BtrfsRecv::Open(HWND hwnd, WCHAR* file, WCHAR* path, BOOL quiet) {
     }
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK RecvSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     OPENFILENAMEW ofn;
     WCHAR file[MAX_PATH];
@@ -2145,3 +2149,7 @@ void CALLBACK RecvSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
 end:
     LocalFree(args);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif

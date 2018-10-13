@@ -491,7 +491,7 @@ static NTSTATUS pdo_pnp(PDEVICE_OBJECT pdo, PIRP Irp) {
 
 _Dispatch_type_(IRP_MJ_PNP)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
+NTSTATUS NTAPI drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     device_extension* Vcb = DeviceObject->DeviceExtension;
     NTSTATUS Status;

@@ -9,6 +9,9 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserPainting);
 
+BOOL UserExtTextOutW(HDC hdc, INT x, INT y, UINT flags, PRECTL lprc,
+                     LPCWSTR lpString, UINT count);
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**
@@ -2145,15 +2148,13 @@ UserDrawCaptionText(
 
    if (Ret)
    {  // Faster while in setup.
-      GreExtTextOutW( hDc,
+      UserExtTextOutW( hDc,
                       lpRc->left,
-                      lpRc->top + (lpRc->bottom - lpRc->top) / 2 - Size.cy / 2, // DT_SINGLELINE && DT_VCENTER
+                      lpRc->top + (lpRc->bottom - lpRc->top - Size.cy) / 2, // DT_SINGLELINE && DT_VCENTER
                       ETO_CLIPPED,
                      (RECTL *)lpRc,
                       Text->Buffer,
-                      Length,
-                      NULL,
-                      0 );
+                      Length);
    }
    else
    {

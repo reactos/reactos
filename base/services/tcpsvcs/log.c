@@ -12,7 +12,7 @@
 #define DEBUG
 
 static LPWSTR lpEventSource = L"tcpsvcs";
-static LPCWSTR lpLogFileName = L"C:\\tcpsvcs_log.log";
+static WCHAR szLogFileName[MAX_PATH];
 static HANDLE hLogFile = NULL;
 
 static OVERLAPPED olWrite;
@@ -47,7 +47,7 @@ LogToEventLog(LPCWSTR lpMsg,
 static BOOL
 OpenLogFile()
 {
-    hLogFile = CreateFileW(lpLogFileName,
+    hLogFile = CreateFileW(szLogFileName,
                            GENERIC_WRITE,
                            FILE_SHARE_READ,
                            NULL,
@@ -70,20 +70,20 @@ LogToFile(LPCWSTR lpMsg,
           UINT flags)
 {
     LPWSTR lpFullMsg = NULL;
-    DWORD msgLen;
+    SIZE_T msgLen;
 
     msgLen = wcslen(lpMsg) + 1;
 
     if (flags & LOG_ERROR)
     {
-        LPVOID lpSysMsg;
+        LPWSTR lpSysMsg;
         DWORD eMsgLen;
 
         eMsgLen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                                  NULL,
                                  errNum,
                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                 (LPTSTR)&lpSysMsg,
+                                 (LPWSTR)&lpSysMsg,
                                  0,
                                  NULL);
 
@@ -122,6 +122,13 @@ LogToFile(LPCWSTR lpMsg,
         }
     }
 
+    /* Make sure the length in bytes doesn't overflow a DWORD */
+    msgLen = wcslen(lpFullMsg);
+    if (msgLen > (MAXDWORD / sizeof(WCHAR)))
+    {
+        RaiseException(EXCEPTION_INT_OVERFLOW, 0, 0, NULL);
+    }
+
     if (lpFullMsg)
     {
         DWORD bytesWritten;
@@ -130,7 +137,7 @@ LogToFile(LPCWSTR lpMsg,
 
         bRet = WriteFile(hLogFile,
                          lpFullMsg,
-                         wcslen(lpFullMsg) * sizeof(WCHAR),
+                         (DWORD)msgLen * sizeof(WCHAR),
                          &bytesWritten,
                          &olWrite);
         if (!bRet)
@@ -205,13 +212,19 @@ InitLogging()
 #ifdef DEBUG
     BOOL bRet = FALSE;
 
+    if (!GetEnvironmentVariableW(L"SystemDrive", szLogFileName, ARRAYSIZE(szLogFileName)))
+    {
+        StringCchCopyW(szLogFileName, ARRAYSIZE(szLogFileName), L"C:");
+    }
+    StringCchCatW(szLogFileName, ARRAYSIZE(szLogFileName), L"\\tcpsvcs_log.log");
+
     ZeroMemory(&olWrite, sizeof(OVERLAPPED));
     olWrite.Offset = 0xFFFFFFFF;
     olWrite.OffsetHigh = 0xFFFFFFFF;
     olWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (olWrite.hEvent)
     {
-        DeleteFileW(lpLogFileName);
+        DeleteFileW(szLogFileName);
 
         if (OpenLogFile())
         {

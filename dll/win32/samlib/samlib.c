@@ -2267,4 +2267,26 @@ SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
     return Status;
 }
 
+
+NTSTATUS
+NTAPI
+SamTestPrivateFunctionsDomain(
+    _In_ SAM_HANDLE DomainHandle)
+{
+    TRACE("SamTestPrivateFunctionsDomain(%p)\n",
+          DomainHandle);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+SamTestPrivateFunctionsUser(
+    _In_ SAM_HANDLE UserHandle)
+{
+    TRACE("SamTestPrivateFunctionsUser(%p)\n",
+          UserHandle);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

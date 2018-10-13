@@ -652,6 +652,34 @@ NetGetDCName(
 }
 
 
+NET_API_STATUS
+WINAPI
+NetLogonGetTimeServiceParentDomain(
+    _In_ LPWSTR ServerName,
+    _Out_ LPWSTR *DomainName,
+    _Out_ LPBOOL PdcSameSite)
+{
+    NET_API_STATUS Status;
+
+    TRACE("NetLogonGetTimeServiceParentDomain(%s, %p, %p)\n",
+          debugstr_w(ServerName), DomainName, PdcSameSite);
+
+    RpcTryExcept
+    {
+        Status = NetrLogonGetTimeServiceParentDomain(ServerName,
+                                                     DomainName,
+                                                     PdcSameSite);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
 NTSTATUS
 WINAPI
 NetLogonSetServiceBits(

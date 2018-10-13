@@ -312,6 +312,11 @@ SETUP_CreateDevicesList(
     IN CONST GUID *Class OPTIONAL,
     IN PCWSTR Enumerator OPTIONAL);
 
+HKEY SETUPDI_CreateDevKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM samDesired);
+HKEY SETUPDI_CreateDrvKey(HKEY RootKey, struct DeviceInfo *devInfo, UUID *ClassGuid, REGSAM samDesired);
+HKEY SETUPDI_OpenDevKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM samDesired);
+HKEY SETUPDI_OpenDrvKey(HKEY RootKey, struct DeviceInfo *devInfo, REGSAM samDesired);
+
 /* driver.c */
 
 struct InfFileDetails *

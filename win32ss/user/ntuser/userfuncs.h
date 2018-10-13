@@ -92,6 +92,12 @@ HKL FASTCALL UserGetKeyboardLayout(DWORD dwThreadId);
 
 /*************** MISC.C ***************/
 
+int
+__cdecl
+_scwprintf(
+    const wchar_t *format,
+    ...);
+
 BOOL FASTCALL
 UserSystemParametersInfo(
   UINT uiAction,
@@ -104,6 +110,12 @@ VOID FASTCALL IntClearWindowState(PWND, UINT);
 PTHREADINFO FASTCALL IntTID2PTI(HANDLE);
 HBRUSH FASTCALL GetControlBrush(PWND,HDC,UINT);
 HBRUSH FASTCALL GetControlColor(PWND,PWND,HDC,UINT);
+
+NTSTATUS
+GetProcessLuid(
+    IN PETHREAD Thread OPTIONAL,
+    IN PEPROCESS Process OPTIONAL,
+    OUT PLUID Luid);
 
 /*************** MESSAGE.C ***************/
 

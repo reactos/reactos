@@ -617,7 +617,7 @@ USB2_DeallocateHS(IN PUSB2_TT_ENDPOINT TtEndpoint,
 BOOLEAN
 NTAPI
 USB2_MoveTtEndpoint(IN PUSB2_TT_ENDPOINT TtEndpoint,
-                    IN USHORT BusTime,
+                    IN LONG BusTime,
                     IN PUSB2_REBALANCE Rebalance,
                     IN ULONG RebalanceListEntries,
                     OUT BOOLEAN * OutResult)
@@ -739,8 +739,7 @@ USB2_ConvertFrame(IN UCHAR Frame,
         *HcMicroframe = 0;
     }
 
-    if (Microframe >= 0 &&
-        Microframe <= (USB2_MICROFRAMES - 2))
+    if (Microframe <= (USB2_MICROFRAMES - 2))
     {
         *HcFrame = Frame;
         *HcMicroframe = Microframe + 1;
@@ -1893,11 +1892,7 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
             case UsbHighSpeed:
             {
                 Tt = &FdoExtension->Usb2Extension->HcTt;
-
-                if (EndpointProperties->Period > USB2_MAX_MICROFRAMES)
-                    Period = USB2_MAX_MICROFRAMES;
-                else
-                    Period = EndpointProperties->Period;
+                Period = EndpointProperties->Period;
 
                 break;
             }

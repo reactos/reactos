@@ -176,7 +176,7 @@ static LPITEMIDLIST _ILReadFromSharedMemory(PCWSTR strField)
     if (*strField != L':')
         return NULL;
 
-    HANDLE hData = (HANDLE) StrToIntW(strField + 1);
+    HANDLE hData = IntToPtr(StrToIntW(strField + 1));
     PWSTR strSecond = StrChrW(strField + 1, L':');
 
     if (strSecond)
@@ -246,7 +246,7 @@ SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
             PathStripToRootW(strDir);
             pInfo->pidlPath = ILCreateFromPathW(strDir);
         }
-        return (LONG) (pInfo->pidlPath);
+        return (LONG_PTR)(pInfo->pidlPath);
     }
 
     PCWSTR strNextArg = _FindFirstField(strFieldArray);

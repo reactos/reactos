@@ -117,14 +117,14 @@ static BOOL get_assembly_directory(LPWSTR dir, DWORD size, const char *version, 
     if (!strcmp(version, "v4.0.30319"))
     {
         strcpyW(dir + len, dotnet);
-        len += sizeof(dotnet)/sizeof(WCHAR) -1;
+        len += ARRAY_SIZE(dotnet) - 1;
         strcpyW(dir + len, gac + 1);
-        len += sizeof(gac)/sizeof(WCHAR) - 2;
+        len += ARRAY_SIZE(gac) - 2;
     }
     else
     {
         strcpyW(dir + len, gac);
-        len += sizeof(gac)/sizeof(WCHAR) - 1;
+        len += ARRAY_SIZE(gac) - 1;
     }
     switch (architecture)
     {
@@ -433,7 +433,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     WCHAR asmdir[MAX_PATH], *p, **external_files = NULL, *dst_dir = NULL;
     PEKIND architecture;
     char *clr_version;
-    DWORD i, count = 0, src_len, dst_len = sizeof(format_v40)/sizeof(format_v40[0]);
+    DWORD i, count = 0, src_len, dst_len = ARRAY_SIZE(format_v40);
     HRESULT hr;
 
     TRACE("(%p, %d, %s, %p)\n", iface, dwFlags,

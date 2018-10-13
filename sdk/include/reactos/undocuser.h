@@ -156,8 +156,11 @@ extern "C" {
 #define DFCS_MENUARROWUP   0x0008
 #define DFCS_MENUARROWDOWN 0x0010
 
-
-#define STARTF_SCRNSAVER 0x80000000
+//
+// Undocumented flags for CreateProcess
+//
+#define STARTF_INHERITDESKTOP   0x40000000
+#define STARTF_SCREENSAVER      0x80000000
 
 #define MOD_WINLOGON_SAS 0x8000
 
@@ -215,6 +218,83 @@ typedef struct _BALLOON_HARD_ERROR_DATA
     ULONG_PTR TitleOffset;
     ULONG_PTR MessageOffset;
 } BALLOON_HARD_ERROR_DATA, *PBALLOON_HARD_ERROR_DATA;
+
+//
+// Undocumented SoftModalMessageBox() API, which constitutes
+// the basis of all implementations of the MessageBox*() APIs.
+//
+typedef struct _MSGBOXDATA
+{
+    MSGBOXPARAMSW mbp;          // Size: 0x28 (on x86), 0x50 (on x64)
+    HWND     hwndOwner;
+#if defined(_WIN32) && (_WIN32_WINNT >= _WIN32_WINNT_WIN7) /* (NTDDI_VERSION >= NTDDI_WIN7) */
+    DWORD    dwPadding;
+#endif
+    WORD     wLanguageId;
+    INT*     pidButton;         // Array of button IDs
+    LPCWSTR* ppszButtonText;    // Array of button text strings
+    DWORD    dwButtons;         // Number of buttons
+    UINT     uDefButton;        // Default button ID
+    UINT     uCancelId;         // Button ID for Cancel action
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINXP)    /* (NTDDI_VERSION >= NTDDI_WINXP) */
+    DWORD    dwTimeout;         // Message box timeout
+#endif
+    DWORD    dwReserved0;
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)     /* (NTDDI_VERSION >= NTDDI_WIN7) */
+    DWORD    dwReserved[4];
+#endif
+} MSGBOXDATA, *PMSGBOXDATA, *LPMSGBOXDATA;
+
+#if defined(_WIN64)
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)     /* (NTDDI_VERSION >= NTDDI_WIN7) */
+C_ASSERT(sizeof(MSGBOXDATA) == 0x98);
+#elif (_WIN32_WINNT <= _WIN32_WINNT_WS03)   /* (NTDDI_VERSION <= NTDDI_WS03) */
+C_ASSERT(sizeof(MSGBOXDATA) == 0x88);
+#endif
+
+#else
+
+#if (_WIN32_WINNT <= _WIN32_WINNT_WIN2K)    /* (NTDDI_VERSION <= NTDDI_WIN2KSP4) */
+C_ASSERT(sizeof(MSGBOXDATA) == 0x48);
+#elif (_WIN32_WINNT >= _WIN32_WINNT_WIN7)   /* (NTDDI_VERSION >= NTDDI_WIN7) */
+C_ASSERT(sizeof(MSGBOXDATA) == 0x60);
+#else // (_WIN32_WINNT == _WIN32_WINNT_WINXP || _WIN32_WINNT == _WIN32_WINNT_WS03) /* (NTDDI_VERSION == NTDDI_WS03) */
+C_ASSERT(sizeof(MSGBOXDATA) == 0x4C);
+#endif
+
+#endif /* defined(_WIN64) */
+
+int WINAPI SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData);
+
+int
+WINAPI
+MessageBoxTimeoutA(
+    IN HWND hWnd,
+    IN LPCSTR lpText,
+    IN LPCSTR lpCaption,
+    IN UINT uType,
+    IN WORD wLanguageId,
+    IN DWORD dwTimeout);
+
+int
+WINAPI
+MessageBoxTimeoutW(
+    IN HWND hWnd,
+    IN LPCWSTR lpText,
+    IN LPCWSTR lpCaption,
+    IN UINT uType,
+    IN WORD wLanguageId,
+    IN DWORD dwTimeout);
+
+#ifdef UNICODE
+#define MessageBoxTimeout MessageBoxTimeoutW
+#else
+#define MessageBoxTimeout MessageBoxTimeoutA
+#endif
+
+LPCWSTR WINAPI MB_GetString(IN UINT wBtn);
+
 
 //
 // User api hook

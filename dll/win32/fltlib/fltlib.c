@@ -74,8 +74,8 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
 {
     PFILTER_NAME FilterName;
     HANDLE hFltMgr;
-    DWORD StringLength;
-    DWORD BufferLength;
+    SIZE_T StringLength;
+    SIZE_T BufferLength;
     DWORD dwError;
 
     /* Get a handle to the filter manager */

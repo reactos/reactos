@@ -809,6 +809,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     LANGID lang_id;
     HRSRC hrsrc;
     HGLOBAL hmem;
+    LPCWSTR lpType, lpName;
     INT ret;
     UINT lcflags;
     const WCHAR *p;
@@ -881,8 +882,18 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     if (SUBLANGID(lang_id) == SUBLANG_NEUTRAL)
         lang_id = MAKELANGID(PRIMARYLANGID(lang_id), SUBLANG_DEFAULT);
 
-    if (!(hrsrc = FindResourceExW( kernel32_handle, (LPWSTR)RT_STRING,
-                                   ULongToPtr((lctype >> 4) + 1), lang_id )))
+    if (lctype != LOCALE_FONTSIGNATURE)
+    {
+        lpType = MAKEINTRESOURCEW(RT_STRING);
+        lpName = MAKEINTRESOURCEW(ULongToPtr((lctype >> 4) + 1));
+    }
+    else
+    {
+        lpType = MAKEINTRESOURCEW(RT_RCDATA);
+        lpName = MAKEINTRESOURCEW(lctype);
+    }
+
+    if (!(hrsrc = FindResourceExW( kernel32_handle, lpType, lpName, lang_id )))
     {
         SetLastError( ERROR_INVALID_FLAGS );  /* no such lctype */
         return 0;
@@ -891,7 +902,10 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
         return 0;
 
     p = LockResource( hmem );
-    for (i = 0; i < (lctype & 0x0f); i++) p += *p + 1;
+    if (lctype != LOCALE_FONTSIGNATURE)
+    {
+        for (i = 0; i < (lctype & 0x0f); i++) p += *p + 1;
+    }
 
     if (lcflags & LOCALE_RETURN_NUMBER) ret = sizeof(UINT)/sizeof(WCHAR);
     else if (is_genitive_name_supported( lctype ) && *p)
@@ -906,8 +920,10 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
         }
         else ret = i;
     }
+    else if (lctype != LOCALE_FONTSIGNATURE)
+        ret = *p + 1;
     else
-        ret = (lctype == LOCALE_FONTSIGNATURE) ? *p : *p + 1;
+        ret = SizeofResource(kernel32_handle, hrsrc) / sizeof(WCHAR);
 
     if (!buffer) return ret;
 
@@ -939,7 +955,8 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     }
     else
     {
-        memcpy( buffer, p + 1, ret * sizeof(WCHAR) );
+        if (lctype != LOCALE_FONTSIGNATURE) p++;
+        memcpy( buffer, p, ret * sizeof(WCHAR) );
         if (lctype != LOCALE_FONTSIGNATURE) buffer[ret-1] = 0;
 
         TRACE( "(lcid=0x%x,lctype=0x%x,%p,%d) returning %d %s\n",

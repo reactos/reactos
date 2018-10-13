@@ -112,14 +112,14 @@ COPY [/V][/Y|/-Y][/A|/B] źródło [/A|/B]\n\
                istniejącego pliku.\n\n\
 Opcja /Y może znaleźć się wśród zmiennych środowiskowych COPYCMD.\n\
 ...\n"
-    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
-CTTY device\n\n\
-  device    The terminal device you want to use as the new standard I/O device.\n\
-            This name must refer to a valid character device:\n\
+    STRING_CTTY_HELP "Zmienia standardowe urządzenie końcowe I/O w urządzenie pomocnicze.\n\n\
+urządzenie CTTY\n\n\
+  urządzenie Urządzenie końcowe, którego chcesz używać jako nowe urządzenie I/O.\n\
+            Ta nazwa musi się odnosić do prawidłowego urządzenia znakowego:\n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
-            CON is usually the default standard I/O device.\n\n\
-To return control to the standard console, type: CTTY CON on the auxiliary\n\
-device."
+            CON przeważnie jest domyślnym urządzeniem standardowym I/O.\n\n\
+Aby przywrócić kontrolę standardowej konsoli, wpisz: CTTY CON na urządzeniu\n\
+pomocniczym."
     STRING_DATE_HELP1 "\nPodaj nową datę (mm%cdd%crrrr): "
     STRING_DATE_HELP2 "\nPodaj nową datę (dd%cmm%crrrr): "
     STRING_DATE_HELP3 "\nPodaj nową datę (rrrr%cmm%cdd): "
@@ -174,7 +174,7 @@ DELAY [/m]n\n\n\
                G  Wyświetla najpierw katalogi      -  Odwraca kolejność\n\
   /P          Pauza po każdym pełnym ekranie.\n\
   /Q          Wyświetla właściciela plików\n\
-  /R          Displays alternate data streams of the files.\n\
+  /R          Wyświetla alternatywne strumienie danych plików.\n\
   /S          Wyświetla pliki w danym katalogu i wszystkich podkatalogach.\n\
   /T          Pole czasu, odpowiedzialne za wyświetlanie/sortowanie \n\
   czas        C  Utworzenia\n\
@@ -225,18 +225,18 @@ FOR /L %zmienna IN (start,step,end) DO komenda [parametery]\n\
 FOR /D %zmienna IN (zestaw) DO komenda [parametery]\n\
 FOR /R [[drive:]path] IN (zestaw) DO komenda [parametery]\n\
 FOR /F [""options""] IN (zestaw) DO komenda [parametery]\n\n\
-  /L    Generates a number sequence from start to end incrementing by step.\n\
-  /D    Modifies the set to refer to directories instead of files.\n\
-  /R    Executes command for files in the set in the specified path (or current\n\
-        working directory if not specified) and every directory below.\n\
-  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+  /L    Generuje sekwencję liczb od początku do końca zwiększaną stopniowo.\n\
+  /D    Modyfikuje zestaw tak, aby odnosił się do katalogów zamiast plików.\n\
+  /R    Wykonuje polecenie dla plików w określonym katalogu (lub bieżącym\n\
+        katalogu roboczym, jeśli nie określono) i w każdym katalogu poniżej.\n\
+  /F    Modyfikuje zestaw tak, aby odnosił się do zawartości plików w zestawie.\n\n\
   %zmienna   Wyznacza zamienny parametr.\n\
   (zestaw)   Definiuje zestaw plików. Można stosować wieloznaczniki (np. *.*)\n\
   komenda    Wyznacza komendę do wykonania na zestawie plików.\n\
   parametry  Wyznacza parametry dla podanej komendy.\n\
-  options    Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
-Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
-after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
+  opcje      Obsługiwane opcje to: eol, skip, delims, tokens, and usebackq.\n\n\
+Wymienne parametry mogą być modyfikowane przez dodanie ~ i opcjonalnego\n\
+kwalifikatora po % i przed nazwą (e.g. %~X). Obsługiwane kwalifikatory to:\n\
 f,d,p,n,x,s,a,t,z.\n\n\
 By użyć FOR w pliku wsadowym, oznacz zmienną jako %%zmienna zamiast\n\
 %zmienna.\n"
@@ -324,12 +324,12 @@ Znak zachęty może składać się z normalnych znaków, a także poniższych sy
   $F   ) (prawy nawias)\n\
   $G   > (znak większości)\n\
   $H   (usuwa ostatni znak)\n\
-  $I   Information line\n\
+  $I   Linia informacyjna\n\
   $L   < (znak mniejszości)\n\
   $N   Bieżący napęd\n\
   $P   Bieżący napęd i ścieżka\n\
   $Q   = (znak równości)\n\
-  $S   (space)\n\
+  $S   (spacja)\n\
   $T   Bieżący czas\n\
   $V   Wersja systemu\n\
   $_   Znak CR/LF\n\
@@ -398,18 +398,18 @@ SET [zmienna[=][parametry]]\n\n\
   parametry    Określa parametry przypisane do tej zmiennej.\n\n\
 Wpisz SET bez żadnych parametrów, by wyświetlić obecne ustawienia zmiennych.\n"
     STRING_START_HELP1 "Wywołuje komendę.\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
-  komenda     Określa komendę, jaka ma być wywołana.\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+START [""tytuł""] [/D ścieżka] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [polecenie/program] [parametry]\n\n\
+  ""tytuł""     Tytuł okna.\n\
+  ścieżka     Określa katalog startowy.\n\
+  I           Używa oryginalnego środowiska przekazanego do cmd.exe,\n\
+              zamiast obecnego środowiska.\n\
+  B           Uruchamia polecenie lub program bez tworzenia żadnego okna.\n\
+  MIN         Uruchamia ze zminimalizowanym oknem.\n\
+  MAX         Uruchamia ze zmaksymalizowanym oknem.\n\
+  WAIT        Uruchamia polecenie lub program i czeka na jego zakończenie.\n\
+  polecenie   Określa polecenie, które ma być wywołane.\n\
+  parametry   Określa parametry, które będą przesłane do polecenia lub programu.\n"
     STRING_TITLE_HELP "Ustawia tytuł dla okna ze znakiem zachęty.\n\n\
 TITLE [tytuł]\n\n\
 tytuł       Określa tytuł dla okna.\n"
@@ -488,7 +488,7 @@ title         nowy tytuł okna\n"
     STRING_CHOICE_OPTION "TN"
     STRING_COPY_OPTION "TNZ"
     STRING_ALIAS_ERROR "Linia poleceń zbyt długa po rozszerzeniu aliasa!\n"
-    STRING_ASSOC_ERROR "File association not found for extension %s\n"
+    STRING_ASSOC_ERROR "Nie można odnaleźć skojarzenia pliku dla rozszerzenia %s\n"
     STRING_BATCH_ERROR "Błąd podczas otwierania pliku wsadowego\n"
     STRING_CHOICE_ERROR "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
     STRING_CHOICE_ERROR_TXT "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
@@ -548,11 +548,11 @@ title         nowy tytuł okna\n"
     STRING_REPLACE_ERROR5 "Dostęp zabroniony - %s\n"
     STRING_REPLACE_ERROR6 "Nie znaleziono plików - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32 -  Błąd współdzielenia\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
+    STRING_CMD_INFOLINE "  Wiersz polecenia ReactOS                                    Type HELP = Help  "
+    STRING_REACTOS_VERSION "System operacyjny ReactOS [Wersja %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Działający na: "
-    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_VERSION_RUNVER "%s [Wersja %d.%d.%d] %s"
     STRING_COPY_FILE "        %d plik(ów) skopiowano\n"
     STRING_DELETE_WIPE "skasowano"
     STRING_FOR_ERROR "złe określenie zmiennej."

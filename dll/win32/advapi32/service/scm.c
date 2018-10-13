@@ -12,6 +12,18 @@
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+NTSTATUS
+WINAPI
+SystemFunction004(
+    const struct ustring *in,
+    const struct ustring *key,
+    struct ustring *out);
+
+NTSTATUS
+WINAPI
+SystemFunction028(
+    IN PVOID ContextHandle,
+    OUT LPBYTE SessionKey);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -155,6 +167,75 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
 }
 
 
+static
+DWORD
+ScmEncryptPassword(
+    _In_ PCWSTR pClearTextPassword,
+    _Out_ PBYTE *pEncryptedPassword,
+    _Out_ PDWORD pEncryptedPasswordSize)
+{
+    struct ustring inData, keyData, outData;
+    BYTE SessionKey[16];
+    PBYTE pBuffer;
+    NTSTATUS Status;
+
+    /* Get the session key */
+    Status = SystemFunction028(NULL,
+                               SessionKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SystemFunction028 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    inData.Length = (wcslen(pClearTextPassword) + 1) * sizeof(WCHAR);
+    inData.MaximumLength = inData.Length;
+    inData.Buffer = (unsigned char *)pClearTextPassword;
+
+    keyData.Length = sizeof(SessionKey);
+    keyData.MaximumLength = keyData.Length;
+    keyData.Buffer = SessionKey;
+
+    outData.Length = 0;
+    outData.MaximumLength = 0;
+    outData.Buffer = NULL;
+
+    /* Get the required buffer size */
+    Status = SystemFunction004(&inData,
+                               &keyData,
+                               &outData);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ERR("SystemFunction004 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Allocate a buffer for the encrypted password */
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, outData.Length);
+    if (pBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    outData.MaximumLength = outData.Length;
+    outData.Buffer = pBuffer;
+
+    /* Encrypt the password */
+    Status = SystemFunction004(&inData,
+                               &keyData,
+                               &outData);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SystemFunction004 failed (Status 0x%08lx)\n", Status);
+        HeapFree(GetProcessHeap(), 0, pBuffer);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    *pEncryptedPassword = outData.Buffer;
+    *pEncryptedPasswordSize = outData.Length;
+
+    return ERROR_SUCCESS;
+}
+
+
 /**********************************************************************
  *  ChangeServiceConfig2A
  *
@@ -293,12 +374,12 @@ ChangeServiceConfigA(SC_HANDLE hService,
     DWORD dwDependenciesLength = 0;
     SIZE_T cchLength;
     LPCSTR lpStr;
-    DWORD dwPasswordLength = 0;
+    DWORD dwPasswordSize = 0;
     LPWSTR lpPasswordW = NULL;
     LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("ChangeServiceConfigA(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
-          dwServiceType, dwStartType, dwErrorControl, debugstr_a(lpBinaryPathName),
+          hService, dwServiceType, dwStartType, dwErrorControl, debugstr_a(lpBinaryPathName),
           debugstr_a(lpLoadOrderGroup), lpdwTagId, debugstr_a(lpDependencies),
           debugstr_a(lpServiceStartName), debugstr_a(lpPassword), debugstr_a(lpDisplayName));
 
@@ -334,9 +415,12 @@ ChangeServiceConfigA(SC_HANDLE hService,
                             lpPasswordW,
                             (int)(strlen(lpPassword) + 1));
 
-        /* FIXME: Encrypt the password */
-        lpEncryptedPassword = (LPBYTE)lpPasswordW;
-        dwPasswordLength = (wcslen(lpPasswordW) + 1) * sizeof(WCHAR);
+        /* Encrypt the unicode password */
+        dwError = ScmEncryptPassword(lpPasswordW,
+                                     &lpEncryptedPassword,
+                                     &dwPasswordSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     RpcTryExcept
@@ -352,7 +436,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
                                         dwDependenciesLength,
                                         (LPSTR)lpServiceStartName,
                                         lpEncryptedPassword,
-                                        dwPasswordLength,
+                                        dwPasswordSize,
                                         (LPSTR)lpDisplayName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -361,8 +445,19 @@ ChangeServiceConfigA(SC_HANDLE hService,
     }
     RpcEndExcept;
 
+done:
     if (lpPasswordW != NULL)
+    {
+        /* Wipe and release the password buffers */
+        SecureZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpPasswordW);
+
+        if (lpEncryptedPassword != NULL)
+        {
+            SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
+            HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
+        }
+    }
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -397,11 +492,11 @@ ChangeServiceConfigW(SC_HANDLE hService,
     DWORD dwDependenciesLength = 0;
     SIZE_T cchLength;
     LPCWSTR lpStr;
-    DWORD dwPasswordLength = 0;
+    DWORD dwPasswordSize = 0;
     LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("ChangeServiceConfigW(%p %lu %lu %lu %s %s %p %s %s %s %s)\n",
-          dwServiceType, dwStartType, dwErrorControl, debugstr_w(lpBinaryPathName),
+          hService, dwServiceType, dwStartType, dwErrorControl, debugstr_w(lpBinaryPathName),
           debugstr_w(lpLoadOrderGroup), lpdwTagId, debugstr_w(lpDependencies),
           debugstr_w(lpServiceStartName), debugstr_w(lpPassword), debugstr_w(lpDisplayName));
 
@@ -421,9 +516,14 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Encrypt the password */
-        lpEncryptedPassword = (LPBYTE)lpPassword;
-        dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+        dwError = ScmEncryptPassword(lpPassword,
+                                     &lpEncryptedPassword,
+                                     &dwPasswordSize);
+        if (dwError != ERROR_SUCCESS)
+        {
+            ERR("ScmEncryptPassword failed (Error %lu)\n", dwError);
+            goto done;
+        }
     }
 
     RpcTryExcept
@@ -439,7 +539,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
                                         dwDependenciesLength,
                                         (LPWSTR)lpServiceStartName,
                                         lpEncryptedPassword,
-                                        dwPasswordLength,
+                                        dwPasswordSize,
                                         (LPWSTR)lpDisplayName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -447,6 +547,14 @@ ChangeServiceConfigW(SC_HANDLE hService,
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
+
+done:
+    if (lpEncryptedPassword != NULL)
+    {
+        /* Wipe and release the password buffer */
+        SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
+        HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
+    }
 
     if (dwError != ERROR_SUCCESS)
     {
@@ -584,7 +692,7 @@ CreateServiceA(SC_HANDLE hSCManager,
     DWORD dwError;
     SIZE_T cchLength;
     LPCSTR lpStr;
-    DWORD dwPasswordLength = 0;
+    DWORD dwPasswordSize = 0;
     LPWSTR lpPasswordW = NULL;
     LPBYTE lpEncryptedPassword = NULL;
 
@@ -632,9 +740,12 @@ CreateServiceA(SC_HANDLE hSCManager,
                             lpPasswordW,
                             (int)(strlen(lpPassword) + 1));
 
-        /* FIXME: Encrypt the password */
-        lpEncryptedPassword = (LPBYTE)lpPasswordW;
-        dwPasswordLength = (wcslen(lpPasswordW) + 1) * sizeof(WCHAR);
+        /* Encrypt the password */
+        dwError = ScmEncryptPassword(lpPasswordW,
+                                     &lpEncryptedPassword,
+                                     &dwPasswordSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     RpcTryExcept
@@ -653,7 +764,7 @@ CreateServiceA(SC_HANDLE hSCManager,
                                   dwDependenciesLength,
                                   (LPSTR)lpServiceStartName,
                                   lpEncryptedPassword,
-                                  dwPasswordLength,
+                                  dwPasswordSize,
                                   (SC_RPC_HANDLE *)&hService);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -662,8 +773,19 @@ CreateServiceA(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
+done:
     if (lpPasswordW != NULL)
+    {
+        /* Wipe and release the password buffers */
+        SecureZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpPasswordW);
+
+        if (lpEncryptedPassword != NULL)
+        {
+            SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
+            HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
+        }
+    }
 
     SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
@@ -701,7 +823,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     DWORD dwError;
     SIZE_T cchLength;
     LPCWSTR lpStr;
-    DWORD dwPasswordLength = 0;
+    DWORD dwPasswordSize = 0;
     LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("CreateServiceW(%p %s %s %lx %lu %lu %lu %s %s %p %s %s %s)\n",
@@ -732,9 +854,12 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Encrypt the password */
-        lpEncryptedPassword = (LPBYTE)lpPassword;
-        dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+        /* Encrypt the password */
+        dwError = ScmEncryptPassword(lpPassword,
+                                     &lpEncryptedPassword,
+                                     &dwPasswordSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     RpcTryExcept
@@ -753,7 +878,7 @@ CreateServiceW(SC_HANDLE hSCManager,
                                   dwDependenciesLength,
                                   lpServiceStartName,
                                   lpEncryptedPassword,
-                                  dwPasswordLength,
+                                  dwPasswordSize,
                                   (SC_RPC_HANDLE *)&hService);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -761,6 +886,14 @@ CreateServiceW(SC_HANDLE hSCManager,
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
+
+done:
+    if (lpEncryptedPassword != NULL)
+    {
+        /* Wipe and release the password buffers */
+        SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
+        HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
+    }
 
     SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
@@ -1560,6 +1693,11 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    /*
+     * NOTE: A size of 1 character would be enough, but tests show that
+     * Windows returns 2 characters instead, certainly due to a WCHAR/bytes
+     * mismatch in their code.
+     */
     if (!lpDisplayName || *lpcchBuffer < sizeof(WCHAR))
     {
         lpNameBuffer = szEmptyName;
@@ -1677,6 +1815,11 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    /*
+     * NOTE: A size of 1 character would be enough, but tests show that
+     * Windows returns 2 characters instead, certainly due to a WCHAR/bytes
+     * mismatch in their code.
+     */
     if (!lpServiceName || *lpcchBuffer < sizeof(WCHAR))
     {
         lpNameBuffer = szEmptyName;

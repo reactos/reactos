@@ -150,9 +150,17 @@ ScmDeleteRegKey(
     _In_ HKEY hKey,
     _In_ PCWSTR pszSubKey);
 
+DWORD
+ScmDecryptPassword(
+    _In_ PBYTE pPassword,
+    _In_ DWORD dwPasswordSize,
+    _Out_ PWSTR *pDecryptedPassword);
+
+
 /* controlset.c */
 
-BOOL ScmGetControlSetValues(VOID);
+DWORD
+ScmCreateLastKnownGoodControlSet(VOID);
 
 
 /* database.c */

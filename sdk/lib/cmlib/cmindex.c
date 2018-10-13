@@ -1285,7 +1285,7 @@ CmpSelectLeaf(IN PHHIVE Hive,
     if (!IndexKey)
     {
         /* Should not happen! */
-        ASSERTMSG("IndexKey = NULL!, it should not happen!\n", FALSE);
+        ASSERT(IndexKey != NULL);
         return HCELL_NIL;
     }
 

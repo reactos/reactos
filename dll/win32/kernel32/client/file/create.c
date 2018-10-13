@@ -447,7 +447,7 @@ OpenFile(LPCSTR lpFileName,
 			default:
 				Sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
 		}
-		return (HFILE) CreateFileA (lpFileName,
+		return (HFILE)(ULONG_PTR) CreateFileA (lpFileName,
 		                            GENERIC_READ | GENERIC_WRITE,
 		                            Sharing,
 		                            NULL,
@@ -476,7 +476,7 @@ OpenFile(LPCSTR lpFileName,
 	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
 		lpReOpenBuff->nErrCode = (WORD)GetLastError();
-		return (HFILE)INVALID_HANDLE_VALUE;
+		return HFILE_ERROR;
 	}
 
     if (uStyle & OF_DELETE)
@@ -507,7 +507,7 @@ OpenFile(LPCSTR lpFileName,
 					   NULL,
 					   NULL))
 	{
-		return (HFILE)INVALID_HANDLE_VALUE;
+		return HFILE_ERROR;
 	}
 
 	// FILE_SHARE_READ
@@ -534,7 +534,7 @@ OpenFile(LPCSTR lpFileName,
 	if (!NT_SUCCESS(errCode))
 	{
 		BaseSetLastNTError (errCode);
-		return (HFILE)INVALID_HANDLE_VALUE;
+		return HFILE_ERROR;
 	}
 
 	if (uStyle & OF_EXIST)
@@ -543,7 +543,7 @@ OpenFile(LPCSTR lpFileName,
 		return (HFILE)1;
 	}
 
-	return (HFILE)FileHandle;
+	return (HFILE)(ULONG_PTR)FileHandle;
 }
 
 /*

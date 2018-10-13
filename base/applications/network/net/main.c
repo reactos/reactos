@@ -25,7 +25,7 @@ COMMAND cmds[] =
     {L"config",     cmdConfig},
     {L"continue",   cmdContinue},
     {L"file",       unimplemented},
-    {L"group",      unimplemented},
+    {L"group",      cmdGroup},
     {L"help",       cmdHelp},
     {L"helpmsg",    cmdHelpMsg},
     {L"localgroup", cmdLocalGroup},

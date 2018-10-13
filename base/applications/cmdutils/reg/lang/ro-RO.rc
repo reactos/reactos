@@ -1,14 +1,14 @@
 /*
  * Translators: Claudia Cotună
  *              Michael Stefaniuc
- *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ *              Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage:\n  REG [operation] [parameters]\n\nSupported operations:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nFor help on a specific operation, type:\n  REG [operation] /?\n\n"
+    STRING_USAGE, "Sintaxa comenzii:\n  REG [operație] [parametri]\n\nOperații disponibile:\n  ADD | DELETE | IMPORT | EXPORT | QUERY\n\nPentru informații despre o anume operație, tastați:\n  REG [operație] /?\n\n"
     STRING_ADD_USAGE, "REG ADD nume_cheie [/v nume_valoare | /ve] [/t tip] [/s separator] [/d date] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE nume_cheie [/v nume_valoare | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY nume_cheie [/v nume_valoare | /ve] [/s]\n"
@@ -39,11 +39,11 @@ STRINGTABLE
     STRING_REG_HELP, "Tastați «REG /?» pentru mai multe informații.\n"
     STRING_FUNC_HELP, "Tastați «REG %1 /?» pentru mai multe informații.\n"
     STRING_VALUE_NOT_SET, "(valoare nealocată)"
-    STRING_IMPORT_USAGE, "REG IMPORT file.reg\n"
-    STRING_FILE_NOT_FOUND, "reg: The file '%1' was not found.\n"
-    STRING_OPEN_KEY_FAILED, "reg: Unable to open the registry key '%1'.\n"
-    STRING_ESCAPE_SEQUENCE, "reg: Unrecognized escape sequence [\\%1!c!]\n"
-    STRING_EXPORT_USAGE, "REG EXPORT key_name file.reg [/y]\n"
-    STRING_INVALID_SYSTEM_KEY, "reg: Invalid system key [%1]\n"
-    STRING_OVERWRITE_FILE, "The file '%1' already exists. Do you want to overwrite it?"
+    STRING_IMPORT_USAGE, "REG IMPORT fișier.reg\n"
+    STRING_FILE_NOT_FOUND, "reg: Fișierul «%1» nu a putut fi găsit.\n"
+    STRING_OPEN_KEY_FAILED, "reg: Cheia de registru «%1» nu a putut fi deschisă.\n"
+    STRING_ESCAPE_SEQUENCE, "reg: Secvența de sustracție [\\%1!c!] nu este recunoscută.\n"
+    STRING_EXPORT_USAGE, "REG EXPORT nume_cheie fișier.reg [/y]\n"
+    STRING_INVALID_SYSTEM_KEY, "reg: Cheia de sistem [%1] nu este una validă.\n"
+    STRING_OVERWRITE_FILE, "Fișierul «%1» deja există. Doriți suprascrierea lui?"
 }

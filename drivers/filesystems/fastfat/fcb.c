@@ -22,8 +22,6 @@
 
 /*  --------------------------------------------------------  DEFINES  */
 
-#define TAG_FCB 'BCFV'
-
 #ifdef KDBG
 extern UNICODE_STRING DebugFile;
 #endif
@@ -262,7 +260,7 @@ vfatDestroyCCB(
 {
     if (pCcb->SearchPattern.Buffer)
     {
-        ExFreePoolWithTag(pCcb->SearchPattern.Buffer, TAG_VFAT);
+        ExFreePoolWithTag(pCcb->SearchPattern.Buffer, TAG_SEARCH);
     }
     ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, pCcb);
 }

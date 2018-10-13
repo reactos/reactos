@@ -165,8 +165,8 @@ UserProcessCreate(PEPROCESS Process)
 
     /* Setup process flags */
     ppiCurrent->W32PF_flags |= W32PF_PROCESSCONNECTED;
-    if ( Process->Peb->ProcessParameters &&
-         Process->Peb->ProcessParameters->WindowFlags & STARTF_SCRNSAVER )
+    if (Process->Peb->ProcessParameters &&
+        (Process->Peb->ProcessParameters->WindowFlags & STARTF_SCREENSAVER))
     {
         ppiScrnSaver = ppiCurrent;
         ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
@@ -532,11 +532,11 @@ InitThreadCallback(PETHREAD Thread)
 
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
 
+    // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
+
     /* CSRSS threads have some special features */
     if (Process == gpepCSRSS)
         ptiCurrent->TIF_flags = TIF_CSRSSTHREAD | TIF_DONTATTACHQUEUE;
-
-    // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
 
     ptiCurrent->pcti = &ptiCurrent->cti;
 
@@ -570,18 +570,30 @@ InitThreadCallback(PETHREAD Thread)
        }
     }
 
-    /* Assign a default window station and desktop to the process */
-    /* Do not try to open a desktop or window station before winlogon initializes */
-    if (ptiCurrent->ppi->hdeskStartup == NULL && gpidLogon != 0)
+    /*
+     * Assign a default window station and desktop to the process.
+     * Do not try to open a desktop or window station before the very first
+     * (interactive) window station has been created by Winlogon.
+     */
+    // if (ptiCurrent->ppi->hdeskStartup == NULL && InputWindowStation != NULL)
+    /* Last things to do only if we are not a SYSTEM or CSRSS thread */
+    // HACK Part #1: Temporarily disabled to have our current USERSRV running, but normally this is its duty to connect itself to the required desktop!
+    if (// !(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
+        /**/ptiCurrent->ppi->hdeskStartup == NULL &&/**/
+        InputWindowStation != NULL)
     {
         HWINSTA hWinSta = NULL;
         HDESK hDesk = NULL;
         UNICODE_STRING DesktopPath;
         PDESKTOP pdesk;
 
+        // HACK Part #2: We force USERSRV to connect to WinSta0 by setting the STARTF_INHERITDESKTOP flag.
+        if (ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD))
+            ProcessParams->WindowFlags |= STARTF_INHERITDESKTOP;
+
         /*
-         * inherit the thread desktop and process window station (if not yet inherited) from the process startup
-         * info structure. See documentation of CreateProcess()
+         * Inherit the thread desktop and process window station (if not yet inherited)
+         * from the process startup info structure. See documentation of CreateProcess().
          */
 
         Status = STATUS_UNSUCCESSFUL;
@@ -594,17 +606,18 @@ InitThreadCallback(PETHREAD Thread)
             RtlInitUnicodeString(&DesktopPath, NULL);
         }
 
-        Status = IntParseDesktopPath(Process,
-                                     &DesktopPath,
-                                     &hWinSta,
-                                     &hDesk);
+        Status = IntResolveDesktop(Process,
+                                   &DesktopPath,
+                                   !!(ProcessParams->WindowFlags & STARTF_INHERITDESKTOP),
+                                   &hWinSta,
+                                   &hDesk);
 
         if (DesktopPath.Buffer)
             ExFreePoolWithTag(DesktopPath.Buffer, TAG_STRING);
 
         if (!NT_SUCCESS(Status))
         {
-            ERR_CH(UserThread, "Failed to assign default dekstop and winsta to process\n");
+            ERR_CH(UserThread, "Failed to assign default desktop and winsta to process\n");
             goto error;
         }
 
@@ -615,7 +628,7 @@ InitThreadCallback(PETHREAD Thread)
             goto error;
         }
 
-        /* Validate the new desktop. */
+        /* Validate the new desktop */
         Status = IntValidateDesktopHandle(hDesk, UserMode, 0, &pdesk);
         if (!NT_SUCCESS(Status))
         {
@@ -624,6 +637,8 @@ InitThreadCallback(PETHREAD Thread)
         }
 
         /* Store the parsed desktop as the initial desktop */
+        ASSERT(ptiCurrent->ppi->hdeskStartup == NULL);
+        ASSERT(Process->UniqueProcessId != gpidLogon);
         ptiCurrent->ppi->hdeskStartup = hDesk;
         ptiCurrent->ppi->rpdeskStartup = pdesk;
     }

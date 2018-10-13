@@ -1282,7 +1282,7 @@ void free_write_data_stripes(write_data_context* wtc);
 
 _Dispatch_type_(IRP_MJ_WRITE)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 _Requires_lock_held_(c->lock)
 _When_(return != 0, _Releases_lock_(c->lock))
@@ -1304,7 +1304,7 @@ void add_extent(_In_ fcb* fcb, _In_ LIST_ENTRY* prevextle, _In_ __drv_aliasesMem
 
 _Dispatch_type_(IRP_MJ_DIRECTORY_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 ULONG get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 type, ULONG atts, BOOL lxss, PIRP Irp);
 
@@ -1312,11 +1312,11 @@ ULONG get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 t
 
 _Dispatch_type_(IRP_MJ_QUERY_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_SET_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp);
 void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid);
@@ -1330,19 +1330,19 @@ void find_gid(struct _fcb* fcb, struct _fcb* parfcb, PSECURITY_SUBJECT_CONTEXT s
 
 _Dispatch_type_(IRP_MJ_SET_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_QUERY_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_query_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_query_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_QUERY_EA)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_SET_EA)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 BOOL has_open_children(file_ref* fileref);
 NTSTATUS stream_set_end_of_file_information(device_extension* Vcb, UINT16 end, fcb* fcb, file_ref* fileref, BOOL advance_only);
@@ -1360,7 +1360,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_CREATE)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_create(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_create(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lock_held_(_Curr_->fcb_lock) _In_ device_extension* Vcb, _Out_ file_ref** pfr,
                       _In_ PUNICODE_STRING fnus, _In_opt_ file_ref* related, _In_ BOOL parent, _Out_opt_ USHORT* parsed, _Out_opt_ ULONG* fn_offset, _In_ POOL_TYPE pooltype,
@@ -1412,7 +1412,7 @@ NTSTATUS update_dev_item(device_extension* Vcb, device* device, PIRP Irp);
 
 _Dispatch_type_(IRP_MJ_READ)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI drv_read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS read_data(_In_ device_extension* Vcb, _In_ UINT64 addr, _In_ UINT32 length, _In_reads_bytes_opt_(length*sizeof(UINT32)/Vcb->superblock.sector_size) UINT32* csum,
                    _In_ BOOL is_tree, _Out_writes_bytes_(length) UINT8* buf, _In_opt_ chunk* c, _Out_opt_ chunk** pc, _In_opt_ PIRP Irp, _In_ UINT64 generation, _In_ BOOL file_read,
@@ -1427,7 +1427,7 @@ void raid6_recover2(UINT8* sectors, UINT16 num_stripes, ULONG sector_size, UINT1
 
 _Dispatch_type_(IRP_MJ_PNP)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS pnp_surprise_removal(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp);
@@ -1492,7 +1492,7 @@ UINT8 gdiv(UINT8 a, UINT8 b);
 
 _Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 // in calcthread.c
 

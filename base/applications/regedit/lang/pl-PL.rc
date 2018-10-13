@@ -363,7 +363,7 @@ BEGIN
     IDS_FLT_REGFILE "Plik rejestru"
     IDS_FLT_REGFILES "Pliki rejestru (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "Pliki Drzewa (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Pliki rejestru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"

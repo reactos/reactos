@@ -255,7 +255,7 @@ FltpObjectPointerReference(_In_ PFLT_OBJECT Object)
 
     /* Store the old count and increment */
     Result = &Object->PointerCount;
-    InterlockedIncrement((PLONG)&Object->PointerCount);
+    InterlockedIncrementSizeT(&Object->PointerCount);
 
     /* Return the initial value */
     return *Result;
@@ -264,7 +264,7 @@ FltpObjectPointerReference(_In_ PFLT_OBJECT Object)
 VOID
 FltpObjectPointerDereference(_In_ PFLT_OBJECT Object)
 {
-    if (!InterlockedDecrement((PLONG)Object->PointerCount))
+    if (InterlockedDecrementSizeT(&Object->PointerCount) == 0)
     {
         // Cleanup
         FLT_ASSERT(FALSE);

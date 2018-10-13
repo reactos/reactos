@@ -231,8 +231,7 @@ static WINECRYPT_CERTSTORE *CRYPT_CreateFileStore(DWORD dwFlags,
         info->type = type;
         info->dirty = FALSE;
         provInfo.cbSize = sizeof(provInfo);
-        provInfo.cStoreProvFunc = sizeof(fileProvFuncs) /
-         sizeof(fileProvFuncs[0]);
+        provInfo.cStoreProvFunc = ARRAY_SIZE(fileProvFuncs);
         provInfo.rgpvStoreProvFunc = fileProvFuncs;
         provInfo.hStoreProv = info;
         store = CRYPT_ProvCreateStore(dwFlags, memStore, &provInfo);

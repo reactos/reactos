@@ -2912,11 +2912,11 @@ NtUserRemoveProp(
     ATOM Atom);
 
 HDESK
-APIENTRY
+NTAPI
 NtUserResolveDesktop(
     IN HANDLE ProcessHandle,
     IN PUNICODE_STRING DesktopPath,
-    DWORD dwUnknown,
+    IN BOOL bInherit,
     OUT HWINSTA* phWinSta);
 
 DWORD

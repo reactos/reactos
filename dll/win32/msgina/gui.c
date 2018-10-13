@@ -53,7 +53,7 @@ SetWelcomeText(HWND hWnd)
 
     TRACE("SetWelcomeText(%p)\n", hWnd);
 
-    /* Get the path of userinit */
+    /* Open the Winlogon key */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0,
@@ -931,6 +931,14 @@ DoLogon(
 
                 goto done;
             }
+        }
+        else if (SubStatus == STATUS_ACCOUNT_EXPIRED)
+        {
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONEXCLAMATION,
+                               IDS_LOGONTITLE,
+                               IDS_ACCOUNTEXPIRED);
         }
         else
         {

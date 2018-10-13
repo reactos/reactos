@@ -11,6 +11,7 @@ list(APPEND SOURCE
     dosdev.c
     FindActCtxSectionStringW.c
     FindFiles.c
+    FLS.c
     FormatMessage.c
     GetComputerNameEx.c
     GetCurrentDirectory.c
@@ -28,6 +29,7 @@ list(APPEND SOURCE
     SetConsoleWindowInfo.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
+    SystemFirmware.c
     TerminateProcess.c
     TunnelCache.c
     WideCharToMultiByte.c

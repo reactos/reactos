@@ -241,7 +241,7 @@ static BOOL AppendFullPathURL(LPCWSTR file, LPWSTR buf, LPCWSTR index)
 
     TRACE("%s %p %s\n", debugstr_w(file), buf, debugstr_w(index));
 
-    if(!GetFullPathNameW(file, sizeof(full_path)/sizeof(full_path[0]), full_path, NULL)) {
+    if (!GetFullPathNameW(file, ARRAY_SIZE(full_path), full_path, NULL)) {
         WARN("GetFullPathName failed: %u\n", GetLastError());
         return FALSE;
     }
@@ -1830,7 +1830,7 @@ HHInfo *CreateHelpViewer(HHInfo *info, LPCWSTR filename, HWND caller)
     /* Set the invalid tab ID (-1) as the default value for all
      * of the tabs, this matches a failed TCM_INSERTITEM call.
      */
-    for(i=0;i<sizeof(info->tabs)/sizeof(HHTab);i++)
+    for (i = 0; i < ARRAY_SIZE(info->tabs); i++)
         info->tabs[i].id = -1;
 
     OleInitialize(NULL);
@@ -1867,7 +1867,7 @@ HHInfo *CreateHelpViewer(HHInfo *info, LPCWSTR filename, HWND caller)
  */
 static char find_html_symbol(const char *entity, int entity_len)
 {
-    int max = sizeof(html_encoded_symbols)/sizeof(html_encoded_symbols[0])-1;
+    int max = ARRAY_SIZE(html_encoded_symbols)-1;
     int min = 0, dir;
 
     while(min <= max)

@@ -118,7 +118,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
 
             /* Reference ourselves */
             ObjectHeader = OBJECT_TO_OBJECT_HEADER(Process);
-            InterlockedIncrement(&ObjectHeader->PointerCount);
+            InterlockedIncrementSizeT(&ObjectHeader->PointerCount);
 
             /* Return the pointer */
             *Object = Process;
@@ -135,7 +135,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
 
             /* Reference ourselves */
             ObjectHeader = OBJECT_TO_OBJECT_HEADER(Thread);
-            InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+            InterlockedIncrementSizeT(&ObjectHeader->PointerCount);
 
             /* No audit mask */
             *AuditMask = 0;
@@ -188,7 +188,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
         *Object = &ObjectHeader->Body;
 
         /* Add a reference */
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+        InterlockedIncrementSizeT(&ObjectHeader->PointerCount);
 
         /* Unlock the handle */
         ExUnlockHandleTableEntry(HandleTable, HandleEntry);
@@ -556,7 +556,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     ProcessHandleCount = 0;
 
     /* Decrement the handle count */
-    NewCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+    NewCount = InterlockedDecrementSizeT(&ObjectHeader->HandleCount);
 
     /* Check if we're out of handles and this was an exclusive object */
     if (!(NewCount) && (ObjectHeader->Flags & OB_FLAG_EXCLUSIVE))
@@ -964,7 +964,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     }
 
     /* Increase the handle count */
-    InterlockedIncrement(&ObjectHeader->HandleCount);
+    InterlockedIncrementSizeT(&ObjectHeader->HandleCount);
     ProcessHandleCount = 0;
 
     /* Check if we have a handle database */
@@ -1191,7 +1191,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     }
 
     /* Increase the handle count */
-    InterlockedIncrement(&ObjectHeader->HandleCount);
+    InterlockedIncrementSizeT(&ObjectHeader->HandleCount);
     ProcessHandleCount = 0;
 
     /* Check if we have a handle database */
@@ -1386,8 +1386,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     if (AdditionalReferences)
     {
         /* Add them to the header */
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount,
-                               AdditionalReferences);
+        InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount,
+                                    AdditionalReferences);
     }
 
     /* Save the access mask */
@@ -1437,8 +1437,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     if (AdditionalReferences)
     {
         /* Dereference it as many times as required */
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount,
-                               -(LONG)AdditionalReferences);
+        InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount,
+                                    -(LONG)AdditionalReferences);
     }
 
     /* Decrement the handle count and detach */
@@ -1603,7 +1603,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     if (AdditionalReferences)
     {
         /* Add them to the header */
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, AdditionalReferences);
+        InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount,
+                                    AdditionalReferences);
     }
 
     /* Now we can release the object */
@@ -1692,8 +1693,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         if (AdditionalReferences > 1)
         {
             /* Dereference it many times */
-            InterlockedExchangeAdd(&ObjectHeader->PointerCount,
-                                  -(LONG)(AdditionalReferences - 1));
+            InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount,
+                                        -(LONG)(AdditionalReferences - 1));
         }
 
         /* Dereference the object one last time */
@@ -1972,7 +1973,7 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
         ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
         /* Increment the pointer count */
-        InterlockedIncrement(&ObjectHeader->PointerCount);
+        InterlockedIncrementSizeT(&ObjectHeader->PointerCount);
 
         /* Release the handle lock */
         ExUnlockHandleTableEntry(HandleTable, OldEntry);
@@ -3094,7 +3095,7 @@ ObInsertObject(IN PVOID Object,
             {
                 /* Check if this was a symbolic link */
                 if (OBJECT_TO_OBJECT_HEADER(InsertObject)->Type ==
-                    ObSymbolicLinkType)
+                    ObpSymbolicLinkObjectType)
                 {
                     /* Dereference it */
                     ObDereferenceObject(InsertObject);
@@ -3128,7 +3129,7 @@ ObInsertObject(IN PVOID Object,
         else
         {
             /* Check if this is a symbolic link */
-            if (ObjectType == ObSymbolicLinkType)
+            if (ObjectType == ObpSymbolicLinkObjectType)
             {
                 /* Create the internal name */
                 ObpCreateSymbolicLinkName(Object);

@@ -15,6 +15,7 @@ extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathResolve(void);
 extern void func_SHCreateFileExtractIconW(void);
+extern void func_ShellExecCmdLine(void);
 extern void func_ShellExecuteEx(void);
 extern void func_ShellState(void);
 extern void func_SHParseDisplayName(void);
@@ -33,6 +34,7 @@ const struct test winetest_testlist[] =
     { "OpenAs_RunDLL", func_OpenAs_RunDLL },
     { "PathResolve", func_PathResolve },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
+    { "ShellExecCmdLine", func_ShellExecCmdLine },
     { "ShellExecuteEx", func_ShellExecuteEx },
     { "ShellState", func_ShellState },
     { "SHParseDisplayName", func_SHParseDisplayName },

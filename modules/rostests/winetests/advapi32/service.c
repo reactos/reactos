@@ -36,6 +36,7 @@ static const CHAR spooler[] = "Spooler"; /* Should be available on all platforms
 static CHAR selfname[MAX_PATH];
 
 static BOOL (WINAPI *pChangeServiceConfig2A)(SC_HANDLE,DWORD,LPVOID);
+static BOOL (WINAPI *pChangeServiceConfig2W)(SC_HANDLE,DWORD,LPVOID);
 static BOOL (WINAPI *pEnumServicesStatusExA)(SC_HANDLE, SC_ENUM_TYPE, DWORD,
                                              DWORD, LPBYTE, DWORD, LPDWORD,
                                              LPDWORD, LPDWORD, LPCSTR);
@@ -57,6 +58,7 @@ static void init_function_pointers(void)
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
 
     pChangeServiceConfig2A = (void*)GetProcAddress(hadvapi32, "ChangeServiceConfig2A");
+    pChangeServiceConfig2W = (void*)GetProcAddress(hadvapi32, "ChangeServiceConfig2W");
     pEnumServicesStatusExA= (void*)GetProcAddress(hadvapi32, "EnumServicesStatusExA");
     pEnumServicesStatusExW= (void*)GetProcAddress(hadvapi32, "EnumServicesStatusExW");
     pGetSecurityInfo = (void *)GetProcAddress(hadvapi32, "GetSecurityInfo");
@@ -1954,6 +1956,7 @@ static void test_queryconfig2(void)
     DWORD expected, needed;
     BYTE buffer[MAX_PATH];
     LPSERVICE_DESCRIPTIONA pConfig = (LPSERVICE_DESCRIPTIONA)buffer;
+    LPSERVICE_DESCRIPTIONW pConfigW = (LPSERVICE_DESCRIPTIONW)buffer;
     SERVICE_PRESHUTDOWN_INFO preshutdown_info;
     static const CHAR servicename [] = "Winetest";
     static const CHAR displayname [] = "Winetest dummy service";
@@ -1961,6 +1964,9 @@ static void test_queryconfig2(void)
     static const CHAR dependencies[] = "Master1\0Master2\0+MasterGroup1\0";
     static const CHAR password    [] = "";
     static const CHAR description [] = "Description";
+    static const CHAR description_empty[] = "";
+    static const WCHAR descriptionW [] = {'D','e','s','c','r','i','p','t','i','o','n','W',0};
+    static const WCHAR descriptionW_empty[] = {0};
 
     if(!pQueryServiceConfig2A)
     {
@@ -2121,6 +2127,66 @@ static void test_queryconfig2(void)
     ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION,buffer, needed,&needed);
     ok(ret, "expected QueryServiceConfig2W to succeed\n");
 
+    pConfig->lpDescription = (LPSTR)description;
+    ret = pChangeServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2A to succeed\n");
+
+    pConfig->lpDescription = NULL;
+    ret = pQueryServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(pConfig->lpDescription && !strcmp(description, pConfig->lpDescription),
+        "expected lpDescription to be %s, got %s\n", description, pConfig->lpDescription);
+
+    pConfig->lpDescription = NULL;
+    ret = pChangeServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2A to succeed\n");
+
+    pConfig->lpDescription = NULL;
+    ret = pQueryServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(pConfig->lpDescription && !strcmp(description, pConfig->lpDescription),
+        "expected lpDescription to be %s, got %s\n", description, pConfig->lpDescription);
+
+    pConfig->lpDescription = (LPSTR)description_empty;
+    ret = pChangeServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2A to succeed\n");
+
+    pConfig->lpDescription = (void*)0xdeadbeef;
+    ret = pQueryServiceConfig2A(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(!pConfig->lpDescription,
+        "expected lpDescription to be null, got %s\n", pConfig->lpDescription);
+
+    pConfigW->lpDescription = (LPWSTR)descriptionW;
+    ret = pChangeServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2W to succeed\n");
+
+    pConfigW->lpDescription = NULL;
+    ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(pConfigW->lpDescription && !lstrcmpW(descriptionW, pConfigW->lpDescription),
+        "expected lpDescription to be %s, got %s\n", wine_dbgstr_w(descriptionW), wine_dbgstr_w(pConfigW->lpDescription));
+
+    pConfigW->lpDescription = NULL;
+    ret = pChangeServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2W to succeed\n");
+
+    pConfigW->lpDescription = NULL;
+    ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(pConfigW->lpDescription && !lstrcmpW(descriptionW, pConfigW->lpDescription),
+        "expected lpDescription to be %s, got %s\n", wine_dbgstr_w(descriptionW), wine_dbgstr_w(pConfigW->lpDescription));
+
+    pConfigW->lpDescription = (LPWSTR)descriptionW_empty;
+    ret = pChangeServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, &buffer);
+    ok(ret, "expected ChangeServiceConfig2W to succeed\n");
+
+    pConfigW->lpDescription = (void*)0xdeadbeef;
+    ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION, buffer, sizeof(buffer), &needed);
+    ok(ret, "expected QueryServiceConfig2A to succeed\n");
+    ok(!pConfigW->lpDescription,
+        "expected lpDescription to be null, got %s\n", wine_dbgstr_w(pConfigW->lpDescription));
+
     SetLastError(0xdeadbeef);
     ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_PRESHUTDOWN_INFO,
             (LPBYTE)&preshutdown_info, sizeof(preshutdown_info), &needed);
@@ -2200,73 +2266,146 @@ static DWORD try_start_stop(SC_HANDLE svc_handle, const char* name, DWORD is_nt4
     return le1;
 }
 
+#define PHASE_STOPPED 1
+#define PHASE_RUNNING 2
+
 struct notify_data {
     SERVICE_NOTIFYW notify;
     SC_HANDLE svc;
+    BOOL was_called;
+    DWORD phase;
 };
 
-static void CALLBACK cb_stopped(void *user)
+static void CALLBACK notify_cb(void *user)
 {
     struct notify_data *data = user;
-    BOOL br;
+    switch (data->phase)
+    {
+    case PHASE_STOPPED:
+        ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
+                "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
+        ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_STOPPED,
+                "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
+        ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_STOPPED,
+                "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
+        break;
 
-    ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
-            "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
-    ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_STOPPED,
-            "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
-    ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_STOPPED,
-            "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
+    case PHASE_RUNNING:
+        ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
+                "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
+        ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_RUNNING,
+                "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
+        ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_RUNNING,
+                "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
+        break;
+    }
 
-    br = StartServiceA(data->svc, 0, NULL);
-    ok(br, "StartService failed: %u\n", GetLastError());
+    data->was_called = TRUE;
 }
 
-static void CALLBACK cb_running(void *user)
+static void test_servicenotify(SC_HANDLE scm_handle, const char *servicename)
 {
-    struct notify_data *data = user;
+    DWORD dr, dr2;
+    struct notify_data data;
+    struct notify_data data2;
     BOOL br;
     SERVICE_STATUS status;
-
-    ok(data->notify.dwNotificationStatus == ERROR_SUCCESS,
-            "Got wrong notification status: %u\n", data->notify.dwNotificationStatus);
-    ok(data->notify.ServiceStatus.dwCurrentState == SERVICE_RUNNING,
-            "Got wrong service state: 0x%x\n", data->notify.ServiceStatus.dwCurrentState);
-    ok(data->notify.dwNotificationTriggered == SERVICE_NOTIFY_RUNNING,
-            "Got wrong notification triggered: 0x%x\n", data->notify.dwNotificationTriggered);
-
-    br = ControlService(data->svc, SERVICE_CONTROL_STOP, &status);
-    ok(br, "ControlService failed: %u\n", GetLastError());
-}
-
-static void test_servicenotify(SC_HANDLE svc)
-{
-    DWORD dr;
-    struct notify_data data;
+    HANDLE svc, svc2;
 
     if(!pNotifyServiceStatusChangeW){
         win_skip("No NotifyServiceStatusChangeW\n");
         return;
     }
 
+    svc = OpenServiceA(scm_handle, servicename, GENERIC_ALL);
+    svc2 = OpenServiceA(scm_handle, servicename, GENERIC_ALL);
+    ok(svc != NULL && svc2 != NULL, "Failed to open service\n");
+    if(!svc || !svc2)
+        return;
+
+    /* receive stopped notification, then start service */
     memset(&data.notify, 0, sizeof(data.notify));
     data.notify.dwVersion = SERVICE_NOTIFY_STATUS_CHANGE;
-    data.notify.pfnNotifyCallback = &cb_stopped;
+    data.notify.pfnNotifyCallback = &notify_cb;
     data.notify.pContext = &data;
     data.svc = svc;
+    data.phase = PHASE_STOPPED;
+    data.was_called = FALSE;
 
     dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
     ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
 
     dr = SleepEx(100, TRUE);
-    ok(dr == WAIT_IO_COMPLETION, "APC wasn't called\n");
+    ok(dr == WAIT_IO_COMPLETION, "Got wrong SleepEx result: %u\n", dr);
+    ok(data.was_called == TRUE, "APC wasn't called\n");
 
-    data.notify.pfnNotifyCallback = &cb_running;
+    br = StartServiceA(svc, 0, NULL);
+    ok(br, "StartService failed: %u\n", GetLastError());
+
+    /* receive running notification */
+    data.phase = PHASE_RUNNING;
+    data.was_called = FALSE;
 
     dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
     ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
 
     dr = SleepEx(100, TRUE);
-    ok(dr == WAIT_IO_COMPLETION, "APC wasn't called\n");
+    ok(dr == WAIT_IO_COMPLETION, "Got wrong SleepEx result: %u\n", dr);
+    ok(data.was_called == TRUE, "APC wasn't called\n");
+
+    /* cannot register two notifications */
+    data.phase = PHASE_STOPPED;
+    data.was_called = FALSE;
+
+    dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
+    ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
+
+    memset(&data2.notify, 0, sizeof(data2.notify));
+    data2.notify.dwVersion = SERVICE_NOTIFY_STATUS_CHANGE;
+    data2.notify.pfnNotifyCallback = &notify_cb;
+    data2.notify.pContext = &data2;
+
+    dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data2.notify);
+    ok(dr == ERROR_SUCCESS || /* win8+ */
+            dr == ERROR_ALREADY_REGISTERED, "NotifyServiceStatusChangeW gave wrong result: %u\n", dr);
+
+    /* should receive no notification because status has not changed.
+     * on win8+, SleepEx quits early but the callback is still not invoked. */
+    dr2 = SleepEx(100, TRUE);
+    ok((dr == ERROR_SUCCESS && dr2 == WAIT_IO_COMPLETION) || /* win8+ */
+            (dr == ERROR_ALREADY_REGISTERED && dr2 == 0), "Got wrong SleepEx result: %u\n", dr);
+    ok(data.was_called == FALSE, "APC should not have been called\n");
+
+    /* stop service and receive notifiction */
+    br = ControlService(svc, SERVICE_CONTROL_STOP, &status);
+    ok(br, "ControlService failed: %u\n", GetLastError());
+
+    dr = SleepEx(100, TRUE);
+    ok(dr == WAIT_IO_COMPLETION, "Got wrong SleepEx result: %u\n", dr);
+    ok(data.was_called == TRUE, "APC wasn't called\n");
+
+    /* test cancelation: create notify on svc that will block until service
+     * start; close svc; start service on svc2; verify that notification does
+     * not happen */
+
+    data.phase = PHASE_RUNNING;
+    data.was_called = FALSE;
+    dr = pNotifyServiceStatusChangeW(svc, SERVICE_NOTIFY_STOPPED | SERVICE_NOTIFY_RUNNING, &data.notify);
+    ok(dr == ERROR_SUCCESS, "NotifyServiceStatusChangeW failed: %u\n", dr);
+
+    CloseServiceHandle(svc);
+
+    br = StartServiceA(svc2, 0, NULL);
+    ok(br, "StartService failed: %u\n", GetLastError());
+
+    dr = SleepEx(100, TRUE);
+    ok(dr == 0, "Got wrong SleepEx result: %u\n", dr);
+    ok(data.was_called == FALSE, "APC should not have been called\n");
+
+    br = ControlService(svc2, SERVICE_CONTROL_STOP, &status);
+    ok(br, "ControlService failed: %u\n", GetLastError());
+
+    CloseServiceHandle(svc2);
 }
 
 static void test_start_stop(void)
@@ -2352,7 +2491,7 @@ static void test_start_stop(void)
     displayname = "Winetest Service";
     ret = ChangeServiceConfigA(svc_handle, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, cmd, NULL, NULL, NULL, NULL, NULL, displayname);
     ok(ret, "ChangeServiceConfig() failed le=%u\n", GetLastError());
-    test_servicenotify(svc_handle);
+    test_servicenotify(scm_handle, servicename);
 
 cleanup:
     if (svc_handle)

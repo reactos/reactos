@@ -50,8 +50,8 @@
 @ stdcall SamSetMemberAttributesOfGroup(ptr long long)
 @ stdcall SamSetSecurityObject(ptr long ptr)
 @ stdcall SamShutdownSamServer(ptr)
-@ stub SamTestPrivateFunctionsDomain
-@ stub SamTestPrivateFunctionsUser
+@ stdcall SamTestPrivateFunctionsDomain(ptr)
+@ stdcall SamTestPrivateFunctionsUser(ptr)
 @ stub SamiChangeKeys
 @ stub SamiChangePasswordUser2
 @ stub SamiChangePasswordUser3

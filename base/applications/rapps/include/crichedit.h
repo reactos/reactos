@@ -6,10 +6,10 @@ class CRichEdit :
 {
     HMODULE m_LoadedLibrary;
 
-    VOID GenericInsertText(LPCWSTR lpszText, LONG InsertedTextLen, DWORD dwEffects)
+    VOID GenericInsertText(LPCWSTR lpszText, SIZE_T InsertedTextLen, DWORD dwEffects)
     {
         SETTEXTEX SetText;
-        LONG Len = GetTextLen();
+        SIZE_T Len = GetTextLen();
 
         if (InsertedTextLen)
         {
@@ -34,7 +34,7 @@ class CRichEdit :
 public:
     CRichEdit() : CWindow(), m_LoadedLibrary(NULL) {}
 
-    VOID SetRangeFormatting(LONG Start, LONG End, DWORD dwEffects)
+    VOID SetRangeFormatting(SIZE_T Start, SIZE_T End, DWORD dwEffects)
     {
         CHARFORMAT2W CharFormat;
 

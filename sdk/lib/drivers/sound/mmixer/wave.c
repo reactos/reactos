@@ -665,7 +665,7 @@ MMixerGetWaveDevicePath(
     PMIXER_LIST MixerList;
     LPMIXER_DATA MixerData;
     LPWAVE_INFO WaveInfo;
-    ULONG Length;
+    SIZE_T Length;
     MIXER_STATUS Status;
 
     /* verify mixer context */

@@ -158,36 +158,43 @@ ConWrite(
 
         /*
          * Find any newline character in the buffer,
-         * write the part BEFORE the newline, then write
-         * a carriage-return + newline, and then write
-         * the remaining part of the buffer.
+         * write the part BEFORE the newline, then emit
+         * a carriage-return + newline sequence and finally
+         * write the remaining part of the buffer.
          *
          * This fixes output in files and serial console.
          */
         while (len > 0)
         {
-            /* Loop until we find a \r or \n character */
-            // FIXME: What about the pair \r\n ?
+            /* Loop until we find a newline character */
             p = szStr;
-            while (len > 0 && *(PWCHAR)p != L'\r' && *(PWCHAR)p != L'\n')
+            while (len > 0 && *(PWCHAR)p != L'\n')
             {
                 /* Advance one character */
                 p = (PVOID)((PWCHAR)p + 1);
-                len--;
+                --len;
             }
 
-            /* Write everything up to \r or \n */
+            /* Write everything up to \n */
             dwNumBytes = ((PWCHAR)p - (PWCHAR)szStr) * sizeof(WCHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
-            /* If we hit \r or \n ... */
-            if (len > 0 && (*(PWCHAR)p == L'\r' || *(PWCHAR)p == L'\n'))
+            /*
+             * If we hit a newline and the previous character is not a carriage-return,
+             * emit a carriage-return + newline sequence, otherwise just emit the newline.
+             */
+            if (len > 0 && *(PWCHAR)p == L'\n')
             {
-                /* ... send a carriage-return + newline sequence and skip \r or \n */
-                WriteFile(Stream->hHandle, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
-                szStr = (PVOID)((PWCHAR)p + 1);
-                len--;
+                if (p == (PVOID)szStr || (p > (PVOID)szStr && *((PWCHAR)p - 1) != L'\r'))
+                    WriteFile(Stream->hHandle, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
+                else
+                    WriteFile(Stream->hHandle, L"\n", sizeof(WCHAR), &dwNumBytes, NULL);
+
+                /* Skip \n */
+                p = (PVOID)((PWCHAR)p + 1);
+                --len;
             }
+            szStr = p;
         }
 
 #ifndef _UNICODE
@@ -235,36 +242,43 @@ ConWrite(
 
         /*
          * Find any newline character in the buffer,
-         * write the part BEFORE the newline, then write
-         * a carriage-return + newline, and then write
-         * the remaining part of the buffer.
+         * write the part BEFORE the newline, then emit
+         * a carriage-return + newline sequence and finally
+         * write the remaining part of the buffer.
          *
          * This fixes output in files and serial console.
          */
         while (len > 0)
         {
-            /* Loop until we find a \r or \n character */
-            // FIXME: What about the pair \r\n ?
+            /* Loop until we find a newline character */
             p = szStr;
-            while (len > 0 && *(PCHAR)p != '\r' && *(PCHAR)p != '\n')
+            while (len > 0 && *(PCHAR)p != '\n')
             {
                 /* Advance one character */
                 p = (PVOID)((PCHAR)p + 1);
-                len--;
+                --len;
             }
 
-            /* Write everything up to \r or \n */
+            /* Write everything up to \n */
             dwNumBytes = ((PCHAR)p - (PCHAR)szStr) * sizeof(CHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
-            /* If we hit \r or \n ... */
-            if (len > 0 && (*(PCHAR)p == '\r' || *(PCHAR)p == '\n'))
+            /*
+             * If we hit a newline and the previous character is not a carriage-return,
+             * emit a carriage-return + newline sequence, otherwise just emit the newline.
+             */
+            if (len > 0 && *(PCHAR)p == '\n')
             {
-                /* ... send a carriage-return + newline sequence and skip \r or \n */
-                WriteFile(Stream->hHandle, "\r\n", 2, &dwNumBytes, NULL);
-                szStr = (PVOID)((PCHAR)p + 1);
-                len--;
+                if (p == (PVOID)szStr || (p > (PVOID)szStr && *((PCHAR)p - 1) != '\r'))
+                    WriteFile(Stream->hHandle, "\r\n", 2, &dwNumBytes, NULL);
+                else
+                    WriteFile(Stream->hHandle, "\n", 1, &dwNumBytes, NULL);
+
+                /* Skip \n */
+                p = (PVOID)((PCHAR)p + 1);
+                --len;
             }
+            szStr = p;
         }
 
 #ifdef _UNICODE

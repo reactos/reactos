@@ -286,7 +286,7 @@ BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD
     if (headers && module_type == MODTYPE_PE && ((PBYTE)(headers+1) <= mapping_end))
     {
         DWORD info_size;
-        SIZE_T export_dir_size;
+        ULONG export_dir_size;
         PIMAGE_EXPORT_DIRECTORY export_dir;
 
         info_size = GetFileVersionInfoSizeW(path, NULL);

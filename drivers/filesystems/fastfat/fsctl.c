@@ -132,7 +132,7 @@ VfatHasFileSystem(
 
     if (*RecognizedFS)
     {
-        Boot = ExAllocatePoolWithTag(NonPagedPool, DiskGeometry.BytesPerSector, TAG_VFAT);
+        Boot = ExAllocatePoolWithTag(NonPagedPool, DiskGeometry.BytesPerSector, TAG_BUFFER);
         if (Boot == NULL)
         {
            return STATUS_INSUFFICIENT_RESOURCES;
@@ -256,12 +256,12 @@ VfatHasFileSystem(
             }
         }
 
-        ExFreePool(Boot);
+        ExFreePoolWithTag(Boot, TAG_BUFFER);
     }
 
     if (!*RecognizedFS && PartitionInfoIsValid)
     {
-        BootFatX = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _BootSectorFatX), TAG_VFAT);
+        BootFatX = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _BootSectorFatX), TAG_BUFFER);
         if (BootFatX == NULL)
         {
             *RecognizedFS=FALSE;
@@ -280,8 +280,14 @@ VfatHasFileSystem(
                 BootFatX->SysType[2] != 'T' ||
                 BootFatX->SysType[3] != 'X')
             {
-                DPRINT1("SysType %c%c%c%c\n", BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3]);
-                *RecognizedFS=FALSE;
+                DPRINT1("SysType %02X%02X%02X%02X (%c%c%c%c)\n",
+                        BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3],
+                        isprint(BootFatX->SysType[0]) ? BootFatX->SysType[0] : '.',
+                        isprint(BootFatX->SysType[1]) ? BootFatX->SysType[1] : '.',
+                        isprint(BootFatX->SysType[2]) ? BootFatX->SysType[2] : '.',
+                        isprint(BootFatX->SysType[3]) ? BootFatX->SysType[3] : '.');
+
+                *RecognizedFS = FALSE;
             }
 
             if (*RecognizedFS &&
@@ -332,7 +338,7 @@ VfatHasFileSystem(
                 }
             }
         }
-        ExFreePool(BootFatX);
+        ExFreePoolWithTag(BootFatX, TAG_BUFFER);
     }
 
     DPRINT("VfatHasFileSystem done\n");
@@ -412,13 +418,13 @@ ReadVolumeLabel(
 
         ASSERT(DeviceObject->Type == 3);
 
-        Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_VFAT);
+        Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_DIRENT);
         if (Buffer != NULL)
         {
             Status = VfatReadDisk(DeviceObject, &FileOffset, PAGE_SIZE, (PUCHAR)Buffer, TRUE);
             if (!NT_SUCCESS(Status))
             {
-                ExFreePoolWithTag(Buffer, TAG_VFAT);
+                ExFreePoolWithTag(Buffer, TAG_DIRENT);
             }
             else
             {
@@ -496,7 +502,7 @@ ReadVolumeLabel(
         }
         else if (NoCache)
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
         }
     }
 
@@ -668,7 +674,7 @@ VfatMount(
     ExInitializeResourceLite(&DeviceExt->DirResource);
 
     DeviceExt->IoVPB = DeviceObject->Vpb;
-    DeviceExt->SpareVPB = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VFAT);
+    DeviceExt->SpareVPB = ExAllocatePoolWithTag(NonPagedPool, sizeof(VPB), TAG_VPB);
     if (DeviceExt->SpareVPB == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -677,7 +683,7 @@ VfatMount(
 
     DeviceExt->Statistics = ExAllocatePoolWithTag(NonPagedPool,
                                                   sizeof(STATISTICS) * VfatGlobalData->NumberProcessors,
-                                                  TAG_VFAT);
+                                                  TAG_STATS);
     if (DeviceExt->Statistics == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -807,9 +813,9 @@ ByeBye:
         if (DeviceExt && DeviceExt->FATFileObject)
             ObDereferenceObject (DeviceExt->FATFileObject);
         if (DeviceExt && DeviceExt->SpareVPB)
-            ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VFAT);
+            ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VPB);
         if (DeviceExt && DeviceExt->Statistics)
-            ExFreePoolWithTag(DeviceExt->Statistics, TAG_VFAT);
+            ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
         if (Fcb)
             vfatDestroyFCB(Fcb);
         if (Ccb)
@@ -1299,6 +1305,7 @@ VfatDismountVolume(
     ExReleaseResourceLite(&DeviceExt->FatResource);
 
     /* Release a few resources and quit, we're done */
+    ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
     ExDeleteResourceLite(&DeviceExt->DirResource);
     ExDeleteResourceLite(&DeviceExt->FatResource);
     ObDereferenceObject(DeviceExt->FATFileObject);

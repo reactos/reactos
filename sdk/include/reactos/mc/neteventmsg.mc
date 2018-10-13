@@ -22,8 +22,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 
 LanguageNames=(English=0x409:MSG00409
                Russian=0x419:MSG00419
-               French=0x040c:MSG0040c)
-
+               French=0x040c:MSG0040c
+               Polish=0x415:MSG00415)
 
 ;
 ; message definitions
@@ -48,6 +48,9 @@ Language=Russian
 Language=French
 Le fichier de journalisation %1 est plein.
 .
+Language=Polish
+Plik dziennika %1 jest zapełniony.
+.
 
 MessageId=6001
 Severity=Warning
@@ -61,6 +64,9 @@ Language=Russian
 .
 Language=French
 Le fichier de journalisation %1 ne peut pas être ouvert.
+.
+Language=Polish
+Nie można otworzyć pliku dziennika %1.
 .
 
 MessageId=6002
@@ -76,6 +82,9 @@ Language=Russian
 Language=French
 Le fichier de journalisation %1 est corrompu et doit être vidé.
 .
+Language=Polish
+Plik dziennika "%1" jest uszkodzony i zostanie wyczyszczony.
+.
 
 MessageId=6003
 Severity=Warning
@@ -89,6 +98,9 @@ Language=Russian
 .
 Language=French
 Le fichier de journalisation des application ne peut pas être ouvert. %1 sera utilisé comme fichier de journalisation par défaut.
+.
+Language=Polish
+Nie można otworzyć pliku dziennika aplikacji. Jako domyślny plik dziennika zostanie użyty plik %1.
 .
 
 MessageId=6004
@@ -104,6 +116,9 @@ Language=Russian
 Language=French
 Un paquet de pilote reçu par le sous-système IO était invalide. La donnée est le paquet.
 .
+Language=Polish
+Pakiet sterownika otrzymany z podsystemu wejścia/wyjścia jest niepoprawny. Przedstawione dane to otrzymany pakiet.
+.
 
 MessageId=6005
 Severity=Warning
@@ -118,6 +133,9 @@ Language=Russian
 Language=French
 Le service de journalisation des évènements a été démarré.
 .
+Language=Polish
+Uruchomiono usługę Dziennik zdarzeń.
+.
 
 MessageId=6006
 Severity=Warning
@@ -131,6 +149,9 @@ Language=Russian
 .
 Language=French
 Le service de journalisation des évènements a été arrêté.
+.
+Language=Polish
+Zatrzymano usługę Dziennik zdarzeń.
 .
 
 MessageId=6007
@@ -155,6 +176,9 @@ Language=Russian
 Language=French
 Service de journalisation des évènements %0
 .
+Language=Polish
+Usługa Dziennik zdarzeń "%0"
+.
 
 MessageId=6008
 Severity=Warning
@@ -169,6 +193,9 @@ Language=Russian
 Language=French
 L'arrêt précédent du système à %1 le %2 n'était pas prévu.
 .
+Language=Polish
+Poprzednie zamknięcie systemu o godzinie %1 na %2 było nieoczekiwane.
+.
 
 MessageId=6009
 Severity=Warning
@@ -181,6 +208,9 @@ Language=Russian
 ReactOS %1 %2 %3 %4.
 .
 Language=French
+ReactOS %1 %2 %3 %4.
+.
+Language=Polish
 ReactOS %1 %2 %3 %4.
 .
 
@@ -197,6 +227,9 @@ Language=Russian
 Language=French
 Le service %1 n'a pas réussi à installer une source d'évènement.
 .
+Language=Polish
+Usługa %1 nie mogła skonfigurować źródła zdarzenia.
+.
 
 MessageId=6011
 Severity=Error
@@ -211,6 +244,9 @@ NetBIOS и DNS имена этого компьютера были измене�
 Language=French
 Le nom NetBIOS et le nom d'hôte DNS de cette machine ont été changés de %1 à %2.
 .
+Language=Polish
+Nazwa NetBIOS i nazwa hosta DNS tego komputera została zmieniona z %1 na %2.
+.
 
 MessageId=6012
 Severity=Error
@@ -224,6 +260,9 @@ DNS-домен присвоенный этому компьютеру был и�
 .
 Language=French
 Le domaine DNS assigné à cet ordinateur a été changé de %1 à %2.
+.
+Language=Polish
+Domena DNS przydzielona do tego komputera uległa zmianie z %1 na %2.
 .
 
 
@@ -244,6 +283,9 @@ Language=Russian
 Language=French
 Un pilote spécifique monoprocesseur a été chargé sur un système multiprocesseurs. Le pilote n'a pas pu être chargé.
 .
+Language=Polish
+Próbowano załadować sterownik jednoprocesorowy na komputerze wieloprocesorowym. Nie można załadować sterownika.
+.
 
 
 ;
@@ -263,6 +305,9 @@ Language=Russian
 Language=French
 Le service %1 n'a pas pu démarrer en raison de l'erreur suivante : %n%2
 .
+Language=Polish
+Nie można uruchomić usługi %1 z powodu następującego błędu: %n%2
+.
 
 MessageId=7001
 Severity=Error
@@ -276,6 +321,9 @@ Language=Russian
 .
 Language=French
 Le serveur %1 dépend du service %2 qui n'a pas pu démarrer en raison de l'erreur suivante : %n%3
+.
+Language=Polish
+Usługa %1 zależy od usługi %2, której nie można uruchomić z powodu następującego błędu: %n%3
 .
 
 MessageId=7002
@@ -291,6 +339,9 @@ Language=Russian
 Language=French
 Le service %1 dépend du groupe %2 et aucun membre de ce groupe n'a démarré.
 .
+Language=Polish
+Usługa %1 zależy od grupy %2, a nie uruchomiono żadnego członka tej grupy.
+.
 
 MessageId=7003
 Severity=Error
@@ -304,6 +355,9 @@ Language=Russian
 .
 Language=French
 Le service %1 dépend du service non existant suivant : %2
+.
+Language=Polish
+Usługa %1 zależy od następującej nieistniejącej usługi: %2
 .
 
 MessageId=7005
@@ -319,6 +373,9 @@ Language=Russian
 Language=French
 L'appel %1 a échoué avec l'erreur suivante : %n%2
 .
+Language=Polish
+Wywołanie %1 nie powiodło się i wystąpił następujący błąd: %n%2
+.
 
 MessageId=7006
 Severity=Error
@@ -332,6 +389,9 @@ The %1 call failed for %2 with the following error: %n%3
 .
 Language=French
 L'appel %1 a échoué pour %2 avec l'erreur suivante : %n%3
+.
+Language=Polish
+Wywołanie %1 dla %2 nie powiodło się i wystąpił następujący błąd: %n%3
 .
 
 MessageId=7007
@@ -347,6 +407,9 @@ The system reverted to its last known good configuration.  The system is restart
 Language=French
 Le système a restauré sa dernière bonne configuration connue. Le système redémarre...
 .
+Language=Polish
+System powrócił do ostatniej znanej dobrej konfiguracji. Trwa ponowne uruchamianie systemu...
+.
 
 MessageId=7008
 Severity=Error
@@ -360,6 +423,9 @@ No backslash is in the account name.
 .
 Language=French
 Aucun backslash n'est présent dans le nom de compte.
+.
+Language=Polish
+W nazwie konta brak znaku ukośnika odwrotnego.
 .
 
 MessageId=7009
@@ -375,6 +441,9 @@ Timeout (%1 milliseconds) waiting for the %2 service to connect.
 Language=French
 Expiration du délai (%1 millisecondes) lors de l'attente du service %2 pour se connecter.
 .
+Language=Polish
+Upłynął limit czasu (%1 milisekund) podczas oczekiwania na połączenie się z usługą %2.
+.
 
 MessageId=7010
 Severity=Error
@@ -388,6 +457,9 @@ Timeout (%1 milliseconds) waiting for ReadFile.
 .
 Language=French
 Expiration du délai (%1 millisecondes) lors de l'attente de ReadFile.
+.
+Language=Polish
+Upłynął limit czasu (%1 milisekund) podczas oczekiwania na operację ReadFile.
 .
 
 MessageId=7011
@@ -403,6 +475,9 @@ Timeout (%1 milliseconds) waiting for a transaction response from the %2 service
 Language=French
 Expiration du délai (%1 millisecondes) lors de l'attente pour une transaction réponse du service %2.
 .
+Language=Polish
+Upłynął limit czasu (%1 milisekund) podczas oczekiwania na odpowiedź transakcji z usługi %2.
+.
 
 MessageId=7012
 Severity=Error
@@ -416,6 +491,9 @@ Message returned in transaction has incorrect size.
 .
 Language=French
 Le message retourné dans la transaction a une taille incorrecte.
+.
+Language=Polish
+Wiadomość zwrócona w transakcji ma niepoprawny rozmiar.
 .
 
 MessageId=7013
@@ -431,6 +509,9 @@ Logon attempt with current password failed with the following error: %n%1
 Language=French
 La tentative de connexion avec le mot de passe actuel a échoué avec l'erreur suivante : %n%1
 .
+Language=Polish
+Próba logowania za pomocą aktualnego hasła nie powiodła się; wystąpił następujący błąd: %n%1
+.
 
 MessageId=7014
 Severity=Error
@@ -444,6 +525,9 @@ Second logon attempt with old password also failed with the following error: %n%
 .
 Language=French
 La seconde tentative de connexion avec l'ancien mot de passe a également échoué avec l'erreur suivante : %n%1
+.
+Language=Polish
+Druga próba logowania za pomocą starego hasła także się nie powiodła; wystąpił następujący błąd: %n%1
 .
 
 MessageId=7015
@@ -459,6 +543,9 @@ Boot-start or system-start driver (%1) must not depend on a service.
 Language=French
 Un pilote au démarrage ou système (%1) ne doit pas dépendre d'un service.
 .
+Language=Polish
+Sterowniki startu rozruchowego oraz systemowego (%1) nie mogą zależeć od usługi.
+.
 
 MessageId=7016
 Severity=Error
@@ -472,6 +559,9 @@ The %1 service has reported an invalid current state %2.
 .
 Language=French
 Le service %1 a reporté un état courant invalide %2.
+.
+Language=Polish
+Usługa %1 zaraportowała nieprawidłowy stan bieżący %2.
 .
 
 MessageId=7017
@@ -487,6 +577,9 @@ Detected circular dependencies demand starting %1.
 Language=French
 Dépendances circulaires détectées lors du démarrage de %1.
 .
+Language=Polish
+Wykryte zależności cykliczne wymagają uruchomienia %1.
+.
 
 MessageId=7018
 Severity=Error
@@ -500,6 +593,9 @@ Detected circular dependencies auto-starting services.
 .
 Language=French
 Dépendances circulaires détectées lors du démarrage automatique des services.
+.
+Language=Polish
+Wykryto automatycznie uruchamiane usługi zależności cyklicznych.
 .
 
 MessageId=7019
@@ -515,6 +611,9 @@ Circular dependency: The %1 service depends on a service in a group which starts
 Language=French
 Dépendance circulaire : le service %1 dépend d'un service dans un groupe qui démarre plus tard.
 .
+Language=Polish
+Zależność cykliczna: usługa %1 zależy od usługi z grupy uruchamianej później.
+.
 
 MessageId=7020
 Severity=Error
@@ -528,6 +627,9 @@ Circular dependency: The %1 service depends on a group which starts later.
 .
 Language=French
 Dépendance circulaire : le service %1 dépend d'un groupe qui démarre plus tard.
+.
+Language=Polish
+Zależność cykliczna: usługa %1 zależy od grupy uruchamianej później.
 .
 
 MessageId=7021
@@ -543,6 +645,9 @@ About to revert to the last known good configuration because the %1 service fail
 Language=French
 Sur le point de revenir à la dernière bonne configuration connue car le service %1 n'a pas réussi à démarrer.
 .
+Language=Polish
+System powróci do ostatniej znanej dobrej konfiguracji, ponieważ uruchomienie usługi %1 nie powiodło się.
+.
 
 MessageId=7022
 Severity=Error
@@ -556,6 +661,9 @@ Language=Russian
 .
 Language=French
 Le serveur %1 service s'est gelé au démarrage.
+.
+Language=Polish
+Usługa %1 zawiesiła się podczas uruchamiania.
 .
 
 MessageId=7023
@@ -571,6 +679,9 @@ The %1 service terminated with the following error: %n%2
 Language=French
 Le service %1 s'est terminé avec l'erreur suivante : %n%2
 .
+Language=Polish
+Usługa %1 zakończyła działanie; wystąpił następujący błąd: %n%2
+.
 
 MessageId=7024
 Severity=Error
@@ -584,6 +695,9 @@ The %1 service terminated with service-specific error %2.
 .
 Language=French
 Le service %1 s'est terminé avec une erreur spécifique au service %2.
+.
+Language=Polish
+Usługa %1 zakończyła działanie; wystąpił specyficzny dla niej błąd %2.
 .
 
 MessageId=7025
@@ -599,6 +713,9 @@ At least one service or driver failed during system startup.  Use Event Viewer t
 Language=French
 Au moins un service ou pilote a échoué durant le démarrage du système. Utilisez la visionneuse d'évènements pour examiner les journaux d'évènements pour plus de détails.
 .
+Language=Polish
+Przynajmniej jedna usługa lub jeden sterownik nie dały się uruchomić podczas uruchamiania systemu. Użyj Podglądu zdarzeń, aby znaleźć szczegółowe informacje w dzienniku zdarzeń.
+.
 
 MessageId=7026
 Severity=Error
@@ -612,6 +729,9 @@ The following boot-start or system-start driver(s) failed to load: %1
 .
 Language=French
 Le pilote au démarrage ou système suivant n'a pas pu être chargé : %1
+.
+Language=Polish
+Nie można załadować następujących sterowników startu rozruchowego lub systemowego: %1
 .
 
 MessageId=7027
@@ -627,6 +747,9 @@ ReactOS could not be started as configured.  A previous working configuration wa
 Language=French
 ReactOS n'a pas pu démarrer tel que configuré. Une précédente configuration fonctionnelle a été utilisé à la place.
 .
+Language=Polish
+Nie można uruchomić systemu ReactOS zgodnie z aktualną konfiguracją. Zamiast niej użyto poprzedniej działającej konfiguracji.
+.
 
 MessageId=7028
 Severity=Error
@@ -640,6 +763,9 @@ The %1 Registry key denied access to SYSTEM account programs so the Service Cont
 .
 Language=French
 La clé de registre %1 a refusé l'accès aux programmes du compte SYSTEM. Le gestionnaire de contrôle des services s'est approprié la clé de registre.
+.
+Language=Polish
+Klucz Rejestru %1 nie przyznał dostępu do programów konta SYSTEM, w związku z czym Menedżer sterowania usługami przejął ten klucz na własność.
 .
 
 MessageId=7029
@@ -655,6 +781,9 @@ Service Control Manager %0
 Language=French
 Gestionnaire de contrôle des services %0
 .
+Language=Polish
+Menedżer sterowania usługami %0
+.
 
 MessageId=7030
 Severity=Error
@@ -668,6 +797,9 @@ The %1 service is marked as an interactive service.  However, the system is conf
 .
 Language=French
 Le service %1 est marqué comme service interactif. Cependant, le système est configuré pour ne pas autoriser les services interactifs. Ce service pourrait ne pas fonctionner correctement.
+.
+Language=Polish
+Usługa %1 jest oznaczona jako usługa interakcyjna. System jest jednak skonfigurowany tak, aby nie zezwalać na usługi interakcyjne, dlatego ta usługa może nie działać właściwie.
 .
 
 MessageId=7031
@@ -683,6 +815,9 @@ The %1 service terminated unexpectedly.  It has done this %2 time(s).  The follo
 Language=French
 Le service %1 s'est terminée de façon non prévue. Il l'a fait %2 fois. L'action corrective suivante va être prise dans %3 millisecondes : %5.
 .
+Language=Polish
+Usługa %1 niespodziewanie zakończyła pracę. Wystąpiło to razy: %2. W przeciągu %3 milisekund zostanie podjęta następująca czynność korekcyjna: %5.
+.
 
 MessageId=7032
 Severity=Error
@@ -696,6 +831,9 @@ The Service Control Manager tried to take a corrective action (%2) after the une
 .
 Language=French
 Le gestionnaire de contrôle des services a tenté de prendre une action corrective (%2) après la fin inattendue du service %3, mais cette action a échoué avec l'erreur suivante : %n%4
+.
+Language=Polish
+Menedżer sterowania usługami próbował podjąć akcję korekcyjną (%2) po nieoczekiwanym zakończeniu usługi %3, ale ta akcja nie powiodła się przy następującym błędzie: %n%4.
 .
 
 MessageId=7033
@@ -717,6 +855,10 @@ Le gestionnaire de contrôle des services ne s'est pas initialisé correctement.
 Le serveur de configuration de sécurité (scesrv.dll) n'a pas réussi à s'initialiser
 avec l'erreur %1. Le système redémarre...
 .
+Language=Polish
+Menedżer sterowania usługami nie został zainicjowany pomyślnie.\r\nNie udało się zainicjować serwera
+konfiguracji zabezpieczeń (scesrv.dll)\r\nz powodu błędu %1. Trwa ponowne uruchamianie systemu...
+.
 
 MessageId=7034
 Severity=Error
@@ -730,6 +872,9 @@ Language=Russian
 .
 Language=French
 Le service %1 s'est terminée de façon non prévue. Il l'a fait %2 fois.
+.
+Language=Polish
+Usługa %1 niespodziewanie zakończyła pracę. Wystąpiło to razy: %2.
 .
 
 MessageId=7035
@@ -745,6 +890,9 @@ Language=Russian
 Language=French
 Le contrôle %2 a été envoyé avec succès au service %1.
 .
+Language=Polish
+Do usługi %1 został pomyślnie wysłany kod sterowania %2.
+.
 
 MessageId=7036
 Severity=Informational
@@ -758,6 +906,9 @@ Language=Russian
 .
 Language=French
 Le service %1 est entré dans l'état %2.
+.
+Language=Polish
+Usługa %1 weszła w stan %2.
 .
 
 MessageId=7037
@@ -790,6 +941,15 @@ redémarrer le service %1 ou pourriez rencontrer d'autres erreurs. Pour vous ass
 que le service est configuré correctement, utilisez la console de gestion des services
 dans la console de gestion Microsoft (MMC).
 .
+Language=Polish
+Menedżer sterowania usługami napotkał błąd podczas cofania zmiany konfiguracji
+usługi %1. Element usługi: %2 jest obecnie w stanie nieprzewidywalnym.
+
+Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
+%1 może okazać się niemożliwe lub mogą wystąpić inne błędy. Aby upewnić się, 
+że usługa jest skonfigurowana właściwie, użyj przystawki Usługi w programie
+ReactOS Management Console (MMC).
+.
 
 MessageId=7038
 Severity=Error
@@ -812,6 +972,12 @@ Le service %1 n'a pas réussi à s'identifier en tant que %2 avec le mot de pass
 actuellement configuré en raison de l'erreur suivante : %n%3%n%nPour vous assurer
 que le service est correctement, utilisez la console de gestion des services
 dans la console de gestion Microsoft (MMC).
+.
+Language=Polish
+Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym 
+hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa 
+jest skonfigurowana właściwie, użyj przystawki Usługi w programie
+ReactOS Management Console (MMC).
 .
 
 MessageId=7039
@@ -839,6 +1005,13 @@ lancé le processus %2 et le processus %3 s'est connecté à la place.%n%n
 
 Veuillez noter que si ce service est configurer pour démarrer dans un débogueur, ce comportement est attendu.
 .
+Language=Polish
+Proces usługi innej niż uruchomiona przez Menedżer sterowania usługami
+połączył się podczas uruchamiania usługi %1. Menedżer sterowania usługami uruchomił
+proces %2, a połączył się proces %3.%n%n
+
+Jeśli ta usługa jest skonfigurowana do uruchomienia z debugerem, takie zachowanie jest oczekiwane.
+.
 
 MessageId=7040
 Severity=Informational
@@ -852,6 +1025,9 @@ Language=Russian
 .
 Language=French
 Le type de démarrage du service %1 a été changé de %2 à %3.
+.
+Language=Polish
+Typ startowy usługi %1 został zmieniony z %2 do %3.
 .
 
 MessageId=7041
@@ -906,6 +1082,22 @@ Si vous avez déjà assigné ce droit d'utilisateur au compte de service, et que
 un objet de stratégie de groupe (GPO) associé avec ce nœud peut avoir supprimé le droit.
 Contactez votre administrateur de domaine pour vérifier si c'est ce qui se produit.
 .
+Language=Polish
+Usługa %1 nie mogła się zalogować jako %2 z aktualnie skonfigurowanym hasłem z powodu następującego błędu:%n
+Błąd logowania: użytkownik nie otrzymał wymaganego typu logowania na tym komputerze.%n%n
+Usługa: %1%n
+Domena i użytkownik: %2%n%n
+To konto usługi nie zawiera potrzebnego prawa użytkownika "Zaloguj się jako usługa."%n%n
+Akcje użytkownika%n%n
+Przypisz "Zaloguj się jako usługa" do konta usługi na tym komputerze. Możesz użyć
+Ustawień zabezpieczeń lokalnych (Secpol.msc), by to wykonać. Jeśli ten komputer jest
+węzłem w klastrze, sprawdź czy to prawo użytkownika jest przypisane do konta usługi
+Klaster na wszystkich węzłach tego klastra.%n%n
+Jeśli już przypisałeś to prawo użytkownika do konta usługi
+i prawo użytkownika wygląda na usunięte, obiekt zasad grupy powiązany z tym
+węzłem może usuwać to prawo. Skontaktuj się z administratorem domeny by sprawdzić,
+czy to się dokonuje.
+.
 
 MessageId=7042
 Severity=Informational
@@ -926,6 +1118,11 @@ Le contrôle %2 a été envoyé avec succès au service %1.%n%n
 La raison spécifiée était : %3 [%4]%n%n
 Commentaire : %5
 .
+Language=Polish
+Do usługi %1 został pomyślnie wysłany kod sterowania %2.%n%n
+Powód: %3 [%4]%n%n
+Komentarz: %5
+.
 
 MessageId=7043
 Severity=Error
@@ -940,7 +1137,9 @@ The %1 service did not shut down properly after receiving a preshutdown control.
 Language=French
 Le service %1 ne s'est pas arrêté proprement après avoir reçu un contrôle de pré-arrêt.
 .
-
+Language=Polish
+Usługa %1 nie została poprawnie wyłączona po otrzymaniu kodu sterownika przed zamknięciem systemu.
+.
 
 ;
 ; transport events 9000-9499
@@ -959,6 +1158,9 @@ Language=Russian
 Language=French
 %2 n'a pas réussi à s'enregistrer avec le wrapper NDIS.
 .
+Language=Polish
+%2: nie można zarejestrować w otoce NDIS.
+.
 
 MessageId=9006
 Severity=Error
@@ -972,4 +1174,7 @@ Language=Russian
 .
 Language=French
 %2 n'a pas pu trouver l'adaptateur %3.
+.
+Language=Polish
+%2: nie można odnaleźć karty %3.
 .

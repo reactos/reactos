@@ -1,6 +1,7 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
 STRINGTABLE
 BEGIN
     STRING_ASSOC_HELP "Modifică asocierile extensiilor de fișiere.\n\n\
@@ -116,14 +117,15 @@ COPY [/V][/Y|/-Y][/A|/B] sursă [/A|/B]\n\
   /Y           Suprimă cererile de confimare a spurascrierilor.\n\
   /-Y          Emite cereri de confirmare pentru suprascrieri.\n\n\
 Argumentul /Y poate fi prezent în variabila de mediu COPYCMD.\n"
-    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
-CTTY device\n\n\
-  device    The terminal device you want to use as the new standard I/O device.\n\
-            This name must refer to a valid character device:\n\
-            AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
-            CON is usually the default standard I/O device.\n\n\
-To return control to the standard console, type: CTTY CON on the auxiliary\n\
-device."
+    STRING_CTTY_HELP "Schimbă dispozitivul terminalului de In/Ex standard la un\n\
+dispozitiv auxiliar.\n\n\
+CTTY dispozitiv\n\n\
+  dispozitiv  Dispozitivul terminal dorit a fi utilizat ca noul dispozitiv\n\
+              de In/Ex. Dispozitive valide ce pot fi referite:\n\
+              AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
+              CON este de obicei dispozitivul standard implicit de In/Ex.\n\n\
+Pentru a restitui controlul la consola standard, tastați: CTTY CON la\n\
+dispozitivul auxiliar."
     STRING_DATE_HELP1 "\nIntroduceți o nouă dată (ll%czz%caaaa): "
     STRING_DATE_HELP2 "\nIntroduceți o nouă dată (zz%cll%caaaa): "
     STRING_DATE_HELP3 "\nIntroduceți o nouă dată (aaaa%cll%czz): "
@@ -553,7 +555,7 @@ titlu         Noul titlu.\n"
     STRING_REN_ERROR1 "A eșuat MoveFile(). Eroarea: %lu\n"
     STRING_TIME_ERROR1 "Oră nevalidă."
     STRING_TYPE_ERROR1 "Opțiune eronată «/%s»\n"
-    STRING_WINDOW_ERROR1 "fereastra nu a fost găsită"
+    STRING_WINDOW_ERROR1 "Fereastra nu a fost găsită"
     STRING_ERROR_PARAMETERF_ERROR "Formatul argumentului nu este corect - %c\n"
     STRING_ERROR_INVALID_SWITCH "Argument eronat - /%c\n"
     STRING_ERROR_TOO_MANY_PARAMETERS "Prea multe argumente - %s\n"

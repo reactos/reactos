@@ -137,6 +137,8 @@ list(APPEND KMTEST_SOURCE
     kernel32/FindFile_user.c
     ntos_cc/CcCopyRead_user.c
     ntos_cc/CcMapData_user.c
+    ntos_cc/CcPinMappedData_user.c
+    ntos_cc/CcPinRead_user.c
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
@@ -155,8 +157,7 @@ add_importlibs(kmtest fltlib advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_target_compile_definitions(kmtest KMT_USER_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest include/kmt_test.h)
 set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
-#add_rostests_file(TARGET kmtest)
-add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET kmtest)
 
 #
 # Group targets

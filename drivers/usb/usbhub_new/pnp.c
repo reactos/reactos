@@ -1558,7 +1558,7 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
     WCHAR Buffer[200];
     PWCHAR EndBuffer;
     size_t Remaining = sizeof(Buffer);
-    ULONG Length;
+    size_t Length;
     PWCHAR Id = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
@@ -1649,7 +1649,7 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
                                      DeviceDescriptor->idProduct);
             }
 
-            Length = sizeof(Buffer) - (Remaining - sizeof(UNICODE_NULL));
+            Length = sizeof(Buffer) - (Remaining - 2 * sizeof(UNICODE_NULL));
 
             Id = ExAllocatePoolWithTag(PagedPool, Length, USB_HUB_TAG);
 
@@ -1662,7 +1662,7 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
             if (PortExtension->PortPdoFlags & USBHUB_PDO_FLAG_INIT_PORT_FAILED)
             {
-                DPRINT("USBH_PdoQueryId: BusQueryInstanceID - %S\n", Id);
+                DPRINT("USBH_PdoQueryId: BusQueryHardwareID - %S\n", Id);
             }
             else
             {
@@ -1766,7 +1766,7 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
                                      InterfaceDescriptor->bInterfaceClass);
             }
 
-            Length = sizeof(Buffer) - (Remaining - sizeof(UNICODE_NULL));
+            Length = sizeof(Buffer) - (Remaining - 2 * sizeof(UNICODE_NULL));
 
             Id = ExAllocatePoolWithTag(PagedPool, Length, USB_HUB_TAG);
 
@@ -1779,7 +1779,7 @@ USBH_PdoQueryId(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
             if (PortExtension->PortPdoFlags & USBHUB_PDO_FLAG_INIT_PORT_FAILED)
             {
-                DPRINT("USBH_PdoQueryId: BusQueryInstanceID - %S\n", Id);
+                DPRINT("USBH_PdoQueryId: BusQueryCompatibleID - %S\n", Id);
             }
             else
             {
@@ -1855,8 +1855,8 @@ USBH_PdoQueryDeviceText(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
     PWCHAR DeviceText;
     UCHAR iProduct = 0;
     NTSTATUS Status;
-    ULONG NumSymbols;
-    ULONG Length;
+    size_t NumSymbols;
+    size_t Length;
 
     DPRINT("USBH_PdoQueryDeviceText ... \n");
 

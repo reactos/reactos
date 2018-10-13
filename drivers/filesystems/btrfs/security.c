@@ -578,7 +578,7 @@ static NTSTATUS get_file_security(PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* 
 
 _Dispatch_type_(IRP_MJ_QUERY_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS NTAPI drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     SECURITY_DESCRIPTOR* sd;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -743,7 +743,7 @@ end:
 
 _Dispatch_type_(IRP_MJ_SET_SECURITY)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS NTAPI drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;

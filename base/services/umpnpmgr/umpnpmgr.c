@@ -782,7 +782,7 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_PHYSICAL_DEVICE_OBJECT_NAME;
             break;
 
         case CM_DRP_CAPABILITIES:
@@ -790,7 +790,7 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_UI_NUMBER:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_UI_NUMBER;
             break;
 
         case CM_DRP_UPPERFILTERS:
@@ -802,19 +802,19 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_BUSTYPEGUID:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_BUSTYPEGUID;
             break;
 
         case CM_DRP_LEGACYBUSTYPE:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_LEGACYBUSTYPE;
             break;
 
         case CM_DRP_BUSNUMBER:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_BUSNUMBER;
             break;
 
         case CM_DRP_ENUMERATOR_NAME:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_ENUMERATOR_NAME;
             break;
 
         case CM_DRP_SECURITY:
@@ -834,7 +834,7 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_ADDRESS:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_ADDRESS;
             break;
 
         case CM_DRP_UI_NUMBER_DESC_FORMAT:
@@ -842,15 +842,15 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_DEVICE_POWER_DATA:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_POWER_DATA;
             break;
 
         case CM_DRP_REMOVAL_POLICY:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY;
             break;
 
         case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT;
             break;
 
         case CM_DRP_REMOVAL_POLICY_OVERRIDE:
@@ -858,18 +858,18 @@ PNP_GetDeviceRegProp(
             break;
 
         case CM_DRP_INSTALL_STATE:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_INSTALL_STATE;
             break;
 
 #if (WINVER >= _WIN32_WINNT_WS03)
         case CM_DRP_LOCATION_PATHS:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_LOCATION_PATHS;
             break;
 #endif
 
 #if (WINVER >= _WIN32_WINNT_WIN7)
         case CM_DRP_BASE_CONTAINERID:
-            lpValueName = NULL;
+            PlugPlayData.Property = PNP_PROPERTY_CONTAINERID;
             break;
 #endif
 
@@ -923,68 +923,6 @@ PNP_GetDeviceRegProp(
         PlugPlayData.Buffer = Buffer;
         PlugPlayData.BufferSize = *pulLength;
 
-        switch (ulProperty)
-        {
-            case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
-                PlugPlayData.Property = PNP_PROPERTY_PHYSICAL_DEVICE_OBJECT_NAME;
-                break;
-
-            case CM_DRP_UI_NUMBER:
-                PlugPlayData.Property = PNP_PROPERTY_UI_NUMBER;
-                break;
-
-            case CM_DRP_BUSTYPEGUID:
-                PlugPlayData.Property = PNP_PROPERTY_BUSTYPEGUID;
-                break;
-
-            case CM_DRP_LEGACYBUSTYPE:
-                PlugPlayData.Property = PNP_PROPERTY_LEGACYBUSTYPE;
-                break;
-
-            case CM_DRP_BUSNUMBER:
-                PlugPlayData.Property = PNP_PROPERTY_BUSNUMBER;
-                break;
-
-            case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = PNP_PROPERTY_ENUMERATOR_NAME;
-                break;
-
-            case CM_DRP_ADDRESS:
-                PlugPlayData.Property = PNP_PROPERTY_ADDRESS;
-                break;
-
-            case CM_DRP_DEVICE_POWER_DATA:
-                PlugPlayData.Property = PNP_PROPERTY_POWER_DATA;
-                break;
-
-            case CM_DRP_REMOVAL_POLICY:
-                PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY;
-                break;
-
-            case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
-                PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT;
-                break;
-
-            case CM_DRP_INSTALL_STATE:
-                PlugPlayData.Property = PNP_PROPERTY_INSTALL_STATE;
-                break;
-
-#if (WINVER >= _WIN32_WINNT_WS03)
-            case CM_DRP_LOCATION_PATHS:
-                PlugPlayData.Property = PNP_PROPERTY_LOCATION_PATHS;
-                break;
-#endif
-
-#if (WINVER >= _WIN32_WINNT_WIN7)
-            case CM_DRP_BASE_CONTAINERID:
-                PlugPlayData.Property = PNP_PROPERTY_CONTAINERID;
-                break;
-#endif
-
-            default:
-                return CR_INVALID_PROPERTY;
-        }
-
         Status = NtPlugPlayControl(PlugPlayControlProperty,
                                    (PVOID)&PlugPlayData,
                                    sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA));
@@ -999,7 +937,6 @@ PNP_GetDeviceRegProp(
     }
 
 done:
-
     if (pulTransferLen)
         *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
@@ -1959,11 +1896,36 @@ DisableDeviceInstance(LPWSTR pszDeviceInstance)
 
 
 static CONFIGRET
-ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
+ReenumerateDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance,
+    _In_ ULONG ulFlags)
 {
-    DPRINT("ReenumerateDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA EnumerateDeviceData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("ReenumerateDeviceInstance(%S 0x%08lx)\n",
+           pszDeviceInstance, ulFlags);
+
+    if (ulFlags & ~CM_REENUMERATE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (ulFlags & CM_REENUMERATE_RETRY_INSTALLATION)
+    {
+        DPRINT1("CM_REENUMERATE_RETRY_INSTALLATION not implemented!\n");
+    }
+
+    RtlInitUnicodeString(&EnumerateDeviceData.DeviceInstance,
+                         pszDeviceInstance);
+    EnumerateDeviceData.Flags = 0;
+
+    Status = NtPlugPlayControl(PlugPlayControlEnumerateDevice,
+                               &EnumerateDeviceData,
+                               sizeof(PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
@@ -2004,7 +1966,8 @@ PNP_DeviceInstanceAction(
             break;
 
         case PNP_DEVINST_REENUMERATE:
-            ret = ReenumerateDeviceInstance(pszDeviceInstance1);
+            ret = ReenumerateDeviceInstance(pszDeviceInstance1,
+                                            ulFlags);
             break;
 
         default:

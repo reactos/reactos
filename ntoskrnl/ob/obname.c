@@ -306,7 +306,7 @@ ObpDeleteNameCheck(IN PVOID Object)
                 ObpDeleteEntryDirectory(&Context);
 
                 /* Check if this is a symbolic link */
-                if (ObjectType == ObSymbolicLinkType)
+                if (ObjectType == ObpSymbolicLinkObjectType)
                 {
                     /* Remove internal name */
                     ObpDeleteSymbolicLinkName(Object);
@@ -434,7 +434,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         }
 
         /* Don't parse a Directory */
-        if (ObjectHeader->Type != ObDirectoryType)
+        if (ObjectHeader->Type != ObpDirectoryObjectType)
         {
             /* Make sure the Object Type has a parse routine */
             ParseRoutine = ObjectHeader->Type->TypeInfo.ParseProcedure;
@@ -745,7 +745,7 @@ ParseFromRoot:
 
                 /* Check create access for the object */
                 if (!ObCheckCreateObjectAccess(Directory,
-                                               ObjectType == ObDirectoryType ?
+                                               ObjectType == ObpDirectoryObjectType ?
                                                DIRECTORY_CREATE_SUBDIRECTORY :
                                                DIRECTORY_CREATE_OBJECT,
                                                AccessState,
@@ -834,7 +834,7 @@ ReparseObject:
                 Directory = NULL;
 
                 /* Increment the pointer count */
-                InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+                InterlockedExchangeAddSizeT(&ObjectHeader->PointerCount, 1);
 
                 /* Cleanup from the first lookup */
                 ObpReleaseLookupContext(LookupContext);
@@ -988,7 +988,7 @@ ReparseObject:
                 else
                 {
                     /* We still have a name; check if this is a directory object */
-                    if (ObjectHeader->Type == ObDirectoryType)
+                    if (ObjectHeader->Type == ObpDirectoryObjectType)
                     {
                         /* Check if we have a referenced parent directory */
                         if (ReferencedParentDirectory)

@@ -8,6 +8,14 @@ HKLM,"SOFTWARE\Classes",,0x00000010
 HKCR,"*","",0x00000000,""
 HKCR,"SystemFileAssociations","",0x00000000,""
 
+; Open With List
+HKCR,"*\OpenWithList\excel.exe","",0x00000000,""
+HKCR,"*\OpenWithList\iexplore.exe","",0x00000000,""
+HKCR,"*\OpenWithList\mspaint.exe","",0x00000000,""
+HKCR,"*\OpenWithList\notepad.exe","",0x00000000,""
+HKCR,"*\OpenWithList\winword.exe","",0x00000000,""
+HKCR,"*\OpenWithList\wordpad.exe","",0x00000000,""
+
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"
 ;HKCR,"Folder\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
@@ -24,7 +32,7 @@ HKCR,".clp","Content Type",0x00000000,"application/x-msclip"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
-HKCR,"clpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\clipbrd.exe %1"
+HKCR,"clpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\clipbrd.exe ""%1"""
 
 ; Event Log File
 HKCR,".evt","",0x00000000,"evtfile"
@@ -65,7 +73,7 @@ HKCR,"batfile","",0x00000000,"ReactOS Batch File"
 HKCR,"batfile","EditFlags",0x00010001,0x00000010
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
-HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; ReactOS Command Script Files
@@ -74,7 +82,7 @@ HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
 HKCR,"cmdfile","EditFlags",0x00010001,0x00000010
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
-HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; DOS Applications
@@ -208,19 +216,21 @@ HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
 HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-212"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
-HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\winhlp32.exe %1"
+HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\winhlp32.exe ""%1"""
 
 HKCR,".chm","",0x00000000,"chm.file"
 HKCR,"chm.file","",0x00000000,%CHMFILE%
 ;;HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\hhctrl.ocx,-452"
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
-HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
+HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe ""%1"""
 
 ; HTA Files
 HKCR,".hta","",0x00000000,"htafile"
 HKCR,"htafile","",0x00000000,"HTML Application"
 HKCR,"htafile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mshta.exe,-1"
-HKCR,"htafile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mshta.exe ""%1"" %*"
+; HKCR,"htafile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mshta.exe ""%1"" %*"
+HKCR,"htafile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"htafile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"htmlfile"
@@ -232,7 +242,7 @@ HKCR,".html","PerceivedType",0x00000000,"text"
 HKCR,"htmlfile","",0x00000000,"HTML Document"
 HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\mshtml.dll,-7501"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
-HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
@@ -258,7 +268,7 @@ HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
@@ -376,7 +386,7 @@ HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
 HKCR,"txtfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\notepad.exe,-512"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
-HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 
 ; XML Documents
@@ -385,7 +395,7 @@ HKCR,".xml","Content Type",0x00000000,"text/xml"
 HKCR,"xmlfile","",0x00000000,%XMLFILE%
 ;;HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
-HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
 ; XSL Stylesheets
 HKCR,".xsl","",0x00000000,"xslfile"
@@ -393,7 +403,7 @@ HKCR,".xsl","Content Type",0x00000000,"text/xml"
 HKCR,"xslfile","",0x00000000,%XSLFILE%
 ;;HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
-HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
@@ -426,7 +436,7 @@ HKCR,".reg","",0x00000000,"regfile"
 HKCR,"regfile","",0x00000000,"Registration File"
 HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\regedit.exe,-31000"
 HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
-HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"regfile\shell\open","",0x00000000,%MERGE%
 HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
 
@@ -435,8 +445,8 @@ HKCR,".rdp","",0x00000000,"rdpfile"
 HKCR,"rdpfile","",0x00000000,"Remote Desktop Connection"
 ;HKCR,"rdpfile","FriendlyTypeName",0x00020000,"%SystemRoot%\mstsc.exe,-4004"
 HKCR,"rdpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mstsc.exe,0"
-HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe %1"
-;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit %1"
+HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe ""%1"""
+;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit ""%1"""
 
 ; Screen Savers
 HKCR,".scr","",0x00000000,"scrfile"
@@ -493,7 +503,7 @@ HKCR,".wav","Content Type",0x00000000,"audio/wav"
 HKCR,".wav","PerceivedType",0x00000000,"audio"
 HKCR,"SoundRec","",0x00000000,%WAVFILE%
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Midi Sounds
 HKCR,".mid","",0x00000000,"MIDFile"
@@ -504,13 +514,13 @@ HKCR,".midi","Content Type",0x00000000,"audio/mid"
 HKCR,".midi","PerceivedType",0x00000000,"audio"
 HKCR,"MIDFile","",0x00000000,%MIDFILE%
 HKCR,"MIDFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Audio CD
 HKCR,".cda","",0x00000000,"CDAFile"
 HKCR,"CDAFile","",0x00000000,%CDAFILE%
 HKCR,"CDAFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Avi Files
 HKCR,".avi","",0x00000000,"AVIFile"
@@ -518,7 +528,7 @@ HKCR,".avi","Content Type",0x00000000,"video/avi"
 HKCR,".avi","PerceivedType",0x00000000,"video"
 HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
-HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 HKCR,"CLSID",,0x00000012
 
@@ -556,11 +566,6 @@ HKCR,"CLSID\{A65B8071-3BFE-4213-9A5B-491DA4461CA7}\VersionIndependentProgID","",
 HKCR,"NDS\Clsid","",0x00000002,"{323991f0-7bad-11cf-b03d-00aa006e0975}"
 
 HKCR,"WinNT\Clsid","",0x00000002,"{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
-
-; Applications
-HKCR,"Applications\notepad.exe\shell\open\command","",0x00000002,"notepad.exe %1"
-HKCR,"Applications\mspaint.exe\shell\open\command","",0x00000002,"mspaint.exe %1"
-HKCR,"Applications\wordpad.exe\shell\open\command","",0x00000002,"wordpad.exe %1"
 
 ; Misc Perceived types
 HKCR,".asm","PerceivedType",0x00000000,"text"

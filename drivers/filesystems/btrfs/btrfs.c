@@ -464,7 +464,11 @@ BOOL get_xattr(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vc
 
 _Dispatch_type_(IRP_MJ_CLOSE)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_close(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_close(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
     device_extension* Vcb = DeviceObject->DeviceExtension;
@@ -513,7 +517,11 @@ end:
 
 _Dispatch_type_(IRP_MJ_FLUSH_BUFFERS)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_flush_buffers(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_flush_buffers(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation( Irp );
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -708,7 +716,11 @@ static BOOL lie_about_fs_type() {
 
 _Dispatch_type_(IRP_MJ_QUERY_VOLUME_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_query_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_query_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG BytesCopied = 0;
@@ -1147,7 +1159,11 @@ end:
 
 _Dispatch_type_(IRP_MJ_SET_VOLUME_INFORMATION)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_set_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_set_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     device_extension* Vcb = DeviceObject->DeviceExtension;
     NTSTATUS Status;
@@ -2129,7 +2145,11 @@ NTSTATUS delete_fileref(_In_ file_ref* fileref, _In_opt_ PFILE_OBJECT FileObject
 
 _Dispatch_type_(IRP_MJ_CLEANUP)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_cleanup(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -4453,7 +4473,21 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         goto exit;
     }
 
+    /* HACK: stream file object seems to get deleted at some point
+     * leading to use after free when installing ReactOS on
+     * BtrFS.
+     * Workaround: leak a handle to the fileobject
+     * XXX: Could be improved by storing it somewhere and releasing it
+     * on dismount. Or even by referencing again the file object.
+     */
+#ifndef __REACTOS__
     Vcb->root_file = IoCreateStreamFileObject(NULL, DeviceToMount);
+#else
+    {
+        HANDLE Dummy;
+        Vcb->root_file = IoCreateStreamFileObjectEx(NULL, DeviceToMount, &Dummy);
+    }
+#endif
     Vcb->root_file->FsContext = root_fcb;
     Vcb->root_file->SectionObjectPointer = &root_fcb->nonpaged->segment_object;
     Vcb->root_file->Vpb = DeviceObject->Vpb;
@@ -4754,7 +4788,11 @@ static NTSTATUS verify_volume(_In_ PDEVICE_OBJECT devobj) {
 
 _Dispatch_type_(IRP_MJ_FILE_SYSTEM_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_file_system_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_file_system_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     device_extension* Vcb = DeviceObject->DeviceExtension;
@@ -4835,7 +4873,11 @@ end:
 
 _Dispatch_type_(IRP_MJ_LOCK_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_lock_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_lock_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     fcb* fcb = IrpSp->FileObject->FsContext;
@@ -4874,10 +4916,17 @@ exit:
 
 _Dispatch_type_(IRP_MJ_SHUTDOWN)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     BOOL top_level;
     device_extension* Vcb = DeviceObject->DeviceExtension;
+#ifdef __REACTOS__
+    LIST_ENTRY *Vcble, *le;
+#endif
 
     FsRtlEnterFileSystem();
 
@@ -4895,6 +4944,7 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     shutting_down = TRUE;
     KeSetEvent(&mountmgr_thread_event, 0, FALSE);
 
+#ifndef __REACTOS__
     while (!IsListEmpty(&VcbList)) {
         Vcb = CONTAINING_RECORD(VcbList.Flink, device_extension, list_entry);
 
@@ -4902,6 +4952,71 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         uninit(Vcb, TRUE);
     }
+#else
+    Vcble = VcbList.Flink;
+    while (Vcble != &VcbList) {
+        Vcb = CONTAINING_RECORD(Vcble, device_extension, list_entry);
+
+        TRACE("shutting down Vcb %p\n", Vcb);
+
+        if (Vcb->balance.thread) {
+            Vcb->balance.paused = FALSE;
+            Vcb->balance.stopping = TRUE;
+            KeSetEvent(&Vcb->balance.event, 0, FALSE);
+            KeWaitForSingleObject(&Vcb->balance.finished, Executive, KernelMode, FALSE, NULL);
+        }
+
+        if (Vcb->scrub.thread) {
+            Vcb->scrub.paused = FALSE;
+            Vcb->scrub.stopping = TRUE;
+            KeSetEvent(&Vcb->scrub.event, 0, FALSE);
+            KeWaitForSingleObject(&Vcb->scrub.finished, Executive, KernelMode, FALSE, NULL);
+        }
+
+        if (Vcb->running_sends != 0) {
+            BOOL send_cancelled = FALSE;
+
+            ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
+
+            le = Vcb->send_ops.Flink;
+            while (le != &Vcb->send_ops) {
+                send_info* send = CONTAINING_RECORD(le, send_info, list_entry);
+
+                if (!send->cancelling) {
+                    send->cancelling = TRUE;
+                    send_cancelled = TRUE;
+                    send->ccb = NULL;
+                    KeSetEvent(&send->cleared_event, 0, FALSE);
+                }
+
+                le = le->Flink;
+            }
+
+            ExReleaseResourceLite(&Vcb->send_load_lock);
+
+            if (send_cancelled) {
+                while (Vcb->running_sends != 0) {
+                    ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
+                    ExReleaseResourceLite(&Vcb->send_load_lock);
+                }
+            }
+        }
+
+        ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+
+        if (Vcb->need_write && !Vcb->readonly) {
+            Status = do_write(Vcb, Irp);
+
+            if (!NT_SUCCESS(Status))
+                ERR("do_write returned %08x\n", Status);
+        }
+
+        Vcb->removing = TRUE;
+
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        Vcble = Vcble->Flink;
+    }
+#endif
 
 #ifdef _DEBUG
     if (comfo) {
@@ -4927,7 +5042,11 @@ end:
 
 _Dispatch_type_(IRP_MJ_POWER)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_power(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     device_extension* Vcb = DeviceObject->DeviceExtension;
     BOOL top_level;
@@ -4968,7 +5087,11 @@ exit:
 
 _Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
 _Function_class_(DRIVER_DISPATCH)
+#ifdef __REACTOS__
+static NTSTATUS NTAPI drv_system_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#else
 static NTSTATUS drv_system_control(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
+#endif
     NTSTATUS Status;
     device_extension* Vcb = DeviceObject->DeviceExtension;
     BOOL top_level;
@@ -5497,6 +5620,30 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 
     DriverObject->DriverExtension->AddDevice = AddDevice;
 
+#ifdef __REACTOS__
+    DriverObject->MajorFunction[IRP_MJ_CREATE]                   = drv_create;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = drv_close;
+    DriverObject->MajorFunction[IRP_MJ_READ]                     = drv_read;
+    DriverObject->MajorFunction[IRP_MJ_WRITE]                    = drv_write;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION]        = drv_query_information;
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION]          = drv_set_information;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_EA]                 = drv_query_ea;
+    DriverObject->MajorFunction[IRP_MJ_SET_EA]                   = drv_set_ea;
+    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS]            = drv_flush_buffers;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = drv_query_volume_information;
+    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION]   = drv_set_volume_information;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL]        = drv_directory_control;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL]      = drv_file_system_control;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL]           = drv_device_control;
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN]                 = drv_shutdown;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL]             = drv_lock_control;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP]                  = drv_cleanup;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY]           = drv_query_security;
+    DriverObject->MajorFunction[IRP_MJ_SET_SECURITY]             = drv_set_security;
+    DriverObject->MajorFunction[IRP_MJ_POWER]                    = drv_power;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL]           = drv_system_control;
+    DriverObject->MajorFunction[IRP_MJ_PNP]                      = drv_pnp;
+#else
     DriverObject->MajorFunction[IRP_MJ_CREATE]                   = (PDRIVER_DISPATCH)drv_create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE]                    = (PDRIVER_DISPATCH)drv_close;
     DriverObject->MajorFunction[IRP_MJ_READ]                     = (PDRIVER_DISPATCH)drv_read;
@@ -5519,6 +5666,7 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
     DriverObject->MajorFunction[IRP_MJ_POWER]                    = (PDRIVER_DISPATCH)drv_power;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL]           = (PDRIVER_DISPATCH)drv_system_control;
     DriverObject->MajorFunction[IRP_MJ_PNP]                      = (PDRIVER_DISPATCH)drv_pnp;
+#endif
 
     init_fast_io_dispatch(&DriverObject->FastIoDispatch);
 
@@ -5563,12 +5711,19 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 
     InitializeObjectAttributes(&oa, RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateKey(&regh, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
+    /* ReactOS specific hack: allow BtrFS driver to start in 1st stage with no hive */
+#ifndef __REACTOS__
     if (!NT_SUCCESS(Status)) {
         ERR("ZwCreateKey returned %08x\n", Status);
         return Status;
     }
 
     watch_registry(regh);
+#else
+    if (NT_SUCCESS(Status)) {
+        watch_registry(regh);
+    }
+#endif
 
     Status = IoReportDetectedDevice(drvobj, InterfaceTypeUndefined, 0xFFFFFFFF, 0xFFFFFFFF,
                                     NULL, NULL, 0, &cde->buspdo);

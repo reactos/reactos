@@ -4,7 +4,7 @@
  * PURPOSE: Romanian Language File for new device installer
  * TRANSLATORS:
  *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ *          Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,7 +17,7 @@ BEGIN
     LTEXT "Bun venit!", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Acest asistent va instala module-pilot pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "AVERTISMENT: INSTALAREA UNUI DISPOZITIV NEOBIȘNUIT VĂ POATE SCOATE DIN FUNCȚIUNE CALCULATORUL!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Instalează modulele-pilot a&utomat", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Instalează modulele-pilot din lo&cație specificată", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -41,7 +41,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalarea a eșuat", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Dispozitivul nu a fost instalat din cauza unei erori neașteptate.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -81,7 +81,7 @@ BEGIN
     LTEXT "Instalare completă", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Este necesară repornirea sistemului pentru a încheia instalarea:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Apăsați „Sfârșit” pentru a închide asistentul.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -92,7 +92,7 @@ BEGIN
     LTEXT "Instalare completă", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Asistentul a încheiat instalarea dispozitivului:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Apăsați „Sfârșit” pentru a încheia instalarea.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

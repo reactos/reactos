@@ -26,8 +26,18 @@
 
 #pragma once
 
-typedef struct _PROGRESS
+struct _PROGRESSBAR;
+
+typedef BOOLEAN
+(NTAPI *PUPDATE_PROGRESS)(
+    IN struct _PROGRESSBAR* Bar,
+    IN BOOLEAN AlwaysUpdate,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize);
+
+typedef struct _PROGRESSBAR
 {
+    /* Border and text positions */
     SHORT Left;
     SHORT Top;
     SHORT Right;
@@ -37,45 +47,67 @@ typedef struct _PROGRESS
 
     SHORT Width;
 
-    ULONG Percent;
-    SHORT Pos;
-
+    /* Maximum and current step counts */
     ULONG StepCount;
     ULONG CurrentStep;
 
-    BOOLEAN Double;
-    CHAR *Text;
+    /* User-specific displayed bar progress/position */
+    PUPDATE_PROGRESS UpdateProgressProc;
+    ULONG Progress;
+    SHORT Pos;
+
+    /* Static progress bar cues */
+    BOOLEAN DoubleEdge;
+    SHORT ProgressColour;
+    PCSTR DescriptionText;
+    PCSTR ProgressFormatText;
 } PROGRESSBAR, *PPROGRESSBAR;
+
 
 /* FUNCTIONS ****************************************************************/
 
 PPROGRESSBAR
+CreateProgressBarEx(
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
+    IN BOOLEAN DoubleEdge,
+    IN SHORT ProgressColour,
+    IN ULONG StepCount,
+    IN PCSTR DescriptionText OPTIONAL,
+    IN PCSTR ProgressFormatText OPTIONAL,
+    IN PUPDATE_PROGRESS UpdateProgressProc OPTIONAL);
+
+PPROGRESSBAR
 CreateProgressBar(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom,
-    SHORT TextTop,
-    SHORT TextRight,
-    BOOLEAN DoubleEdge,
-    CHAR *Text);
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
+    IN BOOLEAN DoubleEdge,
+    IN PCSTR DescriptionText OPTIONAL);
 
 VOID
 DestroyProgressBar(
-    PPROGRESSBAR Bar);
+    IN OUT PPROGRESSBAR Bar);
 
 VOID
 ProgressSetStepCount(
-    PPROGRESSBAR Bar,
-    ULONG StepCount);
+    IN PPROGRESSBAR Bar,
+    IN ULONG StepCount);
 
 VOID
 ProgressNextStep(
-    PPROGRESSBAR Bar);
+    IN PPROGRESSBAR Bar);
 
 VOID
 ProgressSetStep(
-    PPROGRESSBAR Bar,
-    ULONG Step);
+    IN PPROGRESSBAR Bar,
+    IN ULONG Step);
 
 /* EOF */

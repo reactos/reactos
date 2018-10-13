@@ -60,7 +60,7 @@ arbusno_Constructor(IN PVOID DeviceExtension,
     UNREFERENCED_PARAMETER(Interface);
 
     /* Make sure it's the expected interface */
-    if ((ULONG)InterfaceData != CmResourceTypeBusNumber)
+    if ((ULONG_PTR)InterfaceData != CmResourceTypeBusNumber)
     {
         /* Arbiter support must have been initialized first */
         if (FdoExtension->ArbitersInitialized)

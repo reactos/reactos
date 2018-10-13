@@ -586,7 +586,7 @@ HandleLogon(
 
     Session->hProfileInfo = ProfileInfo.hProfile;
 
-    /* Logon has successed. Play sound. */
+    /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
     ret = TRUE;
@@ -656,6 +656,9 @@ LogoffShutdownThread(
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
         ret = 0;
     }
+
+    /* Cancel all the user connections */
+    WNetClearConnections(0);
 
     if (LSData->Session->UserToken)
         RevertToSelf();

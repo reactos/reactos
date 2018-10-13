@@ -78,9 +78,9 @@ BEGIN
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Papier", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    LTEXT "&Rozmiar:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Źródło:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientacja", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Pionowa", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON

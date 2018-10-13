@@ -27,6 +27,8 @@
 #include <shlwapi.h>
 #include <iphlpapi.h>
 #include <winsock2.h>
+#include <udmihelp.h>
+#include <dmilib.h>
 
 #include "resource.h"
 
@@ -62,7 +64,7 @@ RegGetSZ(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR lpBuf, DWORD c
         wprintf(L"Warning! Cannot query %s. Last error: %lu, type: %lu.\n", lpValueName, GetLastError(), dwType);
         dwBytes = 0;
     }
-    else
+    else if (dwBytes == 0)
     {
         wcscpy(lpBuf, L"N/A");
         dwBytes = 6;
@@ -173,8 +175,52 @@ FormatDateTime(time_t Time, LPWSTR lpBuf)
 
     /* Copy time now */
     i += swprintf(lpBuf + i, L", ");
-    i += 2;
+
     GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf + i, BUFFER_SIZE - i);
+}
+
+ULONGLONG GetSecondsQPC(VOID)
+{
+    LARGE_INTEGER Counter, Frequency;
+
+    QueryPerformanceCounter(&Counter);
+    QueryPerformanceFrequency(&Frequency);
+
+    return Counter.QuadPart / Frequency.QuadPart;
+}
+
+ULONGLONG GetSeconds(VOID)
+{
+    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
+    ULONGLONG Ticks64;
+    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+    if (pGetTickCount64)
+    {
+        return pGetTickCount64() / 1000;
+    }
+
+    hModule = LoadLibraryW(L"kernel32_vista.dll");
+
+    if (!hModule)
+    {
+        return GetSecondsQPC();
+    }
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+
+    if (pGetTickCount64)
+    {
+        Ticks64 = pGetTickCount64() / 1000;
+    }
+    else
+    {
+        Ticks64 = GetSecondsQPC();
+    }
+
+    FreeLibrary(hModule);
+    return Ticks64;
 }
 
 /* Show usage */
@@ -236,6 +282,8 @@ AllSysInfo(VOID)
     HKEY hKey;
     PIP_ADAPTER_ADDRESSES pAdapters;
     ULONG cbAdapters;
+    PVOID SMBiosBuf;
+    PCHAR DmiStrings[ID_STRINGS_MAX] = { 0 };
 
     if (!GetSystemDirectoryW(szSystemDir, sizeof(szSystemDir)/sizeof(szSystemDir[0])))
     {
@@ -313,29 +361,40 @@ AllSysInfo(VOID)
     RegCloseKey(hKey);
 
     //getting System Up Time
-    cSeconds = GetTickCount() / 1000;
+    cSeconds = GetSeconds();
     if (!LoadStringW(GetModuleHandle(NULL), IDS_UP_TIME_FORMAT, Tmp, BUFFER_SIZE))
         Tmp[0] = L'\0';
     swprintf(Buf, Tmp, cSeconds / (60*60*24), (cSeconds / (60*60)) % 24, (cSeconds / 60) % 60, cSeconds % 60);
     PrintRow(IDS_UP_TIME, FALSE, L"%s", Buf);
 
+    // prepare SMBIOS data
+    SMBiosBuf = LoadSMBiosData(DmiStrings);
+
     //getting System Manufacturer; HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation\Manufacturer for Win >= 6.0
     swprintf(Tmp, L"%s\\oeminfo.ini", szSystemDir);
     GetPrivateProfileStringW(L"General",
                              L"Manufacturer",
-                             L"To Be Filled By O.E.M.",
+                             L"",
                              Buf,
                              sizeof(Buf)/sizeof(Buf[0]),
                              Tmp);
+    if (wcslen(Buf) == 0 && SMBiosBuf)
+    {
+        GetSMBiosStringW(DmiStrings[SYS_VENDOR], Buf, _countof(Buf), FALSE);
+    }
     PrintRow(IDS_SYS_MANUFACTURER, FALSE, L"%s", Buf);
 
     //getting System Model; HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation\Model for Win >= 6.0
     GetPrivateProfileStringW(L"General",
                              L"Model",
-                             L"To Be Filled By O.E.M.",
+                             L"",
                              Buf,
                              sizeof(Buf)/sizeof(Buf[0]),
                              Tmp);
+    if (wcslen(Buf) == 0 && SMBiosBuf)
+    {
+        GetSMBiosStringW(DmiStrings[SYS_PRODUCT], Buf, _countof(Buf), FALSE);
+    }
     PrintRow(IDS_SYS_MODEL, FALSE, L"%s", Buf);
 
     //getting System type
@@ -375,20 +434,43 @@ AllSysInfo(VOID)
     }
 
     //getting BIOS Version
-    RegGetSZ(HKEY_LOCAL_MACHINE,
-             L"HARDWARE\\DESCRIPTION\\System",
-             L"SystemBiosVersion",
-             Buf,
-             BUFFER_SIZE);
+    if (SMBiosBuf)
+    {
+        j = GetSMBiosStringW(DmiStrings[BIOS_VENDOR], Buf, BUFFER_SIZE, TRUE);
+        if (j + 1 < BUFFER_SIZE)
+        {
+            Buf[j++] = L' ';
+            Buf[j] = L'\0';
+        }
+        GetSMBiosStringW(DmiStrings[BIOS_VERSION], Buf + j, BUFFER_SIZE - j, TRUE);
+    }
+    else
+    {
+        RegGetSZ(HKEY_LOCAL_MACHINE,
+                 L"HARDWARE\\DESCRIPTION\\System",
+                 L"SystemBiosVersion",
+                 Buf,
+                 BUFFER_SIZE);
+    }
     PrintRow(IDS_BIOS_VERSION, FALSE, L"%s", Buf);
 
     //gettings BIOS date
-    RegGetSZ(HKEY_LOCAL_MACHINE,
-             L"HARDWARE\\DESCRIPTION\\System",
-             L"SystemBiosDate",
-             Buf,
-             BUFFER_SIZE);
+    if (SMBiosBuf)
+    {
+        GetSMBiosStringW(DmiStrings[BIOS_DATE], Buf, BUFFER_SIZE, TRUE);
+    }
+    else
+    {
+        RegGetSZ(HKEY_LOCAL_MACHINE,
+                 L"HARDWARE\\DESCRIPTION\\System",
+                 L"SystemBiosDate",
+                 Buf,
+                 BUFFER_SIZE);
+    }
     PrintRow(IDS_BIOS_DATE, FALSE, L"%s", Buf);
+
+    // clean SMBIOS data
+    FreeSMBiosData(SMBiosBuf);
 
     //getting ReactOS Directory
     if (!GetWindowsDirectoryW(Buf, BUFFER_SIZE))

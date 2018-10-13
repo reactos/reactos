@@ -963,8 +963,8 @@ BuildFileFilterAndDeviceMenu(VOID)
     DWORD dwPosition = 0;
     DWORD i;
     DWORD j;
-    UINT uSizeRemain;
-    UINT uMaskRemain;
+    size_t uSizeRemain;
+    size_t uMaskRemain;
     HKEY hKey = NULL;
 
     /* Always load the default (all files) filter */

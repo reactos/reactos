@@ -550,7 +550,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
 #if (_MI_PAGING_LEVELS >= 3)
                 /* On PAE/x64 systems, there's no double-buffering */
-                ASSERT(FALSE);
+                /* Initialize the PFN entry for it */
+                MiInitializePfnForOtherProcess(PageFrameNumber,
+                                               (PMMPTE)PointerPde,
+                                               PFN_FROM_PTE(MiAddressToPte(PointerPde)));
+
+                /* Write the actual PDE now */
+                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #else
                 //
                 // Save it into our double-buffered system page directory
@@ -561,10 +567,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 MiInitializePfnForOtherProcess(PageFrameNumber,
                                                (PMMPTE)PointerPde,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
-
-                /* Write the actual PDE now */
-//                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #endif
+
                 //
                 // Move on to the next expansion address
                 //

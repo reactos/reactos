@@ -27,7 +27,7 @@ FASTCALL
 VerifyObjectOwner(PDD_ENTRY pEntry)
 {
     DWORD Pid = (DWORD)(DWORD_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC;
-    DWORD check = (DWORD)pEntry->Pid & 0xFFFFFFFE;
+    DWORD check = (DWORD_PTR)pEntry->Pid & 0xFFFFFFFE;
     return ( (check == Pid) || (!check));
 }
 
@@ -163,7 +163,7 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
         if ( VerifyObjectOwner(pEntry) )
         {
             if ( ( pEntry->Objt == ObjectType ) &&
-                 ( pEntry->FullUnique == (((ULONG)DdHandle >> 21) & 0x7FF) ) &&
+                 ( pEntry->FullUnique == (((ULONG_PTR)DdHandle >> 21) & 0x7FF) ) &&
                  ( !pEntry->pobj->cExclusiveLock ) )
             {
                 InterlockedIncrement((VOID*)&pEntry->pobj->cExclusiveLock);
@@ -261,7 +261,7 @@ DdGetFreeHandle(UCHAR objType)
     PVOID mAllocMem = NULL;
     ULONG mAllocEntries = 0;
     PDD_ENTRY pEntry = NULL;
-    ULONG retVal;
+    ULONG_PTR retVal;
     ULONG index;
 
     // check if memory is allocated
@@ -362,7 +362,7 @@ DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock)
         pEntry->pobj = pObject;
         pEntry->Objt = objType;
 
-        pEntry->Pid = (HANDLE)(((ULONG)PsGetCurrentProcessId() & 0xFFFFFFFC) | ((ULONG)(pEntry->Pid) & 1));
+        pEntry->Pid = (HANDLE)(((ULONG_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC) | ((ULONG_PTR)(pEntry->Pid) & 1));
 
         if (objLock)
         {
@@ -417,7 +417,7 @@ DdHmgFree(HANDLE DdHandle)
     pEntry->NextFree = ghFreeDdHmgr;
 
     // reset process ID
-    pEntry->Pid = (HANDLE)((DWORD)pEntry->Pid & 1);
+    pEntry->Pid = (HANDLE)((DWORD_PTR)pEntry->Pid & 1);
     ghFreeDdHmgr = Index;
 
     EngReleaseSemaphore(ghsemHmgr);

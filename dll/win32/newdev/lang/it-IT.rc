@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Benvenuto", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Questa procedura guidata installa un nuovo driver di dispositivi per:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Selezionare Successivo per continuare.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "ATTENZIONE! INSTALLARE UN DISPOSITIVO PERSONALIZZATO PUÒ BLOCCARE IL COMPUTER O IMPEDIRNE L'AVVIO!", IDC_STATIC, 120, 59, 210, 25
     CONTROL "Installa il driver automaticamente", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Installa il driver da una posizione specifica", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "L'installazione è fallita", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Impossibile installare il dispositivo perché si è verificato un errore inatteso.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -74,7 +74,7 @@ BEGIN
     LTEXT "Installazione completata", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "È necessario riavviare per terminare l'installazione di:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Selezionare Fine per chiudere questa procedura guidata.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -85,7 +85,7 @@ BEGIN
     LTEXT "Installazione completata", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "La procedura guidata ha terminato l'installazione del driver per:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Selezionare Fine per chiudere questa procedura guidata.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DISPOSITIVO SCONOSCIUTO", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

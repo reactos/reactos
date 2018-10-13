@@ -456,7 +456,7 @@ DEVMODEW *pdm)
 
                 cOutputModes--;
 
-                pdm = (LPDEVMODEW) ( ((ULONG)pdm) + sizeof(DEVMODEW) +
+                pdm = (LPDEVMODEW) ( ((ULONG_PTR)pdm) + sizeof(DEVMODEW) +
                                                    DRIVER_EXTRA_SIZE);
 
                 cbOutputSize += (sizeof(DEVMODEW) + DRIVER_EXTRA_SIZE);

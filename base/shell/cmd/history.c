@@ -48,16 +48,16 @@ typedef struct tagHISTORY
     LPTSTR string;
 } HIST_ENTRY, * LPHIST_ENTRY;
 
-static INT size, max_size=100;
+static INT size, max_size = 100;
 
-static LPHIST_ENTRY Top;
-static LPHIST_ENTRY Bottom;
+static LPHIST_ENTRY Top = NULL;
+static LPHIST_ENTRY Bottom = NULL;
 
-static LPHIST_ENTRY curr_ptr=0;
+static LPHIST_ENTRY curr_ptr = NULL;
 
 VOID InitHistory(VOID);
 VOID History_move_to_bottom(VOID);
-VOID History (INT dir, LPTSTR commandline);
+VOID History(INT dir, LPTSTR commandline);
 VOID CleanHistory(VOID);
 VOID History_del_current_entry(LPTSTR str);
 
@@ -68,7 +68,7 @@ static VOID add_at_bottom(LPTSTR string);
 VOID set_size(INT new_size);
 
 
-INT CommandHistory (LPTSTR param)
+INT CommandHistory(LPTSTR param)
 {
     LPTSTR tmp;
     INT tmp_int;
@@ -120,6 +120,8 @@ INT CommandHistory (LPTSTR param)
 
 VOID set_size(INT new_size)
 {
+    ASSERT(Top && Bottom);
+
     while (new_size<size)
         del(Top->prev);
 
@@ -129,10 +131,22 @@ VOID set_size(INT new_size)
 
 VOID InitHistory(VOID)
 {
-    size=0;
+    size = 0;
 
     Top = cmd_alloc(sizeof(HIST_ENTRY));
+    if (!Top)
+    {
+        WARN("Cannot allocate memory for Top!\n");
+        return;
+    }
     Bottom = cmd_alloc(sizeof(HIST_ENTRY));
+    if (!Bottom)
+    {
+        WARN("Cannot allocate memory for Bottom!\n");
+        cmd_free(Top);
+        Top = NULL;
+        return;
+    }
 
     Top->prev = Bottom;
     Top->next = NULL;
@@ -142,13 +156,15 @@ VOID InitHistory(VOID)
     Bottom->next = Top;
     Bottom->string = NULL;
 
-    curr_ptr=Bottom;
+    curr_ptr = Bottom;
 }
 
 
 VOID CleanHistory(VOID)
 {
-    while (Bottom->next!=Top)
+    ASSERT(Top && Bottom);
+
+    while (Bottom->next != Top)
         del(Bottom->next);
 
     cmd_free(Top);
@@ -160,14 +176,16 @@ VOID History_del_current_entry(LPTSTR str)
 {
     LPHIST_ENTRY tmp;
 
+    ASSERT(Top && Bottom);
+
     if (size == 0)
         return;
 
     if (curr_ptr == Bottom)
-        curr_ptr=Bottom->next;
+        curr_ptr = Bottom->next;
 
     if (curr_ptr == Top)
-        curr_ptr=Top->prev;
+        curr_ptr = Top->prev;
 
 
     tmp = curr_ptr;
@@ -180,6 +198,8 @@ VOID History_del_current_entry(LPTSTR str)
 static
 VOID del(LPHIST_ENTRY item)
 {
+    ASSERT(Top && Bottom);
+
     if (item==NULL || item==Top || item==Bottom)
     {
         TRACE ("del in " __FILE__ ": returning\n"
@@ -206,8 +226,10 @@ VOID add_at_bottom(LPTSTR string)
 {
     LPHIST_ENTRY tmp;
 
+    ASSERT(Top && Bottom);
+
     /*delete first entry if maximum number of entries is reached*/
-    while(size>=max_size)
+    while (size>=max_size)
         del(Top->prev);
 
     while (_istspace(*string))
@@ -218,23 +240,37 @@ VOID add_at_bottom(LPTSTR string)
 
     /*if new entry is the same than the last do not add it*/
     if (size)
+    {
         if (_tcscmp(string,Bottom->next->string)==0)
             return;
+    }
 
-    /*fill bottom with string, it will become Bottom->next*/
-    Bottom->string=cmd_alloc((_tcslen(string)+1)*sizeof(TCHAR));
+    /*create new empty Bottom*/
+    tmp = cmd_alloc(sizeof(HIST_ENTRY));
+    if (!tmp)
+    {
+        WARN("Cannot allocate memory for new Bottom!\n");
+        return;
+    }
+
+    /*fill old bottom with string, it will become new Bottom->next*/
+    Bottom->string = cmd_alloc((_tcslen(string)+1)*sizeof(TCHAR));
+    if (!Bottom->string)
+    {
+        WARN("Cannot allocate memory for Bottom->string!\n");
+        cmd_free(tmp);
+        return;
+    }
     _tcscpy(Bottom->string,string);
 
-    /*save Bottom value*/
-    tmp=Bottom;
+    tmp->next = Bottom;
+    tmp->prev = NULL;
+    tmp->string = NULL;
 
-    /*create new void Bottom*/
-    Bottom=cmd_alloc(sizeof(HIST_ENTRY));
-    Bottom->next=tmp;
-    Bottom->prev=NULL;
-    Bottom->string=NULL;
+    Bottom->prev = tmp;
 
-    tmp->prev=Bottom;
+    /*save the new Bottom value*/
+    Bottom = tmp;
 
     /*set new size*/
     size++;
@@ -243,12 +279,16 @@ VOID add_at_bottom(LPTSTR string)
 
 VOID History_move_to_bottom(VOID)
 {
-    curr_ptr=Bottom;
+    ASSERT(Top && Bottom);
+
+    curr_ptr = Bottom;
 }
 
 LPCTSTR PeekHistory(INT dir)
 {
     LPHIST_ENTRY entry = curr_ptr;
+
+    ASSERT(Top && Bottom);
 
     if (dir == 0)
         return NULL;
@@ -283,12 +323,14 @@ LPCTSTR PeekHistory(INT dir)
     return entry->string;
 }
 
-VOID History (INT dir, LPTSTR commandline)
+VOID History(INT dir, LPTSTR commandline)
 {
+    ASSERT(Top && Bottom);
+
     if (dir==0)
     {
         add_at_bottom(commandline);
-        curr_ptr=Bottom;
+        curr_ptr = Bottom;
         return;
     }
 
@@ -303,9 +345,9 @@ VOID History (INT dir, LPTSTR commandline)
         if (curr_ptr->next==Top || curr_ptr==Top)
         {
 #ifdef WRAP_HISTORY
-            curr_ptr=Bottom;
+            curr_ptr = Bottom;
 #else
-            curr_ptr=Top;
+            curr_ptr = Top;
             commandline[0]=_T('\0');
             return;
 #endif
@@ -321,15 +363,15 @@ VOID History (INT dir, LPTSTR commandline)
         if (curr_ptr->prev==Bottom || curr_ptr==Bottom)
         {
 #ifdef WRAP_HISTORY
-            curr_ptr=Top;
+            curr_ptr = Top;
 #else
-            curr_ptr=Bottom;
+            curr_ptr = Bottom;
             commandline[0]=_T('\0');
             return;
 #endif
         }
 
-        curr_ptr=curr_ptr->prev;
+        curr_ptr = curr_ptr->prev;
         if (curr_ptr->string)
             _tcscpy(commandline,curr_ptr->string);
     }

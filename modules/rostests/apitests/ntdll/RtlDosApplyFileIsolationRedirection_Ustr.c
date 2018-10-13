@@ -22,7 +22,7 @@ struct test_data
     WCHAR* ExpectedSubString;
 };
 
-struct test_data Tests[] = 
+struct test_data Tests[] =
 {
     /* Not redirected file */
     {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"somefilesomefile", NULL},
@@ -33,6 +33,9 @@ struct test_data Tests[] =
     {__LINE__, STATUS_SUCCESS, L"COMCTL32.DLL", L"\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82"},
     {__LINE__, STATUS_SUCCESS, L"comctl32.DLL", L"\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82"},
     {__LINE__, STATUS_SUCCESS, L"c:\\windows\\system32\\comctl32.DLL", L"\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82"},
+    /* Files not redirected with sxs */
+    {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"MSVCR90.DLL", NULL},
+    {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"c:\\windows\\system32\\MSVCR90.DLL", NULL},
     /* Files defined in the manifest, one exists, one doesn't */
     {__LINE__, STATUS_SUCCESS, L"deptest.dll", EXPECT_IN_SAME_DIR},
     {__LINE__, STATUS_SUCCESS, L"adllfile.dll", EXPECT_IN_SAME_DIR},
@@ -69,7 +72,7 @@ HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line)
     SetLastError(0xdeaddead);
     h = CreateActCtxW(&ActCtx);
     ok_(__FILE__, line)(h != INVALID_HANDLE_VALUE, "CreateActCtx failed for %S\n", FileName);
-    // In win10 last error is unchanged and in win2k3 it is ERROR_BAD_EXE_FORMAT    
+    // In win10 last error is unchanged and in win2k3 it is ERROR_BAD_EXE_FORMAT
     ok_(__FILE__, line)(GetLastError() == ERROR_BAD_EXE_FORMAT || GetLastError() == 0xdeaddead, "Wrong last error %lu\n", GetLastError());
 
     return h;
@@ -148,7 +151,7 @@ void TestBuffers()
 
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      NULL, 
+                                                      NULL,
                                                       NULL,
                                                       NULL,
                                                       &DynamicString,
@@ -161,8 +164,8 @@ void TestBuffers()
     RtlInitEmptyUnicodeString(&Param, NULL, 0);
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       NULL,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -176,8 +179,8 @@ void TestBuffers()
     Param.Buffer = L"comctl32.dllcrapcrap";
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       NULL,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -190,8 +193,8 @@ void TestBuffers()
     RtlInitUnicodeString(&Param, L"comctl32.dll");
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       NULL,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -203,8 +206,8 @@ void TestBuffers()
     RtlInitUnicodeString(&Param, L"comctl32");
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       NULL,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -216,8 +219,8 @@ void TestBuffers()
     RtlInitUnicodeString(&Param, L"comctl32");
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      &DotDll, 
+                                                      &Param,
+                                                      &DotDll,
                                                       NULL,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -230,7 +233,7 @@ void TestBuffers()
     RtlInitUnicodeString(&Param, L"comctl32.dll");
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
+                                                      &Param,
                                                       NULL,
                                                       NULL,
                                                       &DynamicString,
@@ -254,8 +257,8 @@ void TestBuffers()
     StaticString.MaximumLength = sizeof(buffer);
     Param = StaticString;
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       &StaticString,
                                                       NULL,
                                                       &StringUsed,
@@ -269,8 +272,8 @@ void TestBuffers()
     StaticString.Length = sizeof(L"comctl32.dll");
     StaticString.MaximumLength = sizeof(buffer);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &StaticString, 
-                                                      NULL, 
+                                                      &StaticString,
+                                                      NULL,
                                                       &StaticString,
                                                       NULL,
                                                       &StringUsed,
@@ -282,8 +285,8 @@ void TestBuffers()
     RtlInitUnicodeString(&Param, L"comctl32.dll");
     RtlInitEmptyUnicodeString(&StaticString, buffer, sizeof(buffer));
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       &StaticString,
                                                       NULL,
                                                       &StringUsed,
@@ -301,8 +304,8 @@ void TestBuffers()
 
     RtlInitEmptyUnicodeString(&StaticString, buffer, 5 * sizeof(WCHAR));
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       &StaticString,
                                                       NULL,
                                                       &StringUsed,
@@ -315,8 +318,8 @@ void TestBuffers()
     RtlInitEmptyUnicodeString(&StaticString, buffer, sizeof(buffer));
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       &StaticString,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -341,8 +344,8 @@ void TestBuffers()
     RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     StaticString.Buffer[0] = 1;
     Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      &Param, 
-                                                      NULL, 
+                                                      &Param,
+                                                      NULL,
                                                       &StaticString,
                                                       &DynamicString,
                                                       &StringUsed,
@@ -374,7 +377,7 @@ START_TEST(RtlDosApplyFileIsolationRedirection_Ustr)
         HANDLE h = _CreateActCtxFromFile(L"ntdlltest.manifest", __LINE__);
         BOOL bactivated = FALSE;
         ULONG_PTR cookie;
-        
+
         if (h != INVALID_HANDLE_VALUE)
             bactivated = ActivateActCtx(h, &cookie);
 
@@ -396,7 +399,7 @@ START_TEST(RtlDosApplyFileIsolationRedirection_Ustr)
         separator = wcsrchr(TestPath, L'\\');
         separator++;
         wcscpy(separator, L"testdata\\ntdll_apitest.exe RtlDosApplyFileIsolationRedirection_Ustr DoTest");
-        
+
         created = CreateProcessW(NULL, TestPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
         ok(created, "Expected CreateProcess to succeed\n");
         if (created)

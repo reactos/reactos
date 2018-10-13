@@ -644,6 +644,19 @@ typedef struct _SAMPR_USER_INTERNAL1_INFORMATION
     BOOLEAN PasswordExpired;
 } SAMPR_USER_INTERNAL1_INFORMATION, *PSAMPR_USER_INTERNAL1_INFORMATION;
 
+/* SAMPR_USER_INTERNAL2_INFORMATION.Flags values */
+cpp_quote("#define USER_LOGON_BAD_PASSWORD    0x08000000")
+cpp_quote("#define USER_LOGON_SUCCESS         0x10000000")
+
+typedef struct _SAMPR_USER_INTERNAL2_INFORMATION
+{
+    unsigned long Flags;
+    OLD_LARGE_INTEGER LastLogon;
+    OLD_LARGE_INTEGER LastLogoff;
+    unsigned short BadPasswordCount;
+    unsigned short LogonCount;
+} SAMPR_USER_INTERNAL2_INFORMATION, *PSAMPR_USER_INTERNAL2_INFORMATION;
+
 typedef struct _SAMPR_USER_INTERNAL4_INFORMATION
 {
     SAMPR_USER_ALL_INFORMATION I1;
@@ -723,6 +736,7 @@ typedef [switch_type(USER_INFORMATION_CLASS)] union _SAMPR_USER_INFO_BUFFER
     [case(UserControlInformation)] USER_CONTROL_INFORMATION Control;
     [case(UserExpiresInformation)] USER_EXPIRES_INFORMATION Expires;
     [case(UserInternal1Information)] SAMPR_USER_INTERNAL1_INFORMATION Internal1;
+    [case(UserInternal2Information)] SAMPR_USER_INTERNAL2_INFORMATION Internal2;
     [case(UserParametersInformation)] SAMPR_USER_PARAMETERS_INFORMATION Parameters;
     [case(UserAllInformation)] SAMPR_USER_ALL_INFORMATION All;
     [case(UserInternal4Information)] SAMPR_USER_INTERNAL4_INFORMATION Internal4;

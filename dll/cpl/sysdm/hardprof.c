@@ -567,7 +567,7 @@ GetProfile(
                               L"PreferenceOrder",
                               NULL,
                               NULL,
-                              (LPBYTE)pProfile->dwPreferenceOrder,
+                              (LPBYTE)&pProfile->dwPreferenceOrder,
                               &dwSize);
     if (lError == ERROR_SUCCESS)
     {

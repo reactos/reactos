@@ -58,8 +58,7 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-// FIXME: freeldr implementation uses ULONG for page numbers
-#define MM_MAX_PAGE        0xFFFFFFFFFFFFF
+#define MM_MAX_PAGE     0x3FFFF /* freeldr only maps 1 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
@@ -176,7 +175,8 @@ FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag)
 FORCEINLINE
 PVOID
 FrLdrTempAlloc(
-    ULONG Size, ULONG Tag)
+    _In_ SIZE_T Size,
+    _In_ ULONG Tag)
 {
     return FrLdrHeapAllocateEx(FrLdrTempHeap, Size, Tag);
 }

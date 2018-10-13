@@ -564,7 +564,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+            if (ProcessInformationLength != RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query))
             {
                 if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
                 {

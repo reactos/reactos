@@ -961,7 +961,7 @@ USBPORT_ParseResources(IN PDEVICE_OBJECT FdoDevice,
         {
             if (PortDescriptor->Flags & CM_RESOURCE_PORT_IO)
             {
-                UsbPortResources->ResourceBase = (PVOID)PortDescriptor->u.Port.Start.LowPart;
+                UsbPortResources->ResourceBase = (PVOID)(ULONG_PTR)PortDescriptor->u.Port.Start.QuadPart;
             }
             else
             {
@@ -1413,7 +1413,7 @@ USBPORT_GetDeviceHwIds(IN PDEVICE_OBJECT FdoDevice,
     PUSBPORT_REGISTRATION_PACKET Packet;
     PVOID Id;
     WCHAR Buffer[300] = {0};
-    ULONG Length = 0;
+    SIZE_T Length = 0;
     size_t Remaining = sizeof(Buffer);
     PWCHAR EndBuffer;
 
@@ -1493,7 +1493,7 @@ USBPORT_GetDeviceHwIds(IN PDEVICE_OBJECT FdoDevice,
                              L"USB\\ROOT_HUB");
     }
 
-    Length = (sizeof(Buffer) - Remaining + sizeof(UNICODE_NULL));
+    Length = (sizeof(Buffer) - Remaining + 2 * sizeof(UNICODE_NULL));
 
      /* for debug only */
     if (FALSE)
@@ -1709,7 +1709,7 @@ USBPORT_PdoPnP(IN PDEVICE_OBJECT PdoDevice,
                                        L"USB\\ROOT_HUB");
                 }
 
-                Length = (wcslen(Buffer) + 1);
+                Length = (LONG)(wcslen(Buffer) + 1);
 
                 Id = ExAllocatePoolWithTag(PagedPool,
                                            Length * sizeof(WCHAR),

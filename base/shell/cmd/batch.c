@@ -110,13 +110,14 @@ LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
  *
  */
 
-LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
+LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
 {
     LPTSTR dp = (LPTSTR)cmd_alloc ((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
 
     /* JPP 20-Jul-1998 added error checking */
     if (dp == NULL)
     {
+        WARN("Cannot allocate memory for dp!\n");
         error_out_of_memory();
         return NULL;
     }
@@ -158,7 +159,7 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 /*
  * free the allocated memory of a batch file
  */
-VOID ClearBatch()
+VOID ClearBatch(VOID)
 {
     TRACE ("ClearBatch  mem = %08x    free = %d\n", bc->mem, bc->memfree);
 
@@ -182,7 +183,7 @@ VOID ClearBatch()
  * message
  */
 
-VOID ExitBatch()
+VOID ExitBatch(VOID)
 {
     ClearBatch();
 
@@ -234,7 +235,7 @@ void BatchFile2Mem(HANDLE hBatchFile)
  * The firstword parameter is the full filename of the batch file.
  *
  */
-INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
+INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 {
     BATCH_CONTEXT new;
     LPFOR_CONTEXT saved_fc;
@@ -396,12 +397,18 @@ VOID AddBatchRedirection(REDIRECTION **RedirList)
  *   Read a single line from the batch file from the current batch/memory position.
  *   Almost a copy of FileGetString with same UNICODE handling
  */
-BOOL BatchGetString (LPTSTR lpBuffer, INT nBufferLength)
+BOOL BatchGetString(LPTSTR lpBuffer, INT nBufferLength)
 {
     LPSTR lpString;
     INT len = 0;
 #ifdef _UNICODE
     lpString = cmd_alloc(nBufferLength);
+    if (!lpString)
+    {
+        WARN("Cannot allocate memory for lpString\n");
+        error_out_of_memory();
+        return FALSE;
+    }
 #else
     lpString = lpBuffer;
 #endif
@@ -443,7 +450,7 @@ BOOL BatchGetString (LPTSTR lpBuffer, INT nBufferLength)
  *
  * Set eflag to 0 if line is not to be echoed else 1
  */
-LPTSTR ReadBatchLine ()
+LPTSTR ReadBatchLine(VOID)
 {
     TRACE ("ReadBatchLine ()\n");
 

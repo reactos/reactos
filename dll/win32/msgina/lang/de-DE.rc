@@ -198,6 +198,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Ihr Konto wurde deaktiviert. Wenden Sie sich an Ihren Systemadministrator."
     IDS_PASSWORDMUSTCHANGE "Sie müssen Ihr Passwort bei der ersten Anmeldung ändern."
     IDS_PASSWORDEXPIRED "Ihr Passwort ist abgelaufen und muss geändert werden."
+    IDS_ACCOUNTEXPIRED "Ihr Konto ist abgelaufen. Bitte wenden Sie sich an Ihren Systemadministrator."
 END
 
 /* Shutdown Dialog Strings */

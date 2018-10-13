@@ -109,7 +109,7 @@ GreGetKerningPairs(
   currently selected font. If not valid, GetCharacterPlacement ignores the
   value.
 
-  M$ must use a preset "compiled in" support for each language based releases.
+  MS must use a preset "compiled in" support for each language based releases.
   ReactOS uses FreeType, this will need to be supported. ATM this is hard coded
   for GCPCLASS_LATIN!
 
@@ -294,6 +294,18 @@ FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
 {
     ULONG cjMaxSize;
     ENUMLOGFONTEXDVW *plf = &plfont->logfont;
+
+    if (!(plfont->fl & TEXTOBJECT_INIT))
+    {
+        NTSTATUS Status;
+        DPRINT1("FontGetObject font not initialized!\n");
+
+        Status = TextIntRealizeFont(plfont->BaseObject.hHmgr, plfont);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("FontGetObject(TextIntRealizeFont) Status = 0x%lx\n", Status);
+        }
+    }
 
     /* If buffer is NULL, only the size is requested */
     if (pvBuffer == NULL) return sizeof(LOGFONTW);

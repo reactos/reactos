@@ -96,10 +96,3 @@ GreCreateFrameRgn(
 PREGION
 FASTCALL
 IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
-
-// FIXME: move this
-BOOL
-FASTCALL
-IntGdiPaintRgn(
-    _In_ PDC pdc,
-    _In_ PREGION prgn);

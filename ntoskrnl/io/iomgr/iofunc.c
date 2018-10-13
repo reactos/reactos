@@ -334,7 +334,13 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Remember to unlock later */
         LockedForSynch = TRUE;
@@ -666,7 +672,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        (void)IopLockFileObject(FileObject, KernelMode);
 
         /* Use File Object event */
         KeClearEvent(&FileObject->Event);
@@ -899,14 +905,16 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
                                RenameInfo->RootDirectory,
                                NULL);
 
-    /* And open its parent directory */
+    /* And open its parent directory
+     * Use hint if specified
+     */
     if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
     {
+        PFILE_OBJECT_EXTENSION FileObjectExtension;
+
         ASSERT(!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN));
-#if 0
-        /* Commented out - we don't support FO extension yet
-         * FIXME: Corrected last arg when it's supported
-         */
+
+        FileObjectExtension = FileObject->FileObjectExtension;
         Status = IoCreateFileSpecifyDeviceObjectHint(&TargetHandle,
                                                      DesiredAccess | SYNCHRONIZE,
                                                      &ObjectAttributes,
@@ -921,12 +929,7 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
                                                      CreateFileTypeNone,
                                                      NULL,
                                                      IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY | IO_NO_PARAMETER_CHECKING,
-                                                     FileObject->DeviceObject);
-#else
-        ASSERT(FALSE);
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
-#endif
+                                                     FileObjectExtension->TopDeviceObjectHint);
     }
     else
     {
@@ -1221,7 +1224,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        (void)IopLockFileObject(FileObject, KernelMode);
 
         /* Use File Object event */
         KeClearEvent(&FileObject->Event);
@@ -1431,7 +1434,12 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -1579,7 +1587,13 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         LockedForSync = TRUE;
     }
 
@@ -1779,7 +1793,13 @@ NtLockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         LockedForSync = TRUE;
     }
 
@@ -1972,7 +1992,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            return Status;
+        }
 
         /* Remember to unlock later */
         LockedForSynch = TRUE;
@@ -2207,7 +2234,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if the caller just wants the position */
         if (FileInformationClass == FilePositionInformation)
@@ -2547,6 +2579,18 @@ NtReadFile(IN HANDLE FileHandle,
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_READ_DATA,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Validate User-Mode Buffers */
     if (PreviousMode != KernelMode)
     {
@@ -2565,12 +2609,52 @@ NtReadFile(IN HANDLE FileHandle,
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Perform additional checks for non-cached file access */
+            if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+            {
+                /* Fail if Length is not sector size aligned
+                 * Perform a quick check for 2^ sector sizes
+                 * If it fails, try a more standard way
+                 */
+                if ((DeviceObject->SectorSize != 0) &&
+                    ((DeviceObject->SectorSize - 1) & Length) != 0)
+                {
+                    if (Length % DeviceObject->SectorSize != 0)
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                /* Fail if buffer doesn't match alignment requirements */
+                if (((ULONG_PTR)Buffer & DeviceObject->AlignmentRequirement) != 0)
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                if (ByteOffset)
+                {
+                    /* Fail if ByteOffset is not sector size aligned */
+                    if ((DeviceObject->SectorSize != 0) &&
+                        (CapturedByteOffset.QuadPart % DeviceObject->SectorSize != 0))
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
+                }
+            }
+
             /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Return the exception code */
+            /* Release the file object and return the exception code */
+            ObDereferenceObject(FileObject);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -2581,15 +2665,6 @@ NtReadFile(IN HANDLE FileHandle,
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
     }
-
-    /* Get File Object */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       FILE_READ_DATA,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check for event */
     if (Event)
@@ -2612,14 +2687,17 @@ NtReadFile(IN HANDLE FileHandle,
         KeClearEvent(EventObject);
     }
 
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
@@ -2961,7 +3039,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if the caller just wants the position */
         if (FileInformationClass == FilePositionInformation)
@@ -3411,7 +3494,12 @@ NtUnlockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -3543,6 +3631,9 @@ NtWriteFile(IN HANDLE FileHandle,
                                            &ObjectHandleInfo);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Validate User-Mode Buffers */
     if (PreviousMode != KernelMode)
     {
@@ -3559,6 +3650,51 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Perform additional checks for non-cached file access */
+            if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+            {
+                /* Fail if Length is not sector size aligned
+                 * Perform a quick check for 2^ sector sizes
+                 * If it fails, try a more standard way
+                 */
+                if ((DeviceObject->SectorSize != 0) &&
+                    ((DeviceObject->SectorSize - 1) & Length) != 0)
+                {
+                    if (Length % DeviceObject->SectorSize != 0)
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
+                }
+
+                /* Fail if buffer doesn't match alignment requirements */
+                if (((ULONG_PTR)Buffer & DeviceObject->AlignmentRequirement) != 0)
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                if (ByteOffset)
+                {
+                    /* Fail if ByteOffset is not sector size aligned */
+                    if ((DeviceObject->SectorSize != 0) &&
+                        (CapturedByteOffset.QuadPart % DeviceObject->SectorSize != 0))
+                    {
+                        /* Only if that's not specific values for synchronous IO */
+                        if ((CapturedByteOffset.QuadPart != FILE_WRITE_TO_END_OF_FILE) &&
+                            (CapturedByteOffset.QuadPart != FILE_USE_FILE_POINTER_POSITION ||
+                             !BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO)))
+                        {
+                            /* Release the file object and and fail */
+                            ObDereferenceObject(FileObject);
+                            return STATUS_INVALID_PARAMETER;
+                        }
+                    }
+                }
             }
 
             /* Capture and probe the key */
@@ -3609,14 +3745,17 @@ NtWriteFile(IN HANDLE FileHandle,
         KeClearEvent(EventObject);
     }
 
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
@@ -3897,7 +4036,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -4068,7 +4212,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            if (TargetDeviceObject) ObDereferenceObject(TargetDeviceObject);
+            return Status;
+        }
     }
     else
     {

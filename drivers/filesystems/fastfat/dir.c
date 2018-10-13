@@ -530,13 +530,7 @@ DoQuery(
     }
 
     /* Obtain the callers parameters */
-#ifdef _MSC_VER
-    /* HACKHACK: Bug in the MS ntifs.h header:
-     * FileName is really a PUNICODE_STRING, not a PSTRING */
     pSearchPattern = (PUNICODE_STRING)Stack->Parameters.QueryDirectory.FileName;
-#else
-    pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
-#endif
     FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
 
     /* Allocate search pattern in case:
@@ -555,7 +549,7 @@ DoQuery(
             pCcb->SearchPattern.MaximumLength = pSearchPattern->Length + sizeof(WCHAR);
             pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                                pCcb->SearchPattern.MaximumLength,
-                                                               TAG_VFAT);
+                                                               TAG_SEARCH);
             if (!pCcb->SearchPattern.Buffer)
             {
                 ExReleaseResourceLite(&pFcb->MainResource);
@@ -572,7 +566,7 @@ DoQuery(
         pCcb->SearchPattern.MaximumLength = 2 * sizeof(WCHAR);
         pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                            2 * sizeof(WCHAR),
-                                                           TAG_VFAT);
+                                                           TAG_SEARCH);
         if (!pCcb->SearchPattern.Buffer)
         {
             ExReleaseResourceLite(&pFcb->MainResource);

@@ -408,7 +408,8 @@ CHubController::HandlePnp(
     PPNP_BUS_INFORMATION BusInformation;
     PDEVICE_RELATIONS DeviceRelations;
     NTSTATUS Status;
-    ULONG Index = 0, Length;
+    ULONG Index = 0;
+    SIZE_T Length;
     USHORT VendorID, DeviceID;
     ULONG HiSpeed, NumPorts;
     WCHAR Buffer[300];

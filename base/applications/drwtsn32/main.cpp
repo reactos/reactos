@@ -285,7 +285,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, INT)
         {
             if (n + 1 < argc)
             {
-                data.Event = (HANDLE)wcstoul(argv[n+1], NULL, 10);
+                data.Event = (HANDLE)(ULONG_PTR)_wcstoui64(argv[n+1], NULL, 10);
                 n++;
             }
         }

@@ -256,7 +256,7 @@ static BOOL get_engine_clsid(const WCHAR *ext, CLSID *clsid)
     if(res != ERROR_SUCCESS)
         return FALSE;
 
-    size = sizeof(fileid)/sizeof(WCHAR);
+    size = ARRAY_SIZE(fileid);
     res = RegQueryValueW(hkey, NULL, fileid, &size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS)
@@ -269,7 +269,7 @@ static BOOL get_engine_clsid(const WCHAR *ext, CLSID *clsid)
     if(res != ERROR_SUCCESS)
         return FALSE;
 
-    size = sizeof(progid)/sizeof(WCHAR);
+    size = ARRAY_SIZE(progid);
     res = RegQueryValueW(hkey, NULL, progid, &size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS)
@@ -449,8 +449,8 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
         WINE_FIXME("No file name specified\n");
         return 1;
     }
-    res = GetFullPathNameW(filename, sizeof(scriptFullName)/sizeof(WCHAR), scriptFullName, &filepart);
-    if(!res || res > sizeof(scriptFullName)/sizeof(WCHAR))
+    res = GetFullPathNameW(filename, ARRAY_SIZE(scriptFullName), scriptFullName, &filepart);
+    if(!res || res > ARRAY_SIZE(scriptFullName))
         return 1;
 
     ext = strrchrW(filepart, '.');

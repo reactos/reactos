@@ -21,7 +21,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
               )
 
 LanguageNames=(English=0x409:MSG00409
-               Russian=0x419:MSG00419)
+               Russian=0x419:MSG00419
+               Polish=0x415:MSG00415)
 
 MessageId=0
 Severity=Success
@@ -32,6 +33,9 @@ ERROR_SUCCESS - The operation completed successfully.
 .
 Language=Russian
 ERROR_SUCCESS - Операция успешно завершена.
+.
+Language=Polish
+ERROR_SUCCESS - Operacja ukończona pomyślnie.
 .
 
 MessageId=1
@@ -44,6 +48,9 @@ ERROR_INVALID_FUNCTION - Incorrect function.
 Language=Russian
 ERROR_INVALID_FUNCTION - Неверная функция.
 .
+Language=Polish
+ERROR_INVALID_FUNCTION - Niepoprawna funkcja.
+.
 
 MessageId=2
 Severity=Success
@@ -54,6 +61,9 @@ ERROR_FILE_NOT_FOUND - The system cannot find the file specified.
 .
 Language=Russian
 ERROR_FILE_NOT_FOUND - Не удается найти указанный файл.
+.
+Language=Polish
+ERROR_FILE_NOT_FOUND - Nie można odnaleźć określonego pliku.
 .
 
 MessageId=3
@@ -66,6 +76,9 @@ ERROR_PATH_NOT_FOUND - The system cannot find the path specified.
 Language=Russian
 ERROR_PATH_NOT_FOUND - Системе не удается найти указанный путь.
 .
+Language=Polish
+ERROR_PATH_NOT_FOUND - System nie może odnaleźć określonej ścieżki.
+.
 
 MessageId=4
 Severity=Success
@@ -76,6 +89,9 @@ ERROR_TOO_MANY_OPEN_FILES - The system cannot open the file.
 .
 Language=Russian
 ERROR_TOO_MANY_OPEN_FILES - Системе не удается открыть файл.
+.
+Language=Polish
+ERROR_TOO_MANY_OPEN_FILES - System nie może otworzyć tego pliku.
 .
 
 MessageId=5
@@ -88,6 +104,9 @@ ERROR_ACCESS_DENIED - Access is denied.
 Language=Russian
 ERROR_ACCESS_DENIED - Отказано в доступе.
 .
+Language=Polish
+ERROR_ACCESS_DENIED - Odmowa dostępu.
+.
 
 MessageId=6
 Severity=Success
@@ -98,6 +117,9 @@ ERROR_INVALID_HANDLE - The handle is invalid.
 .
 Language=Russian
 ERROR_INVALID_HANDLE - Неверный дескриптор.
+.
+Language=Polish
+ERROR_INVALID_HANDLE - Nieprawidłowe dojście.
 .
 
 MessageId=7
@@ -110,6 +132,9 @@ ERROR_ARENA_TRASHED - The storage control blocks were destroyed.
 Language=Russian
 ERROR_ARENA_TRASHED - Повреждены управляющие блоки памяти.
 .
+Language=Polish
+ERROR_ARENA_TRASHED - Bloki kontroli magazynu zostały zniszczone.
+.
 
 MessageId=8
 Severity=Success
@@ -120,6 +145,9 @@ ERROR_NOT_ENOUGH_MEMORY - Not enough storage is available to process this comman
 .
 Language=Russian
 ERROR_NOT_ENOUGH_MEMORY - Недостаточно памяти для обработки команды.
+.
+Language=Polish
+ERROR_NOT_ENOUGH_MEMORY - W magazynie brak miejsca dla wykonania tego polecenia.
 .
 
 MessageId=9
@@ -132,6 +160,9 @@ ERROR_INVALID_BLOCK - The storage control block address is invalid.
 Language=Russian
 ERROR_INVALID_BLOCK - Неверный адрес управляющего блока памяти.
 .
+Language=Polish
+ERROR_INVALID_BLOCK - Adres bloku kontroli magazynu jest nieprawidłowy.
+.
 
 MessageId=10
 Severity=Success
@@ -142,6 +173,9 @@ ERROR_BAD_ENVIRONMENT - The environment is incorrect.
 .
 Language=Russian
 ERROR_BAD_ENVIRONMENT - Недопустимая среда.
+.
+Language=Polish
+ERROR_BAD_ENVIRONMENT - Środowisko jest niepoprawne.
 .
 
 MessageId=11
@@ -154,6 +188,9 @@ ERROR_BAD_FORMAT - An attempt was made to load a program with an incorrect forma
 Language=Russian
 ERROR_BAD_FORMAT - Попытка запустить программу с недопустимым форматом.
 .
+Language=Polish
+ERROR_BAD_FORMAT - Próbowano załadować program w niepoprawnym formacie.
+.
 
 MessageId=12
 Severity=Success
@@ -164,6 +201,9 @@ ERROR_INVALID_ACCESS - The access code is invalid.
 .
 Language=Russian
 ERROR_INVALID_ACCESS - Неверный код доступа.
+.
+Language=Polish
+ERROR_INVALID_ACCESS - Nieprawidłowy kod dostępu.
 .
 
 MessageId=13
@@ -176,6 +216,9 @@ ERROR_INVALID_DATA - The data is invalid.
 Language=Russian
 ERROR_INVALID_DATA - Недопустимые данные.
 .
+Language=Polish
+ERROR_INVALID_DATA - Nieprawidłowe dane.
+.
 
 MessageId=14
 Severity=Success
@@ -186,6 +229,9 @@ ERROR_OUTOFMEMORY - Not enough storage is available to complete this operation.
 .
 Language=Russian
 ERROR_OUTOFMEMORY - Недостаточно памяти для завершения операции.
+.
+Language=Polish
+ERROR_OUTOFMEMORY - W magazynie brak miejsca dla wykonania tej operacji.
 .
 
 MessageId=15
@@ -198,6 +244,9 @@ ERROR_INVALID_DRIVE - The system cannot find the drive specified.
 Language=Russian
 ERROR_INVALID_DRIVE - Система не может найти указанное устройство.
 .
+Language=Polish
+ERROR_INVALID_DRIVE - Nie można odnaleźć dysku.
+.
 
 MessageId=16
 Severity=Success
@@ -208,6 +257,9 @@ ERROR_CURRENT_DIRECTORY - The directory cannot be removed.
 .
 Language=Russian
 ERROR_CURRENT_DIRECTORY - Этот каталог не может быть удален.
+.
+Language=Polish
+ERROR_CURRENT_DIRECTORY - Nie można usunąć katalogu.
 .
 
 MessageId=17
@@ -220,6 +272,9 @@ ERROR_NOT_SAME_DEVICE - The system cannot move the file to a different disk driv
 Language=Russian
 ERROR_NOT_SAME_DEVICE - Система не может переместить файл на другое дисковое устройство.
 .
+Language=Polish
+ERROR_NOT_SAME_DEVICE - Nie można przenieść pliku na inny dysk.
+.
 
 MessageId=18
 Severity=Success
@@ -230,6 +285,9 @@ ERROR_NO_MORE_FILES - There are no more files.
 .
 Language=Russian
 ERROR_NO_MORE_FILES - Файлов больше нет.
+.
+Language=Polish
+ERROR_NO_MORE_FILES - Brak dalszych plików.
 .
 
 MessageId=19
@@ -242,6 +300,9 @@ ERROR_WRITE_PROTECT - The media is write protected.
 Language=Russian
 ERROR_WRITE_PROTECT - Носитель защищен от записи.
 .
+Language=Polish
+ERROR_WRITE_PROTECT - Nośnik jest zabezpieczony przed zapisem.
+.
 
 MessageId=20
 Severity=Success
@@ -252,6 +313,9 @@ ERROR_BAD_UNIT - The system cannot find the device specified.
 .
 Language=Russian
 ERROR_BAD_UNIT - Система не может найти указанное устройство.
+.
+Language=Polish
+ERROR_BAD_UNIT - Nie można odnaleźć urządzenia.
 .
 
 MessageId=21
@@ -264,6 +328,9 @@ ERROR_NOT_READY - The device is not ready.
 Language=Russian
 ERROR_NOT_READY - Устройство не готово.
 .
+Language=Polish
+ERROR_NOT_READY - Urządzenie nie jest gotowe.
+.
 
 MessageId=22
 Severity=Success
@@ -274,6 +341,9 @@ ERROR_BAD_COMMAND - The device does not recognize the command.
 .
 Language=Russian
 ERROR_BAD_COMMAND - Устройство не распознает команду.
+.
+Language=Polish
+ERROR_BAD_COMMAND - Urządzenie nie rozpoznaje polecenia.
 .
 
 MessageId=23
@@ -286,6 +356,9 @@ ERROR_CRC - Data error (cyclic redundancy check).
 Language=Russian
 ERROR_CRC - Ошибка в данных (циклический код с избыточностью).
 .
+Language=Polish
+ERROR_CRC - Błąd danych (CRC).
+.
 
 MessageId=24
 Severity=Success
@@ -296,6 +369,9 @@ ERROR_BAD_LENGTH - The program issued a command but the command length is incorr
 .
 Language=Russian
 ERROR_BAD_LENGTH - Программа выдала команду с недопустимой длиной.
+.
+Language=Polish
+ERROR_BAD_LENGTH - Program wydał polecenie, ale długość polecenia jest niepoprawna.
 .
 
 MessageId=25
@@ -308,6 +384,9 @@ ERROR_SEEK - The drive cannot locate a specific area or track on the disk.
 Language=Russian
 ERROR_SEEK - Дисковое устройство не может обнаружить указанную область или дорожку.
 .
+Language=Polish
+ERROR_SEEK - Nie można odnaleźć na dysku określonego obszaru lub ścieżki.
+.
 
 MessageId=26
 Severity=Success
@@ -318,6 +397,9 @@ ERROR_NOT_DOS_DISK - The specified disk or diskette cannot be accessed.
 .
 Language=Russian
 ERROR_NOT_DOS_DISK - Нет доступа к диску или дискете.
+.
+Language=Polish
+ERROR_NOT_DOS_DISK - Nie można uzyskać dostępu do określonego dysku lub dyskietki.
 .
 
 MessageId=27
@@ -330,6 +412,9 @@ ERROR_SECTOR_NOT_FOUND - The drive cannot find the sector requested.
 Language=Russian
 ERROR_SECTOR_NOT_FOUND - Дисковое устройство не может обнаружить указанную область или дорожку.
 .
+Language=Polish
+ERROR_SECTOR_NOT_FOUND - Nie można odnaleźć na dysku żądanego sektora.
+.
 
 MessageId=28
 Severity=Success
@@ -340,6 +425,9 @@ ERROR_OUT_OF_PAPER - The printer is out of paper.
 .
 Language=Russian
 ERROR_OUT_OF_PAPER - В принтере закончилась бумага.
+.
+Language=Polish
+ERROR_OUT_OF_PAPER - Brak papieru w drukarce.
 .
 
 MessageId=29
@@ -352,6 +440,9 @@ ERROR_WRITE_FAULT - The system cannot write to the specified device.
 Language=Russian
 ERROR_WRITE_FAULT - Система не может выполнить запись на указанное устройство.
 .
+Language=Polish
+ERROR_WRITE_FAULT - System nie może zapisywać do określonego urządzenia.
+.
 
 MessageId=30
 Severity=Success
@@ -362,6 +453,9 @@ ERROR_READ_FAULT - The system cannot read from the specified device.
 .
 Language=Russian
 ERROR_READ_FAULT - Системе не может выполнить чтение с указанного устройства.
+.
+Language=Polish
+ERROR_READ_FAULT - System nie może czytać z określonego urządzenia.
 .
 
 MessageId=31
@@ -374,6 +468,9 @@ ERROR_GEN_FAILURE - A device attached to the system is not functioning.
 Language=Russian
 ERROR_GEN_FAILURE - Устройство, подключенное к системе, не работает.
 .
+Language=Polish
+ERROR_GEN_FAILURE - Urządzenie dołączone do komputera nie działa.
+.
 
 MessageId=32
 Severity=Success
@@ -384,6 +481,9 @@ ERROR_SHARING_VIOLATION - The process cannot access the file because it is being
 .
 Language=Russian
 ERROR_SHARING_VIOLATION - Процесс не имеет доступа к файлу, поскольку файл используется другим процессом.
+.
+Language=Polish
+ERROR_SHARING_VIOLATION - Proces nie może uzyskać dostępu do pliku, ponieważ jest on używany przez inny proces.
 .
 
 MessageId=33
@@ -396,6 +496,9 @@ ERROR_LOCK_VIOLATION - The process cannot access the file because another proces
 Language=Russian
 ERROR_LOCK_VIOLATION - Процесс не имеет доступа к файлу, поскольку другой процесс заблокировал часть файла.
 .
+Language=Polish
+ERROR_LOCK_VIOLATION - Proces nie może uzyskać dostępu do pliku, ponieważ inny proces zablokował jego część.
+.
 
 MessageId=34
 Severity=Success
@@ -406,6 +509,9 @@ ERROR_WRONG_DISK - The wrong diskette is in the drive. Insert %2 (Volume Serial 
 .
 Language=Russian
 ERROR_WRONG_DISK - Вставте другую дискету. Вставьте %2 (серийный номер тома: %3) в дисковод %1.
+.
+Language=Polish
+ERROR_WRONG_DISK - W stacji umieszczono niewłaściwą dyskietkę. Włóż dysk %2 (numer seryjny woluminu: %3) do stacji: %1.
 .
 
 MessageId=36
@@ -418,6 +524,9 @@ ERROR_SHARING_BUFFER_EXCEEDED - Too many files opened for sharing.
 Language=Russian
 ERROR_SHARING_BUFFER_EXCEEDED - Слишком много файлов открыто для совместного использования.
 .
+Language=Polish
+ERROR_SHARING_BUFFER_EXCEEDED - Za dużo plików otwartych do udostępniania.
+.
 
 MessageId=38
 Severity=Success
@@ -428,6 +537,9 @@ ERROR_HANDLE_EOF - Reached the end of the file.
 .
 Language=Russian
 ERROR_HANDLE_EOF - Достигнут конец файла.
+.
+Language=Polish
+ERROR_HANDLE_EOF - Osiągnięto koniec pliku.
 .
 
 MessageId=39
@@ -440,6 +552,9 @@ ERROR_HANDLE_DISK_FULL - The disk is full.
 Language=Russian
 ERROR_HANDLE_DISK_FULL - Отсутствует место на диске.
 .
+Language=Polish
+ERROR_HANDLE_DISK_FULL - Dysk jest zapełniony.
+.
 
 MessageId=50
 Severity=Success
@@ -450,6 +565,9 @@ ERROR_NOT_SUPPORTED - The request is not supported.
 .
 Language=Russian
 ERROR_NOT_SUPPORTED - Запрос не поддерживается.
+.
+Language=Polish
+ERROR_NOT_SUPPORTED - Żądanie nie jest obsługiwane.
 .
 
 MessageId=51
@@ -462,7 +580,9 @@ ERROR_REM_NOT_LIST - ReactOS cannot find the network path. Verify that the netwo
 Language=Russian
 ERROR_REM_NOT_LIST - Невозможно найти сетевой путь. Убедитесь, что сетевой путь указан верно, а конечный компьютер включен и не занят. Если система вновь не сможет найти путь, обратитесь к сетевому администратору.
 .
-
+Language=Polish
+ERROR_REM_NOT_LIST - System ReactOS nie może odnaleźć ścieżki sieciowej. Sprawdź, czy ścieżka sieciowa jest poprawna i czy komputer docelowy nie jest zajęty lub wyłączony. Jeśli system ReactOS nadal nie będzie mógł odnaleźć ścieżki sieciowej, skontaktuj się z administratorem sieci.
+.
 
 MessageId=52
 Severity=Success
@@ -473,6 +593,9 @@ ERROR_DUP_NAME - You were not connected because a duplicate name exists on the n
 .
 Language=Russian
 ERROR_DUP_NAME - Вы не подключены, поскольку такое же имя уже существует в этой сети. Для присоединения к домену откройте компонент панели управления "Система", измените имя компьютера и повторите попытку. Для присоединения к рабочей группе выберите другое имя рабочей группы.
+.
+Language=Polish
+ERROR_DUP_NAME - Połączenie nie zostało nawiązane, ponieważ w sieci istnieje duplikat nazwy. Jeśli przyłączasz się do domeny, przejdź do apletu System w Panelu sterowania, aby zmienić nazwę komputera, i spróbuj ponownie. Jeśli przyłączasz się do grupy roboczej, wybierz inną nazwę grupy.
 .
 
 MessageId=53
@@ -485,6 +608,9 @@ ERROR_BAD_NETPATH - The network path was not found.
 Language=Russian
 ERROR_BAD_NETPATH - Не найден сетевой путь.
 .
+Language=Polish
+ERROR_BAD_NETPATH - Nie można odnaleźć ścieżki sieciowej.
+.
 
 MessageId=54
 Severity=Success
@@ -495,6 +621,9 @@ ERROR_NETWORK_BUSY - The network is busy.
 .
 Language=Russian
 ERROR_NETWORK_BUSY - Сеть занята.
+.
+Language=Polish
+ERROR_NETWORK_BUSY - Sieć jest zajęta.
 .
 
 MessageId=55
@@ -507,6 +636,9 @@ ERROR_DEV_NOT_EXIST - The specified network resource or device is no longer avai
 Language=Russian
 ERROR_DEV_NOT_EXIST - Сетевой ресурс или устройство более недоступно.
 .
+Language=Polish
+ERROR_DEV_NOT_EXIST - Określone zasoby sieciowe lub urządzenie są już niedostępne.
+.
 
 MessageId=56
 Severity=Success
@@ -517,6 +649,9 @@ ERROR_TOO_MANY_CMDS - The network BIOS command limit has been reached.
 .
 Language=Russian
 ERROR_TOO_MANY_CMDS - Достигнут предел числа команд NetBIOS.
+.
+Language=Polish
+ERROR_TOO_MANY_CMDS - Osiągnięto limit poleceń systemu BIOS dla sieci.
 .
 
 MessageId=57
@@ -529,6 +664,9 @@ ERROR_ADAP_HDW_ERR - A network adapter hardware error occurred.
 Language=Russian
 ERROR_ADAP_HDW_ERR - Аппаратная ошибка сетевой платы.
 .
+Language=Polish
+ERROR_ADAP_HDW_ERR - Wystąpił błąd sprzętowy karty sieciowej.
+.
 
 MessageId=58
 Severity=Success
@@ -539,6 +677,9 @@ ERROR_BAD_NET_RESP - The specified server cannot perform the requested operation
 .
 Language=Russian
 ERROR_BAD_NET_RESP - Указанный сервер не может выполнить требуемую операцию.
+.
+Language=Polish
+ERROR_BAD_NET_RESP - Określony serwer nie może wykonać żądanej operacji.
 .
 
 MessageId=59
@@ -551,6 +692,9 @@ ERROR_UNEXP_NET_ERR - An unexpected network error occurred.
 Language=Russian
 ERROR_UNEXP_NET_ERR - Непредвиденная сетевая ошибка.
 .
+Language=Polish
+ERROR_UNEXP_NET_ERR - Wystąpił nieoczekiwany błąd sieciowy.
+.
 
 MessageId=60
 Severity=Success
@@ -561,6 +705,9 @@ ERROR_BAD_REM_ADAP - The remote adapter is not compatible.
 .
 Language=Russian
 ERROR_BAD_REM_ADAP - Несовместимый удаленный контроллер.
+.
+Language=Polish
+ERROR_BAD_REM_ADAP - Zdalna karta sieciowa jest niezgodna.
 .
 
 MessageId=61
@@ -573,6 +720,9 @@ ERROR_PRINTQ_FULL - The printer queue is full.
 Language=Russian
 ERROR_PRINTQ_FULL - Очередь печати переполнена.
 .
+Language=Polish
+ERROR_PRINTQ_FULL - Kolejka wydruku jest zapełniona.
+.
 
 MessageId=62
 Severity=Success
@@ -583,6 +733,9 @@ ERROR_NO_SPOOL_SPACE - Space to store the file waiting to be printed is not avai
 .
 Language=Russian
 ERROR_NO_SPOOL_SPACE - На сервере нет места для хранения ожидающего печати файла.
+.
+Language=Polish
+ERROR_NO_SPOOL_SPACE - Na serwerze nie ma miejsca na przechowywanie pliku oczekującego na wydruk.
 .
 
 MessageId=63
@@ -595,6 +748,9 @@ ERROR_PRINT_CANCELLED - Your file waiting to be printed was deleted.
 Language=Russian
 ERROR_PRINT_CANCELLED - Ваш файл, находившийся в очереди вывода на печать, был удален.
 .
+Language=Polish
+ERROR_PRINT_CANCELLED - Plik oczekujący na wydruk został usunięty.
+.
 
 MessageId=64
 Severity=Success
@@ -605,6 +761,9 @@ ERROR_NETNAME_DELETED - The specified network name is no longer available.
 .
 Language=Russian
 ERROR_NETNAME_DELETED - Указанное сетевое имя более недоступно.
+.
+Language=Polish
+ERROR_NETNAME_DELETED - Określona nazwa sieciowa już jest niedostępna.
 .
 
 MessageId=65
@@ -617,6 +776,9 @@ ERROR_NETWORK_ACCESS_DENIED - Network access is denied.
 Language=Russian
 ERROR_NETWORK_ACCESS_DENIED - Нет доступа к сети.
 .
+Language=Polish
+ERROR_NETWORK_ACCESS_DENIED - Odmowa dostępu do sieci.
+.
 
 MessageId=66
 Severity=Success
@@ -627,6 +789,9 @@ ERROR_BAD_DEV_TYPE - The network resource type is not correct.
 .
 Language=Russian
 ERROR_BAD_DEV_TYPE - Неверно указан тип сетевого ресурса.
+.
+Language=Polish
+ERROR_BAD_DEV_TYPE - Typ zasobu sieciowego jest niepoprawny.
 .
 
 MessageId=67
@@ -639,6 +804,9 @@ ERROR_BAD_NET_NAME - The network name cannot be found.
 Language=Russian
 ERROR_BAD_NET_NAME - Не найдено сетевое имя.
 .
+Language=Polish
+ERROR_BAD_NET_NAME - Nie można odnaleźć nazwy sieciowej.
+.
 
 MessageId=68
 Severity=Success
@@ -649,6 +817,9 @@ ERROR_TOO_MANY_NAMES - The name limit for the local computer network adapter car
 .
 Language=Russian
 ERROR_TOO_MANY_NAMES - Превышен предел числа имен для сетевого адаптера локального компьютера.
+.
+Language=Polish
+ERROR_TOO_MANY_NAMES - Przekroczono ograniczenie nazwy dla karty sieci lokalnej komputera.
 .
 
 MessageId=69
@@ -661,6 +832,9 @@ ERROR_TOO_MANY_SESS - The network BIOS session limit was exceeded.
 Language=Russian
 ERROR_TOO_MANY_SESS - Превышен предел по числу сеансов NetBIOS.
 .
+Language=Polish
+ERROR_TOO_MANY_SESS - Przekroczono limit sesji systemu BIOS dla sieci.
+.
 
 MessageId=70
 Severity=Success
@@ -671,6 +845,9 @@ ERROR_SHARING_PAUSED - The remote server has been paused or is in the process of
 .
 Language=Russian
 ERROR_SHARING_PAUSED - Сервер сети был остановлен или находится в процессе запуска.
+.
+Language=Polish
+ERROR_SHARING_PAUSED - Zdalny serwer przerwał pracę lub jest w trakcie procesu uruchamiania.
 .
 
 MessageId=71
@@ -683,6 +860,9 @@ ERROR_REQ_NOT_ACCEP - No more connections can be made to this remote computer at
 Language=Russian
 ERROR_REQ_NOT_ACCEP - Дополнительные подключения к этому удаленному компьютеру сейчас невозможны, так как их число достигло предела.
 .
+Language=Polish
+ERROR_REQ_NOT_ACCEP - Do tego komputera zdalnego nie można obecnie uzyskać więcej połączeń, ponieważ istnieje już maksymalna akceptowalna liczba połączeń.
+.
 
 MessageId=72
 Severity=Success
@@ -693,6 +873,9 @@ ERROR_REDIR_PAUSED - The specified printer or disk device has been paused.
 .
 Language=Russian
 ERROR_REDIR_PAUSED - Работа указанного принтера или дискового накопителя была остановлена.
+.
+Language=Polish
+ERROR_REDIR_PAUSED - Określona drukarka lub urządzenie przerwały pracę.
 .
 
 MessageId=80
@@ -705,6 +888,9 @@ ERROR_FILE_EXISTS - The file exists.
 Language=Russian
 ERROR_FILE_EXISTS - Файл существует.
 .
+Language=Polish
+ERROR_FILE_EXISTS - Plik istnieje.
+.
 
 MessageId=82
 Severity=Success
@@ -715,6 +901,9 @@ ERROR_CANNOT_MAKE - The directory or file cannot be created.
 .
 Language=Russian
 ERROR_CANNOT_MAKE - Не удается создать файл или папку.
+.
+Language=Polish
+ERROR_CANNOT_MAKE - Nie można utworzyć katalogu lub pliku.
 .
 
 MessageId=83
@@ -727,6 +916,9 @@ ERROR_FAIL_I24 - Fail on INT 24.
 Language=Russian
 ERROR_FAIL_I24 - Сбой прерывания INT 24.
 .
+Language=Polish
+ERROR_FAIL_I24 - Błąd przerwania INT 24.
+.
 
 MessageId=84
 Severity=Success
@@ -737,6 +929,9 @@ ERROR_OUT_OF_STRUCTURES - Storage to process this request is not available.
 .
 Language=Russian
 ERROR_OUT_OF_STRUCTURES - Недостаточно памяти для обработки запроса.
+.
+Language=Polish
+ERROR_OUT_OF_STRUCTURES - Pamięć do przetworzenia tego żądania jest niedostępna.
 .
 
 MessageId=85
@@ -749,6 +944,9 @@ ERROR_ALREADY_ASSIGNED - The local device name is already in use.
 Language=Russian
 ERROR_ALREADY_ASSIGNED - Имя локального устройства уже используется.
 .
+Language=Polish
+ERROR_ALREADY_ASSIGNED - Nazwa lokalnego urządzenia jest już w użyciu.
+.
 
 MessageId=86
 Severity=Success
@@ -759,6 +957,9 @@ ERROR_INVALID_PASSWORD - The specified network password is not correct.
 .
 Language=Russian
 ERROR_INVALID_PASSWORD - Сетевой пароль указан неверно.
+.
+Language=Polish
+ERROR_INVALID_PASSWORD - Określone hasło sieciowe jest niepoprawne.
 .
 
 MessageId=87
@@ -771,6 +972,9 @@ ERROR_INVALID_PARAMETER - The parameter is incorrect.
 Language=Russian
 ERROR_INVALID_PARAMETER - Параметр задан неверно.
 .
+Language=Polish
+ERROR_INVALID_PARAMETER - Parametr jest niepoprawny.
+.
 
 MessageId=88
 Severity=Success
@@ -781,6 +985,9 @@ ERROR_NET_WRITE_FAULT - A write fault occurred on the network.
 .
 Language=Russian
 ERROR_NET_WRITE_FAULT - Ошибка записи в сети.
+.
+Language=Polish
+ERROR_NET_WRITE_FAULT - Wystąpił błąd zapisu w sieci.
 .
 
 MessageId=89
@@ -793,6 +1000,9 @@ ERROR_NO_PROC_SLOTS - The system cannot start another process at this time.
 Language=Russian
 ERROR_NO_PROC_SLOTS - В настоящее время системе не удается запустить другой процесс.
 .
+Language=Polish
+ERROR_NO_PROC_SLOTS - System nie może teraz uruchomić innego procesu.
+.
 
 MessageId=100
 Severity=Success
@@ -803,6 +1013,9 @@ ERROR_TOO_MANY_SEMAPHORES - Cannot create another system semaphore.
 .
 Language=Russian
 ERROR_TOO_MANY_SEMAPHORES - Не удается создать еще один системный семафор.
+.
+Language=Polish
+ERROR_TOO_MANY_SEMAPHORES - Nie można utworzyć innego semafora systemowego.
 .
 
 MessageId=101
@@ -815,6 +1028,9 @@ ERROR_EXCL_SEM_ALREADY_OWNED - The exclusive semaphore is owned by another proce
 Language=Russian
 ERROR_EXCL_SEM_ALREADY_OWNED - Семафор эксклюзивного доступа занят другим процессом.
 .
+Language=Polish
+ERROR_EXCL_SEM_ALREADY_OWNED - Semafor wyłączny jest własnością innego procesu.
+.
 
 MessageId=102
 Severity=Success
@@ -825,6 +1041,9 @@ ERROR_SEM_IS_SET - The semaphore is set and cannot be closed.
 .
 Language=Russian
 ERROR_SEM_IS_SET - Семафор установлен и не может быть закрыт.
+.
+Language=Polish
+ERROR_SEM_IS_SET - Semafor jest ustawiony i nie można go zamknąć.
 .
 
 MessageId=103
@@ -837,6 +1056,9 @@ ERROR_TOO_MANY_SEM_REQUESTS - The semaphore cannot be set again.
 Language=Russian
 ERROR_TOO_MANY_SEM_REQUESTS - Семафор не может быть установлен повторно.
 .
+Language=Polish
+ERROR_TOO_MANY_SEM_REQUESTS - Nie można ponownie zamknąć semafora.
+.
 
 MessageId=104
 Severity=Success
@@ -847,6 +1069,9 @@ ERROR_INVALID_AT_INTERRUPT_TIME - Cannot request exclusive semaphores at interru
 .
 Language=Russian
 ERROR_INVALID_AT_INTERRUPT_TIME - Запросы к семафорам эксклюзивного доступа на время выполнения прерываний не допускаются.
+.
+Language=Polish
+ERROR_INVALID_AT_INTERRUPT_TIME - Nie można żądać semaforów wyłącznych w czasie przerwania.
 .
 
 MessageId=105
@@ -859,6 +1084,9 @@ ERROR_SEM_OWNER_DIED - The previous ownership of this semaphore has ended.
 Language=Russian
 ERROR_SEM_OWNER_DIED - Этот семафор более не принадлежит использовавшему его процессу.
 .
+Language=Polish
+ERROR_SEM_OWNER_DIED - Poprzednia przynależność tego semafora skończyła się.
+.
 
 MessageId=106
 Severity=Success
@@ -869,6 +1097,9 @@ ERROR_SEM_USER_LIMIT - Insert the diskette for drive %1.
 .
 Language=Russian
 ERROR_SEM_USER_LIMIT - Вставте дискету в дисковод %1.
+.
+Language=Polish
+ERROR_SEM_USER_LIMIT - Włóż dyskietkę do stacji dysków %1.
 .
 
 MessageId=107
@@ -881,6 +1112,9 @@ ERROR_DISK_CHANGE - The program stopped because an alternate diskette was not in
 Language=Russian
 ERROR_DISK_CHANGE - Программа была остановлена, так как нужный диск вставлен не был.
 .
+Language=Polish
+ERROR_DISK_CHANGE - Program przestał działać, ponieważ nie włożono innej dyskietki.
+.
 
 MessageId=108
 Severity=Success
@@ -891,6 +1125,9 @@ ERROR_DRIVE_LOCKED - The disk is in use or locked by another process.
 .
 Language=Russian
 ERROR_DRIVE_LOCKED - Диск занят или заблокирован другим процессом.
+.
+Language=Polish
+ERROR_DRIVE_LOCKED - Dysk jest w użyciu lub zablokowany przez inny proces.
 .
 
 MessageId=109
@@ -903,6 +1140,9 @@ ERROR_BROKEN_PIPE - The pipe has been ended.
 Language=Russian
 ERROR_BROKEN_PIPE - Канал был закрыт.
 .
+Language=Polish
+ERROR_BROKEN_PIPE - Potok został zakończony.
+.
 
 MessageId=110
 Severity=Success
@@ -913,6 +1153,9 @@ ERROR_OPEN_FAILED - The system cannot open the device or file specified.
 .
 Language=Russian
 ERROR_OPEN_FAILED - Системе не удается открыть указанное устройство или файл.
+.
+Language=Polish
+ERROR_OPEN_FAILED - System nie może otworzyć określonego urządzenia lub pliku.
 .
 
 MessageId=111
@@ -925,6 +1168,9 @@ ERROR_BUFFER_OVERFLOW - The file name is too long.
 Language=Russian
 ERROR_BUFFER_OVERFLOW - Указано слишком длинное имя файла.
 .
+Language=Polish
+ERROR_BUFFER_OVERFLOW - Nazwa pliku jest za długa.
+.
 
 MessageId=112
 Severity=Success
@@ -935,6 +1181,9 @@ ERROR_DISK_FULL - There is not enough space on the disk.
 .
 Language=Russian
 ERROR_DISK_FULL - Недостаточно места на диске.
+.
+Language=Polish
+ERROR_DISK_FULL - Za mało miejsca na dysku.
 .
 
 MessageId=113
@@ -947,6 +1196,9 @@ ERROR_NO_MORE_SEARCH_HANDLES - No more internal file identifiers available.
 Language=Russian
 ERROR_NO_MORE_SEARCH_HANDLES - Исчерпаны внутренние идентификаторы файлов.
 .
+Language=Polish
+ERROR_NO_MORE_SEARCH_HANDLES - Brak dostępnych wewnętrznych identyfikatorów plików.
+.
 
 MessageId=114
 Severity=Success
@@ -957,6 +1209,9 @@ ERROR_INVALID_TARGET_HANDLE - The target internal file identifier is incorrect.
 .
 Language=Russian
 ERROR_INVALID_TARGET_HANDLE - Результирующий внутренний идентификатор файла неправилен.
+.
+Language=Polish
+ERROR_INVALID_TARGET_HANDLE - Wewnętrzny identyfikator pliku docelowego jest niepoprawny.
 .
 
 MessageId=117
@@ -969,6 +1224,9 @@ ERROR_INVALID_CATEGORY - The IOCTL call made by the application program is not c
 Language=Russian
 ERROR_INVALID_CATEGORY - Вызов IOCTL приложением произведен неверно.
 .
+Language=Polish
+ERROR_INVALID_CATEGORY - Wywołanie IOCTL wykonane przez program aplikacji jest niepoprawne.
+.
 
 MessageId=118
 Severity=Success
@@ -979,6 +1237,9 @@ ERROR_INVALID_VERIFY_SWITCH - The verify-on-write switch parameter value is not 
 .
 Language=Russian
 ERROR_INVALID_VERIFY_SWITCH - Параметр проверки записи данных имеет неверное значение.
+.
+Language=Polish
+ERROR_INVALID_VERIFY_SWITCH - Wartość parametru przełącznika sprawdź-przy-zapisie jest niepoprawna.
 .
 
 MessageId=119
@@ -991,6 +1252,9 @@ ERROR_BAD_DRIVER_LEVEL - The system does not support the command requested.
 Language=Russian
 ERROR_BAD_DRIVER_LEVEL - Система не может обработать полученную команду.
 .
+Language=Polish
+ERROR_BAD_DRIVER_LEVEL - System nie obsługuje żądanego polecenia.
+.
 
 MessageId=120
 Severity=Success
@@ -1001,6 +1265,9 @@ ERROR_CALL_NOT_IMPLEMENTED - This function is not supported on this system.
 .
 Language=Russian
 ERROR_CALL_NOT_IMPLEMENTED - Эта функция не поддерживается для этой системы.
+.
+Language=Polish
+ERROR_CALL_NOT_IMPLEMENTED - Ta funkcja nie jest obsługiwana w tym systemie.
 .
 
 MessageId=121
@@ -1013,6 +1280,9 @@ ERROR_SEM_TIMEOUT - The semaphore timeout period has expired.
 Language=Russian
 ERROR_SEM_TIMEOUT - Превышен таймаут семафора.
 .
+Language=Polish
+ERROR_SEM_TIMEOUT - Przekroczono limit czasu semafora.
+.
 
 MessageId=122
 Severity=Success
@@ -1023,6 +1293,9 @@ ERROR_INSUFFICIENT_BUFFER - The data area passed to a system call is too small.
 .
 Language=Russian
 ERROR_INSUFFICIENT_BUFFER - Область данных, переданная по системному вызову, слишком мала.
+.
+Language=Polish
+ERROR_INSUFFICIENT_BUFFER - Obszar danych przekazany do wywołania systemowego jest za mały.
 .
 
 MessageId=123
@@ -1035,6 +1308,9 @@ ERROR_INVALID_NAME - The filename, directory name, or volume label syntax is inc
 Language=Russian
 ERROR_INVALID_NAME - Синтаксическая ошибка в имени файла, имени папки или метке тома.
 .
+Language=Polish
+ERROR_INVALID_NAME - Nazwa pliku, nazwa katalogu lub składnia etykiety woluminu jest niepoprawna.
+.
 
 MessageId=124
 Severity=Success
@@ -1045,6 +1321,9 @@ ERROR_INVALID_LEVEL - The system call level is not correct.
 .
 Language=Russian
 ERROR_INVALID_LEVEL - Неверный уровень системного вызова.
+.
+Language=Polish
+ERROR_INVALID_LEVEL - Poziom wywołania systemowego jest niepoprawny.
 .
 
 MessageId=125
@@ -1057,6 +1336,9 @@ ERROR_NO_VOLUME_LABEL - The disk has no volume label.
 Language=Russian
 ERROR_NO_VOLUME_LABEL - У диска отсутствует метка тома.
 .
+Language=Polish
+ERROR_NO_VOLUME_LABEL - Dysk nie ma etykiety woluminu.
+.
 
 MessageId=126
 Severity=Success
@@ -1067,6 +1349,9 @@ ERROR_MOD_NOT_FOUND - The specified module could not be found.
 .
 Language=Russian
 ERROR_MOD_NOT_FOUND - Не найден указанный модуль.
+.
+Language=Polish
+ERROR_MOD_NOT_FOUND - Nie można odnaleźć określonego modułu.
 .
 
 MessageId=127
@@ -1079,6 +1364,9 @@ ERROR_PROC_NOT_FOUND - The specified procedure could not be found.
 Language=Russian
 ERROR_PROC_NOT_FOUND - Не найдена указанная процедура.
 .
+Language=Polish
+ERROR_PROC_NOT_FOUND - Nie można odnaleźć określonej procedury.
+.
 
 MessageId=128
 Severity=Success
@@ -1089,6 +1377,9 @@ ERROR_WAIT_NO_CHILDREN - There are no child processes to wait for.
 .
 Language=Russian
 ERROR_WAIT_NO_CHILDREN - Дочерние процессы, окончания которых требуется ожидать, отсутствуют.
+.
+Language=Polish
+ERROR_WAIT_NO_CHILDREN - Nie ma procesów podrzędnych, na które trzeba by czekać.
 .
 
 MessageId=129
@@ -1101,6 +1392,9 @@ ERROR_CHILD_NOT_COMPLETE - The %1 application cannot be run in Win32 mode.
 Language=Russian
 ERROR_CHILD_NOT_COMPLETE - Приложение "%1" не может быть запущено в режиме Win32.
 .
+Language=Polish
+ERROR_CHILD_NOT_COMPLETE - Nie można uruchomić %1 w trybie Win32.
+.
 
 MessageId=130
 Severity=Success
@@ -1111,6 +1405,9 @@ ERROR_DIRECT_ACCESS_HANDLE - Attempt to use a file handle to an open disk partit
 .
 Language=Russian
 ERROR_DIRECT_ACCESS_HANDLE - Попытка использовать дескриптор файла для открытия раздела диска и выполнения операции, отличающейся от ввода/вывода нижнего уровня.
+.
+Language=Polish
+ERROR_DIRECT_ACCESS_HANDLE - Próbowano użyć dojścia do pliku do otwarcia partycji dysku dla operacji innej niż czysta dyskowa operacja We/Wy.
 .
 
 MessageId=131
@@ -1123,6 +1420,9 @@ ERROR_NEGATIVE_SEEK - An attempt was made to move the file pointer before the be
 Language=Russian
 ERROR_NEGATIVE_SEEK - Попытка поместить указатель на файл перед началом файла.
 .
+Language=Polish
+ERROR_NEGATIVE_SEEK - Wykonano próbę przesunięcia wskaźnika pliku przed początek pliku.
+.
 
 MessageId=132
 Severity=Success
@@ -1133,6 +1433,9 @@ ERROR_SEEK_ON_DEVICE - The file pointer cannot be set on the specified device or
 .
 Language=Russian
 ERROR_SEEK_ON_DEVICE - Указатель на файл не может быть установлен на заданное устройство или файл.
+.
+Language=Polish
+ERROR_SEEK_ON_DEVICE - Wskaźnik plików nie może być ustawiony na określonym urządzeniu lub pliku.
 .
 
 MessageId=133
@@ -1145,6 +1448,9 @@ ERROR_IS_JOIN_TARGET - A JOIN or SUBST command cannot be used for a drive that c
 Language=Russian
 ERROR_IS_JOIN_TARGET - Команды JOIN и SUBST не могут быть использованы для дисков, содержащих уже объединенные диски.
 .
+Language=Polish
+ERROR_IS_JOIN_TARGET - Polecenia JOIN lub SUBST nie mogą być użyte na dysku zawierającym poprzednio sprzężone dyski.
+.
 
 MessageId=134
 Severity=Success
@@ -1155,6 +1461,9 @@ ERROR_IS_JOINED - An attempt was made to use a JOIN or SUBST command on a drive 
 .
 Language=Russian
 ERROR_IS_JOINED - Попытка использовать команду JOIN или SUBST для диска, уже включенного в набор объединенных дисков.
+.
+Language=Polish
+ERROR_IS_JOINED - Wykonano próbę użycia polecenia JOIN lub SUBST dla dysku, który został już sprzęgnięty.
 .
 
 MessageId=135
@@ -1167,6 +1476,9 @@ ERROR_IS_SUBSTED - An attempt was made to use a JOIN or SUBST command on a drive
 Language=Russian
 ERROR_IS_SUBSTED - Попытка использовать команду JOIN или SUBST для диска, который уже был отображен.
 .
+Language=Polish
+ERROR_IS_SUBSTED - Wykonano próbę użycia polecenia JOIN lub SUBST na dysku, który uległ już podstawieniu.
+.
 
 MessageId=136
 Severity=Success
@@ -1177,6 +1489,9 @@ ERROR_NOT_JOINED - The system tried to delete the JOIN of a drive that is not jo
 .
 Language=Russian
 ERROR_NOT_JOINED - Попытка снять признак объединения с диска, для которого команда JOIN не выполнялась.
+.
+Language=Polish
+ERROR_NOT_JOINED - System próbował usunąć stan JOIN dysku, który nie jest sprzęgnięty (JOIN).
 .
 
 MessageId=137
@@ -1189,6 +1504,9 @@ ERROR_NOT_SUBSTED - The system tried to delete the substitution of a drive that 
 Language=Russian
 ERROR_NOT_SUBSTED - Попытка снять признак отображения с диска, для которого команда SUBST не выполнялась.
 .
+Language=Polish
+ERROR_NOT_SUBSTED - System próbował usunąć podstawienie dysku, który nie uległ podstawieniu.
+.
 
 MessageId=138
 Severity=Success
@@ -1199,6 +1517,9 @@ ERROR_JOIN_TO_JOIN - The system tried to join a drive to a directory on a joined
 .
 Language=Russian
 ERROR_JOIN_TO_JOIN - Попытка объединить диск с папкой на объединенном диске.
+.
+Language=Polish
+ERROR_JOIN_TO_JOIN - System próbował sprzęgnąć dysk z katalogiem na dysku sprzęgniętym.
 .
 
 MessageId=139
@@ -1211,6 +1532,9 @@ ERROR_SUBST_TO_SUBST - The system tried to substitute a drive to a directory on 
 Language=Russian
 ERROR_SUBST_TO_SUBST - Попытка отобразить диск на папку, находящуюся на отображенном диске.
 .
+Language=Polish
+ERROR_SUBST_TO_SUBST - System próbował dokonać podstawienia dysku przez katalog na dysku poddanym podstawieniu.
+.
 
 MessageId=140
 Severity=Success
@@ -1221,6 +1545,9 @@ ERROR_JOIN_TO_SUBST - The system tried to join a drive to a directory on a subst
 .
 Language=Russian
 ERROR_JOIN_TO_SUBST - Попытка объединить диск с папкой на отображенном диске.
+.
+Language=Polish
+ERROR_JOIN_TO_SUBST - System próbował sprzęgnąć dysk z katalogiem na dysku poddanym podstawieniu.
 .
 
 MessageId=141
@@ -1233,6 +1560,9 @@ ERROR_SUBST_TO_JOIN - The system tried to SUBST a drive to a directory on a join
 Language=Russian
 ERROR_SUBST_TO_JOIN - Попытка отобразить диск на папку, находящуюся на объединенном диске.
 .
+Language=Polish
+ERROR_SUBST_TO_JOIN - System próbował dokonać podstawienia dysku przez katalog na dysku sprzęgniętym.
+.
 
 MessageId=142
 Severity=Success
@@ -1243,6 +1573,9 @@ ERROR_BUSY_DRIVE - The system cannot perform a JOIN or SUBST at this time.
 .
 Language=Russian
 ERROR_BUSY_DRIVE - В настоящее время выполнить команду JOIN или SUBST невозможно.
+.
+Language=Polish
+ERROR_BUSY_DRIVE - System nie może teraz wykonać polecenia JOIN ani SUBST.
 .
 
 MessageId=143
@@ -1255,6 +1588,9 @@ ERROR_SAME_DRIVE - The system cannot join or substitute a drive to or for a dire
 Language=Russian
 ERROR_SAME_DRIVE - Невозможно объединить (или отобразить) диск с папкой (или на папку) этого же диска.
 .
+Language=Polish
+ERROR_SAME_DRIVE - System nie może sprzęgnąć lub dokonać podstawienia dysku (JOIN lub SUBST) przy użyciu katalogu na tym samym dysku.
+.
 
 MessageId=144
 Severity=Success
@@ -1265,6 +1601,9 @@ ERROR_DIR_NOT_ROOT - The directory is not a subdirectory of the root directory.
 .
 Language=Russian
 ERROR_DIR_NOT_ROOT - Эта папка не является подпапкой корневой папки.
+.
+Language=Polish
+ERROR_DIR_NOT_ROOT - Katalog nie jest podkatalogiem katalogu głównego.
 .
 
 MessageId=145
@@ -1277,6 +1616,9 @@ ERROR_DIR_NOT_EMPTY - The directory is not empty.
 Language=Russian
 ERROR_DIR_NOT_EMPTY - Папка не пуста.
 .
+Language=Polish
+ERROR_DIR_NOT_EMPTY - Katalog nie jest pusty.
+.
 
 MessageId=146
 Severity=Success
@@ -1287,6 +1629,9 @@ ERROR_IS_SUBST_PATH - The path specified is being used in a substitute.
 .
 Language=Russian
 ERROR_IS_SUBST_PATH - Указанный путь используется для отображенного диска.
+.
+Language=Polish
+ERROR_IS_SUBST_PATH - Określona ścieżka jest używana w podstawieniu.
 .
 
 MessageId=147
@@ -1299,6 +1644,9 @@ ERROR_IS_JOIN_PATH - Not enough resources are available to process this command.
 Language=Russian
 ERROR_IS_JOIN_PATH - Недостаточно ресурсов для обработки команды.
 .
+Language=Polish
+ERROR_IS_JOIN_PATH - Za mało zasobów do przetworzenia tego polecenia.
+.
 
 MessageId=148
 Severity=Success
@@ -1309,6 +1657,9 @@ ERROR_PATH_BUSY - The path specified cannot be used at this time.
 .
 Language=Russian
 ERROR_PATH_BUSY - Указанный путь невозможно использовать сейчас.
+.
+Language=Polish
+ERROR_PATH_BUSY - Nie można teraz użyć określonej ścieżki.
 .
 
 MessageId=149
@@ -1321,6 +1672,9 @@ ERROR_IS_SUBST_TARGET - An attempt was made to join or substitute a drive for wh
 Language=Russian
 ERROR_IS_SUBST_TARGET - Попытка объединить или отобразить диск, папка на котором уже используется для отображения.
 .
+Language=Polish
+ERROR_IS_SUBST_TARGET - Wykonano próbę sprzęgnięcia (JOIN) lub podstawienia (SUBST) dysku, dla którego katalog na dysku jest katalogiem docelowym poprzedniego podstawienia.
+.
 
 MessageId=150
 Severity=Success
@@ -1331,6 +1685,9 @@ ERROR_SYSTEM_TRACE - System trace information was not specified in your CONFIG.S
 .
 Language=Russian
 ERROR_SYSTEM_TRACE - Сведения о трассировке в файле CONFIG.SYS не найдены, либо трассировка запрещена.
+.
+Language=Polish
+ERROR_SYSTEM_TRACE - СInformacje o śledzeniu systemu nie zostały określone w pliku CONFIG.SYS lub śledzenie jest niedozwolone.
 .
 
 MessageId=151
@@ -1343,6 +1700,9 @@ ERROR_INVALID_EVENT_COUNT - The number of specified semaphore events for DosMuxS
 Language=Russian
 ERROR_INVALID_EVENT_COUNT - Число семафоров для DosMuxSemWait задано неверно.
 .
+Language=Polish
+ERROR_INVALID_EVENT_COUNT - Liczba określonych zdarzeń semafora dla DosMuxSemWait jest niepoprawna.
+.
 
 MessageId=152
 Severity=Success
@@ -1353,6 +1713,9 @@ ERROR_TOO_MANY_MUXWAITERS - DosMuxSemWait did not execute; too many semaphores a
 .
 Language=Russian
 ERROR_TOO_MANY_MUXWAITERS - Не выполнен вызов DosMuxSemWait. Установлено слишком много семафоров.
+.
+Language=Polish
+ERROR_TOO_MANY_MUXWAITERS - Nie wykonano funkcji DosMuxSemWait; za dużo semaforów jest już ustawionych.
 .
 
 MessageId=153
@@ -1365,6 +1728,9 @@ ERROR_INVALID_LIST_FORMAT - The DosMuxSemWait list is not correct.
 Language=Russian
 ERROR_INVALID_LIST_FORMAT - Некорректный вызов DosMuxSemWait.
 .
+Language=Polish
+ERROR_INVALID_LIST_FORMAT - Lista DosMuxSemWait jest niepoprawna.
+.
 
 MessageId=154
 Severity=Success
@@ -1375,6 +1741,9 @@ ERROR_LABEL_TOO_LONG - The volume label you entered exceeds the label character 
 .
 Language=Russian
 ERROR_LABEL_TOO_LONG - Длина метки тома превосходит предел, установленный для файловой системы.
+.
+Language=Polish
+ERROR_LABEL_TOO_LONG - Wprowadzona etykieta woluminu przekracza limit znaków etykiety docelowego systemu plików.
 .
 
 MessageId=155
@@ -1387,6 +1756,9 @@ ERROR_TOO_MANY_TCBS - Cannot create another thread.
 Language=Russian
 ERROR_TOO_MANY_TCBS - Не удается создать еще один поток команд.
 .
+Language=Polish
+ERROR_TOO_MANY_TCBS - Nie można utworzyć innego wątku.
+.
 
 MessageId=156
 Severity=Success
@@ -1397,6 +1769,9 @@ ERROR_SIGNAL_REFUSED - The recipient process has refused the signal.
 .
 Language=Russian
 ERROR_SIGNAL_REFUSED - Принимающий процесс отклонил сигнал.
+.
+Language=Polish
+ERROR_SIGNAL_REFUSED - Proces odbiorczy odrzucił sygnał.
 .
 
 MessageId=157
@@ -1409,6 +1784,9 @@ ERROR_DISCARDED - The segment is already discarded and cannot be locked.
 Language=Russian
 ERROR_DISCARDED - Сегмент уже освобожден и не может быть заблокирован.
 .
+Language=Polish
+ERROR_DISCARDED - Segment jest już zarzucony i nie można go zablokować.
+.
 
 MessageId=158
 Severity=Success
@@ -1419,6 +1797,9 @@ ERROR_NOT_LOCKED - The segment is already unlocked.
 .
 Language=Russian
 ERROR_NOT_LOCKED - Блокировка с сегмента уже снята.
+.
+Language=Polish
+ERROR_NOT_LOCKED - Segment jest już odblokowany.
 .
 
 MessageId=159
@@ -1431,6 +1812,9 @@ ERROR_BAD_THREADID_ADDR - The address for the thread ID is not correct.
 Language=Russian
 ERROR_BAD_THREADID_ADDR - Адрес идентификатора потока команд задан неверно.
 .
+Language=Polish
+ERROR_BAD_THREADID_ADDR - Adres identyfikatora wątku jest niepoprawny.
+.
 
 MessageId=160
 Severity=Success
@@ -1441,6 +1825,9 @@ ERROR_BAD_ARGUMENTS - The argument string passed to DosExecPgm is not correct.
 .
 Language=Russian
 ERROR_BAD_ARGUMENTS - Неверны один или несколько аргументов.
+.
+Language=Polish
+ERROR_BAD_ARGUMENTS - Co najmniej jeden argument jest niepoprawny.
 .
 
 MessageId=161
@@ -1453,6 +1840,9 @@ ERROR_BAD_PATHNAME - The specified path is invalid.
 Language=Russian
 ERROR_BAD_PATHNAME - Указан недопустимый путь.
 .
+Language=Polish
+ERROR_BAD_PATHNAME - Określona ścieżka jest nieprawidłowa.
+.
 
 MessageId=162
 Severity=Success
@@ -1463,6 +1853,9 @@ ERROR_SIGNAL_PENDING - A signal is already pending.
 .
 Language=Russian
 ERROR_SIGNAL_PENDING - Сигнал уже находится в состоянии обработки.
+.
+Language=Polish
+ERROR_SIGNAL_PENDING - Sygnał jest już w stanie oczekiwania.
 .
 
 MessageId=164
@@ -1475,6 +1868,9 @@ ERROR_MAX_THRDS_REACHED - No more threads can be created in the system.
 Language=Russian
 ERROR_MAX_THRDS_REACHED - Создание дополнительных потоков команд невозможно.
 .
+Language=Polish
+ERROR_MAX_THRDS_REACHED - W systemie nie można utworzyć dalszych wątków.
+.
 
 MessageId=167
 Severity=Success
@@ -1485,6 +1881,9 @@ ERROR_LOCK_FAILED - Unable to lock a region of a file.
 .
 Language=Russian
 ERROR_LOCK_FAILED - Не удается снять блокировку с области файла.
+.
+Language=Polish
+ERROR_LOCK_FAILED - Nie można zablokować regionu pliku.
 .
 
 MessageId=170
@@ -1497,6 +1896,9 @@ ERROR_BUSY - The requested resource is in use.
 Language=Russian
 ERROR_BUSY - Требуемый ресурс занят.
 .
+Language=Polish
+ERROR_BUSY - Żądane zasoby są w użyciu.
+.
 
 MessageId=173
 Severity=Success
@@ -1507,6 +1909,9 @@ ERROR_CANCEL_VIOLATION - A lock request was not outstanding for the supplied can
 .
 Language=Russian
 ERROR_CANCEL_VIOLATION - Запрос на блокировку соответствует определенной области.
+.
+Language=Polish
+ERROR_CANCEL_VIOLATION - Żądanie zablokowania nie było zaległe dla podanego regionu anulowania.
 .
 
 MessageId=174
@@ -1519,6 +1924,9 @@ ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - The file system does not support atomic chang
 Language=Russian
 ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - Файловая система не поддерживает указанные изменения типа блокировки.
 .
+Language=Polish
+ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - System plików nie obsługuje zmian częściowych dotyczących typu blokady.
+.
 
 MessageId=180
 Severity=Success
@@ -1529,6 +1937,9 @@ ERROR_INVALID_SEGMENT_NUMBER - The system detected a segment number that was not
 .
 Language=Russian
 ERROR_INVALID_SEGMENT_NUMBER - Система обнаружила неверный номер сегмента.
+.
+Language=Polish
+ERROR_INVALID_SEGMENT_NUMBER - System wykrył niepoprawny numer segmentu.
 .
 
 MessageId=182
@@ -1541,6 +1952,9 @@ ERROR_INVALID_ORDINAL - The operating system cannot run %1.
 Language=Russian
 ERROR_INVALID_ORDINAL - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_INVALID_ORDINAL - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=183
 Severity=Success
@@ -1551,6 +1965,9 @@ ERROR_ALREADY_EXISTS - Cannot create a file when that file already exists.
 .
 Language=Russian
 ERROR_ALREADY_EXISTS - Невозможно создать файл, так как он уже существует.
+.
+Language=Polish
+ERROR_ALREADY_EXISTS - Nie można utworzyć pliku, który już istnieje.
 .
 
 MessageId=186
@@ -1563,6 +1980,9 @@ ERROR_INVALID_FLAG_NUMBER - The flag passed is not correct.
 Language=Russian
 ERROR_INVALID_FLAG_NUMBER - Передан неверный флаг.
 .
+Language=Polish
+ERROR_INVALID_FLAG_NUMBER - Przekazana flaga jest niepoprawna.
+.
 
 MessageId=187
 Severity=Success
@@ -1573,6 +1993,9 @@ ERROR_SEM_NOT_FOUND - The specified system semaphore name was not found.
 .
 Language=Russian
 ERROR_SEM_NOT_FOUND - Не найдено указанное имя системного семафора.
+.
+Language=Polish
+ERROR_SEM_NOT_FOUND - Nie odnaleziono określonej nazwy semafora systemowego.
 .
 
 MessageId=188
@@ -1585,6 +2008,9 @@ ERROR_INVALID_STARTING_CODESEG - The operating system cannot run %1.
 Language=Russian
 ERROR_INVALID_STARTING_CODESEG - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_INVALID_STARTING_CODESEG - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=189
 Severity=Success
@@ -1595,6 +2021,9 @@ ERROR_INVALID_STACKSEG - The operating system cannot run %1.
 .
 Language=Russian
 ERROR_INVALID_STACKSEG - Операционная система не может выполнить "%1".
+.
+Language=Polish
+ERROR_INVALID_STACKSEG - System operacyjny nie może uruchomić %1.
 .
 
 MessageId=190
@@ -1607,6 +2036,9 @@ ERROR_INVALID_MODULETYPE - The operating system cannot run %1.
 Language=Russian
 ERROR_INVALID_MODULETYPE - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_INVALID_MODULETYPE - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=191
 Severity=Success
@@ -1617,6 +2049,9 @@ ERROR_INVALID_EXE_SIGNATURE - Cannot run %1 in Win32 mode.
 .
 Language=Russian
 ERROR_INVALID_EXE_SIGNATURE - Невозможно запустить "%1" в режиме Win32.
+.
+Language=Polish
+ERROR_INVALID_EXE_SIGNATURE - Nie można uruchomić %1 w trybie Win32.
 .
 
 MessageId=192
@@ -1629,6 +2064,9 @@ ERROR_EXE_MARKED_INVALID - The operating system cannot run %1.
 Language=Russian
 ERROR_EXE_MARKED_INVALID - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_EXE_MARKED_INVALID - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=193
 Severity=Success
@@ -1639,6 +2077,9 @@ ERROR_BAD_EXE_FORMAT - %1 is not a valid Win32 application.
 .
 Language=Russian
 ERROR_BAD_EXE_FORMAT - "%1" не является приложением Win32.
+.
+Language=Polish
+ERROR_BAD_EXE_FORMAT - %1 nie jest prawidłową aplikacją systemu Win32.
 .
 
 MessageId=194
@@ -1651,6 +2092,9 @@ ERROR_ITERATED_DATA_EXCEEDS_64k - The operating system cannot run %1.
 Language=Russian
 ERROR_ITERATED_DATA_EXCEEDS_64k - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_ITERATED_DATA_EXCEEDS_64k - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=195
 Severity=Success
@@ -1661,6 +2105,9 @@ ERROR_INVALID_MINALLOCSIZE - The operating system cannot run %1.
 .
 Language=Russian
 ERROR_INVALID_MINALLOCSIZE - Операционная система не может выполнить "%1".
+.
+Language=Polish
+ERROR_INVALID_MINALLOCSIZE - System operacyjny nie może uruchomić %1.
 .
 
 MessageId=196
@@ -1673,6 +2120,9 @@ ERROR_DYNLINK_FROM_INVALID_RING - The operating system cannot run this applicati
 Language=Russian
 ERROR_DYNLINK_FROM_INVALID_RING - Операционная система не может запустить это приложение.
 .
+Language=Polish
+ERROR_DYNLINK_FROM_INVALID_RING - System operacyjny nie może uruchomić tej aplikacji programu.
+.
 
 MessageId=197
 Severity=Success
@@ -1683,6 +2133,9 @@ ERROR_IOPL_NOT_ENABLED - The operating system is not presently configured to run
 .
 Language=Russian
 ERROR_IOPL_NOT_ENABLED - Конфигурация операционной системы не рассчитана на запуск этого приложения.
+.
+Language=Polish
+ERROR_IOPL_NOT_ENABLED - System operacyjny nie jest obecnie skonfigurowany do uruchomienia tej aplikacji.
 .
 
 MessageId=198
@@ -1695,6 +2148,9 @@ ERROR_INVALID_SEGDPL - The operating system cannot run %1.
 Language=Russian
 ERROR_INVALID_SEGDPL - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_INVALID_SEGDPL - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=199
 Severity=Success
@@ -1705,6 +2161,9 @@ ERROR_AUTODATASEG_EXCEEDS_64k - The operating system cannot run this application
 .
 Language=Russian
 ERROR_AUTODATASEG_EXCEEDS_64k - Операционная система не может запустить это приложение.
+.
+Language=Polish
+ERROR_AUTODATASEG_EXCEEDS_64k - System operacyjny nie może uruchomić tej aplikacji programu.
 .
 
 MessageId=200
@@ -1717,6 +2176,9 @@ ERROR_RING2SEG_MUST_BE_MOVABLE - The code segment cannot be greater than or equa
 Language=Russian
 ERROR_RING2SEG_MUST_BE_MOVABLE - Сегмент кода должен быть меньше 64 КБ.
 .
+Language=Polish
+ERROR_RING2SEG_MUST_BE_MOVABLE - Segment kodu nie może być większy niż lub równy 64 KB.
+.
 
 MessageId=201
 Severity=Success
@@ -1727,6 +2189,9 @@ ERROR_RELOC_CHAIN_XEEDS_SEGLIM - The operating system cannot run %1.
 .
 Language=Russian
 ERROR_RELOC_CHAIN_XEEDS_SEGLIM - Операционная система не может выполнить "%1".
+.
+Language=Polish
+ERROR_RELOC_CHAIN_XEEDS_SEGLIM - System operacyjny nie może uruchomić %1.
 .
 
 MessageId=202
@@ -1739,6 +2204,9 @@ ERROR_INFLOOP_IN_RELOC_CHAIN - The operating system cannot run %1.
 Language=Russian
 ERROR_INFLOOP_IN_RELOC_CHAIN - Операционная система не может выполнить "%1".
 .
+Language=Polish
+ERROR_INFLOOP_IN_RELOC_CHAIN - System operacyjny nie może uruchomić %1.
+.
 
 MessageId=203
 Severity=Success
@@ -1749,6 +2217,9 @@ ERROR_ENVVAR_NOT_FOUND - The system could not find the environment option that w
 .
 Language=Russian
 ERROR_ENVVAR_NOT_FOUND - Системе не удается найти указанный параметр среды.
+.
+Language=Polish
+ERROR_ENVVAR_NOT_FOUND - System nie mógł znaleźć opcji środowiska, która została wprowadzona.
 .
 
 MessageId=205
@@ -1761,6 +2232,9 @@ ERROR_NO_SIGNAL_SENT - No process in the command subtree has a signal handler.
 Language=Russian
 ERROR_NO_SIGNAL_SENT - Ни один из процессов в дереве команды не имеет обработчика сигналов.
 .
+Language=Polish
+ERROR_NO_SIGNAL_SENT - Żaden proces w poddrzewie polecenia nie ma obsługi sygnałów.
+.
 
 MessageId=206
 Severity=Success
@@ -1771,6 +2245,9 @@ ERROR_FILENAME_EXCED_RANGE - The filename or extension is too long.
 .
 Language=Russian
 ERROR_FILENAME_EXCED_RANGE - Имя файла или его расширение имеет слишком большую длину.
+.
+Language=Polish
+ERROR_FILENAME_EXCED_RANGE - Nazwa pliku lub jej rozszerzenie są za długie.
 .
 
 MessageId=207
@@ -1783,6 +2260,9 @@ ERROR_RING2_STACK_IN_USE - The ring 2 stack is in use.
 Language=Russian
 ERROR_RING2_STACK_IN_USE - Кольцо 2 стека занято.
 .
+Language=Polish
+ERROR_RING2_STACK_IN_USE - Stos ring 2 jest w użyciu.
+.
 
 MessageId=208
 Severity=Success
@@ -1793,6 +2273,9 @@ ERROR_META_EXPANSION_TOO_LONG - The global filename characters, * or ?, are ente
 .
 Language=Russian
 ERROR_META_EXPANSION_TOO_LONG - Подстановочные знаки * и/или ? заданы неверно или образуют неверный шаблон имени.
+.
+Language=Polish
+ERROR_META_EXPANSION_TOO_LONG - Znaki globalne w nazwach plików, * lub ?, są niepoprawnie wprowadzone lub określono za dużo znaków globalnych.
 .
 
 MessageId=209
@@ -1805,6 +2288,9 @@ ERROR_INVALID_SIGNAL_NUMBER - The signal being posted is not correct.
 Language=Russian
 ERROR_INVALID_SIGNAL_NUMBER - Отправляемый сигнал неверен.
 .
+Language=Polish
+ERROR_INVALID_SIGNAL_NUMBER - Ogłaszany sygnał jest nieprawidłowy.
+.
 
 MessageId=210
 Severity=Success
@@ -1815,6 +2301,9 @@ ERROR_THREAD_1_INACTIVE - The signal handler cannot be set.
 .
 Language=Russian
 ERROR_THREAD_1_INACTIVE - Не удается установить обработчик сигналов.
+.
+Language=Polish
+ERROR_THREAD_1_INACTIVE - Nie można ustawić programu obsługi sygnałów.
 .
 
 MessageId=212
@@ -1827,6 +2316,9 @@ ERROR_LOCKED - The segment is locked and cannot be reallocated.
 Language=Russian
 ERROR_LOCKED - Сегмент заблокирован и не может быть перемещен.
 .
+Language=Polish
+ERROR_LOCKED - Segment jest zablokowany i nie można przydzielić go ponownie.
+.
 
 MessageId=214
 Severity=Success
@@ -1837,6 +2329,9 @@ ERROR_TOO_MANY_MODULES - Too many dynamic-link modules are attached to this prog
 .
 Language=Russian
 ERROR_TOO_MANY_MODULES - К этой программе или модулю присоединено слишком много динамически подключаемых модулей.
+.
+Language=Polish
+ERROR_TOO_MANY_MODULES - Do tego programu lub modułu dołączono za dużo modułów dołączanych dynamicznie.
 .
 
 MessageId=215
@@ -1849,6 +2344,9 @@ ERROR_NESTING_NOT_ALLOWED - Cannot nest calls to LoadModule.
 Language=Russian
 ERROR_NESTING_NOT_ALLOWED - Вызовы LoadModule не могут быть вложены.
 .
+Language=Polish
+ERROR_NESTING_NOT_ALLOWED - Nie można zagnieżdżać wywołań funkcji LoadModule.
+.
 
 MessageId=216
 Severity=Success
@@ -1859,6 +2357,9 @@ ERROR_EXE_MACHINE_TYPE_MISMATCH - The image file %1 is valid, but is for a machi
 .
 Language=Russian
 ERROR_EXE_MACHINE_TYPE_MISMATCH - The image file %1 is valid, but is for a machine type other than the current machine.
+.
+Language=Polish
+ERROR_EXE_MACHINE_TYPE_MISMATCH - Plik obrazu %1 jest prawidłowy, ale jest przeznaczony na komputer innego typu niż obecny.
 .
 
 MessageId=217
@@ -1871,6 +2372,9 @@ ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY - The image file %1 is signed, unable to m
 Language=Russian
 ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY - The image file %1 is signed, unable to modify.
 .
+Language=Polish
+ERROR_EXE_CANNOT_MODIFY_SIGNED_BINARY - Plik obrazu %1 jest podpisany, nie można go zmodyfikować.
+.
 
 MessageId=218
 Severity=Success
@@ -1881,6 +2385,9 @@ ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY - The image file %1 is strong signed
 .
 Language=Russian
 ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY - The image file %1 is strong signed, unable to modify.
+.
+Language=Polish
+ERRO_EXE_CANNOT_MODIFY_STRONG_SIGNED_BINARY - Plik obrazu %1 ma silny podpis, nie można go zmodyfikować.
 .
 
 MessageId=230
@@ -1893,6 +2400,9 @@ ERROR_BAD_PIPE - The pipe state is invalid.
 Language=Russian
 ERROR_BAD_PIPE - The pipe state is invalid.
 .
+Language=Polish
+ERROR_BAD_PIPE - Stan potoku jest nieprawidłowy.
+.
 
 MessageId=231
 Severity=Success
@@ -1903,6 +2413,9 @@ ERROR_PIPE_BUSY - All pipe instances are busy.
 .
 Language=Russian
 ERROR_PIPE_BUSY - All pipe instances are busy.
+.
+Language=Polish
+ERROR_PIPE_BUSY - Wszystkie wystąpienia potoku są zajęte.
 .
 
 MessageId=232
@@ -1915,6 +2428,9 @@ ERROR_NO_DATA - The pipe is being closed.
 Language=Russian
 ERROR_NO_DATA - The pipe is being closed.
 .
+Language=Polish
+ERROR_NO_DATA - Trwa zamykanie potoku.
+.
 
 MessageId=233
 Severity=Success
@@ -1925,6 +2441,9 @@ ERROR_PIPE_NOT_CONNECTED - No process is on the other end of the pipe.
 .
 Language=Russian
 ERROR_PIPE_NOT_CONNECTED - No process is on the other end of the pipe.
+.
+Language=Polish
+ERROR_PIPE_NOT_CONNECTED - Na drugim końcu potoku nie ma żadnego procesu.
 .
 
 MessageId=234
@@ -1937,6 +2456,9 @@ ERROR_MORE_DATA - More data is available.
 Language=Russian
 ERROR_MORE_DATA - More data is available.
 .
+Language=Polish
+ERROR_MORE_DATA - Dostępnych jest więcej danych.
+.
 
 MessageId=240
 Severity=Success
@@ -1947,6 +2469,9 @@ ERROR_VC_DISCONNECTED - The session was canceled.
 .
 Language=Russian
 ERROR_VC_DISCONNECTED - The session was canceled.
+.
+Language=Polish
+ERROR_VC_DISCONNECTED - Sesja została anulowana.
 .
 
 MessageId=254
@@ -1959,6 +2484,9 @@ ERROR_INVALID_EA_NAME - The specified extended attribute name was invalid.
 Language=Russian
 ERROR_INVALID_EA_NAME - The specified extended attribute name was invalid.
 .
+Language=Polish
+ERROR_INVALID_EA_NAME - Określona nazwa atrybutu rozszerzonego jest nieprawidłowa.
+.
 
 MessageId=255
 Severity=Success
@@ -1969,6 +2497,9 @@ ERROR_EA_LIST_INCONSISTENT - The extended attributes are inconsistent.
 .
 Language=Russian
 ERROR_EA_LIST_INCONSISTENT - The extended attributes are inconsistent.
+.
+Language=Polish
+ERROR_EA_LIST_INCONSISTENT - Atrybuty rozszerzone są niezgodne.
 .
 
 MessageId=258
@@ -1981,6 +2512,9 @@ WAIT_TIMEOUT - The wait operation timed out.
 Language=Russian
 WAIT_TIMEOUT - The wait operation timed out.
 .
+Language=Polish
+WAIT_TIMEOUT - Upłynął limit czasu operacji oczekiwania.
+.
 
 MessageId=259
 Severity=Success
@@ -1991,6 +2525,9 @@ ERROR_NO_MORE_ITEMS - No more data is available.
 .
 Language=Russian
 ERROR_NO_MORE_ITEMS - No more data is available.
+.
+Language=Polish
+ERROR_NO_MORE_ITEMS - Brak dalszych danych.
 .
 
 MessageId=266
@@ -2003,6 +2540,9 @@ ERROR_CANNOT_COPY - The copy functions cannot be used.
 Language=Russian
 ERROR_CANNOT_COPY - The copy functions cannot be used.
 .
+Language=Polish
+ERROR_CANNOT_COPY - Nie można używać funkcji kopiowania.
+.
 
 MessageId=267
 Severity=Success
@@ -2013,6 +2553,9 @@ ERROR_DIRECTORY - The directory name is invalid.
 .
 Language=Russian
 ERROR_DIRECTORY - The directory name is invalid.
+.
+Language=Polish
+ERROR_DIRECTORY - Nazwa katalogu jest nieprawidłowa.
 .
 
 MessageId=275
@@ -2025,6 +2568,9 @@ ERROR_EAS_DIDNT_FIT - The extended attributes did not fit in the buffer.
 Language=Russian
 ERROR_EAS_DIDNT_FIT - The extended attributes did not fit in the buffer.
 .
+Language=Polish
+ERROR_EAS_DIDNT_FIT - Atrybuty rozszerzone nie zmieściły się w buforze.
+.
 
 MessageId=276
 Severity=Success
@@ -2035,6 +2581,9 @@ ERROR_EA_FILE_CORRUPT - The extended attribute file on the mounted file system i
 .
 Language=Russian
 ERROR_EA_FILE_CORRUPT - The extended attribute file on the mounted file system is corrupt.
+.
+Language=Polish
+ERROR_EA_FILE_CORRUPT - Plik atrybutów rozszerzonych w zainstalowanym systemie plików jest uszkodzony.
 .
 
 MessageId=277
@@ -2047,6 +2596,9 @@ ERROR_EA_TABLE_FULL - The extended attribute table file is full.
 Language=Russian
 ERROR_EA_TABLE_FULL - The extended attribute table file is full.
 .
+Language=Polish
+ERROR_EA_TABLE_FULL - Tabela atrybutów rozszerzonych jest zapełniona.
+.
 
 MessageId=278
 Severity=Success
@@ -2057,6 +2609,9 @@ ERROR_INVALID_EA_HANDLE - The specified extended attribute handle is invalid.
 .
 Language=Russian
 ERROR_INVALID_EA_HANDLE - The specified extended attribute handle is invalid.
+.
+Language=Polish
+ERROR_INVALID_EA_HANDLE - Określone dojście atrybutu rozszerzonego jest nieprawidłowe.
 .
 
 MessageId=282
@@ -2069,6 +2624,9 @@ ERROR_EAS_NOT_SUPPORTED - The mounted file system does not support extended attr
 Language=Russian
 ERROR_EAS_NOT_SUPPORTED - The mounted file system does not support extended attributes.
 .
+Language=Polish
+ERROR_EAS_NOT_SUPPORTED - Zainstalowany system plików nie obsługuje atrybutów rozszerzonych.
+.
 
 MessageId=288
 Severity=Success
@@ -2079,6 +2637,9 @@ ERROR_NOT_OWNER - Attempt to release mutex not owned by caller.
 .
 Language=Russian
 ERROR_NOT_OWNER - Attempt to release mutex not owned by caller.
+.
+Language=Polish
+ERROR_NOT_OWNER - Próbowano zwolnić mutex nie będący własnością wywołującego.
 .
 
 MessageId=298
@@ -2091,6 +2652,9 @@ ERROR_TOO_MANY_POSTS - Too many posts were made to a semaphore.
 Language=Russian
 ERROR_TOO_MANY_POSTS - Too many posts were made to a semaphore.
 .
+Language=Polish
+ERROR_TOO_MANY_POSTS - Wykonano za dużo przesłań do semafora.
+.
 
 MessageId=299
 Severity=Success
@@ -2101,6 +2665,9 @@ ERROR_PARTIAL_COPY - Only part of a ReadProcessMemory or WriteProcessMemory requ
 .
 Language=Russian
 ERROR_PARTIAL_COPY - Only part of a ReadProcessMemory or WriteProcessMemory request was completed.
+.
+Language=Polish
+ERROR_PARTIAL_COPY - Ukończono tylko część żądania ReadProcessMemory lub WriteProcessMemory.
 .
 
 MessageId=300
@@ -2113,6 +2680,9 @@ ERROR_OPLOCK_NOT_GRANTED - The oplock request is denied.
 Language=Russian
 ERROR_OPLOCK_NOT_GRANTED - The oplock request is denied.
 .
+Language=Polish
+ERROR_OPLOCK_NOT_GRANTED - Odmowa żądania operacji oplock.
+.
 
 MessageId=301
 Severity=Success
@@ -2123,6 +2693,9 @@ ERROR_INVALID_OPLOCK_PROTOCOL - An invalid oplock acknowledgment was received by
 .
 Language=Russian
 ERROR_INVALID_OPLOCK_PROTOCOL - An invalid oplock acknowledgment was received by the system.
+.
+Language=Polish
+ERROR_INVALID_OPLOCK_PROTOCOL - System odebrał nieprawidłowe potwierdzenie zablokowania operacji.
 .
 
 MessageId=302
@@ -2135,6 +2708,9 @@ ERROR_DISK_TOO_FRAGMENTED - The volume is too fragmented to complete this operat
 Language=Russian
 ERROR_DISK_TOO_FRAGMENTED - The volume is too fragmented to complete this operation.
 .
+Language=Polish
+ERROR_DISK_TOO_FRAGMENTED - Wolumin jest zbyt pofragmentowany, aby ukończyć tę operację.
+.
 
 MessageId=303
 Severity=Success
@@ -2145,6 +2721,9 @@ ERROR_DELETE_PENDING - The file cannot be opened because it is in the process of
 .
 Language=Russian
 ERROR_DELETE_PENDING - The file cannot be opened because it is in the process of being deleted.
+.
+Language=Polish
+ERROR_DELETE_PENDING - Nie można otworzyć pliku, ponieważ trwa proces jego usuwania.
 .
 
 MessageId=317
@@ -2157,6 +2736,9 @@ ERROR_MR_MID_NOT_FOUND - The system cannot find message text for message number 
 Language=Russian
 ERROR_MR_MID_NOT_FOUND - The system cannot find message text for message number 0x%1 in the message file for %2.
 .
+Language=Polish
+ERROR_MR_MID_NOT_FOUND - System nie może znaleźć komunikatu dla numeru komunikatu 0x%1 w pliku komunikatów dla %2.
+.
 
 MessageId=318
 Severity=Success
@@ -2167,6 +2749,9 @@ ERROR_SCOPE_NOT_FOUND - The scope specified was not found.
 .
 Language=Russian
 ERROR_SCOPE_NOT_FOUND - The scope specified was not found.
+.
+Language=Polish
+ERROR_SCOPE_NOT_FOUND - Nie można odnaleźć określonego zakresu.
 .
 
 MessageId=487
@@ -2179,6 +2764,9 @@ ERROR_INVALID_ADDRESS - Attempt to access invalid address.
 Language=Russian
 ERROR_INVALID_ADDRESS - Attempt to access invalid address.
 .
+Language=Polish
+ERROR_INVALID_ADDRESS - Próbowano uzyskać dostęp do nieprawidłowego adresu.
+.
 
 MessageId=534
 Severity=Success
@@ -2188,6 +2776,9 @@ Language=English
 ERROR_ARITHMETIC_OVERFLOW - Arithmetic result exceeded 32 bits.
 .
 Language=Russian
+ERROR_ARITHMETIC_OVERFLOW - Arithmetic result exceeded 32 bits.
+.
+Language=Polish
 ERROR_ARITHMETIC_OVERFLOW - Arithmetic result exceeded 32 bits.
 .
 
@@ -2201,6 +2792,9 @@ ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
 Language=Russian
 ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
 .
+Language=Polish
+ERROR_PIPE_CONNECTED - There is a process on other end of the pipe.
+.
 
 MessageId=536
 Severity=Success
@@ -2210,6 +2804,9 @@ Language=English
 ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
 .
 Language=Russian
+ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
+.
+Language=Polish
 ERROR_PIPE_LISTENING - Waiting for a process to open the other end of the pipe.
 .
 
@@ -2223,6 +2820,9 @@ ERROR_ACPI_ERROR - An error occurred in the ACPI subsystem.
 Language=Russian
 ERROR_ACPI_ERROR - An error occurred in the ACPI subsystem.
 .
+Language=Polish
+ERROR_ACPI_ERROR - An error occurred in the ACPI subsystem.
+.
 
 MessageId=538
 Severity=Success
@@ -2232,6 +2832,9 @@ Language=English
 ERROR_ABIOS_ERROR - An error occurred in the ABIOS subsystem
 .
 Language=Russian
+ERROR_ABIOS_ERROR - An error occurred in the ABIOS subsystem
+.
+Language=Polish
 ERROR_ABIOS_ERROR - An error occurred in the ABIOS subsystem
 .
 
@@ -2245,6 +2848,9 @@ ERROR_WX86_WARNING - A warning occurred in the WX86 subsystem.
 Language=Russian
 ERROR_WX86_WARNING - A warning occurred in the WX86 subsystem.
 .
+Language=Polish
+ERROR_WX86_WARNING - A warning occurred in the WX86 subsystem.
+.
 
 MessageId=540
 Severity=Success
@@ -2254,6 +2860,9 @@ Language=English
 ERROR_WX86_ERROR - An error occurred in the WX86 subsystem.
 .
 Language=Russian
+ERROR_WX86_ERROR - An error occurred in the WX86 subsystem.
+.
+Language=Polish
 ERROR_WX86_ERROR - An error occurred in the WX86 subsystem.
 .
 
@@ -2267,6 +2876,9 @@ ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has
 Language=Russian
 ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
 .
+Language=Polish
+ERROR_TIMER_NOT_CANCELED - An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
+.
 
 MessageId=542
 Severity=Success
@@ -2276,6 +2888,9 @@ Language=English
 ERROR_UNWIND - Unwind exception code.
 .
 Language=Russian
+ERROR_UNWIND - Unwind exception code.
+.
+Language=Polish
 ERROR_UNWIND - Unwind exception code.
 .
 
@@ -2289,6 +2904,9 @@ ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind
 Language=Russian
 ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind operation.
 .
+Language=Polish
+ERROR_BAD_STACK - An invalid or unaligned stack was encountered during an unwind operation.
+.
 
 MessageId=544
 Severity=Success
@@ -2298,6 +2916,9 @@ Language=English
 ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
 .
 Language=Russian
+ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
+.
+Language=Polish
 ERROR_INVALID_UNWIND_TARGET - An invalid unwind target was encountered during an unwind operation.
 .
 
@@ -2311,6 +2932,9 @@ ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreateP
 Language=Russian
 ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreatePort or invalid Port Attributes specified to NtConnectPort
 .
+Language=Polish
+ERROR_INVALID_PORT_ATTRIBUTES - Invalid Object Attributes specified to NtCreatePort or invalid Port Attributes specified to NtConnectPort
+.
 
 MessageId=546
 Severity=Success
@@ -2320,6 +2944,9 @@ Language=English
 ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
 .
 Language=Russian
+ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
+.
+Language=Polish
 ERROR_PORT_MESSAGE_TOO_LONG - Length of message passed to NtRequestPort or NtRequestWaitReplyPort was longer than the maximum message allowed by the port.
 .
 
@@ -2333,6 +2960,9 @@ ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the
 Language=Russian
 ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the current usage.
 .
+Language=Polish
+ERROR_INVALID_QUOTA_LOWER - An attempt was made to lower a quota limit below the current usage.
+.
 
 MessageId=548
 Severity=Success
@@ -2342,6 +2972,9 @@ Language=English
 ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
 .
 Language=Russian
+ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
+.
+Language=Polish
 ERROR_DEVICE_ALREADY_ATTACHED - An attempt was made to attach to a device that was already attached to another device.
 .
 
@@ -2355,6 +2988,9 @@ ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction a
 Language=Russian
 ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction at an unaligned address and the host system does not support unaligned instruction references.
 .
+Language=Polish
+ERROR_INSTRUCTION_MISALIGNMENT - An attempt was made to execute an instruction at an unaligned address and the host system does not support unaligned instruction references.
+.
 
 MessageId=550
 Severity=Success
@@ -2364,6 +3000,9 @@ Language=English
 ERROR_PROFILING_NOT_STARTED - Profiling not started.
 .
 Language=Russian
+ERROR_PROFILING_NOT_STARTED - Profiling not started.
+.
+Language=Polish
 ERROR_PROFILING_NOT_STARTED - Profiling not started.
 .
 
@@ -2377,6 +3016,9 @@ ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
 Language=Russian
 ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
 .
+Language=Polish
+ERROR_PROFILING_NOT_STOPPED - Profiling not stopped.
+.
 
 MessageId=552
 Severity=Success
@@ -2386,6 +3028,9 @@ Language=English
 ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
 .
 Language=Russian
+ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
+.
+Language=Polish
 ERROR_COULD_NOT_INTERPRET - The passed ACL did not contain the minimum required information.
 .
 
@@ -2399,6 +3044,9 @@ ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maxi
 Language=Russian
 ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
 .
+Language=Polish
+ERROR_PROFILING_AT_LIMIT - The number of active profiling objects is at the maximum and no more may be started.
+.
 
 MessageId=554
 Severity=Success
@@ -2408,6 +3056,9 @@ Language=English
 ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
 .
 Language=Russian
+ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
+.
+Language=Polish
 ERROR_CANT_WAIT - Used to indicate that an operation cannot continue without blocking for I/O.
 .
 
@@ -2421,6 +3072,9 @@ ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itsel
 Language=Russian
 ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
 .
+Language=Polish
+ERROR_CANT_TERMINATE_SELF - Indicates that a thread attempted to terminate itself by default (called NtTerminateThread with NULL) and it was the last thread in the current process.
+.
 
 MessageId=556
 Severity=Success
@@ -2430,6 +3084,9 @@ Language=English
 ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 Language=Russian
+ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+.
+Language=Polish
 ERROR_UNEXPECTED_MM_CREATE_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 
@@ -2443,6 +3100,9 @@ ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined 
 Language=Russian
 ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
+Language=Polish
+ERROR_UNEXPECTED_MM_MAP_ERROR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+.
 
 MessageId=558
 Severity=Success
@@ -2452,6 +3112,9 @@ Language=English
 ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 Language=Russian
+ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
+.
+Language=Polish
 ERROR_UNEXPECTED_MM_EXTEND_ERR - If an MM error is returned which is not defined in the standard FsRtl filter, it is converted to one of the following errors which is guaranteed to be in the filter. In this case information is lost, however, the filter correctly handles the exception.
 .
 
@@ -2465,6 +3128,9 @@ ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an 
 Language=Russian
 ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
 .
+Language=Polish
+ERROR_BAD_FUNCTION_TABLE - A malformed function table was encountered during an unwind operation.
+.
 
 MessageId=560
 Severity=Success
@@ -2474,6 +3140,9 @@ Language=English
 ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
 .
 Language=Russian
+ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
+.
+Language=Polish
 ERROR_NO_GUID_TRANSLATION - Indicates that an attempt was made to assign protection to a file system file or directory and one of the SIDs in the security descriptor could not be translated into a GUID that could be stored by the file system. This causes the protection attempt to fail, which may cause a file creation attempt to fail.
 .
 
@@ -2487,6 +3156,9 @@ ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by se
 Language=Russian
 ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
 .
+Language=Polish
+ERROR_INVALID_LDT_SIZE - Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
+.
 
 MessageId=563
 Severity=Success
@@ -2496,6 +3168,9 @@ Language=English
 ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
 .
 Language=Russian
+ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
+.
+Language=Polish
 ERROR_INVALID_LDT_OFFSET - Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
 .
 
@@ -2509,6 +3184,9 @@ ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descr
 Language=Russian
 ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
 .
+Language=Polish
+ERROR_INVALID_LDT_DESCRIPTOR - Indicates that the user supplied an invalid descriptor when trying to set up Ldt descriptors.
+.
 
 MessageId=565
 Severity=Success
@@ -2518,6 +3196,9 @@ Language=English
 ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
 .
 Language=Russian
+ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
+.
+Language=Polish
 ERROR_TOO_MANY_THREADS - Indicates a process has too many threads to perform the requested action. For example, assignment of a primary token may only be performed when a process has zero or one threads.
 .
 
@@ -2531,6 +3212,9 @@ ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within 
 Language=Russian
 ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
 .
+Language=Polish
+ERROR_THREAD_NOT_IN_PROCESS - An attempt was made to operate on a thread within a specific process, but the thread specified is not in the process specified.
+.
 
 MessageId=567
 Severity=Success
@@ -2540,6 +3224,9 @@ Language=English
 ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
 .
 Language=Russian
+ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
+.
+Language=Polish
 ERROR_PAGEFILE_QUOTA_EXCEEDED - Page file quota was exceeded.
 .
 
@@ -2553,6 +3240,9 @@ ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another 
 Language=Russian
 ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
 .
+Language=Polish
+ERROR_LOGON_SERVER_CONFLICT - The Netlogon service cannot start because another Netlogon service running in the domain conflicts with the specified role.
+.
 
 MessageId=569
 Severity=Success
@@ -2562,6 +3252,9 @@ Language=English
 ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
 .
 Language=Russian
+ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
+.
+Language=Polish
 ERROR_SYNCHRONIZATION_REQUIRED - The SAM database on a Windows Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
 .
 
@@ -2575,6 +3268,9 @@ ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be 
 Language=Russian
 ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
 .
+Language=Polish
+ERROR_NET_OPEN_FAILED - The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the Windows Lan Manager Redirector to use in its internal error mapping routines.
+.
 
 MessageId=571
 Severity=Success
@@ -2584,6 +3280,9 @@ Language=English
 ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
 .
 Language=Russian
+ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
+.
+Language=Polish
 ERROR_IO_PRIVILEGE_FAILED - The I/O permissions for the process could not be changed.
 .
 
@@ -2597,6 +3296,9 @@ ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
 Language=Russian
 ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
 .
+Language=Polish
+ERROR_CONTROL_C_EXIT - The application terminated as a result of a CTRL+C.
+.
 
 MessageId=573
 Severity=Success
@@ -2606,6 +3308,9 @@ Language=English
 ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
 .
 Language=Russian
+ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
+.
+Language=Polish
 ERROR_MISSING_SYSTEMFILE - The required system file %hs is bad or missing.
 .
 
@@ -2619,6 +3324,9 @@ ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the applicati
 Language=Russian
 ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
 .
+Language=Polish
+ERROR_UNHANDLED_EXCEPTION - The exception %s (0x%08lx) occurred in the application at location 0x%08lx.
+.
 
 MessageId=575
 Severity=Success
@@ -2628,6 +3336,9 @@ Language=English
 ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
 .
 Language=Russian
+ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
+.
+Language=Polish
 ERROR_APP_INIT_FAILURE - The application failed to initialize properly (0x%lx). Click on OK to terminate the application.
 .
 
@@ -2641,6 +3352,9 @@ ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx).
 Language=Russian
 ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
 .
+Language=Polish
+ERROR_PAGEFILE_CREATE_FAILED - The creation of the paging file %hs failed (%lx). The requested size was %ld.
+.
 
 MessageId=578
 Severity=Success
@@ -2650,6 +3364,9 @@ Language=English
 ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
 .
 Language=Russian
+ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
+.
+Language=Polish
 ERROR_NO_PAGEFILE - No paging file was specified in the system configuration.
 .
 
@@ -2663,6 +3380,9 @@ ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point in
 Language=Russian
 ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
 .
+Language=Polish
+ERROR_ILLEGAL_FLOAT_CONTEXT - A real-mode application issued a floating-point instruction and floating-point hardware is not present.
+.
 
 MessageId=580
 Severity=Success
@@ -2672,6 +3392,9 @@ Language=English
 ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
 .
 Language=Russian
+ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
+.
+Language=Polish
 ERROR_NO_EVENT_PAIR - An event pair synchronization operation was performed using the thread specific client/server event pair object, but no event pair object was associated with the thread.
 .
 
@@ -2685,6 +3408,9 @@ ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuratio
 Language=Russian
 ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
 .
+Language=Polish
+ERROR_DOMAIN_CTRLR_CONFIG_ERROR - A Windows Server has an incorrect configuration.
+.
 
 MessageId=582
 Severity=Success
@@ -2694,6 +3420,9 @@ Language=English
 ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
 .
 Language=Russian
+ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
+.
+Language=Polish
 ERROR_ILLEGAL_CHARACTER - An illegal character was encountered. For a multi-byte character set this includes a lead byte without a succeeding trail byte. For the Unicode character set this includes the characters 0xFFFF and 0xFFFE.
 .
 
@@ -2707,6 +3436,9 @@ ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode 
 Language=Russian
 ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
 .
+Language=Polish
+ERROR_UNDEFINED_CHARACTER - The Unicode character is not defined in the Unicode character set installed on the system.
+.
 
 MessageId=584
 Severity=Success
@@ -2716,6 +3448,9 @@ Language=English
 ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
 .
 Language=Russian
+ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
+.
+Language=Polish
 ERROR_FLOPPY_VOLUME - The paging file cannot be created on a floppy diskette.
 .
 
@@ -2729,6 +3464,9 @@ ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a sys
 Language=Russian
 ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
 .
+Language=Polish
+ERROR_BIOS_FAILED_TO_CONNECT_INTERRUPT - The system bios failed to connect a system interrupt to the device or bus for which the device is connected.
+.
 
 MessageId=586
 Severity=Success
@@ -2738,6 +3476,9 @@ Language=English
 ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
 .
 Language=Russian
+ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
+.
+Language=Polish
 ERROR_BACKUP_CONTROLLER - This operation is only allowed for the Primary Domain Controller of the domain.
 .
 
@@ -2751,6 +3492,9 @@ ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that 
 Language=Russian
 ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
 .
+Language=Polish
+ERROR_MUTANT_LIMIT_EXCEEDED - An attempt was made to acquire a mutant such that its maximum count would have been exceeded.
+.
 
 MessageId=588
 Severity=Success
@@ -2760,6 +3504,9 @@ Language=English
 ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
 .
 Language=Russian
+ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
+.
+Language=Polish
 ERROR_FS_DRIVER_REQUIRED - A volume has been accessed for which a file system driver is required that has not yet been loaded.
 .
 
@@ -2773,6 +3520,9 @@ ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs 
 Language=Russian
 ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
 .
+Language=Polish
+ERROR_CANNOT_LOAD_REGISTRY_FILE - The registry cannot load the hive (file): %hs or its log or alternate. It is corrupt, absent, or not writable.
+.
 
 MessageId=590
 Severity=Success
@@ -2782,6 +3532,9 @@ Language=English
 ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
 .
 Language=Russian
+ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
+.
+Language=Polish
 ERROR_DEBUG_ATTACH_FAILED - An unexpected failure occurred while processing a DebugActiveProcess API request. You may choose OK to terminate the process, or Cancel to ignore the error.
 .
 
@@ -2795,6 +3548,9 @@ ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly
 Language=Russian
 ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
 .
+Language=Polish
+ERROR_SYSTEM_PROCESS_TERMINATED - The %hs system process terminated unexpectedly with a status of 0x%08x (0x%08x 0x%08x). The system has been shut down.
+.
 
 MessageId=592
 Severity=Success
@@ -2804,6 +3560,9 @@ Language=English
 ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
 .
 Language=Russian
+ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
+.
+Language=Polish
 ERROR_DATA_NOT_ACCEPTED - The TDI client could not handle the data received during an indication.
 .
 
@@ -2817,6 +3576,9 @@ ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
 Language=Russian
 ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
 .
+Language=Polish
+ERROR_VDM_HARD_ERROR - NTVDM encountered a hard error.
+.
 
 MessageId=594
 Severity=Success
@@ -2826,6 +3588,9 @@ Language=English
 ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
 .
 Language=Russian
+ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
+.
+Language=Polish
 ERROR_DRIVER_CANCEL_TIMEOUT - The driver %hs failed to complete a cancelled I/O request in the allotted time.
 .
 
@@ -2839,6 +3604,9 @@ ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, b
 Language=Russian
 ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
 .
+Language=Polish
+ERROR_REPLY_MESSAGE_MISMATCH - An attempt was made to reply to an LPC message, but the thread specified by the client ID in the message was not waiting on that message.
+.
 
 MessageId=596
 Severity=Success
@@ -2848,6 +3616,9 @@ Language=English
 ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
 .
 Language=Russian
+ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
+.
+Language=Polish
 ERROR_LOST_WRITEBEHIND_DATA - Windows was unable to save all the data for the file %hs. The data has been lost. This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
 .
 
@@ -2861,6 +3632,9 @@ ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server i
 Language=Russian
 ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
 .
+Language=Polish
+ERROR_CLIENT_SERVER_PARAMETERS_INVALID - The parameter(s) passed to the server in the client/server shared memory window were invalid. Too much data may have been put in the shared memory window.
+.
 
 MessageId=598
 Severity=Success
@@ -2870,6 +3644,9 @@ Language=English
 ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
 .
 Language=Russian
+ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
+.
+Language=Polish
 ERROR_NOT_TINY_STREAM - The stream is not a tiny stream.
 .
 
@@ -2883,6 +3660,9 @@ ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow co
 Language=Russian
 ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
 .
+Language=Polish
+ERROR_STACK_OVERFLOW_READ - The request must be handled by the stack overflow code.
+.
 
 MessageId=600
 Severity=Success
@@ -2892,6 +3672,9 @@ Language=English
 ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
 .
 Language=Russian
+ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
+.
+Language=Polish
 ERROR_CONVERT_TO_LARGE - Internal OFS status codes indicating how an allocation operation is handled. Either it is retried after the containing onode is moved or the extent stream is converted to a large stream.
 .
 
@@ -2905,6 +3688,9 @@ ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matchi
 Language=Russian
 ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
 .
+Language=Polish
+ERROR_FOUND_OUT_OF_SCOPE - The attempt to find the object found an object matching by ID on the volume but it is out of the scope of the handle used for the operation.
+.
 
 MessageId=602
 Severity=Success
@@ -2914,6 +3700,9 @@ Language=English
 ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
 .
 Language=Russian
+ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
+.
+Language=Polish
 ERROR_ALLOCATE_BUCKET - The bucket array must be grown. Retry transaction after doing so.
 .
 
@@ -2927,6 +3716,9 @@ ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
 Language=Russian
 ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
 .
+Language=Polish
+ERROR_MARSHALL_OVERFLOW - The user/kernel marshalling buffer has overflowed.
+.
 
 MessageId=604
 Severity=Success
@@ -2936,6 +3728,9 @@ Language=English
 ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
 .
 Language=Russian
+ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
+.
+Language=Polish
 ERROR_INVALID_VARIANT - The supplied variant structure contains invalid data.
 .
 
@@ -2949,6 +3744,9 @@ ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
 Language=Russian
 ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
 .
+Language=Polish
+ERROR_BAD_COMPRESSION_BUFFER - The specified buffer contains ill-formed data.
+.
 
 MessageId=606
 Severity=Success
@@ -2958,6 +3756,9 @@ Language=English
 ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
 .
 Language=Russian
+ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
+.
+Language=Polish
 ERROR_AUDIT_FAILED - An attempt to generate a security audit failed.
 .
 
@@ -2971,6 +3772,9 @@ ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by 
 Language=Russian
 ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
 .
+Language=Polish
+ERROR_TIMER_RESOLUTION_NOT_SET - The timer resolution was not previously set by the current process.
+.
 
 MessageId=608
 Severity=Success
@@ -2980,6 +3784,9 @@ Language=English
 ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
 .
 Language=Russian
+ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
+.
+Language=Polish
 ERROR_INSUFFICIENT_LOGON_INFO - There is insufficient account information to log you on.
 .
 
@@ -2993,6 +3800,9 @@ ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly
 Language=Russian
 ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
 .
+Language=Polish
+ERROR_BAD_DLL_ENTRYPOINT - The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
+.
 
 MessageId=610
 Severity=Success
@@ -3002,6 +3812,9 @@ Language=English
 ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
 .
 Language=Russian
+ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
+.
+Language=Polish
 ERROR_BAD_SERVICE_ENTRYPOINT - The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
 .
 
@@ -3015,6 +3828,9 @@ ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system
 Language=Russian
 ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
 .
+Language=Polish
+ERROR_IP_ADDRESS_CONFLICT1 - There is an IP address conflict with another system on the network
+.
 
 MessageId=612
 Severity=Success
@@ -3024,6 +3840,9 @@ Language=English
 ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
 .
 Language=Russian
+ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
+.
+Language=Polish
 ERROR_IP_ADDRESS_CONFLICT2 - There is an IP address conflict with another system on the network
 .
 
@@ -3037,6 +3856,9 @@ ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for
 Language=Russian
 ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
 .
+Language=Polish
+ERROR_REGISTRY_QUOTA_LIMIT - The system has reached the maximum size allowed for the system part of the registry. Additional storage requests will be ignored.
+.
 
 MessageId=614
 Severity=Success
@@ -3046,6 +3868,9 @@ Language=English
 ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
 .
 Language=Russian
+ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
+.
+Language=Polish
 ERROR_NO_CALLBACK_ACTIVE - A callback return system service cannot be executed when no callback is active.
 .
 
@@ -3059,6 +3884,9 @@ ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of y
 Language=Russian
 ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
 .
+Language=Polish
+ERROR_PWD_TOO_SHORT - The password provided is too short to meet the policy of your user account. Please choose a longer password.
+.
 
 MessageId=616
 Severity=Success
@@ -3068,6 +3896,9 @@ Language=English
 ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
 .
 Language=Russian
+ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
+.
+Language=Polish
 ERROR_PWD_TOO_RECENT - The policy of your user account does not allow you to change passwords too frequently. This is done to prevent users from changing back to a familiar, but potentially discovered, password. If you feel your password has been compromised then please contact your administrator immediately to have a new one assigned.
 .
 
@@ -3081,6 +3912,9 @@ ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one t
 Language=Russian
 ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
 .
+Language=Polish
+ERROR_PWD_HISTORY_CONFLICT - You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
+.
 
 MessageId=618
 Severity=Success
@@ -3090,6 +3924,9 @@ Language=English
 ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
 .
 Language=Russian
+ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
+.
+Language=Polish
 ERROR_UNSUPPORTED_COMPRESSION - The specified compression format is unsupported.
 .
 
@@ -3103,6 +3940,9 @@ ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is inval
 Language=Russian
 ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
 .
+Language=Polish
+ERROR_INVALID_HW_PROFILE - The specified hardware profile configuration is invalid.
+.
 
 MessageId=620
 Severity=Success
@@ -3112,6 +3952,9 @@ Language=English
 ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
 .
 Language=Russian
+ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
+.
+Language=Polish
 ERROR_INVALID_PLUGPLAY_DEVICE_PATH - The specified Plug and Play registry device path is invalid.
 .
 
@@ -3125,6 +3968,9 @@ ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsist
 Language=Russian
 ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
 .
+Language=Polish
+ERROR_QUOTA_LIST_INCONSISTENT - The specified quota list is internally inconsistent with its descriptor.
+.
 
 MessageId=622
 Severity=Success
@@ -3134,6 +3980,9 @@ Language=English
 ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
 .
 Language=Russian
+ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
+.
+Language=Polish
 ERROR_EVALUATION_EXPIRATION - The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
 .
 
@@ -3147,6 +3996,9 @@ ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The a
 Language=Russian
 ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
 .
+Language=Polish
+ERROR_ILLEGAL_DLL_RELOCATION - The system DLL %hs was relocated in memory. The application will not run properly. The relocation occurred because the DLL %hs occupied an address range reserved for Windows system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
+.
 
 MessageId=624
 Severity=Success
@@ -3156,6 +4008,9 @@ Language=English
 ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
 .
 Language=Russian
+ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
+.
+Language=Polish
 ERROR_DLL_INIT_FAILED_LOGOFF - The application failed to initialize because the window station is shutting down.
 .
 
@@ -3169,6 +4024,9 @@ ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the nex
 Language=Russian
 ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the next step.
 .
+Language=Polish
+ERROR_VALIDATE_CONTINUE - The validation process needs to continue on to the next step.
+.
 
 MessageId=626
 Severity=Success
@@ -3178,6 +4036,9 @@ Language=English
 ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
 .
 Language=Russian
+ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
+.
+Language=Polish
 ERROR_NO_MORE_MATCHES - There are no more matches for the current index enumeration.
 .
 
@@ -3191,6 +4052,9 @@ ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list becau
 Language=Russian
 ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list because of a conflict.
 .
+Language=Polish
+ERROR_RANGE_LIST_CONFLICT - The range could not be added to the range list because of a conflict.
+.
 
 MessageId=628
 Severity=Success
@@ -3200,6 +4064,9 @@ Language=English
 ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
 .
 Language=Russian
+ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
+.
+Language=Polish
 ERROR_SERVER_SID_MISMATCH - The server process is running under a SID different than that required by client.
 .
 
@@ -3213,6 +4080,9 @@ ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled
 Language=Russian
 ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled.
 .
+Language=Polish
+ERROR_CANT_ENABLE_DENY_ONLY - A group marked use for deny only cannot be enabled.
+.
 
 MessageId=630
 Severity=Success
@@ -3222,6 +4092,9 @@ Language=English
 ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
 .
 Language=Russian
+ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
+.
+Language=Polish
 ERROR_FLOAT_MULTIPLE_FAULTS - Multiple floating point faults.
 .
 
@@ -3235,6 +4108,9 @@ ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
 Language=Russian
 ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
 .
+Language=Polish
+ERROR_FLOAT_MULTIPLE_TRAPS - Multiple floating point traps.
+.
 
 MessageId=632
 Severity=Success
@@ -3244,6 +4120,9 @@ Language=English
 ERROR_NOINTERFACE - The requested interface is not supported.
 .
 Language=Russian
+ERROR_NOINTERFACE - The requested interface is not supported.
+.
+Language=Polish
 ERROR_NOINTERFACE - The requested interface is not supported.
 .
 
@@ -3257,6 +4136,9 @@ ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updati
 Language=Russian
 ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
 .
+Language=Polish
+ERROR_DRIVER_FAILED_SLEEP - The driver %hs does not support standby mode. Updating this driver may allow the system to go to standby mode.
+.
 
 MessageId=634
 Severity=Success
@@ -3266,6 +4148,9 @@ Language=English
 ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
 .
 Language=Russian
+ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
+.
+Language=Polish
 ERROR_CORRUPT_SYSTEM_FILE - The system file %1 has become corrupt and has been replaced.
 .
 
@@ -3279,6 +4164,9 @@ ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is incr
 Language=Russian
 ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
 .
+Language=Polish
+ERROR_COMMITMENT_MINIMUM - Your system is low on virtual memory. Windows is increasing the size of your virtual memory paging file. During this process, memory requests for some applications may be denied. For more information, see Help.
+.
 
 MessageId=636
 Severity=Success
@@ -3288,6 +4176,9 @@ Language=English
 ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
 .
 Language=Russian
+ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
+.
+Language=Polish
 ERROR_PNP_RESTART_ENUMERATION - A device was removed so enumeration must be restarted.
 .
 
@@ -3301,6 +4192,9 @@ ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. T
 Language=Russian
 ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
 .
+Language=Polish
+ERROR_SYSTEM_IMAGE_BAD_SIGNATURE - The system image %s is not properly signed. The file has been replaced with the signed file. The system has been shut down.
+.
 
 MessageId=638
 Severity=Success
@@ -3310,6 +4204,9 @@ Language=English
 ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
 .
 Language=Russian
+ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
+.
+Language=Polish
 ERROR_PNP_REBOOT_REQUIRED - Device will not start without a reboot.
 .
 
@@ -3323,6 +4220,9 @@ ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested o
 Language=Russian
 ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested operation.
 .
+Language=Polish
+ERROR_INSUFFICIENT_POWER - There is not enough power to complete the requested operation.
+.
 
 MessageId=641
 Severity=Success
@@ -3332,6 +4232,9 @@ Language=English
 ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
 .
 Language=Russian
+ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
+.
+Language=Polish
 ERROR_SYSTEM_SHUTDOWN - The system is in the process of shutting down.
 .
 
@@ -3345,6 +4248,9 @@ ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a 
 Language=Russian
 ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
 .
+Language=Polish
+ERROR_PORT_NOT_SET - An attempt to remove a processes DebugPort was made, but a port was not already associated with the process.
+.
 
 MessageId=643
 Severity=Success
@@ -3354,6 +4260,9 @@ Language=English
 ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
 .
 Language=Russian
+ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
+.
+Language=Polish
 ERROR_DS_VERSION_CHECK_FAILURE - This version of Windows is not compatible with the behavior version of directory forest, domain or domain controller.
 .
 
@@ -3367,6 +4276,9 @@ ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list
 Language=Russian
 ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list.
 .
+Language=Polish
+ERROR_RANGE_NOT_FOUND - The specified range could not be found in the range list.
+.
 
 MessageId=646
 Severity=Success
@@ -3376,6 +4288,9 @@ Language=English
 ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
 .
 Language=Russian
+ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
+.
+Language=Polish
 ERROR_NOT_SAFE_MODE_DRIVER - The driver was not loaded because the system is booting into safe mode.
 .
 
@@ -3389,6 +4304,9 @@ ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's ini
 Language=Russian
 ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
 .
+Language=Polish
+ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
+.
 
 MessageId=648
 Severity=Success
@@ -3398,6 +4316,9 @@ Language=English
 ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
 .
 Language=Russian
+ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
+.
+Language=Polish
 ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
 .
 
@@ -3411,6 +4332,9 @@ ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name co
 Language=Russian
 ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
 .
+Language=Polish
+ERROR_MOUNT_POINT_NOT_RESOLVED - The create operation failed because the name contained at least one mount point which resolves to a volume to which the specified device object is not attached.
+.
 
 MessageId=650
 Severity=Success
@@ -3420,6 +4344,9 @@ Language=English
 ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
 .
 Language=Russian
+ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
+.
+Language=Polish
 ERROR_INVALID_DEVICE_OBJECT_PARAMETER - The device object parameter is either not a valid device object or is not attached to the volume specified by the file name.
 .
 
@@ -3433,6 +4360,9 @@ ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system 
 Language=Russian
 ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system eventlog for additional information.
 .
+Language=Polish
+ERROR_MCA_OCCURED - A Machine Check Error has occurred. Please check the system eventlog for additional information.
+.
 
 MessageId=652
 Severity=Success
@@ -3442,6 +4372,9 @@ Language=English
 ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
 .
 Language=Russian
+ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
+.
+Language=Polish
 ERROR_DRIVER_DATABASE_ERROR - There was error [%2] processing the driver database.
 .
 
@@ -3455,6 +4388,9 @@ ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
 Language=Russian
 ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
 .
+Language=Polish
+ERROR_SYSTEM_HIVE_TOO_LARGE - System hive size has exceeded its limit.
+.
 
 MessageId=654
 Severity=Success
@@ -3464,6 +4400,9 @@ Language=English
 ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
 .
 Language=Russian
+ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
+.
+Language=Polish
 ERROR_DRIVER_FAILED_PRIOR_UNLOAD - The driver could not be loaded because a previous version of the driver is still in memory.
 .
 
@@ -3477,6 +4416,9 @@ ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Servi
 Language=Russian
 ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
 .
+Language=Polish
+ERROR_VOLSNAP_PREPARE_HIBERNATE - Please wait while the Volume Shadow Copy Service prepares volume %hs for hibernation.
+.
 
 MessageId=656
 Severity=Success
@@ -3486,6 +4428,9 @@ Language=English
 ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
 .
 Language=Russian
+ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
+.
+Language=Polish
 ERROR_HIBERNATION_FAILURE - The system has failed to hibernate (The error code is %hs). Hibernation will be disabled until the system is restarted.
 .
 
@@ -3499,6 +4444,9 @@ ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working no
 Language=Russian
 ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
 .
+Language=Polish
+ERROR_HUNG_DISPLAY_DRIVER_THREAD - The %hs display driver has stopped working normally. Save your work and reboot the system to restore full display functionality. The next time you reboot the machine a dialog will be displayed giving you a chance to report this failure to Microsoft.
+.
 
 MessageId=665
 Severity=Success
@@ -3508,6 +4456,9 @@ Language=English
 ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
 .
 Language=Russian
+ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
+.
+Language=Polish
 ERROR_FILE_SYSTEM_LIMITATION - The requested operation could not be completed due to a file system limitation.
 .
 
@@ -3521,6 +4472,9 @@ ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
 Language=Russian
 ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
 .
+Language=Polish
+ERROR_ASSERTION_FAILURE - An assertion failure has occurred.
+.
 
 MessageId=669
 Severity=Success
@@ -3530,6 +4484,9 @@ Language=English
 ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
 .
 Language=Russian
+ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
+.
+Language=Polish
 ERROR_VERIFIER_STOP - Application verifier has found an error in the current process.
 .
 
@@ -3543,6 +4500,9 @@ ERROR_WOW_ASSERTION - WOW Assertion Error.
 Language=Russian
 ERROR_WOW_ASSERTION - WOW Assertion Error.
 .
+Language=Polish
+ERROR_WOW_ASSERTION - WOW Assertion Error.
+.
 
 MessageId=671
 Severity=Success
@@ -3552,6 +4512,9 @@ Language=English
 ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
 .
 Language=Russian
+ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
+.
+Language=Polish
 ERROR_PNP_BAD_MPS_TABLE - A device is missing in the system BIOS MPS table. This device will not be used. Please contact your system vendor for system BIOS update.
 .
 
@@ -3565,6 +4528,9 @@ ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
 Language=Russian
 ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
 .
+Language=Polish
+ERROR_PNP_TRANSLATION_FAILED - A translator failed to translate resources.
+.
 
 MessageId=673
 Severity=Success
@@ -3574,6 +4540,9 @@ Language=English
 ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
 .
 Language=Russian
+ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
+.
+Language=Polish
 ERROR_PNP_IRQ_TRANSLATION_FAILED - A IRQ translator failed to translate resources.
 .
 
@@ -3587,6 +4556,9 @@ ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
 Language=Russian
 ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
 .
+Language=Polish
+ERROR_PNP_INVALID_ID - Driver %2 returned invalid ID for a child device (%3).
+.
 
 MessageId=675
 Severity=Success
@@ -3596,6 +4568,9 @@ Language=English
 ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
 .
 Language=Russian
+ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
+.
+Language=Polish
 ERROR_WAKE_SYSTEM_DEBUGGER - The system debugger was awakened by an interrupt.
 .
 
@@ -3609,6 +4584,9 @@ ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a re
 Language=Russian
 ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a result of the requested operation.
 .
+Language=Polish
+ERROR_HANDLES_CLOSED - Handles to objects have been automatically closed as a result of the requested operation.
+.
 
 MessageId=677
 Severity=Success
@@ -3618,6 +4596,9 @@ Language=English
 ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
 .
 Language=Russian
+ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
+.
+Language=Polish
 ERROR_EXTRANEOUS_INFORMATION - he specified access control list (ACL) contained more information than was expected.
 .
 
@@ -3631,6 +4612,9 @@ ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the tran
 Language=Russian
 ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
 .
+Language=Polish
+ERROR_RXACT_COMMIT_NECESSARY - This warning level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has NOT been completed, but has not been rolled back either (so it may still be committed if desired).
+.
 
 MessageId=679
 Severity=Success
@@ -3640,6 +4624,9 @@ Language=English
 ERROR_MEDIA_CHECK - The media may have changed.
 .
 Language=Russian
+ERROR_MEDIA_CHECK - The media may have changed.
+.
+Language=Polish
 ERROR_MEDIA_CHECK - The media may have changed.
 .
 
@@ -3653,6 +4640,9 @@ ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GU
 Language=Russian
 ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
 .
+Language=Polish
+ERROR_GUID_SUBSTITUTION_MADE - During the translation of a global identifier (GUID) to a Windows security ID (SID), no administratively-defined GUID prefix was found. A substitute prefix was used, which will not compromise system security. However, this may provide a more restrictive access than intended.
+.
 
 MessageId=681
 Severity=Success
@@ -3662,6 +4652,9 @@ Language=English
 ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
 .
 Language=Russian
+ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
+.
+Language=Polish
 ERROR_STOPPED_ON_SYMLINK - The create operation stopped after reaching a symbolic link.
 .
 
@@ -3675,6 +4668,9 @@ ERROR_LONGJUMP - A long jump has been executed.
 Language=Russian
 ERROR_LONGJUMP - A long jump has been executed.
 .
+Language=Polish
+ERROR_LONGJUMP - A long jump has been executed.
+.
 
 MessageId=683
 Severity=Success
@@ -3684,6 +4680,9 @@ Language=English
 ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
 .
 Language=Russian
+ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
+.
+Language=Polish
 ERROR_PLUGPLAY_QUERY_VETOED - The Plug and Play query operation was not successful.
 .
 
@@ -3697,6 +4696,9 @@ ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
 Language=Russian
 ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
 .
+Language=Polish
+ERROR_UNWIND_CONSOLIDATE - A frame consolidation has been executed.
+.
 
 MessageId=685
 Severity=Success
@@ -3706,6 +4708,9 @@ Language=English
 ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
 .
 Language=Russian
+ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
+.
+Language=Polish
 ERROR_REGISTRY_HIVE_RECOVERED - Registry hive (file): %hs was corrupted and it has been recovered. Some data might have been lost.
 .
 
@@ -3719,6 +4724,9 @@ ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable co
 Language=Russian
 ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
+Language=Polish
+ERROR_DLL_MIGHT_BE_INSECURE - The application is attempting to run executable code from the module %hs. This may be insecure. An alternative, %hs, is available. Should the application use the secure module %hs?
+.
 
 MessageId=687
 Severity=Success
@@ -3728,6 +4736,9 @@ Language=English
 ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
 Language=Russian
+ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
+.
+Language=Polish
 ERROR_DLL_MIGHT_BE_INCOMPATIBLE - The application is loading executable code from the module %hs. This is secure, but may be incompatible with previous releases of the operating system. An alternative, %hs, is available. Should the application use the secure module %hs?
 .
 
@@ -3741,6 +4752,9 @@ ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
 Language=Russian
 ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
 .
+Language=Polish
+ERROR_DBG_EXCEPTION_NOT_HANDLED - Debugger did not handle the exception.
+.
 
 MessageId=689
 Severity=Success
@@ -3750,6 +4764,9 @@ Language=English
 ERROR_DBG_REPLY_LATER - Debugger will reply later.
 .
 Language=Russian
+ERROR_DBG_REPLY_LATER - Debugger will reply later.
+.
+Language=Polish
 ERROR_DBG_REPLY_LATER - Debugger will reply later.
 .
 
@@ -3763,6 +4780,9 @@ ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
 Language=Russian
 ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
 .
+Language=Polish
+ERROR_DBG_UNABLE_TO_PROVIDE_HANDLE - Debugger can not provide handle.
+.
 
 MessageId=691
 Severity=Success
@@ -3772,6 +4792,9 @@ Language=English
 ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
 .
 Language=Russian
+ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
+.
+Language=Polish
 ERROR_DBG_TERMINATE_THREAD - Debugger terminated thread.
 .
 
@@ -3785,6 +4808,9 @@ ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
 Language=Russian
 ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
 .
+Language=Polish
+ERROR_DBG_TERMINATE_PROCESS - Debugger terminated process.
+.
 
 MessageId=693
 Severity=Success
@@ -3794,6 +4820,9 @@ Language=English
 ERROR_DBG_CONTROL_C - Debugger got control C.
 .
 Language=Russian
+ERROR_DBG_CONTROL_C - Debugger got control C.
+.
+Language=Polish
 ERROR_DBG_CONTROL_C - Debugger got control C.
 .
 
@@ -3807,6 +4836,9 @@ ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
 Language=Russian
 ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
 .
+Language=Polish
+ERROR_DBG_PRINTEXCEPTION_C - Debugger printed exception on control C.
+.
 
 MessageId=695
 Severity=Success
@@ -3816,6 +4848,9 @@ Language=English
 ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
 .
 Language=Russian
+ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
+.
+Language=Polish
 ERROR_DBG_RIPEXCEPTION - Debugger received RIP exception.
 .
 
@@ -3829,6 +4864,9 @@ ERROR_DBG_CONTROL_BREAK - Debugger received control break.
 Language=Russian
 ERROR_DBG_CONTROL_BREAK - Debugger received control break.
 .
+Language=Polish
+ERROR_DBG_CONTROL_BREAK - Debugger received control break.
+.
 
 MessageId=697
 Severity=Success
@@ -3838,6 +4876,9 @@ Language=English
 ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
 .
 Language=Russian
+ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
+.
+Language=Polish
 ERROR_DBG_COMMAND_EXCEPTION - Debugger command communication exception.
 .
 
@@ -3851,6 +4892,9 @@ ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the objec
 Language=Russian
 ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the object name already existed.
 .
+Language=Polish
+ERROR_OBJECT_NAME_EXISTS - An attempt was made to create an object and the object name already existed.
+.
 
 MessageId=699
 Severity=Success
@@ -3860,6 +4904,9 @@ Language=English
 ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
 .
 Language=Russian
+ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
+.
+Language=Polish
 ERROR_THREAD_WAS_SUSPENDED - A thread termination occurred while the thread was suspended. The thread was resumed, and termination proceeded.
 .
 
@@ -3873,6 +4920,9 @@ ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address speci
 Language=Russian
 ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
 .
+Language=Polish
+ERROR_IMAGE_NOT_AT_BASE - An image file could not be mapped at the address specified in the image file. Local fixups must be performed on this image.
+.
 
 MessageId=701
 Severity=Success
@@ -3882,6 +4932,9 @@ Language=English
 ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
 .
 Language=Russian
+ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
+.
+Language=Polish
 ERROR_RXACT_STATE_CREATED - This informational level status indicates that a specified registry sub-tree transaction state did not yet exist and had to be created.
 .
 
@@ -3895,6 +4948,9 @@ ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, 
 Language=Russian
 ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
 .
+Language=Polish
+ERROR_SEGMENT_NOTIFICATION - A virtual DOS machine (VDM) is loading, unloading, or moving an MS-DOS or Win16 program segment image. An exception is raised so a debugger can load, unload or track symbols and breakpoints within these 16-bit segments.
+.
 
 MessageId=703
 Severity=Success
@@ -3904,6 +4960,9 @@ Language=English
 ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
 .
 Language=Russian
+ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
+.
+Language=Polish
 ERROR_BAD_CURRENT_DIRECTORY - The process cannot switch to the startup current directory %hs. Select OK to set current directory to %hs, or select CANCEL to exit.
 .
 
@@ -3917,6 +4976,9 @@ ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tol
 Language=Russian
 ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
 .
+Language=Polish
+ERROR_FT_READ_RECOVERY_FROM_BACKUP - To satisfy a read request, the NT fault-tolerant file system successfully read the requested data from a redundant copy. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was unable to reassign the failing area of the device.
+.
 
 MessageId=705
 Severity=Success
@@ -3926,6 +4988,9 @@ Language=English
 ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
 .
 Language=Russian
+ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
+.
+Language=Polish
 ERROR_FT_WRITE_RECOVERY - To satisfy a write request, the NT fault-tolerant file system successfully wrote a redundant copy of the information. This was done because the file system encountered a failure on a member of the fault-tolerant volume, but was not able to reassign the failing area of the device.
 .
 
@@ -3939,6 +5004,9 @@ ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a ma
 Language=Russian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
 .
+Language=Polish
+ERROR_IMAGE_MACHINE_TYPE_MISMATCH - The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
+.
 
 MessageId=707
 Severity=Success
@@ -3948,6 +5016,9 @@ Language=English
 ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
 .
 Language=Russian
+ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
+.
+Language=Polish
 ERROR_RECEIVE_PARTIAL - The network transport returned partial data to its client. The remaining data will be sent later.
 .
 
@@ -3961,6 +5032,9 @@ ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that
 Language=Russian
 ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that was marked as expedited by the remote system.
 .
+Language=Polish
+ERROR_RECEIVE_EXPEDITED - The network transport returned data to its client that was marked as expedited by the remote system.
+.
 
 MessageId=709
 Severity=Success
@@ -3970,6 +5044,9 @@ Language=English
 ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
 .
 Language=Russian
+ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
+.
+Language=Polish
 ERROR_RECEIVE_PARTIAL_EXPEDITED - The network transport returned partial data to its client and this data was marked as expedited by the remote system. The remaining data will be sent later.
 .
 
@@ -3983,6 +5060,9 @@ ERROR_EVENT_DONE - The TDI indication has completed successfully.
 Language=Russian
 ERROR_EVENT_DONE - The TDI indication has completed successfully.
 .
+Language=Polish
+ERROR_EVENT_DONE - The TDI indication has completed successfully.
+.
 
 MessageId=711
 Severity=Success
@@ -3992,6 +5072,9 @@ Language=English
 ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
 .
 Language=Russian
+ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
+.
+Language=Polish
 ERROR_EVENT_PENDING - The TDI indication has entered the pending state.
 .
 
@@ -4005,6 +5088,9 @@ ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
 Language=Russian
 ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
 .
+Language=Polish
+ERROR_CHECKING_FILE_SYSTEM - Checking file system on %wZ.
+.
 
 MessageId=714
 Severity=Success
@@ -4014,6 +5100,9 @@ Language=English
 ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
 .
 Language=Russian
+ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
+.
+Language=Polish
 ERROR_PREDEFINED_HANDLE - The specified registry key is referenced by a predefined handle.
 .
 
@@ -4027,6 +5116,9 @@ ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Acc
 Language=Russian
 ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
 .
+Language=Polish
+ERROR_WAS_UNLOCKED - The page protection of a locked page was changed to 'No Access' and the page was unlocked from memory and from the process.
+.
 
 MessageId=717
 Severity=Success
@@ -4036,6 +5128,9 @@ Language=English
 ERROR_WAS_LOCKED - One of the pages to lock was already locked.
 .
 Language=Russian
+ERROR_WAS_LOCKED - One of the pages to lock was already locked.
+.
+Language=Polish
 ERROR_WAS_LOCKED - One of the pages to lock was already locked.
 .
 
@@ -4049,6 +5144,9 @@ ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for 
 Language=Russian
 ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for a machine type other than the current machine.
 .
+Language=Polish
+ERROR_IMAGE_MACHINE_TYPE_MISMATCH_EXE - The image file %hs is valid, but is for a machine type other than the current machine.
+.
 
 MessageId=721
 Severity=Success
@@ -4058,6 +5156,9 @@ Language=English
 ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
 .
 Language=Russian
+ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
+.
+Language=Polish
 ERROR_NO_YIELD_PERFORMED - A yield execution was performed and no thread was available to run.
 .
 
@@ -4071,6 +5172,9 @@ ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
 Language=Russian
 ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
 .
+Language=Polish
+ERROR_TIMER_RESUME_IGNORED - The resumable flag to a timer API was ignored.
+.
 
 MessageId=723
 Severity=Success
@@ -4080,6 +5184,9 @@ Language=English
 ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
 .
 Language=Russian
+ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
+.
+Language=Polish
 ERROR_ARBITRATION_UNHANDLED - The arbiter has deferred arbitration of these resources to its parent.
 .
 
@@ -4093,6 +5200,9 @@ ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in 
 Language=Russian
 ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
 .
+Language=Polish
+ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
+.
 
 MessageId=725
 Severity=Success
@@ -4102,6 +5212,9 @@ Language=English
 ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
 .
 Language=Russian
+ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
+.
+Language=Polish
 ERROR_MP_PROCESSOR_MISMATCH - The CPUs in this multiprocessor system are not all the same revision level. To use all processors the operating system restricts itself to the features of the least capable processor in the system. Should problems occur with this system, contact the CPU manufacturer to see if this mix of processors is supported.
 .
 
@@ -4115,6 +5228,9 @@ ERROR_HIBERNATED - The system was put into hibernation.
 Language=Russian
 ERROR_HIBERNATED - The system was put into hibernation.
 .
+Language=Polish
+ERROR_HIBERNATED - The system was put into hibernation.
+.
 
 MessageId=727
 Severity=Success
@@ -4124,6 +5240,9 @@ Language=English
 ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
 .
 Language=Russian
+ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
+.
+Language=Polish
 ERROR_RESUME_HIBERNATION - The system was resumed from hibernation.
 .
 
@@ -4137,6 +5256,9 @@ ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) wa
 Language=Russian
 ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
 .
+Language=Polish
+ERROR_FIRMWARE_UPDATED - Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
+.
 
 MessageId=729
 Severity=Success
@@ -4146,6 +5268,9 @@ Language=English
 ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
 .
 Language=Russian
+ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
+.
+Language=Polish
 ERROR_DRIVERS_LEAKING_LOCKED_PAGES - A device driver is leaking locked I/O pages causing system degradation. The system has automatically enabled tracking code in order to try and catch the culprit.
 .
 
@@ -4159,6 +5284,9 @@ ERROR_WAKE_SYSTEM - The system has awoken
 Language=Russian
 ERROR_WAKE_SYSTEM - The system has awoken
 .
+Language=Polish
+ERROR_WAKE_SYSTEM - The system has awoken
+.
 
 MessageId=741
 Severity=Success
@@ -4168,6 +5296,9 @@ Language=English
 ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 Language=Russian
+ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+.
+Language=Polish
 ERROR_REPARSE - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 
@@ -4181,6 +5312,9 @@ ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an opl
 Language=Russian
 ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an oplock break is underway.
 .
+Language=Polish
+ERROR_OPLOCK_BREAK_IN_PROGRESS - An open/create operation completed while an oplock break is underway.
+.
 
 MessageId=743
 Severity=Success
@@ -4190,6 +5324,9 @@ Language=English
 ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
 .
 Language=Russian
+ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
+.
+Language=Polish
 ERROR_VOLUME_MOUNTED - A new volume has been mounted by a file system.
 .
 
@@ -4203,6 +5340,9 @@ ERROR_RXACT_COMMITTED - This success level status indicates that the transaction
 Language=Russian
 ERROR_RXACT_COMMITTED - This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
 .
+Language=Polish
+ERROR_RXACT_COMMITTED - This success level status indicates that the transaction state already exists for the registry sub-tree, but that a transaction commit was previously aborted. The commit has now been completed.
+.
 
 MessageId=745
 Severity=Success
@@ -4212,6 +5352,9 @@ Language=English
 ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
 .
 Language=Russian
+ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
+.
+Language=Polish
 ERROR_NOTIFY_CLEANUP - This indicates that a notify change request has been completed due to closing the handle which made the notify change request.
 .
 
@@ -4225,6 +5368,9 @@ ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the r
 Language=Russian
 ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
 .
+Language=Polish
+ERROR_PRIMARY_TRANSPORT_CONNECT_FAILED - An attempt was made to connect to the remote server %hs on the primary transport, but the connection failed. The computer WAS able to connect on a secondary transport.
+.
 
 MessageId=747
 Severity=Success
@@ -4234,6 +5380,9 @@ Language=English
 ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
 .
 Language=Russian
+ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
+.
+Language=Polish
 ERROR_PAGE_FAULT_TRANSITION - Page fault was a transition fault.
 .
 
@@ -4247,6 +5396,9 @@ ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
 Language=Russian
 ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
 .
+Language=Polish
+ERROR_PAGE_FAULT_DEMAND_ZERO - Page fault was a demand zero fault.
+.
 
 MessageId=749
 Severity=Success
@@ -4256,6 +5408,9 @@ Language=English
 ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
 .
 Language=Russian
+ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
+.
+Language=Polish
 ERROR_PAGE_FAULT_COPY_ON_WRITE - Page fault was a demand zero fault.
 .
 
@@ -4269,6 +5424,9 @@ ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
 Language=Russian
 ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
 .
+Language=Polish
+ERROR_PAGE_FAULT_GUARD_PAGE - Page fault was a demand zero fault.
+.
 
 MessageId=751
 Severity=Success
@@ -4278,6 +5436,9 @@ Language=English
 ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
 .
 Language=Russian
+ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
+.
+Language=Polish
 ERROR_PAGE_FAULT_PAGING_FILE - Page fault was satisfied by reading from a secondary storage device.
 .
 
@@ -4291,6 +5452,9 @@ ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
 Language=Russian
 ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
 .
+Language=Polish
+ERROR_CACHE_PAGE_LOCKED - Cached page was locked during operation.
+.
 
 MessageId=753
 Severity=Success
@@ -4300,6 +5464,9 @@ Language=English
 ERROR_CRASH_DUMP - Crash dump exists in paging file.
 .
 Language=Russian
+ERROR_CRASH_DUMP - Crash dump exists in paging file.
+.
+Language=Polish
 ERROR_CRASH_DUMP - Crash dump exists in paging file.
 .
 
@@ -4313,6 +5480,9 @@ ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
 Language=Russian
 ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
 .
+Language=Polish
+ERROR_BUFFER_ALL_ZEROS - Specified buffer contains all zeros.
+.
 
 MessageId=755
 Severity=Success
@@ -4322,6 +5492,9 @@ Language=English
 ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 Language=Russian
+ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
+.
+Language=Polish
 ERROR_REPARSE_OBJECT - A reparse should be performed by the Object Manager since the name of the file resulted in a symbolic link.
 .
 
@@ -4335,6 +5508,9 @@ ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and 
 Language=Russian
 ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and its resource requirements have changed.
 .
+Language=Polish
+ERROR_RESOURCE_REQUIREMENTS_CHANGED - The device has succeeded a query-stop and its resource requirements have changed.
+.
 
 MessageId=757
 Severity=Success
@@ -4344,6 +5520,9 @@ Language=English
 ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
 .
 Language=Russian
+ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
+.
+Language=Polish
 ERROR_TRANSLATION_COMPLETE - The translator has translated these resources into the global space and no further translations should be performed.
 .
 
@@ -4357,6 +5536,9 @@ ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to termin
 Language=Russian
 ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to terminate.
 .
+Language=Polish
+ERROR_NOTHING_TO_TERMINATE - A process being terminated has no threads to terminate.
+.
 
 MessageId=759
 Severity=Success
@@ -4366,6 +5548,9 @@ Language=English
 ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
 .
 Language=Russian
+ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
+.
+Language=Polish
 ERROR_PROCESS_NOT_IN_JOB - The specified process is not part of a job.
 .
 
@@ -4379,6 +5564,9 @@ ERROR_PROCESS_IN_JOB - The specified process is part of a job.
 Language=Russian
 ERROR_PROCESS_IN_JOB - The specified process is part of a job.
 .
+Language=Polish
+ERROR_PROCESS_IN_JOB - The specified process is part of a job.
+.
 
 MessageId=761
 Severity=Success
@@ -4388,6 +5576,9 @@ Language=English
 ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
 .
 Language=Russian
+ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
+.
+Language=Polish
 ERROR_VOLSNAP_HIBERNATE_READY - The system is now ready for hibernation.
 .
 
@@ -4401,6 +5592,9 @@ ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter d
 Language=Russian
 ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter driver has successfully completed an FsFilter operation.
 .
+Language=Polish
+ERROR_FSFILTER_OP_COMPLETED_SUCCESSFULLY - A file system or file system filter driver has successfully completed an FsFilter operation.
+.
 
 MessageId=763
 Severity=Success
@@ -4410,6 +5604,9 @@ Language=English
 ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
 .
 Language=Russian
+ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
+.
+Language=Polish
 ERROR_INTERRUPT_VECTOR_ALREADY_CONNECTED - The specified interrupt vector was already connected.
 .
 
@@ -4423,6 +5620,9 @@ ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connec
 Language=Russian
 ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connected.
 .
+Language=Polish
+ERROR_INTERRUPT_STILL_CONNECTED - The specified interrupt vector is still connected.
+.
 
 MessageId=765
 Severity=Success
@@ -4432,6 +5632,9 @@ Language=English
 ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
 .
 Language=Russian
+ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
+.
+Language=Polish
 ERROR_WAIT_FOR_OPLOCK - An operation is blocked waiting for an oplock.
 .
 
@@ -4445,6 +5648,9 @@ ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
 Language=Russian
 ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
 .
+Language=Polish
+ERROR_DBG_EXCEPTION_HANDLED - Debugger handled exception.
+.
 
 MessageId=767
 Severity=Success
@@ -4454,6 +5660,9 @@ Language=English
 ERROR_DBG_CONTINUE - Debugger continued
 .
 Language=Russian
+ERROR_DBG_CONTINUE - Debugger continued
+.
+Language=Polish
 ERROR_DBG_CONTINUE - Debugger continued
 .
 
@@ -4467,6 +5676,9 @@ ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the
 Language=Russian
 ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the kernel callback frame should be removed.
 .
+Language=Polish
+ERROR_CALLBACK_POP_STACK - An exception occurred in a user mode callback and the kernel callback frame should be removed.
+.
 
 MessageId=769
 Severity=Success
@@ -4476,6 +5688,9 @@ Language=English
 ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
 .
 Language=Russian
+ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
+.
+Language=Polish
 ERROR_COMPRESSION_DISABLED - Compression is disabled for this volume.
 .
 
@@ -4489,6 +5704,9 @@ ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a re
 Language=Russian
 ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a result set.
 .
+Language=Polish
+ERROR_CANTFETCHBACKWARDS - The data provider cannot fetch backwards through a result set.
+.
 
 MessageId=771
 Severity=Success
@@ -4498,6 +5716,9 @@ Language=English
 ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
 .
 Language=Russian
+ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
+.
+Language=Polish
 ERROR_CANTSCROLLBACKWARDS - The data provider cannot scroll backwards through a result set.
 .
 
@@ -4511,6 +5732,9 @@ ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data 
 Language=Russian
 ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data is released before asking for more data.
 .
+Language=Polish
+ERROR_ROWSNOTRELEASED - The data provider requires that previously fetched data is released before asking for more data.
+.
 
 MessageId=773
 Severity=Success
@@ -4520,6 +5744,9 @@ Language=English
 ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
 .
 Language=Russian
+ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
+.
+Language=Polish
 ERROR_BAD_ACCESSOR_FLAGS - The data provider was not able to interpret the flags set for a column binding in an accessor.
 .
 
@@ -4533,6 +5760,9 @@ ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the requ
 Language=Russian
 ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the request.
 .
+Language=Polish
+ERROR_ERRORS_ENCOUNTERED - One or more errors occurred while processing the request.
+.
 
 MessageId=775
 Severity=Success
@@ -4542,6 +5772,9 @@ Language=English
 ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
 .
 Language=Russian
+ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
+.
+Language=Polish
 ERROR_NOT_CAPABLE - The implementation is not capable of performing the request.
 .
 
@@ -4555,6 +5788,9 @@ ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation
 Language=Russian
 ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation which is not valid given the state of the component instance.
 .
+Language=Polish
+ERROR_REQUEST_OUT_OF_SEQUENCE - The client of a component requested an operation which is not valid given the state of the component instance.
+.
 
 MessageId=777
 Severity=Success
@@ -4564,6 +5800,9 @@ Language=English
 ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
 .
 Language=Russian
+ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
+.
+Language=Polish
 ERROR_VERSION_PARSE_ERROR - A version number could not be parsed.
 .
 
@@ -4577,6 +5816,9 @@ ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
 Language=Russian
 ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
 .
+Language=Polish
+ERROR_BADSTARTPOSITION - The iterator's start position is invalid.
+.
 
 MessageId=994
 Severity=Success
@@ -4586,6 +5828,9 @@ Language=English
 ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
 .
 Language=Russian
+ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
+.
+Language=Polish
 ERROR_EA_ACCESS_DENIED - Access to the extended attribute was denied.
 .
 
@@ -4599,6 +5844,9 @@ ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a
 Language=Russian
 ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a thread exit or an application request.
 .
+Language=Polish
+ERROR_OPERATION_ABORTED - The I/O operation has been aborted because of either a thread exit or an application request.
+.
 
 MessageId=996
 Severity=Success
@@ -4608,6 +5856,9 @@ Language=English
 ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
 .
 Language=Russian
+ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
+.
+Language=Polish
 ERROR_IO_INCOMPLETE - Overlapped I/O event is not in a signaled state.
 .
 
@@ -4621,6 +5872,9 @@ ERROR_IO_PENDING - Overlapped I/O operation is in progress.
 Language=Russian
 ERROR_IO_PENDING - Overlapped I/O operation is in progress.
 .
+Language=Polish
+ERROR_IO_PENDING - Overlapped I/O operation is in progress.
+.
 
 MessageId=998
 Severity=Success
@@ -4630,6 +5884,9 @@ Language=English
 ERROR_NOACCESS - Invalid access to memory location.
 .
 Language=Russian
+ERROR_NOACCESS - Invalid access to memory location.
+.
+Language=Polish
 ERROR_NOACCESS - Invalid access to memory location.
 .
 
@@ -4643,6 +5900,9 @@ ERROR_SWAPERROR - Error performing inpage operation.
 Language=Russian
 ERROR_SWAPERROR - Error performing inpage operation.
 .
+Language=Polish
+ERROR_SWAPERROR - Error performing inpage operation.
+.
 
 MessageId=1001
 Severity=Success
@@ -4652,6 +5912,9 @@ Language=English
 ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
 .
 Language=Russian
+ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
+.
+Language=Polish
 ERROR_STACK_OVERFLOW - Recursion too deep; the stack overflowed.
 .
 
@@ -4665,6 +5928,9 @@ ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
 Language=Russian
 ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
 .
+Language=Polish
+ERROR_INVALID_MESSAGE - The window cannot act on the sent message.
+.
 
 MessageId=1003
 Severity=Success
@@ -4674,6 +5940,9 @@ Language=English
 ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
 .
 Language=Russian
+ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
+.
+Language=Polish
 ERROR_CAN_NOT_COMPLETE - Cannot complete this function.
 .
 
@@ -4687,6 +5956,9 @@ ERROR_INVALID_FLAGS - Invalid flags.
 Language=Russian
 ERROR_INVALID_FLAGS - Invalid flags.
 .
+Language=Polish
+ERROR_INVALID_FLAGS - Invalid flags.
+.
 
 MessageId=1005
 Severity=Success
@@ -4696,6 +5968,9 @@ Language=English
 ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
 .
 Language=Russian
+ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
+.
+Language=Polish
 ERROR_UNRECOGNIZED_VOLUME - The volume does not contain a recognized file system. Please make sure that all required file system drivers are loaded and that the volume is not corrupted.
 .
 
@@ -4709,6 +5984,9 @@ ERROR_FILE_INVALID - The volume for a file has been externally altered so that t
 Language=Russian
 ERROR_FILE_INVALID - The volume for a file has been externally altered so that the opened file is no longer valid.
 .
+Language=Polish
+ERROR_FILE_INVALID - The volume for a file has been externally altered so that the opened file is no longer valid.
+.
 
 MessageId=1007
 Severity=Success
@@ -4718,6 +5996,9 @@ Language=English
 ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
 .
 Language=Russian
+ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
+.
+Language=Polish
 ERROR_FULLSCREEN_MODE - The requested operation cannot be performed in full-screen mode.
 .
 
@@ -4731,6 +6012,9 @@ ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
 Language=Russian
 ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
 .
+Language=Polish
+ERROR_NO_TOKEN - An attempt was made to reference a token that does not exist.
+.
 
 MessageId=1009
 Severity=Success
@@ -4740,6 +6024,9 @@ Language=English
 ERROR_BADDB - The configuration registry database is corrupt.
 .
 Language=Russian
+ERROR_BADDB - The configuration registry database is corrupt.
+.
+Language=Polish
 ERROR_BADDB - The configuration registry database is corrupt.
 .
 
@@ -4753,6 +6040,9 @@ ERROR_BADKEY - The configuration registry key is invalid.
 Language=Russian
 ERROR_BADKEY - The configuration registry key is invalid.
 .
+Language=Polish
+ERROR_BADKEY - The configuration registry key is invalid.
+.
 
 MessageId=1011
 Severity=Success
@@ -4762,6 +6052,9 @@ Language=English
 ERROR_CANTOPEN - The configuration registry key could not be opened.
 .
 Language=Russian
+ERROR_CANTOPEN - The configuration registry key could not be opened.
+.
+Language=Polish
 ERROR_CANTOPEN - The configuration registry key could not be opened.
 .
 
@@ -4775,6 +6068,9 @@ ERROR_CANTREAD - The configuration registry key could not be read.
 Language=Russian
 ERROR_CANTREAD - The configuration registry key could not be read.
 .
+Language=Polish
+ERROR_CANTREAD - The configuration registry key could not be read.
+.
 
 MessageId=1013
 Severity=Success
@@ -4784,6 +6080,9 @@ Language=English
 ERROR_CANTWRITE - The configuration registry key could not be written.
 .
 Language=Russian
+ERROR_CANTWRITE - The configuration registry key could not be written.
+.
+Language=Polish
 ERROR_CANTWRITE - The configuration registry key could not be written.
 .
 
@@ -4797,6 +6096,9 @@ ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be r
 Language=Russian
 ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
 .
+Language=Polish
+ERROR_REGISTRY_RECOVERED - One of the files in the registry database had to be recovered by use of a log or alternate copy. The recovery was successful.
+.
 
 MessageId=1015
 Severity=Success
@@ -4806,6 +6108,9 @@ Language=English
 ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
 .
 Language=Russian
+ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
+.
+Language=Polish
 ERROR_REGISTRY_CORRUPT - The registry is corrupted. The structure of one of the files containing registry data is corrupted, or the system's memory image of the file is corrupted, or the file could not be recovered because the alternate copy or log was absent or corrupted.
 .
 
@@ -4819,6 +6124,9 @@ ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unr
 Language=Russian
 ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
 .
+Language=Polish
+ERROR_REGISTRY_IO_FAILED - An I/O operation initiated by the registry failed unrecoverably. The registry could not read in, or write out, or flush, one of the files that contain the system's image of the registry.
+.
 
 MessageId=1017
 Severity=Success
@@ -4828,6 +6136,9 @@ Language=English
 ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
 .
 Language=Russian
+ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
+.
+Language=Polish
 ERROR_NOT_REGISTRY_FILE - The system has attempted to load or restore a file into the registry, but the specified file is not in a registry file format.
 .
 
@@ -4841,6 +6152,9 @@ ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been 
 Language=Russian
 ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been marked for deletion.
 .
+Language=Polish
+ERROR_KEY_DELETED - Illegal operation attempted on a registry key that has been marked for deletion.
+.
 
 MessageId=1019
 Severity=Success
@@ -4850,6 +6164,9 @@ Language=English
 ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
 .
 Language=Russian
+ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
+.
+Language=Polish
 ERROR_NO_LOG_SPACE - System could not allocate the required space in a registry log.
 .
 
@@ -4863,6 +6180,9 @@ ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that al
 Language=Russian
 ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that already has subkeys or values.
 .
+Language=Polish
+ERROR_KEY_HAS_CHILDREN - Cannot create a symbolic link in a registry key that already has subkeys or values.
+.
 
 MessageId=1021
 Severity=Success
@@ -4872,6 +6192,9 @@ Language=English
 ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
 .
 Language=Russian
+ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
+.
+Language=Polish
 ERROR_CHILD_MUST_BE_VOLATILE - Cannot create a stable subkey under a volatile parent key.
 .
 
@@ -4885,6 +6208,9 @@ ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the infor
 Language=Russian
 ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
 .
+Language=Polish
+ERROR_NOTIFY_ENUM_DIR - A notify change request is being completed and the information is not being returned in the caller's buffer. The caller now needs to enumerate the files to find the changes.
+.
 
 MessageId=1051
 Severity=Success
@@ -4894,6 +6220,9 @@ Language=English
 ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
 .
 Language=Russian
+ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
+.
+Language=Polish
 ERROR_DEPENDENT_SERVICES_RUNNING - A stop control has been sent to a service that other running services are dependent on.
 .
 
@@ -4907,6 +6236,9 @@ ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this serv
 Language=Russian
 ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this service.
 .
+Language=Polish
+ERROR_INVALID_SERVICE_CONTROL - The requested control is not valid for this service.
+.
 
 MessageId=1053
 Severity=Success
@@ -4916,6 +6248,9 @@ Language=English
 ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
 .
 Language=Russian
+ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
+.
+Language=Polish
 ERROR_SERVICE_REQUEST_TIMEOUT - The service did not respond to the start or control request in a timely fashion.
 .
 
@@ -4929,6 +6264,9 @@ ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
 Language=Russian
 ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
 .
+Language=Polish
+ERROR_SERVICE_NO_THREAD - A thread could not be created for the service.
+.
 
 MessageId=1055
 Severity=Success
@@ -4938,6 +6276,9 @@ Language=English
 ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
 .
 Language=Russian
+ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
+.
+Language=Polish
 ERROR_SERVICE_DATABASE_LOCKED - The service database is locked.
 .
 
@@ -4951,6 +6292,9 @@ ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
 Language=Russian
 ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
 .
+Language=Polish
+ERROR_SERVICE_ALREADY_RUNNING - An instance of the service is already running.
+.
 
 MessageId=1057
 Severity=Success
@@ -4960,6 +6304,9 @@ Language=English
 ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
 .
 Language=Russian
+ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
+.
+Language=Polish
 ERROR_INVALID_SERVICE_ACCOUNT - The account name is invalid or does not exist, or the password is invalid for the account name specified.
 .
 
@@ -4973,6 +6320,9 @@ ERROR_SERVICE_DISABLED - The service cannot be started, either because it is dis
 Language=Russian
 ERROR_SERVICE_DISABLED - The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
 .
+Language=Polish
+ERROR_SERVICE_DISABLED - The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.
+.
 
 MessageId=1059
 Severity=Success
@@ -4982,6 +6332,9 @@ Language=English
 ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
 .
 Language=Russian
+ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
+.
+Language=Polish
 ERROR_CIRCULAR_DEPENDENCY - Circular service dependency was specified.
 .
 
@@ -4995,6 +6348,9 @@ ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an instal
 Language=Russian
 ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an installed service.
 .
+Language=Polish
+ERROR_SERVICE_DOES_NOT_EXIST - The specified service does not exist as an installed service.
+.
 
 MessageId=1061
 Severity=Success
@@ -5004,6 +6360,9 @@ Language=English
 ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
 .
 Language=Russian
+ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
+.
+Language=Polish
 ERROR_SERVICE_CANNOT_ACCEPT_CTRL - The service cannot accept control messages at this time.
 .
 
@@ -5017,6 +6376,9 @@ ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
 Language=Russian
 ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
 .
+Language=Polish
+ERROR_SERVICE_NOT_ACTIVE - The service has not been started.
+.
 
 MessageId=1063
 Severity=Success
@@ -5026,6 +6388,9 @@ Language=English
 ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
 .
 Language=Russian
+ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
+.
+Language=Polish
 ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The service process could not connect to the service controller.
 .
 
@@ -5039,6 +6404,9 @@ ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling 
 Language=Russian
 ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling the control request.
 .
+Language=Polish
+ERROR_EXCEPTION_IN_SERVICE - An exception occurred in the service when handling the control request.
+.
 
 MessageId=1065
 Severity=Success
@@ -5048,6 +6416,9 @@ Language=English
 ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
 .
 Language=Russian
+ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
+.
+Language=Polish
 ERROR_DATABASE_DOES_NOT_EXIST - The database specified does not exist.
 .
 
@@ -5061,6 +6432,9 @@ ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error
 Language=Russian
 ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error code.
 .
+Language=Polish
+ERROR_SERVICE_SPECIFIC_ERROR - The service has returned a service-specific error code.
+.
 
 MessageId=1067
 Severity=Success
@@ -5070,6 +6444,9 @@ Language=English
 ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
 .
 Language=Russian
+ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
+.
+Language=Polish
 ERROR_PROCESS_ABORTED - The process terminated unexpectedly.
 .
 
@@ -5083,6 +6460,9 @@ ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
 Language=Russian
 ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
 .
+Language=Polish
+ERROR_SERVICE_DEPENDENCY_FAIL - The dependency service or group failed to start.
+.
 
 MessageId=1069
 Severity=Success
@@ -5092,6 +6472,9 @@ Language=English
 ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
 .
 Language=Russian
+ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
+.
+Language=Polish
 ERROR_SERVICE_LOGON_FAILED - The service did not start due to a logon failure.
 .
 
@@ -5105,6 +6488,9 @@ ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending s
 Language=Russian
 ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending state.
 .
+Language=Polish
+ERROR_SERVICE_START_HANG - After starting, the service hung in a start-pending state.
+.
 
 MessageId=1071
 Severity=Success
@@ -5114,6 +6500,9 @@ Language=English
 ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
 .
 Language=Russian
+ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
+.
+Language=Polish
 ERROR_INVALID_SERVICE_LOCK - The specified service database lock is invalid.
 .
 
@@ -5127,6 +6516,9 @@ ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for dele
 Language=Russian
 ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for deletion.
 .
+Language=Polish
+ERROR_SERVICE_MARKED_FOR_DELETE - The specified service has been marked for deletion.
+.
 
 MessageId=1073
 Severity=Success
@@ -5136,6 +6528,9 @@ Language=English
 ERROR_SERVICE_EXISTS - The specified service already exists.
 .
 Language=Russian
+ERROR_SERVICE_EXISTS - The specified service already exists.
+.
+Language=Polish
 ERROR_SERVICE_EXISTS - The specified service already exists.
 .
 
@@ -5149,6 +6544,9 @@ ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-
 Language=Russian
 ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-good configuration.
 .
+Language=Polish
+ERROR_ALREADY_RUNNING_LKG - The system is currently running with the last-known-good configuration.
+.
 
 MessageId=1075
 Severity=Success
@@ -5158,6 +6556,9 @@ Language=English
 ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
 .
 Language=Russian
+ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
+.
+Language=Polish
 ERROR_SERVICE_DEPENDENCY_DELETED - The dependency service does not exist or has been marked for deletion.
 .
 
@@ -5171,6 +6572,9 @@ ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use
 Language=Russian
 ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use as the last-known-good control set.
 .
+Language=Polish
+ERROR_BOOT_ALREADY_ACCEPTED - The current boot has already been accepted for use as the last-known-good control set.
+.
 
 MessageId=1077
 Severity=Success
@@ -5180,6 +6584,9 @@ Language=English
 ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
 .
 Language=Russian
+ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
+.
+Language=Polish
 ERROR_SERVICE_NEVER_STARTED - No attempts to start the service have been made since the last boot.
 .
 
@@ -5193,6 +6600,9 @@ ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service na
 Language=Russian
 ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service name or a service display name.
 .
+Language=Polish
+ERROR_DUPLICATE_SERVICE_NAME - The name is already in use as either a service name or a service display name.
+.
 
 MessageId=1079
 Severity=Success
@@ -5202,6 +6612,9 @@ Language=English
 ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
 .
 Language=Russian
+ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
+.
+Language=Polish
 ERROR_DIFFERENT_SERVICE_ACCOUNT - The account specified for this service is different from the account specified for other services running in the same process.
 .
 
@@ -5215,6 +6628,9 @@ ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 s
 Language=Russian
 ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 services, not for drivers.
 .
+Language=Polish
+ERROR_CANNOT_DETECT_DRIVER_FAILURE - Failure actions can only be set for Win32 services, not for drivers.
+.
 
 MessageId=1081
 Severity=Success
@@ -5224,6 +6640,9 @@ Language=English
 ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
 .
 Language=Russian
+ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
+.
+Language=Polish
 ERROR_CANNOT_DETECT_PROCESS_ABORT - This service runs in the same process as the service control manager. Therefore, the service control manager cannot take action if this service's process terminates unexpectedly.
 .
 
@@ -5237,6 +6656,9 @@ ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this ser
 Language=Russian
 ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this service.
 .
+Language=Polish
+ERROR_NO_RECOVERY_PROGRAM - No recovery program has been configured for this service.
+.
 
 MessageId=1083
 Severity=Success
@@ -5246,6 +6668,9 @@ Language=English
 ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
 .
 Language=Russian
+ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
+.
+Language=Polish
 ERROR_SERVICE_NOT_IN_EXE - The executable program that this service is configured to run in does not implement the service.
 .
 
@@ -5259,6 +6684,9 @@ ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
 Language=Russian
 ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
 .
+Language=Polish
+ERROR_NOT_SAFEBOOT_SERVICE - This service cannot be started in Safe Mode.
+.
 
 MessageId=1100
 Severity=Success
@@ -5268,6 +6696,9 @@ Language=English
 ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
 .
 Language=Russian
+ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
+.
+Language=Polish
 ERROR_END_OF_MEDIA - The physical end of the tape has been reached.
 .
 
@@ -5281,6 +6712,9 @@ ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
 Language=Russian
 ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
 .
+Language=Polish
+ERROR_FILEMARK_DETECTED - A tape access reached a filemark.
+.
 
 MessageId=1102
 Severity=Success
@@ -5290,6 +6724,9 @@ Language=English
 ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
 .
 Language=Russian
+ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
+.
+Language=Polish
 ERROR_BEGINNING_OF_MEDIA - The beginning of the tape or a partition was encountered.
 .
 
@@ -5303,6 +6740,9 @@ ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
 Language=Russian
 ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
 .
+Language=Polish
+ERROR_SETMARK_DETECTED - A tape access reached the end of a set of files.
+.
 
 MessageId=1104
 Severity=Success
@@ -5312,6 +6752,9 @@ Language=English
 ERROR_NO_DATA_DETECTED - No more data is on the tape.
 .
 Language=Russian
+ERROR_NO_DATA_DETECTED - No more data is on the tape.
+.
+Language=Polish
 ERROR_NO_DATA_DETECTED - No more data is on the tape.
 .
 
@@ -5325,6 +6768,9 @@ ERROR_PARTITION_FAILURE - Tape could not be partitioned.
 Language=Russian
 ERROR_PARTITION_FAILURE - Tape could not be partitioned.
 .
+Language=Polish
+ERROR_PARTITION_FAILURE - Tape could not be partitioned.
+.
 
 MessageId=1106
 Severity=Success
@@ -5334,6 +6780,9 @@ Language=English
 ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
 .
 Language=Russian
+ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
+.
+Language=Polish
 ERROR_INVALID_BLOCK_LENGTH - When accessing a new tape of a multivolume partition, the current block size is incorrect.
 .
 
@@ -5347,6 +6796,9 @@ ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found whe
 Language=Russian
 ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found when loading a tape.
 .
+Language=Polish
+ERROR_DEVICE_NOT_PARTITIONED - Tape partition information could not be found when loading a tape.
+.
 
 MessageId=1108
 Severity=Success
@@ -5356,6 +6808,9 @@ Language=English
 ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
 .
 Language=Russian
+ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
+.
+Language=Polish
 ERROR_UNABLE_TO_LOCK_MEDIA - Unable to lock the media eject mechanism.
 .
 
@@ -5369,6 +6824,9 @@ ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
 Language=Russian
 ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
 .
+Language=Polish
+ERROR_UNABLE_TO_UNLOAD_MEDIA - Unable to unload the media.
+.
 
 MessageId=1110
 Severity=Success
@@ -5378,6 +6836,9 @@ Language=English
 ERROR_MEDIA_CHANGED - The media in the drive may have changed.
 .
 Language=Russian
+ERROR_MEDIA_CHANGED - The media in the drive may have changed.
+.
+Language=Polish
 ERROR_MEDIA_CHANGED - The media in the drive may have changed.
 .
 
@@ -5391,6 +6852,9 @@ ERROR_BUS_RESET - The I/O bus was reset.
 Language=Russian
 ERROR_BUS_RESET - The I/O bus was reset.
 .
+Language=Polish
+ERROR_BUS_RESET - The I/O bus was reset.
+.
 
 MessageId=1112
 Severity=Success
@@ -5400,6 +6864,9 @@ Language=English
 ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
 .
 Language=Russian
+ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
+.
+Language=Polish
 ERROR_NO_MEDIA_IN_DRIVE - No media in drive.
 .
 
@@ -5413,6 +6880,9 @@ ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in th
 Language=Russian
 ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in the target multi-byte code page.
 .
+Language=Polish
+ERROR_NO_UNICODE_TRANSLATION - No mapping for the Unicode character exists in the target multi-byte code page.
+.
 
 MessageId=1114
 Severity=Success
@@ -5422,6 +6892,9 @@ Language=English
 ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
 .
 Language=Russian
+ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
+.
+Language=Polish
 ERROR_DLL_INIT_FAILED - A dynamic link library (DLL) initialization routine failed.
 .
 
@@ -5435,6 +6908,9 @@ ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
 Language=Russian
 ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
 .
+Language=Polish
+ERROR_SHUTDOWN_IN_PROGRESS - A system shutdown is in progress.
+.
 
 MessageId=1116
 Severity=Success
@@ -5444,6 +6920,9 @@ Language=English
 ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
 .
 Language=Russian
+ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
+.
+Language=Polish
 ERROR_NO_SHUTDOWN_IN_PROGRESS - Unable to abort the system shutdown because no shutdown was in progress.
 .
 
@@ -5457,6 +6936,9 @@ ERROR_IO_DEVICE - The request could not be performed because of an I/O device er
 Language=Russian
 ERROR_IO_DEVICE - The request could not be performed because of an I/O device error.
 .
+Language=Polish
+ERROR_IO_DEVICE - The request could not be performed because of an I/O device error.
+.
 
 MessageId=1118
 Severity=Success
@@ -5466,6 +6948,9 @@ Language=English
 ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
 .
 Language=Russian
+ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
+.
+Language=Polish
 ERROR_SERIAL_NO_DEVICE - No serial device was successfully initialized. The serial driver will unload.
 .
 
@@ -5479,6 +6964,9 @@ ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (
 Language=Russian
 ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
 .
+Language=Polish
+ERROR_IRQ_BUSY - Unable to open a device that was sharing an interrupt request (IRQ) with other devices. At least one other device that uses that IRQ was already opened.
+.
 
 MessageId=1120
 Severity=Success
@@ -5488,6 +6976,9 @@ Language=English
 ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
 .
 Language=Russian
+ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
+.
+Language=Polish
 ERROR_MORE_WRITES - A serial I/O operation was completed by another write to the serial port. (The IOCTL_SERIAL_XOFF_COUNTER reached zero.)
 .
 
@@ -5501,6 +6992,9 @@ ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout per
 Language=Russian
 ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
 .
+Language=Polish
+ERROR_COUNTER_TIMEOUT - A serial I/O operation completed because the timeout period expired. (The IOCTL_SERIAL_XOFF_COUNTER did not reach zero.)
+.
 
 MessageId=1122
 Severity=Success
@@ -5510,6 +7004,9 @@ Language=English
 ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
 .
 Language=Russian
+ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
+.
+Language=Polish
 ERROR_FLOPPY_ID_MARK_NOT_FOUND - No ID address mark was found on the floppy disk.
 .
 
@@ -5523,6 +7020,9 @@ ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field a
 Language=Russian
 ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
 .
+Language=Polish
+ERROR_FLOPPY_WRONG_CYLINDER - Mismatch between the floppy disk sector ID field and the floppy disk controller track address.
+.
 
 MessageId=1124
 Severity=Success
@@ -5532,6 +7032,9 @@ Language=English
 ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
 .
 Language=Russian
+ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
+.
+Language=Polish
 ERROR_FLOPPY_UNKNOWN_ERROR - The floppy disk controller reported an error that is not recognized by the floppy disk driver.
 .
 
@@ -5545,6 +7048,9 @@ ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent re
 Language=Russian
 ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent results in its registers.
 .
+Language=Polish
+ERROR_FLOPPY_BAD_REGISTERS - The floppy disk controller returned inconsistent results in its registers.
+.
 
 MessageId=1126
 Severity=Success
@@ -5554,6 +7060,9 @@ Language=English
 ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
 .
 Language=Russian
+ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
+.
+Language=Polish
 ERROR_DISK_RECALIBRATE_FAILED - While accessing the hard disk, a recalibrate operation failed, even after retries.
 .
 
@@ -5567,6 +7076,9 @@ ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation fa
 Language=Russian
 ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation failed even after retries.
 .
+Language=Polish
+ERROR_DISK_OPERATION_FAILED - While accessing the hard disk, a disk operation failed even after retries.
+.
 
 MessageId=1128
 Severity=Success
@@ -5576,6 +7088,9 @@ Language=English
 ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
 .
 Language=Russian
+ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
+.
+Language=Polish
 ERROR_DISK_RESET_FAILED - While accessing the hard disk, a disk controller reset was needed, but even that failed.
 .
 
@@ -5589,6 +7104,9 @@ ERROR_EOM_OVERFLOW - Physical end of tape encountered.
 Language=Russian
 ERROR_EOM_OVERFLOW - Physical end of tape encountered.
 .
+Language=Polish
+ERROR_EOM_OVERFLOW - Physical end of tape encountered.
+.
 
 MessageId=1130
 Severity=Success
@@ -5598,6 +7116,9 @@ Language=English
 ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
 .
 Language=Russian
+ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
+.
+Language=Polish
 ERROR_NOT_ENOUGH_SERVER_MEMORY - Not enough server storage is available to process this command.
 .
 
@@ -5611,6 +7132,9 @@ ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
 Language=Russian
 ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
 .
+Language=Polish
+ERROR_POSSIBLE_DEADLOCK - A potential deadlock condition has been detected.
+.
 
 MessageId=1132
 Severity=Success
@@ -5620,6 +7144,9 @@ Language=English
 ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
 .
 Language=Russian
+ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
+.
+Language=Polish
 ERROR_MAPPED_ALIGNMENT - The base address or the file offset specified does not have the proper alignment.
 .
 
@@ -5633,6 +7160,9 @@ ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was v
 Language=Russian
 ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was vetoed by another application or driver.
 .
+Language=Polish
+ERROR_SET_POWER_STATE_VETOED - An attempt to change the system power state was vetoed by another application or driver.
+.
 
 MessageId=1141
 Severity=Success
@@ -5642,6 +7172,9 @@ Language=English
 ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
 .
 Language=Russian
+ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
+.
+Language=Polish
 ERROR_SET_POWER_STATE_FAILED - The system BIOS failed an attempt to change the system power state.
 .
 
@@ -5655,6 +7188,9 @@ ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than t
 Language=Russian
 ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than the file system supports.
 .
+Language=Polish
+ERROR_TOO_MANY_LINKS - An attempt was made to create more links on a file than the file system supports.
+.
 
 MessageId=1150
 Severity=Success
@@ -5664,6 +7200,9 @@ Language=English
 ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
 .
 Language=Russian
+ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
+.
+Language=Polish
 ERROR_OLD_WIN_VERSION - The specified program requires a newer version of Windows.
 .
 
@@ -5677,6 +7216,9 @@ ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
 Language=Russian
 ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
 .
+Language=Polish
+ERROR_APP_WRONG_OS - The specified program is not a Windows or MS-DOS program.
+.
 
 MessageId=1152
 Severity=Success
@@ -5686,6 +7228,9 @@ Language=English
 ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
 .
 Language=Russian
+ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
+.
+Language=Polish
 ERROR_SINGLE_INSTANCE_APP - Cannot start more than one instance of the specified program.
 .
 
@@ -5699,6 +7244,9 @@ ERROR_RMODE_APP - The specified program was written for an earlier version of Wi
 Language=Russian
 ERROR_RMODE_APP - The specified program was written for an earlier version of Windows.
 .
+Language=Polish
+ERROR_RMODE_APP - The specified program was written for an earlier version of Windows.
+.
 
 MessageId=1154
 Severity=Success
@@ -5708,6 +7256,9 @@ Language=English
 ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
 .
 Language=Russian
+ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
+.
+Language=Polish
 ERROR_INVALID_DLL - One of the library files needed to run this application is damaged.
 .
 
@@ -5721,6 +7272,9 @@ ERROR_NO_ASSOCIATION - No application is associated with the specified file for 
 Language=Russian
 ERROR_NO_ASSOCIATION - No application is associated with the specified file for this operation.
 .
+Language=Polish
+ERROR_NO_ASSOCIATION - No application is associated with the specified file for this operation.
+.
 
 MessageId=1156
 Severity=Success
@@ -5731,6 +7285,9 @@ ERROR_DDE_FAIL - An error occurred in sending the command to the application.
 .
 Language=Russian
 ERROR_DDE_FAIL - Ошибка при пересылке команды приложению.
+.
+Language=Polish
+ERROR_DDE_FAIL - An error occurred in sending the command to the application.
 .
 
 MessageId=1157
@@ -5743,6 +7300,9 @@ ERROR_DLL_NOT_FOUND - One of the library files needed to run this application ca
 Language=Russian
 ERROR_DLL_NOT_FOUND - Не найден один из файлов библиотек, необходимых для выполнения данного приложения.
 .
+Language=Polish
+ERROR_DLL_NOT_FOUND - One of the library files needed to run this application cannot be found.
+.
 
 MessageId=1158
 Severity=Success
@@ -5753,6 +7313,9 @@ ERROR_NO_MORE_USER_HANDLES - The current process has used all of its system allo
 .
 Language=Russian
 ERROR_NO_MORE_USER_HANDLES - Текущий процесс использовал все системные разрешения по управлению объектами диспетчера окон.
+.
+Language=Polish
+ERROR_NO_MORE_USER_HANDLES - The current process has used all of its system allowance of handles for Window Manager objects.
 .
 
 MessageId=1159
@@ -5765,6 +7328,9 @@ ERROR_MESSAGE_SYNC_ONLY - The message can be used only with synchronous operatio
 Language=Russian
 ERROR_MESSAGE_SYNC_ONLY - Сообщение может быть использовано только с операциями синхронизации.
 .
+Language=Polish
+ERROR_MESSAGE_SYNC_ONLY - The message can be used only with synchronous operations.
+.
 
 MessageId=1160
 Severity=Success
@@ -5775,6 +7341,9 @@ ERROR_SOURCE_ELEMENT_EMPTY - The indicated source element has no media.
 .
 Language=Russian
 ERROR_SOURCE_ELEMENT_EMPTY - Указанный исходный элемент не имеет носителя.
+.
+Language=Polish
+ERROR_SOURCE_ELEMENT_EMPTY - The indicated source element has no media.
 .
 
 MessageId=1161
@@ -5787,6 +7356,9 @@ ERROR_DESTINATION_ELEMENT_FULL - The indicated destination element already conta
 Language=Russian
 ERROR_DESTINATION_ELEMENT_FULL - Указанный конечный элемент уже содержит носитель.
 .
+Language=Polish
+ERROR_DESTINATION_ELEMENT_FULL - The indicated destination element already contains media.
+.
 
 MessageId=1162
 Severity=Success
@@ -5797,6 +7369,9 @@ ERROR_ILLEGAL_ELEMENT_ADDRESS - The indicated element does not exist.
 .
 Language=Russian
 ERROR_ILLEGAL_ELEMENT_ADDRESS - Указанный элемент не существует.
+.
+Language=Polish
+ERROR_ILLEGAL_ELEMENT_ADDRESS - The indicated element does not exist.
 .
 
 MessageId=1163
@@ -5809,6 +7384,9 @@ ERROR_MAGAZINE_NOT_PRESENT - The indicated element is part of a magazine that is
 Language=Russian
 ERROR_MAGAZINE_NOT_PRESENT - Указанный элемент является частью отсутствующего журнала.
 .
+Language=Polish
+ERROR_MAGAZINE_NOT_PRESENT - The indicated element is part of a magazine that is not present.
+.
 
 MessageId=1164
 Severity=Success
@@ -5819,6 +7397,9 @@ ERROR_DEVICE_REINITIALIZATION_NEEDED - The indicated device requires reinitializ
 .
 Language=Russian
 ERROR_DEVICE_REINITIALIZATION_NEEDED - Указанный элемент требует повторной инициализации из-за аппаратных ошибок.
+.
+Language=Polish
+ERROR_DEVICE_REINITIALIZATION_NEEDED - The indicated device requires reinitialization due to hardware errors.
 .
 
 MessageId=1165
@@ -5831,6 +7412,9 @@ ERROR_DEVICE_REQUIRES_CLEANING - The device has indicated that cleaning is requi
 Language=Russian
 ERROR_DEVICE_REQUIRES_CLEANING - Устройство требует проведение чистки перед его дальнейшим использованием.
 .
+Language=Polish
+ERROR_DEVICE_REQUIRES_CLEANING - The device has indicated that cleaning is required before further operations are attempted.
+.
 
 MessageId=1166
 Severity=Success
@@ -5841,6 +7425,9 @@ ERROR_DEVICE_DOOR_OPEN - The device has indicated that its door is open.
 .
 Language=Russian
 ERROR_DEVICE_DOOR_OPEN - Устройство сообщает, что открыта дверца.
+.
+Language=Polish
+ERROR_DEVICE_DOOR_OPEN - The device has indicated that its door is open.
 .
 
 MessageId=1167
@@ -5853,6 +7440,9 @@ ERROR_DEVICE_NOT_CONNECTED - The device is not connected.
 Language=Russian
 ERROR_DEVICE_NOT_CONNECTED - Устройство не подключено.
 .
+Language=Polish
+ERROR_DEVICE_NOT_CONNECTED - The device is not connected.
+.
 
 MessageId=1168
 Severity=Success
@@ -5863,6 +7453,9 @@ ERROR_NOT_FOUND - Element not found.
 .
 Language=Russian
 ERROR_NOT_FOUND - Элемент не найден.
+.
+Language=Polish
+ERROR_NOT_FOUND - Element not found.
 .
 
 MessageId=1169
@@ -5875,6 +7468,9 @@ ERROR_NO_MATCH - There was no match for the specified key in the index.
 Language=Russian
 ERROR_NO_MATCH - В индексе не найдены соответствия указанному ключу.
 .
+Language=Polish
+ERROR_NO_MATCH - There was no match for the specified key in the index.
+.
 
 MessageId=1170
 Severity=Success
@@ -5885,6 +7481,9 @@ ERROR_SET_NOT_FOUND - The property set specified does not exist on the object.
 .
 Language=Russian
 ERROR_SET_NOT_FOUND - Указанный набор свойств не существует для объекта.
+.
+Language=Polish
+ERROR_SET_NOT_FOUND - The property set specified does not exist on the object.
 .
 
 MessageId=1171
@@ -5897,6 +7496,9 @@ ERROR_POINT_NOT_FOUND - The point passed to GetMouseMovePointsEx is not in the b
 Language=Russian
 ERROR_POINT_NOT_FOUND - Переданная в GetMouseMovePoints точка не находится в буфере.
 .
+Language=Polish
+ERROR_POINT_NOT_FOUND - The point passed to GetMouseMovePointsEx is not in the buffer.
+.
 
 MessageId=1172
 Severity=Success
@@ -5907,6 +7509,9 @@ ERROR_NO_TRACKING_SERVICE - The tracking (workstation) service is not running.
 .
 Language=Russian
 ERROR_NO_TRACKING_SERVICE - Служба слежения (на рабочей станции) не запущена.
+.
+Language=Polish
+ERROR_NO_TRACKING_SERVICE - The tracking (workstation) service is not running.
 .
 
 MessageId=1173
@@ -5919,6 +7524,9 @@ ERROR_NO_VOLUME_ID - The Volume ID could not be found.
 Language=Russian
 ERROR_NO_VOLUME_ID - Не удается найти идентификатор тома.
 .
+Language=Polish
+ERROR_NO_VOLUME_ID - The Volume ID could not be found.
+.
 
 MessageId=1175
 Severity=Success
@@ -5929,6 +7537,9 @@ ERROR_UNABLE_TO_REMOVE_REPLACED - Unable to remove the file to be replaced.
 .
 Language=Russian
 ERROR_UNABLE_TO_REMOVE_REPLACED - Не удается удалить заменяемый файл.
+.
+Language=Polish
+ERROR_UNABLE_TO_REMOVE_REPLACED - Unable to remove the file to be replaced.
 .
 
 MessageId=1176
@@ -5941,6 +7552,9 @@ ERROR_UNABLE_TO_MOVE_REPLACEMENT - Unable to move the replacement file to the fi
 Language=Russian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT - Не удается заместить файл. Замещаемый файл сохранил свое первоначальное имя.
 .
+Language=Polish
+ERROR_UNABLE_TO_MOVE_REPLACEMENT - Unable to move the replacement file to the file to be replaced. The file to be replaced has retained its original name.
+.
 
 MessageId=1177
 Severity=Success
@@ -5951,6 +7565,9 @@ ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Unable to move the replacement file to the 
 .
 Language=Russian
 ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Не удается заместить файл. Замещаемый файл был переименован с использованием резервного имени.
+.
+Language=Polish
+ERROR_UNABLE_TO_MOVE_REPLACEMENT_2 - Unable to move the replacement file to the file to be replaced. The file to be replaced has been renamed using the backup name.
 .
 
 MessageId=1178
@@ -5963,6 +7580,9 @@ ERROR_JOURNAL_DELETE_IN_PROGRESS - The volume change journal is being deleted.
 Language=Russian
 ERROR_JOURNAL_DELETE_IN_PROGRESS - Журнал изменений тома удален.
 .
+Language=Polish
+ERROR_JOURNAL_DELETE_IN_PROGRESS - The volume change journal is being deleted.
+.
 
 MessageId=1179
 Severity=Success
@@ -5973,6 +7593,9 @@ ERROR_JOURNAL_NOT_ACTIVE - The volume change journal is not active.
 .
 Language=Russian
 ERROR_JOURNAL_NOT_ACTIVE - Журнал изменений тома не активен.
+.
+Language=Polish
+ERROR_JOURNAL_NOT_ACTIVE - The volume change journal is not active.
 .
 
 MessageId=1180
@@ -5985,6 +7608,9 @@ ERROR_POTENTIAL_FILE_FOUND - A file was found, but it may not be the correct fil
 Language=Russian
 ERROR_POTENTIAL_FILE_FOUND - Файл найден, но это может быть неверный файл.
 .
+Language=Polish
+ERROR_POTENTIAL_FILE_FOUND - A file was found, but it may not be the correct file.
+.
 
 MessageId=1181
 Severity=Success
@@ -5995,6 +7621,9 @@ ERROR_JOURNAL_ENTRY_DELETED - The journal entry has been deleted from the journa
 .
 Language=Russian
 ERROR_JOURNAL_ENTRY_DELETED - Из журнала удалена запись.
+.
+Language=Polish
+ERROR_JOURNAL_ENTRY_DELETED - The journal entry has been deleted from the journal.
 .
 
 MessageId=1200
@@ -6007,6 +7636,9 @@ ERROR_BAD_DEVICE - The specified device name is invalid.
 Language=Russian
 ERROR_BAD_DEVICE - Указано неверное имя устройства.
 .
+Language=Polish
+ERROR_BAD_DEVICE - The specified device name is invalid.
+.
 
 MessageId=1201
 Severity=Success
@@ -6017,6 +7649,9 @@ ERROR_CONNECTION_UNAVAIL - The device is not currently connected but it is a rem
 .
 Language=Russian
 ERROR_CONNECTION_UNAVAIL - Устройство сейчас не подключено, но сведения о нем в конфигурации присутствуют.
+.
+Language=Polish
+ERROR_CONNECTION_UNAVAIL - The device is not currently connected but it is a remembered connection.
 .
 
 MessageId=1202
@@ -6029,6 +7664,9 @@ ERROR_DEVICE_ALREADY_REMEMBERED - The local device name has a remembered connect
 Language=Russian
 ERROR_DEVICE_ALREADY_REMEMBERED - Локальное имя устройства уже используется для подключения к другому сетевому ресурсу.
 .
+Language=Polish
+ERROR_DEVICE_ALREADY_REMEMBERED - The local device name has a remembered connection to another network resource.
+.
 
 MessageId=1203
 Severity=Success
@@ -6039,6 +7677,9 @@ ERROR_NO_NET_OR_BAD_PATH - The network path was either typed incorrectly, does n
 .
 Language=Russian
 ERROR_NO_NET_OR_BAD_PATH - Сетевой путь введен неправильно, не существует, или сеть сейчас недоступна. Попробуйте ввести путь заново или обратитесь к администратору сети.
+.
+Language=Polish
+ERROR_NO_NET_OR_BAD_PATH - The network path was either typed incorrectly, does not exist, or the network provider is not currently available. Please try retyping the path or contact your network administrator.
 .
 
 MessageId=1204
@@ -6051,6 +7692,9 @@ ERROR_BAD_PROVIDER - The specified network provider name is invalid.
 Language=Russian
 ERROR_BAD_PROVIDER - Имя службы доступа к сети задано неверно.
 .
+Language=Polish
+ERROR_BAD_PROVIDER - The specified network provider name is invalid.
+.
 
 MessageId=1205
 Severity=Success
@@ -6061,6 +7705,9 @@ ERROR_CANNOT_OPEN_PROFILE - Unable to open the network connection profile.
 .
 Language=Russian
 ERROR_CANNOT_OPEN_PROFILE - Не удается открыть конфигурацию подключения к сети.
+.
+Language=Polish
+ERROR_CANNOT_OPEN_PROFILE - Unable to open the network connection profile.
 .
 
 MessageId=1206
@@ -6073,6 +7720,9 @@ ERROR_BAD_PROFILE - The network connection profile is corrupted.
 Language=Russian
 ERROR_BAD_PROFILE - Конфигурация подключения к сети повреждена.
 .
+Language=Polish
+ERROR_BAD_PROFILE - The network connection profile is corrupted.
+.
 
 MessageId=1207
 Severity=Success
@@ -6083,6 +7733,9 @@ ERROR_NOT_CONTAINER - Cannot enumerate a noncontainer.
 .
 Language=Russian
 ERROR_NOT_CONTAINER - Перечисление объектов, не являющихся контейнерами, невозможно.
+.
+Language=Polish
+ERROR_NOT_CONTAINER - Cannot enumerate a noncontainer.
 .
 
 MessageId=1208
@@ -6095,6 +7748,9 @@ ERROR_EXTENDED_ERROR - An extended error has occurred.
 Language=Russian
 ERROR_EXTENDED_ERROR - Ошибка расширенного типа.
 .
+Language=Polish
+ERROR_EXTENDED_ERROR - An extended error has occurred.
+.
 
 MessageId=1209
 Severity=Success
@@ -6105,6 +7761,9 @@ ERROR_INVALID_GROUPNAME - The format of the specified group name is invalid.
 .
 Language=Russian
 ERROR_INVALID_GROUPNAME - Неверный формат имени группы.
+.
+Language=Polish
+ERROR_INVALID_GROUPNAME - The format of the specified group name is invalid.
 .
 
 MessageId=1210
@@ -6117,6 +7776,9 @@ ERROR_INVALID_COMPUTERNAME - The format of the specified computer name is invali
 Language=Russian
 ERROR_INVALID_COMPUTERNAME - Неверный формат имени компьютера.
 .
+Language=Polish
+ERROR_INVALID_COMPUTERNAME - The format of the specified computer name is invalid.
+.
 
 MessageId=1211
 Severity=Success
@@ -6127,6 +7789,9 @@ ERROR_INVALID_EVENTNAME - The format of the specified event name is invalid.
 .
 Language=Russian
 ERROR_INVALID_EVENTNAME - Неверный формат имени события.
+.
+Language=Polish
+ERROR_INVALID_EVENTNAME - The format of the specified event name is invalid.
 .
 
 MessageId=1212
@@ -6139,6 +7804,9 @@ ERROR_INVALID_DOMAINNAME - The format of the specified domain name is invalid.
 Language=Russian
 ERROR_INVALID_DOMAINNAME - Неверный формат имени домена.
 .
+Language=Polish
+ERROR_INVALID_DOMAINNAME - The format of the specified domain name is invalid.
+.
 
 MessageId=1213
 Severity=Success
@@ -6149,6 +7817,9 @@ ERROR_INVALID_SERVICENAME - The format of the specified service name is invalid.
 .
 Language=Russian
 ERROR_INVALID_SERVICENAME - Неверный формат имени службы.
+.
+Language=Polish
+ERROR_INVALID_SERVICENAME - The format of the specified service name is invalid.
 .
 
 MessageId=1214
@@ -6161,6 +7832,9 @@ ERROR_INVALID_NETNAME - The format of the specified network name is invalid.
 Language=Russian
 ERROR_INVALID_NETNAME - Неверный формат сетевого имени.
 .
+Language=Polish
+ERROR_INVALID_NETNAME - The format of the specified network name is invalid.
+.
 
 MessageId=1215
 Severity=Success
@@ -6171,6 +7845,9 @@ ERROR_INVALID_SHARENAME - The format of the specified share name is invalid.
 .
 Language=Russian
 ERROR_INVALID_SHARENAME - Недопустимый формат имени общего ресурса.
+.
+Language=Polish
+ERROR_INVALID_SHARENAME - The format of the specified share name is invalid.
 .
 
 MessageId=1216
@@ -6183,6 +7860,9 @@ ERROR_INVALID_PASSWORDNAME - The format of the specified password is invalid.
 Language=Russian
 ERROR_INVALID_PASSWORDNAME - Неверный формат пароля.
 .
+Language=Polish
+ERROR_INVALID_PASSWORDNAME - The format of the specified password is invalid.
+.
 
 MessageId=1217
 Severity=Success
@@ -6193,6 +7873,9 @@ ERROR_INVALID_MESSAGENAME - The format of the specified message name is invalid.
 .
 Language=Russian
 ERROR_INVALID_MESSAGENAME - Неверный формат имени сообщения.
+.
+Language=Polish
+ERROR_INVALID_MESSAGENAME - The format of the specified message name is invalid.
 .
 
 MessageId=1218
@@ -6205,6 +7888,9 @@ ERROR_INVALID_MESSAGEDEST - The format of the specified message destination is i
 Language=Russian
 ERROR_INVALID_MESSAGEDEST - Неверный формат задания адреса, по которому отправляется сообщение.
 .
+Language=Polish
+ERROR_INVALID_MESSAGEDEST - The format of the specified message destination is invalid.
+.
 
 MessageId=1219
 Severity=Success
@@ -6215,6 +7901,9 @@ ERROR_SESSION_CREDENTIAL_CONFLICT - Multiple connections to a server or shared r
 .
 Language=Russian
 ERROR_SESSION_CREDENTIAL_CONFLICT - Множественное подключение к серверу или к общим ресурсам одним пользователем с использованием более одного имени пользователя не разрешено. Отключите все предыдущие подключения к серверу или общим ресурсам и повторите попытку.
+.
+Language=Polish
+ERROR_SESSION_CREDENTIAL_CONFLICT - Multiple connections to a server or shared resource by the same user, using more than one user name, are not allowed. Disconnect all previous connections to the server or shared resource and try again.
 .
 
 MessageId=1220
@@ -6227,6 +7916,9 @@ ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - An attempt was made to establish a session
 Language=Russian
 ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - Попытка установки сеанса связи с сервером сети, для которого достигнут предел по числу таких сеансов.
 .
+Language=Polish
+ERROR_REMOTE_SESSION_LIMIT_EXCEEDED - An attempt was made to establish a session to a network server, but there are already too many sessions established to that server.
+.
 
 MessageId=1221
 Severity=Success
@@ -6237,6 +7929,9 @@ ERROR_DUP_DOMAINNAME - The workgroup or domain name is already in use by another
 .
 Language=Russian
 ERROR_DUP_DOMAINNAME - Имя рабочей группы или домена уже используется другим компьютером в сети.
+.
+Language=Polish
+ERROR_DUP_DOMAINNAME - The workgroup or domain name is already in use by another computer on the network.
 .
 
 MessageId=1222
@@ -6249,6 +7944,9 @@ ERROR_NO_NETWORK - The network is not present or not started.
 Language=Russian
 ERROR_NO_NETWORK - Сеть отсутствует или не запущена.
 .
+Language=Polish
+ERROR_NO_NETWORK - The network is not present or not started.
+.
 
 MessageId=1223
 Severity=Success
@@ -6259,6 +7957,9 @@ ERROR_CANCELLED - The operation was canceled by the user.
 .
 Language=Russian
 ERROR_CANCELLED - Операция была отменена пользователем.
+.
+Language=Polish
+ERROR_CANCELLED - The operation was canceled by the user.
 .
 
 MessageId=1224
@@ -6271,6 +7972,9 @@ ERROR_USER_MAPPED_FILE - The requested operation cannot be performed on a file w
 Language=Russian
 ERROR_USER_MAPPED_FILE - Запрошенную операцию нельзя выполнить для файла с открытой пользователем сопоставленной секцией.
 .
+Language=Polish
+ERROR_USER_MAPPED_FILE - The requested operation cannot be performed on a file with a user-mapped section open.
+.
 
 MessageId=1225
 Severity=Success
@@ -6281,6 +7985,9 @@ ERROR_CONNECTION_REFUSED - The remote system refused the network connection.
 .
 Language=Russian
 ERROR_CONNECTION_REFUSED - Удаленный компьютер отклонил это сетевое подключение.
+.
+Language=Polish
+ERROR_CONNECTION_REFUSED - The remote system refused the network connection.
 .
 
 MessageId=1226
@@ -6293,6 +8000,9 @@ ERROR_GRACEFUL_DISCONNECT - The network connection was gracefully closed.
 Language=Russian
 ERROR_GRACEFUL_DISCONNECT - Сетевое подключение было закрыто.
 .
+Language=Polish
+ERROR_GRACEFUL_DISCONNECT - The network connection was gracefully closed.
+.
 
 MessageId=1227
 Severity=Success
@@ -6303,6 +8013,9 @@ ERROR_ADDRESS_ALREADY_ASSOCIATED - The network transport endpoint already has an
 .
 Language=Russian
 ERROR_ADDRESS_ALREADY_ASSOCIATED - Конечной точке сетевого транспорта уже сопоставлен адрес.
+.
+Language=Polish
+ERROR_ADDRESS_ALREADY_ASSOCIATED - The network transport endpoint already has an address associated with it.
 .
 
 MessageId=1228
@@ -6315,6 +8028,9 @@ ERROR_ADDRESS_NOT_ASSOCIATED - An address has not yet been associated with the n
 Language=Russian
 ERROR_ADDRESS_NOT_ASSOCIATED - Конечной точке сети еще не сопоставлен адрес.
 .
+Language=Polish
+ERROR_ADDRESS_NOT_ASSOCIATED - An address has not yet been associated with the network endpoint.
+.
 
 MessageId=1229
 Severity=Success
@@ -6325,6 +8041,9 @@ ERROR_CONNECTION_INVALID - An operation was attempted on a nonexistent network c
 .
 Language=Russian
 ERROR_CONNECTION_INVALID - Попытка выполнить операцию для несуществующего сетевого подключения.
+.
+Language=Polish
+ERROR_CONNECTION_INVALID - An operation was attempted on a nonexistent network connection.
 .
 
 MessageId=1230
@@ -6337,6 +8056,9 @@ ERROR_CONNECTION_ACTIVE - An invalid operation was attempted on an active networ
 Language=Russian
 ERROR_CONNECTION_ACTIVE - Попытка выполнить недопустимую операцию для активного сетевого подключения.
 .
+Language=Polish
+ERROR_CONNECTION_ACTIVE - An invalid operation was attempted on an active network connection.
+.
 
 MessageId=1231
 Severity=Success
@@ -6347,6 +8069,9 @@ ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For informat
 .
 Language=Russian
 ERROR_NETWORK_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
+.
+Language=Polish
+ERROR_NETWORK_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
 .
 
 MessageId=1232
@@ -6359,6 +8084,9 @@ ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information
 Language=Russian
 ERROR_HOST_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
 .
+Language=Polish
+ERROR_HOST_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
+.
 
 MessageId=1233
 Severity=Success
@@ -6369,6 +8097,9 @@ ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For informa
 .
 Language=Russian
 ERROR_PROTOCOL_UNREACHABLE - Сетевая папка недоступна. За информацией о разрешении проблем в сети обратитесь к справочной системе Windows.
+.
+Language=Polish
+ERROR_PROTOCOL_UNREACHABLE - The network location cannot be reached. For information about network troubleshooting, see Windows Help.
 .
 
 MessageId=1234
@@ -6381,6 +8112,9 @@ ERROR_PORT_UNREACHABLE - No service is operating at the destination network endp
 Language=Russian
 ERROR_PORT_UNREACHABLE - На конечном звене нужной сети удаленной системы не запущена ни одна служба.
 .
+Language=Polish
+ERROR_PORT_UNREACHABLE - No service is operating at the destination network endpoint on the remote system.
+.
 
 MessageId=1235
 Severity=Success
@@ -6391,6 +8125,9 @@ ERROR_REQUEST_ABORTED - The request was aborted.
 .
 Language=Russian
 ERROR_REQUEST_ABORTED - Запрос был прерван.
+.
+Language=Polish
+ERROR_REQUEST_ABORTED - The request was aborted.
 .
 
 MessageId=1236
@@ -6403,6 +8140,9 @@ ERROR_CONNECTION_ABORTED - The network connection was aborted by the local syste
 Language=Russian
 ERROR_CONNECTION_ABORTED - Подключение к сети было разорвано локальной системой.
 .
+Language=Polish
+ERROR_CONNECTION_ABORTED - The network connection was aborted by the local system.
+.
 
 MessageId=1237
 Severity=Success
@@ -6413,6 +8153,9 @@ ERROR_RETRY - The operation could not be completed. A retry should be performed.
 .
 Language=Russian
 ERROR_RETRY - Не удалось завершить операцию.  Следует повторить ее.
+.
+Language=Polish
+ERROR_RETRY - The operation could not be completed. A retry should be performed.
 .
 
 MessageId=1238
@@ -6425,6 +8168,9 @@ ERROR_CONNECTION_COUNT_LIMIT - A connection to the server could not be made beca
 Language=Russian
 ERROR_CONNECTION_COUNT_LIMIT - Подключение к серверу невозможно, так как для данной учетной записи уже достигнут предел по числу одновременных подключений.
 .
+Language=Polish
+ERROR_CONNECTION_COUNT_LIMIT - A connection to the server could not be made because the limit on the number of concurrent connections for this account has been reached.
+.
 
 MessageId=1239
 Severity=Success
@@ -6435,6 +8181,9 @@ ERROR_LOGIN_TIME_RESTRICTION - Attempting to log in during an unauthorized time 
 .
 Language=Russian
 ERROR_LOGIN_TIME_RESTRICTION - Попытка входа в сеть в непредусмотренное для этой учетной записи время дня.
+.
+Language=Polish
+ERROR_LOGIN_TIME_RESTRICTION - Attempting to log in during an unauthorized time of day for this account.
 .
 
 MessageId=1240
@@ -6447,6 +8196,9 @@ ERROR_LOGIN_WKSTA_RESTRICTION - The account is not authorized to log in from thi
 Language=Russian
 ERROR_LOGIN_WKSTA_RESTRICTION - Данная учетная запись не может быть использована для входа в сеть с этой станции.
 .
+Language=Polish
+ERROR_LOGIN_WKSTA_RESTRICTION - The account is not authorized to log in from this station.
+.
 
 MessageId=1241
 Severity=Success
@@ -6457,6 +8209,9 @@ ERROR_INCORRECT_ADDRESS - The network address could not be used for the operatio
 .
 Language=Russian
 ERROR_INCORRECT_ADDRESS - Не удалось использовать сетевой адрес для запрошенной операции.
+.
+Language=Polish
+ERROR_INCORRECT_ADDRESS - The network address could not be used for the operation requested.
 .
 
 MessageId=1242
@@ -6469,6 +8224,9 @@ ERROR_ALREADY_REGISTERED - The service is already registered.
 Language=Russian
 ERROR_ALREADY_REGISTERED - Служба уже зарегистрирована.
 .
+Language=Polish
+ERROR_ALREADY_REGISTERED - The service is already registered.
+.
 
 MessageId=1243
 Severity=Success
@@ -6479,6 +8237,9 @@ ERROR_SERVICE_NOT_FOUND - The specified service does not exist.
 .
 Language=Russian
 ERROR_SERVICE_NOT_FOUND - Указанная служба не существует.
+.
+Language=Polish
+ERROR_SERVICE_NOT_FOUND - The specified service does not exist.
 .
 
 MessageId=1244
@@ -6491,6 +8252,9 @@ ERROR_NOT_AUTHENTICATED - The operation being requested was not performed becaus
 Language=Russian
 ERROR_NOT_AUTHENTICATED - Запрошенная операция не была выполнена, так как пользователь не зарегистрирован.
 .
+Language=Polish
+ERROR_NOT_AUTHENTICATED - The operation being requested was not performed because the user has not been authenticated.
+.
 
 MessageId=1245
 Severity=Success
@@ -6501,6 +8265,9 @@ ERROR_NOT_LOGGED_ON - The operation being requested was not performed because th
 .
 Language=Russian
 ERROR_NOT_LOGGED_ON - Запрошенная операция не была выполнена, так как пользователь не выполнил вход в сеть. Указанная служба не существует.
+.
+Language=Polish
+ERROR_NOT_LOGGED_ON - The operation being requested was not performed because the user has not logged on to the network. The specified service does not exist.
 .
 
 MessageId=1246
@@ -6513,6 +8280,9 @@ ERROR_CONTINUE - Continue with work in progress.
 Language=Russian
 ERROR_CONTINUE - Требуется продолжить выполняющуюся операцию.
 .
+Language=Polish
+ERROR_CONTINUE - Continue with work in progress.
+.
 
 MessageId=1247
 Severity=Success
@@ -6523,6 +8293,9 @@ ERROR_ALREADY_INITIALIZED - An attempt was made to perform an initialization ope
 .
 Language=Russian
 ERROR_ALREADY_INITIALIZED - Попытка выполнить операцию инициализации, которая уже проведена.
+.
+Language=Polish
+ERROR_ALREADY_INITIALIZED - An attempt was made to perform an initialization operation when initialization has already been completed.
 .
 
 MessageId=1248
@@ -6535,6 +8308,9 @@ ERROR_NO_MORE_DEVICES - No more local devices.
 Language=Russian
 ERROR_NO_MORE_DEVICES - Больше локальных устройств не найдено.
 .
+Language=Polish
+ERROR_NO_MORE_DEVICES - No more local devices.
+.
 
 MessageId=1249
 Severity=Success
@@ -6545,6 +8321,9 @@ ERROR_NO_SUCH_SITE - The specified site does not exist.
 .
 Language=Russian
 ERROR_NO_SUCH_SITE - Указанный сайт не существует.
+.
+Language=Polish
+ERROR_NO_SUCH_SITE - The specified site does not exist.
 .
 
 MessageId=1250
@@ -6557,6 +8336,9 @@ ERROR_DOMAIN_CONTROLLER_EXISTS - A domain controller with the specified name alr
 Language=Russian
 ERROR_DOMAIN_CONTROLLER_EXISTS - Контроллер домена с указанным именем уже существует.
 .
+Language=Polish
+ERROR_DOMAIN_CONTROLLER_EXISTS - A domain controller with the specified name already exists.
+.
 
 MessageId=1251
 Severity=Success
@@ -6567,6 +8349,9 @@ ERROR_ONLY_IF_CONNECTED - This operation is supported only when you are connecte
 .
 Language=Russian
 ERROR_ONLY_IF_CONNECTED - Эта операция поддерживается только при наличии подключения к серверу.
+.
+Language=Polish
+ERROR_ONLY_IF_CONNECTED - This operation is supported only when you are connected to the server.
 .
 
 MessageId=1252
@@ -6579,6 +8364,9 @@ ERROR_OVERRIDE_NOCHANGES - The group policy framework should call the extension 
 Language=Russian
 ERROR_OVERRIDE_NOCHANGES - Основной модуль групповой политики должен вызвать расширение даже в случае отсутствия изменений.
 .
+Language=Polish
+ERROR_OVERRIDE_NOCHANGES - The group policy framework should call the extension even if there are no changes.
+.
 
 MessageId=1253
 Severity=Success
@@ -6589,6 +8377,9 @@ ERROR_BAD_USER_PROFILE - The specified user does not have a valid profile.
 .
 Language=Russian
 ERROR_BAD_USER_PROFILE - Выбранный пользователь не имеет допустимого профиля.
+.
+Language=Polish
+ERROR_BAD_USER_PROFILE - The specified user does not have a valid profile.
 .
 
 MessageId=1254
@@ -6601,6 +8392,9 @@ ERROR_NOT_SUPPORTED_ON_SBS - This operation is not supported on a computer runni
 Language=Russian
 ERROR_NOT_SUPPORTED_ON_SBS - Эта операция не поддерживается на Windows Server 2003 for Small Business Server.
 .
+Language=Polish
+ERROR_NOT_SUPPORTED_ON_SBS - This operation is not supported on a computer running Windows Server 2003 for Small Business Server.
+.
 
 MessageId=1255
 Severity=Success
@@ -6611,6 +8405,9 @@ ERROR_SERVER_SHUTDOWN_IN_PROGRESS - The server machine is shutting down.
 .
 Language=Russian
 ERROR_SERVER_SHUTDOWN_IN_PROGRESS - Идет завершение работы компьютера-сервера.
+.
+Language=Polish
+ERROR_SERVER_SHUTDOWN_IN_PROGRESS - The server machine is shutting down.
 .
 
 MessageId=1256
@@ -6623,6 +8420,9 @@ ERROR_HOST_DOWN - The remote system is not available. For information about netw
 Language=Russian
 ERROR_HOST_DOWN - Удаленная система недоступна. За информацией о разрешении проблем в сети, обратитесь к справочной системе Windows.
 .
+Language=Polish
+ERROR_HOST_DOWN - The remote system is not available. For information about network troubleshooting, see Windows Help.
+.
 
 MessageId=1257
 Severity=Success
@@ -6633,6 +8433,9 @@ ERROR_NON_ACCOUNT_SID - The security identifier provided is not from an account 
 .
 Language=Russian
 ERROR_NON_ACCOUNT_SID - Был указан идентификатор безопасности не из того домена.
+.
+Language=Polish
+ERROR_NON_ACCOUNT_SID - The security identifier provided is not from an account domain.
 .
 
 MessageId=1258
@@ -6645,6 +8448,9 @@ ERROR_NON_DOMAIN_SID - The security identifier provided does not have a domain c
 Language=Russian
 ERROR_NON_DOMAIN_SID - В указанном идентификаторе безопасности отсутствует компонент для домена.
 .
+Language=Polish
+ERROR_NON_DOMAIN_SID - The security identifier provided does not have a domain component.
+.
 
 MessageId=1259
 Severity=Success
@@ -6655,6 +8461,9 @@ ERROR_APPHELP_BLOCK - AppHelp dialog canceled thus preventing the application fr
 .
 Language=Russian
 ERROR_APPHELP_BLOCK - Окно AppHelp закрыто, из-за чего приложение не было запущено.
+.
+Language=Polish
+ERROR_APPHELP_BLOCK - AppHelp dialog canceled thus preventing the application from starting.
 .
 
 MessageId=1260
@@ -6667,6 +8476,9 @@ ERROR_ACCESS_DISABLED_BY_POLICY - Windows cannot open this program because it ha
 Language=Russian
 ERROR_ACCESS_DISABLED_BY_POLICY - Эта программа заблокирована групповой политикой. За дополнительными сведениями обращайтесь к системному администратору.
 .
+Language=Polish
+ERROR_ACCESS_DISABLED_BY_POLICY - Windows cannot open this program because it has been prevented by a software restriction policy. For more information, open Event Viewer or contact your system administrator.
+.
 
 MessageId=1261
 Severity=Success
@@ -6677,6 +8489,9 @@ ERROR_REG_NAT_CONSUMPTION - A program attempt to use an invalid register value. 
 .
 Language=Russian
 ERROR_REG_NAT_CONSUMPTION - Попытка программы использовать неправильное значение регистра. Обычно это вызвано неинициализированным регистром.
+.
+Language=Polish
+ERROR_REG_NAT_CONSUMPTION - A program attempt to use an invalid register value. Normally caused by an uninitialized register. This error is Itanium specific.
 .
 
 MessageId=1262
@@ -6689,6 +8504,9 @@ ERROR_CSCSHARE_OFFLINE - The share is currently offline or does not exist.
 Language=Russian
 ERROR_CSCSHARE_OFFLINE - Общий ресурс недоступен или не существует.
 .
+Language=Polish
+ERROR_CSCSHARE_OFFLINE - The share is currently offline or does not exist.
+.
 
 MessageId=1263
 Severity=Success
@@ -6699,6 +8517,9 @@ ERROR_PKINIT_FAILURE - The kerberos protocol encountered an error while validati
 .
 Language=Russian
 ERROR_PKINIT_FAILURE - Ошибка протокола Kerberos при проверке сертификата KDC во время входа в систему со смарт-картой. Дополнительные сведения см. в журнале системных событий.
+.
+Language=Polish
+ERROR_PKINIT_FAILURE - The kerberos protocol encountered an error while validating the KDC certificate during smartcard logon.
 .
 
 MessageId=1264
@@ -6711,6 +8532,9 @@ ERROR_SMARTCARD_SUBSYSTEM_FAILURE - The kerberos protocol encountered an error w
 Language=Russian
 ERROR_SMARTCARD_SUBSYSTEM_FAILURE - Ошибка протокола Kerberos при попытке использовать подсистему для смарт-карт.
 .
+Language=Polish
+ERROR_SMARTCARD_SUBSYSTEM_FAILURE - The kerberos protocol encountered an error while attempting to utilize the smartcard subsystem.
+.
 
 MessageId=1265
 Severity=Success
@@ -6722,6 +8546,9 @@ ERROR_DOWNGRADE_DETECTED - The system detected a possible attempt to compromise 
 Language=Russian
 ERROR_DOWNGRADE_DETECTED - Системе не удается установить связь с контроллером домена, чтобы обработать запрос на проверку подлинности. Попробуйте еще раз позже.
 .
+Language=Polish
+ERROR_DOWNGRADE_DETECTED - The system detected a possible attempt to compromise security. Please ensure that you can contact the server that authenticated you.
+.
 
 MessageId=1266
 Severity=Success
@@ -6731,6 +8558,9 @@ Language=English
 SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
 .
 Language=Russian
+SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
+.
+Language=Polish
 SEC_E_SMARTCARD_CERT_REVOKED - The smartcard certificate used for authentication has been revoked. Please contact your system administrator. There may be additional information in the event log.
 .
 
@@ -6744,6 +8574,9 @@ SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected whi
 Language=Russian
 SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
 .
+Language=Polish
+SEC_E_ISSUING_CA_UNTRUSTED - An untrusted certificate authority was detected while processing the smartcard certificate used for authentication. Please contact your system administrator.
+.
 
 MessageId=1268
 Severity=Success
@@ -6753,6 +8586,9 @@ Language=English
 SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
 .
 Language=Russian
+SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
+.
+Language=Polish
 SEC_E_REVOCATION_OFFLINE_C - The revocation status of the smartcard certificate used for authentication could not be determined. Please contact your system administrator.
 .
 
@@ -6766,6 +8602,9 @@ SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication w
 Language=Russian
 SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
 .
+Language=Polish
+SEC_E_PKINIT_CLIENT_FAILUR - The smartcard certificate used for authentication was not trusted. Please contact your system administrator.
+.
 
 MessageId=1270
 Severity=Success
@@ -6775,6 +8614,9 @@ Language=English
 SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
 .
 Language=Russian
+SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
+.
+Language=Polish
 SEC_E_SMARTCARD_CERT_EXPIRED - The smartcard certificate used for authentication has expired. Please contact your system administrator.
 .
 
@@ -6788,6 +8630,9 @@ ERROR_MACHINE_LOCKED - The machine is locked and cannot be shut down without the
 Language=Russian
 ERROR_MACHINE_LOCKED - Компьютер заблокирован и не может завершить работу без режима принудительного завершения.
 .
+Language=Polish
+ERROR_MACHINE_LOCKED - The machine is locked and cannot be shut down without the force option.
+.
 
 MessageId=1273
 Severity=Success
@@ -6798,6 +8643,9 @@ ERROR_CALLBACK_SUPPLIED_INVALID_DATA - An application-defined callback gave inva
 .
 Language=Russian
 ERROR_CALLBACK_SUPPLIED_INVALID_DATA - Определенный в приложении ответный вызов вернул неверные данные.
+.
+Language=Polish
+ERROR_CALLBACK_SUPPLIED_INVALID_DATA - An application-defined callback gave invalid data when called.
 .
 
 MessageId=1274
@@ -6810,6 +8658,9 @@ ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - The group policy framework should call 
 Language=Russian
 ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - Система групповой политики должна вызывать расширения в синхронном, не фоновом режиме обновления.
 .
+Language=Polish
+ERROR_SYNC_FOREGROUND_REFRESH_REQUIRED - The group policy framework should call the extension in the synchronous foreground policy refresh.
+.
 
 MessageId=1275
 Severity=Success
@@ -6820,6 +8671,9 @@ ERROR_DRIVER_BLOCKED - This driver has been blocked from loading.
 .
 Language=Russian
 ERROR_DRIVER_BLOCKED - Загрузка драйвера была заблокирована.
+.
+Language=Polish
+ERROR_DRIVER_BLOCKED - This driver has been blocked from loading.
 .
 
 MessageId=1276
@@ -6832,6 +8686,9 @@ ERROR_INVALID_IMPORT_OF_NON_DLL - A dynamic link library (DLL) referenced a modu
 Language=Russian
 ERROR_INVALID_IMPORT_OF_NON_DLL - Библиотека, на которую ссылается модуль, не является библиотекой динамической компоновки (DLL) или исполняемым модулем.
 .
+Language=Polish
+ERROR_INVALID_IMPORT_OF_NON_DLL - A dynamic link library (DLL) referenced a module that was neither a DLL nor the process's executable image.
+.
 
 MessageId=1277
 Severity=Success
@@ -6842,6 +8699,9 @@ ERROR_ACCESS_DISABLED_WEBBLADE - Windows cannot open this program since it has b
 .
 Language=Russian
 ERROR_ACCESS_DISABLED_WEBBLADE - Windows не удается запустить эту программу, так как она отключена.
+.
+Language=Polish
+ERROR_ACCESS_DISABLED_WEBBLADE - Windows cannot open this program since it has been disabled.
 .
 
 MessageId=1278
@@ -6854,6 +8714,9 @@ ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows cannot open this program because
 Language=Russian
 ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows не удается открыть эту программу, так как система учета лицензий изменена или повреждена.
 .
+Language=Polish
+ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER - Windows cannot open this program because the license enforcement system has been tampered with or become corrupted.
+.
 
 MessageId=1279
 Severity=Success
@@ -6864,6 +8727,9 @@ ERROR_RECOVERY_FAILURE - A transaction recovery failed.
 .
 Language=Russian
 ERROR_RECOVERY_FAILURE - Неудача при восстановлении транзакции.
+.
+Language=Polish
+ERROR_RECOVERY_FAILURE - A transaction recovery failed.
 .
 
 MessageId=1280
@@ -6876,6 +8742,9 @@ ERROR_ALREADY_FIBER - The current thread has already been converted to a fiber.
 Language=Russian
 ERROR_ALREADY_FIBER - Текущий поток уже преобразован в нить.
 .
+Language=Polish
+ERROR_ALREADY_FIBER - The current thread has already been converted to a fiber.
+.
 
 MessageId=1281
 Severity=Success
@@ -6886,6 +8755,9 @@ ERROR_ALREADY_THREAD - The current thread has already been converted from a fibe
 .
 Language=Russian
 ERROR_ALREADY_THREAD - Текущий поток уже преобразован из нити.
+.
+Language=Polish
+ERROR_ALREADY_THREAD - The current thread has already been converted from a fiber.
 .
 
 MessageId=1282
@@ -6898,6 +8770,9 @@ ERROR_STACK_BUFFER_OVERRUN - The system detected an overrun of a stack-based buf
 Language=Russian
 ERROR_STACK_BUFFER_OVERRUN - Обнаружено переполнение стекового буфера в данном приложении. Это переполнение может позволить злоумышленнику получить управление над данным приложением.
 .
+Language=Polish
+ERROR_STACK_BUFFER_OVERRUN - The system detected an overrun of a stack-based buffer in this application. This overrun could potentially allow a malicious user to gain control of this application.
+.
 
 MessageId=1283
 Severity=Success
@@ -6908,6 +8783,9 @@ ERROR_PARAMETER_QUOTA_EXCEEDED - Data present in one of the parameters is more t
 .
 Language=Russian
 ERROR_PARAMETER_QUOTA_EXCEEDED - В одном из параметров задано больше данных, чем эта функция может обработать.
+.
+Language=Polish
+ERROR_PARAMETER_QUOTA_EXCEEDED - Data present in one of the parameters is more than the function can operate on.
 .
 
 MessageId=1284
@@ -6920,6 +8798,9 @@ ERROR_DEBUGGER_INACTIVE - An attempt to do an operation on a debug object failed
 Language=Russian
 ERROR_DEBUGGER_INACTIVE - Не удалось выполнить операцию над объектом отладки, так как он удаляется.
 .
+Language=Polish
+ERROR_DEBUGGER_INACTIVE - An attempt to do an operation on a debug object failed because the object is in the process of being deleted.
+.
 
 MessageId=1285
 Severity=Success
@@ -6930,6 +8811,9 @@ ERROR_DELAY_LOAD_FAILED - An attempt to delay-load a .dll or get a function addr
 .
 Language=Russian
 ERROR_DELAY_LOAD_FAILED - Не удалось загрузить с задержкой библиотеку DLL или получить из нее адрес функции.
+.
+Language=Polish
+ERROR_DELAY_LOAD_FAILED - An attempt to delay-load a .dll or get a function address in a delay-loaded .dll failed.
 .
 
 MessageId=1286
@@ -6942,6 +8826,9 @@ ERROR_VDM_DISALLOWED - %1 is a 16-bit application. You do not have permissions t
 Language=Russian
 ERROR_VDM_DISALLOWED - "%1" является 16-битным приложением. Вы не имеете прав доступа для выполнения 16-битных приложений. Проверьте ваши права доступа с вашим системным администратором.
 .
+Language=Polish
+ERROR_VDM_DISALLOWED - %1 is a 16-bit application. You do not have permissions to execute 16-bit applications. Check your permissions with your system administrator.
+.
 
 MessageId=1287
 Severity=Success
@@ -6952,6 +8839,9 @@ ERROR_UNIDENTIFIED_ERROR - Insufficient information exists to identify the cause
 .
 Language=Russian
 ERROR_UNIDENTIFIED_ERROR - Недостаточно сведений для установки причины сбоя.
+.
+Language=Polish
+ERROR_UNIDENTIFIED_ERROR - Insufficient information exists to identify the cause of failure.
 .
 
 MessageId=1288
@@ -6964,6 +8854,9 @@ ERROR_INVALID_BANDWIDTH_PARAMETERS - An invalid budget or period parameter was s
 Language=Russian
 ERROR_INVALID_BANDWIDTH_PARAMETERS - В динамическую функцию C передан неверный параметр.
 .
+Language=Polish
+ERROR_INVALID_BANDWIDTH_PARAMETERS - An invalid budget or period parameter was specified.
+.
 
 MessageId=1289
 Severity=Success
@@ -6974,6 +8867,9 @@ ERROR_AFFINITY_NOT_COMPATIBLE - An attempt was made to join a thread to a reserv
 .
 Language=Russian
 ERROR_AFFINITY_NOT_COMPATIBLE - Операция выполнена за пределами допустимой длины данных файла.
+.
+Language=Polish
+ERROR_AFFINITY_NOT_COMPATIBLE - An attempt was made to join a thread to a reserve whose affinity did not intersect the reserve affinity or an attempt was made to associate a process with a reserve whose affinity did not intersect the reserve affinity.
 .
 
 MessageId=1290
@@ -6986,6 +8882,9 @@ ERROR_THREAD_ALREADY_IN_RESERVE - An attempt was made to join a thread to a rese
 Language=Russian
 ERROR_THREAD_ALREADY_IN_RESERVE - Не удалось запустить эту службу, так как одна или несколько служб одного процесса имеют несовместимый параметр типа SID службы. Служба с ограниченным типом SID может сосуществовать в одном и том же процессе только с другими службами с ограниченным типом SID. Если тип SID для этой службы только что настроен, необходимо перезапустить хост-процесс, чтобы запустить эту службу.
 .
+Language=Polish
+ERROR_THREAD_ALREADY_IN_RESERVE - An attempt was made to join a thread to a reserve which was already joined to another reserve.
+.
 
 MessageId=1291
 Severity=Success
@@ -6996,6 +8895,9 @@ ERROR_THREAD_NOT_IN_RESERVE - An attempt was made to disjoin a thread from a res
 .
 Language=Russian
 ERROR_THREAD_NOT_IN_RESERVE - Процесс, использующий драйвер для этого устройства, прерван.
+.
+Language=Polish
+ERROR_THREAD_NOT_IN_RESERVE - An attempt was made to disjoin a thread from a reserve, but the thread was not joined to the reserve.
 .
 
 MessageId=1292
@@ -7008,6 +8910,9 @@ ERROR_THREAD_PROCESS_IN_RESERVE - An attempt was made to disjoin a thread from a
 Language=Russian
 ERROR_THREAD_PROCESS_IN_RESERVE - Операция попыталась превысить установленный предел.
 .
+Language=Polish
+ERROR_THREAD_PROCESS_IN_RESERVE - An attempt was made to disjoin a thread from a reserve whose process is associated with a reserve.
+.
 
 MessageId=1293
 Severity=Success
@@ -7018,6 +8923,9 @@ ERROR_PROCESS_ALREADY_IN_RESERVE - An attempt was made to associate a process wi
 .
 Language=Russian
 ERROR_PROCESS_ALREADY_IN_RESERVE - Целевой процесс или процесс целевого потока является защищенным.
+.
+Language=Polish
+ERROR_PROCESS_ALREADY_IN_RESERVE - An attempt was made to associate a process with a reserve that was already associated with a reserve.
 .
 
 MessageId=1294
@@ -7030,6 +8938,9 @@ ERROR_PROCESS_NOT_IN_RESERVE - An attempt was made to disassociate a process fro
 Language=Russian
 ERROR_PROCESS_NOT_IN_RESERVE - Клиент уведомлений службы значительно отстает от текущего состояния служб в системе.
 .
+Language=Polish
+ERROR_PROCESS_NOT_IN_RESERVE - An attempt was made to disassociate a process from a reserve, but the process did not have an associated reserve.
+.
 
 MessageId=1295
 Severity=Success
@@ -7040,6 +8951,9 @@ ERROR_PROCESS_THREADS_IN_RESERVE - An attempt was made to associate a process wi
 .
 Language=Russian
 ERROR_PROCESS_THREADS_IN_RESERVE - Требуемая операция с файлами завершилась сбоем из-за превышения квоты на использование места на диске. Чтобы освободить место на диске, переместите файлы в другое место или удалите ненужные файлы. За дополнительными сведениями обратитесь к системному администратору.
+.
+Language=Polish
+ERROR_PROCESS_THREADS_IN_RESERVE - An attempt was made to associate a process with a reserve, but the process contained thread joined to a reserve.
 .
 
 MessageId=1296
@@ -7052,6 +8966,9 @@ ERROR_AFFINITY_NOT_SET_IN_RESERVE - An attempt was made to set the affinity of a
 Language=Russian
 ERROR_AFFINITY_NOT_SET_IN_RESERVE - Требуемая операция с файлами завершилась сбоем, так как политика хранилища блокирует этот тип файлов. За дополнительными сведениями обратитесь к системному администратору.
 .
+Language=Polish
+ERROR_AFFINITY_NOT_SET_IN_RESERVE - An attempt was made to set the affinity of a thread or a process, but the thread or process was joined or associated with a reserve.
+.
 
 MessageId=1297
 Severity=Success
@@ -7062,6 +8979,9 @@ ERROR_IMPLEMENTATION_LIMIT - An operation attempted to exceed an implementation-
 .
 Language=Russian
 ERROR_IMPLEMENTATION_LIMIT - Права, необходимые службе для правильной работы, не существуют в конфигурации учетной записи службы.
+.
+Language=Polish
+ERROR_IMPLEMENTATION_LIMIT - An operation attempted to exceed an implementation-defined limit.
 .
 
 MessageId=1298
@@ -7074,6 +8994,9 @@ ERROR_DS_CACHE_ONLY - The requested object is for internal DS operations only.
 Language=Russian
 ERROR_DS_CACHE_ONLY - Поток, задействованный в данной операции, не отвечает.
 .
+Language=Polish
+ERROR_DS_CACHE_ONLY - The requested object is for internal DS operations only.
+.
 
 MessageId=1300
 Severity=Success
@@ -7084,6 +9007,9 @@ ERROR_NOT_ALL_ASSIGNED - Not all privileges referenced are assigned to the calle
 .
 Language=Russian
 ERROR_NOT_ALL_ASSIGNED - Вызывающая сторона не обладает всеми необходимыми правами доступа.
+.
+Language=Polish
+ERROR_NOT_ALL_ASSIGNED - Not all privileges referenced are assigned to the caller.
 .
 
 MessageId=1301
@@ -7096,6 +9022,9 @@ ERROR_SOME_NOT_MAPPED - Some mapping between account names and security IDs was 
 Language=Russian
 ERROR_SOME_NOT_MAPPED - Некоторые соответствия между именами пользователей и идентификаторами безопасности не были установлены.
 .
+Language=Polish
+ERROR_SOME_NOT_MAPPED - Some mapping between account names and security IDs was not done.
+.
 
 MessageId=1302
 Severity=Success
@@ -7106,6 +9035,9 @@ ERROR_NO_QUOTAS_FOR_ACCOUNT - No system quota limits are specifically set for th
 .
 Language=Russian
 ERROR_NO_QUOTAS_FOR_ACCOUNT - Системные квоты для данной учетной записи не установлены.
+.
+Language=Polish
+ERROR_NO_QUOTAS_FOR_ACCOUNT - No system quota limits are specifically set for this account.
 .
 
 MessageId=1303
@@ -7118,6 +9050,9 @@ ERROR_LOCAL_USER_SESSION_KEY - No encryption key is available. A well-known encr
 Language=Russian
 ERROR_LOCAL_USER_SESSION_KEY - Ключ шифрования недоступен. Возвращен общедоступный ключ.
 .
+Language=Polish
+ERROR_LOCAL_USER_SESSION_KEY - No encryption key is available. A well-known encryption key was returned.
+.
 
 MessageId=1304
 Severity=Success
@@ -7128,6 +9063,9 @@ ERROR_NULL_LM_PASSWORD - The password is too complex to be converted to a LAN Ma
 .
 Language=Russian
 ERROR_NULL_LM_PASSWORD - Пароль слишком сложен и не может быть преобразован в пароль LAN Manager. Вместо пароля LAN Manager была возвращена пустая строка.
+.
+Language=Polish
+ERROR_NULL_LM_PASSWORD - The password is too complex to be converted to a LAN Manager password. The LAN Manager password returned is a NULL string.
 .
 
 MessageId=1305
@@ -7140,6 +9078,9 @@ ERROR_UNKNOWN_REVISION - The revision level is unknown.
 Language=Russian
 ERROR_UNKNOWN_REVISION - Уровень редакции неизвестен.
 .
+Language=Polish
+ERROR_UNKNOWN_REVISION - The revision level is unknown.
+.
 
 MessageId=1306
 Severity=Success
@@ -7150,6 +9091,9 @@ ERROR_REVISION_MISMATCH - Indicates two revision levels are incompatible.
 .
 Language=Russian
 ERROR_REVISION_MISMATCH - Два уровня редакции являются несовместимыми.
+.
+Language=Polish
+ERROR_REVISION_MISMATCH - Indicates two revision levels are incompatible.
 .
 
 MessageId=1307
@@ -7162,6 +9106,9 @@ ERROR_INVALID_OWNER - This security ID may not be assigned as the owner of this 
 Language=Russian
 ERROR_INVALID_OWNER - Этот идентификатор безопасности не может быть назначен владельцем этого объекта.
 .
+Language=Polish
+ERROR_INVALID_OWNER - This security ID may not be assigned as the owner of this object.
+.
 
 MessageId=1308
 Severity=Success
@@ -7172,6 +9119,9 @@ ERROR_INVALID_PRIMARY_GROUP - This security ID may not be assigned as the primar
 .
 Language=Russian
 ERROR_INVALID_PRIMARY_GROUP - Этот идентификатор безопасности не может быть назначен основной группой объекта.
+.
+Language=Polish
+ERROR_INVALID_PRIMARY_GROUP - This security ID may not be assigned as the primary group of an object.
 .
 
 MessageId=1309
@@ -7184,6 +9134,9 @@ ERROR_NO_IMPERSONATION_TOKEN - An attempt has been made to operate on an imperso
 Language=Russian
 ERROR_NO_IMPERSONATION_TOKEN - Предпринята попытка использования элемента олицетворения потоком команд, который в данное время не олицетворяет клиента.
 .
+Language=Polish
+ERROR_NO_IMPERSONATION_TOKEN - An attempt has been made to operate on an impersonation token by a thread that is not currently impersonating a client.
+.
 
 MessageId=1310
 Severity=Success
@@ -7194,6 +9147,9 @@ ERROR_CANT_DISABLE_MANDATORY - The group may not be disabled.
 .
 Language=Russian
 ERROR_CANT_DISABLE_MANDATORY - Эту группу невозможно отключить.
+.
+Language=Polish
+ERROR_CANT_DISABLE_MANDATORY - The group may not be disabled.
 .
 
 MessageId=1311
@@ -7206,6 +9162,9 @@ ERROR_NO_LOGON_SERVERS - There are currently no logon servers available to servi
 Language=Russian
 ERROR_NO_LOGON_SERVERS - Отсутствуют серверы, которые могли бы обработать запрос на вход в сеть.
 .
+Language=Polish
+ERROR_NO_LOGON_SERVERS - There are currently no logon servers available to service the logon request.
+.
 
 MessageId=1312
 Severity=Success
@@ -7216,6 +9175,9 @@ ERROR_NO_SUCH_LOGON_SESSION - A specified logon session does not exist. It may a
 .
 Language=Russian
 ERROR_NO_SUCH_LOGON_SESSION - Указанный сеанс работы не существует. Возможно, он уже  завершен.
+.
+Language=Polish
+ERROR_NO_SUCH_LOGON_SESSION - A specified logon session does not exist. It may already have been terminated.
 .
 
 MessageId=1313
@@ -7228,6 +9190,9 @@ ERROR_NO_SUCH_PRIVILEGE - A specified privilege does not exist.
 Language=Russian
 ERROR_NO_SUCH_PRIVILEGE - Указанная привилегия не существует.
 .
+Language=Polish
+ERROR_NO_SUCH_PRIVILEGE - A specified privilege does not exist.
+.
 
 MessageId=1314
 Severity=Success
@@ -7238,6 +9203,9 @@ ERROR_PRIVILEGE_NOT_HELD - A required privilege is not held by the client.
 .
 Language=Russian
 ERROR_PRIVILEGE_NOT_HELD - Клиент не обладает требуемыми правами.
+.
+Language=Polish
+ERROR_PRIVILEGE_NOT_HELD - A required privilege is not held by the client.
 .
 
 MessageId=1315
@@ -7250,6 +9218,9 @@ ERROR_INVALID_ACCOUNT_NAME - The name provided is not a properly formed account 
 Language=Russian
 ERROR_INVALID_ACCOUNT_NAME - Указанное имя не является корректным именем пользователя.
 .
+Language=Polish
+ERROR_INVALID_ACCOUNT_NAME - The name provided is not a properly formed account name.
+.
 
 MessageId=1316
 Severity=Success
@@ -7260,6 +9231,9 @@ ERROR_USER_EXISTS - The specified user already exists.
 .
 Language=Russian
 ERROR_USER_EXISTS - Указанная учетная запись уже существует.
+.
+Language=Polish
+ERROR_USER_EXISTS - The specified user already exists.
 .
 
 MessageId=1317
@@ -7272,6 +9246,9 @@ ERROR_NO_SUCH_USER - The specified user does not exist.
 Language=Russian
 ERROR_NO_SUCH_USER - Указанная учетная запись не существует.
 .
+Language=Polish
+ERROR_NO_SUCH_USER - The specified user does not exist.
+.
 
 MessageId=1318
 Severity=Success
@@ -7282,6 +9259,9 @@ ERROR_GROUP_EXISTS - The specified group already exists.
 .
 Language=Russian
 ERROR_GROUP_EXISTS - Указанная группа уже существует.
+.
+Language=Polish
+ERROR_GROUP_EXISTS - The specified group already exists.
 .
 
 MessageId=1319
@@ -7294,6 +9274,9 @@ ERROR_NO_SUCH_GROUP - The specified group does not exist.
 Language=Russian
 ERROR_NO_SUCH_GROUP - Указанная группа не существует.
 .
+Language=Polish
+ERROR_NO_SUCH_GROUP - The specified group does not exist.
+.
 
 MessageId=1320
 Severity=Success
@@ -7304,6 +9287,9 @@ ERROR_MEMBER_IN_GROUP - Either the specified user account is already a member of
 .
 Language=Russian
 ERROR_MEMBER_IN_GROUP - Указанный пользователь уже является членом заданной группы, либо группа не может быть удалена, так как содержит как минимум одного пользователя.
+.
+Language=Polish
+ERROR_MEMBER_IN_GROUP - Either the specified user account is already a member of the specified group, or the specified group cannot be deleted because it contains a member.
 .
 
 MessageId=1321
@@ -7316,6 +9302,9 @@ ERROR_MEMBER_NOT_IN_GROUP - The specified user account is not a member of the sp
 Language=Russian
 ERROR_MEMBER_NOT_IN_GROUP - Указанный пользователь не является членом заданной группы.
 .
+Language=Polish
+ERROR_MEMBER_NOT_IN_GROUP - The specified user account is not a member of the specified group account.
+.
 
 MessageId=1322
 Severity=Success
@@ -7326,6 +9315,9 @@ ERROR_LAST_ADMIN - The last remaining administration account cannot be disabled 
 .
 Language=Russian
 ERROR_LAST_ADMIN - Эта операция запрещена, так как может привести к отключению, удалению или невозможности входа учетной записи администратора.
+.
+Language=Polish
+ERROR_LAST_ADMIN - The last remaining administration account cannot be disabled or deleted.
 .
 
 MessageId=1323
@@ -7338,6 +9330,9 @@ ERROR_WRONG_PASSWORD - Unable to update the password. The value provided as the 
 Language=Russian
 ERROR_WRONG_PASSWORD - Не удается обновить пароль. Текущий пароль был задан неверно.
 .
+Language=Polish
+ERROR_WRONG_PASSWORD - Unable to update the password. The value provided as the current password is incorrect.
+.
 
 MessageId=1324
 Severity=Success
@@ -7348,6 +9343,9 @@ ERROR_ILL_FORMED_PASSWORD - Unable to update the password. The value provided fo
 .
 Language=Russian
 ERROR_ILL_FORMED_PASSWORD - Не удается обновить пароль. Новый пароль содержит недопустимые символы.
+.
+Language=Polish
+ERROR_ILL_FORMED_PASSWORD - Unable to update the password. The value provided for the new password contains values that are not allowed in passwords.
 .
 
 MessageId=1325
@@ -7360,6 +9358,9 @@ ERROR_PASSWORD_RESTRICTION - Unable to update the password. The value provided f
 Language=Russian
 ERROR_PASSWORD_RESTRICTION - Не удается обновить пароль. Введенный пароль не обеспечивает требований домена к длине пароля, его сложности или истории обновления.
 .
+Language=Polish
+ERROR_PASSWORD_RESTRICTION - Unable to update the password. The value provided for the new password does not meet the length, complexity, or history requirement of the domain.
+.
 
 MessageId=1326
 Severity=Success
@@ -7370,6 +9371,9 @@ ERROR_LOGON_FAILURE - Logon failure: unknown user name or bad password.
 .
 Language=Russian
 ERROR_LOGON_FAILURE - Неверное имя пользователя или пароль.
+.
+Language=Polish
+ERROR_LOGON_FAILURE - Logon failure: unknown user name or bad password.
 .
 
 MessageId=1327
@@ -7382,6 +9386,9 @@ ERROR_ACCOUNT_RESTRICTION - Logon failure: user account restriction. Possible re
 Language=Russian
 ERROR_ACCOUNT_RESTRICTION - Вход этого пользователя в систему не выполнен из-за ограничений учетной записи. Например: пустые пароли не разрешены, ограничено число входов или включено ограничение политики.
 .
+Language=Polish
+ERROR_ACCOUNT_RESTRICTION - Logon failure: user account restriction. Possible reasons are blank passwords not allowed, logon hour restrictions, or a policy restriction has been enforced.
+.
 
 MessageId=1328
 Severity=Success
@@ -7392,6 +9399,9 @@ ERROR_INVALID_LOGON_HOURS - Logon failure: account logon time restriction violat
 .
 Language=Russian
 ERROR_INVALID_LOGON_HOURS - Вы не можете войти в систему сейчас из-за ограничений вашей учетной записи.
+.
+Language=Polish
+ERROR_INVALID_LOGON_HOURS - Logon failure: account logon time restriction violation.
 .
 
 MessageId=1329
@@ -7404,6 +9414,9 @@ ERROR_INVALID_WORKSTATION - Logon failure: user not allowed to log on to this co
 Language=Russian
 ERROR_INVALID_WORKSTATION - Этому пользователю не разрешен вход в систему на этом компьютере.
 .
+Language=Polish
+ERROR_INVALID_WORKSTATION - Logon failure: user not allowed to log on to this computer.
+.
 
 MessageId=1330
 Severity=Success
@@ -7414,6 +9427,9 @@ ERROR_PASSWORD_EXPIRED - Logon failure: the specified account password has expir
 .
 Language=Russian
 ERROR_PASSWORD_EXPIRED - Срок действия пароля для этой учетной записи истек.
+.
+Language=Polish
+ERROR_PASSWORD_EXPIRED - Logon failure: the specified account password has expired.
 .
 
 MessageId=1331
@@ -7426,6 +9442,9 @@ ERROR_ACCOUNT_DISABLED - Logon failure: account currently disabled.
 Language=Russian
 ERROR_ACCOUNT_DISABLED - Вход этого пользователя в систему невозможен, так как эта учетная запись сейчас отключена.
 .
+Language=Polish
+ERROR_ACCOUNT_DISABLED - Logon failure: account currently disabled.
+.
 
 MessageId=1332
 Severity=Success
@@ -7436,6 +9455,9 @@ ERROR_NONE_MAPPED - No mapping between account names and security IDs was done.
 .
 Language=Russian
 ERROR_NONE_MAPPED - Сопоставление между именами пользователей и идентификаторами безопасности не было произведено.
+.
+Language=Polish
+ERROR_NONE_MAPPED - No mapping between account names and security IDs was done.
 .
 
 MessageId=1333
@@ -7448,6 +9470,9 @@ ERROR_TOO_MANY_LUIDS_REQUESTED - Too many local user identifiers (LUIDs) were re
 Language=Russian
 ERROR_TOO_MANY_LUIDS_REQUESTED - Одновременно запрошено слишком много локальных кодов пользователей.
 .
+Language=Polish
+ERROR_TOO_MANY_LUIDS_REQUESTED - Too many local user identifiers (LUIDs) were requested at one time.
+.
 
 MessageId=1334
 Severity=Success
@@ -7458,6 +9483,9 @@ ERROR_LUIDS_EXHAUSTED - No more local user identifiers (LUIDs) are available.
 .
 Language=Russian
 ERROR_LUIDS_EXHAUSTED - Дополнительные локальные коды пользователей недоступны.
+.
+Language=Polish
+ERROR_LUIDS_EXHAUSTED - No more local user identifiers (LUIDs) are available.
 .
 
 MessageId=1335
@@ -7470,6 +9498,9 @@ ERROR_INVALID_SUB_AUTHORITY - The subauthority part of a security ID is invalid 
 Language=Russian
 ERROR_INVALID_SUB_AUTHORITY - Часть "subauthority" идентификатора безопасности недействительна для этого конкретного использования.
 .
+Language=Polish
+ERROR_INVALID_SUB_AUTHORITY - The subauthority part of a security ID is invalid for this particular use.
+.
 
 MessageId=1336
 Severity=Success
@@ -7480,6 +9511,9 @@ ERROR_INVALID_ACL - The access control list (ACL) structure is invalid.
 .
 Language=Russian
 ERROR_INVALID_ACL - Список управления доступом (ACL) имеет неверную структуру.
+.
+Language=Polish
+ERROR_INVALID_ACL - The access control list (ACL) structure is invalid.
 .
 
 MessageId=1337
@@ -7492,6 +9526,9 @@ ERROR_INVALID_SID - The security ID structure is invalid.
 Language=Russian
 ERROR_INVALID_SID - Идентификатор безопасности имеет неверную структуру.
 .
+Language=Polish
+ERROR_INVALID_SID - The security ID structure is invalid.
+.
 
 MessageId=1338
 Severity=Success
@@ -7502,6 +9539,9 @@ ERROR_INVALID_SECURITY_DESCR - The security descriptor structure is invalid.
 .
 Language=Russian
 ERROR_INVALID_SECURITY_DESCR - Дескриптор защиты данных имеет неверную структуру.
+.
+Language=Polish
+ERROR_INVALID_SECURITY_DESCR - The security descriptor structure is invalid.
 .
 
 MessageId=1340
@@ -7514,6 +9554,9 @@ ERROR_BAD_INHERITANCE_ACL - The inherited access control list (ACL) or access co
 Language=Russian
 ERROR_BAD_INHERITANCE_ACL - Не удается построить список управления доступом (ACL) или элемент этого списка (ACE).
 .
+Language=Polish
+ERROR_BAD_INHERITANCE_ACL - The inherited access control list (ACL) or access control entry (ACE) could not be built.
+.
 
 MessageId=1341
 Severity=Success
@@ -7524,6 +9567,9 @@ ERROR_SERVER_DISABLED - The server is currently disabled.
 .
 Language=Russian
 ERROR_SERVER_DISABLED - Сервер в настоящее время отключен.
+.
+Language=Polish
+ERROR_SERVER_DISABLED - The server is currently disabled.
 .
 
 MessageId=1342
@@ -7536,6 +9582,9 @@ ERROR_SERVER_NOT_DISABLED - The server is currently enabled.
 Language=Russian
 ERROR_SERVER_NOT_DISABLED - Сервер в настоящее время включен.
 .
+Language=Polish
+ERROR_SERVER_NOT_DISABLED - The server is currently enabled.
+.
 
 MessageId=1343
 Severity=Success
@@ -7546,6 +9595,9 @@ ERROR_INVALID_ID_AUTHORITY - The value provided was an invalid value for an iden
 .
 Language=Russian
 ERROR_INVALID_ID_AUTHORITY - Указано недопустимое значение для защитного кода.
+.
+Language=Polish
+ERROR_INVALID_ID_AUTHORITY - The value provided was an invalid value for an identifier authority.
 .
 
 MessageId=1344
@@ -7558,6 +9610,9 @@ ERROR_ALLOTTED_SPACE_EXCEEDED - No more memory is available for security informa
 Language=Russian
 ERROR_ALLOTTED_SPACE_EXCEEDED - Недостаточно памяти для обновления сведений, относящихся к защите данных.
 .
+Language=Polish
+ERROR_ALLOTTED_SPACE_EXCEEDED - No more memory is available for security information updates.
+.
 
 MessageId=1345
 Severity=Success
@@ -7568,6 +9623,9 @@ ERROR_INVALID_GROUP_ATTRIBUTES - The specified attributes are invalid, or incomp
 .
 Language=Russian
 ERROR_INVALID_GROUP_ATTRIBUTES - Указанные атрибуты неверны или несовместимы с атрибутами группы в целом.
+.
+Language=Polish
+ERROR_INVALID_GROUP_ATTRIBUTES - The specified attributes are invalid, or incompatible with the attributes for the group as a whole.
 .
 
 MessageId=1346
@@ -7580,6 +9638,9 @@ ERROR_BAD_IMPERSONATION_LEVEL - Either a required impersonation level was not pr
 Language=Russian
 ERROR_BAD_IMPERSONATION_LEVEL - Требуемый уровень олицетворения не обеспечен, или обеспеченный уровень неверен.
 .
+Language=Polish
+ERROR_BAD_IMPERSONATION_LEVEL - Either a required impersonation level was not provided, or the provided impersonation level is invalid.
+.
 
 MessageId=1347
 Severity=Success
@@ -7590,6 +9651,9 @@ ERROR_CANT_OPEN_ANONYMOUS - Cannot open an anonymous level security token.
 .
 Language=Russian
 ERROR_CANT_OPEN_ANONYMOUS - Не удается открыть токен безопасности анонимного уровня.
+.
+Language=Polish
+ERROR_CANT_OPEN_ANONYMOUS - Cannot open an anonymous level security token.
 .
 
 MessageId=1348
@@ -7602,6 +9666,9 @@ ERROR_BAD_VALIDATION_CLASS - The validation information class requested was inva
 Language=Russian
 ERROR_BAD_VALIDATION_CLASS - Запрошен неправильный класс сведений для проверки.
 .
+Language=Polish
+ERROR_BAD_VALIDATION_CLASS - The validation information class requested was invalid.
+.
 
 MessageId=1349
 Severity=Success
@@ -7612,6 +9679,9 @@ ERROR_BAD_TOKEN_TYPE - The type of the token is inappropriate for its attempted 
 .
 Language=Russian
 ERROR_BAD_TOKEN_TYPE - Тип токена не соответствует выполняемой операции.
+.
+Language=Polish
+ERROR_BAD_TOKEN_TYPE - The type of the token is inappropriate for its attempted use.
 .
 
 MessageId=1350
@@ -7624,6 +9694,9 @@ ERROR_NO_SECURITY_ON_OBJECT - Unable to perform a security operation on an objec
 Language=Russian
 ERROR_NO_SECURITY_ON_OBJECT - Операция, связанная с защитой данных, не может быть выполнена для незащищенного объекта.
 .
+Language=Polish
+ERROR_NO_SECURITY_ON_OBJECT - Unable to perform a security operation on an object that has no associated security.
+.
 
 MessageId=1351
 Severity=Success
@@ -7634,6 +9707,9 @@ ERROR_CANT_ACCESS_DOMAIN_INFO - Configuration information could not be read from
 .
 Language=Russian
 ERROR_CANT_ACCESS_DOMAIN_INFO - Не удалось получить данные о конфигурации от контроллера домена. Либо он отключен, либо к нему нет доступа.
+.
+Language=Polish
+ERROR_CANT_ACCESS_DOMAIN_INFO - Configuration information could not be read from the domain controller, either because the machine is unavailable, or access has been denied.
 .
 
 MessageId=1352
@@ -7646,6 +9722,9 @@ ERROR_INVALID_SERVER_STATE - The security account manager (SAM) or local securit
 Language=Russian
 ERROR_INVALID_SERVER_STATE - Диспетчер защиты (SAM) или локальный сервер (LSA) не смог выполнить требуемую операцию.
 .
+Language=Polish
+ERROR_INVALID_SERVER_STATE - The security account manager (SAM) or local security authority (LSA) server was in the wrong state to perform the security operation.
+.
 
 MessageId=1353
 Severity=Success
@@ -7656,6 +9735,9 @@ ERROR_INVALID_DOMAIN_STATE - The domain was in the wrong state to perform the se
 .
 Language=Russian
 ERROR_INVALID_DOMAIN_STATE - Состояние домена не позволило выполнить нужную операцию.
+.
+Language=Polish
+ERROR_INVALID_DOMAIN_STATE - The domain was in the wrong state to perform the security operation.
 .
 
 MessageId=1354
@@ -7668,6 +9750,9 @@ ERROR_INVALID_DOMAIN_ROLE - This operation is only allowed for the Primary Domai
 Language=Russian
 ERROR_INVALID_DOMAIN_ROLE - Операция разрешена только для основного контроллера домена.
 .
+Language=Polish
+ERROR_INVALID_DOMAIN_ROLE - This operation is only allowed for the Primary Domain Controller of the domain.
+.
 
 MessageId=1355
 Severity=Success
@@ -7678,6 +9763,9 @@ ERROR_NO_SUCH_DOMAIN - The specified domain either does not exist or could not b
 .
 Language=Russian
 ERROR_NO_SUCH_DOMAIN - Указанный домен не существует или к нему невозможно подключиться.
+.
+Language=Polish
+ERROR_NO_SUCH_DOMAIN - The specified domain either does not exist or could not be contacted.
 .
 
 MessageId=1356
@@ -7690,6 +9778,9 @@ ERROR_DOMAIN_EXISTS - The specified domain already exists.
 Language=Russian
 ERROR_DOMAIN_EXISTS - Указанный домен уже существует.
 .
+Language=Polish
+ERROR_DOMAIN_EXISTS - The specified domain already exists.
+.
 
 MessageId=1357
 Severity=Success
@@ -7700,6 +9791,9 @@ ERROR_DOMAIN_LIMIT_EXCEEDED - An attempt was made to exceed the limit on the num
 .
 Language=Russian
 ERROR_DOMAIN_LIMIT_EXCEEDED - Была сделана попытка превысить предел на число доменов, обслуживаемых одним сервером.
+.
+Language=Polish
+ERROR_DOMAIN_LIMIT_EXCEEDED - An attempt was made to exceed the limit on the number of domains per server.
 .
 
 MessageId=1358
@@ -7712,6 +9806,9 @@ ERROR_INTERNAL_DB_CORRUPTION - Unable to complete the requested operation becaus
 Language=Russian
 ERROR_INTERNAL_DB_CORRUPTION - Не удается завершить требуемую операцию из-за сбоев в данных на диске или неустранимой ошибки носителя.
 .
+Language=Polish
+ERROR_INTERNAL_DB_CORRUPTION - Unable to complete the requested operation because of either a catastrophic media failure or a data structure corruption on the disk.
+.
 
 MessageId=1359
 Severity=Success
@@ -7722,6 +9819,9 @@ ERROR_INTERNAL_ERROR - An internal error occurred.
 .
 Language=Russian
 ERROR_INTERNAL_ERROR - Внутренняя ошибка.
+.
+Language=Polish
+ERROR_INTERNAL_ERROR - An internal error occurred.
 .
 
 MessageId=1360
@@ -7734,6 +9834,9 @@ ERROR_GENERIC_NOT_MAPPED - Generic access types were contained in an access mask
 Language=Russian
 ERROR_GENERIC_NOT_MAPPED - Универсальные типы доступа содержатся в маске доступа, которая должна была уже быть связана с нестандартными типами.
 .
+Language=Polish
+ERROR_GENERIC_NOT_MAPPED - Generic access types were contained in an access mask which should already be mapped to nongeneric types.
+.
 
 MessageId=1361
 Severity=Success
@@ -7744,6 +9847,9 @@ ERROR_BAD_DESCRIPTOR_FORMAT - A security descriptor is not in the right format (
 .
 Language=Russian
 ERROR_BAD_DESCRIPTOR_FORMAT - Дескриптор защиты имеет неверный формат.
+.
+Language=Polish
+ERROR_BAD_DESCRIPTOR_FORMAT - A security descriptor is not in the right format (absolute or self-relative).
 .
 
 MessageId=1362
@@ -7756,6 +9862,9 @@ ERROR_NOT_LOGON_PROCESS - The requested action is restricted for use by logon pr
 Language=Russian
 ERROR_NOT_LOGON_PROCESS - Выполнение запрошенной операции разрешено только для процессов входа в систему. Вызывающий процесс не зарегистрирован как процесс входа в систему.
 .
+Language=Polish
+ERROR_NOT_LOGON_PROCESS - The requested action is restricted for use by logon processes only. The calling process has not registered as a logon process.
+.
 
 MessageId=1363
 Severity=Success
@@ -7766,6 +9875,9 @@ ERROR_LOGON_SESSION_EXISTS - Cannot start a new logon session with an ID that is
 .
 Language=Russian
 ERROR_LOGON_SESSION_EXISTS - Запуск нового сеанса работы с уже использующимся кодом невозможен.
+.
+Language=Polish
+ERROR_LOGON_SESSION_EXISTS - Cannot start a new logon session with an ID that is already in use.
 .
 
 MessageId=1364
@@ -7778,6 +9890,9 @@ ERROR_NO_SUCH_PACKAGE - A specified authentication package is unknown.
 Language=Russian
 ERROR_NO_SUCH_PACKAGE - Пакет проверки подлинности не опознан.
 .
+Language=Polish
+ERROR_NO_SUCH_PACKAGE - A specified authentication package is unknown.
+.
 
 MessageId=1365
 Severity=Success
@@ -7788,6 +9903,9 @@ ERROR_BAD_LOGON_SESSION_STATE - The logon session is not in a state that is cons
 .
 Language=Russian
 ERROR_BAD_LOGON_SESSION_STATE - Текущее состояние сеанса входа в систему не подходит для запрошенной операции.
+.
+Language=Polish
+ERROR_BAD_LOGON_SESSION_STATE - The logon session is not in a state that is consistent with the requested operation.
 .
 
 MessageId=1366
@@ -7800,6 +9918,9 @@ ERROR_LOGON_SESSION_COLLISION - The logon session ID is already in use.
 Language=Russian
 ERROR_LOGON_SESSION_COLLISION - Код сеанса входа в систему уже используется.
 .
+Language=Polish
+ERROR_LOGON_SESSION_COLLISION - The logon session ID is already in use.
+.
 
 MessageId=1367
 Severity=Success
@@ -7810,6 +9931,9 @@ ERROR_INVALID_LOGON_TYPE - A logon request contained an invalid logon type value
 .
 Language=Russian
 ERROR_INVALID_LOGON_TYPE - Режим входа в систему задан неверно.
+.
+Language=Polish
+ERROR_INVALID_LOGON_TYPE - A logon request contained an invalid logon type value.
 .
 
 MessageId=1368
@@ -7822,6 +9946,9 @@ ERROR_CANNOT_IMPERSONATE - Unable to impersonate using a named pipe until data h
 Language=Russian
 ERROR_CANNOT_IMPERSONATE - Невозможно обеспечить олицетворение через именованный канал до тех пор, пока данные не считаны из этого канала.
 .
+Language=Polish
+ERROR_CANNOT_IMPERSONATE - Unable to impersonate using a named pipe until data has been read from that pipe.
+.
 
 MessageId=1369
 Severity=Success
@@ -7832,6 +9959,9 @@ ERROR_RXACT_INVALID_STATE - The transaction state of a registry subtree is incom
 .
 Language=Russian
 ERROR_RXACT_INVALID_STATE - Операция несовместима с состоянием транзакции для ветви реестра.
+.
+Language=Polish
+ERROR_RXACT_INVALID_STATE - The transaction state of a registry subtree is incompatible with the requested operation.
 .
 
 MessageId=1370
@@ -7844,6 +9974,9 @@ ERROR_RXACT_COMMIT_FAILURE - An internal security database corruption has been e
 Language=Russian
 ERROR_RXACT_COMMIT_FAILURE - База данных защиты повреждена.
 .
+Language=Polish
+ERROR_RXACT_COMMIT_FAILURE - An internal security database corruption has been encountered.
+.
 
 MessageId=1371
 Severity=Success
@@ -7854,6 +9987,9 @@ ERROR_SPECIAL_ACCOUNT - Cannot perform this operation on built-in accounts.
 .
 Language=Russian
 ERROR_SPECIAL_ACCOUNT - Операция не предназначена для встроенных учетных записей.
+.
+Language=Polish
+ERROR_SPECIAL_ACCOUNT - Cannot perform this operation on built-in accounts.
 .
 
 MessageId=1372
@@ -7866,6 +10002,9 @@ ERROR_SPECIAL_GROUP - Cannot perform this operation on this built-in special gro
 Language=Russian
 ERROR_SPECIAL_GROUP - Операция не предназначена для встроенной специальной группы.
 .
+Language=Polish
+ERROR_SPECIAL_GROUP - Cannot perform this operation on this built-in special group.
+.
 
 MessageId=1373
 Severity=Success
@@ -7876,6 +10015,9 @@ ERROR_SPECIAL_USER - Cannot perform this operation on this built-in special user
 .
 Language=Russian
 ERROR_SPECIAL_USER - Операция не предназначена для встроенного специального пользователя.
+.
+Language=Polish
+ERROR_SPECIAL_USER - Cannot perform this operation on this built-in special user.
 .
 
 MessageId=1374
@@ -7888,6 +10030,9 @@ ERROR_MEMBERS_PRIMARY_GROUP - The user cannot be removed from a group because th
 Language=Russian
 ERROR_MEMBERS_PRIMARY_GROUP - Невозможно удалить пользователя из группы, так как она является для него основной.
 .
+Language=Polish
+ERROR_MEMBERS_PRIMARY_GROUP - The user cannot be removed from a group because the group is currently the user's primary group.
+.
 
 MessageId=1375
 Severity=Success
@@ -7898,6 +10043,9 @@ ERROR_TOKEN_ALREADY_IN_USE - The token is already in use as a primary token.
 .
 Language=Russian
 ERROR_TOKEN_ALREADY_IN_USE - Токен уже используется в качестве основного токена.
+.
+Language=Polish
+ERROR_TOKEN_ALREADY_IN_USE - The token is already in use as a primary token.
 .
 
 MessageId=1376
@@ -7910,6 +10058,9 @@ ERROR_NO_SUCH_ALIAS - The specified local group does not exist.
 Language=Russian
 ERROR_NO_SUCH_ALIAS - Указанная локальная группа не существует.
 .
+Language=Polish
+ERROR_NO_SUCH_ALIAS - The specified local group does not exist.
+.
 
 MessageId=1377
 Severity=Success
@@ -7920,6 +10071,9 @@ ERROR_MEMBER_NOT_IN_ALIAS - The specified account name is not a member of the lo
 .
 Language=Russian
 ERROR_MEMBER_NOT_IN_ALIAS - Указанная учетная запись не входит в эту группу.
+.
+Language=Polish
+ERROR_MEMBER_NOT_IN_ALIAS - The specified account name is not a member of the local group.
 .
 
 MessageId=1378
@@ -7932,6 +10086,9 @@ ERROR_MEMBER_IN_ALIAS - The specified account name is already a member of the lo
 Language=Russian
 ERROR_MEMBER_IN_ALIAS - Указанная учетная запись уже входит в эту группу.
 .
+Language=Polish
+ERROR_MEMBER_IN_ALIAS - The specified account name is already a member of the local group.
+.
 
 MessageId=1379
 Severity=Success
@@ -7942,6 +10099,9 @@ ERROR_ALIAS_EXISTS - The specified local group already exists.
 .
 Language=Russian
 ERROR_ALIAS_EXISTS - Указанная локальная группа уже существует.
+.
+Language=Polish
+ERROR_ALIAS_EXISTS - The specified local group already exists.
 .
 
 MessageId=1380
@@ -7954,6 +10114,9 @@ ERROR_LOGON_NOT_GRANTED - Logon failure: the user has not been granted the reque
 Language=Russian
 ERROR_LOGON_NOT_GRANTED - Вход в систему не произведен: выбранный режим входа для данного пользователя на этом компьютере не предусмотрен.
 .
+Language=Polish
+ERROR_LOGON_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
+.
 
 MessageId=1381
 Severity=Success
@@ -7964,6 +10127,9 @@ ERROR_TOO_MANY_SECRETS - The maximum number of secrets that may be stored in a s
 .
 Language=Russian
 ERROR_TOO_MANY_SECRETS - Достигнут предел по количеству защищенных данных/ресурсов для одной системы.
+.
+Language=Polish
+ERROR_TOO_MANY_SECRETS - The maximum number of secrets that may be stored in a single system has been exceeded.
 .
 
 MessageId=1382
@@ -7976,6 +10142,9 @@ ERROR_SECRET_TOO_LONG - The length of a secret exceeds the maximum length allowe
 Language=Russian
 ERROR_SECRET_TOO_LONG - Длина защищенных данных превышает максимально возможную.
 .
+Language=Polish
+ERROR_SECRET_TOO_LONG - The length of a secret exceeds the maximum length allowed.
+.
 
 MessageId=1383
 Severity=Success
@@ -7986,6 +10155,9 @@ ERROR_INTERNAL_DB_ERROR - The local security authority database contains an inte
 .
 Language=Russian
 ERROR_INTERNAL_DB_ERROR - Локальная база данных защиты содержит внутренние несоответствия.
+.
+Language=Polish
+ERROR_INTERNAL_DB_ERROR - The local security authority database contains an internal inconsistency.
 .
 
 MessageId=1384
@@ -7998,6 +10170,9 @@ ERROR_TOO_MANY_CONTEXT_IDS - During a logon attempt, the user's security context
 Language=Russian
 ERROR_TOO_MANY_CONTEXT_IDS - При попытке входа в систему контекст безопасности пользователя накопил слишком много идентификаторов безопасности.
 .
+Language=Polish
+ERROR_TOO_MANY_CONTEXT_IDS - During a logon attempt, the user's security context accumulated too many security IDs.
+.
 
 MessageId=1385
 Severity=Success
@@ -8008,6 +10183,9 @@ ERROR_LOGON_TYPE_NOT_GRANTED - Logon failure: the user has not been granted the 
 .
 Language=Russian
 ERROR_LOGON_TYPE_NOT_GRANTED - Вход в систему не произведен: выбранный режим входа для данного пользователя на этом компьютере не предусмотрен.
+.
+Language=Polish
+ERROR_LOGON_TYPE_NOT_GRANTED - Logon failure: the user has not been granted the requested logon type at this computer.
 .
 
 MessageId=1386
@@ -8020,6 +10198,9 @@ ERROR_NT_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to 
 Language=Russian
 ERROR_NT_CROSS_ENCRYPTION_REQUIRED - Для смены пароля необходим зашифрованный пароль.
 .
+Language=Polish
+ERROR_NT_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change a user password.
+.
 
 MessageId=1387
 Severity=Success
@@ -8030,6 +10211,9 @@ ERROR_NO_SUCH_MEMBER - A new member could not be added to or removed from the lo
 .
 Language=Russian
 ERROR_NO_SUCH_MEMBER - Не удалось добавить или удалить члена локальной группы, так как он не существует.
+.
+Language=Polish
+ERROR_NO_SUCH_MEMBER - A new member could not be added to or removed from the local group because the member does not exist.
 .
 
 MessageId=1388
@@ -8042,6 +10226,9 @@ ERROR_INVALID_MEMBER - A new member could not be added to a local group because 
 Language=Russian
 ERROR_INVALID_MEMBER - Добавление нового члена в локальную группу невозможно, так как он имеет неправильный тип учетной записи.
 .
+Language=Polish
+ERROR_INVALID_MEMBER - A new member could not be added to a local group because the member has the wrong account type.
+.
 
 MessageId=1389
 Severity=Success
@@ -8052,6 +10239,9 @@ ERROR_TOO_MANY_SIDS - Too many security IDs have been specified.
 .
 Language=Russian
 ERROR_TOO_MANY_SIDS - Задано слишком много идентификаторов безопасности.
+.
+Language=Polish
+ERROR_TOO_MANY_SIDS - Too many security IDs have been specified.
 .
 
 MessageId=1390
@@ -8064,6 +10254,9 @@ ERROR_LM_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to 
 Language=Russian
 ERROR_LM_CROSS_ENCRYPTION_REQUIRED - Для смены пароля необходим зашифрованный пароль.
 .
+Language=Polish
+ERROR_LM_CROSS_ENCRYPTION_REQUIRED - A cross-encrypted password is necessary to change this user password.
+.
 
 MessageId=1391
 Severity=Success
@@ -8074,6 +10267,9 @@ ERROR_NO_INHERITANCE - Indicates an ACL contains no inheritable components.
 .
 Language=Russian
 ERROR_NO_INHERITANCE - Список управления доступом (ACL) не содержит наследуемых компонентов.
+.
+Language=Polish
+ERROR_NO_INHERITANCE - Indicates an ACL contains no inheritable components.
 .
 
 MessageId=1392
@@ -8086,6 +10282,9 @@ ERROR_FILE_CORRUPT - The file or directory is corrupted and unreadable.
 Language=Russian
 ERROR_FILE_CORRUPT - Файл или папка повреждены. Чтение невозможно.
 .
+Language=Polish
+ERROR_FILE_CORRUPT - The file or directory is corrupted and unreadable.
+.
 
 MessageId=1393
 Severity=Success
@@ -8096,6 +10295,9 @@ ERROR_DISK_CORRUPT - The disk structure is corrupted and unreadable.
 .
 Language=Russian
 ERROR_DISK_CORRUPT - Структура диска повреждена. Чтение невозможно.
+.
+Language=Polish
+ERROR_DISK_CORRUPT - The disk structure is corrupted and unreadable.
 .
 
 MessageId=1394
@@ -8108,6 +10310,9 @@ ERROR_NO_USER_SESSION_KEY - There is no user session key for the specified logon
 Language=Russian
 ERROR_NO_USER_SESSION_KEY - Для заданного сеанса входа в систему отсутствует раздел сеанса пользователя.
 .
+Language=Polish
+ERROR_NO_USER_SESSION_KEY - There is no user session key for the specified logon session.
+.
 
 MessageId=1395
 Severity=Success
@@ -8118,6 +10323,9 @@ ERROR_LICENSE_QUOTA_EXCEEDED - The service being accessed is licensed for a part
 .
 Language=Russian
 ERROR_LICENSE_QUOTA_EXCEEDED - Для вызываемой службы действует лицензия на определенное число подключений. В настоящее время создание дополнительных подключений к службе невозможно, так как уже существует максимально допустимое число подключений.
+.
+Language=Polish
+ERROR_LICENSE_QUOTA_EXCEEDED - The service being accessed is licensed for a particular number of connections. No more connections can be made to the service at this time because there are already as many connections as the service can accept.
 .
 
 MessageId=1396
@@ -8130,6 +10338,9 @@ ERROR_WRONG_TARGET_NAME - Logon Failure: The target account name is incorrect.
 Language=Russian
 ERROR_WRONG_TARGET_NAME - Конечная учетная запись указана неверно.
 .
+Language=Polish
+ERROR_WRONG_TARGET_NAME - Logon Failure: The target account name is incorrect.
+.
 
 MessageId=1397
 Severity=Success
@@ -8140,6 +10351,9 @@ ERROR_MUTUAL_AUTH_FAILED - Mutual Authentication failed. The server's password i
 .
 Language=Russian
 ERROR_MUTUAL_AUTH_FAILED - Ошибка взаимной проверки подлинности. Пароль сервера на контроллере домена устарел.
+.
+Language=Polish
+ERROR_MUTUAL_AUTH_FAILED - Mutual Authentication failed. The server's password is out of date at the domain controller.
 .
 
 MessageId=1398
@@ -8152,6 +10366,9 @@ ERROR_TIME_SKEW - There is a time and/or date difference between the client and 
 Language=Russian
 ERROR_TIME_SKEW - Существует разница настройки времени и/или даты между клиентом и сервером.
 .
+Language=Polish
+ERROR_TIME_SKEW - There is a time and/or date difference between the client and server.
+.
 
 MessageId=1399
 Severity=Success
@@ -8162,6 +10379,9 @@ ERROR_CURRENT_DOMAIN_NOT_ALLOWED - This operation cannot be performed on the cur
 .
 Language=Russian
 ERROR_CURRENT_DOMAIN_NOT_ALLOWED - Эта операция не может быть выполнена над текущим доменом.
+.
+Language=Polish
+ERROR_CURRENT_DOMAIN_NOT_ALLOWED - This operation cannot be performed on the current domain.
 .
 
 MessageId=1400
@@ -8174,6 +10394,9 @@ ERROR_INVALID_WINDOW_HANDLE - Invalid window handle.
 Language=Russian
 ERROR_INVALID_WINDOW_HANDLE - Недопустимый дескриптор окна.
 .
+Language=Polish
+ERROR_INVALID_WINDOW_HANDLE - Invalid window handle.
+.
 
 MessageId=1401
 Severity=Success
@@ -8184,6 +10407,9 @@ ERROR_INVALID_MENU_HANDLE - Invalid menu handle.
 .
 Language=Russian
 ERROR_INVALID_MENU_HANDLE - Неверный дескриптор меню.
+.
+Language=Polish
+ERROR_INVALID_MENU_HANDLE - Invalid menu handle.
 .
 
 MessageId=1402
@@ -8196,6 +10422,9 @@ ERROR_INVALID_CURSOR_HANDLE - Invalid cursor handle.
 Language=Russian
 ERROR_INVALID_CURSOR_HANDLE - Неверный дескриптор указателя.
 .
+Language=Polish
+ERROR_INVALID_CURSOR_HANDLE - Invalid cursor handle.
+.
 
 MessageId=1403
 Severity=Success
@@ -8206,6 +10435,9 @@ ERROR_INVALID_ACCEL_HANDLE - Invalid accelerator table handle.
 .
 Language=Russian
 ERROR_INVALID_ACCEL_HANDLE - Неверный дескриптор таблицы сочетаний клавиш.
+.
+Language=Polish
+ERROR_INVALID_ACCEL_HANDLE - Invalid accelerator table handle.
 .
 
 MessageId=1404
@@ -8218,6 +10450,9 @@ ERROR_INVALID_HOOK_HANDLE - Invalid hook handle.
 Language=Russian
 ERROR_INVALID_HOOK_HANDLE - Неверный дескриптор обработчика.
 .
+Language=Polish
+ERROR_INVALID_HOOK_HANDLE - Invalid hook handle.
+.
 
 MessageId=1405
 Severity=Success
@@ -8228,6 +10463,9 @@ ERROR_INVALID_DWP_HANDLE - Invalid handle to a multiple-window position structur
 .
 Language=Russian
 ERROR_INVALID_DWP_HANDLE - Неверный дескриптор многооконной структуры.
+.
+Language=Polish
+ERROR_INVALID_DWP_HANDLE - Invalid handle to a multiple-window position structure.
 .
 
 MessageId=1406
@@ -8240,6 +10478,9 @@ ERROR_TLW_WITH_WSCHILD - Cannot create a top-level child window.
 Language=Russian
 ERROR_TLW_WITH_WSCHILD - Не удается создать дочернее окно верхнего уровня.
 .
+Language=Polish
+ERROR_TLW_WITH_WSCHILD - Cannot create a top-level child window.
+.
 
 MessageId=1407
 Severity=Success
@@ -8250,6 +10491,9 @@ ERROR_CANNOT_FIND_WND_CLASS - Cannot find window class.
 .
 Language=Russian
 ERROR_CANNOT_FIND_WND_CLASS - Не удается найти класс окна.
+.
+Language=Polish
+ERROR_CANNOT_FIND_WND_CLASS - Cannot find window class.
 .
 
 MessageId=1408
@@ -8262,6 +10506,9 @@ ERROR_WINDOW_OF_OTHER_THREAD - Invalid window; it belongs to other thread.
 Language=Russian
 ERROR_WINDOW_OF_OTHER_THREAD - Окно принадлежит другому потоку команд.
 .
+Language=Polish
+ERROR_WINDOW_OF_OTHER_THREAD - Invalid window; it belongs to other thread.
+.
 
 MessageId=1409
 Severity=Success
@@ -8272,6 +10519,9 @@ ERROR_HOTKEY_ALREADY_REGISTERED - Hot key is already registered.
 .
 Language=Russian
 ERROR_HOTKEY_ALREADY_REGISTERED - Назначенная клавиша уже зарегистрирована.
+.
+Language=Polish
+ERROR_HOTKEY_ALREADY_REGISTERED - Hot key is already registered.
 .
 
 MessageId=1410
@@ -8284,6 +10534,9 @@ ERROR_CLASS_ALREADY_EXISTS - Class already exists.
 Language=Russian
 ERROR_CLASS_ALREADY_EXISTS - Класс уже существует.
 .
+Language=Polish
+ERROR_CLASS_ALREADY_EXISTS - Class already exists.
+.
 
 MessageId=1411
 Severity=Success
@@ -8295,6 +10548,9 @@ ERROR_CLASS_DOES_NOT_EXIST - Class does not exist.
 Language=Russian
 ERROR_CLASS_DOES_NOT_EXIST - Класс не существует.
 .
+Language=Polish
+ERROR_CLASS_DOES_NOT_EXIST - Class does not exist.
+.
 
 MessageId=1412
 Severity=Success
@@ -8304,6 +10560,9 @@ Language=English
 ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
 .
 Language=Russian
+ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
+.
+Language=Polish
 ERROR_CLASS_HAS_WINDOWS - Class still has open windows.
 .
 
@@ -8317,6 +10576,9 @@ ERROR_INVALID_INDEX - Invalid index.
 Language=Russian
 ERROR_INVALID_INDEX - Invalid index.
 .
+Language=Polish
+ERROR_INVALID_INDEX - Invalid index.
+.
 
 MessageId=1414
 Severity=Success
@@ -8326,6 +10588,9 @@ Language=English
 ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
 .
 Language=Russian
+ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
+.
+Language=Polish
 ERROR_INVALID_ICON_HANDLE - Invalid icon handle.
 .
 
@@ -8339,6 +10604,9 @@ ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
 Language=Russian
 ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
 .
+Language=Polish
+ERROR_PRIVATE_DIALOG_INDEX - Using private DIALOG window words.
+.
 
 MessageId=1416
 Severity=Success
@@ -8348,6 +10616,9 @@ Language=English
 ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
 .
 Language=Russian
+ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
+.
+Language=Polish
 ERROR_LISTBOX_ID_NOT_FOUND - The list box identifier was not found.
 .
 
@@ -8361,6 +10632,9 @@ ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
 Language=Russian
 ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
 .
+Language=Polish
+ERROR_NO_WILDCARD_CHARACTERS - No wildcards were found.
+.
 
 MessageId=1418
 Severity=Success
@@ -8370,6 +10644,9 @@ Language=English
 ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
 .
 Language=Russian
+ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
+.
+Language=Polish
 ERROR_CLIPBOARD_NOT_OPEN - Thread does not have a clipboard open.
 .
 
@@ -8383,6 +10660,9 @@ ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
 Language=Russian
 ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
 .
+Language=Polish
+ERROR_HOTKEY_NOT_REGISTERED - Hot key is not registered.
+.
 
 MessageId=1420
 Severity=Success
@@ -8392,6 +10672,9 @@ Language=English
 ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
 .
 Language=Russian
+ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
+.
+Language=Polish
 ERROR_WINDOW_NOT_DIALOG - The window is not a valid dialog window.
 .
 
@@ -8405,6 +10688,9 @@ ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
 Language=Russian
 ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
 .
+Language=Polish
+ERROR_CONTROL_ID_NOT_FOUND - Control ID not found.
+.
 
 MessageId=1422
 Severity=Success
@@ -8414,6 +10700,9 @@ Language=English
 ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
 .
 Language=Russian
+ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
+.
+Language=Polish
 ERROR_INVALID_COMBOBOX_MESSAGE - Invalid message for a combo box because it does not have an edit control.
 .
 
@@ -8427,6 +10716,9 @@ ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
 Language=Russian
 ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
 .
+Language=Polish
+ERROR_WINDOW_NOT_COMBOBOX - The window is not a combo box.
+.
 
 MessageId=1424
 Severity=Success
@@ -8436,6 +10728,9 @@ Language=English
 ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
 .
 Language=Russian
+ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
+.
+Language=Polish
 ERROR_INVALID_EDIT_HEIGHT - Height must be less than 256.
 .
 
@@ -8449,6 +10744,9 @@ ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
 Language=Russian
 ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
 .
+Language=Polish
+ERROR_DC_NOT_FOUND - Invalid device context (DC) handle.
+.
 
 MessageId=1426
 Severity=Success
@@ -8458,6 +10756,9 @@ Language=English
 ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
 .
 Language=Russian
+ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
+.
+Language=Polish
 ERROR_INVALID_HOOK_FILTER - Invalid hook procedure type.
 .
 
@@ -8471,6 +10772,9 @@ ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
 Language=Russian
 ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
 .
+Language=Polish
+ERROR_INVALID_FILTER_PROC - Invalid hook procedure.
+.
 
 MessageId=1428
 Severity=Success
@@ -8480,6 +10784,9 @@ Language=English
 ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
 .
 Language=Russian
+ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
+.
+Language=Polish
 ERROR_HOOK_NEEDS_HMOD - Cannot set nonlocal hook without a module handle.
 .
 
@@ -8493,6 +10800,9 @@ ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
 Language=Russian
 ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
 .
+Language=Polish
+ERROR_GLOBAL_ONLY_HOOK - This hook procedure can only be set globally.
+.
 
 MessageId=1430
 Severity=Success
@@ -8502,6 +10812,9 @@ Language=English
 ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
 .
 Language=Russian
+ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
+.
+Language=Polish
 ERROR_JOURNAL_HOOK_SET - The journal hook procedure is already installed.
 .
 
@@ -8515,6 +10828,9 @@ ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
 Language=Russian
 ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
 .
+Language=Polish
+ERROR_HOOK_NOT_INSTALLED - The hook procedure is not installed.
+.
 
 MessageId=1432
 Severity=Success
@@ -8524,6 +10840,9 @@ Language=English
 ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
 .
 Language=Russian
+ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
+.
+Language=Polish
 ERROR_INVALID_LB_MESSAGE - Invalid message for single-selection list box.
 .
 
@@ -8537,6 +10856,9 @@ ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
 Language=Russian
 ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
 .
+Language=Polish
+ERROR_SETCOUNT_ON_BAD_LB - LB_SETCOUNT sent to non-lazy list box.
+.
 
 MessageId=1434
 Severity=Success
@@ -8546,6 +10868,9 @@ Language=English
 ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
 .
 Language=Russian
+ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
+.
+Language=Polish
 ERROR_LB_WITHOUT_TABSTOPS - This list box does not support tab stops.
 .
 
@@ -8559,6 +10884,9 @@ ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another 
 Language=Russian
 ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another thread.
 .
+Language=Polish
+ERROR_DESTROY_OBJECT_OF_OTHER_THREAD - Cannot destroy object created by another thread.
+.
 
 MessageId=1436
 Severity=Success
@@ -8568,6 +10896,9 @@ Language=English
 ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
 .
 Language=Russian
+ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
+.
+Language=Polish
 ERROR_CHILD_WINDOW_MENU - Child windows cannot have menus.
 .
 
@@ -8581,6 +10912,9 @@ ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
 Language=Russian
 ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
 .
+Language=Polish
+ERROR_NO_SYSTEM_MENU - The window does not have a system menu.
+.
 
 MessageId=1438
 Severity=Success
@@ -8590,6 +10924,9 @@ Language=English
 ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
 .
 Language=Russian
+ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
+.
+Language=Polish
 ERROR_INVALID_MSGBOX_STYLE - Invalid message box style.
 .
 
@@ -8603,6 +10940,9 @@ ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
 Language=Russian
 ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
 .
+Language=Polish
+ERROR_INVALID_SPI_VALUE - Invalid system-wide (SPI_*) parameter.
+.
 
 MessageId=1440
 Severity=Success
@@ -8612,6 +10952,9 @@ Language=English
 ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
 .
 Language=Russian
+ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
+.
+Language=Polish
 ERROR_SCREEN_ALREADY_LOCKED - Screen already locked.
 .
 
@@ -8625,6 +10968,9 @@ ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window posit
 Language=Russian
 ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window position structure must have the same parent.
 .
+Language=Polish
+ERROR_HWNDS_HAVE_DIFF_PARENT - All handles to windows in a multiple-window position structure must have the same parent.
+.
 
 MessageId=1442
 Severity=Success
@@ -8634,6 +10980,9 @@ Language=English
 ERROR_NOT_CHILD_WINDOW - The window is not a child window.
 .
 Language=Russian
+ERROR_NOT_CHILD_WINDOW - The window is not a child window.
+.
+Language=Polish
 ERROR_NOT_CHILD_WINDOW - The window is not a child window.
 .
 
@@ -8647,6 +10996,9 @@ ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
 Language=Russian
 ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
 .
+Language=Polish
+ERROR_INVALID_GW_COMMAND - Invalid GW_* command.
+.
 
 MessageId=1444
 Severity=Success
@@ -8656,6 +11008,9 @@ Language=English
 ERROR_INVALID_THREAD_ID - Invalid thread identifier.
 .
 Language=Russian
+ERROR_INVALID_THREAD_ID - Invalid thread identifier.
+.
+Language=Polish
 ERROR_INVALID_THREAD_ID - Invalid thread identifier.
 .
 
@@ -8669,6 +11024,9 @@ ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a
 Language=Russian
 ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a multiple document interface (MDI) window.
 .
+Language=Polish
+ERROR_NON_MDICHILD_WINDOW - Cannot process a message from a window that is not a multiple document interface (MDI) window.
+.
 
 MessageId=1446
 Severity=Success
@@ -8678,6 +11036,9 @@ Language=English
 ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
 .
 Language=Russian
+ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
+.
+Language=Polish
 ERROR_POPUP_ALREADY_ACTIVE - Popup menu already active.
 .
 
@@ -8691,6 +11052,9 @@ ERROR_NO_SCROLLBARS - The window does not have scroll bars.
 Language=Russian
 ERROR_NO_SCROLLBARS - The window does not have scroll bars.
 .
+Language=Polish
+ERROR_NO_SCROLLBARS - The window does not have scroll bars.
+.
 
 MessageId=1448
 Severity=Success
@@ -8700,6 +11064,9 @@ Language=English
 ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
 .
 Language=Russian
+ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
+.
+Language=Polish
 ERROR_INVALID_SCROLLBAR_RANGE - Scroll bar range cannot be greater than MAXLONG.
 .
 
@@ -8713,6 +11080,9 @@ ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way spec
 Language=Russian
 ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way specified.
 .
+Language=Polish
+ERROR_INVALID_SHOWWIN_COMMAND - Cannot show or remove the window in the way specified.
+.
 
 MessageId=1450
 Severity=Success
@@ -8722,6 +11092,9 @@ Language=English
 ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 Language=Russian
+ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+.
+Language=Polish
 ERROR_NO_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 
@@ -8735,6 +11108,9 @@ ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complet
 Language=Russian
 ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
+Language=Polish
+ERROR_NONPAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+.
 
 MessageId=1452
 Severity=Success
@@ -8744,6 +11120,9 @@ Language=English
 ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 Language=Russian
+ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
+.
+Language=Polish
 ERROR_PAGED_SYSTEM_RESOURCES - Insufficient system resources exist to complete the requested service.
 .
 
@@ -8757,6 +11136,9 @@ ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
 Language=Russian
 ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
 .
+Language=Polish
+ERROR_WORKING_SET_QUOTA - Insufficient quota to complete the requested service.
+.
 
 MessageId=1454
 Severity=Success
@@ -8766,6 +11148,9 @@ Language=English
 ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
 .
 Language=Russian
+ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
+.
+Language=Polish
 ERROR_PAGEFILE_QUOTA - Insufficient quota to complete the requested service.
 .
 
@@ -8779,6 +11164,9 @@ ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to comp
 Language=Russian
 ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to complete.
 .
+Language=Polish
+ERROR_COMMITMENT_LIMIT - The paging file is too small for this operation to complete.
+.
 
 MessageId=1456
 Severity=Success
@@ -8788,6 +11176,9 @@ Language=English
 ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
 .
 Language=Russian
+ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
+.
+Language=Polish
 ERROR_MENU_ITEM_NOT_FOUND - A menu item was not found.
 .
 
@@ -8801,6 +11192,9 @@ ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
 Language=Russian
 ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
 .
+Language=Polish
+ERROR_INVALID_KEYBOARD_HANDLE - Invalid keyboard layout handle.
+.
 
 MessageId=1458
 Severity=Success
@@ -8810,6 +11204,9 @@ Language=English
 ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
 .
 Language=Russian
+ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
+.
+Language=Polish
 ERROR_HOOK_TYPE_NOT_ALLOWED - Hook type not allowed.
 .
 
@@ -8823,6 +11220,9 @@ ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactiv
 Language=Russian
 ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactive window station.
 .
+Language=Polish
+ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION - This operation requires an interactive window station.
+.
 
 MessageId=1460
 Severity=Success
@@ -8832,6 +11232,9 @@ Language=English
 ERROR_TIMEOUT - This operation returned because the timeout period expired.
 .
 Language=Russian
+ERROR_TIMEOUT - This operation returned because the timeout period expired.
+.
+Language=Polish
 ERROR_TIMEOUT - This operation returned because the timeout period expired.
 .
 
@@ -8845,6 +11248,9 @@ ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
 Language=Russian
 ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
 .
+Language=Polish
+ERROR_INVALID_MONITOR_HANDLE - Invalid monitor handle.
+.
 
 MessageId=1500
 Severity=Success
@@ -8854,6 +11260,9 @@ Language=English
 ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
 .
 Language=Russian
+ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
+.
+Language=Polish
 ERROR_EVENTLOG_FILE_CORRUPT - The event log file is corrupted.
 .
 
@@ -8867,6 +11276,9 @@ ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logg
 Language=Russian
 ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logging service did not start.
 .
+Language=Polish
+ERROR_EVENTLOG_CANT_START - No event log file could be opened, so the event logging service did not start.
+.
 
 MessageId=1502
 Severity=Success
@@ -8876,6 +11288,9 @@ Language=English
 ERROR_LOG_FILE_FULL - The event log file is full.
 .
 Language=Russian
+ERROR_LOG_FILE_FULL - The event log file is full.
+.
+Language=Polish
 ERROR_LOG_FILE_FULL - The event log file is full.
 .
 
@@ -8889,6 +11304,9 @@ ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operat
 Language=Russian
 ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operations.
 .
+Language=Polish
+ERROR_EVENTLOG_FILE_CHANGED - The event log file has changed between read operations.
+.
 
 MessageId=1601
 Severity=Success
@@ -8898,6 +11316,9 @@ Language=English
 ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
 .
 Language=Russian
+ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
+.
+Language=Polish
 ERROR_INSTALL_SERVICE_FAILURE - The Windows Installer service could not be accessed. This can occur if you are running Windows in safe mode, or if the Windows Installer is not correctly installed. Contact your support personnel for assistance.
 .
 
@@ -8911,6 +11332,9 @@ ERROR_INSTALL_USEREXIT - User cancelled installation.
 Language=Russian
 ERROR_INSTALL_USEREXIT - User cancelled installation.
 .
+Language=Polish
+ERROR_INSTALL_USEREXIT - User cancelled installation.
+.
 
 MessageId=1603
 Severity=Success
@@ -8920,6 +11344,9 @@ Language=English
 ERROR_INSTALL_FAILURE - Fatal error during installation.
 .
 Language=Russian
+ERROR_INSTALL_FAILURE - Fatal error during installation.
+.
+Language=Polish
 ERROR_INSTALL_FAILURE - Fatal error during installation.
 .
 
@@ -8933,6 +11360,9 @@ ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
 Language=Russian
 ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
 .
+Language=Polish
+ERROR_INSTALL_SUSPEND - Installation suspended, incomplete.
+.
 
 MessageId=1605
 Severity=Success
@@ -8942,6 +11372,9 @@ Language=English
 ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
 .
 Language=Russian
+ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
+.
+Language=Polish
 ERROR_UNKNOWN_PRODUCT - This action is only valid for products that are currently installed.
 .
 
@@ -8955,6 +11388,9 @@ ERROR_UNKNOWN_FEATURE - Feature ID not registered.
 Language=Russian
 ERROR_UNKNOWN_FEATURE - Feature ID not registered.
 .
+Language=Polish
+ERROR_UNKNOWN_FEATURE - Feature ID not registered.
+.
 
 MessageId=1607
 Severity=Success
@@ -8964,6 +11400,9 @@ Language=English
 ERROR_UNKNOWN_COMPONENT - Component ID not registered.
 .
 Language=Russian
+ERROR_UNKNOWN_COMPONENT - Component ID not registered.
+.
+Language=Polish
 ERROR_UNKNOWN_COMPONENT - Component ID not registered.
 .
 
@@ -8977,6 +11416,9 @@ ERROR_UNKNOWN_PROPERTY - Unknown property.
 Language=Russian
 ERROR_UNKNOWN_PROPERTY - Unknown property.
 .
+Language=Polish
+ERROR_UNKNOWN_PROPERTY - Unknown property.
+.
 
 MessageId=1609
 Severity=Success
@@ -8986,6 +11428,9 @@ Language=English
 ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
 .
 Language=Russian
+ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
+.
+Language=Polish
 ERROR_INVALID_HANDLE_STATE - Handle is in an invalid state.
 .
 
@@ -8999,6 +11444,9 @@ ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Co
 Language=Russian
 ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Contact your support personnel.
 .
+Language=Polish
+ERROR_BAD_CONFIGURATION - The configuration data for this product is corrupt. Contact your support personnel.
+.
 
 MessageId=1611
 Severity=Success
@@ -9008,6 +11456,9 @@ Language=English
 ERROR_INDEX_ABSENT - Component qualifier not present.
 .
 Language=Russian
+ERROR_INDEX_ABSENT - Component qualifier not present.
+.
+Language=Polish
 ERROR_INDEX_ABSENT - Component qualifier not present.
 .
 
@@ -9021,6 +11472,9 @@ ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not av
 Language=Russian
 ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not available. Verify that the source exists and that you can access it.
 .
+Language=Polish
+ERROR_INSTALL_SOURCE_ABSENT - The installation source for this product is not available. Verify that the source exists and that you can access it.
+.
 
 MessageId=1613
 Severity=Success
@@ -9030,6 +11484,9 @@ Language=English
 ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 Language=Russian
+ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+.
+Language=Polish
 ERROR_INSTALL_PACKAGE_VERSION - This installation package cannot be installed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 
@@ -9043,6 +11500,9 @@ ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
 Language=Russian
 ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
 .
+Language=Polish
+ERROR_PRODUCT_UNINSTALLED - Product is uninstalled.
+.
 
 MessageId=1615
 Severity=Success
@@ -9052,6 +11512,9 @@ Language=English
 ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
 .
 Language=Russian
+ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
+.
+Language=Polish
 ERROR_BAD_QUERY_SYNTAX - SQL query syntax invalid or unsupported.
 .
 
@@ -9065,6 +11528,9 @@ ERROR_INVALID_FIELD - Record field does not exist.
 Language=Russian
 ERROR_INVALID_FIELD - Record field does not exist.
 .
+Language=Polish
+ERROR_INVALID_FIELD - Record field does not exist.
+.
 
 MessageId=1617
 Severity=Success
@@ -9074,6 +11540,9 @@ Language=English
 ERROR_DEVICE_REMOVED - The device has been removed.
 .
 Language=Russian
+ERROR_DEVICE_REMOVED - The device has been removed.
+.
+Language=Polish
 ERROR_DEVICE_REMOVED - The device has been removed.
 .
 
@@ -9087,6 +11556,9 @@ ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Com
 Language=Russian
 ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Complete that installation before proceeding with this install.
 .
+Language=Polish
+ERROR_INSTALL_ALREADY_RUNNING - Another installation is already in progress. Complete that installation before proceeding with this install.
+.
 
 MessageId=1619
 Severity=Success
@@ -9096,6 +11568,9 @@ Language=English
 ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
 .
 Language=Russian
+ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
+.
+Language=Polish
 ERROR_INSTALL_PACKAGE_OPEN_FAILED - This installation package could not be opened. Verify that the package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer package.
 .
 
@@ -9109,6 +11584,9 @@ ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. C
 Language=Russian
 ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
 .
+Language=Polish
+ERROR_INSTALL_PACKAGE_INVALID - This installation package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer package.
+.
 
 MessageId=1621
 Severity=Success
@@ -9118,6 +11596,9 @@ Language=English
 ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
 .
 Language=Russian
+ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
+.
+Language=Polish
 ERROR_INSTALL_UI_FAILURE - There was an error starting the Windows Installer service user interface. Contact your support personnel.
 .
 
@@ -9131,6 +11612,9 @@ ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the
 Language=Russian
 ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
 .
+Language=Polish
+ERROR_INSTALL_LOG_FAILURE - Error opening installation log file. Verify that the specified log file location exists and that you can write to it.
+.
 
 MessageId=1623
 Severity=Success
@@ -9140,6 +11624,9 @@ Language=English
 ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
 .
 Language=Russian
+ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
+.
+Language=Polish
 ERROR_INSTALL_LANGUAGE_UNSUPPORTED - The language of this installation package is not supported by your system.
 .
 
@@ -9153,6 +11640,9 @@ ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the spe
 Language=Russian
 ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the specified transform paths are valid.
 .
+Language=Polish
+ERROR_INSTALL_TRANSFORM_FAILURE - Error applying transforms. Verify that the specified transform paths are valid.
+.
 
 MessageId=1625
 Severity=Success
@@ -9162,6 +11652,9 @@ Language=English
 ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
 .
 Language=Russian
+ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
+.
+Language=Polish
 ERROR_INSTALL_PACKAGE_REJECTED - This installation is forbidden by system policy. Contact your system administrator.
 .
 
@@ -9175,6 +11668,9 @@ ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
 Language=Russian
 ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
 .
+Language=Polish
+ERROR_FUNCTION_NOT_CALLED - Function could not be executed.
+.
 
 MessageId=1627
 Severity=Success
@@ -9184,6 +11680,9 @@ Language=English
 ERROR_FUNCTION_FAILED - Function failed during execution.
 .
 Language=Russian
+ERROR_FUNCTION_FAILED - Function failed during execution.
+.
+Language=Polish
 ERROR_FUNCTION_FAILED - Function failed during execution.
 .
 
@@ -9197,6 +11696,9 @@ ERROR_INVALID_TABLE - Invalid or unknown table specified.
 Language=Russian
 ERROR_INVALID_TABLE - Invalid or unknown table specified.
 .
+Language=Polish
+ERROR_INVALID_TABLE - Invalid or unknown table specified.
+.
 
 MessageId=1629
 Severity=Success
@@ -9206,6 +11708,9 @@ Language=English
 ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
 .
 Language=Russian
+ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
+.
+Language=Polish
 ERROR_DATATYPE_MISMATCH - Data supplied is of wrong type.
 .
 
@@ -9219,6 +11724,9 @@ ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
 Language=Russian
 ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
 .
+Language=Polish
+ERROR_UNSUPPORTED_TYPE - Data of this type is not supported.
+.
 
 MessageId=1631
 Severity=Success
@@ -9228,6 +11736,9 @@ Language=English
 ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
 .
 Language=Russian
+ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
+.
+Language=Polish
 ERROR_CREATE_FAILED - The Windows Installer service failed to start. Contact your support personnel.
 .
 
@@ -9241,6 +11752,9 @@ ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or in
 Language=Russian
 ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
 .
+Language=Polish
+ERROR_INSTALL_TEMP_UNWRITABLE - The Temp folder is on a drive that is full or inaccessible. Free up space on the drive or verify that you have write permission on the Temp folder.
+.
 
 MessageId=1633
 Severity=Success
@@ -9250,6 +11764,9 @@ Language=English
 ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
 .
 Language=Russian
+ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
+.
+Language=Polish
 ERROR_INSTALL_PLATFORM_UNSUPPORTED - This installation package is not supported by this processor type. Contact your product vendor.
 .
 
@@ -9263,6 +11780,9 @@ ERROR_INSTALL_NOTUSED - Component not used on this computer.
 Language=Russian
 ERROR_INSTALL_NOTUSED - Component not used on this computer.
 .
+Language=Polish
+ERROR_INSTALL_NOTUSED - Component not used on this computer.
+.
 
 MessageId=1635
 Severity=Success
@@ -9272,6 +11792,9 @@ Language=English
 ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
 Language=Russian
+ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
+.
+Language=Polish
 ERROR_PATCH_PACKAGE_OPEN_FAILED - This patch package could not be opened. Verify that the patch package exists and that you can access it, or contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
 
@@ -9285,6 +11808,9 @@ ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact th
 Language=Russian
 ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
 .
+Language=Polish
+ERROR_PATCH_PACKAGE_INVALID - This patch package could not be opened. Contact the application vendor to verify that this is a valid Windows Installer patch package.
+.
 
 MessageId=1637
 Severity=Success
@@ -9294,6 +11820,9 @@ Language=English
 ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 Language=Russian
+ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
+.
+Language=Polish
 ERROR_PATCH_PACKAGE_UNSUPPORTED - This patch package cannot be processed by the Windows Installer service. You must install a Windows service pack that contains a newer version of the Windows Installer service.
 .
 
@@ -9307,6 +11836,9 @@ ERROR_PRODUCT_VERSION - Another version of this product is already installed. In
 Language=Russian
 ERROR_PRODUCT_VERSION - Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
 .
+Language=Polish
+ERROR_PRODUCT_VERSION - Another version of this product is already installed. Installation of this version cannot continue. To configure or remove the existing version of this product, use Add/Remove Programs on the Control Panel.
+.
 
 MessageId=1639
 Severity=Success
@@ -9316,6 +11848,9 @@ Language=English
 ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
 .
 Language=Russian
+ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
+.
+Language=Polish
 ERROR_INVALID_COMMAND_LINE - Invalid command line argument. Consult the Windows Installer SDK for detailed command line help.
 .
 
@@ -9329,6 +11864,9 @@ ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, re
 Language=Russian
 ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
 .
+Language=Polish
+ERROR_INSTALL_REMOTE_DISALLOWED - Only administrators have permission to add, remove, or configure server software during a Terminal Services remote session. If you want to install or configure software on the server, contact your network administrator.
+.
 
 MessageId=1641
 Severity=Success
@@ -9338,6 +11876,9 @@ Language=English
 ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
 .
 Language=Russian
+ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
+.
+Language=Polish
 ERROR_SUCCESS_REBOOT_INITIATED - The requested operation completed successfully. The system will be restarted so the changes can take effect.
 .
 
@@ -9351,6 +11892,9 @@ ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Wind
 Language=Russian
 ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
 .
+Language=Polish
+ERROR_PATCH_TARGET_NOT_FOUND - The upgrade patch cannot be installed by the Windows Installer service because the program to be upgraded may be missing, or the upgrade patch may update a different version of the program. Verify that the program to be upgraded exists on your computer and that you have the correct upgrade patch.
+.
 
 MessageId=1643
 Severity=Success
@@ -9360,6 +11904,9 @@ Language=English
 ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
 .
 Language=Russian
+ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
+.
+Language=Polish
 ERROR_PATCH_PACKAGE_REJECTED - The patch package is not permitted by software restriction policy.
 .
 
@@ -9373,6 +11920,9 @@ ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted 
 Language=Russian
 ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted by software restriction policy.
 .
+Language=Polish
+ERROR_INSTALL_TRANSFORM_REJECTED - One or more customizations are not permitted by software restriction policy.
+.
 
 MessageId=1645
 Severity=Success
@@ -9382,6 +11932,9 @@ Language=English
 ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
 .
 Language=Russian
+ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
+.
+Language=Polish
 ERROR_INSTALL_REMOTE_PROHIBITED - The Windows Installer does not permit installation from a Remote Desktop Connection.
 .
 
@@ -9395,6 +11948,9 @@ RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
 Language=Russian
 RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
 .
+Language=Polish
+RPC_S_INVALID_STRING_BINDING - The string binding is invalid.
+.
 
 MessageId=1701
 Severity=Success
@@ -9404,6 +11960,9 @@ Language=English
 RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
 .
 Language=Russian
+RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
+.
+Language=Polish
 RPC_S_WRONG_KIND_OF_BINDING - The binding handle is not the correct type.
 .
 
@@ -9417,6 +11976,9 @@ RPC_S_INVALID_BINDING - The binding handle is invalid.
 Language=Russian
 RPC_S_INVALID_BINDING - The binding handle is invalid.
 .
+Language=Polish
+RPC_S_INVALID_BINDING - The binding handle is invalid.
+.
 
 MessageId=1703
 Severity=Success
@@ -9426,6 +11988,9 @@ Language=English
 RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
 .
 Language=Russian
+RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
+.
+Language=Polish
 RPC_S_PROTSEQ_NOT_SUPPORTED - The RPC protocol sequence is not supported.
 .
 
@@ -9439,6 +12004,9 @@ RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
 Language=Russian
 RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
 .
+Language=Polish
+RPC_S_INVALID_RPC_PROTSEQ - The RPC protocol sequence is invalid.
+.
 
 MessageId=1705
 Severity=Success
@@ -9448,6 +12016,9 @@ Language=English
 RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
 .
 Language=Russian
+RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
+.
+Language=Polish
 RPC_S_INVALID_STRING_UUID - The string universal unique identifier (UUID) is invalid.
 .
 
@@ -9461,6 +12032,9 @@ RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
 Language=Russian
 RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
 .
+Language=Polish
+RPC_S_INVALID_ENDPOINT_FORMAT - The endpoint format is invalid.
+.
 
 MessageId=1707
 Severity=Success
@@ -9470,6 +12044,9 @@ Language=English
 RPC_S_INVALID_NET_ADDR - The network address is invalid.
 .
 Language=Russian
+RPC_S_INVALID_NET_ADDR - The network address is invalid.
+.
+Language=Polish
 RPC_S_INVALID_NET_ADDR - The network address is invalid.
 .
 
@@ -9483,6 +12060,9 @@ RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
 Language=Russian
 RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
 .
+Language=Polish
+RPC_S_NO_ENDPOINT_FOUND - No endpoint was found.
+.
 
 MessageId=1709
 Severity=Success
@@ -9492,6 +12072,9 @@ Language=English
 RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
 .
 Language=Russian
+RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
+.
+Language=Polish
 RPC_S_INVALID_TIMEOUT - The timeout value is invalid.
 .
 
@@ -9505,6 +12088,9 @@ RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not f
 Language=Russian
 RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not found.
 .
+Language=Polish
+RPC_S_OBJECT_NOT_FOUND - The object universal unique identifier (UUID) was not found.
+.
 
 MessageId=1711
 Severity=Success
@@ -9514,6 +12100,9 @@ Language=English
 RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
 .
 Language=Russian
+RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
+.
+Language=Polish
 RPC_S_ALREADY_REGISTERED - The object universal unique identifier (UUID) has already been registered.
 .
 
@@ -9527,6 +12116,9 @@ RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has 
 Language=Russian
 RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has already been registered.
 .
+Language=Polish
+RPC_S_TYPE_ALREADY_REGISTERED - The type universal unique identifier (UUID) has already been registered.
+.
 
 MessageId=1713
 Severity=Success
@@ -9536,6 +12128,9 @@ Language=English
 RPC_S_ALREADY_LISTENING - The RPC server is already listening.
 .
 Language=Russian
+RPC_S_ALREADY_LISTENING - The RPC server is already listening.
+.
+Language=Polish
 RPC_S_ALREADY_LISTENING - The RPC server is already listening.
 .
 
@@ -9549,6 +12144,9 @@ RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
 Language=Russian
 RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
 .
+Language=Polish
+RPC_S_NO_PROTSEQS_REGISTERED - No protocol sequences have been registered.
+.
 
 MessageId=1715
 Severity=Success
@@ -9558,6 +12156,9 @@ Language=English
 RPC_S_NOT_LISTENING - The RPC server is not listening.
 .
 Language=Russian
+RPC_S_NOT_LISTENING - The RPC server is not listening.
+.
+Language=Polish
 RPC_S_NOT_LISTENING - The RPC server is not listening.
 .
 
@@ -9571,6 +12172,9 @@ RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
 Language=Russian
 RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
 .
+Language=Polish
+RPC_S_UNKNOWN_MGR_TYPE - The manager type is unknown.
+.
 
 MessageId=1717
 Severity=Success
@@ -9580,6 +12184,9 @@ Language=English
 RPC_S_UNKNOWN_IF - The interface is unknown.
 .
 Language=Russian
+RPC_S_UNKNOWN_IF - The interface is unknown.
+.
+Language=Polish
 RPC_S_UNKNOWN_IF - The interface is unknown.
 .
 
@@ -9593,6 +12200,9 @@ RPC_S_NO_BINDINGS - There are no bindings.
 Language=Russian
 RPC_S_NO_BINDINGS - There are no bindings.
 .
+Language=Polish
+RPC_S_NO_BINDINGS - There are no bindings.
+.
 
 MessageId=1719
 Severity=Success
@@ -9602,6 +12212,9 @@ Language=English
 RPC_S_NO_PROTSEQS - There are no protocol sequences.
 .
 Language=Russian
+RPC_S_NO_PROTSEQS - There are no protocol sequences.
+.
+Language=Polish
 RPC_S_NO_PROTSEQS - There are no protocol sequences.
 .
 
@@ -9615,6 +12228,9 @@ RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
 Language=Russian
 RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
 .
+Language=Polish
+RPC_S_CANT_CREATE_ENDPOINT - The endpoint cannot be created.
+.
 
 MessageId=1721
 Severity=Success
@@ -9624,6 +12240,9 @@ Language=English
 RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
 .
 Language=Russian
+RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
+.
+Language=Polish
 RPC_S_OUT_OF_RESOURCES - Not enough resources are available to complete this operation.
 .
 
@@ -9637,6 +12256,9 @@ RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
 Language=Russian
 RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
 .
+Language=Polish
+RPC_S_SERVER_UNAVAILABLE - The RPC server is unavailable.
+.
 
 MessageId=1723
 Severity=Success
@@ -9646,6 +12268,9 @@ Language=English
 RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
 .
 Language=Russian
+RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
+.
+Language=Polish
 RPC_S_SERVER_TOO_BUSY - The RPC server is too busy to complete this operation.
 .
 
@@ -9659,6 +12284,9 @@ RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
 Language=Russian
 RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
 .
+Language=Polish
+RPC_S_INVALID_NETWORK_OPTIONS - The network options are invalid.
+.
 
 MessageId=1725
 Severity=Success
@@ -9668,6 +12296,9 @@ Language=English
 RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
 .
 Language=Russian
+RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
+.
+Language=Polish
 RPC_S_NO_CALL_ACTIVE - There are no remote procedure calls active on this thread.
 .
 
@@ -9681,6 +12312,9 @@ RPC_S_CALL_FAILED - The remote procedure call failed.
 Language=Russian
 RPC_S_CALL_FAILED - The remote procedure call failed.
 .
+Language=Polish
+RPC_S_CALL_FAILED - The remote procedure call failed.
+.
 
 MessageId=1727
 Severity=Success
@@ -9690,6 +12324,9 @@ Language=English
 RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
 .
 Language=Russian
+RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
+.
+Language=Polish
 RPC_S_CALL_FAILED_DNE - The remote procedure call failed and did not execute.
 .
 
@@ -9703,6 +12340,9 @@ RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
 Language=Russian
 RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
 .
+Language=Polish
+RPC_S_PROTOCOL_ERROR - A remote procedure call (RPC) protocol error occurred.
+.
 
 MessageId=1730
 Severity=Success
@@ -9712,6 +12352,9 @@ Language=English
 RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
 .
 Language=Russian
+RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
+.
+Language=Polish
 RPC_S_UNSUPPORTED_TRANS_SYN - The transfer syntax is not supported by the RPC server.
 .
 
@@ -9725,6 +12368,9 @@ RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supp
 Language=Russian
 RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supported.
 .
+Language=Polish
+RPC_S_UNSUPPORTED_TYPE - The universal unique identifier (UUID) type is not supported.
+.
 
 MessageId=1733
 Severity=Success
@@ -9734,6 +12380,9 @@ Language=English
 RPC_S_INVALID_TAG - The tag is invalid.
 .
 Language=Russian
+RPC_S_INVALID_TAG - The tag is invalid.
+.
+Language=Polish
 RPC_S_INVALID_TAG - The tag is invalid.
 .
 
@@ -9747,6 +12396,9 @@ RPC_S_INVALID_BOUND - The array bounds are invalid.
 Language=Russian
 RPC_S_INVALID_BOUND - The array bounds are invalid.
 .
+Language=Polish
+RPC_S_INVALID_BOUND - The array bounds are invalid.
+.
 
 MessageId=1735
 Severity=Success
@@ -9756,6 +12408,9 @@ Language=English
 RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
 .
 Language=Russian
+RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
+.
+Language=Polish
 RPC_S_NO_ENTRY_NAME - The binding does not contain an entry name.
 .
 
@@ -9769,6 +12424,9 @@ RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
 Language=Russian
 RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
 .
+Language=Polish
+RPC_S_INVALID_NAME_SYNTAX - The name syntax is invalid.
+.
 
 MessageId=1737
 Severity=Success
@@ -9778,6 +12436,9 @@ Language=English
 RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
 .
 Language=Russian
+RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
+.
+Language=Polish
 RPC_S_UNSUPPORTED_NAME_SYNTAX - The name syntax is not supported.
 .
 
@@ -9791,6 +12452,9 @@ RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a un
 Language=Russian
 RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a universal unique identifier (UUID).
 .
+Language=Polish
+RPC_S_UUID_NO_ADDRESS - No network address is available to use to construct a universal unique identifier (UUID).
+.
 
 MessageId=1740
 Severity=Success
@@ -9800,6 +12464,9 @@ Language=English
 RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
 .
 Language=Russian
+RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
+.
+Language=Polish
 RPC_S_DUPLICATE_ENDPOINT - The endpoint is a duplicate.
 .
 
@@ -9813,6 +12480,9 @@ RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
 Language=Russian
 RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
 .
+Language=Polish
+RPC_S_UNKNOWN_AUTHN_TYPE - The authentication type is unknown.
+.
 
 MessageId=1742
 Severity=Success
@@ -9822,6 +12492,9 @@ Language=English
 RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
 .
 Language=Russian
+RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
+.
+Language=Polish
 RPC_S_MAX_CALLS_TOO_SMALL - The maximum number of calls is too small.
 .
 
@@ -9835,6 +12508,9 @@ RPC_S_STRING_TOO_LONG - The string is too long.
 Language=Russian
 RPC_S_STRING_TOO_LONG - The string is too long.
 .
+Language=Polish
+RPC_S_STRING_TOO_LONG - The string is too long.
+.
 
 MessageId=1744
 Severity=Success
@@ -9844,6 +12520,9 @@ Language=English
 RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
 .
 Language=Russian
+RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
+.
+Language=Polish
 RPC_S_PROTSEQ_NOT_FOUND - The RPC protocol sequence was not found.
 .
 
@@ -9857,6 +12536,9 @@ RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
 Language=Russian
 RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
 .
+Language=Polish
+RPC_S_PROCNUM_OUT_OF_RANGE - The procedure number is out of range.
+.
 
 MessageId=1746
 Severity=Success
@@ -9866,6 +12548,9 @@ Language=English
 RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
 .
 Language=Russian
+RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
+.
+Language=Polish
 RPC_S_BINDING_HAS_NO_AUTH - The binding does not contain any authentication information.
 .
 
@@ -9879,6 +12564,9 @@ RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
 Language=Russian
 RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
 .
+Language=Polish
+RPC_S_UNKNOWN_AUTHN_SERVICE - The authentication service is unknown.
+.
 
 MessageId=1748
 Severity=Success
@@ -9888,6 +12576,9 @@ Language=English
 RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
 .
 Language=Russian
+RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
+.
+Language=Polish
 RPC_S_UNKNOWN_AUTHN_LEVEL - The authentication level is unknown.
 .
 
@@ -9901,6 +12592,9 @@ RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
 Language=Russian
 RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
 .
+Language=Polish
+RPC_S_INVALID_AUTH_IDENTITY - The security context is invalid.
+.
 
 MessageId=1750
 Severity=Success
@@ -9910,6 +12604,9 @@ Language=English
 RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
 .
 Language=Russian
+RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
+.
+Language=Polish
 RPC_S_UNKNOWN_AUTHZ_SERVICE - The authorization service is unknown.
 .
 
@@ -9923,6 +12620,9 @@ EPT_S_INVALID_ENTRY - The entry is invalid.
 Language=Russian
 EPT_S_INVALID_ENTRY - The entry is invalid.
 .
+Language=Polish
+EPT_S_INVALID_ENTRY - The entry is invalid.
+.
 
 MessageId=1752
 Severity=Success
@@ -9932,6 +12632,9 @@ Language=English
 EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
 .
 Language=Russian
+EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
+.
+Language=Polish
 EPT_S_CANT_PERFORM_OP - The server endpoint cannot perform the operation.
 .
 
@@ -9945,6 +12648,9 @@ EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint m
 Language=Russian
 EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint mapper.
 .
+Language=Polish
+EPT_S_NOT_REGISTERED - There are no more endpoints available from the endpoint mapper.
+.
 
 MessageId=1754
 Severity=Success
@@ -9954,6 +12660,9 @@ Language=English
 RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
 .
 Language=Russian
+RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
+.
+Language=Polish
 RPC_S_NOTHING_TO_EXPORT - No interfaces have been exported.
 .
 
@@ -9967,6 +12676,9 @@ RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
 Language=Russian
 RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
 .
+Language=Polish
+RPC_S_INCOMPLETE_NAME - The entry name is incomplete.
+.
 
 MessageId=1756
 Severity=Success
@@ -9976,6 +12688,9 @@ Language=English
 RPC_S_INVALID_VERS_OPTION - The version option is invalid.
 .
 Language=Russian
+RPC_S_INVALID_VERS_OPTION - The version option is invalid.
+.
+Language=Polish
 RPC_S_INVALID_VERS_OPTION - The version option is invalid.
 .
 
@@ -9989,6 +12704,9 @@ RPC_S_NO_MORE_MEMBERS - There are no more members.
 Language=Russian
 RPC_S_NO_MORE_MEMBERS - There are no more members.
 .
+Language=Polish
+RPC_S_NO_MORE_MEMBERS - There are no more members.
+.
 
 MessageId=1758
 Severity=Success
@@ -9998,6 +12716,9 @@ Language=English
 RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
 .
 Language=Russian
+RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
+.
+Language=Polish
 RPC_S_NOT_ALL_OBJS_UNEXPORTED - There is nothing to unexport.
 .
 
@@ -10011,6 +12732,9 @@ RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
 Language=Russian
 RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
 .
+Language=Polish
+RPC_S_INTERFACE_NOT_FOUND - The interface was not found.
+.
 
 MessageId=1760
 Severity=Success
@@ -10020,6 +12744,9 @@ Language=English
 RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
 .
 Language=Russian
+RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
+.
+Language=Polish
 RPC_S_ENTRY_ALREADY_EXISTS - The entry already exists.
 .
 
@@ -10033,6 +12760,9 @@ RPC_S_ENTRY_NOT_FOUND - The entry is not found.
 Language=Russian
 RPC_S_ENTRY_NOT_FOUND - The entry is not found.
 .
+Language=Polish
+RPC_S_ENTRY_NOT_FOUND - The entry is not found.
+.
 
 MessageId=1762
 Severity=Success
@@ -10042,6 +12772,9 @@ Language=English
 RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
 .
 Language=Russian
+RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
+.
+Language=Polish
 RPC_S_NAME_SERVICE_UNAVAILABLE - The name service is unavailable.
 .
 
@@ -10055,6 +12788,9 @@ RPC_S_INVALID_NAF_ID - The network address family is invalid.
 Language=Russian
 RPC_S_INVALID_NAF_ID - The network address family is invalid.
 .
+Language=Polish
+RPC_S_INVALID_NAF_ID - The network address family is invalid.
+.
 
 MessageId=1764
 Severity=Success
@@ -10064,6 +12800,9 @@ Language=English
 RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
 .
 Language=Russian
+RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
+.
+Language=Polish
 RPC_S_CANNOT_SUPPORT - The requested operation is not supported.
 .
 
@@ -10077,6 +12816,9 @@ RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersona
 Language=Russian
 RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersonation.
 .
+Language=Polish
+RPC_S_NO_CONTEXT_AVAILABLE - No security context is available to allow impersonation.
+.
 
 MessageId=1766
 Severity=Success
@@ -10086,6 +12828,9 @@ Language=English
 RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
 .
 Language=Russian
+RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
+.
+Language=Polish
 RPC_S_INTERNAL_ERROR - An internal error occurred in a remote procedure call (RPC).
 .
 
@@ -10099,6 +12844,9 @@ RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
 Language=Russian
 RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
 .
+Language=Polish
+RPC_S_ZERO_DIVIDE - The RPC server attempted an integer division by zero.
+.
 
 MessageId=1768
 Severity=Success
@@ -10108,6 +12856,9 @@ Language=English
 RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
 .
 Language=Russian
+RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
+.
+Language=Polish
 RPC_S_ADDRESS_ERROR - An addressing error occurred in the RPC server.
 .
 
@@ -10121,6 +12872,9 @@ RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a divisi
 Language=Russian
 RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a division by zero.
 .
+Language=Polish
+RPC_S_FP_DIV_ZERO - A floating-point operation at the RPC server caused a division by zero.
+.
 
 MessageId=1770
 Severity=Success
@@ -10130,6 +12884,9 @@ Language=English
 RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
 .
 Language=Russian
+RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
+.
+Language=Polish
 RPC_S_FP_UNDERFLOW - A floating-point underflow occurred at the RPC server.
 .
 
@@ -10143,6 +12900,9 @@ RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
 Language=Russian
 RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
 .
+Language=Polish
+RPC_S_FP_OVERFLOW - A floating-point overflow occurred at the RPC server.
+.
 
 MessageId=1772
 Severity=Success
@@ -10152,6 +12912,9 @@ Language=English
 RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
 .
 Language=Russian
+RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
+.
+Language=Polish
 RPC_X_NO_MORE_ENTRIES - The list of RPC servers available for the binding of auto handles has been exhausted.
 .
 
@@ -10165,6 +12928,9 @@ RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table f
 Language=Russian
 RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table file.
 .
+Language=Polish
+RPC_X_SS_CHAR_TRANS_OPEN_FAIL - Unable to open the character translation table file.
+.
 
 MessageId=1774
 Severity=Success
@@ -10174,6 +12940,9 @@ Language=English
 RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
 .
 Language=Russian
+RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
+.
+Language=Polish
 RPC_X_SS_CHAR_TRANS_SHORT_FILE - The file containing the character translation table has fewer than 512 bytes.
 .
 
@@ -10187,6 +12956,9 @@ RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to t
 Language=Russian
 RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to the host during a remote procedure call.
 .
+Language=Polish
+RPC_X_SS_IN_NULL_CONTEXT - A null context handle was passed from the client to the host during a remote procedure call.
+.
 
 MessageId=1777
 Severity=Success
@@ -10196,6 +12968,9 @@ Language=English
 RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
 .
 Language=Russian
+RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
+.
+Language=Polish
 RPC_X_SS_CONTEXT_DAMAGED - The context handle changed during a remote procedure call.
 .
 
@@ -10209,6 +12984,9 @@ RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure cal
 Language=Russian
 RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure call do not match.
 .
+Language=Polish
+RPC_X_SS_HANDLES_MISMATCH - The binding handles passed to a remote procedure call do not match.
+.
 
 MessageId=1779
 Severity=Success
@@ -10218,6 +12996,9 @@ Language=English
 RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
 .
 Language=Russian
+RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
+.
+Language=Polish
 RPC_X_SS_CANNOT_GET_CALL_HANDLE - The stub is unable to get the remote procedure call handle.
 .
 
@@ -10231,6 +13012,9 @@ RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
 Language=Russian
 RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
 .
+Language=Polish
+RPC_X_NULL_REF_POINTER - A null reference pointer was passed to the stub.
+.
 
 MessageId=1781
 Severity=Success
@@ -10240,6 +13024,9 @@ Language=English
 RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
 .
 Language=Russian
+RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
+.
+Language=Polish
 RPC_X_ENUM_VALUE_OUT_OF_RANGE - The enumeration value is out of range.
 .
 
@@ -10253,6 +13040,9 @@ RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
 Language=Russian
 RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
 .
+Language=Polish
+RPC_X_BYTE_COUNT_TOO_SMALL - The byte count is too small.
+.
 
 MessageId=1783
 Severity=Success
@@ -10262,6 +13052,9 @@ Language=English
 RPC_X_BAD_STUB_DATA - The stub received bad data.
 .
 Language=Russian
+RPC_X_BAD_STUB_DATA - The stub received bad data.
+.
+Language=Polish
 RPC_X_BAD_STUB_DATA - The stub received bad data.
 .
 
@@ -10275,6 +13068,9 @@ ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the reques
 Language=Russian
 ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the requested operation.
 .
+Language=Polish
+ERROR_INVALID_USER_BUFFER - The supplied user buffer is not valid for the requested operation.
+.
 
 MessageId=1785
 Severity=Success
@@ -10284,6 +13080,9 @@ Language=English
 ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
 .
 Language=Russian
+ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
+.
+Language=Polish
 ERROR_UNRECOGNIZED_MEDIA - The disk media is not recognized. It may not be formatted.
 .
 
@@ -10297,6 +13096,9 @@ ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
 Language=Russian
 ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
 .
+Language=Polish
+ERROR_NO_TRUST_LSA_SECRET - The workstation does not have a trust secret.
+.
 
 MessageId=1787
 Severity=Success
@@ -10306,6 +13108,9 @@ Language=English
 ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
 .
 Language=Russian
+ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
+.
+Language=Polish
 ERROR_NO_TRUST_SAM_ACCOUNT - The security database on the server does not have a computer account for this workstation trust relationship.
 .
 
@@ -10319,6 +13124,9 @@ ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain
 Language=Russian
 ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain and the trusted domain failed.
 .
+Language=Polish
+ERROR_TRUSTED_DOMAIN_FAILURE - The trust relationship between the primary domain and the trusted domain failed.
+.
 
 MessageId=1789
 Severity=Success
@@ -10328,6 +13136,9 @@ Language=English
 ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
 .
 Language=Russian
+ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
+.
+Language=Polish
 ERROR_TRUSTED_RELATIONSHIP_FAILURE - The trust relationship between this workstation and the primary domain failed.
 .
 
@@ -10341,6 +13152,9 @@ ERROR_TRUST_FAILURE - The network logon failed.
 Language=Russian
 ERROR_TRUST_FAILURE - The network logon failed.
 .
+Language=Polish
+ERROR_TRUST_FAILURE - The network logon failed.
+.
 
 MessageId=1791
 Severity=Success
@@ -10350,6 +13164,9 @@ Language=English
 RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
 .
 Language=Russian
+RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
+.
+Language=Polish
 RPC_S_CALL_IN_PROGRESS - A remote procedure call is already in progress for this thread.
 .
 
@@ -10363,6 +13180,9 @@ ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon
 Language=Russian
 ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon service was not started.
 .
+Language=Polish
+ERROR_NETLOGON_NOT_STARTED - An attempt was made to logon, but the network logon service was not started.
+.
 
 MessageId=1793
 Severity=Success
@@ -10372,6 +13192,9 @@ Language=English
 ERROR_ACCOUNT_EXPIRED - The user's account has expired.
 .
 Language=Russian
+ERROR_ACCOUNT_EXPIRED - The user's account has expired.
+.
+Language=Polish
 ERROR_ACCOUNT_EXPIRED - The user's account has expired.
 .
 
@@ -10385,6 +13208,9 @@ ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloa
 Language=Russian
 ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloaded.
 .
+Language=Polish
+ERROR_REDIRECTOR_HAS_OPEN_HANDLES - The redirector is in use and cannot be unloaded.
+.
 
 MessageId=1795
 Severity=Success
@@ -10394,6 +13220,9 @@ Language=English
 ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
 .
 Language=Russian
+ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
+.
+Language=Polish
 ERROR_PRINTER_DRIVER_ALREADY_INSTALLED - The specified printer driver is already installed.
 .
 
@@ -10407,6 +13236,9 @@ ERROR_UNKNOWN_PORT - The specified port is unknown.
 Language=Russian
 ERROR_UNKNOWN_PORT - The specified port is unknown.
 .
+Language=Polish
+ERROR_UNKNOWN_PORT - The specified port is unknown.
+.
 
 MessageId=1797
 Severity=Success
@@ -10416,6 +13248,9 @@ Language=English
 ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
 .
 Language=Russian
+ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
+.
+Language=Polish
 ERROR_UNKNOWN_PRINTER_DRIVER - The printer driver is unknown.
 .
 
@@ -10429,6 +13264,9 @@ ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
 Language=Russian
 ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
 .
+Language=Polish
+ERROR_UNKNOWN_PRINTPROCESSOR - The print processor is unknown.
+.
 
 MessageId=1799
 Severity=Success
@@ -10438,6 +13276,9 @@ Language=English
 ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
 .
 Language=Russian
+ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
+.
+Language=Polish
 ERROR_INVALID_SEPARATOR_FILE - The specified separator file is invalid.
 .
 
@@ -10451,6 +13292,9 @@ ERROR_INVALID_PRIORITY - The specified priority is invalid.
 Language=Russian
 ERROR_INVALID_PRIORITY - The specified priority is invalid.
 .
+Language=Polish
+ERROR_INVALID_PRIORITY - The specified priority is invalid.
+.
 
 MessageId=1801
 Severity=Success
@@ -10460,6 +13304,9 @@ Language=English
 ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
 .
 Language=Russian
+ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
+.
+Language=Polish
 ERROR_INVALID_PRINTER_NAME - The printer name is invalid.
 .
 
@@ -10473,6 +13320,9 @@ ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
 Language=Russian
 ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
 .
+Language=Polish
+ERROR_PRINTER_ALREADY_EXISTS - The printer already exists.
+.
 
 MessageId=1803
 Severity=Success
@@ -10482,6 +13332,9 @@ Language=English
 ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
 .
 Language=Russian
+ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
+.
+Language=Polish
 ERROR_INVALID_PRINTER_COMMAND - The printer command is invalid.
 .
 
@@ -10495,6 +13348,9 @@ ERROR_INVALID_DATATYPE - The specified datatype is invalid.
 Language=Russian
 ERROR_INVALID_DATATYPE - The specified datatype is invalid.
 .
+Language=Polish
+ERROR_INVALID_DATATYPE - The specified datatype is invalid.
+.
 
 MessageId=1805
 Severity=Success
@@ -10504,6 +13360,9 @@ Language=English
 ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
 .
 Language=Russian
+ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
+.
+Language=Polish
 ERROR_INVALID_ENVIRONMENT - The environment specified is invalid.
 .
 
@@ -10517,6 +13376,9 @@ RPC_S_NO_MORE_BINDINGS - There are no more bindings.
 Language=Russian
 RPC_S_NO_MORE_BINDINGS - There are no more bindings.
 .
+Language=Polish
+RPC_S_NO_MORE_BINDINGS - There are no more bindings.
+.
 
 MessageId=1807
 Severity=Success
@@ -10526,6 +13388,9 @@ Language=English
 ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
 .
 Language=Russian
+ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
+.
+Language=Polish
 ERROR_NOLOGON_INTERDOMAIN_TRUST_ACCOUNT - The account used is an interdomain trust account. Use your global user account or local user account to access this server.
 .
 
@@ -10539,6 +13404,9 @@ ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account
 Language=Russian
 ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account. Use your global user account or local user account to access this server.
 .
+Language=Polish
+ERROR_NOLOGON_WORKSTATION_TRUST_ACCOUNT - The account used is a computer account. Use your global user account or local user account to access this server.
+.
 
 MessageId=1809
 Severity=Success
@@ -10548,6 +13416,9 @@ Language=English
 ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
 .
 Language=Russian
+ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
+.
+Language=Polish
 ERROR_NOLOGON_SERVER_TRUST_ACCOUNT - The account used is a server trust account. Use your global user account or local user account to access this server.
 .
 
@@ -10561,6 +13432,9 @@ ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain sp
 Language=Russian
 ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
 .
+Language=Polish
+ERROR_DOMAIN_TRUST_INCONSISTENT - The name or security ID (SID) of the domain specified is inconsistent with the trust information for that domain.
+.
 
 MessageId=1811
 Severity=Success
@@ -10570,6 +13444,9 @@ Language=English
 ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
 .
 Language=Russian
+ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
+.
+Language=Polish
 ERROR_SERVER_HAS_OPEN_HANDLES - The server is in use and cannot be unloaded.
 .
 
@@ -10583,6 +13460,9 @@ ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resou
 Language=Russian
 ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resource section.
 .
+Language=Polish
+ERROR_RESOURCE_DATA_NOT_FOUND - The specified image file did not contain a resource section.
+.
 
 MessageId=1813
 Severity=Success
@@ -10592,6 +13472,9 @@ Language=English
 ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
 .
 Language=Russian
+ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
+.
+Language=Polish
 ERROR_RESOURCE_TYPE_NOT_FOUND - The specified resource type cannot be found in the image file.
 .
 
@@ -10605,6 +13488,9 @@ ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in t
 Language=Russian
 ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in the image file.
 .
+Language=Polish
+ERROR_RESOURCE_NAME_NOT_FOUND - The specified resource name cannot be found in the image file.
+.
 
 MessageId=1815
 Severity=Success
@@ -10614,6 +13500,9 @@ Language=English
 ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
 .
 Language=Russian
+ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
+.
+Language=Polish
 ERROR_RESOURCE_LANG_NOT_FOUND - The specified resource language ID cannot be found in the image file.
 .
 
@@ -10627,6 +13516,9 @@ ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
 Language=Russian
 ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
 .
+Language=Polish
+ERROR_NOT_ENOUGH_QUOTA - Not enough quota is available to process this command.
+.
 
 MessageId=1817
 Severity=Success
@@ -10636,6 +13528,9 @@ Language=English
 RPC_S_NO_INTERFACES - No interfaces have been registered.
 .
 Language=Russian
+RPC_S_NO_INTERFACES - No interfaces have been registered.
+.
+Language=Polish
 RPC_S_NO_INTERFACES - No interfaces have been registered.
 .
 
@@ -10649,6 +13544,9 @@ RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
 Language=Russian
 RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
 .
+Language=Polish
+RPC_S_CALL_CANCELLED - The remote procedure call was cancelled.
+.
 
 MessageId=1819
 Severity=Success
@@ -10658,6 +13556,9 @@ Language=English
 RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
 .
 Language=Russian
+RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
+.
+Language=Polish
 RPC_S_BINDING_INCOMPLETE - The binding handle does not contain all required information.
 .
 
@@ -10671,6 +13572,9 @@ RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure
 Language=Russian
 RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure call.
 .
+Language=Polish
+RPC_S_COMM_FAILURE - A communications failure occurred during a remote procedure call.
+.
 
 MessageId=1821
 Severity=Success
@@ -10680,6 +13584,9 @@ Language=English
 RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
 .
 Language=Russian
+RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
+.
+Language=Polish
 RPC_S_UNSUPPORTED_AUTHN_LEVEL - The requested authentication level is not supported.
 .
 
@@ -10693,6 +13600,9 @@ RPC_S_NO_PRINC_NAME - No principal name registered.
 Language=Russian
 RPC_S_NO_PRINC_NAME - No principal name registered.
 .
+Language=Polish
+RPC_S_NO_PRINC_NAME - No principal name registered.
+.
 
 MessageId=1823
 Severity=Success
@@ -10702,6 +13612,9 @@ Language=English
 RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
 .
 Language=Russian
+RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
+.
+Language=Polish
 RPC_S_NOT_RPC_ERROR - The error specified is not a valid Windows RPC error code.
 .
 
@@ -10715,6 +13628,9 @@ RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allo
 Language=Russian
 RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allocated.
 .
+Language=Polish
+RPC_S_UUID_LOCAL_ONLY - A UUID that is valid only on this computer has been allocated.
+.
 
 MessageId=1825
 Severity=Success
@@ -10724,6 +13640,9 @@ Language=English
 RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
 .
 Language=Russian
+RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
+.
+Language=Polish
 RPC_S_SEC_PKG_ERROR - A security package specific error occurred.
 .
 
@@ -10737,6 +13656,9 @@ RPC_S_NOT_CANCELLED - Thread is not canceled.
 Language=Russian
 RPC_S_NOT_CANCELLED - Thread is not canceled.
 .
+Language=Polish
+RPC_S_NOT_CANCELLED - Thread is not canceled.
+.
 
 MessageId=1827
 Severity=Success
@@ -10746,6 +13668,9 @@ Language=English
 RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
 .
 Language=Russian
+RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
+.
+Language=Polish
 RPC_X_INVALID_ES_ACTION - Invalid operation on the encoding/decoding handle.
 .
 
@@ -10759,6 +13684,9 @@ RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
 Language=Russian
 RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
 .
+Language=Polish
+RPC_X_WRONG_ES_VERSION - Incompatible version of the serializing package.
+.
 
 MessageId=1829
 Severity=Success
@@ -10768,6 +13696,9 @@ Language=English
 RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
 .
 Language=Russian
+RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
+.
+Language=Polish
 RPC_X_WRONG_STUB_VERSION - Incompatible version of the RPC stub.
 .
 
@@ -10781,6 +13712,9 @@ RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
 Language=Russian
 RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
 .
+Language=Polish
+RPC_X_INVALID_PIPE_OBJECT - The RPC pipe object is invalid or corrupted.
+.
 
 MessageId=1831
 Severity=Success
@@ -10790,6 +13724,9 @@ Language=English
 RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
 .
 Language=Russian
+RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
+.
+Language=Polish
 RPC_X_WRONG_PIPE_ORDER - An invalid operation was attempted on an RPC pipe object.
 .
 
@@ -10803,6 +13740,9 @@ RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
 Language=Russian
 RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
 .
+Language=Polish
+RPC_X_WRONG_PIPE_VERSION - Unsupported RPC pipe version.
+.
 
 MessageId=1898
 Severity=Success
@@ -10812,6 +13752,9 @@ Language=English
 RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
 .
 Language=Russian
+RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
+.
+Language=Polish
 RPC_S_GROUP_MEMBER_NOT_FOUND - The group member was not found.
 .
 
@@ -10825,6 +13768,9 @@ EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
 Language=Russian
 EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
 .
+Language=Polish
+EPT_S_CANT_CREATE - The endpoint mapper database entry could not be created.
+.
 
 MessageId=1900
 Severity=Success
@@ -10834,6 +13780,9 @@ Language=English
 RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
 .
 Language=Russian
+RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
+.
+Language=Polish
 RPC_S_INVALID_OBJECT - The object universal unique identifier (UUID) is the nil UUID.
 .
 
@@ -10847,6 +13796,9 @@ ERROR_INVALID_TIME - The specified time is invalid.
 Language=Russian
 ERROR_INVALID_TIME - The specified time is invalid.
 .
+Language=Polish
+ERROR_INVALID_TIME - The specified time is invalid.
+.
 
 MessageId=1902
 Severity=Success
@@ -10856,6 +13808,9 @@ Language=English
 ERROR_INVALID_FORM_NAME - The specified form name is invalid.
 .
 Language=Russian
+ERROR_INVALID_FORM_NAME - The specified form name is invalid.
+.
+Language=Polish
 ERROR_INVALID_FORM_NAME - The specified form name is invalid.
 .
 
@@ -10869,6 +13824,9 @@ ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
 Language=Russian
 ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
 .
+Language=Polish
+ERROR_INVALID_FORM_SIZE - The specified form size is invalid.
+.
 
 MessageId=1904
 Severity=Success
@@ -10878,6 +13836,9 @@ Language=English
 ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
 .
 Language=Russian
+ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
+.
+Language=Polish
 ERROR_ALREADY_WAITING - The specified printer handle is already being waited on
 .
 
@@ -10891,6 +13852,9 @@ ERROR_PRINTER_DELETED - The specified printer has been deleted.
 Language=Russian
 ERROR_PRINTER_DELETED - The specified printer has been deleted.
 .
+Language=Polish
+ERROR_PRINTER_DELETED - The specified printer has been deleted.
+.
 
 MessageId=1906
 Severity=Success
@@ -10900,6 +13864,9 @@ Language=English
 ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
 .
 Language=Russian
+ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
+.
+Language=Polish
 ERROR_INVALID_PRINTER_STATE - The state of the printer is invalid.
 .
 
@@ -10913,6 +13880,9 @@ ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging 
 Language=Russian
 ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging on the first time.
 .
+Language=Polish
+ERROR_PASSWORD_MUST_CHANGE - The user's password must be changed before logging on the first time.
+.
 
 MessageId=1908
 Severity=Success
@@ -10922,6 +13892,9 @@ Language=English
 ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
 .
 Language=Russian
+ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
+.
+Language=Polish
 ERROR_DOMAIN_CONTROLLER_NOT_FOUND - Could not find the domain controller for this domain.
 .
 
@@ -10935,6 +13908,9 @@ ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and ma
 Language=Russian
 ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and may not be used to log on.
 .
+Language=Polish
+ERROR_ACCOUNT_LOCKED_OUT - The referenced account is currently locked out and may not be used to log on.
+.
 
 MessageId=1910
 Severity=Success
@@ -10944,6 +13920,9 @@ Language=English
 OR_INVALID_OXID - The object exporter specified was not found.
 .
 Language=Russian
+OR_INVALID_OXID - The object exporter specified was not found.
+.
+Language=Polish
 OR_INVALID_OXID - The object exporter specified was not found.
 .
 
@@ -10957,6 +13936,9 @@ OR_INVALID_OID - The object specified was not found.
 Language=Russian
 OR_INVALID_OID - The object specified was not found.
 .
+Language=Polish
+OR_INVALID_OID - The object specified was not found.
+.
 
 MessageId=1912
 Severity=Success
@@ -10966,6 +13948,9 @@ Language=English
 OR_INVALID_SET - The object resolver set specified was not found.
 .
 Language=Russian
+OR_INVALID_SET - The object resolver set specified was not found.
+.
+Language=Polish
 OR_INVALID_SET - The object resolver set specified was not found.
 .
 
@@ -10979,6 +13964,9 @@ RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
 Language=Russian
 RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
 .
+Language=Polish
+RPC_S_SEND_INCOMPLETE - Some data remains to be sent in the request buffer.
+.
 
 MessageId=1914
 Severity=Success
@@ -10988,6 +13976,9 @@ Language=English
 RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
 .
 Language=Russian
+RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
+.
+Language=Polish
 RPC_S_INVALID_ASYNC_HANDLE - Invalid asynchronous remote procedure call handle.
 .
 
@@ -11001,6 +13992,9 @@ RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operati
 Language=Russian
 RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operation.
 .
+Language=Polish
+RPC_S_INVALID_ASYNC_CALL - Invalid asynchronous RPC call handle for this operation.
+.
 
 MessageId=1916
 Severity=Success
@@ -11010,6 +14004,9 @@ Language=English
 RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
 .
 Language=Russian
+RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
+.
+Language=Polish
 RPC_X_PIPE_CLOSED - The RPC pipe object has already been closed.
 .
 
@@ -11023,6 +14020,9 @@ RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were proce
 Language=Russian
 RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were processed.
 .
+Language=Polish
+RPC_X_PIPE_DISCIPLINE_ERROR - The RPC call completed before all pipes were processed.
+.
 
 MessageId=1918
 Severity=Success
@@ -11032,6 +14032,9 @@ Language=English
 RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
 .
 Language=Russian
+RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
+.
+Language=Polish
 RPC_X_PIPE_EMPTY - No more data is available from the RPC pipe.
 .
 
@@ -11045,6 +14048,9 @@ ERROR_NO_SITENAME - No site name is available for this machine.
 Language=Russian
 ERROR_NO_SITENAME - No site name is available for this machine.
 .
+Language=Polish
+ERROR_NO_SITENAME - No site name is available for this machine.
+.
 
 MessageId=1920
 Severity=Success
@@ -11054,6 +14060,9 @@ Language=English
 ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
 .
 Language=Russian
+ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
+.
+Language=Polish
 ERROR_CANT_ACCESS_FILE - The file cannot be accessed by the system.
 .
 
@@ -11067,6 +14076,9 @@ ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the sys
 Language=Russian
 ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the system.
 .
+Language=Polish
+ERROR_CANT_RESOLVE_FILENAME - The name of the file cannot be resolved by the system.
+.
 
 MessageId=1922
 Severity=Success
@@ -11076,6 +14088,9 @@ Language=English
 RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
 .
 Language=Russian
+RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
+.
+Language=Polish
 RPC_S_ENTRY_TYPE_MISMATCH - The entry is not of the expected type.
 .
 
@@ -11089,6 +14104,9 @@ RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the spec
 Language=Russian
 RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the specified entry.
 .
+Language=Polish
+RPC_S_NOT_ALL_OBJS_EXPORTED - Not all object UUIDs could be exported to the specified entry.
+.
 
 MessageId=1924
 Severity=Success
@@ -11098,6 +14116,9 @@ Language=English
 RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
 .
 Language=Russian
+RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
+.
+Language=Polish
 RPC_S_INTERFACE_NOT_EXPORTED - Interface could not be exported to the specified entry.
 .
 
@@ -11111,6 +14132,9 @@ RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
 Language=Russian
 RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
 .
+Language=Polish
+RPC_S_PROFILE_NOT_ADDED - The specified profile entry could not be added.
+.
 
 MessageId=1926
 Severity=Success
@@ -11120,6 +14144,9 @@ Language=English
 RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
 .
 Language=Russian
+RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
+.
+Language=Polish
 RPC_S_PRF_ELT_NOT_ADDED - The specified profile element could not be added.
 .
 
@@ -11133,6 +14160,9 @@ RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
 Language=Russian
 RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
 .
+Language=Polish
+RPC_S_PRF_ELT_NOT_REMOVED - The specified profile element could not be removed.
+.
 
 MessageId=1928
 Severity=Success
@@ -11142,6 +14172,9 @@ Language=English
 RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
 .
 Language=Russian
+RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
+.
+Language=Polish
 RPC_S_GRP_ELT_NOT_ADDED - The group element could not be added.
 .
 
@@ -11155,6 +14188,9 @@ RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
 Language=Russian
 RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
 .
+Language=Polish
+RPC_S_GRP_ELT_NOT_REMOVED - The group element could not be removed.
+.
 
 MessageId=1930
 Severity=Success
@@ -11164,6 +14200,9 @@ Language=English
 ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
 .
 Language=Russian
+ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
+.
+Language=Polish
 ERROR_KM_DRIVER_BLOCKED - The printer driver is not compatible with a policy enabled on your computer that blocks NT 4.0 drivers.
 .
 
@@ -11177,6 +14216,9 @@ ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
 Language=Russian
 ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
 .
+Language=Polish
+ERROR_CONTEXT_EXPIRED - The context has expired and can no longer be used.
+.
 
 MessageId=1932
 Severity=Success
@@ -11186,6 +14228,9 @@ Language=English
 ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
 .
 Language=Russian
+ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
+.
+Language=Polish
 ERROR_PER_USER_TRUST_QUOTA_EXCEEDED - The current user's delegated trust creation quota has been exceeded.
 .
 
@@ -11199,6 +14244,9 @@ ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota h
 Language=Russian
 ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota has been exceeded.
 .
+Language=Polish
+ERROR_ALL_USER_TRUST_QUOTA_EXCEEDED - The total delegated trust creation quota has been exceeded.
+.
 
 MessageId=1934
 Severity=Success
@@ -11208,6 +14256,9 @@ Language=English
 ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
 .
 Language=Russian
+ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
+.
+Language=Polish
 ERROR_USER_DELETE_TRUST_QUOTA_EXCEEDED - The current user's delegated trust deletion quota has been exceeded.
 .
 
@@ -11221,6 +14272,9 @@ ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
 Language=Russian
 ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
 .
+Language=Polish
+ERROR_INVALID_PIXEL_FORMAT - The pixel format is invalid.
+.
 
 MessageId=2001
 Severity=Success
@@ -11230,6 +14284,9 @@ Language=English
 ERROR_BAD_DRIVER - The specified driver is invalid.
 .
 Language=Russian
+ERROR_BAD_DRIVER - The specified driver is invalid.
+.
+Language=Polish
 ERROR_BAD_DRIVER - The specified driver is invalid.
 .
 
@@ -11243,6 +14300,9 @@ ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for 
 Language=Russian
 ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for this operation.
 .
+Language=Polish
+ERROR_INVALID_WINDOW_STYLE - The window style or class attribute is invalid for this operation.
+.
 
 MessageId=2003
 Severity=Success
@@ -11252,6 +14312,9 @@ Language=English
 ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
 .
 Language=Russian
+ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
+.
+Language=Polish
 ERROR_METAFILE_NOT_SUPPORTED - The requested metafile operation is not supported.
 .
 
@@ -11265,6 +14328,9 @@ ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not su
 Language=Russian
 ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not supported.
 .
+Language=Polish
+ERROR_TRANSFORM_NOT_SUPPORTED - The requested transformation operation is not supported.
+.
 
 MessageId=2005
 Severity=Success
@@ -11274,6 +14340,9 @@ Language=English
 ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
 .
 Language=Russian
+ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
+.
+Language=Polish
 ERROR_CLIPPING_NOT_SUPPORTED - The requested clipping operation is not supported.
 .
 
@@ -11287,6 +14356,9 @@ ERROR_INVALID_CMM - The specified color management module is invalid.
 Language=Russian
 ERROR_INVALID_CMM - The specified color management module is invalid.
 .
+Language=Polish
+ERROR_INVALID_CMM - The specified color management module is invalid.
+.
 
 MessageId=2011
 Severity=Success
@@ -11296,6 +14368,9 @@ Language=English
 ERROR_INVALID_PROFILE - The specified color profile is invalid.
 .
 Language=Russian
+ERROR_INVALID_PROFILE - The specified color profile is invalid.
+.
+Language=Polish
 ERROR_INVALID_PROFILE - The specified color profile is invalid.
 .
 
@@ -11309,6 +14384,9 @@ ERROR_TAG_NOT_FOUND - The specified tag was not found.
 Language=Russian
 ERROR_TAG_NOT_FOUND - The specified tag was not found.
 .
+Language=Polish
+ERROR_TAG_NOT_FOUND - The specified tag was not found.
+.
 
 MessageId=2013
 Severity=Success
@@ -11318,6 +14396,9 @@ Language=English
 ERROR_TAG_NOT_PRESENT - A required tag is not present.
 .
 Language=Russian
+ERROR_TAG_NOT_PRESENT - A required tag is not present.
+.
+Language=Polish
 ERROR_TAG_NOT_PRESENT - A required tag is not present.
 .
 
@@ -11331,6 +14412,9 @@ ERROR_DUPLICATE_TAG - The specified tag is already present.
 Language=Russian
 ERROR_DUPLICATE_TAG - The specified tag is already present.
 .
+Language=Polish
+ERROR_DUPLICATE_TAG - The specified tag is already present.
+.
 
 MessageId=2015
 Severity=Success
@@ -11340,6 +14424,9 @@ Language=English
 ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
 .
 Language=Russian
+ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
+.
+Language=Polish
 ERROR_PROFILE_NOT_ASSOCIATED_WITH_DEVICE - The specified color profile is not associated with any device.
 .
 
@@ -11353,6 +14440,9 @@ ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
 Language=Russian
 ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
 .
+Language=Polish
+ERROR_PROFILE_NOT_FOUND - The specified color profile was not found.
+.
 
 MessageId=2017
 Severity=Success
@@ -11362,6 +14452,9 @@ Language=English
 ERROR_INVALID_COLORSPACE - The specified color space is invalid.
 .
 Language=Russian
+ERROR_INVALID_COLORSPACE - The specified color space is invalid.
+.
+Language=Polish
 ERROR_INVALID_COLORSPACE - The specified color space is invalid.
 .
 
@@ -11375,6 +14468,9 @@ ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
 Language=Russian
 ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
 .
+Language=Polish
+ERROR_ICM_NOT_ENABLED - Image Color Management is not enabled.
+.
 
 MessageId=2019
 Severity=Success
@@ -11384,6 +14480,9 @@ Language=English
 ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
 .
 Language=Russian
+ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
+.
+Language=Polish
 ERROR_DELETING_ICM_XFORM - There was an error while deleting the color transform.
 .
 
@@ -11397,6 +14496,9 @@ ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
 Language=Russian
 ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
 .
+Language=Polish
+ERROR_INVALID_TRANSFORM - The specified color transform is invalid.
+.
 
 MessageId=2021
 Severity=Success
@@ -11406,6 +14508,9 @@ Language=English
 ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
 .
 Language=Russian
+ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
+.
+Language=Polish
 ERROR_COLORSPACE_MISMATCH - The specified transform does not match the bitmap's color space.
 .
 
@@ -11419,6 +14524,9 @@ ERROR_INVALID_COLORINDEX - The specified named color index is not present in the
 Language=Russian
 ERROR_INVALID_COLORINDEX - The specified named color index is not present in the profile.
 .
+Language=Polish
+ERROR_INVALID_COLORINDEX - The specified named color index is not present in the profile.
+.
 
 MessageId=2108
 Severity=Success
@@ -11428,6 +14536,9 @@ Language=English
 ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
 .
 Language=Russian
+ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
+.
+Language=Polish
 ERROR_CONNECTED_OTHER_PASSWORD - The network connection was made successfully, but the user had to be prompted for a password other than the one originally specified.
 .
 
@@ -11441,6 +14552,9 @@ ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made success
 Language=Russian
 ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made successfully using default credentials.
 .
+Language=Polish
+ERROR_CONNECTED_OTHER_PASSWORD_DEFAULT - The network connection was made successfully using default credentials.
+.
 
 MessageId=2202
 Severity=Success
@@ -11450,6 +14564,9 @@ Language=English
 ERROR_BAD_USERNAME - The specified username is invalid.
 .
 Language=Russian
+ERROR_BAD_USERNAME - The specified username is invalid.
+.
+Language=Polish
 ERROR_BAD_USERNAME - The specified username is invalid.
 .
 
@@ -11463,6 +14580,9 @@ ERROR_NOT_CONNECTED - This network connection does not exist.
 Language=Russian
 ERROR_NOT_CONNECTED - This network connection does not exist.
 .
+Language=Polish
+ERROR_NOT_CONNECTED - This network connection does not exist.
+.
 
 MessageId=2401
 Severity=Success
@@ -11472,6 +14592,9 @@ Language=English
 ERROR_OPEN_FILES - This network connection has files open or requests pending.
 .
 Language=Russian
+ERROR_OPEN_FILES - This network connection has files open or requests pending.
+.
+Language=Polish
 ERROR_OPEN_FILES - This network connection has files open or requests pending.
 .
 
@@ -11485,6 +14608,9 @@ ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
 Language=Russian
 ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
 .
+Language=Polish
+ERROR_ACTIVE_CONNECTIONS - Active connections still exist.
+.
 
 MessageId=2404
 Severity=Success
@@ -11494,6 +14620,9 @@ Language=English
 ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
 .
 Language=Russian
+ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
+.
+Language=Polish
 ERROR_DEVICE_IN_USE - The device is in use by an active process and cannot be disconnected.
 .
 
@@ -11507,6 +14636,9 @@ ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
 Language=Russian
 ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
 .
+Language=Polish
+ERROR_UNKNOWN_PRINT_MONITOR - The specified print monitor is unknown.
+.
 
 MessageId=3001
 Severity=Success
@@ -11516,6 +14648,9 @@ Language=English
 ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
 .
 Language=Russian
+ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
+.
+Language=Polish
 ERROR_PRINTER_DRIVER_IN_USE - The specified printer driver is currently in use.
 .
 
@@ -11529,6 +14664,9 @@ ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
 Language=Russian
 ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
 .
+Language=Polish
+ERROR_SPOOL_FILE_NOT_FOUND - The spool file was not found.
+.
 
 MessageId=3003
 Severity=Success
@@ -11538,6 +14676,9 @@ Language=English
 ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
 .
 Language=Russian
+ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
+.
+Language=Polish
 ERROR_SPL_NO_STARTDOC - A StartDocPrinter call was not issued.
 .
 
@@ -11551,6 +14692,9 @@ ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
 Language=Russian
 ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
 .
+Language=Polish
+ERROR_SPL_NO_ADDJOB - An AddJob call was not issued.
+.
 
 MessageId=3005
 Severity=Success
@@ -11560,6 +14704,9 @@ Language=English
 ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
 .
 Language=Russian
+ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
+.
+Language=Polish
 ERROR_PRINT_PROCESSOR_ALREADY_INSTALLED - The specified print processor has already been installed.
 .
 
@@ -11573,6 +14720,9 @@ ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already 
 Language=Russian
 ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already been installed.
 .
+Language=Polish
+ERROR_PRINT_MONITOR_ALREADY_INSTALLED - The specified print monitor has already been installed.
+.
 
 MessageId=3007
 Severity=Success
@@ -11582,6 +14732,9 @@ Language=English
 ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
 .
 Language=Russian
+ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
+.
+Language=Polish
 ERROR_INVALID_PRINT_MONITOR - The specified print monitor does not have the required functions.
 .
 
@@ -11595,6 +14748,9 @@ ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
 Language=Russian
 ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
 .
+Language=Polish
+ERROR_PRINT_MONITOR_IN_USE - The specified print monitor is currently in use.
+.
 
 MessageId=3009
 Severity=Success
@@ -11604,6 +14760,9 @@ Language=English
 ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
 .
 Language=Russian
+ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
+.
+Language=Polish
 ERROR_PRINTER_HAS_JOBS_QUEUED - The requested operation is not allowed when there are jobs queued to the printer.
 .
 
@@ -11617,6 +14776,9 @@ ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes w
 Language=Russian
 ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes will not be effective until the system is rebooted.
 .
+Language=Polish
+ERROR_SUCCESS_REBOOT_REQUIRED - The requested operation is successful. Changes will not be effective until the system is rebooted.
+.
 
 MessageId=3011
 Severity=Success
@@ -11626,6 +14788,9 @@ Language=English
 ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
 .
 Language=Russian
+ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
+.
+Language=Polish
 ERROR_SUCCESS_RESTART_REQUIRED - The requested operation is successful. Changes will not be effective until the service is restarted.
 .
 
@@ -11639,6 +14804,9 @@ ERROR_PRINTER_NOT_FOUND - No printers were found.
 Language=Russian
 ERROR_PRINTER_NOT_FOUND - No printers were found.
 .
+Language=Polish
+ERROR_PRINTER_NOT_FOUND - No printers were found.
+.
 
 MessageId=3013
 Severity=Success
@@ -11648,6 +14816,9 @@ Language=English
 ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
 .
 Language=Russian
+ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
+.
+Language=Polish
 ERROR_PRINTER_DRIVER_WARNED - The printer driver is known to be unreliable.
 .
 
@@ -11661,6 +14832,9 @@ ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
 Language=Russian
 ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
 .
+Language=Polish
+ERROR_PRINTER_DRIVER_BLOCKED - The printer driver is known to harm the system.
+.
 
 MessageId=3100
 Severity=Success
@@ -11670,6 +14844,9 @@ Language=English
 ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
 .
 Language=Russian
+ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
+.
+Language=Polish
 ERROR_XML_UNDEFINED_ENTITY - The XML contains an entity reference to an undefined entity.
 .
 
@@ -11683,6 +14860,9 @@ ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
 Language=Russian
 ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
 .
+Language=Polish
+ERROR_XML_MALFORMED_ENTITY - The XML contains a malformed entity reference.
+.
 
 MessageId=3102
 Severity=Success
@@ -11692,6 +14872,9 @@ Language=English
 ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
 .
 Language=Russian
+ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
+.
+Language=Polish
 ERROR_XML_CHAR_NOT_IN_RANGE - The XML contains a character which is not permitted in XML.
 .
 
@@ -11705,6 +14888,9 @@ ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_EXTERNAL_PROXY - The manifest contained a duplicate definition for external proxy stub %1 at (%1:%2,%3)
+.
 
 MessageId=3201
 Severity=Success
@@ -11714,6 +14900,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_ASSEMBLY_REFERENCE - The manifest already contains a reference to %4 - a second reference was found at (%1:%2,%3)
 .
 
@@ -11727,6 +14916,9 @@ ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2
 Language=Russian
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2,%3) is invalid.
 .
+Language=Polish
+ERROR_PCM_COMPILER_INVALID_ASSEMBLY_REFERENCE - The assembly reference at (%1:%2,%3) is invalid.
+.
 
 MessageId=3203
 Severity=Success
@@ -11736,6 +14928,9 @@ Language=English
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
 .
 Language=Russian
+ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
+.
+Language=Polish
 ERROR_PCM_COMPILER_INVALID_ASSEMBLY_DEFINITION - The assembly definition at (%1:%2,%3) is invalid.
 .
 
@@ -11749,6 +14944,9 @@ ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the w
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_WINDOW_CLASS - The manifest already contained the window class %4, found a second declaration at (%1:%2,%3)
+.
 
 MessageId=3205
 Severity=Success
@@ -11758,6 +14956,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_PROGID - The manifest already declared the progId %4, found a second declaration at (%1:%2,%3)
 .
 
@@ -11771,6 +14972,9 @@ ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present i
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_NOINHERIT - Only one noInherit tag may be present in a manifest, found a second tag at (%1:%2,%3)
+.
 
 MessageId=3207
 Severity=Success
@@ -11780,6 +14984,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_NOINHERITABLE - Only one noInheritable tag may be present in a manifest, found a second tag at (%1:%2,%3)
 .
 
@@ -11793,6 +15000,9 @@ ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate decl
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_COM_CLASS - The manifest contained a duplicate declaration of COM class %4 at (%1:%2,%3)
+.
 
 MessageId=3209
 Severity=Success
@@ -11802,6 +15012,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_FILE_NAME - The manifest already declared the file %4, a second definition was found at (%1:%2,%3)
 .
 
@@ -11815,6 +15028,9 @@ ERROR_PCM_COMPILER_DUPLICATE_CLR_SURROGATE - CLR surrogate %1 was already define
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_CLR_SURROGATE - CLR surrogate %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_CLR_SURROGATE - CLR surrogate %1 was already defined, second definition at (%1:%2,%3) is invalid.
+.
 
 MessageId=3211
 Severity=Success
@@ -11824,6 +15040,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_TYPE_LIBRARY - Type library %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_TYPE_LIBRARY - Type library %1 was already defined, second definition at (%1:%2,%3) is invalid.
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_TYPE_LIBRARY - Type library %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
 
@@ -11837,6 +15056,9 @@ ERROR_PCM_COMPILER_DUPLICATE_PROXY_STUB - Proxy stub definition %1 was already d
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_PROXY_STUB - Proxy stub definition %1 was already defined, second definition at (%1:%2,%3) is invalid.
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_PROXY_STUB - Proxy stub definition %1 was already defined, second definition at (%1:%2,%3) is invalid.
+.
 
 MessageId=3213
 Severity=Success
@@ -11846,6 +15068,9 @@ Language=English
 ERROR_PCM_COMPILER_DUPLICATE_CATEGORY_NAME - Category friendly name %4 was already used, second definition was found at (%1:%2,%3) is invalid.
 .
 Language=Russian
+ERROR_PCM_COMPILER_DUPLICATE_CATEGORY_NAME - Category friendly name %4 was already used, second definition was found at (%1:%2,%3) is invalid.
+.
+Language=Polish
 ERROR_PCM_COMPILER_DUPLICATE_CATEGORY_NAME - Category friendly name %4 was already used, second definition was found at (%1:%2,%3) is invalid.
 .
 
@@ -11859,6 +15084,9 @@ ERROR_PCM_COMPILER_DUPLICATE_TOP_LEVEL_IDENTITY_FOUND - Only one top-level assem
 Language=Russian
 ERROR_PCM_COMPILER_DUPLICATE_TOP_LEVEL_IDENTITY_FOUND - Only one top-level assemblyIdentity tag may be present in a manifest. A second tag with identity %4 was found at (%1:%2,%3)
 .
+Language=Polish
+ERROR_PCM_COMPILER_DUPLICATE_TOP_LEVEL_IDENTITY_FOUND - Only one top-level assemblyIdentity tag may be present in a manifest. A second tag with identity %4 was found at (%1:%2,%3)
+.
 
 MessageId=3215
 Severity=Success
@@ -11868,6 +15096,9 @@ Language=English
 ERROR_PCM_COMPILER_UNKNOWN_ROOT_ELEMENT - The root element for a manifest found at (%1:%2,%3) was not expected or was of the wrong version.
 .
 Language=Russian
+ERROR_PCM_COMPILER_UNKNOWN_ROOT_ELEMENT - The root element for a manifest found at (%1:%2,%3) was not expected or was of the wrong version.
+.
+Language=Polish
 ERROR_PCM_COMPILER_UNKNOWN_ROOT_ELEMENT - The root element for a manifest found at (%1:%2,%3) was not expected or was of the wrong version.
 .
 
@@ -11881,6 +15112,9 @@ ERROR_PCM_COMPILER_INVALID_ELEMENT - The element found at (%1:%2,%3) was not exp
 Language=Russian
 ERROR_PCM_COMPILER_INVALID_ELEMENT - The element found at (%1:%2,%3) was not expected according to the manifest schema.
 .
+Language=Polish
+ERROR_PCM_COMPILER_INVALID_ELEMENT - The element found at (%1:%2,%3) was not expected according to the manifest schema.
+.
 
 MessageId=3217
 Severity=Success
@@ -11890,6 +15124,9 @@ Language=English
 ERROR_PCM_COMPILER_MISSING_REQUIRED_ATTRIBUTE - The element found at (%1:%2,%3) was missing the required attribute '%4'. See the manifest schema for more information
 .
 Language=Russian
+ERROR_PCM_COMPILER_MISSING_REQUIRED_ATTRIBUTE - The element found at (%1:%2,%3) was missing the required attribute '%4'. See the manifest schema for more information
+.
+Language=Polish
 ERROR_PCM_COMPILER_MISSING_REQUIRED_ATTRIBUTE - The element found at (%1:%2,%3) was missing the required attribute '%4'. See the manifest schema for more information
 .
 
@@ -11903,6 +15140,9 @@ ERROR_PCM_COMPILER_INVALID_ATTRIBUTE_VALUE - The attribute value %4 at (%1:%2,%3
 Language=Russian
 ERROR_PCM_COMPILER_INVALID_ATTRIBUTE_VALUE - The attribute value %4 at (%1:%2,%3) was invalid according to the schema.
 .
+Language=Polish
+ERROR_PCM_COMPILER_INVALID_ATTRIBUTE_VALUE - The attribute value %4 at (%1:%2,%3) was invalid according to the schema.
+.
 
 MessageId=3219
 Severity=Success
@@ -11912,6 +15152,9 @@ Language=English
 ERROR_PCM_COMPILER_UNEXPECTED_PCDATA - PCDATA or CDATA found at (%1:%2,%3) in the source document was not expected in the parent element %4.
 .
 Language=Russian
+ERROR_PCM_COMPILER_UNEXPECTED_PCDATA - PCDATA or CDATA found at (%1:%2,%3) in the source document was not expected in the parent element %4.
+.
+Language=Polish
 ERROR_PCM_COMPILER_UNEXPECTED_PCDATA - PCDATA or CDATA found at (%1:%2,%3) in the source document was not expected in the parent element %4.
 .
 
@@ -11925,6 +15168,9 @@ ERROR_PCM_DUPLICATE_STRING_TABLE_ENT - The string table entry with culture %4, n
 Language=Russian
 ERROR_PCM_DUPLICATE_STRING_TABLE_ENT - The string table entry with culture %4, name %5, and value '%6' at (%1:%2,%3) duplicated a previous entry.
 .
+Language=Polish
+ERROR_PCM_DUPLICATE_STRING_TABLE_ENT - The string table entry with culture %4, name %5, and value '%6' at (%1:%2,%3) duplicated a previous entry.
+.
 
 MessageId=4000
 Severity=Success
@@ -11934,6 +15180,9 @@ Language=English
 ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
 .
 Language=Russian
+ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
+.
+Language=Polish
 ERROR_WINS_INTERNAL - WINS encountered an error while processing the command.
 .
 
@@ -11947,6 +15196,9 @@ ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
 Language=Russian
 ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
 .
+Language=Polish
+ERROR_CAN_NOT_DEL_LOCAL_WINS - The local WINS cannot be deleted.
+.
 
 MessageId=4002
 Severity=Success
@@ -11956,6 +15208,9 @@ Language=English
 ERROR_STATIC_INIT - The importation from the file failed.
 .
 Language=Russian
+ERROR_STATIC_INIT - The importation from the file failed.
+.
+Language=Polish
 ERROR_STATIC_INIT - The importation from the file failed.
 .
 
@@ -11969,6 +15224,9 @@ ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
 Language=Russian
 ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
 .
+Language=Polish
+ERROR_INC_BACKUP - The backup failed. Was a full backup done before?
+.
 
 MessageId=4004
 Severity=Success
@@ -11978,6 +15236,9 @@ Language=English
 ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
 .
 Language=Russian
+ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
+.
+Language=Polish
 ERROR_FULL_BACKUP - The backup failed. Check the directory to which you are backing the database.
 .
 
@@ -11991,6 +15252,9 @@ ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
 Language=Russian
 ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
 .
+Language=Polish
+ERROR_REC_NON_EXISTENT - The name does not exist in the WINS database.
+.
 
 MessageId=4006
 Severity=Success
@@ -12000,6 +15264,9 @@ Language=English
 ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
 .
 Language=Russian
+ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
+.
+Language=Polish
 ERROR_RPL_NOT_ALLOWED - Replication with a nonconfigured partner is not allowed.
 .
 
@@ -12013,6 +15280,9 @@ ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is
 Language=Russian
 ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
 .
+Language=Polish
+ERROR_DHCP_ADDRESS_CONFLICT - The DHCP client has obtained an IP address that is already in use on the network. The local interface will be disabled until the DHCP client can obtain a new address.
+.
 
 MessageId=4200
 Severity=Success
@@ -12022,6 +15292,9 @@ Language=English
 ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
 .
 Language=Russian
+ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
+.
+Language=Polish
 ERROR_WMI_GUID_NOT_FOUND - The GUID passed was not recognized as valid by a WMI data provider.
 .
 
@@ -12035,6 +15308,9 @@ ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as va
 Language=Russian
 ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as valid by a WMI data provider.
 .
+Language=Polish
+ERROR_WMI_INSTANCE_NOT_FOUND - The instance name passed was not recognized as valid by a WMI data provider.
+.
 
 MessageId=4202
 Severity=Success
@@ -12044,6 +15320,9 @@ Language=English
 ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
 .
 Language=Russian
+ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
+.
+Language=Polish
 ERROR_WMI_ITEMID_NOT_FOUND - The data item ID passed was not recognized as valid by a WMI data provider.
 .
 
@@ -12057,6 +15336,9 @@ ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retri
 Language=Russian
 ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retried.
 .
+Language=Polish
+ERROR_WMI_TRY_AGAIN - The WMI request could not be completed and should be retried.
+.
 
 MessageId=4204
 Severity=Success
@@ -12066,6 +15348,9 @@ Language=English
 ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
 .
 Language=Russian
+ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
+.
+Language=Polish
 ERROR_WMI_DP_NOT_FOUND - The WMI data provider could not be located.
 .
 
@@ -12079,6 +15364,9 @@ ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance
 Language=Russian
 ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance set that has not been registered.
 .
+Language=Polish
+ERROR_WMI_UNRESOLVED_INSTANCE_REF - The WMI data provider references an instance set that has not been registered.
+.
 
 MessageId=4206
 Severity=Success
@@ -12088,6 +15376,9 @@ Language=English
 ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
 .
 Language=Russian
+ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
+.
+Language=Polish
 ERROR_WMI_ALREADY_ENABLED - The WMI data block or event notification has already been enabled.
 .
 
@@ -12101,6 +15392,9 @@ ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
 Language=Russian
 ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
 .
+Language=Polish
+ERROR_WMI_GUID_DISCONNECTED - The WMI data block is no longer available.
+.
 
 MessageId=4208
 Severity=Success
@@ -12110,6 +15404,9 @@ Language=English
 ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
 .
 Language=Russian
+ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
+.
+Language=Polish
 ERROR_WMI_SERVER_UNAVAILABLE - The WMI data service is not available.
 .
 
@@ -12123,6 +15420,9 @@ ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
 Language=Russian
 ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
 .
+Language=Polish
+ERROR_WMI_DP_FAILED - The WMI data provider failed to carry out the request.
+.
 
 MessageId=4210
 Severity=Success
@@ -12132,6 +15432,9 @@ Language=English
 ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
 .
 Language=Russian
+ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
+.
+Language=Polish
 ERROR_WMI_INVALID_MOF - The WMI MOF information is not valid.
 .
 
@@ -12145,6 +15448,9 @@ ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
 Language=Russian
 ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
 .
+Language=Polish
+ERROR_WMI_INVALID_REGINFO - The WMI registration information is not valid.
+.
 
 MessageId=4212
 Severity=Success
@@ -12154,6 +15460,9 @@ Language=English
 ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
 .
 Language=Russian
+ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
+.
+Language=Polish
 ERROR_WMI_ALREADY_DISABLED - The WMI data block or event notification has already been disabled.
 .
 
@@ -12167,6 +15476,9 @@ ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
 Language=Russian
 ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
 .
+Language=Polish
+ERROR_WMI_READ_ONLY - The WMI data item or data block is read only.
+.
 
 MessageId=4214
 Severity=Success
@@ -12176,6 +15488,9 @@ Language=English
 ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
 .
 Language=Russian
+ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
+.
+Language=Polish
 ERROR_WMI_SET_FAILURE - The WMI data item or data block could not be changed.
 .
 
@@ -12189,6 +15504,9 @@ ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
 Language=Russian
 ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
 .
+Language=Polish
+ERROR_INVALID_MEDIA - The media identifier does not represent a valid medium.
+.
 
 MessageId=4301
 Severity=Success
@@ -12198,6 +15516,9 @@ Language=English
 ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
 .
 Language=Russian
+ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
+.
+Language=Polish
 ERROR_INVALID_LIBRARY - The library identifier does not represent a valid library.
 .
 
@@ -12211,6 +15532,9 @@ ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid 
 Language=Russian
 ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid media pool.
 .
+Language=Polish
+ERROR_INVALID_MEDIA_POOL - The media pool identifier does not represent a valid media pool.
+.
 
 MessageId=4303
 Severity=Success
@@ -12220,6 +15544,9 @@ Language=English
 ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
 .
 Language=Russian
+ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
+.
+Language=Polish
 ERROR_DRIVE_MEDIA_MISMATCH - The drive and medium are not compatible or exist in different libraries.
 .
 
@@ -12233,6 +15560,9 @@ ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must
 Language=Russian
 ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must be online to perform this operation.
 .
+Language=Polish
+ERROR_MEDIA_OFFLINE - The medium currently exists in an offline library and must be online to perform this operation.
+.
 
 MessageId=4305
 Severity=Success
@@ -12242,6 +15572,9 @@ Language=English
 ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
 .
 Language=Russian
+ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
+.
+Language=Polish
 ERROR_LIBRARY_OFFLINE - The operation cannot be performed on an offline library.
 .
 
@@ -12255,6 +15588,9 @@ ERROR_EMPTY - The library, drive, or media pool is empty.
 Language=Russian
 ERROR_EMPTY - The library, drive, or media pool is empty.
 .
+Language=Polish
+ERROR_EMPTY - The library, drive, or media pool is empty.
+.
 
 MessageId=4307
 Severity=Success
@@ -12264,6 +15600,9 @@ Language=English
 ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
 .
 Language=Russian
+ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
+.
+Language=Polish
 ERROR_NOT_EMPTY - The library, drive, or media pool must be empty to perform this operation.
 .
 
@@ -12277,6 +15616,9 @@ ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or 
 Language=Russian
 ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or library.
 .
+Language=Polish
+ERROR_MEDIA_UNAVAILABLE - No media is currently available in this media pool or library.
+.
 
 MessageId=4309
 Severity=Success
@@ -12286,6 +15628,9 @@ Language=English
 ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
 .
 Language=Russian
+ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
+.
+Language=Polish
 ERROR_RESOURCE_DISABLED - A resource required for this operation is disabled.
 .
 
@@ -12299,6 +15644,9 @@ ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
 Language=Russian
 ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
 .
+Language=Polish
+ERROR_INVALID_CLEANER - The media identifier does not represent a valid cleaner.
+.
 
 MessageId=4311
 Severity=Success
@@ -12308,6 +15656,9 @@ Language=English
 ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
 .
 Language=Russian
+ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
+.
+Language=Polish
 ERROR_UNABLE_TO_CLEAN - The drive cannot be cleaned or does not support cleaning.
 .
 
@@ -12321,6 +15672,9 @@ ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object
 Language=Russian
 ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object.
 .
+Language=Polish
+ERROR_OBJECT_NOT_FOUND - The object identifier does not represent a valid object.
+.
 
 MessageId=4313
 Severity=Success
@@ -12330,6 +15684,9 @@ Language=English
 ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
 .
 Language=Russian
+ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
+.
+Language=Polish
 ERROR_DATABASE_FAILURE - Unable to read from or write to the database.
 .
 
@@ -12343,6 +15700,9 @@ ERROR_DATABASE_FULL - The database is full.
 Language=Russian
 ERROR_DATABASE_FULL - The database is full.
 .
+Language=Polish
+ERROR_DATABASE_FULL - The database is full.
+.
 
 MessageId=4315
 Severity=Success
@@ -12352,6 +15712,9 @@ Language=English
 ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
 .
 Language=Russian
+ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
+.
+Language=Polish
 ERROR_MEDIA_INCOMPATIBLE - The medium is not compatible with the device or media pool.
 .
 
@@ -12365,6 +15728,9 @@ ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not e
 Language=Russian
 ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not exist.
 .
+Language=Polish
+ERROR_RESOURCE_NOT_PRESENT - The resource required for this operation does not exist.
+.
 
 MessageId=4317
 Severity=Success
@@ -12374,6 +15740,9 @@ Language=English
 ERROR_INVALID_OPERATION - The operation identifier is not valid.
 .
 Language=Russian
+ERROR_INVALID_OPERATION - The operation identifier is not valid.
+.
+Language=Polish
 ERROR_INVALID_OPERATION - The operation identifier is not valid.
 .
 
@@ -12387,6 +15756,9 @@ ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
 Language=Russian
 ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
 .
+Language=Polish
+ERROR_MEDIA_NOT_AVAILABLE - The media is not mounted or ready for use.
+.
 
 MessageId=4319
 Severity=Success
@@ -12396,6 +15768,9 @@ Language=English
 ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
 .
 Language=Russian
+ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
+.
+Language=Polish
 ERROR_DEVICE_NOT_AVAILABLE - The device is not ready for use.
 .
 
@@ -12409,6 +15784,9 @@ ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
 Language=Russian
 ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
 .
+Language=Polish
+ERROR_REQUEST_REFUSED - The operator or administrator has refused the request.
+.
 
 MessageId=4321
 Severity=Success
@@ -12418,6 +15796,9 @@ Language=English
 ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
 .
 Language=Russian
+ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
+.
+Language=Polish
 ERROR_INVALID_DRIVE_OBJECT - The drive identifier does not represent a valid drive.
 .
 
@@ -12431,6 +15812,9 @@ ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
 Language=Russian
 ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
 .
+Language=Polish
+ERROR_LIBRARY_FULL - Library is full. No slot is available for use.
+.
 
 MessageId=4323
 Severity=Success
@@ -12440,6 +15824,9 @@ Language=English
 ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
 .
 Language=Russian
+ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
+.
+Language=Polish
 ERROR_MEDIUM_NOT_ACCESSIBLE - The transport cannot access the medium.
 .
 
@@ -12453,6 +15840,9 @@ ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
 Language=Russian
 ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
 .
+Language=Polish
+ERROR_UNABLE_TO_LOAD_MEDIUM - Unable to load the medium into the drive.
+.
 
 MessageId=4325
 Severity=Success
@@ -12462,6 +15852,9 @@ Language=English
 ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
 .
 Language=Russian
+ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
+.
+Language=Polish
 ERROR_UNABLE_TO_INVENTORY_DRIVE - Unable to retrieve status about the drive.
 .
 
@@ -12475,6 +15868,9 @@ ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
 Language=Russian
 ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
 .
+Language=Polish
+ERROR_UNABLE_TO_INVENTORY_SLOT - Unable to retrieve status about the slot.
+.
 
 MessageId=4327
 Severity=Success
@@ -12484,6 +15880,9 @@ Language=English
 ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
 .
 Language=Russian
+ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
+.
+Language=Polish
 ERROR_UNABLE_TO_INVENTORY_TRANSPORT - Unable to retrieve status about the transport.
 .
 
@@ -12497,6 +15896,9 @@ ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
 Language=Russian
 ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
 .
+Language=Polish
+ERROR_TRANSPORT_FULL - Cannot use the transport because it is already in use.
+.
 
 MessageId=4329
 Severity=Success
@@ -12506,6 +15908,9 @@ Language=English
 ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
 .
 Language=Russian
+ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
+.
+Language=Polish
 ERROR_CONTROLLING_IEPORT - Unable to open or close the inject/eject port.
 .
 
@@ -12519,6 +15924,9 @@ ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in
 Language=Russian
 ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in a drive.
 .
+Language=Polish
+ERROR_UNABLE_TO_EJECT_MOUNTED_MEDIA - Unable to eject the media because it is in a drive.
+.
 
 MessageId=4331
 Severity=Success
@@ -12528,6 +15936,9 @@ Language=English
 ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
 .
 Language=Russian
+ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
+.
+Language=Polish
 ERROR_CLEANER_SLOT_SET - A cleaner slot is already reserved.
 .
 
@@ -12541,6 +15952,9 @@ ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
 Language=Russian
 ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
 .
+Language=Polish
+ERROR_CLEANER_SLOT_NOT_SET - A cleaner slot is not reserved.
+.
 
 MessageId=4333
 Severity=Success
@@ -12550,6 +15964,9 @@ Language=English
 ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
 .
 Language=Russian
+ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
+.
+Language=Polish
 ERROR_CLEANER_CARTRIDGE_SPENT - The cleaner cartridge has performed the maximum number of drive cleanings.
 .
 
@@ -12563,6 +15980,9 @@ ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
 Language=Russian
 ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
 .
+Language=Polish
+ERROR_UNEXPECTED_OMID - Unexpected on-medium identifier.
+.
 
 MessageId=4335
 Severity=Success
@@ -12572,6 +15992,9 @@ Language=English
 ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
 .
 Language=Russian
+ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
+.
+Language=Polish
 ERROR_CANT_DELETE_LAST_ITEM - The last remaining item in this group or resource cannot be deleted.
 .
 
@@ -12585,6 +16008,9 @@ ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size a
 Language=Russian
 ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size allowed for this parameter.
 .
+Language=Polish
+ERROR_MESSAGE_EXCEEDS_MAX_SIZE - The message provided exceeds the maximum size allowed for this parameter.
+.
 
 MessageId=4337
 Severity=Success
@@ -12594,6 +16020,9 @@ Language=English
 ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
 .
 Language=Russian
+ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
+.
+Language=Polish
 ERROR_VOLUME_CONTAINS_SYS_FILES - The volume contains system or paging files.
 .
 
@@ -12607,6 +16036,9 @@ ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since
 Language=Russian
 ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
 .
+Language=Polish
+ERROR_INDIGENOUS_TYPE - The media type cannot be removed from this library since at least one drive in the library reports it can support this media type.
+.
 
 MessageId=4339
 Severity=Success
@@ -12616,6 +16048,9 @@ Language=English
 ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
 .
 Language=Russian
+ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
+.
+Language=Polish
 ERROR_NO_SUPPORTING_DRIVES - This offline media cannot be mounted on this system since no enabled drives are present which can be used.
 .
 
@@ -12629,6 +16064,9 @@ ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape l
 Language=Russian
 ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape library.
 .
+Language=Polish
+ERROR_CLEANER_CARTRIDGE_INSTALLED - A cleaner cartridge is present in the tape library.
+.
 
 MessageId=4350
 Severity=Success
@@ -12638,6 +16076,9 @@ Language=English
 ERROR_FILE_OFFLINE - The remote storage service was not able to recall the file.
 .
 Language=Russian
+ERROR_FILE_OFFLINE - The remote storage service was not able to recall the file.
+.
+Language=Polish
 ERROR_FILE_OFFLINE - The remote storage service was not able to recall the file.
 .
 
@@ -12651,6 +16092,9 @@ ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational 
 Language=Russian
 ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational at this time.
 .
+Language=Polish
+ERROR_REMOTE_STORAGE_NOT_ACTIVE - The remote storage service is not operational at this time.
+.
 
 MessageId=4352
 Severity=Success
@@ -12660,6 +16104,9 @@ Language=English
 ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
 .
 Language=Russian
+ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
+.
+Language=Polish
 ERROR_REMOTE_STORAGE_MEDIA_ERROR - The remote storage service encountered a media error.
 .
 
@@ -12673,6 +16120,9 @@ ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
 Language=Russian
 ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
 .
+Language=Polish
+ERROR_NOT_A_REPARSE_POINT - The file or directory is not a reparse point.
+.
 
 MessageId=4391
 Severity=Success
@@ -12682,6 +16132,9 @@ Language=English
 ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
 .
 Language=Russian
+ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
+.
+Language=Polish
 ERROR_REPARSE_ATTRIBUTE_CONFLICT - The reparse point attribute cannot be set because it conflicts with an existing attribute.
 .
 
@@ -12695,6 +16148,9 @@ ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is inv
 Language=Russian
 ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is invalid.
 .
+Language=Polish
+ERROR_INVALID_REPARSE_DATA - The data present in the reparse point buffer is invalid.
+.
 
 MessageId=4393
 Severity=Success
@@ -12704,6 +16160,9 @@ Language=English
 ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
 .
 Language=Russian
+ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
+.
+Language=Polish
 ERROR_REPARSE_TAG_INVALID - The tag present in the reparse point buffer is invalid.
 .
 
@@ -12717,6 +16176,9 @@ ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in th
 Language=Russian
 ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in the request and the tag present in the reparse point.
 .
+Language=Polish
+ERROR_REPARSE_TAG_MISMATCH - There is a mismatch between the tag specified in the request and the tag present in the reparse point.
+.
 
 MessageId=4500
 Severity=Success
@@ -12726,6 +16188,9 @@ Language=English
 ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
 .
 Language=Russian
+ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
+.
+Language=Polish
 ERROR_VOLUME_NOT_SIS_ENABLED - Single Instance Storage is not available on this volume.
 .
 
@@ -12739,6 +16204,9 @@ ERROR_DEPENDENT_RESOURCE_EXISTS - The cluster resource cannot be moved to anothe
 Language=Russian
 ERROR_DEPENDENT_RESOURCE_EXISTS - The cluster resource cannot be moved to another group because other resources are dependent on it.
 .
+Language=Polish
+ERROR_DEPENDENT_RESOURCE_EXISTS - The cluster resource cannot be moved to another group because other resources are dependent on it.
+.
 
 MessageId=5002
 Severity=Success
@@ -12748,6 +16216,9 @@ Language=English
 ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
 .
 Language=Russian
+ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
+.
+Language=Polish
 ERROR_DEPENDENCY_NOT_FOUND - The cluster resource dependency cannot be found.
 .
 
@@ -12761,6 +16232,9 @@ ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent 
 Language=Russian
 ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent on the specified resource because it is already dependent.
 .
+Language=Polish
+ERROR_DEPENDENCY_ALREADY_EXISTS - The cluster resource cannot be made dependent on the specified resource because it is already dependent.
+.
 
 MessageId=5004
 Severity=Success
@@ -12770,6 +16244,9 @@ Language=English
 ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
 .
 Language=Russian
+ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
+.
+Language=Polish
 ERROR_RESOURCE_NOT_ONLINE - The cluster resource is not online.
 .
 
@@ -12783,6 +16260,9 @@ ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operati
 Language=Russian
 ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
 .
+Language=Polish
+ERROR_HOST_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
+.
 
 MessageId=5006
 Severity=Success
@@ -12792,6 +16272,9 @@ Language=English
 ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
 .
 Language=Russian
+ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
+.
+Language=Polish
 ERROR_RESOURCE_NOT_AVAILABLE - The cluster resource is not available.
 .
 
@@ -12805,6 +16288,9 @@ ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
 Language=Russian
 ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
 .
+Language=Polish
+ERROR_RESOURCE_NOT_FOUND - The cluster resource could not be found.
+.
 
 MessageId=5008
 Severity=Success
@@ -12814,6 +16300,9 @@ Language=English
 ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
 .
 Language=Russian
+ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
+.
+Language=Polish
 ERROR_SHUTDOWN_CLUSTER - The cluster is being shut down.
 .
 
@@ -12827,6 +16316,9 @@ ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster
 Language=Russian
 ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster unless the node is down.
 .
+Language=Polish
+ERROR_CANT_EVICT_ACTIVE_NODE - A cluster node cannot be evicted from the cluster unless the node is down.
+.
 
 MessageId=5010
 Severity=Success
@@ -12836,6 +16328,9 @@ Language=English
 ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
 .
 Language=Russian
+ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
+.
+Language=Polish
 ERROR_OBJECT_ALREADY_EXISTS - The object already exists.
 .
 
@@ -12849,6 +16344,9 @@ ERROR_OBJECT_IN_LIST - The object is already in the list.
 Language=Russian
 ERROR_OBJECT_IN_LIST - The object is already in the list.
 .
+Language=Polish
+ERROR_OBJECT_IN_LIST - The object is already in the list.
+.
 
 MessageId=5012
 Severity=Success
@@ -12858,6 +16356,9 @@ Language=English
 ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
 .
 Language=Russian
+ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
+.
+Language=Polish
 ERROR_GROUP_NOT_AVAILABLE - The cluster group is not available for any new requests.
 .
 
@@ -12871,6 +16372,9 @@ ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
 Language=Russian
 ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
 .
+Language=Polish
+ERROR_GROUP_NOT_FOUND - The cluster group could not be found.
+.
 
 MessageId=5014
 Severity=Success
@@ -12880,6 +16384,9 @@ Language=English
 ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
 .
 Language=Russian
+ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
+.
+Language=Polish
 ERROR_GROUP_NOT_ONLINE - The operation could not be completed because the cluster group is not online.
 .
 
@@ -12893,6 +16400,9 @@ ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the re
 Language=Russian
 ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the resource.
 .
+Language=Polish
+ERROR_HOST_NODE_NOT_RESOURCE_OWNER - The cluster node is not the owner of the resource.
+.
 
 MessageId=5016
 Severity=Success
@@ -12902,6 +16412,9 @@ Language=English
 ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
 .
 Language=Russian
+ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
+.
+Language=Polish
 ERROR_HOST_NODE_NOT_GROUP_OWNER - The cluster node is not the owner of the group.
 .
 
@@ -12915,6 +16428,9 @@ ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the sp
 Language=Russian
 ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the specified resource monitor.
 .
+Language=Polish
+ERROR_RESMON_CREATE_FAILED - The cluster resource could not be created in the specified resource monitor.
+.
 
 MessageId=5018
 Severity=Success
@@ -12924,6 +16440,9 @@ Language=English
 ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
 .
 Language=Russian
+ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
+.
+Language=Polish
 ERROR_RESMON_ONLINE_FAILED - The cluster resource could not be brought online by the resource monitor.
 .
 
@@ -12937,6 +16456,9 @@ ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster
 Language=Russian
 ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster resource is online.
 .
+Language=Polish
+ERROR_RESOURCE_ONLINE - The operation could not be completed because the cluster resource is online.
+.
 
 MessageId=5020
 Severity=Success
@@ -12946,6 +16468,9 @@ Language=English
 ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
 .
 Language=Russian
+ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
+.
+Language=Polish
 ERROR_QUORUM_RESOURCE - The cluster resource could not be deleted or brought offline because it is the quorum resource.
 .
 
@@ -12959,6 +16484,9 @@ ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a q
 Language=Russian
 ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
 .
+Language=Polish
+ERROR_NOT_QUORUM_CAPABLE - The cluster could not make the specified resource a quorum resource because it is not capable of being a quorum resource.
+.
 
 MessageId=5022
 Severity=Success
@@ -12968,6 +16496,9 @@ Language=English
 ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
 .
 Language=Russian
+ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
+.
+Language=Polish
 ERROR_CLUSTER_SHUTTING_DOWN - The cluster software is shutting down.
 .
 
@@ -12981,6 +16512,9 @@ ERROR_INVALID_STATE - The group or resource is not in the correct state to perfo
 Language=Russian
 ERROR_INVALID_STATE - The group or resource is not in the correct state to perform the requested operation.
 .
+Language=Polish
+ERROR_INVALID_STATE - The group or resource is not in the correct state to perform the requested operation.
+.
 
 MessageId=5024
 Severity=Success
@@ -12990,6 +16524,9 @@ Language=English
 ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
 .
 Language=Russian
+ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
+.
+Language=Polish
 ERROR_RESOURCE_PROPERTIES_STORED - The properties were stored but not all changes will take effect until the next time the resource is brought online.
 .
 
@@ -13003,6 +16540,9 @@ ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quo
 Language=Russian
 ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
 .
+Language=Polish
+ERROR_NOT_QUORUM_CLASS - The cluster could not make the specified resource a quorum resource because it does not belong to a shared storage class.
+.
 
 MessageId=5026
 Severity=Success
@@ -13012,6 +16552,9 @@ Language=English
 ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
 .
 Language=Russian
+ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
+.
+Language=Polish
 ERROR_CORE_RESOURCE - The cluster resource could not be deleted since it is a core resource.
 .
 
@@ -13025,6 +16568,9 @@ ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
 Language=Russian
 ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
 .
+Language=Polish
+ERROR_QUORUM_RESOURCE_ONLINE_FAILED - The quorum resource failed to come online.
+.
 
 MessageId=5028
 Severity=Success
@@ -13034,6 +16580,9 @@ Language=English
 ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
 .
 Language=Russian
+ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
+.
+Language=Polish
 ERROR_QUORUMLOG_OPEN_FAILED - The quorum log could not be created or mounted successfully.
 .
 
@@ -13047,6 +16596,9 @@ ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
 Language=Russian
 ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
 .
+Language=Polish
+ERROR_CLUSTERLOG_CORRUPT - The cluster log is corrupt.
+.
 
 MessageId=5030
 Severity=Success
@@ -13056,6 +16608,9 @@ Language=English
 ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
 .
 Language=Russian
+ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
+.
+Language=Polish
 ERROR_CLUSTERLOG_RECORD_EXCEEDS_MAXSIZE - The record could not be written to the cluster log since it exceeds the maximum size.
 .
 
@@ -13069,6 +16624,9 @@ ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
 Language=Russian
 ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
 .
+Language=Polish
+ERROR_CLUSTERLOG_EXCEEDS_MAXSIZE - The cluster log exceeds its maximum size.
+.
 
 MessageId=5032
 Severity=Success
@@ -13078,6 +16636,9 @@ Language=English
 ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
 .
 Language=Russian
+ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
+.
+Language=Polish
 ERROR_CLUSTERLOG_CHKPOINT_NOT_FOUND - No checkpoint record was found in the cluster log.
 .
 
@@ -13091,6 +16652,9 @@ ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for l
 Language=Russian
 ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for logging is not available.
 .
+Language=Polish
+ERROR_CLUSTERLOG_NOT_ENOUGH_SPACE - The minimum required disk space needed for logging is not available.
+.
 
 MessageId=5034
 Severity=Success
@@ -13100,6 +16664,9 @@ Language=English
 ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
 .
 Language=Russian
+ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
+.
+Language=Polish
 ERROR_QUORUM_OWNER_ALIVE - The cluster node failed to take control of the quorum resource because the resource is owned by another active node.
 .
 
@@ -13113,6 +16680,9 @@ ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operat
 Language=Russian
 ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operation.
 .
+Language=Polish
+ERROR_NETWORK_NOT_AVAILABLE - A cluster network is not available for this operation.
+.
 
 MessageId=5036
 Severity=Success
@@ -13122,6 +16692,9 @@ Language=English
 ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
 .
 Language=Russian
+ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
+.
+Language=Polish
 ERROR_NODE_NOT_AVAILABLE - A cluster node is not available for this operation.
 .
 
@@ -13135,6 +16708,9 @@ ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform thi
 Language=Russian
 ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform this operation.
 .
+Language=Polish
+ERROR_ALL_NODES_NOT_AVAILABLE - All cluster nodes must be running to perform this operation.
+.
 
 MessageId=5038
 Severity=Success
@@ -13144,6 +16720,9 @@ Language=English
 ERROR_RESOURCE_FAILED - A cluster resource failed.
 .
 Language=Russian
+ERROR_RESOURCE_FAILED - A cluster resource failed.
+.
+Language=Polish
 ERROR_RESOURCE_FAILED - A cluster resource failed.
 .
 
@@ -13157,6 +16736,9 @@ ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
 Language=Russian
 ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
 .
+Language=Polish
+ERROR_CLUSTER_INVALID_NODE - The cluster node is not valid.
+.
 
 MessageId=5040
 Severity=Success
@@ -13166,6 +16748,9 @@ Language=English
 ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_EXISTS - The cluster node already exists.
 .
 
@@ -13179,6 +16764,9 @@ ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster
 Language=Russian
 ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster.
 .
+Language=Polish
+ERROR_CLUSTER_JOIN_IN_PROGRESS - A node is in the process of joining the cluster.
+.
 
 MessageId=5042
 Severity=Success
@@ -13188,6 +16776,9 @@ Language=English
 ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_NOT_FOUND - The cluster node was not found.
 .
 
@@ -13201,6 +16792,9 @@ ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not 
 Language=Russian
 ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not found.
 .
+Language=Polish
+ERROR_CLUSTER_LOCAL_NODE_NOT_FOUND - The cluster local node information was not found.
+.
 
 MessageId=5044
 Severity=Success
@@ -13210,6 +16804,9 @@ Language=English
 ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
 .
 Language=Russian
+ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
+.
+Language=Polish
 ERROR_CLUSTER_NETWORK_EXISTS - The cluster network already exists.
 .
 
@@ -13223,6 +16820,9 @@ ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
 Language=Russian
 ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
 .
+Language=Polish
+ERROR_CLUSTER_NETWORK_NOT_FOUND - The cluster network was not found.
+.
 
 MessageId=5046
 Severity=Success
@@ -13232,6 +16832,9 @@ Language=English
 ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
 .
 Language=Russian
+ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
+.
+Language=Polish
 ERROR_CLUSTER_NETINTERFACE_EXISTS - The cluster network interface already exists.
 .
 
@@ -13245,6 +16848,9 @@ ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not fou
 Language=Russian
 ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not found.
 .
+Language=Polish
+ERROR_CLUSTER_NETINTERFACE_NOT_FOUND - The cluster network interface was not found.
+.
 
 MessageId=5048
 Severity=Success
@@ -13254,6 +16860,9 @@ Language=English
 ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
 .
 Language=Russian
+ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
+.
+Language=Polish
 ERROR_CLUSTER_INVALID_REQUEST - The cluster request is not valid for this object.
 .
 
@@ -13267,6 +16876,9 @@ ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not val
 Language=Russian
 ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not valid.
 .
+Language=Polish
+ERROR_CLUSTER_INVALID_NETWORK_PROVIDER - The cluster network provider is not valid.
+.
 
 MessageId=5050
 Severity=Success
@@ -13276,6 +16888,9 @@ Language=English
 ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_DOWN - The cluster node is down.
 .
 
@@ -13289,6 +16904,9 @@ ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
 Language=Russian
 ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_UNREACHABLE - The cluster node is not reachable.
+.
 
 MessageId=5052
 Severity=Success
@@ -13298,6 +16916,9 @@ Language=English
 ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_NOT_MEMBER - The cluster node is not a member of the cluster.
 .
 
@@ -13311,6 +16932,9 @@ ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress
 Language=Russian
 ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress.
 .
+Language=Polish
+ERROR_CLUSTER_JOIN_NOT_IN_PROGRESS - A cluster join operation is not in progress.
+.
 
 MessageId=5054
 Severity=Success
@@ -13320,6 +16944,9 @@ Language=English
 ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
 .
 Language=Russian
+ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
+.
+Language=Polish
 ERROR_CLUSTER_INVALID_NETWORK - The cluster network is not valid.
 .
 
@@ -13333,6 +16960,9 @@ ERROR_CLUSTER_NODE_UP - The cluster node is up.
 Language=Russian
 ERROR_CLUSTER_NODE_UP - The cluster node is up.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_UP - The cluster node is up.
+.
 
 MessageId=5057
 Severity=Success
@@ -13342,6 +16972,9 @@ Language=English
 ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
 .
 Language=Russian
+ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
+.
+Language=Polish
 ERROR_CLUSTER_IPADDR_IN_USE - The cluster IP address is already in use.
 .
 
@@ -13355,6 +16988,9 @@ ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
 Language=Russian
 ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_NOT_PAUSED - The cluster node is not paused.
+.
 
 MessageId=5059
 Severity=Success
@@ -13364,6 +17000,9 @@ Language=English
 ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
 .
 Language=Russian
+ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
+.
+Language=Polish
 ERROR_CLUSTER_NO_SECURITY_CONTEXT - No cluster security context is available.
 .
 
@@ -13377,6 +17016,9 @@ ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for i
 Language=Russian
 ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for internal cluster communication.
 .
+Language=Polish
+ERROR_CLUSTER_NETWORK_NOT_INTERNAL - The cluster network is not configured for internal cluster communication.
+.
 
 MessageId=5061
 Severity=Success
@@ -13386,6 +17028,9 @@ Language=English
 ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_ALREADY_UP - The cluster node is already up.
 .
 
@@ -13399,6 +17044,9 @@ ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
 Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_ALREADY_DOWN - The cluster node is already down.
+.
 
 MessageId=5063
 Severity=Success
@@ -13408,6 +17056,9 @@ Language=English
 ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
 .
 Language=Russian
+ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
+.
+Language=Polish
 ERROR_CLUSTER_NETWORK_ALREADY_ONLINE - The cluster network is already online.
 .
 
@@ -13421,6 +17072,9 @@ ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
 Language=Russian
 ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
 .
+Language=Polish
+ERROR_CLUSTER_NETWORK_ALREADY_OFFLINE - The cluster network is already offline.
+.
 
 MessageId=5065
 Severity=Success
@@ -13430,6 +17084,9 @@ Language=English
 ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_ALREADY_MEMBER - The cluster node is already a member of the cluster.
 .
 
@@ -13443,6 +17100,9 @@ ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one config
 Language=Russian
 ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
 .
+Language=Polish
+ERROR_CLUSTER_LAST_INTERNAL_NETWORK - The cluster network is the only one configured for internal cluster communication between two or more active cluster nodes. The internal communication capability cannot be removed from the network.
+.
 
 MessageId=5067
 Severity=Success
@@ -13452,6 +17112,9 @@ Language=English
 ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
 .
 Language=Russian
+ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
+.
+Language=Polish
 ERROR_CLUSTER_NETWORK_HAS_DEPENDENTS - One or more cluster resources depend on the network to provide service to clients. The client access capability cannot be removed from the network.
 .
 
@@ -13465,6 +17128,9 @@ ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cl
 Language=Russian
 ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
 .
+Language=Polish
+ERROR_INVALID_OPERATION_ON_QUORUM - This operation cannot be performed on the cluster resource as it the quorum resource. You may not bring the quorum resource offline or modify its possible owners list.
+.
 
 MessageId=5069
 Severity=Success
@@ -13474,6 +17140,9 @@ Language=English
 ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
 .
 Language=Russian
+ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
+.
+Language=Polish
 ERROR_DEPENDENCY_NOT_ALLOWED - The cluster quorum resource is not allowed to have any dependencies.
 .
 
@@ -13487,6 +17156,9 @@ ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
 Language=Russian
 ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_PAUSED - The cluster node is paused.
+.
 
 MessageId=5071
 Severity=Success
@@ -13496,6 +17168,9 @@ Language=English
 ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
 .
 Language=Russian
+ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
+.
+Language=Polish
 ERROR_NODE_CANT_HOST_RESOURCE - The cluster resource cannot be brought online. The owner node cannot run this resource.
 .
 
@@ -13509,6 +17184,9 @@ ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requ
 Language=Russian
 ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requested operation.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_NOT_READY - The cluster node is not ready to perform the requested operation.
+.
 
 MessageId=5073
 Severity=Success
@@ -13518,6 +17196,9 @@ Language=English
 ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
 .
 Language=Russian
+ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
+.
+Language=Polish
 ERROR_CLUSTER_NODE_SHUTTING_DOWN - The cluster node is shutting down.
 .
 
@@ -13531,6 +17212,9 @@ ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
 Language=Russian
 ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
 .
+Language=Polish
+ERROR_CLUSTER_JOIN_ABORTED - The cluster join operation was aborted.
+.
 
 MessageId=5075
 Severity=Success
@@ -13540,6 +17224,9 @@ Language=English
 ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
 .
 Language=Russian
+ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
+.
+Language=Polish
 ERROR_CLUSTER_INCOMPATIBLE_VERSIONS - The cluster join operation failed due to incompatible software versions between the joining node and its sponsor.
 .
 
@@ -13553,6 +17240,9 @@ ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created bec
 Language=Russian
 ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
 .
+Language=Polish
+ERROR_CLUSTER_MAXNUM_OF_RESOURCES_EXCEEDED - This resource cannot be created because the cluster has reached the limit on the number of resources it can monitor.
+.
 
 MessageId=5077
 Severity=Success
@@ -13562,6 +17252,9 @@ Language=English
 ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
 .
 Language=Russian
+ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
+.
+Language=Polish
 ERROR_CLUSTER_SYSTEM_CONFIG_CHANGED - The system configuration changed during the cluster join or form operation. The join or form operation was aborted.
 .
 
@@ -13575,6 +17268,9 @@ ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not foun
 Language=Russian
 ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not found.
 .
+Language=Polish
+ERROR_CLUSTER_RESOURCE_TYPE_NOT_FOUND - The specified resource type was not found.
+.
 
 MessageId=5079
 Severity=Success
@@ -13584,6 +17280,9 @@ Language=English
 ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
 .
 Language=Russian
+ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
+.
+Language=Polish
 ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED - The specified node does not support a resource of this type. This may be due to version inconsistencies or due to the absence of the resource DLL on this node.
 .
 
@@ -13597,6 +17296,9 @@ ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by th
 Language=Russian
 ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
 .
+Language=Polish
+ERROR_CLUSTER_RESNAME_NOT_FOUND - The specified resource name is supported by this resource DLL. This may be due to a bad (or changed) name supplied to the resource DLL.
+.
 
 MessageId=5081
 Severity=Success
@@ -13606,6 +17308,9 @@ Language=English
 ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
 .
 Language=Russian
+ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
+.
+Language=Polish
 ERROR_CLUSTER_NO_RPC_PACKAGES_REGISTERED - No authentication package could be registered with the RPC server.
 .
 
@@ -13619,6 +17324,9 @@ ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because 
 Language=Russian
 ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
 .
+Language=Polish
+ERROR_CLUSTER_OWNER_NOT_IN_PREFLIST - You cannot bring the group online because the owner of the group is not in the preferred list for the group. To change the owner node for the group, move the group.
+.
 
 MessageId=5083
 Severity=Success
@@ -13628,6 +17336,9 @@ Language=English
 ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
 .
 Language=Russian
+ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
+.
+Language=Polish
 ERROR_CLUSTER_DATABASE_SEQMISMATCH - The join operation failed because the cluster database sequence number has changed or is incompatible with the locker node. This may happen during a join operation if the cluster database was changing during the join.
 .
 
@@ -13641,6 +17352,9 @@ ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operat
 Language=Russian
 ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
 .
+Language=Polish
+ERROR_RESMON_INVALID_STATE - The resource monitor will not allow the fail operation to be performed while the resource is in its current state. This may happen if the resource is in a pending state.
+.
 
 MessageId=5085
 Severity=Success
@@ -13650,6 +17364,9 @@ Language=English
 ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
 .
 Language=Russian
+ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
+.
+Language=Polish
 ERROR_CLUSTER_GUM_NOT_LOCKER - A non locker code got a request to reserve the lock for making global updates.
 .
 
@@ -13663,6 +17380,9 @@ ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluste
 Language=Russian
 ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluster service.
 .
+Language=Polish
+ERROR_QUORUM_DISK_NOT_FOUND - The quorum disk could not be located by the cluster service.
+.
 
 MessageId=5087
 Severity=Success
@@ -13672,6 +17392,9 @@ Language=English
 ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
 .
 Language=Russian
+ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
+.
+Language=Polish
 ERROR_DATABASE_BACKUP_CORRUPT - The backup up cluster database is possibly corrupt.
 .
 
@@ -13685,6 +17408,9 @@ ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this clus
 Language=Russian
 ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this cluster node.
 .
+Language=Polish
+ERROR_CLUSTER_NODE_ALREADY_HAS_DFS_ROOT - A DFS root already exists in this cluster node.
+.
 
 MessageId=5089
 Severity=Success
@@ -13694,6 +17420,9 @@ Language=English
 ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
 .
 Language=Russian
+ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
+.
+Language=Polish
 ERROR_RESOURCE_PROPERTY_UNCHANGEABLE - An attempt to modify a resource property failed because it conflicts with another existing property.
 .
 
@@ -13707,6 +17436,9 @@ ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is inco
 Language=Russian
 ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is incompatible with the current membership state of the node.
 .
+Language=Polish
+ERROR_CLUSTER_MEMBERSHIP_INVALID_STATE - An operation was attempted that is incompatible with the current membership state of the node.
+.
 
 MessageId=5891
 Severity=Success
@@ -13716,6 +17448,9 @@ Language=English
 ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
 .
 Language=Russian
+ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
+.
+Language=Polish
 ERROR_CLUSTER_QUORUMLOG_NOT_FOUND - The quorum resource does not contain the quorum log.
 .
 
@@ -13729,6 +17464,9 @@ ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the 
 Language=Russian
 ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the cluster service on this node.
 .
+Language=Polish
+ERROR_CLUSTER_MEMBERSHIP_HALT - The membership engine requested shutdown of the cluster service on this node.
+.
 
 MessageId=5893
 Severity=Success
@@ -13738,6 +17476,9 @@ Language=English
 ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
 .
 Language=Russian
+ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
+.
+Language=Polish
 ERROR_CLUSTER_INSTANCE_ID_MISMATCH - The join operation failed because the cluster instance ID of the joining node does not match the cluster instance ID of the sponsor node.
 .
 
@@ -13751,6 +17492,9 @@ ERROR_CLUSTER_NETWORK_NOT_FOUND_FOR_IP - A matching network for the specified IP
 Language=Russian
 ERROR_CLUSTER_NETWORK_NOT_FOUND_FOR_IP - A matching network for the specified IP address could not be found. Please also specify a subnet mask and a cluster network.
 .
+Language=Polish
+ERROR_CLUSTER_NETWORK_NOT_FOUND_FOR_IP - A matching network for the specified IP address could not be found. Please also specify a subnet mask and a cluster network.
+.
 
 MessageId=5895
 Severity=Success
@@ -13760,6 +17504,9 @@ Language=English
 ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
 .
 Language=Russian
+ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
+.
+Language=Polish
 ERROR_CLUSTER_PROPERTY_DATA_TYPE_MISMATCH - The actual data type of the property did not match the expected data type of the property.
 .
 
@@ -13773,6 +17520,9 @@ ERROR_CLUSTER_EVICT_WITHOUT_CLEANUP - The cluster node was evicted from the clus
 Language=Russian
 ERROR_CLUSTER_EVICT_WITHOUT_CLEANUP - The cluster node was evicted from the cluster successfully, but the node was not cleaned up. Extended status information explaining why the node was not cleaned up is available.
 .
+Language=Polish
+ERROR_CLUSTER_EVICT_WITHOUT_CLEANUP - The cluster node was evicted from the cluster successfully, but the node was not cleaned up. Extended status information explaining why the node was not cleaned up is available.
+.
 
 MessageId=5897
 Severity=Success
@@ -13782,6 +17532,9 @@ Language=English
 ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
 .
 Language=Russian
+ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
+.
+Language=Polish
 ERROR_CLUSTER_PARAMETER_MISMATCH - Two or more parameter values specified for a resource's properties are in conflict.
 .
 
@@ -13795,6 +17548,9 @@ ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a clus
 Language=Russian
 ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a cluster.
 .
+Language=Polish
+ERROR_NODE_CANNOT_BE_CLUSTERED - This computer cannot be made a member of a cluster.
+.
 
 MessageId=5899
 Severity=Success
@@ -13804,6 +17560,9 @@ Language=English
 ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
 .
 Language=Russian
+ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
+.
+Language=Polish
 ERROR_CLUSTER_WRONG_OS_VERSION - This computer cannot be made a member of a cluster because it does not have the correct version of Windows installed.
 .
 
@@ -13817,6 +17576,9 @@ ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with th
 Language=Russian
 ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
 .
+Language=Polish
+ERROR_CLUSTER_CANT_CREATE_DUP_CLUSTER_NAME - A cluster cannot be created with the specified cluster name because that cluster name is already in use. Specify a different name for the cluster.
+.
 
 MessageId=5901
 Severity=Success
@@ -13826,6 +17588,9 @@ Language=English
 ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
 .
 Language=Russian
+ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
+.
+Language=Polish
 ERROR_CLUSCFG_ALREADY_COMMITTED - The cluster configuration action has already been committed.
 .
 
@@ -13839,6 +17604,9 @@ ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be ro
 Language=Russian
 ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be rolled back.
 .
+Language=Polish
+ERROR_CLUSCFG_ROLLBACK_FAILED - The cluster configuration action could not be rolled back.
+.
 
 MessageId=5903
 Severity=Success
@@ -13848,6 +17616,9 @@ Language=English
 ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
 .
 Language=Russian
+ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
+.
+Language=Polish
 ERROR_CLUSCFG_SYSTEM_DISK_DRIVE_LETTER_CONFLICT - The drive letter assigned to a system disk on one node conflicted with the driver letter assigned to a disk on another node.
 .
 
@@ -13861,6 +17632,9 @@ ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a versi
 Language=Russian
 ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
 .
+Language=Polish
+ERROR_CLUSTER_OLD_VERSION - One or more nodes in the cluster are running a version of Windows that does not support this operation.
+.
 
 MessageId=5905
 Severity=Success
@@ -13870,6 +17644,9 @@ Language=English
 ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
 .
 Language=Russian
+ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
+.
+Language=Polish
 ERROR_CLUSTER_MISMATCHED_COMPUTER_ACCT_NAME - The name of the corresponding computer account doesn't match the Network Name for this resource.
 .
 
@@ -13883,6 +17660,9 @@ ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
 Language=Russian
 ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
 .
+Language=Polish
+ERROR_CLUSTER_NO_NET_ADAPTERS - No network adapters are available.
+.
 
 MessageId=5907
 Severity=Success
@@ -13892,6 +17672,9 @@ Language=English
 ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
 .
 Language=Russian
+ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
+.
+Language=Polish
 ERROR_CLUSTER_POISONED - The cluster node has been poisoned.
 .
 
@@ -13905,6 +17688,9 @@ ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
 Language=Russian
 ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
 .
+Language=Polish
+ERROR_ENCRYPTION_FAILED - The specified file could not be encrypted.
+.
 
 MessageId=6001
 Severity=Success
@@ -13914,6 +17700,9 @@ Language=English
 ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
 .
 Language=Russian
+ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
+.
+Language=Polish
 ERROR_DECRYPTION_FAILED - The specified file could not be decrypted.
 .
 
@@ -13927,6 +17716,9 @@ ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not hav
 Language=Russian
 ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not have the ability to decrypt it.
 .
+Language=Polish
+ERROR_FILE_ENCRYPTED - The specified file is encrypted and the user does not have the ability to decrypt it.
+.
 
 MessageId=6003
 Severity=Success
@@ -13936,6 +17728,9 @@ Language=English
 ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
 .
 Language=Russian
+ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
+.
+Language=Polish
 ERROR_NO_RECOVERY_POLICY - There is no valid encryption recovery policy configured for this system.
 .
 
@@ -13949,6 +17744,9 @@ ERROR_NO_EFS - The required encryption driver is not loaded for this system.
 Language=Russian
 ERROR_NO_EFS - The required encryption driver is not loaded for this system.
 .
+Language=Polish
+ERROR_NO_EFS - The required encryption driver is not loaded for this system.
+.
 
 MessageId=6005
 Severity=Success
@@ -13958,6 +17756,9 @@ Language=English
 ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
 .
 Language=Russian
+ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
+.
+Language=Polish
 ERROR_WRONG_EFS - The file was encrypted with a different encryption driver than is currently loaded.
 .
 
@@ -13971,6 +17772,9 @@ ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
 Language=Russian
 ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
 .
+Language=Polish
+ERROR_NO_USER_KEYS - There are no EFS keys defined for the user.
+.
 
 MessageId=6007
 Severity=Success
@@ -13980,6 +17784,9 @@ Language=English
 ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
 .
 Language=Russian
+ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
+.
+Language=Polish
 ERROR_FILE_NOT_ENCRYPTED - The specified file is not encrypted.
 .
 
@@ -13993,6 +17800,9 @@ ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export fo
 Language=Russian
 ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export format.
 .
+Language=Polish
+ERROR_NOT_EXPORT_FORMAT - The specified file is not in the defined EFS export format.
+.
 
 MessageId=6009
 Severity=Success
@@ -14002,6 +17812,9 @@ Language=English
 ERROR_FILE_READ_ONLY - The specified file is read only.
 .
 Language=Russian
+ERROR_FILE_READ_ONLY - The specified file is read only.
+.
+Language=Polish
 ERROR_FILE_READ_ONLY - The specified file is read only.
 .
 
@@ -14015,6 +17828,9 @@ ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
 Language=Russian
 ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
 .
+Language=Polish
+ERROR_DIR_EFS_DISALLOWED - The directory has been disabled for encryption.
+.
 
 MessageId=6011
 Severity=Success
@@ -14024,6 +17840,9 @@ Language=English
 ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
 .
 Language=Russian
+ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
+.
+Language=Polish
 ERROR_EFS_SERVER_NOT_TRUSTED - The server is not trusted for remote encryption operation.
 .
 
@@ -14037,6 +17856,9 @@ ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains 
 Language=Russian
 ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains invalid recovery certificate.
 .
+Language=Polish
+ERROR_BAD_RECOVERY_POLICY - Recovery policy configured for this system contains invalid recovery certificate.
+.
 
 MessageId=6013
 Severity=Success
@@ -14046,6 +17868,9 @@ Language=English
 ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
 .
 Language=Russian
+ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
+.
+Language=Polish
 ERROR_EFS_ALG_BLOB_TOO_BIG - The encryption algorithm used on the source file needs a bigger key buffer than the one on the destination file.
 .
 
@@ -14059,6 +17884,9 @@ ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encrypti
 Language=Russian
 ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encryption.
 .
+Language=Polish
+ERROR_VOLUME_NOT_SUPPORT_EFS - The disk partition does not support file encryption.
+.
 
 MessageId=6015
 Severity=Success
@@ -14068,6 +17896,9 @@ Language=English
 ERROR_EFS_DISABLED - This machine is disabled for file encryption.
 .
 Language=Russian
+ERROR_EFS_DISABLED - This machine is disabled for file encryption.
+.
+Language=Polish
 ERROR_EFS_DISABLED - This machine is disabled for file encryption.
 .
 
@@ -14081,6 +17912,9 @@ ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encry
 Language=Russian
 ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encrypted file.
 .
+Language=Polish
+ERROR_EFS_VERSION_NOT_SUPPORT - A newer system is required to decrypt this encrypted file.
+.
 
 MessageId=6118
 Severity=Success
@@ -14090,6 +17924,9 @@ Language=English
 ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
 .
 Language=Russian
+ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
+.
+Language=Polish
 ERROR_NO_BROWSER_SERVERS_FOUND - The list of servers for this workgroup is not currently available.
 .
 
@@ -14103,6 +17940,9 @@ SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured 
 Language=Russian
 SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
 .
+Language=Polish
+SCHED_E_SERVICE_NOT_LOCALSYSTEM - The Task Scheduler service must be configured to run in the System account to function properly. Individual tasks may be configured to run in other accounts.
+.
 
 MessageId=7001
 Severity=Success
@@ -14112,6 +17952,9 @@ Language=English
 ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
 .
 Language=Russian
+ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
+.
+Language=Polish
 ERROR_CTX_WINSTATION_NAME_INVALID - The specified session name is invalid.
 .
 
@@ -14125,6 +17968,9 @@ ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
 Language=Russian
 ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
 .
+Language=Polish
+ERROR_CTX_INVALID_PD - The specified protocol driver is invalid.
+.
 
 MessageId=7003
 Severity=Success
@@ -14134,6 +17980,9 @@ Language=English
 ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
 .
 Language=Russian
+ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
+.
+Language=Polish
 ERROR_CTX_PD_NOT_FOUND - The specified protocol driver was not found in the system path.
 .
 
@@ -14147,6 +17996,9 @@ ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found 
 Language=Russian
 ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found in the system path.
 .
+Language=Polish
+ERROR_CTX_WD_NOT_FOUND - The specified terminal connection driver was not found in the system path.
+.
 
 MessageId=7005
 Severity=Success
@@ -14156,6 +18008,9 @@ Language=English
 ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
 .
 Language=Russian
+ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
+.
+Language=Polish
 ERROR_CTX_CANNOT_MAKE_EVENTLOG_ENTRY - A registry key for event logging could not be created for this session.
 .
 
@@ -14169,6 +18024,9 @@ ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists o
 Language=Russian
 ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists on the system.
 .
+Language=Polish
+ERROR_CTX_SERVICE_NAME_COLLISION - A service with the same name already exists on the system.
+.
 
 MessageId=7007
 Severity=Success
@@ -14178,6 +18036,9 @@ Language=English
 ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
 .
 Language=Russian
+ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
+.
+Language=Polish
 ERROR_CTX_CLOSE_PENDING - A close operation is pending on the session.
 .
 
@@ -14191,6 +18052,9 @@ ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
 Language=Russian
 ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
 .
+Language=Polish
+ERROR_CTX_NO_OUTBUF - There are no free output buffers available.
+.
 
 MessageId=7009
 Severity=Success
@@ -14200,6 +18064,9 @@ Language=English
 ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
 .
 Language=Russian
+ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
+.
+Language=Polish
 ERROR_CTX_MODEM_INF_NOT_FOUND - The MODEM.INF file was not found.
 .
 
@@ -14213,6 +18080,9 @@ ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
 Language=Russian
 ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
 .
+Language=Polish
+ERROR_CTX_INVALID_MODEMNAME - The modem name was not found in MODEM.INF.
+.
 
 MessageId=7011
 Severity=Success
@@ -14222,6 +18092,9 @@ Language=English
 ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
 .
 Language=Russian
+ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
+.
+Language=Polish
 ERROR_CTX_MODEM_RESPONSE_ERROR - The modem did not accept the command sent to it. Verify that the configured modem name matches the attached modem.
 .
 
@@ -14235,6 +18108,9 @@ ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent
 Language=Russian
 ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
 .
+Language=Polish
+ERROR_CTX_MODEM_RESPONSE_TIMEOUT - The modem did not respond to the command sent to it. Verify that the modem is properly cabled and powered on.
+.
 
 MessageId=7013
 Severity=Success
@@ -14244,6 +18120,9 @@ Language=English
 ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
 .
 Language=Russian
+ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
+.
+Language=Polish
 ERROR_CTX_MODEM_RESPONSE_NO_CARRIER - Carrier detect has failed or carrier has been dropped due to disconnect.
 .
 
@@ -14257,6 +18136,9 @@ ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the require
 Language=Russian
 ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
 .
+Language=Polish
+ERROR_CTX_MODEM_RESPONSE_NO_DIALTONE - Dial tone not detected within the required time. Verify that the phone cable is properly attached and functional.
+.
 
 MessageId=7015
 Severity=Success
@@ -14266,6 +18148,9 @@ Language=English
 ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
 .
 Language=Russian
+ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
+.
+Language=Polish
 ERROR_CTX_MODEM_RESPONSE_BUSY - Busy signal detected at remote site on callback.
 .
 
@@ -14279,6 +18164,9 @@ ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
 Language=Russian
 ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
 .
+Language=Polish
+ERROR_CTX_MODEM_RESPONSE_VOICE - Voice detected at remote site on callback.
+.
 
 MessageId=7017
 Severity=Success
@@ -14288,6 +18176,9 @@ Language=English
 ERROR_CTX_TD_ERROR - Transport driver error
 .
 Language=Russian
+ERROR_CTX_TD_ERROR - Transport driver error
+.
+Language=Polish
 ERROR_CTX_TD_ERROR - Transport driver error
 .
 
@@ -14301,6 +18192,9 @@ ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
 Language=Russian
 ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
 .
+Language=Polish
+ERROR_CTX_WINSTATION_NOT_FOUND - The specified session cannot be found.
+.
 
 MessageId=7023
 Severity=Success
@@ -14310,6 +18204,9 @@ Language=English
 ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
 .
 Language=Russian
+ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
+.
+Language=Polish
 ERROR_CTX_WINSTATION_ALREADY_EXISTS - The specified session name is already in use.
 .
 
@@ -14323,6 +18220,9 @@ ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because 
 Language=Russian
 ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
 .
+Language=Polish
+ERROR_CTX_WINSTATION_BUSY - The requested operation cannot be completed because the terminal connection is currently busy processing a connect, disconnect, reset, or delete operation.
+.
 
 MessageId=7025
 Severity=Success
@@ -14332,6 +18232,9 @@ Language=English
 ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
 .
 Language=Russian
+ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
+.
+Language=Polish
 ERROR_CTX_BAD_VIDEO_MODE - An attempt has been made to connect to a session whose video mode is not supported by the current client.
 .
 
@@ -14345,6 +18248,9 @@ ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mo
 Language=Russian
 ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
 .
+Language=Polish
+ERROR_CTX_GRAPHICS_INVALID - The application attempted to enable DOS graphics mode. DOS graphics mode is not supported.
+.
 
 MessageId=7037
 Severity=Success
@@ -14354,6 +18260,9 @@ Language=English
 ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
 .
 Language=Russian
+ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
+.
+Language=Polish
 ERROR_CTX_LOGON_DISABLED - Your interactive logon privilege has been disabled. Please contact your administrator.
 .
 
@@ -14367,6 +18276,9 @@ ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the sys
 Language=Russian
 ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
 .
+Language=Polish
+ERROR_CTX_NOT_CONSOLE - The requested operation can be performed only on the system console. This is most often the result of a driver or system DLL requiring direct console access.
+.
 
 MessageId=7040
 Severity=Success
@@ -14376,6 +18288,9 @@ Language=English
 ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
 .
 Language=Russian
+ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
+.
+Language=Polish
 ERROR_CTX_CLIENT_QUERY_TIMEOUT - The client failed to respond to the server connect message.
 .
 
@@ -14389,6 +18304,9 @@ ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supporte
 Language=Russian
 ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supported.
 .
+Language=Polish
+ERROR_CTX_CONSOLE_DISCONNECT - Disconnecting the console session is not supported.
+.
 
 MessageId=7042
 Severity=Success
@@ -14398,6 +18316,9 @@ Language=English
 ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
 .
 Language=Russian
+ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
+.
+Language=Polish
 ERROR_CTX_CONSOLE_CONNECT - Reconnecting a disconnected session to the console is not supported.
 .
 
@@ -14411,6 +18332,9 @@ ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was de
 Language=Russian
 ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was denied.
 .
+Language=Polish
+ERROR_CTX_SHADOW_DENIED - The request to control another session remotely was denied.
+.
 
 MessageId=7045
 Severity=Success
@@ -14420,6 +18344,9 @@ Language=English
 ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
 .
 Language=Russian
+ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
+.
+Language=Polish
 ERROR_CTX_WINSTATION_ACCESS_DENIED - The requested session access is denied.
 .
 
@@ -14433,6 +18360,9 @@ ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
 Language=Russian
 ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
 .
+Language=Polish
+ERROR_CTX_INVALID_WD - The specified terminal connection driver is invalid.
+.
 
 MessageId=7050
 Severity=Success
@@ -14442,6 +18372,9 @@ Language=English
 ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
 .
 Language=Russian
+ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
+.
+Language=Polish
 ERROR_CTX_SHADOW_INVALID - The requested session cannot be controlled remotely. This may be because the session is disconnected or does not currently have a user logged on.
 .
 
@@ -14455,6 +18388,9 @@ ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow rem
 Language=Russian
 ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow remote control.
 .
+Language=Polish
+ERROR_CTX_SHADOW_DISABLED - The requested session is not configured to allow remote control.
+.
 
 MessageId=7052
 Severity=Success
@@ -14464,6 +18400,9 @@ Language=English
 ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
 .
 Language=Russian
+ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
+.
+Language=Polish
 ERROR_CTX_CLIENT_LICENSE_IN_USE - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number is currently being used by another user. Please call your system administrator to obtain a unique license number.
 .
 
@@ -14477,6 +18416,9 @@ ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Serv
 Language=Russian
 ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
 .
+Language=Polish
+ERROR_CTX_CLIENT_LICENSE_NOT_SET - Your request to connect to this Terminal Server has been rejected. Your Terminal Server client license number has not been entered for this copy of the Terminal Server client. Please contact your system administrator.
+.
 
 MessageId=7054
 Severity=Success
@@ -14486,6 +18428,9 @@ Language=English
 ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
 .
 Language=Russian
+ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
+.
+Language=Polish
 ERROR_CTX_LICENSE_NOT_AVAILABLE - The system has reached its licensed logon limit. Please try again later.
 .
 
@@ -14499,6 +18444,9 @@ ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to u
 Language=Russian
 ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to use this system. Your logon request is denied.
 .
+Language=Polish
+ERROR_CTX_LICENSE_CLIENT_INVALID - The client you are using is not licensed to use this system. Your logon request is denied.
+.
 
 MessageId=7056
 Severity=Success
@@ -14508,6 +18456,9 @@ Language=English
 ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
 .
 Language=Russian
+ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
+.
+Language=Polish
 ERROR_CTX_LICENSE_EXPIRED - The system license has expired. Your logon request is denied.
 .
 
@@ -14521,6 +18472,9 @@ ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because th
 Language=Russian
 ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because the specified session is not currently being remotely controlled.
 .
+Language=Polish
+ERROR_CTX_SHADOW_NOT_RUNNING - Remote control could not be terminated because the specified session is not currently being remotely controlled.
+.
 
 MessageId=7058
 Severity=Success
@@ -14530,6 +18484,9 @@ Language=English
 ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
 .
 Language=Russian
+ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
+.
+Language=Polish
 ERROR_CTX_SHADOW_ENDED_BY_MODE_CHANGE - The remote control of the console was terminated because the display mode was changed. Changing the display mode in a remote control session is not supported.
 .
 
@@ -14543,6 +18500,9 @@ ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum 
 Language=Russian
 ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
 .
+Language=Polish
+ERROR_ACTIVATION_COUNT_EXCEEDED - Activation has already been reset the maximum number of times for this installation. Your activation timer will not be cleared.
+.
 
 MessageId=7060
 Severity=Success
@@ -14552,6 +18512,9 @@ Language=English
 ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
 .
 Language=Russian
+ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
+.
+Language=Polish
 ERROR_CTX_WINSTATIONS_DISABLED - Remote logins are currently disabled.
 .
 
@@ -14565,6 +18528,9 @@ ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption leve
 Language=Russian
 ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption level to access this Session.
 .
+Language=Polish
+ERROR_CTX_ENCRYPTION_LEVEL_REQUIRED - You do not have the proper encryption level to access this Session.
+.
 
 MessageId=7062
 Severity=Success
@@ -14574,6 +18540,9 @@ Language=English
 ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
 .
 Language=Russian
+ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
+.
+Language=Polish
 ERROR_CTX_SESSION_IN_USE - The user %s\\%s is currently logged on to this computer. Only the current user or an administrator can log on to this computer.
 .
 
@@ -14587,6 +18556,9 @@ ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console 
 Language=Russian
 ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
 .
+Language=Polish
+ERROR_CTX_NO_FORCE_LOGOFF - The user %s\\%s is already logged on to the console of this computer. You do not have permission to log in at this time. To resolve this issue, contact %s\\%s and have them log off.
+.
 
 MessageId=7064
 Severity=Success
@@ -14596,6 +18568,9 @@ Language=English
 ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
 .
 Language=Russian
+ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
+.
+Language=Polish
 ERROR_CTX_ACCOUNT_RESTRICTION - Unable to log you on because of an account restriction.
 .
 
@@ -14609,6 +18584,9 @@ ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in th
 Language=Russian
 ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
 .
+Language=Polish
+ERROR_RDP_PROTOCOL_ERROR - The RDP protocol component %2 detected an error in the protocol stream and has disconnected the client.
+.
 
 MessageId=7066
 Severity=Success
@@ -14618,6 +18596,9 @@ Language=English
 ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
 .
 Language=Russian
+ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
+.
+Language=Polish
 ERROR_CTX_CDM_CONNECT - The Client Drive Mapping Service Has Connected on Terminal Connection.
 .
 
@@ -14631,6 +18612,9 @@ ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on 
 Language=Russian
 ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on Terminal Connection.
 .
+Language=Polish
+ERROR_CTX_CDM_DISCONNECT - The Client Drive Mapping Service Has Disconnected on Terminal Connection.
+.
 
 MessageId=8001
 Severity=Success
@@ -14640,6 +18624,9 @@ Language=English
 FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
 .
 Language=Russian
+FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
+.
+Language=Polish
 FRS_ERR_INVALID_API_SEQUENCE - The file replication service API was called incorrectly.
 .
 
@@ -14653,6 +18640,9 @@ FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
 Language=Russian
 FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
 .
+Language=Polish
+FRS_ERR_STARTING_SERVICE - The file replication service cannot be started.
+.
 
 MessageId=8003
 Severity=Success
@@ -14662,6 +18652,9 @@ Language=English
 FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
 .
 Language=Russian
+FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
+.
+Language=Polish
 FRS_ERR_STOPPING_SERVICE - The file replication service cannot be stopped.
 .
 
@@ -14675,6 +18668,9 @@ FRS_ERR_INTERNAL_API - The file replication service API terminated the request. 
 Language=Russian
 FRS_ERR_INTERNAL_API - The file replication service API terminated the request. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_INTERNAL_API - The file replication service API terminated the request. The event log may have more information.
+.
 
 MessageId=8005
 Severity=Success
@@ -14684,6 +18680,9 @@ Language=English
 FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
 .
 Language=Russian
+FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
+.
+Language=Polish
 FRS_ERR_INTERNAL - The file replication service terminated the request. The event log may have more information.
 .
 
@@ -14697,6 +18696,9 @@ FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The eve
 Language=Russian
 FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_SERVICE_COMM - The file replication service cannot be contacted. The event log may have more information.
+.
 
 MessageId=8007
 Severity=Success
@@ -14706,6 +18708,9 @@ Language=English
 FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
 .
 Language=Russian
+FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
+.
+Language=Polish
 FRS_ERR_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges. The event log may have more information.
 .
 
@@ -14719,6 +18724,9 @@ FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request
 Language=Russian
 FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available. The event log may have more information.
+.
 
 MessageId=8009
 Severity=Success
@@ -14728,6 +18736,9 @@ Language=English
 FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
 .
 Language=Russian
+FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
+.
+Language=Polish
 FRS_ERR_PARENT_INSUFFICIENT_PRIV - The file replication service cannot satisfy the request because the user has insufficient privileges on the domain controller. The event log may have more information.
 .
 
@@ -14741,6 +18752,9 @@ FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the 
 Language=Russian
 FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_PARENT_AUTHENTICATION - The file replication service cannot satisfy the request because authenticated RPC is not available on the domain controller. The event log may have more information.
+.
 
 MessageId=8011
 Severity=Success
@@ -14750,6 +18764,9 @@ Language=English
 FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
 .
 Language=Russian
+FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
+.
+Language=Polish
 FRS_ERR_CHILD_TO_PARENT_COMM - The file replication service cannot communicate with the file replication service on the domain controller. The event log may have more information.
 .
 
@@ -14763,6 +18780,9 @@ FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain contro
 Language=Russian
 FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_PARENT_TO_CHILD_COMM - The file replication service on the domain controller cannot communicate with the file replication service on this computer. The event log may have more information.
+.
 
 MessageId=8013
 Severity=Success
@@ -14772,6 +18792,9 @@ Language=English
 FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
 .
 Language=Russian
+FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
+.
+Language=Polish
 FRS_ERR_SYSVOL_POPULATE - The file replication service cannot populate the system volume because of an internal error. The event log may have more information.
 .
 
@@ -14785,6 +18808,9 @@ FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate t
 Language=Russian
 FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_SYSVOL_POPULATE_TIMEOUT - The file replication service cannot populate the system volume because of an internal timeout. The event log may have more information.
+.
 
 MessageId=8015
 Severity=Success
@@ -14794,6 +18820,9 @@ Language=English
 FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
 .
 Language=Russian
+FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
+.
+Language=Polish
 FRS_ERR_SYSVOL_IS_BUSY - The file replication service cannot process the request. The system volume is busy with a previous request.
 .
 
@@ -14807,6 +18836,9 @@ FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the
 Language=Russian
 FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
 .
+Language=Polish
+FRS_ERR_SYSVOL_DEMOTE - The file replication service cannot stop replicating the system volume because of an internal error. The event log may have more information.
+.
 
 MessageId=8017
 Severity=Success
@@ -14816,6 +18848,9 @@ Language=English
 FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
 .
 Language=Russian
+FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
+.
+Language=Polish
 FRS_ERR_INVALID_SERVICE_PARAMETER - The file replication service detected an invalid parameter.
 .
 
@@ -14829,6 +18864,9 @@ ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory servic
 Language=Russian
 ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory service. For more information, see the event log.
 .
+Language=Polish
+ERROR_DS_NOT_INSTALLED - An error occurred while installing the directory service. For more information, see the event log.
+.
 
 MessageId=8201
 Severity=Success
@@ -14838,6 +18876,9 @@ Language=English
 ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
 .
 Language=Russian
+ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
+.
+Language=Polish
 ERROR_DS_MEMBERSHIP_EVALUATED_LOCALLY - The directory service evaluated group memberships locally.
 .
 
@@ -14851,6 +18892,9 @@ ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or va
 Language=Russian
 ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or value does not exist.
 .
+Language=Polish
+ERROR_DS_NO_ATTRIBUTE_OR_VALUE - The specified directory service attribute or value does not exist.
+.
 
 MessageId=8203
 Severity=Success
@@ -14860,6 +18904,9 @@ Language=English
 ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
 .
 Language=Russian
+ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
+.
+Language=Polish
 ERROR_DS_INVALID_ATTRIBUTE_SYNTAX - The attribute syntax specified to the directory service is invalid.
 .
 
@@ -14873,6 +18920,9 @@ ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the director
 Language=Russian
 ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the directory service is not defined.
 .
+Language=Polish
+ERROR_DS_ATTRIBUTE_TYPE_UNDEFINED - The attribute type specified to the directory service is not defined.
+.
 
 MessageId=8205
 Severity=Success
@@ -14882,6 +18932,9 @@ Language=English
 ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
 .
 Language=Russian
+ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
+.
+Language=Polish
 ERROR_DS_ATTRIBUTE_OR_VALUE_EXISTS - The specified directory service attribute or value already exists.
 .
 
@@ -14895,6 +18948,9 @@ ERROR_DS_BUSY - The directory service is busy.
 Language=Russian
 ERROR_DS_BUSY - The directory service is busy.
 .
+Language=Polish
+ERROR_DS_BUSY - The directory service is busy.
+.
 
 MessageId=8207
 Severity=Success
@@ -14904,6 +18960,9 @@ Language=English
 ERROR_DS_UNAVAILABLE - The directory service is unavailable.
 .
 Language=Russian
+ERROR_DS_UNAVAILABLE - The directory service is unavailable.
+.
+Language=Polish
 ERROR_DS_UNAVAILABLE - The directory service is unavailable.
 .
 
@@ -14917,6 +18976,9 @@ ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a rela
 Language=Russian
 ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a relative identifier.
 .
+Language=Polish
+ERROR_DS_NO_RIDS_ALLOCATED - The directory service was unable to allocate a relative identifier.
+.
 
 MessageId=8209
 Severity=Success
@@ -14926,6 +18988,9 @@ Language=English
 ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
 .
 Language=Russian
+ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
+.
+Language=Polish
 ERROR_DS_NO_MORE_RIDS - The directory service has exhausted the pool of relative identifiers.
 .
 
@@ -14939,6 +19004,9 @@ ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed b
 Language=Russian
 ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed because the directory service is not the master for that type of operation.
 .
+Language=Polish
+ERROR_DS_INCORRECT_ROLE_OWNER - The requested operation could not be performed because the directory service is not the master for that type of operation.
+.
 
 MessageId=8211
 Severity=Success
@@ -14948,6 +19016,9 @@ Language=English
 ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
 .
 Language=Russian
+ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
+.
+Language=Polish
 ERROR_DS_RIDMGR_INIT_ERROR - The directory service was unable to initialize the subsystem that allocates relative identifiers.
 .
 
@@ -14961,6 +19032,9 @@ ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or mo
 Language=Russian
 ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or more constraints associated with the class of the object.
 .
+Language=Polish
+ERROR_DS_OBJ_CLASS_VIOLATION - The requested operation did not satisfy one or more constraints associated with the class of the object.
+.
 
 MessageId=8213
 Severity=Success
@@ -14970,6 +19044,9 @@ Language=English
 ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
 .
 Language=Russian
+ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
+.
+Language=Polish
 ERROR_DS_CANT_ON_NON_LEAF - The directory service can perform the requested operation only on a leaf object.
 .
 
@@ -14983,6 +19060,9 @@ ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operat
 Language=Russian
 ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operation on the RDN attribute of an object.
 .
+Language=Polish
+ERROR_DS_CANT_ON_RDN - The directory service cannot perform the requested operation on the RDN attribute of an object.
+.
 
 MessageId=8215
 Severity=Success
@@ -14992,6 +19072,9 @@ Language=English
 ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
 .
 Language=Russian
+ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
+.
+Language=Polish
 ERROR_DS_CANT_MOD_OBJ_CLASS - The directory service detected an attempt to modify the object class of an object.
 .
 
@@ -15005,6 +19088,9 @@ ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could 
 Language=Russian
 ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could not be performed.
 .
+Language=Polish
+ERROR_DS_CROSS_DOM_MOVE_ERROR - The requested cross-domain move operation could not be performed.
+.
 
 MessageId=8217
 Severity=Success
@@ -15014,6 +19100,9 @@ Language=English
 ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
 .
 Language=Russian
+ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
+.
+Language=Polish
 ERROR_DS_GC_NOT_AVAILABLE - Unable to contact the global catalog server.
 .
 
@@ -15027,6 +19116,9 @@ ERROR_SHARED_POLICY - The policy object is shared and can only be modified at th
 Language=Russian
 ERROR_SHARED_POLICY - The policy object is shared and can only be modified at the root.
 .
+Language=Polish
+ERROR_SHARED_POLICY - The policy object is shared and can only be modified at the root.
+.
 
 MessageId=8219
 Severity=Success
@@ -15036,6 +19128,9 @@ Language=English
 ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
 .
 Language=Russian
+ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
+.
+Language=Polish
 ERROR_POLICY_OBJECT_NOT_FOUND - The policy object does not exist.
 .
 
@@ -15049,6 +19144,9 @@ ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the direct
 Language=Russian
 ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the directory service.
 .
+Language=Polish
+ERROR_POLICY_ONLY_IN_DS - The requested policy information is only in the directory service.
+.
 
 MessageId=8221
 Severity=Success
@@ -15058,6 +19156,9 @@ Language=English
 ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
 .
 Language=Russian
+ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
+.
+Language=Polish
 ERROR_PROMOTION_ACTIVE - A domain controller promotion is currently active.
 .
 
@@ -15071,6 +19172,9 @@ ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently activ
 Language=Russian
 ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently active
 .
+Language=Polish
+ERROR_NO_PROMOTION_ACTIVE - A domain controller promotion is not currently active
+.
 
 MessageId=8224
 Severity=Success
@@ -15080,6 +19184,9 @@ Language=English
 ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
 .
 Language=Russian
+ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
+.
+Language=Polish
 ERROR_DS_OPERATIONS_ERROR - An operations error occurred.
 .
 
@@ -15093,6 +19200,9 @@ ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
 Language=Russian
 ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
 .
+Language=Polish
+ERROR_DS_PROTOCOL_ERROR - A protocol error occurred.
+.
 
 MessageId=8226
 Severity=Success
@@ -15102,6 +19212,9 @@ Language=English
 ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
 .
 Language=Russian
+ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
+.
+Language=Polish
 ERROR_DS_TIMELIMIT_EXCEEDED - The time limit for this request was exceeded.
 .
 
@@ -15115,6 +19228,9 @@ ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
 Language=Russian
 ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
 .
+Language=Polish
+ERROR_DS_SIZELIMIT_EXCEEDED - The size limit for this request was exceeded.
+.
 
 MessageId=8228
 Severity=Success
@@ -15124,6 +19240,9 @@ Language=English
 ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
 .
 Language=Russian
+ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
+.
+Language=Polish
 ERROR_DS_ADMIN_LIMIT_EXCEEDED - The administrative limit for this request was exceeded.
 .
 
@@ -15137,6 +19256,9 @@ ERROR_DS_COMPARE_FALSE - The compare response was false.
 Language=Russian
 ERROR_DS_COMPARE_FALSE - The compare response was false.
 .
+Language=Polish
+ERROR_DS_COMPARE_FALSE - The compare response was false.
+.
 
 MessageId=8230
 Severity=Success
@@ -15146,6 +19268,9 @@ Language=English
 ERROR_DS_COMPARE_TRUE - The compare response was true.
 .
 Language=Russian
+ERROR_DS_COMPARE_TRUE - The compare response was true.
+.
+Language=Polish
 ERROR_DS_COMPARE_TRUE - The compare response was true.
 .
 
@@ -15159,6 +19284,9 @@ ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not 
 Language=Russian
 ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not supported by the server.
 .
+Language=Polish
+ERROR_DS_AUTH_METHOD_NOT_SUPPORTED - The requested authentication method is not supported by the server.
+.
 
 MessageId=8232
 Severity=Success
@@ -15168,6 +19296,9 @@ Language=English
 ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
 .
 Language=Russian
+ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
+.
+Language=Polish
 ERROR_DS_STRONG_AUTH_REQUIRED - A more secure authentication method is required for this server.
 .
 
@@ -15181,6 +19312,9 @@ ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
 Language=Russian
 ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
 .
+Language=Polish
+ERROR_DS_INAPPROPRIATE_AUTH - Inappropriate authentication.
+.
 
 MessageId=8234
 Severity=Success
@@ -15190,6 +19324,9 @@ Language=English
 ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
 .
 Language=Russian
+ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
+.
+Language=Polish
 ERROR_DS_AUTH_UNKNOWN - The authentication mechanism is unknown.
 .
 
@@ -15203,6 +19340,9 @@ ERROR_DS_REFERRAL - A referral was returned from the server.
 Language=Russian
 ERROR_DS_REFERRAL - A referral was returned from the server.
 .
+Language=Polish
+ERROR_DS_REFERRAL - A referral was returned from the server.
+.
 
 MessageId=8236
 Severity=Success
@@ -15212,6 +19352,9 @@ Language=English
 ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
 .
 Language=Russian
+ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
+.
+Language=Polish
 ERROR_DS_UNAVAILABLE_CRIT_EXTENSION - The server does not support the requested critical extension.
 .
 
@@ -15225,6 +19368,9 @@ ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
 Language=Russian
 ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
 .
+Language=Polish
+ERROR_DS_CONFIDENTIALITY_REQUIRED - This request requires a secure connection.
+.
 
 MessageId=8238
 Severity=Success
@@ -15234,6 +19380,9 @@ Language=English
 ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
 .
 Language=Russian
+ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
+.
+Language=Polish
 ERROR_DS_INAPPROPRIATE_MATCHING - Inappropriate matching.
 .
 
@@ -15247,6 +19396,9 @@ ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
 Language=Russian
 ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
 .
+Language=Polish
+ERROR_DS_CONSTRAINT_VIOLATION - A constraint violation occurred.
+.
 
 MessageId=8240
 Severity=Success
@@ -15256,6 +19408,9 @@ Language=English
 ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
 .
 Language=Russian
+ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
+.
+Language=Polish
 ERROR_DS_NO_SUCH_OBJECT - There is no such object on the server.
 .
 
@@ -15269,6 +19424,9 @@ ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
 Language=Russian
 ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
 .
+Language=Polish
+ERROR_DS_ALIAS_PROBLEM - There is an alias problem.
+.
 
 MessageId=8242
 Severity=Success
@@ -15278,6 +19436,9 @@ Language=English
 ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
 .
 Language=Russian
+ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
+.
+Language=Polish
 ERROR_DS_INVALID_DN_SYNTAX - An invalid dn syntax has been specified.
 .
 
@@ -15291,6 +19452,9 @@ ERROR_DS_IS_LEAF - The object is a leaf object.
 Language=Russian
 ERROR_DS_IS_LEAF - The object is a leaf object.
 .
+Language=Polish
+ERROR_DS_IS_LEAF - The object is a leaf object.
+.
 
 MessageId=8244
 Severity=Success
@@ -15300,6 +19464,9 @@ Language=English
 ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
 .
 Language=Russian
+ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
+.
+Language=Polish
 ERROR_DS_ALIAS_DEREF_PROBLEM - There is an alias dereferencing problem.
 .
 
@@ -15313,6 +19480,9 @@ ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
 Language=Russian
 ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
 .
+Language=Polish
+ERROR_DS_UNWILLING_TO_PERFORM - The server is unwilling to process the request.
+.
 
 MessageId=8246
 Severity=Success
@@ -15322,6 +19492,9 @@ Language=English
 ERROR_DS_LOOP_DETECT - A loop has been detected.
 .
 Language=Russian
+ERROR_DS_LOOP_DETECT - A loop has been detected.
+.
+Language=Polish
 ERROR_DS_LOOP_DETECT - A loop has been detected.
 .
 
@@ -15335,6 +19508,9 @@ ERROR_DS_NAMING_VIOLATION - There is a naming violation.
 Language=Russian
 ERROR_DS_NAMING_VIOLATION - There is a naming violation.
 .
+Language=Polish
+ERROR_DS_NAMING_VIOLATION - There is a naming violation.
+.
 
 MessageId=8248
 Severity=Success
@@ -15344,6 +19520,9 @@ Language=English
 ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
 .
 Language=Russian
+ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
+.
+Language=Polish
 ERROR_DS_OBJECT_RESULTS_TOO_LARGE - The result set is too large.
 .
 
@@ -15357,6 +19536,9 @@ ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
 Language=Russian
 ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
 .
+Language=Polish
+ERROR_DS_AFFECTS_MULTIPLE_DSAS - The operation affects multiple DSAs
+.
 
 MessageId=8250
 Severity=Success
@@ -15366,6 +19548,9 @@ Language=English
 ERROR_DS_SERVER_DOWN - The server is not operational.
 .
 Language=Russian
+ERROR_DS_SERVER_DOWN - The server is not operational.
+.
+Language=Polish
 ERROR_DS_SERVER_DOWN - The server is not operational.
 .
 
@@ -15379,6 +19564,9 @@ ERROR_DS_LOCAL_ERROR - A local error has occurred.
 Language=Russian
 ERROR_DS_LOCAL_ERROR - A local error has occurred.
 .
+Language=Polish
+ERROR_DS_LOCAL_ERROR - A local error has occurred.
+.
 
 MessageId=8252
 Severity=Success
@@ -15388,6 +19576,9 @@ Language=English
 ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
 .
 Language=Russian
+ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
+.
+Language=Polish
 ERROR_DS_ENCODING_ERROR - An encoding error has occurred.
 .
 
@@ -15401,6 +19592,9 @@ ERROR_DS_DECODING_ERROR - A decoding error has occurred.
 Language=Russian
 ERROR_DS_DECODING_ERROR - A decoding error has occurred.
 .
+Language=Polish
+ERROR_DS_DECODING_ERROR - A decoding error has occurred.
+.
 
 MessageId=8254
 Severity=Success
@@ -15410,6 +19604,9 @@ Language=English
 ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
 .
 Language=Russian
+ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
+.
+Language=Polish
 ERROR_DS_FILTER_UNKNOWN - The search filter cannot be recognized.
 .
 
@@ -15423,6 +19620,9 @@ ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
 Language=Russian
 ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
 .
+Language=Polish
+ERROR_DS_PARAM_ERROR - One or more parameters are illegal.
+.
 
 MessageId=8256
 Severity=Success
@@ -15432,6 +19632,9 @@ Language=English
 ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
 .
 Language=Russian
+ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
+.
+Language=Polish
 ERROR_DS_NOT_SUPPORTED - The specified method is not supported.
 .
 
@@ -15445,6 +19648,9 @@ ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
 Language=Russian
 ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
 .
+Language=Polish
+ERROR_DS_NO_RESULTS_RETURNED - No results were returned.
+.
 
 MessageId=8258
 Severity=Success
@@ -15454,6 +19660,9 @@ Language=English
 ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
 .
 Language=Russian
+ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
+.
+Language=Polish
 ERROR_DS_CONTROL_NOT_FOUND - The specified control is not supported by the server.
 .
 
@@ -15467,6 +19676,9 @@ ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
 Language=Russian
 ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
 .
+Language=Polish
+ERROR_DS_CLIENT_LOOP - A referral loop was detected by the client.
+.
 
 MessageId=8260
 Severity=Success
@@ -15476,6 +19688,9 @@ Language=English
 ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
 .
 Language=Russian
+ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
+.
+Language=Polish
 ERROR_DS_REFERRAL_LIMIT_EXCEEDED - The preset referral limit was exceeded.
 .
 
@@ -15489,6 +19704,9 @@ ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
 Language=Russian
 ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
 .
+Language=Polish
+ERROR_DS_SORT_CONTROL_MISSING - The search requires a SORT control.
+.
 
 MessageId=8262
 Severity=Success
@@ -15498,6 +19716,9 @@ Language=English
 ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
 .
 Language=Russian
+ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
+.
+Language=Polish
 ERROR_DS_OFFSET_RANGE_ERROR - The search results exceed the offset range specified.
 .
 
@@ -15511,6 +19732,9 @@ ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context.
 Language=Russian
 ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context. The root object cannot have an instantiated parent.
 .
+Language=Polish
+ERROR_DS_ROOT_MUST_BE_NC - The root object must be the head of a naming context. The root object cannot have an instantiated parent.
+.
 
 MessageId=8302
 Severity=Success
@@ -15520,6 +19744,9 @@ Language=English
 ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
 .
 Language=Russian
+ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
+.
+Language=Polish
 ERROR_DS_ADD_REPLICA_INHIBITED - The add replica operation cannot be performed. The naming context must be writeable in order to create the replica.
 .
 
@@ -15533,6 +19760,9 @@ ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined
 Language=Russian
 ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined in the schema occurred.
 .
+Language=Polish
+ERROR_DS_ATT_NOT_DEF_IN_SCHEMA - A reference to an attribute that is not defined in the schema occurred.
+.
 
 MessageId=8304
 Severity=Success
@@ -15542,6 +19772,9 @@ Language=English
 ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
 .
 Language=Russian
+ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
+.
+Language=Polish
 ERROR_DS_MAX_OBJ_SIZE_EXCEEDED - The maximum size of an object has been exceeded.
 .
 
@@ -15555,6 +19788,9 @@ ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the di
 Language=Russian
 ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the directory with a name that is already in use.
 .
+Language=Polish
+ERROR_DS_OBJ_STRING_NAME_EXISTS - An attempt was made to add an object to the directory with a name that is already in use.
+.
 
 MessageId=8306
 Severity=Success
@@ -15564,6 +19800,9 @@ Language=English
 ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
 .
 Language=Russian
+ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
+.
+Language=Polish
 ERROR_DS_NO_RDN_DEFINED_IN_SCHEMA - An attempt was made to add an object of a class that does not have an RDN defined in the schema.
 .
 
@@ -15577,6 +19816,9 @@ ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an
 Language=Russian
 ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
 .
+Language=Polish
+ERROR_DS_RDN_DOESNT_MATCH_SCHEMA - An attempt was made to add an object using an RDN that is not the RDN defined in the schema.
+.
 
 MessageId=8308
 Severity=Success
@@ -15586,6 +19828,9 @@ Language=English
 ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
 .
 Language=Russian
+ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
+.
+Language=Polish
 ERROR_DS_NO_REQUESTED_ATTS_FOUND - None of the requested attributes were found on the objects.
 .
 
@@ -15599,6 +19844,9 @@ ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
 Language=Russian
 ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
 .
+Language=Polish
+ERROR_DS_USER_BUFFER_TO_SMALL - The user buffer is too small.
+.
 
 MessageId=8310
 Severity=Success
@@ -15608,6 +19856,9 @@ Language=English
 ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
 .
 Language=Russian
+ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
+.
+Language=Polish
 ERROR_DS_ATT_IS_NOT_ON_OBJ - The attribute specified in the operation is not present on the object.
 .
 
@@ -15621,6 +19872,9 @@ ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the mo
 Language=Russian
 ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the modification is not permitted.
 .
+Language=Polish
+ERROR_DS_ILLEGAL_MOD_OPERATION - Illegal modify operation. Some aspect of the modification is not permitted.
+.
 
 MessageId=8312
 Severity=Success
@@ -15630,6 +19884,9 @@ Language=English
 ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
 .
 Language=Russian
+ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
+.
+Language=Polish
 ERROR_DS_OBJ_TOO_LARGE - The specified object is too large.
 .
 
@@ -15643,6 +19900,9 @@ ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
 Language=Russian
 ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
 .
+Language=Polish
+ERROR_DS_BAD_INSTANCE_TYPE - The specified instance type is not valid.
+.
 
 MessageId=8314
 Severity=Success
@@ -15652,6 +19912,9 @@ Language=English
 ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
 .
 Language=Russian
+ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
+.
+Language=Polish
 ERROR_DS_MASTERDSA_REQUIRED - The operation must be performed at a master DSA.
 .
 
@@ -15665,6 +19928,9 @@ ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
 Language=Russian
 ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
 .
+Language=Polish
+ERROR_DS_OBJECT_CLASS_REQUIRED - The object class attribute must be specified.
+.
 
 MessageId=8316
 Severity=Success
@@ -15674,6 +19940,9 @@ Language=English
 ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
 .
 Language=Russian
+ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
+.
+Language=Polish
 ERROR_DS_MISSING_REQUIRED_ATT - A required attribute is missing.
 .
 
@@ -15687,6 +19956,9 @@ ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to incl
 Language=Russian
 ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to include an attribute that is not legal for its class
 .
+Language=Polish
+ERROR_DS_ATT_NOT_DEF_FOR_CLASS - An attempt was made to modify an object to include an attribute that is not legal for its class
+.
 
 MessageId=8318
 Severity=Success
@@ -15696,6 +19968,9 @@ Language=English
 ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
 .
 Language=Russian
+ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
+.
+Language=Polish
 ERROR_DS_ATT_ALREADY_EXISTS - The specified attribute is already present on the object.
 .
 
@@ -15709,6 +19984,9 @@ ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no
 Language=Russian
 ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no values.
 .
+Language=Polish
+ERROR_DS_CANT_ADD_ATT_VALUES - The specified attribute is not present, or has no values.
+.
 
 MessageId=8321
 Severity=Success
@@ -15718,6 +19996,9 @@ Language=English
 ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
 .
 Language=Russian
+ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
+.
+Language=Polish
 ERROR_DS_SINGLE_VALUE_CONSTRAINT - Multiple values were specified for an attribute that can have only one value.
 .
 
@@ -15731,6 +20012,9 @@ ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable 
 Language=Russian
 ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable range of values.
 .
+Language=Polish
+ERROR_DS_RANGE_CONSTRAINT - A value for the attribute was not in the acceptable range of values.
+.
 
 MessageId=8323
 Severity=Success
@@ -15740,6 +20024,9 @@ Language=English
 ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
 .
 Language=Russian
+ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
+.
+Language=Polish
 ERROR_DS_ATT_VAL_ALREADY_EXISTS - The specified value already exists.
 .
 
@@ -15753,6 +20040,9 @@ ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is no
 Language=Russian
 ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is not present on the object.
 .
+Language=Polish
+ERROR_DS_CANT_REM_MISSING_ATT - The attribute cannot be removed because it is not present on the object.
+.
 
 MessageId=8325
 Severity=Success
@@ -15762,6 +20052,9 @@ Language=English
 ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
 .
 Language=Russian
+ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
+.
+Language=Polish
 ERROR_DS_CANT_REM_MISSING_ATT_VAL - The attribute value cannot be removed because it is not present on the object.
 .
 
@@ -15775,6 +20068,9 @@ ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
 Language=Russian
 ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
 .
+Language=Polish
+ERROR_DS_ROOT_CANT_BE_SUBREF - The specified root object cannot be a subref.
+.
 
 MessageId=8327
 Severity=Success
@@ -15784,6 +20080,9 @@ Language=English
 ERROR_DS_NO_CHAINING - Chaining is not permitted.
 .
 Language=Russian
+ERROR_DS_NO_CHAINING - Chaining is not permitted.
+.
+Language=Polish
 ERROR_DS_NO_CHAINING - Chaining is not permitted.
 .
 
@@ -15797,6 +20096,9 @@ ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
 Language=Russian
 ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
 .
+Language=Polish
+ERROR_DS_NO_CHAINED_EVAL - Chained evaluation is not permitted.
+.
 
 MessageId=8329
 Severity=Success
@@ -15806,6 +20108,9 @@ Language=English
 ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
 .
 Language=Russian
+ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
+.
+Language=Polish
 ERROR_DS_NO_PARENT_OBJECT - The operation could not be performed because the object's parent is either uninstantiated or deleted.
 .
 
@@ -15819,6 +20124,9 @@ ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted.
 Language=Russian
 ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted. Aliases are leaf objects.
 .
+Language=Polish
+ERROR_DS_PARENT_IS_AN_ALIAS - Having a parent that is an alias is not permitted. Aliases are leaf objects.
+.
 
 MessageId=8331
 Severity=Success
@@ -15828,6 +20136,9 @@ Language=English
 ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
 .
 Language=Russian
+ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
+.
+Language=Polish
 ERROR_DS_CANT_MIX_MASTER_AND_REPS - The object and parent must be of the same type, either both masters or both replicas.
 .
 
@@ -15841,6 +20152,9 @@ ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child object
 Language=Russian
 ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
 .
+Language=Polish
+ERROR_DS_CHILDREN_EXIST - The operation cannot be performed because child objects exist. This operation can only be performed on a leaf object.
+.
 
 MessageId=8333
 Severity=Success
@@ -15850,6 +20164,9 @@ Language=English
 ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
 .
 Language=Russian
+ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
+.
+Language=Polish
 ERROR_DS_OBJ_NOT_FOUND - Directory object not found.
 .
 
@@ -15863,6 +20180,9 @@ ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
 Language=Russian
 ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
 .
+Language=Polish
+ERROR_DS_ALIASED_OBJ_MISSING - The aliased object is missing.
+.
 
 MessageId=8335
 Severity=Success
@@ -15872,6 +20192,9 @@ Language=English
 ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
 .
 Language=Russian
+ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
+.
+Language=Polish
 ERROR_DS_BAD_NAME_SYNTAX - The object name has bad syntax.
 .
 
@@ -15885,6 +20208,9 @@ ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to an
 Language=Russian
 ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to another alias.
 .
+Language=Polish
+ERROR_DS_ALIAS_POINTS_TO_ALIAS - It is not permitted for an alias to refer to another alias.
+.
 
 MessageId=8337
 Severity=Success
@@ -15894,6 +20220,9 @@ Language=English
 ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
 .
 Language=Russian
+ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
+.
+Language=Polish
 ERROR_DS_CANT_DEREF_ALIAS - The alias cannot be dereferenced.
 .
 
@@ -15907,6 +20236,9 @@ ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
 Language=Russian
 ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
 .
+Language=Polish
+ERROR_DS_OUT_OF_SCOPE - The operation is out of scope.
+.
 
 MessageId=8339
 Severity=Success
@@ -15916,6 +20248,9 @@ Language=English
 ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
 .
 Language=Russian
+ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
+.
+Language=Polish
 ERROR_DS_OBJECT_BEING_REMOVED - The operation cannot continue because the object is in the process of being removed.
 .
 
@@ -15929,6 +20264,9 @@ ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
 Language=Russian
 ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
 .
+Language=Polish
+ERROR_DS_CANT_DELETE_DSA_OBJ - The DSA object cannot be deleted.
+.
 
 MessageId=8341
 Severity=Success
@@ -15938,6 +20276,9 @@ Language=English
 ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
 .
 Language=Russian
+ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
+.
+Language=Polish
 ERROR_DS_GENERIC_ERROR - A directory service error has occurred.
 .
 
@@ -15951,6 +20292,9 @@ ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an inte
 Language=Russian
 ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an internal master DSA object.
 .
+Language=Polish
+ERROR_DS_DSA_MUST_BE_INT_MASTER - The operation can only be performed on an internal master DSA object.
+.
 
 MessageId=8343
 Severity=Success
@@ -15960,6 +20304,9 @@ Language=English
 ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
 .
 Language=Russian
+ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
+.
+Language=Polish
 ERROR_DS_CLASS_NOT_DSA - The object must be of class DSA.
 .
 
@@ -15973,6 +20320,9 @@ ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operat
 Language=Russian
 ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operation.
 .
+Language=Polish
+ERROR_DS_INSUFF_ACCESS_RIGHTS - Insufficient access rights to perform the operation.
+.
 
 MessageId=8345
 Severity=Success
@@ -15982,6 +20332,9 @@ Language=English
 ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
 .
 Language=Russian
+ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
+.
+Language=Polish
 ERROR_DS_ILLEGAL_SUPERIOR - The object cannot be added because the parent is not on the list of possible superiors.
 .
 
@@ -15995,6 +20348,9 @@ ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted becau
 Language=Russian
 ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
 .
+Language=Polish
+ERROR_DS_ATTRIBUTE_OWNED_BY_SAM - Access to the attribute is not permitted because the attribute is owned by the Security Accounts Manager (SAM).
+.
 
 MessageId=8347
 Severity=Success
@@ -16004,6 +20360,9 @@ Language=English
 ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
 .
 Language=Russian
+ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
+.
+Language=Polish
 ERROR_DS_NAME_TOO_MANY_PARTS - The name has too many parts.
 .
 
@@ -16017,6 +20376,9 @@ ERROR_DS_NAME_TOO_LONG - The name is too long.
 Language=Russian
 ERROR_DS_NAME_TOO_LONG - The name is too long.
 .
+Language=Polish
+ERROR_DS_NAME_TOO_LONG - The name is too long.
+.
 
 MessageId=8349
 Severity=Success
@@ -16026,6 +20388,9 @@ Language=English
 ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
 .
 Language=Russian
+ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
+.
+Language=Polish
 ERROR_DS_NAME_VALUE_TOO_LONG - The name value is too long.
 .
 
@@ -16039,6 +20404,9 @@ ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a
 Language=Russian
 ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a name.
 .
+Language=Polish
+ERROR_DS_NAME_UNPARSEABLE - The directory service encountered an error parsing a name.
+.
 
 MessageId=8351
 Severity=Success
@@ -16048,6 +20416,9 @@ Language=English
 ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
 .
 Language=Russian
+ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
+.
+Language=Polish
 ERROR_DS_NAME_TYPE_UNKNOWN - The directory service cannot get the attribute type for a name.
 .
 
@@ -16061,6 +20432,9 @@ ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifi
 Language=Russian
 ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifies a phantom.
 .
+Language=Polish
+ERROR_DS_NOT_AN_OBJECT - The name does not identify an object; the name identifies a phantom.
+.
 
 MessageId=8353
 Severity=Success
@@ -16070,6 +20444,9 @@ Language=English
 ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
 .
 Language=Russian
+ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
+.
+Language=Polish
 ERROR_DS_SEC_DESC_TOO_SHORT - The security descriptor is too short.
 .
 
@@ -16083,6 +20460,9 @@ ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
 Language=Russian
 ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
 .
+Language=Polish
+ERROR_DS_SEC_DESC_INVALID - The security descriptor is invalid.
+.
 
 MessageId=8355
 Severity=Success
@@ -16092,6 +20472,9 @@ Language=English
 ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
 .
 Language=Russian
+ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
+.
+Language=Polish
 ERROR_DS_NO_DELETED_NAME - Failed to create name for deleted object.
 .
 
@@ -16105,6 +20488,9 @@ ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
 Language=Russian
 ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
 .
+Language=Polish
+ERROR_DS_SUBREF_MUST_HAVE_PARENT - The parent of a new subref must exist.
+.
 
 MessageId=8357
 Severity=Success
@@ -16114,6 +20500,9 @@ Language=English
 ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
 .
 Language=Russian
+ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
+.
+Language=Polish
 ERROR_DS_NCNAME_MUST_BE_NC - The object must be a naming context.
 .
 
@@ -16127,6 +20516,9 @@ ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is
 Language=Russian
 ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is owned by the system.
 .
+Language=Polish
+ERROR_DS_CANT_ADD_SYSTEM_ONLY - It is not permitted to add an attribute which is owned by the system.
+.
 
 MessageId=8359
 Severity=Success
@@ -16136,6 +20528,9 @@ Language=English
 ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
 .
 Language=Russian
+ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
+.
+Language=Polish
 ERROR_DS_CLASS_MUST_BE_CONCRETE - The class of the object must be structural; you cannot instantiate an abstract class.
 .
 
@@ -16149,6 +20544,9 @@ ERROR_DS_INVALID_DMD - The schema object could not be found.
 Language=Russian
 ERROR_DS_INVALID_DMD - The schema object could not be found.
 .
+Language=Polish
+ERROR_DS_INVALID_DMD - The schema object could not be found.
+.
 
 MessageId=8361
 Severity=Success
@@ -16158,6 +20556,9 @@ Language=English
 ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
 .
 Language=Russian
+ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
+.
+Language=Polish
 ERROR_DS_OBJ_GUID_EXISTS - A local object with this GUID (dead or alive) already exists.
 .
 
@@ -16171,6 +20572,9 @@ ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
 Language=Russian
 ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
 .
+Language=Polish
+ERROR_DS_NOT_ON_BACKLINK - The operation cannot be performed on a back link.
+.
 
 MessageId=8363
 Severity=Success
@@ -16180,6 +20584,9 @@ Language=English
 ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
 .
 Language=Russian
+ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
+.
+Language=Polish
 ERROR_DS_NO_CROSSREF_FOR_NC - The cross reference for the specified naming context could not be found.
 .
 
@@ -16193,6 +20600,9 @@ ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the direct
 Language=Russian
 ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the directory service is shutting down.
 .
+Language=Polish
+ERROR_DS_SHUTTING_DOWN - The operation could not be performed because the directory service is shutting down.
+.
 
 MessageId=8365
 Severity=Success
@@ -16202,6 +20612,9 @@ Language=English
 ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
 .
 Language=Russian
+ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
+.
+Language=Polish
 ERROR_DS_UNKNOWN_OPERATION - The directory service request is invalid.
 .
 
@@ -16215,6 +20628,9 @@ ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
 Language=Russian
 ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
 .
+Language=Polish
+ERROR_DS_INVALID_ROLE_OWNER - The role owner attribute could not be read.
+.
 
 MessageId=8367
 Severity=Success
@@ -16224,6 +20640,9 @@ Language=English
 ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
 .
 Language=Russian
+ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
+.
+Language=Polish
 ERROR_DS_COULDNT_CONTACT_FSMO - The requested FSMO operation failed. The current FSMO holder could not be reached.
 .
 
@@ -16237,6 +20656,9 @@ ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is no
 Language=Russian
 ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is not permitted.
 .
+Language=Polish
+ERROR_DS_CROSS_NC_DN_RENAME - Modification of a DN across a naming context is not permitted.
+.
 
 MessageId=8369
 Severity=Success
@@ -16246,6 +20668,9 @@ Language=English
 ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
 .
 Language=Russian
+ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
+.
+Language=Polish
 ERROR_DS_CANT_MOD_SYSTEM_ONLY - The attribute cannot be modified because it is owned by the system.
 .
 
@@ -16259,6 +20684,9 @@ ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
 Language=Russian
 ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
 .
+Language=Polish
+ERROR_DS_REPLICATOR_ONLY - Only the replicator can perform this function.
+.
 
 MessageId=8371
 Severity=Success
@@ -16268,6 +20696,9 @@ Language=English
 ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
 .
 Language=Russian
+ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
+.
+Language=Polish
 ERROR_DS_OBJ_CLASS_NOT_DEFINED - The specified class is not defined.
 .
 
@@ -16281,6 +20712,9 @@ ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
 Language=Russian
 ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
 .
+Language=Polish
+ERROR_DS_OBJ_CLASS_NOT_SUBCLASS - The specified class is not a subclass.
+.
 
 MessageId=8373
 Severity=Success
@@ -16290,6 +20724,9 @@ Language=English
 ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
 .
 Language=Russian
+ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
+.
+Language=Polish
 ERROR_DS_NAME_REFERENCE_INVALID - The name reference is invalid.
 .
 
@@ -16303,6 +20740,9 @@ ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
 Language=Russian
 ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
 .
+Language=Polish
+ERROR_DS_CROSS_REF_EXISTS - A cross reference already exists.
+.
 
 MessageId=8375
 Severity=Success
@@ -16312,6 +20752,9 @@ Language=English
 ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
 .
 Language=Russian
+ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
+.
+Language=Polish
 ERROR_DS_CANT_DEL_MASTER_CROSSREF - It is not permitted to delete a master cross reference.
 .
 
@@ -16325,6 +20768,9 @@ ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported o
 Language=Russian
 ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported on NC heads.
 .
+Language=Polish
+ERROR_DS_SUBTREE_NOTIFY_NOT_NC_HEAD - Subtree notifications are only supported on NC heads.
+.
 
 MessageId=8377
 Severity=Success
@@ -16334,6 +20780,9 @@ Language=English
 ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
 .
 Language=Russian
+ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
+.
+Language=Polish
 ERROR_DS_NOTIFY_FILTER_TOO_COMPLEX - Notification filter is too complex.
 .
 
@@ -16347,6 +20796,9 @@ ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
 Language=Russian
 ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
 .
+Language=Polish
+ERROR_DS_DUP_RDN - Schema update failed: duplicate RDN.
+.
 
 MessageId=8379
 Severity=Success
@@ -16356,6 +20808,9 @@ Language=English
 ERROR_DS_DUP_OID - Schema update failed: duplicate OID
 .
 Language=Russian
+ERROR_DS_DUP_OID - Schema update failed: duplicate OID
+.
+Language=Polish
 ERROR_DS_DUP_OID - Schema update failed: duplicate OID
 .
 
@@ -16369,6 +20824,9 @@ ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
 Language=Russian
 ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
 .
+Language=Polish
+ERROR_DS_DUP_MAPI_ID - Schema update failed: duplicate MAPI identifier.
+.
 
 MessageId=8381
 Severity=Success
@@ -16378,6 +20836,9 @@ Language=English
 ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
 .
 Language=Russian
+ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
+.
+Language=Polish
 ERROR_DS_DUP_SCHEMA_ID_GUID - Schema update failed: duplicate schema-id GUID.
 .
 
@@ -16391,6 +20852,9 @@ ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display na
 Language=Russian
 ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display name.
 .
+Language=Polish
+ERROR_DS_DUP_LDAP_DISPLAY_NAME - Schema update failed: duplicate LDAP display name.
+.
 
 MessageId=8383
 Severity=Success
@@ -16400,6 +20864,9 @@ Language=English
 ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
 .
 Language=Russian
+ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
+.
+Language=Polish
 ERROR_DS_SEMANTIC_ATT_TEST - Schema update failed: range-lower less than range upper
 .
 
@@ -16413,6 +20880,9 @@ ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
 Language=Russian
 ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
 .
+Language=Polish
+ERROR_DS_SYNTAX_MISMATCH - Schema update failed: syntax mismatch
+.
 
 MessageId=8385
 Severity=Success
@@ -16422,6 +20892,9 @@ Language=English
 ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
 .
 Language=Russian
+ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
+.
+Language=Polish
 ERROR_DS_EXISTS_IN_MUST_HAVE - Schema deletion failed: attribute is used in must-contain
 .
 
@@ -16435,6 +20908,9 @@ ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-c
 Language=Russian
 ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-contain
 .
+Language=Polish
+ERROR_DS_EXISTS_IN_MAY_HAVE - Schema deletion failed: attribute is used in may-contain
+.
 
 MessageId=8387
 Severity=Success
@@ -16444,6 +20920,9 @@ Language=English
 ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
 .
 Language=Russian
+ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
+.
+Language=Polish
 ERROR_DS_NONEXISTENT_MAY_HAVE - Schema update failed: attribute in may-contain does not exist
 .
 
@@ -16457,6 +20936,9 @@ ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain
 Language=Russian
 ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain does not exist
 .
+Language=Polish
+ERROR_DS_NONEXISTENT_MUST_HAVE - Schema update failed: attribute in must-contain does not exist
+.
 
 MessageId=8389
 Severity=Success
@@ -16466,6 +20948,9 @@ Language=English
 ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
 .
 Language=Russian
+ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
+.
+Language=Polish
 ERROR_DS_AUX_CLS_TEST_FAIL - Schema update failed: class in aux-class list does not exist or is not an auxiliary class
 .
 
@@ -16479,6 +20964,9 @@ ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors do
 Language=Russian
 ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors does not exist
 .
+Language=Polish
+ERROR_DS_NONEXISTENT_POSS_SUP - Schema update failed: class in poss-superiors does not exist
+.
 
 MessageId=8391
 Severity=Success
@@ -16488,6 +20976,9 @@ Language=English
 ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
 .
 Language=Russian
+ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
+.
+Language=Polish
 ERROR_DS_SUB_CLS_TEST_FAIL - Schema update failed: class in subclassof list does not exist or does not satisfy hierarchy rules
 .
 
@@ -16501,6 +20992,9 @@ ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong synt
 Language=Russian
 ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong syntax
 .
+Language=Polish
+ERROR_DS_BAD_RDN_ATT_ID_SYNTAX - Schema update failed: Rdn-Att-Id has wrong syntax
+.
 
 MessageId=8393
 Severity=Success
@@ -16510,6 +21004,9 @@ Language=English
 ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
 .
 Language=Russian
+ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
+.
+Language=Polish
 ERROR_DS_EXISTS_IN_AUX_CLS - Schema deletion failed: class is used as auxiliary class
 .
 
@@ -16523,6 +21020,9 @@ ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
 Language=Russian
 ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
 .
+Language=Polish
+ERROR_DS_EXISTS_IN_SUB_CLS - Schema deletion failed: class is used as sub class
+.
 
 MessageId=8395
 Severity=Success
@@ -16532,6 +21032,9 @@ Language=English
 ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
 .
 Language=Russian
+ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
+.
+Language=Polish
 ERROR_DS_EXISTS_IN_POSS_SUP - Schema deletion failed: class is used as poss superior
 .
 
@@ -16545,6 +21048,9 @@ ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation 
 Language=Russian
 ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation cache.
 .
+Language=Polish
+ERROR_DS_RECALCSCHEMA_FAILED - Schema update failed in recalculating validation cache.
+.
 
 MessageId=8397
 Severity=Success
@@ -16554,6 +21060,9 @@ Language=English
 ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
 .
 Language=Russian
+ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
+.
+Language=Polish
 ERROR_DS_TREE_DELETE_NOT_FINISHED - The tree deletion is not finished.
 .
 
@@ -16567,6 +21076,9 @@ ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
 Language=Russian
 ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
 .
+Language=Polish
+ERROR_DS_CANT_DELETE - The requested delete operation could not be performed.
+.
 
 MessageId=8399
 Severity=Success
@@ -16576,6 +21088,9 @@ Language=English
 ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
 .
 Language=Russian
+ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
+.
+Language=Polish
 ERROR_DS_ATT_SCHEMA_REQ_ID - Cannot read the governs class identifier for the schema record.
 .
 
@@ -16589,6 +21104,9 @@ ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
 Language=Russian
 ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
 .
+Language=Polish
+ERROR_DS_BAD_ATT_SCHEMA_SYNTAX - The attribute schema has bad syntax.
+.
 
 MessageId=8401
 Severity=Success
@@ -16598,6 +21116,9 @@ Language=English
 ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
 .
 Language=Russian
+ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
+.
+Language=Polish
 ERROR_DS_CANT_CACHE_ATT - The attribute could not be cached.
 .
 
@@ -16611,6 +21132,9 @@ ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
 Language=Russian
 ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
 .
+Language=Polish
+ERROR_DS_CANT_CACHE_CLASS - The class could not be cached.
+.
 
 MessageId=8403
 Severity=Success
@@ -16620,6 +21144,9 @@ Language=English
 ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
 .
 Language=Russian
+ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
+.
+Language=Polish
 ERROR_DS_CANT_REMOVE_ATT_CACHE - The attribute could not be removed from the cache.
 .
 
@@ -16633,6 +21160,9 @@ ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache
 Language=Russian
 ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache.
 .
+Language=Polish
+ERROR_DS_CANT_REMOVE_CLASS_CACHE - The class could not be removed from the cache.
+.
 
 MessageId=8405
 Severity=Success
@@ -16642,6 +21172,9 @@ Language=English
 ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
 .
 Language=Russian
+ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
+.
+Language=Polish
 ERROR_DS_CANT_RETRIEVE_DN - The distinguished name attribute could not be read.
 .
 
@@ -16655,6 +21188,9 @@ ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the dire
 Language=Russian
 ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
 .
+Language=Polish
+ERROR_DS_MISSING_SUPREF - No superior reference has been configured for the directory service. The directory service is therefore unable to issue referrals to objects outside this forest.
+.
 
 MessageId=8407
 Severity=Success
@@ -16664,6 +21200,9 @@ Language=English
 ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
 .
 Language=Russian
+ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
+.
+Language=Polish
 ERROR_DS_CANT_RETRIEVE_INSTANCE - The instance type attribute could not be retrieved.
 .
 
@@ -16677,6 +21216,9 @@ ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
 Language=Russian
 ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
 .
+Language=Polish
+ERROR_DS_CODE_INCONSISTENCY - An internal error has occurred.
+.
 
 MessageId=8409
 Severity=Success
@@ -16686,6 +21228,9 @@ Language=English
 ERROR_DS_DATABASE_ERROR - A database error has occurred.
 .
 Language=Russian
+ERROR_DS_DATABASE_ERROR - A database error has occurred.
+.
+Language=Polish
 ERROR_DS_DATABASE_ERROR - A database error has occurred.
 .
 
@@ -16699,6 +21244,9 @@ ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
 Language=Russian
 ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
 .
+Language=Polish
+ERROR_DS_GOVERNSID_MISSING - The attribute GOVERNSID is missing.
+.
 
 MessageId=8411
 Severity=Success
@@ -16708,6 +21256,9 @@ Language=English
 ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
 .
 Language=Russian
+ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
+.
+Language=Polish
 ERROR_DS_MISSING_EXPECTED_ATT - An expected attribute is missing.
 .
 
@@ -16721,6 +21272,9 @@ ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross
 Language=Russian
 ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross reference.
 .
+Language=Polish
+ERROR_DS_NCNAME_MISSING_CR_REF - The specified naming context is missing a cross reference.
+.
 
 MessageId=8413
 Severity=Success
@@ -16730,6 +21284,9 @@ Language=English
 ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
 .
 Language=Russian
+ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
+.
+Language=Polish
 ERROR_DS_SECURITY_CHECKING_ERROR - A security checking error has occurred.
 .
 
@@ -16743,6 +21300,9 @@ ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
 Language=Russian
 ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
 .
+Language=Polish
+ERROR_DS_SCHEMA_NOT_LOADED - The schema is not loaded.
+.
 
 MessageId=8415
 Severity=Success
@@ -16752,6 +21312,9 @@ Language=English
 ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
 .
 Language=Russian
+ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
+.
+Language=Polish
 ERROR_DS_SCHEMA_ALLOC_FAILED - Schema allocation failed. Please check if the machine is running low on memory.
 .
 
@@ -16765,6 +21328,9 @@ ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the at
 Language=Russian
 ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the attribute schema.
 .
+Language=Polish
+ERROR_DS_ATT_SCHEMA_REQ_SYNTAX - Failed to obtain the required syntax for the attribute schema.
+.
 
 MessageId=8417
 Severity=Success
@@ -16774,6 +21340,9 @@ Language=English
 ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
 .
 Language=Russian
+ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
+.
+Language=Polish
 ERROR_DS_GCVERIFY_ERROR - The global catalog verification failed. The global catalog is not available or does not support the operation. Some part of the directory is currently not available.
 .
 
@@ -16787,6 +21356,9 @@ ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a sch
 Language=Russian
 ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a schema mismatch between the servers involved.
 .
+Language=Polish
+ERROR_DS_DRA_SCHEMA_MISMATCH - The replication operation failed because of a schema mismatch between the servers involved.
+.
 
 MessageId=8419
 Severity=Success
@@ -16796,6 +21368,9 @@ Language=English
 ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
 .
 Language=Russian
+ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
+.
+Language=Polish
 ERROR_DS_CANT_FIND_DSA_OBJ - The DSA object could not be found.
 .
 
@@ -16809,6 +21384,9 @@ ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
 Language=Russian
 ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
 .
+Language=Polish
+ERROR_DS_CANT_FIND_EXPECTED_NC - The naming context could not be found.
+.
 
 MessageId=8421
 Severity=Success
@@ -16818,6 +21396,9 @@ Language=English
 ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
 .
 Language=Russian
+ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
+.
+Language=Polish
 ERROR_DS_CANT_FIND_NC_IN_CACHE - The naming context could not be found in the cache.
 .
 
@@ -16831,6 +21412,9 @@ ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
 Language=Russian
 ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
 .
+Language=Polish
+ERROR_DS_CANT_RETRIEVE_CHILD - The child object could not be retrieved.
+.
 
 MessageId=8423
 Severity=Success
@@ -16840,6 +21424,9 @@ Language=English
 ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
 .
 Language=Russian
+ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
+.
+Language=Polish
 ERROR_DS_SECURITY_ILLEGAL_MODIFY - The modification was not permitted for security reasons.
 .
 
@@ -16853,6 +21440,9 @@ ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden recor
 Language=Russian
 ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden record.
 .
+Language=Polish
+ERROR_DS_CANT_REPLACE_HIDDEN_REC - The operation cannot replace the hidden record.
+.
 
 MessageId=8425
 Severity=Success
@@ -16862,6 +21452,9 @@ Language=English
 ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
 .
 Language=Russian
+ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
+.
+Language=Polish
 ERROR_DS_BAD_HIERARCHY_FILE - The hierarchy file is invalid.
 .
 
@@ -16875,6 +21468,9 @@ ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table
 Language=Russian
 ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table failed.
 .
+Language=Polish
+ERROR_DS_BUILD_HIERARCHY_TABLE_FAILED - The attempt to build the hierarchy table failed.
+.
 
 MessageId=8427
 Severity=Success
@@ -16884,6 +21480,9 @@ Language=English
 ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
 .
 Language=Russian
+ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
+.
+Language=Polish
 ERROR_DS_CONFIG_PARAM_MISSING - The directory configuration parameter is missing from the registry.
 .
 
@@ -16897,6 +21496,9 @@ ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indi
 Language=Russian
 ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indices failed.
 .
+Language=Polish
+ERROR_DS_COUNTING_AB_INDICES_FAILED - The attempt to count the address book indices failed.
+.
 
 MessageId=8429
 Severity=Success
@@ -16906,6 +21508,9 @@ Language=English
 ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
 .
 Language=Russian
+ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
+.
+Language=Polish
 ERROR_DS_HIERARCHY_TABLE_MALLOC_FAILED - The allocation of the hierarchy table failed.
 .
 
@@ -16919,6 +21524,9 @@ ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failur
 Language=Russian
 ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failure.
 .
+Language=Polish
+ERROR_DS_INTERNAL_FAILURE - The directory service encountered an internal failure.
+.
 
 MessageId=8431
 Severity=Success
@@ -16928,6 +21536,9 @@ Language=English
 ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
 .
 Language=Russian
+ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
+.
+Language=Polish
 ERROR_DS_UNKNOWN_ERROR - The directory service encountered an unknown failure.
 .
 
@@ -16941,6 +21552,9 @@ ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
 Language=Russian
 ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
 .
+Language=Polish
+ERROR_DS_ROOT_REQUIRES_CLASS_TOP - A root object requires a class of 'top'.
+.
 
 MessageId=8433
 Severity=Success
@@ -16950,6 +21564,9 @@ Language=English
 ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
 .
 Language=Russian
+ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
+.
+Language=Polish
 ERROR_DS_REFUSING_FSMO_ROLES - This directory server is shutting down, and cannot take ownership of new floating single-master operation roles.
 .
 
@@ -16963,6 +21580,9 @@ ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory conf
 Language=Russian
 ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
 .
+Language=Polish
+ERROR_DS_MISSING_FSMO_SETTINGS - The directory service is missing mandatory configuration information, and is unable to determine the ownership of floating single-master operation roles.
+.
 
 MessageId=8435
 Severity=Success
@@ -16972,6 +21592,9 @@ Language=English
 ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
 .
 Language=Russian
+ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
+.
+Language=Polish
 ERROR_DS_UNABLE_TO_SURRENDER_ROLES - The directory service was unable to transfer ownership of one or more floating single-master operation roles to other servers.
 .
 
@@ -16985,6 +21608,9 @@ ERROR_DS_DRA_GENERIC - The replication operation failed.
 Language=Russian
 ERROR_DS_DRA_GENERIC - The replication operation failed.
 .
+Language=Polish
+ERROR_DS_DRA_GENERIC - The replication operation failed.
+.
 
 MessageId=8437
 Severity=Success
@@ -16994,6 +21620,9 @@ Language=English
 ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
 .
 Language=Russian
+ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
+.
+Language=Polish
 ERROR_DS_DRA_INVALID_PARAMETER - An invalid parameter was specified for this replication operation.
 .
 
@@ -17007,6 +21636,9 @@ ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replicatio
 Language=Russian
 ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replication operation at this time.
 .
+Language=Polish
+ERROR_DS_DRA_BUSY - The directory service is too busy to complete the replication operation at this time.
+.
 
 MessageId=8439
 Severity=Success
@@ -17016,6 +21648,9 @@ Language=English
 ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
 .
 Language=Russian
+ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
+.
+Language=Polish
 ERROR_DS_DRA_BAD_DN - The distinguished name specified for this replication operation is invalid.
 .
 
@@ -17029,6 +21664,9 @@ ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operatio
 Language=Russian
 ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operation is invalid.
 .
+Language=Polish
+ERROR_DS_DRA_BAD_NC - The naming context specified for this replication operation is invalid.
+.
 
 MessageId=8441
 Severity=Success
@@ -17038,6 +21676,9 @@ Language=English
 ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
 .
 Language=Russian
+ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
+.
+Language=Polish
 ERROR_DS_DRA_DN_EXISTS - The distinguished name specified for this replication operation already exists.
 .
 
@@ -17051,6 +21692,9 @@ ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal err
 Language=Russian
 ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal error.
 .
+Language=Polish
+ERROR_DS_DRA_INTERNAL_ERROR - The replication system encountered an internal error.
+.
 
 MessageId=8443
 Severity=Success
@@ -17060,6 +21704,9 @@ Language=English
 ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
 .
 Language=Russian
+ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
+.
+Language=Polish
 ERROR_DS_DRA_INCONSISTENT_DIT - The replication operation encountered a database inconsistency.
 .
 
@@ -17073,6 +21720,9 @@ ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication opera
 Language=Russian
 ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication operation could not be contacted.
 .
+Language=Polish
+ERROR_DS_DRA_CONNECTION_FAILED - The server specified for this replication operation could not be contacted.
+.
 
 MessageId=8445
 Severity=Success
@@ -17082,6 +21732,9 @@ Language=English
 ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
 .
 Language=Russian
+ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
+.
+Language=Polish
 ERROR_DS_DRA_BAD_INSTANCE_TYPE - The replication operation encountered an object with an invalid instance type.
 .
 
@@ -17095,6 +21748,9 @@ ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
 Language=Russian
 ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
 .
+Language=Polish
+ERROR_DS_DRA_OUT_OF_MEM - The replication operation failed to allocate memory.
+.
 
 MessageId=8447
 Severity=Success
@@ -17104,6 +21760,9 @@ Language=English
 ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
 .
 Language=Russian
+ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
+.
+Language=Polish
 ERROR_DS_DRA_MAIL_PROBLEM - The replication operation encountered an error with the mail system.
 .
 
@@ -17117,6 +21776,9 @@ ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the 
 Language=Russian
 ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the target server already exists.
 .
+Language=Polish
+ERROR_DS_DRA_REF_ALREADY_EXISTS - The replication reference information for the target server already exists.
+.
 
 MessageId=8449
 Severity=Success
@@ -17126,6 +21788,9 @@ Language=English
 ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
 .
 Language=Russian
+ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
+.
+Language=Polish
 ERROR_DS_DRA_REF_NOT_FOUND - The replication reference information for the target server does not exist.
 .
 
@@ -17139,6 +21804,9 @@ ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it
 Language=Russian
 ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it is replicated to another server.
 .
+Language=Polish
+ERROR_DS_DRA_OBJ_IS_REP_SOURCE - The naming context cannot be removed because it is replicated to another server.
+.
 
 MessageId=8451
 Severity=Success
@@ -17148,6 +21816,9 @@ Language=English
 ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
 .
 Language=Russian
+ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
+.
+Language=Polish
 ERROR_DS_DRA_DB_ERROR - The replication operation encountered a database error.
 .
 
@@ -17161,6 +21832,9 @@ ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed 
 Language=Russian
 ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed or is not replicated from the specified server.
 .
+Language=Polish
+ERROR_DS_DRA_NO_REPLICA - The naming context is in the process of being removed or is not replicated from the specified server.
+.
 
 MessageId=8453
 Severity=Success
@@ -17170,6 +21844,9 @@ Language=English
 ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
 .
 Language=Russian
+ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
+.
+Language=Polish
 ERROR_DS_DRA_ACCESS_DENIED - Replication access was denied.
 .
 
@@ -17183,6 +21860,9 @@ ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this ve
 Language=Russian
 ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this version of the directory service.
 .
+Language=Polish
+ERROR_DS_DRA_NOT_SUPPORTED - The requested operation is not supported by this version of the directory service.
+.
 
 MessageId=8455
 Severity=Success
@@ -17192,6 +21872,9 @@ Language=English
 ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
 .
 Language=Russian
+ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
+.
+Language=Polish
 ERROR_DS_DRA_RPC_CANCELLED - The replication remote procedure call was cancelled.
 .
 
@@ -17205,6 +21888,9 @@ ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replicat
 Language=Russian
 ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replication requests.
 .
+Language=Polish
+ERROR_DS_DRA_SOURCE_DISABLED - The source server is currently rejecting replication requests.
+.
 
 MessageId=8457
 Severity=Success
@@ -17214,6 +21900,9 @@ Language=English
 ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
 .
 Language=Russian
+ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
+.
+Language=Polish
 ERROR_DS_DRA_SINK_DISABLED - The destination server is currently rejecting replication requests.
 .
 
@@ -17227,6 +21916,9 @@ ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collisio
 Language=Russian
 ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collision of object names.
 .
+Language=Polish
+ERROR_DS_DRA_NAME_COLLISION - The replication operation failed due to a collision of object names.
+.
 
 MessageId=8459
 Severity=Success
@@ -17236,6 +21928,9 @@ Language=English
 ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
 .
 Language=Russian
+ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
+.
+Language=Polish
 ERROR_DS_DRA_SOURCE_REINSTALLED - The replication source has been reinstalled.
 .
 
@@ -17249,6 +21944,9 @@ ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a require
 Language=Russian
 ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a required parent object is missing.
 .
+Language=Polish
+ERROR_DS_DRA_MISSING_PARENT - The replication operation failed because a required parent object is missing.
+.
 
 MessageId=8461
 Severity=Success
@@ -17258,6 +21956,9 @@ Language=English
 ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
 .
 Language=Russian
+ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
+.
+Language=Polish
 ERROR_DS_DRA_PREEMPTED - The replication operation was preempted.
 .
 
@@ -17271,6 +21972,9 @@ ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandone
 Language=Russian
 ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandoned because of a lack of updates.
 .
+Language=Polish
+ERROR_DS_DRA_ABANDON_SYNC - The replication synchronization attempt was abandoned because of a lack of updates.
+.
 
 MessageId=8463
 Severity=Success
@@ -17280,6 +21984,9 @@ Language=English
 ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
 .
 Language=Russian
+ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
+.
+Language=Polish
 ERROR_DS_DRA_SHUTDOWN - The replication operation was terminated because the system is shutting down.
 .
 
@@ -17293,6 +22000,9 @@ ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because t
 Language=Russian
 ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
 .
+Language=Polish
+ERROR_DS_DRA_INCOMPATIBLE_PARTIAL_SET - Synchronization attempt failed because the destination DC is currently waiting to synchronize new partial attributes from source. This condition is normal if a recent schema change modified the partial attribute set. The destination partial attribute set is not a subset of the source partial attribute set.
+.
 
 MessageId=8465
 Severity=Success
@@ -17302,6 +22012,9 @@ Language=English
 ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
 .
 Language=Russian
+ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
+.
+Language=Polish
 ERROR_DS_DRA_SOURCE_IS_PARTIAL_REPLICA - The replication synchronization attempt failed because a master replica attempted to sync from a partial replica.
 .
 
@@ -17315,6 +22028,9 @@ ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication 
 Language=Russian
 ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
 .
+Language=Polish
+ERROR_DS_DRA_EXTN_CONNECTION_FAILED - The server specified for this replication operation was contacted, but that server was unable to contact an additional server needed to complete the operation.
+.
 
 MessageId=8467
 Severity=Success
@@ -17324,6 +22040,9 @@ Language=English
 ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
 .
 Language=Russian
+ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
+.
+Language=Polish
 ERROR_DS_INSTALL_SCHEMA_MISMATCH - The version of the Active Directory schema of the source forest is not compatible with the version of Active Directory on this computer.
 .
 
@@ -17337,6 +22056,9 @@ ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link ide
 Language=Russian
 ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link identifier already exists.
 .
+Language=Polish
+ERROR_DS_DUP_LINK_ID - Schema update failed: An attribute with the same link identifier already exists.
+.
 
 MessageId=8469
 Severity=Success
@@ -17346,6 +22068,9 @@ Language=English
 ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
 .
 Language=Russian
+ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
+.
+Language=Polish
 ERROR_DS_NAME_ERROR_RESOLVING - Name translation: Generic processing error.
 .
 
@@ -17359,6 +22084,9 @@ ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or ins
 Language=Russian
 ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or insufficient right to see name.
 .
+Language=Polish
+ERROR_DS_NAME_ERROR_NOT_FOUND - Name translation: Could not find the name or insufficient right to see name.
+.
 
 MessageId=8471
 Severity=Success
@@ -17368,6 +22096,9 @@ Language=English
 ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
 .
 Language=Russian
+ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
+.
+Language=Polish
 ERROR_DS_NAME_ERROR_NOT_UNIQUE - Name translation: Input name mapped to more than one output name.
 .
 
@@ -17381,6 +22112,9 @@ ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the
 Language=Russian
 ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the associated output format.
 .
+Language=Polish
+ERROR_DS_NAME_ERROR_NO_MAPPING - Name translation: Input name found, but not the associated output format.
+.
 
 MessageId=8473
 Severity=Success
@@ -17390,6 +22124,9 @@ Language=English
 ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
 .
 Language=Russian
+ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
+.
+Language=Polish
 ERROR_DS_NAME_ERROR_DOMAIN_ONLY - Name translation: Unable to resolve completely, only the domain was found.
 .
 
@@ -17403,6 +22140,9 @@ ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform
 Language=Russian
 ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
 .
+Language=Polish
+ERROR_DS_NAME_ERROR_NO_SYNTACTICAL_MAPPING - Name translation: Unable to perform purely syntactical mapping at the client without going out to the wire.
+.
 
 MessageId=8475
 Severity=Success
@@ -17412,6 +22152,9 @@ Language=English
 ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
 .
 Language=Russian
+ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
+.
+Language=Polish
 ERROR_DS_CONSTRUCTED_ATT_MOD - Modification of a constructed attribute is not allowed.
 .
 
@@ -17425,6 +22168,9 @@ ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an 
 Language=Russian
 ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
 .
+Language=Polish
+ERROR_DS_WRONG_OM_OBJ_CLASS - The OM-Object-Class specified is incorrect for an attribute with the specified syntax.
+.
 
 MessageId=8477
 Severity=Success
@@ -17434,6 +22180,9 @@ Language=English
 ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
 .
 Language=Russian
+ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
+.
+Language=Polish
 ERROR_DS_DRA_REPL_PENDING - The replication request has been posted; waiting for reply.
 .
 
@@ -17447,6 +22196,9 @@ ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and
 Language=Russian
 ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and none was available.
 .
+Language=Polish
+ERROR_DS_DS_REQUIRED - The requested operation requires a directory service, and none was available.
+.
 
 MessageId=8479
 Severity=Success
@@ -17456,6 +22208,9 @@ Language=English
 ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
 .
 Language=Russian
+ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
+.
+Language=Polish
 ERROR_DS_INVALID_LDAP_DISPLAY_NAME - The LDAP display name of the class or attribute contains non-ASCII characters.
 .
 
@@ -17469,6 +22224,9 @@ ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for 
 Language=Russian
 ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for base searches.
 .
+Language=Polish
+ERROR_DS_NON_BASE_SEARCH - The requested search operation is only supported for base searches.
+.
 
 MessageId=8481
 Severity=Success
@@ -17478,6 +22236,9 @@ Language=English
 ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
 .
 Language=Russian
+ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
+.
+Language=Polish
 ERROR_DS_CANT_RETRIEVE_ATTS - The search failed to retrieve attributes from the database.
 .
 
@@ -17491,6 +22252,9 @@ ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a back
 Language=Russian
 ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a backward link attribute that has no corresponding forward link.
 .
+Language=Polish
+ERROR_DS_BACKLINK_WITHOUT_LINK - The schema update operation tried to add a backward link attribute that has no corresponding forward link.
+.
 
 MessageId=8483
 Severity=Success
@@ -17500,6 +22264,9 @@ Language=English
 ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
 .
 Language=Russian
+ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
+.
+Language=Polish
 ERROR_DS_EPOCH_MISMATCH - Source and destination of a cross domain move do not agree on the object's epoch number. Either source or destination does not have the latest version of the object.
 .
 
@@ -17513,6 +22280,9 @@ ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do no
 Language=Russian
 ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
 .
+Language=Polish
+ERROR_DS_SRC_NAME_MISMATCH - Source and destination of a cross domain move do not agree on the object's current name. Either source or destination does not have the latest version of the object.
+.
 
 MessageId=8485
 Severity=Success
@@ -17522,6 +22292,9 @@ Language=English
 ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
 .
 Language=Russian
+ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
+.
+Language=Polish
 ERROR_DS_SRC_AND_DST_NC_IDENTICAL - Source and destination of a cross domain move operation are identical. Caller should use local move operation instead of cross domain move operation.
 .
 
@@ -17535,6 +22308,9 @@ ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are no
 Language=Russian
 ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
 .
+Language=Polish
+ERROR_DS_DST_NC_MISMATCH - Source and destination for a cross domain move are not in agreement on the naming contexts in the forest. Either source or destination does not have the latest version of the Partitions container.
+.
 
 MessageId=8487
 Severity=Success
@@ -17544,6 +22320,9 @@ Language=English
 ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
 .
 Language=Russian
+ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
+.
+Language=Polish
 ERROR_DS_NOT_AUTHORITIVE_FOR_DST_NC - Destination of a cross domain move is not authoritative for the destination naming context.
 .
 
@@ -17557,6 +22336,9 @@ ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do no
 Language=Russian
 ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
 .
+Language=Polish
+ERROR_DS_SRC_GUID_MISMATCH - Source and destination of a cross domain move do not agree on the identity of the source object. Either source or destination does not have the latest version of the source object.
+.
 
 MessageId=8489
 Severity=Success
@@ -17566,6 +22348,9 @@ Language=English
 ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
 .
 Language=Russian
+ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
+.
+Language=Polish
 ERROR_DS_CANT_MOVE_DELETED_OBJECT - Object being moved across domains is already known to be deleted by the destination server. The source server does not have the latest version of the source object.
 .
 
@@ -17579,6 +22364,9 @@ ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive
 Language=Russian
 ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
 .
+Language=Polish
+ERROR_DS_PDC_OPERATION_IN_PROGRESS - Another operation, which requires exclusive access to the PDC PSMO, is already in progress.
+.
 
 MessageId=8491
 Severity=Success
@@ -17588,6 +22376,9 @@ Language=English
 ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
 .
 Language=Russian
+ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
+.
+Language=Polish
 ERROR_DS_CROSS_DOMAIN_CLEANUP_REQD - A cross domain move operation failed such that the two versions of the moved object exist - one each in the source and destination domains. The destination object needs to be removed to restore the system to a consistent state.
 .
 
@@ -17601,6 +22392,9 @@ ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domai
 Language=Russian
 ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
 .
+Language=Polish
+ERROR_DS_ILLEGAL_XDOM_MOVE_OPERATION - This object may not be moved across domain boundaries either because cross domain moves for this class are disallowed, or the object has some special characteristics, e.g.: trust account or restricted RID, which prevent its move.
+.
 
 MessageId=8493
 Severity=Success
@@ -17610,6 +22404,9 @@ Language=English
 ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
 .
 Language=Russian
+ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
+.
+Language=Polish
 ERROR_DS_CANT_WITH_ACCT_GROUP_MEMBERSHPS - Can't move objects with memberships across domain boundaries as once moved, this would violate the membership conditions of the account group. Remove the object from any account group memberships and retry.
 .
 
@@ -17623,6 +22420,9 @@ ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate ch
 Language=Russian
 ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate child of another naming context head, not of an interior node.
 .
+Language=Polish
+ERROR_DS_NC_MUST_HAVE_NC_PARENT - A naming context head must be the immediate child of another naming context head, not of an interior node.
+.
 
 MessageId=8495
 Severity=Success
@@ -17632,6 +22432,9 @@ Language=English
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
 .
 Language=Russian
+ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
+.
+Language=Polish
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE - The directory cannot validate the proposed naming context name because it does not hold a replica of the naming context above the proposed naming context. Please ensure that the domain naming master role is held by a server that is configured as a global catalog server, and that the server is up to date with its replication partners. (Applies only to Windows 2000 Domain Naming masters)
 .
 
@@ -17645,6 +22448,9 @@ ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
 Language=Russian
 ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
 .
+Language=Polish
+ERROR_DS_DST_DOMAIN_NOT_NATIVE - Destination domain must be in native mode.
+.
 
 MessageId=8497
 Severity=Success
@@ -17654,6 +22460,9 @@ Language=English
 ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
 .
 Language=Russian
+ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
+.
+Language=Polish
 ERROR_DS_MISSING_INFRASTRUCTURE_CONTAINER - The operation cannot be performed because the server does not have an infrastructure container in the domain of interest.
 .
 
@@ -17667,6 +22476,9 @@ ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups
 Language=Russian
 ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups is not allowed.
 .
+Language=Polish
+ERROR_DS_CANT_MOVE_ACCOUNT_GROUP - Cross-domain move of non-empty account groups is not allowed.
+.
 
 MessageId=8499
 Severity=Success
@@ -17676,6 +22488,9 @@ Language=English
 ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
 .
 Language=Russian
+ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
+.
+Language=Polish
 ERROR_DS_CANT_MOVE_RESOURCE_GROUP - Cross-domain move of non-empty resource groups is not allowed.
 .
 
@@ -17689,6 +22504,9 @@ ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. T
 Language=Russian
 ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
 .
+Language=Polish
+ERROR_DS_INVALID_SEARCH_FLAG - The search flags for the attribute are invalid. The ANR bit is valid only on attributes of Unicode or Teletex strings.
+.
 
 MessageId=8501
 Severity=Success
@@ -17698,6 +22516,9 @@ Language=English
 ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
 .
 Language=Russian
+ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
+.
+Language=Polish
 ERROR_DS_NO_TREE_DELETE_ABOVE_NC - Tree deletions starting at an object which has an NC head as a descendant are not allowed.
 .
 
@@ -17711,6 +22532,9 @@ ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a t
 Language=Russian
 ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
 .
+Language=Polish
+ERROR_DS_COULDNT_LOCK_TREE_FOR_DELETE - The directory service failed to lock a tree in preparation for a tree deletion because the tree was in use.
+.
 
 MessageId=8503
 Severity=Success
@@ -17720,6 +22544,9 @@ Language=English
 ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
 .
 Language=Russian
+ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
+.
+Language=Polish
 ERROR_DS_COULDNT_IDENTIFY_OBJECTS_FOR_TREE_DELETE - The directory service failed to identify the list of objects to delete while attempting a tree deletion.
 .
 
@@ -17735,6 +22562,10 @@ Language=Russian
 ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
 .
+Language=Polish
+ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
+Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
+.
 
 MessageId=8505
 Severity=Success
@@ -17744,6 +22575,9 @@ Language=English
 ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
 .
 Language=Russian
+ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
+.
+Language=Polish
 ERROR_DS_SENSITIVE_GROUP_VIOLATION - Only an administrator can modify the membership list of an administrative group.
 .
 
@@ -17757,6 +22591,9 @@ ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domai
 Language=Russian
 ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domain controller account.
 .
+Language=Polish
+ERROR_DS_CANT_MOD_PRIMARYGROUPID - Cannot change the primary group ID of a domain controller account.
+.
 
 MessageId=8507
 Severity=Success
@@ -17766,6 +22603,9 @@ Language=English
 ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
 .
 Language=Russian
+ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
+.
+Language=Polish
 ERROR_DS_ILLEGAL_BASE_SCHEMA_MOD - An attempt is made to modify the base schema.
 .
 
@@ -17779,6 +22619,9 @@ ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing
 Language=Russian
 ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
 .
+Language=Polish
+ERROR_DS_NONSAFE_SCHEMA_CHANGE - Adding a new mandatory attribute to an existing class, deleting a mandatory attribute from an existing class, or adding an optional attribute to the special class Top that is not a backlink attribute (directly or through inheritance, for example, by adding or deleting an auxiliary class) is not allowed.
+.
 
 MessageId=8509
 Severity=Success
@@ -17788,6 +22631,9 @@ Language=English
 ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
 .
 Language=Russian
+ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
+.
+Language=Polish
 ERROR_DS_SCHEMA_UPDATE_DISALLOWED - Schema update is not allowed on this DC because the DC is not the schema FSMO Role Owner.
 .
 
@@ -17801,6 +22647,9 @@ ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created un
 Language=Russian
 ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
 .
+Language=Polish
+ERROR_DS_CANT_CREATE_UNDER_SCHEMA - An object of this class cannot be created under the schema container. You can only create attribute-schema and class-schema objects under the schema container.
+.
 
 MessageId=8511
 Severity=Success
@@ -17810,6 +22659,9 @@ Language=English
 ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
 .
 Language=Russian
+ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
+.
+Language=Polish
 ERROR_DS_INSTALL_NO_SRC_SCH_VERSION - The replica/child install failed to get the objectVersion attribute on the schema container on the source DC. Either the attribute is missing on the schema container or the credentials supplied do not have permission to read it.
 .
 
@@ -17823,6 +22675,9 @@ ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to
 Language=Russian
 ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
 .
+Language=Polish
+ERROR_DS_INSTALL_NO_SCH_VERSION_IN_INIFILE - The replica/child install failed to read the objectVersion attribute in the SCHEMA section of the file schema.ini in the system32 directory.
+.
 
 MessageId=8513
 Severity=Success
@@ -17832,6 +22687,9 @@ Language=English
 ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
 .
 Language=Russian
+ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
+.
+Language=Polish
 ERROR_DS_INVALID_GROUP_TYPE - The specified group type is invalid.
 .
 
@@ -17845,6 +22703,9 @@ ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mix
 Language=Russian
 ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mixed domain if the group is security-enabled.
 .
+Language=Polish
+ERROR_DS_NO_NEST_GLOBALGROUP_IN_MIXEDDOMAIN - Cannot nest global groups in a mixed domain if the group is security-enabled.
+.
 
 MessageId=8515
 Severity=Success
@@ -17854,6 +22715,9 @@ Language=English
 ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
 .
 Language=Russian
+ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
+.
+Language=Polish
 ERROR_DS_NO_NEST_LOCALGROUP_IN_MIXEDDOMAIN - Cannot nest local groups in a mixed domain if the group is security-enabled.
 .
 
@@ -17867,6 +22731,9 @@ ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local grou
 Language=Russian
 ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local group as a member.
 .
+Language=Polish
+ERROR_DS_GLOBAL_CANT_HAVE_LOCAL_MEMBER - A global group cannot have a local group as a member.
+.
 
 MessageId=8517
 Severity=Success
@@ -17876,6 +22743,9 @@ Language=English
 ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
 .
 Language=Russian
+ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
+.
+Language=Polish
 ERROR_DS_GLOBAL_CANT_HAVE_UNIVERSAL_MEMBER - A global group cannot have a universal group as a member.
 .
 
@@ -17889,6 +22759,9 @@ ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a loca
 Language=Russian
 ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a local group as a member.
 .
+Language=Polish
+ERROR_DS_UNIVERSAL_CANT_HAVE_LOCAL_MEMBER - A universal group cannot have a local group as a member.
+.
 
 MessageId=8519
 Severity=Success
@@ -17898,6 +22771,9 @@ Language=English
 ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
 .
 Language=Russian
+ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
+.
+Language=Polish
 ERROR_DS_GLOBAL_CANT_HAVE_CROSSDOMAIN_MEMBER - A global group cannot have a cross-domain member.
 .
 
@@ -17911,6 +22787,9 @@ ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have an
 Language=Russian
 ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have another cross-domain local group as a member.
 .
+Language=Polish
+ERROR_DS_LOCAL_CANT_HAVE_CROSSDOMAIN_LOCAL_MEMBER - A local group cannot have another cross-domain local group as a member.
+.
 
 MessageId=8521
 Severity=Success
@@ -17920,6 +22799,9 @@ Language=English
 ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
 .
 Language=Russian
+ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
+.
+Language=Polish
 ERROR_DS_HAVE_PRIMARY_MEMBERS - A group with primary members cannot change to a security-disabled group.
 .
 
@@ -17933,6 +22815,9 @@ ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert t
 Language=Russian
 ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert the string default SD on a class-schema object.
 .
+Language=Polish
+ERROR_DS_STRING_SD_CONVERSION_FAILED - The schema cache load failed to convert the string default SD on a class-schema object.
+.
 
 MessageId=8523
 Severity=Success
@@ -17942,6 +22827,9 @@ Language=English
 ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
 .
 Language=Russian
+ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
+.
+Language=Polish
 ERROR_DS_NAMING_MASTER_GC - Only DSAs configured to be Global Catalog servers should be allowed to hold the Domain Naming Master FSMO role. (Applies only to Windows 2000 servers)
 .
 
@@ -17955,6 +22843,9 @@ ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DN
 Language=Russian
 ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DNS lookup failure.
 .
+Language=Polish
+ERROR_DS_LOOKUP_FAILURE - The DSA operation is unable to proceed because of a DNS lookup failure.
+.
 
 MessageId=8525
 Severity=Success
@@ -17964,6 +22855,9 @@ Language=English
 ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
 .
 Language=Russian
+ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
+.
+Language=Polish
 ERROR_DS_COULDNT_UPDATE_SPNS - While processing a change to the DNS Host Name for an object, the Service Principal Name values could not be kept in sync.
 .
 
@@ -17977,6 +22871,9 @@ ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
 Language=Russian
 ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
 .
+Language=Polish
+ERROR_DS_CANT_RETRIEVE_SD - The Security Descriptor attribute could not be read.
+.
 
 MessageId=8527
 Severity=Success
@@ -17986,6 +22883,9 @@ Language=English
 ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
 .
 Language=Russian
+ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
+.
+Language=Polish
 ERROR_DS_KEY_NOT_UNIQUE - The object requested was not found, but an object with that key was found.
 .
 
@@ -17999,6 +22899,9 @@ ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being add
 Language=Russian
 ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
 .
+Language=Polish
+ERROR_DS_WRONG_LINKED_ATT_SYNTAX - The syntax of the linked attributed being added is incorrect. Forward links can only have syntax 2.5.5.1, 2.5.5.7, and 2.5.5.14, and backlinks can only have syntax 2.5.5.1.
+.
 
 MessageId=8529
 Severity=Success
@@ -18008,6 +22911,9 @@ Language=English
 ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
 .
 Language=Russian
+ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
+.
+Language=Polish
 ERROR_DS_SAM_NEED_BOOTKEY_PASSWORD - Security Account Manager needs to get the boot password.
 .
 
@@ -18021,6 +22927,9 @@ ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boo
 Language=Russian
 ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boot key from floppy disk.
 .
+Language=Polish
+ERROR_DS_SAM_NEED_BOOTKEY_FLOPPY - Security Account Manager needs to get the boot key from floppy disk.
+.
 
 MessageId=8531
 Severity=Success
@@ -18030,6 +22939,9 @@ Language=English
 ERROR_DS_CANT_START - Directory Service cannot start.
 .
 Language=Russian
+ERROR_DS_CANT_START - Directory Service cannot start.
+.
+Language=Polish
 ERROR_DS_CANT_START - Directory Service cannot start.
 .
 
@@ -18043,6 +22955,9 @@ ERROR_DS_INIT_FAILURE - Directory Services could not start.
 Language=Russian
 ERROR_DS_INIT_FAILURE - Directory Services could not start.
 .
+Language=Polish
+ERROR_DS_INIT_FAILURE - Directory Services could not start.
+.
 
 MessageId=8533
 Severity=Success
@@ -18052,6 +22967,9 @@ Language=English
 ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
 .
 Language=Russian
+ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
+.
+Language=Polish
 ERROR_DS_NO_PKT_PRIVACY_ON_CONNECTION - The connection between client and server requires packet privacy or better.
 .
 
@@ -18065,6 +22983,9 @@ ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same fore
 Language=Russian
 ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same forest as destination.
 .
+Language=Polish
+ERROR_DS_SOURCE_DOMAIN_IN_FOREST - The source domain may not be in the same forest as destination.
+.
 
 MessageId=8535
 Severity=Success
@@ -18074,6 +22995,9 @@ Language=English
 ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
 .
 Language=Russian
+ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
+.
+Language=Polish
 ERROR_DS_DESTINATION_DOMAIN_NOT_IN_FOREST - The destination domain must be in the forest.
 .
 
@@ -18087,6 +23011,9 @@ ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destinat
 Language=Russian
 ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destination domain auditing be enabled.
 .
+Language=Polish
+ERROR_DS_DESTINATION_AUDITING_NOT_ENABLED - The operation requires that destination domain auditing be enabled.
+.
 
 MessageId=8537
 Severity=Success
@@ -18096,6 +23023,9 @@ Language=English
 ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
 .
 Language=Russian
+ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
+.
+Language=Polish
 ERROR_DS_CANT_FIND_DC_FOR_SRC_DOMAIN - The operation couldn't locate a DC for the source domain.
 .
 
@@ -18109,6 +23039,9 @@ ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
 Language=Russian
 ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
 .
+Language=Polish
+ERROR_DS_SRC_OBJ_NOT_GROUP_OR_USER - The source object must be a group or user.
+.
 
 MessageId=8539
 Severity=Success
@@ -18120,6 +23053,9 @@ ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in de
 Language=Russian
 ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in destination forest.
 .
+Language=Polish
+ERROR_DS_SRC_SID_EXISTS_IN_FOREST - The source object's SID already exists in destination forest.
+.
 
 MessageId=8540
 Severity=Success
@@ -18129,6 +23065,9 @@ Language=English
 ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
 .
 Language=Russian
+ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
+.
+Language=Polish
 ERROR_DS_SRC_AND_DST_OBJECT_CLASS_MISMATCH - The source and destination object must be of the same type.
 .
 
@@ -18144,6 +23083,10 @@ Language=Russian
 ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
 .
+Language=Polish
+ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
+Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
+.
 
 MessageId=8542
 Severity=Success
@@ -18153,6 +23096,9 @@ Language=English
 ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
 .
 Language=Russian
+ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
+.
+Language=Polish
 ERROR_DS_DRA_SCHEMA_INFO_SHIP - Schema information could not be included in the replication request.
 .
 
@@ -18166,6 +23112,9 @@ ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed 
 Language=Russian
 ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed due to a schema incompatibility.
 .
+Language=Polish
+ERROR_DS_DRA_SCHEMA_CONFLICT - The replication operation could not be completed due to a schema incompatibility.
+.
 
 MessageId=8544
 Severity=Success
@@ -18175,6 +23124,9 @@ Language=English
 ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
 .
 Language=Russian
+ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
+.
+Language=Polish
 ERROR_DS_DRA_EARLIER_SCHEMA_CONLICT - The replication operation could not be completed due to a previous schema incompatibility.
 .
 
@@ -18188,6 +23140,9 @@ ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied becau
 Language=Russian
 ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
 .
+Language=Polish
+ERROR_DS_DRA_OBJ_NC_MISMATCH - The replication update could not be applied because either the source or the destination has not yet received information regarding a recent cross-domain move operation.
+.
 
 MessageId=8546
 Severity=Success
@@ -18197,6 +23152,9 @@ Language=English
 ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
 .
 Language=Russian
+ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
+.
+Language=Polish
 ERROR_DS_NC_STILL_HAS_DSAS - The requested domain could not be deleted because there exist domain controllers that still host this domain.
 .
 
@@ -18210,6 +23168,9 @@ ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global
 Language=Russian
 ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global catalog server.
 .
+Language=Polish
+ERROR_DS_GC_REQUIRED - The requested operation can be performed only on a global catalog server.
+.
 
 MessageId=8548
 Severity=Success
@@ -18219,6 +23180,9 @@ Language=English
 ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
 .
 Language=Russian
+ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
+.
+Language=Polish
 ERROR_DS_LOCAL_MEMBER_OF_LOCAL_ONLY - A local group can only be a member of other local groups in the same domain.
 .
 
@@ -18232,6 +23196,9 @@ ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be memb
 Language=Russian
 ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be members of universal groups.
 .
+Language=Polish
+ERROR_DS_NO_FPO_IN_UNIVERSAL_GROUPS - Foreign security principals cannot be members of universal groups.
+.
 
 MessageId=8550
 Severity=Success
@@ -18241,6 +23208,9 @@ Language=English
 ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
 .
 Language=Russian
+ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
+.
+Language=Polish
 ERROR_DS_CANT_ADD_TO_GC - The attribute is not allowed to be replicated to the GC because of security reasons.
 .
 
@@ -18254,6 +23224,9 @@ ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken
 Language=Russian
 ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
 .
+Language=Polish
+ERROR_DS_NO_CHECKPOINT_WITH_PDC - The checkpoint with the PDC could not be taken because there are too many modifications being processed currently.
+.
 
 MessageId=8552
 Severity=Success
@@ -18263,6 +23236,9 @@ Language=English
 ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
 .
 Language=Russian
+ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
+.
+Language=Polish
 ERROR_DS_SOURCE_AUDITING_NOT_ENABLED - The operation requires that source domain auditing be enabled.
 .
 
@@ -18276,6 +23252,9 @@ ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be cr
 Language=Russian
 ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be created inside domain naming contexts.
 .
+Language=Polish
+ERROR_DS_CANT_CREATE_IN_NONDOMAIN_NC - Security principal objects can only be created inside domain naming contexts.
+.
 
 MessageId=8554
 Severity=Success
@@ -18285,6 +23264,9 @@ Language=English
 ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
 .
 Language=Russian
+ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
+.
+Language=Polish
 ERROR_DS_INVALID_NAME_FOR_SPN - A Service Principal Name (SPN) could not be constructed because the provided hostname is not in the necessary format.
 .
 
@@ -18298,6 +23280,9 @@ ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructe
 Language=Russian
 ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructed attributes.
 .
+Language=Polish
+ERROR_DS_FILTER_USES_CONTRUCTED_ATTRS - A Filter was passed that uses constructed attributes.
+.
 
 MessageId=8556
 Severity=Success
@@ -18307,6 +23292,9 @@ Language=English
 ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
 .
 Language=Russian
+ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
+.
+Language=Polish
 ERROR_DS_UNICODEPWD_NOT_IN_QUOTES - The unicodePwd attribute value must be enclosed in double quotes.
 .
 
@@ -18320,6 +23308,9 @@ ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to t
 Language=Russian
 ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
 .
+Language=Polish
+ERROR_DS_MACHINE_ACCOUNT_QUOTA_EXCEEDED - Your computer could not be joined to the domain. You have exceeded the maximum number of computer accounts you are allowed to create in this domain. Contact your system administrator to have this limit reset or increased.
+.
 
 MessageId=8558
 Severity=Success
@@ -18329,6 +23320,9 @@ Language=English
 ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
 .
 Language=Russian
+ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
+.
+Language=Polish
 ERROR_DS_MUST_BE_RUN_ON_DST_DC - For security reasons, the operation must be run on the destination DC.
 .
 
@@ -18342,6 +23336,9 @@ ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC mus
 Language=Russian
 ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC must be NT4SP4 or greater.
 .
+Language=Polish
+ERROR_DS_SRC_DC_MUST_BE_SP4_OR_GREATER - For security reasons, the source DC must be NT4SP4 or greater.
+.
 
 MessageId=8560
 Severity=Success
@@ -18351,6 +23348,9 @@ Language=English
 ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
 .
 Language=Russian
+ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
+.
+Language=Polish
 ERROR_DS_CANT_TREE_DELETE_CRITICAL_OBJ - Critical Directory Service System objects cannot be deleted during tree delete operations. The tree delete may have been partially performed.
 .
 
@@ -18363,6 +23363,10 @@ ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of th
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
 Language=Russian
+ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
+Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+.
+Language=Polish
 ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
@@ -18379,6 +23383,10 @@ Language=Russian
 ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
+Language=Polish
+ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
+Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+.
 
 MessageId=8563
 Severity=Success
@@ -18388,6 +23396,9 @@ Language=English
 ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
 .
 Language=Russian
+ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
+.
+Language=Polish
 ERROR_DS_FOREST_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current forest functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this forest.
 .
 
@@ -18401,6 +23412,9 @@ ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed
 Language=Russian
 ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
 .
+Language=Polish
+ERROR_DS_DOMAIN_VERSION_TOO_HIGH - The version of the operating system installed is incompatible with the current domain functional level. You must upgrade to a new version of the operating system before this server can become a domain controller in this domain.
+.
 
 MessageId=8565
 Severity=Success
@@ -18410,6 +23424,9 @@ Language=English
 ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
 .
 Language=Russian
+ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
+.
+Language=Polish
 ERROR_DS_FOREST_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current forest functional level. You must raise the forest functional level before this server can become a domain controller in this forest.
 .
 
@@ -18423,6 +23440,9 @@ ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed
 Language=Russian
 ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
 .
+Language=Polish
+ERROR_DS_DOMAIN_VERSION_TOO_LOW - This version of the operating system installed on this server no longer supports the current domain functional level. You must raise the domain functional level before this server can become a domain controller in this domain.
+.
 
 MessageId=8567
 Severity=Success
@@ -18432,6 +23452,9 @@ Language=English
 ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
 .
 Language=Russian
+ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
+.
+Language=Polish
 ERROR_DS_INCOMPATIBLE_VERSION - The version of the operating system installed on this server is incompatible with the functional level of the domain or forest.
 .
 
@@ -18445,6 +23468,9 @@ ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot
 Language=Russian
 ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
 .
+Language=Polish
+ERROR_DS_LOW_DSA_VERSION - The functional level of the domain (or forest) cannot be raised to the requested value, because there exist one or more domain controllers in the domain (or forest) that are at a lower incompatible functional level.
+.
 
 MessageId=8569
 Severity=Success
@@ -18454,6 +23480,9 @@ Language=English
 ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
 .
 Language=Russian
+ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
+.
+Language=Polish
 ERROR_DS_NO_BEHAVIOR_VERSION_IN_MIXEDDOMAIN - The forest functional level cannot be raised to the requested level since one or more domains are still in mixed domain mode. All domains in the forest must be in native mode before you can raise the forest functional level.
 .
 
@@ -18467,6 +23496,9 @@ ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
 Language=Russian
 ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
 .
+Language=Polish
+ERROR_DS_NOT_SUPPORTED_SORT_ORDER - The sort order requested is not supported.
+.
 
 MessageId=8571
 Severity=Success
@@ -18476,6 +23508,9 @@ Language=English
 ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
 .
 Language=Russian
+ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
+.
+Language=Polish
 ERROR_DS_NAME_NOT_UNIQUE - The requested name already exists as a unique identifier.
 .
 
@@ -18489,6 +23524,9 @@ ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT
 Language=Russian
 ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT4. The account needs to be recreated.
 .
+Language=Polish
+ERROR_DS_MACHINE_ACCOUNT_CREATED_PRENT4 - The machine account was created pre-NT4. The account needs to be recreated.
+.
 
 MessageId=8573
 Severity=Success
@@ -18498,6 +23536,9 @@ Language=English
 ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
 .
 Language=Russian
+ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
+.
+Language=Polish
 ERROR_DS_OUT_OF_VERSION_STORE - The database is out of version store.
 .
 
@@ -18511,6 +23552,9 @@ ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multi
 Language=Russian
 ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multiple conflicting controls were used.
 .
+Language=Polish
+ERROR_DS_INCOMPATIBLE_CONTROLS_USED - Unable to continue operation because multiple conflicting controls were used.
+.
 
 MessageId=8575
 Severity=Success
@@ -18520,6 +23564,9 @@ Language=English
 ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
 .
 Language=Russian
+ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
+.
+Language=Polish
 ERROR_DS_NO_REF_DOMAIN - Unable to find a valid security descriptor reference domain for this partition.
 .
 
@@ -18533,6 +23580,9 @@ ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserve
 Language=Russian
 ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserved.
 .
+Language=Polish
+ERROR_DS_RESERVED_LINK_ID - Schema update failed: The link identifier is reserved.
+.
 
 MessageId=8577
 Severity=Success
@@ -18542,6 +23592,9 @@ Language=English
 ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
 .
 Language=Russian
+ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
+.
+Language=Polish
 ERROR_DS_LINK_ID_NOT_AVAILABLE - Schema update failed: There are no link identifiers available.
 .
 
@@ -18555,6 +23608,9 @@ ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universa
 Language=Russian
 ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universal group as a member.
 .
+Language=Polish
+ERROR_DS_AG_CANT_HAVE_UNIVERSAL_MEMBER - An account group cannot have a universal group as a member.
+.
 
 MessageId=8579
 Severity=Success
@@ -18564,6 +23620,9 @@ Language=English
 ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
 .
 Language=Russian
+ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
+.
+Language=Polish
 ERROR_DS_MODIFYDN_DISALLOWED_BY_INSTANCE_TYPE - Rename or move operations on naming context heads or read-only objects are not allowed.
 .
 
@@ -18577,6 +23636,9 @@ ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema 
 Language=Russian
 ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema naming context are not allowed.
 .
+Language=Polish
+ERROR_DS_NO_OBJECT_MOVE_IN_SCHEMA_NC - Move operations on objects in the schema naming context are not allowed.
+.
 
 MessageId=8581
 Severity=Success
@@ -18586,6 +23648,9 @@ Language=English
 ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
 .
 Language=Russian
+ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
+.
+Language=Polish
 ERROR_DS_MODIFYDN_DISALLOWED_BY_FLAG - A system flag has been set on the object and does not allow the object to be moved or renamed.
 .
 
@@ -18599,6 +23664,9 @@ ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its g
 Language=Russian
 ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
 .
+Language=Polish
+ERROR_DS_MODIFYDN_WRONG_GRANDPARENT - This object is not allowed to change its grandparent container. Moves are not forbidden on this object, but are restricted to sibling containers.
+.
 
 MessageId=8583
 Severity=Success
@@ -18608,6 +23676,9 @@ Language=English
 ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
 .
 Language=Russian
+ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
+.
+Language=Polish
 ERROR_DS_NAME_ERROR_TRUST_REFERRAL - Unable to resolve completely, a referral to another forest is generated.
 .
 
@@ -18621,6 +23692,9 @@ ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported o
 Language=Russian
 ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported on standard server.
 .
+Language=Polish
+ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER - The requested action is not supported on standard server.
+.
 
 MessageId=8585
 Severity=Success
@@ -18630,6 +23704,9 @@ Language=English
 ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
 .
 Language=Russian
+ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
+.
+Language=Polish
 ERROR_DS_CANT_ACCESS_REMOTE_PART_OF_AD - Could not access a partition of the Active Directory located on a remote server. Make sure at least one server is running for the partition in question.
 .
 
@@ -18643,6 +23720,9 @@ ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the propos
 Language=Russian
 ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
 .
+Language=Polish
+ERROR_DS_CR_IMPOSSIBLE_TO_VALIDATE_V2 - The directory cannot validate the proposed naming context (or partition) name because it does not hold a replica nor can it contact a replica of the naming context above the proposed naming context. Please ensure that the parent naming context is properly registered in DNS, and at least one replica of this naming context is reachable by the Domain Naming master.
+.
 
 MessageId=8587
 Severity=Success
@@ -18652,6 +23732,9 @@ Language=English
 ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
 .
 Language=Russian
+ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
+.
+Language=Polish
 ERROR_DS_THREAD_LIMIT_EXCEEDED - The thread limit for this request was exceeded.
 .
 
@@ -18665,6 +23748,9 @@ ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
 Language=Russian
 ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
 .
+Language=Polish
+ERROR_DS_NOT_CLOSEST - The Global catalog server is not in the closet site.
+.
 
 MessageId=8589
 Severity=Success
@@ -18674,6 +23760,9 @@ Language=English
 ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
 .
 Language=Russian
+ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
+.
+Language=Polish
 ERROR_DS_CANT_DERIVE_SPN_WITHOUT_SERVER_REF - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the corresponding server object in the local DS database has no serverReference attribute.
 .
 
@@ -18687,6 +23776,9 @@ ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single 
 Language=Russian
 ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single user mode.
 .
+Language=Polish
+ERROR_DS_SINGLE_USER_MODE_FAILED - The Directory Service failed to enter single user mode.
+.
 
 MessageId=8591
 Severity=Success
@@ -18696,6 +23788,9 @@ Language=English
 ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
 .
 Language=Russian
+ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
+.
+Language=Polish
 ERROR_DS_NTDSCRIPT_SYNTAX_ERROR - The Directory Service cannot parse the script because of a syntax error.
 .
 
@@ -18709,6 +23804,9 @@ ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the scri
 Language=Russian
 ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the script because of an error.
 .
+Language=Polish
+ERROR_DS_NTDSCRIPT_PROCESS_ERROR - The Directory Service cannot process the script because of an error.
+.
 
 MessageId=8593
 Severity=Success
@@ -18718,6 +23816,9 @@ Language=English
 ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
 .
 Language=Russian
+ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
+.
+Language=Polish
 ERROR_DS_DIFFERENT_REPL_EPOCHS - The directory service cannot perform the requested operation because the servers involved are of different replication epochs (which is usually related to a domain rename that is in progress).
 .
 
@@ -18731,6 +23832,9 @@ ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegoti
 Language=Russian
 ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegotiated due to a change in the server extensions information.
 .
+Language=Polish
+ERROR_DS_DRS_EXTENSIONS_CHANGED - The directory service binding must be renegotiated due to a change in the server extensions information.
+.
 
 MessageId=8595
 Severity=Success
@@ -18740,6 +23844,9 @@ Language=English
 ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
 .
 Language=Russian
+ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
+.
+Language=Polish
 ERROR_DS_REPLICA_SET_CHANGE_NOT_ALLOWED_ON_DISABLED_CR - Operation not allowed on a disabled cross ref.
 .
 
@@ -18753,6 +23860,9 @@ ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are avai
 Language=Russian
 ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are available.
 .
+Language=Polish
+ERROR_DS_NO_MSDS_INTID - Schema update failed: No values for msDS-IntId are available.
+.
 
 MessageId=8597
 Severity=Success
@@ -18762,6 +23872,9 @@ Language=English
 ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
 .
 Language=Russian
+ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
+.
+Language=Polish
 ERROR_DS_DUP_MSDS_INTID - Schema update failed: Duplicate msDS-IntId. Retry the operation.
 .
 
@@ -18775,6 +23888,9 @@ ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAt
 Language=Russian
 ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAttID.
 .
+Language=Polish
+ERROR_DS_EXISTS_IN_RDNATTID - Schema deletion failed: attribute is used in rDNAttID.
+.
 
 MessageId=8599
 Severity=Success
@@ -18784,6 +23900,9 @@ Language=English
 ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
 .
 Language=Russian
+ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
+.
+Language=Polish
 ERROR_DS_AUTHORIZATION_FAILED - The directory service failed to authorize the request.
 .
 
@@ -18797,6 +23916,9 @@ ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script becaus
 Language=Russian
 ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script because it is invalid.
 .
+Language=Polish
+ERROR_DS_INVALID_SCRIPT - The Directory Service cannot process the script because it is invalid.
+.
 
 MessageId=8601
 Severity=Success
@@ -18806,6 +23928,9 @@ Language=English
 ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
 .
 Language=Russian
+ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
+.
+Language=Polish
 ERROR_DS_REMOTE_CROSSREF_OP_FAILED - The remote create cross reference operation failed on the Domain Naming Master FSMO. The operation's error is in the extended data.
 .
 
@@ -18819,6 +23944,9 @@ ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name
 Language=Russian
 ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name.
 .
+Language=Polish
+ERROR_DS_CROSS_REF_BUSY - A cross reference is in use locally with the same name.
+.
 
 MessageId=8603
 Severity=Success
@@ -18828,6 +23956,9 @@ Language=English
 ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
 .
 Language=Russian
+ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
+.
+Language=Polish
 ERROR_DS_CANT_DERIVE_SPN_FOR_DELETED_DOMAIN - The DS cannot derive a service principal name (SPN) with which to mutually authenticate the target server because the server's domain has been deleted from the forest.
 .
 
@@ -18841,6 +23972,9 @@ ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demo
 Language=Russian
 ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demoting.
 .
+Language=Polish
+ERROR_DS_CANT_DEMOTE_WITH_WRITEABLE_NC - Writeable NCs prevent this DC from demoting.
+.
 
 MessageId=8605
 Severity=Success
@@ -18850,6 +23984,9 @@ Language=English
 ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
 .
 Language=Russian
+ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
+.
+Language=Polish
 ERROR_DS_DUPLICATE_ID_FOUND - The requested object has a non-unique identifier and cannot be retrieved.
 .
 
@@ -18863,6 +24000,9 @@ ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given
 Language=Russian
 ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
 .
+Language=Polish
+ERROR_DS_INSUFFICIENT_ATTR_TO_CREATE_OBJECT - Insufficient attributes were given to create an object. This object may not exist because it may have been deleted and already garbage collected.
+.
 
 MessageId=8607
 Severity=Success
@@ -18872,6 +24012,9 @@ Language=English
 ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
 .
 Language=Russian
+ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
+.
+Language=Polish
 ERROR_DS_GROUP_CONVERSION_ERROR - The group cannot be converted due to attribute restrictions on the requested group type.
 .
 
@@ -18885,6 +24028,9 @@ ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic applic
 Language=Russian
 ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic application groups is not allowed.
 .
+Language=Polish
+ERROR_DS_CANT_MOVE_APP_BASIC_GROUP - Cross-domain move of non-empty basic application groups is not allowed.
+.
 
 MessageId=8609
 Severity=Success
@@ -18894,6 +24040,9 @@ Language=English
 ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
 .
 Language=Russian
+ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
+.
+Language=Polish
 ERROR_DS_CANT_MOVE_APP_QUERY_GROUP - Cross-domain move on non-empty query based application groups is not allowed.
 .
 
@@ -18907,6 +24056,9 @@ ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replic
 Language=Russian
 ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replication of its partition has not occurred recently.
 .
+Language=Polish
+ERROR_DS_ROLE_NOT_VERIFIED - The role owner could not be verified because replication of its partition has not occurred recently.
+.
 
 MessageId=8611
 Severity=Success
@@ -18916,6 +24068,9 @@ Language=English
 ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
 .
 Language=Russian
+ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
+.
+Language=Polish
 ERROR_DS_WKO_CONTAINER_CANNOT_BE_SPECIAL - The target container for a redirection of a well-known object container cannot already be a special container.
 .
 
@@ -18929,6 +24084,9 @@ ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the re
 Language=Russian
 ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
 .
+Language=Polish
+ERROR_DS_DOMAIN_RENAME_IN_PROGRESS - The Directory Service cannot perform the requested operation because a domain rename operation is in progress.
+.
 
 MessageId=8613
 Severity=Success
@@ -18938,6 +24096,9 @@ Language=English
 ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
 .
 Language=Russian
+ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
+.
+Language=Polish
 ERROR_DS_EXISTING_AD_CHILD_NC - The Active Directory detected an Active Directory child partition below the requested new partition name. The Active Directory's partition hierarchy must be created in a top-down method.
 .
 
@@ -18951,6 +24112,9 @@ ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with thi
 Language=Russian
 ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
 .
+Language=Polish
+ERROR_DS_REPL_LIFETIME_EXCEEDED - The Active Directory cannot replicate with this server because the time since the last replication with this server has exceeded the tombstone lifetime.
+.
 
 MessageId=8615
 Severity=Success
@@ -18960,6 +24124,9 @@ Language=English
 ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
 .
 Language=Russian
+ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
+.
+Language=Polish
 ERROR_DS_DISALLOWED_IN_SYSTEM_CONTAINER - The requested operation is not allowed on an object under the system container.
 .
 
@@ -18973,6 +24140,9 @@ ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled u
 Language=Russian
 ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
+Language=Polish
+ERROR_DS_LDAP_SEND_QUEUE_FULL - The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
+.
 
 MessageId=8617
 Severity=Success
@@ -18982,6 +24152,9 @@ Language=English
 ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
 .
 Language=Russian
+ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
+.
+Language=Polish
 ERROR_DS_DRA_OUT_SCHEDULE_WINDOW - The scheduled replication did not take place because the system was too busy to execute the request within the schedule window. The replication queue is overloaded. Consider reducing the number of partners or decreasing the scheduled replication frequency.
 .
 
@@ -18995,6 +24168,9 @@ DNS_ERROR_RCODE_FORMAT_ERROR - DNS server unable to interpret format.
 Language=Russian
 DNS_ERROR_RCODE_FORMAT_ERROR - DNS server unable to interpret format.
 .
+Language=Polish
+DNS_ERROR_RCODE_FORMAT_ERROR - DNS server unable to interpret format.
+.
 
 MessageId=9002
 Severity=Success
@@ -19004,6 +24180,9 @@ Language=English
 DNS_ERROR_RCODE_SERVER_FAILURE - DNS server failure.
 .
 Language=Russian
+DNS_ERROR_RCODE_SERVER_FAILURE - DNS server failure.
+.
+Language=Polish
 DNS_ERROR_RCODE_SERVER_FAILURE - DNS server failure.
 .
 
@@ -19017,6 +24196,9 @@ DNS_ERROR_RCODE_NAME_ERROR - DNS name does not exist.
 Language=Russian
 DNS_ERROR_RCODE_NAME_ERROR - DNS name does not exist.
 .
+Language=Polish
+DNS_ERROR_RCODE_NAME_ERROR - DNS name does not exist.
+.
 
 MessageId=9004
 Severity=Success
@@ -19026,6 +24208,9 @@ Language=English
 DNS_ERROR_RCODE_NOT_IMPLEMENTED - DNS request not supported by name server.
 .
 Language=Russian
+DNS_ERROR_RCODE_NOT_IMPLEMENTED - DNS request not supported by name server.
+.
+Language=Polish
 DNS_ERROR_RCODE_NOT_IMPLEMENTED - DNS request not supported by name server.
 .
 
@@ -19039,6 +24224,9 @@ DNS_ERROR_RCODE_REFUSED - DNS operation refused.
 Language=Russian
 DNS_ERROR_RCODE_REFUSED - DNS operation refused.
 .
+Language=Polish
+DNS_ERROR_RCODE_REFUSED - DNS operation refused.
+.
 
 MessageId=9006
 Severity=Success
@@ -19048,6 +24236,9 @@ Language=English
 DNS_ERROR_RCODE_YXDOMAIN - DNS name that ought not exist, does exist.
 .
 Language=Russian
+DNS_ERROR_RCODE_YXDOMAIN - DNS name that ought not exist, does exist.
+.
+Language=Polish
 DNS_ERROR_RCODE_YXDOMAIN - DNS name that ought not exist, does exist.
 .
 
@@ -19061,6 +24252,9 @@ DNS_ERROR_RCODE_YXRRSET - DNS RR set that ought not exist, does exist.
 Language=Russian
 DNS_ERROR_RCODE_YXRRSET - DNS RR set that ought not exist, does exist.
 .
+Language=Polish
+DNS_ERROR_RCODE_YXRRSET - DNS RR set that ought not exist, does exist.
+.
 
 MessageId=9008
 Severity=Success
@@ -19070,6 +24264,9 @@ Language=English
 DNS_ERROR_RCODE_NXRRSET - DNS RR set that ought to exist, does not exist.
 .
 Language=Russian
+DNS_ERROR_RCODE_NXRRSET - DNS RR set that ought to exist, does not exist.
+.
+Language=Polish
 DNS_ERROR_RCODE_NXRRSET - DNS RR set that ought to exist, does not exist.
 .
 
@@ -19083,6 +24280,9 @@ DNS_ERROR_RCODE_NOTAUTH - DNS server not authoritative for zone.
 Language=Russian
 DNS_ERROR_RCODE_NOTAUTH - DNS server not authoritative for zone.
 .
+Language=Polish
+DNS_ERROR_RCODE_NOTAUTH - DNS server not authoritative for zone.
+.
 
 MessageId=9010
 Severity=Success
@@ -19092,6 +24292,9 @@ Language=English
 DNS_ERROR_RCODE_NOTZONE - DNS name in update or prereq is not in zone.
 .
 Language=Russian
+DNS_ERROR_RCODE_NOTZONE - DNS name in update or prereq is not in zone.
+.
+Language=Polish
 DNS_ERROR_RCODE_NOTZONE - DNS name in update or prereq is not in zone.
 .
 
@@ -19105,6 +24308,9 @@ DNS_ERROR_RCODE_BADSIG - DNS signature failed to verify.
 Language=Russian
 DNS_ERROR_RCODE_BADSIG - DNS signature failed to verify.
 .
+Language=Polish
+DNS_ERROR_RCODE_BADSIG - DNS signature failed to verify.
+.
 
 MessageId=9017
 Severity=Success
@@ -19114,6 +24320,9 @@ Language=English
 DNS_ERROR_RCODE_BADKEY - DNS bad key.
 .
 Language=Russian
+DNS_ERROR_RCODE_BADKEY - DNS bad key.
+.
+Language=Polish
 DNS_ERROR_RCODE_BADKEY - DNS bad key.
 .
 
@@ -19127,6 +24336,9 @@ DNS_ERROR_RCODE_BADTIME - DNS signature validity expired.
 Language=Russian
 DNS_ERROR_RCODE_BADTIME - DNS signature validity expired.
 .
+Language=Polish
+DNS_ERROR_RCODE_BADTIME - DNS signature validity expired.
+.
 
 MessageId=9501
 Severity=Success
@@ -19136,6 +24348,9 @@ Language=English
 DNS_INFO_NO_RECORDS - No records found for given DNS query.
 .
 Language=Russian
+DNS_INFO_NO_RECORDS - No records found for given DNS query.
+.
+Language=Polish
 DNS_INFO_NO_RECORDS - No records found for given DNS query.
 .
 
@@ -19149,6 +24364,9 @@ DNS_ERROR_BAD_PACKET - Bad DNS packet.
 Language=Russian
 DNS_ERROR_BAD_PACKET - Bad DNS packet.
 .
+Language=Polish
+DNS_ERROR_BAD_PACKET - Bad DNS packet.
+.
 
 MessageId=9503
 Severity=Success
@@ -19158,6 +24376,9 @@ Language=English
 DNS_ERROR_NO_PACKET - No DNS packet.
 .
 Language=Russian
+DNS_ERROR_NO_PACKET - No DNS packet.
+.
+Language=Polish
 DNS_ERROR_NO_PACKET - No DNS packet.
 .
 
@@ -19171,6 +24392,9 @@ DNS_ERROR_RCODE - DNS error, check rcode.
 Language=Russian
 DNS_ERROR_RCODE - DNS error, check rcode.
 .
+Language=Polish
+DNS_ERROR_RCODE - DNS error, check rcode.
+.
 
 MessageId=9505
 Severity=Success
@@ -19180,6 +24404,9 @@ Language=English
 DNS_ERROR_UNSECURE_PACKET - Unsecured DNS packet.
 .
 Language=Russian
+DNS_ERROR_UNSECURE_PACKET - Unsecured DNS packet.
+.
+Language=Polish
 DNS_ERROR_UNSECURE_PACKET - Unsecured DNS packet.
 .
 
@@ -19193,6 +24420,9 @@ DNS_ERROR_INVALID_TYPE - Invalid DNS type.
 Language=Russian
 DNS_ERROR_INVALID_TYPE - Invalid DNS type.
 .
+Language=Polish
+DNS_ERROR_INVALID_TYPE - Invalid DNS type.
+.
 
 MessageId=9552
 Severity=Success
@@ -19202,6 +24432,9 @@ Language=English
 DNS_ERROR_INVALID_IP_ADDRESS - Invalid IP address.
 .
 Language=Russian
+DNS_ERROR_INVALID_IP_ADDRESS - Invalid IP address.
+.
+Language=Polish
 DNS_ERROR_INVALID_IP_ADDRESS - Invalid IP address.
 .
 
@@ -19215,6 +24448,9 @@ DNS_ERROR_INVALID_PROPERTY - Invalid property.
 Language=Russian
 DNS_ERROR_INVALID_PROPERTY - Invalid property.
 .
+Language=Polish
+DNS_ERROR_INVALID_PROPERTY - Invalid property.
+.
 
 MessageId=9554
 Severity=Success
@@ -19224,6 +24460,9 @@ Language=English
 DNS_ERROR_TRY_AGAIN_LATER - Try DNS operation again later.
 .
 Language=Russian
+DNS_ERROR_TRY_AGAIN_LATER - Try DNS operation again later.
+.
+Language=Polish
 DNS_ERROR_TRY_AGAIN_LATER - Try DNS operation again later.
 .
 
@@ -19237,6 +24476,9 @@ DNS_ERROR_NOT_UNIQUE - Record for given name and type is not unique.
 Language=Russian
 DNS_ERROR_NOT_UNIQUE - Record for given name and type is not unique.
 .
+Language=Polish
+DNS_ERROR_NOT_UNIQUE - Record for given name and type is not unique.
+.
 
 MessageId=9556
 Severity=Success
@@ -19246,6 +24488,9 @@ Language=English
 DNS_ERROR_NON_RFC_NAME - DNS name does not comply with RFC specifications.
 .
 Language=Russian
+DNS_ERROR_NON_RFC_NAME - DNS name does not comply with RFC specifications.
+.
+Language=Polish
 DNS_ERROR_NON_RFC_NAME - DNS name does not comply with RFC specifications.
 .
 
@@ -19259,6 +24504,9 @@ DNS_STATUS_FQDN - DNS name is a fully-qualified DNS name.
 Language=Russian
 DNS_STATUS_FQDN - DNS name is a fully-qualified DNS name.
 .
+Language=Polish
+DNS_STATUS_FQDN - DNS name is a fully-qualified DNS name.
+.
 
 MessageId=9558
 Severity=Success
@@ -19268,6 +24516,9 @@ Language=English
 DNS_STATUS_DOTTED_NAME - DNS name is dotted (multi-label).
 .
 Language=Russian
+DNS_STATUS_DOTTED_NAME - DNS name is dotted (multi-label).
+.
+Language=Polish
 DNS_STATUS_DOTTED_NAME - DNS name is dotted (multi-label).
 .
 
@@ -19281,6 +24532,9 @@ DNS_STATUS_SINGLE_PART_NAME - DNS name is a single-part name.
 Language=Russian
 DNS_STATUS_SINGLE_PART_NAME - DNS name is a single-part name.
 .
+Language=Polish
+DNS_STATUS_SINGLE_PART_NAME - DNS name is a single-part name.
+.
 
 MessageId=9560
 Severity=Success
@@ -19290,6 +24544,9 @@ Language=English
 DNS_ERROR_INVALID_NAME_CHAR - DSN name contains an invalid character.
 .
 Language=Russian
+DNS_ERROR_INVALID_NAME_CHAR - DSN name contains an invalid character.
+.
+Language=Polish
 DNS_ERROR_INVALID_NAME_CHAR - DSN name contains an invalid character.
 .
 
@@ -19303,6 +24560,9 @@ DNS_ERROR_NUMERIC_NAME - DNS name is entirely numeric.
 Language=Russian
 DNS_ERROR_NUMERIC_NAME - DNS name is entirely numeric.
 .
+Language=Polish
+DNS_ERROR_NUMERIC_NAME - DNS name is entirely numeric.
+.
 
 MessageId=9562
 Severity=Success
@@ -19312,6 +24572,9 @@ Language=English
 DNS_ERROR_NOT_ALLOWED_ON_ROOT_SERVER - The operation requested is not permitted on a DNS root server.
 .
 Language=Russian
+DNS_ERROR_NOT_ALLOWED_ON_ROOT_SERVER - The operation requested is not permitted on a DNS root server.
+.
+Language=Polish
 DNS_ERROR_NOT_ALLOWED_ON_ROOT_SERVER - The operation requested is not permitted on a DNS root server.
 .
 
@@ -19325,6 +24588,9 @@ DNS_ERROR_NOT_ALLOWED_UNDER_DELEGATION - The record could not be created because
 Language=Russian
 DNS_ERROR_NOT_ALLOWED_UNDER_DELEGATION - The record could not be created because this part of the DNS namespace has been delegated to another server.
 .
+Language=Polish
+DNS_ERROR_NOT_ALLOWED_UNDER_DELEGATION - The record could not be created because this part of the DNS namespace has been delegated to another server.
+.
 
 MessageId=9564
 Severity=Success
@@ -19334,6 +24600,9 @@ Language=English
 DNS_ERROR_CANNOT_FIND_ROOT_HINTS - The DNS server could not find a set of root hints.
 .
 Language=Russian
+DNS_ERROR_CANNOT_FIND_ROOT_HINTS - The DNS server could not find a set of root hints.
+.
+Language=Polish
 DNS_ERROR_CANNOT_FIND_ROOT_HINTS - The DNS server could not find a set of root hints.
 .
 
@@ -19347,6 +24616,9 @@ DNS_ERROR_INCONSISTENT_ROOT_HINTS - The DNS server found root hints but they wer
 Language=Russian
 DNS_ERROR_INCONSISTENT_ROOT_HINTS - The DNS server found root hints but they were not consistent across all adapters.
 .
+Language=Polish
+DNS_ERROR_INCONSISTENT_ROOT_HINTS - The DNS server found root hints but they were not consistent across all adapters.
+.
 
 MessageId=9601
 Severity=Success
@@ -19356,6 +24628,9 @@ Language=English
 DNS_ERROR_ZONE_DOES_NOT_EXIST - DNS zone does not exist.
 .
 Language=Russian
+DNS_ERROR_ZONE_DOES_NOT_EXIST - DNS zone does not exist.
+.
+Language=Polish
 DNS_ERROR_ZONE_DOES_NOT_EXIST - DNS zone does not exist.
 .
 
@@ -19369,6 +24644,9 @@ DNS_ERROR_NO_ZONE_INFO - DNS zone information not available.
 Language=Russian
 DNS_ERROR_NO_ZONE_INFO - DNS zone information not available.
 .
+Language=Polish
+DNS_ERROR_NO_ZONE_INFO - DNS zone information not available.
+.
 
 MessageId=9603
 Severity=Success
@@ -19378,6 +24656,9 @@ Language=English
 DNS_ERROR_INVALID_ZONE_OPERATION - Invalid operation for DNS zone.
 .
 Language=Russian
+DNS_ERROR_INVALID_ZONE_OPERATION - Invalid operation for DNS zone.
+.
+Language=Polish
 DNS_ERROR_INVALID_ZONE_OPERATION - Invalid operation for DNS zone.
 .
 
@@ -19391,6 +24672,9 @@ DNS_ERROR_ZONE_CONFIGURATION_ERROR - Invalid DNS zone configuration.
 Language=Russian
 DNS_ERROR_ZONE_CONFIGURATION_ERROR - Invalid DNS zone configuration.
 .
+Language=Polish
+DNS_ERROR_ZONE_CONFIGURATION_ERROR - Invalid DNS zone configuration.
+.
 
 MessageId=9605
 Severity=Success
@@ -19400,6 +24684,9 @@ Language=English
 DNS_ERROR_ZONE_HAS_NO_SOA_RECORD - DNS zone has no start of authority (SOA) record.
 .
 Language=Russian
+DNS_ERROR_ZONE_HAS_NO_SOA_RECORD - DNS zone has no start of authority (SOA) record.
+.
+Language=Polish
 DNS_ERROR_ZONE_HAS_NO_SOA_RECORD - DNS zone has no start of authority (SOA) record.
 .
 
@@ -19413,6 +24700,9 @@ DNS_ERROR_ZONE_HAS_NO_NS_RECORDS - DNS zone has no name server (NS) record.
 Language=Russian
 DNS_ERROR_ZONE_HAS_NO_NS_RECORDS - DNS zone has no name server (NS) record.
 .
+Language=Polish
+DNS_ERROR_ZONE_HAS_NO_NS_RECORDS - DNS zone has no name server (NS) record.
+.
 
 MessageId=9607
 Severity=Success
@@ -19422,6 +24712,9 @@ Language=English
 DNS_ERROR_ZONE_LOCKED - DNS zone is locked.
 .
 Language=Russian
+DNS_ERROR_ZONE_LOCKED - DNS zone is locked.
+.
+Language=Polish
 DNS_ERROR_ZONE_LOCKED - DNS zone is locked.
 .
 
@@ -19435,6 +24728,9 @@ DNS_ERROR_ZONE_CREATION_FAILED - DNS zone creation failed.
 Language=Russian
 DNS_ERROR_ZONE_CREATION_FAILED - DNS zone creation failed.
 .
+Language=Polish
+DNS_ERROR_ZONE_CREATION_FAILED - DNS zone creation failed.
+.
 
 MessageId=9609
 Severity=Success
@@ -19444,6 +24740,9 @@ Language=English
 DNS_ERROR_ZONE_ALREADY_EXISTS - DNS zone already exists.
 .
 Language=Russian
+DNS_ERROR_ZONE_ALREADY_EXISTS - DNS zone already exists.
+.
+Language=Polish
 DNS_ERROR_ZONE_ALREADY_EXISTS - DNS zone already exists.
 .
 
@@ -19457,6 +24756,9 @@ DNS_ERROR_AUTOZONE_ALREADY_EXISTS - DNS automatic zone already exists.
 Language=Russian
 DNS_ERROR_AUTOZONE_ALREADY_EXISTS - DNS automatic zone already exists.
 .
+Language=Polish
+DNS_ERROR_AUTOZONE_ALREADY_EXISTS - DNS automatic zone already exists.
+.
 
 MessageId=9611
 Severity=Success
@@ -19466,6 +24768,9 @@ Language=English
 DNS_ERROR_INVALID_ZONE_TYPE - Invalid DNS zone type.
 .
 Language=Russian
+DNS_ERROR_INVALID_ZONE_TYPE - Invalid DNS zone type.
+.
+Language=Polish
 DNS_ERROR_INVALID_ZONE_TYPE - Invalid DNS zone type.
 .
 
@@ -19479,6 +24784,9 @@ DNS_ERROR_SECONDARY_REQUIRES_MASTER_IP - Secondary DNS zone requires master IP a
 Language=Russian
 DNS_ERROR_SECONDARY_REQUIRES_MASTER_IP - Secondary DNS zone requires master IP address.
 .
+Language=Polish
+DNS_ERROR_SECONDARY_REQUIRES_MASTER_IP - Secondary DNS zone requires master IP address.
+.
 
 MessageId=9613
 Severity=Success
@@ -19488,6 +24796,9 @@ Language=English
 DNS_ERROR_ZONE_NOT_SECONDARY - DNS zone not secondary.
 .
 Language=Russian
+DNS_ERROR_ZONE_NOT_SECONDARY - DNS zone not secondary.
+.
+Language=Polish
 DNS_ERROR_ZONE_NOT_SECONDARY - DNS zone not secondary.
 .
 
@@ -19501,6 +24812,9 @@ DNS_ERROR_NEED_SECONDARY_ADDRESSES - Need secondary IP address.
 Language=Russian
 DNS_ERROR_NEED_SECONDARY_ADDRESSES - Need secondary IP address.
 .
+Language=Polish
+DNS_ERROR_NEED_SECONDARY_ADDRESSES - Need secondary IP address.
+.
 
 MessageId=9615
 Severity=Success
@@ -19510,6 +24824,9 @@ Language=English
 DNS_ERROR_WINS_INIT_FAILED - WINS initialization failed.
 .
 Language=Russian
+DNS_ERROR_WINS_INIT_FAILED - WINS initialization failed.
+.
+Language=Polish
 DNS_ERROR_WINS_INIT_FAILED - WINS initialization failed.
 .
 
@@ -19523,6 +24840,9 @@ DNS_ERROR_NEED_WINS_SERVERS - Need WINS servers.
 Language=Russian
 DNS_ERROR_NEED_WINS_SERVERS - Need WINS servers.
 .
+Language=Polish
+DNS_ERROR_NEED_WINS_SERVERS - Need WINS servers.
+.
 
 MessageId=9617
 Severity=Success
@@ -19532,6 +24852,9 @@ Language=English
 DNS_ERROR_NBSTAT_INIT_FAILED - NBTSTAT initialization call failed.
 .
 Language=Russian
+DNS_ERROR_NBSTAT_INIT_FAILED - NBTSTAT initialization call failed.
+.
+Language=Polish
 DNS_ERROR_NBSTAT_INIT_FAILED - NBTSTAT initialization call failed.
 .
 
@@ -19545,6 +24868,9 @@ DNS_ERROR_SOA_DELETE_INVALID - Invalid delete of start of authority (SOA)
 Language=Russian
 DNS_ERROR_SOA_DELETE_INVALID - Invalid delete of start of authority (SOA)
 .
+Language=Polish
+DNS_ERROR_SOA_DELETE_INVALID - Invalid delete of start of authority (SOA)
+.
 
 MessageId=9619
 Severity=Success
@@ -19554,6 +24880,9 @@ Language=English
 DNS_ERROR_FORWARDER_ALREADY_EXISTS - A conditional forwarding zone already exists for that name.
 .
 Language=Russian
+DNS_ERROR_FORWARDER_ALREADY_EXISTS - A conditional forwarding zone already exists for that name.
+.
+Language=Polish
 DNS_ERROR_FORWARDER_ALREADY_EXISTS - A conditional forwarding zone already exists for that name.
 .
 
@@ -19567,6 +24896,9 @@ DNS_ERROR_ZONE_REQUIRES_MASTER_IP - This zone must be configured with one or mor
 Language=Russian
 DNS_ERROR_ZONE_REQUIRES_MASTER_IP - This zone must be configured with one or more master DNS server IP addresses.
 .
+Language=Polish
+DNS_ERROR_ZONE_REQUIRES_MASTER_IP - This zone must be configured with one or more master DNS server IP addresses.
+.
 
 MessageId=9621
 Severity=Success
@@ -19576,6 +24908,9 @@ Language=English
 DNS_ERROR_ZONE_IS_SHUTDOWN - The operation cannot be performed because this zone is shutdown.
 .
 Language=Russian
+DNS_ERROR_ZONE_IS_SHUTDOWN - The operation cannot be performed because this zone is shutdown.
+.
+Language=Polish
 DNS_ERROR_ZONE_IS_SHUTDOWN - The operation cannot be performed because this zone is shutdown.
 .
 
@@ -19589,6 +24924,9 @@ DNS_ERROR_PRIMARY_REQUIRES_DATAFILE - Primary DNS zone requires datafile.
 Language=Russian
 DNS_ERROR_PRIMARY_REQUIRES_DATAFILE - Primary DNS zone requires datafile.
 .
+Language=Polish
+DNS_ERROR_PRIMARY_REQUIRES_DATAFILE - Primary DNS zone requires datafile.
+.
 
 MessageId=9652
 Severity=Success
@@ -19598,6 +24936,9 @@ Language=English
 DNS_ERROR_INVALID_DATAFILE_NAME - Invalid datafile name for DNS zone.
 .
 Language=Russian
+DNS_ERROR_INVALID_DATAFILE_NAME - Invalid datafile name for DNS zone.
+.
+Language=Polish
 DNS_ERROR_INVALID_DATAFILE_NAME - Invalid datafile name for DNS zone.
 .
 
@@ -19611,6 +24952,9 @@ DNS_ERROR_DATAFILE_OPEN_FAILURE - Failed to open datafile for DNS zone.
 Language=Russian
 DNS_ERROR_DATAFILE_OPEN_FAILURE - Failed to open datafile for DNS zone.
 .
+Language=Polish
+DNS_ERROR_DATAFILE_OPEN_FAILURE - Failed to open datafile for DNS zone.
+.
 
 MessageId=9654
 Severity=Success
@@ -19620,6 +24964,9 @@ Language=English
 DNS_ERROR_FILE_WRITEBACK_FAILED - Failed to write datafile for DNS zone.
 .
 Language=Russian
+DNS_ERROR_FILE_WRITEBACK_FAILED - Failed to write datafile for DNS zone.
+.
+Language=Polish
 DNS_ERROR_FILE_WRITEBACK_FAILED - Failed to write datafile for DNS zone.
 .
 
@@ -19633,6 +24980,9 @@ DNS_ERROR_DATAFILE_PARSING - Failure while reading datafile for DNS zone.
 Language=Russian
 DNS_ERROR_DATAFILE_PARSING - Failure while reading datafile for DNS zone.
 .
+Language=Polish
+DNS_ERROR_DATAFILE_PARSING - Failure while reading datafile for DNS zone.
+.
 
 MessageId=9701
 Severity=Success
@@ -19642,6 +24992,9 @@ Language=English
 DNS_ERROR_RECORD_DOES_NOT_EXIST - DNS record does not exist.
 .
 Language=Russian
+DNS_ERROR_RECORD_DOES_NOT_EXIST - DNS record does not exist.
+.
+Language=Polish
 DNS_ERROR_RECORD_DOES_NOT_EXIST - DNS record does not exist.
 .
 
@@ -19655,6 +25008,9 @@ DNS_ERROR_RECORD_FORMAT - DNS record format error.
 Language=Russian
 DNS_ERROR_RECORD_FORMAT - DNS record format error.
 .
+Language=Polish
+DNS_ERROR_RECORD_FORMAT - DNS record format error.
+.
 
 MessageId=9703
 Severity=Success
@@ -19664,6 +25020,9 @@ Language=English
 DNS_ERROR_NODE_CREATION_FAILED - Node creation failure in DNS.
 .
 Language=Russian
+DNS_ERROR_NODE_CREATION_FAILED - Node creation failure in DNS.
+.
+Language=Polish
 DNS_ERROR_NODE_CREATION_FAILED - Node creation failure in DNS.
 .
 
@@ -19677,6 +25036,9 @@ DNS_ERROR_UNKNOWN_RECORD_TYPE - Unknown DNS record type.
 Language=Russian
 DNS_ERROR_UNKNOWN_RECORD_TYPE - Unknown DNS record type.
 .
+Language=Polish
+DNS_ERROR_UNKNOWN_RECORD_TYPE - Unknown DNS record type.
+.
 
 MessageId=9705
 Severity=Success
@@ -19686,6 +25048,9 @@ Language=English
 DNS_ERROR_RECORD_TIMED_OUT - DNS record timed out.
 .
 Language=Russian
+DNS_ERROR_RECORD_TIMED_OUT - DNS record timed out.
+.
+Language=Polish
 DNS_ERROR_RECORD_TIMED_OUT - DNS record timed out.
 .
 
@@ -19699,6 +25064,9 @@ DNS_ERROR_NAME_NOT_IN_ZONE - Name not in DNS zone.
 Language=Russian
 DNS_ERROR_NAME_NOT_IN_ZONE - Name not in DNS zone.
 .
+Language=Polish
+DNS_ERROR_NAME_NOT_IN_ZONE - Name not in DNS zone.
+.
 
 MessageId=9707
 Severity=Success
@@ -19708,6 +25076,9 @@ Language=English
 DNS_ERROR_CNAME_LOOP - CNAME loop detected.
 .
 Language=Russian
+DNS_ERROR_CNAME_LOOP - CNAME loop detected.
+.
+Language=Polish
 DNS_ERROR_CNAME_LOOP - CNAME loop detected.
 .
 
@@ -19721,6 +25092,9 @@ DNS_ERROR_NODE_IS_CNAME - Node is a CNAME DNS record.
 Language=Russian
 DNS_ERROR_NODE_IS_CNAME - Node is a CNAME DNS record.
 .
+Language=Polish
+DNS_ERROR_NODE_IS_CNAME - Node is a CNAME DNS record.
+.
 
 MessageId=9709
 Severity=Success
@@ -19730,6 +25104,9 @@ Language=English
 DNS_ERROR_CNAME_COLLISION - A CNAME record already exists for given name.
 .
 Language=Russian
+DNS_ERROR_CNAME_COLLISION - A CNAME record already exists for given name.
+.
+Language=Polish
 DNS_ERROR_CNAME_COLLISION - A CNAME record already exists for given name.
 .
 
@@ -19743,6 +25120,9 @@ DNS_ERROR_RECORD_ONLY_AT_ZONE_ROOT - Record only at DNS zone root.
 Language=Russian
 DNS_ERROR_RECORD_ONLY_AT_ZONE_ROOT - Record only at DNS zone root.
 .
+Language=Polish
+DNS_ERROR_RECORD_ONLY_AT_ZONE_ROOT - Record only at DNS zone root.
+.
 
 MessageId=9711
 Severity=Success
@@ -19752,6 +25132,9 @@ Language=English
 DNS_ERROR_RECORD_ALREADY_EXISTS - DNS record already exists.
 .
 Language=Russian
+DNS_ERROR_RECORD_ALREADY_EXISTS - DNS record already exists.
+.
+Language=Polish
 DNS_ERROR_RECORD_ALREADY_EXISTS - DNS record already exists.
 .
 
@@ -19765,6 +25148,9 @@ DNS_ERROR_SECONDARY_DATA - Secondary DNS zone data error.
 Language=Russian
 DNS_ERROR_SECONDARY_DATA - Secondary DNS zone data error.
 .
+Language=Polish
+DNS_ERROR_SECONDARY_DATA - Secondary DNS zone data error.
+.
 
 MessageId=9713
 Severity=Success
@@ -19774,6 +25160,9 @@ Language=English
 DNS_ERROR_NO_CREATE_CACHE_DATA - Could not create DNS cache data.
 .
 Language=Russian
+DNS_ERROR_NO_CREATE_CACHE_DATA - Could not create DNS cache data.
+.
+Language=Polish
 DNS_ERROR_NO_CREATE_CACHE_DATA - Could not create DNS cache data.
 .
 
@@ -19787,6 +25176,9 @@ DNS_ERROR_NAME_DOES_NOT_EXIST - DNS name does not exist.
 Language=Russian
 DNS_ERROR_NAME_DOES_NOT_EXIST - DNS name does not exist.
 .
+Language=Polish
+DNS_ERROR_NAME_DOES_NOT_EXIST - DNS name does not exist.
+.
 
 MessageId=9715
 Severity=Success
@@ -19796,6 +25188,9 @@ Language=English
 DNS_WARNING_PTR_CREATE_FAILED - Could not create pointer (PTR) record.
 .
 Language=Russian
+DNS_WARNING_PTR_CREATE_FAILED - Could not create pointer (PTR) record.
+.
+Language=Polish
 DNS_WARNING_PTR_CREATE_FAILED - Could not create pointer (PTR) record.
 .
 
@@ -19809,6 +25204,9 @@ DNS_WARNING_DOMAIN_UNDELETED - DNS domain was undeleted.
 Language=Russian
 DNS_WARNING_DOMAIN_UNDELETED - DNS domain was undeleted.
 .
+Language=Polish
+DNS_WARNING_DOMAIN_UNDELETED - DNS domain was undeleted.
+.
 
 MessageId=9717
 Severity=Success
@@ -19818,6 +25216,9 @@ Language=English
 DNS_ERROR_DS_UNAVAILABLE - The directory service is unavailable.
 .
 Language=Russian
+DNS_ERROR_DS_UNAVAILABLE - The directory service is unavailable.
+.
+Language=Polish
 DNS_ERROR_DS_UNAVAILABLE - The directory service is unavailable.
 .
 
@@ -19831,6 +25232,9 @@ DNS_ERROR_DS_ZONE_ALREADY_EXISTS - DNS zone already exists in the directory serv
 Language=Russian
 DNS_ERROR_DS_ZONE_ALREADY_EXISTS - DNS zone already exists in the directory service.
 .
+Language=Polish
+DNS_ERROR_DS_ZONE_ALREADY_EXISTS - DNS zone already exists in the directory service.
+.
 
 MessageId=9719
 Severity=Success
@@ -19840,6 +25244,9 @@ Language=English
 DNS_ERROR_NO_BOOTFILE_IF_DS_ZONE - DNS server not creating or reading the boot file for the directory service integrated DNS zone.
 .
 Language=Russian
+DNS_ERROR_NO_BOOTFILE_IF_DS_ZONE - DNS server not creating or reading the boot file for the directory service integrated DNS zone.
+.
+Language=Polish
 DNS_ERROR_NO_BOOTFILE_IF_DS_ZONE - DNS server not creating or reading the boot file for the directory service integrated DNS zone.
 .
 
@@ -19853,6 +25260,9 @@ DNS_INFO_AXFR_COMPLETE - DNS AXFR (zone transfer) complete.
 Language=Russian
 DNS_INFO_AXFR_COMPLETE - DNS AXFR (zone transfer) complete.
 .
+Language=Polish
+DNS_INFO_AXFR_COMPLETE - DNS AXFR (zone transfer) complete.
+.
 
 MessageId=9752
 Severity=Success
@@ -19862,6 +25272,9 @@ Language=English
 DNS_ERROR_AXFR - DNS zone transfer failed.
 .
 Language=Russian
+DNS_ERROR_AXFR - DNS zone transfer failed.
+.
+Language=Polish
 DNS_ERROR_AXFR - DNS zone transfer failed.
 .
 
@@ -19875,6 +25288,9 @@ DNS_INFO_ADDED_LOCAL_WINS - Added local WINS server.
 Language=Russian
 DNS_INFO_ADDED_LOCAL_WINS - Added local WINS server.
 .
+Language=Polish
+DNS_INFO_ADDED_LOCAL_WINS - Added local WINS server.
+.
 
 MessageId=9801
 Severity=Success
@@ -19884,6 +25300,9 @@ Language=English
 DNS_STATUS_CONTINUE_NEEDED - Secure update call needs to continue update request.
 .
 Language=Russian
+DNS_STATUS_CONTINUE_NEEDED - Secure update call needs to continue update request.
+.
+Language=Polish
 DNS_STATUS_CONTINUE_NEEDED - Secure update call needs to continue update request.
 .
 
@@ -19897,6 +25316,9 @@ DNS_ERROR_NO_TCPIP - TCP/IP network protocol not installed.
 Language=Russian
 DNS_ERROR_NO_TCPIP - TCP/IP network protocol not installed.
 .
+Language=Polish
+DNS_ERROR_NO_TCPIP - TCP/IP network protocol not installed.
+.
 
 MessageId=9852
 Severity=Success
@@ -19906,6 +25328,9 @@ Language=English
 DNS_ERROR_NO_DNS_SERVERS - No DNS servers configured for local system.
 .
 Language=Russian
+DNS_ERROR_NO_DNS_SERVERS - No DNS servers configured for local system.
+.
+Language=Polish
 DNS_ERROR_NO_DNS_SERVERS - No DNS servers configured for local system.
 .
 
@@ -19919,6 +25344,9 @@ DNS_ERROR_DP_DOES_NOT_EXIST - The specified directory partition does not exist.
 Language=Russian
 DNS_ERROR_DP_DOES_NOT_EXIST - The specified directory partition does not exist.
 .
+Language=Polish
+DNS_ERROR_DP_DOES_NOT_EXIST - The specified directory partition does not exist.
+.
 
 MessageId=9902
 Severity=Success
@@ -19928,6 +25356,9 @@ Language=English
 DNS_ERROR_DP_ALREADY_EXISTS - The specified directory partition already exists.
 .
 Language=Russian
+DNS_ERROR_DP_ALREADY_EXISTS - The specified directory partition already exists.
+.
+Language=Polish
 DNS_ERROR_DP_ALREADY_EXISTS - The specified directory partition already exists.
 .
 
@@ -19941,6 +25372,9 @@ DNS_ERROR_DP_NOT_ENLISTED - The DNS server is not enlisted in the specified dire
 Language=Russian
 DNS_ERROR_DP_NOT_ENLISTED - The DNS server is not enlisted in the specified directory partition.
 .
+Language=Polish
+DNS_ERROR_DP_NOT_ENLISTED - The DNS server is not enlisted in the specified directory partition.
+.
 
 MessageId=9904
 Severity=Success
@@ -19950,6 +25384,9 @@ Language=English
 DNS_ERROR_DP_ALREADY_ENLISTED - The DNS server is already enlisted in the specified directory partition.
 .
 Language=Russian
+DNS_ERROR_DP_ALREADY_ENLISTED - The DNS server is already enlisted in the specified directory partition.
+.
+Language=Polish
 DNS_ERROR_DP_ALREADY_ENLISTED - The DNS server is already enlisted in the specified directory partition.
 .
 
@@ -19963,6 +25400,9 @@ DNS_ERROR_DP_NOT_AVAILABLE - The directory partition is not available at this ti
 Language=Russian
 DNS_ERROR_DP_NOT_AVAILABLE - The directory partition is not available at this time. Please wait a few minutes and try again.
 .
+Language=Polish
+DNS_ERROR_DP_NOT_AVAILABLE - The directory partition is not available at this time. Please wait a few minutes and try again.
+.
 
 MessageId=9906
 Severity=Success
@@ -19972,6 +25412,9 @@ Language=English
 DNS_ERROR_DP_FSMO_ERROR - The application directory partition operation failed. The domain controller holding the domain naming master role is down or unable to service the request or is not running Windows Server 2003.
 .
 Language=Russian
+DNS_ERROR_DP_FSMO_ERROR - The application directory partition operation failed. The domain controller holding the domain naming master role is down or unable to service the request or is not running Windows Server 2003.
+.
+Language=Polish
 DNS_ERROR_DP_FSMO_ERROR - The application directory partition operation failed. The domain controller holding the domain naming master role is down or unable to service the request or is not running Windows Server 2003.
 .
 
@@ -19985,6 +25428,9 @@ WSAEINTR - A blocking operation was interrupted by a call to WSACancelBlockingCa
 Language=Russian
 WSAEINTR - A blocking operation was interrupted by a call to WSACancelBlockingCall.
 .
+Language=Polish
+WSAEINTR - A blocking operation was interrupted by a call to WSACancelBlockingCall.
+.
 
 MessageId=10009
 Severity=Success
@@ -19994,6 +25440,9 @@ Language=English
 WSAEBADF - The file handle supplied is not valid.
 .
 Language=Russian
+WSAEBADF - The file handle supplied is not valid.
+.
+Language=Polish
 WSAEBADF - The file handle supplied is not valid.
 .
 
@@ -20007,6 +25456,9 @@ WSAEACCES - An attempt was made to access a socket in a way forbidden by its acc
 Language=Russian
 WSAEACCES - An attempt was made to access a socket in a way forbidden by its access permissions.
 .
+Language=Polish
+WSAEACCES - An attempt was made to access a socket in a way forbidden by its access permissions.
+.
 
 MessageId=10014
 Severity=Success
@@ -20016,6 +25468,9 @@ Language=English
 WSAEFAULT - The system detected an invalid pointer address in attempting to use a pointer argument in a call.
 .
 Language=Russian
+WSAEFAULT - The system detected an invalid pointer address in attempting to use a pointer argument in a call.
+.
+Language=Polish
 WSAEFAULT - The system detected an invalid pointer address in attempting to use a pointer argument in a call.
 .
 
@@ -20029,6 +25484,9 @@ WSAEINVAL - An invalid argument was supplied.
 Language=Russian
 WSAEINVAL - An invalid argument was supplied.
 .
+Language=Polish
+WSAEINVAL - An invalid argument was supplied.
+.
 
 MessageId=10024
 Severity=Success
@@ -20038,6 +25496,9 @@ Language=English
 WSAEMFILE - Too many open sockets.
 .
 Language=Russian
+WSAEMFILE - Too many open sockets.
+.
+Language=Polish
 WSAEMFILE - Too many open sockets.
 .
 
@@ -20051,6 +25512,9 @@ WSAEWOULDBLOCK - A non-blocking socket operation could not be completed immediat
 Language=Russian
 WSAEWOULDBLOCK - A non-blocking socket operation could not be completed immediately.
 .
+Language=Polish
+WSAEWOULDBLOCK - A non-blocking socket operation could not be completed immediately.
+.
 
 MessageId=10036
 Severity=Success
@@ -20060,6 +25524,9 @@ Language=English
 WSAEINPROGRESS - A blocking operation is currently executing.
 .
 Language=Russian
+WSAEINPROGRESS - A blocking operation is currently executing.
+.
+Language=Polish
 WSAEINPROGRESS - A blocking operation is currently executing.
 .
 
@@ -20073,6 +25540,9 @@ WSAEALREADY - An operation was attempted on a non-blocking socket that already h
 Language=Russian
 WSAEALREADY - An operation was attempted on a non-blocking socket that already had an operation in progress.
 .
+Language=Polish
+WSAEALREADY - An operation was attempted on a non-blocking socket that already had an operation in progress.
+.
 
 MessageId=10038
 Severity=Success
@@ -20082,6 +25552,9 @@ Language=English
 WSAENOTSOCK - An operation was attempted on something that is not a socket.
 .
 Language=Russian
+WSAENOTSOCK - An operation was attempted on something that is not a socket.
+.
+Language=Polish
 WSAENOTSOCK - An operation was attempted on something that is not a socket.
 .
 
@@ -20095,6 +25568,9 @@ WSAEDESTADDRREQ - A required address was omitted from an operation on a socket.
 Language=Russian
 WSAEDESTADDRREQ - A required address was omitted from an operation on a socket.
 .
+Language=Polish
+WSAEDESTADDRREQ - A required address was omitted from an operation on a socket.
+.
 
 MessageId=10040
 Severity=Success
@@ -20104,6 +25580,9 @@ Language=English
 WSAEMSGSIZE - A message sent on a datagram socket was larger than the internal message buffer or some other network limit, or the buffer used to receive a datagram into was smaller than the datagram itself.
 .
 Language=Russian
+WSAEMSGSIZE - A message sent on a datagram socket was larger than the internal message buffer or some other network limit, or the buffer used to receive a datagram into was smaller than the datagram itself.
+.
+Language=Polish
 WSAEMSGSIZE - A message sent on a datagram socket was larger than the internal message buffer or some other network limit, or the buffer used to receive a datagram into was smaller than the datagram itself.
 .
 
@@ -20117,6 +25596,9 @@ WSAEPROTOTYPE - A protocol was specified in the socket function call that does n
 Language=Russian
 WSAEPROTOTYPE - A protocol was specified in the socket function call that does not support the semantics of the socket type requested.
 .
+Language=Polish
+WSAEPROTOTYPE - A protocol was specified in the socket function call that does not support the semantics of the socket type requested.
+.
 
 MessageId=10042
 Severity=Success
@@ -20126,6 +25608,9 @@ Language=English
 WSAENOPROTOOPT - An unknown, invalid, or unsupported option or level was specified in a getsockopt or setsockopt call.
 .
 Language=Russian
+WSAENOPROTOOPT - An unknown, invalid, or unsupported option or level was specified in a getsockopt or setsockopt call.
+.
+Language=Polish
 WSAENOPROTOOPT - An unknown, invalid, or unsupported option or level was specified in a getsockopt or setsockopt call.
 .
 
@@ -20139,6 +25624,9 @@ WSAEPROTONOSUPPORT - The requested protocol has not been configured into the sys
 Language=Russian
 WSAEPROTONOSUPPORT - The requested protocol has not been configured into the system, or no implementation for it exists.
 .
+Language=Polish
+WSAEPROTONOSUPPORT - The requested protocol has not been configured into the system, or no implementation for it exists.
+.
 
 MessageId=10044
 Severity=Success
@@ -20148,6 +25636,9 @@ Language=English
 WSAESOCKTNOSUPPORT - The support for the specified socket type does not exist in this address family.
 .
 Language=Russian
+WSAESOCKTNOSUPPORT - The support for the specified socket type does not exist in this address family.
+.
+Language=Polish
 WSAESOCKTNOSUPPORT - The support for the specified socket type does not exist in this address family.
 .
 
@@ -20161,6 +25652,9 @@ WSAEOPNOTSUPP - The attempted operation is not supported for the type of object 
 Language=Russian
 WSAEOPNOTSUPP - The attempted operation is not supported for the type of object referenced.
 .
+Language=Polish
+WSAEOPNOTSUPP - The attempted operation is not supported for the type of object referenced.
+.
 
 MessageId=10046
 Severity=Success
@@ -20170,6 +25664,9 @@ Language=English
 WSAEPFNOSUPPORT - The protocol family has not been configured into the system or no implementation for it exists.
 .
 Language=Russian
+WSAEPFNOSUPPORT - The protocol family has not been configured into the system or no implementation for it exists.
+.
+Language=Polish
 WSAEPFNOSUPPORT - The protocol family has not been configured into the system or no implementation for it exists.
 .
 
@@ -20183,6 +25680,9 @@ WSAEAFNOSUPPORT - An address incompatible with the requested protocol was used.
 Language=Russian
 WSAEAFNOSUPPORT - An address incompatible with the requested protocol was used.
 .
+Language=Polish
+WSAEAFNOSUPPORT - An address incompatible with the requested protocol was used.
+.
 
 MessageId=10048
 Severity=Success
@@ -20192,6 +25692,9 @@ Language=English
 WSAEADDRINUSE - Only one usage of each socket address (protocol/network address/port) is normally permitted.
 .
 Language=Russian
+WSAEADDRINUSE - Only one usage of each socket address (protocol/network address/port) is normally permitted.
+.
+Language=Polish
 WSAEADDRINUSE - Only one usage of each socket address (protocol/network address/port) is normally permitted.
 .
 
@@ -20205,6 +25708,9 @@ WSAEADDRNOTAVAIL - The requested address is not valid in its context.
 Language=Russian
 WSAEADDRNOTAVAIL - The requested address is not valid in its context.
 .
+Language=Polish
+WSAEADDRNOTAVAIL - The requested address is not valid in its context.
+.
 
 MessageId=10050
 Severity=Success
@@ -20214,6 +25720,9 @@ Language=English
 WSAENETDOWN - A socket operation encountered a dead network.
 .
 Language=Russian
+WSAENETDOWN - A socket operation encountered a dead network.
+.
+Language=Polish
 WSAENETDOWN - A socket operation encountered a dead network.
 .
 
@@ -20227,6 +25736,9 @@ WSAENETUNREACH - A socket operation was attempted to an unreachable network.
 Language=Russian
 WSAENETUNREACH - A socket operation was attempted to an unreachable network.
 .
+Language=Polish
+WSAENETUNREACH - A socket operation was attempted to an unreachable network.
+.
 
 MessageId=10052
 Severity=Success
@@ -20236,6 +25748,9 @@ Language=English
 WSAENETRESET - The connection has been broken due to keep-alive activity detecting a failure while the operation was in progress.
 .
 Language=Russian
+WSAENETRESET - The connection has been broken due to keep-alive activity detecting a failure while the operation was in progress.
+.
+Language=Polish
 WSAENETRESET - The connection has been broken due to keep-alive activity detecting a failure while the operation was in progress.
 .
 
@@ -20249,6 +25764,9 @@ WSAECONNABORTED - An established connection was aborted by the software in your 
 Language=Russian
 WSAECONNABORTED - An established connection was aborted by the software in your host machine.
 .
+Language=Polish
+WSAECONNABORTED - An established connection was aborted by the software in your host machine.
+.
 
 MessageId=10054
 Severity=Success
@@ -20258,6 +25776,9 @@ Language=English
 WSAECONNRESET - An existing connection was forcibly closed by the remote host.
 .
 Language=Russian
+WSAECONNRESET - An existing connection was forcibly closed by the remote host.
+.
+Language=Polish
 WSAECONNRESET - An existing connection was forcibly closed by the remote host.
 .
 
@@ -20271,6 +25792,9 @@ WSAENOBUFS - An operation on a socket could not be performed because the system 
 Language=Russian
 WSAENOBUFS - An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full.
 .
+Language=Polish
+WSAENOBUFS - An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full.
+.
 
 MessageId=10056
 Severity=Success
@@ -20280,6 +25804,9 @@ Language=English
 WSAEISCONN - A connect request was made on an already connected socket.
 .
 Language=Russian
+WSAEISCONN - A connect request was made on an already connected socket.
+.
+Language=Polish
 WSAEISCONN - A connect request was made on an already connected socket.
 .
 
@@ -20293,6 +25820,9 @@ WSAENOTCONN - A request to send or receive data was disallowed because the socke
 Language=Russian
 WSAENOTCONN - A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied.
 .
+Language=Polish
+WSAENOTCONN - A request to send or receive data was disallowed because the socket is not connected and (when sending on a datagram socket using a sendto call) no address was supplied.
+.
 
 MessageId=10058
 Severity=Success
@@ -20302,6 +25832,9 @@ Language=English
 WSAESHUTDOWN - A request to send or receive data was disallowed because the socket had already been shut down in that direction with a previous shutdown call.
 .
 Language=Russian
+WSAESHUTDOWN - A request to send or receive data was disallowed because the socket had already been shut down in that direction with a previous shutdown call.
+.
+Language=Polish
 WSAESHUTDOWN - A request to send or receive data was disallowed because the socket had already been shut down in that direction with a previous shutdown call.
 .
 
@@ -20315,6 +25848,9 @@ WSAETOOMANYREFS - Too many references to some kernel object.
 Language=Russian
 WSAETOOMANYREFS - Too many references to some kernel object.
 .
+Language=Polish
+WSAETOOMANYREFS - Too many references to some kernel object.
+.
 
 MessageId=10060
 Severity=Success
@@ -20324,6 +25860,9 @@ Language=English
 WSAETIMEDOUT - A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
 .
 Language=Russian
+WSAETIMEDOUT - A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+.
+Language=Polish
 WSAETIMEDOUT - A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
 .
 
@@ -20337,6 +25876,9 @@ WSAECONNREFUSED - No connection could be made because the target machine activel
 Language=Russian
 WSAECONNREFUSED - No connection could be made because the target machine actively refused it.
 .
+Language=Polish
+WSAECONNREFUSED - No connection could be made because the target machine actively refused it.
+.
 
 MessageId=10062
 Severity=Success
@@ -20346,6 +25888,9 @@ Language=English
 WSAELOOP - Cannot translate name.
 .
 Language=Russian
+WSAELOOP - Cannot translate name.
+.
+Language=Polish
 WSAELOOP - Cannot translate name.
 .
 
@@ -20359,6 +25904,9 @@ WSAENAMETOOLONG - Name component or name was too long.
 Language=Russian
 WSAENAMETOOLONG - Name component or name was too long.
 .
+Language=Polish
+WSAENAMETOOLONG - Name component or name was too long.
+.
 
 MessageId=10064
 Severity=Success
@@ -20368,6 +25916,9 @@ Language=English
 WSAEHOSTDOWN - A socket operation failed because the destination host was down.
 .
 Language=Russian
+WSAEHOSTDOWN - A socket operation failed because the destination host was down.
+.
+Language=Polish
 WSAEHOSTDOWN - A socket operation failed because the destination host was down.
 .
 
@@ -20381,6 +25932,9 @@ WSAEHOSTUNREACH - A socket operation was attempted to an unreachable host.
 Language=Russian
 WSAEHOSTUNREACH - A socket operation was attempted to an unreachable host.
 .
+Language=Polish
+WSAEHOSTUNREACH - A socket operation was attempted to an unreachable host.
+.
 
 MessageId=10066
 Severity=Success
@@ -20390,6 +25944,9 @@ Language=English
 WSAENOTEMPTY - Cannot remove a directory that is not empty.
 .
 Language=Russian
+WSAENOTEMPTY - Cannot remove a directory that is not empty.
+.
+Language=Polish
 WSAENOTEMPTY - Cannot remove a directory that is not empty.
 .
 
@@ -20403,6 +25960,9 @@ WSAEPROCLIM - A Windows Sockets implementation may have a limit on the number of
 Language=Russian
 WSAEPROCLIM - A Windows Sockets implementation may have a limit on the number of applications that may use it simultaneously.
 .
+Language=Polish
+WSAEPROCLIM - A Windows Sockets implementation may have a limit on the number of applications that may use it simultaneously.
+.
 
 MessageId=10068
 Severity=Success
@@ -20412,6 +25972,9 @@ Language=English
 WSAEUSERS - Ran out of quota.
 .
 Language=Russian
+WSAEUSERS - Ran out of quota.
+.
+Language=Polish
 WSAEUSERS - Ran out of quota.
 .
 
@@ -20425,6 +25988,9 @@ WSAEDQUOT - Ran out of disk quota.
 Language=Russian
 WSAEDQUOT - Ran out of disk quota.
 .
+Language=Polish
+WSAEDQUOT - Ran out of disk quota.
+.
 
 MessageId=10070
 Severity=Success
@@ -20434,6 +26000,9 @@ Language=English
 WSAESTALE - File handle reference is no longer available.
 .
 Language=Russian
+WSAESTALE - File handle reference is no longer available.
+.
+Language=Polish
 WSAESTALE - File handle reference is no longer available.
 .
 
@@ -20447,6 +26016,9 @@ WSAEREMOTE - Item is not available locally.
 Language=Russian
 WSAEREMOTE - Item is not available locally.
 .
+Language=Polish
+WSAEREMOTE - Item is not available locally.
+.
 
 MessageId=10091
 Severity=Success
@@ -20456,6 +26028,9 @@ Language=English
 WSASYSNOTREADY - WSAStartup cannot function at this time because the underlying system it uses to provide network services is currently unavailable.
 .
 Language=Russian
+WSASYSNOTREADY - WSAStartup cannot function at this time because the underlying system it uses to provide network services is currently unavailable.
+.
+Language=Polish
 WSASYSNOTREADY - WSAStartup cannot function at this time because the underlying system it uses to provide network services is currently unavailable.
 .
 
@@ -20469,6 +26044,9 @@ WSAVERNOTSUPPORTED - The Windows Sockets version requested is not supported.
 Language=Russian
 WSAVERNOTSUPPORTED - The Windows Sockets version requested is not supported.
 .
+Language=Polish
+WSAVERNOTSUPPORTED - The Windows Sockets version requested is not supported.
+.
 
 MessageId=10093
 Severity=Success
@@ -20478,6 +26056,9 @@ Language=English
 WSANOTINITIALISED - Either the application has not called WSAStartup, or WSAStartup failed.
 .
 Language=Russian
+WSANOTINITIALISED - Either the application has not called WSAStartup, or WSAStartup failed.
+.
+Language=Polish
 WSANOTINITIALISED - Either the application has not called WSAStartup, or WSAStartup failed.
 .
 
@@ -20491,6 +26072,9 @@ WSAEDISCON - Returned by WSARecv or WSARecvFrom to indicate the remote party has
 Language=Russian
 WSAEDISCON - Returned by WSARecv or WSARecvFrom to indicate the remote party has initiated a graceful shutdown sequence.
 .
+Language=Polish
+WSAEDISCON - Returned by WSARecv or WSARecvFrom to indicate the remote party has initiated a graceful shutdown sequence.
+.
 
 MessageId=10102
 Severity=Success
@@ -20500,6 +26084,9 @@ Language=English
 WSAENOMORE - No more results can be returned by WSALookupServiceNext.
 .
 Language=Russian
+WSAENOMORE - No more results can be returned by WSALookupServiceNext.
+.
+Language=Polish
 WSAENOMORE - No more results can be returned by WSALookupServiceNext.
 .
 
@@ -20513,6 +26100,9 @@ WSAECANCELLED - A call to WSALookupServiceEnd was made while this call was still
 Language=Russian
 WSAECANCELLED - A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
 .
+Language=Polish
+WSAECANCELLED - A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
+.
 
 MessageId=10104
 Severity=Success
@@ -20522,6 +26112,9 @@ Language=English
 WSAEINVALIDPROCTABLE - The procedure call table is invalid.
 .
 Language=Russian
+WSAEINVALIDPROCTABLE - The procedure call table is invalid.
+.
+Language=Polish
 WSAEINVALIDPROCTABLE - The procedure call table is invalid.
 .
 
@@ -20535,6 +26128,9 @@ WSAEINVALIDPROVIDER - The requested service provider is invalid.
 Language=Russian
 WSAEINVALIDPROVIDER - The requested service provider is invalid.
 .
+Language=Polish
+WSAEINVALIDPROVIDER - The requested service provider is invalid.
+.
 
 MessageId=10106
 Severity=Success
@@ -20544,6 +26140,9 @@ Language=English
 WSAEPROVIDERFAILEDINIT - The requested service provider could not be loaded or initialized.
 .
 Language=Russian
+WSAEPROVIDERFAILEDINIT - The requested service provider could not be loaded or initialized.
+.
+Language=Polish
 WSAEPROVIDERFAILEDINIT - The requested service provider could not be loaded or initialized.
 .
 
@@ -20557,6 +26156,9 @@ WSASYSCALLFAILURE - A system call that should never fail has failed.
 Language=Russian
 WSASYSCALLFAILURE - A system call that should never fail has failed.
 .
+Language=Polish
+WSASYSCALLFAILURE - A system call that should never fail has failed.
+.
 
 MessageId=10108
 Severity=Success
@@ -20566,6 +26168,9 @@ Language=English
 WSASERVICE_NOT_FOUND - No such service is known. The service cannot be found in the specified name space.
 .
 Language=Russian
+WSASERVICE_NOT_FOUND - No such service is known. The service cannot be found in the specified name space.
+.
+Language=Polish
 WSASERVICE_NOT_FOUND - No such service is known. The service cannot be found in the specified name space.
 .
 
@@ -20579,6 +26184,9 @@ WSATYPE_NOT_FOUND - The specified class was not found.
 Language=Russian
 WSATYPE_NOT_FOUND - The specified class was not found.
 .
+Language=Polish
+WSATYPE_NOT_FOUND - The specified class was not found.
+.
 
 MessageId=10110
 Severity=Success
@@ -20588,6 +26196,9 @@ Language=English
 WSA_E_NO_MORE - No more results can be returned by WSALookupServiceNext.
 .
 Language=Russian
+WSA_E_NO_MORE - No more results can be returned by WSALookupServiceNext.
+.
+Language=Polish
 WSA_E_NO_MORE - No more results can be returned by WSALookupServiceNext.
 .
 
@@ -20601,6 +26212,9 @@ WSA_E_CANCELLED - A call to WSALookupServiceEnd was made while this call was sti
 Language=Russian
 WSA_E_CANCELLED - A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
 .
+Language=Polish
+WSA_E_CANCELLED - A call to WSALookupServiceEnd was made while this call was still processing. The call has been canceled.
+.
 
 MessageId=10112
 Severity=Success
@@ -20610,6 +26224,9 @@ Language=English
 WSAEREFUSED - A database query failed because it was actively refused.
 .
 Language=Russian
+WSAEREFUSED - A database query failed because it was actively refused.
+.
+Language=Polish
 WSAEREFUSED - A database query failed because it was actively refused.
 .
 
@@ -20623,6 +26240,9 @@ WSAHOST_NOT_FOUND - No such host is known.
 Language=Russian
 WSAHOST_NOT_FOUND - No such host is known.
 .
+Language=Polish
+WSAHOST_NOT_FOUND - No such host is known.
+.
 
 MessageId=11002
 Severity=Success
@@ -20632,6 +26252,9 @@ Language=English
 WSATRY_AGAIN - This is usually a temporary error during hostname resolution and means that the local server did not receive a response from an authoritative server.
 .
 Language=Russian
+WSATRY_AGAIN - This is usually a temporary error during hostname resolution and means that the local server did not receive a response from an authoritative server.
+.
+Language=Polish
 WSATRY_AGAIN - This is usually a temporary error during hostname resolution and means that the local server did not receive a response from an authoritative server.
 .
 
@@ -20645,6 +26268,9 @@ WSANO_RECOVERY - A non-recoverable error occurred during a database lookup.
 Language=Russian
 WSANO_RECOVERY - A non-recoverable error occurred during a database lookup.
 .
+Language=Polish
+WSANO_RECOVERY - A non-recoverable error occurred during a database lookup.
+.
 
 MessageId=11004
 Severity=Success
@@ -20654,6 +26280,9 @@ Language=English
 WSANO_DATA - The requested name is valid, but no data of the requested type was found.
 .
 Language=Russian
+WSANO_DATA - The requested name is valid, but no data of the requested type was found.
+.
+Language=Polish
 WSANO_DATA - The requested name is valid, but no data of the requested type was found.
 .
 
@@ -20667,6 +26296,9 @@ WSA_QOS_RECEIVERS - At least one reserve has arrived.
 Language=Russian
 WSA_QOS_RECEIVERS - At least one reserve has arrived.
 .
+Language=Polish
+WSA_QOS_RECEIVERS - At least one reserve has arrived.
+.
 
 MessageId=11006
 Severity=Success
@@ -20676,6 +26308,9 @@ Language=English
 WSA_QOS_SENDERS - At least one path has arrived.
 .
 Language=Russian
+WSA_QOS_SENDERS - At least one path has arrived.
+.
+Language=Polish
 WSA_QOS_SENDERS - At least one path has arrived.
 .
 
@@ -20689,6 +26324,9 @@ WSA_QOS_NO_SENDERS - There are no senders.
 Language=Russian
 WSA_QOS_NO_SENDERS - There are no senders.
 .
+Language=Polish
+WSA_QOS_NO_SENDERS - There are no senders.
+.
 
 MessageId=11008
 Severity=Success
@@ -20698,6 +26336,9 @@ Language=English
 WSA_QOS_NO_RECEIVERS - There are no receivers.
 .
 Language=Russian
+WSA_QOS_NO_RECEIVERS - There are no receivers.
+.
+Language=Polish
 WSA_QOS_NO_RECEIVERS - There are no receivers.
 .
 
@@ -20711,6 +26352,9 @@ WSA_QOS_REQUEST_CONFIRMED - Reserve has been confirmed.
 Language=Russian
 WSA_QOS_REQUEST_CONFIRMED - Reserve has been confirmed.
 .
+Language=Polish
+WSA_QOS_REQUEST_CONFIRMED - Reserve has been confirmed.
+.
 
 MessageId=11010
 Severity=Success
@@ -20720,6 +26364,9 @@ Language=English
 WSA_QOS_ADMISSION_FAILURE - Error due to lack of resources.
 .
 Language=Russian
+WSA_QOS_ADMISSION_FAILURE - Error due to lack of resources.
+.
+Language=Polish
 WSA_QOS_ADMISSION_FAILURE - Error due to lack of resources.
 .
 
@@ -20733,6 +26380,9 @@ WSA_QOS_POLICY_FAILURE - Rejected for administrative reasons - bad credentials.
 Language=Russian
 WSA_QOS_POLICY_FAILURE - Rejected for administrative reasons - bad credentials.
 .
+Language=Polish
+WSA_QOS_POLICY_FAILURE - Rejected for administrative reasons - bad credentials.
+.
 
 MessageId=11012
 Severity=Success
@@ -20742,6 +26392,9 @@ Language=English
 WSA_QOS_BAD_STYLE - Unknown or conflicting style.
 .
 Language=Russian
+WSA_QOS_BAD_STYLE - Unknown or conflicting style.
+.
+Language=Polish
 WSA_QOS_BAD_STYLE - Unknown or conflicting style.
 .
 
@@ -20755,6 +26408,9 @@ WSA_QOS_BAD_OBJECT - Problem with some part of the filterspec or providerspecifi
 Language=Russian
 WSA_QOS_BAD_OBJECT - Problem with some part of the filterspec or providerspecific buffer in general.
 .
+Language=Polish
+WSA_QOS_BAD_OBJECT - Problem with some part of the filterspec or providerspecific buffer in general.
+.
 
 MessageId=11014
 Severity=Success
@@ -20764,6 +26420,9 @@ Language=English
 WSA_QOS_TRAFFIC_CTRL_ERROR - Problem with some part of the flowspec.
 .
 Language=Russian
+WSA_QOS_TRAFFIC_CTRL_ERROR - Problem with some part of the flowspec.
+.
+Language=Polish
 WSA_QOS_TRAFFIC_CTRL_ERROR - Problem with some part of the flowspec.
 .
 
@@ -20777,6 +26436,9 @@ WSA_QOS_GENERIC_ERROR - General QOS error.
 Language=Russian
 WSA_QOS_GENERIC_ERROR - General QOS error.
 .
+Language=Polish
+WSA_QOS_GENERIC_ERROR - General QOS error.
+.
 
 MessageId=11016
 Severity=Success
@@ -20786,6 +26448,9 @@ Language=English
 WSA_QOS_ESERVICETYPE - An invalid or unrecognized service type was found in the flowspec.
 .
 Language=Russian
+WSA_QOS_ESERVICETYPE - An invalid or unrecognized service type was found in the flowspec.
+.
+Language=Polish
 WSA_QOS_ESERVICETYPE - An invalid or unrecognized service type was found in the flowspec.
 .
 
@@ -20799,6 +26464,9 @@ WSA_QOS_EFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS str
 Language=Russian
 WSA_QOS_EFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS structure.
 .
+Language=Polish
+WSA_QOS_EFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS structure.
+.
 
 MessageId=11018
 Severity=Success
@@ -20808,6 +26476,9 @@ Language=English
 WSA_QOS_EPROVSPECBUF - Invalid QOS provider-specific buffer.
 .
 Language=Russian
+WSA_QOS_EPROVSPECBUF - Invalid QOS provider-specific buffer.
+.
+Language=Polish
 WSA_QOS_EPROVSPECBUF - Invalid QOS provider-specific buffer.
 .
 
@@ -20821,6 +26492,9 @@ WSA_QOS_EFILTERSTYLE - An invalid QOS filter style was used.
 Language=Russian
 WSA_QOS_EFILTERSTYLE - An invalid QOS filter style was used.
 .
+Language=Polish
+WSA_QOS_EFILTERSTYLE - An invalid QOS filter style was used.
+.
 
 MessageId=11020
 Severity=Success
@@ -20830,6 +26504,9 @@ Language=English
 WSA_QOS_EFILTERTYPE - An invalid QOS filter type was used.
 .
 Language=Russian
+WSA_QOS_EFILTERTYPE - An invalid QOS filter type was used.
+.
+Language=Polish
 WSA_QOS_EFILTERTYPE - An invalid QOS filter type was used.
 .
 
@@ -20843,6 +26520,9 @@ WSA_QOS_EFILTERCOUNT - An incorrect number of QOS FILTERSPECs were specified in 
 Language=Russian
 WSA_QOS_EFILTERCOUNT - An incorrect number of QOS FILTERSPECs were specified in the FLOWDESCRIPTOR.
 .
+Language=Polish
+WSA_QOS_EFILTERCOUNT - An incorrect number of QOS FILTERSPECs were specified in the FLOWDESCRIPTOR.
+.
 
 MessageId=11022
 Severity=Success
@@ -20852,6 +26532,9 @@ Language=English
 WSA_QOS_EOBJLENGTH - An object with an invalid ObjectLength field was specified in the QOS provider-specific buffer.
 .
 Language=Russian
+WSA_QOS_EOBJLENGTH - An object with an invalid ObjectLength field was specified in the QOS provider-specific buffer.
+.
+Language=Polish
 WSA_QOS_EOBJLENGTH - An object with an invalid ObjectLength field was specified in the QOS provider-specific buffer.
 .
 
@@ -20865,6 +26548,9 @@ WSA_QOS_EFLOWCOUNT - An incorrect number of flow descriptors was specified in th
 Language=Russian
 WSA_QOS_EFLOWCOUNT - An incorrect number of flow descriptors was specified in the QOS structure.
 .
+Language=Polish
+WSA_QOS_EFLOWCOUNT - An incorrect number of flow descriptors was specified in the QOS structure.
+.
 
 MessageId=11024
 Severity=Success
@@ -20874,6 +26560,9 @@ Language=English
 WSA_QOS_EUNKNOWNPSOBJ - An unrecognized object was found in the QOS provider-specific buffer.
 .
 Language=Russian
+WSA_QOS_EUNKNOWNPSOBJ - An unrecognized object was found in the QOS provider-specific buffer.
+.
+Language=Polish
 WSA_QOS_EUNKNOWNPSOBJ - An unrecognized object was found in the QOS provider-specific buffer.
 .
 
@@ -20887,6 +26576,9 @@ WSA_QOS_EPOLICYOBJ - An invalid policy object was found in the QOS provider-spec
 Language=Russian
 WSA_QOS_EPOLICYOBJ - An invalid policy object was found in the QOS provider-specific buffer.
 .
+Language=Polish
+WSA_QOS_EPOLICYOBJ - An invalid policy object was found in the QOS provider-specific buffer.
+.
 
 MessageId=11026
 Severity=Success
@@ -20896,6 +26588,9 @@ Language=English
 WSA_QOS_EFLOWDESC - An invalid QOS flow descriptor was found in the flow descriptor list.
 .
 Language=Russian
+WSA_QOS_EFLOWDESC - An invalid QOS flow descriptor was found in the flow descriptor list.
+.
+Language=Polish
 WSA_QOS_EFLOWDESC - An invalid QOS flow descriptor was found in the flow descriptor list.
 .
 
@@ -20909,6 +26604,9 @@ WSA_QOS_EPSFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS p
 Language=Russian
 WSA_QOS_EPSFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS provider-specific buffer.
 .
+Language=Polish
+WSA_QOS_EPSFLOWSPEC - An invalid or inconsistent flowspec was found in the QOS provider-specific buffer.
+.
 
 MessageId=11028
 Severity=Success
@@ -20918,6 +26616,9 @@ Language=English
 WSA_QOS_EPSFILTERSPEC - An invalid FILTERSPEC was found in the QOS provider-specific buffer.
 .
 Language=Russian
+WSA_QOS_EPSFILTERSPEC - An invalid FILTERSPEC was found in the QOS provider-specific buffer.
+.
+Language=Polish
 WSA_QOS_EPSFILTERSPEC - An invalid FILTERSPEC was found in the QOS provider-specific buffer.
 .
 
@@ -20931,6 +26632,9 @@ WSA_QOS_ESDMODEOBJ - An invalid shape discard mode object was found in the QOS p
 Language=Russian
 WSA_QOS_ESDMODEOBJ - An invalid shape discard mode object was found in the QOS provider-specific buffer.
 .
+Language=Polish
+WSA_QOS_ESDMODEOBJ - An invalid shape discard mode object was found in the QOS provider-specific buffer.
+.
 
 MessageId=11030
 Severity=Success
@@ -20940,6 +26644,9 @@ Language=English
 WSA_QOS_ESHAPERATEOBJ - An invalid shaping rate object was found in the QOS provider-specific buffer.
 .
 Language=Russian
+WSA_QOS_ESHAPERATEOBJ - An invalid shaping rate object was found in the QOS provider-specific buffer.
+.
+Language=Polish
 WSA_QOS_ESHAPERATEOBJ - An invalid shaping rate object was found in the QOS provider-specific buffer.
 .
 
@@ -20953,6 +26660,9 @@ WSA_QOS_RESERVED_PETYPE - A reserved policy element was found in the QOS provide
 Language=Russian
 WSA_QOS_RESERVED_PETYPE - A reserved policy element was found in the QOS provider-specific buffer.
 .
+Language=Polish
+WSA_QOS_RESERVED_PETYPE - A reserved policy element was found in the QOS provider-specific buffer.
+.
 
 MessageId=12000
 Severity=Success
@@ -20962,6 +26672,9 @@ Language=English
 ERROR_FLT_IO_COMPLETE - The IO was completed by a filter.
 .
 Language=Russian
+ERROR_FLT_IO_COMPLETE - The IO was completed by a filter.
+.
+Language=Polish
 ERROR_FLT_IO_COMPLETE - The IO was completed by a filter.
 .
 
@@ -20975,6 +26688,9 @@ ERROR_FLT_BUFFER_TOO_SMALL - The buffer is too small to contain the entry. No in
 Language=Russian
 ERROR_FLT_BUFFER_TOO_SMALL - The buffer is too small to contain the entry. No information has been written to the buffer.
 .
+Language=Polish
+ERROR_FLT_BUFFER_TOO_SMALL - The buffer is too small to contain the entry. No information has been written to the buffer.
+.
 
 MessageId=12002
 Severity=Success
@@ -20984,6 +26700,9 @@ Language=English
 ERROR_FLT_NO_HANDLER_DEFINED - A handler was not defined by the filter for this operation.
 .
 Language=Russian
+ERROR_FLT_NO_HANDLER_DEFINED - A handler was not defined by the filter for this operation.
+.
+Language=Polish
 ERROR_FLT_NO_HANDLER_DEFINED - A handler was not defined by the filter for this operation.
 .
 
@@ -20997,6 +26716,9 @@ ERROR_FLT_CONTEXT_ALREADY_DEFINED - A context is already defined for this object
 Language=Russian
 ERROR_FLT_CONTEXT_ALREADY_DEFINED - A context is already defined for this object.
 .
+Language=Polish
+ERROR_FLT_CONTEXT_ALREADY_DEFINED - A context is already defined for this object.
+.
 
 MessageId=12004
 Severity=Success
@@ -21006,6 +26728,9 @@ Language=English
 ERROR_FLT_INVALID_ASYNCHRONOUS_REQUEST - Asynchronous requests are not valid for this operation.
 .
 Language=Russian
+ERROR_FLT_INVALID_ASYNCHRONOUS_REQUEST - Asynchronous requests are not valid for this operation.
+.
+Language=Polish
 ERROR_FLT_INVALID_ASYNCHRONOUS_REQUEST - Asynchronous requests are not valid for this operation.
 .
 
@@ -21019,6 +26744,9 @@ ERROR_FLT_DISALLOW_FAST_IO - Disallow the Fast IO path for this operation.
 Language=Russian
 ERROR_FLT_DISALLOW_FAST_IO - Disallow the Fast IO path for this operation.
 .
+Language=Polish
+ERROR_FLT_DISALLOW_FAST_IO - Disallow the Fast IO path for this operation.
+.
 
 MessageId=12006
 Severity=Success
@@ -21028,6 +26756,9 @@ Language=English
 ERROR_FLT_INVALID_NAME_REQUEST - An invalid name request was made. The name requested cannot be retrieved at this time.
 .
 Language=Russian
+ERROR_FLT_INVALID_NAME_REQUEST - An invalid name request was made. The name requested cannot be retrieved at this time.
+.
+Language=Polish
 ERROR_FLT_INVALID_NAME_REQUEST - An invalid name request was made. The name requested cannot be retrieved at this time.
 .
 
@@ -21041,6 +26772,9 @@ ERROR_FLT_NOT_SAFE_TO_POST_OPERATION - Posting this operation to a worker thread
 Language=Russian
 ERROR_FLT_NOT_SAFE_TO_POST_OPERATION - Posting this operation to a worker thread for further processing is not safe at this time because it could lead to a system deadlock.
 .
+Language=Polish
+ERROR_FLT_NOT_SAFE_TO_POST_OPERATION - Posting this operation to a worker thread for further processing is not safe at this time because it could lead to a system deadlock.
+.
 
 MessageId=12008
 Severity=Success
@@ -21050,6 +26784,9 @@ Language=English
 ERROR_FLT_NOT_INITIALIZED - The Filter Manager was not initialized when a filter tried to register. Make sure that the Filter Manager is getting loaded as a driver.
 .
 Language=Russian
+ERROR_FLT_NOT_INITIALIZED - The Filter Manager was not initialized when a filter tried to register. Make sure that the Filter Manager is getting loaded as a driver.
+.
+Language=Polish
 ERROR_FLT_NOT_INITIALIZED - The Filter Manager was not initialized when a filter tried to register. Make sure that the Filter Manager is getting loaded as a driver.
 .
 
@@ -21063,6 +26800,9 @@ ERROR_FLT_FILTER_NOT_READY - The filter is not ready for attachment to volumes b
 Language=Russian
 ERROR_FLT_FILTER_NOT_READY - The filter is not ready for attachment to volumes because it has not finished initializing (FltStartFiltering has not been called).
 .
+Language=Polish
+ERROR_FLT_FILTER_NOT_READY - The filter is not ready for attachment to volumes because it has not finished initializing (FltStartFiltering has not been called).
+.
 
 MessageId=12010
 Severity=Success
@@ -21072,6 +26812,9 @@ Language=English
 ERROR_FLT_POST_OPERATION_CLEANUP - The filter must cleanup any operation specific context at this time because it is being removed from the system before the operation is completed by the lower drivers.
 .
 Language=Russian
+ERROR_FLT_POST_OPERATION_CLEANUP - The filter must cleanup any operation specific context at this time because it is being removed from the system before the operation is completed by the lower drivers.
+.
+Language=Polish
 ERROR_FLT_POST_OPERATION_CLEANUP - The filter must cleanup any operation specific context at this time because it is being removed from the system before the operation is completed by the lower drivers.
 .
 
@@ -21085,6 +26828,9 @@ ERROR_FLT_INTERNAL_ERROR - The Filter Manager had an internal error from which i
 Language=Russian
 ERROR_FLT_INTERNAL_ERROR - The Filter Manager had an internal error from which it cannot recover, therefore the operation has been failed. This is usually the result of a filter returning an invalid value from a pre-operation callback.
 .
+Language=Polish
+ERROR_FLT_INTERNAL_ERROR - The Filter Manager had an internal error from which it cannot recover, therefore the operation has been failed. This is usually the result of a filter returning an invalid value from a pre-operation callback.
+.
 
 MessageId=12012
 Severity=Success
@@ -21094,6 +26840,9 @@ Language=English
 ERROR_FLT_DELETING_OBJECT - The object specified for this action is in the process of being deleted, therefore the action requested cannot be completed at this time.
 .
 Language=Russian
+ERROR_FLT_DELETING_OBJECT - The object specified for this action is in the process of being deleted, therefore the action requested cannot be completed at this time.
+.
+Language=Polish
 ERROR_FLT_DELETING_OBJECT - The object specified for this action is in the process of being deleted, therefore the action requested cannot be completed at this time.
 .
 
@@ -21107,6 +26856,9 @@ ERROR_FLT_MUST_BE_NONPAGED_POOL - Non-paged pool must be used for this type of c
 Language=Russian
 ERROR_FLT_MUST_BE_NONPAGED_POOL - Non-paged pool must be used for this type of context.
 .
+Language=Polish
+ERROR_FLT_MUST_BE_NONPAGED_POOL - Non-paged pool must be used for this type of context.
+.
 
 MessageId=12014
 Severity=Success
@@ -21116,6 +26868,9 @@ Language=English
 ERROR_FLT_DUPLICATE_ENTRY - A duplicate handler definition has been provided for an operation.
 .
 Language=Russian
+ERROR_FLT_DUPLICATE_ENTRY - A duplicate handler definition has been provided for an operation.
+.
+Language=Polish
 ERROR_FLT_DUPLICATE_ENTRY - A duplicate handler definition has been provided for an operation.
 .
 
@@ -21129,6 +26884,9 @@ ERROR_FLT_CBDQ_DISABLED - The callback data queue has been disabled.
 Language=Russian
 ERROR_FLT_CBDQ_DISABLED - The callback data queue has been disabled.
 .
+Language=Polish
+ERROR_FLT_CBDQ_DISABLED - The callback data queue has been disabled.
+.
 
 MessageId=12016
 Severity=Success
@@ -21138,6 +26896,9 @@ Language=English
 ERROR_FLT_DO_NOT_ATTACH - Do not attach the filter to the volume at this time.
 .
 Language=Russian
+ERROR_FLT_DO_NOT_ATTACH - Do not attach the filter to the volume at this time.
+.
+Language=Polish
 ERROR_FLT_DO_NOT_ATTACH - Do not attach the filter to the volume at this time.
 .
 
@@ -21151,6 +26912,9 @@ ERROR_FLT_DO_NOT_DETACH - Do not detach the filter from the volume at this time.
 Language=Russian
 ERROR_FLT_DO_NOT_DETACH - Do not detach the filter from the volume at this time.
 .
+Language=Polish
+ERROR_FLT_DO_NOT_DETACH - Do not detach the filter from the volume at this time.
+.
 
 MessageId=12018
 Severity=Success
@@ -21160,6 +26924,9 @@ Language=English
 ERROR_FLT_INSTANCE_ALTITUDE_COLLISION - An instance already exists at this altitude on the volume specified.
 .
 Language=Russian
+ERROR_FLT_INSTANCE_ALTITUDE_COLLISION - An instance already exists at this altitude on the volume specified.
+.
+Language=Polish
 ERROR_FLT_INSTANCE_ALTITUDE_COLLISION - An instance already exists at this altitude on the volume specified.
 .
 
@@ -21173,6 +26940,9 @@ ERROR_FLT_INSTANCE_NAME_COLLISION - An instance already exists with this name on
 Language=Russian
 ERROR_FLT_INSTANCE_NAME_COLLISION - An instance already exists with this name on the volume specified.
 .
+Language=Polish
+ERROR_FLT_INSTANCE_NAME_COLLISION - An instance already exists with this name on the volume specified.
+.
 
 MessageId=12020
 Severity=Success
@@ -21182,6 +26952,9 @@ Language=English
 ERROR_FLT_FILTER_NOT_FOUND - The system could not find the filter specified.
 .
 Language=Russian
+ERROR_FLT_FILTER_NOT_FOUND - The system could not find the filter specified.
+.
+Language=Polish
 ERROR_FLT_FILTER_NOT_FOUND - The system could not find the filter specified.
 .
 
@@ -21195,6 +26968,9 @@ ERROR_FLT_VOLUME_NOT_FOUND - The system could not find the volume specified.
 Language=Russian
 ERROR_FLT_VOLUME_NOT_FOUND - The system could not find the volume specified.
 .
+Language=Polish
+ERROR_FLT_VOLUME_NOT_FOUND - The system could not find the volume specified.
+.
 
 MessageId=12022
 Severity=Success
@@ -21204,6 +26980,9 @@ Language=English
 ERROR_FLT_INSTANCE_NOT_FOUND - The system could not find the instance specified.
 .
 Language=Russian
+ERROR_FLT_INSTANCE_NOT_FOUND - The system could not find the instance specified.
+.
+Language=Polish
 ERROR_FLT_INSTANCE_NOT_FOUND - The system could not find the instance specified.
 .
 
@@ -21217,6 +26996,9 @@ ERROR_FLT_CONTEXT_ALLOCATION_NOT_FOUND - No registered context allocation defini
 Language=Russian
 ERROR_FLT_CONTEXT_ALLOCATION_NOT_FOUND - No registered context allocation definition was found for the given request.
 .
+Language=Polish
+ERROR_FLT_CONTEXT_ALLOCATION_NOT_FOUND - No registered context allocation definition was found for the given request.
+.
 
 MessageId=12024
 Severity=Success
@@ -21226,6 +27008,9 @@ Language=English
 ERROR_FLT_INVALID_CONTEXT_REGISTRATION - An invalid parameter was specified during context registration.
 .
 Language=Russian
+ERROR_FLT_INVALID_CONTEXT_REGISTRATION - An invalid parameter was specified during context registration.
+.
+Language=Polish
 ERROR_FLT_INVALID_CONTEXT_REGISTRATION - An invalid parameter was specified during context registration.
 .
 
@@ -21239,6 +27024,9 @@ ERROR_FLT_NAME_CACHE_MISS - The name requested was not found in Filter Manager's
 Language=Russian
 ERROR_FLT_NAME_CACHE_MISS - The name requested was not found in Filter Manager's name cache and could not be retrieved from the file system.
 .
+Language=Polish
+ERROR_FLT_NAME_CACHE_MISS - The name requested was not found in Filter Manager's name cache and could not be retrieved from the file system.
+.
 
 MessageId=12026
 Severity=Success
@@ -21248,6 +27036,9 @@ Language=English
 ERROR_FLT_NO_DEVICE_OBJECT - The requested device object does not exist for the given volume.
 .
 Language=Russian
+ERROR_FLT_NO_DEVICE_OBJECT - The requested device object does not exist for the given volume.
+.
+Language=Polish
 ERROR_FLT_NO_DEVICE_OBJECT - The requested device object does not exist for the given volume.
 .
 
@@ -21261,6 +27052,9 @@ ERROR_FLT_VOLUME_ALREADY_MOUNTED - The specified volume is already mounted.
 Language=Russian
 ERROR_FLT_VOLUME_ALREADY_MOUNTED - The specified volume is already mounted.
 .
+Language=Polish
+ERROR_FLT_VOLUME_ALREADY_MOUNTED - The specified volume is already mounted.
+.
 
 MessageId=12028
 Severity=Success
@@ -21270,6 +27064,9 @@ Language=English
 ERROR_FLT_NO_WAITER_FOR_REPLY - No waiter is present for the filter's reply to this message.
 .
 Language=Russian
+ERROR_FLT_NO_WAITER_FOR_REPLY - No waiter is present for the filter's reply to this message.
+.
+Language=Polish
 ERROR_FLT_NO_WAITER_FOR_REPLY - No waiter is present for the filter's reply to this message.
 .
 
@@ -21283,6 +27080,9 @@ ERROR_IPSEC_QM_POLICY_EXISTS - The specified quick mode policy already exists.
 Language=Russian
 ERROR_IPSEC_QM_POLICY_EXISTS - The specified quick mode policy already exists.
 .
+Language=Polish
+ERROR_IPSEC_QM_POLICY_EXISTS - The specified quick mode policy already exists.
+.
 
 MessageId=13001
 Severity=Success
@@ -21292,6 +27092,9 @@ Language=English
 ERROR_IPSEC_QM_POLICY_NOT_FOUND - The specified quick mode policy was not found.
 .
 Language=Russian
+ERROR_IPSEC_QM_POLICY_NOT_FOUND - The specified quick mode policy was not found.
+.
+Language=Polish
 ERROR_IPSEC_QM_POLICY_NOT_FOUND - The specified quick mode policy was not found.
 .
 
@@ -21305,6 +27108,9 @@ ERROR_IPSEC_QM_POLICY_IN_USE - The specified quick mode policy is being used.
 Language=Russian
 ERROR_IPSEC_QM_POLICY_IN_USE - The specified quick mode policy is being used.
 .
+Language=Polish
+ERROR_IPSEC_QM_POLICY_IN_USE - The specified quick mode policy is being used.
+.
 
 MessageId=13003
 Severity=Success
@@ -21314,6 +27120,9 @@ Language=English
 ERROR_IPSEC_MM_POLICY_EXISTS - The specified main mode policy already exists.
 .
 Language=Russian
+ERROR_IPSEC_MM_POLICY_EXISTS - The specified main mode policy already exists.
+.
+Language=Polish
 ERROR_IPSEC_MM_POLICY_EXISTS - The specified main mode policy already exists.
 .
 
@@ -21327,6 +27136,9 @@ ERROR_IPSEC_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
 Language=Russian
 ERROR_IPSEC_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
 .
+Language=Polish
+ERROR_IPSEC_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
+.
 
 MessageId=13005
 Severity=Success
@@ -21336,6 +27148,9 @@ Language=English
 ERROR_IPSEC_MM_POLICY_IN_USE - The specified main mode policy is being used.
 .
 Language=Russian
+ERROR_IPSEC_MM_POLICY_IN_USE - The specified main mode policy is being used.
+.
+Language=Polish
 ERROR_IPSEC_MM_POLICY_IN_USE - The specified main mode policy is being used.
 .
 
@@ -21349,6 +27164,9 @@ ERROR_IPSEC_MM_FILTER_EXISTS - The specified main mode filter already exists.
 Language=Russian
 ERROR_IPSEC_MM_FILTER_EXISTS - The specified main mode filter already exists.
 .
+Language=Polish
+ERROR_IPSEC_MM_FILTER_EXISTS - The specified main mode filter already exists.
+.
 
 MessageId=13007
 Severity=Success
@@ -21358,6 +27176,9 @@ Language=English
 ERROR_IPSEC_MM_FILTER_NOT_FOUND - The specified main mode filter was not found.
 .
 Language=Russian
+ERROR_IPSEC_MM_FILTER_NOT_FOUND - The specified main mode filter was not found.
+.
+Language=Polish
 ERROR_IPSEC_MM_FILTER_NOT_FOUND - The specified main mode filter was not found.
 .
 
@@ -21371,6 +27192,9 @@ ERROR_IPSEC_TRANSPORT_FILTER_EXISTS - The specified transport mode filter alread
 Language=Russian
 ERROR_IPSEC_TRANSPORT_FILTER_EXISTS - The specified transport mode filter already exists.
 .
+Language=Polish
+ERROR_IPSEC_TRANSPORT_FILTER_EXISTS - The specified transport mode filter already exists.
+.
 
 MessageId=13009
 Severity=Success
@@ -21380,6 +27204,9 @@ Language=English
 ERROR_IPSEC_TRANSPORT_FILTER_NOT_FOUND - The specified transport mode filter does not exist.
 .
 Language=Russian
+ERROR_IPSEC_TRANSPORT_FILTER_NOT_FOUND - The specified transport mode filter does not exist.
+.
+Language=Polish
 ERROR_IPSEC_TRANSPORT_FILTER_NOT_FOUND - The specified transport mode filter does not exist.
 .
 
@@ -21393,6 +27220,9 @@ ERROR_IPSEC_MM_AUTH_EXISTS - The specified main mode authentication list exists.
 Language=Russian
 ERROR_IPSEC_MM_AUTH_EXISTS - The specified main mode authentication list exists.
 .
+Language=Polish
+ERROR_IPSEC_MM_AUTH_EXISTS - The specified main mode authentication list exists.
+.
 
 MessageId=13011
 Severity=Success
@@ -21402,6 +27232,9 @@ Language=English
 ERROR_IPSEC_MM_AUTH_NOT_FOUND - The specified main mode authentication list was not found.
 .
 Language=Russian
+ERROR_IPSEC_MM_AUTH_NOT_FOUND - The specified main mode authentication list was not found.
+.
+Language=Polish
 ERROR_IPSEC_MM_AUTH_NOT_FOUND - The specified main mode authentication list was not found.
 .
 
@@ -21415,6 +27248,9 @@ ERROR_IPSEC_MM_AUTH_IN_USE - The specified quick mode policy is being used.
 Language=Russian
 ERROR_IPSEC_MM_AUTH_IN_USE - The specified quick mode policy is being used.
 .
+Language=Polish
+ERROR_IPSEC_MM_AUTH_IN_USE - The specified quick mode policy is being used.
+.
 
 MessageId=13013
 Severity=Success
@@ -21424,6 +27260,9 @@ Language=English
 ERROR_IPSEC_DEFAULT_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
 .
 Language=Russian
+ERROR_IPSEC_DEFAULT_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
+.
+Language=Polish
 ERROR_IPSEC_DEFAULT_MM_POLICY_NOT_FOUND - The specified main mode policy was not found.
 .
 
@@ -21437,6 +27276,9 @@ ERROR_IPSEC_DEFAULT_MM_AUTH_NOT_FOUND - The specified quick mode policy was not 
 Language=Russian
 ERROR_IPSEC_DEFAULT_MM_AUTH_NOT_FOUND - The specified quick mode policy was not found.
 .
+Language=Polish
+ERROR_IPSEC_DEFAULT_MM_AUTH_NOT_FOUND - The specified quick mode policy was not found.
+.
 
 MessageId=13015
 Severity=Success
@@ -21446,6 +27288,9 @@ Language=English
 ERROR_IPSEC_DEFAULT_QM_POLICY_NOT_FOUND - The manifest file contains one or more syntax errors.
 .
 Language=Russian
+ERROR_IPSEC_DEFAULT_QM_POLICY_NOT_FOUND - The manifest file contains one or more syntax errors.
+.
+Language=Polish
 ERROR_IPSEC_DEFAULT_QM_POLICY_NOT_FOUND - The manifest file contains one or more syntax errors.
 .
 
@@ -21459,6 +27304,9 @@ ERROR_IPSEC_TUNNEL_FILTER_EXISTS - The application attempted to activate a disab
 Language=Russian
 ERROR_IPSEC_TUNNEL_FILTER_EXISTS - The application attempted to activate a disabled activation context.
 .
+Language=Polish
+ERROR_IPSEC_TUNNEL_FILTER_EXISTS - The application attempted to activate a disabled activation context.
+.
 
 MessageId=13017
 Severity=Success
@@ -21468,6 +27316,9 @@ Language=English
 ERROR_IPSEC_TUNNEL_FILTER_NOT_FOUND - The requested lookup key was not found in any active activation context.
 .
 Language=Russian
+ERROR_IPSEC_TUNNEL_FILTER_NOT_FOUND - The requested lookup key was not found in any active activation context.
+.
+Language=Polish
 ERROR_IPSEC_TUNNEL_FILTER_NOT_FOUND - The requested lookup key was not found in any active activation context.
 .
 
@@ -21481,6 +27332,9 @@ ERROR_IPSEC_MM_FILTER_PENDING_DELETION - The Main Mode filter is pending deletio
 Language=Russian
 ERROR_IPSEC_MM_FILTER_PENDING_DELETION - The Main Mode filter is pending deletion.
 .
+Language=Polish
+ERROR_IPSEC_MM_FILTER_PENDING_DELETION - The Main Mode filter is pending deletion.
+.
 
 MessageId=13019
 Severity=Success
@@ -21490,6 +27344,9 @@ Language=English
 ERROR_IPSEC_TRANSPORT_FILTER_PENDING_DELETION - The transport filter is pending deletion.
 .
 Language=Russian
+ERROR_IPSEC_TRANSPORT_FILTER_PENDING_DELETION - The transport filter is pending deletion.
+.
+Language=Polish
 ERROR_IPSEC_TRANSPORT_FILTER_PENDING_DELETION - The transport filter is pending deletion.
 .
 
@@ -21503,6 +27360,9 @@ ERROR_IPSEC_TUNNEL_FILTER_PENDING_DELETION - The tunnel filter is pending deleti
 Language=Russian
 ERROR_IPSEC_TUNNEL_FILTER_PENDING_DELETION - The tunnel filter is pending deletion.
 .
+Language=Polish
+ERROR_IPSEC_TUNNEL_FILTER_PENDING_DELETION - The tunnel filter is pending deletion.
+.
 
 MessageId=13021
 Severity=Success
@@ -21512,6 +27372,9 @@ Language=English
 ERROR_IPSEC_MM_POLICY_PENDING_DELETION - The Main Mode policy is pending deletion.
 .
 Language=Russian
+ERROR_IPSEC_MM_POLICY_PENDING_DELETION - The Main Mode policy is pending deletion.
+.
+Language=Polish
 ERROR_IPSEC_MM_POLICY_PENDING_DELETION - The Main Mode policy is pending deletion.
 .
 
@@ -21525,6 +27388,9 @@ ERROR_IPSEC_MM_AUTH_PENDING_DELETION - The Main Mode authentication bundle is pe
 Language=Russian
 ERROR_IPSEC_MM_AUTH_PENDING_DELETION - The Main Mode authentication bundle is pending deletion.
 .
+Language=Polish
+ERROR_IPSEC_MM_AUTH_PENDING_DELETION - The Main Mode authentication bundle is pending deletion.
+.
 
 MessageId=13023
 Severity=Success
@@ -21534,6 +27400,9 @@ Language=English
 ERROR_IPSEC_QM_POLICY_PENDING_DELETION - The Quick Mode policy is pending deletion.
 .
 Language=Russian
+ERROR_IPSEC_QM_POLICY_PENDING_DELETION - The Quick Mode policy is pending deletion.
+.
+Language=Polish
 ERROR_IPSEC_QM_POLICY_PENDING_DELETION - The Quick Mode policy is pending deletion.
 .
 
@@ -21547,6 +27416,9 @@ WARNING_IPSEC_MM_POLICY_PRUNED - The Main Mode policy was successfully added, bu
 Language=Russian
 WARNING_IPSEC_MM_POLICY_PRUNED - The Main Mode policy was successfully added, but some of the requested offers are not supported.
 .
+Language=Polish
+WARNING_IPSEC_MM_POLICY_PRUNED - The Main Mode policy was successfully added, but some of the requested offers are not supported.
+.
 
 MessageId=13025
 Severity=Success
@@ -21556,6 +27428,9 @@ Language=English
 WARNING_IPSEC_QM_POLICY_PRUNED - The Quick Mode policy was successfully added, but some of the requested offers are not supported.
 .
 Language=Russian
+WARNING_IPSEC_QM_POLICY_PRUNED - The Quick Mode policy was successfully added, but some of the requested offers are not supported.
+.
+Language=Polish
 WARNING_IPSEC_QM_POLICY_PRUNED - The Quick Mode policy was successfully added, but some of the requested offers are not supported.
 .
 
@@ -21569,6 +27444,9 @@ ERROR_IPSEC_IKE_AUTH_FAIL - IKE authentication credentials are unacceptable.
 Language=Russian
 ERROR_IPSEC_IKE_AUTH_FAIL - IKE authentication credentials are unacceptable.
 .
+Language=Polish
+ERROR_IPSEC_IKE_AUTH_FAIL - IKE authentication credentials are unacceptable.
+.
 
 MessageId=13802
 Severity=Success
@@ -21578,6 +27456,9 @@ Language=English
 ERROR_IPSEC_IKE_ATTRIB_FAIL - IKE security attributes are unacceptable.
 .
 Language=Russian
+ERROR_IPSEC_IKE_ATTRIB_FAIL - IKE security attributes are unacceptable.
+.
+Language=Polish
 ERROR_IPSEC_IKE_ATTRIB_FAIL - IKE security attributes are unacceptable.
 .
 
@@ -21591,6 +27472,9 @@ ERROR_IPSEC_IKE_NEGOTIATION_PENDING - IKE Negotiation in progress.
 Language=Russian
 ERROR_IPSEC_IKE_NEGOTIATION_PENDING - IKE Negotiation in progress.
 .
+Language=Polish
+ERROR_IPSEC_IKE_NEGOTIATION_PENDING - IKE Negotiation in progress.
+.
 
 MessageId=13804
 Severity=Success
@@ -21600,6 +27484,9 @@ Language=English
 ERROR_IPSEC_IKE_GENERAL_PROCESSING_ERROR - General processing error.
 .
 Language=Russian
+ERROR_IPSEC_IKE_GENERAL_PROCESSING_ERROR - General processing error.
+.
+Language=Polish
 ERROR_IPSEC_IKE_GENERAL_PROCESSING_ERROR - General processing error.
 .
 
@@ -21613,6 +27500,9 @@ ERROR_IPSEC_IKE_TIMED_OUT - Negotiation timed out.
 Language=Russian
 ERROR_IPSEC_IKE_TIMED_OUT - Negotiation timed out.
 .
+Language=Polish
+ERROR_IPSEC_IKE_TIMED_OUT - Negotiation timed out.
+.
 
 MessageId=13806
 Severity=Success
@@ -21622,6 +27512,9 @@ Language=English
 ERROR_IPSEC_IKE_NO_CERT - IKE failed to find valid machine certificate.
 .
 Language=Russian
+ERROR_IPSEC_IKE_NO_CERT - IKE failed to find valid machine certificate.
+.
+Language=Polish
 ERROR_IPSEC_IKE_NO_CERT - IKE failed to find valid machine certificate.
 .
 
@@ -21635,6 +27528,9 @@ ERROR_IPSEC_IKE_SA_DELETED - IKE SA deleted by peer before establishment complet
 Language=Russian
 ERROR_IPSEC_IKE_SA_DELETED - IKE SA deleted by peer before establishment completed.
 .
+Language=Polish
+ERROR_IPSEC_IKE_SA_DELETED - IKE SA deleted by peer before establishment completed.
+.
 
 MessageId=13808
 Severity=Success
@@ -21644,6 +27540,9 @@ Language=English
 ERROR_IPSEC_IKE_SA_REAPED - IKE SA deleted before establishment completed.
 .
 Language=Russian
+ERROR_IPSEC_IKE_SA_REAPED - IKE SA deleted before establishment completed.
+.
+Language=Polish
 ERROR_IPSEC_IKE_SA_REAPED - IKE SA deleted before establishment completed.
 .
 
@@ -21657,6 +27556,9 @@ ERROR_IPSEC_IKE_MM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
 Language=Russian
 ERROR_IPSEC_IKE_MM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
 .
+Language=Polish
+ERROR_IPSEC_IKE_MM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
+.
 
 MessageId=13810
 Severity=Success
@@ -21666,6 +27568,9 @@ Language=English
 ERROR_IPSEC_IKE_QM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
 .
 Language=Russian
+ERROR_IPSEC_IKE_QM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
+.
+Language=Polish
 ERROR_IPSEC_IKE_QM_ACQUIRE_DROP - Negotiation request sat in Queue too long.
 .
 
@@ -21679,6 +27584,9 @@ ERROR_IPSEC_IKE_QUEUE_DROP_MM - Negotiation request sat in Queue too long.
 Language=Russian
 ERROR_IPSEC_IKE_QUEUE_DROP_MM - Negotiation request sat in Queue too long.
 .
+Language=Polish
+ERROR_IPSEC_IKE_QUEUE_DROP_MM - Negotiation request sat in Queue too long.
+.
 
 MessageId=13812
 Severity=Success
@@ -21688,6 +27596,9 @@ Language=English
 ERROR_IPSEC_IKE_QUEUE_DROP_NO_MM - Negotiation request sat in Queue too long.
 .
 Language=Russian
+ERROR_IPSEC_IKE_QUEUE_DROP_NO_MM - Negotiation request sat in Queue too long.
+.
+Language=Polish
 ERROR_IPSEC_IKE_QUEUE_DROP_NO_MM - Negotiation request sat in Queue too long.
 .
 
@@ -21701,6 +27612,9 @@ ERROR_IPSEC_IKE_DROP_NO_RESPONSE - No response from peer.
 Language=Russian
 ERROR_IPSEC_IKE_DROP_NO_RESPONSE - No response from peer.
 .
+Language=Polish
+ERROR_IPSEC_IKE_DROP_NO_RESPONSE - No response from peer.
+.
 
 MessageId=13814
 Severity=Success
@@ -21710,6 +27624,9 @@ Language=English
 ERROR_IPSEC_IKE_MM_DELAY_DROP - Negotiation took too long.
 .
 Language=Russian
+ERROR_IPSEC_IKE_MM_DELAY_DROP - Negotiation took too long.
+.
+Language=Polish
 ERROR_IPSEC_IKE_MM_DELAY_DROP - Negotiation took too long.
 .
 
@@ -21723,6 +27640,9 @@ ERROR_IPSEC_IKE_QM_DELAY_DROP - Negotiation took too long.
 Language=Russian
 ERROR_IPSEC_IKE_QM_DELAY_DROP - Negotiation took too long.
 .
+Language=Polish
+ERROR_IPSEC_IKE_QM_DELAY_DROP - Negotiation took too long.
+.
 
 MessageId=13816
 Severity=Success
@@ -21732,6 +27652,9 @@ Language=English
 ERROR_IPSEC_IKE_ERROR - Unknown error occurred.
 .
 Language=Russian
+ERROR_IPSEC_IKE_ERROR - Unknown error occurred.
+.
+Language=Polish
 ERROR_IPSEC_IKE_ERROR - Unknown error occurred.
 .
 
@@ -21745,6 +27668,9 @@ ERROR_IPSEC_IKE_CRL_FAILED - Certificate Revocation Check failed.
 Language=Russian
 ERROR_IPSEC_IKE_CRL_FAILED - Certificate Revocation Check failed.
 .
+Language=Polish
+ERROR_IPSEC_IKE_CRL_FAILED - Certificate Revocation Check failed.
+.
 
 MessageId=13818
 Severity=Success
@@ -21754,6 +27680,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_KEY_USAGE - Invalid certificate key usage.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_KEY_USAGE - Invalid certificate key usage.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_KEY_USAGE - Invalid certificate key usage.
 .
 
@@ -21767,6 +27696,9 @@ ERROR_IPSEC_IKE_INVALID_CERT_TYPE - Invalid certificate type.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_CERT_TYPE - Invalid certificate type.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_CERT_TYPE - Invalid certificate type.
+.
 
 MessageId=13820
 Severity=Success
@@ -21776,6 +27708,9 @@ Language=English
 ERROR_IPSEC_IKE_NO_PRIVATE_KEY - No private key associated with machine certificate.
 .
 Language=Russian
+ERROR_IPSEC_IKE_NO_PRIVATE_KEY - No private key associated with machine certificate.
+.
+Language=Polish
 ERROR_IPSEC_IKE_NO_PRIVATE_KEY - No private key associated with machine certificate.
 .
 
@@ -21789,6 +27724,9 @@ ERROR_IPSEC_IKE_DH_FAIL - Failure in Diffie-Hellman computation.
 Language=Russian
 ERROR_IPSEC_IKE_DH_FAIL - Failure in Diffie-Hellman computation.
 .
+Language=Polish
+ERROR_IPSEC_IKE_DH_FAIL - Failure in Diffie-Hellman computation.
+.
 
 MessageId=13824
 Severity=Success
@@ -21798,6 +27736,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_HEADER - Invalid header.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_HEADER - Invalid header.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_HEADER - Invalid header.
 .
 
@@ -21811,6 +27752,9 @@ ERROR_IPSEC_IKE_NO_POLICY - No policy configured.
 Language=Russian
 ERROR_IPSEC_IKE_NO_POLICY - No policy configured.
 .
+Language=Polish
+ERROR_IPSEC_IKE_NO_POLICY - No policy configured.
+.
 
 MessageId=13826
 Severity=Success
@@ -21820,6 +27764,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_SIGNATURE - Failed to verify signature.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_SIGNATURE - Failed to verify signature.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_SIGNATURE - Failed to verify signature.
 .
 
@@ -21833,6 +27780,9 @@ ERROR_IPSEC_IKE_KERBEROS_ERROR - Failed to authenticate using Kerberos.
 Language=Russian
 ERROR_IPSEC_IKE_KERBEROS_ERROR - Failed to authenticate using Kerberos.
 .
+Language=Polish
+ERROR_IPSEC_IKE_KERBEROS_ERROR - Failed to authenticate using Kerberos.
+.
 
 MessageId=13828
 Severity=Success
@@ -21842,6 +27792,9 @@ Language=English
 ERROR_IPSEC_IKE_NO_PUBLIC_KEY - Peer's certificate did not have a public key.
 .
 Language=Russian
+ERROR_IPSEC_IKE_NO_PUBLIC_KEY - Peer's certificate did not have a public key.
+.
+Language=Polish
 ERROR_IPSEC_IKE_NO_PUBLIC_KEY - Peer's certificate did not have a public key.
 .
 
@@ -21855,6 +27808,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR - Error processing error payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR - Error processing error payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR - Error processing error payload.
+.
 
 MessageId=13830
 Severity=Success
@@ -21864,6 +27820,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_SA - Error processing SA payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_SA - Error processing SA payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_SA - Error processing SA payload.
 .
 
@@ -21877,6 +27836,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_PROP - Error processing Proposal payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_PROP - Error processing Proposal payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_PROP - Error processing Proposal payload.
+.
 
 MessageId=13832
 Severity=Success
@@ -21886,6 +27848,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_TRANS - Error processing Transform payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_TRANS - Error processing Transform payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_TRANS - Error processing Transform payload.
 .
 
@@ -21899,6 +27864,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_KE - Error processing KE payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_KE - Error processing KE payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_KE - Error processing KE payload.
+.
 
 MessageId=13834
 Severity=Success
@@ -21908,6 +27876,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_ID - Error processing ID payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_ID - Error processing ID payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_ID - Error processing ID payload.
 .
 
@@ -21921,6 +27892,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_CERT - Error processing Cert payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_CERT - Error processing Cert payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_CERT - Error processing Cert payload.
+.
 
 MessageId=13836
 Severity=Success
@@ -21930,6 +27904,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_CERT_REQ - Error processing Certificate Request payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_CERT_REQ - Error processing Certificate Request payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_CERT_REQ - Error processing Certificate Request payload.
 .
 
@@ -21943,6 +27920,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_HASH - Error processing Hash payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_HASH - Error processing Hash payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_HASH - Error processing Hash payload.
+.
 
 MessageId=13838
 Severity=Success
@@ -21952,6 +27932,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_SIG - Error processing Signature payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_SIG - Error processing Signature payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_SIG - Error processing Signature payload.
 .
 
@@ -21965,6 +27948,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_NONCE - Error processing Nonce payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_NONCE - Error processing Nonce payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_NONCE - Error processing Nonce payload.
+.
 
 MessageId=13840
 Severity=Success
@@ -21974,6 +27960,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_NOTIFY - Error processing Notify payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_NOTIFY - Error processing Notify payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_NOTIFY - Error processing Notify payload.
 .
 
@@ -21987,6 +27976,9 @@ ERROR_IPSEC_IKE_PROCESS_ERR_DELETE - Error processing Delete Payload.
 Language=Russian
 ERROR_IPSEC_IKE_PROCESS_ERR_DELETE - Error processing Delete Payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_PROCESS_ERR_DELETE - Error processing Delete Payload.
+.
 
 MessageId=13842
 Severity=Success
@@ -21996,6 +27988,9 @@ Language=English
 ERROR_IPSEC_IKE_PROCESS_ERR_VENDOR - Error processing VendorId payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PROCESS_ERR_VENDOR - Error processing VendorId payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PROCESS_ERR_VENDOR - Error processing VendorId payload.
 .
 
@@ -22009,6 +28004,9 @@ ERROR_IPSEC_IKE_INVALID_PAYLOAD - Invalid payload received.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_PAYLOAD - Invalid payload received.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_PAYLOAD - Invalid payload received.
+.
 
 MessageId=13844
 Severity=Success
@@ -22018,6 +28016,9 @@ Language=English
 ERROR_IPSEC_IKE_LOAD_SOFT_SA - Soft SA loaded.
 .
 Language=Russian
+ERROR_IPSEC_IKE_LOAD_SOFT_SA - Soft SA loaded.
+.
+Language=Polish
 ERROR_IPSEC_IKE_LOAD_SOFT_SA - Soft SA loaded.
 .
 
@@ -22031,6 +28032,9 @@ ERROR_IPSEC_IKE_SOFT_SA_TORN_DOWN - Soft SA torn down.
 Language=Russian
 ERROR_IPSEC_IKE_SOFT_SA_TORN_DOWN - Soft SA torn down.
 .
+Language=Polish
+ERROR_IPSEC_IKE_SOFT_SA_TORN_DOWN - Soft SA torn down.
+.
 
 MessageId=13846
 Severity=Success
@@ -22040,6 +28044,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_COOKIE - Invalid cookie received..
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_COOKIE - Invalid cookie received..
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_COOKIE - Invalid cookie received..
 .
 
@@ -22053,6 +28060,9 @@ ERROR_IPSEC_IKE_NO_PEER_CERT - Peer failed to send valid machine certificate.
 Language=Russian
 ERROR_IPSEC_IKE_NO_PEER_CERT - Peer failed to send valid machine certificate.
 .
+Language=Polish
+ERROR_IPSEC_IKE_NO_PEER_CERT - Peer failed to send valid machine certificate.
+.
 
 MessageId=13848
 Severity=Success
@@ -22062,6 +28072,9 @@ Language=English
 ERROR_IPSEC_IKE_PEER_CRL_FAILED - Certification Revocation check of peer's certificate failed.
 .
 Language=Russian
+ERROR_IPSEC_IKE_PEER_CRL_FAILED - Certification Revocation check of peer's certificate failed.
+.
+Language=Polish
 ERROR_IPSEC_IKE_PEER_CRL_FAILED - Certification Revocation check of peer's certificate failed.
 .
 
@@ -22075,6 +28088,9 @@ ERROR_IPSEC_IKE_POLICY_CHANGE - New policy invalidated SAs formed with old polic
 Language=Russian
 ERROR_IPSEC_IKE_POLICY_CHANGE - New policy invalidated SAs formed with old policy.
 .
+Language=Polish
+ERROR_IPSEC_IKE_POLICY_CHANGE - New policy invalidated SAs formed with old policy.
+.
 
 MessageId=13850
 Severity=Success
@@ -22084,6 +28100,9 @@ Language=English
 ERROR_IPSEC_IKE_NO_MM_POLICY - There is no available Main Mode IKE policy.
 .
 Language=Russian
+ERROR_IPSEC_IKE_NO_MM_POLICY - There is no available Main Mode IKE policy.
+.
+Language=Polish
 ERROR_IPSEC_IKE_NO_MM_POLICY - There is no available Main Mode IKE policy.
 .
 
@@ -22097,6 +28116,9 @@ ERROR_IPSEC_IKE_NOTCBPRIV - Failed to enabled TCB privilege.
 Language=Russian
 ERROR_IPSEC_IKE_NOTCBPRIV - Failed to enabled TCB privilege.
 .
+Language=Polish
+ERROR_IPSEC_IKE_NOTCBPRIV - Failed to enabled TCB privilege.
+.
 
 MessageId=13852
 Severity=Success
@@ -22106,6 +28128,9 @@ Language=English
 ERROR_IPSEC_IKE_SECLOADFAIL - Failed to load SECURITY.DLL.
 .
 Language=Russian
+ERROR_IPSEC_IKE_SECLOADFAIL - Failed to load SECURITY.DLL.
+.
+Language=Polish
 ERROR_IPSEC_IKE_SECLOADFAIL - Failed to load SECURITY.DLL.
 .
 
@@ -22119,6 +28144,9 @@ ERROR_IPSEC_IKE_FAILSSPINIT - Failed to obtain security function table dispatch 
 Language=Russian
 ERROR_IPSEC_IKE_FAILSSPINIT - Failed to obtain security function table dispatch address from SSPI.
 .
+Language=Polish
+ERROR_IPSEC_IKE_FAILSSPINIT - Failed to obtain security function table dispatch address from SSPI.
+.
 
 MessageId=13854
 Severity=Success
@@ -22128,6 +28156,9 @@ Language=English
 ERROR_IPSEC_IKE_FAILQUERYSSP - Failed to query Kerberos package to obtain max token size.
 .
 Language=Russian
+ERROR_IPSEC_IKE_FAILQUERYSSP - Failed to query Kerberos package to obtain max token size.
+.
+Language=Polish
 ERROR_IPSEC_IKE_FAILQUERYSSP - Failed to query Kerberos package to obtain max token size.
 .
 
@@ -22141,6 +28172,9 @@ ERROR_IPSEC_IKE_SRVACQFAIL - Failed to obtain Kerberos server credentials for IS
 Language=Russian
 ERROR_IPSEC_IKE_SRVACQFAIL - Failed to obtain Kerberos server credentials for ISAKMP/ERROR_IPSEC_IKE service. Kerberos authentication will not function. The most likely reason for this is lack of domain membership. This is normal if your computer is a member of a workgroup.
 .
+Language=Polish
+ERROR_IPSEC_IKE_SRVACQFAIL - Failed to obtain Kerberos server credentials for ISAKMP/ERROR_IPSEC_IKE service. Kerberos authentication will not function. The most likely reason for this is lack of domain membership. This is normal if your computer is a member of a workgroup.
+.
 
 MessageId=13856
 Severity=Success
@@ -22150,6 +28184,9 @@ Language=English
 ERROR_IPSEC_IKE_SRVQUERYCRED - Failed to determine SSPI principal name for ISAKMP/ERROR_IPSEC_IKE service (QueryCredentialsAttributes).
 .
 Language=Russian
+ERROR_IPSEC_IKE_SRVQUERYCRED - Failed to determine SSPI principal name for ISAKMP/ERROR_IPSEC_IKE service (QueryCredentialsAttributes).
+.
+Language=Polish
 ERROR_IPSEC_IKE_SRVQUERYCRED - Failed to determine SSPI principal name for ISAKMP/ERROR_IPSEC_IKE service (QueryCredentialsAttributes).
 .
 
@@ -22163,6 +28200,9 @@ ERROR_IPSEC_IKE_GETSPIFAIL - Failed to obtain new SPI for the inbound SA from IP
 Language=Russian
 ERROR_IPSEC_IKE_GETSPIFAIL - Failed to obtain new SPI for the inbound SA from IPSec driver. The most common cause for this is that the driver does not have the correct filter. Check your policy to verify the filters.
 .
+Language=Polish
+ERROR_IPSEC_IKE_GETSPIFAIL - Failed to obtain new SPI for the inbound SA from IPSec driver. The most common cause for this is that the driver does not have the correct filter. Check your policy to verify the filters.
+.
 
 MessageId=13858
 Severity=Success
@@ -22172,6 +28212,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_FILTER - Given filter is invalid.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_FILTER - Given filter is invalid.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_FILTER - Given filter is invalid.
 .
 
@@ -22185,6 +28228,9 @@ ERROR_IPSEC_IKE_OUT_OF_MEMORY - Memory allocation failed.
 Language=Russian
 ERROR_IPSEC_IKE_OUT_OF_MEMORY - Memory allocation failed.
 .
+Language=Polish
+ERROR_IPSEC_IKE_OUT_OF_MEMORY - Memory allocation failed.
+.
 
 MessageId=13860
 Severity=Success
@@ -22194,6 +28240,9 @@ Language=English
 ERROR_IPSEC_IKE_ADD_UPDATE_KEY_FAILED - Failed to add Security Association to IPSec Driver. The most common cause for this is if the IKE negotiation took too long to complete. If the problem persists, reduce the load on the faulting machine.
 .
 Language=Russian
+ERROR_IPSEC_IKE_ADD_UPDATE_KEY_FAILED - Failed to add Security Association to IPSec Driver. The most common cause for this is if the IKE negotiation took too long to complete. If the problem persists, reduce the load on the faulting machine.
+.
+Language=Polish
 ERROR_IPSEC_IKE_ADD_UPDATE_KEY_FAILED - Failed to add Security Association to IPSec Driver. The most common cause for this is if the IKE negotiation took too long to complete. If the problem persists, reduce the load on the faulting machine.
 .
 
@@ -22207,6 +28256,9 @@ ERROR_IPSEC_IKE_INVALID_POLICY - Invalid policy.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_POLICY - Invalid policy.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_POLICY - Invalid policy.
+.
 
 MessageId=13862
 Severity=Success
@@ -22216,6 +28268,9 @@ Language=English
 ERROR_IPSEC_IKE_UNKNOWN_DOI - Invalid DOI.
 .
 Language=Russian
+ERROR_IPSEC_IKE_UNKNOWN_DOI - Invalid DOI.
+.
+Language=Polish
 ERROR_IPSEC_IKE_UNKNOWN_DOI - Invalid DOI.
 .
 
@@ -22229,6 +28284,9 @@ ERROR_IPSEC_IKE_INVALID_SITUATION - Invalid situation.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_SITUATION - Invalid situation.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_SITUATION - Invalid situation.
+.
 
 MessageId=13864
 Severity=Success
@@ -22238,6 +28296,9 @@ Language=English
 ERROR_IPSEC_IKE_DH_FAILURE - Diffie-Hellman failure.
 .
 Language=Russian
+ERROR_IPSEC_IKE_DH_FAILURE - Diffie-Hellman failure.
+.
+Language=Polish
 ERROR_IPSEC_IKE_DH_FAILURE - Diffie-Hellman failure.
 .
 
@@ -22251,6 +28312,9 @@ ERROR_IPSEC_IKE_INVALID_GROUP - Invalid Diffie-Hellman group.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_GROUP - Invalid Diffie-Hellman group.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_GROUP - Invalid Diffie-Hellman group.
+.
 
 MessageId=13866
 Severity=Success
@@ -22260,6 +28324,9 @@ Language=English
 ERROR_IPSEC_IKE_ENCRYPT - Error encrypting payload.
 .
 Language=Russian
+ERROR_IPSEC_IKE_ENCRYPT - Error encrypting payload.
+.
+Language=Polish
 ERROR_IPSEC_IKE_ENCRYPT - Error encrypting payload.
 .
 
@@ -22273,6 +28340,9 @@ ERROR_IPSEC_IKE_DECRYPT - Error decrypting payload.
 Language=Russian
 ERROR_IPSEC_IKE_DECRYPT - Error decrypting payload.
 .
+Language=Polish
+ERROR_IPSEC_IKE_DECRYPT - Error decrypting payload.
+.
 
 MessageId=13868
 Severity=Success
@@ -22282,6 +28352,9 @@ Language=English
 ERROR_IPSEC_IKE_POLICY_MATCH - Policy match error.
 .
 Language=Russian
+ERROR_IPSEC_IKE_POLICY_MATCH - Policy match error.
+.
+Language=Polish
 ERROR_IPSEC_IKE_POLICY_MATCH - Policy match error.
 .
 
@@ -22295,6 +28368,9 @@ ERROR_IPSEC_IKE_UNSUPPORTED_ID - Unsupported ID.
 Language=Russian
 ERROR_IPSEC_IKE_UNSUPPORTED_ID - Unsupported ID.
 .
+Language=Polish
+ERROR_IPSEC_IKE_UNSUPPORTED_ID - Unsupported ID.
+.
 
 MessageId=13870
 Severity=Success
@@ -22304,6 +28380,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_HASH - Hash verification failed.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_HASH - Hash verification failed.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_HASH - Hash verification failed.
 .
 
@@ -22317,6 +28396,9 @@ ERROR_IPSEC_IKE_INVALID_HASH_ALG - Invalid hash algorithm.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_HASH_ALG - Invalid hash algorithm.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_HASH_ALG - Invalid hash algorithm.
+.
 
 MessageId=13872
 Severity=Success
@@ -22326,6 +28408,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_HASH_SIZE - Invalid hash size.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_HASH_SIZE - Invalid hash size.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_HASH_SIZE - Invalid hash size.
 .
 
@@ -22339,6 +28424,9 @@ ERROR_IPSEC_IKE_INVALID_ENCRYPT_ALG - Invalid encryption algorithm.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_ENCRYPT_ALG - Invalid encryption algorithm.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_ENCRYPT_ALG - Invalid encryption algorithm.
+.
 
 MessageId=13874
 Severity=Success
@@ -22348,6 +28436,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_AUTH_ALG - Invalid authentication algorithm.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_AUTH_ALG - Invalid authentication algorithm.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_AUTH_ALG - Invalid authentication algorithm.
 .
 
@@ -22361,6 +28452,9 @@ ERROR_IPSEC_IKE_INVALID_SIG - Invalid certificate signature.
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_SIG - Invalid certificate signature.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_SIG - Invalid certificate signature.
+.
 
 MessageId=13876
 Severity=Success
@@ -22370,6 +28464,9 @@ Language=English
 ERROR_IPSEC_IKE_LOAD_FAILED - Load failed.
 .
 Language=Russian
+ERROR_IPSEC_IKE_LOAD_FAILED - Load failed.
+.
+Language=Polish
 ERROR_IPSEC_IKE_LOAD_FAILED - Load failed.
 .
 
@@ -22383,6 +28480,9 @@ ERROR_IPSEC_IKE_RPC_DELETE - Deleted via RPC call.
 Language=Russian
 ERROR_IPSEC_IKE_RPC_DELETE - Deleted via RPC call.
 .
+Language=Polish
+ERROR_IPSEC_IKE_RPC_DELETE - Deleted via RPC call.
+.
 
 MessageId=13878
 Severity=Success
@@ -22392,6 +28492,9 @@ Language=English
 ERROR_IPSEC_IKE_BENIGN_REINIT - Temporary state created to perform reinit. This is not a real failure.
 .
 Language=Russian
+ERROR_IPSEC_IKE_BENIGN_REINIT - Temporary state created to perform reinit. This is not a real failure.
+.
+Language=Polish
 ERROR_IPSEC_IKE_BENIGN_REINIT - Temporary state created to perform reinit. This is not a real failure.
 .
 
@@ -22405,6 +28508,9 @@ ERROR_IPSEC_IKE_INVALID_RESPONDER_LIFETIME_NOTIFY - The lifetime value received 
 Language=Russian
 ERROR_IPSEC_IKE_INVALID_RESPONDER_LIFETIME_NOTIFY - The lifetime value received in the Responder Lifetime Notify is below the Windows 2000 configured minimum value. Please fix the policy on the peer machine.
 .
+Language=Polish
+ERROR_IPSEC_IKE_INVALID_RESPONDER_LIFETIME_NOTIFY - The lifetime value received in the Responder Lifetime Notify is below the Windows 2000 configured minimum value. Please fix the policy on the peer machine.
+.
 
 MessageId=13881
 Severity=Success
@@ -22414,6 +28520,9 @@ Language=English
 ERROR_IPSEC_IKE_INVALID_CERT_KEYLEN - Key length in certificate is too small for configured security requirements.
 .
 Language=Russian
+ERROR_IPSEC_IKE_INVALID_CERT_KEYLEN - Key length in certificate is too small for configured security requirements.
+.
+Language=Polish
 ERROR_IPSEC_IKE_INVALID_CERT_KEYLEN - Key length in certificate is too small for configured security requirements.
 .
 
@@ -22427,6 +28536,9 @@ ERROR_IPSEC_IKE_MM_LIMIT - Max number of established MM SAs to peer exceeded.
 Language=Russian
 ERROR_IPSEC_IKE_MM_LIMIT - Max number of established MM SAs to peer exceeded.
 .
+Language=Polish
+ERROR_IPSEC_IKE_MM_LIMIT - Max number of established MM SAs to peer exceeded.
+.
 
 MessageId=13883
 Severity=Success
@@ -22436,6 +28548,9 @@ Language=English
 ERROR_IPSEC_IKE_NEGOTIATION_DISABLED - IKE received a policy that disables negotiation.
 .
 Language=Russian
+ERROR_IPSEC_IKE_NEGOTIATION_DISABLED - IKE received a policy that disables negotiation.
+.
+Language=Polish
 ERROR_IPSEC_IKE_NEGOTIATION_DISABLED - IKE received a policy that disables negotiation.
 .
 
@@ -22449,6 +28564,9 @@ ERROR_IPSEC_IKE_NEG_STATUS_END - ERROR_IPSEC_IKE_NEG_STATUS_END
 Language=Russian
 ERROR_IPSEC_IKE_NEG_STATUS_END - ERROR_IPSEC_IKE_NEG_STATUS_END
 .
+Language=Polish
+ERROR_IPSEC_IKE_NEG_STATUS_END - ERROR_IPSEC_IKE_NEG_STATUS_END
+.
 
 MessageId=14000
 Severity=Success
@@ -22458,6 +28576,9 @@ Language=English
 ERROR_SXS_SECTION_NOT_FOUND - The requested section was not present in the activation context.
 .
 Language=Russian
+ERROR_SXS_SECTION_NOT_FOUND - The requested section was not present in the activation context.
+.
+Language=Polish
 ERROR_SXS_SECTION_NOT_FOUND - The requested section was not present in the activation context.
 .
 
@@ -22471,6 +28592,9 @@ ERROR_SXS_CANT_GEN_ACTCTX - This application has failed to start because the app
 Language=Russian
 ERROR_SXS_CANT_GEN_ACTCTX - This application has failed to start because the application configuration is incorrect. Reinstalling the application may fix this problem.
 .
+Language=Polish
+ERROR_SXS_CANT_GEN_ACTCTX - This application has failed to start because the application configuration is incorrect. Reinstalling the application may fix this problem.
+.
 
 MessageId=14002
 Severity=Success
@@ -22480,6 +28604,9 @@ Language=English
 ERROR_SXS_INVALID_ACTCTXDATA_FORMAT - The application binding data format is invalid.
 .
 Language=Russian
+ERROR_SXS_INVALID_ACTCTXDATA_FORMAT - The application binding data format is invalid.
+.
+Language=Polish
 ERROR_SXS_INVALID_ACTCTXDATA_FORMAT - The application binding data format is invalid.
 .
 
@@ -22493,6 +28620,9 @@ ERROR_SXS_ASSEMBLY_NOT_FOUND - The referenced assembly is not installed on your 
 Language=Russian
 ERROR_SXS_ASSEMBLY_NOT_FOUND - The referenced assembly is not installed on your system.
 .
+Language=Polish
+ERROR_SXS_ASSEMBLY_NOT_FOUND - The referenced assembly is not installed on your system.
+.
 
 MessageId=14004
 Severity=Success
@@ -22502,6 +28632,9 @@ Language=English
 ERROR_SXS_MANIFEST_FORMAT_ERROR - The manifest file does not begin with the required tag and format information.
 .
 Language=Russian
+ERROR_SXS_MANIFEST_FORMAT_ERROR - The manifest file does not begin with the required tag and format information.
+.
+Language=Polish
 ERROR_SXS_MANIFEST_FORMAT_ERROR - The manifest file does not begin with the required tag and format information.
 .
 
@@ -22515,6 +28648,9 @@ ERROR_SXS_MANIFEST_PARSE_ERROR - The manifest file contains one or more syntax e
 Language=Russian
 ERROR_SXS_MANIFEST_PARSE_ERROR - The manifest file contains one or more syntax errors.
 .
+Language=Polish
+ERROR_SXS_MANIFEST_PARSE_ERROR - The manifest file contains one or more syntax errors.
+.
 
 MessageId=14006
 Severity=Success
@@ -22524,6 +28660,9 @@ Language=English
 ERROR_SXS_ACTIVATION_CONTEXT_DISABLED - The application attempted to activate a disabled activation context.
 .
 Language=Russian
+ERROR_SXS_ACTIVATION_CONTEXT_DISABLED - The application attempted to activate a disabled activation context.
+.
+Language=Polish
 ERROR_SXS_ACTIVATION_CONTEXT_DISABLED - The application attempted to activate a disabled activation context.
 .
 
@@ -22537,6 +28676,9 @@ ERROR_SXS_KEY_NOT_FOUND - The requested lookup key was not found in any active a
 Language=Russian
 ERROR_SXS_KEY_NOT_FOUND - The requested lookup key was not found in any active activation context.
 .
+Language=Polish
+ERROR_SXS_KEY_NOT_FOUND - The requested lookup key was not found in any active activation context.
+.
 
 MessageId=14008
 Severity=Success
@@ -22546,6 +28688,9 @@ Language=English
 ERROR_SXS_VERSION_CONFLICT - A component version required by the application conflicts with another component version already active.
 .
 Language=Russian
+ERROR_SXS_VERSION_CONFLICT - A component version required by the application conflicts with another component version already active.
+.
+Language=Polish
 ERROR_SXS_VERSION_CONFLICT - A component version required by the application conflicts with another component version already active.
 .
 
@@ -22559,6 +28704,9 @@ ERROR_SXS_WRONG_SECTION_TYPE - The type requested activation context section doe
 Language=Russian
 ERROR_SXS_WRONG_SECTION_TYPE - The type requested activation context section does not match the query API used.
 .
+Language=Polish
+ERROR_SXS_WRONG_SECTION_TYPE - The type requested activation context section does not match the query API used.
+.
 
 MessageId=14010
 Severity=Success
@@ -22568,6 +28716,9 @@ Language=English
 ERROR_SXS_THREAD_QUERIES_DISABLED - Lack of system resources has required isolated activation to be disabled for the current thread of execution.
 .
 Language=Russian
+ERROR_SXS_THREAD_QUERIES_DISABLED - Lack of system resources has required isolated activation to be disabled for the current thread of execution.
+.
+Language=Polish
 ERROR_SXS_THREAD_QUERIES_DISABLED - Lack of system resources has required isolated activation to be disabled for the current thread of execution.
 .
 
@@ -22581,6 +28732,9 @@ ERROR_SXS_PROCESS_DEFAULT_ALREADY_SET - An attempt to set the process default ac
 Language=Russian
 ERROR_SXS_PROCESS_DEFAULT_ALREADY_SET - An attempt to set the process default activation context failed because the process default activation context was already set.
 .
+Language=Polish
+ERROR_SXS_PROCESS_DEFAULT_ALREADY_SET - An attempt to set the process default activation context failed because the process default activation context was already set.
+.
 
 MessageId=14012
 Severity=Success
@@ -22590,6 +28744,9 @@ Language=English
 ERROR_SXS_UNKNOWN_ENCODING_GROUP - The encoding group identifier specified is not recognized.
 .
 Language=Russian
+ERROR_SXS_UNKNOWN_ENCODING_GROUP - The encoding group identifier specified is not recognized.
+.
+Language=Polish
 ERROR_SXS_UNKNOWN_ENCODING_GROUP - The encoding group identifier specified is not recognized.
 .
 
@@ -22603,6 +28760,9 @@ ERROR_SXS_UNKNOWN_ENCODING - The encoding requested is not recognized.
 Language=Russian
 ERROR_SXS_UNKNOWN_ENCODING - The encoding requested is not recognized.
 .
+Language=Polish
+ERROR_SXS_UNKNOWN_ENCODING - The encoding requested is not recognized.
+.
 
 MessageId=14014
 Severity=Success
@@ -22612,6 +28772,9 @@ Language=English
 ERROR_SXS_INVALID_XML_NAMESPACE_URI - The manifest contains a reference to an invalid URI.
 .
 Language=Russian
+ERROR_SXS_INVALID_XML_NAMESPACE_URI - The manifest contains a reference to an invalid URI.
+.
+Language=Polish
 ERROR_SXS_INVALID_XML_NAMESPACE_URI - The manifest contains a reference to an invalid URI.
 .
 
@@ -22625,6 +28788,9 @@ ERROR_SXS_ROOT_MANIFEST_DEPENDENCY_NOT_INSTALLED - The application manifest cont
 Language=Russian
 ERROR_SXS_ROOT_MANIFEST_DEPENDENCY_NOT_INSTALLED - The application manifest contains a reference to a dependent assembly which is not installed.
 .
+Language=Polish
+ERROR_SXS_ROOT_MANIFEST_DEPENDENCY_NOT_INSTALLED - The application manifest contains a reference to a dependent assembly which is not installed.
+.
 
 MessageId=14016
 Severity=Success
@@ -22634,6 +28800,9 @@ Language=English
 ERROR_SXS_LEAF_MANIFEST_DEPENDENCY_NOT_INSTALLED - The manifest for an assembly used by the application has a reference to a dependent assembly which is not installed.
 .
 Language=Russian
+ERROR_SXS_LEAF_MANIFEST_DEPENDENCY_NOT_INSTALLED - The manifest for an assembly used by the application has a reference to a dependent assembly which is not installed.
+.
+Language=Polish
 ERROR_SXS_LEAF_MANIFEST_DEPENDENCY_NOT_INSTALLED - The manifest for an assembly used by the application has a reference to a dependent assembly which is not installed.
 .
 
@@ -22647,6 +28816,9 @@ ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE - The manifest contains an attribu
 Language=Russian
 ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE - The manifest contains an attribute for the assembly identity which is not valid.
 .
+Language=Polish
+ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE - The manifest contains an attribute for the assembly identity which is not valid.
+.
 
 MessageId=14018
 Severity=Success
@@ -22656,6 +28828,9 @@ Language=English
 ERROR_SXS_MANIFEST_MISSING_REQUIRED_DEFAULT_NAMESPACE - The manifest is missing the required default namespace specification on the assembly element.
 .
 Language=Russian
+ERROR_SXS_MANIFEST_MISSING_REQUIRED_DEFAULT_NAMESPACE - The manifest is missing the required default namespace specification on the assembly element.
+.
+Language=Polish
 ERROR_SXS_MANIFEST_MISSING_REQUIRED_DEFAULT_NAMESPACE - The manifest is missing the required default namespace specification on the assembly element.
 .
 
@@ -22669,6 +28844,9 @@ ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE - The manifest has a defau
 Language=Russian
 ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE - The manifest has a default namespace specified on the assembly element but its value is not \"urn:schemas-microsoft-com:asm.v1\".
 .
+Language=Polish
+ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE - The manifest has a default namespace specified on the assembly element but its value is not \"urn:schemas-microsoft-com:asm.v1\".
+.
 
 MessageId=14020
 Severity=Success
@@ -22678,6 +28856,9 @@ Language=English
 ERROR_SXS_PRIVATE_MANIFEST_CROSS_PATH_WITH_REPARSE_POINT - The private manifest probe has crossed the reparse-point-associated path.
 .
 Language=Russian
+ERROR_SXS_PRIVATE_MANIFEST_CROSS_PATH_WITH_REPARSE_POINT - The private manifest probe has crossed the reparse-point-associated path.
+.
+Language=Polish
 ERROR_SXS_PRIVATE_MANIFEST_CROSS_PATH_WITH_REPARSE_POINT - The private manifest probe has crossed the reparse-point-associated path.
 .
 
@@ -22691,6 +28872,9 @@ ERROR_SXS_DUPLICATE_DLL_NAME - Two or more components referenced directly or ind
 Language=Russian
 ERROR_SXS_DUPLICATE_DLL_NAME - Two or more components referenced directly or indirectly by the application manifest have files by the same name.
 .
+Language=Polish
+ERROR_SXS_DUPLICATE_DLL_NAME - Two or more components referenced directly or indirectly by the application manifest have files by the same name.
+.
 
 MessageId=14022
 Severity=Success
@@ -22700,6 +28884,9 @@ Language=English
 ERROR_SXS_DUPLICATE_WINDOWCLASS_NAME - Two or more components referenced directly or indirectly by the application manifest have window classes with the same name.
 .
 Language=Russian
+ERROR_SXS_DUPLICATE_WINDOWCLASS_NAME - Two or more components referenced directly or indirectly by the application manifest have window classes with the same name.
+.
+Language=Polish
 ERROR_SXS_DUPLICATE_WINDOWCLASS_NAME - Two or more components referenced directly or indirectly by the application manifest have window classes with the same name.
 .
 
@@ -22713,6 +28900,9 @@ ERROR_SXS_DUPLICATE_CLSID - Two or more components referenced directly or indire
 Language=Russian
 ERROR_SXS_DUPLICATE_CLSID - Two or more components referenced directly or indirectly by the application manifest have the same COM server CLSIDs.
 .
+Language=Polish
+ERROR_SXS_DUPLICATE_CLSID - Two or more components referenced directly or indirectly by the application manifest have the same COM server CLSIDs.
+.
 
 MessageId=14024
 Severity=Success
@@ -22722,6 +28912,9 @@ Language=English
 ERROR_SXS_DUPLICATE_IID - Two or more components referenced directly or indirectly by the application manifest have proxies for the same COM interface IIDs.
 .
 Language=Russian
+ERROR_SXS_DUPLICATE_IID - Two or more components referenced directly or indirectly by the application manifest have proxies for the same COM interface IIDs.
+.
+Language=Polish
 ERROR_SXS_DUPLICATE_IID - Two or more components referenced directly or indirectly by the application manifest have proxies for the same COM interface IIDs.
 .
 
@@ -22735,6 +28928,9 @@ ERROR_SXS_DUPLICATE_TLBID - Two or more components referenced directly or indire
 Language=Russian
 ERROR_SXS_DUPLICATE_TLBID - Two or more components referenced directly or indirectly by the application manifest have the same COM type library TLBIDs.
 .
+Language=Polish
+ERROR_SXS_DUPLICATE_TLBID - Two or more components referenced directly or indirectly by the application manifest have the same COM type library TLBIDs.
+.
 
 MessageId=14026
 Severity=Success
@@ -22744,6 +28940,9 @@ Language=English
 ERROR_SXS_DUPLICATE_PROGID - Two or more components referenced directly or indirectly by the application manifest have the same COM ProgIDs.
 .
 Language=Russian
+ERROR_SXS_DUPLICATE_PROGID - Two or more components referenced directly or indirectly by the application manifest have the same COM ProgIDs.
+.
+Language=Polish
 ERROR_SXS_DUPLICATE_PROGID - Two or more components referenced directly or indirectly by the application manifest have the same COM ProgIDs.
 .
 
@@ -22757,6 +28956,9 @@ ERROR_SXS_DUPLICATE_ASSEMBLY_NAME - Two or more components referenced directly o
 Language=Russian
 ERROR_SXS_DUPLICATE_ASSEMBLY_NAME - Two or more components referenced directly or indirectly by the application manifest are different versions of the same component which is not permitted.
 .
+Language=Polish
+ERROR_SXS_DUPLICATE_ASSEMBLY_NAME - Two or more components referenced directly or indirectly by the application manifest are different versions of the same component which is not permitted.
+.
 
 MessageId=14028
 Severity=Success
@@ -22766,6 +28968,9 @@ Language=English
 ERROR_SXS_FILE_HASH_MISMATCH - A component's file does not match the verification information present in the component manifest.
 .
 Language=Russian
+ERROR_SXS_FILE_HASH_MISMATCH - A component's file does not match the verification information present in the component manifest.
+.
+Language=Polish
 ERROR_SXS_FILE_HASH_MISMATCH - A component's file does not match the verification information present in the component manifest.
 .
 
@@ -22779,6 +28984,9 @@ ERROR_SXS_POLICY_PARSE_ERROR - The policy manifest contains one or more syntax e
 Language=Russian
 ERROR_SXS_POLICY_PARSE_ERROR - The policy manifest contains one or more syntax errors.
 .
+Language=Polish
+ERROR_SXS_POLICY_PARSE_ERROR - The policy manifest contains one or more syntax errors.
+.
 
 MessageId=14030
 Severity=Success
@@ -22788,6 +28996,9 @@ Language=English
 ERROR_SXS_XML_E_MISSINGQUOTE - Manifest Parse Error : A string literal was expected, but no opening quote character was found.
 .
 Language=Russian
+ERROR_SXS_XML_E_MISSINGQUOTE - Manifest Parse Error : A string literal was expected, but no opening quote character was found.
+.
+Language=Polish
 ERROR_SXS_XML_E_MISSINGQUOTE - Manifest Parse Error : A string literal was expected, but no opening quote character was found.
 .
 
@@ -22801,6 +29012,9 @@ ERROR_SXS_XML_E_COMMENTSYNTAX - Manifest Parse Error : Incorrect syntax was used
 Language=Russian
 ERROR_SXS_XML_E_COMMENTSYNTAX - Manifest Parse Error : Incorrect syntax was used in a comment.
 .
+Language=Polish
+ERROR_SXS_XML_E_COMMENTSYNTAX - Manifest Parse Error : Incorrect syntax was used in a comment.
+.
 
 MessageId=14032
 Severity=Success
@@ -22810,6 +29024,9 @@ Language=English
 ERROR_SXS_XML_E_BADSTARTNAMECHAR - Manifest Parse Error : A name was started with an invalid character.
 .
 Language=Russian
+ERROR_SXS_XML_E_BADSTARTNAMECHAR - Manifest Parse Error : A name was started with an invalid character.
+.
+Language=Polish
 ERROR_SXS_XML_E_BADSTARTNAMECHAR - Manifest Parse Error : A name was started with an invalid character.
 .
 
@@ -22823,6 +29040,9 @@ ERROR_SXS_XML_E_BADNAMECHAR - Manifest Parse Error : A name contained an invalid
 Language=Russian
 ERROR_SXS_XML_E_BADNAMECHAR - Manifest Parse Error : A name contained an invalid character.
 .
+Language=Polish
+ERROR_SXS_XML_E_BADNAMECHAR - Manifest Parse Error : A name contained an invalid character.
+.
 
 MessageId=14034
 Severity=Success
@@ -22832,6 +29052,9 @@ Language=English
 ERROR_SXS_XML_E_BADCHARINSTRING - Manifest Parse Error : A string literal contained an invalid character.
 .
 Language=Russian
+ERROR_SXS_XML_E_BADCHARINSTRING - Manifest Parse Error : A string literal contained an invalid character.
+.
+Language=Polish
 ERROR_SXS_XML_E_BADCHARINSTRING - Manifest Parse Error : A string literal contained an invalid character.
 .
 
@@ -22845,6 +29068,9 @@ ERROR_SXS_XML_E_XMLDECLSYNTAX - Manifest Parse Error : Invalid syntax for an XML
 Language=Russian
 ERROR_SXS_XML_E_XMLDECLSYNTAX - Manifest Parse Error : Invalid syntax for an XML declaration.
 .
+Language=Polish
+ERROR_SXS_XML_E_XMLDECLSYNTAX - Manifest Parse Error : Invalid syntax for an XML declaration.
+.
 
 MessageId=14036
 Severity=Success
@@ -22854,6 +29080,9 @@ Language=English
 ERROR_SXS_XML_E_BADCHARDATA - Manifest Parse Error : An invalid character was found in text content.
 .
 Language=Russian
+ERROR_SXS_XML_E_BADCHARDATA - Manifest Parse Error : An invalid character was found in text content.
+.
+Language=Polish
 ERROR_SXS_XML_E_BADCHARDATA - Manifest Parse Error : An invalid character was found in text content.
 .
 
@@ -22867,6 +29096,9 @@ ERROR_SXS_XML_E_MISSINGWHITESPACE - Manifest Parse Error : Required white space 
 Language=Russian
 ERROR_SXS_XML_E_MISSINGWHITESPACE - Manifest Parse Error : Required white space was missing.
 .
+Language=Polish
+ERROR_SXS_XML_E_MISSINGWHITESPACE - Manifest Parse Error : Required white space was missing.
+.
 
 MessageId=14038
 Severity=Success
@@ -22876,6 +29108,9 @@ Language=English
 ERROR_SXS_XML_E_EXPECTINGTAGEND - Manifest Parse Error : The character '>' was expected.
 .
 Language=Russian
+ERROR_SXS_XML_E_EXPECTINGTAGEND - Manifest Parse Error : The character '>' was expected.
+.
+Language=Polish
 ERROR_SXS_XML_E_EXPECTINGTAGEND - Manifest Parse Error : The character '>' was expected.
 .
 
@@ -22889,6 +29124,9 @@ ERROR_SXS_XML_E_MISSINGSEMICOLON - Manifest Parse Error : A semi colon character
 Language=Russian
 ERROR_SXS_XML_E_MISSINGSEMICOLON - Manifest Parse Error : A semi colon character was expected.
 .
+Language=Polish
+ERROR_SXS_XML_E_MISSINGSEMICOLON - Manifest Parse Error : A semi colon character was expected.
+.
 
 MessageId=14040
 Severity=Success
@@ -22898,6 +29136,9 @@ Language=English
 ERROR_SXS_XML_E_UNBALANCEDPAREN - Manifest Parse Error : Unbalanced parentheses.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNBALANCEDPAREN - Manifest Parse Error : Unbalanced parentheses.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNBALANCEDPAREN - Manifest Parse Error : Unbalanced parentheses.
 .
 
@@ -22911,6 +29152,9 @@ ERROR_SXS_XML_E_INTERNALERROR - Manifest Parse Error : Internal error.
 Language=Russian
 ERROR_SXS_XML_E_INTERNALERROR - Manifest Parse Error : Internal error.
 .
+Language=Polish
+ERROR_SXS_XML_E_INTERNALERROR - Manifest Parse Error : Internal error.
+.
 
 MessageId=14042
 Severity=Success
@@ -22920,6 +29164,9 @@ Language=English
 ERROR_SXS_XML_E_UNEXPECTED_WHITESPACE - Manifest Parse Error : White space is not allowed at this location.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNEXPECTED_WHITESPACE - Manifest Parse Error : White space is not allowed at this location.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNEXPECTED_WHITESPACE - Manifest Parse Error : White space is not allowed at this location.
 .
 
@@ -22933,6 +29180,9 @@ ERROR_SXS_XML_E_INCOMPLETE_ENCODING - Manifest Parse Error : End of file reached
 Language=Russian
 ERROR_SXS_XML_E_INCOMPLETE_ENCODING - Manifest Parse Error : End of file reached in invalid state for current encoding.
 .
+Language=Polish
+ERROR_SXS_XML_E_INCOMPLETE_ENCODING - Manifest Parse Error : End of file reached in invalid state for current encoding.
+.
 
 MessageId=14044
 Severity=Success
@@ -22942,6 +29192,9 @@ Language=English
 ERROR_SXS_XML_E_MISSING_PAREN - Manifest Parse Error : Missing parenthesis.
 .
 Language=Russian
+ERROR_SXS_XML_E_MISSING_PAREN - Manifest Parse Error : Missing parenthesis.
+.
+Language=Polish
 ERROR_SXS_XML_E_MISSING_PAREN - Manifest Parse Error : Missing parenthesis.
 .
 
@@ -22955,6 +29208,9 @@ ERROR_SXS_XML_E_EXPECTINGCLOSEQUOTE - Manifest Parse Error : A single or double 
 Language=Russian
 ERROR_SXS_XML_E_EXPECTINGCLOSEQUOTE - Manifest Parse Error : A single or double closing quote character (\' or \") is missing.
 .
+Language=Polish
+ERROR_SXS_XML_E_EXPECTINGCLOSEQUOTE - Manifest Parse Error : A single or double closing quote character (\' or \") is missing.
+.
 
 MessageId=14046
 Severity=Success
@@ -22964,6 +29220,9 @@ Language=English
 ERROR_SXS_XML_E_MULTIPLE_COLONS - Manifest Parse Error : Multiple colons are not allowed in a name.
 .
 Language=Russian
+ERROR_SXS_XML_E_MULTIPLE_COLONS - Manifest Parse Error : Multiple colons are not allowed in a name.
+.
+Language=Polish
 ERROR_SXS_XML_E_MULTIPLE_COLONS - Manifest Parse Error : Multiple colons are not allowed in a name.
 .
 
@@ -22977,6 +29236,9 @@ ERROR_SXS_XML_E_INVALID_DECIMAL - Manifest Parse Error : Invalid character for d
 Language=Russian
 ERROR_SXS_XML_E_INVALID_DECIMAL - Manifest Parse Error : Invalid character for decimal digit.
 .
+Language=Polish
+ERROR_SXS_XML_E_INVALID_DECIMAL - Manifest Parse Error : Invalid character for decimal digit.
+.
 
 MessageId=14048
 Severity=Success
@@ -22986,6 +29248,9 @@ Language=English
 ERROR_SXS_XML_E_INVALID_HEXIDECIMAL - Manifest Parse Error : Invalid character for hexadecimal digit.
 .
 Language=Russian
+ERROR_SXS_XML_E_INVALID_HEXIDECIMAL - Manifest Parse Error : Invalid character for hexadecimal digit.
+.
+Language=Polish
 ERROR_SXS_XML_E_INVALID_HEXIDECIMAL - Manifest Parse Error : Invalid character for hexadecimal digit.
 .
 
@@ -22999,6 +29264,9 @@ ERROR_SXS_XML_E_INVALID_UNICODE - Manifest Parse Error : Invalid Unicode charact
 Language=Russian
 ERROR_SXS_XML_E_INVALID_UNICODE - Manifest Parse Error : Invalid Unicode character value for this platform.
 .
+Language=Polish
+ERROR_SXS_XML_E_INVALID_UNICODE - Manifest Parse Error : Invalid Unicode character value for this platform.
+.
 
 MessageId=14050
 Severity=Success
@@ -23008,6 +29276,9 @@ Language=English
 ERROR_SXS_XML_E_WHITESPACEORQUESTIONMARK - Manifest Parse Error : Expecting white space or '?'.
 .
 Language=Russian
+ERROR_SXS_XML_E_WHITESPACEORQUESTIONMARK - Manifest Parse Error : Expecting white space or '?'.
+.
+Language=Polish
 ERROR_SXS_XML_E_WHITESPACEORQUESTIONMARK - Manifest Parse Error : Expecting white space or '?'.
 .
 
@@ -23021,6 +29292,9 @@ ERROR_SXS_XML_E_UNEXPECTEDENDTAG - Manifest Parse Error : End tag was not expect
 Language=Russian
 ERROR_SXS_XML_E_UNEXPECTEDENDTAG - Manifest Parse Error : End tag was not expected at this location.
 .
+Language=Polish
+ERROR_SXS_XML_E_UNEXPECTEDENDTAG - Manifest Parse Error : End tag was not expected at this location.
+.
 
 MessageId=14052
 Severity=Success
@@ -23030,6 +29304,9 @@ Language=English
 ERROR_SXS_XML_E_UNCLOSEDTAG - Manifest Parse Error : The following tags were not closed: %1.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNCLOSEDTAG - Manifest Parse Error : The following tags were not closed: %1.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNCLOSEDTAG - Manifest Parse Error : The following tags were not closed: %1.
 .
 
@@ -23043,6 +29320,9 @@ ERROR_SXS_XML_E_DUPLICATEATTRIBUTE - Manifest Parse Error : Duplicate attribute.
 Language=Russian
 ERROR_SXS_XML_E_DUPLICATEATTRIBUTE - Manifest Parse Error : Duplicate attribute.
 .
+Language=Polish
+ERROR_SXS_XML_E_DUPLICATEATTRIBUTE - Manifest Parse Error : Duplicate attribute.
+.
 
 MessageId=14054
 Severity=Success
@@ -23052,6 +29332,9 @@ Language=English
 ERROR_SXS_XML_E_MULTIPLEROOTS - Manifest Parse Error : Only one top level element is allowed in an XML document.
 .
 Language=Russian
+ERROR_SXS_XML_E_MULTIPLEROOTS - Manifest Parse Error : Only one top level element is allowed in an XML document.
+.
+Language=Polish
 ERROR_SXS_XML_E_MULTIPLEROOTS - Manifest Parse Error : Only one top level element is allowed in an XML document.
 .
 
@@ -23065,6 +29348,9 @@ ERROR_SXS_XML_E_INVALIDATROOTLEVEL - Manifest Parse Error : Invalid at the top l
 Language=Russian
 ERROR_SXS_XML_E_INVALIDATROOTLEVEL - Manifest Parse Error : Invalid at the top level of the document.
 .
+Language=Polish
+ERROR_SXS_XML_E_INVALIDATROOTLEVEL - Manifest Parse Error : Invalid at the top level of the document.
+.
 
 MessageId=14056
 Severity=Success
@@ -23074,6 +29360,9 @@ Language=English
 ERROR_SXS_XML_E_BADXMLDECL - Manifest Parse Error : Invalid XML declaration.
 .
 Language=Russian
+ERROR_SXS_XML_E_BADXMLDECL - Manifest Parse Error : Invalid XML declaration.
+.
+Language=Polish
 ERROR_SXS_XML_E_BADXMLDECL - Manifest Parse Error : Invalid XML declaration.
 .
 
@@ -23087,6 +29376,9 @@ ERROR_SXS_XML_E_MISSINGROOT - Manifest Parse Error : XML document must have a to
 Language=Russian
 ERROR_SXS_XML_E_MISSINGROOT - Manifest Parse Error : XML document must have a top level element.
 .
+Language=Polish
+ERROR_SXS_XML_E_MISSINGROOT - Manifest Parse Error : XML document must have a top level element.
+.
 
 MessageId=14058
 Severity=Success
@@ -23096,6 +29388,9 @@ Language=English
 ERROR_SXS_XML_E_UNEXPECTEDEOF - Manifest Parse Error : Unexpected end of file.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNEXPECTEDEOF - Manifest Parse Error : Unexpected end of file.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNEXPECTEDEOF - Manifest Parse Error : Unexpected end of file.
 .
 
@@ -23109,6 +29404,9 @@ ERROR_SXS_XML_E_BADPEREFINSUBSET - Manifest Parse Error : Parameter entities can
 Language=Russian
 ERROR_SXS_XML_E_BADPEREFINSUBSET - Manifest Parse Error : Parameter entities cannot be used inside markup declarations in an internal subset.
 .
+Language=Polish
+ERROR_SXS_XML_E_BADPEREFINSUBSET - Manifest Parse Error : Parameter entities cannot be used inside markup declarations in an internal subset.
+.
 
 MessageId=14060
 Severity=Success
@@ -23118,6 +29416,9 @@ Language=English
 ERROR_SXS_XML_E_UNCLOSEDSTARTTAG - Manifest Parse Error : Element was not closed.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNCLOSEDSTARTTAG - Manifest Parse Error : Element was not closed.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNCLOSEDSTARTTAG - Manifest Parse Error : Element was not closed.
 .
 
@@ -23131,6 +29432,9 @@ ERROR_SXS_XML_E_UNCLOSEDENDTAG - Manifest Parse Error : End element was missing 
 Language=Russian
 ERROR_SXS_XML_E_UNCLOSEDENDTAG - Manifest Parse Error : End element was missing the character '>'.
 .
+Language=Polish
+ERROR_SXS_XML_E_UNCLOSEDENDTAG - Manifest Parse Error : End element was missing the character '>'.
+.
 
 MessageId=14062
 Severity=Success
@@ -23140,6 +29444,9 @@ Language=English
 ERROR_SXS_XML_E_UNCLOSEDSTRING - Manifest Parse Error : A string literal was not closed.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNCLOSEDSTRING - Manifest Parse Error : A string literal was not closed.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNCLOSEDSTRING - Manifest Parse Error : A string literal was not closed.
 .
 
@@ -23153,6 +29460,9 @@ ERROR_SXS_XML_E_UNCLOSEDCOMMENT - Manifest Parse Error : A comment was not close
 Language=Russian
 ERROR_SXS_XML_E_UNCLOSEDCOMMENT - Manifest Parse Error : A comment was not closed.
 .
+Language=Polish
+ERROR_SXS_XML_E_UNCLOSEDCOMMENT - Manifest Parse Error : A comment was not closed.
+.
 
 MessageId=14064
 Severity=Success
@@ -23162,6 +29472,9 @@ Language=English
 ERROR_SXS_XML_E_UNCLOSEDDECL - Manifest Parse Error : A declaration was not closed.
 .
 Language=Russian
+ERROR_SXS_XML_E_UNCLOSEDDECL - Manifest Parse Error : A declaration was not closed.
+.
+Language=Polish
 ERROR_SXS_XML_E_UNCLOSEDDECL - Manifest Parse Error : A declaration was not closed.
 .
 
@@ -23175,6 +29488,9 @@ ERROR_SXS_XML_E_UNCLOSEDCDATA - Manifest Parse Error : A CDATA section was not c
 Language=Russian
 ERROR_SXS_XML_E_UNCLOSEDCDATA - Manifest Parse Error : A CDATA section was not closed.
 .
+Language=Polish
+ERROR_SXS_XML_E_UNCLOSEDCDATA - Manifest Parse Error : A CDATA section was not closed.
+.
 
 MessageId=14066
 Severity=Success
@@ -23184,6 +29500,9 @@ Language=English
 ERROR_SXS_XML_E_RESERVEDNAMESPACE - Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string \"xml\".
 .
 Language=Russian
+ERROR_SXS_XML_E_RESERVEDNAMESPACE - Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string \"xml\".
+.
+Language=Polish
 ERROR_SXS_XML_E_RESERVEDNAMESPACE - Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string \"xml\".
 .
 
@@ -23197,6 +29516,9 @@ ERROR_SXS_XML_E_INVALIDENCODING - Manifest Parse Error : System does not support
 Language=Russian
 ERROR_SXS_XML_E_INVALIDENCODING - Manifest Parse Error : System does not support the specified encoding.
 .
+Language=Polish
+ERROR_SXS_XML_E_INVALIDENCODING - Manifest Parse Error : System does not support the specified encoding.
+.
 
 MessageId=14068
 Severity=Success
@@ -23206,6 +29528,9 @@ Language=English
 ERROR_SXS_XML_E_INVALIDSWITCH - Manifest Parse Error : Switch from current encoding to specified encoding not supported.
 .
 Language=Russian
+ERROR_SXS_XML_E_INVALIDSWITCH - Manifest Parse Error : Switch from current encoding to specified encoding not supported.
+.
+Language=Polish
 ERROR_SXS_XML_E_INVALIDSWITCH - Manifest Parse Error : Switch from current encoding to specified encoding not supported.
 .
 
@@ -23219,6 +29544,9 @@ ERROR_SXS_XML_E_BADXMLCASE - Manifest Parse Error : The name 'xml' is reserved a
 Language=Russian
 ERROR_SXS_XML_E_BADXMLCASE - Manifest Parse Error : The name 'xml' is reserved and must be lower case.
 .
+Language=Polish
+ERROR_SXS_XML_E_BADXMLCASE - Manifest Parse Error : The name 'xml' is reserved and must be lower case.
+.
 
 MessageId=14070
 Severity=Success
@@ -23228,6 +29556,9 @@ Language=English
 ERROR_SXS_XML_E_INVALID_STANDALONE - Manifest Parse Error : The standalone attribute must have the value 'yes' or 'no'.
 .
 Language=Russian
+ERROR_SXS_XML_E_INVALID_STANDALONE - Manifest Parse Error : The standalone attribute must have the value 'yes' or 'no'.
+.
+Language=Polish
 ERROR_SXS_XML_E_INVALID_STANDALONE - Manifest Parse Error : The standalone attribute must have the value 'yes' or 'no'.
 .
 
@@ -23241,6 +29572,9 @@ ERROR_SXS_XML_E_UNEXPECTED_STANDALONE - Manifest Parse Error : The standalone at
 Language=Russian
 ERROR_SXS_XML_E_UNEXPECTED_STANDALONE - Manifest Parse Error : The standalone attribute cannot be used in external entities.
 .
+Language=Polish
+ERROR_SXS_XML_E_UNEXPECTED_STANDALONE - Manifest Parse Error : The standalone attribute cannot be used in external entities.
+.
 
 MessageId=14072
 Severity=Success
@@ -23250,6 +29584,9 @@ Language=English
 ERROR_SXS_XML_E_INVALID_VERSION - Manifest Parse Error : Invalid version number.
 .
 Language=Russian
+ERROR_SXS_XML_E_INVALID_VERSION - Manifest Parse Error : Invalid version number.
+.
+Language=Polish
 ERROR_SXS_XML_E_INVALID_VERSION - Manifest Parse Error : Invalid version number.
 .
 
@@ -23263,6 +29600,9 @@ ERROR_SXS_XML_E_MISSINGEQUALS - Manifest Parse Error : Missing equals sign betwe
 Language=Russian
 ERROR_SXS_XML_E_MISSINGEQUALS - Manifest Parse Error : Missing equals sign between attribute and attribute value.
 .
+Language=Polish
+ERROR_SXS_XML_E_MISSINGEQUALS - Manifest Parse Error : Missing equals sign between attribute and attribute value.
+.
 
 MessageId=14074
 Severity=Success
@@ -23272,6 +29612,9 @@ Language=English
 ERROR_SXS_PROTECTION_RECOVERY_FAILED - Assembly Protection Error: Unable to recover the specified assembly.
 .
 Language=Russian
+ERROR_SXS_PROTECTION_RECOVERY_FAILED - Assembly Protection Error: Unable to recover the specified assembly.
+.
+Language=Polish
 ERROR_SXS_PROTECTION_RECOVERY_FAILED - Assembly Protection Error: Unable to recover the specified assembly.
 .
 
@@ -23285,6 +29628,9 @@ ERROR_SXS_PROTECTION_PUBLIC_KEY_TOO_SHORT - Assembly Protection Error: The publi
 Language=Russian
 ERROR_SXS_PROTECTION_PUBLIC_KEY_TOO_SHORT - Assembly Protection Error: The public key for an assembly was too short to be allowed.
 .
+Language=Polish
+ERROR_SXS_PROTECTION_PUBLIC_KEY_TOO_SHORT - Assembly Protection Error: The public key for an assembly was too short to be allowed.
+.
 
 MessageId=14076
 Severity=Success
@@ -23294,6 +29640,9 @@ Language=English
 ERROR_SXS_PROTECTION_CATALOG_NOT_VALID - Assembly Protection Error: The catalog for an assembly is not valid, or does not match the assembly's manifest.
 .
 Language=Russian
+ERROR_SXS_PROTECTION_CATALOG_NOT_VALID - Assembly Protection Error: The catalog for an assembly is not valid, or does not match the assembly's manifest.
+.
+Language=Polish
 ERROR_SXS_PROTECTION_CATALOG_NOT_VALID - Assembly Protection Error: The catalog for an assembly is not valid, or does not match the assembly's manifest.
 .
 
@@ -23307,6 +29656,9 @@ ERROR_SXS_UNTRANSLATABLE_HRESULT - An HRESULT could not be translated to a corre
 Language=Russian
 ERROR_SXS_UNTRANSLATABLE_HRESULT - An HRESULT could not be translated to a corresponding Win32 error code.
 .
+Language=Polish
+ERROR_SXS_UNTRANSLATABLE_HRESULT - An HRESULT could not be translated to a corresponding Win32 error code.
+.
 
 MessageId=14078
 Severity=Success
@@ -23316,6 +29668,9 @@ Language=English
 ERROR_SXS_PROTECTION_CATALOG_FILE_MISSING - Assembly Protection Error: The catalog for an assembly is missing.
 .
 Language=Russian
+ERROR_SXS_PROTECTION_CATALOG_FILE_MISSING - Assembly Protection Error: The catalog for an assembly is missing.
+.
+Language=Polish
 ERROR_SXS_PROTECTION_CATALOG_FILE_MISSING - Assembly Protection Error: The catalog for an assembly is missing.
 .
 
@@ -23329,6 +29684,9 @@ ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE - The supplied assembly identity i
 Language=Russian
 ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE - The supplied assembly identity is missing one or more attributes which must be present in this context.
 .
+Language=Polish
+ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE - The supplied assembly identity is missing one or more attributes which must be present in this context.
+.
 
 MessageId=14080
 Severity=Success
@@ -23338,6 +29696,9 @@ Language=English
 ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME - The supplied assembly identity has one or more attribute names that contain characters not permitted in XML names.
 .
 Language=Russian
+ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME - The supplied assembly identity has one or more attribute names that contain characters not permitted in XML names.
+.
+Language=Polish
 ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME - The supplied assembly identity has one or more attribute names that contain characters not permitted in XML names.
 .
 
@@ -23351,6 +29712,9 @@ ERROR_SXS_ASSEMBLY_MISSING - The referenced assembly could not be found.
 Language=Russian
 ERROR_SXS_ASSEMBLY_MISSING - The referenced assembly could not be found.
 .
+Language=Polish
+ERROR_SXS_ASSEMBLY_MISSING - The referenced assembly could not be found.
+.
 
 MessageId=14082
 Severity=Success
@@ -23360,6 +29724,9 @@ Language=English
 ERROR_SXS_CORRUPT_ACTIVATION_STACK - The activation context activation stack for the running thread of execution is corrupt.
 .
 Language=Russian
+ERROR_SXS_CORRUPT_ACTIVATION_STACK - The activation context activation stack for the running thread of execution is corrupt.
+.
+Language=Polish
 ERROR_SXS_CORRUPT_ACTIVATION_STACK - The activation context activation stack for the running thread of execution is corrupt.
 .
 
@@ -23373,6 +29740,9 @@ ERROR_SXS_CORRUPTION - The application isolation metadata for this process or th
 Language=Russian
 ERROR_SXS_CORRUPTION - The application isolation metadata for this process or thread has become corrupt.
 .
+Language=Polish
+ERROR_SXS_CORRUPTION - The application isolation metadata for this process or thread has become corrupt.
+.
 
 MessageId=14084
 Severity=Success
@@ -23382,6 +29752,9 @@ Language=English
 ERROR_SXS_EARLY_DEACTIVATION - The activation context being deactivated is not the most recently activated one.
 .
 Language=Russian
+ERROR_SXS_EARLY_DEACTIVATION - The activation context being deactivated is not the most recently activated one.
+.
+Language=Polish
 ERROR_SXS_EARLY_DEACTIVATION - The activation context being deactivated is not the most recently activated one.
 .
 
@@ -23395,6 +29768,9 @@ ERROR_SXS_INVALID_DEACTIVATION - The activation context being deactivated is not
 Language=Russian
 ERROR_SXS_INVALID_DEACTIVATION - The activation context being deactivated is not active for the current thread of execution.
 .
+Language=Polish
+ERROR_SXS_INVALID_DEACTIVATION - The activation context being deactivated is not active for the current thread of execution.
+.
 
 MessageId=14086
 Severity=Success
@@ -23404,6 +29780,9 @@ Language=English
 ERROR_SXS_MULTIPLE_DEACTIVATION - The activation context being deactivated has already been deactivated.
 .
 Language=Russian
+ERROR_SXS_MULTIPLE_DEACTIVATION - The activation context being deactivated has already been deactivated.
+.
+Language=Polish
 ERROR_SXS_MULTIPLE_DEACTIVATION - The activation context being deactivated has already been deactivated.
 .
 
@@ -23417,6 +29796,9 @@ ERROR_SXS_PROCESS_TERMINATION_REQUESTED - A component used by the isolation faci
 Language=Russian
 ERROR_SXS_PROCESS_TERMINATION_REQUESTED - A component used by the isolation facility has requested to terminate the process.
 .
+Language=Polish
+ERROR_SXS_PROCESS_TERMINATION_REQUESTED - A component used by the isolation facility has requested to terminate the process.
+.
 
 MessageId=14088
 Severity=Success
@@ -23426,6 +29808,9 @@ Language=English
 ERROR_SXS_RELEASE_ACTIVATION_CONTEXT - A kernel mode component is releasing a reference on an activation context.
 .
 Language=Russian
+ERROR_SXS_RELEASE_ACTIVATION_CONTEXT - A kernel mode component is releasing a reference on an activation context.
+.
+Language=Polish
 ERROR_SXS_RELEASE_ACTIVATION_CONTEXT - A kernel mode component is releasing a reference on an activation context.
 .
 
@@ -23439,6 +29824,9 @@ ERROR_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY - The activation context of sy
 Language=Russian
 ERROR_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY - The activation context of system default assembly could not be generated.
 .
+Language=Polish
+ERROR_SXS_SYSTEM_DEFAULT_ACTIVATION_CONTEXT_EMPTY - The activation context of system default assembly could not be generated.
+.
 
 MessageId=14090
 Severity=Success
@@ -23448,6 +29836,9 @@ Language=English
 ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE - The value of an attribute in an identity is not within the legal range.
 .
 Language=Russian
+ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE - The value of an attribute in an identity is not within the legal range.
+.
+Language=Polish
 ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_VALUE - The value of an attribute in an identity is not within the legal range.
 .
 
@@ -23461,6 +29852,9 @@ ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME - The name of an attribute in an ident
 Language=Russian
 ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME - The name of an attribute in an identity is not within the legal range.
 .
+Language=Polish
+ERROR_SXS_INVALID_IDENTITY_ATTRIBUTE_NAME - The name of an attribute in an identity is not within the legal range.
+.
 
 MessageId=14092
 Severity=Success
@@ -23470,6 +29864,9 @@ Language=English
 ERROR_SXS_IDENTITY_DUPLICATE_ATTRIBUTE - An identity contains two definitions for the same attribute.
 .
 Language=Russian
+ERROR_SXS_IDENTITY_DUPLICATE_ATTRIBUTE - An identity contains two definitions for the same attribute.
+.
+Language=Polish
 ERROR_SXS_IDENTITY_DUPLICATE_ATTRIBUTE - An identity contains two definitions for the same attribute.
 .
 
@@ -23483,6 +29880,9 @@ ERROR_SXS_IDENTITY_PARSE_ERROR - The identity string is malformed. This may be d
 Language=Russian
 ERROR_SXS_IDENTITY_PARSE_ERROR - The identity string is malformed. This may be due to a trailing comma, more than two unnamed attributes, missing attribute name or missing attribute value.
 .
+Language=Polish
+ERROR_SXS_IDENTITY_PARSE_ERROR - The identity string is malformed. This may be due to a trailing comma, more than two unnamed attributes, missing attribute name or missing attribute value.
+.
 
 MessageId=15000
 Severity=Success
@@ -23492,6 +29892,9 @@ Language=English
 ERROR_EVT_INVALID_CHANNEL_PATH - The specified channel path is invalid. See extended error info for more details.
 .
 Language=Russian
+ERROR_EVT_INVALID_CHANNEL_PATH - The specified channel path is invalid. See extended error info for more details.
+.
+Language=Polish
 ERROR_EVT_INVALID_CHANNEL_PATH - The specified channel path is invalid. See extended error info for more details.
 .
 
@@ -23505,6 +29908,9 @@ ERROR_EVT_INVALID_QUERY - The specified query is invalid. See extended error inf
 Language=Russian
 ERROR_EVT_INVALID_QUERY - The specified query is invalid. See extended error info for more details.
 .
+Language=Polish
+ERROR_EVT_INVALID_QUERY - The specified query is invalid. See extended error info for more details.
+.
 
 MessageId=15002
 Severity=Success
@@ -23514,6 +29920,9 @@ Language=English
 ERROR_EVT_PUBLISHER_MANIFEST_NOT_FOUND - The publisher did indicate they have a manifest/resource but a manifest/resource could not be found.
 .
 Language=Russian
+ERROR_EVT_PUBLISHER_MANIFEST_NOT_FOUND - The publisher did indicate they have a manifest/resource but a manifest/resource could not be found.
+.
+Language=Polish
 ERROR_EVT_PUBLISHER_MANIFEST_NOT_FOUND - The publisher did indicate they have a manifest/resource but a manifest/resource could not be found.
 .
 
@@ -23527,6 +29936,9 @@ ERROR_EVT_PUBLISHER_MANIFEST_NOT_SPECIFIED - The publisher does not have a manif
 Language=Russian
 ERROR_EVT_PUBLISHER_MANIFEST_NOT_SPECIFIED - The publisher does not have a manifest and is performing an operation which requires they have a manifest.
 .
+Language=Polish
+ERROR_EVT_PUBLISHER_MANIFEST_NOT_SPECIFIED - The publisher does not have a manifest and is performing an operation which requires they have a manifest.
+.
 
 MessageId=15004
 Severity=Success
@@ -23536,6 +29948,9 @@ Language=English
 ERROR_EVT_NO_REGISTERED_TEMPLATE - There is no registered template for specified event id.
 .
 Language=Russian
+ERROR_EVT_NO_REGISTERED_TEMPLATE - There is no registered template for specified event id.
+.
+Language=Polish
 ERROR_EVT_NO_REGISTERED_TEMPLATE - There is no registered template for specified event id.
 .
 
@@ -23549,6 +29964,9 @@ ERROR_EVT_EVENT_CHANNEL_MISMATCH - The specified event was declared in the manif
 Language=Russian
 ERROR_EVT_EVENT_CHANNEL_MISMATCH - The specified event was declared in the manifest to go a different channel than the one this publisher handle is bound to.
 .
+Language=Polish
+ERROR_EVT_EVENT_CHANNEL_MISMATCH - The specified event was declared in the manifest to go a different channel than the one this publisher handle is bound to.
+.
 
 MessageId=15006
 Severity=Success
@@ -23558,6 +29976,9 @@ Language=English
 ERROR_EVT_UNEXPECTED_VALUE_TYPE - The type of a specified substitution value does not match the type expected from the template definition.
 .
 Language=Russian
+ERROR_EVT_UNEXPECTED_VALUE_TYPE - The type of a specified substitution value does not match the type expected from the template definition.
+.
+Language=Polish
 ERROR_EVT_UNEXPECTED_VALUE_TYPE - The type of a specified substitution value does not match the type expected from the template definition.
 .
 
@@ -23571,6 +29992,9 @@ ERROR_EVT_UNEXPECTED_NUM_VALUES - The number of specified substitution values do
 Language=Russian
 ERROR_EVT_UNEXPECTED_NUM_VALUES - The number of specified substitution values does not match the number expected from the template definition.
 .
+Language=Polish
+ERROR_EVT_UNEXPECTED_NUM_VALUES - The number of specified substitution values does not match the number expected from the template definition.
+.
 
 MessageId=15008
 Severity=Success
@@ -23580,6 +30004,9 @@ Language=English
 ERROR_EVT_CHANNEL_NOT_FOUND - The specified channel could not be found. Check channel configuration.
 .
 Language=Russian
+ERROR_EVT_CHANNEL_NOT_FOUND - The specified channel could not be found. Check channel configuration.
+.
+Language=Polish
 ERROR_EVT_CHANNEL_NOT_FOUND - The specified channel could not be found. Check channel configuration.
 .
 
@@ -23593,6 +30020,9 @@ ERROR_EVT_MALFORMED_XML_TEXT - The specified xml text was not well-formed. See E
 Language=Russian
 ERROR_EVT_MALFORMED_XML_TEXT - The specified xml text was not well-formed. See Extended Error for more details.
 .
+Language=Polish
+ERROR_EVT_MALFORMED_XML_TEXT - The specified xml text was not well-formed. See Extended Error for more details.
+.
 
 MessageId=15010
 Severity=Success
@@ -23602,6 +30032,9 @@ Language=English
 ERROR_EVT_CHANNEL_PATH_TOO_GENERAL - The specified channel path selects more than one instance of a channel. The operation requires that only one channel be selected. It may be necessary to scope channel path to version / publicKeyToken to select only one instance.
 .
 Language=Russian
+ERROR_EVT_CHANNEL_PATH_TOO_GENERAL - The specified channel path selects more than one instance of a channel. The operation requires that only one channel be selected. It may be necessary to scope channel path to version / publicKeyToken to select only one instance.
+.
+Language=Polish
 ERROR_EVT_CHANNEL_PATH_TOO_GENERAL - The specified channel path selects more than one instance of a channel. The operation requires that only one channel be selected. It may be necessary to scope channel path to version / publicKeyToken to select only one instance.
 .
 
@@ -23615,6 +30048,9 @@ E_OUTOFMEMORY - Out of memory
 Language=Russian
 E_OUTOFMEMORY - Out of memory
 .
+Language=Polish
+E_OUTOFMEMORY - Out of memory
+.
 
 MessageId=0x0057
 Severity=Warning
@@ -23624,6 +30060,9 @@ Language=English
 E_INVALIDARG - One or more arguments are invalid
 .
 Language=Russian
+E_INVALIDARG - One or more arguments are invalid
+.
+Language=Polish
 E_INVALIDARG - One or more arguments are invalid
 .
 
@@ -23637,6 +30076,9 @@ E_POINTER - Invalid handle
 Language=Russian
 E_POINTER - Invalid handle
 .
+Language=Polish
+E_POINTER - Invalid handle
+.
 
 MessageId=0x0005
 Severity=Warning
@@ -23646,6 +30088,9 @@ Language=English
 E_ACCESSDENIED - WIN32 access denied error
 .
 Language=Russian
+E_ACCESSDENIED - WIN32 access denied error
+.
+Language=Polish
 E_ACCESSDENIED - WIN32 access denied error
 .
 
@@ -23660,6 +30105,9 @@ OLE_E_OLEVERB - Invalid OLEVERB structure
 Language=Russian
 OLE_E_OLEVERB - Invalid OLEVERB structure
 .
+Language=Polish
+OLE_E_OLEVERB - Invalid OLEVERB structure
+.
 
 MessageId=0x0001
 Severity=Warning
@@ -23669,6 +30117,9 @@ Language=English
 OLE_E_ADVF - Invalid advise flags
 .
 Language=Russian
+OLE_E_ADVF - Invalid advise flags
+.
+Language=Polish
 OLE_E_ADVF - Invalid advise flags
 .
 
@@ -23682,6 +30133,9 @@ OLE_E_ENUM_NOMORE - Can't enumerate any more, because the associated data is mis
 Language=Russian
 OLE_E_ENUM_NOMORE - Can't enumerate any more, because the associated data is missing
 .
+Language=Polish
+OLE_E_ENUM_NOMORE - Can't enumerate any more, because the associated data is missing
+.
 
 MessageId=0x0003
 Severity=Warning
@@ -23691,6 +30145,9 @@ Language=English
 OLE_E_ADVISENOTSUPPORTED - This implementation doesn't take advises
 .
 Language=Russian
+OLE_E_ADVISENOTSUPPORTED - This implementation doesn't take advises
+.
+Language=Polish
 OLE_E_ADVISENOTSUPPORTED - This implementation doesn't take advises
 .
 
@@ -23704,6 +30161,9 @@ OLE_E_NOCONNECTION - There is no connection for this connection ID
 Language=Russian
 OLE_E_NOCONNECTION - There is no connection for this connection ID
 .
+Language=Polish
+OLE_E_NOCONNECTION - There is no connection for this connection ID
+.
 
 MessageId=0x0005
 Severity=Warning
@@ -23713,6 +30173,9 @@ Language=English
 OLE_E_NOTRUNNING - Need to run the object to perform this operation
 .
 Language=Russian
+OLE_E_NOTRUNNING - Need to run the object to perform this operation
+.
+Language=Polish
 OLE_E_NOTRUNNING - Need to run the object to perform this operation
 .
 
@@ -23726,6 +30189,9 @@ OLE_E_NOCACHE - There is no cache to operate on
 Language=Russian
 OLE_E_NOCACHE - There is no cache to operate on
 .
+Language=Polish
+OLE_E_NOCACHE - There is no cache to operate on
+.
 
 MessageId=0x0007
 Severity=Warning
@@ -23735,6 +30201,9 @@ Language=English
 OLE_E_BLANK - Uninitialized object
 .
 Language=Russian
+OLE_E_BLANK - Uninitialized object
+.
+Language=Polish
 OLE_E_BLANK - Uninitialized object
 .
 
@@ -23748,6 +30217,9 @@ OLE_E_CLASSDIFF - Linked object's source class has changed
 Language=Russian
 OLE_E_CLASSDIFF - Linked object's source class has changed
 .
+Language=Polish
+OLE_E_CLASSDIFF - Linked object's source class has changed
+.
 
 MessageId=0x0009
 Severity=Warning
@@ -23757,6 +30229,9 @@ Language=English
 OLE_E_CANT_GETMONIKER - Not able to get the moniker of the object
 .
 Language=Russian
+OLE_E_CANT_GETMONIKER - Not able to get the moniker of the object
+.
+Language=Polish
 OLE_E_CANT_GETMONIKER - Not able to get the moniker of the object
 .
 
@@ -23770,6 +30245,9 @@ OLE_E_CANT_BINDTOSOURCE - Not able to bind to the source
 Language=Russian
 OLE_E_CANT_BINDTOSOURCE - Not able to bind to the source
 .
+Language=Polish
+OLE_E_CANT_BINDTOSOURCE - Not able to bind to the source
+.
 
 MessageId=0x000B
 Severity=Warning
@@ -23779,6 +30257,9 @@ Language=English
 OLE_E_STATIC - Object is static; operation not allowed
 .
 Language=Russian
+OLE_E_STATIC - Object is static; operation not allowed
+.
+Language=Polish
 OLE_E_STATIC - Object is static; operation not allowed
 .
 
@@ -23792,6 +30273,9 @@ OLE_E_PROMPTSAVECANCELLED - User canceled out of save dialog
 Language=Russian
 OLE_E_PROMPTSAVECANCELLED - User canceled out of save dialog
 .
+Language=Polish
+OLE_E_PROMPTSAVECANCELLED - User canceled out of save dialog
+.
 
 MessageId=0x000D
 Severity=Warning
@@ -23801,6 +30285,9 @@ Language=English
 OLE_E_INVALIDRECT - Invalid rectangle
 .
 Language=Russian
+OLE_E_INVALIDRECT - Invalid rectangle
+.
+Language=Polish
 OLE_E_INVALIDRECT - Invalid rectangle
 .
 
@@ -23814,6 +30301,9 @@ OLE_E_WRONGCOMPOBJ - compobj.dll is too old for the ole2.dll initialized
 Language=Russian
 OLE_E_WRONGCOMPOBJ - compobj.dll is too old for the ole2.dll initialized
 .
+Language=Polish
+OLE_E_WRONGCOMPOBJ - compobj.dll is too old for the ole2.dll initialized
+.
 
 MessageId=0x000F
 Severity=Warning
@@ -23823,6 +30313,9 @@ Language=English
 OLE_E_INVALIDHWND - Invalid window handle
 .
 Language=Russian
+OLE_E_INVALIDHWND - Invalid window handle
+.
+Language=Polish
 OLE_E_INVALIDHWND - Invalid window handle
 .
 
@@ -23836,6 +30329,9 @@ OLE_E_NOT_INPLACEACTIVE - Object is not in any of the inplace active states
 Language=Russian
 OLE_E_NOT_INPLACEACTIVE - Object is not in any of the inplace active states
 .
+Language=Polish
+OLE_E_NOT_INPLACEACTIVE - Object is not in any of the inplace active states
+.
 
 MessageId=0x0011
 Severity=Warning
@@ -23845,6 +30341,9 @@ Language=English
 OLE_E_CANTCONVERT - Not able to convert object
 .
 Language=Russian
+OLE_E_CANTCONVERT - Not able to convert object
+.
+Language=Polish
 OLE_E_CANTCONVERT - Not able to convert object
 .
 
@@ -23858,6 +30357,9 @@ OLE_E_NOSTORAGE - Not able to perform the operation because object is not given 
 Language=Russian
 OLE_E_NOSTORAGE - Not able to perform the operation because object is not given storage yet
 .
+Language=Polish
+OLE_E_NOSTORAGE - Not able to perform the operation because object is not given storage yet
+.
 
 MessageId=0x0064
 Severity=Warning
@@ -23867,6 +30369,9 @@ Language=English
 DV_E_FORMATETC - Invalid FORMATETC structure
 .
 Language=Russian
+DV_E_FORMATETC - Invalid FORMATETC structure
+.
+Language=Polish
 DV_E_FORMATETC - Invalid FORMATETC structure
 .
 
@@ -23880,6 +30385,9 @@ DV_E_DVTARGETDEVICE - Invalid DVTARGETDEVICE structure
 Language=Russian
 DV_E_DVTARGETDEVICE - Invalid DVTARGETDEVICE structure
 .
+Language=Polish
+DV_E_DVTARGETDEVICE - Invalid DVTARGETDEVICE structure
+.
 
 MessageId=0x0066
 Severity=Warning
@@ -23889,6 +30397,9 @@ Language=English
 DV_E_STGMEDIUM - Invalid STDGMEDIUM structure
 .
 Language=Russian
+DV_E_STGMEDIUM - Invalid STDGMEDIUM structure
+.
+Language=Polish
 DV_E_STGMEDIUM - Invalid STDGMEDIUM structure
 .
 
@@ -23902,6 +30413,9 @@ DV_E_STATDATA - Invalid STATDATA structure
 Language=Russian
 DV_E_STATDATA - Invalid STATDATA structure
 .
+Language=Polish
+DV_E_STATDATA - Invalid STATDATA structure
+.
 
 MessageId=0x0068
 Severity=Warning
@@ -23911,6 +30425,9 @@ Language=English
 DV_E_LINDEX - Invalid lindex
 .
 Language=Russian
+DV_E_LINDEX - Invalid lindex
+.
+Language=Polish
 DV_E_LINDEX - Invalid lindex
 .
 
@@ -23924,6 +30441,9 @@ DV_E_TYMED - Invalid tymed
 Language=Russian
 DV_E_TYMED - Invalid tymed
 .
+Language=Polish
+DV_E_TYMED - Invalid tymed
+.
 
 MessageId=0x006A
 Severity=Warning
@@ -23933,6 +30453,9 @@ Language=English
 DV_E_CLIPFORMAT - Invalid clipboard format
 .
 Language=Russian
+DV_E_CLIPFORMAT - Invalid clipboard format
+.
+Language=Polish
 DV_E_CLIPFORMAT - Invalid clipboard format
 .
 
@@ -23946,6 +30469,9 @@ DV_E_DVASPECT - Invalid aspect(s)
 Language=Russian
 DV_E_DVASPECT - Invalid aspect(s)
 .
+Language=Polish
+DV_E_DVASPECT - Invalid aspect(s)
+.
 
 MessageId=0x006C
 Severity=Warning
@@ -23955,6 +30481,9 @@ Language=English
 DV_E_DVTARGETDEVICE_SIZE - tdSize parameter of the DVTARGETDEVICE structure is invalid
 .
 Language=Russian
+DV_E_DVTARGETDEVICE_SIZE - tdSize parameter of the DVTARGETDEVICE structure is invalid
+.
+Language=Polish
 DV_E_DVTARGETDEVICE_SIZE - tdSize parameter of the DVTARGETDEVICE structure is invalid
 .
 
@@ -23968,6 +30497,9 @@ DV_E_NOIVIEWOBJECT - Object doesn't support IViewObject interface
 Language=Russian
 DV_E_NOIVIEWOBJECT - Object doesn't support IViewObject interface
 .
+Language=Polish
+DV_E_NOIVIEWOBJECT - Object doesn't support IViewObject interface
+.
 
 MessageId=0x0100
 Severity=Warning
@@ -23977,6 +30509,9 @@ Language=English
 DRAGDROP_E_NOTREGISTERED - Trying to revoke a drop target that has not been registered
 .
 Language=Russian
+DRAGDROP_E_NOTREGISTERED - Trying to revoke a drop target that has not been registered
+.
+Language=Polish
 DRAGDROP_E_NOTREGISTERED - Trying to revoke a drop target that has not been registered
 .
 
@@ -23990,6 +30525,9 @@ DRAGDROP_E_ALREADYREGISTERED - This window has already been registered as a drop
 Language=Russian
 DRAGDROP_E_ALREADYREGISTERED - This window has already been registered as a drop target
 .
+Language=Polish
+DRAGDROP_E_ALREADYREGISTERED - This window has already been registered as a drop target
+.
 
 MessageId=0x0102
 Severity=Warning
@@ -23999,6 +30537,9 @@ Language=English
 DRAGDROP_E_INVALIDHWND - Invalid window handle
 .
 Language=Russian
+DRAGDROP_E_INVALIDHWND - Invalid window handle
+.
+Language=Polish
 DRAGDROP_E_INVALIDHWND - Invalid window handle
 .
 
@@ -24012,6 +30553,9 @@ CLASS_E_NOAGGREGATION - Class does not support aggregation (or class object is r
 Language=Russian
 CLASS_E_NOAGGREGATION - Class does not support aggregation (or class object is remote)
 .
+Language=Polish
+CLASS_E_NOAGGREGATION - Class does not support aggregation (or class object is remote)
+.
 
 MessageId=0x0111
 Severity=Warning
@@ -24023,6 +30567,9 @@ CLASS_E_CLASSNOTAVAILABLE - ClassFactory cannot supply requested class
 Language=Russian
 CLASS_E_CLASSNOTAVAILABLE - ClassFactory cannot supply requested class
 .
+Language=Polish
+CLASS_E_CLASSNOTAVAILABLE - ClassFactory cannot supply requested class
+.
 
 MessageId=0x0112
 Severity=Warning
@@ -24032,5 +30579,8 @@ Language=English
 CLASS_E_NOTLICENSED - Class is not licensed for use
 .
 Language=Russian
+CLASS_E_NOTLICENSED - Class is not licensed for use
+.
+Language=Polish
 CLASS_E_NOTLICENSED - Class is not licensed for use
 .

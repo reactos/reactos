@@ -154,8 +154,8 @@ BasepProbeForDllManifest(IN PVOID DllHandle,
     *ActCtx = NULL;
 
     /* Check whether the image has manifest resource associated with it */
-    Info.Type = (ULONG)RT_MANIFEST;
-    Info.Name = (ULONG)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+    Info.Type = (ULONG_PTR)RT_MANIFEST;
+    Info.Name = (ULONG_PTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
     Info.Language = 0;
     if (!(Status = LdrFindResource_U(DllHandle, &Info, 3, &Entry)))
     {

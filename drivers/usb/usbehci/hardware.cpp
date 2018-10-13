@@ -221,7 +221,7 @@ CUSBHardwareDevice::SetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
     Register = (PULONG)UsbCmd;
-    WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBCMD), *Register);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + EHCI_USBCMD), *Register);
 }
 
 VOID
@@ -230,19 +230,19 @@ CUSBHardwareDevice::GetCommandRegister(PEHCI_USBCMD_CONTENT UsbCmd)
 {
     PULONG Register;
     Register = (PULONG)UsbCmd;
-    *Register = READ_REGISTER_ULONG((PULONG)((ULONG)m_Base + EHCI_USBCMD));
+    *Register = READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + EHCI_USBCMD));
 }
 
 ULONG
 CUSBHardwareDevice::EHCI_READ_REGISTER_ULONG(ULONG Offset)
 {
-    return READ_REGISTER_ULONG((PULONG)((ULONG)m_Base + Offset));
+    return READ_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + Offset));
 }
 
 VOID
 CUSBHardwareDevice::EHCI_WRITE_REGISTER_ULONG(ULONG Offset, ULONG Value)
 {
-    WRITE_REGISTER_ULONG((PULONG)((ULONG)m_Base + Offset), Value);
+    WRITE_REGISTER_ULONG((PULONG)((PUCHAR)m_Base + Offset), Value);
 }
 
 VOID
@@ -384,7 +384,7 @@ CUSBHardwareDevice::PnpStart(
                         //
                         // each entry is a 4 bit field EHCI 2.2.5
                         //
-                        Value = READ_REGISTER_UCHAR((PUCHAR)(ULONG)ResourceBase + EHCI_HCSP_PORTROUTE + Count);
+                        Value = READ_REGISTER_UCHAR((PUCHAR)(ULONG_PTR)ResourceBase + EHCI_HCSP_PORTROUTE + Count);
                         m_Capabilities.PortRoute[Count*2] = (Value & 0xF0);
 
                         if ((Count*2) + 1 < m_Capabilities.HCSParams.PortCount)
@@ -397,7 +397,7 @@ CUSBHardwareDevice::PnpStart(
                 //
                 // Set m_Base to the address of Operational Register Space
                 //
-                m_Base = (PULONG)((ULONG)ResourceBase + m_Capabilities.Length);
+                m_Base = (PULONG)((ULONG_PTR)ResourceBase + m_Capabilities.Length);
                 break;
             }
         }
@@ -1282,7 +1282,7 @@ InterruptServiceRoutine(
         return TRUE;
     }
 
-    KeInsertQueueDpc(&This->m_IntDpcObject, This, (PVOID)CStatus);
+    KeInsertQueueDpc(&This->m_IntDpcObject, This, UlongToPtr(CStatus));
     return TRUE;
 }
 
@@ -1299,7 +1299,7 @@ EhciDeferredRoutine(
     EHCI_USBCMD_CONTENT UsbCmd;
 
     This = (CUSBHardwareDevice*) SystemArgument1;
-    CStatus = (ULONG) SystemArgument2;
+    CStatus = PtrToUlong(SystemArgument2);
 
     DPRINT("EhciDeferredRoutine CStatus %lx\n", CStatus);
 

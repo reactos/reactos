@@ -106,6 +106,14 @@ ServiceControlHandler(DWORD dwControl,
                              &ServiceStatus);
             return ERROR_SUCCESS;
 
+        case 128:
+            TRACE("  Start Shell control received\n");
+            return ERROR_SUCCESS;
+
+        case 129:
+            TRACE("  Logoff control received\n");
+            return ERROR_SUCCESS;
+
         default:
             TRACE("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;

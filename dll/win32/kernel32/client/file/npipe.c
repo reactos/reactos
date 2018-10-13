@@ -142,7 +142,7 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Create the pipe name */
     swprintf(Buffer,
-             L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
+             L"\\Device\\NamedPipe\\Win32Pipes.%p.%08x",
              NtCurrentTeb()->ClientId.UniqueProcess,
              PipeId);
     RtlInitUnicodeString(&PipeName, Buffer);

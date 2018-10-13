@@ -188,7 +188,7 @@ DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     if (Position->LowPart & (Context->SectorSize - 1))
         return EINVAL;
 
-    Context->SectorNumber = (ULONG)(Position->QuadPart / Context->SectorSize);
+    Context->SectorNumber = Position->QuadPart / Context->SectorSize;
     return ESUCCESS;
 }
 

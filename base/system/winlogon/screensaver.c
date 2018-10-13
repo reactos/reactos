@@ -327,7 +327,7 @@ StartScreenSaver(
     ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
     ZeroMemory(&ProcessInformation, sizeof(PROCESS_INFORMATION));
     StartupInfo.cb = sizeof(STARTUPINFOW);
-    StartupInfo.dwFlags = STARTF_SCRNSAVER;
+    StartupInfo.dwFlags = STARTF_SCREENSAVER;
 
     /* FIXME: run the screen saver on the screen saver desktop */
     ret = CreateProcessW(szApplicationName,

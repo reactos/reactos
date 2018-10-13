@@ -11,11 +11,17 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <wmidata.h>
+#include <wmistr.h>
 #define NDEBUG
 #include <debug.h>
 
 /* The maximum size of an environment value (in bytes) */
 #define MAX_ENVVAL_SIZE 1024
+
+#define SIG_ACPI 0x41435049
+#define SIG_FIRM 0x4649524D
+#define SIG_RSMB 0x52534D42
 
 extern LIST_ENTRY HandleTableListHead;
 extern EX_PUSH_LOCK HandleTableListLock;
@@ -237,6 +243,75 @@ ExLockUserBuffer(
     /* Return the MDL */
     *OutMdl = Mdl;
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ExpGetRawSMBiosTable(
+    _Out_opt_ PVOID Buffer,
+    _Out_ ULONG * OutSize,
+    _In_ ULONG BufferSize)
+{
+    NTSTATUS Status;
+    PVOID DataBlockObject;
+    PWNODE_ALL_DATA AllData;
+    ULONG WMIBufSize;
+
+    ASSERT(OutSize != NULL);
+    *OutSize = 0;
+
+    /* Open the data block object for the SMBIOS table */
+    Status = IoWMIOpenBlock(&MSSmBios_RawSMBiosTables_GUID,
+                            WMIGUID_QUERY,
+                            &DataBlockObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoWMIOpenBlock failed: 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Query the required buffer size */
+    WMIBufSize = 0;
+    Status = IoWMIQueryAllData(DataBlockObject, &WMIBufSize, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoWMIOpenBlock failed: 0x%08lx\n", Status);
+        return Status;
+    }
+    
+    AllData = ExAllocatePoolWithTag(PagedPool, WMIBufSize, 'itfS');
+    if (AllData == NULL)
+    {
+        DPRINT1("Failed to allocate %lu bytes for SMBIOS tables\n", WMIBufSize);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Query the buffer data */
+    Status = IoWMIQueryAllData(DataBlockObject, &WMIBufSize, AllData);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IoWMIOpenBlock failed: 0x%08lx\n", Status);
+        ExFreePoolWithTag(AllData, 'itfS');
+        return Status;
+    }
+
+    Status = STATUS_SUCCESS;
+    *OutSize = AllData->FixedInstanceSize;
+    if (Buffer != NULL)
+    {
+        if (BufferSize >= *OutSize)
+        {
+            RtlMoveMemory(Buffer, AllData + 1, *OutSize);
+        }
+        else
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+    }
+
+    /* Free the buffer */
+    ExFreePoolWithTag(AllData, 'itfS');
+    return Status;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -692,7 +767,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcMapDataNoWaitMiss = 0; /* FIXME */
     Spi->CcMapDataWaitMiss = 0; /* FIXME */
 
-    Spi->CcPinMappedDataCount = 0; /* FIXME */
+    Spi->CcPinMappedDataCount = CcPinMappedDataCount;
     Spi->CcPinReadNoWait = CcPinReadNoWait;
     Spi->CcPinReadWait = CcPinReadWait;
     Spi->CcPinReadNoWaitMiss = 0; /* FIXME */
@@ -2503,6 +2578,106 @@ QSI_DEF(SystemExtendedHandleInformation)
     return Status;
 }
 
+/* Class 76 - System firmware table information  */
+QSI_DEF(SystemFirmwareTableInformation)
+{
+    PSYSTEM_FIRMWARE_TABLE_INFORMATION SysFirmwareInfo = (PSYSTEM_FIRMWARE_TABLE_INFORMATION)Buffer;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG InputBufSize;
+    ULONG DataSize = 0;
+    ULONG TableCount = 0;
+
+    DPRINT("NtQuerySystemInformation - SystemFirmwareTableInformation\n");
+
+    /* Set initial required buffer size */
+    *ReqSize = FIELD_OFFSET(SYSTEM_FIRMWARE_TABLE_INFORMATION, TableBuffer);
+
+    /* Check user's buffer size */
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    InputBufSize = SysFirmwareInfo->TableBufferLength;
+    switch (SysFirmwareInfo->ProviderSignature)
+    {
+        /*
+         * ExpFirmwareTableResource and ExpFirmwareTableProviderListHead
+         * variables should be used there somehow...
+         */
+        case SIG_ACPI:
+        {
+            /* FIXME: Not implemented yet */
+            DPRINT1("ACPI provider not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+        case SIG_FIRM:
+        {
+            /* FIXME: Not implemented yet */
+            DPRINT1("FIRM provider not implemented\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+        case SIG_RSMB:
+        {
+            Status = ExpGetRawSMBiosTable(NULL, &DataSize, 0);
+            if (DataSize > 0)
+            {
+                TableCount = 1;
+                if (SysFirmwareInfo->Action == SystemFirmwareTable_Enumerate)
+                {
+                    DataSize = TableCount * sizeof(ULONG);
+                    if (DataSize <= InputBufSize)
+                    {
+                        *(ULONG *)SysFirmwareInfo->TableBuffer = 0;
+                    }
+                }
+                else if (SysFirmwareInfo->Action == SystemFirmwareTable_Get
+                         && DataSize <= InputBufSize)
+                {
+                    Status = ExpGetRawSMBiosTable(SysFirmwareInfo->TableBuffer, &DataSize, InputBufSize);
+                }
+                SysFirmwareInfo->TableBufferLength = DataSize;
+            }
+            break;
+        }
+        default:
+        {
+            DPRINT1("SystemFirmwareTableInformation: Unsupported provider (0x%x)\n",
+                    SysFirmwareInfo->ProviderSignature);
+            Status = STATUS_ILLEGAL_FUNCTION;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        switch (SysFirmwareInfo->Action)
+        {
+            case SystemFirmwareTable_Enumerate:
+            case SystemFirmwareTable_Get:
+            {
+                if (SysFirmwareInfo->TableBufferLength > InputBufSize)
+                {
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                }
+                break;
+            }
+            default:
+            {
+                DPRINT1("SystemFirmwareTableInformation: Unsupported action (0x%x)\n",
+                        SysFirmwareInfo->Action);
+                Status = STATUS_ILLEGAL_FUNCTION;
+            }
+        }
+    }
+    else
+    {
+        SysFirmwareInfo->TableBufferLength = 0;
+    }
+    return Status;
+}
+
 /* Query/Set Calls Table */
 typedef
 struct _QSSI_CALLS
@@ -2590,6 +2765,18 @@ CallQS [] =
     SI_XX(SystemEmulationBasicInformation), /* FIXME: not implemented */
     SI_XX(SystemEmulationProcessorInformation), /* FIXME: not implemented */
     SI_QX(SystemExtendedHandleInformation),
+    SI_XX(SystemLostDelayedWriteInformation), /* FIXME: not implemented */
+    SI_XX(SystemBigPoolInformation), /* FIXME: not implemented */
+    SI_XX(SystemSessionPoolTagInformation), /* FIXME: not implemented */
+    SI_XX(SystemSessionMappedViewInformation), /* FIXME: not implemented */
+    SI_XX(SystemHotpatchInformation), /* FIXME: not implemented */
+    SI_XX(SystemObjectSecurityMode), /* FIXME: not implemented */
+    SI_XX(SystemWatchdogTimerHandler), /* FIXME: not implemented */
+    SI_XX(SystemWatchdogTimerInformation), /* FIXME: not implemented */
+    SI_XX(SystemLogicalProcessorInformation), /* FIXME: not implemented */
+    SI_XX(SystemWow64SharedInformation), /* FIXME: not implemented */
+    SI_XX(SystemRegisterFirmwareTableInformationHandler), /* FIXME: not implemented */
+    SI_QX(SystemFirmwareTableInformation),
 };
 
 C_ASSERT(SystemBasicInformation == 0);

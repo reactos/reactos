@@ -869,7 +869,7 @@ RealDefWindowProcA(HWND hWnd,
         {
             PWSTR buf = NULL;
             PSTR outbuf = (PSTR)lParam;
-            UINT copy;
+            SIZE_T copy;
 
             if (Wnd != NULL && wParam != 0)
             {

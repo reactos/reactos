@@ -506,7 +506,7 @@ EnumProcesses(DWORD *lpidProcess,
              */
             if (Count < cb / sizeof(DWORD))
             {
-                lpidProcess[Count] = (DWORD)ProcInfo->UniqueProcessId;
+                lpidProcess[Count] = HandleToUlong(ProcInfo->UniqueProcessId);
                 Count++;
             }
 
@@ -840,7 +840,7 @@ GetMappedFileNameW(HANDLE hProcess,
                    DWORD nSize)
 {
     DWORD Len;
-    DWORD OutSize;
+    SIZE_T OutSize;
     NTSTATUS Status;
     struct
     {

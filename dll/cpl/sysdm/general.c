@@ -13,6 +13,8 @@
 
 #include <winnls.h>
 #include <powrprof.h>
+#include <buildno.h>
+#include <strsafe.h>
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50
@@ -387,7 +389,7 @@ static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR sz
 
 static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
-    TCHAR szBuf[64];
+    TCHAR szBuf[64], szHz[16];
     DWORD BufSize = sizeof(DWORD);
     DWORD Type = REG_SZ;
     PROCESSOR_POWER_INFORMATION ppi;
@@ -403,12 +405,20 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
     {
         if (ppi.CurrentMhz < 1000)
         {
-            wsprintf(szBuf, _T("%lu MHz"), ppi.CurrentMhz);
+            if (!LoadString(hApplet, IDS_MEGAHERTZ, szHz, _countof(szHz)))
+            {
+                return;
+            }
+            StringCchPrintf(szBuf, _countof(szBuf), _T("%lu %s"), ppi.CurrentMhz, szHz);
         }
         else
         {
             double flt = ppi.CurrentMhz / 1000.0;
-            MakeFloatValueString(&flt, szBuf, _T("GHz"));
+            if (!LoadString(hApplet, IDS_GIGAHERTZ, szHz, _countof(szHz)))
+            {
+                return;
+            }
+            MakeFloatValueString(&flt, szBuf, szHz);
         }
 
         SetDlgItemText(hwnd, uID, szBuf);
@@ -421,8 +431,18 @@ static VOID GetSystemInformation(HWND hwnd)
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
+    WCHAR SMBiosName[96];
     INT CurMachineLine = IDC_MACHINELINE1;
 
+    /*
+     * Get hardware device name or motherboard name
+     * using information from raw SMBIOS data
+     */
+    if (GetSystemName(SMBiosName, _countof(SMBiosName)))
+    {
+        SetDlgItemText(hwnd, CurMachineLine, SMBiosName);
+        CurMachineLine++;
+    }
     /*
      * Get Processor information
      * although undocumented, this information is being pulled
@@ -498,6 +518,107 @@ static VOID GetSystemInformation(HWND hwnd)
     }
 }
 
+static VOID GetSystemVersion(HWND hwnd)
+{
+    HWND hRosVersion;
+    SIZE_T lenStr, lenVersion;
+    PCWSTR pwszVersion = L" " TEXT(KERNEL_VERSION_RC);
+    PWSTR pwszStr;
+
+    lenVersion = wcslen(pwszVersion);
+    if (lenVersion == 0)
+    {
+        return;
+    }
+
+    hRosVersion = GetDlgItem(hwnd, IDC_ROSVERSION);
+    if (!hRosVersion)
+    {
+        return;
+    }
+    lenStr = GetWindowTextLengthW(hRosVersion);
+    lenStr += lenVersion + 1;
+    pwszStr = HeapAlloc(GetProcessHeap(), 0, lenStr * sizeof(WCHAR));
+    if (!pwszStr)
+    {
+        return;
+    }
+    GetWindowText(hRosVersion, pwszStr, lenStr);
+
+    StringCchCatW(pwszStr, lenStr, pwszVersion);
+    SetWindowText(hRosVersion, pwszStr);
+
+    HeapFree(GetProcessHeap(), 0, pwszStr);
+}
+
+ULONGLONG GetSecondsQPC(VOID)
+{
+    LARGE_INTEGER Counter, Frequency;
+
+    QueryPerformanceCounter(&Counter);
+    QueryPerformanceFrequency(&Frequency);
+
+    return Counter.QuadPart / Frequency.QuadPart;
+}
+
+ULONGLONG GetSeconds(VOID)
+{
+    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
+    ULONGLONG Ticks64;
+    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+    if (pGetTickCount64)
+    {
+        return pGetTickCount64() / 1000;
+    }
+
+    hModule = LoadLibraryW(L"kernel32_vista.dll");
+
+    if (!hModule)
+    {
+        return GetSecondsQPC();
+    }
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+
+    if (pGetTickCount64)
+    {
+        Ticks64 = pGetTickCount64() / 1000;
+    }
+    else
+    {
+        Ticks64 = GetSecondsQPC();
+    }
+
+    FreeLibrary(hModule);
+    return Ticks64;
+}
+
+VOID GetSystemUptime(HWND hwnd)
+{
+    HWND hRosUptime;
+    WCHAR szBuf[64], szStr[64];
+    ULONG cSeconds;
+
+    hRosUptime = GetDlgItem(hwnd, IDC_UPTIME);
+    if (!hRosUptime)
+    {
+        return;
+    }
+    if (!LoadStringW(hApplet, IDS_UPTIME_FORMAT, szStr, _countof(szStr)))
+    {
+        return;
+    }
+    cSeconds = GetSeconds();
+    StringCchPrintfW(szBuf, _countof(szBuf), szStr,
+                     cSeconds / (60*60*24),
+                     (cSeconds / (60*60)) % 24,
+                     (cSeconds / 60) % 60,
+                     cSeconds % 60);
+
+    SetWindowTextW(hRosUptime, szBuf);
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -518,6 +639,8 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             InitLogo(hwndDlg);
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
+            GetSystemVersion(hwndDlg);
+            GetSystemUptime(hwndDlg);
             break;
 
         case WM_DESTROY:

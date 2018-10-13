@@ -713,7 +713,7 @@ VfatSetRenameInformation(
             NewName.MaximumLength += sizeof(WCHAR) + ((PVFATFCB)TargetFileObject->FsContext)->PathNameU.Length;
         }
 
-        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_VFAT);
+        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_NAME);
         if (NewName.Buffer == NULL)
         {
             if (TargetFileObject != NULL)
@@ -779,7 +779,7 @@ VfatSetRenameInformation(
 
         NewName.Length = 0;
         NewName.MaximumLength = TargetFileObject->FileName.Length + ((PVFATFCB)TargetFileObject->FsContext)->PathNameU.Length + sizeof(WCHAR);
-        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_VFAT);
+        NewName.Buffer = ExAllocatePoolWithTag(NonPagedPool, NewName.MaximumLength, TAG_NAME);
         if (NewName.Buffer == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -949,7 +949,7 @@ VfatSetRenameInformation(
     ASSERT(NewReferences == ParentFCB->RefCount - 1); // new file
 Cleanup:
     if (ParentFCB != NULL) vfatReleaseFCB(DeviceExt, ParentFCB);
-    if (NewName.Buffer != NULL) ExFreePoolWithTag(NewName.Buffer, TAG_VFAT);
+    if (NewName.Buffer != NULL) ExFreePoolWithTag(NewName.Buffer, TAG_NAME);
     if (RenameInfo->RootDirectory != NULL) ObDereferenceObject(RootFileObject);
 
     return Status;

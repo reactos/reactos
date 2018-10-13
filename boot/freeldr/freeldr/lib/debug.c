@@ -454,7 +454,7 @@ MsgBoxPrint(const char *Format, ...)
     return 0;
 }
 
-// DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
@@ -465,9 +465,15 @@ KeBugCheckEx(
     IN ULONG_PTR  BugCheckParameter4)
 {
     char Buffer[70];
-    sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
-            BugCheckCode, BugCheckParameter1, BugCheckParameter2,
-            BugCheckParameter3, BugCheckParameter4);
+
+    sprintf(Buffer,
+            "*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)",
+            BugCheckCode,
+            (PVOID)BugCheckParameter1,
+            (PVOID)BugCheckParameter2,
+            (PVOID)BugCheckParameter3,
+            (PVOID)BugCheckParameter4);
+
     UiMessageBoxCritical(Buffer);
     ASSERT(FALSE);
     for (;;);
@@ -482,7 +488,7 @@ RtlAssert(IN PVOID FailedAssertion,
 {
     if (Message)
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
+        DbgPrint("Assertion \'%s\' failed at %s line %lu: %s\n",
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber,
@@ -490,7 +496,7 @@ RtlAssert(IN PVOID FailedAssertion,
     }
     else
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %u\n",
+        DbgPrint("Assertion \'%s\' failed at %s line %lu\n",
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber);

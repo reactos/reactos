@@ -393,7 +393,7 @@ ChanMgrCreateChannel(OUT PSAC_CHANNEL *Channel,
         {
             /* Free slot found, attempt to use it */
             ASSERT(!CHANNEL_SLOT_IS_IN_USE(i));
-            _InterlockedCompareExchange((PLONG)&ChannelArray[i], (LONG)NewChannel, 0);
+            InterlockedCompareExchangePointer((PVOID*)&ChannelArray[i], NewChannel, NULL);
             if (ChannelArray[i] == NewChannel) break;
         }
     }

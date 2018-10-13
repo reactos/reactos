@@ -253,6 +253,7 @@ BOOLEAN DiskReadBootRecord(UCHAR DriveNumber, ULONGLONG LogicalSectorNumber, PMA
     return TRUE;
 }
 
+#ifndef _M_AMD64
 NTSTATUS
 NTAPI
 IopReadBootRecord(
@@ -261,7 +262,7 @@ IopReadBootRecord(
     IN ULONG SectorSize,
     OUT PMASTER_BOOT_RECORD BootRecord)
 {
-    ULONG FileId = (ULONG)DeviceObject;
+    ULONG_PTR FileId = (ULONG_PTR)DeviceObject;
     LARGE_INTEGER Position;
     ULONG BytesRead;
     ARC_STATUS Status;
@@ -399,5 +400,5 @@ IoReadPartitionTable(
     *PartitionBuffer = Partitions;
     return STATUS_SUCCESS;
 }
-
+#endif // _M_AMD64
 #endif

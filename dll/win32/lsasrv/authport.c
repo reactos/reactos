@@ -242,6 +242,11 @@ AuthPortThreadRoutine(PVOID Param)
                         ReplyMsg = &RequestMsg;
                         break;
 
+                    case LSASS_REQUEST_POLICY_CHANGE_NOTIFY:
+                        RequestMsg.Status = LsapRegisterNotification(&RequestMsg);
+                        ReplyMsg = &RequestMsg;
+                        break;
+
                     default:
                         RequestMsg.Status = STATUS_INVALID_SYSTEM_SERVICE;
                         ReplyMsg = &RequestMsg;

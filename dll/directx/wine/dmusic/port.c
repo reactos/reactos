@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include "dmusic_private.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
@@ -903,18 +904,312 @@ HRESULT synth_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_param
     return hr;
 }
 
-HRESULT midi_out_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
-        DMUS_PORTCAPS *port_caps, IDirectMusicPort **port)
+struct midi_port {
+    IDirectMusicPort IDirectMusicPort_iface;
+    IDirectMusicThru IDirectMusicThru_iface;
+    LONG ref;
+    IReferenceClock *clock;
+};
+
+static inline struct midi_port *impl_from_IDirectMusicPort(IDirectMusicPort *iface)
 {
-    FIXME("(%p, %p, %p): stub\n", port_params, port_caps, port);
+    return CONTAINING_RECORD(iface, struct midi_port, IDirectMusicPort_iface);
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_QueryInterface(IDirectMusicPort *iface, REFIID riid,
+        void **ret_iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicPort(iface);
+
+    TRACE("(%p, %s, %p)\n", iface, debugstr_dmguid(riid), ret_iface);
+
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDirectMusicPort))
+        *ret_iface = iface;
+    else if (IsEqualIID(riid, &IID_IDirectMusicThru))
+        *ret_iface = &This->IDirectMusicThru_iface;
+    else {
+        WARN("no interface for %s\n", debugstr_dmguid(riid));
+        *ret_iface = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown *)*ret_iface);
+
+    return S_OK;
+}
+
+static ULONG WINAPI midi_IDirectMusicPort_AddRef(IDirectMusicPort *iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicPort(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref = %u\n", iface, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI midi_IDirectMusicPort_Release(IDirectMusicPort *iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicPort(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref = %u\n", iface, ref);
+
+    if (!ref) {
+        if (This->clock)
+            IReferenceClock_Release(This->clock);
+        heap_free(This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_PlayBuffer(IDirectMusicPort *iface,
+        IDirectMusicBuffer *buffer)
+{
+    FIXME("(%p, %p) stub!\n", iface, buffer);
 
     return E_NOTIMPL;
 }
 
-HRESULT midi_in_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *port_params,
-        DMUS_PORTCAPS *port_caps, IDirectMusicPort **port)
+static HRESULT WINAPI midi_IDirectMusicPort_SetReadNotificationHandle(IDirectMusicPort *iface,
+        HANDLE event)
 {
-    FIXME("(%p, %p, %p): stub\n", port_params, port_caps, port);
+    FIXME("(%p, %p) stub!\n", iface, event);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_Read(IDirectMusicPort *iface,
+        IDirectMusicBuffer *buffer)
+{
+    FIXME("(%p, %p) stub!\n", iface, buffer);
 
     return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_DownloadInstrument(IDirectMusicPort *iface,
+        IDirectMusicInstrument *instrument, IDirectMusicDownloadedInstrument **downloaded,
+        DMUS_NOTERANGE *ranges, DWORD num_ranges)
+{
+    FIXME("(%p, %p, %p, %p, %u) stub!\n", iface, instrument, downloaded, ranges, num_ranges);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_UnloadInstrument(IDirectMusicPort *iface,
+        IDirectMusicDownloadedInstrument *downloaded)
+{
+    FIXME("(%p, %p) stub!\n", iface, downloaded);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetLatencyClock(IDirectMusicPort *iface,
+        IReferenceClock **clock)
+{
+    struct midi_port *This = impl_from_IDirectMusicPort(iface);
+
+    TRACE("(%p, %p)\n", iface, clock);
+
+    if (!clock)
+        return E_POINTER;
+
+    *clock = This->clock;
+    IReferenceClock_AddRef(*clock);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetRunningStats(IDirectMusicPort *iface,
+        DMUS_SYNTHSTATS *stats)
+{
+    FIXME("(%p, %p) stub!\n", iface, stats);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_Compact(IDirectMusicPort *iface)
+{
+    FIXME("(%p) stub!\n", iface);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetCaps(IDirectMusicPort *iface, DMUS_PORTCAPS *caps)
+{
+    FIXME("(%p, %p) stub!\n", iface, caps);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_DeviceIoControl(IDirectMusicPort *iface,
+        DWORD io_control_code, void *in, DWORD size_in, void *out, DWORD size_out, DWORD *ret_len,
+        OVERLAPPED *overlapped)
+{
+    FIXME("(%p, %u, %p, %u, %p, %u, %p, %p) stub!\n", iface, io_control_code, in, size_in, out
+            , size_out, ret_len, overlapped);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_SetNumChannelGroups(IDirectMusicPort *iface,
+        DWORD cgroups)
+{
+    FIXME("(%p, %u) stub!\n", iface, cgroups);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetNumChannelGroups(IDirectMusicPort *iface,
+        DWORD *cgroups)
+{
+    FIXME("(%p, %p) stub!\n", iface, cgroups);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_Activate(IDirectMusicPort *iface, BOOL active)
+{
+    FIXME("(%p, %u) stub!\n", iface, active);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_SetChannelPriority(IDirectMusicPort *iface,
+        DWORD channel_group, DWORD channel, DWORD priority)
+{
+    FIXME("(%p, %u, %u, %u) stub!\n", iface, channel_group, channel, priority);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetChannelPriority(IDirectMusicPort *iface,
+        DWORD channel_group, DWORD channel, DWORD *priority)
+{
+    FIXME("(%p, %u, %u, %p) stub!\n", iface, channel_group, channel, priority);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_SetDirectSound(IDirectMusicPort *iface,
+        IDirectSound *dsound, IDirectSoundBuffer *dsbuffer)
+{
+    FIXME("(%p, %p, %p) stub!\n", iface, dsound, dsbuffer);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI midi_IDirectMusicPort_GetFormat(IDirectMusicPort *iface, WAVEFORMATEX *format,
+        DWORD *format_size, DWORD *buffer_size)
+{
+    FIXME("(%p, %p, %p, %p) stub!\n", iface, format, format_size, buffer_size);
+
+    return E_NOTIMPL;
+}
+
+static const IDirectMusicPortVtbl midi_port_vtbl = {
+    midi_IDirectMusicPort_QueryInterface,
+    midi_IDirectMusicPort_AddRef,
+    midi_IDirectMusicPort_Release,
+    midi_IDirectMusicPort_PlayBuffer,
+    midi_IDirectMusicPort_SetReadNotificationHandle,
+    midi_IDirectMusicPort_Read,
+    midi_IDirectMusicPort_DownloadInstrument,
+    midi_IDirectMusicPort_UnloadInstrument,
+    midi_IDirectMusicPort_GetLatencyClock,
+    midi_IDirectMusicPort_GetRunningStats,
+    midi_IDirectMusicPort_Compact,
+    midi_IDirectMusicPort_GetCaps,
+    midi_IDirectMusicPort_DeviceIoControl,
+    midi_IDirectMusicPort_SetNumChannelGroups,
+    midi_IDirectMusicPort_GetNumChannelGroups,
+    midi_IDirectMusicPort_Activate,
+    midi_IDirectMusicPort_SetChannelPriority,
+    midi_IDirectMusicPort_GetChannelPriority,
+    midi_IDirectMusicPort_SetDirectSound,
+    midi_IDirectMusicPort_GetFormat,
+};
+
+static inline struct midi_port *impl_from_IDirectMusicThru(IDirectMusicThru *iface)
+{
+    return CONTAINING_RECORD(iface, struct midi_port, IDirectMusicThru_iface);
+}
+
+static HRESULT WINAPI midi_IDirectMusicThru_QueryInterface(IDirectMusicThru *iface, REFIID riid,
+        void **ret_iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicThru(iface);
+
+    return IDirectMusicPort_QueryInterface(&This->IDirectMusicPort_iface, riid, ret_iface);
+}
+
+static ULONG WINAPI midi_IDirectMusicThru_AddRef(IDirectMusicThru *iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicThru(iface);
+
+    return IDirectMusicPort_AddRef(&This->IDirectMusicPort_iface);
+}
+
+static ULONG WINAPI midi_IDirectMusicThru_Release(IDirectMusicThru *iface)
+{
+    struct midi_port *This = impl_from_IDirectMusicThru(iface);
+
+    return IDirectMusicPort_Release(&This->IDirectMusicPort_iface);
+}
+
+static HRESULT WINAPI midi_IDirectMusicThru_ThruChannel(IDirectMusicThru *iface, DWORD src_group,
+        DWORD src_channel, DWORD dest_group, DWORD dest_channel, IDirectMusicPort *dest_port)
+{
+    FIXME("(%p, %u, %u, %u, %u, %p) stub!\n", iface, src_group, src_channel, dest_group,
+            dest_channel, dest_port);
+
+    return S_OK;
+}
+
+static const IDirectMusicThruVtbl midi_thru_vtbl = {
+    midi_IDirectMusicThru_QueryInterface,
+    midi_IDirectMusicThru_AddRef,
+    midi_IDirectMusicThru_Release,
+    midi_IDirectMusicThru_ThruChannel,
+};
+
+static HRESULT midi_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *params,
+        DMUS_PORTCAPS *caps, IDirectMusicPort **port)
+{
+    struct midi_port *obj;
+    HRESULT hr;
+
+    if (!(obj = heap_alloc_zero(sizeof(*obj))))
+        return E_OUTOFMEMORY;
+
+    obj->IDirectMusicPort_iface.lpVtbl = &midi_port_vtbl;
+    obj->IDirectMusicThru_iface.lpVtbl = &midi_thru_vtbl;
+    obj->ref = 1;
+
+    hr = DMUSIC_CreateReferenceClockImpl(&IID_IReferenceClock, (void **)&obj->clock, NULL);
+    if (hr != S_OK) {
+        HeapFree(GetProcessHeap(), 0, obj);
+        return hr;
+    }
+
+    *port = &obj->IDirectMusicPort_iface;
+
+    return S_OK;
+}
+
+HRESULT midi_out_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *params,
+        DMUS_PORTCAPS *caps, IDirectMusicPort **port)
+{
+    TRACE("(%p, %p, %p, %p)\n", parent, params, caps, port);
+
+    return midi_port_create(parent, params, caps, port);
+}
+
+HRESULT midi_in_port_create(IDirectMusic8Impl *parent, DMUS_PORTPARAMS *params,
+        DMUS_PORTCAPS *caps, IDirectMusicPort **port)
+{
+    TRACE("(%p, %p, %p, %p)\n", parent, params, caps, port);
+
+    return midi_port_create(parent, params, caps, port);
 }

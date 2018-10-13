@@ -153,7 +153,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                  FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList);
         if (Length > CmpConfigurationAreaSize)
         {
-            ASSERTMSG("Component too large -- need reallocation!", FALSE);
+            ASSERTMSG("Component too large -- need reallocation!\n", FALSE);
         }
         else
         {

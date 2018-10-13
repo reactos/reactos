@@ -1,0 +1,25 @@
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Benutzung: dwnl URL [ZIEL]\n"
+    IDS_RESOLVING "Löst %s auf... "
+    IDS_DONE "erledigt.\n"
+    IDS_LENGTH_FULL "Länge: %I64u [%s]\n"
+    IDS_LENGTH "Länge: %I64u\n"
+    IDS_FILE_SAVED "\nDatei gespeichert.\n"
+    IDS_CONNECTING_TO_FULL "Verbindet mit %s [%s]... "
+    IDS_CONNECTING_TO "Verbindet mit %s... "
+    IDS_REDIRECTING_TO "Leitet an %s weiter... "
+    IDS_SEND_REQUEST "Sendet Anfrage... "
+    IDS_BYTES_DOWNLOADED "%I64u bytes heruntergeladen"
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (%I64u byte(s) heruntergeladen)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\nFEHLER: Download fehlgeschlagen.\n"
+    IDS_ERROR_CODE "\nFEHLER: %u\n"
+    IDS_ERROR_FILENAME "\nFEHLER: Dateiname kann nicht ermittelt werden, bitte geben Sie einen Ziel-Dateinamen an.\n"
+    IDS_ERROR_PROTOCOL "\nFEHLER: Nicht unterstütztes Protokoll.\n"
+END

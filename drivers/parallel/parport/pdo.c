@@ -121,7 +121,7 @@ PdoWrite(IN PDEVICE_OBJECT DeviceObject,
         do
         {
             KeStallExecutionProcessor(10);
-            PortStatus = READ_PORT_UCHAR((PUCHAR)(FdoDeviceExtension->BaseAddress + 1));
+            PortStatus = READ_PORT_UCHAR(UlongToPtr(FdoDeviceExtension->BaseAddress + 1));
             ulCount++;
         }
         while (ulCount < 500000 && !(PortStatus & LP_PBUSY));
@@ -138,15 +138,15 @@ PdoWrite(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Write character */
-        WRITE_PORT_UCHAR((PUCHAR)FdoDeviceExtension->BaseAddress, Buffer[i]);
+        WRITE_PORT_UCHAR(UlongToPtr(FdoDeviceExtension->BaseAddress), Buffer[i]);
 
         KeStallExecutionProcessor(10);
 
-        WRITE_PORT_UCHAR((PUCHAR)(FdoDeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP | LP_PSTROBE));
+        WRITE_PORT_UCHAR(UlongToPtr(FdoDeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP | LP_PSTROBE));
 
         KeStallExecutionProcessor(10);
 
-        WRITE_PORT_UCHAR((PUCHAR)(FdoDeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP));
+        WRITE_PORT_UCHAR(UlongToPtr(FdoDeviceExtension->BaseAddress + 2), (LP_PSELECP | LP_PINITP));
     }
 
     Irp->IoStatus.Information = 0;

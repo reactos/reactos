@@ -1211,6 +1211,17 @@ typedef struct _RTL_DEBUG_INFORMATION
 } RTL_DEBUG_INFORMATION, *PRTL_DEBUG_INFORMATION;
 
 //
+// Fiber local storage data
+//
+#define RTL_FLS_MAXIMUM_AVAILABLE 128
+typedef struct _RTL_FLS_DATA
+{
+    LIST_ENTRY ListEntry;
+    PVOID Data[RTL_FLS_MAXIMUM_AVAILABLE];
+} RTL_FLS_DATA, *PRTL_FLS_DATA;
+
+
+//
 // Unload Event Trace Structure for RtlGetUnloadEventTrace
 //
 typedef struct _RTL_UNLOAD_EVENT_TRACE

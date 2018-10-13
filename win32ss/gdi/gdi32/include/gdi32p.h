@@ -136,7 +136,7 @@ typedef struct tagENHMETAFILE
 #define UMPDEV_SUPPORT_ESCAPE 0x0004
 typedef struct _UMPDEV
 {
-    DWORD           Sig;            // Init with PDEV_UMPD_ID
+    DWORD_PTR       Sig;            // Init with PDEV_UMPD_ID
     struct _UMPDEV *pumpdNext;
     PDRIVER_INFO_5W pdi5Info;
     HMODULE         hModule;

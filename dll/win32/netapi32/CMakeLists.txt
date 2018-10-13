@@ -9,6 +9,7 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/browser.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/netdfs.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/netlogon.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/srvsvc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/wkssvc.idl)
@@ -16,9 +17,10 @@ add_rpc_files(client
 list(APPEND SOURCE
     apibuf.c
     browser.c
+    dfs.c
     display.c
     dssetup.c
-    group.c
+    group_new.c
     local_group.c
     misc.c
     nbcmdqueue.c
@@ -38,6 +40,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/atsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/browser_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/dssetup_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/netdfs_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/netlogon_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)

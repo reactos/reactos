@@ -245,7 +245,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #ifdef FEATURE_HISTORY
                         /* add to the history */
                         if (str[0])
-                            History (0, str);
+                            History(0, str);
 #endif /*FEATURE_HISTORY*/
                         str[charcount++] = _T('\n');
                         str[charcount] = _T('\0');
@@ -458,6 +458,13 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         break;
 
                     /*
+                     * Fully print the entered string
+                     * so the command prompt would not overwrite it.
+                     */
+                    SetCursorXY(orgx, orgy);
+                    ConOutPrintf(_T("%s"), str);
+
+                    /*
                      * A Ctrl-C. Do not clear the command line,
                      * but return an empty string in str.
                      */
@@ -479,7 +486,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #ifdef FEATURE_HISTORY
                 /* add to the history */
                 if (str[0])
-                    History (0, str);
+                    History(0, str);
 #endif
                 str[charcount++] = _T('\n');
                 str[charcount] = _T('\0');
@@ -503,7 +510,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #ifdef FEATURE_HISTORY
                 /* get previous command from buffer */
                 ClearCommandLine (str, maxlen, orgx, orgy);
-                History (-1, str);
+                History(-1, str);
                 current = charcount = _tcslen (str);
                 if (((charcount + orgx) / maxx) + orgy > maxy - 1)
                     orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
@@ -516,7 +523,7 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
 #ifdef FEATURE_HISTORY
                 /* get next command from buffer */
                 ClearCommandLine (str, maxlen, orgx, orgy);
-                History (1, str);
+                History(1, str);
                 current = charcount = _tcslen (str);
                 if (((charcount + orgx) / maxx) + orgy > maxy - 1)
                     orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);

@@ -93,7 +93,8 @@ KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
     }
 
-    return NumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+    /* Round size up. Assumed to better match actual physical RAM size */
+    return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 }
 
 /* See also: kd64\kdinit.c */
@@ -255,7 +256,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
         KeInitializeSpinLock(&KdpDebugLogSpinLock);
 
         /* Display separator + ReactOS version at start of the debug log */
-        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        /* Round size up. Assumed to better match actual physical RAM size */
+        MemSizeMBs = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
         KdpPrintBanner(MemSizeMBs);
     }
     else if (BootPhase == 2)
@@ -554,7 +556,8 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
 
         /* Display separator + ReactOS version at start of the debug log */
-        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        /* Round size up. Assumed to better match actual physical RAM size */
+        MemSizeMBs = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
         KdpPrintBanner(MemSizeMBs);
     }
     else if (BootPhase == 2)

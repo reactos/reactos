@@ -409,6 +409,8 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             UpdateDisplayMenu();
             SetDisplayFormat(0);
+
+            DragAcceptFiles(hWnd, TRUE);
             break;
         }
 
@@ -733,8 +735,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     /* If the user provided a path to a clipboard data file, try to open it */
-    if (lpCmdLine != NULL && *lpCmdLine)
-        LoadClipboardDataFromFile(lpCmdLine);
+    if (__argc >= 2)
+        LoadClipboardDataFromFile(__wargv[1]);
 
     while (GetMessageW(&msg, 0, 0, 0))
     {

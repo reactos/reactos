@@ -89,6 +89,7 @@
 #include <fs/ntfs.h>
 #include <fs/iso.h>
 #include <fs/pxe.h>
+#include <fs/btrfs.h>
 
 /* UI support */
 #include <ui/gui.h>

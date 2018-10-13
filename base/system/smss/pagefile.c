@@ -837,8 +837,8 @@ SmpCreateVolumeDescriptors(VOID)
     /* Query the device map so we can get the drive letters */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDeviceMap,
-                                       &ProcessInformation,
-                                       sizeof(ProcessInformation),
+                                       &ProcessInformation.Query,
+                                       sizeof(ProcessInformation.Query),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {

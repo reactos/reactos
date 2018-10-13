@@ -198,6 +198,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Votre compte est désactivé. Voyez votre administrateur système."
     IDS_PASSWORDMUSTCHANGE "Vous devez changer votre mot de passe à la première connexion."
     IDS_PASSWORDEXPIRED "Votre mot de passe a expiré et doit être changé."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

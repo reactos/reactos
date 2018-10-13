@@ -70,12 +70,12 @@ else()
         storage.c
         symbol.c
         type.c
-        precomp.h
-        ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c)
+        precomp.h)
 
     add_library(dbghelp SHARED
         ${SOURCE}
         version.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
         ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
     set_module_type(dbghelp win32dll)

@@ -397,7 +397,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
 
     /* Call handler 0 */
     if ((DriverState.Handler0.CallMask & CallMask) != 0 &&
-         DriverState.Handler0.Callback != (ULONG)NULL)
+         DriverState.Handler0.Callback != NULL32)
     {
         /*
          * Set the parameters for the callback.
@@ -445,7 +445,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
     {
         /* Call the suitable handlers */
         if ((DriverState.Handlers[i].CallMask & CallMask) != 0 &&
-             DriverState.Handlers[i].Callback != (ULONG)NULL)
+             DriverState.Handlers[i].Callback != NULL32)
         {
             /*
              * Set the parameters for the callback.
@@ -920,13 +920,13 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                     {
                         /* Found it, undefine the handler */
                         DriverState.Handlers[i].CallMask = 0x0000;
-                        DriverState.Handlers[i].Callback = (ULONG)NULL;
+                        DriverState.Handlers[i].Callback = NULL32;
                         Success = TRUE;
                         break;
                     }
                 }
             }
-            else if (Callback == (ULONG)NULL)
+            else if (Callback == NULL32)
             {
                 /*
                  * Find the handler entry corresponding to the given
@@ -938,7 +938,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                     {
                         /* Found it, undefine the handler */
                         DriverState.Handlers[i].CallMask = 0x0000;
-                        DriverState.Handlers[i].Callback = (ULONG)NULL;
+                        DriverState.Handlers[i].Callback = NULL32;
                         Success = TRUE;
                         break;
                     }
@@ -959,7 +959,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                     /* Find the first empty handler */
                     if (EmptyHandler == 0xFFFF &&
                         DriverState.Handlers[i].CallMask == 0x0000 &&
-                        DriverState.Handlers[i].Callback == (ULONG)NULL)
+                        DriverState.Handlers[i].Callback == NULL32)
                     {
                         EmptyHandler = i;
                     }

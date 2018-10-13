@@ -108,7 +108,7 @@ mswBufferAppendLst(_Inout_ PMSW_BUFFER mswBuf,
 {
     DWORD lstItemCount;
     DWORD lstByteSize;
-    DWORD lstDataPos;
+    DWORD_PTR lstDataPos;
     DWORD i1;
     UINT_PTR *ptrSrcLstPos;
 
@@ -129,7 +129,7 @@ mswBufferAppendLst(_Inout_ PMSW_BUFFER mswBuf,
 
     /* calculate position for the data of the first item */
     lstDataPos = ((lstItemCount + 1) * sizeof(UINT_PTR)) +
-                 (DWORD)mswBufferEndPtr(mswBuf);
+                 (DWORD_PTR)mswBufferEndPtr(mswBuf);
     /* add ptrofs */
     lstDataPos += ptrofs;
 
@@ -164,7 +164,7 @@ mswBufferAppendStrLstA(_Inout_ PMSW_BUFFER mswBuf,
     DWORD lstItemLen[MAX_ARRAY_SIZE];
     DWORD lstItemCount;
     DWORD lstByteSize;
-    DWORD lstDataPos;
+    DWORD_PTR lstDataPos;
     DWORD lstDataSize;
     DWORD i1;
     UINT_PTR *ptrSrcLstPos;
@@ -194,7 +194,7 @@ mswBufferAppendStrLstA(_Inout_ PMSW_BUFFER mswBuf,
 
     /* calculate position for the data of the first item */
     lstDataPos = ((lstItemCount + 1) * sizeof(UINT_PTR)) +
-                 (DWORD)mswBufferEndPtr(mswBuf);
+                 (DWORD_PTR)mswBufferEndPtr(mswBuf);
 
     /* add ptrofs */
     lstDataPos += ptrofs;
@@ -261,7 +261,7 @@ mswBufferAppendBlob_Hostent(_Inout_ PMSW_BUFFER mswBuf,
     {
         if (!mswBufferAppendStrLstA(mswBuf,
                                     (void**)hostAliasesA,
-                                    -(DWORD)bytesOfs))
+                                    -(LONG_PTR)bytesOfs))
             return FALSE;
     }
     else
@@ -277,7 +277,7 @@ mswBufferAppendBlob_Hostent(_Inout_ PMSW_BUFFER mswBuf,
 
     phe->h_addr_list = (char**)(mswBufferEndPtr(mswBuf) - bytesOfs);
 
-    if (!mswBufferAppendLst(mswBuf, lst, 4, -(DWORD)bytesOfs))
+    if (!mswBufferAppendLst(mswBuf, lst, 4, -(LONG_PTR)bytesOfs))
         return FALSE;
 
     /* name */
@@ -323,7 +323,7 @@ mswBufferAppendBlob_Servent(_Inout_ PMSW_BUFFER mswBuf,
     {
         if (!mswBufferAppendStrLstA(mswBuf,
                                     (void**)serviceAliasesA,
-                                    -(DWORD)bytesOfs))
+                                    -(LONG_PTR)bytesOfs))
             return FALSE;
     }
     else
@@ -484,8 +484,8 @@ WCHAR*
 StrCpyHeapAllocW(_In_opt_ HANDLE hHeap,
                  _In_ WCHAR* wStr)
 {
-    int chLen;
-    int bLen;
+    size_t chLen;
+    size_t bLen;
     WCHAR* resW;
 
     if (wStr == NULL)
@@ -507,8 +507,8 @@ char*
 StrCpyHeapAllocA(_In_opt_ HANDLE hHeap,
                  _In_ char* aStr)
 {
-    int chLen;
-    int bLen;
+    size_t chLen;
+    size_t bLen;
     char* resA;
 
     if (aStr == NULL)
@@ -534,8 +534,8 @@ StrAryCpyHeapAllocA(_In_opt_ HANDLE hHeap,
     char** aDstPtr;
     char* aDstNextStr;
     DWORD aStrByteLen[MAX_ARRAY_SIZE];
-    int bLen;
-    int bItmLen;
+    size_t bLen;
+    size_t bItmLen;
     int aCount;
     int i1;
     char** resA;
@@ -581,7 +581,7 @@ StrAryCpyHeapAllocA(_In_opt_ HANDLE hHeap,
         *aDstPtr = aDstNextStr;
         RtlCopyMemory(*aDstPtr, *aSrcPtr, bItmLen);
 
-        aDstNextStr = (char*)((DWORD)aDstNextStr + (DWORD)bItmLen);
+        aDstNextStr = (char*)((DWORD_PTR)aDstNextStr + (DWORD)bItmLen);
         aDstPtr++;
         aSrcPtr++;
     }
@@ -671,7 +671,7 @@ StrAryCpyHeapAllocWToA(_In_opt_ HANDLE hHeap,
         RtlCopyMemory(*aDstPtr, aStr, bItmLen);
         HeapFree(hHeap, 0, aStr);
 
-        aDstNextStr = (char*)((DWORD)aDstNextStr + (DWORD)bItmLen);
+        aDstNextStr = (char*)((DWORD_PTR)aDstNextStr + (DWORD)bItmLen);
         aDstPtr++;
         wSrcPtr++;
     }

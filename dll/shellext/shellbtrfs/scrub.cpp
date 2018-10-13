@@ -566,6 +566,10 @@ static INT_PTR CALLBACK stub_ScrubDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
         return FALSE;
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK ShowScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     HANDLE token;
     TOKEN_PRIVILEGES tp;
@@ -694,3 +698,7 @@ void CALLBACK StopScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCm
 end:
     LocalFree(args);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif

@@ -50,6 +50,7 @@ Onde:\n\
 [/A]  Copiar apenas ficheiros com atributo de arquivo\n\
 [/M]  Copiar apenas ficheiros com atributo de arquivo, removendo\n\
 \to atributo de arquivo\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Copiar novos ficheiros ou os alterados após a data fornecida\n\
 \t\tSe nenhuma data for fornecida, apenas copiar se o destino\n\
 \t\tfor mais antigo que a fonte\n\n"

@@ -43,22 +43,22 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Shortcuts/Folders"
+CAPTION "Supprimer des raccourcis/dossiers"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    LTEXT "&Pour supprimer un élément du menu démarrer, sélectionnez l'élément puis cliquez sur Surpprimer.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Supprimer", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Fermer", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Installation du package Wine Gecko"
+CAPTION "Installation du paquet Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS n'a trouvé aucun package Wine Gecko nécessaire pour pouvoir exécuter correctement les applications incluant du code HTML. ReactOS est capable de télécharger et d'installer automatiquement le package pour vous.",
+    CONTROL "ReactOS n'a trouvé aucun paquet Wine Gecko nécessaire pour pouvoir exécuter correctement les applications incluant du code HTML. ReactOS est capable de télécharger et d'installer automatiquement le paquet pour vous.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Installer", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
@@ -78,7 +78,8 @@ BEGIN
     IDS_DOWNLOADING "Téléchargement..."
     IDS_INSTALLING "Installation..."
     IDS_INVALID_SHA "La somme de contrôle du fichier téléchargé est erronée. Abandon de l'installation du fichier corrompu."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_NEW_INTERNET_SHORTCUT "Nouveau raccourci Internet"
+    IDS_DWL_FAILED "Échec lors du téléchargement du paquet Gecko. Assurez-vous d'avoir une connexion Internet pour pouvoir le télécharger. L'installation va continuer sans installer Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Échec lors de la création du raccourci Internet."
+    IDS_CANTMAKESHORTCUT "Échec lors de la création du raccourci."
 END

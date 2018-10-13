@@ -38,8 +38,6 @@
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 /* Property sheet / Wizard */
 #define IDD_PROPSHEET 1006
 #define IDD_WIZARD    1020
@@ -270,7 +268,12 @@ extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
 #ifdef __REACTOS__
-extern void BUTTON_Unregister();
+extern void BUTTON_Unregister(void) DECLSPEC_HIDDEN;
+extern void COMBO_Unregister(void) DECLSPEC_HIDDEN;
+extern void COMBOLBOX_Unregister(void) DECLSPEC_HIDDEN;
+extern void EDIT_Unregister(void) DECLSPEC_HIDDEN;
+extern void LISTBOX_Unregister(void) DECLSPEC_HIDDEN;
+extern void STATIC_Unregister(void) DECLSPEC_HIDDEN;
 extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
 extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
 #endif /* __REACTOS__ */

@@ -1784,6 +1784,8 @@ MUI_STRING itITStrings[] =
     "   Fatto..."},
     {STRING_REBOOTCOMPUTER2,
     "   INVIO = Riavvia il computer"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Il computer si riavvierà in %li secondi... "},
     {STRING_CONSOLEFAIL1,
     "Impossibile aprire la console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

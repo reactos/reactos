@@ -1,0 +1,25 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Использование: dwnl URL [ПУТЬ]\n"
+    IDS_RESOLVING "Определение хоста %s... "
+    IDS_DONE "успешно.\n"
+    IDS_LENGTH_FULL "Размер: %I64u [%s]\n"
+    IDS_LENGTH "Размер: %I64u\n"
+    IDS_FILE_SAVED "\nФайл сохранён.\n"
+    IDS_CONNECTING_TO_FULL "Соединение с %s [%s]... "
+    IDS_CONNECTING_TO "Соединение с %s... "
+    IDS_REDIRECTING_TO "Перенаправление на %s... "
+    IDS_SEND_REQUEST "Отправка запроса... "
+    IDS_BYTES_DOWNLOADED "%I64u байт скачано"
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (%I64u байт скачано)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\nОШИБКА: Не удалось скачать.\n"
+    IDS_ERROR_CODE "\nОШИБКА: %u\n"
+    IDS_ERROR_FILENAME "\nОШИБКА: Невозможно определить конечное имя файла, пожалуйста укажите полное имя файла в пути.\n"
+    IDS_ERROR_PROTOCOL "\nОШИБКА: Неподдерживаемый протокол.\n"
+END

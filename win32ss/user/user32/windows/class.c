@@ -1595,7 +1595,19 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
     if (lpWndClass == NULL)
         return 0;
 
-    RtlCopyMemory(&Class.style, lpWndClass, sizeof(WNDCLASSA));
+    /* These MUST be copied manually, since on 64 bit architectures the
+       alignment of the members is different between the 2 structs! */
+    Class.style = lpWndClass->style;
+    Class.lpfnWndProc = lpWndClass->lpfnWndProc;
+    Class.cbClsExtra = lpWndClass->cbClsExtra;
+    Class.cbWndExtra = lpWndClass->cbWndExtra;
+    Class.hInstance = lpWndClass->hInstance;
+    Class.hIcon = lpWndClass->hIcon;
+    Class.hCursor = lpWndClass->hCursor;
+    Class.hbrBackground = lpWndClass->hbrBackground;
+    Class.lpszMenuName = lpWndClass->lpszMenuName;
+    Class.lpszClassName = lpWndClass->lpszClassName;
+
     Class.cbSize = sizeof(WNDCLASSEXA);
     Class.hIconSm = NULL;
 
@@ -1613,7 +1625,19 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
     if (lpWndClass == NULL)
         return 0;
 
-    RtlCopyMemory(&Class.style, lpWndClass, sizeof(WNDCLASSW));
+    /* These MUST be copied manually, since on 64 bit architectures the
+       alignment of the members is different between the 2 structs! */
+    Class.style = lpWndClass->style;
+    Class.lpfnWndProc = lpWndClass->lpfnWndProc;
+    Class.cbClsExtra = lpWndClass->cbClsExtra;
+    Class.cbWndExtra = lpWndClass->cbWndExtra;
+    Class.hInstance = lpWndClass->hInstance;
+    Class.hIcon = lpWndClass->hIcon;
+    Class.hCursor = lpWndClass->hCursor;
+    Class.hbrBackground = lpWndClass->hbrBackground;
+    Class.lpszMenuName = lpWndClass->lpszMenuName;
+    Class.lpszClassName = lpWndClass->lpszClassName;
+
     Class.cbSize = sizeof(WNDCLASSEXW);
     Class.hIconSm = NULL;
 

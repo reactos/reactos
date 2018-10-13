@@ -386,7 +386,13 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955A
 
 ; Class Co-Installers
 HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E965-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E967-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96A-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96B-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96F-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E97B-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E97D-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
 
 
 ; Default computer name settings
@@ -2035,6 +2041,16 @@ HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wbem\wmisvc.dll"
 
+; AutoUpdate Service
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","DisplayName",0x00000000,%WUAUSERV_SERVICE%
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","Description",0x00000000,%WUAUSERV_SERVICE_DESCRIPTION%
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\wuauserv\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wuauserv.dll"
+
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
@@ -2190,6 +2206,9 @@ THEMES_SERVICE_DESCRIPTION="Themes support"
 
 WINMGMT_SERVICE="ReactOS Management Infrastructure"
 WINMGMT_SERVICE_DESCRIPTION="Provides interface to system management information."
+
+WUAUSERV_SERVICE="Automatic Updates"
+WUAUSERV_SERVICE_DESCRIPTION="AutoUpdate Service stub."
 
 WLANSVC_SERVICE="WLAN Service"
 WLANSVC_SERVICE_DESCRIPTION="WLAN Service"

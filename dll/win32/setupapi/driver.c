@@ -808,13 +808,7 @@ SetupDiBuildDriverInfoList(
             strcatW(InfFileName, InfDirectory);
 
             /* Read some information from registry, before creating the driver structure */
-            hDriverKey = SetupDiOpenDevRegKey(
-                DeviceInfoSet,
-                DeviceInfoData,
-                DICS_FLAG_GLOBAL,
-                0,
-                DIREG_DRV,
-                KEY_QUERY_VALUE);
+            hDriverKey = SETUPDI_OpenDrvKey(((struct DeviceInfoSet *)DeviceInfoSet)->HKLM, devInfo, KEY_QUERY_VALUE);
             if (hDriverKey == INVALID_HANDLE_VALUE)
                 goto done;
             RequiredSize = (len - strlenW(InfFileName)) * sizeof(WCHAR);

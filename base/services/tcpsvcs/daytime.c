@@ -14,7 +14,7 @@
 static BOOL
 SendTime(SOCKET sock, CHAR *time)
 {
-    DWORD stringSize = strlen(time) + 1;
+    SIZE_T stringSize = strlen(time) + 1;
     if (send(sock, time, stringSize, 0) == SOCKET_ERROR)
     {
         LogEvent(L"DayTime: Error sending data", WSAGetLastError(), 0, LOG_ERROR);

@@ -7,6 +7,8 @@
  *                  Christoph von Wittich
  *                  Thomas Weidenmueller
  *                  Gunnar Andre Dalsnes
+ *                  Stanislav Motylkov (x86corez@gmail.com)
+ *                  Mark Jansen (mark.jansen@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -72,6 +74,52 @@ GetSystemInfoInternal(IN PSYSTEM_BASIC_INFORMATION BasicInfo,
         SystemInfo->wProcessorLevel = 0;
         SystemInfo->wProcessorRevision = 0;
     }
+}
+
+static
+UINT
+BaseQuerySystemFirmware(IN DWORD FirmwareTableProviderSignature,
+                        IN DWORD FirmwareTableID,
+                        OUT PVOID pFirmwareTableBuffer,
+                        IN DWORD BufferSize,
+                        IN SYSTEM_FIRMWARE_TABLE_ACTION Action)
+{
+    SYSTEM_FIRMWARE_TABLE_INFORMATION* SysFirmwareInfo;
+    ULONG Result = 0, ReturnedSize;
+    ULONG TotalSize = BufferSize + sizeof(SYSTEM_FIRMWARE_TABLE_INFORMATION);
+    NTSTATUS Status;
+
+    SysFirmwareInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, TotalSize);
+    if (!SysFirmwareInfo)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    _SEH2_TRY
+    {
+        SysFirmwareInfo->ProviderSignature = FirmwareTableProviderSignature;
+        SysFirmwareInfo->TableID = FirmwareTableID;
+        SysFirmwareInfo->Action = Action;
+        SysFirmwareInfo->TableBufferLength = BufferSize;
+
+        Status = NtQuerySystemInformation(SystemFirmwareTableInformation, SysFirmwareInfo, TotalSize, &ReturnedSize);
+
+        if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+            Result = SysFirmwareInfo->TableBufferLength;
+
+        if (NT_SUCCESS(Status) && pFirmwareTableBuffer)
+        {
+            RtlCopyMemory(pFirmwareTableBuffer, SysFirmwareInfo->TableBuffer, SysFirmwareInfo->TableBufferLength);
+        }
+    }
+    _SEH2_FINALLY
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SysFirmwareInfo);
+    }
+    _SEH2_END;
+
+    BaseSetLastNTError(Status);
+    return Result;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -423,8 +471,32 @@ SetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
     return 0;
 }
 
-/*
- * @unimplemented
+/**
+ * @name EnumSystemFirmwareTables
+ * @implemented
+ *
+ * Obtains firmware table identifiers.
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724259(v=vs.85).aspx
+ *
+ * @param FirmwareTableProviderSignature
+ * Can be either ACPI, FIRM, or RSMB.
+ *
+ * @param pFirmwareTableBuffer
+ * Pointer to the output buffer, can be NULL.
+ *
+ * @param BufferSize
+ * Size of the output buffer.
+ *
+ * @return
+ * Actual size of the data in case of success, 0 otherwise.
+ *
+ * @remarks
+ * Data would be written to buffer only if the specified size is
+ * larger or equal to the actual size, in the other case Last Error
+ * value would be set to ERROR_INSUFFICIENT_BUFFER.
+ * In case of incorrect provider signature, Last Error value would be
+ * set to ERROR_INVALID_FUNCTION.
+ *
  */
 UINT
 WINAPI
@@ -432,12 +504,46 @@ EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
                          OUT PVOID pFirmwareTableBuffer,
                          IN DWORD BufferSize)
 {
-    STUB;
-    return 0;
+    return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
+                                   0,
+                                   pFirmwareTableBuffer,
+                                   BufferSize,
+                                   SystemFirmwareTable_Enumerate);
 }
 
-/*
- * @unimplemented
+/**
+ * @name GetSystemFirmwareTable
+ * @implemented
+ *
+ * Obtains the firmware table data.
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724379(v=vs.85).aspx
+ *
+ * @param FirmwareTableProviderSignature
+ * Can be either ACPI, FIRM, or RSMB.
+ *
+ * @param FirmwareTableID
+ * Correct table identifier.
+ *
+ * @param pFirmwareTableBuffer
+ * Pointer to the output buffer, can be NULL.
+ *
+ * @param BufferSize
+ * Size of the output buffer.
+ *
+ * @return
+ * Actual size of the data in case of success, 0 otherwise.
+ *
+ * @remarks
+ * Data would be written to buffer only if the specified size is
+ * larger or equal to the actual size, in the other case Last Error
+ * value would be set to ERROR_INSUFFICIENT_BUFFER.
+ * In case of incorrect provider signature, Last Error value would be
+ * set to ERROR_INVALID_FUNCTION.
+ * Also Last Error value becomes ERROR_NOT_FOUND if incorrect
+ * table identifier was specified along with ACPI provider, and
+ * ERROR_INVALID_PARAMETER along with FIRM provider. The RSMB provider
+ * accepts any table identifier.
+ *
  */
 UINT
 WINAPI
@@ -446,8 +552,11 @@ GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
                        OUT PVOID pFirmwareTableBuffer,
                        IN DWORD BufferSize)
 {
-    STUB;
-    return 0;
+    return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
+                                   FirmwareTableID,
+                                   pFirmwareTableBuffer,
+                                   BufferSize,
+                                   SystemFirmwareTable_Get);
 }
 
 /*

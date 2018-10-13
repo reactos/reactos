@@ -29,8 +29,8 @@ VirtualAllocEx(IN HANDLE hProcess,
     NTSTATUS Status;
 
     /* Make sure the address is within the granularity of the system (64K) */
-    if ((lpAddress) &&
-        (lpAddress < (PVOID)BaseStaticServerData->SysInfo.AllocationGranularity))
+    if ((lpAddress != NULL) &&
+        (lpAddress < UlongToPtr(BaseStaticServerData->SysInfo.AllocationGranularity)))
     {
         /* Fail the call */
         SetLastError(ERROR_INVALID_PARAMETER);

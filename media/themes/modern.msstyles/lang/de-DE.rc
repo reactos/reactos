@@ -1,0 +1,39 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Strahlend"
+1001, "Dunkel"
+}
+
+STRINGTABLE
+{
+2000, "Modern Strahlend"
+2001, "Modern Dunkel"
+}
+
+STRINGTABLE
+{
+3000, "Standardgröße"
+3001, "Groß"
+3002, "Extragroß"
+}
+
+STRINGTABLE
+{
+4000, "Standardgröße"
+4001, "Groß"
+4002, "Extragroß"
+}
+
+STRINGTABLE
+{
+5000, "Modern"
+5001, "Visueller Stil"
+5002, "ReactOS Foundation"
+5003, "Polar, basierend auf win10"
+5004, "Veröffentlicht unter GNU/GPL 3.0, 2018"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Visueller Stil für ReactOS"
+}

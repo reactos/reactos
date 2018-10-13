@@ -295,7 +295,7 @@ CUSBHardwareDevice::PnpStart(
                 //
                 // Store Resource base
                 //
-                m_Base = (PULONG)ResourceDescriptor->u.Port.Start.LowPart; //FIXME
+                m_Base = (PULONG)(ULONG_PTR)ResourceDescriptor->u.Port.Start.QuadPart; //FIXME
                 DPRINT("UHCI Base %p Length %x\n", m_Base, ResourceDescriptor->u.Port.Length);
                 break;
             }
@@ -559,7 +559,7 @@ CUSBHardwareDevice::GlobalReset()
     // back up start of modify register
     //
     ASSERT(m_Base);
-    UCHAR sofValue = READ_PORT_UCHAR((PUCHAR)((ULONG)m_Base + UHCI_SOFMOD));
+    UCHAR sofValue = READ_PORT_UCHAR((PUCHAR)m_Base + UHCI_SOFMOD);
 
     //
     // perform global reset
@@ -592,7 +592,7 @@ CUSBHardwareDevice::GlobalReset()
     //
     // restore start of modify register
     //
-    WRITE_PORT_UCHAR((PUCHAR)((ULONG)m_Base + UHCI_SOFMOD), sofValue);
+    WRITE_PORT_UCHAR((PUCHAR)m_Base + UHCI_SOFMOD, sofValue);
 }
 
 NTSTATUS
@@ -1340,7 +1340,7 @@ CUSBHardwareDevice::WriteRegister8(
     IN ULONG Register, 
     IN UCHAR Value)
 {
-    WRITE_PORT_UCHAR((PUCHAR)((ULONG)m_Base + Register), Value);
+    WRITE_PORT_UCHAR((PUCHAR)((PUCHAR)m_Base + Register), Value);
 }
 
 
@@ -1349,7 +1349,7 @@ CUSBHardwareDevice::WriteRegister16(
     ULONG Register,
     USHORT Value)
 {
-    WRITE_PORT_USHORT((PUSHORT)((ULONG)m_Base + Register), Value);
+    WRITE_PORT_USHORT((PUSHORT)((PUCHAR)m_Base + Register), Value);
 }
 
 
@@ -1358,7 +1358,7 @@ CUSBHardwareDevice::WriteRegister32(
     ULONG Register,
     ULONG Value)
 {
-    WRITE_PORT_ULONG((PULONG)((ULONG)m_Base + Register), Value);
+    WRITE_PORT_ULONG((PULONG)((PUCHAR)m_Base + Register), Value);
 }
 
 
@@ -1366,7 +1366,7 @@ UCHAR
 CUSBHardwareDevice::ReadRegister8(
     ULONG Register)
 {
-    return  READ_PORT_UCHAR((PUCHAR)((ULONG)m_Base + Register));
+    return  READ_PORT_UCHAR((PUCHAR)((PUCHAR)m_Base + Register));
 }
 
 
@@ -1374,7 +1374,7 @@ USHORT
 CUSBHardwareDevice::ReadRegister16(
     ULONG Register)
 {
-    return  READ_PORT_USHORT((PUSHORT)((ULONG)m_Base + Register));
+    return  READ_PORT_USHORT((PUSHORT)((PUCHAR)m_Base + Register));
 }
 
 
@@ -1382,7 +1382,7 @@ ULONG
 CUSBHardwareDevice::ReadRegister32(
     ULONG Register)
 {
-    return  READ_PORT_ULONG((PULONG)((ULONG)m_Base + Register));
+    return  READ_PORT_ULONG((PULONG)((PUCHAR)m_Base + Register));
 }
 
 VOID

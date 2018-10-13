@@ -1811,6 +1811,8 @@ MUI_STRING ptBRStrings[] =
     "   Pronto..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER=Reiniciar"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "NÆo foi poss¡vel abrir o console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

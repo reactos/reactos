@@ -415,8 +415,17 @@ LRESULT CAddressBand::OnTipText(UINT idControl, NMHDR *notifyHeader, BOOL &bHand
 {
     if (notifyHeader->hwndFrom == fGoButton)
     {
-        // TODO
-        // Go to "destination path"
+        WCHAR szText[MAX_PATH];
+        WCHAR szFormat[MAX_PATH];
+        LPNMTBGETINFOTIP pGIT = (LPNMTBGETINFOTIP)notifyHeader;
+
+        if (::GetWindowTextW(fEditControl, szText, _countof(szText)))
+        {
+            LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_GOBUTTONTIPTEMPLATE, szFormat, _countof(szFormat));
+            wnsprintf(pGIT->pszText, pGIT->cchTextMax, szFormat, szText);
+        }
+        else
+            *pGIT->pszText = 0;
     }
     return 0;
 }

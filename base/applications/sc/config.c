@@ -17,7 +17,7 @@ BOOL QueryConfig(LPCTSTR ServiceName)
     DWORD cbBytesNeeded = 0;
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
     LPWSTR lpPtr;
-    INT nLen, i;
+    SSIZE_T nLen, i;
 
 #ifdef SCDBG
     _tprintf(_T("service to show configuration - %s\n\n"), ServiceName);

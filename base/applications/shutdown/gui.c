@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-BOOL CALLBACK ShutdownGuiProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+INT_PTR CALLBACK ShutdownGuiProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch(msg)
     {

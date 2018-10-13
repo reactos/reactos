@@ -26,8 +26,10 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
                        char* psz, size_t nChars, char** module_name)
 {
     MEMORY_BASIC_INFORMATION mbi;
-    if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
-        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+
+    if ((nChars > MAXDWORD) ||
+        (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi)) ||
+        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, (DWORD)nChars))
     {
         psz[0] = '\0';
         *module_name = psz;
@@ -164,6 +166,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
 {
     PVOID Data;
     ULONG Size, OldProtect;
+    SIZE_T Size2;
     MEMORY_BASIC_INFORMATION mbi;
     NTSTATUS Status;
     LONG Ret = EXCEPTION_CONTINUE_SEARCH;
@@ -194,10 +197,10 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
             {
                 /* The user tried to write into the resources. Make the page
                    writable... */
-                Size = 1;
+                Size2 = 1;
                 Status = NtProtectVirtualMemory(NtCurrentProcess(),
                                                 &Ptr,
-                                                &Size,
+                                                &Size2,
                                                 PAGE_READWRITE,
                                                 &OldProtect);
                 if (NT_SUCCESS(Status))
@@ -560,14 +563,14 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
      * line. The biggest 32-bit unsigned int (0xFFFFFFFF == 4.294.967.295)
      * takes 10 decimal digits. We then count the terminating NULL.
      */
-    Length = wcslen(AeDebugPath) + 2*10 + 1;
+    Length = (ULONG)wcslen(AeDebugPath) + 2*10 + 1;
 
     /* Check whether the debugger path may be a relative path */
     if ((*AeDebugPath != L'"') &&
         (RtlDetermineDosPathNameType_U(AeDebugPath) == RtlPathTypeRelative))
     {
         /* Relative path, prepend SystemRoot\System32 */
-        PrependLength = wcslen(SharedUserData->NtSystemRoot) + 10 /* == wcslen(L"\\System32\\") */;
+        PrependLength = (ULONG)wcslen(SharedUserData->NtSystemRoot) + 10 /* == wcslen(L"\\System32\\") */;
         if (PrependLength + Length <= ARRAYSIZE(AeDebugCmdLine))
         {
             hr = StringCchPrintfW(AeDebugCmdLine,
@@ -830,8 +833,8 @@ IsBadReadPtr(IN LPCVOID lp,
         *Current;
 
         /* Align the addresses */
-        Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
-        Last = (PCHAR)ROUND_DOWN(Last, PageSize);
+        Current = (volatile CHAR *)ALIGN_DOWN_POINTER_BY(Current, PageSize);
+        Last = (PCHAR)ALIGN_DOWN_POINTER_BY(Last, PageSize);
 
         /* Probe the entire range */
         while (Current != Last)
@@ -908,8 +911,8 @@ IsBadWritePtr(IN LPVOID lp,
         *Current = *Current;
 
         /* Align the addresses */
-        Current = (volatile CHAR *)ROUND_DOWN(Current, PageSize);
-        Last = (PCHAR)ROUND_DOWN(Last, PageSize);
+        Current = (volatile CHAR *)ALIGN_DOWN_POINTER_BY(Current, PageSize);
+        Last = (PCHAR)ALIGN_DOWN_POINTER_BY(Last, PageSize);
 
         /* Probe the entire range */
         while (Current != Last)

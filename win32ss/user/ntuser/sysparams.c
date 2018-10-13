@@ -25,6 +25,7 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
+do { \
     if (GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
         if (GetW32ProcessInfo()->prpwinsta == NULL) \
@@ -33,11 +34,13 @@ BOOL g_PaintDesktopVersion = FALSE;
         } \
         else \
         { \
-            ERR("NtUserSystemParametersInfo requires interactive window station (current is %wZ)\n", &GetW32ProcessInfo()->prpwinsta->Name); \
+            ERR("NtUserSystemParametersInfo requires interactive window station (current is '%wZ')\n", \
+                &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(GetW32ProcessInfo()->prpwinsta))->Name)); \
         } \
         EngSetLastError(err); \
         return 0; \
-    }
+    } \
+} while (0)
 
 static const WCHAR* KEY_MOUSE = L"Control Panel\\Mouse";
 static const WCHAR* VAL_MOUSE1 = L"MouseThreshold1";
@@ -282,7 +285,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
 #if (_WIN32_WINNT >= 0x0600)
-    gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
+    gspv.uiWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
 
     /* Some hardcoded values for now */
@@ -1523,7 +1526,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
 #if(WINVER >= 0x0600)
         case SPI_GETAUDIODESCRIPTION:
-            return SpiGet(pvParam, &gspv.audiodesription, sizeof(AUDIODESCRIPTION), fl);
+            return SpiGet(pvParam, &gspv.audiodescription, sizeof(AUDIODESCRIPTION), fl);
 
         case SPI_SETAUDIODESCRIPTION:
             ERR("SPI_SETAUDIODESCRIPTION is unimplemented\n");
@@ -1666,10 +1669,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bDisableOverlappedContent, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETCLIENTAREAANIMATION:
-            return SpiGetInt(pvParam, &gspv.bClientAnimation, fl);
+            return SpiGetInt(pvParam, &gspv.bClientAreaAnimation, fl);
 
         case SPI_SETCLIENTAREAANIMATION:
-            return SpiSetBool(&gspv.bClientAnimation, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetBool(&gspv.bClientAreaAnimation, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETCLEARTYPE:
             return SpiGetInt(pvParam, &gspv.bClearType, fl);

@@ -41,18 +41,18 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
 
     if (_ILIsMyComputer(apidl[0]))
     {
-        if (32 >= (UINT)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL))
+        if (32 >= (UINT_PTR)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL))
             hr = E_FAIL;
     }
     else if (_ILIsDesktop(apidl[0]))
     {
-        if (32 >= (UINT)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
+        if (32 >= (UINT_PTR)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
             hr = E_FAIL;
     }
     else if (_ILIsNetHood(apidl[0]))
     {
         // FIXME path!
-        if (32 >= (UINT)ShellExecuteW(NULL, L"open", L"explorer.exe",
+        if (32 >= (UINT_PTR)ShellExecuteW(NULL, L"open", L"explorer.exe",
                                       L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
                                       NULL, SW_SHOWDEFAULT))
             hr = E_FAIL;

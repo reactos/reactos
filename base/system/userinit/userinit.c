@@ -183,14 +183,16 @@ GetShell(
 }
 
 static BOOL
-TryToStartShell(
-    IN LPCWSTR Shell)
+StartProcess(
+    IN LPCWSTR CommandLine)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
-    WCHAR ExpandedShell[MAX_PATH];
+    WCHAR ExpandedCmdLine[MAX_PATH];
 
-    TRACE("(%s)\n", debugstr_w(Shell));
+    TRACE("(%s)\n", debugstr_w(CommandLine));
+
+    ExpandEnvironmentStringsW(CommandLine, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
 
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -198,10 +200,8 @@ TryToStartShell(
     si.wShowWindow = SW_SHOWNORMAL;
     ZeroMemory(&pi, sizeof(pi));
 
-    ExpandEnvironmentStringsW(Shell, ExpandedShell, ARRAYSIZE(ExpandedShell));
-
     if (!CreateProcessW(NULL,
-                        ExpandedShell,
+                        ExpandedCmdLine,
                         NULL,
                         NULL,
                         FALSE,
@@ -211,7 +211,7 @@ TryToStartShell(
                         &si,
                         &pi))
     {
-        WARN("CreateProcess() failed with error %lu\n", GetLastError());
+        WARN("CreateProcessW() failed with error %lu\n", GetLastError());
         return FALSE;
     }
 
@@ -267,7 +267,7 @@ StartShell(VOID)
                                 TRACE("Key located - %s\n", debugstr_w(Shell));
 
                                 /* Try to run alternate shell */
-                                if (TryToStartShell(Shell))
+                                if (StartProcess(Shell))
                                 {
                                     TRACE("Alternate shell started (Safe Mode)\n");
                                     return TRUE;
@@ -294,14 +294,14 @@ StartShell(VOID)
     }
 
     /* Try to run shell in user key */
-    if (GetShell(Shell, HKEY_CURRENT_USER) && TryToStartShell(Shell))
+    if (GetShell(Shell, HKEY_CURRENT_USER) && StartProcess(Shell))
     {
         TRACE("Started shell from HKEY_CURRENT_USER\n");
         return TRUE;
     }
 
     /* Try to run shell in local machine key */
-    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && TryToStartShell(Shell))
+    if (GetShell(Shell, HKEY_LOCAL_MACHINE) && StartProcess(Shell))
     {
         TRACE("Started shell from HKEY_LOCAL_MACHINE\n");
         return TRUE;
@@ -310,22 +310,22 @@ StartShell(VOID)
     /* Try default shell */
     if (IsConsoleShell())
     {
+        *Shell = UNICODE_NULL;
         if (GetSystemDirectoryW(Shell, ARRAYSIZE(Shell) - 8))
-            wcscat(Shell, L"\\cmd.exe");
-        else
-            wcscpy(Shell, L"cmd.exe");
+            StringCchCatW(Shell, ARRAYSIZE(Shell), L"\\");
+        StringCchCatW(Shell, ARRAYSIZE(Shell), L"cmd.exe");
     }
     else
     {
-        if (GetWindowsDirectoryW(Shell, ARRAYSIZE(Shell) - 13))
-            wcscat(Shell, L"\\explorer.exe");
-        else
-            wcscpy(Shell, L"explorer.exe");
+        *Shell = UNICODE_NULL;
+        if (GetSystemWindowsDirectoryW(Shell, ARRAYSIZE(Shell) - 13))
+            StringCchCatW(Shell, ARRAYSIZE(Shell), L"\\");
+        StringCchCatW(Shell, ARRAYSIZE(Shell), L"explorer.exe");
     }
 
-    if (!TryToStartShell(Shell))
+    if (!StartProcess(Shell))
     {
-        WARN("Failed to start default shell %s\n", debugstr_w(Shell));
+        WARN("Failed to start default shell '%s'\n", debugstr_w(Shell));
         LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
         MessageBoxW(NULL, szMsg, NULL, MB_OK);
         return FALSE;
@@ -501,24 +501,124 @@ NotifyLogon(VOID)
 }
 
 static BOOL
-StartInstaller(VOID)
+StartInstaller(IN LPCTSTR lpInstallerName)
 {
-    WCHAR Shell[MAX_PATH];
+    SYSTEM_INFO SystemInfo;
+    SIZE_T cchInstallerNameLen;
+    PWSTR ptr;
+    DWORD dwAttribs;
+    WCHAR Installer[MAX_PATH];
     WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    if (GetWindowsDirectoryW(Shell, ARRAYSIZE(Shell) - 12))
-        wcscat(Shell, L"\\reactos.exe");
-    else
-        wcscpy(Shell, L"reactos.exe");
-
-    if (!TryToStartShell(Shell))
+    cchInstallerNameLen = wcslen(lpInstallerName);
+    if (ARRAYSIZE(Installer) < cchInstallerNameLen)
     {
-        WARN("Failed to start the installer: %s\n", debugstr_w(Shell));
-        LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
-        MessageBoxW(NULL, szMsg, NULL, MB_OK);
+        /* The buffer is not large enough to contain the installer file name */
         return FALSE;
     }
-    return TRUE;
+
+    /*
+     * First, try to find the installer using the default drive, under
+     * the directory whose name corresponds to the currently-running
+     * CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *Installer = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - cchInstallerNameLen - 1);
+    ptr = wcschr(Installer, L'\\');
+    if (ptr)
+        *++ptr = UNICODE_NULL;
+    else
+        *Installer = UNICODE_NULL;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"I386");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"MIPS");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ALPHA");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"PPC");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"SHX");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ARM");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"IA64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"ALPHA64");
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            StringCchCatW(Installer, ARRAYSIZE(Installer), L"AMD64");
+            break;
+
+        // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            WARN("Unknown processor architecture %lu\n", SystemInfo.wProcessorArchitecture);
+            SystemInfo.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+            break;
+    }
+
+    if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
+        StringCchCatW(Installer, ARRAYSIZE(Installer), L"\\");
+    StringCchCatW(Installer, ARRAYSIZE(Installer), lpInstallerName);
+
+    dwAttribs = GetFileAttributesW(Installer);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        if (StartProcess(Installer))
+            return TRUE;
+    }
+
+    ERR("Failed to start the installer '%s', trying alternative.\n", debugstr_w(Installer));
+
+    /*
+     * We failed. Try to find the installer from either the current
+     * ReactOS installation directory, or from our current directory.
+     */
+    *Installer = UNICODE_NULL;
+    /* Alternatively one can use SharedUserData->NtSystemRoot */
+    if (GetSystemWindowsDirectoryW(Installer, ARRAYSIZE(Installer) - cchInstallerNameLen - 1))
+        StringCchCatW(Installer, ARRAYSIZE(Installer), L"\\");
+    StringCchCatW(Installer, ARRAYSIZE(Installer), lpInstallerName);
+
+    dwAttribs = GetFileAttributesW(Installer);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        if (StartProcess(Installer))
+            return TRUE;
+    }
+
+    /* We failed. Display an error message and quit. */
+    ERR("Failed to start the installer '%s'.\n", debugstr_w(Installer));
+    LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
+    MessageBoxW(NULL, szMsg, NULL, MB_OK);
+    return FALSE;
 }
 
 /* Used to get the shutdown privilege */
@@ -591,7 +691,7 @@ Restart:
             break;
 
         case INSTALLER:
-            Success = StartInstaller();
+            Success = StartInstaller(L"reactos.exe");
             break;
 
         case REBOOT:

@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB OHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBOHCI main driver functions
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbohci.h"
 
 #define NDEBUG
@@ -239,7 +246,7 @@ OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
 
     TdVA = OhciEndpoint->FirstTD;
 
-    TdPA = (ULONG)EndpointProperties->BufferPA + sizeof(OHCI_HCD_ED);
+    TdPA = EndpointProperties->BufferPA + sizeof(OHCI_HCD_ED);
 
     for (ix = 0; ix < TdCount; ix++)
     {
@@ -673,9 +680,9 @@ OHCI_StartController(IN PVOID ohciExtension,
     }
 
     OhciExtension->HcResourcesVA = (POHCI_HC_RESOURCES)Resources->StartVA;
-    OhciExtension->HcResourcesPA = (POHCI_HC_RESOURCES)Resources->StartPA;
+    OhciExtension->HcResourcesPA = Resources->StartPA;
 
-    DPRINT_OHCI("OHCI_StartController: HcResourcesVA - %p, HcResourcesPA - %p\n",
+    DPRINT_OHCI("OHCI_StartController: HcResourcesVA - %p, HcResourcesPA - %lx\n",
                 OhciExtension->HcResourcesVA,
                 OhciExtension->HcResourcesPA);
 
@@ -685,7 +692,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++) 
     {
         IntED = &OhciExtension->HcResourcesVA->InterrruptHeadED[ix];
-        IntEdPA = (ULONG_PTR)&OhciExtension->HcResourcesPA->InterrruptHeadED[ix];
+        IntEdPA = OhciExtension->HcResourcesPA + FIELD_OFFSET(OHCI_HC_RESOURCES, InterrruptHeadED[ix]);
 
         if (ix == (ENDPOINT_INTERRUPT_1ms - 1))
         {
@@ -819,7 +826,7 @@ OHCI_StartController(IN PVOID ohciExtension,
 
     /* Setup HcHCCA register */
     WRITE_REGISTER_ULONG(&OperationalRegs->HcHCCA,
-                         (ULONG)&OhciExtension->HcResourcesPA->HcHCCA);
+                         OhciExtension->HcResourcesPA + FIELD_OFFSET(OHCI_HC_RESOURCES, HcHCCA));
 
     /* Setup HcInterruptEnable register */
     Interrupts.AsULONG = 0;
@@ -1249,7 +1256,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
     DPRINT_OHCI("OHCI_RemainTDs: ... \n");
 
     MaxTDs = OhciEndpoint->MaxTransferDescriptors;
-    TD = (POHCI_HCD_TD)OhciEndpoint->FirstTD;
+    TD = OhciEndpoint->FirstTD;
 
     RemainTDs = 0;
 
@@ -1273,7 +1280,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                      IN PUSBPORT_SCATTER_GATHER_LIST SGList)
 {
     POHCI_HCD_TD FirstTD;
-    POHCI_HCD_TD FirstTdPA;
+    ULONG FirstTdPA;
     POHCI_HCD_TD TD;
     POHCI_HCD_TD TD2;
     POHCI_HCD_TD PrevTD;
@@ -1302,7 +1309,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     FirstTD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
     FirstTD->NextHcdTD = 0;
-    FirstTD->OhciTransfer = (ULONG)OhciTransfer;
+    FirstTD->OhciTransfer = OhciTransfer;
 
     FirstTD->HwTD.Padded[0] = 0;
     FirstTD->HwTD.Padded[1] = 0;
@@ -1313,12 +1320,12 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                   &TransferParameters->SetupPacket,
                   sizeof(FirstTD->HwTD.SetupPacket));
 
-    FirstTdPA = (POHCI_HCD_TD)FirstTD->PhysicalAddress;
+    FirstTdPA = FirstTD->PhysicalAddress;
 
-    FirstTD->HwTD.gTD.CurrentBuffer = (ULONG)&FirstTdPA->HwTD.SetupPacket;
+    FirstTD->HwTD.gTD.CurrentBuffer = FirstTdPA + FIELD_OFFSET(OHCI_HCD_TD, HwTD.SetupPacket);
 
-    BufferEnd = (ULONG_PTR)&FirstTdPA->HwTD.SetupPacket +
-                           sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) - 1;
+    BufferEnd = FirstTdPA + FIELD_OFFSET(OHCI_HCD_TD, HwTD.SetupPacket) +
+                            sizeof(USB_DEFAULT_PIPE_SETUP_PACKET) - 1;
 
     FirstTD->HwTD.gTD.BufferEnd = BufferEnd;
 
@@ -1336,7 +1343,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     TD2->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
     TD2->NextHcdTD = 0;
-    TD2->OhciTransfer = (ULONG)OhciTransfer;
+    TD2->OhciTransfer = OhciTransfer;
 
     RtlZeroMemory(&TD2->HwTD.SetupPacket,
                   sizeof(TD2->HwTD.SetupPacket));
@@ -1348,7 +1355,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     TD = TD2;
 
     PrevTD->HwTD.gTD.NextTD = TD2->PhysicalAddress;
-    PrevTD->NextHcdTD = (ULONG)TD2;
+    PrevTD->NextHcdTD = TD2;
 
     MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
@@ -1387,7 +1394,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
 
         TD->NextHcdTD = 0;
-        TD->OhciTransfer = (ULONG)OhciTransfer;
+        TD->OhciTransfer = OhciTransfer;
 
         TD->HwTD.gTD.CurrentBuffer = 0;
         TD->HwTD.gTD.BufferEnd = 0;
@@ -1399,7 +1406,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.Padded[1] = 0;
 
         PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-        PrevTD->NextHcdTD = (ULONG)TD;
+        PrevTD->NextHcdTD = TD;
     }
 
     if (TransferParameters->TransferFlags & USBD_SHORT_TRANSFER_OK)
@@ -1435,7 +1442,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     NextTD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
 
     TD->HwTD.gTD.NextTD = NextTD->PhysicalAddress;
-    TD->NextHcdTD = (ULONG)NextTD;
+    TD->NextHcdTD = NextTD;
 
     NextTD->NextHcdTD = 0;
     NextTD->HwTD.gTD.NextTD = 0;
@@ -1503,7 +1510,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         TD->HwTD.Padded[1] = 0;
 
         TD->Flags |= OHCI_HCD_TD_FLAG_PROCESSED;
-        TD->OhciTransfer = (ULONG)OhciTransfer;
+        TD->OhciTransfer = OhciTransfer;
         TD->NextHcdTD = 0;
 
         if (TransferParameters->TransferBufferLength)
@@ -1533,7 +1540,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         OhciTransfer->PendingTDs++;
 
         PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-        PrevTD->NextHcdTD = (ULONG)TD;
+        PrevTD->NextHcdTD = TD;
     }
     while (TransferedLen < TransferParameters->TransferBufferLength);
 
@@ -1545,7 +1552,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
 
     PrevTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_IMMEDIATE;
     PrevTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
-    PrevTD->NextHcdTD = (ULONG)TD;
+    PrevTD->NextHcdTD = TD;
 
     TD->HwTD.gTD.NextTD = 0;
     TD->NextHcdTD = 0;
@@ -1630,7 +1637,7 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
 
     DPRINT_OHCI("OHCI_ProcessDoneTD: ... \n");
 
-    OhciTransfer = (POHCI_TRANSFER)TD->OhciTransfer;
+    OhciTransfer = TD->OhciTransfer;
     OhciEndpoint = OhciTransfer->OhciEndpoint;
 
     OhciTransfer->PendingTDs--;
@@ -1735,7 +1742,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
                                                       OhciExtension,
                                                       OhciEndpoint);
 
-    if (NextTD->OhciTransfer == (ULONG)OhciTransfer)
+    if (NextTD->OhciTransfer == OhciTransfer)
     {
         LastTD = OhciTransfer->NextTD;
 
@@ -1748,7 +1755,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         {
             TD = &OhciEndpoint->FirstTD[ix];
 
-            if (TD->OhciTransfer == (ULONG)OhciTransfer)
+            if (TD->OhciTransfer == OhciTransfer)
             {
                 if (IsIsoEndpoint)
                     OHCI_ProcessDoneIsoTD(OhciExtension, TD, FALSE);
@@ -1768,10 +1775,10 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
     do
     {
-        if (TD->OhciTransfer == (ULONG)ohciTransfer)
+        if (TD->OhciTransfer == ohciTransfer)
         {
             PrevTD = TD;
-            TD = (POHCI_HCD_TD)TD->NextHcdTD;
+            TD = TD->NextHcdTD;
 
             if (PrevTD == OhciEndpoint->HcdHeadP)
                 OhciEndpoint->HcdHeadP = TD;
@@ -1785,7 +1792,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         }
         else
         {
-            TD = (POHCI_HCD_TD)TD->NextHcdTD;
+            TD = TD->NextHcdTD;
         }
     }
     while (TD != NextTD);
@@ -1799,7 +1806,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
         while (TD != OhciEndpoint->HcdTailP)
         {
-            if (TD->OhciTransfer == (ULONG)OhciTransfer)
+            if (TD->OhciTransfer == OhciTransfer)
             {
                 td = TD;
                 break;
@@ -1807,7 +1814,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
             LastTD = TD;
 
-            TD = (POHCI_HCD_TD)TD->NextHcdTD;
+            TD = TD->NextHcdTD;
         }
 
         TD = td;
@@ -1818,19 +1825,19 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
                 break;
 
             PrevTD = TD;
-            TD = (POHCI_HCD_TD)TD->NextHcdTD;
+            TD = TD->NextHcdTD;
 
             if (IsIsoEndpoint)
                 OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
             else
                 OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
         }
-        while (TD->OhciTransfer == (ULONG)OhciTransfer);
+        while (TD->OhciTransfer == OhciTransfer);
 
-        TmpTransfer = (POHCI_TRANSFER)LastTD->OhciTransfer;
+        TmpTransfer = LastTD->OhciTransfer;
         TmpTransfer->NextTD = TD;
 
-        LastTD->NextHcdTD = (ULONG)TD;
+        LastTD->NextHcdTD = TD;
         LastTD->HwTD.gTD.NextTD = TD->PhysicalAddress;
     }
 
@@ -1991,7 +1998,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     IsResetOnHalt = (ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT) != 0;
     DPRINT1("PollAsyncEndpoint: IsResetOnHalt %x\n", IsResetOnHalt);
 
-    for (TD = OhciEndpoint->HcdHeadP; ; TD = (POHCI_HCD_TD)TD->NextHcdTD)
+    for (TD = OhciEndpoint->HcdHeadP; ; TD = TD->NextHcdTD)
     {
         if (!TD)
         {
@@ -2005,7 +2012,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
             goto HandleDoneList;
         }
 
-        OhciTransfer = (POHCI_TRANSFER)TD->OhciTransfer;
+        OhciTransfer = TD->OhciTransfer;
         ConditionCode = TD->HwTD.gTD.Control.ConditionCode;
 
         DPRINT("TD - %p, ConditionCode - %X\n", TD, ConditionCode);
@@ -2056,7 +2063,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
 
                             do
                             {
-                                transfer = (POHCI_TRANSFER)transfer->NextTD->OhciTransfer;
+                                transfer = transfer->NextTD->OhciTransfer;
                                 NextTD = transfer->NextTD;
                             }
                             while (transfer && TransferNumber ==
@@ -2111,7 +2118,7 @@ ProcessListTDs:
         OHCI_DumpHcdTD(TD);
         TD->Flags |= OHCI_HCD_TD_FLAG_DONE;
         InsertTailList(&OhciEndpoint->TDList, &TD->DoneLink);
-        TD = (POHCI_HCD_TD)TD->NextHcdTD;
+        TD = TD->NextHcdTD;
     }
 
 HandleDoneList:

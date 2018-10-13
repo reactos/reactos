@@ -18,6 +18,8 @@
 #include <winnls.h>
 #include <shellapi.h>
 #include <windowsx.h>
+#include <stdlib.h>
+#include <tchar.h>
 
 #include "resource.h"
 
@@ -923,9 +925,15 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                 if (HIWORD(wParam) == CBN_SELCHANGE)
                 {
                     HWND hCombo = GetDlgItem(hDlg,IDC_ZOOM);
+                    LPCTSTR currentZoomValue = TEXT("");
 
                     /* Get index of current selection and the text of that selection */
-                    iZoom = SendMessage( hCombo, CB_GETCURSEL, (WPARAM) wParam, (LPARAM) lParam ) + 1;
+                    int currentSelectionIndex = ComboBox_GetCurSel(hCombo);  
+                    ComboBox_GetLBText(hCombo, currentSelectionIndex, currentZoomValue);
+                    iZoom = _ttoi(currentZoomValue);
+
+                    /* Trigger the Draw function to rezoom (which will be set false automatically after rezooming) */
+                    bRecreateOffscreenDC = TRUE;
 
                     /* Update the magnifier UI */
                     Refresh();

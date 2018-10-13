@@ -233,14 +233,23 @@ GetServices ( void )
                         }
                     }
 
-                    memset(&FileName, 0, MAX_PATH);
-                    if (_tcscspn(pServiceConfig->lpBinaryPathName, _T("\"")))
+                    if (pServiceConfig->lpBinaryPathName[0] != _T('"'))
                     {
-                        _tcsncpy(FileName, pServiceConfig->lpBinaryPathName, _tcscspn(pServiceConfig->lpBinaryPathName, _T(" ")) );
+                        /* Assume everything before the first space is the binary path */
+                        /* FIXME: This is a reasonable heuristic but some
+                         *        services use unquoted paths with spaces */
+                        StringCchCopyN(FileName,
+                                       _countof(FileName),
+                                       pServiceConfig->lpBinaryPathName,
+                                       _tcscspn(pServiceConfig->lpBinaryPathName, _T(" ")));
                     }
                     else
                     {
-                        _tcscpy(FileName, pServiceConfig->lpBinaryPathName);
+                        /* Binary path is inside the quotes */
+                        StringCchCopyN(FileName,
+                                       _countof(FileName),
+                                       pServiceConfig->lpBinaryPathName + 1,
+                                       _tcscspn(pServiceConfig->lpBinaryPathName + 1, _T("\"")));
                     }
 
                     HeapFree(GetProcessHeap(), 0, pServiceConfig);

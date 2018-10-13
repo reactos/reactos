@@ -27,7 +27,7 @@ CALLBACK completion(
     ok(lpOverlapped != NULL, "lpOverlapped %p\n", lpOverlapped);
     if (lpOverlapped)
     {
-        ok(lpOverlapped->hEvent != INVALID_HANDLE_VALUE, "lpOverlapped->hEvent %d\n", (int)lpOverlapped->hEvent);
+        ok(lpOverlapped->hEvent != INVALID_HANDLE_VALUE, "lpOverlapped->hEvent %p\n", lpOverlapped->hEvent);
         if (lpOverlapped->hEvent != INVALID_HANDLE_VALUE)
             WSASetEvent(lpOverlapped->hEvent);
     }

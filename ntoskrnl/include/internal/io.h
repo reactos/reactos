@@ -96,6 +96,7 @@
 typedef struct _FILE_OBJECT_EXTENSION
 {
     PDEVICE_OBJECT TopDeviceObjectHint;
+    PVOID FilterContext;
 
 } FILE_OBJECT_EXTENSION, *PFILE_OBJECT_EXTENSION;
 
@@ -797,6 +798,12 @@ IopVerifyDiskSignature(
     OUT PULONG Signature
 );
 
+BOOLEAN
+NTAPI
+IoInitializeCrashDump(
+    IN HANDLE PageFileHandle
+);
+
 //
 // Device/Volume Routines
 //
@@ -1213,9 +1220,21 @@ IopGetSetSecurityObject(
 
 NTSTATUS
 NTAPI
-IopQueryNameFile(
+IopQueryName(
     IN PVOID ObjectBody,
     IN BOOLEAN HasName,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength,
+    IN KPROCESSOR_MODE PreviousMode
+);
+
+NTSTATUS
+NTAPI
+IopQueryNameInternal(
+    IN PVOID ObjectBody,
+    IN BOOLEAN HasName,
+    IN BOOLEAN QueryDosName,
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
     IN ULONG Length,
     OUT PULONG ReturnLength,
@@ -1230,6 +1249,15 @@ IopCloseFile(
     IN ACCESS_MASK GrantedAccess,
     IN ULONG ProcessHandleCount,
     IN ULONG SystemHandleCount
+);
+
+NTSTATUS
+NTAPI
+IopAcquireFileObjectLock(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ BOOLEAN Alertable,
+    _Out_ PBOOLEAN LockFailed
 );
 
 PVOID
@@ -1259,6 +1287,23 @@ NTAPI
 IoComputeDesiredAccessFileObject(
     IN PFILE_OBJECT FileObject,
     IN PACCESS_MASK DesiredAccess
+);
+
+NTSTATUS
+NTAPI
+IopGetFileInformation(
+    IN PFILE_OBJECT FileObject,
+    IN ULONG Length,
+    IN FILE_INFORMATION_CLASS FileInfoClass,
+    OUT PVOID Buffer,
+    OUT PULONG ReturnedLength
+);
+
+BOOLEAN
+NTAPI
+IopVerifyDeviceObjectOnStack(
+    IN PDEVICE_OBJECT BaseDeviceObject,
+    IN PDEVICE_OBJECT TopDeviceObjectHint
 );
 
 //

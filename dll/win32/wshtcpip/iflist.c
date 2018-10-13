@@ -95,7 +95,7 @@ BOOL AllocAndGetEntityArray(
         *idCount = (outBufLenNeeded / sizeof(TDIEntityID));
         *ppEntities = (TDIEntityID*)outBuf;
 
-        DPRINT("TcpFile %lx\n", (DWORD)TcpFile);
+        DPRINT("TcpFile %p\n", TcpFile);
 
         DPRINT("idCount %lx\n", *idCount);// 0x24;
 
@@ -247,7 +247,7 @@ WSHIoctl_GetInterfaceList(
         goto cleanup;
     }
 
-    DPRINT("TcpFile %lx\n",(DWORD)TcpFile);
+    DPRINT("TcpFile %p\n", TcpFile);
 
     if (!AllocAndGetEntityArray(TcpFile,hHeap,&outEntityID,&outIDCount))
     {

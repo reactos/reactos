@@ -57,7 +57,7 @@ BEGIN
     IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawień..."
     IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu ReactOS..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d dni"
 END
 
 STRINGTABLE

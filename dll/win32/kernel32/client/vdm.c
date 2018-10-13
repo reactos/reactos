@@ -746,7 +746,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
     BOOL Success = FALSE;
     NTSTATUS Status;
-    ULONG RegionSize, EnvironmentSize = 0;
+    ULONG EnvironmentSize = 0;
+    SIZE_T RegionSize;
     PWCHAR Environment, NewEnvironment = NULL;
     ENV_NAME_TYPE NameType;
     ULONG NameLength, NumChars, Remaining;
@@ -1025,7 +1026,7 @@ NTAPI
 BaseDestroyVDMEnvironment(IN PANSI_STRING AnsiEnv,
                           IN PUNICODE_STRING UnicodeEnv)
 {
-    ULONG Dummy = 0;
+    SIZE_T Dummy = 0;
 
     /* Clear the ANSI buffer since Rtl creates this for us */
     if (AnsiEnv->Buffer) RtlFreeAnsiString(AnsiEnv);

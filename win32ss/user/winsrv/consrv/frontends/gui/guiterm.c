@@ -97,8 +97,6 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
  ******************************************************************************/
 
 VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-VOID
 CreateSysMenu(HWND hWnd);
 
 static ULONG NTAPI
@@ -326,7 +324,7 @@ GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
 
     hDesk = NtUserResolveDesktop(ConsoleLeaderProcessHandle,
                                  &DesktopPath,
-                                 0,
+                                 FALSE,
                                  &hWinSta);
     DPRINT("NtUserResolveDesktop(DesktopPath = '%wZ') returned hDesk = 0x%p; hWinSta = 0x%p\n",
            &DesktopPath, hDesk, hWinSta);

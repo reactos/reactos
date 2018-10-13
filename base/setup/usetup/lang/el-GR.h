@@ -1796,6 +1796,8 @@ MUI_STRING elGRStrings[] =
     "   Ž¢¦¡¢ž¨éŸž¡œ..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = „§œ¤ ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "€›ç¤˜«¦ ¤˜ ˜¤¦ ®«œå ž ¡¦¤©æ¢˜\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

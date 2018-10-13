@@ -258,7 +258,8 @@ LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg)
     PLIST_ENTRY SessionEntry;
     PLSAP_LOGON_SESSION CurrentSession;
     PLUID SessionList;
-    ULONG i, Length, MemSize;
+    ULONG i, Length;
+    SIZE_T MemSize;
     PVOID ClientBaseAddress = NULL;
     NTSTATUS Status;
 
@@ -353,7 +354,8 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     PLSAP_LOGON_SESSION Session;
     PSECURITY_LOGON_SESSION_DATA LocalSessionData;
     PVOID ClientBaseAddress = NULL;
-    ULONG TotalLength, MemSize, SidLength = 0;
+    ULONG TotalLength, SidLength = 0;
+    SIZE_T MemSize;
     PUCHAR Ptr;
     NTSTATUS Status;
 

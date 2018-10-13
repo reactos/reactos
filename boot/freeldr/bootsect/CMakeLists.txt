@@ -6,6 +6,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     CreateBootSectorTarget(fat ${CMAKE_CURRENT_SOURCE_DIR}/fat.S ${CMAKE_CURRENT_BINARY_DIR}/fat.bin 7c00)
     CreateBootSectorTarget(fat32 ${CMAKE_CURRENT_SOURCE_DIR}/fat32.S ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin 7c00)
+    CreateBootSectorTarget(btrfsvbr ${CMAKE_CURRENT_SOURCE_DIR}/btrfs.S ${CMAKE_CURRENT_BINARY_DIR}/btrfs.bin 7c00)
 
     ## New versions using FATY.S (experimental)
     # add_definitions(-DFAT12)
@@ -24,6 +25,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     add_cd_file(TARGET dosmbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin FOR bootcd regtest)
     add_cd_file(TARGET ext2 DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/ext2.bin FOR bootcd regtest)
+    add_cd_file(TARGET btrfsvbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/btrfs.bin FOR bootcd regtest)
     add_cd_file(TARGET fat DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/fat.bin FOR bootcd regtest)
     add_cd_file(TARGET fat32 DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin FOR bootcd regtest)
     add_cd_file(TARGET isoboot DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isoboot.bin FOR all hybridcd)

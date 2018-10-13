@@ -87,16 +87,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Réinitialisation automatique", -1, 6, 11, 234, 47
+    GROUPBOX "Réinitialisation automatique", -1, 6, 11, 234, 50
     AUTOCHECKBOX "&Désactiver les fonctionnalités d'accessibilité après un délai d'inactivité de :",
-                 IDC_RESET_BOX, 12, 18, 222, 14
+                 IDC_RESET_BOX, 12, 20, 222, 16, BS_MULTILINE
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Avertissement", -1, 6, 63, 234, 47
+    GROUPBOX "Avertissement", -1, 6, 63, 234, 50
     AUTOCHECKBOX "Afficher un message d'avertissement lors de l'activation d'une fonctionnalité", IDC_NOTIFICATION_MESSAGE,
-                 12, 72, 222, 14
+                 12, 72, 222, 14, BS_MULTILINE
     AUTOCHECKBOX "Émettre un son lors de l'activation/désactivation d'une fonctionnalité", IDC_NOTIFICATION_SOUND,
-                 12, 90, 222, 14
+                 12, 90, 222, 18, BS_MULTILINE
     GROUPBOX "Périphériques Touches série", -1, 6, 115, 234, 47
     LTEXT "Les périphériques Touches série représentent une alternative pour accéder aux fonctionnalités du clavier et de la souris.",
           -1, 12, 124, 222, 20
@@ -106,7 +106,7 @@ BEGIN
     AUTOCHECKBOX "Appliquer tous les paramètres au Bureau d'ou&verture de session", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
     AUTOCHECKBOX "Appliq&uer tous les paramètres par défaut aux nouveaux utilisateurs", IDC_ADMIN_USERS_BOX,
-                 12, 196, 222, 14
+                 12, 196, 222, 14, BS_MULTILINE
 END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 228

@@ -1090,6 +1090,10 @@ static void unserialize(void* data, ULONG len, WCHAR* s) {
     }
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK StartBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     WCHAR *s, *vol, *block;
     HANDLE h, token;
@@ -1291,3 +1295,7 @@ void CALLBACK StopBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int n
 end:
     CloseHandle(token);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif

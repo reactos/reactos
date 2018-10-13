@@ -460,7 +460,12 @@ BOOL BIDI_Reorder(
 
     if (lpGlyphs)
     {
+#ifdef __REACTOS__
+        /* ReactOS r57677 and r57679 */
+        cMaxGlyphs = 3 * uCount / 2 + 16;
+#else
         cMaxGlyphs = 1.5 * uCount + 16;
+#endif
         run_glyphs = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * cMaxGlyphs);
         if (!run_glyphs)
         {

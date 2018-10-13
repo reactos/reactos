@@ -4,7 +4,7 @@
  * PURPOSE: Romanian Language File for Winlogon
  * TRANSLATORS:
  *          Petru Dimitriu (petrimetri at gmail dot com)
- *          Ștefan Fulea (stefan dot fulea at mail dot md)
+ *          Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -59,7 +59,7 @@ BEGIN
     IDS_SAVEYOURSETTINGS "Configurații personale în curs de păstrare…"
     IDS_REACTOSISSTARTINGUP "Sistem de operare în curs de pornire…"
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d zile"
 END
 
 STRINGTABLE

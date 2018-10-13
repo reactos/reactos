@@ -1777,6 +1777,8 @@ MUI_STRING etEEStrings[] =
     "   Valmis..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Taask„ivita arvuti"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Konsooli ei ännestunud avada\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

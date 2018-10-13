@@ -178,8 +178,9 @@ INT cmd_start (LPTSTR Rest)
 
     /* get comspec */
     comspec = cmd_alloc ( MAX_PATH * sizeof(TCHAR));
-    if (comspec == NULL)
+    if (!comspec)
     {
+        WARN("Cannot allocate memory for start comspec!\n");
         error_out_of_memory();
         return 1;
     }

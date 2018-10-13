@@ -217,7 +217,7 @@ ACPI_THREAD_ID
 AcpiOsGetThreadId (void)
 {
     /* Thread ID must be non-zero */
-    return (ULONG)PsGetCurrentThreadId() + 1;
+    return (ULONG_PTR)PsGetCurrentThreadId() + 1;
 }
 
 ACPI_STATUS

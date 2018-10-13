@@ -9,6 +9,7 @@ list(APPEND SOURCE
     CComBSTR.cpp
     CComHeapPtr.cpp
     CComObject.cpp
+    CComQIPtr.cpp
     CImage.cpp
     CRegKey.cpp
     CSimpleArray.cpp

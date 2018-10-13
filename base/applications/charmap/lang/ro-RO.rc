@@ -1,7 +1,7 @@
 /*
  * FILE:             base/applications/charmap/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot md)
+ * TRANSLATOR:       Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -45,7 +45,7 @@ CAPTION "Despre"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Hartă de caractere v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Ștefan Fulea (stefan.fulea@mail.md)", IDC_STATIC, 48, 7, 210, 36
+    LTEXT "Hartă de caractere v0.1\nDrept de autor (C) 2007 Ged Murphy (gedmurphy@reactos.org)\nTraducere de Ștefan Fulea (stefan.fulea@mail.com)", IDC_STATIC, 48, 7, 210, 36
     PUSHBUTTON "Î&nchide", IDOK, 105, 162, 44, 15
     ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 254, 107, WS_VISIBLE | WS_VSCROLL |
