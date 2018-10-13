@@ -2108,6 +2108,14 @@ PATH_WidenPath(DC *dc)
     else if (obj_type == GDI_OBJECT_TYPE_EXTPEN)
     {
         penStyle = elp->elpPenStyle;
+        if ((PS_TYPE_MASK & penStyle) == PS_COSMETIC)
+        {
+            DPRINT("PS_COSMETIC\n");
+            EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+            ExFreePoolWithTag(elp, TAG_PATH);
+            PATH_UnlockPath(pPath);
+            return NULL;
+        }
     }
     else
     {
