@@ -150,7 +150,7 @@ PerformTest(
     ULONG TestId,
     PDEVICE_OBJECT DeviceObject)
 {
-    PVOID Bcb, PinBcb;
+    PVOID Bcb, PinBcb, NewBcb;
     BOOLEAN Ret;
     PULONG Buffer;
     PTEST_FCB Fcb;
@@ -184,7 +184,7 @@ PerformTest(
                 if (TestId == 0)
                 {
                     Ret = FALSE;
-                    Offset.QuadPart = TestId * 0x1000;
+                    Offset.QuadPart = 0;
                     KmtStartSeh();
                     Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
@@ -209,6 +209,50 @@ PerformTest(
                         }
 
                         CcUnpinData(Bcb);
+                    }
+                }
+                else if (TestId == 1)
+                {
+                    Ret = FALSE;
+                    Offset.QuadPart = 0;
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &PinBcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        ok(*(PUSHORT)PinBcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)PinBcb);
+                        ok_eq_ulong(Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                        Ret = FALSE;
+                        KmtStartSeh();
+                        Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                        {
+                            ok(Bcb != PinBcb, "Returned same BCB!\n");
+
+                            Ret = FALSE;
+                            NewBcb = Bcb;
+                            KmtStartSeh();
+                            Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &NewBcb);
+                            KmtEndSeh(STATUS_SUCCESS);
+
+                            if (!skip(Ret == TRUE, "CcPinMappedData failed\n"))
+                            {
+                                ok(Bcb != NewBcb, "Returned same BCB!\n");
+                                ok_eq_pointer(NewBcb, PinBcb);
+                                ok(*(PUSHORT)NewBcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)NewBcb);
+
+                                /* Previous BCB isn't valid anymore! */
+                                Bcb = NewBcb;
+                            }
+
+                            CcUnpinData(Bcb);
+                        }
+
+                        CcUnpinData(PinBcb);
                     }
                 }
             }
