@@ -36,7 +36,7 @@ static void test_findAttribute(void)
     BYTE blobbin[] = {0x02,0x01,0x01};
     static CHAR oid[] = "1.2.3";
     CRYPT_ATTR_BLOB blobs[] = { { sizeof blobbin, blobbin }, };
-    CRYPT_ATTRIBUTE attr = { oid, sizeof(blobs) / sizeof(blobs[0]), blobs };
+    CRYPT_ATTRIBUTE attr = { oid, ARRAY_SIZE(blobs), blobs };
 
     /* returns NULL, last error not set */
     SetLastError(0xdeadbeef);
@@ -128,10 +128,8 @@ static void test_findRDNAttr(void)
     CERT_RDN_ATTR attrs[] = {
      { oid, CERT_RDN_IA5_STRING, { sizeof bin, bin } },
     };
-    CERT_RDN rdns[] = {
-     { sizeof(attrs) / sizeof(attrs[0]), attrs },
-    };
-    CERT_NAME_INFO nameInfo = { sizeof(rdns) / sizeof(rdns[0]), rdns };
+    CERT_RDN rdns[] = { { ARRAY_SIZE(attrs), attrs } };
+    CERT_NAME_INFO nameInfo = { ARRAY_SIZE(rdns), rdns };
 
     if (0)
     {

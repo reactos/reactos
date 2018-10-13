@@ -48,6 +48,9 @@ INT_PTR CALLBACK StartRecDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
 INT_PTR CALLBACK VirtMemDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK LicenceDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
+/* System information */
+BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf);
+
 typedef struct _PAGEFILE
 {
     TCHAR  szDrive[3];

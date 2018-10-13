@@ -1263,6 +1263,10 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
                             rc.bottom - rc.top + chgy,
                             SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
                     break;
+                case IDC_TOOLBARPLACES:
+                    DeferWindowPos( hdwp, ctrl, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top + chgy,
+                                    SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
             }
         }
     }

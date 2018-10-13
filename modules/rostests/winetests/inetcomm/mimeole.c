@@ -20,6 +20,9 @@
 
 #define COBJMACROS
 #define NONAMELESSUNION
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#endif
 
 #include "initguid.h"
 #include "windows.h"
@@ -129,7 +132,7 @@ static WCHAR *a2w(const char *str)
 static int strcmp_wa(const WCHAR *strw, const char *stra)
 {
     WCHAR buf[512];
-    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, ARRAY_SIZE(buf));
     return lstrcmpW(strw, buf);
 }
 
@@ -436,7 +439,7 @@ static HRESULT WINAPI Stream_Clone(IStream *iface, IStream **ppstm)
     return E_NOTIMPL;
 }
 
-static /* const */ IStreamVtbl StreamVtbl = {
+static const IStreamVtbl StreamVtbl = {
     Stream_QueryInterface,
     Stream_AddRef,
     Stream_Release,
@@ -1300,7 +1303,7 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
     return E_FAIL;
 }
 
-static /* const */ IServiceProviderVtbl ServiceProviderVtbl = {
+static const IServiceProviderVtbl ServiceProviderVtbl = {
     ServiceProvider_QueryInterface,
     ServiceProvider_AddRef,
     ServiceProvider_Release,
@@ -1430,7 +1433,7 @@ static void test_mhtml_protocol_binding(const mhtml_binding_test_t *test)
     CloseHandle(file);
 
     sprintf(urla, test->url, file_name);
-    MultiByteToWideChar(CP_ACP, 0, urla, -1, test_url, sizeof(test_url)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, urla, -1, test_url, ARRAY_SIZE(test_url));
 
     hres = CoCreateInstance(&CLSID_IMimeHtmlProtocol, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void**)&protocol);
     ok(hres == S_OK, "Could not create protocol handler: %08x\n", hres);
@@ -1514,13 +1517,13 @@ static void test_mhtml_protocol_info(void)
                             &IID_IInternetProtocolInfo, (void**)&protocol_info);
     ok(hres == S_OK, "Could not create protocol info: %08x\n", hres);
 
-    for(i = 0; i < sizeof(combine_tests)/sizeof(*combine_tests); i++) {
+    for(i = 0; i < ARRAY_SIZE(combine_tests); i++) {
         base_url = a2w(combine_tests[i].base_url);
         relative_url = a2w(combine_tests[i].relative_url);
 
         combined_len = 0xdeadbeef;
         hres = IInternetProtocolInfo_CombineUrl(protocol_info, base_url, relative_url, ICU_BROWSER_MODE,
-                                                combined_url, sizeof(combined_url)/sizeof(WCHAR), &combined_len, 0);
+                                                combined_url, ARRAY_SIZE(combined_url), &combined_len, 0);
         todo_wine_if(combine_tests[i].todo)
         ok(hres == S_OK, "[%u] CombineUrl failed: %08x\n", i, hres);
         if(SUCCEEDED(hres)) {
@@ -1541,7 +1544,7 @@ static void test_mhtml_protocol_info(void)
     }
 
     hres = IInternetProtocolInfo_CombineUrl(protocol_info, http_url, http_url, ICU_BROWSER_MODE,
-                                            combined_url, sizeof(combined_url)/sizeof(WCHAR), &combined_len, 0);
+                                            combined_url, ARRAY_SIZE(combined_url), &combined_len, 0);
     ok(hres == E_FAIL, "CombineUrl failed: %08x\n", hres);
 
     IInternetProtocolInfo_Release(protocol_info);
@@ -1563,7 +1566,7 @@ static ULONG WINAPI outer_Release(IUnknown *iface)
     return 1;
 }
 
-static /* const */ IUnknownVtbl outer_vtbl = {
+static const IUnknownVtbl outer_vtbl = {
     outer_QueryInterface,
     outer_AddRef,
     outer_Release
@@ -1605,7 +1608,7 @@ static void test_mhtml_protocol(void)
     if(!broken_mhtml_resolver)
         test_mhtml_protocol_info();
 
-    for(i = 0; i < sizeof(binding_tests)/sizeof(*binding_tests); i++)
+    for(i = 0; i < ARRAY_SIZE(binding_tests); i++)
         test_mhtml_protocol_binding(binding_tests + i);
 }
 
@@ -1628,7 +1631,7 @@ static void test_MimeOleObjectFromMoniker(void)
         {"../test.mht", "mhtml:../test.mht"}
     };
 
-    for(i = 0; i < sizeof(tests)/sizeof(*tests); i++) {
+    for(i = 0; i < ARRAY_SIZE(tests); i++) {
         url = a2w(tests[i].url);
         hres = CreateURLMoniker(NULL, url, &mon);
         ok(hres == S_OK, "CreateURLMoniker failed: %08x\n", hres);

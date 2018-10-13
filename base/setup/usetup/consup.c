@@ -54,7 +54,7 @@ CONSOLE_Init(
     if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
         return FALSE;
     xScreen = csbi.dwSize.X;
-    yScreen = 50;//csbi.dwSize.Y;
+    yScreen = csbi.dwSize.Y;
     return TRUE;
 }
 

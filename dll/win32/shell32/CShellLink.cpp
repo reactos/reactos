@@ -143,6 +143,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/*
+ * Allows to define whether or not Windows-compatible behaviour
+ * should be adopted when setting and retrieving icon location paths.
+ * See CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT iIcon)
+ * for more details.
+ */
+#define ICON_LINK_WINDOWS_COMPAT
+
 #define SHLINK_LOCAL  0
 #define SHLINK_REMOTE 1
 
@@ -519,7 +527,7 @@ static LPWSTR Stream_LoadPath(LPCSTR p, DWORD maxlen)
 {
     UINT len = 0;
 
-    while (p[len] && len < maxlen)
+    while (len < maxlen && p[len])
         len++;
 
     UINT wlen = MultiByteToWideChar(CP_ACP, 0, p, len, NULL, 0);
@@ -1200,7 +1208,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCSTR pszArgs)
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1399,7 +1406,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::Resolve(HWND hwnd, DWORD fFlags)
 
         /* Clear the cached path */
         HeapFree(GetProcessHeap(), 0, m_sPath);
-        m_sPath = NULL;
         m_sPath = shelllink_get_msi_component_path(component);
         if (!m_sPath)
             return E_FAIL;
@@ -1553,15 +1559,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetDescription(LPCWSTR pszName)
     TRACE("(%p)->(desc=%s)\n", this, debugstr_w(pszName));
 
     HeapFree(GetProcessHeap(), 0, m_sDescription);
+    m_sDescription = NULL;
+
     if (pszName)
     {
         m_sDescription = strdupW(pszName);
         if (!m_sDescription)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sDescription = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1585,15 +1590,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetWorkingDirectory(LPCWSTR pszDir)
     TRACE("(%p)->(dir=%s)\n", this, debugstr_w(pszDir));
 
     HeapFree(GetProcessHeap(), 0, m_sWorkDir);
+    m_sWorkDir = NULL;
+
     if (pszDir)
     {
         m_sWorkDir = strdupW(pszDir);
         if (!m_sWorkDir)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sWorkDir = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1617,15 +1621,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCWSTR pszArgs)
     TRACE("(%p)->(args=%s)\n", this, debugstr_w(pszArgs));
 
     HeapFree(GetProcessHeap(), 0, m_sArgs);
+    m_sArgs = NULL;
+
     if (pszArgs)
     {
         m_sArgs = strdupW(pszArgs);
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sArgs = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1650,11 +1653,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(LPWSTR pszIconPath, INT cc
         pInfo = (LPEXP_SZ_LINK)SHFindDataBlock(m_pDBList, EXP_SZ_ICON_SIG);
         if (pInfo && (pInfo->cbSize == sizeof(*pInfo)))
         {
+            SHExpandEnvironmentStringsW(pInfo->szwTarget, szPath, _countof(szPath));
+
             m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
             HeapFree(GetProcessHeap(), 0, m_sIcoPath);
-            m_sIcoPath = NULL;
-
-            SHExpandEnvironmentStringsW(pInfo->szwTarget, szPath, _countof(szPath));
 
             m_sIcoPath = strdupW(szPath);
             if (!m_sIcoPath)
@@ -1721,7 +1723,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
     uFlags |= GIL_FORSHORTCUT;
 
     if (uFlags & GIL_DEFAULTICON)
-        return E_FAIL;
+        return S_FALSE;
 
     hr = GetIconLocation(pszIconFile, cchMax, piIndex);
     if (FAILED(hr) || pszIconFile[0] == UNICODE_NULL)
@@ -1855,15 +1857,12 @@ BOOL PathFullyUnExpandEnvStringsW(
 HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT iIcon)
 {
     HRESULT hr = E_FAIL;
-    WCHAR szUnExpIconPath[MAX_PATH];
-    BOOL bSuccess;
+    WCHAR szIconPath[MAX_PATH];
 
     TRACE("(%p)->(path=%s iicon=%u)\n", this, debugstr_w(pszIconPath), iIcon);
 
     if (pszIconPath)
     {
-        /* Try to fully unexpand the icon path */
-
         /*
          * Check whether the user-given file path contains unexpanded
          * environment variables. If so, create a target environment block.
@@ -1874,16 +1873,35 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
          * refer to the same place even if the would-be corresponding
          * environment variable could change).
          */
-        // FIXME: http://stackoverflow.com/questions/2976489/ishelllinkseticonlocation-translates-my-icon-path-into-program-files-which-i
-        // if (PathFullyUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath)))
-        bSuccess = PathUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
-        if (bSuccess && wcscmp(pszIconPath, szUnExpIconPath) != 0)
+#ifdef ICON_LINK_WINDOWS_COMPAT
+        /* Try to fully unexpand the icon path */
+        // if (PathFullyUnExpandEnvStringsW(pszIconPath, szIconPath, _countof(szIconPath)))
+        BOOL bSuccess = PathUnExpandEnvStringsW(pszIconPath, szIconPath, _countof(szIconPath));
+        if (bSuccess && wcscmp(pszIconPath, szIconPath) != 0)
+#else
+        /*
+         * In some situations, described in http://stackoverflow.com/questions/2976489/ishelllinkseticonlocation-translates-my-icon-path-into-program-files-which-i
+         * the result of PathUnExpandEnvStringsW() could be wrong, and instead
+         * one would have to store the actual provided icon location path, while
+         * creating an icon environment block ONLY if that path already contains
+         * environment variables. This is what the present case is trying to implement.
+         */
+        SHExpandEnvironmentStringsW(pszIconPath, szIconPath, _countof(szIconPath));
+        if (wcscmp(pszIconPath, szIconPath) != 0)
+#endif
         {
-            /* Unexpansion succeeded, so we need an icon environment block */
+            /*
+             * The user-given file path contains unexpanded environment
+             * variables, so we need an icon environment block.
+             */
             EXP_SZ_LINK buffer;
             LPEXP_SZ_LINK pInfo;
 
-            pszIconPath = szUnExpIconPath;
+#ifdef ICON_LINK_WINDOWS_COMPAT
+            /* Make pszIconPath point to the unexpanded path */
+            LPCWSTR pszOrgIconPath = pszIconPath;
+            pszIconPath = szIconPath;
+#endif
             pInfo = (LPEXP_SZ_LINK)SHFindDataBlock(m_pDBList, EXP_SZ_ICON_SIG);
             if (pInfo)
             {
@@ -1908,8 +1926,8 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
                 buffer.dwSignature = EXP_SZ_ICON_SIG;
             }
 
-            lstrcpynW(pInfo->szwTarget, szUnExpIconPath, _countof(pInfo->szwTarget));
-            WideCharToMultiByte(CP_ACP, 0, szUnExpIconPath, -1,
+            lstrcpynW(pInfo->szwTarget, pszIconPath, _countof(pInfo->szwTarget));
+            WideCharToMultiByte(CP_ACP, 0, pszIconPath, -1,
                                 pInfo->szTarget, _countof(pInfo->szTarget), NULL, NULL);
 
             hr = S_OK;
@@ -1917,21 +1935,35 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
                 hr = AddDataBlock(pInfo);
             if (hr == S_OK)
                 m_Header.dwFlags |= SLDF_HAS_EXP_ICON_SZ;
+
+#ifdef ICON_LINK_WINDOWS_COMPAT
+            /* Set pszIconPath back to the original one */
+            pszIconPath = pszOrgIconPath;
+#else
+            /* Now, make pszIconPath point to the expanded path */
+            pszIconPath = szIconPath;
+#endif
         }
         else
         {
-            /* Unexpansion failed, so we need to remove any icon environment block */
+            /*
+             * The user-given file path does not contain unexpanded environment
+             * variables, so we need to remove any icon environment block.
+             */
             m_Header.dwFlags &= ~SLDF_HAS_EXP_ICON_SZ;
             RemoveDataBlock(EXP_SZ_ICON_SIG);
+
+            /* pszIconPath points to the user path */
         }
     }
 
-    /* Store the original icon path location (this one may contain unexpanded environment strings) */
+#ifdef ICON_LINK_WINDOWS_COMPAT
+    /* Store the original icon path location (may contain unexpanded environment strings) */
+#endif
     if (pszIconPath)
     {
         m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
         HeapFree(GetProcessHeap(), 0, m_sIcoPath);
-        m_sIcoPath = NULL;
 
         m_sIcoPath = strdupW(pszIconPath);
         if (!m_sIcoPath)
@@ -1953,15 +1985,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD 
     TRACE("(%p)->(path=%s %x)\n", this, debugstr_w(pszPathRel), dwReserved);
 
     HeapFree(GetProcessHeap(), 0, m_sPathRel);
+    m_sPathRel = NULL;
+
     if (pszPathRel)
     {
         m_sPathRel = strdupW(pszPathRel);
         if (!m_sPathRel)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sPathRel = NULL;
-
     m_bDirty = TRUE;
 
     return ShellLink_UpdatePath(m_sPathRel, m_sPath, m_sWorkDir, &m_sPath);
@@ -2412,7 +2443,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetPath(LPCWSTR pszFile)
             if (hr == S_OK)
                 m_Header.dwFlags |= SLDF_HAS_EXP_SZ;
 
-            /* Now, make pszFile point to the expanded buffer */
+            /* Now, make pszFile point to the expanded path */
             pszFile = szPath;
         }
         else

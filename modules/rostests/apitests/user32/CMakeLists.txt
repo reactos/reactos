@@ -22,6 +22,7 @@ list(APPEND SOURCE
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
     NextDlgItem.c
+    PrivateExtractIcons.c
     RealGetWindowClass.c
     RedrawWindow.c
     RegisterClassEx.c

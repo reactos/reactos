@@ -210,6 +210,124 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
+/*
+ * Expands the path for the ReactOS Installer "reactos.exe".
+ * See also base/system/userinit/userinit.c!StartInstaller()
+ */
+BOOL
+ExpandInstallerPath(
+    IN LPCTSTR lpInstallerName,
+    OUT LPTSTR lpInstallerPath,
+    IN SIZE_T PathSize)
+{
+    SYSTEM_INFO SystemInfo;
+    SIZE_T cchInstallerNameLen;
+    PTSTR ptr;
+    DWORD dwAttribs;
+
+    cchInstallerNameLen = _tcslen(lpInstallerName);
+    if (PathSize < cchInstallerNameLen)
+    {
+        /* The buffer is not large enough to contain the installer file name */
+        *lpInstallerPath = 0;
+        return FALSE;
+    }
+
+    /*
+     * First, try to find the installer using the default drive, under
+     * the directory whose name corresponds to the currently-running
+     * CPU architecture.
+     */
+    GetSystemInfo(&SystemInfo);
+
+    *lpInstallerPath = 0;
+    GetModuleFileName(NULL, lpInstallerPath, PathSize - cchInstallerNameLen - 1);
+    ptr = _tcschr(lpInstallerPath, _T('\\'));
+    if (ptr)
+        *++ptr = 0;
+    else
+        *lpInstallerPath = 0;
+
+    /* Append the corresponding CPU architecture */
+    switch (SystemInfo.wProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("I386"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("MIPS"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("PPC"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_SHX:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("SHX"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ARM"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_IA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("IA64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ALPHA64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("ALPHA64"));
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            StringCchCat(lpInstallerPath, PathSize, TEXT("AMD64"));
+            break;
+
+        // case PROCESSOR_ARCHITECTURE_MSIL: /* .NET CPU-independent code */
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+        default:
+            SystemInfo.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_UNKNOWN;
+            break;
+    }
+
+    if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
+        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
+
+    dwAttribs = GetFileAttributes(lpInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return TRUE;
+    }
+
+    /*
+     * We failed. Try to find the installer from either the current
+     * ReactOS installation directory, or from our current directory.
+     */
+    *lpInstallerPath = 0;
+    if (GetWindowsDirectory(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
+        StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
+    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
+
+    dwAttribs = GetFileAttributes(lpInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return TRUE;
+    }
+
+    /* Installer not found */
+    *lpInstallerPath = 0;
+    return FALSE;
+}
+
 VOID InitializeTopicList(VOID)
 {
     dwNumberTopics = 0;
@@ -239,7 +357,8 @@ PTOPIC AddNewTopic(VOID)
     return pTopic;
 }
 
-PTOPIC AddNewTopicEx(
+PTOPIC
+AddNewTopicEx(
     IN LPTSTR szText  OPTIONAL,
     IN LPTSTR szTitle OPTIONAL,
     IN LPTSTR szDesc  OPTIONAL,
@@ -274,7 +393,21 @@ PTOPIC AddNewTopicEx(
     if (szCommand && *szCommand)
     {
         pTopic->bIsCommand = TRUE;
-        StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+
+        /* Check for special applications: ReactOS Installer */
+        if (_tcsicmp(szCommand, TEXT("reactos.exe")) == 0)
+        {
+            ExpandInstallerPath(szCommand, pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
+        }
+        else
+        {
+            /* Expand any environment string in the command line */
+            DWORD dwSize = ExpandEnvironmentStringsW(szCommand, NULL, 0);
+            if (dwSize <= ARRAYSIZE(pTopic->szCommand))
+                ExpandEnvironmentStringsW(szCommand, pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
+            else
+                StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+        }
     }
     else
     {
@@ -382,6 +515,7 @@ static BOOL
 LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 {
     DWORD dwRet;
+    DWORD dwAttribs;
     DWORD dwSize;
     TCHAR szBuffer[LOCALE_NAME_MAX_LENGTH];
     TCHAR szIniPath[MAX_PATH];
@@ -402,7 +536,9 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
                     TEXT("%s\\%s.ini"), lpResPath, szBuffer);
 
     /* Verify that the file exists, otherwise fall back to english (US) */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
 
@@ -411,8 +547,12 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
     }
 
     /* Verify that the file exists, otherwise fall back to internal (localized) resource */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
         return FALSE; // For localized resources, see the general function.
+    }
 
     /* Try to load the default localized strings */
     GetPrivateProfileString(TEXT("Defaults"), TEXT("AppTitle"), TEXT("ReactOS - Welcome") /* default */,
@@ -496,6 +636,7 @@ LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 static VOID
 LoadConfiguration(VOID)
 {
+    DWORD dwAttribs;
     BOOL  bLoadDefaultResources;
     TCHAR szAppPath[MAX_PATH];
     TCHAR szIniPath[MAX_PATH];
@@ -530,7 +671,9 @@ LoadConfiguration(VOID)
     StringCchPrintf(szIniPath, ARRAYSIZE(szIniPath), TEXT("%s\\welcome.ini"), szAppPath);
 
     /* Verify that the file exists, otherwise use the default configuration */
-    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    dwAttribs = GetFileAttributes(szIniPath);
+    if ((dwAttribs == INVALID_FILE_ATTRIBUTES) ||
+        (dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         /* Use the default internal (localized) resources */
         LoadLocalizedResourcesInternal();
@@ -647,6 +790,8 @@ _tWinMain(HINSTANCE hInst,
         return 0;
     }
 
+#if 0
+    /* Mirroring is enabled from within the resources */
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -656,6 +801,7 @@ _tWinMain(HINSTANCE hInst,
         default:
             break;
     }
+#endif
 
     hInstance = hInst;
 
@@ -974,7 +1120,9 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             pTopics[i]->hWndButton = CreateWindow(TEXT("BUTTON"),
                                                   pTopics[i]->szText,
-                                                  WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_MULTILINE | BS_OWNERDRAW,
+                                                  (*pTopics[i]->szCommand ? 0 : WS_DISABLED) |
+                                                      WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP |
+                                                      BS_MULTILINE | BS_OWNERDRAW,
                                                   rcLeftPanel.left,
                                                   dwTop,
                                                   rcLeftPanel.right - rcLeftPanel.left,
@@ -1008,7 +1156,8 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             hWndCheckButton = CreateWindow(TEXT("BUTTON"),
                                            szText,
-                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_MULTILINE /**/| BS_FLAT/**/,
+                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP |
+                                               BS_AUTOCHECKBOX | BS_MULTILINE /**/| BS_FLAT/**/,
                                            rcLeftPanel.left + 8,
                                            rcLeftPanel.bottom - 8 - 13,
                                            rcLeftPanel.right - rcLeftPanel.left - 16,
@@ -1307,7 +1456,8 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
     InflateRect(&lpDis->rcItem, -10, -4);
     OffsetRect(&lpDis->rcItem, 0, 1);
     GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
-    SetTextColor(lpDis->hDC, GetSysColor(COLOR_WINDOWTEXT));
+    SetTextColor(lpDis->hDC, GetSysColor(IsWindowEnabled(lpDis->hwndItem) ?
+                                         COLOR_WINDOWTEXT : COLOR_GRAYTEXT));
     iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
     DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
     SetBkMode(lpDis->hDC, iBkMode);

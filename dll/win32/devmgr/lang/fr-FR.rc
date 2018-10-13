@@ -27,12 +27,12 @@ BEGIN
     IDS_NOTAVAILABLE "Non disponible"
     IDS_NOTDIGITALLYSIGNED "Non signé numériquement"
     IDS_NODRIVERS "Aucun fichier n'est requis ou n'a été chargé pour ce matériel."
-    IDS_RESOURCE_COLUMN "Resource type"
-    IDS_SETTING_COLUMN "Setting"
-    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_COLUMN "Type de ressource"
+    IDS_SETTING_COLUMN "Paramètres"
+    IDS_RESOURCE_MEMORY_RANGE "Rang mémoire"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "I/O range"
+    IDS_RESOURCE_PORT "Rang I/O"
 END
 
 STRINGTABLE
@@ -155,7 +155,7 @@ BEGIN
     GROUPBOX "État du matériel", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
     PUSHBUTTON "&Dépannage...", IDC_DEVPROBLEM, 148, 163, 90, 15
-    LTEXT "&Utilisation du matériel:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+    LTEXT "&Utilisation du matériel :", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
@@ -176,12 +176,12 @@ BEGIN
     EDITTEXT IDC_DIGITALSIGNER, 120, 81, 126, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Détails...", IDC_DRIVERDETAILS, 7, 106, 75, 15
     LTEXT "Voir les détails à propos des fichiers du Pilote.", -1, 91, 110, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 134, 75, 15
-    LTEXT "Update the device driver.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Mettre le pilote à jour...", IDC_UPDATEDRIVER, 7, 134, 75, 15
+    LTEXT "Mettre à jour le pilote du périphérique.", -1, 91, 138, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "&Restaurer le pilote", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "Si le périphérique ne fonctionne plus après la mise à jour du pilote, permet de retourner au pilote précédemment installé.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "Dé&sinstaller", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "Désinstaller le pilote (Avancé).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
@@ -208,7 +208,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Détails"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -221,12 +221,12 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Ressources"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    LTEXT "Paramètres de la ressource :", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
@@ -234,7 +234,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Énergie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -249,79 +249,79 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Fichier"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "&Quitter",                          IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Action",                              IDC_ACTIONMENU
+  POPUP "Vue"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Périphériques par type",            IDC_DEVBYTYPE
+    MENUITEM "Périphériques par connexion",       IDC_DEVBYCONN
+    MENUITEM "Ressources par type",               IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressources par connexion",          IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Afficher les périphériques cachés", IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "Aide"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "À propos",                          IDC_ABOUT
   END
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Gestionnaire de périphériques ReactOS"
+  IDS_CONFIRM_DISABLE       "Désactiver ce périphérique va le rendre inopérant.\r\nVoulez-vous réellement le désactiver ?"
+  IDS_CONFIRM_UNINSTALL     "Attention : vous êtes sur le point de désinstaller ce périphérique de votre système.\r\nVoulez-vous continuer ?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Mettre le pilote logiciel à jour..."
+  IDS_MENU_ENABLE           "Activer"
+  IDS_MENU_DISABLE          "Désactiver"
+  IDS_MENU_UNINSTALL        "Désinstaller"
+  IDS_MENU_SCAN             "Vérifier les changements de matériel"
+  IDS_MENU_ADD              "Ajouter un matériel"
+  IDS_MENU_PROPERTIES       "Propriétés"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Propriétés"
+  IDS_TOOLTIP_SCAN          "Vérifier les changements de matériel"
+  IDS_TOOLTIP_ENABLE        "Activer"
+  IDS_TOOLTIP_DISABLE       "Désactiver"
+  IDS_TOOLTIP_UPDATE        "Mettre le pilote logiciel à jour"
+  IDS_TOOLTIP_UNINSTALL     "Désinstaller"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Ouvre les priopriétés pour la sélection actuelle."
+  IDS_HINT_SCAN         " Analyser le PC pour le matériel qui a changé ou pour les nouveaux périphériques 'plug and play'."
+  IDS_HINT_ENABLE       " Active le périphérique sélectionné."
+  IDS_HINT_DISABLE      " Désactive le périphérique sélectionné."
+  IDS_HINT_UPDATE       " Lance l'assistant de mise à jour de pilote logiciel pour le périphérique sélectionné."
+  IDS_HINT_UNINSTALL    " Désinstalle le pilote pour le périphérique sélectionné."
+  IDS_HINT_ADD          " Ajoute un périphérique ancien (non 'plug and play') à l'ordinateur."
+  IDS_HINT_ABOUT        " À propos du gestionnaire de périphérique ReactOS."
+  IDS_HINT_EXIT         " Quitte le programme."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Affiche les périphériques par type de matériel."
+  IDS_HINT_DEV_BY_CONN  " Affiche les périphériques par connexion."
+  IDS_HINT_RES_BY_TYPE  " Affiche les ressources par type."
+  IDS_HINT_RES_BY_CONN  " Affiche les ressources par type de connexion."
+  IDS_HINT_SHOW_HIDDEN  " Affiche les anciens périphériques et les périphériques qui ne sont plus installés."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Restaure cette fenêtre à sa taille normale."
+  IDS_HINT_SYS_MOVE     " Déplace cette fenêtre."
+  IDS_HINT_SYS_SIZE     " Redimensionne cette fenêtre."
+  IDS_HINT_SYS_MINIMIZE " Réduit cette fenêtre à une icône."
+  IDS_HINT_SYS_MAXIMIZE " Agrandit cette fenêtre pour occuper tout cet écran."
+  IDS_HINT_SYS_CLOSE    " Ferme cette fenêtre."
 END
 

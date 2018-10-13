@@ -24,6 +24,10 @@
 
 #include <user32.h>
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 /* Start of Hack section */
 
 WINE_DEFAULT_DEBUG_CHANNEL(icon);
@@ -275,13 +279,24 @@ static UINT ICO_ExtractIconExW(
 	LPBYTE		peimage;
 	HANDLE		fmapping;
 	DWORD		fsizeh,fsizel;
+#ifdef __REACTOS__
+    WCHAR		szExpandedExePath[MAX_PATH];
+#endif
         WCHAR		szExePath[MAX_PATH];
         DWORD		dwSearchReturn;
 
 	TRACE("%s, %d, %d %p 0x%08x\n", debugstr_w(lpszExeFileName), nIconIndex, nIcons, pIconId, flags);
 
-        dwSearchReturn = SearchPathW(NULL, lpszExeFileName, NULL, sizeof(szExePath) / sizeof(szExePath[0]), szExePath, NULL);
-        if ((dwSearchReturn == 0) || (dwSearchReturn > sizeof(szExePath) / sizeof(szExePath[0])))
+#ifdef __REACTOS__
+    if (RetPtr)
+        *RetPtr = NULL;
+
+    if (ExpandEnvironmentStringsW(lpszExeFileName, szExpandedExePath, ARRAY_SIZE(szExpandedExePath)))
+        lpszExeFileName = szExpandedExePath;
+#endif
+
+        dwSearchReturn = SearchPathW(NULL, lpszExeFileName, NULL, ARRAY_SIZE(szExePath), szExePath, NULL);
+        if ((dwSearchReturn == 0) || (dwSearchReturn > ARRAY_SIZE(szExePath)))
         {
             WARN("File %s not found or path too long\n", debugstr_w(lpszExeFileName));
             return -1;

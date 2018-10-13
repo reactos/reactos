@@ -50,6 +50,7 @@ En la cual:\n\
 [/A]  Copia solamente archivos con el attributo de archivo definido\n\
 [/M]  Copia solamente archivos con el attributo de archivo definido, supprime\n\
 \tl'attributo de archivo\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Copia los nuevos archivos or los que fueront modificado despues la fecha especificada.\n\
 \t\tSi la fecha no esta especificada, copia unicamente cuando el archivo de destino est mas viejo\n\
 \t\tque el archivo fuente\n\n"

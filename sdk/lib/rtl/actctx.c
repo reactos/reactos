@@ -2947,6 +2947,65 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     return status;
 }
 
+IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
+                                             LPCWSTR name, void *root,
+                                             int want_dir );
+
+IMAGE_RESOURCE_DIRECTORY *find_first_entry( IMAGE_RESOURCE_DIRECTORY *dir,
+                                            void *root, int want_dir );
+
+
+static IMAGE_RESOURCE_DIRECTORY *find_first_id_entry( IMAGE_RESOURCE_DIRECTORY *dir,
+                                           void *root, int want_dir )
+{
+    const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
+    int pos;
+
+    for (pos = dir->NumberOfNamedEntries; pos < dir->NumberOfNamedEntries + dir->NumberOfIdEntries; pos++)
+    {
+        if (!entry[pos].DataIsDirectory == !want_dir)
+            return (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry[pos].OffsetToDirectory);
+    }
+    return NULL;
+}
+
+
+static NTSTATUS search_manifest_in_module( struct actctx_loader* acl, struct assembly_identity* ai,
+                                       LPCWSTR filename, LPCWSTR directory, BOOL shared,
+                                       HANDLE hModule, ULONG lang )
+{
+    ULONG size;
+    PVOID root, ptr;
+    IMAGE_RESOURCE_DIRECTORY *resdirptr;
+    IMAGE_RESOURCE_DATA_ENTRY *entry;
+    NTSTATUS status;
+
+    root = RtlImageDirectoryEntryToData(hModule, TRUE, IMAGE_DIRECTORY_ENTRY_RESOURCE, &size);
+    if (!root) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    if (size < sizeof(*resdirptr)) return STATUS_RESOURCE_DATA_NOT_FOUND;
+    resdirptr = root;
+
+    if (!(ptr = find_entry_by_name(resdirptr, (LPCWSTR)RT_MANIFEST, root, 1)))
+        return STATUS_RESOURCE_TYPE_NOT_FOUND;
+
+    resdirptr = ptr;
+    if (!(ptr = find_first_id_entry(resdirptr, root, 1)))
+        return STATUS_RESOURCE_TYPE_NOT_FOUND;
+
+    resdirptr = ptr;
+    if (!(ptr = find_first_entry(resdirptr, root, 0)))
+        return STATUS_RESOURCE_TYPE_NOT_FOUND;
+
+    entry = ptr;
+    status = LdrAccessResource(hModule, entry, &ptr, NULL);
+
+    if (status == STATUS_SUCCESS)
+        status = parse_manifest(acl, ai, filename, directory, shared, ptr, entry->Size);
+
+    return status;
+}
+
+
 static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assembly_identity* ai,
                                          LPCWSTR filename, LPCWSTR directory, BOOL shared,
                                          HANDLE file, LPCWSTR resname, ULONG lang )
@@ -2958,8 +3017,16 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     NTSTATUS            status;
     SIZE_T              count;
     void               *base;
+    WCHAR resnameBuf[20];
+    LPCWSTR resptr = resname;
 
-    DPRINT( "looking for res %S in %S\n", resname, filename );
+    if ((!((ULONG_PTR)resname >> 16)))
+    {
+        sprintfW(resnameBuf, L"#%u", (ULONG_PTR)resname);
+        resptr = resnameBuf;
+    }
+
+    DPRINT( "looking for res %S in %S\n", resptr, filename ? filename : L"<NULL>");
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -2984,7 +3051,10 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     if (RtlImageNtHeader(base)) /* we got a PE file */
     {
         HANDLE module = (HMODULE)((ULONG_PTR)base | 1);  /* make it a LOAD_LIBRARY_AS_DATAFILE handle */
-        status = get_manifest_in_module( acl, ai, filename, directory, shared, module, resname, lang );
+        if (resname)
+            status = get_manifest_in_module( acl, ai, filename, directory, shared, module, resname, lang );
+        else
+            status = search_manifest_in_module(acl, ai, filename, directory, shared, module, lang);
     }
     else status = STATUS_INVALID_IMAGE_FORMAT;
 
@@ -3308,7 +3378,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
             if (!status)
             {
                 status = get_manifest_in_pe_file( acl, ai, nameW.Buffer, directory, FALSE, file,
-                                                  (LPCWSTR)CREATEPROCESS_MANIFEST_RESOURCE_ID, 0 );
+                                                  (LPCWSTR)0, 0 );
                 NtClose( file );
                 break;
             }
@@ -5098,7 +5168,7 @@ RtlCreateActivationContext(IN ULONG Flags,
                 status = get_manifest_in_associated_manifest( &acl, NULL, NULL, directory,
                                                               pActCtx->hModule, pActCtx->lpResourceName );
         }
-        else if (pActCtx->lpSource)
+        else if (pActCtx->lpSource && pActCtx->lpResourceName)
         {
             status = get_manifest_in_pe_file( &acl, NULL, nameW.Buffer, directory, FALSE,
                                               file, pActCtx->lpResourceName, lang );

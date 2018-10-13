@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
  *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *******************************************************************/
@@ -687,6 +688,40 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+IopVerifyDeviceObjectOnStack(IN PDEVICE_OBJECT BaseDeviceObject,
+                             IN PDEVICE_OBJECT TopDeviceObjectHint)
+{
+    KIRQL OldIrql;
+    BOOLEAN Result;
+    PDEVICE_OBJECT LoopObject;
+
+    ASSERT(BaseDeviceObject != NULL);
+
+    Result = FALSE;
+    /* Simply loop on the device stack and try to find our hint */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    for (LoopObject = BaseDeviceObject; ; LoopObject = LoopObject->AttachedDevice)
+    {
+        /* It was found, it's a success */
+        if (LoopObject == TopDeviceObjectHint)
+        {
+            Result = TRUE;
+            break;
+        }
+
+        /* End of the stack, that's a failure - default */
+        if (LoopObject == NULL)
+        {
+            break;
+        }
+    }
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
+    return Result;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1353,8 +1388,10 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
                 /* Cast the buffer to something we understand */
                 FileObjectExtension = FileObject->FileObjectExtension;
 
-                /* Check if have a replacement top level device */
-                if (FileObjectExtension->TopDeviceObjectHint)
+                /* Check if have a valid replacement top level device */
+                if (FileObjectExtension->TopDeviceObjectHint &&
+                    IopVerifyDeviceObjectOnStack(DeviceObject,
+                                                 FileObjectExtension->TopDeviceObjectHint))
                 {
                     /* Use this instead of returning the top level device */
                     return FileObjectExtension->TopDeviceObjectHint;

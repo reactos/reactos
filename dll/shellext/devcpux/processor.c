@@ -92,10 +92,16 @@ ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
             WCHAR szFeatures[MAX_PATH] = L"";
             WCHAR szModel[3];
             WCHAR szStepping[3];
+            WCHAR szMhz[16];
             WCHAR szCurrentMhz[10];
             BOOL bFirst = TRUE;
             SYSTEM_INFO SystemInfo;
             PROCESSOR_POWER_INFORMATION PowerInfo;
+
+            if (!LoadStringW(g_hInstance, IDS_MEGAHERTZ, szMhz, ARRAYSIZE(szMhz)))
+            {
+                StringCbCopyW(szMhz, sizeof(szMhz), L"%ld MHz");
+            }
 
             if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE))
                 AddFeature(szFeatures, sizeof(szFeatures), L"MMX", &bFirst);
@@ -119,7 +125,7 @@ ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
             SetDlgItemTextW(hDlg, IDC_STEPPING, szStepping);
 
             CallNtPowerInformation(11, NULL, 0, &PowerInfo, sizeof(PowerInfo));
-            StringCbPrintfW(szCurrentMhz, sizeof(szCurrentMhz), L"%ld %s", PowerInfo.CurrentMhz, L"MHz");
+            StringCbPrintfW(szCurrentMhz, sizeof(szCurrentMhz), szMhz, PowerInfo.CurrentMhz);
             SetDlgItemTextW(hDlg, IDC_CORESPEED, szCurrentMhz);
 
             return TRUE;

@@ -18,8 +18,6 @@
 #ifndef _SCRRUN_PRIVATE_H_
 #define _SCRRUN_PRIVATE_H_
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 extern HRESULT WINAPI FileSystem_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI Dictionary_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 

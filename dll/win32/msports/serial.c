@@ -323,6 +323,12 @@ WritePortSettings(
         return;
     }
 
+    /* Notify the system */
+    PostMessageW(HWND_BROADCAST,
+                 WM_WININICHANGE,
+                 0,
+                 (LPARAM)pPortData->szPortName);
+
     TRACE("Done!\n");
 }
 

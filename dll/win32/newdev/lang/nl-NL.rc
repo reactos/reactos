@@ -15,7 +15,7 @@ BEGIN
     LTEXT "Welkom", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Deze wizard installeert een nieuwe driver voor:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Klik op Volgende om verder te gaan.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "WAARSCHUWING! EEN ONBEKEND APPARAAT INSTALLEREN KAN UW COMPUTER LATEN VASTLOPEN OF ONOPSTARTBAAR MAKEN!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Installeer de driver automatisch", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Installeer de driver van een bepaalde locatie", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -39,7 +39,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Installatie mislukt.", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Het apparaat kon niet geïnstalleerd worden omdat er een onverwachte fout optrad.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -79,7 +79,7 @@ BEGIN
     LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "U moet uw computer herstarten om de installatie te voltooien van:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -90,7 +90,7 @@ BEGIN
     LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "De wizard is voltooid met het installeren van de driver voor:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

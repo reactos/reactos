@@ -29,6 +29,7 @@
 #define IDS_DOWNLOADING        14
 #define IDS_INSTALLING         15
 #define IDS_INVALID_SHA        16
+#define IDS_DWL_FAILED         17
 
 /* Controls */
 #define IDC_SHORTCUT_LOCATION	107

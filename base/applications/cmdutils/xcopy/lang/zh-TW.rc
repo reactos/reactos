@@ -52,6 +52,7 @@ XCOPY 源 [目標] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/A]  僅複製具有存檔屬性設定的檔案。\n\
 [/M]  僅複製檔案的存檔屬性設定，刪除\n\
 \t存檔屬性。\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] 複製新檔案或那些修改後所提供的日期。\n\
 \t\t如果提供沒有日期，則只複製如果目的地\n\
 \t\t比源。\n\n"

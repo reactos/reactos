@@ -1539,6 +1539,52 @@ static void test_GdipFillClosedCurveI(void)
     ReleaseDC(hwnd, hdc);
 }
 
+static void test_GdipFillPath(void)
+{
+    GpStatus status;
+    GpGraphics *graphics;
+    GpSolidFill *brush;
+    GpPath *path;
+    HDC hdc = GetDC(hwnd);
+
+    ok(hdc != NULL, "Expected HDC to be initialized\n");
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+    ok(graphics != NULL, "Expected graphics to be initialized\n");
+    status = GdipCreateSolidFill((ARGB)0xffffffff, &brush);
+    expect(Ok, status);
+    ok(brush != NULL, "Expected brush to be initialized\n");
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+    ok(path != NULL, "Expected path to be initialized\n");
+
+    /* Empty path */
+    GdipResetPath(path);
+    status = GdipFillPath(graphics, (GpBrush *)brush, path);
+    expect(Ok, status);
+
+    /* Not closed path */
+    GdipResetPath(path);
+    status = GdipAddPathLineI(path, 0, 0, 2, 2);
+    expect(Ok, status);
+    status = GdipAddPathLineI(path, 2, 2, 4, 0);
+    expect(Ok, status);
+    status = GdipFillPath(graphics, (GpBrush *)brush, path);
+    expect(Ok, status);
+
+    /* Closed path */
+    GdipResetPath(path);
+    status = GdipAddPathRectangle(path, 0, 0, 4, 4);
+    expect(Ok, status);
+    status = GdipFillPath(graphics, (GpBrush *)brush, path);
+    expect(Ok, status);
+
+    GdipDeletePath(path);
+    GdipDeleteBrush((GpBrush *)brush);
+    GdipDeleteGraphics(graphics);
+    ReleaseDC(hwnd, hdc);
+}
+
 static void test_Get_Release_DC(void)
 {
     GpStatus status;
@@ -2148,6 +2194,7 @@ static void test_clip_xform(void)
     expect(0xff, color);
 
     GdipDeleteGraphics(graphics);
+    GdipDeleteRegion(clip);
     ReleaseDC(hwnd, hdc);
 }
 
@@ -3721,7 +3768,7 @@ static void test_GdipMeasureString(void)
     expect(Ok, status);
     expect(UnitPixel, font_unit);
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         GpImage *image;
 
@@ -3799,7 +3846,7 @@ todo_wine
         expect(Ok, status);
         expect(unit, font_unit);
 
-        for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(td); i++)
         {
             REAL unit_scale;
             GpImage *image;
@@ -3883,7 +3930,7 @@ todo_wine
     }
 
     /* Font with units = UnitWorld */
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         GpPointF pt = {0.0, 100.0};
         GpImage* image;
@@ -3972,7 +4019,7 @@ static void test_transform(void)
     GpPointF ptf[2];
     UINT i;
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         graphics = create_graphics(td[i].res_x, td[i].res_y, td[i].unit, td[i].scale, &image);
         ptf[0].X = td[i].in[0].X;
@@ -4032,7 +4079,7 @@ static void test_pen_thickness(void)
     BitmapData bd;
     INT min, max, size;
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         status = GdipCreateBitmapFromScan0(100, 100, 0, PixelFormat24bppRGB, NULL, &u.bitmap);
         expect(Ok, status);
@@ -6795,6 +6842,7 @@ START_TEST(graphics)
     test_GdipDrawImagePointsRect();
     test_GdipFillClosedCurve();
     test_GdipFillClosedCurveI();
+    test_GdipFillPath();
     test_GdipDrawString();
     test_GdipGetNearestColor();
     test_GdipGetVisibleClipBounds();

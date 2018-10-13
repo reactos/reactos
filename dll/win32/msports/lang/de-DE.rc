@@ -38,4 +38,5 @@ BEGIN
     IDS_PARITY "Gerade,Ungerade,Keine,Mark,Space"
     IDS_STOPBITS "1,1.5,2"
     IDS_FLOWCONTROL "Xon / Xoff,Hardware,Keine"
+    IDS_PORT_IN_USE " (wird benutzt)"
 END

@@ -307,13 +307,15 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     if( processed == 0 )
        {
       /* raw output mode */
+      // FIXME: Does the buffer only contains chars? or chars + attributes?
+      // FIXME2: Fix buffer overflow.
       memcpy( &vidmem[(cursorx * 2) + (cursory * columns * 2)], pch, stk->Parameters.Write.Length );
       offset += (stk->Parameters.Write.Length / 2);
        }
     else {
-       for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
+      for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
       {
-         switch (*pch)
+        switch (*pch)
         {
         case '\b':
            if (cursorx > 0)
@@ -364,7 +366,9 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
               }
            break;
         }
-         if (cursory >= rows)
+
+        /* Scroll up the contents of the screen if we are at the end */
+        if (cursory >= rows)
         {
            unsigned short *LinePtr;
 
@@ -403,7 +407,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
 
 static DRIVER_DISPATCH ScrIoControl;
@@ -465,6 +469,14 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           PCONSOLE_SCREEN_BUFFER_INFO pcsbi = (PCONSOLE_SCREEN_BUFFER_INFO)Irp->AssociatedIrp.SystemBuffer;
           unsigned int offset;
+
+          if ( pcsbi->dwCursorPosition.X < 0 || pcsbi->dwCursorPosition.X >= DeviceExtension->Columns ||
+               pcsbi->dwCursorPosition.Y < 0 || pcsbi->dwCursorPosition.Y >= DeviceExtension->Rows )
+          {
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_INVALID_PARAMETER;
+              break;
+          }
 
           DeviceExtension->CharAttribute = pcsbi->wAttributes;
           offset = (pcsbi->dwCursorPosition.Y * DeviceExtension->Columns) +
@@ -562,20 +574,34 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength = Buf->nLength;
+
+          if ( Buf->dwCoord.X < 0 || Buf->dwCoord.X >= DeviceExtension->Columns ||
+               Buf->dwCoord.Y < 0 || Buf->dwCoord.Y >= DeviceExtension->Rows )
+          {
+              Buf->dwTransfered = 0;
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
             vidmem = DeviceExtension->VideoMemory;
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                        (Buf->dwCoord.X * 2) + 1;
+                     (Buf->dwCoord.X * 2) + 1;
 
-            for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
+            nMaxLength = min(nMaxLength,
+                             (DeviceExtension->Rows - Buf->dwCoord.Y)
+                                * DeviceExtension->Columns - Buf->dwCoord.X);
+
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++)
             {
               vidmem[offset + (dwCount * 2)] = (char) Buf->wAttribute;
             }
           }
 
-          Buf->dwTransfered = Buf->nLength;
+          Buf->dwTransfered = nMaxLength;
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -589,6 +615,16 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength;
+
+          if ( Buf->dwCoord.X < 0 || Buf->dwCoord.X >= DeviceExtension->Columns ||
+               Buf->dwCoord.Y < 0 || Buf->dwCoord.Y >= DeviceExtension->Rows )
+          {
+              Buf->dwTransfered = 0;
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
@@ -596,9 +632,13 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
                      (Buf->dwCoord.X * 2) + 1;
 
-            for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pAttr++)
+            nMaxLength = min(stk->Parameters.DeviceIoControl.OutputBufferLength,
+                             (DeviceExtension->Rows - Buf->dwCoord.Y)
+                                * DeviceExtension->Columns - Buf->dwCoord.X);
+
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++, pAttr++)
             {
-              *((char *) pAttr) = vidmem[offset + (dwCount * 2)];
+              *((char *)pAttr) = vidmem[offset + (dwCount * 2)];
             }
 
             Buf->dwTransfered = dwCount;
@@ -620,14 +660,27 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength;
+
+          if ( pCoord->X < 0 || pCoord->X >= DeviceExtension->Columns ||
+               pCoord->Y < 0 || pCoord->Y >= DeviceExtension->Rows )
+          {
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
             vidmem = DeviceExtension->VideoMemory;
             offset = (pCoord->Y * DeviceExtension->Columns * 2) +
-                    (pCoord->X * 2) + 1;
+                     (pCoord->X * 2) + 1;
 
-            for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
+            nMaxLength = min(stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof(COORD),
+                             (DeviceExtension->Rows - pCoord->Y)
+                                * DeviceExtension->Columns - pCoord->X);
+
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++, pAttr++)
             {
               vidmem[offset + (dwCount * 2)] = *pAttr;
             }
@@ -650,21 +703,34 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength = Buf->nLength;
+
+          if ( Buf->dwCoord.X < 0 || Buf->dwCoord.X >= DeviceExtension->Columns ||
+               Buf->dwCoord.Y < 0 || Buf->dwCoord.Y >= DeviceExtension->Rows )
+          {
+              Buf->dwTransfered = 0;
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
             vidmem = DeviceExtension->VideoMemory;
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                    (Buf->dwCoord.X * 2);
+                     (Buf->dwCoord.X * 2);
 
+            nMaxLength = min(nMaxLength,
+                             (DeviceExtension->Rows - Buf->dwCoord.Y)
+                                * DeviceExtension->Columns - Buf->dwCoord.X);
 
-            for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++)
             {
               vidmem[offset + (dwCount * 2)] = (char) Buf->cCharacter;
             }
           }
 
-          Buf->dwTransfered = Buf->nLength;
+          Buf->dwTransfered = nMaxLength;
 
           Irp->IoStatus.Information = 0;
           Status = STATUS_SUCCESS;
@@ -678,14 +744,28 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength;
+
+          if ( Buf->dwCoord.X < 0 || Buf->dwCoord.X >= DeviceExtension->Columns ||
+               Buf->dwCoord.Y < 0 || Buf->dwCoord.Y >= DeviceExtension->Rows )
+          {
+              Buf->dwTransfered = 0;
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
             vidmem = DeviceExtension->VideoMemory;
             offset = (Buf->dwCoord.Y * DeviceExtension->Columns * 2) +
-                    (Buf->dwCoord.X * 2);
+                     (Buf->dwCoord.X * 2);
 
-            for (dwCount = 0; dwCount < stk->Parameters.DeviceIoControl.OutputBufferLength; dwCount++, pChar++)
+            nMaxLength = min(stk->Parameters.DeviceIoControl.OutputBufferLength,
+                             (DeviceExtension->Rows - Buf->dwCoord.Y)
+                                * DeviceExtension->Columns - Buf->dwCoord.X);
+
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++, pChar++)
             {
               *pChar = vidmem[offset + (dwCount * 2)];
             }
@@ -704,21 +784,32 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER:
         {
-          COORD *pCoord;
-          LPSTR pChar;
+          COORD *pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
+          LPSTR pChar = (CHAR *)(pCoord + 1);
           PUCHAR vidmem;
           int offset;
           ULONG dwCount;
+          ULONG nMaxLength;
+
+          if ( pCoord->X < 0 || pCoord->X >= DeviceExtension->Columns ||
+               pCoord->Y < 0 || pCoord->Y >= DeviceExtension->Rows )
+          {
+              Irp->IoStatus.Information = 0;
+              Status = STATUS_SUCCESS;
+              break;
+          }
 
           if (!InbvCheckDisplayOwnership())
           {
-            pCoord = (COORD *)MmGetSystemAddressForMdl(Irp->MdlAddress);
-            pChar = (CHAR *)(pCoord + 1);
             vidmem = DeviceExtension->VideoMemory;
             offset = (pCoord->Y * DeviceExtension->Columns * 2) +
-                    (pCoord->X * 2);
+                     (pCoord->X * 2);
 
-            for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pChar++)
+            nMaxLength = min(stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof(COORD),
+                             (DeviceExtension->Rows - pCoord->Y)
+                                * DeviceExtension->Columns - pCoord->X);
+
+            for (dwCount = 0; dwCount < nMaxLength; dwCount++, pChar++)
             {
               vidmem[offset + (dwCount * 2)] = *pChar;
             }
@@ -752,7 +843,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
             }
 
             Offset = (ConsoleDraw->CursorY * DeviceExtension->Columns) +
-                    ConsoleDraw->CursorX;
+                      ConsoleDraw->CursorX;
 
             _disable();
             WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
@@ -815,7 +906,7 @@ ScrDispatch(PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
 
 

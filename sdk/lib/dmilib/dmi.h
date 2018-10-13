@@ -87,6 +87,8 @@ enum _DMI_FIELD_OFFSETS
     DMI_SYS_PRODUCT = 0x05,
     DMI_SYS_VERSION = 0x06,
     DMI_SYS_SERIAL = 0x07,
+    DMI_SYS_SKU = 0x19,
+    DMI_SYS_FAMILY = 0x1a,
     DMI_SYS_SIZE = 0x1b,
 
     /* Type = 2: DMI_ENTRY_BASEBOARD */

@@ -20,3 +20,4 @@
 #define IDS_PARITY                11
 #define IDS_STOPBITS              12
 #define IDS_FLOWCONTROL           13
+#define IDS_PORT_IN_USE           61

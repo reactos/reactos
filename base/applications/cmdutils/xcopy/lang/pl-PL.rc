@@ -49,6 +49,7 @@ Gdzie:\n\
 [/C]  Kontynuuje nawet jeżeli podczas kopiowania wystąpiły błędy\n\
 [/A]  Kopiuje tylko pliki z atrybutem archiwalny\n\
 [/M]  Kopiuje tylko pliki z atrybutem archiwalny i usuwa ten atrybut\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Kopiuje tylko nowe pliki lub te zmodifikowane po podanej dacie.\n\
 \t\tJeżeli nie podano żadnej daty, to kopiowane są pliki, które są\n\
 \t\tnowsze niż w katalogu docelowym\n\n"

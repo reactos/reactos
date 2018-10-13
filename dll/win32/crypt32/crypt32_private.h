@@ -341,7 +341,7 @@ void CRYPT_ImportSystemRootCertsToReg(void) DECLSPEC_HIDDEN;
 BOOL CRYPT_SerializeContextsToReg(HKEY key, DWORD flags, const WINE_CONTEXT_INTERFACE *contextInterface,
     HCERTSTORE memStore) DECLSPEC_HIDDEN;
 
-BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type) DECLSPEC_HIDDEN;
+DWORD CRYPT_IsCertificateSelfSigned(const CERT_CONTEXT *cert) DECLSPEC_HIDDEN;
 
 /* Allocates and initializes a certificate chain engine, but without creating
  * the root store.  Instead, it uses root, and assumes the caller has done any

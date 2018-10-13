@@ -2,6 +2,7 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 add_executable(reg export.c import.c reg.c reg.rc)
 set_module_type(reg win32cui UNICODE)
 target_link_libraries(reg wine)

@@ -21,7 +21,8 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
  * PURPOSE:         Registry code
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermès Bélusca-Maïto
  */
 
 /*
@@ -38,12 +39,13 @@
 
 static CMHIVE RootHive;
 static PMEMKEY RootKey;
-CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
-CMHIVE SamHive;      /* \Registry\Machine\SAM */
-CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
-CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
-CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
-CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
+
+static CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+static CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
+static CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
+static CMHIVE SamHive;      /* \Registry\Machine\SAM */
+static CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
+static CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 
 //
 // TODO: Write these values in a more human-readable form.
@@ -56,7 +58,7 @@ CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 // A cross-check was subsequently done with the system hives to verify that
 // the security descriptors were the same.
 //
-UCHAR BcdSecurity[] =
+static UCHAR BcdSecurity[] =
 {
     // SECURITY_DESCRIPTOR_RELATIVE
     0x01,                   // Revision
@@ -118,7 +120,7 @@ UCHAR BcdSecurity[] =
     0x01, 0x02, 0x00, 0x00
 };
 
-UCHAR SoftwareSecurity[] =
+static UCHAR SoftwareSecurity[] =
 {
     // SECURITY_DESCRIPTOR_RELATIVE
     0x01,                   // Revision
@@ -234,7 +236,7 @@ UCHAR SoftwareSecurity[] =
 };
 
 // Same security for SYSTEM, SAM and .DEFAULT
-UCHAR SystemSecurity[] =
+static UCHAR SystemSecurity[] =
 {
     // SECURITY_DESCRIPTOR_RELATIVE
     0x01,                   // Revision
@@ -330,6 +332,24 @@ UCHAR SystemSecurity[] =
     0x01, 0x02, 0x00, 0x00
 };
 
+
+HIVE_LIST_ENTRY RegistryHives[/*MAX_NUMBER_OF_REGISTRY_HIVES*/] =
+{
+    /* Special Setup system registry hive */
+    // WARNING: Please *keep* it in first position!
+    { "SETUPREG", L"Registry\\Machine\\SYSTEM"     , &SystemHive  , SystemSecurity  , sizeof(SystemSecurity)   },
+
+    /* Regular registry hives */
+    { "SYSTEM"  , L"Registry\\Machine\\SYSTEM"     , &SystemHive  , SystemSecurity  , sizeof(SystemSecurity)   },
+    { "SOFTWARE", L"Registry\\Machine\\SOFTWARE"   , &SoftwareHive, SoftwareSecurity, sizeof(SoftwareSecurity) },
+    { "DEFAULT" , L"Registry\\User\\.DEFAULT"      , &DefaultHive , SystemSecurity  , sizeof(SystemSecurity)   },
+    { "SAM"     , L"Registry\\Machine\\SAM"        , &SamHive     , SystemSecurity  , sizeof(SystemSecurity)   },
+    { "SECURITY", L"Registry\\Machine\\SECURITY"   , &SecurityHive, NULL            , 0                        },
+    { "BCD"     , L"Registry\\Machine\\BCD00000000", &BcdHive     , BcdSecurity     , sizeof(BcdSecurity)      },
+};
+C_ASSERT(_countof(RegistryHives) == MAX_NUMBER_OF_REGISTRY_HIVES);
+
+
 static PMEMKEY
 CreateInMemoryStructure(
     IN PCMHIVE RegistryHive,
@@ -346,6 +366,7 @@ CreateInMemoryStructure(
     return Key;
 }
 
+LIST_ENTRY CmiHiveListHead;
 LIST_ENTRY CmiReparsePointsHead;
 
 static LONG
@@ -671,9 +692,9 @@ VOID
 RepGetValueData(
     IN PHHIVE Hive,
     IN PCM_KEY_VALUE ValueCell,
-    OUT ULONG* Type OPTIONAL,
+    OUT PULONG Type OPTIONAL,
     OUT PUCHAR Data OPTIONAL,
-    IN OUT ULONG* DataSize OPTIONAL)
+    IN OUT PULONG DataSize OPTIONAL)
 {
     ULONG DataLength;
     PVOID DataCell;
@@ -759,16 +780,16 @@ static BOOL
 ConnectRegistry(
     IN HKEY RootKey,
     IN PCMHIVE HiveToConnect,
-    IN PUCHAR Descriptor,
-    IN ULONG DescriptorLength,
-    IN LPCWSTR Path)
+    IN PUCHAR SecurityDescriptor,
+    IN ULONG SecurityDescriptorLength,
+    IN PCWSTR Path)
 {
     NTSTATUS Status;
     PREPARSE_POINT ReparsePoint;
     PMEMKEY NewKey;
     LONG rc;
 
-    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
+    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(*ReparsePoint));
     if (!ReparsePoint)
         return FALSE;
 
@@ -794,7 +815,7 @@ ConnectRegistry(
      */
     Status = CmiCreateSecurityKey(&HiveToConnect->Hive,
                                   HiveToConnect->Hive.BaseBlock->RootCell,
-                                  Descriptor, DescriptorLength);
+                                  SecurityDescriptor, SecurityDescriptorLength);
     if (!NT_SUCCESS(Status))
         DPRINT1("Failed to add security for root key '%S'\n", Path);
 
@@ -821,18 +842,64 @@ ConnectRegistry(
     ReparsePoint->DestinationHive = NewKey->RegistryHive;
     ReparsePoint->DestinationKeyCellOffset = NewKey->KeyCellOffset;
     InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
+
     return TRUE;
 }
 
-LIST_ENTRY CmiHiveListHead;
+static BOOL
+CreateSymLink(
+    IN PCWSTR LinkKeyPath OPTIONAL,
+    IN OUT PHKEY LinkKeyHandle OPTIONAL,
+    // IN PCWSTR TargetKeyPath OPTIONAL,
+    IN HKEY TargetKeyHandle)
+{
+    PMEMKEY LinkKey, TargetKey;
+    PREPARSE_POINT ReparsePoint;
+
+    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(*ReparsePoint));
+    if (!ReparsePoint)
+        return FALSE;
+
+    if (LinkKeyPath && !(LinkKeyHandle && *LinkKeyHandle))
+    {
+        /* Create the link key */
+        RegCreateKeyExW(NULL,
+                        LinkKeyPath,
+                        0,
+                        NULL,
+                        REG_OPTION_VOLATILE,
+                        0,
+                        NULL,
+                        (HKEY*)&LinkKey,
+                        NULL);
+    }
+    else if (LinkKeyHandle)
+    {
+        /* Use the user-provided link key handle */
+        LinkKey = HKEY_TO_MEMKEY(*LinkKeyHandle);
+    }
+
+    if (LinkKeyHandle)
+        *LinkKeyHandle = MEMKEY_TO_HKEY(LinkKey);
+
+    TargetKey = HKEY_TO_MEMKEY(TargetKeyHandle);
+
+    ReparsePoint->SourceHive = LinkKey->RegistryHive;
+    ReparsePoint->SourceKeyCellOffset = LinkKey->KeyCellOffset;
+    ReparsePoint->DestinationHive = TargetKey->RegistryHive;
+    ReparsePoint->DestinationKeyCellOffset = TargetKey->KeyCellOffset;
+    InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
+
+    return TRUE;
+}
 
 VOID
-RegInitializeRegistry(VOID)
+RegInitializeRegistry(
+    IN PCSTR HiveList)
 {
-    UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
     NTSTATUS Status;
-    PMEMKEY ControlSetKey, CurrentControlSetKey;
-    PREPARSE_POINT ReparsePoint;
+    UINT i;
+    HKEY ControlSetKey;
 
     InitializeListHead(&CmiHiveListHead);
     InitializeListHead(&CmiReparsePointsHead);
@@ -847,70 +914,56 @@ RegInitializeRegistry(VOID)
     RootKey = CreateInMemoryStructure(&RootHive,
                                       RootHive.Hive.BaseBlock->RootCell);
 
-    /* Create DEFAULT key */
-    ConnectRegistry(NULL,
-                    &DefaultHive,
-                    SystemSecurity, sizeof(SystemSecurity),
-                    L"Registry\\User\\.DEFAULT");
+    for (i = 0; i < _countof(RegistryHives); ++i)
+    {
+        /* Skip this registry hive if it's not in the list */
+        if (!strstr(HiveList, RegistryHives[i].HiveName))
+            continue;
 
-    /* Create SAM key */
-    ConnectRegistry(NULL,
-                    &SamHive,
-                    SystemSecurity, sizeof(SystemSecurity),
-                    L"Registry\\Machine\\SAM");
+        /* Create the registry key */
+        ConnectRegistry(NULL,
+                        RegistryHives[i].CmHive,
+                        RegistryHives[i].SecurityDescriptor,
+                        RegistryHives[i].SecurityDescriptorLength,
+                        RegistryHives[i].HiveRegistryPath);
 
-    /* Create SECURITY key */
-    ConnectRegistry(NULL,
-                    &SecurityHive,
-                    NULL, 0,
-                    L"Registry\\Machine\\SECURITY");
+        /* If we happen to deal with the special setup registry hive, stop there */
+        // if (strcmp(RegistryHives[i].HiveName, "SETUPREG") == 0)
+        if (i == 0)
+            break;
+    }
 
-    /* Create SOFTWARE key */
-    ConnectRegistry(NULL,
-                    &SoftwareHive,
-                    SoftwareSecurity, sizeof(SoftwareSecurity),
-                    L"Registry\\Machine\\SOFTWARE");
-
-    /* Create BCD key */
-    ConnectRegistry(NULL,
-                    &BcdHive,
-                    BcdSecurity, sizeof(BcdSecurity),
-                    L"Registry\\Machine\\BCD00000000");
-
-    /* Create SYSTEM key */
-    ConnectRegistry(NULL,
-                    &SystemHive,
-                    SystemSecurity, sizeof(SystemSecurity),
-                    L"Registry\\Machine\\SYSTEM");
-
-    /* Create 'ControlSet001' key */
+    /* Create the 'ControlSet001' key */
     RegCreateKeyW(NULL,
                   L"Registry\\Machine\\SYSTEM\\ControlSet001",
-                  (HKEY*)&ControlSetKey);
+                  &ControlSetKey);
 
-    /* Create 'CurrentControlSet' key */
-    RegCreateKeyExW(NULL,
-                    L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
-                    0,
-                    NULL,
-                    REG_OPTION_VOLATILE,
-                    0,
-                    NULL,
-                    (HKEY*)&CurrentControlSetKey,
-                    NULL);
+    /* Create the 'CurrentControlSet' key as a symlink to 'ControlSet001' */
+    CreateSymLink(L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
+                  NULL, ControlSetKey);
 
-    /* Connect 'CurrentControlSet' to 'ControlSet001' */
-    ReparsePoint = (PREPARSE_POINT)malloc(sizeof(REPARSE_POINT));
-    ReparsePoint->SourceHive = CurrentControlSetKey->RegistryHive;
-    ReparsePoint->SourceKeyCellOffset = CurrentControlSetKey->KeyCellOffset;
-    ReparsePoint->DestinationHive = ControlSetKey->RegistryHive;
-    ReparsePoint->DestinationKeyCellOffset = ControlSetKey->KeyCellOffset;
-    InsertTailList(&CmiReparsePointsHead, &ReparsePoint->ListEntry);
+#if 0
+    /* Link SECURITY to SAM */
+    CmpLinkKeyToHive(L"\\Registry\\Machine\\Security\\SAM", L"\\Registry\\Machine\\SAM\\SAM");
+    /* Link S-1-5-18 to .Default */
+    CmpLinkKeyToHive(L"\\Registry\\User\\S-1-5-18", L"\\Registry\\User\\.Default");
+#endif
 }
 
 VOID
 RegShutdownRegistry(VOID)
 {
+    PLIST_ENTRY Entry;
+    PREPARSE_POINT ReparsePoint;
+
+    /* Clean up the reparse points list */
+    while (!IsListEmpty(&CmiReparsePointsHead))
+    {
+        Entry = RemoveHeadList(&CmiReparsePointsHead);
+        ReparsePoint = CONTAINING_RECORD(Entry, REPARSE_POINT, ListEntry);
+        free(ReparsePoint);
+    }
+
     /* FIXME: clean up the complete hive */
 
     free(RootKey);

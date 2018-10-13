@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau
  */
 
@@ -31,6 +31,12 @@
 #include <stdlib.h>
 
 #include <typedefs.h>
+
+#ifndef _MSC_VER
+#ifndef _countof
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+#endif
 
 // Definitions copied from <ntstatus.h>
 // We only want to include host headers, so we define them manually
