@@ -10,14 +10,47 @@
 
 static BOOL UsePageHeap = FALSE;
 
+const WCHAR ImageExecOptionsString[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
 
-DWORD ReagFlagsFromRegistry(HKEY SubKey, PVOID Buffer, PWSTR Value, DWORD MaxLen)
+BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName, OUT HKEY* Key)
 {
+    LONG Ret;
+    HKEY HandleKey, HandleSubKey;
+
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ImageExecOptionsString, 0, KEY_WRITE | KEY_READ, &HandleKey);
+    if (Ret != ERROR_SUCCESS)
+    {
+        wprintf(L"OpenIFEO: RegOpenKeyEx failed (%d)\n", Ret);
+        return FALSE;
+    }
+
+    if (ImageName == NULL)
+    {
+        *Key = HandleKey;
+        return TRUE;
+    }
+
+    Ret = RegCreateKeyExW(HandleKey, ImageName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &HandleSubKey, NULL);
+    CloseHandle(HandleKey);
+
+    if (Ret != ERROR_SUCCESS)
+    {
+        wprintf(L"OpenIFEO: RegCreateKeyEx failed (%d)\n", Ret);
+        return FALSE;
+    }
+    *Key = HandleSubKey;
+    return TRUE;
+}
+
+
+DWORD ReadSZFlagsFromRegistry(HKEY SubKey, PWSTR Value)
+{
+    WCHAR Buffer[20] = { 0 };
     DWORD Len, Flags, Type;
 
-    Len = MaxLen;
+    Len = sizeof(Buffer) - sizeof(WCHAR);
     Flags = 0;
-    if (RegQueryValueEx(SubKey, Value, NULL, &Type, Buffer, &Len) == ERROR_SUCCESS && Type == REG_SZ)
+    if (RegQueryValueExW(SubKey, Value, NULL, &Type, (BYTE*)Buffer, &Len) == ERROR_SUCCESS && Type == REG_SZ)
     {
         Flags = wcstoul(Buffer, NULL, 16);
     }
@@ -67,10 +100,10 @@ int wmain(int argc, LPWSTR argv[])
     if (!ParseCmdline(argc, argv))
     {
         wprintf(L"Usage: gflags /p [image.exe] [/enable|/disable [/full]]\n"
-                L"\timage.exe:\tImage you want to deal with\n"
-                L"\t/enable:\tenable page heap for the image\n"
-                L"\t/disable:\tdisable page heap for the image\n"
-                L"\t/full:\t\tactivate full debug page heap\n");
+                L"    image.exe:  Image you want to deal with\n"
+                L"    /enable:    enable page heap for the image\n"
+                L"    /disable:   disable page heap for the image\n"
+                L"    /full:      activate full debug page heap\n");
         return 1;
     }
 

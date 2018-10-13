@@ -13,7 +13,10 @@
 #include <winreg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pstypes.h>
 
+extern
+const WCHAR ImageExecOptionsString[];
 
 /* Option specific commandline parsing */
 BOOL PageHeap_ParseCmdline(INT i, int argc, LPWSTR argv[]);
@@ -22,5 +25,6 @@ BOOL PageHeap_ParseCmdline(INT i, int argc, LPWSTR argv[]);
 INT PageHeap_Execute();
 
 /* Common functions */
-DWORD ReagFlagsFromRegistry(HKEY SubKey, PVOID Buffer, PWSTR Value, DWORD MaxLen);
+DWORD ReadSZFlagsFromRegistry(HKEY SubKey, PWSTR Value);
+BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName, OUT HKEY* Key);
 

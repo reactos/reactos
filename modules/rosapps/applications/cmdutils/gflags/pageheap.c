@@ -11,63 +11,34 @@ static BOOL Set = FALSE;
 static BOOL Unset = FALSE;
 static BOOL Full = FALSE;
 static PWSTR Image = NULL;
-static WCHAR ImageExecOptionsString[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
 
 
 static VOID ModifyStatus(VOID)
 {
     LONG Ret;
-    DWORD MaxLen, GlobalFlags;
-    PVOID Buffer;
-    HKEY HandleKey, HandleSubKey;
+    DWORD GlobalFlags;
+    HKEY IFEOKey;
+    WCHAR Buffer[11];
 
-    Ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, ImageExecOptionsString, 0, KEY_WRITE | KEY_READ, &HandleKey);
-    if (Ret != ERROR_SUCCESS)
+    if (!OpenImageFileExecOptions(KEY_WRITE | KEY_READ, Image, &IFEOKey))
     {
-        wprintf(L"MS: RegOpenKeyEx failed (%d)\n", Ret);
         return;
     }
 
-    Ret = RegCreateKeyEx(HandleKey, Image, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &HandleSubKey, NULL);
-    if (Ret != ERROR_SUCCESS)
-    {
-        wprintf(L"MS: RegCreateKeyEx failed (%d)\n", Ret);
-        return;
-    }
-
-    Ret = RegQueryInfoKey(HandleSubKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &MaxLen, NULL, NULL);
-    if (Ret != ERROR_SUCCESS)
-    {
-        wprintf(L"MS: RegQueryInfoKey failed (%d)\n", Ret);
-        RegCloseKey(HandleSubKey);
-        RegCloseKey(HandleKey);
-        return;
-    }
-
-    MaxLen = max(MaxLen, 11 * sizeof(WCHAR));
-    Buffer = HeapAlloc(GetProcessHeap(), 0, MaxLen);
-    if (Buffer == NULL)
-    {
-        wprintf(L"MS: HeapAlloc failed\n");
-        RegCloseKey(HandleSubKey);
-        RegCloseKey(HandleKey);
-        return;
-    }
-
-    GlobalFlags = ReagFlagsFromRegistry(HandleSubKey, Buffer, L"GlobalFlag", MaxLen);
+    GlobalFlags = ReadSZFlagsFromRegistry(IFEOKey, L"GlobalFlag");
     if (Set)
     {
-        GlobalFlags |= 0x02000000;
+        GlobalFlags |= FLG_HEAP_PAGE_ALLOCS;
     }
     else
     {
-        GlobalFlags &= ~0x02000000;
+        GlobalFlags &= ~FLG_HEAP_PAGE_ALLOCS;
     }
 
     if (GlobalFlags != 0)
     {
         wsprintf(Buffer, L"0x%08x", GlobalFlags);
-        Ret = RegSetValueEx(HandleSubKey, L"GlobalFlag", 0, REG_SZ, Buffer, 11 * sizeof(WCHAR));
+        Ret = RegSetValueExW(IFEOKey, L"GlobalFlag", 0, REG_SZ, (BYTE*)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
         if (Ret != ERROR_SUCCESS)
         {
             wprintf(L"MS: RegSetValueEx failed (%d)\n", Ret);
@@ -75,7 +46,7 @@ static VOID ModifyStatus(VOID)
     }
     else
     {
-        Ret = RegDeleteValue(HandleSubKey, L"GlobalFlag");
+        Ret = RegDeleteValueW(IFEOKey, L"GlobalFlag");
         if (Ret != ERROR_SUCCESS)
         {
             wprintf(L"MS: RegDeleteValue failed (%d)\n", Ret);
@@ -84,7 +55,7 @@ static VOID ModifyStatus(VOID)
 
     if (Unset)
     {
-        Ret = RegDeleteValue(HandleSubKey, L"PageHeapFlags");
+        Ret = RegDeleteValueW(IFEOKey, L"PageHeapFlags");
         if (Ret != ERROR_SUCCESS)
         {
             wprintf(L"MS: RegDeleteValue failed (%d)\n", Ret);
@@ -94,7 +65,7 @@ static VOID ModifyStatus(VOID)
     {
         DWORD PageHeapFlags;
 
-        PageHeapFlags = ReagFlagsFromRegistry(HandleSubKey, Buffer, L"PageHeapFlags", MaxLen);
+        PageHeapFlags = ReadSZFlagsFromRegistry(IFEOKey, L"PageHeapFlags");
         PageHeapFlags &= ~3;
 
         if (Full)
@@ -104,7 +75,7 @@ static VOID ModifyStatus(VOID)
         PageHeapFlags |= 2;
 
         wsprintf(Buffer, L"0x%x", PageHeapFlags);
-        Ret = RegSetValueEx(HandleSubKey, L"PageHeapFlags", 0, REG_SZ, Buffer, 11 * sizeof(WCHAR));
+        Ret = RegSetValueExW(IFEOKey, L"PageHeapFlags", 0, REG_SZ, (BYTE*)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
         if (Ret != ERROR_SUCCESS)
         {
             wprintf(L"MS: RegSetValueEx failed (%d)\n", Ret);
@@ -116,24 +87,27 @@ static VOID ModifyStatus(VOID)
         DWORD Type, VerifierFlags, Len;
 
         VerifierFlags = 0;
-        Len = MaxLen;
-        if (RegQueryValueEx(HandleSubKey, L"VerifierFlags", NULL, &Type, Buffer, &Len) == ERROR_SUCCESS &&
+        Len = VerifierFlags;
+        if (RegQueryValueExW(IFEOKey, L"VerifierFlags", NULL, &Type, (BYTE *)&VerifierFlags, &Len) == ERROR_SUCCESS &&
             Type == REG_DWORD && Len == sizeof(DWORD))
         {
-            VerifierFlags = ((DWORD *)Buffer)[0];
-            VerifierFlags &= ~0x8001;
+            VerifierFlags &= ~0x8001;   /* RTL_VRF_FLG_FAST_FILL_HEAP | RTL_VRF_FLG_FULL_PAGE_HEAP */
+        }
+        else
+        {
+            VerifierFlags = 0;
         }
 
         if (Full)
         {
-            VerifierFlags |= 1;
+            VerifierFlags |= 1; /* RTL_VRF_FLG_FULL_PAGE_HEAP */
         }
         else
         {
-            VerifierFlags |= 0x8000;
+            VerifierFlags |= 0x8000;    /* RTL_VRF_FLG_FAST_FILL_HEAP */
         }
 
-        Ret = RegSetValueEx(HandleSubKey, L"VerifierFlags", 0, REG_DWORD, (const BYTE *)&VerifierFlags, sizeof(DWORD));
+        Ret = RegSetValueExW(IFEOKey, L"VerifierFlags", 0, REG_DWORD, (const BYTE *)&VerifierFlags, sizeof(DWORD));
         if (Ret != ERROR_SUCCESS)
         {
             wprintf(L"MS: RegSetValueEx failed (%d)\n", Ret);
@@ -144,44 +118,26 @@ static VOID ModifyStatus(VOID)
     wprintf(L"\t%s: page heap %s\n", Image, (Set ? L"enabled" : L"disabled"));
 
     HeapFree(GetProcessHeap(), 0, Buffer);
-    RegCloseKey(HandleSubKey);
-    RegCloseKey(HandleKey);
+    RegCloseKey(IFEOKey);
 }
 
 static BOOL DisplayImageInfo(HKEY HandleKey, PWSTR SubKey, PBOOL Header)
 {
     LONG Ret;
     BOOL Handled;
-    DWORD MaxLen, GlobalFlags;
+    DWORD GlobalFlags;
     HKEY HandleSubKey;
-    PVOID Buffer;
 
-    Ret = RegOpenKeyEx(HandleKey, SubKey, 0, KEY_READ, &HandleSubKey);
+    Ret = RegOpenKeyExW(HandleKey, SubKey, 0, KEY_READ, &HandleSubKey);
     if (Ret != ERROR_SUCCESS)
     {
         wprintf(L"DII: RegOpenKeyEx failed (%d)\n", Ret);
         return FALSE;
     }
 
-    Ret = RegQueryInfoKey(HandleSubKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &MaxLen, NULL, NULL);
-    if (Ret != ERROR_SUCCESS)
-    {
-        wprintf(L"DII: RegQueryInfoKey failed (%d)\n", Ret);
-        RegCloseKey(HandleSubKey);
-        return FALSE;
-    }
-
-    Buffer = HeapAlloc(GetProcessHeap(), 0, MaxLen);
-    if (Buffer == NULL)
-    {
-        wprintf(L"DII: HeapAlloc failed\n");
-        RegCloseKey(HandleSubKey);
-        return FALSE;
-    }
-
     Handled = FALSE;
-    GlobalFlags = ReagFlagsFromRegistry(HandleSubKey, Buffer, L"GlobalFlag", MaxLen);
-    if (GlobalFlags & 0x02000000)
+    GlobalFlags = ReadSZFlagsFromRegistry(HandleSubKey, L"GlobalFlag");
+    if (GlobalFlags & FLG_HEAP_PAGE_ALLOCS)
     {
         DWORD PageHeapFlags;
 
@@ -199,7 +155,7 @@ static BOOL DisplayImageInfo(HKEY HandleKey, PWSTR SubKey, PBOOL Header)
             wprintf(L"Page heap is enabled for %s with flags (", SubKey);
         }
 
-        PageHeapFlags = ReagFlagsFromRegistry(HandleSubKey, Buffer, L"PageHeapFlags", MaxLen);
+        PageHeapFlags = ReadSZFlagsFromRegistry(HandleSubKey, L"PageHeapFlags");
         if (PageHeapFlags & 0x1)
         {
             wprintf(L"full ");
@@ -215,7 +171,6 @@ static BOOL DisplayImageInfo(HKEY HandleKey, PWSTR SubKey, PBOOL Header)
         Handled = TRUE;
     }
 
-    HeapFree(GetProcessHeap(), 0, Buffer);
     RegCloseKey(HandleSubKey);
 
     return Handled;
@@ -229,14 +184,12 @@ static VOID DisplayStatus(VOID)
     TCHAR * SubKey;
     BOOL Header;
 
-    Ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, ImageExecOptionsString, 0, KEY_READ, &HandleKey);
-    if (Ret != ERROR_SUCCESS)
+    if (!OpenImageFileExecOptions(KEY_READ, NULL, &HandleKey))
     {
-        wprintf(L"DS: RegOpenKeyEx failed (%d)\n", Ret);
         return;
     }
 
-    Ret = RegQueryInfoKey(HandleKey, NULL, NULL, NULL, NULL, &MaxLen, NULL, NULL, NULL, NULL, NULL, NULL);
+    Ret = RegQueryInfoKeyW(HandleKey, NULL, NULL, NULL, NULL, &MaxLen, NULL, NULL, NULL, NULL, NULL, NULL);
     if (Ret != ERROR_SUCCESS)
     {
         wprintf(L"DS: RegQueryInfoKey failed (%d)\n", Ret);
@@ -245,7 +198,7 @@ static VOID DisplayStatus(VOID)
     }
 
     ++MaxLen; // NULL-char
-    SubKey = HeapAlloc(GetProcessHeap(), 0, MaxLen * sizeof(TCHAR));
+    SubKey = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MaxLen * sizeof(WCHAR));
     if (SubKey == NULL)
     {
         wprintf(L"DS: HeapAlloc failed\n");
@@ -258,7 +211,7 @@ static VOID DisplayStatus(VOID)
     Header = FALSE;
     do
     {
-        Ret = RegEnumKey(HandleKey, Index, SubKey, MaxLen);
+        Ret = RegEnumKeyW(HandleKey, Index, SubKey, MaxLen);
         if (Ret != ERROR_NO_MORE_ITEMS)
         {
             if (Image == NULL || wcscmp(SubKey, Image) == 0)
