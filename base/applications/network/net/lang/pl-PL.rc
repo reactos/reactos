@@ -1,0 +1,320 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+STRINGTABLE
+BEGIN
+    IDS_ACCOUNTS_SYNTAX "NET ACCOUNTS [/FORCELOGOFF:{minuty|NO}] [/MINPWLEN:długość]\n\
+             [/MAXPWAGE:{dni|UNLIMITED}] [/MINPWAGE:dni]\n\
+             [/UNIQUEPW:liczba] [/DOMAIN]\n\n"
+    IDS_ACCOUNTS_HELP_1 "NET ACCOUNTS uaktualnia bazę kont użytkowników i zmienia hasło oraz wymagania\n\
+logowania dla wszystkich kont.\n\
+Użyte bez opcji, NET ACCOUNTS wyświetla bieżące ustawienia\n\
+hasła i ograniczeń logowania oraz informacje o domenie.\n\n"
+    IDS_ACCOUNTS_HELP_2 "Aby opcje użyte z NET ACCOUNTS odniosły skutek, muszą być\n\
+spełnione dwa warunki.\n\n"
+    IDS_ACCOUNTS_HELP_3 "- Wymagania hasła i logowania odnoszą skutek tylko wtedy, gdy\n\
+  zostało utworzone konto użytkownika (w tym celu użyj\n\
+  Menedżera użytkowników lub polecenia NET USER).\n\n"
+    IDS_ACCOUNTS_HELP_4 "- Usługa logowania (Net Logon) musi być uruchomiona na wszystkich\n\
+  serwerach w domenie, które weryfikują logowanie. Usługa logowania\n\
+  jest uruchamiana automatycznie podczas uruchamiania systemu.\n\n"
+    IDS_ACCOUNTS_HELP_5 "/FORECELOGOFF:{minuty | NO}   Ustawia liczbę minut, przez które użytkownik\n\
+                               może być zalogowany przed wymuszeniem wylogowania\n\
+                               wskutek wygaśnięcia lub ważności godzin logowania.\n\
+                               NO, wartość domyślna, zapobiega wymuszaniu\n\
+							   wylogowania.\n"
+    IDS_ACCOUNTS_HELP_6 "/MINPWLEN:długość              Ustawia minimalną liczbę znaków w haśle.\n\
+                               Zakres długości hasła wynosi od 0 do 14 znaków;\n\
+                               wartość domyślna to 6 znaków.\n"
+    IDS_ACCOUNTS_HELP_7 "/MAXPWAGE:{dni | UNLIMITED}   Ustawia maksymalną liczbę dni ważności\n\
+                               hasła. UNLIMITED ustala nieograniczony\n\
+                               czas ważności hasła. Wartość /MAXPWAGE nie\n\
+                               może być mniejsza od /MINPWAGE. Zakres wynosi\n\
+                               od 1 do 999; domyślnie wartość się nie zmienia.\n"
+    IDS_ACCOUNTS_HELP_8 "/MINPWAGE:dni                  Ustawia minimalną liczbę dni, które muszą\n\
+                               minąć, zanim użytkownik może zmienić hasło.\n\
+                               Wartość 0 ustawia brak tego ograniczenia.\n\
+                               Zakres wynosi od 0 do 999; wartość domyślna\n\
+                               to 0 dni. Wartość /MINPWAGE nie może być \n\
+							   większa od wartości /MAXPWAGE."
+    IDS_ACCOUNTS_HELP_9 "/UNIQUEPW:liczba               Wymaga, aby hasło użytkownika było unikatowe,\n\
+                               poprzez określoną liczbę zmian hasła.\n\
+                               Największa wartość to 24.\n"
+    IDS_ACCOUNTS_HELP_10 "/DOMAIN                        Wykonuje operacje na kontrolerze domeny\n\
+                               w bieżącej domenie. W innym wypadku,\n\
+                               operacje te są dokonywane na komputerze\n\
+                               lokalnym.\n\n"
+    IDS_COMPUTER_SYNTAX "NET COMPUTER \\nazwa_komputera {/ADD | /DEL}\n\n"
+    IDS_COMPUTER_HELP_1 "NET COMPUTER dodaje lub usuwa komputer z bazy danych domeny.\n\
+To polecenie jest dostępne tylko na serwerowych systemach opoeracyjnych.\n\n"
+    IDS_COMPUTER_HELP_2 "\\nazwa_komputera   Określa komputer dodawany lub usuwany\n\
+                z domeny.\n\
+/ADD            Dodaje określony komputer do domeny.\n\
+/DEL            Usuwa określony komputer z domeny.\n\n"
+    IDS_CONFIG_SYNTAX "NET CONFIG [SERVER | WORKSTATION]\n\n"
+    IDS_CONFIG_HELP_1 "NET CONFIG wyświetla informacje o konfiguracji usług Stacja robocza lub\n\
+Serwer. Polecenie użyte bez przełącznika SERVER lub WORKSTATION wyświetla,\n\
+listę usług dostępnych do konfiguracji. Aby uzyskać pomoc na temat\n\
+konfigurowania usługi, wpisz polecenie NET HELP CONFIG usługa.\n\n"
+    IDS_CONFIG_HELP_2 "SERVER        Wyświetla informacje o konfiguracji usługi Serwer\n\
+WORKSTATION   Wyświetla informacje o konfiguracji usługi Stacja robocza.\n\n"
+    IDS_CONFIG_SERVER_SYNTAX "NET CONFIG SERVER [/AUTODISCONNECT:czas] [/SRVCOMMENT:""tekst""]\n\
+                  [/HIDDEN:{YES | NO}]\n\n"
+    IDS_CONFIG_SERVER_HELP_1 "NET CONFIG SERVER wyświetla lub zmienia ustawienia usługi Serwer.\n\n"
+    IDS_CONFIG_SERVER_HELP_2 "/AUTODISCONNECT:czas    Ustawia maksymalną liczbę minut, przez\n\
+                        które sesja użytkownika może być nieaktywna, zanim\n\
+                        nastąpi jej rozłączenie. Użyj wartości -1, aby\n\
+                        zapobiec rozłączaniu. Zakres wynosi od -1 do 65535\n\
+						minut, domyślnie 15.\n"
+    IDS_CONFIG_SERVER_HELP_3 "/SRVCOMMENT:""tekst""    Dodaje komentarz dla serwera wyświetlany na\n\
+                        ekranie komputera i przez polecenie NET VIEW.\n\
+                        Tekst musi być ujęty w cudzysłów.\n"
+    IDS_CONFIG_SERVER_HELP_4 "/HIDDEN:{YES | NO}      Określa, czy nazwa serwera pojawia się\n\
+                        podczas wyświetlania listy serwerów. Należy pamiętać,\n\
+                        że ukrycie serwera nie zmienia uprawnień na tym\n\
+                        serwerze. Wartość domyślna: NO (nie ukrywaj).\n\n"
+    IDS_CONFIG_SERVER_HELP_5 "Aby wyświetlić bieżącą konfigurację usługi Serwer,\n\
+wpisz NET CONFIG SERVER bez parametrów.\n\n"
+    IDS_CONTINUE_SYNTAX "NET CONTINUE usługa\n\n"
+    IDS_CONTINUE_HELP_1 "NET CONTINUE wznawia działanie usługi, która została.\n\
+wstrzymana poleceniem NET PAUSE.\n"
+    IDS_CONTINUE_HELP_2 "usługa             Wstrzymana usługa\n\
+                    Może to być jedna z następujących usług:\n\
+                    NET LOGON\n\
+                    NT LM SECURITY SUPPORT PROVIDER\n\
+                    SCHEDULE\n\
+                    SERVER\n\
+                    WORKSTATION\n\n"
+    IDS_FILE_SYNTAX "NET FILE [identyfikator [/CLOSE]]\n\n"
+    IDS_FILE_HELP "FILE\n...\n\n"
+    IDS_GROUP_SYNTAX "NET GROUP [nazwa_grupy [/COMMENT:""tekst""]] [/DOMAIN]\n\
+          nazwa_grupy {/ADD [/COMMENT:""tekst""] | /DELETE} [/DOMAIN]\n\
+          nazwa_grupy nazwa_użytkownika [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
+    IDS_GROUP_HELP_1 "NET GROUP dodaje, wyświetla lub modyfikuje grupy globalne na serwerach.\n\
+Użyte bez parametrów wyświetla nazwy grup na serwerze.\n\n"
+    IDS_GROUP_HELP_2 "nazwa_grupy       Nazwa grupy dodawanej, rozszerzanej lub usuwanej.\n\
+                 Aby zobaczyć listę użytkowników w grupie, podaj tylko\n\
+                  nazwę grupy.\n"
+    IDS_GROUP_HELP_3 "/COMMENT:""tekst""        Dodaje komentarz dla nowej lub istniejącej grupy.\n\
+                 Tekst musi być ujęty w cudzysłów.\n"
+    IDS_GROUP_HELP_4 "/DOMAIN                   Wykonuje operację na kontrolerze domeny.\n\
+                 Bez tego przełącznika operacje są wykonywane na\n\
+                 komputerze lokalnym.\n"
+    IDS_GROUP_HELP_5 "nazwa_użytkownika[ ...]   Lista zawierająca nazwy jednego lub kilku\n\
+                 użytkowników dodawanych lub usuwanych z grupy.\n\
+				 Rozdziel kolejne nazwy znakiem spacji.\n"
+    IDS_GROUP_HELP_6 "/ADD             Dodaje grupę lub dodaje nazwę użytkownika do grupy.\n"
+    IDS_GROUP_HELP_7 "/DELETE          Usuwa grupę lub usuwa nazwę użytkownika z grupy.\n\n"
+    IDS_HELP_SYNTAX "NET HELP polecenie\n   - lub -\nNET polecenie /HELP\n\n"
+    IDS_HELP_HELP_1 "   Dostępne polecenia to:\n\n\
+   NET ACCOUNTS             NET HELP                 NET SHARE\n\
+   NET COMPUTER             NET HELPMSG              NET START\n\
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
+   NET CONFIG SERVER        NET NAME                 NET STOP\n\
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
+   NET CONTINUE             NET PRINT                NET USE\n\
+   NET FILE                 NET SEND                 NET USER\n\
+   NET GROUP                NET SESSION              NET VIEW\n\n"
+    IDS_HELP_HELP_2 "   ...\n\n"
+    IDS_HELPMSG_SYNTAX "NET HELPMSG komunikat#\n\n"
+    IDS_HELPMSG_HELP_1 "NET HELPMSG wyświetla informacje o komunikatach sieci (takich\n\
+jak błąd, ostrzeżenie lub alarm). Gdy wpiszesz NET HELPMSG i błąd numeryczny\n\
+(na przykład ""net helpmsg 2182""), system\n\
+objaśni komunikat i zasugeruje rozwiązanie problemu.\n\n"
+    IDS_HELPMSG_HELP_2 "komunikat#   Numeryczny błąd systemu, o którym chcesz uzyskać informacje.\n\n"
+    IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [nazwa_grupy [/COMMENT:""tekst""]] [/DOMAIN]\n\
+               nazwa_grupy {/ADD [/COMMENT:""tekst""] | /DELETE} [/DOMAIN]\n\
+               nazwa_grupy nazwa [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
+    IDS_LOCALGROUP_HELP_1 "NET LOCALGROUP dodaje, wyświetla, lub modyfikuje grupy lokalne na komputerach\n\
+Polecenie użyte bez parametrów wyświetla grupy lokalne na komputerze.\n\n"
+    IDS_LOCALGROUP_HELP_2 "nazwa_grupy       Nazwa grupy dodawanej, rozszerzanej lub usuwanej.\n\
+                 Aby zobaczyć listę użytkowników lub grup globalnych\n\
+                 w grupie lokalnej, podaj tylko nazwę grupy.\n"
+    IDS_LOCALGROUP_HELP_3 "/COMMENT:""tekst""  Dodaje komentarz dla nowej lub istniejącej grupy.\n\
+                 Tekst musi być ujęty w cudzysłów.\n"
+    IDS_LOCALGROUP_HELP_4 "/DOMAIN          Wykonuje operację na kontrolerze bieżącej domeny.\n\
+                 Bez tego przełącznika operacje są wykonywane na\n\
+                 komputerze lokalnym.\n"
+    IDS_LOCALGROUP_HELP_5 "nazwa[ ...]      Lista zawierająca nazwy jednego lub kilku użytkowników\n\
+                 lub grup, dodawanych lub usuwanych z grupy lokalnej.\n\
+                 Rozdziel kolejne wpisy znakiem spacji. Lista może zawierać\n\
+                 nazwy użytkowników lub grup globalnych, lecz nie może\n\
+                 zawierać nazw innych grup lokalnych. Podając nazwę\n\
+				 użytkownika z innej domeny poprzedź ją nazwą domeny\n\
+                 (na przykład: WARSZAWA\PIOTRS).\n"
+    IDS_LOCALGROUP_HELP_6 "/ADD             Dodaje nazwę grupy lub użytkownika do grupy lokalnej.\n\
+                 Dla użytkowników lub grup globalnych dodawanych tym\n\
+                 poleceniem do grupy lokalnej należy wcześniej utworzyć\n\
+				 odpowiednie konto.\n"
+    IDS_LOCALGROUP_HELP_7 "/DELETE          Usuwa nazwę grupy lub użytkownika z grupy lokalnej.\n\n"
+
+    IDS_NAME_SYNTAX "NET NAME ...\n\n"
+    IDS_NAME_HELP "NAME\n...\n\n"
+    IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
+    IDS_PRINT_HELP "PRINT\n...\n\n"
+    IDS_PAUSE_SYNTAX "NET PAUSE usługa\n\n"
+    IDS_PAUSE_HELP_1 "NET PAUSE wstrzymuje usługę.\n\n"
+    IDS_PAUSE_HELP_2 "usługa   Nazwa wstrzymywanej usługi.\n\n"
+    IDS_SEND_SYNTAX "NET SEND ...\n\n"
+    IDS_SEND_HELP "SEND\n...\n\n"
+    IDS_SESSION_SYNTAX "NET SESSION ...\n\n"
+    IDS_SESSION_HELP "SESSION\n...\n\n"
+    IDS_SHARE_SYNTAX "NET SHARE ...\n\n"
+    IDS_SHARE_HELP "SHARE\n...\n\n"
+    IDS_START_SYNTAX "NET START [usługa]\n\n"
+    IDS_START_HELP_1 "NET START uruchamia usługi lub wyświetla uruchomione usługi.\n\n"
+    IDS_START_HELP_2 "usługa   Nazwa uruchamianej usługi.\n\n"
+    IDS_START_HELP_3 "Nazwy usług mające dwa lub więcej słów wpisywane w.\n\
+wierszu polecenia muszą być ujęte w cudzysłów. Przykładowo,\n\
+NET START ""NET LOGON"" uruchamia usługę logowania w sieci.\n\n"
+    IDS_STATISTICS_SYNTAX "NET STATISTICS [SERVER | WORKSTATION]\n\n"
+    IDS_STATISTICS_HELP_1 "NET STATISTICS wyświetla dziennik statystyki dla lokalnej usługi\n\
+Stacja robocza lub Serwer. Użyte bez parametrów, NET STATISTICS wyświetla\n\
+usługi dla których statystyka jest dostępna.\n\n"
+    IDS_STATISTICS_HELP_2 "SERVER        Wyświetla statystykę usługi Serwer.\n\
+WORKSTATION   Wyświetla statystykę usługi Stacja robocza.\n\n"
+
+    IDS_STOP_SYNTAX "NET STOP usługa\n\n"
+    IDS_STOP_HELP_1 "NET STOP zatrzymuje usługi.\n\n"
+    IDS_STOP_HELP_2 "usługa   Nazwa zatrzymywanej usługi.\n\n"
+    IDS_STOP_HELP_3 "Zatrzymanie usługi rozłącza wszystkie połączenia sieciowe\n\
+używane przez usługę. Niektóre usługi zależą od innych. Zatrzymanie jednej\n\
+może też zatrzymać inne. Niektóre usługi nie mogą być zatrzymane.\n\n"
+    IDS_TIME_SYNTAX "NET TIME ...\n\n"
+    IDS_TIME_HELP "TIME\n...\n\n"
+    IDS_USE_SYNTAX "NET USE ...\n\n"
+    IDS_USE_HELP "USE\n...\n\n"
+    IDS_USER_SYNTAX "NET USER [nazwa_użytkownika [hasło | *] [opcje]] [/DOMAIN]\n\
+         nazwa_użytkownika {hasło | *} /ADD [opcje] [/DOMAIN]\n\
+         nazwa_użytkownika [/DELETE] [/DOMAIN]\n\n"
+    IDS_USER_HELP "USER\n...\n\n"
+    IDS_VIEW_SYNTAX "NET VIEW ...\n\n"
+    IDS_VIEW_HELP "VIEW\n...\n\n"
+
+    IDS_NET_SYNTAX "NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]\n"
+
+    IDS_ACCOUNTS_FORCE_LOGOFF "Wymuś wylogowanie po upływie"
+    IDS_ACCOUNTS_LOGOFF_SECONDS "%lu sekund"
+    IDS_ACCOUNTS_MIN_PW_AGE "Minimalny okres ważności hasła (dni)"
+    IDS_ACCOUNTS_MAX_PW_AGE "Maksymalny okres ważności hasła (dni)"
+    IDS_ACCOUNTS_MIN_PW_LENGTH "Minimalna długość hasła"
+    IDS_ACCOUNTS_PW_HIST_LENGTH "Długość zapamiętywanej historii haseł"
+    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Próg blokady"
+    IDS_ACCOUNTS_LOCKOUT_DURATION "Czas trwania blokady (minuty)"
+    IDS_ACCOUNTS_LOCKOUT_WINDOW "Okno obserwowania blokady (minuty)"
+    IDS_ACCOUNTS_COMPUTER_ROLE "Rola komputera"
+    IDS_ACCOUNTS_PRIMARY_SERVER "Serwer podstawowy"
+    IDS_ACCOUNTS_BACKUP_SERVER "Serwer zapasowy"
+    IDS_ACCOUNTS_STANDALONE_SERVER "Serwer autonomiczny"
+    IDS_ACCOUNTS_WORKSTATION "Stacja robocza"
+
+    IDS_CONFIG_TEXT "Można sterować następującymi uruchomionymi obecnie usługami:\n\n\
+   Serwer\n   Stacja robocza\n\n"
+    IDS_CONFIG_SERVER_NAME "Nazwa serwera"
+    IDS_CONFIG_SERVER_COMMENT "Komentarz serwera"
+    IDS_CONFIG_SERVER_VERSION "Wersja oprogramowania"
+    IDS_CONFIG_SERVER_ACTIVE "Serwer jest aktywny na"
+    IDS_CONFIG_SERVER_HIDDEN "Serwer ukrykty"
+    IDS_CONFIG_SERVER_USERS "Maksymalna liczba zalogowanych użytkowników"
+    IDS_CONFIG_SERVER_FILES "Maksymalna liczba otwartych plików na sesję"
+    IDS_CONFIG_SERVER_IDLE "Czas bezczynności sesji (min)"
+    IDS_CONFIG_WORKSTATION_NAME "Nazwa komputera"
+    IDS_CONFIG_WORKSTATION_FULLNAME "Pełna nazwa komputera"
+    IDS_CONFIG_WORKSTATION_USERNAME "Nazwa użytkownika"
+    IDS_CONFIG_WORKSTATION_ACTIVE "Stacja robocza jest aktywna na"
+    IDS_CONFIG_WORKSTATION_VERSION "Wersja oprogramowania"
+    IDS_CONFIG_WORKSTATION_DOMAIN "Domena stacji roboczej"
+    IDS_CONFIG_WORKSTATION_LOGON "Domena logowania"
+
+    IDS_GROUP_GROUPS "Konta grupowe dla \\\\%s"
+    IDS_GROUP_NAME "Nazwa grupy"
+    IDS_GROUP_COMMENT "Komentarz"
+    IDS_GROUP_MEMBERS "Członkowie"
+
+    IDS_LOCALGROUP_ALIASES "Aliasy dla \\\\%s"
+    IDS_LOCALGROUP_ALIAS_NAME "Nazwa aliasu"
+    IDS_LOCALGROUP_COMMENT "Komentarz"
+    IDS_LOCALGROUP_MEMBERS "Członkowie"
+
+    IDS_STATISTICS_TEXT "Dostępne są statystyki dla następujących uruchomionych obecnie usług:\n\n\
+   Serwer\n   Stacja robocza\n\n"
+    IDS_STATISTICS_SINCE "Statystyka od %d/%d/%d %d:%02d %s\n\n\n"
+    IDS_STATISTICS_SRV_NAME "Statystyka serwera dla \\\\%s\n\n\n"
+    IDS_STATISTICS_SRV_SESACCEPT "Zaakceptowane sesje"
+    IDS_STATISTICS_SRV_SESSTIME "Sesje przerwane z powodu upłynięcia limitu czasu"
+    IDS_STATISTICS_SRV_SESSERROR "Sesje przerwane z powodu wystąpienia błędu"
+    IDS_STATISTICS_SRV_KBSENT "Wysłano kilobajtów"
+    IDS_STATISTICS_SRV_KBRCVD "Odebrano kilobajtów"
+    IDS_STATISTICS_SRV_MRESPTIME "Średni czas odpowiedzi (ms)"
+    IDS_STATISTICS_SRV_SYSERRORS "Błędy systemu"
+    IDS_STATISTICS_SRV_PMERRORS "Naruszenia uprawnień"
+    IDS_STATISTICS_SRV_PWERRORS "Naruszenia hasła"
+    IDS_STATISTICS_SRV_FILES "Wykorzystane pliki"
+    IDS_STATISTICS_SRV_DEVICES "Wykorzystane urządzenia komunikacyjne"
+    IDS_STATISTICS_SRV_JOBS "Buforowane zadania drukowania"
+    IDS_STATISTICS_SRV_BUFFERS "Wyczerpane bufory czasomierzy\n\n"
+    IDS_STATISTICS_SRV_BIGBUFFERS "  Duże bufory"
+    IDS_STATISTICS_SRV_REQBUFFERS "  Bufory żądań"
+    IDS_STATISTICS_WKS_NAME "Statystyka stacji roboczej dla \\\\%s\n\n\n"
+    IDS_STATISTICS_WKS_BYTESRCVD "Bajty odebrane"
+    IDS_STATISTICS_WKS_SMBSRCVD "Odebrane bloki komunikatów serwera (SMB)"
+    IDS_STATISTICS_WKS_BYTESTRANS "Bajty przesłane"
+    IDS_STATISTICS_WKS_SMBSTRANS "Przesłane bloki komunikatów serwera (SMB)"
+    IDS_STATISTICS_WKS_READOPS "Operacje odczytu"
+    IDS_STATISTICS_WKS_WRITEOPS "Operacje zapisu"
+    IDS_STATISTICS_WKS_READDENIED "Odrzucone operacje odczytu bez przetwarzania"
+    IDS_STATISTICS_WKS_WRITEDENIED "Odrzucone operacje zapisu bez przetwarzania"
+    IDS_STATISTICS_WKS_NETWORKERROR "Błędy sieciowe"
+    IDS_STATISTICS_WKS_CONNECTS "Wykonane połączenia"
+    IDS_STATISTICS_WKS_RECONNECTS "Ponownie wykonane połączenia"
+    IDS_STATISTICS_WKS_DISCONNECTS "Rozłączenia serwera"
+    IDS_STATISTICS_WKS_SESSIONS "Sesje uruchomione"
+    IDS_STATISTICS_WKS_HUNGSESSIONS "Zawieszone sesje"
+    IDS_STATISTICS_WKS_FAILSESSIONS "Niepowodzenia sesji"
+    IDS_STATISTICS_WKS_FAILEDOPS "Niepowodzenia operacji"
+    IDS_STATISTICS_WKS_USECOUNT "Liczba pomyślnych prób użycia"
+    IDS_STATISTICS_WKS_FAILUSECOUNT "Liczba niepomyślnych prób użycia"
+
+    IDS_USER_ACCOUNTS "Konta użytkowników dla \\\\%s"
+    IDS_USER_NAME "Nazwa użytkownika"
+    IDS_USER_FULL_NAME "Pełna nazwa"
+    IDS_USER_COMMENT "Komentarz"
+    IDS_USER_USER_COMMENT "Komentarz użytkownika"
+    IDS_USER_COUNTRY_CODE "Kod kraju"
+    IDS_USER_ACCOUNT_ACTIVE "Konto jest aktywne"
+    IDS_USER_ACCOUNT_EXPIRES "Wygasanie konta"
+    IDS_USER_PW_LAST_SET "Hasło ostatnio ustawiano"
+    IDS_USER_PW_EXPIRES "Ważność hasła wygasa"
+    IDS_USER_PW_CHANGEABLE "Hasło może być zmieniane"
+    IDS_USER_PW_REQUIRED "Wymagane jest hasło"
+    IDS_USER_CHANGE_PW "Użytkownik może zmieniać hasło"
+    IDS_USER_WORKSTATIONS "Dozwolone stacje robocze"
+    IDS_USER_LOGON_SCRIPT "Skrypt logowania"
+    IDS_USER_PROFILE "Profil użytkownika"
+    IDS_USER_HOME_DIR "Katalog macierzysty"
+    IDS_USER_LAST_LOGON "Ostatnie logowanie"
+    IDS_USER_LOGON_HOURS "Dozwolone godziny logowania"
+    IDS_USER_LOCAL_GROUPS "Członkostwa grup lokalnych"
+    IDS_USER_GLOBAL_GROUPS "Członkostwa grup globalnych"
+
+    IDS_USER_ENTER_PASSWORD1 "Wpisz nowe hasło dla użytkownika: "
+    IDS_USER_ENTER_PASSWORD2 "Wpisz hasło ponownie w celu potwierdzenia: "
+    IDS_USER_NO_PASSWORD_MATCH "Hasła są niezgodne!"
+
+    IDS_USE_NOW_CONNECTED "%s jest obecnie podłączony do %s\n"
+
+    IDS_GENERIC_YES "Tak"
+    IDS_GENERIC_NO "Nie"
+    IDS_GENERIC_NEVER "Nigdy"
+    IDS_GENERIC_NONE "Brak"
+    IDS_GENERIC_ALL "Wszystkie"
+    IDS_GENERIC_LOCKED "Zablokowane"
+    IDS_GENERIC_UNLIMITED "Bez ograniczeń"
+    IDS_GENERIC_SYNTAX "Składnia tego polecenia jest następująca:\n\n"
+    IDS_GENERIC_PAGE "NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.\n\n"
+
+    IDS_ERROR_OPTION_NOT_SUPPORTED "Opcja %s nie jest jeszcze obsługiwana.\n"
+    IDS_ERROR_INVALID_OPTION_VALUE "Wprowadzono nieprawidłową wartość dla opcji %s.\n"
+    IDS_ERROR_SYSTEM_ERROR "Wystąpił błąd systemu %d.\n"
+    IDS_ERROR_NO_ERROR "Polecenie zostało wykonane pomyślnie.\n\n"
+END

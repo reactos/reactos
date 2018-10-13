@@ -1,0 +1,37 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Black Shade"
+}
+
+STRINGTABLE
+{
+2000, "Black Shade"
+}
+
+STRINGTABLE
+{
+3000, "Normalny"
+3001, "Duże czcionki"
+3002, "Bardzo duże czcionki"
+}
+
+STRINGTABLE
+{
+4000, "Normalny"
+4001, "Duże czcionki"
+4002, "Bardzo duże czcionki"
+}
+
+STRINGTABLE
+{
+5000, "Black Shade"
+5001, "Styl wizualny"
+5002, "Fundacja ReactOS"
+5003, "Autorem obrazów jest David Quintana <gigaherz@gmail.com>"
+5004, "Obrazy wydane na licencji CC-BY-SA 4.0"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Styl wizualny dla systemu ReactOS"
+}
