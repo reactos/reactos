@@ -73,17 +73,14 @@ CcpMapData(
     IN PLARGE_INTEGER FileOffset,
     IN ULONG Length,
     IN ULONG Flags,
-    IN BOOLEAN ToPin,
-    OUT PVOID *pBcb,
+    OUT PROS_VACB *pVacb,
     OUT PVOID *pBuffer)
 {
     LONGLONG ReadOffset;
     BOOLEAN Valid;
     PROS_VACB Vacb;
     NTSTATUS Status;
-    PINTERNAL_BCB iBcb, DupBcb;
     LONGLONG ROffset;
-    KIRQL OldIrql;
 
     ReadOffset = FileOffset->QuadPart;
 
@@ -146,14 +143,30 @@ CcpMapData(
     }
 
     *pBuffer = (PUCHAR)*pBuffer + ReadOffset % VACB_MAPPING_GRANULARITY;
+    *pVacb = Vacb;
+
+    return TRUE;
+}
+
+static
+PVOID
+CcpGetAppropriateBcb(
+    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
+    IN PROS_VACB Vacb,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG PinFlags,
+    IN BOOLEAN ToPin)
+{
+    KIRQL OldIrql;
+    BOOLEAN Result;
+    PINTERNAL_BCB iBcb, DupBcb;
+
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
-        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-            SharedCacheMap->FileObject, FileOffset, Length, Flags);
-        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
-        return FALSE;
+        return NULL;
     }
 
     RtlZeroMemory(iBcb, sizeof(*iBcb));
@@ -166,44 +179,147 @@ CcpMapData(
     iBcb->PinCount = 0;
     iBcb->RefCount = 1;
     ExInitializeResourceLite(&iBcb->Lock);
-    *pBcb = (PVOID)iBcb;
 
-    /* Only insert if we're not to pin data */
-    if (!ToPin)
+    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+
+    /* Check if we raced with another BCB creation */
+    DupBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, ToPin);
+    /* Yes, and we've lost */
+    if (DupBcb != NULL)
     {
-        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+        Result = TRUE;
 
-        /* Check if we raced with another BCB creation */
-        DupBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, FALSE);
-        /* Yes, and we've lost */
-        if (DupBcb != NULL)
+        if (ToPin)
+        {
+            DupBcb->PinCount++;
+
+            if (BooleanFlagOn(PinFlags, PIN_EXCLUSIVE))
+            {
+                Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(PinFlags, PIN_WAIT));
+            }
+            else
+            {
+                Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(PinFlags, PIN_WAIT));
+            }
+
+            if (!Result)
+            {
+                DupBcb->PinCount--;
+                DupBcb = NULL;
+            }
+        }
+
+        if (Result)
         {
             /* We'll return that BCB */
             ++DupBcb->RefCount;
-
-            /* Delete the loser */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
-            ExDeleteResourceLite(&iBcb->Lock);
-            ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
-
-            /* Return the winner - no need to update buffer address, it's
-             * relative to the VACB, which is unchanged.
-             */
-            *pBcb = DupBcb;
         }
-        /* Nope, insert ourselves */
+
+        /* Delete the loser */
+        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+        ExDeleteResourceLite(&iBcb->Lock);
+        ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+
+        /* Return the winner - no need to update buffer address, it's
+         * relative to the VACB, which is unchanged.
+         */
+        iBcb = DupBcb;
+    }
+    /* Nope, insert ourselves */
+    else
+    {
+        if (ToPin)
+        {
+            iBcb->PinCount++;
+
+            if (BooleanFlagOn(PinFlags, PIN_EXCLUSIVE))
+            {
+                Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(PinFlags, PIN_WAIT));
+            }
+            else
+            {
+                Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(PinFlags, PIN_WAIT));
+            }
+
+            ASSERT(Result);
+        }
+
+        InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+    }
+    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
+    return iBcb;
+}
+
+static
+BOOLEAN
+CcpPinData(
+    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN ULONG Flags,
+    OUT	PVOID * Bcb,
+    OUT	PVOID * Buffer)
+{
+    PINTERNAL_BCB NewBcb;
+    BOOLEAN Result;
+    PROS_VACB Vacb;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+    NewBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
+    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
+    if (NewBcb != NULL)
+    {
+        NewBcb->PinCount++;
+
+        if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
+        {
+            Result = ExAcquireResourceExclusiveLite(&NewBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
+        }
         else
         {
-            InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+            Result = ExAcquireSharedStarveExclusive(&NewBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
         }
-        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
+        if (!Result)
+        {
+            NewBcb->PinCount--;
+        }
+        else
+        {
+            NewBcb->RefCount++;
+            *Bcb = NewBcb;
+            *Buffer = (PUCHAR)NewBcb->Vacb->BaseAddress + FileOffset->QuadPart % VACB_MAPPING_GRANULARITY;
+        }
+
+        return Result;
     }
     else
     {
-        InitializeListHead(&iBcb->BcbEntry);
+        if (BooleanFlagOn(Flags, PIN_IF_BCB))
+        {
+            return FALSE;
+        }
+
+        Result = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, &Vacb, Buffer);
+        if (Result)
+        {
+            NewBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, Flags, TRUE);
+            if (NewBcb == NULL)
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+                Result = FALSE;
+            }
+            else
+            {
+                *Bcb = NewBcb;
+            }
+        }
     }
 
-    return TRUE;
+    return Result;
 }
 
 /*
@@ -222,6 +338,7 @@ CcMapData (
     BOOLEAN Ret;
     KIRQL OldIrql;
     PINTERNAL_BCB iBcb;
+    PROS_VACB Vacb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
@@ -250,7 +367,20 @@ CcMapData (
 
     if (iBcb == NULL)
     {
-        Ret = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, FALSE, pBcb, pBuffer);
+        Ret = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, &Vacb, pBuffer);
+        if (Ret)
+        {
+            iBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, 0, FALSE);
+            if (iBcb == NULL)
+            {
+                CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+                Ret = FALSE;
+            }
+            else
+            {
+                *pBcb = iBcb;
+            }
+        }
     }
     else
     {
@@ -278,6 +408,7 @@ CcPinMappedData (
     OUT	PVOID * Bcb)
 {
     BOOLEAN Result;
+    PVOID Buffer;
     PINTERNAL_BCB iBcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
@@ -297,22 +428,11 @@ CcPinMappedData (
     }
 
     iBcb = *Bcb;
-    ASSERT(iBcb->PinCount == 0);
 
-    iBcb->PinCount++;
-
-    if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
+    Result = CcpPinData(SharedCacheMap, FileOffset, Length, Flags, Bcb, &Buffer);
+    if (Result)
     {
-        Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-    }
-    else
-    {
-        Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-    }
-
-    if (!Result)
-    {
-        iBcb->PinCount--;
+        CcUnpinData(iBcb);
     }
 
     return Result;
@@ -331,9 +451,6 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
-    KIRQL OldIrql;
-    BOOLEAN Result;
-    PINTERNAL_BCB iBcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
@@ -345,6 +462,11 @@ CcPinRead (
 
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     ASSERT(SharedCacheMap);
+    if (!SharedCacheMap->PinAccess)
+    {
+        DPRINT1("FIXME: Pinning a file with no pin access!\n");
+        return FALSE;
+    }
 
     if (Flags & PIN_WAIT)
     {
@@ -355,95 +477,7 @@ CcPinRead (
         ++CcPinReadNoWait;
     }
 
-    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
-    iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
-    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
-
-    if (iBcb == NULL)
-    {
-        /* We failed to find an already existing BCB */
-        if (BooleanFlagOn(Flags, PIN_IF_BCB))
-        {
-            return FALSE;
-        }
-
-        /* Map first */
-        if (!CcpMapData(SharedCacheMap, FileOffset, Length, Flags, TRUE, Bcb, Buffer))
-        {
-            return FALSE;
-        }
-
-        /* Pin then */
-        if (!CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
-        {
-            CcUnpinData(*Bcb);
-            return FALSE;
-        }
-
-        /* Did we race for the BCB creation? */
-        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
-        iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
-        if (iBcb != NULL)
-        {
-            KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
-
-            /* Free our now unused BCB */
-            CcUnpinData(*Bcb);
-
-            /* Lock the found BCB and return it */
-            if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
-            {
-                Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-            }
-            else
-            {
-                Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-            }
-
-            if (!Result)
-            {
-                return FALSE;
-            }
-
-            ++iBcb->PinCount;
-            ++iBcb->RefCount;
-
-            *Bcb = iBcb;
-        }
-        else
-        {
-            iBcb = *Bcb;
-
-            /* Insert ourselves in the linked list */
-            InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
-            KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
-        }
-    }
-    /* We found a BCB, lock it and return it */
-    else
-    {
-        if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
-        {
-            Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-        }
-        else
-        {
-            Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
-        }
-
-        if (!Result)
-        {
-            return FALSE;
-        }
-
-        ++iBcb->PinCount;
-        ++iBcb->RefCount;
-
-        *Bcb = iBcb;
-        *Buffer = (PUCHAR)iBcb->Vacb->BaseAddress + FileOffset->QuadPart % VACB_MAPPING_GRANULARITY;
-    }
-
-    return TRUE;
+    return CcpPinData(SharedCacheMap, FileOffset, Length, Flags, Bcb, Buffer);
 }
 
 /*
