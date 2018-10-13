@@ -90,6 +90,10 @@ RegSetValueExW(
     IN ULONG cbData);
 
 LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey);
+
+LONG WINAPI
 RegDeleteKeyW(
     IN HKEY hKey,
     IN LPCWSTR lpSubKey);

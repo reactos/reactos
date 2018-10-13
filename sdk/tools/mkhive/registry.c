@@ -486,6 +486,18 @@ RegpCreateOrOpenKey(
 }
 
 LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey)
+{
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+
+    /* Free the object */
+    free(Key);
+
+    return ERROR_SUCCESS;
+}
+
+LONG WINAPI
 RegCreateKeyW(
     IN HKEY hKey,
     IN LPCWSTR lpSubKey,
@@ -941,6 +953,8 @@ RegInitializeRegistry(
     /* Create the 'CurrentControlSet' key as a symlink to 'ControlSet001' */
     CreateSymLink(L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
                   NULL, ControlSetKey);
+
+    RegCloseKey(ControlSetKey);
 
 #if 0
     /* Link SECURITY to SAM */
