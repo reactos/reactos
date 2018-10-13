@@ -353,6 +353,36 @@ PerformTest(
                         ExFreePool(TestContext);
                     }
                 }
+                else if (TestId == 3)
+                {
+                    Ret = FALSE;
+                    Offset.QuadPart = 0;
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                    {
+                        Ret = FALSE;
+                        PinBcb = Bcb;
+                        ok_eq_ulong(Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                        KmtStartSeh();
+                        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_IF_BCB, &PinBcb);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == FALSE, "CcPinMappedData succeed\n"))
+                        {
+                            ok_eq_pointer(Bcb, PinBcb);
+                        }
+                        else
+                        {
+                            Bcb = PinBcb;
+                        }
+
+                        CcUnpinData(Bcb);
+                    }
+                }
             }
         }
     }

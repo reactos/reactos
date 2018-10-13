@@ -19,7 +19,7 @@ START_TEST(CcPinMappedData)
     KmtOpenDriver();
 
     /* 1 basic test */
-    for (TestId = 0; TestId < 3; ++TestId)
+    for (TestId = 0; TestId < 4; ++TestId)
     {
         Ret = KmtSendUlongToDriver(IOCTL_START_TEST, TestId);
         ok(Ret == ERROR_SUCCESS, "KmtSendUlongToDriver failed: %lx\n", Ret);
