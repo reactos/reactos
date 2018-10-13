@@ -23,11 +23,13 @@ extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
  * - Number of calls to CcMapData that couldn't wait
  * - Number of calls to CcPinRead that could wait
  * - Number of calls to CcPinRead that couldn't wait
+ * - Number of calls to CcPinMappedDataCount
  */
 ULONG CcMapDataWait = 0;
 ULONG CcMapDataNoWait = 0;
 ULONG CcPinReadWait = 0;
 ULONG CcPinReadNoWait = 0;
+ULONG CcPinMappedDataCount = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -428,6 +430,8 @@ CcPinMappedData (
     }
 
     iBcb = *Bcb;
+
+    ++CcPinMappedDataCount;
 
     Result = CcpPinData(SharedCacheMap, FileOffset, Length, Flags, Bcb, &Buffer);
     if (Result)
