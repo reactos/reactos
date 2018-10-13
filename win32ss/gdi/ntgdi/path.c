@@ -1726,18 +1726,10 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
     INT i, j, numStrokes, numOldStrokes, penWidthIn, penWidthOut;
     PPATH flat_path, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     BYTE *type;
-    DWORD joint, endcap, penType;
+    DWORD joint, endcap;
 
     endcap = (PS_ENDCAP_MASK & penStyle);
     joint = (PS_JOIN_MASK & penStyle);
-    penType = (PS_TYPE_MASK & penStyle);
-
-    /* The function cannot apply to cosmetic pens */
-    if (penType == PS_COSMETIC)
-    {
-        DPRINT1("PS_COSMETIC\n");
-        return NULL;
-    }
 
     if (!(flat_path = PATH_FlattenPath(pPath)))
     {
@@ -2108,14 +2100,6 @@ PATH_WidenPath(DC *dc)
     else if (obj_type == GDI_OBJECT_TYPE_EXTPEN)
     {
         penStyle = elp->elpPenStyle;
-        if ((PS_TYPE_MASK & penStyle) == PS_COSMETIC)
-        {
-            DPRINT("PS_COSMETIC\n");
-            EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-            ExFreePoolWithTag(elp, TAG_PATH);
-            PATH_UnlockPath(pPath);
-            return NULL;
-        }
     }
     else
     {
@@ -2129,10 +2113,18 @@ PATH_WidenPath(DC *dc)
     penWidth = elp->elpWidth;
     ExFreePoolWithTag(elp, TAG_PATH);
 
+    /* The function cannot apply to cosmetic pens */
+    if (obj_type == GDI_OBJECT_TYPE_EXTPEN &&
+        (PS_TYPE_MASK & penStyle) == PS_COSMETIC)
+    {
+        DPRINT("PWP 5\n");
+        PATH_UnlockPath(pPath);
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        return FALSE;
+    }
+
     pNewPath = IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
     PATH_UnlockPath(pPath);
-    if (!pNewPath)
-        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     return pNewPath;
 }
 
