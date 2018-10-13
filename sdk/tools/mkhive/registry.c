@@ -370,7 +370,7 @@ LIST_ENTRY CmiHiveListHead;
 LIST_ENTRY CmiReparsePointsHead;
 
 static LONG
-RegpOpenOrCreateKey(
+RegpCreateOrOpenKey(
     IN HKEY hParentKey,
     IN PCWSTR KeyName,
     IN BOOL AllowCreation,
@@ -390,7 +390,7 @@ RegpOpenOrCreateKey(
     PCM_KEY_NODE SubKeyCell;
     HCELL_INDEX BlockOffset;
 
-    DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
+    DPRINT("RegpCreateOrOpenKey('%S')\n", KeyName);
 
     if (*KeyName == OBJ_NAME_PATH_SEPARATOR)
     {
@@ -491,7 +491,26 @@ RegCreateKeyW(
     IN LPCWSTR lpSubKey,
     OUT PHKEY phkResult)
 {
-    return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
+    return RegpCreateOrOpenKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
+}
+
+LONG WINAPI
+RegCreateKeyExW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    IN DWORD Reserved,
+    IN LPWSTR lpClass OPTIONAL,
+    IN DWORD dwOptions,
+    IN REGSAM samDesired,
+    IN LPSECURITY_ATTRIBUTES lpSecurityAttributes OPTIONAL,
+    OUT PHKEY phkResult,
+    OUT LPDWORD lpdwDisposition OPTIONAL)
+{
+    return RegpCreateOrOpenKey(hKey,
+                               lpSubKey,
+                               TRUE,
+                               (dwOptions & REG_OPTION_VOLATILE) != 0,
+                               phkResult);
 }
 
 LONG WINAPI
@@ -510,26 +529,7 @@ RegOpenKeyW(
     IN LPCWSTR lpSubKey,
     OUT PHKEY phkResult)
 {
-    return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
-}
-
-LONG WINAPI
-RegCreateKeyExW(
-    IN HKEY hKey,
-    IN LPCWSTR lpSubKey,
-    IN DWORD Reserved,
-    IN LPWSTR lpClass OPTIONAL,
-    IN DWORD dwOptions,
-    IN REGSAM samDesired,
-    IN LPSECURITY_ATTRIBUTES lpSecurityAttributes OPTIONAL,
-    OUT PHKEY phkResult,
-    OUT LPDWORD lpdwDisposition OPTIONAL)
-{
-    return RegpOpenOrCreateKey(hKey,
-                               lpSubKey,
-                               TRUE,
-                               (dwOptions & REG_OPTION_VOLATILE) != 0,
-                               phkResult);
+    return RegpCreateOrOpenKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
 }
 
 LONG WINAPI
@@ -785,9 +785,9 @@ ConnectRegistry(
     IN PCWSTR Path)
 {
     NTSTATUS Status;
+    LONG rc;
     PREPARSE_POINT ReparsePoint;
     PMEMKEY NewKey;
-    LONG rc;
 
     ReparsePoint = (PREPARSE_POINT)malloc(sizeof(*ReparsePoint));
     if (!ReparsePoint)
@@ -819,7 +819,7 @@ ConnectRegistry(
     if (!NT_SUCCESS(Status))
         DPRINT1("Failed to add security for root key '%S'\n", Path);
 
-    /* Create key */
+    /* Create the key */
     rc = RegCreateKeyExW(RootKey,
                          Path,
                          0,

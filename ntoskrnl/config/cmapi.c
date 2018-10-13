@@ -982,7 +982,7 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
 
         /* Get the key value */
-        Value = (PCM_KEY_VALUE)HvGetCell(Hive,ChildCell);
+        Value = (PCM_KEY_VALUE)HvGetCell(Hive, ChildCell);
         ASSERT(Value);
 
         /* Mark it and all related data as dirty */
@@ -1851,7 +1851,7 @@ CmDeleteKey(IN PCM_KEY_BODY KeyBody)
     {
         /* Don't do it twice */
         Status = STATUS_SUCCESS;
-        goto Quickie2;
+        goto Quickie;
     }
 
     /* Get the hive and node */
@@ -1925,7 +1925,7 @@ CmDeleteKey(IN PCM_KEY_BODY KeyBody)
     CmpUnlockHiveFlusher((PCMHIVE)Hive);
 
     /* Release the KCB locks */
-Quickie2:
+Quickie:
     CmpReleaseTwoKcbLockByKey(Kcb->ConvKey, Kcb->ParentKcb->ConvKey);
 
     /* Release hive lock */
