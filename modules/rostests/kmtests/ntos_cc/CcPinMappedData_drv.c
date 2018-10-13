@@ -147,6 +147,57 @@ MapAndLockUserBuffer(
 static
 VOID
 NTAPI
+PinInAnotherThread(IN PVOID Context)
+{
+    BOOLEAN Ret;
+    PULONG Buffer;
+    PVOID Bcb, PinBcb;
+    LARGE_INTEGER Offset;
+    PTEST_CONTEXT TestContext;
+
+    ok(TestFileObject != NULL, "Called in invalid context!\n");
+    ok_eq_ulong(TestTestId, 4);
+
+    TestContext = Context;
+    ok(TestContext != NULL, "Called in invalid context!\n");
+    ok(TestContext->Bcb != NULL, "Called in invalid context!\n");
+    ok(TestContext->Buffer != NULL, "Called in invalid context!\n");
+    ok(TestContext->Length != 0, "Called in invalid context!\n");
+
+    Ret = FALSE;
+    Offset.QuadPart = 0;
+
+    KmtStartSeh();
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        Ret = FALSE;
+        PinBcb = Bcb;
+
+        KmtStartSeh();
+        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, 0, &PinBcb);
+        KmtEndSeh(STATUS_SUCCESS);
+
+        if (!skip(Ret == TRUE, "CcPinMappedData failed\n"))
+        {
+            ok(Bcb != PinBcb, "Returned same BCB!\n");
+            ok_eq_pointer(PinBcb, TestContext->Bcb);
+
+            Bcb = PinBcb;
+        }
+
+        CcUnpinData(Bcb);
+    }
+}
+
+static
+VOID
+NTAPI
 PinInAnotherThreadExclusive(IN PVOID Context)
 {
     BOOLEAN Ret;
@@ -381,6 +432,36 @@ PerformTest(
                         }
 
                         CcUnpinData(Bcb);
+                    }
+                }
+                else if (TestId == 4)
+                {
+                    PTEST_CONTEXT TestContext;
+
+                    TestContext = ExAllocatePool(NonPagedPool, sizeof(TEST_CONTEXT));
+                    if (!skip(TestContext != NULL, "ExAllocatePool failed\n"))
+                    {
+                        Ret = FALSE;
+                        Offset.QuadPart = 0;
+                        KmtStartSeh();
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &TestContext->Bcb, (PVOID *)&TestContext->Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                        {
+                            PKTHREAD ThreadHandle;
+
+                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+                            ok_eq_ulong(TestContext->Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                            TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
+                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
+                            KmtFinishThread(ThreadHandle, NULL);
+
+                            CcUnpinData(TestContext->Bcb);
+                        }
+
+                        ExFreePool(TestContext);
                     }
                 }
             }
