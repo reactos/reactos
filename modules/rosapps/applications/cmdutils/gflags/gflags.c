@@ -9,6 +9,7 @@
 #include "gflags.h"
 
 static BOOL UsePageHeap = FALSE;
+static BOOL UseImageFile = FALSE;
 
 const WCHAR ImageExecOptionsString[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
 
@@ -77,6 +78,11 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
                 UsePageHeap = TRUE;
                 return PageHeap_ParseCmdline(i + 1, argc, argv);
             }
+            if (argv[i][1] == L'i' && argv[i][2] == UNICODE_NULL)
+            {
+                UseImageFile = TRUE;
+                return ImageFile_ParseCmdline(i + 1, argc, argv);
+            }
         }
         else
         {
@@ -85,9 +91,9 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
         }
     }
 
-    if (!UsePageHeap)
+    if (!UsePageHeap && !UseImageFile)
     {
-        wprintf(L"Only page heap flags are supported\n");
+        wprintf(L"Only page heap / image file flags are supported\n");
         return FALSE;
     }
 
@@ -99,17 +105,31 @@ int wmain(int argc, LPWSTR argv[])
 {
     if (!ParseCmdline(argc, argv))
     {
-        wprintf(L"Usage: gflags /p [image.exe] [/enable|/disable [/full]]\n"
+        wprintf(L"Usage: gflags [/p [image.exe] [/enable|/disable [/full]]]\n"
+                L"              [/i <image.exe> [<Flags>]]\n"
                 L"    image.exe:  Image you want to deal with\n"
                 L"    /enable:    enable page heap for the image\n"
                 L"    /disable:   disable page heap for the image\n"
-                L"    /full:      activate full debug page heap\n");
+                L"    /full:      activate full debug page heap\n"
+                L"    <Flags>:    A 32 bit hex number (0x00000001) that specifies\n"
+                L"                one or more global flags to set.\n"
+                L"                Without any flags, the current settings are shown.\n"
+                L"                Specify FFFFFFFF to delete the GlobalFlags entry.\n"
+                L"                Additionally, instead of a single hex number,\n"
+                L"                specify a list of abbreviations prefixed with\n"
+                L"                a '+' to add, and '-' to remove a bit.\n"
+                L"                Valid abbreviations:\n");
+        PrintFlags(~0, DEST_IMAGE);
         return 1;
     }
 
     if (UsePageHeap)
     {
         return PageHeap_Execute();
+    }
+    else if (UseImageFile)
+    {
+        return ImageFile_Execute();
     }
     return 2;
 }

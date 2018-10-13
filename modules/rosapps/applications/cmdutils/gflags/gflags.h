@@ -20,11 +20,18 @@ const WCHAR ImageExecOptionsString[];
 
 /* Option specific commandline parsing */
 BOOL PageHeap_ParseCmdline(INT i, int argc, LPWSTR argv[]);
+BOOL ImageFile_ParseCmdline(INT i, int argc, LPWSTR argv[]);
 
 /* Execute parsed options */
 INT PageHeap_Execute();
+INT ImageFile_Execute();
 
 /* Common functions */
 DWORD ReadSZFlagsFromRegistry(HKEY SubKey, PWSTR Value);
 BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName, OUT HKEY* Key);
 
+#define DEST_REGISTRY       1
+#define DEST_KERNEL         2
+#define DEST_IMAGE          4
+
+void PrintFlags(IN DWORD GlobalFlags, IN OPTIONAL WORD Dest);

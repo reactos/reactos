@@ -2,6 +2,7 @@
 
 list(APPEND SOURCE
     gflags.c
+    imagefile.c
     pageheap.c
     gflags.h)
 
