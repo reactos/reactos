@@ -1973,7 +1973,7 @@ typedef struct FONT_NAMES
     UNICODE_STRING FullNameW;
 } FONT_NAMES, *LPFONT_NAMES;
 
-void FASTCALL IntInitFontNames(FONT_NAMES *Names)
+static __inline void FASTCALL IntInitFontNames(FONT_NAMES *Names)
 {
     RtlInitUnicodeString(&Names->FamilyNameW, NULL);
     RtlInitUnicodeString(&Names->FaceNameW, NULL);
@@ -1981,7 +1981,7 @@ void FASTCALL IntInitFontNames(FONT_NAMES *Names)
     RtlInitUnicodeString(&Names->FullNameW, NULL);
 }
 
-void FASTCALL IntFreeFontNames(FONT_NAMES *Names)
+static __inline void FASTCALL IntFreeFontNames(FONT_NAMES *Names)
 {
     RtlFreeUnicodeString(&Names->FamilyNameW);
     RtlFreeUnicodeString(&Names->FaceNameW);
