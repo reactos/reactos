@@ -2002,13 +2002,12 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
     Names->OtmSize = OtmSize;
 }
 
-static __inline BYTE *FASTCALL
+static __inline SIZE_T FASTCALL
 IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
 {
     RtlCopyMemory(pb, pName->Buffer, pName->Length);
     *(WCHAR *)&pb[pName->Length] = UNICODE_NULL;
-    pb += pName->Length + sizeof(UNICODE_NULL);
-    return pb;
+    return pName->Length + sizeof(UNICODE_NULL);
 }
 
 static __inline BYTE *FASTCALL
@@ -2018,19 +2017,19 @@ IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
 
     /* family name */
     Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
-    pb = IntStoreName(&Names->FamilyNameW, pb);
+    pb += IntStoreName(&Names->FamilyNameW, pb);
 
     /* face name */
     Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
-    pb = IntStoreName(&Names->FaceNameW, pb);
+    pb += IntStoreName(&Names->FaceNameW, pb);
 
     /* style name */
     Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
-    pb = IntStoreName(&Names->StyleNameW, pb);
+    pb += IntStoreName(&Names->StyleNameW, pb);
 
     /* unique name (full name) */
     Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
-    pb = IntStoreName(&Names->FullNameW, pb);
+    pb += IntStoreName(&Names->FullNameW, pb);
 
     return pb;
 }
