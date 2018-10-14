@@ -50,6 +50,7 @@ NTSTATUS
 CmiAddValueKey(
     IN PCMHIVE RegistryHive,
     IN PCM_KEY_NODE Parent,
+    IN ULONG ChildIndex,
     IN PCUNICODE_STRING ValueName,
     OUT PCM_KEY_VALUE *pValueCell,
     OUT HCELL_INDEX *pValueCellOffset);

@@ -557,6 +557,7 @@ RegSetValueExW(
     PHHIVE Hive;
     PCM_KEY_NODE KeyNode; // ParentNode
     PCM_KEY_VALUE ValueCell;
+    ULONG ChildIndex;
     HCELL_INDEX CellIndex;
     UNICODE_STRING ValueNameString;
 
@@ -600,12 +601,24 @@ RegSetValueExW(
 
     /* Initialize value name string */
     RtlInitUnicodeString(&ValueNameString, lpValueName);
-    CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
+    if (!CmpFindNameInList(Hive,
+                           &KeyNode->ValueList,
+                           &ValueNameString,
+                           &ChildIndex,
+                           &CellIndex))
+    {
+        /* Sanity check */
+        ASSERT(CellIndex == HCELL_NIL);
+        /* Fail */
+        // Status = STATUS_INSUFFICIENT_RESOURCES;
+        return ERROR_UNSUCCESSFUL;
+    }
     if (CellIndex == HCELL_NIL)
     {
         /* The value doesn't exist, create a new one */
         Status = CmiAddValueKey(Key->RegistryHive,
                                 KeyNode,
+                                ChildIndex,
                                 &ValueNameString,
                                 &ValueCell,
                                 &CellIndex);
