@@ -2030,10 +2030,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     {
         UINT Needed;
         Needed = sizeof(OUTLINETEXTMETRICW);
-        Needed += FontNames.FamilyNameW.Length + sizeof(WCHAR);
-        Needed += FontNames.FaceNameW.Length + sizeof(WCHAR);
-        Needed += FontNames.StyleNameW.Length + sizeof(WCHAR);
-        Needed += FontNames.FullNameW.Length + sizeof(WCHAR);
+        Needed += FontNames.FamilyNameW.Length + sizeof(UNICODE_NULL);
+        Needed += FontNames.FaceNameW.Length + sizeof(UNICODE_NULL);
+        Needed += FontNames.StyleNameW.Length + sizeof(UNICODE_NULL);
+        Needed += FontNames.FullNameW.Length + sizeof(UNICODE_NULL);
 
         Cache->OutlineRequiredSize = Needed;
     }
