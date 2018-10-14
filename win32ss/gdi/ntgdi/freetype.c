@@ -1991,6 +1991,34 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
     IntGetFontLocalizedName(&Names->FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
 }
 
+static __inline BYTE *FASTCALL
+IntStoreFontNames(FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
+{
+    BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
+
+    /* family name */
+    Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
+    wcscpy((WCHAR*) pb, Names->FamilyNameW.Buffer);
+    pb += Names->FamilyNameW.Length + sizeof(UNICODE_NULL);
+
+    /* face name */
+    Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
+    wcscpy((WCHAR*) pb, Names->FaceNameW.Buffer);
+    pb += Names->FaceNameW.Length + sizeof(UNICODE_NULL);
+
+    /* style name */
+    Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
+    wcscpy((WCHAR*) pb, Names->StyleNameW.Buffer);
+    pb += Names->StyleNameW.Length + sizeof(UNICODE_NULL);
+
+    /* unique name (full name) */
+    Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
+    wcscpy((WCHAR*) pb, Names->FullNameW.Buffer);
+    pb += Names->FullNameW.Length + sizeof(UNICODE_NULL);
+
+    return pb;
+}
+
 static __inline void FASTCALL
 IntFreeFontNames(FONT_NAMES *Names)
 {
@@ -2015,7 +2043,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     FT_Fixed XScale, YScale;
     FT_WinFNT_HeaderRec Win;
     FT_Error Error;
-    char *Cp;
+    BYTE *pb;
     FONT_NAMES FontNames;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
     PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
@@ -2120,29 +2148,8 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     IntUnLockFreeType();
 
-    Cp = (char*) Otm + sizeof(OUTLINETEXTMETRICW);
-
-    /* family name */
-    Otm->otmpFamilyName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FontNames.FamilyNameW.Buffer);
-    Cp += FontNames.FamilyNameW.Length + sizeof(UNICODE_NULL);
-
-    /* face name */
-    Otm->otmpFaceName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FontNames.FaceNameW.Buffer);
-    Cp += FontNames.FaceNameW.Length + sizeof(UNICODE_NULL);
-
-    /* style name */
-    Otm->otmpStyleName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FontNames.StyleNameW.Buffer);
-    Cp += FontNames.StyleNameW.Length + sizeof(UNICODE_NULL);
-
-    /* unique name (full name) */
-    Otm->otmpFullName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FontNames.FullNameW.Buffer);
-    Cp += FontNames.FullNameW.Length + sizeof(UNICODE_NULL);
-
-    ASSERT(Cp - (char*)Otm == Cache->OutlineRequiredSize);
+    pb = IntStoreFontNames(&FontNames, Otm);
+    ASSERT(pb - (BYTE*)Otm == Cache->OutlineRequiredSize);
 
     IntFreeFontNames(&FontNames);
 
