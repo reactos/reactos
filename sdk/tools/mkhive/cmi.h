@@ -24,6 +24,8 @@
  * PROGRAMMER:      Hervé Poussineau
  */
 
+#pragma once
+
 #define VERIFY_KEY_CELL(key)
 
 NTSTATUS

@@ -25,8 +25,12 @@
  *                  Hermès Bélusca-Maïto
  */
 
+/* INCLUDES *****************************************************************/
+
 #define NDEBUG
 #include "mkhive.h"
+
+/* FUNCTIONS ****************************************************************/
 
 PVOID
 NTAPI
@@ -422,6 +426,7 @@ CmiAddValueKey(
     {
         *pValueCell = NewValueCell;
         *pValueCellOffset = NewValueCellOffset;
+        Status = STATUS_SUCCESS;
     }
 
     return Status;

@@ -26,6 +26,8 @@
  *                  Hermès Bélusca-Maïto
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
@@ -48,6 +50,7 @@
 #define DIR_SEPARATOR_STRING "\\"
 #endif
 
+/* FUNCTIONS ****************************************************************/
 
 void usage(void)
 {

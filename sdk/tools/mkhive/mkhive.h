@@ -67,6 +67,7 @@ VOID NTAPI
 RtlInitUnicodeString(
     IN OUT PUNICODE_STRING DestinationString,
     IN PCWSTR SourceString);
+
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
     IN WCHAR Source);

@@ -25,11 +25,34 @@
  *                  Hermès Bélusca-Maïto
  */
 
+/* INCLUDES *****************************************************************/
+
 #define NDEBUG
 #include "mkhive.h"
 
+/* DEFINITIONS AND DATA *****************************************************/
+
 #define STATUS_NO_LOG_SPACE     ((NTSTATUS)0xC000017D)
 #define STATUS_CANNOT_DELETE    ((NTSTATUS)0xC0000121)
+
+typedef struct _REPARSE_POINT
+{
+    LIST_ENTRY ListEntry;
+    PCMHIVE SourceHive;
+    HCELL_INDEX SourceKeyCellOffset;
+    PCMHIVE DestinationHive;
+    HCELL_INDEX DestinationKeyCellOffset;
+} REPARSE_POINT, *PREPARSE_POINT;
+
+typedef struct _MEMKEY
+{
+    /* Information on hard disk structure */
+    HCELL_INDEX KeyCellOffset;
+    PCMHIVE RegistryHive;
+} MEMKEY, *PMEMKEY;
+
+#define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))
+#define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
 
 static CMHIVE RootHive;
 static PMEMKEY RootKey;
@@ -326,6 +349,7 @@ static UCHAR SystemSecurity[] =
     0x01, 0x02, 0x00, 0x00
 };
 
+/* GLOBALS ******************************************************************/
 
 HIVE_LIST_ENTRY RegistryHives[/*MAX_NUMBER_OF_REGISTRY_HIVES*/] =
 {
@@ -343,6 +367,7 @@ HIVE_LIST_ENTRY RegistryHives[/*MAX_NUMBER_OF_REGISTRY_HIVES*/] =
 };
 C_ASSERT(_countof(RegistryHives) == MAX_NUMBER_OF_REGISTRY_HIVES);
 
+/* FUNCTIONS ****************************************************************/
 
 static PMEMKEY
 CreateInMemoryStructure(
