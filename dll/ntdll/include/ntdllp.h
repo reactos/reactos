@@ -203,4 +203,12 @@ VOID
 NTAPI
 LdrpFinalizeAndDeallocateDataTableEntry(IN PLDR_DATA_TABLE_ENTRY Entry);
 
+
+/* path.c */
+BOOLEAN
+NTAPI
+RtlDoesFileExists_UStr(
+    IN PUNICODE_STRING FileName
+);
+
 /* EOF */

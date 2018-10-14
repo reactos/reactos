@@ -25,6 +25,7 @@ UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machin
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
 UNICODE_STRING Kernel32String = RTL_CONSTANT_STRING(L"kernel32.dll");
+const UNICODE_STRING LdrpDotLocal = RTL_CONSTANT_STRING(L".Local");
 
 BOOLEAN LdrpInLdrInit;
 LONG LdrpProcessInitialized;
@@ -1626,6 +1627,66 @@ LdrpInitializeProcessCompat(PVOID* pOldShimData)
     }
 }
 
+VOID
+NTAPI
+LdrpInitializeDotLocalSupport(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
+{
+    UNICODE_STRING ImagePathName = ProcessParameters->ImagePathName;
+    WCHAR LocalBuffer[MAX_PATH];
+    UNICODE_STRING DotLocal;
+    NTSTATUS Status;
+    ULONG RequiredSize;
+
+    RequiredSize = ImagePathName.Length + LdrpDotLocal.Length + sizeof(UNICODE_NULL);
+    if (RequiredSize <= sizeof(LocalBuffer))
+    {
+        RtlInitEmptyUnicodeString(&DotLocal, LocalBuffer, sizeof(LocalBuffer));
+    }
+    else if (RequiredSize <= UNICODE_STRING_MAX_BYTES)
+    {
+        DotLocal.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, RequiredSize);
+        DotLocal.Length = 0;
+        DotLocal.MaximumLength = RequiredSize;
+        if (!DotLocal.Buffer)
+            DPRINT1("LDR: Failed to allocate memory for .local check\n");
+    }
+    else
+    {
+        DotLocal.Buffer = NULL;
+        DotLocal.Length = 0;
+        DotLocal.MaximumLength = 0;
+        DPRINT1("LDR: String too big for .local check\n");
+    }
+
+    if (DotLocal.Buffer)
+    {
+        Status = RtlAppendUnicodeStringToString(&DotLocal, &ImagePathName);
+        ASSERT(NT_SUCCESS(Status));
+        if (NT_SUCCESS(Status))
+        {
+            Status = RtlAppendUnicodeStringToString(&DotLocal, &LdrpDotLocal);
+            ASSERT(NT_SUCCESS(Status));
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            if (RtlDoesFileExists_UStr(&DotLocal))
+            {
+                ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH;
+            }
+        }
+        else
+        {
+            DPRINT1("LDR: Failed to append: 0x%lx\n", Status);
+        }
+
+        if (DotLocal.Buffer != LocalBuffer)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DotLocal.Buffer);
+        }
+    }
+}
+
 
 NTSTATUS
 NTAPI
@@ -2135,13 +2196,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (FreeCurDir) RtlFreeUnicodeString(&CurrentDirectory);
     }
 
-    /* Check if we should look for a .local file 
-        FIXME: Thomas suggested that this check might actually be reversed, we should check this file
-               if the flag is NOT set. */
-    if (ProcessParameters && (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH))
+    /* Check if we should look for a .local file */
+    if (ProcessParameters && !(ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH))
     {
-        /* FIXME */
-        DPRINT1("We don't support .local overrides yet\n");
+        LdrpInitializeDotLocalSupport(ProcessParameters);
     }
 
     /* Check if the Application Verifier was enabled */
