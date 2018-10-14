@@ -2041,7 +2041,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     TT_HoriHeader *pHori;
     TT_Postscript *pPost;
     FT_Fixed XScale, YScale;
-    FT_WinFNT_HeaderRec Win;
+    FT_WinFNT_HeaderRec WinFNT;
     FT_Error Error;
     BYTE *pb;
     FONT_NAMES FontNames;
@@ -2078,6 +2078,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     YScale = Face->size->metrics.y_scale;
 
     IntLockFreeType();
+
     pOS2 = FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
     if (NULL == pOS2)
     {
@@ -2096,13 +2097,13 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return 0;
     }
 
-    pPost = FT_Get_Sfnt_Table(Face, ft_sfnt_post); /* We can live with this failing */
+    pPost = FT_Get_Sfnt_Table(Face, FT_SFNT_POST); /* We can live with this failing */
 
-    Error = FT_Get_WinFNT_Header(Face , &Win);
+    Error = FT_Get_WinFNT_Header(Face, &WinFNT);
 
     Otm->otmSize = Cache->OutlineRequiredSize;
 
-    FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
+    FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &WinFNT : 0);
 
     Otm->otmFiller = 0;
     RtlCopyMemory(&Otm->otmPanoseNumber, pOS2->panose, PANOSE_COUNT);
@@ -2112,29 +2113,34 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmsCharSlopeRun = pHori->caret_Slope_Run;
     Otm->otmItalicAngle = 0; /* POST table */
     Otm->otmEMSquare = Face->units_per_EM;
-    Otm->otmAscent = (FT_MulFix(pOS2->sTypoAscender, YScale) + 32) >> 6;
-    Otm->otmDescent = (FT_MulFix(pOS2->sTypoDescender, YScale) + 32) >> 6;
-    Otm->otmLineGap = (FT_MulFix(pOS2->sTypoLineGap, YScale) + 32) >> 6;
-    Otm->otmsCapEmHeight = (FT_MulFix(pOS2->sCapHeight, YScale) + 32) >> 6;
-    Otm->otmsXHeight = (FT_MulFix(pOS2->sxHeight, YScale) + 32) >> 6;
-    Otm->otmrcFontBox.left = (FT_MulFix(Face->bbox.xMin, XScale) + 32) >> 6;
-    Otm->otmrcFontBox.right = (FT_MulFix(Face->bbox.xMax, XScale) + 32) >> 6;
-    Otm->otmrcFontBox.top = (FT_MulFix(Face->bbox.yMax, YScale) + 32) >> 6;
-    Otm->otmrcFontBox.bottom = (FT_MulFix(Face->bbox.yMin, YScale) + 32) >> 6;
+
+#define SCALE_X(value)  ((FT_MulFix((value), XScale) + 32) >> 6)
+#define SCALE_Y(value)  ((FT_MulFix((value), YScale) + 32) >> 6)
+
+    Otm->otmAscent = SCALE_Y(pOS2->sTypoAscender);
+    Otm->otmDescent = SCALE_Y(pOS2->sTypoDescender);
+    Otm->otmLineGap = SCALE_Y(pOS2->sTypoLineGap);
+    Otm->otmsCapEmHeight = SCALE_Y(pOS2->sCapHeight);
+    Otm->otmsXHeight = SCALE_Y(pOS2->sxHeight);
+    Otm->otmrcFontBox.left = SCALE_X(Face->bbox.xMin);
+    Otm->otmrcFontBox.right = SCALE_X(Face->bbox.xMax);
+    Otm->otmrcFontBox.top = SCALE_Y(Face->bbox.yMax);
+    Otm->otmrcFontBox.bottom = SCALE_Y(Face->bbox.yMin);
     Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
     Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
     Otm->otmMacLineGap = Otm->otmLineGap;
     Otm->otmusMinimumPPEM = 0; /* TT Header */
-    Otm->otmptSubscriptSize.x = (FT_MulFix(pOS2->ySubscriptXSize, XScale) + 32) >> 6;
-    Otm->otmptSubscriptSize.y = (FT_MulFix(pOS2->ySubscriptYSize, YScale) + 32) >> 6;
-    Otm->otmptSubscriptOffset.x = (FT_MulFix(pOS2->ySubscriptXOffset, XScale) + 32) >> 6;
-    Otm->otmptSubscriptOffset.y = (FT_MulFix(pOS2->ySubscriptYOffset, YScale) + 32) >> 6;
-    Otm->otmptSuperscriptSize.x = (FT_MulFix(pOS2->ySuperscriptXSize, XScale) + 32) >> 6;
-    Otm->otmptSuperscriptSize.y = (FT_MulFix(pOS2->ySuperscriptYSize, YScale) + 32) >> 6;
-    Otm->otmptSuperscriptOffset.x = (FT_MulFix(pOS2->ySuperscriptXOffset, XScale) + 32) >> 6;
-    Otm->otmptSuperscriptOffset.y = (FT_MulFix(pOS2->ySuperscriptYOffset, YScale) + 32) >> 6;
-    Otm->otmsStrikeoutSize = (FT_MulFix(pOS2->yStrikeoutSize, YScale) + 32) >> 6;
-    Otm->otmsStrikeoutPosition = (FT_MulFix(pOS2->yStrikeoutPosition, YScale) + 32) >> 6;
+    Otm->otmptSubscriptSize.x = SCALE_X(pOS2->ySubscriptXSize);
+    Otm->otmptSubscriptSize.y = SCALE_Y(pOS2->ySubscriptYSize);
+    Otm->otmptSubscriptOffset.x = SCALE_X(pOS2->ySubscriptXOffset);
+    Otm->otmptSubscriptOffset.y = SCALE_Y(pOS2->ySubscriptYOffset);
+    Otm->otmptSuperscriptSize.x = SCALE_X(pOS2->ySuperscriptXSize);
+    Otm->otmptSuperscriptSize.y = SCALE_Y(pOS2->ySuperscriptYSize);
+    Otm->otmptSuperscriptOffset.x = SCALE_X(pOS2->ySuperscriptXOffset);
+    Otm->otmptSuperscriptOffset.y = SCALE_Y(pOS2->ySuperscriptYOffset);
+    Otm->otmsStrikeoutSize = SCALE_Y(pOS2->yStrikeoutSize);
+    Otm->otmsStrikeoutPosition = SCALE_Y(pOS2->yStrikeoutPosition);
+
     if (!pPost)
     {
         Otm->otmsUnderscoreSize = 0;
@@ -2142,9 +2148,12 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     }
     else
     {
-        Otm->otmsUnderscoreSize = (FT_MulFix(pPost->underlineThickness, YScale) + 32) >> 6;
-        Otm->otmsUnderscorePosition = (FT_MulFix(pPost->underlinePosition, YScale) + 32) >> 6;
+        Otm->otmsUnderscoreSize = SCALE_Y(pPost->underlineThickness);
+        Otm->otmsUnderscorePosition = SCALE_Y(pPost->underlinePosition);
     }
+
+#undef SCALE_X
+#undef SCALE_Y
 
     IntUnLockFreeType();
 
