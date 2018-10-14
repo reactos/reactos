@@ -7,7 +7,8 @@
  */
 
 #include "ros_lpk.h"
-#include <debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
 LPK_LPEDITCONTROL_LIST LpkEditControl = {EditCreate,       EditIchToXY,  EditMouseToIch, EditCchInWidth,
                                          EditGetLineWidth, EditDrawText, EditHScroll,    EditMoveSelection,
@@ -140,7 +141,7 @@ static void LPK_ApplyMirroring()
 
     sprintfW( buffer, filedescW, LOWORD(languages[i]), HIWORD(languages[i]) );
     if (!VerQueryValueW( data, buffer, (void **)&str, &len )) goto done;
-    /* TRACE( "found description %s\n", debugstr_w( str )); */
+    TRACE( "found description %s\n", debugstr_w( str ));
     if (str[0] == 0x200e && str[1] == 0x200e) version_layout = LAYOUT_RTL;
 
 done:
@@ -242,7 +243,7 @@ LpkExtTextOut(
         }
         else
         {
-            DPRINT1("BIDI_Reorder failed, falling back to original string.\n");
+            WARN("BIDI_Reorder failed, falling back to original string.\n");
             bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
         }
 
