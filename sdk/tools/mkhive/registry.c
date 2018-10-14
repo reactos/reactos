@@ -30,10 +30,6 @@
  *   - Implement RegDeleteKeyW() and RegDeleteValueW()
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
 #define NDEBUG
 #include "mkhive.h"
 
@@ -463,11 +459,18 @@ RegpCreateOrOpenKey(
                                   Volatile,
                                   &BlockOffset);
         }
+        else // if (BlockOffset == HCELL_NIL)
+        {
+            Status = STATUS_OBJECT_NAME_NOT_FOUND; // ERROR_PATH_NOT_FOUND;
+        }
 
         HvReleaseCell(&ParentRegistryHive->Hive, ParentCellOffset);
 
         if (!NT_SUCCESS(Status))
+        {
+            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%wZ'\n", KeyName, &KeyString);
             return ERROR_UNSUCCESSFUL;
+        }
 
         ParentCellOffset = BlockOffset;
         if (End)
@@ -711,7 +714,7 @@ RegSetValueExW(
 }
 
 
-// Synced with freeldr/windows/registry.c
+// Synced with freeldr/ntldr/registry.c
 static
 VOID
 RepGetValueData(
@@ -750,7 +753,7 @@ RepGetValueData(
     }
 }
 
-// Similar to RegQueryValue in freeldr/windows/registry.c
+// Similar to RegQueryValue in freeldr/ntldr/registry.c
 LONG WINAPI
 RegQueryValueExW(
     IN HKEY hKey,
@@ -878,6 +881,7 @@ CreateSymLink(
     // IN PCWSTR TargetKeyPath OPTIONAL,
     IN HKEY TargetKeyHandle)
 {
+    LONG rc;
     PMEMKEY LinkKey, TargetKey;
     PREPARSE_POINT ReparsePoint;
 
@@ -888,15 +892,20 @@ CreateSymLink(
     if (LinkKeyPath && !(LinkKeyHandle && *LinkKeyHandle))
     {
         /* Create the link key */
-        RegCreateKeyExW(NULL,
-                        LinkKeyPath,
-                        0,
-                        NULL,
-                        REG_OPTION_VOLATILE,
-                        0,
-                        NULL,
-                        (HKEY*)&LinkKey,
-                        NULL);
+        rc = RegCreateKeyExW(NULL,
+                             LinkKeyPath,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             0,
+                             NULL,
+                             (PHKEY)&LinkKey,
+                             NULL);
+        if (rc != ERROR_SUCCESS)
+        {
+            free(ReparsePoint);
+            return FALSE;
+        }
     }
     else if (LinkKeyHandle)
     {
