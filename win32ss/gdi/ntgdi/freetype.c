@@ -1967,15 +1967,18 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
 
 typedef struct FONT_NAMES
 {
-    UNICODE_STRING FamilyNameW;     /* TT_NAME_ID_FONT_FAMILY */
-    UNICODE_STRING FaceNameW;       /* TT_NAME_ID_FULL_NAME */
-    UNICODE_STRING StyleNameW;      /* TT_NAME_ID_FONT_SUBFAMILY */
-    UNICODE_STRING FullNameW;       /* TT_NAME_ID_UNIQUE_ID */
+    UNICODE_STRING FamilyNameW;     /* family name (TT_NAME_ID_FONT_FAMILY) */
+    UNICODE_STRING FaceNameW;       /* face name (TT_NAME_ID_FULL_NAME) */
+    UNICODE_STRING StyleNameW;      /* style name (TT_NAME_ID_FONT_SUBFAMILY) */
+    UNICODE_STRING FullNameW;       /* unique name (TT_NAME_ID_UNIQUE_ID) */
+    ULONG OtmSize;                  /* size of OUTLINETEXTMETRICW with extra data */
 } FONT_NAMES, *LPFONT_NAMES;
 
 static __inline void FASTCALL
 IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
 {
+    ULONG OtmSize;
+
     RtlInitUnicodeString(&Names->FamilyNameW, NULL);
     RtlInitUnicodeString(&Names->FaceNameW, NULL);
     RtlInitUnicodeString(&Names->StyleNameW, NULL);
@@ -1989,6 +1992,14 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
     IntGetFontLocalizedName(&Names->StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
     /* unique name (full name) */
     IntGetFontLocalizedName(&Names->FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
+
+    /* Calculate the size of OUTLINETEXTMETRICW with extra data */
+    OtmSize = sizeof(OUTLINETEXTMETRICW) +
+              Names->FamilyNameW.Length + sizeof(UNICODE_NULL) +
+              Names->FaceNameW.Length + sizeof(UNICODE_NULL) +
+              Names->StyleNameW.Length + sizeof(UNICODE_NULL) +
+              Names->FullNameW.Length + sizeof(UNICODE_NULL);
+    Names->OtmSize = OtmSize;
 }
 
 static __inline BYTE *FASTCALL
@@ -2053,7 +2064,6 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
     PSHARED_FACE_CACHE Cache;
     FT_Face Face = SharedFace->Face;
-    UINT Needed;
 
     if (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH)
         Cache = &SharedFace->EnglishUS;
@@ -2061,22 +2071,12 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         Cache = &SharedFace->UserLanguage;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
-    {
         return Cache->OutlineRequiredSize;
-    }
 
     IntInitFontNames(&FontNames, SharedFace);
 
     if (!Cache->OutlineRequiredSize)
-    {
-        Needed = sizeof(OUTLINETEXTMETRICW);
-        Needed += FontNames.FamilyNameW.Length + sizeof(UNICODE_NULL);
-        Needed += FontNames.FaceNameW.Length + sizeof(UNICODE_NULL);
-        Needed += FontNames.StyleNameW.Length + sizeof(UNICODE_NULL);
-        Needed += FontNames.FullNameW.Length + sizeof(UNICODE_NULL);
-
-        Cache->OutlineRequiredSize = Needed;
-    }
+        Cache->OutlineRequiredSize = FontNames.OtmSize;
 
     if (Size < Cache->OutlineRequiredSize)
     {
