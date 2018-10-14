@@ -5150,7 +5150,7 @@ IntGdiGetFontResourceInfo(
 
     /* Free the buffers */
     ExFreePoolWithTag(NameInfo1, TAG_FINF);
-    ExFreePool(NameInfo2);
+    ExFreePoolWithTag(NameInfo2, TAG_FINF);
 
     if (Count == 0 && dwType != 5)
     {
