@@ -2046,9 +2046,14 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     BYTE *pb;
     FONT_NAMES FontNames;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
-    PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
+    PSHARED_FACE_CACHE Cache;
     FT_Face Face = SharedFace->Face;
     UINT Needed;
+
+    if (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH)
+        Cache = &SharedFace->EnglishUS;
+    else
+        Cache = &SharedFace->UserLanguage;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
     {
