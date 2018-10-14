@@ -807,17 +807,19 @@ cleanup:
 
 BOOL
 WINAPI
-InstallDevInst(
+InstallDevInstEx(
     IN HWND hWndParent,
     IN LPCWSTR InstanceId,
     IN BOOL bUpdate,
-    OUT LPDWORD lpReboot)
+    OUT LPDWORD lpReboot,
+    IN DWORD Unknown)
 {
     PDEVINSTDATA DevInstData = NULL;
     BOOL ret;
     BOOL retval = FALSE;
 
-    TRACE("InstllDevInst(%p, %s, %d, %p)\n", hWndParent, debugstr_w(InstanceId), bUpdate, lpReboot);
+    TRACE("InstllDevInstEx(%p, %s, %d, %p, %lx)\n",
+          hWndParent, debugstr_w(InstanceId), bUpdate, lpReboot, Unknown);
 
     DevInstData = HeapAlloc(GetProcessHeap(), 0, sizeof(DEVINSTDATA));
     if (!DevInstData)
@@ -913,6 +915,21 @@ cleanup:
     }
 
     return retval;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+InstallDevInst(
+    IN HWND hWndParent,
+    IN LPCWSTR InstanceId,
+    IN BOOL bUpdate,
+    OUT LPDWORD lpReboot)
+{
+    return InstallDevInstEx(hWndParent, InstanceId, bUpdate, lpReboot, 0);
 }
 
 
