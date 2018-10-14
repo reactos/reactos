@@ -1967,21 +1967,32 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
 
 typedef struct FONT_NAMES
 {
-    UNICODE_STRING FamilyNameW;
-    UNICODE_STRING FaceNameW;
-    UNICODE_STRING StyleNameW;
-    UNICODE_STRING FullNameW;
+    UNICODE_STRING FamilyNameW;     /* TT_NAME_ID_FONT_FAMILY */
+    UNICODE_STRING FaceNameW;       /* TT_NAME_ID_FULL_NAME */
+    UNICODE_STRING StyleNameW;      /* TT_NAME_ID_FONT_SUBFAMILY */
+    UNICODE_STRING FullNameW;       /* TT_NAME_ID_UNIQUE_ID */
 } FONT_NAMES, *LPFONT_NAMES;
 
-static __inline void FASTCALL IntInitFontNames(FONT_NAMES *Names)
+static __inline void FASTCALL
+IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
 {
     RtlInitUnicodeString(&Names->FamilyNameW, NULL);
     RtlInitUnicodeString(&Names->FaceNameW, NULL);
     RtlInitUnicodeString(&Names->StyleNameW, NULL);
     RtlInitUnicodeString(&Names->FullNameW, NULL);
+
+    /* family name */
+    IntGetFontLocalizedName(&Names->FamilyNameW, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+    /* face name */
+    IntGetFontLocalizedName(&Names->FaceNameW, SharedFace, TT_NAME_ID_FULL_NAME, gusLanguageID);
+    /* style name */
+    IntGetFontLocalizedName(&Names->StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
+    /* unique name (full name) */
+    IntGetFontLocalizedName(&Names->FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
 }
 
-static __inline void FASTCALL IntFreeFontNames(FONT_NAMES *Names)
+static __inline void FASTCALL
+IntFreeFontNames(FONT_NAMES *Names)
 {
     RtlFreeUnicodeString(&Names->FamilyNameW);
     RtlFreeUnicodeString(&Names->FaceNameW);
@@ -2009,26 +2020,17 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
     PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
     FT_Face Face = SharedFace->Face;
+    UINT Needed;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
     {
         return Cache->OutlineRequiredSize;
     }
 
-    IntInitFontNames(&FontNames);
-
-    /* family name */
-    IntGetFontLocalizedName(&FontNames.FamilyNameW, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
-    /* face name */
-    IntGetFontLocalizedName(&FontNames.FaceNameW, SharedFace, TT_NAME_ID_FULL_NAME, gusLanguageID);
-    /* style name */
-    IntGetFontLocalizedName(&FontNames.StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
-    /* unique name (full name) */
-    IntGetFontLocalizedName(&FontNames.FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
+    IntInitFontNames(&FontNames, SharedFace);
 
     if (!Cache->OutlineRequiredSize)
     {
-        UINT Needed;
         Needed = sizeof(OUTLINETEXTMETRICW);
         Needed += FontNames.FamilyNameW.Length + sizeof(UNICODE_NULL);
         Needed += FontNames.FaceNameW.Length + sizeof(UNICODE_NULL);
@@ -2048,7 +2050,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     YScale = Face->size->metrics.y_scale;
 
     IntLockFreeType();
-    pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+    pOS2 = FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
     if (NULL == pOS2)
     {
         IntUnLockFreeType();
@@ -2057,7 +2059,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return 0;
     }
 
-    pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
+    pHori = FT_Get_Sfnt_Table(Face, FT_SFNT_HHEA);
     if (NULL == pHori)
     {
         IntUnLockFreeType();
