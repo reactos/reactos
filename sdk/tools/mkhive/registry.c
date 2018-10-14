@@ -25,13 +25,11 @@
  *                  Hermès Bélusca-Maïto
  */
 
-/*
- * TODO:
- *   - Implement RegDeleteKeyW() and RegDeleteValueW()
- */
-
 #define NDEBUG
 #include "mkhive.h"
+
+#define STATUS_NO_LOG_SPACE     ((NTSTATUS)0xC000017D)
+#define STATUS_CANNOT_DELETE    ((NTSTATUS)0xC0000121)
 
 static CMHIVE RootHive;
 static PMEMKEY RootKey;
@@ -533,9 +531,87 @@ RegDeleteKeyW(
     IN HKEY hKey,
     IN LPCWSTR lpSubKey)
 {
-    DPRINT1("RegDeleteKeyW(0x%p, '%S') is UNIMPLEMENTED!\n",
-            hKey, (lpSubKey ? lpSubKey : L""));
-    return ERROR_SUCCESS;
+    LONG rc;
+    HKEY hTargetKey;
+    PMEMKEY Key; // ParentKey
+    PHHIVE Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_NODE Parent;
+    HCELL_INDEX ParentCell;
+
+    NTSTATUS Status;
+
+    if (lpSubKey)
+    {
+        rc = RegOpenKeyW(hKey, lpSubKey, &hTargetKey);
+        if (rc != ERROR_SUCCESS)
+            return rc;
+    }
+    else
+    {
+        hTargetKey = hKey;
+    }
+
+    /* Don't allow deleting the root */
+    if (hTargetKey == RootKey)
+    {
+        /* Fail */
+        Status = STATUS_CANNOT_DELETE;
+        goto Quit;
+    }
+
+    /* Get the hive and node */
+    Key = HKEY_TO_MEMKEY(hTargetKey);
+    Hive = &Key->RegistryHive->Hive;
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+    {
+        Status = ERROR_UNSUCCESSFUL;
+        goto Quit;
+    }
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if we don't have any children */
+    if (!(KeyNode->SubKeyCounts[Stable] + KeyNode->SubKeyCounts[Volatile]) &&
+        !(KeyNode->Flags & KEY_NO_DELETE))
+    {
+        /* Get the parent and free the cell */
+        ParentCell = KeyNode->Parent;
+        Status = CmpFreeKeyByCell(Hive, Key->KeyCellOffset, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the parent node */
+            Parent = (PCM_KEY_NODE)HvGetCell(Hive, ParentCell);
+            if (Parent)
+            {
+                /* Make sure we're dirty */
+                ASSERT(HvIsCellDirty(Hive, ParentCell));
+
+                /* Update the write time */
+                KeQuerySystemTime(&Parent->LastWriteTime);
+
+                /* Release the cell */
+                HvReleaseCell(Hive, ParentCell);
+            }
+        }
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_CANNOT_DELETE;
+    }
+
+    /* Release the cell */
+    HvReleaseCell(Hive, Key->KeyCellOffset);
+
+Quit:
+    if (lpSubKey)
+        RegCloseKey(hTargetKey);
+
+    return Status;
 }
 
 LONG WINAPI
@@ -798,9 +874,108 @@ RegDeleteValueW(
     IN HKEY hKey,
     IN LPCWSTR lpValueName OPTIONAL)
 {
-    DPRINT1("RegDeleteValueW(0x%p, '%S') is UNIMPLEMENTED!\n",
-            hKey, (lpValueName ? lpValueName : L""));
-    return ERROR_UNSUCCESSFUL;
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+    PHHIVE Hive = &Key->RegistryHive->Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_VALUE ValueCell;
+    HCELL_INDEX CellIndex;
+    ULONG ChildIndex;
+    UNICODE_STRING ValueNameString;
+
+    NTSTATUS Status;
+
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+        return ERROR_UNSUCCESSFUL;
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Initialize value name string */
+    RtlInitUnicodeString(&ValueNameString, lpValueName);
+    if (!CmpFindNameInList(Hive,
+                           &KeyNode->ValueList,
+                           &ValueNameString,
+                           &ChildIndex,
+                           &CellIndex))
+    {
+        /* Sanity check */
+        ASSERT(CellIndex == HCELL_NIL);
+    }
+    if (CellIndex == HCELL_NIL)
+    {
+        Status = ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quit;
+    }
+
+    /* We found the value, mark all relevant cells dirty */
+    HvMarkCellDirty(Hive, Key->KeyCellOffset, FALSE);
+    HvMarkCellDirty(Hive, KeyNode->ValueList.List, FALSE);
+    HvMarkCellDirty(Hive, CellIndex, FALSE);
+
+    /* Get the key value */
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
+    ASSERT(ValueCell);
+
+    /* Mark it and all related data as dirty */
+    if (!CmpMarkValueDataDirty(Hive, ValueCell))
+    {
+        /* Not enough log space, fail */
+        Status = STATUS_NO_LOG_SPACE;
+        goto Quit;
+    }
+
+    /* Sanity checks */
+    ASSERT(HvIsCellDirty(Hive, KeyNode->ValueList.List));
+    ASSERT(HvIsCellDirty(Hive, CellIndex));
+
+    /* Remove the value from the child list */
+    Status = CmpRemoveValueFromList(Hive, ChildIndex, &KeyNode->ValueList);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set known error */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Remove the value and its data itself */
+    if (!CmpFreeValue(Hive, CellIndex))
+    {
+        /* Failed to free the value, fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Set the last write time */
+    KeQuerySystemTime(&KeyNode->LastWriteTime);
+
+    /* Sanity check */
+    ASSERT(HvIsCellDirty(Hive, Key->KeyCellOffset));
+
+    /* Check if the value list is empty now */
+    if (!KeyNode->ValueList.Count)
+    {
+        /* Then clear key node data */
+        KeyNode->MaxValueNameLen = 0;
+        KeyNode->MaxValueDataLen = 0;
+    }
+
+    /* Change default Status to success */
+    Status = STATUS_SUCCESS;
+
+Quit:
+    /* Check if we had a value */
+    if (ValueCell)
+    {
+        /* Release the child cell */
+        ASSERT(CellIndex != HCELL_NIL);
+        HvReleaseCell(Hive, CellIndex);
+    }
+
+    /* Release the parent cell, if any */
+    if (KeyNode)
+        HvReleaseCell(Hive, Key->KeyCellOffset);
+
+    return Status;
 }
 
 
