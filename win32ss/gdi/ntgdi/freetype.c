@@ -1992,7 +1992,7 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
 }
 
 static __inline BYTE *FASTCALL
-IntStoreFontNames(FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
+IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
 {
     BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
 
