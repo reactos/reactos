@@ -43,6 +43,8 @@ typedef struct _PARAMETER
 
     INT iBase;
     INT iStep;
+    LONG lMin;
+    LONG lMax;
 } PARAMETER, *PPARAMETER;
 
 typedef struct _PARAMETER_ARRAY
@@ -193,6 +195,41 @@ GetIntValue(
     if (dwRegType == REG_SZ && dwLength >= sizeof(WCHAR))
     {
         *pValue = _wtoi(szBuffer);
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
+GetLongValue(
+    _In_ HKEY hKey,
+    _In_ PWSTR pValueName,
+    _In_ LONG lDefault,
+    _Out_ PLONG pValue)
+{
+    WCHAR szBuffer[24];
+    DWORD dwLength = 0;
+    DWORD dwRegType;
+    PWSTR ptr = NULL;
+
+    dwLength = sizeof(szBuffer);
+    RegQueryValueExW(hKey,
+                     pValueName,
+                     NULL,
+                     &dwRegType,
+                     (LPBYTE)szBuffer,
+                     &dwLength);
+
+    if (dwRegType == REG_SZ && dwLength >= sizeof(WCHAR))
+    {
+        *pValue = wcstol(szBuffer, &ptr, 10);
+        if (*pValue == 0 && ptr != NULL)
+            *pValue = lDefault;
+    }
+    else
+    {
+        *pValue = lDefault;
     }
 
     return ERROR_SUCCESS;
@@ -350,6 +387,7 @@ BuildParameterArray(
     DWORD dwSubKeys, dwMaxSubKeyLen, dwKeyLen, dwIndex;
     PWSTR pszType = NULL;
     LONG lError;
+    LONG lDefaultMin, lDefaultMax;
     BOOL ret = FALSE;
 
     hDriverKey = SetupDiOpenDevRegKey(DeviceInfoSet,
@@ -493,7 +531,38 @@ BuildParameterArray(
                 ParamArray->Array[dwIndex].Type == WORD_TYPE ||
                 ParamArray->Array[dwIndex].Type == DWORD_TYPE)
             {
-                /* FIXME: Read Min and Max values */
+                if (ParamArray->Array[dwIndex].Type == INT_TYPE)
+                {
+                    lDefaultMin = -32768L; //MIN_SHORT;
+                    lDefaultMax = 32767L;  //MAX_SHORT;
+                }
+                else if (ParamArray->Array[dwIndex].Type == LONG_TYPE)
+                {
+                    lDefaultMin = (-2147483647L - 1); // MIN_LONG;
+                    lDefaultMax = 2147483647L;        // MAX_LONG;
+                }
+                else if (ParamArray->Array[dwIndex].Type == WORD_TYPE)
+                {
+                    lDefaultMin = 0L;
+                    lDefaultMax = 65535L; // MAX_WORD;
+                }
+#if 0
+                else if (ParamArray->Array[dwIndex].Type == DWORD_TYPE)
+                {
+                    lDefaultMin = 0;
+                    lDefaultMax = 4294967295; //MAX_DWORD;
+                }
+#endif
+
+                GetLongValue(hParamKey,
+                             L"Min",
+                             lDefaultMin,
+                             &ParamArray->Array[dwIndex].lMin);
+
+                GetLongValue(hParamKey,
+                             L"Max",
+                             lDefaultMax,
+                             &ParamArray->Array[dwIndex].lMax);
 
                 GetIntValue(hParamKey,
                             L"Base",
@@ -692,13 +761,23 @@ DisplayParameter(
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_HIDE);
 
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN);
-            EnableWindow(hwndControl, Parameter->bPresent);
-            ShowWindow(hwndControl, SW_SHOW);
+
+            if (Parameter->Type != DWORD_TYPE)
+            {
+                EnableWindow(hwndControl, Parameter->bPresent);
+                ShowWindow(hwndControl, SW_SHOW);
+            }
 
             if (Parameter->Type == WORD_TYPE || Parameter->Type == DWORD_TYPE)
                 SendMessage(hwndControl, UDM_SETBASE, Parameter->iBase, 0);
             else
                 SendMessage(hwndControl, UDM_SETBASE, 10, 0);
+
+            if (Parameter->Type != DWORD_TYPE)
+            {
+                TRACE("SetMin %ld  SetMax %ld\n", Parameter->lMin, Parameter->lMax);
+                SendMessage(hwndControl, UDM_SETRANGE32, Parameter->lMin, Parameter->lMax);
+            }
 
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
             EnableWindow(hwndControl, Parameter->bPresent);
