@@ -30,10 +30,7 @@
 #define NDEBUG
 #include "mkhive.h"
 
-/* DEFINITIONS AND DATA *****************************************************/
-
-#define STATUS_NO_LOG_SPACE     ((NTSTATUS)0xC000017D)
-#define STATUS_CANNOT_DELETE    ((NTSTATUS)0xC0000121)
+/* DATA *********************************************************************/
 
 typedef struct _REPARSE_POINT
 {
@@ -396,10 +393,10 @@ RegpCreateOrOpenKey(
     IN BOOL Volatile,
     OUT PHKEY Key)
 {
+    NTSTATUS Status;
     PWSTR LocalKeyName;
     PWSTR End;
     UNICODE_STRING KeyString;
-    NTSTATUS Status;
     PREPARSE_POINT CurrentReparsePoint;
     PMEMKEY CurrentKey;
     PCMHIVE ParentRegistryHive;
@@ -450,7 +447,7 @@ RegpCreateOrOpenKey(
 
         ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&ParentRegistryHive->Hive, ParentCellOffset);
         if (!ParentKeyCell)
-            return STATUS_UNSUCCESSFUL;
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
         VERIFY_KEY_CELL(ParentKeyCell);
 
@@ -484,15 +481,15 @@ RegpCreateOrOpenKey(
         }
         else // if (BlockOffset == HCELL_NIL)
         {
-            Status = STATUS_OBJECT_NAME_NOT_FOUND; // ERROR_PATH_NOT_FOUND;
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
         }
 
         HvReleaseCell(&ParentRegistryHive->Hive, ParentCellOffset);
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%wZ'\n", KeyName, &KeyString);
-            return ERROR_UNSUCCESSFUL;
+            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%wZ', Status 0x%08x\n", KeyName, &KeyString, Status);
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
         }
 
         ParentCellOffset = BlockOffset;
@@ -504,7 +501,7 @@ RegpCreateOrOpenKey(
 
     CurrentKey = CreateInMemoryStructure(ParentRegistryHive, ParentCellOffset);
     if (!CurrentKey)
-        return ERROR_OUTOFMEMORY;
+        return ERROR_NOT_ENOUGH_MEMORY; // STATUS_NO_MEMORY;
 
     *Key = MEMKEY_TO_HKEY(CurrentKey);
 
@@ -557,14 +554,13 @@ RegDeleteKeyW(
     IN LPCWSTR lpSubKey)
 {
     LONG rc;
+    NTSTATUS Status;
     HKEY hTargetKey;
     PMEMKEY Key; // ParentKey
     PHHIVE Hive;
     PCM_KEY_NODE KeyNode; // ParentNode
     PCM_KEY_NODE Parent;
     HCELL_INDEX ParentCell;
-
-    NTSTATUS Status;
 
     if (lpSubKey)
     {
@@ -581,7 +577,7 @@ RegDeleteKeyW(
     if (hTargetKey == RootKey)
     {
         /* Fail */
-        Status = STATUS_CANNOT_DELETE;
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
         goto Quit;
     }
 
@@ -593,7 +589,7 @@ RegDeleteKeyW(
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
     if (!KeyNode)
     {
-        Status = ERROR_UNSUCCESSFUL;
+        rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
         goto Quit;
     }
 
@@ -622,11 +618,16 @@ RegDeleteKeyW(
                 HvReleaseCell(Hive, ParentCell);
             }
         }
+        else
+        {
+            /* Fail */
+            rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        }
     }
     else
     {
         /* Fail */
-        Status = STATUS_CANNOT_DELETE;
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
     }
 
     /* Release the cell */
@@ -636,7 +637,7 @@ Quit:
     if (lpSubKey)
         RegCloseKey(hTargetKey);
 
-    return Status;
+    return rc;
 }
 
 LONG WINAPI
@@ -675,7 +676,7 @@ RegSetValueExW(
 
         /* Special handling of registry links */
         if (cbData != sizeof(PVOID))
-            return STATUS_INVALID_PARAMETER;
+            return ERROR_INVALID_PARAMETER; // STATUS_INVALID_PARAMETER;
 
         DestKey = HKEY_TO_MEMKEY(*(PHKEY)lpData);
 
@@ -683,20 +684,20 @@ RegSetValueExW(
 
         /* Create the link in registry hive (if applicable) */
         if (Key->RegistryHive != DestKey->RegistryHive)
-            return STATUS_SUCCESS;
+            return ERROR_SUCCESS;
 
         DPRINT1("Save link to registry\n");
-        return STATUS_NOT_IMPLEMENTED;
+        return ERROR_INVALID_FUNCTION; // STATUS_NOT_IMPLEMENTED;
     }
 
     if ((cbData & ~CM_KEY_VALUE_SPECIAL_SIZE) != cbData)
-        return STATUS_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     Hive = &Key->RegistryHive->Hive;
 
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
     if (!KeyNode)
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -714,8 +715,7 @@ RegSetValueExW(
         /* Sanity check */
         ASSERT(CellIndex == HCELL_NIL);
         /* Fail */
-        // Status = STATUS_INSUFFICIENT_RESOURCES;
-        return ERROR_UNSUCCESSFUL;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
     }
     if (CellIndex == HCELL_NIL)
     {
@@ -738,7 +738,7 @@ RegSetValueExW(
     // /**/HvReleaseCell(Hive, CellIndex);/**/
 
     if (!NT_SUCCESS(Status))
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     /* Get size of the allocated cell (if any) */
     if (!(ValueCell->DataLength & CM_KEY_VALUE_SPECIAL_SIZE) &&
@@ -746,7 +746,7 @@ RegSetValueExW(
     {
         DataCell = HvGetCell(Hive, ValueCell->Data);
         if (!DataCell)
-            return ERROR_UNSUCCESSFUL;
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
         DataCellSize = (ULONG)(-HvGetCellSize(Hive, DataCell));
     }
@@ -781,7 +781,7 @@ RegSetValueExW(
             if (NewOffset == HCELL_NIL)
             {
                 DPRINT("HvAllocateCell() has failed!\n");
-                return ERROR_UNSUCCESSFUL;
+                return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
             }
 
             if (DataCell)
@@ -873,7 +873,7 @@ RegQueryValueExW(
 
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, ParentKey->KeyCellOffset);
     if (!KeyNode)
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -881,7 +881,7 @@ RegQueryValueExW(
     RtlInitUnicodeString(&ValueNameString, lpValueName);
     CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
     if (CellIndex == HCELL_NIL)
-        return ERROR_FILE_NOT_FOUND;
+        return ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
 
     /* Get the value cell */
     ValueCell = HvGetCell(Hive, CellIndex);
@@ -899,6 +899,8 @@ RegDeleteValueW(
     IN HKEY hKey,
     IN LPCWSTR lpValueName OPTIONAL)
 {
+    LONG rc;
+    NTSTATUS Status;
     PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
     PHHIVE Hive = &Key->RegistryHive->Hive;
     PCM_KEY_NODE KeyNode; // ParentNode
@@ -907,11 +909,9 @@ RegDeleteValueW(
     ULONG ChildIndex;
     UNICODE_STRING ValueNameString;
 
-    NTSTATUS Status;
-
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
     if (!KeyNode)
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -928,7 +928,7 @@ RegDeleteValueW(
     }
     if (CellIndex == HCELL_NIL)
     {
-        Status = ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
+        rc = ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
         goto Quit;
     }
 
@@ -945,7 +945,7 @@ RegDeleteValueW(
     if (!CmpMarkValueDataDirty(Hive, ValueCell))
     {
         /* Not enough log space, fail */
-        Status = STATUS_NO_LOG_SPACE;
+        rc = ERROR_NO_LOG_SPACE; // STATUS_NO_LOG_SPACE;
         goto Quit;
     }
 
@@ -958,7 +958,7 @@ RegDeleteValueW(
     if (!NT_SUCCESS(Status))
     {
         /* Set known error */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        rc = ERROR_NO_SYSTEM_RESOURCES; // STATUS_INSUFFICIENT_RESOURCES;
         goto Quit;
     }
 
@@ -966,7 +966,7 @@ RegDeleteValueW(
     if (!CmpFreeValue(Hive, CellIndex))
     {
         /* Failed to free the value, fail */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        rc = ERROR_NO_SYSTEM_RESOURCES; // STATUS_INSUFFICIENT_RESOURCES;
         goto Quit;
     }
 
@@ -985,7 +985,7 @@ RegDeleteValueW(
     }
 
     /* Change default Status to success */
-    Status = STATUS_SUCCESS;
+    rc = ERROR_SUCCESS;
 
 Quit:
     /* Check if we had a value */
@@ -1000,7 +1000,7 @@ Quit:
     if (KeyNode)
         HvReleaseCell(Hive, Key->KeyCellOffset);
 
-    return Status;
+    return rc;
 }
 
 
