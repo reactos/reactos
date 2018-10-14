@@ -50,7 +50,7 @@ LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
     }
 
     /* Allocate the string*/
-    StringOut->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+    StringOut->Buffer = RtlAllocateHeap(LdrpHeap,
                                         0,
                                         StringOut->Length + sizeof(WCHAR));
     if (!StringOut->Buffer)
@@ -88,7 +88,7 @@ LdrpFreeUnicodeString(IN PUNICODE_STRING StringIn)
     /* If Buffer is not NULL - free it */
     if (StringIn->Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, StringIn->Buffer);
+        RtlFreeHeap(LdrpHeap, 0, StringIn->Buffer);
     }
 
     /* Zero it out */
@@ -703,7 +703,7 @@ LdrpResolveDllName(PWSTR DllPath,
     ULONG BufSize = 500;
 
     /* Allocate space for full DLL name */
-    FullDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufSize + sizeof(UNICODE_NULL));
+    FullDllName->Buffer = RtlAllocateHeap(LdrpHeap, 0, BufSize + sizeof(UNICODE_NULL));
     if (!FullDllName->Buffer) return FALSE;
 
     Length = RtlDosSearchPath_U(DllPath ? DllPath : LdrpDefaultPath.Buffer,
@@ -721,7 +721,7 @@ LdrpResolveDllName(PWSTR DllPath,
             DPRINT1("%ws from %ws\n", DllName, DllPath ? DllPath : LdrpDefaultPath.Buffer);
         }
 
-        RtlFreeUnicodeString(FullDllName);
+        LdrpFreeUnicodeString(FullDllName);
         return FALSE;
     }
 
@@ -730,16 +730,16 @@ LdrpResolveDllName(PWSTR DllPath,
     FullDllName->MaximumLength = FullDllName->Length + sizeof(UNICODE_NULL);
 
     /* Allocate a new buffer */
-    NameBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, FullDllName->MaximumLength);
+    NameBuffer = RtlAllocateHeap(LdrpHeap, 0, FullDllName->MaximumLength);
     if (!NameBuffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, FullDllName->Buffer);
+        RtlFreeHeap(LdrpHeap, 0, FullDllName->Buffer);
         return FALSE;
     }
 
     /* Copy over the contents from the previous one and free it */
     RtlCopyMemory(NameBuffer, FullDllName->Buffer, FullDllName->MaximumLength);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, FullDllName->Buffer);
+    RtlFreeHeap(LdrpHeap, 0, FullDllName->Buffer);
     FullDllName->Buffer = NameBuffer;
 
     /* Find last backslash */
@@ -766,11 +766,11 @@ LdrpResolveDllName(PWSTR DllPath,
     /* Construct base DLL name */
     BaseDllName->Length = (ULONG_PTR)p1 - (ULONG_PTR)p2;
     BaseDllName->MaximumLength = BaseDllName->Length + sizeof(UNICODE_NULL);
-    BaseDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BaseDllName->MaximumLength);
+    BaseDllName->Buffer = RtlAllocateHeap(LdrpHeap, 0, BaseDllName->MaximumLength);
 
     if (!BaseDllName->Buffer)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
+        RtlFreeHeap(LdrpHeap, 0, NameBuffer);
         return FALSE;
     }
 
@@ -867,7 +867,7 @@ LdrpCheckForKnownDll(PWSTR DllName,
         /* Set up BaseDllName */
         BaseDllName->Length = DllNameUnic.Length;
         BaseDllName->MaximumLength = DllNameUnic.MaximumLength;
-        BaseDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+        BaseDllName->Buffer = RtlAllocateHeap(LdrpHeap,
                                               0,
                                               DllNameUnic.MaximumLength);
         if (!BaseDllName->Buffer)
@@ -882,7 +882,7 @@ LdrpCheckForKnownDll(PWSTR DllName,
         /* Set up FullDllName */
         FullDllName->Length = LdrpKnownDllPath.Length + BaseDllName->Length + sizeof(WCHAR);
         FullDllName->MaximumLength = FullDllName->Length + sizeof(UNICODE_NULL);
-        FullDllName->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, FullDllName->MaximumLength);
+        FullDllName->Buffer = RtlAllocateHeap(LdrpHeap, 0, FullDllName->MaximumLength);
         if (!FullDllName->Buffer)
         {
             Status = STATUS_NO_MEMORY;
@@ -932,8 +932,8 @@ Failure:
     if (Section) NtClose(Section);
 
     /* Free string resources */
-    if (BaseDllName->Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, BaseDllName->Buffer);
-    if (FullDllName->Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, FullDllName->Buffer);
+    if (BaseDllName->Buffer) RtlFreeHeap(LdrpHeap, 0, BaseDllName->Buffer);
+    if (FullDllName->Buffer) RtlFreeHeap(LdrpHeap, 0, FullDllName->Buffer);
 
     /* Return status */
     return Status;
@@ -1137,8 +1137,8 @@ SkipCheck:
             if (!NT_SUCCESS(Status))
             {
                 /* Free the name strings and return */
-                RtlFreeUnicodeString(&FullDllName);
-                RtlFreeUnicodeString(&BaseDllName);
+                LdrpFreeUnicodeString(&FullDllName);
+                LdrpFreeUnicodeString(&BaseDllName);
                 return Status;
             }
         }
@@ -1286,7 +1286,7 @@ SkipCheck:
             RemoveEntryList(&LdrEntry->HashLinks);
 
             /* Remove the LDR Entry */
-            RtlFreeHeap(RtlGetProcessHeap(), 0, LdrEntry );
+            RtlFreeHeap(LdrpHeap, 0, LdrEntry );
 
             /* Unmap and close section */
             NtUnmapViewOfSection(NtCurrentProcess(), ViewBase);
@@ -1553,7 +1553,7 @@ LdrpAllocateDataTableEntry(IN PVOID BaseAddress)
     if (NtHeader)
     {
         /* Allocate an entry */
-        LdrEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+        LdrEntry = RtlAllocateHeap(LdrpHeap,
                                    HEAP_ZERO_MEMORY,
                                    sizeof(LDR_DATA_TABLE_ENTRY));
 
@@ -1608,7 +1608,7 @@ LdrpFinalizeAndDeallocateDataTableEntry(IN PLDR_DATA_TABLE_ENTRY Entry)
     if (Entry->FullDllName.Buffer) LdrpFreeUnicodeString(&Entry->FullDllName);
 
     /* Finally free the entry's memory */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Entry);
+    RtlFreeHeap(LdrpHeap, 0, Entry);
 }
 
 BOOLEAN
