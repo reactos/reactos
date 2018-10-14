@@ -2125,22 +2125,22 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     /* family name */
     Otm->otmpFamilyName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, FontNames.FamilyNameW.Buffer);
-    Cp += FontNames.FamilyNameW.Length + sizeof(WCHAR);
+    Cp += FontNames.FamilyNameW.Length + sizeof(UNICODE_NULL);
 
     /* face name */
     Otm->otmpFaceName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, FontNames.FaceNameW.Buffer);
-    Cp += FontNames.FaceNameW.Length + sizeof(WCHAR);
+    Cp += FontNames.FaceNameW.Length + sizeof(UNICODE_NULL);
 
     /* style name */
     Otm->otmpStyleName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, FontNames.StyleNameW.Buffer);
-    Cp += FontNames.StyleNameW.Length + sizeof(WCHAR);
+    Cp += FontNames.StyleNameW.Length + sizeof(UNICODE_NULL);
 
     /* unique name (full name) */
     Otm->otmpFullName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, FontNames.FullNameW.Buffer);
-    Cp += FontNames.FullNameW.Length + sizeof(WCHAR);
+    Cp += FontNames.FullNameW.Length + sizeof(UNICODE_NULL);
 
     ASSERT(Cp - (char*)Otm == Cache->OutlineRequiredSize);
 
