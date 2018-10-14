@@ -488,7 +488,8 @@ RegpCreateOrOpenKey(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%wZ', Status 0x%08x\n", KeyName, &KeyString, Status);
+            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%.*S', Status 0x%08x\n",
+                   KeyName, (int)(KeyString.Length / sizeof(WCHAR)), KeyString.Buffer, Status);
             return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
         }
 
