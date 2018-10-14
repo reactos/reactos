@@ -114,7 +114,7 @@ class CDefView :
     private:
         HRESULT _MergeToolbar();
         BOOL _Sort();
-        VOID _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     public:
         CDefView();
@@ -520,7 +520,9 @@ void CDefView::SetStyle(DWORD dwAdd, DWORD dwRemove)
 */
 BOOL CDefView::CreateList()
 {
+    HRESULT hr;
     DWORD dwStyle, dwExStyle;
+    UINT ViewMode;
 
     TRACE("%p\n", this);
 
@@ -532,6 +534,16 @@ BOOL CDefView::CreateList()
         dwStyle |= LVS_ALIGNLEFT;
     else
         dwStyle |= LVS_ALIGNTOP | LVS_SHOWSELALWAYS;
+
+    ViewMode = m_FolderSettings.ViewMode;
+    hr = _DoFolderViewCB(SFVM_DEFVIEWMODE, NULL, (LPARAM)&ViewMode);
+    if (SUCCEEDED(hr))
+    {
+        if (ViewMode >= FVM_FIRST && ViewMode <= FVM_LAST)
+            m_FolderSettings.ViewMode = ViewMode;
+        else
+            ERR("Ignoring invalid ViewMode from SFVM_DEFVIEWMODE: %u (was: %u)\n", ViewMode, m_FolderSettings.ViewMode);
+    }
 
     switch (m_FolderSettings.ViewMode)
     {
@@ -3245,12 +3257,13 @@ HRESULT CDefView::_MergeToolbar()
     return S_OK;
 }
 
-VOID CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (m_pShellFolderViewCB)
     {
-        m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
+        return m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
     }
+    return E_NOINTERFACE;
 }
 
 HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)

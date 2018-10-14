@@ -7,6 +7,7 @@ spec2def(netcfgx.dll netcfgx.spec)
 list(APPEND SOURCE
     netcfgx.c
     classfactory.c
+    installer.c
     netcfg_iface.c
     inetcfgcomp_iface.c
     tcpipconf_notify.c

@@ -287,7 +287,7 @@ PerformTest(
                     PTEST_CONTEXT TestContext;
 
                     TestContext = ExAllocatePool(NonPagedPool, sizeof(TEST_CONTEXT));
-                    if (!skip(Fcb != NULL, "ExAllocatePool failed\n"))
+                    if (!skip(TestContext != NULL, "ExAllocatePool failed\n"))
                     {
                         Ret = FALSE;
                         Offset.QuadPart = 0x1000;

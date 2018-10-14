@@ -203,6 +203,7 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    BOOL bResult;
    DWORD dwExitCode;
    DWORD dwError;
+   DWORD dwFlags = 0;
 
    TRACE(MK_STR(do_spawnT)"(%i,'%"sT"','%"sT"','%"sT"')",mode,cmdname,args,envp);
 
@@ -286,12 +287,20 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 
    create_io_inherit_block(&StartupInfo.cbReserved2, &StartupInfo.lpReserved2);
 
+   if (mode == _P_DETACH)
+   {
+       dwFlags |= DETACHED_PROCESS;
+   }
+#ifdef _UNICODE
+   dwFlags |= CREATE_UNICODE_ENVIRONMENT;
+#endif
+
    bResult = CreateProcess((_TCHAR *)cmdname,
                             (_TCHAR *)args,
                             NULL,
                             NULL,
                             TRUE,
-                            mode == _P_DETACH ? DETACHED_PROCESS : 0,
+                            dwFlags,
                             (LPVOID)envp,
                             NULL,
                             &StartupInfo,

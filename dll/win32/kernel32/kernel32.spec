@@ -92,11 +92,11 @@
 ;@ stdcall -arch=x86_64 ConsoleIMERoutine()
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
-@ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime
+@ stdcall -stub -version=0x600+ ConvertCalDateTimeToSystemTime(ptr ptr)
 @ stdcall ConvertDefaultLocale (long)
 @ stdcall ConvertFiberToThread()
 @ stdcall -stub -version=0x600+ ConvertNLSDayOfWeekToWin32DayOfWeek(long)
-@ stdcall -stub -version=0x600+ ConvertSystemTimeToCalDateTime
+@ stdcall -stub -version=0x600+ ConvertSystemTimeToCalDateTime(ptr long ptr)
 @ stdcall ConvertThreadToFiber(ptr)
 @ stdcall ConvertThreadToFiberEx(ptr long)
 @ stdcall CopyFileA(str str long)

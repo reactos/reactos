@@ -62,6 +62,7 @@ extern ULONG CcMapDataWait;
 extern ULONG CcMapDataNoWait;
 extern ULONG CcPinReadWait;
 extern ULONG CcPinReadNoWait;
+extern ULONG CcPinMappedDataCount;
 extern ULONG CcDataPages;
 extern ULONG CcDataFlushes;
 

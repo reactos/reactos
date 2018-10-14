@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test driver for CcPinRead function
+ * PURPOSE:         Test driver for CcPinMappedData function
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
@@ -23,7 +23,7 @@ typedef struct _TEST_FCB
 typedef struct _TEST_CONTEXT
 {
     PVOID Bcb;
-    PVOID Buffer;
+    PULONG Buffer;
     ULONG Length;
 } TEST_CONTEXT, *PTEST_CONTEXT;
 
@@ -46,7 +46,7 @@ TestEntry(
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    *DeviceName = L"CcPinRead";
+    *DeviceName = L"CcPinMappedData";
     *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE |
              TESTENTRY_BUFFERED_IO_DEVICE |
              TESTENTRY_NO_READONLY_DEVICE;
@@ -151,12 +151,12 @@ PinInAnotherThread(IN PVOID Context)
 {
     BOOLEAN Ret;
     PULONG Buffer;
-    PVOID Bcb;
+    PVOID Bcb, PinBcb;
     LARGE_INTEGER Offset;
     PTEST_CONTEXT TestContext;
 
     ok(TestFileObject != NULL, "Called in invalid context!\n");
-    ok_eq_ulong(TestTestId, 3);
+    ok_eq_ulong(TestTestId, 4);
 
     TestContext = Context;
     ok(TestContext != NULL, "Called in invalid context!\n");
@@ -165,45 +165,7 @@ PinInAnotherThread(IN PVOID Context)
     ok(TestContext->Length != 0, "Called in invalid context!\n");
 
     Ret = FALSE;
-    Offset.QuadPart = 0x1000;
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, TestContext->Buffer);
-
-        CcUnpinData(Bcb);
-    }
-
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, TestContext->Buffer);
-
-        CcUnpinData(Bcb);
-    }
-
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, TestContext->Buffer);
-
-        CcUnpinData(Bcb);
-    }
+    Offset.QuadPart = 0;
 
     KmtStartSeh();
     Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
@@ -214,52 +176,23 @@ PinInAnotherThread(IN PVOID Context)
         ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
-        CcUnpinData(Bcb);
-    }
+        Ret = FALSE;
+        PinBcb = Bcb;
 
-    Offset.QuadPart = 0x1500;
-    TestContext->Length -= 0x500;
+        KmtStartSeh();
+        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, 0, &PinBcb);
+        KmtEndSeh(STATUS_SUCCESS);
 
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
+        if (!skip(Ret == TRUE, "CcPinMappedData failed\n"))
+        {
+            ok(Bcb != PinBcb, "Returned same BCB!\n");
+            ok_eq_pointer(PinBcb, TestContext->Bcb);
 
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
-
-        CcUnpinData(Bcb);
-    }
-
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+            Bcb = PinBcb;
+        }
 
         CcUnpinData(Bcb);
     }
-
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-    {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-        ok_eq_pointer(Bcb, TestContext->Bcb);
-        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
-
-        CcUnpinData(Bcb);
-    }
-
-    return;
 }
 
 static
@@ -269,12 +202,12 @@ PinInAnotherThreadExclusive(IN PVOID Context)
 {
     BOOLEAN Ret;
     PULONG Buffer;
-    PVOID Bcb;
+    PVOID Bcb, PinBcb;
     LARGE_INTEGER Offset;
     PTEST_CONTEXT TestContext;
 
     ok(TestFileObject != NULL, "Called in invalid context!\n");
-    ok_eq_ulong(TestTestId, 3);
+    ok_eq_ulong(TestTestId, 2);
 
     TestContext = Context;
     ok(TestContext != NULL, "Called in invalid context!\n");
@@ -283,19 +216,10 @@ PinInAnotherThreadExclusive(IN PVOID Context)
     ok(TestContext->Length != 0, "Called in invalid context!\n");
 
     Ret = FALSE;
-    Offset.QuadPart = 0x1000;
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-    ok(Ret == FALSE, "CcPinRead succeed\n");
-
-    if (Ret)
-    {
-        CcUnpinData(Bcb);
-    }
+    Offset.QuadPart = 0;
 
     KmtStartSeh();
-    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
     KmtEndSeh(STATUS_SUCCESS);
 
     if (!skip(Ret == TRUE, "CcMapData failed\n"))
@@ -303,45 +227,40 @@ PinInAnotherThreadExclusive(IN PVOID Context)
         ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
-        CcUnpinData(Bcb);
-    }
+        Ret = FALSE;
+        PinBcb = Bcb;
 
-    Offset.QuadPart = 0x1500;
-    TestContext->Length -= 0x500;
+        KmtStartSeh();
+        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_EXCLUSIVE, &PinBcb);
+        KmtEndSeh(STATUS_SUCCESS);
 
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-    ok(Ret == FALSE, "CcPinRead succeed\n");
+        if (!skip(Ret == FALSE, "CcPinMappedData succeed\n"))
+        {
+            ok_eq_pointer(PinBcb, Bcb);
 
-    if (Ret)
-    {
-        CcUnpinData(Bcb);
-    }
+            Ret = FALSE;
+            PinBcb = Bcb;
 
-    KmtStartSeh();
-    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-    ok(Ret == FALSE, "CcPinRead succeed\n");
+            KmtStartSeh();
+            Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, 0, &PinBcb);
+            KmtEndSeh(STATUS_SUCCESS);
 
-    if (Ret)
-    {
-        CcUnpinData(Bcb);
-    }
-
-    KmtStartSeh();
-    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
-    KmtEndSeh(STATUS_SUCCESS);
-
-    if (!skip(Ret == TRUE, "CcMapData failed\n"))
-    {
-        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
-        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+            if (!skip(Ret == FALSE, "CcPinMappedData succeed\n"))
+            {
+                ok_eq_pointer(PinBcb, Bcb);
+            }
+            else
+            {
+                Bcb = PinBcb;
+            }
+        }
+        else
+        {
+            Bcb = PinBcb;
+        }
 
         CcUnpinData(Bcb);
     }
-
-    return;
 }
 
 static
@@ -350,7 +269,7 @@ PerformTest(
     ULONG TestId,
     PDEVICE_OBJECT DeviceObject)
 {
-    PVOID Bcb;
+    PVOID Bcb, PinBcb, NewBcb;
     BOOLEAN Ret;
     PULONG Buffer;
     PTEST_FCB Fcb;
@@ -368,8 +287,6 @@ PerformTest(
         Fcb = ExAllocatePool(NonPagedPool, sizeof(TEST_FCB));
         if (!skip(Fcb != NULL, "ExAllocatePool failed\n"))
         {
-            BOOLEAN PinAccess = (TestId != 4);
-
             RtlZeroMemory(Fcb, sizeof(TEST_FCB));
             ExInitializeFastMutex(&Fcb->HeaderMutex);
             FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
@@ -378,28 +295,86 @@ PerformTest(
             TestFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
             KmtStartSeh();
-            CcInitializeCacheMap(TestFileObject, &FileSizes, PinAccess, &Callbacks, NULL);
+            CcInitializeCacheMap(TestFileObject, &FileSizes, TRUE, &Callbacks, NULL);
             KmtEndSeh(STATUS_SUCCESS);
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
             {
-                if (TestId < 3)
+                if (TestId == 0)
                 {
                     Ret = FALSE;
-                    Offset.QuadPart = TestId * 0x1000;
+                    Offset.QuadPart = 0;
                     KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
 
-                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
                     {
-                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-                        ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
+                        Ret = FALSE;
+                        PinBcb = Bcb;
+                        ok_eq_ulong(Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                        KmtStartSeh();
+                        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &PinBcb);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcPinMappedData failed\n"))
+                        {
+                            ok(Bcb != PinBcb, "Returned same BCB!\n");
+                            ok(*(PUSHORT)PinBcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)PinBcb);
+
+                            /* Previous BCB isn't valid anymore! */
+                            Bcb = PinBcb;
+                        }
 
                         CcUnpinData(Bcb);
                     }
                 }
-                else if (TestId == 3)
+                else if (TestId == 1)
+                {
+                    Ret = FALSE;
+                    Offset.QuadPart = 0;
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &PinBcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        ok(*(PUSHORT)PinBcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)PinBcb);
+                        ok_eq_ulong(Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                        Ret = FALSE;
+                        KmtStartSeh();
+                        Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                        {
+                            ok(Bcb != PinBcb, "Returned same BCB!\n");
+
+                            Ret = FALSE;
+                            NewBcb = Bcb;
+                            KmtStartSeh();
+                            Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &NewBcb);
+                            KmtEndSeh(STATUS_SUCCESS);
+
+                            if (!skip(Ret == TRUE, "CcPinMappedData failed\n"))
+                            {
+                                ok(Bcb != NewBcb, "Returned same BCB!\n");
+                                ok_eq_pointer(NewBcb, PinBcb);
+                                ok(*(PUSHORT)NewBcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)NewBcb);
+
+                                /* Previous BCB isn't valid anymore! */
+                                Bcb = NewBcb;
+                            }
+
+                            CcUnpinData(Bcb);
+                        }
+
+                        CcUnpinData(PinBcb);
+                    }
+                }
+                else if (TestId == 2)
                 {
                     PTEST_CONTEXT TestContext;
 
@@ -407,20 +382,9 @@ PerformTest(
                     if (!skip(TestContext != NULL, "ExAllocatePool failed\n"))
                     {
                         Ret = FALSE;
-                        Offset.QuadPart = 0x1000;
-
-                        /* Try enforce BCB first */
+                        Offset.QuadPart = 0;
                         KmtStartSeh();
-                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
-                        KmtEndSeh(STATUS_SUCCESS);
-                        ok(Ret == FALSE, "CcPinRead succeed\n");
-                        if (Ret)
-                        {
-                            CcUnpinData(Bcb);
-                        }
-
-                        KmtStartSeh();
-                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &TestContext->Bcb, &TestContext->Buffer);
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT | PIN_EXCLUSIVE, &TestContext->Bcb, (PVOID *)&TestContext->Buffer);
                         KmtEndSeh(STATUS_SUCCESS);
 
                         if (!skip(Ret == TRUE, "CcPinRead failed\n"))
@@ -428,39 +392,7 @@ PerformTest(
                             PKTHREAD ThreadHandle;
 
                             ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
-
-#ifdef _X86_
-                            /* FIXME: Should be fixed, will fail under certains conditions */
-                            ok(TestContext->Buffer > (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
-                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
-#else
-#ifdef _M_AMD64
-                            ok(TestContext->Buffer > (PVOID)0xFFFFF98000000000 && TestContext->Buffer < (PVOID)0xFFFFFA8000000000,
-                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
-#else
-                            skip(FALSE, "System space mapping not defined\n");
-#endif
-#endif
-                            TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
-                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
-                            KmtFinishThread(ThreadHandle, NULL);
-
-                            TestContext->Length = FileSizes.FileSize.QuadPart - 2 * Offset.QuadPart;
-                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
-                            KmtFinishThread(ThreadHandle, NULL);
-
-                            CcUnpinData(TestContext->Bcb);
-                        }
-
-                        KmtStartSeh();
-                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT | PIN_EXCLUSIVE, &TestContext->Bcb, &TestContext->Buffer);
-                        KmtEndSeh(STATUS_SUCCESS);
-
-                        if (!skip(Ret == TRUE, "CcPinRead failed\n"))
-                        {
-                            PKTHREAD ThreadHandle;
-
-                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+                            ok_eq_ulong(TestContext->Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThreadExclusive, TestContext);
@@ -472,64 +404,64 @@ PerformTest(
                         ExFreePool(TestContext);
                     }
                 }
-                else if (TestId == 4)
+                else if (TestId == 3)
                 {
                     Ret = FALSE;
-                    Offset.QuadPart = 0x1000;
+                    Offset.QuadPart = 0;
                     KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
 
-                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
                     {
-                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
-                        ok_eq_ulong(Buffer[0x2000 / sizeof(ULONG)], 0);
+                        Ret = FALSE;
+                        PinBcb = Bcb;
+                        ok_eq_ulong(Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
+
+                        KmtStartSeh();
+                        Ret = CcPinMappedData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_IF_BCB, &PinBcb);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == FALSE, "CcPinMappedData succeed\n"))
+                        {
+                            ok_eq_pointer(Bcb, PinBcb);
+                        }
+                        else
+                        {
+                            Bcb = PinBcb;
+                        }
 
                         CcUnpinData(Bcb);
                     }
                 }
-                else if (TestId == 5)
+                else if (TestId == 4)
                 {
-                    /* Pin after EOF */
-                    Ret = FALSE;
-                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000;
+                    PTEST_CONTEXT TestContext;
 
-                    KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
-                    KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
-
-                    if (Ret)
+                    TestContext = ExAllocatePool(NonPagedPool, sizeof(TEST_CONTEXT));
+                    if (!skip(TestContext != NULL, "ExAllocatePool failed\n"))
                     {
-                        CcUnpinData(Bcb);
-                    }
+                        Ret = FALSE;
+                        Offset.QuadPart = 0;
+                        KmtStartSeh();
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &TestContext->Bcb, (PVOID *)&TestContext->Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
 
-                    /* Pin a VACB after EOF */
-                    Ret = FALSE;
-                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
+                        if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                        {
+                            PKTHREAD ThreadHandle;
 
-                    KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
-                    KmtEndSeh(STATUS_ACCESS_VIOLATION);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
+                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+                            ok_eq_ulong(TestContext->Buffer[0x3000 / sizeof(ULONG)], 0xDEADBABE);
 
-                    if (Ret)
-                    {
-                        CcUnpinData(Bcb);
-                    }
+                            TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
+                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
+                            KmtFinishThread(ThreadHandle, NULL);
 
-                    /* Pin more than a VACB */
-                    Ret = FALSE;
-                    Offset.QuadPart = 0x0;
+                            CcUnpinData(TestContext->Bcb);
+                        }
 
-                    KmtStartSeh();
-                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, 0, &Bcb, (PVOID *)&Buffer);
-                    KmtEndSeh(STATUS_SUCCESS);
-                    ok(Ret == FALSE, "CcPinRead succeed\n");
-
-                    if (Ret)
-                    {
-                        CcUnpinData(Bcb);
+                        ExFreePool(TestContext);
                     }
                 }
             }
