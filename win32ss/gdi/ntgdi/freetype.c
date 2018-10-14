@@ -1994,27 +1994,32 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
 static __inline BYTE *FASTCALL
 IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
 {
+    SIZE_T cbSize;
     BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
 
     /* family name */
     Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
-    wcscpy((WCHAR*) pb, Names->FamilyNameW.Buffer);
-    pb += Names->FamilyNameW.Length + sizeof(UNICODE_NULL);
+    cbSize = Names->FamilyNameW.Length + sizeof(UNICODE_NULL);
+    RtlCopyMemory(pb, Names->FamilyNameW.Buffer, cbSize);
+    pb += cbSize;
 
     /* face name */
     Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
-    wcscpy((WCHAR*) pb, Names->FaceNameW.Buffer);
-    pb += Names->FaceNameW.Length + sizeof(UNICODE_NULL);
+    cbSize = Names->FaceNameW.Length + sizeof(UNICODE_NULL);
+    RtlCopyMemory(pb, Names->FaceNameW.Buffer, cbSize);
+    pb += cbSize;
 
     /* style name */
     Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
-    wcscpy((WCHAR*) pb, Names->StyleNameW.Buffer);
-    pb += Names->StyleNameW.Length + sizeof(UNICODE_NULL);
+    cbSize = Names->StyleNameW.Length + sizeof(UNICODE_NULL);
+    RtlCopyMemory(pb, Names->StyleNameW.Buffer, cbSize);
+    pb += cbSize;
 
     /* unique name (full name) */
     Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
-    wcscpy((WCHAR*) pb, Names->FullNameW.Buffer);
-    pb += Names->FullNameW.Length + sizeof(UNICODE_NULL);
+    cbSize = Names->FullNameW.Length + sizeof(UNICODE_NULL);
+    RtlCopyMemory(pb, Names->FullNameW.Buffer, cbSize);
+    pb += cbSize;
 
     return pb;
 }
