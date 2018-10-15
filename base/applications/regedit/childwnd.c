@@ -389,7 +389,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         if (!g_pChildWnd) return 0;
 
         wcsncpy(g_pChildWnd->szPath, buffer, MAX_PATH);
-        g_pChildWnd->nSplitPos = 250;
+        g_pChildWnd->nSplitPos = 210;
         g_pChildWnd->hWnd = hWnd;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
