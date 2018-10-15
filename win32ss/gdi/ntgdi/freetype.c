@@ -2065,17 +2065,25 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     FT_Face Face = SharedFace->Face;
 
     if (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH)
+    {
         Cache = &SharedFace->EnglishUS;
+    }
     else
+    {
         Cache = &SharedFace->UserLanguage;
+    }
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
+    {
         return Cache->OutlineRequiredSize;
+    }
 
     IntInitFontNames(&FontNames, SharedFace);
 
     if (!Cache->OutlineRequiredSize)
+    {
         Cache->OutlineRequiredSize = FontNames.OtmSize;
+    }
 
     if (Size < Cache->OutlineRequiredSize)
     {
