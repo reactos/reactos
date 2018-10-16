@@ -1476,12 +1476,17 @@ MUI_ERROR csCZErrorEntries[] =
         "ENTER = Restartovat poü°taü"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Nepoda˝ilo se nainstalovat FAT zavadÿü na systÇmovÏ odd°l.",
         "ENTER = Restartovat poü°taü"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Nepoda˝ilo se naü°st seznam typÖ poü°taüe.\n",
         "ENTER = Restartovat poü°taü"
     },
@@ -1527,12 +1532,17 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Nepoda˝ilo se nainstalovat FAT zavadÿü na systÇmovÏ odd°l.",
         "ENTER = Restartovat poü°taü"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "V jednotce A: nen° disketa.",
         "ENTER = Pokraüovat"
     },

@@ -1470,12 +1470,17 @@ MUI_ERROR deDEErrorEntries[] =
         "EINGABETASTE = Computer neu starten"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Computertypenliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
@@ -1521,12 +1526,17 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Keine Diskette in Laufwerk A: gefunden.",
         "EINGABETASTE = Fortsetzen"
     },

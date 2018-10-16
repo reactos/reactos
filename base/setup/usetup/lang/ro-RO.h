@@ -1503,13 +1503,18 @@ MUI_ERROR roROErrorEntries[] =
         "ENTER = Repornire calculator"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Eºec la încãrcarea listei cu arhitecturi de\n"
         "calcul disponibile.",
         "ENTER = Repornire calculator"
@@ -1561,13 +1566,18 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Eºec la instalarea codului FAT de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Nu existã discuri flexibile în unitatea A:",
         "ENTER = Continuare"
     },

@@ -1477,12 +1477,17 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Не вдалось завантажити список типiв комп'ютера.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
@@ -1528,12 +1533,17 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Вiдсутня дискета в дисководi A:.",
         "ENTER = Продовжити"
     },

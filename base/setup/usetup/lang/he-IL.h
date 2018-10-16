@@ -1470,12 +1470,17 @@ MUI_ERROR heILErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Setup failed to install FAT bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Setup failed to load the computer type list.\n",
         "ENTER = Reboot computer"
     },
@@ -1521,12 +1526,17 @@ MUI_ERROR heILErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Setup failed to install the FAT bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "No disk in drive A:.",
         "ENTER = Continue"
     },

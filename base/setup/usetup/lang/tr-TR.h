@@ -1449,12 +1449,17 @@ MUI_ERROR trTRErrorEntries[] =
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Kur, dizge bîlÅmÅne FAT în yÅkleme kodunu kuramadç.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Kur, bilgisayar tÅrÅ dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
@@ -1500,12 +1505,17 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Kur, dizge bîlÅmÅ Åzerinde FAT în yÅkleme kodunu kurmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "A: sÅrÅcÅsÅnde disk yok.",
         "Giriü = SÅrdÅr"
     },

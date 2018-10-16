@@ -1471,12 +1471,17 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "SÅsteemikettale ei ‰nnestunud kirjutada FAT alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "ArvutitÅÅpide nimekirja ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
@@ -1522,12 +1527,17 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "SÅsteemikettale ei ‰nnestunud paigaldada FAT alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Draivis A: ei ole flopiketast.",
         "ENTER = JÑtka"
     },

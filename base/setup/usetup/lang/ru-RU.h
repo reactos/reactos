@@ -1470,12 +1470,17 @@ MUI_ERROR ruRUErrorEntries[] =
         "ENTER = Перезагрузка"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Не удалось загрузить список типов компьютера.\n",
         "ENTER = Перезагрузка"
     },
@@ -1521,12 +1526,17 @@ MUI_ERROR ruRUErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Нет диска в дисководе A:.",
         "ENTER = Продолжить"
     },

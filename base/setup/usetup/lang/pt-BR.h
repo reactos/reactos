@@ -1501,12 +1501,17 @@ MUI_ERROR ptBRErrorEntries[] =
         "ENTER=Reiniciar"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Erro ao escrever o c¢digo de inicializa‡Æo na parti‡Æo do sistema.\n",
         "ENTER=Reiniciar"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "NÆo foi poss¡vel carregar a lista de tipos de computadores.\n",
         "ENTER=Reiniciar"
     },
@@ -1552,12 +1557,17 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Erro ao instalar o c¢digo de inicializa‡Æo na parti‡Æo do sistema.",
         "ENTER=Reiniciar"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "NÆo h  disco na unidade A:.",
         "ENTER=Continuar"
     },

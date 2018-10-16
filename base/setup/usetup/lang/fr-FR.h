@@ -1488,12 +1488,17 @@ MUI_ERROR frFRErrorEntries[] =
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Setup n'a pu charger la liste de type d'ordinateurs.\n",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
@@ -1539,12 +1544,17 @@ MUI_ERROR frFRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Pas de disque dans le lecteur A:.",
         "ENTRêE = Continuer"
     },

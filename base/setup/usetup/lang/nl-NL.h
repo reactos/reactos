@@ -1492,12 +1492,17 @@ MUI_ERROR nlNLErrorEntries[] =
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Setup kan de computertype-lijst niet laden.\n",
         "ENTER = Computer opnieuw opstarten"
     },
@@ -1544,12 +1549,17 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Geen diskette in station A:.",
         "ENTER = Doorgaan"
     },

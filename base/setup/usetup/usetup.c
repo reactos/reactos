@@ -4622,7 +4622,10 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
+    UCHAR PartitionType;
     NTSTATUS Status;
+    
+    PartitionType = PartitionList->SystemPartition->PartitionType;
 
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
@@ -4630,8 +4633,18 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        /* Check the partition type, if we have BTRFS on it */
+        if (PartitionType == PARTITION_LINUX)
+        {
+            MUIDisplayError(ERROR_WRITE_BOOT_BTRFS, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+        /* Otherwise we have FAT */
+        else
+        {
+            MUIDisplayError(ERROR_WRITE_BOOT_FAT, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
     }
 
     return SUCCESS_PAGE;
@@ -4655,18 +4668,31 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 {
+    UCHAR PartitionType;
     NTSTATUS Status;
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
     /* Step 1: Write the VBR */
+    PartitionType = PartitionList->SystemPartition->PartitionType;
+    
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
                                    &USetupData.DestinationArcPath,
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        /* Check the partition type, if we have BTRFS on it */
+        if (PartitionType == PARTITION_LINUX)
+        {
+            MUIDisplayError(ERROR_WRITE_BOOT_BTRFS, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+        /* Otherwise we have FAT */
+        else
+        {
+            MUIDisplayError(ERROR_WRITE_BOOT_FAT, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
     }
 
     /* Step 2: Write the MBR */
@@ -4679,8 +4705,19 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
-        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+
+        /* Check the partition type, if we have BTRFS on it */
+        if (PartitionType == PARTITION_LINUX)
+        {
+            MUIDisplayError(ERROR_INSTALL_BOOTCODE_BTRFS, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+        /* Otherwise we have FAT */
+        else
+        {
+            MUIDisplayError(ERROR_INSTALL_BOOTCODE_FAT, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
     }
 
     return SUCCESS_PAGE;

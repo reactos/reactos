@@ -1478,12 +1478,17 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Неуспешно слагане на означаваш запис (bootcode) за FAT в системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Настройвачът не успя да зареди списъка с видовете компютри.\n",
         "ENTER = Презапускане на компютъра"
     },
@@ -1529,13 +1534,18 @@ MUI_ERROR bgBGErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         //"Setup failed to install the FAT bootcode on the system partition.",
         "Неуспешно слагане на обуващия код за FAT на системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "В устройство A: няма носител.",
         "ENTER = Продължаване"
     },

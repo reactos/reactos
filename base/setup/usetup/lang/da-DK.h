@@ -1483,12 +1483,17 @@ MUI_ERROR daDKErrorEntries[] =
         "ENTER = Genstart"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Installationen kunne ikke indl‘se listen over computertyper.\n",
         "ENTER = Genstart"
     },
@@ -1534,12 +1539,17 @@ MUI_ERROR daDKErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Der er ingen diskette i drev A:.",
         "ENTER = Forts‘t"
     },

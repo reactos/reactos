@@ -1475,12 +1475,17 @@ MUI_ERROR sqALErrorEntries[] =
         "ENTER = Ristarto kompjuterin"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Instalimi deshtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ kompjuterit.\n",
         "ENTER = Ristarto kompjuterin"
     },
@@ -1526,12 +1531,17 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Instalimi d‰shtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Ska disk n‰ drive A:.",
         "ENTER = Vazhdo"
     },

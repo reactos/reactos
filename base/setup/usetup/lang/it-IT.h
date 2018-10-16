@@ -1476,12 +1476,17 @@ MUI_ERROR itITErrorEntries[] =
         "INVIO = Riavviare il computer"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Impossibile installare il bootcode FAT nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Setup non ha potuto caricare l'elenco di tipi di computer.\n",
         "INVIO = Riavviare il computer"
     },
@@ -1527,12 +1532,17 @@ MUI_ERROR itITErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Impossibile installare il bootcode FAT nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Non c'\x8A un disco nell'unit\x85 A:.",
         "ENTER = Continue"
     },

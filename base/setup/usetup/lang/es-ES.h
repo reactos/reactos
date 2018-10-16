@@ -1473,12 +1473,17 @@ MUI_ERROR esESErrorEntries[] =
         "INTRO = Reiniciar el equipo"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "El instalador fall¢ al cargar la lista de tipos de equipos.\n",
         "INTRO = Reiniciar el equipo"
     },
@@ -1524,12 +1529,17 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "No hay disco en la unidad A:.",
         "INTRO = Continuar"
     },

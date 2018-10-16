@@ -1471,12 +1471,17 @@ MUI_ERROR jaJPErrorEntries[] =
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ Êß°Ã¨¼®Ý ¼Þ®³ÍÉ FAT ÌÞ°Äº°ÄÞÉ ²Ý½Ä°ÙÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "¾¯Ä±¯ÌßÊ ºÝËß­°ÀÉ ¼­Ù² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
@@ -1522,12 +1527,17 @@ MUI_ERROR jaJPErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ Êß°Ã¨¼®Ý ¼Þ®³ÍÉ FAT ÌÞ°Ä Úº°ÄÞ É ²Ý½Ä°ÙÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "ÄÞ×²ÌÞ A: Æ ÃÞ¨½¸¶Þ ±ØÏ¾Ý¡",
         "ENTER = ¿Þ¯º³"
     },

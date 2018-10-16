@@ -1494,12 +1494,17 @@ MUI_ERROR elGRErrorEntries[] =
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Setup failed to install FAT bootcode on the system partition.",
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "† œš¡˜«á©«˜©ž ›œ £§æ¨œ©œ ¤˜ ­¦¨«é©œ  «ž ¢å©«˜ «ç§à¤ ¬§¦¢¦š ©«ã.\n",
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
@@ -1545,12 +1550,17 @@ MUI_ERROR elGRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Setup failed to install the FAT bootcode on the system partition.",
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "ƒœ¤ ¬§á¨®œ  › ©¡â«˜ ©«¦ A:.",
         "ENTER = ‘¬¤â®œ ˜"
     },

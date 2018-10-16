@@ -1370,12 +1370,17 @@ MUI_ERROR msMYErrorEntries[] =
         "ENTER = Memulakan semula komputer"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Persediaan gagal untuk memuatkan senarai jenis komputer.\n",
         "ENTER = Memulakan semula komputer"
     },
@@ -1421,12 +1426,17 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Tiada cakera dalam cakera A:.",
         "ENTER = Teruskan"
     },

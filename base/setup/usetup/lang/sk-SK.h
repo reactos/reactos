@@ -1477,13 +1477,18 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Inçtal tor zlyhal pri nahr van¡ zoznamu typov poŸ¡taŸov.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
@@ -1530,13 +1535,18 @@ MUI_ERROR skSKErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "V mechanike A: nie je disketa.",
         "ENTER = PokraŸovaœ"
     },

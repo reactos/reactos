@@ -1477,12 +1477,17 @@ MUI_ERROR svSEErrorEntries[] =
         "ENTER = Starta om datorn"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Setup misslyckades installera FAT bootkod p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Setup misslyckades att l„sa datortypslistan.\n",
         "ENTER = Starta om datorn"
     },
@@ -1528,12 +1533,17 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Setup misslyckades att installera FAT bootkoden p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Ingen disk i enhet A:.",
         "ENTER = Forts„tt"
     },

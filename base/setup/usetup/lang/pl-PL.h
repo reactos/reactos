@@ -1479,12 +1479,17 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
-        // ERROR_WRITE_BOOT,
+        //ERROR_WRITE_BOOT_FAT,
         "Nieudane zapisanie FAT bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {
-        // ERROR_LOAD_COMPUTER,
+        //ERROR_WRITE_BOOT_BTRFS,
+        "Setup failed to install BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
         "Instalator nie m¢gˆ zaˆadowa† listy typ¢w komputera.\n",
         "ENTER = Restart komputera"
     },
@@ -1530,12 +1535,17 @@ MUI_ERROR plPLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_INSTALL_BOOTCODE,
+        //ERROR_INSTALL_BOOTCODE_FAT,
         "Nieudana instalacja FAT bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {
-        // ERROR_NO_FLOPPY,
+        //ERROR_INSTALL_BOOTCODE_BTRFS
+        "Setup failed to install the BTRFS bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
         "Brak dyskietki w nap©dzie A:.",
         "ENTER = Kontynuacja"
     },
