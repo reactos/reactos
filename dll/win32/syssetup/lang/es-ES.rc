@@ -1,4 +1,11 @@
-/* Spanish translation created by ??? and refurbished by Ismael Ferreras Morezuelas (2014-12-30) */
+/*
+ * PROJECT:     ReactOS Win32 Setup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   2014 Ismael Ferreras Morezuelas
+ *              2018 Julio Carchi Ruiz
+ */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
@@ -86,11 +93,11 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Estilo Lautus", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Estilo Clásico", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -164,8 +171,8 @@ BEGIN
     IDS_DATETIMESUBTITLE "Fije la fecha y hora correcta de su equipo."
     IDS_PROCESSTITLE "Registrando componentes"
     IDS_PROCESSSUBTITLE "Espere un momento..."
-    IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
+    IDS_THEMESELECTIONTITLE "Apariencia"
+    IDS_THEMESELECTIONSUBTITLE "Seleccione el estilo de su preferencia."
 END
 
 STRINGTABLE
