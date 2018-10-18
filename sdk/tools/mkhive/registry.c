@@ -572,6 +572,7 @@ RegDeleteKeyW(
     else
     {
         hTargetKey = hKey;
+        rc = ERROR_SUCCESS;
     }
 
     /* Don't allow deleting the root */
@@ -618,6 +619,8 @@ RegDeleteKeyW(
                 /* Release the cell */
                 HvReleaseCell(Hive, ParentCell);
             }
+
+            rc = ERROR_SUCCESS;
         }
         else
         {
