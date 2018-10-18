@@ -811,8 +811,9 @@ InstallMbrBootCodeToDisk(
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -833,6 +834,7 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
+    /* Write new bootsector to RootPath */
     FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -970,8 +972,9 @@ InstallFat12BootCodeToFloppy(
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -992,6 +995,7 @@ InstallFat12BootCodeToFloppy(
         return Status;
     }
 
+    /* Write new bootsector to RootPath */
     FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -1529,8 +1533,8 @@ InstallFat32BootCodeToDisk(
 static
 NTSTATUS
 InstallBtrfsBootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1651,8 +1655,9 @@ InstallBtrfsBootCodeToDisk(
     // RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 #endif
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1684,7 +1689,6 @@ InstallBtrfsBootCodeToDisk(
                                    0,
                                    &PartInfo,
                                    sizeof(PartInfo));
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (Status %lx)\n", Status);
@@ -1692,6 +1696,8 @@ InstallBtrfsBootCodeToDisk(
         RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
     }
+
+    /* Write new bootsector to RootPath */
 
     NewBootSector->PartitionStartLBA = PartInfo.StartingOffset.QuadPart / SECTORSIZE;
 
