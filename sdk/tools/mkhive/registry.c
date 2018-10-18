@@ -403,7 +403,6 @@ RegpCreateOrOpenKey(
     HCELL_INDEX ParentCellOffset;
     PCM_KEY_NODE ParentKeyCell;
     PLIST_ENTRY Ptr;
-    PCM_KEY_NODE SubKeyCell;
     HCELL_INDEX BlockOffset;
 
     DPRINT("RegpCreateOrOpenKey('%S')\n", KeyName);
