@@ -26,29 +26,6 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
 
 /* FUNCTIONS ******************************************************************/
 
-static
-LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
-{
-    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
-
-    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
-    if (RealFilter != NULL)
-    {
-        _SEH2_TRY
-        {
-            ExceptionDisposition = RealFilter(ExceptionInfo);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
-        }
-        _SEH2_END;
-    }
-
-    return ExceptionDisposition;
-}
-
 __declspec(noreturn)
 VOID
 WINAPI
@@ -68,7 +45,7 @@ BaseThreadStartup(IN LPTHREAD_START_ROUTINE lpStartAddress,
         /* Get the exit code from the Thread Start */
         ExitThread((lpStartAddress)((PVOID)lpParameter));
     }
-    _SEH2_EXCEPT(BaseThreadExceptionFilter(_SEH2_GetExceptionInformation()))
+    _SEH2_EXCEPT(UnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
     {
         /* Get the Exit code from the SEH Handler */
         if (!BaseRunningInServerProcess)
