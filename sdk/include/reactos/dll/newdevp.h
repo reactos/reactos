@@ -28,6 +28,15 @@ InstallDevInst(
     IN BOOL bUpdate,
     OUT LPDWORD lpReboot);
 
+BOOL
+WINAPI
+InstallDevInstEx(
+    IN HWND hWndParent,
+    IN LPCWSTR InstanceId,
+    IN BOOL bUpdate,
+    OUT LPDWORD lpReboot,
+    IN DWORD Unknown);
+
 #ifdef __cplusplus
 }
 #endif

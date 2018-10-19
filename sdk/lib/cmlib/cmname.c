@@ -149,7 +149,7 @@ NTAPI
 CmpFindNameInList(IN PHHIVE Hive,
                   IN PCHILD_LIST ChildList,
                   IN PUNICODE_STRING Name,
-                  OUT PULONG ChildIndex,
+                  OUT PULONG ChildIndex OPTIONAL,
                   OUT PHCELL_INDEX CellIndex)
 {
     PCELL_DATA CellData;

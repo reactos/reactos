@@ -26,6 +26,8 @@
  *                  Hermès Bélusca-Maïto
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
@@ -48,6 +50,7 @@
 #define DIR_SEPARATOR_STRING "\\"
 #endif
 
+/* FUNCTIONS ****************************************************************/
 
 void usage(void)
 {
@@ -91,7 +94,7 @@ void convert_path(char *dst, char *src)
 int main(int argc, char *argv[])
 {
     INT ret;
-    UINT i;
+    INT i;
     PSTR ptr;
     BOOL UpperCaseFileName = FALSE;
     PCSTR HiveList = NULL;

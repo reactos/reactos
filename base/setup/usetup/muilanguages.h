@@ -634,7 +634,7 @@ const MUI_LANGUAGE MUILanguageList[] =
     {L"0000040D", L"1255", L"862", L"10005", L"Hebrew", L"117", heILPages, heILErrorEntries, heILStrings, HebrewFonts, heILLayouts },
 #endif
 #ifdef LANGUAGE_HI_IN
-    {L"00000439", L"1252", L"437", L"10000", L"Hindi", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, hiINLayouts },
+    {L"00000439", L"1252", L"437", L"10000", L"Hindi", L"113", enUSPages, enUSErrorEntries, enUSStrings, HindiFonts, hiINLayouts },
 #endif
 #ifdef LANGUAGE_HU_HU
     {L"0000040E", L"1250", L"852", L"10029", L"Hungarian", L"109", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, huHULayouts },

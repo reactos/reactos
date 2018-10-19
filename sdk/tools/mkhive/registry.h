@@ -7,25 +7,6 @@
 
 #pragma once
 
-typedef struct _REPARSE_POINT
-{
-    LIST_ENTRY ListEntry;
-    PCMHIVE SourceHive;
-    HCELL_INDEX SourceKeyCellOffset;
-    PCMHIVE DestinationHive;
-    HCELL_INDEX DestinationKeyCellOffset;
-} REPARSE_POINT, *PREPARSE_POINT;
-
-typedef struct _MEMKEY
-{
-    /* Information on hard disk structure */
-    HCELL_INDEX KeyCellOffset;
-    PCMHIVE RegistryHive;
-} MEMKEY, *PMEMKEY;
-
-#define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))
-#define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
-
 typedef struct _HIVE_LIST_ENTRY
 {
     PCSTR   HiveName;
@@ -39,12 +20,16 @@ typedef struct _HIVE_LIST_ENTRY
 extern HIVE_LIST_ENTRY RegistryHives[];
 
 #define ERROR_SUCCESS                    0L
-#define ERROR_UNSUCCESSFUL               1L
+#define ERROR_INVALID_FUNCTION           1L
 #define ERROR_FILE_NOT_FOUND             2L
-#define ERROR_OUTOFMEMORY                14L
+#define ERROR_ACCESS_DENIED              5L
+#define ERROR_NOT_ENOUGH_MEMORY          8L
+#define ERROR_GEN_FAILURE                31L
 #define ERROR_INVALID_PARAMETER          87L
-#define ERROR_MORE_DATA                  234L
-#define ERROR_NO_MORE_ITEMS              259L
+// #define ERROR_MORE_DATA                  234L
+// #define ERROR_NO_MORE_ITEMS              259L
+#define ERROR_NO_LOG_SPACE               1019L
+#define ERROR_NO_SYSTEM_RESOURCES        1450L
 
 #define REG_NONE                           0
 #define REG_SZ                             1

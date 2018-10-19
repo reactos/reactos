@@ -25,17 +25,31 @@
  *                  Hermès Bélusca-Maïto
  */
 
-/*
- * TODO:
- *   - Implement RegDeleteKeyW() and RegDeleteValueW()
- */
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+/* INCLUDES *****************************************************************/
 
 #define NDEBUG
 #include "mkhive.h"
+
+/* DATA *********************************************************************/
+
+typedef struct _REPARSE_POINT
+{
+    LIST_ENTRY ListEntry;
+    PCMHIVE SourceHive;
+    HCELL_INDEX SourceKeyCellOffset;
+    PCMHIVE DestinationHive;
+    HCELL_INDEX DestinationKeyCellOffset;
+} REPARSE_POINT, *PREPARSE_POINT;
+
+typedef struct _MEMKEY
+{
+    /* Information on hard disk structure */
+    HCELL_INDEX KeyCellOffset;
+    PCMHIVE RegistryHive;
+} MEMKEY, *PMEMKEY;
+
+#define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))
+#define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
 
 static CMHIVE RootHive;
 static PMEMKEY RootKey;
@@ -332,6 +346,7 @@ static UCHAR SystemSecurity[] =
     0x01, 0x02, 0x00, 0x00
 };
 
+/* GLOBALS ******************************************************************/
 
 HIVE_LIST_ENTRY RegistryHives[/*MAX_NUMBER_OF_REGISTRY_HIVES*/] =
 {
@@ -349,6 +364,7 @@ HIVE_LIST_ENTRY RegistryHives[/*MAX_NUMBER_OF_REGISTRY_HIVES*/] =
 };
 C_ASSERT(_countof(RegistryHives) == MAX_NUMBER_OF_REGISTRY_HIVES);
 
+/* FUNCTIONS ****************************************************************/
 
 static PMEMKEY
 CreateInMemoryStructure(
@@ -370,27 +386,26 @@ LIST_ENTRY CmiHiveListHead;
 LIST_ENTRY CmiReparsePointsHead;
 
 static LONG
-RegpOpenOrCreateKey(
+RegpCreateOrOpenKey(
     IN HKEY hParentKey,
     IN PCWSTR KeyName,
     IN BOOL AllowCreation,
     IN BOOL Volatile,
     OUT PHKEY Key)
 {
+    NTSTATUS Status;
     PWSTR LocalKeyName;
     PWSTR End;
     UNICODE_STRING KeyString;
-    NTSTATUS Status;
     PREPARSE_POINT CurrentReparsePoint;
     PMEMKEY CurrentKey;
     PCMHIVE ParentRegistryHive;
     HCELL_INDEX ParentCellOffset;
     PCM_KEY_NODE ParentKeyCell;
     PLIST_ENTRY Ptr;
-    PCM_KEY_NODE SubKeyCell;
     HCELL_INDEX BlockOffset;
 
-    DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
+    DPRINT("RegpCreateOrOpenKey('%S')\n", KeyName);
 
     if (*KeyName == OBJ_NAME_PATH_SEPARATOR)
     {
@@ -431,7 +446,7 @@ RegpOpenOrCreateKey(
 
         ParentKeyCell = (PCM_KEY_NODE)HvGetCell(&ParentRegistryHive->Hive, ParentCellOffset);
         if (!ParentKeyCell)
-            return STATUS_UNSUCCESSFUL;
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
         VERIFY_KEY_CELL(ParentKeyCell);
 
@@ -463,11 +478,19 @@ RegpOpenOrCreateKey(
                                   Volatile,
                                   &BlockOffset);
         }
+        else // if (BlockOffset == HCELL_NIL)
+        {
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        }
 
         HvReleaseCell(&ParentRegistryHive->Hive, ParentCellOffset);
 
         if (!NT_SUCCESS(Status))
-            return ERROR_UNSUCCESSFUL;
+        {
+            DPRINT("RegpCreateOrOpenKey('%S'): Could not create or open subkey '%.*S', Status 0x%08x\n",
+                   KeyName, (int)(KeyString.Length / sizeof(WCHAR)), KeyString.Buffer, Status);
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        }
 
         ParentCellOffset = BlockOffset;
         if (End)
@@ -478,9 +501,21 @@ RegpOpenOrCreateKey(
 
     CurrentKey = CreateInMemoryStructure(ParentRegistryHive, ParentCellOffset);
     if (!CurrentKey)
-        return ERROR_OUTOFMEMORY;
+        return ERROR_NOT_ENOUGH_MEMORY; // STATUS_NO_MEMORY;
 
     *Key = MEMKEY_TO_HKEY(CurrentKey);
+
+    return ERROR_SUCCESS;
+}
+
+LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey)
+{
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+
+    /* Free the object */
+    free(Key);
 
     return ERROR_SUCCESS;
 }
@@ -491,26 +526,7 @@ RegCreateKeyW(
     IN LPCWSTR lpSubKey,
     OUT PHKEY phkResult)
 {
-    return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
-}
-
-LONG WINAPI
-RegDeleteKeyW(
-    IN HKEY hKey,
-    IN LPCWSTR lpSubKey)
-{
-    DPRINT1("RegDeleteKeyW(0x%p, '%S') is UNIMPLEMENTED!\n",
-            hKey, (lpSubKey ? lpSubKey : L""));
-    return ERROR_SUCCESS;
-}
-
-LONG WINAPI
-RegOpenKeyW(
-    IN HKEY hKey,
-    IN LPCWSTR lpSubKey,
-    OUT PHKEY phkResult)
-{
-    return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
+    return RegpCreateOrOpenKey(hKey, lpSubKey, TRUE, FALSE, phkResult);
 }
 
 LONG WINAPI
@@ -525,11 +541,115 @@ RegCreateKeyExW(
     OUT PHKEY phkResult,
     OUT LPDWORD lpdwDisposition OPTIONAL)
 {
-    return RegpOpenOrCreateKey(hKey,
+    return RegpCreateOrOpenKey(hKey,
                                lpSubKey,
                                TRUE,
                                (dwOptions & REG_OPTION_VOLATILE) != 0,
                                phkResult);
+}
+
+LONG WINAPI
+RegDeleteKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey)
+{
+    LONG rc;
+    NTSTATUS Status;
+    HKEY hTargetKey;
+    PMEMKEY Key; // ParentKey
+    PHHIVE Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_NODE Parent;
+    HCELL_INDEX ParentCell;
+
+    if (lpSubKey)
+    {
+        rc = RegOpenKeyW(hKey, lpSubKey, &hTargetKey);
+        if (rc != ERROR_SUCCESS)
+            return rc;
+    }
+    else
+    {
+        hTargetKey = hKey;
+        rc = ERROR_SUCCESS;
+    }
+
+    /* Don't allow deleting the root */
+    if (hTargetKey == RootKey)
+    {
+        /* Fail */
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
+        goto Quit;
+    }
+
+    /* Get the hive and node */
+    Key = HKEY_TO_MEMKEY(hTargetKey);
+    Hive = &Key->RegistryHive->Hive;
+
+    /* Get the key node */
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+    {
+        rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        goto Quit;
+    }
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Check if we don't have any children */
+    if (!(KeyNode->SubKeyCounts[Stable] + KeyNode->SubKeyCounts[Volatile]) &&
+        !(KeyNode->Flags & KEY_NO_DELETE))
+    {
+        /* Get the parent and free the cell */
+        ParentCell = KeyNode->Parent;
+        Status = CmpFreeKeyByCell(Hive, Key->KeyCellOffset, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the parent node */
+            Parent = (PCM_KEY_NODE)HvGetCell(Hive, ParentCell);
+            if (Parent)
+            {
+                /* Make sure we're dirty */
+                ASSERT(HvIsCellDirty(Hive, ParentCell));
+
+                /* Update the write time */
+                KeQuerySystemTime(&Parent->LastWriteTime);
+
+                /* Release the cell */
+                HvReleaseCell(Hive, ParentCell);
+            }
+
+            rc = ERROR_SUCCESS;
+        }
+        else
+        {
+            /* Fail */
+            rc = ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+        }
+    }
+    else
+    {
+        /* Fail */
+        rc = ERROR_ACCESS_DENIED; // STATUS_CANNOT_DELETE;
+    }
+
+    /* Release the cell */
+    HvReleaseCell(Hive, Key->KeyCellOffset);
+
+Quit:
+    if (lpSubKey)
+        RegCloseKey(hTargetKey);
+
+    return rc;
+}
+
+LONG WINAPI
+RegOpenKeyW(
+    IN HKEY hKey,
+    IN LPCWSTR lpSubKey,
+    OUT PHKEY phkResult)
+{
+    return RegpCreateOrOpenKey(hKey, lpSubKey, FALSE, FALSE, phkResult);
 }
 
 LONG WINAPI
@@ -545,6 +665,7 @@ RegSetValueExW(
     PHHIVE Hive;
     PCM_KEY_NODE KeyNode; // ParentNode
     PCM_KEY_VALUE ValueCell;
+    ULONG ChildIndex;
     HCELL_INDEX CellIndex;
     UNICODE_STRING ValueNameString;
 
@@ -558,7 +679,7 @@ RegSetValueExW(
 
         /* Special handling of registry links */
         if (cbData != sizeof(PVOID))
-            return STATUS_INVALID_PARAMETER;
+            return ERROR_INVALID_PARAMETER; // STATUS_INVALID_PARAMETER;
 
         DestKey = HKEY_TO_MEMKEY(*(PHKEY)lpData);
 
@@ -566,20 +687,20 @@ RegSetValueExW(
 
         /* Create the link in registry hive (if applicable) */
         if (Key->RegistryHive != DestKey->RegistryHive)
-            return STATUS_SUCCESS;
+            return ERROR_SUCCESS;
 
         DPRINT1("Save link to registry\n");
-        return STATUS_NOT_IMPLEMENTED;
+        return ERROR_INVALID_FUNCTION; // STATUS_NOT_IMPLEMENTED;
     }
 
     if ((cbData & ~CM_KEY_VALUE_SPECIAL_SIZE) != cbData)
-        return STATUS_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     Hive = &Key->RegistryHive->Hive;
 
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
     if (!KeyNode)
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -588,12 +709,23 @@ RegSetValueExW(
 
     /* Initialize value name string */
     RtlInitUnicodeString(&ValueNameString, lpValueName);
-    CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
+    if (!CmpFindNameInList(Hive,
+                           &KeyNode->ValueList,
+                           &ValueNameString,
+                           &ChildIndex,
+                           &CellIndex))
+    {
+        /* Sanity check */
+        ASSERT(CellIndex == HCELL_NIL);
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
     if (CellIndex == HCELL_NIL)
     {
         /* The value doesn't exist, create a new one */
         Status = CmiAddValueKey(Key->RegistryHive,
                                 KeyNode,
+                                ChildIndex,
                                 &ValueNameString,
                                 &ValueCell,
                                 &CellIndex);
@@ -609,7 +741,7 @@ RegSetValueExW(
     // /**/HvReleaseCell(Hive, CellIndex);/**/
 
     if (!NT_SUCCESS(Status))
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     /* Get size of the allocated cell (if any) */
     if (!(ValueCell->DataLength & CM_KEY_VALUE_SPECIAL_SIZE) &&
@@ -617,7 +749,7 @@ RegSetValueExW(
     {
         DataCell = HvGetCell(Hive, ValueCell->Data);
         if (!DataCell)
-            return ERROR_UNSUCCESSFUL;
+            return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
         DataCellSize = (ULONG)(-HvGetCellSize(Hive, DataCell));
     }
@@ -652,7 +784,7 @@ RegSetValueExW(
             if (NewOffset == HCELL_NIL)
             {
                 DPRINT("HvAllocateCell() has failed!\n");
-                return ERROR_UNSUCCESSFUL;
+                return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
             }
 
             if (DataCell)
@@ -686,7 +818,7 @@ RegSetValueExW(
 }
 
 
-// Synced with freeldr/windows/registry.c
+// Synced with freeldr/ntldr/registry.c
 static
 VOID
 RepGetValueData(
@@ -725,7 +857,7 @@ RepGetValueData(
     }
 }
 
-// Similar to RegQueryValue in freeldr/windows/registry.c
+// Similar to RegQueryValue in freeldr/ntldr/registry.c
 LONG WINAPI
 RegQueryValueExW(
     IN HKEY hKey,
@@ -744,7 +876,7 @@ RegQueryValueExW(
 
     KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, ParentKey->KeyCellOffset);
     if (!KeyNode)
-        return ERROR_UNSUCCESSFUL;
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
 
     ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
 
@@ -752,7 +884,7 @@ RegQueryValueExW(
     RtlInitUnicodeString(&ValueNameString, lpValueName);
     CellIndex = CmpFindValueByName(Hive, KeyNode, &ValueNameString);
     if (CellIndex == HCELL_NIL)
-        return ERROR_FILE_NOT_FOUND;
+        return ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
 
     /* Get the value cell */
     ValueCell = HvGetCell(Hive, CellIndex);
@@ -770,9 +902,108 @@ RegDeleteValueW(
     IN HKEY hKey,
     IN LPCWSTR lpValueName OPTIONAL)
 {
-    DPRINT1("RegDeleteValueW(0x%p, '%S') is UNIMPLEMENTED!\n",
-            hKey, (lpValueName ? lpValueName : L""));
-    return ERROR_UNSUCCESSFUL;
+    LONG rc;
+    NTSTATUS Status;
+    PMEMKEY Key = HKEY_TO_MEMKEY(hKey); // ParentKey
+    PHHIVE Hive = &Key->RegistryHive->Hive;
+    PCM_KEY_NODE KeyNode; // ParentNode
+    PCM_KEY_VALUE ValueCell;
+    HCELL_INDEX CellIndex;
+    ULONG ChildIndex;
+    UNICODE_STRING ValueNameString;
+
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Key->KeyCellOffset);
+    if (!KeyNode)
+        return ERROR_GEN_FAILURE; // STATUS_UNSUCCESSFUL;
+
+    ASSERT(KeyNode->Signature == CM_KEY_NODE_SIGNATURE);
+
+    /* Initialize value name string */
+    RtlInitUnicodeString(&ValueNameString, lpValueName);
+    if (!CmpFindNameInList(Hive,
+                           &KeyNode->ValueList,
+                           &ValueNameString,
+                           &ChildIndex,
+                           &CellIndex))
+    {
+        /* Sanity check */
+        ASSERT(CellIndex == HCELL_NIL);
+    }
+    if (CellIndex == HCELL_NIL)
+    {
+        rc = ERROR_FILE_NOT_FOUND; // STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quit;
+    }
+
+    /* We found the value, mark all relevant cells dirty */
+    HvMarkCellDirty(Hive, Key->KeyCellOffset, FALSE);
+    HvMarkCellDirty(Hive, KeyNode->ValueList.List, FALSE);
+    HvMarkCellDirty(Hive, CellIndex, FALSE);
+
+    /* Get the key value */
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(Hive, CellIndex);
+    ASSERT(ValueCell);
+
+    /* Mark it and all related data as dirty */
+    if (!CmpMarkValueDataDirty(Hive, ValueCell))
+    {
+        /* Not enough log space, fail */
+        rc = ERROR_NO_LOG_SPACE; // STATUS_NO_LOG_SPACE;
+        goto Quit;
+    }
+
+    /* Sanity checks */
+    ASSERT(HvIsCellDirty(Hive, KeyNode->ValueList.List));
+    ASSERT(HvIsCellDirty(Hive, CellIndex));
+
+    /* Remove the value from the child list */
+    Status = CmpRemoveValueFromList(Hive, ChildIndex, &KeyNode->ValueList);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set known error */
+        rc = ERROR_NO_SYSTEM_RESOURCES; // STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Remove the value and its data itself */
+    if (!CmpFreeValue(Hive, CellIndex))
+    {
+        /* Failed to free the value, fail */
+        rc = ERROR_NO_SYSTEM_RESOURCES; // STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Set the last write time */
+    KeQuerySystemTime(&KeyNode->LastWriteTime);
+
+    /* Sanity check */
+    ASSERT(HvIsCellDirty(Hive, Key->KeyCellOffset));
+
+    /* Check if the value list is empty now */
+    if (!KeyNode->ValueList.Count)
+    {
+        /* Then clear key node data */
+        KeyNode->MaxValueNameLen = 0;
+        KeyNode->MaxValueDataLen = 0;
+    }
+
+    /* Change default Status to success */
+    rc = ERROR_SUCCESS;
+
+Quit:
+    /* Check if we had a value */
+    if (ValueCell)
+    {
+        /* Release the child cell */
+        ASSERT(CellIndex != HCELL_NIL);
+        HvReleaseCell(Hive, CellIndex);
+    }
+
+    /* Release the parent cell, if any */
+    if (KeyNode)
+        HvReleaseCell(Hive, Key->KeyCellOffset);
+
+    return rc;
 }
 
 
@@ -785,9 +1016,9 @@ ConnectRegistry(
     IN PCWSTR Path)
 {
     NTSTATUS Status;
+    LONG rc;
     PREPARSE_POINT ReparsePoint;
     PMEMKEY NewKey;
-    LONG rc;
 
     ReparsePoint = (PREPARSE_POINT)malloc(sizeof(*ReparsePoint));
     if (!ReparsePoint)
@@ -819,7 +1050,7 @@ ConnectRegistry(
     if (!NT_SUCCESS(Status))
         DPRINT1("Failed to add security for root key '%S'\n", Path);
 
-    /* Create key */
+    /* Create the key */
     rc = RegCreateKeyExW(RootKey,
                          Path,
                          0,
@@ -853,6 +1084,7 @@ CreateSymLink(
     // IN PCWSTR TargetKeyPath OPTIONAL,
     IN HKEY TargetKeyHandle)
 {
+    LONG rc;
     PMEMKEY LinkKey, TargetKey;
     PREPARSE_POINT ReparsePoint;
 
@@ -863,15 +1095,20 @@ CreateSymLink(
     if (LinkKeyPath && !(LinkKeyHandle && *LinkKeyHandle))
     {
         /* Create the link key */
-        RegCreateKeyExW(NULL,
-                        LinkKeyPath,
-                        0,
-                        NULL,
-                        REG_OPTION_VOLATILE,
-                        0,
-                        NULL,
-                        (HKEY*)&LinkKey,
-                        NULL);
+        rc = RegCreateKeyExW(NULL,
+                             LinkKeyPath,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             0,
+                             NULL,
+                             (PHKEY)&LinkKey,
+                             NULL);
+        if (rc != ERROR_SUCCESS)
+        {
+            free(ReparsePoint);
+            return FALSE;
+        }
     }
     else if (LinkKeyHandle)
     {
@@ -941,6 +1178,8 @@ RegInitializeRegistry(
     /* Create the 'CurrentControlSet' key as a symlink to 'ControlSet001' */
     CreateSymLink(L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
                   NULL, ControlSetKey);
+
+    RegCloseKey(ControlSetKey);
 
 #if 0
     /* Link SECURITY to SAM */

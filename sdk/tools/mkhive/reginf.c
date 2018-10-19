@@ -34,19 +34,23 @@
 #define NDEBUG
 #include "mkhive.h"
 
-#define FLG_ADDREG_BINVALUETYPE           0x00000001
-#define FLG_ADDREG_NOCLOBBER              0x00000002
-#define FLG_ADDREG_DELVAL                 0x00000004
-#define FLG_ADDREG_APPEND                 0x00000008
-#define FLG_ADDREG_KEYONLY                0x00000010
-#define FLG_ADDREG_OVERWRITEONLY          0x00000020
-#define FLG_ADDREG_TYPE_SZ                0x00000000
-#define FLG_ADDREG_TYPE_MULTI_SZ          0x00010000
-#define FLG_ADDREG_TYPE_EXPAND_SZ         0x00020000
-#define FLG_ADDREG_TYPE_BINARY           (0x00000000 | FLG_ADDREG_BINVALUETYPE)
-#define FLG_ADDREG_TYPE_DWORD            (0x00010000 | FLG_ADDREG_BINVALUETYPE)
-#define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
-#define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
+#define FLG_ADDREG_BINVALUETYPE         0x00000001
+#define FLG_ADDREG_NOCLOBBER            0x00000002
+#define FLG_ADDREG_DELVAL               0x00000004
+#define FLG_ADDREG_APPEND               0x00000008
+#define FLG_ADDREG_KEYONLY              0x00000010
+#define FLG_ADDREG_OVERWRITEONLY        0x00000020
+#define FLG_ADDREG_KEYONLY_COMMON       0x00002000
+#define FLG_DELREG_KEYONLY_COMMON       FLG_ADDREG_KEYONLY_COMMON
+#define FLG_ADDREG_DELREG_BIT           0x00008000
+
+#define FLG_ADDREG_TYPE_SZ              0x00000000
+#define FLG_ADDREG_TYPE_MULTI_SZ        0x00010000
+#define FLG_ADDREG_TYPE_EXPAND_SZ       0x00020000
+#define FLG_ADDREG_TYPE_BINARY         (0x00000000 | FLG_ADDREG_BINVALUETYPE)
+#define FLG_ADDREG_TYPE_DWORD          (0x00010000 | FLG_ADDREG_BINVALUETYPE)
+#define FLG_ADDREG_TYPE_NONE           (0x00020000 | FLG_ADDREG_BINVALUETYPE)
+#define FLG_ADDREG_TYPE_MASK           (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
 
 static const WCHAR HKCR[] = {'H','K','C','R',0};
@@ -118,8 +122,8 @@ get_root_key(PWCHAR Name)
 static VOID
 append_multi_sz_value(
     IN HKEY KeyHandle,
-    IN PWCHAR ValueName,
-    IN PWCHAR Strings,
+    IN PCWSTR ValueName,
+    IN PCWSTR Strings,
     IN ULONG StringSize) // In characters
 {
     ULONG Size, Total;   // In bytes
@@ -194,7 +198,7 @@ done:
 static BOOL
 do_reg_operation(
     IN HKEY KeyHandle,
-    IN PWCHAR ValueName,
+    IN PCWSTR ValueName,
     IN PINFCONTEXT Context,
     IN ULONG Flags)
 {
@@ -203,21 +207,21 @@ do_reg_operation(
     ULONG Size;
     LONG Error;
 
-    if (Flags & FLG_ADDREG_DELVAL)  /* deletion */
+    if (Flags & (FLG_ADDREG_DELREG_BIT | FLG_ADDREG_DELVAL))  /* deletion */
     {
-        if (ValueName)
+        if (ValueName && *ValueName && !(Flags & FLG_DELREG_KEYONLY_COMMON))
         {
+            // NOTE: We don't currently handle deleting sub-values inside multi-strings.
             RegDeleteValueW(KeyHandle, ValueName);
         }
         else
         {
             RegDeleteKeyW(KeyHandle, NULL);
         }
-
         return TRUE;
     }
 
-    if (Flags & FLG_ADDREG_KEYONLY)
+    if (Flags & (FLG_ADDREG_KEYONLY | FLG_ADDREG_KEYONLY_COMMON))
         return TRUE;
 
     if (Flags & (FLG_ADDREG_NOCLOBBER | FLG_ADDREG_OVERWRITEONLY))
@@ -228,6 +232,7 @@ do_reg_operation(
                                  NULL,
                                  NULL,
                                  NULL);
+
         if ((Error == ERROR_SUCCESS) && (Flags & FLG_ADDREG_NOCLOBBER))
             return TRUE;
 
@@ -390,7 +395,7 @@ do_reg_operation(
  * Called once for each AddReg and DelReg entry in a given section.
  */
 static BOOL
-registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
+registry_callback(HINF hInf, PCWSTR Section, BOOL Delete)
 {
     WCHAR Buffer[MAX_INF_STRING_LENGTH];
     PWCHAR ValuePtr;
@@ -405,30 +410,36 @@ registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
     if (!Ok)
         return TRUE; /* Don't fail if the section isn't present */
 
-    for (;Ok; Ok = (InfHostFindNextLine(Context, Context) == 0))
+    for (Ok = TRUE; Ok; Ok = (InfHostFindNextLine(Context, Context) == 0))
     {
-        /* get root */
+        /* Get root */
         if (InfHostGetStringField(Context, 1, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL) != 0)
             continue;
         if (!get_root_key(Buffer))
             continue;
 
-        /* get key */
+        /* Get key */
         Length = strlenW(Buffer);
         if (InfHostGetStringField(Context, 2, Buffer + Length, sizeof(Buffer)/sizeof(WCHAR) - (ULONG)Length, NULL) != 0)
             *Buffer = 0;
 
         DPRINT("KeyName: <%S>\n", Buffer);
 
+        /* Get flags */
+        if (InfHostGetIntField(Context, 4, (INT*)&Flags) != 0)
+            Flags = 0;
+
         if (Delete)
         {
-            Flags = FLG_ADDREG_DELVAL;
+            if (!Flags)
+                Flags = FLG_ADDREG_DELREG_BIT;
+            else if (!(Flags & FLG_ADDREG_DELREG_BIT))
+                continue; /* ignore this entry */
         }
         else
         {
-            /* get flags */
-            if (InfHostGetIntField(Context, 4, (INT *)&Flags) != 0)
-                Flags = 0;
+            if (Flags & FLG_ADDREG_DELREG_BIT)
+                continue; /* ignore this entry */
         }
 
         DPRINT("Flags: 0x%x\n", Flags);
@@ -450,7 +461,7 @@ registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
             }
         }
 
-        /* get value name */
+        /* Get value name */
         if (InfHostGetStringField(Context, 3, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL) == 0)
         {
             ValuePtr = Buffer;
@@ -460,11 +471,14 @@ registry_callback(HINF hInf, PWCHAR Section, BOOL Delete)
             ValuePtr = NULL;
         }
 
-        /* and now do it */
+        /* And now do it */
         if (!do_reg_operation(KeyHandle, ValuePtr, Context, Flags))
         {
+            RegCloseKey(KeyHandle);
             return FALSE;
         }
+
+        RegCloseKey(KeyHandle);
     }
 
     InfHostFreeContext(Context);

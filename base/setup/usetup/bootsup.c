@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
- * PROGRAMMER:
+ * PROGRAMMERS:     ...
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #include "usetup.h"
@@ -11,6 +12,20 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * BIG FIXME!!
+ * ===========
+ *
+ * All that stuff *MUST* go into the fsutil.c module.
+ * Indeed, all that relates to filesystem formatting details and as such
+ * *MUST* be abstracted out from this module (bootsup.c).
+ * However, bootsup.c can still deal with MBR code (actually it'll have
+ * at some point to share or give it to partlist.c, because when we'll
+ * support GPT disks, things will change a bit).
+ * And, bootsup.c can still manage initializing / adding boot entries
+ * into NTLDR and FREELDR, and installing the latter, and saving the old
+ * MBR / boot sectors in files.
+ */
 #define SECTORSIZE 512
 
 #include <pshpack1.h>
@@ -94,350 +109,157 @@ C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == 3 * 512);
 
 #include <poppack.h>
 
-extern PPARTLIST PartitionList;
+/* End of BIG FIXME!! */
+
 
 /* FUNCTIONS ****************************************************************/
 
-
-static
-VOID
-CreateCommonFreeLoaderSections(
-    PINICACHE IniCache)
+static VOID
+TrimTrailingPathSeparators_UStr(
+    IN OUT PUNICODE_STRING UnicodeString)
 {
-    PINICACHESECTION IniSection;
-
-    /* Create "FREELOADER" section */
-    IniSection = IniCacheAppendSection(IniCache, L"FREELOADER");
-
-#if DBG
-    if (IsUnattendedSetup)
+    while (UnicodeString->Length >= sizeof(WCHAR) &&
+           UnicodeString->Buffer[UnicodeString->Length / sizeof(WCHAR) - 1] == OBJ_NAME_PATH_SEPARATOR)
     {
-        /* DefaultOS=ReactOS */
-        IniCacheInsertKey(IniSection,
-                          NULL,
-                          INSERT_LAST,
-                          L"DefaultOS",
-#ifndef _WINKD_
-                          L"ReactOS_KdSerial");
-#else
-                          L"ReactOS_Debug");
-#endif
+        UnicodeString->Length -= sizeof(WCHAR);
     }
-    else
-#endif
-    {
-        /* DefaultOS=ReactOS */
-        IniCacheInsertKey(IniSection,
-                          NULL,
-                          INSERT_LAST,
-                          L"DefaultOS",
-                          L"ReactOS");
-    }
-
-#if DBG
-    if (IsUnattendedSetup)
-#endif
-    {
-        /* Timeout=0 for unattended or non debug*/
-        IniCacheInsertKey(IniSection,
-                          NULL,
-                          INSERT_LAST,
-                          L"TimeOut",
-                          L"0");
-    }
-#if DBG
-    else
-    {
-        /* Timeout=0 or 10 */
-        IniCacheInsertKey(IniSection,
-                          NULL,
-                          INSERT_LAST,
-                          L"TimeOut",
-                          L"10");
-    }
-#endif
-
-    /* Create "Display" section */
-    IniSection = IniCacheAppendSection(IniCache, L"Display");
-
-    /* TitleText=ReactOS Boot Manager */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"TitleText",
-                      L"ReactOS Boot Manager");
-
-    /* StatusBarColor=Cyan */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"StatusBarColor",
-                      L"Cyan");
-
-    /* StatusBarTextColor=Black */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"StatusBarTextColor",
-                      L"Black");
-
-    /* BackdropTextColor=White */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BackdropTextColor",
-                      L"White");
-
-    /* BackdropColor=Blue */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BackdropColor",
-                      L"Blue");
-
-    /* BackdropFillStyle=Medium */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BackdropFillStyle",
-                      L"Medium");
-
-    /* TitleBoxTextColor=White */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"TitleBoxTextColor",
-                      L"White");
-
-    /* TitleBoxColor=Red */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"TitleBoxColor",
-                      L"Red");
-
-    /* MessageBoxTextColor=White */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MessageBoxTextColor",
-                      L"White");
-
-    /* MessageBoxColor=Blue */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MessageBoxColor",
-                      L"Blue");
-
-    /* MenuTextColor=White */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MenuTextColor",
-                      L"Gray");
-
-    /* MenuColor=Blue */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MenuColor",
-                      L"Black");
-
-    /* TextColor=Yellow */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"TextColor",
-                      L"Gray");
-
-    /* SelectedTextColor=Black */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SelectedTextColor",
-                      L"Black");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SelectedColor",
-                      L"Gray");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"ShowTime",
-                      L"No");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MenuBox",
-                      L"No");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"CenterMenu",
-                      L"No");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"MinimalUI",
-                      L"Yes");
-
-    /* SelectedColor=Gray */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"TimeText",
-                      L"Seconds until highlighted choice will be started automatically:   ");
 }
 
-static
-NTSTATUS
-CreateNTOSEntry(
-    PINICACHE IniCache,
-    PINICACHESECTION OSSection,
-    PWCHAR Section,
-    PWCHAR Description,
-    PWCHAR BootType,
-    PWCHAR ArcPath,
-    PWCHAR Options)
-{
-    PINICACHESECTION IniSection;
 
-    /* Insert entry into "Operating Systems" section */
-    IniCacheInsertKey(OSSection,
-                      NULL,
-                      INSERT_LAST,
-                      Section,
-                      Description);
-
-    /* Create new section */
-    IniSection = IniCacheAppendSection(IniCache, Section);
-
-    /* BootType= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      BootType);
-
-    /* SystemPath= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"SystemPath",
-                      ArcPath);
-
-    /* Options= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"Options",
-                      Options);
-
-    return STATUS_SUCCESS;
-}
-
-static
-VOID
+static VOID
 CreateFreeLoaderReactOSEntries(
-    PINICACHE IniCache,
-    PWCHAR ArcPath)
+    IN PVOID BootStoreHandle,
+    IN PCWSTR ArcPath)
 {
-    PINICACHESECTION IniSection;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+    BOOT_STORE_OPTIONS BootOptions;
 
-    /* Create "Operating Systems" section */
-    IniSection = IniCacheAppendSection(IniCache, L"Operating Systems");
+    BootEntry->Version = FreeLdr;
+    BootEntry->BootFilePath = NULL;
+
+    BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
+    RtlCopyMemory(Options->Signature,
+                  NTOS_OPTIONS_SIGNATURE,
+                  RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
+
+    Options->OsLoadPath = ArcPath;
 
     /* ReactOS */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS", L"\"ReactOS\"",
-                    L"Windows2003", ArcPath,
-                    L"");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS");
+    BootEntry->FriendlyName = L"\"ReactOS\"";
+    Options->OsLoadOptions  = NULL; // L"";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS"));
 
     /* ReactOS_Debug */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_Debug", L"\"ReactOS (Debug)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+    BootEntry->FriendlyName = L"\"ReactOS (Debug)\"";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
+
 #ifdef _WINKD_
     /* ReactOS_VBoxDebug */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_VBoxDebug", L"\"ReactOS (VBoxDebug)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=VBOX /SOS");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
+    BootEntry->FriendlyName = L"\"ReactOS (VBoxDebug)\"";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=VBOX /SOS";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
 #endif
 #if DBG
 #ifndef _WINKD_
     /* ReactOS_KdSerial */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_KdSerial", L"\"ReactOS (RosDbg)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
+    BootEntry->FriendlyName = L"\"ReactOS (RosDbg)\"";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
 #endif
 
     /* ReactOS_Screen */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_Screen", L"\"ReactOS (Screen)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=SCREEN /SOS");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Screen");
+    BootEntry->FriendlyName = L"\"ReactOS (Screen)\"";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=SCREEN /SOS";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Screen"));
 
     /* ReactOS_LogFile */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_LogFile", L"\"ReactOS (Log file)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=FILE /SOS");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_LogFile");
+    BootEntry->FriendlyName = L"\"ReactOS (Log file)\"";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=FILE /SOS";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_LogFile"));
 
     /* ReactOS_Ram */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_Ram", L"\"ReactOS (RAM Disk)\"",
-                    L"Windows2003", L"ramdisk(0)\\ReactOS",
-                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Ram");
+    BootEntry->FriendlyName = L"\"ReactOS (RAM Disk)\"";
+    Options->OsLoadPath     = L"ramdisk(0)\\ReactOS";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Ram"));
 
     /* ReactOS_EMS */
-    CreateNTOSEntry(IniCache, IniSection,
-                    L"ReactOS_EMS", L"\"ReactOS (Emergency Management Services)\"",
-                    L"Windows2003", ArcPath,
-                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200");
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_EMS");
+    BootEntry->FriendlyName = L"\"ReactOS (Emergency Management Services)\"";
+    Options->OsLoadPath     = ArcPath;
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200";
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_EMS"));
 #endif
+
+
+#if DBG
+    if (IsUnattendedSetup)
+    {
+        /* DefaultOS=ReactOS */
+#ifndef _WINKD_
+        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
+#else
+        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+#endif
+    }
+    else
+#endif
+    {
+        /* DefaultOS=ReactOS */
+        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS");
+    }
+
+#if DBG
+    if (IsUnattendedSetup)
+#endif
+    {
+        /* Timeout=0 for unattended or non debug */
+        BootOptions.Timeout = 0;
+    }
+#if DBG
+    else
+    {
+        /* Timeout=10 */
+        BootOptions.Timeout = 10;
+    }
+#endif
+
+    BootOptions.Version = FreeLdr;
+    SetBootStoreOptions(BootStoreHandle, &BootOptions, 2 | 1);
 }
 
-static
-NTSTATUS
+static NTSTATUS
 CreateFreeLoaderIniForReactOS(
-    PWCHAR IniPath,
-    PWCHAR ArcPath)
+    IN PCWSTR IniPath,
+    IN PCWSTR ArcPath)
 {
-    PINICACHE IniCache;
+    NTSTATUS Status;
+    PVOID BootStoreHandle;
 
-    /* Initialize the INI file */
-    IniCache = IniCacheCreate();
-
-    /* Create the common FreeLdr sections */
-    CreateCommonFreeLoaderSections(IniCache);
+    /* Initialize the INI file and create the common FreeLdr sections */
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Add the ReactOS entries */
-    CreateFreeLoaderReactOSEntries(IniCache, ArcPath);
+    CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
-    /* Save the INI file */
-    IniCacheSave(IniCache, IniPath);
-    IniCacheDestroy(IniCache);
-
+    /* Close the INI file */
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS;
 }
 
-static
-NTSTATUS
+static NTSTATUS
 CreateFreeLoaderIniForReactOSAndBootSector(
     IN PCWSTR IniPath,
     IN PCWSTR ArcPath,
@@ -447,191 +269,255 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     IN PCWSTR BootPartition,
     IN PCWSTR BootSector)
 {
-    PINICACHE IniCache;
-    PINICACHESECTION IniSection;
+    NTSTATUS Status;
+    PVOID BootStoreHandle;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(BOOT_SECTOR_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
+    PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
-    /* Initialize the INI file */
-    IniCache = IniCacheCreate();
-
-    /* Create the common FreeLdr sections */
-    CreateCommonFreeLoaderSections(IniCache);
+    /* Initialize the INI file and create the common FreeLdr sections */
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Add the ReactOS entries */
-    CreateFreeLoaderReactOSEntries(IniCache, (PWCHAR)ArcPath);
+    CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
-    /* Get "Operating Systems" section */
-    IniSection = IniCacheGetSection(IniCache, L"Operating Systems");
+    BootEntry->Version = FreeLdr;
+    BootEntry->BootFilePath = NULL;
 
-    /* Insert entry into "Operating Systems" section */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      (PWCHAR)Section,
-                      (PWCHAR)Description);
+    BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
+    RtlCopyMemory(Options->Signature,
+                  BOOT_SECTOR_OPTIONS_SIGNATURE,
+                  RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature));
 
-    /* Create new section */
-    IniSection = IniCacheAppendSection(IniCache, (PWCHAR)Section);
+    Options->Drive = BootDrive;
+    Options->Partition = BootPartition;
+    Options->BootSectorFileName = BootSector;
 
-    /* BootType=BootSector */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootType",
-                      L"BootSector");
+    // BootEntry->BootEntryKey = MAKESTRKEY(Section);
+    BootEntry->FriendlyName = Description;
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Section));
 
-    /* BootDrive= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootDrive",
-                      (PWCHAR)BootDrive);
+    /* Close the INI file */
+    CloseBootStore(BootStoreHandle);
+    return STATUS_SUCCESS;
+}
 
-    /* BootPartition= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootPartition",
-                      (PWCHAR)BootPartition);
+//
+// I think this function can be generalizable as:
+// "find the corresponding 'ReactOS' boot entry in this loader config file
+// (here abstraction comes there), and if none, add a new one".
+//
 
-    /* BootSector= */
-    IniCacheInsertKey(IniSection,
-                      NULL,
-                      INSERT_LAST,
-                      L"BootSectorFile",
-                      (PWCHAR)BootSector);
+typedef struct _ENUM_REACTOS_ENTRIES_DATA
+{
+    ULONG i;
+    BOOLEAN UseExistingEntry;
+    PCWSTR ArcPath;
+    WCHAR SectionName[80];
+    WCHAR OsName[80];
+} ENUM_REACTOS_ENTRIES_DATA, *PENUM_REACTOS_ENTRIES_DATA;
 
-    /* Save the INI file */
-    IniCacheSave(IniCache, (PWCHAR)IniPath);
-    IniCacheDestroy(IniCache);
+// PENUM_BOOT_ENTRIES_ROUTINE
+static NTSTATUS
+NTAPI
+EnumerateReactOSEntries(
+    IN BOOT_STORE_TYPE Type,
+    IN PBOOT_STORE_ENTRY BootEntry,
+    IN PVOID Parameter OPTIONAL)
+{
+    PENUM_REACTOS_ENTRIES_DATA Data = (PENUM_REACTOS_ENTRIES_DATA)Parameter;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+    WCHAR SystemPath[MAX_PATH];
 
+    /* We have a boot entry */
+
+    /* Check for supported boot type "Windows2003" */
+    if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
+        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
+                         NTOS_OPTIONS_SIGNATURE,
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
+    {
+        /* This is not a ReactOS entry */
+        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
+                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT1("    An installation '%S' of unsupported type %lu\n",
+                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
+        /* Continue the enumeration */
+        goto SkipThisEntry;
+    }
+
+    /* BootType is Windows2003, now check OsLoadPath */
+    if (!Options->OsLoadPath || !*Options->OsLoadPath)
+    {
+        /* Certainly not a ReactOS installation */
+        DPRINT1("    A Win2k3 install '%S' without an ARC path?!\n", BootEntry->FriendlyName);
+        /* Continue the enumeration */
+        goto SkipThisEntry;
+    }
+
+    RtlStringCchPrintfW(SystemPath, ARRAYSIZE(SystemPath), L"\"%s\"", Data->ArcPath);
+    if ((_wcsicmp(Options->OsLoadPath, Data->ArcPath) != 0) &&
+        (_wcsicmp(Options->OsLoadPath, SystemPath)    != 0))
+    {
+        /*
+         * This entry is a ReactOS entry, but the SystemRoot
+         * does not match the one we are looking for.
+         */
+        /* Continue the enumeration */
+        goto SkipThisEntry;
+    }
+
+    DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
+            BootEntry->FriendlyName, Options->OsLoadPath);
+    // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
+            // BootEntry->FriendlyName, Options->OsLoadPath);
+
+    DPRINT1("EnumerateReactOSEntries: OsLoadPath: '%S'\n", Options->OsLoadPath);
+
+    Data->UseExistingEntry = TRUE;
+    RtlStringCchCopyW(Data->OsName, ARRAYSIZE(Data->OsName), BootEntry->FriendlyName);
+
+    /* We have found our entry, stop the enumeration now! */
+    return STATUS_NO_MORE_ENTRIES;
+
+SkipThisEntry:
+    Data->UseExistingEntry = FALSE;
+    if (Type == FreeLdr && wcscmp(Data->SectionName, (PWSTR)BootEntry->BootEntryKey)== 0)
+    {
+        RtlStringCchPrintfW(Data->SectionName, ARRAYSIZE(Data->SectionName),
+                            L"ReactOS_%lu", Data->i);
+        RtlStringCchPrintfW(Data->OsName, ARRAYSIZE(Data->OsName),
+                            L"\"ReactOS %lu\"", Data->i);
+        Data->i++;
+    }
     return STATUS_SUCCESS;
 }
 
 static
 NTSTATUS
 UpdateFreeLoaderIni(
-    PWCHAR IniPath,
-    PWCHAR ArcPath)
+    IN PCWSTR IniPath,
+    IN PCWSTR ArcPath)
 {
     NTSTATUS Status;
-    PINICACHE IniCache;
-    PINICACHESECTION IniSection;
-    PINICACHESECTION OsIniSection;
-    WCHAR SectionName[80];
-    WCHAR OsName[80];
-    WCHAR SystemPath[200];
-    WCHAR SectionName2[200];
-    PWCHAR KeyData;
-    ULONG i,j;
+    PVOID BootStoreHandle;
+    ENUM_REACTOS_ENTRIES_DATA Data;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
-    Status = IniCacheLoad(&IniCache, IniPath, FALSE);
+    /* Open the INI file */
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, /*TRUE*/ FALSE);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Get "Operating Systems" section */
-    IniSection = IniCacheGetSection(IniCache, L"Operating Systems");
-    if (IniSection == NULL)
-    {
-        IniCacheDestroy(IniCache);
-        return STATUS_UNSUCCESSFUL;
-    }
-
     /* Find an existing usable or an unused section name */
-    i = 1;
-    wcscpy(SectionName, L"ReactOS");
-    wcscpy(OsName, L"\"ReactOS\"");
-    while(TRUE)
+    Data.UseExistingEntry = TRUE;
+    Data.i = 1;
+    Data.ArcPath = ArcPath;
+    RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS");
+    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
+
+    //
+    // FIXME: We temporarily use EnumerateBootStoreEntries, until
+    // both QueryBootStoreEntry and ModifyBootStoreEntry get implemented.
+    //
+    Status = EnumerateBootStoreEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
+
+    /* Create a new "ReactOS" entry if there is none already existing that suits us */
+    if (!Data.UseExistingEntry)
     {
-        Status = IniCacheGetKey(IniSection, SectionName, &KeyData);
-        if (!NT_SUCCESS(Status))
-            break;
+        // RtlStringCchPrintfW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS_%lu", Data.i);
+        // RtlStringCchPrintfW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS %lu\"", Data.i);
 
-        /* Get operation system section */
-        if (KeyData[0] == '"')
-        {
-            wcscpy(SectionName2, &KeyData[1]);
-            j = wcslen(SectionName2);
-            if (j > 0)
-            {
-                SectionName2[j-1] = 0;
-            }
-        }
-        else
-        {
-            wcscpy(SectionName2, KeyData);
-        }
+        BootEntry->Version = FreeLdr;
+        BootEntry->BootFilePath = NULL;
 
-        /* Search for an existing ReactOS entry */
-        OsIniSection = IniCacheGetSection(IniCache, SectionName2);
-        if (OsIniSection != NULL)
-        {
-            BOOLEAN UseExistingEntry = TRUE;
+        BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
+        RtlCopyMemory(Options->Signature,
+                      NTOS_OPTIONS_SIGNATURE,
+                      RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
-            /* Check for boot type "Windows2003" */
-            Status = IniCacheGetKey(OsIniSection, L"BootType", &KeyData);
-            if (NT_SUCCESS(Status))
-            {
-                if ((KeyData == NULL) ||
-                    ( (_wcsicmp(KeyData, L"Windows2003") != 0) &&
-                      (_wcsicmp(KeyData, L"\"Windows2003\"") != 0) ))
-                {
-                    /* This is not a ReactOS entry */
-                    UseExistingEntry = FALSE;
-                }
-            }
-            else
-            {
-                UseExistingEntry = FALSE;
-            }
+        Options->OsLoadPath = ArcPath;
 
-            if (UseExistingEntry)
-            {
-                /* BootType is Windows2003. Now check SystemPath. */
-                Status = IniCacheGetKey(OsIniSection, L"SystemPath", &KeyData);
-                if (NT_SUCCESS(Status))
-                {
-                    swprintf(SystemPath, L"\"%s\"", ArcPath);
-                    if ((KeyData == NULL) ||
-                        ( (_wcsicmp(KeyData, ArcPath) != 0) &&
-                          (_wcsicmp(KeyData, SystemPath) != 0) ))
-                    {
-                        /* This entry is a ReactOS entry, but the SystemRoot
-                           does not match the one we are looking for. */
-                        UseExistingEntry = FALSE;
-                    }
-                }
-                else
-                {
-                    UseExistingEntry = FALSE;
-                }
-            }
-
-            if (UseExistingEntry)
-            {
-                IniCacheDestroy(IniCache);
-                return STATUS_SUCCESS;
-            }
-        }
-
-        swprintf(SectionName, L"ReactOS_%lu", i);
-        swprintf(OsName, L"\"ReactOS %lu\"", i);
-        i++;
+        // BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
+        BootEntry->FriendlyName = Data.OsName;
+        Options->OsLoadOptions  = NULL; // L"";
+        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Data.SectionName));
     }
 
-    /* Create a new "ReactOS" entry */
-    CreateNTOSEntry(IniCache, IniSection,
-                    SectionName, OsName,
-                    L"Windows2003", ArcPath,
-                    L"");
-
-    IniCacheSave(IniCache, IniPath);
-    IniCacheDestroy(IniCache);
-
+    /* Close the INI file */
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+UpdateBootIni(
+    IN PCWSTR IniPath,
+    IN PCWSTR EntryName,    // ~= ArcPath
+    IN PCWSTR EntryValue)
+{
+    NTSTATUS Status;
+    PVOID BootStoreHandle;
+    ENUM_REACTOS_ENTRIES_DATA Data;
+
+    // NOTE: Technically it would be "BootSector"...
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+
+    /* Open the INI file */
+    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr, FALSE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Find an existing usable or an unused section name */
+    Data.UseExistingEntry = TRUE;
+    // Data.i = 1;
+    Data.ArcPath = EntryName;
+    // RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS");
+    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
+
+    //
+    // FIXME: We temporarily use EnumerateBootStoreEntries, until
+    // both QueryBootStoreEntry and ModifyBootStoreEntry get implemented.
+    //
+    Status = EnumerateBootStoreEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
+
+    /* If either the key was not found, or contains something else, add a new one */
+    if (!Data.UseExistingEntry /* ||
+        ( (Status == STATUS_NO_MORE_ENTRIES) && wcscmp(Data.OsName, EntryValue) ) */)
+    {
+        BootEntry->Version = NtLdr;
+        BootEntry->BootFilePath = NULL;
+
+        BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
+        RtlCopyMemory(Options->Signature,
+                      NTOS_OPTIONS_SIGNATURE,
+                      RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
+
+        Options->OsLoadPath = EntryName;
+
+        // BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
+        // BootEntry->FriendlyName = Data.OsName;
+        BootEntry->FriendlyName = EntryValue;
+        Options->OsLoadOptions  = NULL; // L"";
+        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(0 /*Data.SectionName*/));
+    }
+
+    /* Close the INI file */
+    CloseBootStore(BootStoreHandle);
+    return STATUS_SUCCESS; // Status;
+}
+
+
 BOOLEAN
-IsThereAValidBootSector(PWSTR RootPath)
+IsThereAValidBootSector(
+    IN PCWSTR RootPath)
 {
     /*
      * We first demand that the bootsector has a valid signature at its end.
@@ -641,9 +527,10 @@ IsThereAValidBootSector(PWSTR RootPath)
      * non-zero. If both these tests pass, then the bootsector is valid; otherwise
      * it is invalid and certainly needs to be overwritten.
      */
+
     BOOLEAN IsValid = FALSE;
     NTSTATUS Status;
-    UNICODE_STRING Name;
+    UNICODE_STRING RootPartition;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE FileHandle;
@@ -655,12 +542,14 @@ IsThereAValidBootSector(PWSTR RootPath)
     BootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (BootSector == NULL)
         return FALSE; // STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(BootSector, SECTORSIZE);
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
+    /* Open the root partition - Remove any trailing backslash if needed */
+    RtlInitUnicodeString(&RootPartition, RootPath);
+    TrimTrailingPathSeparators_UStr(&RootPartition);
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &RootPartition,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
@@ -674,8 +563,7 @@ IsThereAValidBootSector(PWSTR RootPath)
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    RtlZeroMemory(BootSector, SECTORSIZE);
-
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -705,9 +593,9 @@ Quit:
 
 NTSTATUS
 SaveBootSector(
-    PWSTR RootPath,
-    PWSTR DstPath,
-    ULONG Length)
+    IN PCWSTR RootPath,
+    IN PCWSTR DstPath,
+    IN ULONG Length)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -722,8 +610,9 @@ SaveBootSector(
     if (BootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -743,6 +632,7 @@ SaveBootSector(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -803,371 +693,10 @@ SaveBootSector(
     return Status;
 }
 
-static
-NTSTATUS
-InstallFat16BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT_BOOTSECTOR OrigBootSector;
-    PFAT_BOOTSECTOR NewBootSector;
-
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        &FileOffset,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        SECTORSIZE,
-                        &FileOffset,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write new bootsector to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_OVERWRITE_IF,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
-
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-
-    return Status;
-}
-
-static
-NTSTATUS
-InstallFat32BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT32_BOOTSECTOR OrigBootSector;
-    PFAT32_BOOTSECTOR NewBootSector;
-
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector (2 sectors) */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        2 * SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT32 BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
-
-    /* Disable the backup boot sector */
-    NewBootSector->BackupBootSector = 0;
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write the first sector of the new bootcode to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_SUPERSEDE,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Write the second sector of the new bootcode to boot disk sector 14 */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         ((PUCHAR)NewBootSector + SECTORSIZE),
-                         SECTORSIZE,
-                         &FileOffset,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-    }
-    NtClose(FileHandle);
-
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-
-    return Status;
-}
-
-
 NTSTATUS
 InstallMbrBootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1179,15 +708,13 @@ InstallMbrBootCodeToDisk(
     PPARTITION_SECTOR NewBootSector;
 
     /* Allocate buffer for original bootsector */
-    OrigBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
-                     0,
-                     sizeof(PARTITION_SECTOR));
+    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(PARTITION_SECTOR));
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name,
-                         RootPath);
+    /* Open the root partition - Remove any trailing backslash if needed */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1207,6 +734,7 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -1225,9 +753,7 @@ InstallMbrBootCodeToDisk(
     }
 
     /* Allocate buffer for new bootsector */
-    NewBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
-                    0,
-                    sizeof(PARTITION_SECTOR));
+    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(PARTITION_SECTOR));
     if (NewBootSector == NULL)
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1279,13 +805,15 @@ InstallMbrBootCodeToDisk(
      */
     RtlCopyMemory(&NewBootSector->Signature,
                   &OrigBootSector->Signature,
-                  sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
+                  sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature)
+                    /* Length of partition table */);
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1306,6 +834,7 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
+    /* Write new bootsector to RootPath */
     FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -1324,11 +853,12 @@ InstallMbrBootCodeToDisk(
     return Status;
 }
 
+
 static
 NTSTATUS
 InstallFat12BootCodeToFloppy(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1344,8 +874,9 @@ InstallFat12BootCodeToFloppy(
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1365,6 +896,7 @@ InstallFat12BootCodeToFloppy(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -1440,8 +972,9 @@ InstallFat12BootCodeToFloppy(
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1462,6 +995,7 @@ InstallFat12BootCodeToFloppy(
         return Status;
     }
 
+    /* Write new bootsector to RootPath */
     FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
                          NULL,
@@ -1482,9 +1016,10 @@ InstallFat12BootCodeToFloppy(
 
 static
 NTSTATUS
-InstallFat16BootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+InstallFat16BootCode(
+    IN PCWSTR SrcPath,          // FAT16 bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) FAT16 information
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1495,34 +1030,14 @@ InstallFat16BootCodeToDisk(
     PFAT_BOOTSECTOR OrigBootSector;
     PFAT_BOOTSECTOR NewBootSector;
 
-    /* Allocate buffer for original bootsector */
+    /* Allocate a buffer for the original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
+    /* Read the current partition boot sector into the buffer */
     FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
+    Status = NtReadFile(RootPartition,
                         NULL,
                         NULL,
                         NULL,
@@ -1531,14 +1046,13 @@ InstallFat16BootCodeToDisk(
                         SECTORSIZE,
                         &FileOffset,
                         NULL);
-    NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
         return Status;
     }
 
-    /* Allocate buffer for new bootsector */
+    /* Allocate a buffer for the new bootsector */
     NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (NewBootSector == NULL)
     {
@@ -1546,15 +1060,13 @@ InstallFat16BootCodeToDisk(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Read new bootsector from SrcPath */
+    /* Read the new bootsector from SrcPath */
     RtlInitUnicodeString(&Name, SrcPath);
-
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -1568,6 +1080,7 @@ InstallFat16BootCodeToDisk(
         return Status;
     }
 
+    FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
                         NULL,
@@ -1575,7 +1088,7 @@ InstallFat16BootCodeToDisk(
                         &IoStatusBlock,
                         NewBootSector,
                         SECTORSIZE,
-                        NULL,
+                        &FileOffset,
                         NULL);
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
@@ -1585,7 +1098,7 @@ InstallFat16BootCodeToDisk(
         return Status;
     }
 
-    /* Adjust bootsector (copy a part of the FAT16 BPB) */
+    /* Adjust the bootsector (copy a part of the FAT16 BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
@@ -1594,30 +1107,9 @@ InstallFat16BootCodeToDisk(
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to RootPath */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
+    /* Write the new bootsector to DstPath */
     FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
+    Status = NtWriteFile(DstPath,
                          NULL,
                          NULL,
                          NULL,
@@ -1626,7 +1118,6 @@ InstallFat16BootCodeToDisk(
                          SECTORSIZE,
                          &FileOffset,
                          NULL);
-    NtClose(FileHandle);
 
     /* Free the new boot sector */
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
@@ -1636,9 +1127,124 @@ InstallFat16BootCodeToDisk(
 
 static
 NTSTATUS
-InstallFat32BootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+InstallFat16BootCodeToFile(
+    IN PCWSTR SrcPath,
+    IN PCWSTR DstPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle, FileHandle;
+
+    /*
+     * Open the root partition from which the boot sector
+     * parameters will be obtained.
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open or create the file where the new bootsector will be saved */
+    RtlInitUnicodeString(&Name, DstPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0, // OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_OVERWRITE_IF,
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+        NtClose(PartitionHandle);
+        return Status;
+    }
+
+    /* Install the FAT16 boot sector */
+    Status = InstallFat16BootCode(SrcPath, FileHandle, PartitionHandle);
+
+    /* Close the file and the partition */
+    NtClose(FileHandle);
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
+static
+NTSTATUS
+InstallFat16BootCodeToDisk(
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle;
+
+    /*
+     * Open the root partition from which the boot sector parameters will be
+     * obtained; this is also where we will write the updated boot sector.
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Install the FAT16 boot sector */
+    Status = InstallFat16BootCode(SrcPath, PartitionHandle, PartitionHandle);
+
+    /* Close the partition */
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+InstallFat32BootCode(
+    IN PCWSTR SrcPath,          // FAT32 bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) FAT32 information
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1650,34 +1256,14 @@ InstallFat32BootCodeToDisk(
     PFAT32_BOOTSECTOR NewBootSector;
     USHORT BackupBootSector;
 
-    /* Allocate buffer for original bootsector */
+    /* Allocate a buffer for the original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
+    /* Read the current boot sector into the buffer */
     FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
+    Status = NtReadFile(RootPartition,
                         NULL,
                         NULL,
                         NULL,
@@ -1686,15 +1272,13 @@ InstallFat32BootCodeToDisk(
                         SECTORSIZE,
                         &FileOffset,
                         NULL);
-    NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
         return Status;
     }
 
-
-    /* Allocate buffer for new bootsector (2 sectors) */
+    /* Allocate a buffer for the new bootsector (2 sectors) */
     NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
     if (NewBootSector == NULL)
     {
@@ -1702,15 +1286,13 @@ InstallFat32BootCodeToDisk(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Read new bootsector from SrcPath */
+    /* Read the new bootsector from SrcPath */
     RtlInitUnicodeString(&Name, SrcPath);
-
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -1724,6 +1306,7 @@ InstallFat32BootCodeToDisk(
         return Status;
     }
 
+    FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
                         NULL,
@@ -1731,7 +1314,7 @@ InstallFat32BootCodeToDisk(
                         &IoStatusBlock,
                         NewBootSector,
                         2 * SECTORSIZE,
-                        NULL,
+                        &FileOffset,
                         NULL);
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
@@ -1741,43 +1324,33 @@ InstallFat32BootCodeToDisk(
         return Status;
     }
 
-    /* Adjust bootsector (copy a part of the FAT32 BPB) */
+    /* Adjust the bootsector (copy a part of the FAT32 BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
-    /* Get the location of the backup boot sector */
-    BackupBootSector = OrigBootSector->BackupBootSector;
+    /*
+     * We know we copy the boot code to a file only when DstPath != RootPartition,
+     * otherwise the boot code is copied to the specified root partition.
+     */
+    if (DstPath != RootPartition)
+    {
+        /* Copy to a file: Disable the backup boot sector */
+        NewBootSector->BackupBootSector = 0;
+    }
+    else
+    {
+        /* Copy to a disk: Get the location of the backup boot sector */
+        BackupBootSector = OrigBootSector->BackupBootSector;
+    }
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write the first sector of the new bootcode to DstPath */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Write sector 0 */
+    /* Write the first sector of the new bootcode to DstPath sector 0 */
     FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
+    Status = NtWriteFile(DstPath,
                          NULL,
                          NULL,
                          NULL,
@@ -1789,36 +1362,38 @@ InstallFat32BootCodeToDisk(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
         RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
     }
 
-    /* Write backup boot sector */
-    if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
+    if (DstPath == RootPartition)
     {
-        FileOffset.QuadPart = (ULONGLONG)((ULONG)BackupBootSector * SECTORSIZE);
-        Status = NtWriteFile(FileHandle,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &IoStatusBlock,
-                             NewBootSector,
-                             SECTORSIZE,
-                             &FileOffset,
-                             NULL);
-        if (!NT_SUCCESS(Status))
+        /* Copy to a disk: Write the backup boot sector */
+        if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
         {
-            DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-            NtClose(FileHandle);
-            RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-            return Status;
+            FileOffset.QuadPart = (ULONGLONG)((ULONG)BackupBootSector * SECTORSIZE);
+            Status = NtWriteFile(DstPath,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 NewBootSector,
+                                 SECTORSIZE,
+                                 &FileOffset,
+                                 NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+                RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+                return Status;
+            }
         }
     }
 
-    /* Write sector 14 */
+    /* Write the second sector of the new bootcode to boot disk sector 14 */
+    // FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
     FileOffset.QuadPart = 14 * SECTORSIZE;
-    Status = NtWriteFile(FileHandle,
+    Status = NtWriteFile(DstPath,   // or really RootPartition ???
                          NULL,
                          NULL,
                          NULL,
@@ -1831,7 +1406,6 @@ InstallFat32BootCodeToDisk(
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
     }
-    NtClose(FileHandle);
 
     /* Free the new boot sector */
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
@@ -1841,9 +1415,126 @@ InstallFat32BootCodeToDisk(
 
 static
 NTSTATUS
+InstallFat32BootCodeToFile(
+    IN PCWSTR SrcPath,
+    IN PCWSTR DstPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle, FileHandle;
+
+    /*
+     * Open the root partition from which the boot sector parameters
+     * will be obtained.
+     * FIXME? It might be possible that we need to also open it for writing
+     * access in case we really need to still write the second portion of
+     * the boot sector ????
+     *
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open or create the file where (the first sector of ????) the new bootsector will be saved */
+    RtlInitUnicodeString(&Name, DstPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0, // OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_SUPERSEDE, // FILE_OVERWRITE_IF, <- is used for FAT16
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+        NtClose(PartitionHandle);
+        return Status;
+    }
+
+    /* Install the FAT32 boot sector */
+    Status = InstallFat32BootCode(SrcPath, FileHandle, PartitionHandle);
+
+    /* Close the file and the partition */
+    NtClose(FileHandle);
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
+static
+NTSTATUS
+InstallFat32BootCodeToDisk(
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle;
+
+    /*
+     * Open the root partition from which the boot sector parameters will be
+     * obtained; this is also where we will write the updated boot sector.
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Install the FAT32 boot sector */
+    Status = InstallFat32BootCode(SrcPath, PartitionHandle, PartitionHandle);
+
+    /* Close the partition */
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
+static
+NTSTATUS
 InstallBtrfsBootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1862,8 +1553,9 @@ InstallBtrfsBootCodeToDisk(
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1883,6 +1575,7 @@ InstallBtrfsBootCodeToDisk(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -1955,8 +1648,6 @@ InstallBtrfsBootCodeToDisk(
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
-    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
-
     /* Get the location of the backup boot sector */
     BackupBootSector = OrigBootSector->BackupBootSector;
 
@@ -1964,8 +1655,9 @@ InstallBtrfsBootCodeToDisk(
     // RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 #endif
 
-    /* Write new bootsector to RootPath */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1997,7 +1689,6 @@ InstallBtrfsBootCodeToDisk(
                                    0,
                                    &PartInfo,
                                    sizeof(PartInfo));
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (Status %lx)\n", Status);
@@ -2005,6 +1696,8 @@ InstallBtrfsBootCodeToDisk(
         RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
     }
+
+    /* Write new bootsector to RootPath */
 
     NewBootSector->PartitionStartLBA = PartInfo.StartingOffset.QuadPart / SECTORSIZE;
 
@@ -2076,203 +1769,6 @@ InstallBtrfsBootCodeToDisk(
 
 static
 NTSTATUS
-UnprotectBootIni(
-    PWSTR FileName,
-    PULONG Attributes)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_BASIC_INFORMATION FileInfo;
-    HANDLE FileHandle;
-
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (Status == STATUS_NO_SUCH_FILE)
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        *Attributes = 0;
-        return STATUS_SUCCESS;
-    }
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        return Status;
-    }
-
-    *Attributes = FileInfo.FileAttributes;
-
-    /* Delete attributes SYSTEM, HIDDEN and READONLY */
-    FileInfo.FileAttributes = FileInfo.FileAttributes &
-                              ~(FILE_ATTRIBUTE_SYSTEM |
-                                FILE_ATTRIBUTE_HIDDEN |
-                                FILE_ATTRIBUTE_READONLY);
-
-    Status = NtSetInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
-    }
-
-    NtClose(FileHandle);
-    return Status;
-}
-
-static
-NTSTATUS
-ProtectBootIni(
-    PWSTR FileName,
-    ULONG Attributes)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_BASIC_INFORMATION FileInfo;
-    HANDLE FileHandle;
-
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        return Status;
-    }
-
-    FileInfo.FileAttributes = FileInfo.FileAttributes | Attributes;
-
-    Status = NtSetInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
-    }
-
-    NtClose(FileHandle);
-    return Status;
-}
-
-static
-NTSTATUS
-UpdateBootIni(
-    PWSTR BootIniPath,
-    PWSTR EntryName,
-    PWSTR EntryValue)
-{
-    NTSTATUS Status;
-    PINICACHE Cache = NULL;
-    PINICACHESECTION Section = NULL;
-    ULONG FileAttribute;
-    PWCHAR OldValue = NULL;
-
-    Status = IniCacheLoad(&Cache, BootIniPath, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    Section = IniCacheGetSection(Cache,
-                                 L"operating systems");
-    if (Section == NULL)
-    {
-        IniCacheDestroy(Cache);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Check - maybe record already exists */
-    Status = IniCacheGetKey(Section, EntryName, &OldValue);
-
-    /* If either key was not found, or contains something else - add new one */
-    if (!NT_SUCCESS(Status) || wcscmp(OldValue, EntryValue))
-    {
-        IniCacheInsertKey(Section,
-                          NULL,
-                          INSERT_LAST,
-                          EntryName,
-                          EntryValue);
-    }
-
-    Status = UnprotectBootIni(BootIniPath,
-                              &FileAttribute);
-    if (!NT_SUCCESS(Status))
-    {
-        IniCacheDestroy(Cache);
-        return Status;
-    }
-
-    Status = IniCacheSave(Cache, BootIniPath);
-    if (!NT_SUCCESS(Status))
-    {
-        IniCacheDestroy(Cache);
-        return Status;
-    }
-
-    FileAttribute |= (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
-    Status = ProtectBootIni(BootIniPath, FileAttribute);
-
-    IniCacheDestroy(Cache);
-
-    return Status;
-}
-
-static
-NTSTATUS
 InstallFatBootcodeToPartition(
     PUNICODE_STRING SystemRootPath,
     PUNICODE_STRING SourceRootPath,
@@ -2300,15 +1796,12 @@ InstallFatBootcodeToPartition(
     }
 
     /* Prepare for possibly updating 'freeldr.ini' */
-    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
-
-    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
+    DoesFreeLdrExist = DoesFileExist_2(SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
         DPRINT1("Update existing 'freeldr.ini'\n");
-
-        Status = UpdateFreeLoaderIni(DstPath, DestinationArcPath->Buffer);
+        Status = UpdateFreeLoaderIni(SystemRootPath->Buffer, DestinationArcPath->Buffer);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
@@ -2319,8 +1812,8 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    /*** Status = FindNTOSBootLoader(PartitionHandle, NtLdr, &Version); ***/
-    /*** Status = FindNTOSBootLoader(PartitionHandle, BootMgr, &Version); ***/
+    /*** Status = FindBootStore(PartitionHandle, NtLdr, &Version); ***/
+    /*** Status = FindBootStore(PartitionHandle, BootMgr, &Version); ***/
     if (DoesFileExist_2(SystemRootPath->Buffer, L"NTLDR") == TRUE ||
         DoesFileExist_2(SystemRootPath->Buffer, L"BOOT.INI") == TRUE)
     {
@@ -2332,9 +1825,7 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
-
-            Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
+            Status = CreateFreeLoaderIniForReactOS(SystemRootPath->Buffer, DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
@@ -2376,12 +1867,10 @@ InstallFatBootcodeToPartition(
         }
 
         /* Update 'boot.ini' */
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
-
         /* Windows' NTLDR loads an external bootsector file when the specified drive
            letter is C:, otherwise it will interpret it as a boot DOS path specifier. */
-        DPRINT1("Update 'boot.ini': %S\n", DstPath);
-        Status = UpdateBootIni(DstPath,
+        DPRINT1("Update 'boot.ini'\n");
+        Status = UpdateBootIni(SystemRootPath->Buffer,
                                L"C:\\bootsect.ros",
                                L"\"ReactOS\"");
         if (!NT_SUCCESS(Status))
@@ -2406,7 +1895,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found COMPAQ MS-DOS 1.x (1.11, 1.12) / MS-DOS 1.25 boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"CPQDOS";
             Description   = L"\"COMPAQ MS-DOS 1.x / MS-DOS 1.25\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2420,7 +1909,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"MSDOS";
             Description   = L"\"MS-DOS/Windows\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2434,7 +1923,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\n");
 
-            Section       = L"DOS";
+            Section       = L"IBMDOS";
             Description   = L"\"IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2447,8 +1936,21 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found DR-DOS 3.x\n");
 
-            Section       = L"DOS";
+            Section       = L"DRDOS";
             Description   = L"\"DR-DOS 3.x\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.DOS";
+        }
+        else
+        /* Search for Dell Real-Mode Kernel (DRMK) OS */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"DELLBIO.BIN") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"DELLRMK.BIN") == TRUE)
+        {
+            DPRINT1("Found Dell Real-Mode Kernel OS\n");
+
+            Section       = L"DRMK";
+            Description   = L"\"Dell Real-Mode Kernel OS\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
             BootSector    = L"BOOTSECT.DOS";
@@ -2461,7 +1963,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found MS OS/2 1.x\n");
 
-            Section       = L"DOS";
+            Section       = L"MSOS2";
             Description   = L"\"MS OS/2 1.x\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2475,7 +1977,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found MS/IBM OS/2\n");
 
-            Section       = L"DOS";
+            Section       = L"IBMOS2";
             Description   = L"\"MS/IBM OS/2\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2487,7 +1989,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found FreeDOS boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"FDOS";
             Description   = L"\"FreeDOS\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2510,12 +2012,11 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
 
             if (IsThereAValidBootSector(SystemRootPath->Buffer))
             {
                 Status = CreateFreeLoaderIniForReactOSAndBootSector(
-                             DstPath, DestinationArcPath->Buffer,
+                             SystemRootPath->Buffer, DestinationArcPath->Buffer,
                              Section, Description,
                              BootDrive, BootPartition, BootSector);
                 if (!NT_SUCCESS(Status))
@@ -2537,7 +2038,7 @@ InstallFatBootcodeToPartition(
             }
             else
             {
-                Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
+                Status = CreateFreeLoaderIniForReactOS(SystemRootPath->Buffer, DestinationArcPath->Buffer);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
@@ -2607,16 +2108,13 @@ InstallBtrfsBootcodeToPartition(
         return Status;
     }
 
-    /* Prepare for possibly copying 'freeldr.ini' */
-    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
-
-    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
+    /* Prepare for possibly updating 'freeldr.ini' */
+    DoesFreeLdrExist = DoesFileExist_2(SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
         DPRINT1("Update existing 'freeldr.ini'\n");
-
-        Status = UpdateFreeLoaderIni(DstPath, DestinationArcPath->Buffer);
+        Status = UpdateFreeLoaderIni(SystemRootPath->Buffer, DestinationArcPath->Buffer);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
@@ -2631,7 +2129,6 @@ InstallBtrfsBootcodeToPartition(
     {
         /* Create new 'freeldr.ini' */
         DPRINT1("Create new 'freeldr.ini'\n");
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
         /* Certainly SysLinux, GRUB, LILO... or an unknown boot loader */
         DPRINT1("*nix or unknown boot loader found\n");
@@ -2641,7 +2138,7 @@ InstallBtrfsBootcodeToPartition(
             PCWSTR BootSector = L"BOOTSECT.OLD";
 
             Status = CreateFreeLoaderIniForReactOSAndBootSector(
-                         DstPath, DestinationArcPath->Buffer,
+                         SystemRootPath->Buffer, DestinationArcPath->Buffer,
                          L"Linux", L"\"Linux\"",
                          L"hd0", L"1", BootSector);
             if (!NT_SUCCESS(Status))
@@ -2663,7 +2160,7 @@ InstallBtrfsBootcodeToPartition(
         }
         else
         {
-            Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
+            Status = CreateFreeLoaderIniForReactOS(SystemRootPath->Buffer, DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
@@ -2777,10 +2274,8 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Create new 'freeldr.ini' */
-    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice.Buffer, L"freeldr.ini");
-
     DPRINT("Create new 'freeldr.ini'\n");
-    Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
+    Status = CreateFreeLoaderIniForReactOS(FloppyDevice.Buffer, DestinationArcPath->Buffer);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
@@ -2789,7 +2284,7 @@ InstallFatBootcodeToFloppy(
 
     /* Install FAT12 boosector */
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
-    RtlStringCchCopyW(DstPath, ARRAYSIZE(DstPath), FloppyDevice.Buffer);
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 1, FloppyDevice.Buffer);
 
     DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
     Status = InstallFat12BootCodeToFloppy(SrcPath, DstPath);
