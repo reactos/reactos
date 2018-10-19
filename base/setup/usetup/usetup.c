@@ -4405,10 +4405,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
         DPRINT("Found OS/2 boot manager partition\n");
         InstallOnFloppy = TRUE;
     }
-    else if (PartitionType == PARTITION_EXT2)
+    else if (PartitionType == PARTITION_LINUX)
     {
-        /* Linux EXT2 partition */
-        DPRINT("Found Linux EXT2 partition\n");
+        /* Linux partition */
+        DPRINT("Found Linux native partition (ext2/ext3/ReiserFS/BTRFS/etc)\n");
         InstallOnFloppy = FALSE;
     }
     else if (PartitionType == PARTITION_IFS)
