@@ -298,3 +298,30 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Palatino Linotype",      L"DejaVu Serif" },
     { NULL, NULL }
 };
+
+MUI_SUBFONT HindiFonts[] =
+{
+    /*Font                       Substitute  */
+    { L"Arial",                  L"Liberation Sans" },
+    { L"Courier",                L"FreeMono" },
+    { L"Courier New",            L"FreeMono" },
+    { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
+    { L"Franklin Gothic Medium", L"Libre Franklin Bold" },
+    { L"Helv",                   L"Tahoma" },
+    { L"Helvetica",              L"Liberation Sans" },
+    { L"Lucida Console",         L"DejaVu Sans Mono" },
+    { L"MS Sans Serif",          L"FreeSans" },
+    { L"MS Shell Dlg",           L"FreeSans" },
+    { L"MS Shell Dlg 2",         L"FreeSans" },
+    { L"Tahoma",                 L"FreeSans" },
+    { L"Terminal",               L"DejaVu Sans Mono" },
+    { L"Times",                  L"Liberation Serif" },
+    { L"Times New Roman",        L"Liberation Serif" },
+    { L"Tms Rmn",                L"Liberation Serif" },
+    { L"Trebuchet MS",           L"Open Sans" },
+    { L"System",                 L"FreeSans" },
+    { L"Comic Sans MS",          L"Ubuntu" },
+    { L"Georgia",                L"FreeSerif" },
+    { L"Palatino Linotype",      L"FreeSans" },
+    { NULL, NULL }
+};
