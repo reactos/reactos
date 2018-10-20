@@ -158,7 +158,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     /* Just let the object manager handle this */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 CmpKeyObjectType,
-                                ExGetPreviousMode(),
+                                PreviousMode,
                                 NULL,
                                 DesiredAccess,
                                 &ParseContext,
@@ -267,7 +267,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_ENUMERATE_SUB_KEYS,
                                        CmpKeyObjectType,
-                                       ExGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
@@ -352,7 +352,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
                                        CmpKeyObjectType,
-                                       ExGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
@@ -443,7 +443,7 @@ NtQueryKey(IN HANDLE KeyHandle,
         Status = ObReferenceObjectByHandle(KeyHandle,
                                            0,
                                            CmpKeyObjectType,
-                                           ExGetPreviousMode(),
+                                           PreviousMode,
                                            (PVOID*)&KeyObject,
                                            &HandleInfo);
         if (NT_SUCCESS(Status))
@@ -463,7 +463,7 @@ NtQueryKey(IN HANDLE KeyHandle,
         Status = ObReferenceObjectByHandle(KeyHandle,
                                            KEY_QUERY_VALUE,
                                            CmpKeyObjectType,
-                                           ExGetPreviousMode(),
+                                           PreviousMode,
                                            (PVOID*)&KeyObject,
                                            NULL);
     }
@@ -541,7 +541,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
                                        CmpKeyObjectType,
-                                       ExGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
@@ -672,7 +672,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_SET_VALUE,
                                        CmpKeyObjectType,
-                                       ExGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status))
@@ -757,7 +757,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                        KEY_SET_VALUE,
                                        CmpKeyObjectType,
                                        PreviousMode,
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -880,7 +880,6 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
     /* Validate privilege */
     if (!SeSinglePrivilegeCheck(SeRestorePrivilege, PreviousMode))
     {
-        /* Fail */
         DPRINT1("Restore Privilege missing!\n");
         return STATUS_PRIVILEGE_NOT_HELD;
     }
@@ -896,7 +895,7 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
                                            0,
                                            CmpKeyObjectType,
                                            PreviousMode,
-                                           (PVOID *)&KeyBody,
+                                           (PVOID*)&KeyBody,
                                            NULL);
     }
 
@@ -1128,6 +1127,7 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     /* Get the processor mode */
     PreviousMode = KeGetPreviousMode();
 
+    /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
     {
         /* Prepare to probe parameters */
@@ -1164,7 +1164,7 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
                                            KEY_READ,
                                            CmpKeyObjectType,
                                            PreviousMode,
-                                           (PVOID *)&KeyBody,
+                                           (PVOID*)&KeyBody,
                                            NULL);
 
         /* Close the handle */
@@ -1275,7 +1275,7 @@ NtSaveKeyEx(IN HANDLE KeyHandle,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Check for the SeBackupPrivilege */
+    /* Validate privilege */
     if (!SeSinglePrivilegeCheck(SeBackupPrivilege, PreviousMode))
     {
         return STATUS_PRIVILEGE_NOT_HELD;
@@ -1315,7 +1315,7 @@ NtSaveMergedKeys(IN HANDLE HighPrecedenceKeyHandle,
 
     PreviousMode = ExGetPreviousMode();
 
-    /* Check for the SeBackupPrivilege */
+    /* Validate privilege */
     if (!SeSinglePrivilegeCheck(SeBackupPrivilege, PreviousMode))
     {
         return STATUS_PRIVILEGE_NOT_HELD;
@@ -1392,7 +1392,6 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     /* Validate privilege */
     if (!SeSinglePrivilegeCheck(SeRestorePrivilege, PreviousMode))
     {
-        /* Fail */
         DPRINT1("Restore Privilege missing!\n");
         return STATUS_PRIVILEGE_NOT_HELD;
     }
@@ -1497,7 +1496,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
         goto Quickie;
     }
 
-    /* Check if it's a readonly key */
+    /* Check if it's a read-only key */
     if (KeyBody->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY)
     {
         /* Return appropriate status */
