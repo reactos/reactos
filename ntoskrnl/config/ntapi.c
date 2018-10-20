@@ -533,9 +533,22 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     REG_QUERY_VALUE_KEY_INFORMATION QueryValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     UNICODE_STRING ValueNameCopy = *ValueName;
+
     PAGED_CODE();
+
     DPRINT("NtQueryValueKey() KH 0x%p, VN '%wZ', KVIC %d, Length %lu\n",
         KeyHandle, ValueName, KeyValueInformationClass, Length);
+
+    /* Reject classes we don't know about */
+    if ((KeyValueInformationClass != KeyValueBasicInformation)       &&
+        (KeyValueInformationClass != KeyValueFullInformation)        &&
+        (KeyValueInformationClass != KeyValuePartialInformation)     &&
+        (KeyValueInformationClass != KeyValueFullInformationAlign64) &&
+        (KeyValueInformationClass != KeyValuePartialInformationAlign64))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
@@ -723,11 +736,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
                                Type,
                                Data,
                                DataSize);
-    }
 
-    /* Do the post-callback */
-    PostOperationInfo.Status = Status;
-    CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
+        /* Do the post-callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
+    }
 
 end:
     /* Dereference and return status */
