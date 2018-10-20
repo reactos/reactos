@@ -68,8 +68,8 @@ CAPTION "Системные параметры"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Информация о версии", IDC_STATIC, 6, 3, 210, 73
+    LTEXT "ReactOS собран как серверная ОС и сообщает приложениям об этом. Установка флажка изменит это (только для приложений).", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Представляться как рабочая станция", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    LTEXT "ReactOS собран как серверная ОС и сообщает приложениям об этом. Установка флажка изменит это (только для приложений).", IDC_STATIC, 15, 15, 183, 55
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 

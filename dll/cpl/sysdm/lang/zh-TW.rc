@@ -70,8 +70,8 @@ CAPTION "系統設置"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "作爲工作站的報告", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS建作爲服務器操作系統並沒有這樣的報告。選中此框可更改此僅對應用程序而已。", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "作爲工作站的報告", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "確定", IDOK, 166, 83, 50, 14
 END
 
