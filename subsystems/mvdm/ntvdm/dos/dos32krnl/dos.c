@@ -161,6 +161,21 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     return TRUE;
 }
 
+static BOOLEAN DosIsFileOnCdRom(VOID)
+{
+    UINT DriveType;
+    CHAR RootPathName[4];
+
+    /* Construct a simple <letter>:\ string to get drive type */
+    RootPathName[0] = Sda->CurrentDrive + 'A';
+    RootPathName[1] = ':';
+    RootPathName[2] = '\\';
+    RootPathName[3] = ANSI_NULL;
+
+    DriveType = GetDriveTypeA(RootPathName);
+    return (DriveType == DRIVE_CDROM);
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN DosControlBreak(VOID)
@@ -950,8 +965,19 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x3D:
         {
             WORD FileHandle;
+            BYTE AccessShareModes = getAL();
             LPCSTR FileName = (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX());
-            WORD ErrorCode = DosOpenFile(&FileHandle, FileName, getAL());
+            WORD ErrorCode = DosOpenFile(&FileHandle, FileName, AccessShareModes);
+
+            /*
+             * Check if we failed because we attempted to open a file for write
+             * on a CDROM drive. In that situation, attempt to reopen for read
+             */
+            if (ErrorCode == ERROR_ACCESS_DENIED &&
+                (AccessShareModes & 0x03) != 0 && DosIsFileOnCdRom())
+            {
+                ErrorCode = DosOpenFile(&FileHandle, FileName, 0);
+            }
 
             if (ErrorCode == ERROR_SUCCESS)
             {
