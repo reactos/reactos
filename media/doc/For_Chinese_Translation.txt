@@ -1,3 +1,7 @@
+The following material is addressed (in Chinese) to Chinese translators.
+
+------------------------------------------------------------------------
+
 欢迎翻译 ReactOS ！在正式开始翻译之前，希望您可以注意以下几点以便更好地进行翻译。
 
 1）Windows 的记事本会将 UTF-8 格式变成 UTF-8 BOM 格式。因此，请不要用记事本编辑 ReactOS 的文件，特别是翻译文件。您可以使用 Notepad++ 之类的第三方文本编辑器进行编辑。
