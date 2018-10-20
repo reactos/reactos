@@ -1,0 +1,31 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+[drive:]    Specifies the drive to check.\n\
+-F          Fixes errors on the disk.\n\
+-V          Displays the full path of every file on the disk.\n\
+-R          Locates bad sectors and recovers readable information.\n\
+-C          Checks the drive only if it is dirty.\n\
+\n"
+
+    IDS_PERCENT_COMPL "%d percent completed.\r"
+    IDS_FILE_SYSTEM "The type of file system is %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Volume is in use and cannot be locked\n"
+    IDS_CHKDSK_FAIL "Chkdsk was unable to complete successfully.\n\n"
+    IDS_NO_ENTRY_POINT "Could not located FMIFS entry points.\n\n"
+    IDS_BAD_ARGUMENT "Unknown argument: %s\n"
+    IDS_NO_CURRENT_DIR "Could not get current directory. Error code: "
+    IDS_NO_QUERY_VOL "Could not query volume. Error code: "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk cannot run because the volume is in use by another process.\n\n"
+END
