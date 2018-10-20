@@ -68,8 +68,8 @@ CAPTION "Cilësimet Sistemit"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Versioni Info", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Raporto si StacionPune", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
     LTEXT "ReactOS është ndërtuar si një server OS dhe raporton si të tillë. Kontrolloni këtë kuti për të ndryshuar vetëm këtë program.", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "Raporto si StacionPune", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 

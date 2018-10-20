@@ -71,8 +71,8 @@ CAPTION "系统设置"
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "报告为工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS 作为服务器操作系统而被构建，并如此被报告。选中此框可更改（仅对于应用程序有效）。", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "报告为工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "确定", IDOK, 166, 83, 50, 14
 END
 
