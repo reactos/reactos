@@ -1,0 +1,193 @@
+﻿/*
+ * PROJECT:     Notepad Hindi Translation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hindi Translation Of Notepad
+ * COPYRIGHT:   Copyright 2018 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&फ़ाइल"
+    BEGIN
+        MENUITEM "&नया\tCtrl+N", CMD_NEW
+        MENUITEM "&खोलो...\tCtrl+O", CMD_OPEN
+        MENUITEM "&सेव\tCtrl+S", CMD_SAVE
+        MENUITEM "सेव &इज़...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "पेज &सेटअप...", CMD_PAGE_SETUP
+        MENUITEM "&प्रिन्ट...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&इग्ज़िट", CMD_EXIT
+    END
+    POPUP "&संपादित करें"
+    BEGIN
+        MENUITEM "&पूर्ववत करें\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&कट\tCtrl+X", CMD_CUT
+        MENUITEM "&कॉपी\tCtrl+C", CMD_COPY
+        MENUITEM "&पेस्ट\tCtrl+V", CMD_PASTE
+        MENUITEM "&डिलीट\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&ढूंढो...\tCtrl+F", CMD_SEARCH
+        MENUITEM "&अगला ढूंढो\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&बदलले...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&के लिए जाओ...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "&सभी का चयन करे\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "समय/&तारीख\tF5", CMD_TIME_DATE
+    END
+    POPUP "&स्वरूप"
+    BEGIN
+        MENUITEM "&वर्ड रैप", CMD_WRAP
+        MENUITEM "&फ़ॉन्ट...", CMD_FONT
+    END
+    POPUP "&देखें"
+    BEGIN
+        MENUITEM "&स्टेटस बार", CMD_STATUSBAR
+    END
+    POPUP "&मदद"
+    BEGIN
+        MENUITEM "&मदद देखें", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "&नोटपैड के बारे में", CMD_ABOUT
+        MENUITEM "&जानकारी", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION " पेज सेटअप"
+BEGIN
+    GROUPBOX "प्रीव्यू", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "कागज़", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&साइज़:", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "&ट्रे:", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "अभिविन्यास", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "&पॉर्ट्रट", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&लैन्ड्स्केप", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "बॉर्डरो", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "&बाएं:", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&दाईं:", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&ऊपर:", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&तल:", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "&हैडर:", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "&फ़ुटर:", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "सहायता", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "ओके", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "रद्द करें", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "&प्रिंटर...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "एन्कोडिंग"
+BEGIN
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "एन्कोडिंग:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "लाइन का अंत:", 0x156, 5, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "गोटो लाइन"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "लाइन संख्या:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "ओके", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "रद्द करें", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस नोटपैड के बारे में"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "रिऐक्ट ओएस नोटपैड v1.0\r\nकॉपीराइट 1997,98 Marcel Baur\r\nकॉपीराइट 2000 Mike McCormack\r\nकॉपीराइट 2002 Sylvain Petreolle\r\nकॉपीराइट 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "बंद करे", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    STRING_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Page &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
+    STRING_NOTEPAD "नोटपैड"
+    STRING_ERROR "त्रुटि"
+    STRING_WARNING "वॉर्निंग"
+    STRING_INFO "सूचना"
+    STRING_UNTITLED "शीर्षकहीन"
+    STRING_ALL_FILES "सभी फाइलें (*.*)"
+    STRING_TEXT_FILES_TXT "पाठ फाइलें (*.txt)"
+    STRING_TOOLARGE "नोटपैड के लिए फ़ाइल '% s' बहुत बड़ी है।\n \
+कृपया एक अलग इडिटर का प्रयोग करें।"
+    STRING_NOTEXT "आपने कोई टेक्स्ट दर्ज नहीं किया है।\
+\nकृपया कुछ टाइप करें और पुनः प्रयास करें"
+    STRING_DOESNOTEXIST "फ़ाइल' %s'\nमौजूद नहीं है\n\n \
+क्या आप एक नई फाइल बनाना चाहते हैं?"
+    STRING_NOTSAVED "फ़ाइल '%s'\nको संशोधित किया गया है\n\n \
+क्या आप बदलावों को सहेजना चाहते हैं?"
+    STRING_NOTFOUND "'%s' नहीं मिला।"
+    STRING_OUT_OF_MEMORY "इस कार्य को पूरा करने के लिए पर्याप्त स्मृति नहीं \
+है। \nमुफ्त मेमोरी की मात्रा बढ़ाने के लिए एक या अधिक एप्लिकेशन\nबंद करें।"
+    STRING_CANNOTFIND "'%s' नहीं मिला"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "लाइन%d, स्तंभ%d"
+    STRING_PRINTERROR "फ़ाइल '%s' मुद्रित नहीं कर सकता।\n\n सुनिश्चित करें कि प्रिंटर चालू है और ठीक से कॉन्फ़िगर किया गया है।"
+
+    STRING_TEXT_DOCUMENT "टेक्स्ट डॉक्यूमॅन्ट"
+END
