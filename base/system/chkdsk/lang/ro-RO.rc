@@ -1,0 +1,38 @@
+/*
+ * PROJECT:     Check Disk utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Romanian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+ 
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Uz: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+[drive:]    Specifică unitatea de stocare pentru control.\n\
+-F          Rezolvă erorile discului.\n\
+-V          Vizualizează calea tuturor fișierelor de pe disc.\n\
+-R          Găsește sectoarele defecte și recuperează informațiile care pot fi citite.\n\
+-C          Controlează unitatea de stocare doar dacă este necesar.\n\
+\n"
+
+    IDS_PERCENT_COMPL "%d completat.\r"
+    IDS_FILE_SYSTEM "Tipul sistemului de fișier este %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 de către Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+Adaptarea pentru ReactOS din 1999 de către Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Volumul este în uz și nu poate fi blocat\n"
+    IDS_CHKDSK_FAIL "Operația programului Chkdsk a eșuat.\n\n"
+    IDS_NO_ENTRY_POINT "Nu s-au putut găsi punctele de intrare FMIFS.\n\n"
+    IDS_BAD_ARGUMENT "Argument necunoscut: %s\n"
+    IDS_NO_CURRENT_DIR "Nu s-a putut găsi directorul respectiv. Cod de eroare: "
+    IDS_NO_QUERY_VOL "Nu s-a putut interoga volumul. Cod de eroare: "
+    IDS_VOLUME_IN_USE_PROC "Execuția Chkdsk a eșuat pentru că volumul este folosit de către un alt proces.\n\n"
+END
