@@ -1542,8 +1542,8 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
     }
 
     /* Call the internal API */
-    *HandleCount = CmCountOpenSubKeys(KeyBody->KeyControlBlock,
-                                      FALSE);
+    *HandleCount = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
+                                           FALSE, FALSE);
 
     /* Unlock the registry */
     CmpUnlockRegistry();

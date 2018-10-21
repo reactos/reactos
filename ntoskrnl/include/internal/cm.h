@@ -1357,9 +1357,10 @@ CmUnloadKey(
 
 ULONG
 NTAPI
-CmCountOpenSubKeys(
+CmpEnumerateOpenSubKeys(
     IN PCM_KEY_CONTROL_BLOCK RootKcb,
-    IN BOOLEAN RemoveEmptyCacheEntries
+    IN BOOLEAN RemoveEmptyCacheEntries,
+    IN BOOLEAN DereferenceOpenedEntries
 );
 
 HCELL_INDEX
