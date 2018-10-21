@@ -136,7 +136,8 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     PWCHAR FilePath;
     UCHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
     ULONG Length = sizeof(Buffer);
-    POBJECT_NAME_INFORMATION FileNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
+    POBJECT_NAME_INFORMATION FileNameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+
     HivePath.Buffer = NULL;
 
     /* Create or open the hive list key */
