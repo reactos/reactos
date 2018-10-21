@@ -551,14 +551,18 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     PCM_KEY_BODY KeyObject;
     REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
+
     PAGED_CODE();
+
     DPRINT("NtEnumerateValueKey() KH 0x%p, Index 0x%x, KVIC %d, Length %lu\n",
            KeyHandle, Index, KeyValueInformationClass, Length);
 
     /* Reject classes we don't know about */
-    if ((KeyValueInformationClass != KeyValueBasicInformation) &&
-        (KeyValueInformationClass != KeyValueFullInformation)  &&
-        (KeyValueInformationClass != KeyValuePartialInformation))
+    if ((KeyValueInformationClass != KeyValueBasicInformation)       &&
+        (KeyValueInformationClass != KeyValueFullInformation)        &&
+        (KeyValueInformationClass != KeyValuePartialInformation)     &&
+        (KeyValueInformationClass != KeyValueFullInformationAlign64) &&
+        (KeyValueInformationClass != KeyValuePartialInformationAlign64))
     {
         /* Fail */
         return STATUS_INVALID_PARAMETER;
