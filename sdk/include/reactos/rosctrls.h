@@ -224,6 +224,12 @@ public:
     {
         return (BOOL)SendMessage(LVM_SETITEMPOSITION, nItem, MAKELPARAM(pPoint->x, pPoint->y));
     }
+
+    BOOL Arrange(UINT nCode)
+    {
+        return (BOOL)SendMessage(LVM_ARRANGE, nCode, 0);
+    }
+
 };
 
 template<typename TItemData = DWORD_PTR>
