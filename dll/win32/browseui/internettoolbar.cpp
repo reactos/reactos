@@ -1051,6 +1051,34 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     return S_OK;
 }
 
+HRESULT CInternetToolbar::IsBandVisible(int BandID)
+{
+    int index = (int)SendMessage(fMainReBar, RB_IDTOINDEX, BandID, 0);
+
+    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE};
+    SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo);
+
+    return (bandInfo.fStyle & RBBS_HIDDEN) ? S_FALSE : S_OK;
+}
+
+HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
+{
+    int index = (int)SendMessage(fMainReBar, RB_IDTOINDEX, BandID, 0);
+
+    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE};
+    SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo);
+
+    if (bandInfo.fStyle & RBBS_HIDDEN)
+        bandInfo.fStyle &= ~RBBS_HIDDEN;
+    else
+        bandInfo.fStyle |= RBBS_HIDDEN;
+
+    SendMessage(fMainReBar, RB_SETBANDINFOW, index, (LPARAM)&bandInfo);
+
+    ReserveBorderSpace(0);
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGroup,
     ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
@@ -1064,13 +1092,13 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
                     break;
                 case ITID_TOOLBARBANDSHOWN: // toolbar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fControlsBar)
-                        prgCmds->cmdf |= OLECMDF_LATCHED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsBandVisible(ITBBID_TOOLSBAND) == S_OK)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;                       
                     break;
                 case ITID_ADDRESSBANDSHOWN: // address bar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fNavigationBar)
+                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsBandVisible(ITBBID_ADDRESSBAND) == S_OK)
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_LINKSBANDSHOWN:   // links bar visibility
@@ -1118,11 +1146,9 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Exec(const GUID *pguidCmdGroup, DWOR
                 // toggle text labels
                 return S_OK;
             case ITID_TOOLBARBANDSHOWN:
-                // toggle toolbar band visibility
-                return S_OK;
+                return ToggleBandVisibility(ITBBID_TOOLSBAND);
             case ITID_ADDRESSBANDSHOWN:
-                // toggle address band visibility
-                return S_OK;
+                return ToggleBandVisibility(ITBBID_ADDRESSBAND);
             case ITID_LINKSBANDSHOWN:
                 // toggle links band visibility
                 return S_OK;
@@ -1661,15 +1687,11 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         default:
             break;
     }
-    
-    // TODO: Implement show/hide toolbars
-    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, FALSE);
-    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, FALSE);
-    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
-    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
 
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, fControlsBar != NULL);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, fNavigationBar != NULL);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
+
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, IsBandVisible(ITBBID_TOOLSBAND) == S_OK);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, IsBandVisible(ITBBID_ADDRESSBAND) == S_OK);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, fLocked);
@@ -1682,8 +1704,10 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     switch (command)
     {
         case IDM_TOOLBARS_STANDARDBUTTONS:  // standard buttons
+            ToggleBandVisibility(ITBBID_TOOLSBAND);
             break;
         case IDM_TOOLBARS_ADDRESSBAR:   // address bar
+            ToggleBandVisibility(ITBBID_ADDRESSBAND);
             break;
         case IDM_TOOLBARS_LINKSBAR: // links
             break;

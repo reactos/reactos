@@ -102,6 +102,9 @@ public:
     HRESULT LockUnlockToolbars(bool locked);
     HRESULT CommandStateChanged(bool newValue, int commandID);
     HRESULT CreateAndInitBandProxy();
+    HRESULT IsBandVisible(int BandID);
+    HRESULT ToggleBandVisibility(int BandID);
+
 public:
     // *** IInputObject specific methods ***
     virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
