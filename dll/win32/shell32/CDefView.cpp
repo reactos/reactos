@@ -1192,6 +1192,11 @@ HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
                        m_sortInfo.nHeaderID + 0x30, 
                        MF_BYCOMMAND);
 
+    if (m_FolderSettings.ViewMode == FVM_DETAILS || m_FolderSettings.ViewMode == FVM_LIST)
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND | MF_GRAYED);
+    else
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND); 
+
     return S_OK;
 }
 
