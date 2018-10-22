@@ -1026,7 +1026,9 @@ GdiRealizationInfo(HDC hdc,
 VOID WINAPI GdiInitializeLanguagePack(DWORD InitParam)
 {
     /* Lpk function pointers to be passed to user32 */
+#if 0
     FARPROC hookfuncs[4];
+#endif
 
 #ifdef LANGPACK
     if (!LoadLPK(LPK_INIT)) // no lpk found!
