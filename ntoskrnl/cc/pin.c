@@ -267,6 +267,7 @@ CcpPinData(
     BOOLEAN Result;
     PROS_VACB Vacb;
     KIRQL OldIrql;
+    ULONG MapFlags;
 
     KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
     NewBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
@@ -305,7 +306,13 @@ CcpPinData(
             return FALSE;
         }
 
-        Result = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, &Vacb, Buffer);
+        MapFlags = Flags & PIN_WAIT;
+        if (BooleanFlagOn(Flags, PIN_NO_READ))
+        {
+            SetFlag(MapFlags, MAP_NO_READ);
+        }
+
+        Result = CcpMapData(SharedCacheMap, FileOffset, Length, MapFlags, &Vacb, Buffer);
         if (Result)
         {
             NewBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, Flags, TRUE);
