@@ -112,6 +112,11 @@ static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, in
 
 /* Code taken from the GetProcessDefaultLayout function from Wine's user32 
  * Wine version 3.17 
+ * 
+ * This function should be called from LpkInitialize, 
+ * which is in turn called by GdiInitializeLanguagePack (from gdi32).
+ * TODO: Move call from LpkDllInitialize to LpkInitialize when latter
+ * function is implemented.
  */
 static void LPK_ApplyMirroring()
 {  
