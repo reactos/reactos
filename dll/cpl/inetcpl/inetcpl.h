@@ -41,6 +41,8 @@ INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 #define ICO_CERTIFICATES    1314
 #define ICO_HISTORY         1315
 #define ICO_HOME            1316
+#define ICO_TRUSTED         4480
+#define ICO_RESTRICTED      4481
 #endif
 
 /* strings */
