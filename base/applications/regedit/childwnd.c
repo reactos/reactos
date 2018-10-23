@@ -42,7 +42,9 @@ extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb;
-    const int tHeight = 22;
+    const int nButtonWidth = 44;
+    const int nButtonHeight = 22;
+    int cyEdge = GetSystemMetrics(SM_CYEDGE);
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
     SetRect(&rt, 0, 0, cx, cy);
     cy = 0;
@@ -56,22 +58,26 @@ extern void ResizeWnd(int cx, int cy)
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
                               rt.left, rt.top,
-                              rt.right - rt.left - 2*tHeight, tHeight,
+                              rt.right - rt.left - nButtonWidth, nButtonHeight,
                               uFlags);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, NULL,
-                              rt.right - 2*tHeight, rt.top,
-                              2*tHeight, tHeight,
+                              rt.right - nButtonWidth, rt.top,
+                              nButtonWidth, nButtonHeight,
                               uFlags);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
-                              rt.left, rt.top + tHeight + 2,
-                              g_pChildWnd->nSplitPos - SPLIT_WIDTH/2 - rt.left, rt.bottom - rt.top - cy,
+                              rt.left,
+                              rt.top + nButtonHeight + cyEdge,
+                              g_pChildWnd->nSplitPos - SPLIT_WIDTH/2 - rt.left,
+                              rt.bottom - rt.top - cy - 2 * cyEdge,
                               uFlags);
     if (hdwp)
         hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, NULL,
-                              rt.left + cx, rt.top + tHeight + 2,
-                              rt.right - cx, rt.bottom - rt.top - cy,
+                              rt.left + cx,
+                              rt.top + nButtonHeight + cyEdge,
+                              rt.right - cx,
+                              rt.bottom - rt.top - cy - 2 * cyEdge,
                               uFlags);
     if (hdwp)
         EndDeferWindowPos(hdwp);
