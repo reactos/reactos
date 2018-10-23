@@ -1264,6 +1264,102 @@ SETUP_GetValueString(
     return ERROR_SUCCESS;
 }
 
+static
+BOOL
+SETUP_CallInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_ADDPROPERTYPAGE_DATA PageData)
+{
+    PSP_CLASSINSTALL_HEADER pClassInstallParams = NULL;
+    DWORD dwSize = 0;
+    DWORD dwError;
+    BOOL ret = TRUE;
+
+    /* Get the size of the old class install parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      NULL,
+                                      0,
+                                      &dwSize))
+    {
+        dwError = GetLastError();
+        if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        {
+            ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", dwError);
+            return FALSE;
+        }
+    }
+
+    /* Allocate a buffer for the old class install parameters */
+    pClassInstallParams = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (pClassInstallParams == NULL)
+    {
+        ERR("Failed to allocate the parameters buffer!\n");
+        return FALSE;
+    }
+
+    /* Save the old class install parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      pClassInstallParams,
+                                      dwSize,
+                                      &dwSize))
+    {
+        ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
+        ret = FALSE;
+        goto done;
+    }
+
+    /* Set the new class install parameters */
+    if (!SetupDiSetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      &PageData->ClassInstallHeader,
+                                      sizeof(SP_ADDPROPERTYPAGE_DATA)))
+    {
+        ERR("SetupDiSetClassInstallParams failed (Error %lu)\n", dwError);
+        ret = FALSE;
+        goto done;
+    }
+
+    /* Call the installer */
+    ret = SetupDiCallClassInstaller(InstallFunction,
+                                    DeviceInfoSet,
+                                    DeviceInfoData);
+    if (ret == FALSE)
+    {
+        ERR("SetupDiCallClassInstaller failed\n");
+        goto done;
+    }
+
+    /* Read the new class installer parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      &PageData->ClassInstallHeader,
+                                      sizeof(SP_ADDPROPERTYPAGE_DATA),
+                                      NULL))
+    {
+        ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
+        ret = FALSE;
+        goto done;
+    }
+
+done:
+    /* Restore and free the old class install parameters */
+    if (pClassInstallParams != NULL)
+    {
+        SetupDiSetClassInstallParams(DeviceInfoSet,
+                                     DeviceInfoData,
+                                     pClassInstallParams,
+                                     dwSize);
+
+        HeapFree(GetProcessHeap(), 0, pClassInstallParams);
+    }
+
+    return ret;
+}
+
 /***********************************************************************
  *		SetupDiGetClassDevPropertySheetsW(SETUPAPI.@)
  */
@@ -1311,7 +1407,8 @@ SetupDiGetClassDevPropertySheetsW(
         HMODULE hModule = NULL;
         PROPERTY_PAGE_PROVIDER pPropPageProvider = NULL;
         struct ClassDevPropertySheetsData PropPageData;
-        DWORD InitialNumberOfPages;
+        SP_ADDPROPERTYPAGE_DATA InstallerPropPageData;
+        DWORD InitialNumberOfPages, i;
         DWORD rc;
 
         if (DeviceInfoData)
@@ -1393,6 +1490,30 @@ SetupDiGetClassDevPropertySheetsW(
         /* Call the device property page provider */
         if (devInfo != NULL && devInfo->pDevicePropPageProvider != NULL)
             ((PROPERTY_PAGE_PROVIDER)devInfo->pDevicePropPageProvider)(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
+
+        /* Call the class installer and add the returned pages */
+        ZeroMemory(&InstallerPropPageData, sizeof(SP_ADDPROPERTYPAGE_DATA));
+        InstallerPropPageData.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+        InstallerPropPageData.ClassInstallHeader.InstallFunction = DIF_ADDPROPERTYPAGE_ADVANCED;
+        InstallerPropPageData.hwndWizardDlg = PropertySheetHeader->hwndParent;
+
+        if (SETUP_CallInstaller(DIF_ADDPROPERTYPAGE_ADVANCED,
+                                DeviceInfoSet,
+                                DeviceInfoData,
+                                &InstallerPropPageData))
+        {
+            for (i = 0; i < InstallerPropPageData.NumDynamicPages; i++)
+            {
+                if (PropPageData.PropertySheetHeader->nPages < PropertySheetHeaderPageListSize)
+                {
+                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] = 
+                        InstallerPropPageData.DynamicPages[i];
+                    PropPageData.PropertySheetHeader->nPages++;
+                }
+            }
+
+            PropPageData.NumberOfPages += InstallerPropPageData.NumDynamicPages;
+        }
 
         if (RequiredSize)
             *RequiredSize = PropPageData.NumberOfPages;
