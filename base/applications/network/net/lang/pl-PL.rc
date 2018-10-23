@@ -139,7 +139,7 @@ Polecenie użyte bez parametrów wyświetla grupy lokalne na komputerze.\n\n"
                  nazwy użytkowników lub grup globalnych, lecz nie może\n\
                  zawierać nazw innych grup lokalnych. Podając nazwę\n\
 				 użytkownika z innej domeny poprzedź ją nazwą domeny\n\
-                 (na przykład: WARSZAWA\PIOTRS).\n"
+                 (na przykład: WARSZAWA\\PIOTRS).\n"
     IDS_LOCALGROUP_HELP_6 "/ADD             Dodaje nazwę grupy lub użytkownika do grupy lokalnej.\n\
                  Dla użytkowników lub grup globalnych dodawanych tym\n\
                  poleceniem do grupy lokalnej należy wcześniej utworzyć\n\
