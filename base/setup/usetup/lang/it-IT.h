@@ -561,7 +561,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
     {
         0,
         0,
-        "Svuotamento della cache in corso",
+        "   Svuotamento della cache in corso",
         TEXT_TYPE_STATUS
     },
     {
@@ -1785,7 +1785,7 @@ MUI_STRING itITStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   INVIO = Riavvia il computer"},
     {STRING_REBOOTPROGRESSBAR,
-    " Il computer si riavvierà in %li secondi... "},
+    " Il computer si riavvier\x85 in %li secondi... "},
     {STRING_CONSOLEFAIL1,
     "Impossibile aprire la console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
