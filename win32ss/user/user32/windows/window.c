@@ -85,13 +85,13 @@ SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
     if (fAltTab)
     {
         if (IsIconic(hwnd))
-            ShowWindowAsync(hwnd, SW_RESTORE);
+            PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
         SetForegroundWindow(hwnd);
     }
     else
     {
         hwndFG = GetForegroundWindow();
-        ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+        PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
         SetWindowPos(hwnd, hwndFG, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         SetWindowPos(hwndFG, hwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
