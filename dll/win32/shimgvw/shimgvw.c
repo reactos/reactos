@@ -587,8 +587,10 @@ ImageView_DrawImage(HWND hwnd)
     UINT ImageWidth, ImageHeight;
     INT ZoomedWidth, ZoomedHeight, x, y;
     PAINTSTRUCT ps;
-    RECT rect;
+    RECT rect, margin;
     HDC hdc;
+    HBRUSH white;
+    HGDIOBJ hbrOld;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -609,13 +611,30 @@ ImageView_DrawImage(HWND hwnd)
 
     if (GetClientRect(hwnd, &rect))
     {
-        FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
         ZoomedWidth = (ImageWidth * ZoomPercents) / 100;
         ZoomedHeight = (ImageHeight * ZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
+
+        white = GetStockObject(WHITE_BRUSH);
+        // Fill top part
+        margin = rect;
+        margin.bottom = y - 1;
+        FillRect(hdc, &margin, white);
+        // Fill bottom part
+        margin.top = y + ZoomedHeight + 1;
+        margin.bottom = rect.bottom;
+        FillRect(hdc, &margin, white);
+        // Fill left part
+        margin.top = y - 1;
+        margin.bottom = y + ZoomedHeight + 1;
+        margin.right = x - 1;
+        FillRect(hdc, &margin, white);
+        // Fill right part
+        margin.left = x + ZoomedWidth + 1;
+        margin.right = rect.right;
+        FillRect(hdc, &margin, white);
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
@@ -633,7 +652,9 @@ ImageView_DrawImage(HWND hwnd)
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
+        hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+        SelectObject(hdc, hbrOld);
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
@@ -749,7 +770,7 @@ static void ImageView_OnTimer(HWND hwnd)
     DWORD dwDelay;
 
     KillTimer(hwnd, ANIME_TIMER_ID);
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 
     if (Anime_Step(&dwDelay))
     {
