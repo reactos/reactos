@@ -5063,7 +5063,7 @@ IntGdiGetFontResourceInfo(
     DWORD dwType)
 {
     UNICODE_STRING EntryFileName;
-    POBJECT_NAME_INFORMATION NameInfo1, NameInfo2;
+    POBJECT_NAME_INFORMATION NameInfo1 = NULL, NameInfo2 = NULL;
     PLIST_ENTRY ListEntry;
     PFONT_ENTRY FontEntry;
     ULONG Size, i, Count;
@@ -5071,47 +5071,46 @@ IntGdiGetFontResourceInfo(
     BOOL IsEqual;
     FONTFAMILYINFO *FamInfo;
     const ULONG MaxFamInfo = 64;
+    const ULONG MAX_FAM_INFO_BYTES = sizeof(FONTFAMILYINFO) * MaxFamInfo;
     BOOL bSuccess;
+    const ULONG NAMEINFO_SIZE = sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
 
     DPRINT("IntGdiGetFontResourceInfo: dwType == %lu\n", dwType);
 
-    /* Create buffer for full path name */
-    Size = sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
-    NameInfo1 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
-    if (!NameInfo1)
+    do
     {
+        /* Create buffer for full path name */
+        NameInfo1 = ExAllocatePoolWithTag(PagedPool, NAMEINFO_SIZE, TAG_FINF);
+        if (!NameInfo1)
+            break;
+
+        /* Get the full path name */
+        if (!IntGetFullFileName(NameInfo1, NAMEINFO_SIZE, FileName))
+            break;
+
+        /* Create a buffer for the entries' names */
+        NameInfo2 = ExAllocatePoolWithTag(PagedPool, NAMEINFO_SIZE, TAG_FINF);
+        if (!NameInfo2)
+            break;
+
+        FamInfo = ExAllocatePoolWithTag(PagedPool, MAX_FAM_INFO_BYTES, TAG_FINF);
+    } while (0);
+
+    if (!NameInfo1 || !NameInfo2 || !FamInfo)
+    {
+        if (NameInfo2)
+            ExFreePoolWithTag(NameInfo2, TAG_FINF);
+
+        if (NameInfo1)
+            ExFreePoolWithTag(NameInfo1, TAG_FINF);
+
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    /* Get the full path name */
-    if (!IntGetFullFileName(NameInfo1, Size, FileName))
-    {
-        ExFreePoolWithTag(NameInfo1, TAG_FINF);
-        return FALSE;
-    }
-
-    /* Create a buffer for the entries' names */
-    NameInfo2 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
-    if (!NameInfo2)
-    {
-        ExFreePoolWithTag(NameInfo1, TAG_FINF);
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    FamInfo = ExAllocatePoolWithTag(PagedPool,
-                                    sizeof(FONTFAMILYINFO) * MaxFamInfo,
-                                    TAG_FINF);
-    if (!FamInfo)
-    {
-        ExFreePoolWithTag(NameInfo2, TAG_FINF);
-        ExFreePoolWithTag(NameInfo1, TAG_FINF);
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-    /* Try to find the pathname in the global font list */
     Count = 0;
+
+    /* Try to find the pathname in the global font list */
     IntLockGlobalFonts();
     for (ListEntry = g_FontListHead.Flink; ListEntry != &g_FontListHead;
          ListEntry = ListEntry->Flink)
@@ -5121,7 +5120,7 @@ IntGdiGetFontResourceInfo(
             continue;
 
         RtlInitUnicodeString(&EntryFileName , FontEntry->Font->Filename);
-        if (!IntGetFullFileName(NameInfo2, Size, &EntryFileName))
+        if (!IntGetFullFileName(NameInfo2, NAMEINFO_SIZE, &EntryFileName))
             continue;
 
         if (!RtlEqualUnicodeString(&NameInfo1->Name, &NameInfo2->Name, FALSE))
