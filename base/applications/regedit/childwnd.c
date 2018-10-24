@@ -105,17 +105,6 @@ static void draw_splitbar(HWND hWnd, int x)
     ReleaseDC(hWnd, hdc);
 }
 
-static void OnPaint(HWND hWnd)
-{
-    PAINTSTRUCT ps;
-    RECT rt;
-
-    GetClientRect(hWnd, &rt);
-    BeginPaint(hWnd, &ps);
-    FillRect(ps.hdc, &rt, GetSysColorBrush(COLOR_BTNFACE));
-    EndPaint(hWnd, &ps);
-}
-
 /*******************************************************************************
  * finish_splitbar [internal]
  *
@@ -384,7 +373,6 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
  *  PURPOSE:  Processes messages for the child windows.
  *
  *  WM_COMMAND  - process the application menu
- *  WM_PAINT    - Paint the main window
  *  WM_DESTROY  - post a quit message and return
  *
  */
@@ -449,9 +437,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             goto def;
         }
         break;
-    case WM_PAINT:
-        OnPaint(hWnd);
-        return 0;
     case WM_SETCURSOR:
         if (LOWORD(lParam) == HTCLIENT)
         {
