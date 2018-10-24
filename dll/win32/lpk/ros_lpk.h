@@ -18,6 +18,8 @@
 #include <winnls.h>
 #include <usp10.h>
 #include <strsafe.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 /* FIXME USP10 api that does not have prototype in any include file */
 VOID WINAPI LpkPresent(VOID);

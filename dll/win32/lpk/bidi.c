@@ -43,8 +43,6 @@
  */
  
 #include "ros_lpk.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
 //#include "config.h"
 //#include "gdi_private.h"
 

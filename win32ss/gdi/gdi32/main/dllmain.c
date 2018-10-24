@@ -51,6 +51,7 @@ GdiProcessSetup(VOID)
     GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
     RtlInitializeCriticalSection(&semLocal);
     InitializeCriticalSection(&gcsClientObjLinks);
+    GdiInitializeLanguagePack(0);
 }
 
 VOID

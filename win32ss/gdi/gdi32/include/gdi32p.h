@@ -64,8 +64,9 @@ extern LPKGCP LpkGetCharacterPlacement;
 
 #define SAPCALLBACKDELAY 244
 
-#define LPK_ETO 1
-#define LPK_GCP 2
+#define LPK_INIT 1
+#define LPK_ETO  2
+#define LPK_GCP  3
 
 /* MACRO ********************************************************************/
 
@@ -318,6 +319,16 @@ WINAPI
 LoadLPK(
     INT LpkFunctionID
 );
+
+VOID
+WINAPI
+GdiInitializeLanguagePack(
+    _In_ DWORD InitParam);
+
+VOID
+WINAPI
+InitializeLpkHooks(
+    _In_ FARPROC *hookfuncs);
 
 BOOL
 WINAPI
