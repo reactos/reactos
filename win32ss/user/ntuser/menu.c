@@ -2099,7 +2099,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
     //TRACE("lprect %p %s\n", lprect, wine_dbgstr_rect( lprect));
     lppop->cxMenu  = lprect->right - lprect->left;
     lppop->cyMenu = 0;
-    maxY = lprect->top+1;
+    maxY = lprect->top;
     start = 0;
     helpPos = ~0U;
     lppop->cxTextAlign = 0;
@@ -2140,7 +2140,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
 	start = i; /* This works! */
     }
 
-    lprect->bottom = maxY;
+    lprect->bottom = maxY + 1;
     lppop->cyMenu = lprect->bottom - lprect->top;
 
     /* Flush right all items between the MF_RIGHTJUSTIFY and */
