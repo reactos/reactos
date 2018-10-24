@@ -10,7 +10,7 @@
 
 #include <stubs.h>
 
-#undef UNIMPLEMENTED
+#undef  UNIMPLEMENTED
 #define UNIMPLEMENTED DbgPrint("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 /*

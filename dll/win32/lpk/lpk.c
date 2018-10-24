@@ -126,7 +126,7 @@ static void LPK_ApplyMirroring()
                                        '\\','%','0','4','x','%','0','4','x',
                                        '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
     WCHAR *str, buffer[MAX_PATH];
-#ifdef __GNUC__
+#ifdef __REACTOS__
     DWORD i, version_layout = 0;
     UINT len;
 #else
