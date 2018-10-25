@@ -125,7 +125,7 @@ void ResizeAndCenter(HWND hwnd, int width, int height)
 void MakeWindowActive(HWND hwnd)
 {
    if (IsIconic(hwnd))
-      ShowWindowAsync(hwnd, SW_RESTORE);
+      PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
    BringWindowToTop(hwnd);  // same as: SetWindowPos(hwnd,HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE); ?
    SetForegroundWindow(hwnd);
@@ -170,6 +170,9 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 
    if (!IsWindowVisible(window))
             return TRUE;
+
+   if (GetWindow(window, GW_OWNER) != NULL)
+       return TRUE;
 
    GetClassNameW(window, windowText, _countof(windowText));
    if ((wcscmp(L"Shell_TrayWnd", windowText)==0) ||
