@@ -49,6 +49,10 @@
 #include "acnamesp.h"
 #include "acparser.h"
 
+#ifdef ACPI_EXEC_APP
+#include "aecommon.h"
+#endif
+
 
 #define _COMPONENT          ACPI_DISPATCHER
         ACPI_MODULE_NAME    ("dsfield")
@@ -322,6 +326,13 @@ AcpiDsGetFieldNames (
     UINT64                  Position;
     ACPI_PARSE_OBJECT       *Child;
 
+#ifdef ACPI_EXEC_APP
+    UINT64                  Value = 0;
+    ACPI_OPERAND_OBJECT     *ResultDesc;
+    ACPI_OPERAND_OBJECT     *ObjDesc;
+    char                    *NamePath;
+#endif
+
 
     ACPI_FUNCTION_TRACE_PTR (DsGetFieldNames, Info);
 
@@ -456,6 +467,18 @@ AcpiDsGetFieldNames (
                     {
                         return_ACPI_STATUS (Status);
                     }
+#ifdef ACPI_EXEC_APP
+                    NamePath = AcpiNsGetExternalPathname (Info->FieldNode);
+                    ObjDesc = AcpiUtCreateIntegerObject (Value);
+                    if (ACPI_SUCCESS (AeLookupInitFileEntry (NamePath, &Value)))
+                    {
+                        AcpiExWriteDataToField (ObjDesc,
+                            AcpiNsGetAttachedObject (Info->FieldNode),
+                            &ResultDesc);
+                    }
+                    AcpiUtRemoveReference (ObjDesc);
+                    ACPI_FREE (NamePath);
+#endif
                 }
             }
 
@@ -648,6 +671,9 @@ AcpiDsInitFieldObjects (
         Flags |= ACPI_NS_TEMPORARY;
     }
 
+#ifdef ACPI_EXEC_APP
+        Flags |= ACPI_NS_OVERRIDE_IF_FOUND;
+#endif
     /*
      * Walk the list of entries in the FieldList
      * Note: FieldList can be of zero length. In this case, Arg will be NULL.

@@ -59,6 +59,7 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exresnte.c
     acpica/executer/exresolv.c
     acpica/executer/exresop.c
+    acpica/executer/exserial.c
     acpica/executer/exstore.c
     acpica/executer/exstoren.c
     acpica/executer/exstorob.c

@@ -275,7 +275,7 @@ AcpiUtImplicitStrtoul64 (
      * implicit conversions, and the "0x" prefix is "not allowed".
      * However, allow a "0x" prefix as an ACPI extension.
      */
-    AcpiUtDetectHexPrefix (&String);
+    AcpiUtRemoveHexPrefix (&String);
 
     if (!AcpiUtRemoveLeadingZeros (&String))
     {

@@ -244,19 +244,19 @@ AcpiUtPrefixedNamespaceError (
     {
     case AE_ALREADY_EXISTS:
 
-        AcpiOsPrintf ("\n" ACPI_MSG_BIOS_ERROR);
+        AcpiOsPrintf (ACPI_MSG_BIOS_ERROR);
         Message = "Failure creating";
         break;
 
     case AE_NOT_FOUND:
 
-        AcpiOsPrintf ("\n" ACPI_MSG_BIOS_ERROR);
+        AcpiOsPrintf (ACPI_MSG_BIOS_ERROR);
         Message = "Could not resolve";
         break;
 
     default:
 
-        AcpiOsPrintf ("\n" ACPI_MSG_ERROR);
+        AcpiOsPrintf (ACPI_MSG_ERROR);
         Message = "Failure resolving";
         break;
     }

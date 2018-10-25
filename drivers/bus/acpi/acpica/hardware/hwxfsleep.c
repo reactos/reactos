@@ -76,17 +76,17 @@ AcpiHwSleepDispatch (
 
 static ACPI_SLEEP_FUNCTIONS         AcpiSleepDispatch[] =
 {
-    {ACPI_STRUCT_INIT (legacy_function,
+    {ACPI_STRUCT_INIT (LegacyFunction,
                        ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacySleep)),
-     ACPI_STRUCT_INIT (extended_function,
+     ACPI_STRUCT_INIT (ExtendedFunction,
                        AcpiHwExtendedSleep) },
-    {ACPI_STRUCT_INIT (legacy_function,
+    {ACPI_STRUCT_INIT (LegacyFunction,
                        ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWakePrep)),
-     ACPI_STRUCT_INIT (extended_function,
+     ACPI_STRUCT_INIT (ExtendedFunction,
                        AcpiHwExtendedWakePrep) },
-    {ACPI_STRUCT_INIT (legacy_function,
+    {ACPI_STRUCT_INIT (Legacy_function,
                        ACPI_HW_OPTIONAL_FUNCTION (AcpiHwLegacyWake)),
-     ACPI_STRUCT_INIT (extended_function,
+     ACPI_STRUCT_INIT (ExtendedFunction,
                        AcpiHwExtendedWake) }
 };
 

@@ -50,12 +50,6 @@
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evrgnini")
 
-/* Local prototypes */
-
-static BOOLEAN
-AcpiEvIsPciRootBridge (
-    ACPI_NAMESPACE_NODE     *Node);
-
 
 /*******************************************************************************
  *
@@ -382,7 +376,7 @@ AcpiEvPciConfigRegionSetup (
  *
  ******************************************************************************/
 
-static BOOLEAN
+BOOLEAN
 AcpiEvIsPciRootBridge (
     ACPI_NAMESPACE_NODE     *Node)
 {

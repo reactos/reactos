@@ -177,6 +177,11 @@ AcpiExTracePoint (
  * exfield - ACPI AML (p-code) execution - field manipulation
  */
 ACPI_STATUS
+AcpiExGetProtocolBufferLength (
+    UINT32                  ProtocolId,
+    UINT32                  *ReturnLength);
+
+ACPI_STATUS
 AcpiExCommonBufferSetup (
     ACPI_OPERAND_OBJECT     *ObjDesc,
     UINT32                  BufferLength,
@@ -384,6 +389,32 @@ AcpiExPrepCommonFieldObject (
 ACPI_STATUS
 AcpiExPrepFieldValue (
     ACPI_CREATE_FIELD_INFO  *Info);
+
+
+/*
+ * exserial - FieldUnit support for serial address spaces
+ */
+ACPI_STATUS
+AcpiExReadSerialBus (
+    ACPI_OPERAND_OBJECT     *ObjDesc,
+    ACPI_OPERAND_OBJECT     **ReturnBuffer);
+
+ACPI_STATUS
+AcpiExWriteSerialBus (
+    ACPI_OPERAND_OBJECT     *SourceDesc,
+    ACPI_OPERAND_OBJECT     *ObjDesc,
+    ACPI_OPERAND_OBJECT     **ReturnBuffer);
+
+ACPI_STATUS
+AcpiExReadGpio (
+    ACPI_OPERAND_OBJECT     *ObjDesc,
+    void                    *Buffer);
+
+ACPI_STATUS
+AcpiExWriteGpio (
+    ACPI_OPERAND_OBJECT     *SourceDesc,
+    ACPI_OPERAND_OBJECT     *ObjDesc,
+    ACPI_OPERAND_OBJECT     **ReturnBuffer);
 
 
 /*

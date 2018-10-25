@@ -90,16 +90,21 @@ AcpiHwLegacySleep (
         return_ACPI_STATUS (Status);
     }
 
-    /*
-     * 1) Disable all GPEs
-     * 2) Enable all wakeup GPEs
-     */
+    /* Disable all GPEs */
+
     Status = AcpiHwDisableAllGpes ();
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);
     }
+    Status = AcpiHwClearAcpiStatus();
+    if (ACPI_FAILURE(Status))
+    {
+        return_ACPI_STATUS(Status);
+    }
     AcpiGbl_SystemAwakeAndRunning = FALSE;
+
+    /* Enable all wakeup GPEs */
 
     Status = AcpiHwEnableAllWakeupGpes ();
     if (ACPI_FAILURE (Status))

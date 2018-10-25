@@ -219,8 +219,8 @@ typedef struct acpi_namespace_node
 #define ANOBJ_SUBTREE_HAS_INI           0x10    /* Used to optimize device initialization */
 #define ANOBJ_EVALUATED                 0x20    /* Set on first evaluation of node */
 #define ANOBJ_ALLOCATED_BUFFER          0x40    /* Method AML buffer is dynamic (InstallMethod) */
+#define ANOBJ_NODE_EARLY_INIT           0x80    /* AcpiExec only: Node was create via init file (-fi) */
 
-#define IMPLICIT_EXTERNAL               0x02    /* iASL only: This object created implicitly via External */
 #define ANOBJ_IS_EXTERNAL               0x08    /* iASL only: This object created via External() */
 #define ANOBJ_METHOD_NO_RETVAL          0x10    /* iASL only: Method has no return value */
 #define ANOBJ_METHOD_SOME_NO_RETVAL     0x20    /* iASL only: Method has at least one return value */
@@ -489,9 +489,9 @@ typedef struct acpi_simple_repair_info
 
 typedef struct acpi_reg_walk_info
 {
-    ACPI_ADR_SPACE_TYPE     SpaceId;
     UINT32                  Function;
     UINT32                  RegRunCount;
+    ACPI_ADR_SPACE_TYPE     SpaceId;
 
 } ACPI_REG_WALK_INFO;
 

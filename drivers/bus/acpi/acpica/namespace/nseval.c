@@ -320,11 +320,11 @@ AcpiNsEvaluate (
 
         Status = AE_OK;
     }
-    else if (ACPI_FAILURE(Status)) 
+    else if (ACPI_FAILURE(Status))
     {
         /* If ReturnObject exists, delete it */
 
-        if (Info->ReturnObject) 
+        if (Info->ReturnObject)
         {
             AcpiUtRemoveReference (Info->ReturnObject);
             Info->ReturnObject = NULL;

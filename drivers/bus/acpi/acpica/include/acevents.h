@@ -359,6 +359,10 @@ ACPI_STATUS
 AcpiEvInitializeRegion (
     ACPI_OPERAND_OBJECT     *RegionObj);
 
+BOOLEAN
+AcpiEvIsPciRootBridge (
+    ACPI_NAMESPACE_NODE     *Node);
+
 
 /*
  * evsci - SCI (System Control Interrupt) handling/dispatch

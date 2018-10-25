@@ -472,7 +472,7 @@ extern ACPI_DMTABLE_INFO        AcpiDmTableInfoGeneric[][2];
  * dmtable and ahtable
  */
 extern const ACPI_DMTABLE_DATA  AcpiDmTableData[];
-extern const AH_TABLE           Gbl_AcpiSupportedTables[];
+extern const AH_TABLE           AcpiGbl_SupportedTables[];
 
 UINT8
 AcpiDmGenerateChecksum (

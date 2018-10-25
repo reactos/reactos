@@ -616,6 +616,15 @@ AcpiNsLookup (
                     CurrentNode));
             }
 
+#ifdef ACPI_EXEC_APP
+            if ((Status == AE_ALREADY_EXISTS) &&
+                (ThisNode->Flags & ANOBJ_NODE_EARLY_INIT))
+            {
+                ThisNode->Flags &= ~ANOBJ_NODE_EARLY_INIT;
+                Status = AE_OK;
+            }
+#endif
+
 #ifdef ACPI_ASL_COMPILER
             /*
              * If this ACPI name already exists within the namespace as an
@@ -673,13 +682,6 @@ AcpiNsLookup (
 
         else
         {
-#ifdef ACPI_ASL_COMPILER
-            if (!AcpiGbl_DisasmFlag && (ThisNode->Flags & ANOBJ_IS_EXTERNAL))
-            {
-                ThisNode->Flags &= ~IMPLICIT_EXTERNAL;
-            }
-#endif
-
             /*
              * Sanity typecheck of the target object:
              *
@@ -743,6 +745,13 @@ AcpiNsLookup (
             }
         }
     }
+
+#ifdef ACPI_EXEC_APP
+    if (Flags & ACPI_NS_EARLY_INIT)
+    {
+        ThisNode->Flags |= ANOBJ_NODE_EARLY_INIT;
+    }
+#endif
 
     *ReturnNode = ThisNode;
     return_ACPI_STATUS (AE_OK);

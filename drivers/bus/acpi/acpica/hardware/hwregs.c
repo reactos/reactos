@@ -616,13 +616,20 @@ AcpiHwRegisterRead (
     case ACPI_REGISTER_PM2_CONTROL:          /* 8-bit access */
 
         Status = AcpiHwRead (&Value64, &AcpiGbl_FADT.XPm2ControlBlock);
-        Value = (UINT32) Value64;
+        if (ACPI_SUCCESS (Status))
+        {
+            Value = (UINT32) Value64;
+        }
         break;
 
     case ACPI_REGISTER_PM_TIMER:             /* 32-bit access */
 
         Status = AcpiHwRead (&Value64, &AcpiGbl_FADT.XPmTimerBlock);
-        Value = (UINT32) Value64;
+        if (ACPI_SUCCESS (Status))
+        {
+            Value = (UINT32) Value64;
+        }
+
         break;
 
     case ACPI_REGISTER_SMI_COMMAND_BLOCK:    /* 8-bit access */
