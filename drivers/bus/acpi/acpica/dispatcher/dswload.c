@@ -217,7 +217,7 @@ AcpiDsLoad1BeginOp (
 #endif
         if (ACPI_FAILURE (Status))
         {
-            ACPI_ERROR_NAMESPACE (Path, Status);
+            ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo, Path, Status);
             return_ACPI_STATUS (Status);
         }
 
@@ -387,7 +387,7 @@ AcpiDsLoad1BeginOp (
 
             if (ACPI_FAILURE (Status))
             {
-                ACPI_ERROR_NAMESPACE (Path, Status);
+                ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo, Path, Status);
                 return_ACPI_STATUS (Status);
             }
         }

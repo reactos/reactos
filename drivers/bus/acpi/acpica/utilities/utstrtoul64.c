@@ -1,6 +1,7 @@
 /*******************************************************************************
  *
- * Module Name: utstrtoul64 - string to 64-bit integer support
+ * Module Name: utstrtoul64 - String-to-integer conversion support for both
+ *                            64-bit and 32-bit integers
  *
  ******************************************************************************/
 
@@ -44,84 +45,47 @@
 #include "acpi.h"
 #include "accommon.h"
 
-
-/*******************************************************************************
- *
- * The functions in this module satisfy the need for 64-bit string-to-integer
- * conversions on both 32-bit and 64-bit platforms.
- *
- ******************************************************************************/
-
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utstrtoul64")
 
-/* Local prototypes */
-
-static UINT64
-AcpiUtStrtoulBase10 (
-    char                    *String,
-    UINT32                  Flags);
-
-static UINT64
-AcpiUtStrtoulBase16 (
-    char                    *String,
-    UINT32                  Flags);
-
 
 /*******************************************************************************
  *
- * String conversion rules as written in the ACPI specification. The error
- * conditions and behavior are different depending on the type of conversion.
+ * This module contains the top-level string to 64/32-bit unsigned integer
+ * conversion functions:
  *
+ *  1) A standard strtoul() function that supports 64-bit integers, base
+ *     8/10/16, with integer overflow support. This is used mainly by the
+ *     iASL compiler, which implements tighter constraints on integer
+ *     constants than the runtime (interpreter) integer-to-string conversions.
+ *  2) Runtime "Explicit conversion" as defined in the ACPI specification.
+ *  3) Runtime "Implicit conversion" as defined in the ACPI specification.
  *
- * Implicit data type conversion: string-to-integer
- * --------------------------------------------------
+ * Current users of this module:
  *
- * Base is always 16. This is the ACPI_STRTOUL_BASE16 case.
+ *  iASL        - Preprocessor (constants and math expressions)
+ *  iASL        - Main parser, conversion of constants to integers
+ *  iASL        - Data Table Compiler parser (constants and math expressions)
+ *  Interpreter - Implicit and explicit conversions, GPE method names
+ *  Interpreter - Repair code for return values from predefined names
+ *  Debugger    - Command line input string conversion
+ *  AcpiDump    - ACPI table physical addresses
+ *  AcpiExec    - Support for namespace overrides
  *
- * Example:
- *      Add ("BA98", Arg0, Local0)
+ * Notes concerning users of these interfaces:
  *
- * The integer is initialized to the value zero.
- * The ASCII string is interpreted as a hexadecimal constant.
+ * AcpiGbl_IntegerByteWidth is used to set the 32/64 bit limit for explicit
+ * and implicit conversions. This global must be set to the proper width.
+ * For the core ACPICA code, the width depends on the DSDT version. For the
+ * AcpiUtStrtoul64 interface, all conversions are 64 bits. This interface is
+ * used primarily for iASL, where the default width is 64 bits for all parsers,
+ * but error checking is performed later to flag cases where a 64-bit constant
+ * is wrongly defined in a 32-bit DSDT/SSDT.
  *
- *  1)  A "0x" prefix is not allowed. However, ACPICA allows this for
- *      compatibility with previous ACPICA. (NO ERROR)
- *
- *  2)  Terminates when the size of an integer is reached (32 or 64 bits).
- *      (NO ERROR)
- *
- *  3)  The first non-hex character terminates the conversion without error.
- *      (NO ERROR)
- *
- *  4)  Conversion of a null (zero-length) string to an integer is not
- *      allowed. However, ACPICA allows this for compatibility with previous
- *      ACPICA. This conversion returns the value 0. (NO ERROR)
- *
- *
- * Explicit data type conversion:  ToInteger() with string operand
- * ---------------------------------------------------------------
- *
- * Base is either 10 (default) or 16 (with 0x prefix)
- *
- * Examples:
- *      ToInteger ("1000")
- *      ToInteger ("0xABCD")
- *
- *  1)  Can be (must be) either a decimal or hexadecimal numeric string.
- *      A hex value must be prefixed by "0x" or it is interpreted as a decimal.
- *
- *  2)  The value must not exceed the maximum of an integer value. ACPI spec
- *      states the behavior is "unpredictable", so ACPICA matches the behavior
- *      of the implicit conversion case.(NO ERROR)
- *
- *  3)  Behavior on the first non-hex character is not specified by the ACPI
- *      spec, so ACPICA matches the behavior of the implicit conversion case
- *      and terminates. (NO ERROR)
- *
- *  4)  A null (zero-length) string is illegal.
- *      However, ACPICA allows this for compatibility with previous ACPICA.
- *      This conversion returns the value 0. (NO ERROR)
+ * In ACPI, the only place where octal numbers are supported is within
+ * the ASL language itself. This is implemented via the main AcpiUtStrtoul64
+ * interface. According the ACPI specification, there is no ACPI runtime
+ * support (explicit/implicit) for octal string conversions.
  *
  ******************************************************************************/
 
@@ -130,261 +94,301 @@ AcpiUtStrtoulBase16 (
  *
  * FUNCTION:    AcpiUtStrtoul64
  *
- * PARAMETERS:  String                  - Null terminated input string
- *              Flags                   - Conversion info, see below
+ * PARAMETERS:  String                  - Null terminated input string,
+ *                                        must be a valid pointer
  *              ReturnValue             - Where the converted integer is
- *                                        returned
+ *                                        returned. Must be a valid pointer
  *
- * RETURN:      Status and Converted value
+ * RETURN:      Status and converted integer. Returns an exception on a
+ *              64-bit numeric overflow
  *
- * DESCRIPTION: Convert a string into an unsigned value. Performs either a
- *              32-bit or 64-bit conversion, depending on the input integer
- *              size in Flags (often the current mode of the interpreter).
+ * DESCRIPTION: Convert a string into an unsigned integer. Always performs a
+ *              full 64-bit conversion, regardless of the current global
+ *              integer width. Supports Decimal, Hex, and Octal strings.
  *
- * Values for Flags:
- *      ACPI_STRTOUL_32BIT      - Max integer value is 32 bits
- *      ACPI_STRTOUL_64BIT      - Max integer value is 64 bits
- *      ACPI_STRTOUL_BASE16     - Input string is hexadecimal. Default
- *                                is 10/16 based on string prefix (0x).
+ * Current users of this function:
  *
- * NOTES:
- *   Negative numbers are not supported, as they are not supported by ACPI.
- *
- *   Supports only base 16 or base 10 strings/values. Does not
- *   support Octal strings, as these are not supported by ACPI.
- *
- * Current users of this support:
- *
- *  Interpreter - Implicit and explicit conversions, GPE method names
- *  Debugger    - Command line input string conversion
- *  iASL        - Main parser, conversion of constants to integers
- *  iASL        - Data Table Compiler parser (constant math expressions)
- *  iASL        - Preprocessor (constant math expressions)
- *  AcpiDump    - Input table addresses
- *  AcpiExec    - Testing of the AcpiUtStrtoul64 function
- *
- * Note concerning callers:
- *   AcpiGbl_IntegerByteWidth can be used to set the 32/64 limit. If used,
- *   this global should be set to the proper width. For the core ACPICA code,
- *   this width depends on the DSDT version. For iASL, the default byte
- *   width is always 8 for the parser, but error checking is performed later
- *   to flag cases where a 64-bit constant is defined in a 32-bit DSDT/SSDT.
+ *  iASL        - Preprocessor (constants and math expressions)
+ *  iASL        - Main ASL parser, conversion of ASL constants to integers
+ *  iASL        - Data Table Compiler parser (constants and math expressions)
+ *  Interpreter - Repair code for return values from predefined names
+ *  AcpiDump    - ACPI table physical addresses
+ *  AcpiExec    - Support for namespace overrides
  *
  ******************************************************************************/
 
 ACPI_STATUS
 AcpiUtStrtoul64 (
     char                    *String,
-    UINT32                  Flags,
     UINT64                  *ReturnValue)
 {
     ACPI_STATUS             Status = AE_OK;
-    UINT32                  Base;
+    UINT8                   OriginalBitWidth;
+    UINT32                  Base = 10;          /* Default is decimal */
 
 
     ACPI_FUNCTION_TRACE_STR (UtStrtoul64, String);
 
 
-    /* Parameter validation */
-
-    if (!String || !ReturnValue)
-    {
-        return_ACPI_STATUS (AE_BAD_PARAMETER);
-    }
-
     *ReturnValue = 0;
 
-    /* Check for zero-length string, returns 0 */
+    /* A NULL return string returns a value of zero */
 
     if (*String == 0)
     {
         return_ACPI_STATUS (AE_OK);
     }
 
-    /* Skip over any white space at start of string */
-
-    while (isspace ((int) *String))
-    {
-        String++;
-    }
-
-    /* End of string? return 0 */
-
-    if (*String == 0)
+    if (!AcpiUtRemoveWhitespace (&String))
     {
         return_ACPI_STATUS (AE_OK);
     }
 
     /*
-     * 1) The "0x" prefix indicates base 16. Per the ACPI specification,
-     * the "0x" prefix is only allowed for implicit (non-strict) conversions.
-     * However, we always allow it for compatibility with older ACPICA.
+     * 1) Check for a hex constant. A "0x" prefix indicates base 16.
      */
-    if ((*String == ACPI_ASCII_ZERO) &&
-        (tolower ((int) *(String + 1)) == 'x'))
-    {
-        String += 2;    /* Go past the 0x */
-        if (*String == 0)
-        {
-            return_ACPI_STATUS (AE_OK);     /* Return value 0 */
-        }
-
-        Base = 16;
-    }
-
-    /* 2) Force to base 16 (implicit conversion case) */
-
-    else if (Flags & ACPI_STRTOUL_BASE16)
+    if (AcpiUtDetectHexPrefix (&String))
     {
         Base = 16;
     }
 
-    /* 3) Default fallback is to Base 10 */
-
-    else
+    /*
+     * 2) Check for an octal constant, defined to be a leading zero
+     * followed by sequence of octal digits (0-7)
+     */
+    else if (AcpiUtDetectOctalPrefix (&String))
     {
-        Base = 10;
+        Base = 8;
     }
 
-    /* Skip all leading zeros */
-
-    while (*String == ACPI_ASCII_ZERO)
+    if (!AcpiUtRemoveLeadingZeros (&String))
     {
-        String++;
-        if (*String == 0)
-        {
-            return_ACPI_STATUS (AE_OK);     /* Return value 0 */
-        }
+        return_ACPI_STATUS (AE_OK);     /* Return value 0 */
     }
 
-    /* Perform the base 16 or 10 conversion */
+    /*
+     * Force a full 64-bit conversion. The caller (usually iASL) must
+     * check for a 32-bit overflow later as necessary (If current mode
+     * is 32-bit, meaning a 32-bit DSDT).
+     */
+    OriginalBitWidth = AcpiGbl_IntegerBitWidth;
+    AcpiGbl_IntegerBitWidth = 64;
 
-    if (Base == 16)
+    /*
+     * Perform the base 8, 10, or 16 conversion. A 64-bit numeric overflow
+     * will return an exception (to allow iASL to flag the statement).
+     */
+    switch (Base)
     {
-        *ReturnValue = AcpiUtStrtoulBase16 (String, Flags);
-    }
-    else
-    {
-        *ReturnValue = AcpiUtStrtoulBase10 (String, Flags);
+    case 8:
+        Status = AcpiUtConvertOctalString (String, ReturnValue);
+        break;
+
+    case 10:
+        Status = AcpiUtConvertDecimalString (String, ReturnValue);
+        break;
+
+    case 16:
+    default:
+        Status = AcpiUtConvertHexString (String, ReturnValue);
+        break;
     }
 
+    /* Only possible exception from above is a 64-bit overflow */
+
+    AcpiGbl_IntegerBitWidth = OriginalBitWidth;
     return_ACPI_STATUS (Status);
 }
 
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiUtStrtoulBase10
+ * FUNCTION:    AcpiUtImplicitStrtoul64
  *
- * PARAMETERS:  String                  - Null terminated input string
- *              Flags                   - Conversion info
+ * PARAMETERS:  String                  - Null terminated input string,
+ *                                        must be a valid pointer
  *
- * RETURN:      64-bit converted integer
+ * RETURN:      Converted integer
  *
- * DESCRIPTION: Performs a base 10 conversion of the input string to an
- *              integer value, either 32 or 64 bits.
- *              Note: String must be valid and non-null.
+ * DESCRIPTION: Perform a 64-bit conversion with restrictions placed upon
+ *              an "implicit conversion" by the ACPI specification. Used by
+ *              many ASL operators that require an integer operand, and support
+ *              an automatic (implicit) conversion from a string operand
+ *              to the final integer operand. The major restriction is that
+ *              only hex strings are supported.
+ *
+ * -----------------------------------------------------------------------------
+ *
+ * Base is always 16, either with or without the 0x prefix. Decimal and
+ * Octal strings are not supported, as per the ACPI specification.
+ *
+ * Examples (both are hex values):
+ *      Add ("BA98", Arg0, Local0)
+ *      Subtract ("0x12345678", Arg1, Local1)
+ *
+ * Conversion rules as extracted from the ACPI specification:
+ *
+ *  The converted integer is initialized to the value zero.
+ *  The ASCII string is always interpreted as a hexadecimal constant.
+ *
+ *  1)  According to the ACPI specification, a "0x" prefix is not allowed.
+ *      However, ACPICA allows this as an ACPI extension on general
+ *      principle. (NO ERROR)
+ *
+ *  2)  The conversion terminates when the size of an integer is reached
+ *      (32 or 64 bits). There are no numeric overflow conditions. (NO ERROR)
+ *
+ *  3)  The first non-hex character terminates the conversion and returns
+ *      the current accumulated value of the converted integer (NO ERROR).
+ *
+ *  4)  Conversion of a null (zero-length) string to an integer is
+ *      technically not allowed. However, ACPICA allows this as an ACPI
+ *      extension. The conversion returns the value 0. (NO ERROR)
+ *
+ * NOTE: There are no error conditions returned by this function. At
+ * the minimum, a value of zero is returned.
+ *
+ * Current users of this function:
+ *
+ *  Interpreter - All runtime implicit conversions, as per ACPI specification
+ *  iASL        - Data Table Compiler parser (constants and math expressions)
  *
  ******************************************************************************/
 
-static UINT64
-AcpiUtStrtoulBase10 (
-    char                    *String,
-    UINT32                  Flags)
+UINT64
+AcpiUtImplicitStrtoul64 (
+    char                    *String)
 {
-    int                     AsciiDigit;
-    UINT64                  NextValue;
-    UINT64                  ReturnValue = 0;
+    UINT64                  ConvertedInteger = 0;
 
 
-    /* Main loop: convert each ASCII byte in the input string */
+    ACPI_FUNCTION_TRACE_STR (UtImplicitStrtoul64, String);
 
-    while (*String)
+
+    if (!AcpiUtRemoveWhitespace (&String))
     {
-        AsciiDigit = *String;
-        if (!isdigit (AsciiDigit))
-        {
-            /* Not ASCII 0-9, terminate */
-
-            goto Exit;
-        }
-
-        /* Convert and insert (add) the decimal digit */
-
-        AcpiUtShortMultiply (ReturnValue, 10, &NextValue);
-        NextValue += (AsciiDigit - ACPI_ASCII_ZERO);
-
-        /* Check for overflow (32 or 64 bit) - return current converted value */
-
-        if (((Flags & ACPI_STRTOUL_32BIT) && (NextValue > ACPI_UINT32_MAX)) ||
-            (NextValue < ReturnValue)) /* 64-bit overflow case */
-        {
-            goto Exit;
-        }
-
-        ReturnValue = NextValue;
-        String++;
+        return_VALUE (0);
     }
 
-Exit:
-    return (ReturnValue);
+    /*
+     * Per the ACPI specification, only hexadecimal is supported for
+     * implicit conversions, and the "0x" prefix is "not allowed".
+     * However, allow a "0x" prefix as an ACPI extension.
+     */
+    AcpiUtDetectHexPrefix (&String);
+
+    if (!AcpiUtRemoveLeadingZeros (&String))
+    {
+        return_VALUE (0);
+    }
+
+    /*
+     * Ignore overflow as per the ACPI specification. This is implemented by
+     * ignoring the return status from the conversion function called below.
+     * On overflow, the input string is simply truncated.
+     */
+    AcpiUtConvertHexString (String, &ConvertedInteger);
+    return_VALUE (ConvertedInteger);
 }
 
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiUtStrtoulBase16
+ * FUNCTION:    AcpiUtExplicitStrtoul64
  *
- * PARAMETERS:  String                  - Null terminated input string
- *              Flags                   - conversion info
+ * PARAMETERS:  String                  - Null terminated input string,
+ *                                        must be a valid pointer
  *
- * RETURN:      64-bit converted integer
+ * RETURN:      Converted integer
  *
- * DESCRIPTION: Performs a base 16 conversion of the input string to an
- *              integer value, either 32 or 64 bits.
- *              Note: String must be valid and non-null.
+ * DESCRIPTION: Perform a 64-bit conversion with the restrictions placed upon
+ *              an "explicit conversion" by the ACPI specification. The
+ *              main restriction is that only hex and decimal are supported.
+ *
+ * -----------------------------------------------------------------------------
+ *
+ * Base is either 10 (default) or 16 (with 0x prefix). Octal (base 8) strings
+ * are not supported, as per the ACPI specification.
+ *
+ * Examples:
+ *      ToInteger ("1000")      Decimal
+ *      ToInteger ("0xABCD")    Hex
+ *
+ * Conversion rules as extracted from the ACPI specification:
+ *
+ *  1)  The input string is either a decimal or hexadecimal numeric string.
+ *      A hex value must be prefixed by "0x" or it is interpreted as decimal.
+ *
+ *  2)  The value must not exceed the maximum of an integer value
+ *      (32 or 64 bits). The ACPI specification states the behavior is
+ *      "unpredictable", so ACPICA matches the behavior of the implicit
+ *      conversion case. There are no numeric overflow conditions. (NO ERROR)
+ *
+ *  3)  Behavior on the first non-hex character is not defined by the ACPI
+ *      specification (for the ToInteger operator), so ACPICA matches the
+ *      behavior of the implicit conversion case. It terminates the
+ *      conversion and returns the current accumulated value of the converted
+ *      integer. (NO ERROR)
+ *
+ *  4)  Conversion of a null (zero-length) string to an integer is
+ *      technically not allowed. However, ACPICA allows this as an ACPI
+ *      extension. The conversion returns the value 0. (NO ERROR)
+ *
+ * NOTE: There are no error conditions returned by this function. At the
+ * minimum, a value of zero is returned.
+ *
+ * Current users of this function:
+ *
+ *  Interpreter - Runtime ASL ToInteger operator, as per the ACPI specification
  *
  ******************************************************************************/
 
-static UINT64
-AcpiUtStrtoulBase16 (
-    char                    *String,
-    UINT32                  Flags)
+UINT64
+AcpiUtExplicitStrtoul64 (
+    char                    *String)
 {
-    int                     AsciiDigit;
-    UINT32                  ValidDigits = 1;
-    UINT64                  ReturnValue = 0;
+    UINT64                  ConvertedInteger = 0;
+    UINT32                  Base = 10;          /* Default is decimal */
 
 
-    /* Main loop: convert each ASCII byte in the input string */
+    ACPI_FUNCTION_TRACE_STR (UtExplicitStrtoul64, String);
 
-    while (*String)
+
+    if (!AcpiUtRemoveWhitespace (&String))
     {
-        /* Check for overflow (32 or 64 bit) - return current converted value */
-
-        if ((ValidDigits > 16) ||
-            ((ValidDigits > 8) && (Flags & ACPI_STRTOUL_32BIT)))
-        {
-            goto Exit;
-        }
-
-        AsciiDigit = *String;
-        if (!isxdigit (AsciiDigit))
-        {
-            /* Not Hex ASCII A-F, a-f, or 0-9, terminate */
-
-            goto Exit;
-        }
-
-        /* Convert and insert the hex digit */
-
-        AcpiUtShortShiftLeft (ReturnValue, 4, &ReturnValue);
-        ReturnValue |= AcpiUtAsciiCharToHex (AsciiDigit);
-
-        String++;
-        ValidDigits++;
+        return_VALUE (0);
     }
 
-Exit:
-    return (ReturnValue);
+    /*
+     * Only Hex and Decimal are supported, as per the ACPI specification.
+     * A "0x" prefix indicates hex; otherwise decimal is assumed.
+     */
+    if (AcpiUtDetectHexPrefix (&String))
+    {
+        Base = 16;
+    }
+
+    if (!AcpiUtRemoveLeadingZeros (&String))
+    {
+        return_VALUE (0);
+    }
+
+    /*
+     * Ignore overflow as per the ACPI specification. This is implemented by
+     * ignoring the return status from the conversion functions called below.
+     * On overflow, the input string is simply truncated.
+     */
+    switch (Base)
+    {
+    case 10:
+    default:
+        AcpiUtConvertDecimalString (String, &ConvertedInteger);
+        break;
+
+    case 16:
+        AcpiUtConvertHexString (String, &ConvertedInteger);
+        break;
+    }
+
+    return_VALUE (ConvertedInteger);
 }

@@ -381,6 +381,11 @@ AcpiNsGetNormalizedPathname (
     BOOLEAN                 NoTrailing);
 
 char *
+AcpiNsBuildPrefixedPathname (
+    ACPI_GENERIC_STATE      *PrefixScope,
+    const char              *InternalPath);
+
+char *
 AcpiNsNameOfCurrentScope (
     ACPI_WALK_STATE         *WalkState);
 

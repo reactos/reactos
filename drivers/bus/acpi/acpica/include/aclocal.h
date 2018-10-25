@@ -726,7 +726,7 @@ typedef struct acpi_control_state
     union acpi_parse_object         *PredicateOp;
     UINT8                           *AmlPredicateStart;     /* Start of if/while predicate */
     UINT8                           *PackageEnd;            /* End of if/while block */
-    UINT32                          LoopCount;              /* While() loop counter */
+    UINT64                          LoopTimeout;            /* While() loop timeout */
 
 } ACPI_CONTROL_STATE;
 
@@ -1424,16 +1424,17 @@ typedef struct acpi_db_method_info
     ACPI_OBJECT_TYPE                *Types;
 
     /*
-     * Arguments to be passed to method for the command
-     * Threads -
-     *   the Number of threads, ID of current thread and
-     *   Index of current thread inside all them created.
+     * Arguments to be passed to method for the commands Threads and
+     * Background. Note, ACPI specifies a maximum of 7 arguments (0 - 6).
+     *
+     * For the Threads command, the Number of threads, ID of current
+     * thread and Index of current thread inside all them created.
      */
     char                            InitArgs;
 #ifdef ACPI_DEBUGGER
-    ACPI_OBJECT_TYPE                ArgTypes[4];
+    ACPI_OBJECT_TYPE                ArgTypes[ACPI_METHOD_NUM_ARGS];
 #endif
-    char                            *Arguments[4];
+    char                            *Arguments[ACPI_METHOD_NUM_ARGS];
     char                            NumThreadsStr[11];
     char                            IdOfThreadStr[11];
     char                            IndexOfThreadStr[11];

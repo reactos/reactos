@@ -106,8 +106,8 @@ ACPI_EXPORT_SYMBOL (AcpiError)
  *
  * RETURN:      None
  *
- * DESCRIPTION: Print "ACPI Exception" message with module/line/version info
- *              and decoded ACPI_STATUS.
+ * DESCRIPTION: Print an "ACPI Error" message with module/line/version
+ *              info as well as decoded ACPI_STATUS.
  *
  ******************************************************************************/
 
@@ -128,12 +128,12 @@ AcpiException (
 
     if (ACPI_SUCCESS (Status))
     {
-        AcpiOsPrintf (ACPI_MSG_EXCEPTION);
+        AcpiOsPrintf (ACPI_MSG_ERROR);
 
     }
     else
     {
-        AcpiOsPrintf (ACPI_MSG_EXCEPTION "%s, ",
+        AcpiOsPrintf (ACPI_MSG_ERROR "%s, ",
             AcpiFormatException (Status));
     }
 

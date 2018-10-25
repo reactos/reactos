@@ -115,7 +115,8 @@ AcpiDsBuildInternalObject (
                         ACPI_NAMESPACE_NODE, &(Op->Common.Node)));
                 if (ACPI_FAILURE (Status))
                 {
-                    ACPI_ERROR_NAMESPACE (Op->Common.Value.String, Status);
+                    ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
+                        Op->Common.Value.String, Status);
                     return_ACPI_STATUS (Status);
                 }
             }

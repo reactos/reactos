@@ -311,9 +311,12 @@ AcpiDsInitPackageElement (
     ACPI_OPERAND_OBJECT     **ElementPtr;
 
 
+    ACPI_FUNCTION_TRACE (DsInitPackageElement);
+
+
     if (!SourceObject)
     {
-        return (AE_OK);
+        return_ACPI_STATUS (AE_OK);
     }
 
     /*
@@ -348,7 +351,7 @@ AcpiDsInitPackageElement (
         SourceObject->Package.Flags |= AOPOBJ_DATA_VALID;
     }
 
-    return (AE_OK);
+    return_ACPI_STATUS (AE_OK);
 }
 
 
@@ -373,6 +376,7 @@ AcpiDsResolvePackageElement (
     ACPI_GENERIC_STATE      ScopeInfo;
     ACPI_OPERAND_OBJECT     *Element = *ElementPtr;
     ACPI_NAMESPACE_NODE     *ResolvedNode;
+    ACPI_NAMESPACE_NODE     *OriginalNode;
     char                    *ExternalPath = NULL;
     ACPI_OBJECT_TYPE        Type;
 
@@ -468,6 +472,7 @@ AcpiDsResolvePackageElement (
      * will remain as named references. This behavior is not described
      * in the ACPI spec, but it appears to be an oversight.
      */
+    OriginalNode = ResolvedNode;
     Status = AcpiExResolveNodeToValue (&ResolvedNode, NULL);
     if (ACPI_FAILURE (Status))
     {
@@ -499,26 +504,27 @@ AcpiDsResolvePackageElement (
      */
     case ACPI_TYPE_DEVICE:
     case ACPI_TYPE_THERMAL:
-
-        /* TBD: This may not be necesssary */
-
-        AcpiUtAddReference (ResolvedNode->Object);
+    case ACPI_TYPE_METHOD:
         break;
 
     case ACPI_TYPE_MUTEX:
-    case ACPI_TYPE_METHOD:
     case ACPI_TYPE_POWER:
     case ACPI_TYPE_PROCESSOR:
     case ACPI_TYPE_EVENT:
     case ACPI_TYPE_REGION:
 
+        /* AcpiExResolveNodeToValue gave these an extra reference */
+
+        AcpiUtRemoveReference (OriginalNode->Object);
         break;
 
     default:
         /*
          * For all other types - the node was resolved to an actual
-         * operand object with a value, return the object
+         * operand object with a value, return the object. Remove
+         * a reference on the existing object.
          */
+        AcpiUtRemoveReference (Element);
         *ElementPtr = (ACPI_OPERAND_OBJECT *) ResolvedNode;
         break;
     }

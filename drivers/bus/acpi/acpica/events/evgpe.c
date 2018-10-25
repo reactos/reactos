@@ -443,8 +443,8 @@ AcpiEvGpeDetect (
     ACPI_GPE_HANDLER_INFO   *GpeHandlerInfo;
     UINT32                  IntStatus = ACPI_INTERRUPT_NOT_HANDLED;
     UINT8                   EnabledStatusByte;
-    UINT32                  StatusReg;
-    UINT32                  EnableReg;
+    UINT64                  StatusReg;
+    UINT64                  EnableReg;
     ACPI_CPU_FLAGS          Flags;
     UINT32                  i;
     UINT32                  j;
@@ -521,7 +521,7 @@ AcpiEvGpeDetect (
                 "RunEnable=%02X, WakeEnable=%02X\n",
                 GpeRegisterInfo->BaseGpeNumber,
                 GpeRegisterInfo->BaseGpeNumber + (ACPI_GPE_REGISTER_WIDTH - 1),
-                StatusReg, EnableReg,
+                (UINT32) StatusReg, (UINT32) EnableReg,
                 GpeRegisterInfo->EnableForRun,
                 GpeRegisterInfo->EnableForWake));
 

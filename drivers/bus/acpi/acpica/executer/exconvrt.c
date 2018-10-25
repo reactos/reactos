@@ -64,10 +64,10 @@ AcpiExConvertToAscii (
  *
  * FUNCTION:    AcpiExConvertToInteger
  *
- * PARAMETERS:  ObjDesc         - Object to be converted. Must be an
- *                                Integer, Buffer, or String
- *              ResultDesc      - Where the new Integer object is returned
- *              Flags           - Used for string conversion
+ * PARAMETERS:  ObjDesc             - Object to be converted. Must be an
+ *                                    Integer, Buffer, or String
+ *              ResultDesc          - Where the new Integer object is returned
+ *              ImplicitConversion  - Used for string conversion
  *
  * RETURN:      Status
  *
@@ -79,14 +79,13 @@ ACPI_STATUS
 AcpiExConvertToInteger (
     ACPI_OPERAND_OBJECT     *ObjDesc,
     ACPI_OPERAND_OBJECT     **ResultDesc,
-    UINT32                  Flags)
+    UINT32                  ImplicitConversion)
 {
     ACPI_OPERAND_OBJECT     *ReturnDesc;
     UINT8                   *Pointer;
     UINT64                  Result;
     UINT32                  i;
     UINT32                  Count;
-    ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_TRACE_PTR (ExConvertToInteger, ObjDesc);
@@ -136,12 +135,17 @@ AcpiExConvertToInteger (
          * hexadecimal as per the ACPI specification. The only exception (as
          * of ACPI 3.0) is that the ToInteger() operator allows both decimal
          * and hexadecimal strings (hex prefixed with "0x").
+         *
+         * Explicit conversion is used only by ToInteger.
+         * All other string-to-integer conversions are implicit conversions.
          */
-        Status = AcpiUtStrtoul64 (ACPI_CAST_PTR (char, Pointer),
-            (AcpiGbl_IntegerByteWidth | Flags), &Result);
-        if (ACPI_FAILURE (Status))
+        if (ImplicitConversion)
         {
-            return_ACPI_STATUS (Status);
+            Result = AcpiUtImplicitStrtoul64 (ACPI_CAST_PTR (char, Pointer));
+        }
+        else
+        {
+            Result = AcpiUtExplicitStrtoul64 (ACPI_CAST_PTR (char, Pointer));
         }
         break;
 
@@ -684,7 +688,7 @@ AcpiExConvertToTargetType (
              * a Buffer or a String to an Integer if necessary.
              */
             Status = AcpiExConvertToInteger (SourceDesc, ResultDesc,
-                ACPI_STRTOUL_BASE16);
+                ACPI_IMPLICIT_CONVERSION);
             break;
 
         case ACPI_TYPE_STRING:

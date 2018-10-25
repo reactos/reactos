@@ -459,7 +459,7 @@
  * the plist contains a set of parens to allow variable-length lists.
  * These macros are used for both the debug and non-debug versions of the code.
  */
-#define ACPI_ERROR_NAMESPACE(s, e)          AcpiUtNamespaceError (AE_INFO, s, e);
+#define ACPI_ERROR_NAMESPACE(s, p, e)       AcpiUtPrefixedNamespaceError (AE_INFO, s, p, e);
 #define ACPI_ERROR_METHOD(s, n, p, e)       AcpiUtMethodError (AE_INFO, s, n, p, e);
 #define ACPI_WARN_PREDEFINED(plist)         AcpiUtPredefinedWarning plist
 #define ACPI_INFO_PREDEFINED(plist)         AcpiUtPredefinedInfo plist

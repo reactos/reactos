@@ -139,84 +139,14 @@ AcpiRead (
     UINT64                  *ReturnValue,
     ACPI_GENERIC_ADDRESS    *Reg)
 {
-    UINT32                  ValueLo;
-    UINT32                  ValueHi;
-    UINT32                  Width;
-    UINT64                  Address;
     ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_NAME (AcpiRead);
 
 
-    if (!ReturnValue)
-    {
-        return (AE_BAD_PARAMETER);
-    }
-
-    /* Validate contents of the GAS register. Allow 64-bit transfers */
-
-    Status = AcpiHwValidateRegister (Reg, 64, &Address);
-    if (ACPI_FAILURE (Status))
-    {
-        return (Status);
-    }
-
-    /*
-     * Two address spaces supported: Memory or I/O. PCI_Config is
-     * not supported here because the GAS structure is insufficient
-     */
-    if (Reg->SpaceId == ACPI_ADR_SPACE_SYSTEM_MEMORY)
-    {
-        Status = AcpiOsReadMemory ((ACPI_PHYSICAL_ADDRESS)
-            Address, ReturnValue, Reg->BitWidth);
-        if (ACPI_FAILURE (Status))
-        {
-            return (Status);
-        }
-    }
-    else /* ACPI_ADR_SPACE_SYSTEM_IO, validated earlier */
-    {
-        ValueLo = 0;
-        ValueHi = 0;
-
-        Width = Reg->BitWidth;
-        if (Width == 64)
-        {
-            Width = 32; /* Break into two 32-bit transfers */
-        }
-
-        Status = AcpiHwReadPort ((ACPI_IO_ADDRESS)
-            Address, &ValueLo, Width);
-        if (ACPI_FAILURE (Status))
-        {
-            return (Status);
-        }
-
-        if (Reg->BitWidth == 64)
-        {
-            /* Read the top 32 bits */
-
-            Status = AcpiHwReadPort ((ACPI_IO_ADDRESS)
-                (Address + 4), &ValueHi, 32);
-            if (ACPI_FAILURE (Status))
-            {
-                return (Status);
-            }
-        }
-
-        /* Set the return value only if status is AE_OK */
-
-        *ReturnValue = (ValueLo | ((UINT64) ValueHi << 32));
-    }
-
-    ACPI_DEBUG_PRINT ((ACPI_DB_IO,
-        "Read:  %8.8X%8.8X width %2d from %8.8X%8.8X (%s)\n",
-        ACPI_FORMAT_UINT64 (*ReturnValue), Reg->BitWidth,
-        ACPI_FORMAT_UINT64 (Address),
-        AcpiUtGetRegionName (Reg->SpaceId)));
-
-    return (AE_OK);
+    Status = AcpiHwRead (ReturnValue, Reg);
+    return (Status);
 }
 
 ACPI_EXPORT_SYMBOL (AcpiRead)
@@ -240,67 +170,13 @@ AcpiWrite (
     UINT64                  Value,
     ACPI_GENERIC_ADDRESS    *Reg)
 {
-    UINT32                  Width;
-    UINT64                  Address;
     ACPI_STATUS             Status;
 
 
     ACPI_FUNCTION_NAME (AcpiWrite);
 
 
-    /* Validate contents of the GAS register. Allow 64-bit transfers */
-
-    Status = AcpiHwValidateRegister (Reg, 64, &Address);
-    if (ACPI_FAILURE (Status))
-    {
-        return (Status);
-    }
-
-    /*
-     * Two address spaces supported: Memory or IO. PCI_Config is
-     * not supported here because the GAS structure is insufficient
-     */
-    if (Reg->SpaceId == ACPI_ADR_SPACE_SYSTEM_MEMORY)
-    {
-        Status = AcpiOsWriteMemory ((ACPI_PHYSICAL_ADDRESS)
-            Address, Value, Reg->BitWidth);
-        if (ACPI_FAILURE (Status))
-        {
-            return (Status);
-        }
-    }
-    else /* ACPI_ADR_SPACE_SYSTEM_IO, validated earlier */
-    {
-        Width = Reg->BitWidth;
-        if (Width == 64)
-        {
-            Width = 32; /* Break into two 32-bit transfers */
-        }
-
-        Status = AcpiHwWritePort ((ACPI_IO_ADDRESS)
-            Address, ACPI_LODWORD (Value), Width);
-        if (ACPI_FAILURE (Status))
-        {
-            return (Status);
-        }
-
-        if (Reg->BitWidth == 64)
-        {
-            Status = AcpiHwWritePort ((ACPI_IO_ADDRESS)
-                (Address + 4), ACPI_HIDWORD (Value), 32);
-            if (ACPI_FAILURE (Status))
-            {
-                return (Status);
-            }
-        }
-    }
-
-    ACPI_DEBUG_PRINT ((ACPI_DB_IO,
-        "Wrote: %8.8X%8.8X width %2d   to %8.8X%8.8X (%s)\n",
-        ACPI_FORMAT_UINT64 (Value), Reg->BitWidth,
-        ACPI_FORMAT_UINT64 (Address),
-        AcpiUtGetRegionName (Reg->SpaceId)));
-
+    Status = AcpiHwWrite (Value, Reg);
     return (Status);
 }
 

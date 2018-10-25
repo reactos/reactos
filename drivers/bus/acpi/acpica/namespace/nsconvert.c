@@ -83,8 +83,7 @@ AcpiNsConvertToInteger (
 
         /* String-to-Integer conversion */
 
-        Status = AcpiUtStrtoul64 (OriginalObject->String.Pointer,
-            AcpiGbl_IntegerByteWidth, &Value);
+        Status = AcpiUtStrtoul64 (OriginalObject->String.Pointer, &Value);
         if (ACPI_FAILURE (Status))
         {
             return (Status);
@@ -537,7 +536,8 @@ AcpiNsConvertToReference (
     {
         /* Check if we are resolving a named reference within a package */
 
-        ACPI_ERROR_NAMESPACE (OriginalObject->String.Pointer, Status);
+        ACPI_ERROR_NAMESPACE (&ScopeInfo,
+            OriginalObject->String.Pointer, Status);
         goto ErrorExit;
     }
 

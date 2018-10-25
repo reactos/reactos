@@ -344,6 +344,12 @@ AcpiDbExecute (
     UINT32                  Flags);
 
 void
+AcpiDbCreateExecutionThread (
+    char                    *MethodNameArg,
+    char                    **Arguments,
+    ACPI_OBJECT_TYPE        *Types);
+
+void
 AcpiDbCreateExecutionThreads (
     char                    *NumThreadsArg,
     char                    *NumLoopsArg,

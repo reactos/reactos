@@ -922,6 +922,7 @@ typedef struct acpi_iort_smmu_gsi
     UINT32                  NSgIrptFlags;
     UINT32                  NSgCfgIrpt;
     UINT32                  NSgCfgIrptFlags;
+
 } ACPI_IORT_SMMU_GSI;
 
 
@@ -939,6 +940,7 @@ typedef struct acpi_iort_smmu_v3
     UINT8                   Pxm;
     UINT8                   Reserved1;
     UINT16                  Reserved2;
+    UINT32                  IdMappingIndex;
 
 } ACPI_IORT_SMMU_V3;
 
@@ -1441,6 +1443,8 @@ enum AcpiSpmiInterfaceTypes
  * TCPA - Trusted Computing Platform Alliance table
  *        Version 2
  *
+ * TCG Hardware Interface Table for TPM 1.2 Clients and Servers
+ *
  * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
  * Version 1.2, Revision 8
  * February 27, 2017
@@ -1513,6 +1517,8 @@ typedef struct acpi_table_tcpa_server
  * TPM2 - Trusted Platform Module (TPM) 2.0 Hardware Interface Table
  *        Version 4
  *
+ * TCG Hardware Interface Table for TPM 2.0 Clients and Servers
+ *
  * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
  * Version 1.2, Revision 8
  * February 27, 2017
@@ -1534,17 +1540,25 @@ typedef struct acpi_table_tpm2
 /* Values for StartMethod above */
 
 #define ACPI_TPM2_NOT_ALLOWED                       0
+#define ACPI_TPM2_RESERVED1                         1
 #define ACPI_TPM2_START_METHOD                      2
+#define ACPI_TPM2_RESERVED3                         3
+#define ACPI_TPM2_RESERVED4                         4
+#define ACPI_TPM2_RESERVED5                         5
 #define ACPI_TPM2_MEMORY_MAPPED                     6
 #define ACPI_TPM2_COMMAND_BUFFER                    7
 #define ACPI_TPM2_COMMAND_BUFFER_WITH_START_METHOD  8
+#define ACPI_TPM2_RESERVED9                         9
+#define ACPI_TPM2_RESERVED10                        10
 #define ACPI_TPM2_COMMAND_BUFFER_WITH_ARM_SMC       11  /* V1.2 Rev 8 */
+#define ACPI_TPM2_RESERVED                          12
 
 
-/* Trailer appears after any StartMethod subtables */
+/* Optional trailer appears after any StartMethod subtables */
 
 typedef struct acpi_tpm2_trailer
 {
+    UINT8                   MethodParameters[12];
     UINT32                  MinimumLogLength;   /* Minimum length for the event log area */
     UINT64                  LogAddress;         /* Address of the event log area */
 

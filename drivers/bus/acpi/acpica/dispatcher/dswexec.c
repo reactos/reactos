@@ -145,7 +145,7 @@ AcpiDsGetPredicateValue (
      * object. Implicitly convert the argument if necessary.
      */
     Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc,
-        ACPI_STRTOUL_BASE16);
+        ACPI_IMPLICIT_CONVERSION);
     if (ACPI_FAILURE (Status))
     {
         goto Cleanup;

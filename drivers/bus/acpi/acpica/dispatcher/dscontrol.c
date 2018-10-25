@@ -126,7 +126,8 @@ AcpiDsExecBeginControlOp (
             WalkState->ParserState.PkgEnd;
         ControlState->Control.Opcode =
             Op->Common.AmlOpcode;
-
+        ControlState->Control.LoopTimeout = AcpiOsGetTimer () +
+           (UINT64) (AcpiGbl_MaxLoopIterations * ACPI_100NSEC_PER_SEC);
 
         /* Push the control state on this walk's control stack */
 
@@ -219,15 +220,15 @@ AcpiDsExecEndControlOp (
             /* Predicate was true, the body of the loop was just executed */
 
             /*
-             * This loop counter mechanism allows the interpreter to escape
-             * possibly infinite loops. This can occur in poorly written AML
-             * when the hardware does not respond within a while loop and the
-             * loop does not implement a timeout.
+             * This infinite loop detection mechanism allows the interpreter
+             * to escape possibly infinite loops. This can occur in poorly
+             * written AML when the hardware does not respond within a while
+             * loop and the loop does not implement a timeout.
              */
-            ControlState->Control.LoopCount++;
-            if (ControlState->Control.LoopCount > AcpiGbl_MaxLoopIterations)
+            if (ACPI_TIME_AFTER (AcpiOsGetTimer (),
+                    ControlState->Control.LoopTimeout))
             {
-                Status = AE_AML_INFINITE_LOOP;
+                Status = AE_AML_LOOP_TIMEOUT;
                 break;
             }
 

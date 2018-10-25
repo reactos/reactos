@@ -205,6 +205,82 @@ AcpiUtPredefinedBiosError (
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiUtPrefixedNamespaceError
+ *
+ * PARAMETERS:  ModuleName          - Caller's module name (for error output)
+ *              LineNumber          - Caller's line number (for error output)
+ *              PrefixScope         - Scope/Path that prefixes the internal path
+ *              InternalPath        - Name or path of the namespace node
+ *              LookupStatus        - Exception code from NS lookup
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Print error message with the full pathname constructed this way:
+ *
+ *                  PrefixScopeNodeFullPath.ExternalizedInternalPath
+ *
+ * NOTE:        10/2017: Treat the major NsLookup errors as firmware errors
+ *
+ ******************************************************************************/
+
+void
+AcpiUtPrefixedNamespaceError (
+    const char              *ModuleName,
+    UINT32                  LineNumber,
+    ACPI_GENERIC_STATE      *PrefixScope,
+    const char              *InternalPath,
+    ACPI_STATUS             LookupStatus)
+{
+    char                    *FullPath;
+    const char              *Message;
+
+
+    /*
+     * Main cases:
+     * 1) Object creation, object must not already exist
+     * 2) Object lookup, object must exist
+     */
+    switch (LookupStatus)
+    {
+    case AE_ALREADY_EXISTS:
+
+        AcpiOsPrintf (ACPI_MSG_BIOS_ERROR);
+        Message = "Failure creating";
+        break;
+
+    case AE_NOT_FOUND:
+
+        AcpiOsPrintf (ACPI_MSG_BIOS_ERROR);
+        Message = "Failure looking up";
+        break;
+
+    default:
+
+        AcpiOsPrintf (ACPI_MSG_ERROR);
+        Message = "Failure looking up";
+        break;
+    }
+
+    /* Concatenate the prefix path and the internal path */
+
+    FullPath = AcpiNsBuildPrefixedPathname (PrefixScope, InternalPath);
+
+    AcpiOsPrintf ("%s [%s], %s", Message,
+        FullPath ? FullPath : "Could not get pathname",
+        AcpiFormatException (LookupStatus));
+
+    if (FullPath)
+    {
+        ACPI_FREE (FullPath);
+    }
+
+    ACPI_MSG_SUFFIX;
+}
+
+
+#ifdef __OBSOLETE_FUNCTION
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiUtNamespaceError
  *
  * PARAMETERS:  ModuleName          - Caller's module name (for error output)
@@ -270,7 +346,7 @@ AcpiUtNamespaceError (
     ACPI_MSG_SUFFIX;
     ACPI_MSG_REDIRECT_END;
 }
-
+#endif
 
 /*******************************************************************************
  *

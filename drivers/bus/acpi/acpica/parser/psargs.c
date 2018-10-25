@@ -392,7 +392,7 @@ AcpiPsGetNextNamepath (
 
     if (ACPI_FAILURE (Status))
     {
-        ACPI_ERROR_NAMESPACE (Path, Status);
+        ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo, Path, Status);
 
         if ((WalkState->ParseFlags & ACPI_PARSE_MODE_MASK) ==
             ACPI_PARSE_EXECUTE)

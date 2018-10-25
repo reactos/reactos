@@ -196,10 +196,12 @@ AcpiDsLoad2BeginOp (
                 }
                 else
                 {
-                    ACPI_ERROR_NAMESPACE (BufferPtr, Status);
+                    ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
+                        BufferPtr, Status);
                 }
 #else
-                ACPI_ERROR_NAMESPACE (BufferPtr, Status);
+                ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
+                    BufferPtr, Status);
 #endif
                 return_ACPI_STATUS (Status);
             }
@@ -354,7 +356,8 @@ AcpiDsLoad2BeginOp (
 
     if (ACPI_FAILURE (Status))
     {
-        ACPI_ERROR_NAMESPACE (BufferPtr, Status);
+        ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
+            BufferPtr, Status);
         return_ACPI_STATUS (Status);
     }
 
@@ -736,7 +739,8 @@ AcpiDsLoad2EndOp (
         }
         else
         {
-            ACPI_ERROR_NAMESPACE (Arg->Common.Value.String, Status);
+            ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo,
+                Arg->Common.Value.String, Status);
         }
         break;
 

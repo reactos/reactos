@@ -392,15 +392,10 @@ AcpiPsCreateOp (
              * external declaration opcode. Setting WalkState->Aml to
              * WalkState->ParserState.Aml + 2 moves increments the
              * WalkState->Aml past the object type and the paramcount of the
-             * external opcode. For the error message, only print the AML
-             * offset. We could attempt to print the name but this may cause
-             * a segmentation fault when printing the namepath because the
-             * AML may be incorrect.
+             * external opcode.
              */
-            AcpiOsPrintf (
-                "// Invalid external declaration at AML offset 0x%x.\n",
-                WalkState->Aml - WalkState->ParserState.AmlStart);
             WalkState->Aml = WalkState->ParserState.Aml + 2;
+            WalkState->ParserState.Aml = WalkState->Aml;
             return_ACPI_STATUS (AE_CTRL_PARSE_CONTINUE);
         }
 #endif

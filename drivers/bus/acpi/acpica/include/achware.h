@@ -77,12 +77,12 @@ AcpiHwValidateRegister (
 
 ACPI_STATUS
 AcpiHwRead (
-    UINT32                  *Value,
+    UINT64                  *Value,
     ACPI_GENERIC_ADDRESS    *Reg);
 
 ACPI_STATUS
 AcpiHwWrite (
-    UINT32                  Value,
+    UINT64                  Value,
     ACPI_GENERIC_ADDRESS    *Reg);
 
 ACPI_BIT_REGISTER_INFO *
