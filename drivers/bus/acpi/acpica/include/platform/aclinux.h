@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -207,7 +207,7 @@
 #define ACPI_FLUSH_CPU_CACHE()
 #define ACPI_CAST_PTHREAD_T(Pthread) ((ACPI_THREAD_ID) (Pthread))
 
-#if defined(__ia64__)    || defined(__x86_64__) ||\
+#if defined(__ia64__)    || (defined(__x86_64__) && !defined(__ILP32__)) ||\
     defined(__aarch64__) || defined(__PPC64__) ||\
     defined(__s390x__)
 #define ACPI_MACHINE_WIDTH          64
