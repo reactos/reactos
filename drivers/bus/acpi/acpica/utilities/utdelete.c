@@ -346,8 +346,8 @@ AcpiUtDeleteInternalObj (
 
     /* Now the object can be safely deleted */
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS, "Deleting Object %p [%s]\n",
-        Object, AcpiUtGetObjectTypeName (Object)));
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_ALLOCATIONS, "%s: Deleting Object %p [%s]\n",
+        ACPI_GET_FUNCTION_NAME, Object, AcpiUtGetObjectTypeName (Object)));
 
     AcpiUtDeleteObjectDesc (Object);
     return_VOID;
@@ -473,9 +473,9 @@ AcpiUtUpdateRefCount (
                 Object));
         }
 
-        ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,
-            "Obj %p Type %.2X Refs %.2X [Decremented]\n",
-            Object, Object->Common.Type, NewCount));
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_ALLOCATIONS,
+            "%s: Obj %p Type %.2X Refs %.2X [Decremented]\n",
+            ACPI_GET_FUNCTION_NAME, Object, Object->Common.Type, NewCount));
 
         /* Actually delete the object on a reference count of zero */
 
@@ -798,9 +798,9 @@ AcpiUtRemoveReference (
         return;
     }
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_ALLOCATIONS,
-        "Obj %p Current Refs=%X [To Be Decremented]\n",
-        Object, Object->Common.ReferenceCount));
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_ALLOCATIONS,
+        "%s: Obj %p Current Refs=%X [To Be Decremented]\n",
+        ACPI_GET_FUNCTION_NAME, Object, Object->Common.ReferenceCount));
 
     /*
      * Decrement the reference count, and only actually delete the object

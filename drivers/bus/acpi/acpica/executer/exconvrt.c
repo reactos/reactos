@@ -649,6 +649,7 @@ AcpiExConvertToTargetType (
     switch (GET_CURRENT_ARG_TYPE (WalkState->OpInfo->RuntimeArgs))
     {
     case ARGI_SIMPLE_TARGET:
+    case ARGI_FIXED_TARGET:
     case ARGI_INTEGER_REF:      /* Handles Increment, Decrement cases */
 
         switch (DestinationType)

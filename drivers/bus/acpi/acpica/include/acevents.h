@@ -46,6 +46,21 @@
 
 
 /*
+ * Conditions to trigger post enabling GPE polling:
+ * It is not sufficient to trigger edge-triggered GPE with specific GPE
+ * chips, software need to poll once after enabling.
+ */
+#ifdef ACPI_USE_GPE_POLLING
+#define ACPI_GPE_IS_POLLING_NEEDED(__gpe__)             \
+    ((__gpe__)->RuntimeCount == 1 &&                    \
+     (__gpe__)->Flags & ACPI_GPE_INITIALIZED &&         \
+     ((__gpe__)->Flags & ACPI_GPE_XRUPT_TYPE_MASK) == ACPI_GPE_EDGE_TRIGGERED)
+#else
+#define ACPI_GPE_IS_POLLING_NEEDED(__gpe__)             FALSE
+#endif
+
+
+/*
  * evevent
  */
 ACPI_STATUS
@@ -141,6 +156,12 @@ AcpiEvLowGetGpeInfo (
 ACPI_STATUS
 AcpiEvFinishGpe (
     ACPI_GPE_EVENT_INFO     *GpeEventInfo);
+
+UINT32
+AcpiEvDetectGpe (
+    ACPI_NAMESPACE_NODE     *GpeDevice,
+    ACPI_GPE_EVENT_INFO     *GpeEventInfo,
+    UINT32                  GpeNumber);
 
 
 /*

@@ -217,6 +217,10 @@ FlSplitInputPathname (
     char                    **OutFilename);
 
 char *
+FlGetFileBasename (
+    char                    *FilePathname);
+
+char *
 AdGenerateFilename (
     char                    *Prefix,
     char                    *TableId);

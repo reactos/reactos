@@ -58,11 +58,13 @@
 
 #define ACPI_USE_SYSTEM_CLIBRARY
 #define ACPI_USE_DO_WHILE_0
+#define ACPI_IGNORE_PACKAGE_RESOLUTION_ERRORS
 
 
 #ifdef __KERNEL__
 
 #define ACPI_USE_SYSTEM_INTTYPES
+#define ACPI_USE_GPE_POLLING
 
 /* Kernel specific ACPICA configuration */
 

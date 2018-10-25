@@ -83,11 +83,14 @@
 /* Definitions of the predefined namespace names  */
 
 #define ACPI_UNKNOWN_NAME       (UINT32) 0x3F3F3F3F     /* Unknown name is "????" */
-#define ACPI_ROOT_NAME          (UINT32) 0x5F5F5F5C     /* Root name is    "\___" */
-
 #define ACPI_PREFIX_MIXED       (UINT32) 0x69706341     /* "Acpi" */
 #define ACPI_PREFIX_LOWER       (UINT32) 0x69706361     /* "acpi" */
 
+/* Root name stuff */
+
+#define ACPI_ROOT_NAME          (UINT32) 0x5F5F5F5C     /* Root name is    "\___" */
+#define ACPI_ROOT_PATHNAME      "\\___"
+#define ACPI_NAMESPACE_ROOT     "Namespace Root"
 #define ACPI_NS_ROOT_PATH       "\\"
 
 #endif  /* __ACNAMES_H__  */

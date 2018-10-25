@@ -307,8 +307,9 @@ AcpiOsAcquireObject (
         Cache->CurrentDepth--;
 
         ACPI_MEM_TRACKING (Cache->Hits++);
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-            "Object %p from %s cache\n", Object, Cache->ListName));
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC,
+            "%s: Object %p from %s cache\n",
+            ACPI_GET_FUNCTION_NAME, Object, Cache->ListName));
 
         Status = AcpiUtReleaseMutex (ACPI_MTX_CACHES);
         if (ACPI_FAILURE (Status))

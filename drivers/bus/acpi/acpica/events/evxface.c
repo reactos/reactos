@@ -1149,6 +1149,15 @@ AcpiRemoveGpeHandler (
         Handler->OriginallyEnabled)
     {
         (void) AcpiEvAddGpeReference (GpeEventInfo);
+        if (ACPI_GPE_IS_POLLING_NEEDED (GpeEventInfo))
+        {
+            /* Poll edge triggered GPEs to handle existing events */
+
+            AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+            (void) AcpiEvDetectGpe (
+                GpeDevice, GpeEventInfo, GpeNumber);
+            Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+        }
     }
 
     AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);

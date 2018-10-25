@@ -46,7 +46,7 @@
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20180105
+#define ACPI_CA_VERSION                 0x20180531
 
 #include "acconfig.h"
 #include "actypes.h"
@@ -194,15 +194,18 @@ ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_DoNotUseXsdt, FALSE);
 
 /*
  * Optionally support group module level code.
+ * NOTE, this is essentially obsolete and will be removed soon
+ * (01/2018).
  */
 ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_GroupModuleLevelCode, FALSE);
 
 /*
- * Optionally support module level code by parsing the entire table as
- * a TermList. Default is FALSE, do not execute entire table until some
- * lock order issues are fixed.
+ * Optionally support module level code by parsing an entire table as
+ * a method as it is loaded. Default is TRUE.
+ * NOTE, this is essentially obsolete and will be removed soon
+ * (01/2018).
  */
-ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_ParseTableAsTermList, FALSE);
+ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_ExecuteTablesAsMethods, TRUE);
 
 /*
  * Optionally use 32-bit FADT addresses if and when there is a conflict
@@ -267,6 +270,16 @@ ACPI_INIT_GLOBAL (BOOLEAN,          AcpiGbl_ReducedHardware, FALSE);
  * execution within a host kernel.
  */
 ACPI_INIT_GLOBAL (UINT32,           AcpiGbl_MaxLoopIterations, ACPI_MAX_LOOP_TIMEOUT);
+
+/*
+ * Optionally ignore AE_NOT_FOUND errors from named reference package elements
+ * during DSDT/SSDT table loading. This reduces error "noise" in platforms
+ * whose firmware is carrying around a bunch of unused package objects that
+ * refer to non-existent named objects. However, If the AML actually tries to
+ * use such a package, the unresolved element(s) will be replaced with NULL
+ * elements.
+ */
+ACPI_INIT_GLOBAL (BOOLEAN,          AcpiGbl_IgnorePackageResolutionErrors, FALSE);
 
 /*
  * This mechanism is used to trace a specified AML method. The method is

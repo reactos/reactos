@@ -943,6 +943,9 @@ AcpiPsGetNextArg (
 
             if (Arg->Common.AmlOpcode == AML_INT_METHODCALL_OP)
             {
+                /* Free method call op and corresponding namestring sub-ob */
+
+                AcpiPsFreeOp (Arg->Common.Value.Arg);
                 AcpiPsFreeOp (Arg);
                 Arg = NULL;
                 WalkState->ArgCount = 1;
@@ -959,10 +962,9 @@ AcpiPsGetNextArg (
     case ARGP_DATAOBJ:
     case ARGP_TERMARG:
 
-
-    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-        "**** TermArg/DataObj: %s (%2.2X)\n",
-        AcpiUtGetArgumentTypeName (ArgType), ArgType));
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "**** TermArg/DataObj: %s (%2.2X)\n",
+            AcpiUtGetArgumentTypeName (ArgType), ArgType));
 
         /* Single complex argument, nothing returned */
 

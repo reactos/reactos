@@ -175,14 +175,22 @@ AcpiPsGetArguments (
         }
 
         ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-            "Final argument count: %u pass %u\n",
+            "Final argument count: %8.8X pass %u\n",
             WalkState->ArgCount, WalkState->PassNumber));
 
         /*
-         * Handle executable code at "module-level". This refers to
-         * executable opcodes that appear outside of any control method.
+         * This case handles the legacy option that groups all module-level
+         * code blocks together and defers execution until all of the tables
+         * are loaded. Execute all of these blocks at this time.
+         * Execute any module-level code that was detected during the table
+         * load phase.
+         *
+         * Note: this option is deprecated and will be eliminated in the
+         * future. Use of this option can cause problems with AML code that
+         * depends upon in-order immediate execution of module-level code.
          */
-        if ((WalkState->PassNumber <= ACPI_IMODE_LOAD_PASS2) &&
+        if (AcpiGbl_GroupModuleLevelCode &&
+            (WalkState->PassNumber <= ACPI_IMODE_LOAD_PASS2) &&
             ((WalkState->ParseFlags & ACPI_PARSE_DISASSEMBLE) == 0))
         {
             /*
@@ -331,6 +339,16 @@ AcpiPsGetArguments (
  * DESCRIPTION: Wrap the module-level code with a method object and link the
  *              object to the global list. Note, the mutex field of the method
  *              object is used to link multiple module-level code objects.
+ *
+ * NOTE: In this legacy option, each block of detected executable AML
+ * code that is outside of any control method is wrapped with a temporary
+ * control method object and placed on a global list below.
+ *
+ * This function executes the module-level code for all tables only after
+ * all of the tables have been loaded. It is a legacy option and is
+ * not compatible with other ACPI implementations. See AcpiNsLoadTable.
+ *
+ * This function will be removed when the legacy option is removed.
  *
  ******************************************************************************/
 
@@ -539,6 +557,19 @@ AcpiPsParseLoop (
                 {
                     return_ACPI_STATUS (Status);
                 }
+                if (WalkState->Opcode == AML_SCOPE_OP)
+                {
+                    /*
+                     * If the scope op fails to parse, skip the body of the
+                     * scope op because the parse failure indicates that the
+                     * device may not exist.
+                     */
+                    WalkState->ParserState.Aml = WalkState->Aml + 1;
+                    WalkState->ParserState.Aml =
+                        AcpiPsGetNextPackageEnd(&WalkState->ParserState);
+                    WalkState->Aml = WalkState->ParserState.Aml;
+                    ACPI_ERROR ((AE_INFO, "Skipping Scope block"));
+                }
 
                 continue;
             }
@@ -581,7 +612,32 @@ AcpiPsParseLoop (
                 {
                     return_ACPI_STATUS (Status);
                 }
+                if ((WalkState->ControlState) &&
+                    ((WalkState->ControlState->Control.Opcode == AML_IF_OP) ||
+                    (WalkState->ControlState->Control.Opcode == AML_WHILE_OP)))
+                {
+                    /*
+                     * If the if/while op fails to parse, we will skip parsing
+                     * the body of the op.
+                     */
+                    ParserState->Aml =
+                        WalkState->ControlState->Control.AmlPredicateStart + 1;
+                    ParserState->Aml =
+                        AcpiPsGetNextPackageEnd (ParserState);
+                    WalkState->Aml = ParserState->Aml;
 
+                    ACPI_ERROR ((AE_INFO, "Skipping While/If block"));
+                    if (*WalkState->Aml == AML_ELSE_OP)
+                    {
+                        ACPI_ERROR ((AE_INFO, "Skipping Else block"));
+                        WalkState->ParserState.Aml = WalkState->Aml + 1;
+                        WalkState->ParserState.Aml =
+                            AcpiPsGetNextPackageEnd (ParserState);
+                        WalkState->Aml = ParserState->Aml;
+                    }
+                    ACPI_FREE(AcpiUtPopGenericState (&WalkState->ControlState));
+                }
+                Op = NULL;
                 continue;
             }
         }
@@ -589,7 +645,7 @@ AcpiPsParseLoop (
         /* Check for arguments that need to be processed */
 
         ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-            "Parseloop: argument count: %u\n", WalkState->ArgCount));
+            "Parseloop: argument count: %8.8X\n", WalkState->ArgCount));
 
         if (WalkState->ArgCount)
         {

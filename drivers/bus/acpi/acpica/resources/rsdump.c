@@ -660,7 +660,7 @@ AcpiRsDumpByteList (
     UINT16                  Length,
     UINT8                   *Data)
 {
-    UINT8                   i;
+    UINT16                  i;
 
 
     for (i = 0; i < Length; i++)

@@ -373,6 +373,7 @@ AcpiDsGetPackageArguments (
 
     Status = AcpiDsExecuteArguments (Node, Node,
         ObjDesc->Package.AmlLength, ObjDesc->Package.AmlStart);
+
     return_ACPI_STATUS (Status);
 }
 

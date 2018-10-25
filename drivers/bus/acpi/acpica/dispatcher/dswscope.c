@@ -161,8 +161,7 @@ AcpiDsScopeStackPush (
     }
     else
     {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC,
-            "[\\___] (%s)", "ROOT"));
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC, ACPI_NAMESPACE_ROOT));
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC,
@@ -220,15 +219,13 @@ AcpiDsScopeStackPop (
     NewScopeInfo = WalkState->ScopeInfo;
     if (NewScopeInfo)
     {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC,
-            "[%4.4s] (%s)\n",
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC, "[%4.4s] (%s)\n",
             AcpiUtGetNodeName (NewScopeInfo->Scope.Node),
             AcpiUtGetTypeName (NewScopeInfo->Common.Value)));
     }
     else
     {
-        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC,
-            "[\\___] (ROOT)\n"));
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EXEC, "%s\n", ACPI_NAMESPACE_ROOT));
     }
 
     AcpiUtDeleteGenericState (ScopeInfo);

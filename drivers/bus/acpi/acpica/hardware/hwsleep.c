@@ -90,16 +90,8 @@ AcpiHwLegacySleep (
         return_ACPI_STATUS (Status);
     }
 
-    /* Clear all fixed and general purpose status bits */
-
-    Status = AcpiHwClearAcpiStatus ();
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
-
     /*
-     * 1) Disable/Clear all GPEs
+     * 1) Disable all GPEs
      * 2) Enable all wakeup GPEs
      */
     Status = AcpiHwDisableAllGpes ();
@@ -319,7 +311,7 @@ AcpiHwLegacyWake (
      * might get fired there
      *
      * Restore the GPEs:
-     * 1) Disable/Clear all GPEs
+     * 1) Disable all GPEs
      * 2) Enable all runtime GPEs
      */
     Status = AcpiHwDisableAllGpes ();

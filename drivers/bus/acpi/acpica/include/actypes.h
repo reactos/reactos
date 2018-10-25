@@ -585,17 +585,17 @@ typedef UINT64                          ACPI_INTEGER;
  ******************************************************************************/
 
 /*
- * Initialization sequence
+ * Initialization sequence options
  */
-#define ACPI_FULL_INITIALIZATION        0x00
-#define ACPI_NO_ADDRESS_SPACE_INIT      0x01
-#define ACPI_NO_HARDWARE_INIT           0x02
-#define ACPI_NO_EVENT_INIT              0x04
-#define ACPI_NO_HANDLER_INIT            0x08
-#define ACPI_NO_ACPI_ENABLE             0x10
-#define ACPI_NO_DEVICE_INIT             0x20
-#define ACPI_NO_OBJECT_INIT             0x40
-#define ACPI_NO_FACS_INIT               0x80
+#define ACPI_FULL_INITIALIZATION        0x0000
+#define ACPI_NO_FACS_INIT               0x0001
+#define ACPI_NO_ACPI_ENABLE             0x0002
+#define ACPI_NO_HARDWARE_INIT           0x0004
+#define ACPI_NO_EVENT_INIT              0x0008
+#define ACPI_NO_HANDLER_INIT            0x0010
+#define ACPI_NO_OBJECT_INIT             0x0020
+#define ACPI_NO_DEVICE_INIT             0x0040
+#define ACPI_NO_ADDRESS_SPACE_INIT      0x0080
 
 /*
  * Initialization state
@@ -798,7 +798,7 @@ typedef UINT32                          ACPI_EVENT_STATUS;
  *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
  *   |  | | +----- Interrupt type: edge or level triggered
  *   |  | +------- Is a Wake GPE
- *   |  +--------- Is GPE masked by the software GPE masking mechanism
+ *   |  +--------- Has been enabled automatically at init time
  *   +------------ <Reserved>
  */
 #define ACPI_GPE_DISPATCH_NONE          (UINT8) 0x00
@@ -814,6 +814,8 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 #define ACPI_GPE_XRUPT_TYPE_MASK        (UINT8) 0x08
 
 #define ACPI_GPE_CAN_WAKE               (UINT8) 0x10
+#define ACPI_GPE_AUTO_ENABLED           (UINT8) 0x20
+#define ACPI_GPE_INITIALIZED            (UINT8) 0x40
 
 /*
  * Flags for GPE and Lock interfaces
@@ -1280,7 +1282,6 @@ typedef struct acpi_device_info
     UINT8                           Flags;              /* Miscellaneous info */
     UINT8                           HighestDstates[4];  /* _SxD values: 0xFF indicates not valid */
     UINT8                           LowestDstates[5];   /* _SxW values: 0xFF indicates not valid */
-    UINT32                          CurrentStatus;      /* _STA value */
     UINT64                          Address;            /* _ADR value */
     ACPI_PNP_DEVICE_ID              HardwareId;         /* _HID value */
     ACPI_PNP_DEVICE_ID              UniqueId;           /* _UID value */
@@ -1295,7 +1296,6 @@ typedef struct acpi_device_info
 
 /* Flags for Valid field above (AcpiGetObjectInfo) */
 
-#define ACPI_VALID_STA                  0x0001
 #define ACPI_VALID_ADR                  0x0002
 #define ACPI_VALID_HID                  0x0004
 #define ACPI_VALID_UID                  0x0008
@@ -1403,6 +1403,7 @@ typedef enum
 #define ACPI_OSI_WIN_10                 0x0D
 #define ACPI_OSI_WIN_10_RS1             0x0E
 #define ACPI_OSI_WIN_10_RS2             0x0F
+#define ACPI_OSI_WIN_10_RS3             0x10
 
 
 /* Definitions of getopt */

@@ -229,7 +229,7 @@ AcpiEnterSleepStateS4bios (
     }
 
     /*
-     * 1) Disable/Clear all GPEs
+     * 1) Disable all GPEs
      * 2) Enable all wakeup GPEs
      */
     Status = AcpiHwDisableAllGpes ();

@@ -1082,12 +1082,18 @@ AcpiTbLoadTable (
 
     Status = AcpiNsLoadTable (TableIndex, ParentNode);
 
-    /* Execute any module-level code that was found in the table */
-
-    if (!AcpiGbl_ParseTableAsTermList && AcpiGbl_GroupModuleLevelCode)
-    {
-        AcpiNsExecModuleCodeList ();
-    }
+    /*
+     * This case handles the legacy option that groups all module-level
+     * code blocks together and defers execution until all of the tables
+     * are loaded. Execute all of these blocks at this time.
+     * Execute any module-level code that was detected during the table
+     * load phase.
+     *
+     * Note: this option is deprecated and will be eliminated in the
+     * future. Use of this option can cause problems with AML code that
+     * depends upon in-order immediate execution of module-level code.
+     */
+    AcpiNsExecModuleCodeList ();
 
     /*
      * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is

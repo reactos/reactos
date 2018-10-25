@@ -615,8 +615,8 @@ AcpiDsExecEndOp (
         case AML_TYPE_CREATE_OBJECT:
 
             ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "Executing CreateObject (Buffer/Package) Op=%p AMLPtr=%p\n",
-                Op, Op->Named.Data));
+                "Executing CreateObject (Buffer/Package) Op=%p Child=%p ParentOpcode=%4.4X\n",
+                Op, Op->Named.Value.Arg, Op->Common.Parent->Common.AmlOpcode));
 
             switch (Op->Common.Parent->Common.AmlOpcode)
             {

@@ -321,6 +321,7 @@ AcpiExResolveOperands (
         case ARGI_OBJECT_REF:
         case ARGI_DEVICE_REF:
         case ARGI_TARGETREF:     /* Allows implicit conversion rules before store */
+        case ARGI_FIXED_TARGET:  /* No implicit conversion before store to target */
         case ARGI_SIMPLE_TARGET: /* Name, Local, or Arg - no implicit conversion  */
         case ARGI_STORE_TARGET:
 

@@ -96,6 +96,12 @@ ACPI_STATUS
 AcpiNsInitializeDevices (
     UINT32                  Flags);
 
+ACPI_STATUS
+AcpiNsInitOnePackage (
+    ACPI_HANDLE             ObjHandle,
+    UINT32                  Level,
+    void                    *Context,
+    void                    **ReturnValue);
 
 /*
  * nsload -  Namespace loading
