@@ -11,11 +11,11 @@ static const WCHAR s_szClassName[] = L"SwitchTest";
 
 static BOOL s_bTracing = FALSE;
 
-static BOOL s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
-static BOOL s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
-static BOOL s_bWM_NCACTIVATE = FALSE;
-static BOOL s_bWM_WINDOWPOSCHANGING = FALSE;
-static BOOL s_bWM_ACTIVATE = FALSE;
+static INT s_nWM_SYSCOMMAND_SC_RESTORE = 0;
+static INT s_nWM_SYSCOMMAND_NOT_SC_RESTORE = 0;
+static INT s_nWM_NCACTIVATE = 0;
+static INT s_nWM_WINDOWPOSCHANGING = 0;
+static INT s_nWM_ACTIVATE = 0;
 
 #define INTERVAL 200
 
@@ -30,19 +30,19 @@ DoMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (uMsg == WM_SYSCOMMAND)
     {
         if (wParam == SC_RESTORE)
-            s_bWM_SYSCOMMAND_SC_RESTORE = TRUE;
+            ++s_nWM_SYSCOMMAND_SC_RESTORE;
         else
-            s_bWM_SYSCOMMAND_NOT_SC_RESTORE = TRUE;
+            ++s_nWM_SYSCOMMAND_NOT_SC_RESTORE;
     }
 
     if (uMsg == WM_NCACTIVATE)
-        s_bWM_NCACTIVATE = TRUE;
+        ++s_nWM_NCACTIVATE;
 
     if (uMsg == WM_WINDOWPOSCHANGING)
-        s_bWM_WINDOWPOSCHANGING = TRUE;
+        ++s_nWM_WINDOWPOSCHANGING;
 
     if (uMsg == WM_ACTIVATE)
-        s_bWM_ACTIVATE = TRUE;
+        ++s_nWM_ACTIVATE;
 }
 
 // WM_TIMER
@@ -68,11 +68,11 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == NULL, "GetFocus() != NULL\n");
             s_bTracing = TRUE;
-            s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
-            s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
-            s_bWM_NCACTIVATE = FALSE;
-            s_bWM_WINDOWPOSCHANGING = FALSE;
-            s_bWM_ACTIVATE = FALSE;
+            s_nWM_SYSCOMMAND_SC_RESTORE = 0;
+            s_nWM_SYSCOMMAND_NOT_SC_RESTORE = 0;
+            s_nWM_NCACTIVATE = 0;
+            s_nWM_WINDOWPOSCHANGING = 0;
+            s_nWM_ACTIVATE = 0;
             SwitchToThisWindow(hwnd, TRUE);
             trace("SwitchToThisWindow(TRUE): tracing...\n");
             break;
@@ -82,11 +82,11 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetForegroundWindow() == hwnd, "GetForegroundWindow() != hwnd\n");
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == hwnd, "GetFocus() != hwnd\n");
-            ok(s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: not found\n");
-            ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
-            ok(s_bWM_NCACTIVATE, "WM_NCACTIVATE: not found\n");
-            ok(s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
-            ok(s_bWM_ACTIVATE, "WM_ACTIVATE: not found\n");
+            ok(s_nWM_SYSCOMMAND_SC_RESTORE == 1, "WM_SYSCOMMAND SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_SC_RESTORE);
+            ok(!s_nWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND non-SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_NOT_SC_RESTORE);
+            ok(s_nWM_NCACTIVATE > 0, "WM_NCACTIVATE: not found\n");
+            ok(s_nWM_WINDOWPOSCHANGING > 0, "WM_WINDOWPOSCHANGING: not found\n");
+            ok(s_nWM_ACTIVATE > 0, "WM_ACTIVATE: not found\n");
             break;
         //
         // SwitchToThisWindow(FALSE)
@@ -104,11 +104,11 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == NULL, "GetFocus() != NULL\n");
             s_bTracing = TRUE;
-            s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
-            s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
-            s_bWM_NCACTIVATE = FALSE;
-            s_bWM_WINDOWPOSCHANGING = FALSE;
-            s_bWM_ACTIVATE = FALSE;
+            s_nWM_SYSCOMMAND_SC_RESTORE = 0;
+            s_nWM_SYSCOMMAND_NOT_SC_RESTORE = 0;
+            s_nWM_NCACTIVATE = 0;
+            s_nWM_WINDOWPOSCHANGING = 0;
+            s_nWM_ACTIVATE = 0;
             SwitchToThisWindow(hwnd, FALSE);
             trace("SwitchToThisWindow(FALSE): tracing...\n");
             break;
@@ -118,11 +118,11 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-            ok(!s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: found\n");
-            ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
-            ok(!s_bWM_NCACTIVATE, "WM_NCACTIVATE: found\n");
-            ok(!s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: found\n");
-            ok(!s_bWM_ACTIVATE, "WM_ACTIVATE: found\n");
+            ok(!s_nWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_SC_RESTORE);
+            ok(!s_nWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND non-SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_NOT_SC_RESTORE);
+            ok(!s_nWM_NCACTIVATE, "WM_NCACTIVATE: %d\n", s_nWM_NCACTIVATE);
+            ok(!s_nWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: %d\n", s_nWM_WINDOWPOSCHANGING);
+            ok(!s_nWM_ACTIVATE, "WM_ACTIVATE: %d\n", s_nWM_ACTIVATE);
             break;
         default: // finish
             DestroyWindow(hwnd);
