@@ -17,7 +17,7 @@ static INT s_nWM_NCACTIVATE = 0;
 static INT s_nWM_WINDOWPOSCHANGING = 0;
 static INT s_nWM_ACTIVATE = 0;
 
-#define INTERVAL 200
+#define TIMER_INTERVAL 200
 
 static void
 DoMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -128,7 +128,7 @@ OnTimer(HWND hwnd, UINT id)
             DestroyWindow(hwnd);
             return;
     }
-    SetTimer(hwnd, id + 1, INTERVAL, NULL);
+    SetTimer(hwnd, id + 1, TIMER_INTERVAL, NULL);
 }
 
 static LRESULT CALLBACK
@@ -138,7 +138,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_CREATE:
-            SetTimer(hwnd, 0, INTERVAL, NULL);
+            SetTimer(hwnd, 0, TIMER_INTERVAL, NULL);
             break;
         case WM_TIMER:
             OnTimer(hwnd, (UINT)wParam);
