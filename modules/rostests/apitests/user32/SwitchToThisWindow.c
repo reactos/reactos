@@ -52,81 +52,81 @@ OnTimer(HWND hwnd, UINT id)
     KillTimer(hwnd, id);
     switch (id)
     {
-    //
-    // SwitchToThisWindow(TRUE)
-    //
-    case 0: // minimize
-        SetForegroundWindow(GetDesktopWindow());
-        SetActiveWindow(GetDesktopWindow());
-        ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
-        ok(GetActiveWindow() == NULL, "GetActiveWindow() != NULL\n");
-        ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-        CloseWindow(hwnd);  // minimize
-        break;
-    case 1: // start tracing
-        ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
-        ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
-        ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-        s_bTracing = TRUE;
-        s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
-        s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
-        s_bWM_NCACTIVATE = FALSE;
-        s_bWM_WINDOWPOSCHANGING = FALSE;
-        s_bWM_ACTIVATE = FALSE;
-        SwitchToThisWindow(hwnd, TRUE);
-        trace("SwitchToThisWindow(TRUE): tracing...\n");
-        break;
-    case 2: // tracing done
-        s_bTracing = FALSE;
-        trace("SwitchToThisWindow(TRUE): tracing done\n");
-        ok(GetForegroundWindow() == hwnd, "GetForegroundWindow() != hwnd\n");
-        ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
-        ok(GetFocus() == hwnd, "GetFocus() != hwnd\n");
-        ok(s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: not found\n");
-        ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
-        ok(s_bWM_NCACTIVATE, "WM_NCACTIVATE: not found\n");
-        ok(s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
-        ok(s_bWM_ACTIVATE, "WM_ACTIVATE: not found\n");
-        break;
-    //
-    // SwitchToThisWindow(FALSE)
-    //
-    case 3: // minimize
-        SetForegroundWindow(GetDesktopWindow());
-        SetActiveWindow(GetDesktopWindow());
-        ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
-        ok(GetActiveWindow() == NULL, "GetActiveWindow() != NULL\n");
-        ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-        CloseWindow(hwnd);  // minimize
-        break;
-    case 4: // start tracing
-        ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
-        ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
-        ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-        s_bTracing = TRUE;
-        s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
-        s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
-        s_bWM_NCACTIVATE = FALSE;
-        s_bWM_WINDOWPOSCHANGING = FALSE;
-        s_bWM_ACTIVATE = FALSE;
-        SwitchToThisWindow(hwnd, FALSE);
-        trace("SwitchToThisWindow(FALSE): tracing...\n");
-        break;
-    case 5: // tracing done
-        s_bTracing = FALSE;
-        trace("SwitchToThisWindow(FALSE): tracing done\n");
-        ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
-        ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
-        ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-        ok(!s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: found\n");
-        ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
-        ok(!s_bWM_NCACTIVATE, "WM_NCACTIVATE: found\n");
-        ok(!s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
-        ok(!s_bWM_ACTIVATE, "WM_ACTIVATE: found\n");
-        break;
-    default: // finish
-        DestroyWindow(hwnd);
-        return;
+        //
+        // SwitchToThisWindow(TRUE)
+        //
+        case 0: // minimize
+            SetForegroundWindow(GetDesktopWindow());
+            SetActiveWindow(GetDesktopWindow());
+            ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
+            ok(GetActiveWindow() == NULL, "GetActiveWindow() != NULL\n");
+            ok(GetFocus() == NULL, "GetFocus() != NULL\n");
+            CloseWindow(hwnd);  // minimize
+            break;
+        case 1: // start tracing
+            ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
+            ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
+            ok(GetFocus() == NULL, "GetFocus() != NULL\n");
+            s_bTracing = TRUE;
+            s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
+            s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
+            s_bWM_NCACTIVATE = FALSE;
+            s_bWM_WINDOWPOSCHANGING = FALSE;
+            s_bWM_ACTIVATE = FALSE;
+            SwitchToThisWindow(hwnd, TRUE);
+            trace("SwitchToThisWindow(TRUE): tracing...\n");
+            break;
+        case 2: // tracing done
+            s_bTracing = FALSE;
+            trace("SwitchToThisWindow(TRUE): tracing done\n");
+            ok(GetForegroundWindow() == hwnd, "GetForegroundWindow() != hwnd\n");
+            ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
+            ok(GetFocus() == hwnd, "GetFocus() != hwnd\n");
+            ok(s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: not found\n");
+            ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
+            ok(s_bWM_NCACTIVATE, "WM_NCACTIVATE: not found\n");
+            ok(s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
+            ok(s_bWM_ACTIVATE, "WM_ACTIVATE: not found\n");
+            break;
+        //
+        // SwitchToThisWindow(FALSE)
+        //
+        case 3: // minimize
+            SetForegroundWindow(GetDesktopWindow());
+            SetActiveWindow(GetDesktopWindow());
+            ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
+            ok(GetActiveWindow() == NULL, "GetActiveWindow() != NULL\n");
+            ok(GetFocus() == NULL, "GetFocus() != NULL\n");
+            CloseWindow(hwnd);  // minimize
+            break;
+        case 4: // start tracing
+            ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
+            ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
+            ok(GetFocus() == NULL, "GetFocus() != NULL\n");
+            s_bTracing = TRUE;
+            s_bWM_SYSCOMMAND_SC_RESTORE = FALSE;
+            s_bWM_SYSCOMMAND_NOT_SC_RESTORE = FALSE;
+            s_bWM_NCACTIVATE = FALSE;
+            s_bWM_WINDOWPOSCHANGING = FALSE;
+            s_bWM_ACTIVATE = FALSE;
+            SwitchToThisWindow(hwnd, FALSE);
+            trace("SwitchToThisWindow(FALSE): tracing...\n");
+            break;
+        case 5: // tracing done
+            s_bTracing = FALSE;
+            trace("SwitchToThisWindow(FALSE): tracing done\n");
+            ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
+            ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
+            ok(GetFocus() == NULL, "GetFocus() != NULL\n");
+            ok(!s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: found\n");
+            ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
+            ok(!s_bWM_NCACTIVATE, "WM_NCACTIVATE: found\n");
+            ok(!s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
+            ok(!s_bWM_ACTIVATE, "WM_ACTIVATE: found\n");
+            break;
+        default: // finish
+            DestroyWindow(hwnd);
+            return;
     }
     SetTimer(hwnd, id + 1, INTERVAL, NULL);
 }
