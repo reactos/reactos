@@ -15,7 +15,12 @@
 #pragma once
 
 #ifndef __RELFILE__
-#define __RELFILE__ __FILE__
+#   ifdef __REACTOS__
+#       include <reactos/builddir.h>
+#       define __RELFILE__ &__FILE__[sizeof(REACTOS_SOURCE_DIR)]
+#   else
+#       define __RELFILE__ __FILE__
+#   endif
 #endif
 
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
