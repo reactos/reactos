@@ -1,0 +1,9 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nKirjuta ""CLIP /?"" kasutamise informatsiooniks.\n"
+    IDS_HELP "\nJuhib käsurea programmide väljundi lõikelauale.\n\n\
+CLIP [/?]\n\n\
+    /?  Kuvab seda spikriteemat.\n"
+END
