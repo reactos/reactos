@@ -67,12 +67,12 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-            s_bTracing = TRUE;
             s_nWM_SYSCOMMAND_SC_RESTORE = 0;
             s_nWM_SYSCOMMAND_NOT_SC_RESTORE = 0;
             s_nWM_NCACTIVATE = 0;
             s_nWM_WINDOWPOSCHANGING = 0;
             s_nWM_ACTIVATE = 0;
+            s_bTracing = TRUE;
             SwitchToThisWindow(hwnd, TRUE);
             trace("SwitchToThisWindow(TRUE): tracing...\n");
             break;
@@ -103,12 +103,12 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetForegroundWindow() == NULL, "GetForegroundWindow() != NULL\n");
             ok(GetActiveWindow() == hwnd, "GetActiveWindow() != hwnd\n");
             ok(GetFocus() == NULL, "GetFocus() != NULL\n");
-            s_bTracing = TRUE;
             s_nWM_SYSCOMMAND_SC_RESTORE = 0;
             s_nWM_SYSCOMMAND_NOT_SC_RESTORE = 0;
             s_nWM_NCACTIVATE = 0;
             s_nWM_WINDOWPOSCHANGING = 0;
             s_nWM_ACTIVATE = 0;
+            s_bTracing = TRUE;
             SwitchToThisWindow(hwnd, FALSE);
             trace("SwitchToThisWindow(FALSE): tracing...\n");
             break;
