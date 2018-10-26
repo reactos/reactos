@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     et-EE resource file
+ * COPYRIGHT:   Copyright 2018 Joann Mõndresku (joannmondresku at gmail dot com)
+ */
+
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS'i krahhi teavitaja"
+    IDS_USER_ALERT_MESSAGE "Rakendus %ls jooksis kokku. Informatsioon selle krahhi kohta on salvestatud asukohta:\r\n\r\n%ls"
+END

@@ -1,0 +1,13 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "FINDSTR: Trükib kõik read failist, mis sisaldavad stringi.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
+    /C  Loenda arvuna stringi sisaldavaid ridu\n\
+    /I  Tõstutundetult\n\
+    /N  Nummerda kuvatud read alustades 1-st\n\
+    /V  Trüki read, mis ei sisalda stringi"
+    IDS_NO_SUCH_FILE "FINDSTR: %s: Sellist faili ei leitud\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: Ei saa faili avada\n"
+END
