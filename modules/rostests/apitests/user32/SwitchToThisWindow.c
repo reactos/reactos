@@ -137,17 +137,17 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     DoMessage(hwnd, uMsg, wParam, lParam);
     switch (uMsg)
     {
-    case WM_CREATE:
-        SetTimer(hwnd, 0, INTERVAL, NULL);
-        break;
-    case WM_TIMER:
-        OnTimer(hwnd, (UINT)wParam);
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        case WM_CREATE:
+            SetTimer(hwnd, 0, INTERVAL, NULL);
+            break;
+        case WM_TIMER:
+            OnTimer(hwnd, (UINT)wParam);
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
