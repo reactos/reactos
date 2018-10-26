@@ -121,7 +121,7 @@ OnTimer(HWND hwnd, UINT id)
             ok(!s_bWM_SYSCOMMAND_SC_RESTORE, "WM_SYSCOMMAND SC_RESTORE: found\n");
             ok(!s_bWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND not SC_RESTORE: found\n");
             ok(!s_bWM_NCACTIVATE, "WM_NCACTIVATE: found\n");
-            ok(!s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: not found\n");
+            ok(!s_bWM_WINDOWPOSCHANGING, "WM_WINDOWPOSCHANGING: found\n");
             ok(!s_bWM_ACTIVATE, "WM_ACTIVATE: found\n");
             break;
         default: // finish
