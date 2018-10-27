@@ -95,6 +95,10 @@ SetupGetStringFieldW(PINFCONTEXT Context,
 #undef MAX_INF_STRING_LENGTH
 #define MAX_INF_STRING_LENGTH   1024 // Still larger than in infcommon.h
 
+#ifndef INF_STYLE_OLDNT
+#define INF_STYLE_OLDNT 0x00000001
+#endif
+
 #ifndef INF_STYLE_WIN4
 #define INF_STYLE_WIN4  0x00000002
 #endif

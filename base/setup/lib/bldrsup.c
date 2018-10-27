@@ -461,8 +461,9 @@ OpenIniBootLoaderStore(
             DPRINT1("IniCacheLoadFromMemory() failed (Status 0x%08lx)\n", Status);
 
             /* Finally, unmap and close the file */
-            UnMapFile(BootStore->SectionHandle, BootStore->ViewBase);
-            NtClose(BootStore->FileHandle);
+            UnMapAndCloseFile(BootStore->FileHandle,
+                              BootStore->SectionHandle,
+                              BootStore->ViewBase);
 
             RtlFreeHeap(ProcessHeap, 0, BootStore);
             return Status;
@@ -715,8 +716,9 @@ Quit:
     if (BootStore->SectionHandle)
     {
         /* Finally, unmap and close the file */
-        UnMapFile(BootStore->SectionHandle, BootStore->ViewBase);
-        NtClose(BootStore->FileHandle);
+        UnMapAndCloseFile(BootStore->FileHandle,
+                          BootStore->SectionHandle,
+                          BootStore->ViewBase);
     }
     else // if (BootStore->FileHandle)
     {

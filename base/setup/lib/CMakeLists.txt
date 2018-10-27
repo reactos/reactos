@@ -12,6 +12,7 @@ list(APPEND SOURCE
     partlist.c
     registry.c
     regutil.c
+    setuplib.c
     precomp.h)
 
 add_library(setuplib ${SOURCE})

@@ -361,7 +361,7 @@ interface wkssvc
     /* Function 0 */
     unsigned long
     __stdcall
-    NetrWkstaGetInfo (
+    NetrWkstaGetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in] unsigned long Level,
         [out, switch_is(Level)] LPWKSTA_INFO WkstaInfo);
@@ -369,7 +369,7 @@ interface wkssvc
     /* Function 1 */
     unsigned long
     __stdcall
-    NetrWkstaSetInfo (
+    NetrWkstaSetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in] unsigned long Level,
         [in, switch_is(Level)] LPWKSTA_INFO WkstaInfo,
@@ -378,7 +378,7 @@ interface wkssvc
     /* Function 2 */
     unsigned long
     __stdcall
-    NetrWkstaUserEnum (
+    NetrWkstaUserEnum(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in, out] LPWKSTA_USER_ENUM_STRUCT UserInfo,
         [in] unsigned long PreferredMaximumLength,
@@ -396,7 +396,7 @@ interface wkssvc
     /* Function 4 */
     unsigned long
     __stdcall
-    NetrWkstaUserSetInfo (
+    NetrWkstaUserSetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE Unused,
         [in] unsigned long Level,
         [in, switch_is(Level)] LPWKSTA_USER_INFO UserInfo,
@@ -405,7 +405,7 @@ interface wkssvc
     /* Function 5 */
     unsigned long
     __stdcall
-    NetrWkstaTransportEnum (
+    NetrWkstaTransportEnum(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in, out] LPWKSTA_TRANSPORT_ENUM_STRUCT TransportInfo,
         [in] unsigned long PreferredMaximumLength,
@@ -415,7 +415,7 @@ interface wkssvc
     /* Function 6 */
     unsigned long
     __stdcall
-    NetrWkstaTransportAdd (
+    NetrWkstaTransportAdd(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in] unsigned long Level,
         [in] LPWKSTA_TRANSPORT_INFO_0 TransportInfo,
@@ -424,7 +424,7 @@ interface wkssvc
     /* Function 7 */
     unsigned long
     __stdcall
-    NetrWkstaTransportDel (
+    NetrWkstaTransportDel(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in, string, unique] wchar_t *TransportName,
         [in] unsigned long ForceLevel);
@@ -432,7 +432,7 @@ interface wkssvc
     /* Function 8 */
     unsigned long
     __stdcall
-    NetrUseAdd (
+    NetrUseAdd(
         [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
         [in] unsigned long Level,
         [in, switch_is(Level)] LPUSE_INFO InfoStruct,
@@ -441,7 +441,7 @@ interface wkssvc
     /* Function 9 */
     unsigned long
     __stdcall
-    NetrUseGetInfo (
+    NetrUseGetInfo(
         [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
         [in, string] wchar_t *UseName,
         [in] unsigned long Level,
@@ -450,7 +450,7 @@ interface wkssvc
     /* Function 10 */
     unsigned long
     __stdcall
-    NetrUseDel (
+    NetrUseDel(
         [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
         [in, string] wchar_t *UseName,
         [in] unsigned long ForceLevel);
@@ -458,17 +458,17 @@ interface wkssvc
     /* Function 11 */
     unsigned long
     __stdcall
-    NetrUseEnum (
+    NetrUseEnum(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in, out] LPUSE_ENUM_STRUCT InfoStruct,
         [in] unsigned long PreferredMaximumLength,
         [out] unsigned long *TotalEntries,
         [in, out, unique] unsigned long *ResumeHandle);
 
-    /* Function 12 */
-    void
+    /* Function 12 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum12NotUsedOnWire(void);
+    NetrMessageBufferSend(void);
 
     /* Function 13 */
     unsigned long
@@ -480,35 +480,37 @@ interface wkssvc
         [in] unsigned long Options,
         [out] LPSTAT_WORKSTATION_0 *Buffer);
 
-    /* Function 14 */
-    void
+    /* Function 14 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum14NotUsedOnWire(void);
+    NetrLogonDomainNameAdd(
+        [in, string] WKSSVC_IDENTIFY_HANDLE DomainName);
 
-    /* Function 15 */
-    void
+    /* Function 15 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum15NotUsedOnWire(void);
+    NetrLogonDomainNameDel(
+        [in, string] WKSSVC_IDENTIFY_HANDLE DomainName);
 
-    /* Function 16 */
-    void
+    /* Function 16 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum16NotUsedOnWire(void);
+    NetrJoinDomain(void);
 
-    /* Function 17 */
-    void
+    /* Function 17 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum17NotUsedOnWire(void);
+    NetrUnjoinDomain(void);
 
-    /* Function 18 */
-    void
+    /* Function 18 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum18NotUsedOnWire(void);
+    NetrValidateName(void);
 
-    /* Function 19 */
-    void
+    /* Function 19 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum19NotUsedOnWire(void);
+    NetrRenameMachineInDomain(void);
 
     /* Function 20 */
     unsigned long
@@ -518,10 +520,10 @@ interface wkssvc
         [in, out, string] wchar_t **NameBuffer,
         [out] PNETSETUP_JOIN_STATUS BufferType);
 
-    /* Function 21 */
-    void
+    /* Function 21 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum21NotUsedOnWire(void);
+    NetrGetJoinableOUs(void);
 
     /* Function 22 */
     unsigned long

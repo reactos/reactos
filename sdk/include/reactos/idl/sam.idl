@@ -852,7 +852,7 @@ interface samr
     NTSTATUS
     __stdcall
     SamrCloseHandle(
-        [in,out] SAMPR_HANDLE *SamHandle);
+        [in, out] SAMPR_HANDLE *SamHandle);
 
     /* Function 2 */
     NTSTATUS
@@ -889,7 +889,7 @@ interface samr
     __stdcall
     SamrEnumerateDomainsInSamServer(
         [in] SAMPR_HANDLE ServerHandle,
-        [in,out] unsigned long *EnumerationContext,
+        [in, out] unsigned long *EnumerationContext,
         [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
         [in] unsigned long PreferedMaximumLength,
         [out] unsigned long *CountReturned);
@@ -934,7 +934,7 @@ interface samr
     __stdcall
     SamrEnumerateGroupsInDomain(
         [in] SAMPR_HANDLE DomainHandle,
-        [in,out] unsigned long *EnumerationContext,
+        [in, out] unsigned long *EnumerationContext,
         [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
         [in] unsigned long PreferedMaximumLength,
         [out] unsigned long *CountReturned);
@@ -942,55 +942,61 @@ interface samr
     /* Function 12 */
     NTSTATUS
     __stdcall
-    SamrCreateUserInDomain([in] SAMPR_HANDLE DomainHandle,
-                           [in] PRPC_UNICODE_STRING Name,
-                           [in] ACCESS_MASK DesiredAccess,
-                           [out] SAMPR_HANDLE *UserHandle,
-                           [out] unsigned long *RelativeId);
+    SamrCreateUserInDomain(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in] PRPC_UNICODE_STRING Name,
+        [in] ACCESS_MASK DesiredAccess,
+        [out] SAMPR_HANDLE *UserHandle,
+        [out] unsigned long *RelativeId);
 
     /* Function 13 */
     NTSTATUS
     __stdcall
-    SamrEnumerateUsersInDomain([in] SAMPR_HANDLE DomainHandle,
-                               [in,out] unsigned long *EnumerationContext,
-                               [in] unsigned long UserAccountControl,
-                               [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
-                               [in] unsigned long PreferedMaximumLength,
-                               [out] unsigned long *CountReturned);
+    SamrEnumerateUsersInDomain(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in, out] unsigned long *EnumerationContext,
+        [in] unsigned long UserAccountControl,
+        [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
+        [in] unsigned long PreferedMaximumLength,
+        [out] unsigned long *CountReturned);
 
     /* Function 14 */
     NTSTATUS
     __stdcall
-    SamrCreateAliasInDomain([in] SAMPR_HANDLE DomainHandle,
-                            [in] PRPC_UNICODE_STRING AccountName,
-                            [in] ACCESS_MASK DesiredAccess,
-                            [out] SAMPR_HANDLE *AliasHandle,
-                            [out] unsigned long *RelativeId);
+    SamrCreateAliasInDomain(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in] PRPC_UNICODE_STRING AccountName,
+        [in] ACCESS_MASK DesiredAccess,
+        [out] SAMPR_HANDLE *AliasHandle,
+        [out] unsigned long *RelativeId);
 
     /* Function 15 */
     NTSTATUS
     __stdcall
-    SamrEnumerateAliasesInDomain([in] SAMPR_HANDLE DomainHandle,
-                                 [in,out] unsigned long *EnumerationContext,
-                                 [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
-                                 [in] unsigned long PreferedMaximumLength,
-                                 [out] unsigned long *CountReturned);
+    SamrEnumerateAliasesInDomain(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in, out] unsigned long *EnumerationContext,
+        [out] PSAMPR_ENUMERATION_BUFFER *Buffer,
+        [in] unsigned long PreferedMaximumLength,
+        [out] unsigned long *CountReturned);
 
     /* Function 16 */
     NTSTATUS
     __stdcall
-    SamrGetAliasMembership([in] SAMPR_HANDLE DomainHandle,
-                           [in] PSAMPR_PSID_ARRAY SidArray,
-                           [out] PSAMPR_ULONG_ARRAY Membership);
+    SamrGetAliasMembership(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in] PSAMPR_PSID_ARRAY SidArray,
+        [out] PSAMPR_ULONG_ARRAY Membership);
 
     /* Function 17 */
     NTSTATUS
     __stdcall
-    SamrLookupNamesInDomain([in] SAMPR_HANDLE DomainHandle,
-                            [in, range(0, 1000)] unsigned long Count,
-                            [in, size_is(1000), length_is(Count)] RPC_UNICODE_STRING Names[*],
-                            [out] PSAMPR_ULONG_ARRAY RelativeIds,
-                            [out] PSAMPR_ULONG_ARRAY Use);
+    SamrLookupNamesInDomain(
+        [in] SAMPR_HANDLE DomainHandle,
+        [in, range(0, 1000)] unsigned long Count,
+        [in, size_is(1000), length_is(Count)] RPC_UNICODE_STRING Names[*],
+        [out] PSAMPR_ULONG_ARRAY RelativeIds,
+        [out] PSAMPR_ULONG_ARRAY Use);
 
     /* Function 18 */
     NTSTATUS
@@ -1039,7 +1045,7 @@ interface samr
     NTSTATUS
     __stdcall
     SamrDeleteGroup(
-        [in,out] SAMPR_HANDLE *GroupHandle);
+        [in, out] SAMPR_HANDLE *GroupHandle);
 
     /* Function 24 */
     NTSTATUS
@@ -1299,37 +1305,37 @@ interface samr
     __stdcall
     SamrOemChangePasswordUser2(
         [in] handle_t BindingHandle,
-        [in,unique] PRPC_STRING ServerName,
+        [in, unique] PRPC_STRING ServerName,
         [in] PRPC_STRING UserName,
-        [in,unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldLm,
-        [in,unique] PENCRYPTED_LM_OWF_PASSWORD OldLmOwfPasswordEncryptedWithNewLm);
+        [in, unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldLm,
+        [in, unique] PENCRYPTED_LM_OWF_PASSWORD OldLmOwfPasswordEncryptedWithNewLm);
 
     /* Function 55 */
     NTSTATUS
     __stdcall
     SamrUnicodeChangePasswordUser2(
         [in] handle_t BindingHandle,
-        [in,unique] PRPC_UNICODE_STRING ServerName,
+        [in, unique] PRPC_UNICODE_STRING ServerName,
         [in] PRPC_UNICODE_STRING UserName,
-        [in,unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldNt,
-        [in,unique] PENCRYPTED_NT_OWF_PASSWORD OldNtOwfPasswordEncryptedWithNewNt,
+        [in, unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldNt,
+        [in, unique] PENCRYPTED_NT_OWF_PASSWORD OldNtOwfPasswordEncryptedWithNewNt,
         [in] unsigned char LmPresent,
-        [in,unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldLm,
-        [in,unique] PENCRYPTED_LM_OWF_PASSWORD OldLmOwfPasswordEncryptedWithNewNt);
+        [in, unique] PSAMPR_ENCRYPTED_USER_PASSWORD NewPasswordEncryptedWithOldLm,
+        [in, unique] PENCRYPTED_LM_OWF_PASSWORD OldLmOwfPasswordEncryptedWithNewNt);
 
     /* Function 56 */
     NTSTATUS
     __stdcall
     SamrGetDomainPasswordInformation(
         [in] handle_t BindingHandle,
-        [in,unique] PRPC_UNICODE_STRING Unused,
+        [in, unique] PRPC_UNICODE_STRING Unused,
         [out] PUSER_DOMAIN_PASSWORD_INFORMATION PasswordInformation);
 
     /* Function 57 */
     NTSTATUS
     __stdcall
     SamrConnect2(
-        [in,unique,string] PSAMPR_SERVER_NAME ServerName,
+        [in, unique, string] PSAMPR_SERVER_NAME ServerName,
         [out] SAMPR_HANDLE *ServerHandle,
         [in] ACCESS_MASK DesiredAccess);
 
@@ -1363,7 +1369,7 @@ interface samr
     NTSTATUS
     __stdcall
     SamrConnect4(
-        [in,unique,string] PSAMPR_SERVER_NAME ServerName,
+        [in, unique, string] PSAMPR_SERVER_NAME ServerName,
         [out] SAMPR_HANDLE *ServerHandle,
         [in] unsigned long ClientRevision,
         [in] ACCESS_MASK DesiredAccess);
@@ -1378,12 +1384,12 @@ interface samr
     NTSTATUS
     __stdcall
     SamrConnect5(
-        [in,unique,string] PSAMPR_SERVER_NAME ServerName,
+        [in, unique, string] PSAMPR_SERVER_NAME ServerName,
         [in] ACCESS_MASK DesiredAccess,
         [in] unsigned long InVersion,
-        [in,switch_is(InVersion)] SAMPR_REVISION_INFO *InRevisionInfo,
+        [in, switch_is(InVersion)] SAMPR_REVISION_INFO *InRevisionInfo,
         [out] unsigned long *OutVersion,
-        [out,switch_is(*OutVersion)] SAMPR_REVISION_INFO *OutRevisionInfo,
+        [out, switch_is(*OutVersion)] SAMPR_REVISION_INFO *OutRevisionInfo,
         [out] SAMPR_HANDLE *ServerHandle);
 
     /* Function 65 */
@@ -1399,9 +1405,9 @@ interface samr
     __stdcall
     SamrSetDSRMPassword(
         [in] handle_t BindingHandle,
-        [in,unique] PRPC_UNICODE_STRING Unused,
+        [in, unique] PRPC_UNICODE_STRING Unused,
         [in] unsigned long UserId,
-        [in,unique] PENCRYPTED_NT_OWF_PASSWORD EncryptedNtOwfPassword);
+        [in, unique] PENCRYPTED_NT_OWF_PASSWORD EncryptedNtOwfPassword);
 
     /* Function 67 */
     NTSTATUS
@@ -1409,6 +1415,6 @@ interface samr
     SamrValidatePassword(
         [in] handle_t Handle,
         [in] PASSWORD_POLICY_VALIDATION_TYPE ValidationType,
-        [in,switch_is(ValidationType)] PSAM_VALIDATE_INPUT_ARG InputArg,
-        [out,switch_is(ValidationType)] PSAM_VALIDATE_OUTPUT_ARG *OutputArg);
+        [in, switch_is(ValidationType)] PSAM_VALIDATE_INPUT_ARG InputArg,
+        [out, switch_is(ValidationType)] PSAM_VALIDATE_OUTPUT_ARG *OutputArg);
 }

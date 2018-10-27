@@ -63,12 +63,14 @@ CombinePaths(
 BOOLEAN
 DoesPathExist(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName);
+    IN PCWSTR PathName,
+    IN BOOLEAN IsDirectory);
 
-BOOLEAN
-DoesFileExist(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathNameToFile);
+#define DoesDirExist(RootDirectory, DirName)    \
+    DoesPathExist((RootDirectory), (DirName), TRUE)
+
+#define DoesFileExist(RootDirectory, FileName)  \
+    DoesPathExist((RootDirectory), (FileName), FALSE)
 
 // FIXME: DEPRECATED! HACKish function that needs to be deprecated!
 BOOLEAN
@@ -97,5 +99,11 @@ BOOLEAN
 UnMapFile(
     IN HANDLE SectionHandle,
     IN PVOID BaseAddress);
+
+#define UnMapAndCloseFile(FileHandle, SectionHandle, BaseAddress)   \
+do {    \
+    UnMapFile((SectionHandle), (BaseAddress));  \
+    NtClose(FileHandle);                        \
+} while (0)
 
 /* EOF */

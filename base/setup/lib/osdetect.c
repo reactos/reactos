@@ -284,7 +284,7 @@ CheckForValidPEAndVendor(
     {
         DPRINT1("File '%S' does not seem to be a valid PE, bail out\n", PathNameToFile);
         Status = STATUS_INVALID_IMAGE_FORMAT;
-        goto UnmapFile;
+        goto UnmapCloseFile;
     }
 
     /*
@@ -295,7 +295,7 @@ CheckForValidPEAndVendor(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get version resource for file '%S', Status 0x%08lx\n", PathNameToFile, Status);
-        goto UnmapFile;
+        goto UnmapCloseFile;
     }
 
     Status = NtVerQueryValue(VersionBuffer, L"\\VarFileInfo\\Translation", &pvData, &BufLen);
@@ -333,10 +333,9 @@ CheckForValidPEAndVendor(
     if (!NT_SUCCESS(Status))
         DPRINT1("No version vendor found for file '%S'\n", PathNameToFile);
 
-UnmapFile:
+UnmapCloseFile:
     /* Finally, unmap and close the file */
-    UnMapFile(SectionHandle, ViewBase);
-    NtClose(FileHandle);
+    UnMapAndCloseFile(FileHandle, SectionHandle, ViewBase);
 
     return Success;
 }
@@ -359,7 +358,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32 */
     PathName = L"System32\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
@@ -367,7 +366,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32\drivers */
     PathName = L"System32\\drivers\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
@@ -375,7 +374,7 @@ IsValidNTOSInstallationByHandle(
 
     /* Check for the existence of \SystemRoot\System32\config */
     PathName = L"System32\\config\\";
-    if (!DoesPathExist(SystemRootDirectory, PathName))
+    if (!DoesDirExist(SystemRootDirectory, PathName))
     {
         // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;

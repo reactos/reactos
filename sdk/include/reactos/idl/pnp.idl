@@ -847,7 +847,7 @@ interface pnp
     __stdcall
     PNP_QueryArbitratorFreeData(
         [in] handle_t hBinding,
-        [out,size_is(DataLen)] BYTE *pData,
+        [out, size_is(DataLen)] BYTE *pData,
         [in] DWORD DataLen,
         [in, string, ref] LPWSTR pDeviceID,
         [in] RESOURCEID ResourceID,

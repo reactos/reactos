@@ -749,6 +749,16 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
     return S_OK;
 }
 
+HRESULT CInternetToolbar::SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd)
+{
+    long state = 0;
+    if (pcmd->cmdf & OLECMDF_ENABLED)
+        state |= TBSTATE_ENABLED;
+    if (pcmd->cmdf & OLECMDF_LATCHED)
+        state |= TBSTATE_CHECKED;
+    return SetState(pguidCmdGroup, commandID, state);
+}
+
 HRESULT CInternetToolbar::CommandStateChanged(bool newValue, int commandID)
 {
     HRESULT                                 hResult;
@@ -762,6 +772,18 @@ HRESULT CInternetToolbar::CommandStateChanged(bool newValue, int commandID)
             //    if up, QueryStatus for up state and update it
             //
             //for buttons in fCommandCategory, update with QueryStatus of fCommandTarget
+
+            OLECMD commandList[4];
+            commandList[0].cmdID = 0x1c;
+            commandList[1].cmdID = 0x1d;
+            commandList[2].cmdID = 0x1e;
+            commandList[3].cmdID = 0x23;
+            IUnknown_QueryStatus(fSite, CGID_Explorer, 4, commandList, NULL);
+            SetState(&CLSID_CommonButtons, gSearchCommandID, &commandList[0]);
+            SetState(&CLSID_CommonButtons, gFoldersCommandID, &commandList[3]);
+            //SetState(&CLSID_CommonButtons, gFavoritesCommandID, &commandList[2]);
+            //SetState(&CLSID_CommonButtons, gHistoryCommandID, &commandList[1]);
+
             break;
         case 1:
             // forward
@@ -1094,7 +1116,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                 case ITID_TOOLBARBANDSHOWN: // toolbar visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
                     if (IsBandVisible(ITBBID_TOOLSBAND) == S_OK)
-                        prgCmds->cmdf |= OLECMDF_LATCHED;                       
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_ADDRESSBANDSHOWN: // address bar visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
@@ -1504,7 +1526,8 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    return IUnknown_Exec(fSite, CLSID_CommonButtons, 0x123, 1, NULL, NULL); 
+    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL); 
+    return 1;
 }
 
 LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
@@ -1523,7 +1546,7 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
     }
     return 1;
 }
-
+    
 LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
     CComPtr<IBrowserService>                browserService;
