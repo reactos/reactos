@@ -1781,7 +1781,8 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
     rop=((lpitem->fState & MF_HILITE) && !IS_MAGIC_BITMAP(hbmToDraw)) ? NOTSRCCOPY : SRCCOPY;
     if ((lpitem->fState & MF_HILITE) && lpitem->hbmp)
         IntGdiSetBkColor(hdc, IntGetSysColor(COLOR_HIGHLIGHT));
-    if (!flat_menu &&
+    if (MenuBar &&
+        !flat_menu &&
         (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
     {
         ++left;
@@ -2531,7 +2532,8 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                     break;
         }
 
-        if (!flat_menu &&
+        if (menuBar &&
+            !flat_menu &&
             (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
         {
             RECTL_vOffsetRect(&rect, +1, +1);
@@ -2578,7 +2580,8 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat );
         }
 
-        if (!flat_menu &&
+        if (menuBar &&
+            !flat_menu &&
             (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
         {
             RECTL_vOffsetRect(&rect, -1, -1);
