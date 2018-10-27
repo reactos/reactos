@@ -465,10 +465,10 @@ interface wkssvc
         [out] unsigned long *TotalEntries,
         [in, out, unique] unsigned long *ResumeHandle);
 
-    /* Function 12 */
-    void
+    /* Function 12 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum12NotUsedOnWire(void);
+    NetrMessageBufferSend(void);
 
     /* Function 13 */
     unsigned long
@@ -480,35 +480,37 @@ interface wkssvc
         [in] unsigned long Options,
         [out] LPSTAT_WORKSTATION_0 *Buffer);
 
-    /* Function 14 */
-    void
+    /* Function 14 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum14NotUsedOnWire(void);
+    NetrLogonDomainNameAdd(
+        [in, string] WKSSVC_IDENTIFY_HANDLE DomainName);
 
-    /* Function 15 */
-    void
+    /* Function 15 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum15NotUsedOnWire(void);
+    NetrLogonDomainNameDel(
+        [in, string] WKSSVC_IDENTIFY_HANDLE DomainName);
 
-    /* Function 16 */
-    void
+    /* Function 16 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum16NotUsedOnWire(void);
+    NetrJoinDomain(void);
 
-    /* Function 17 */
-    void
+    /* Function 17 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum17NotUsedOnWire(void);
+    NetrUnjoinDomain(void);
 
-    /* Function 18 */
-    void
+    /* Function 18 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum18NotUsedOnWire(void);
+    NetrValidateName(void);
 
-    /* Function 19 */
-    void
+    /* Function 19 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum19NotUsedOnWire(void);
+    NetrRenameMachineInDomain(void);
 
     /* Function 20 */
     unsigned long
@@ -518,10 +520,10 @@ interface wkssvc
         [in, out, string] wchar_t **NameBuffer,
         [out] PNETSETUP_JOIN_STATUS BufferType);
 
-    /* Function 21 */
-    void
+    /* Function 21 - Not used on wire */
+    unsigned long
     __stdcall
-    Opnum21NotUsedOnWire(void);
+    NetrGetJoinableOUs(void);
 
     /* Function 22 */
     unsigned long
