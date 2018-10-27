@@ -514,15 +514,14 @@ NtUserCallTwoParam(
             {
                 break;
             }
-            hwnd = Window->head.h;
             if ((BOOL)Param2)
             {
                 if (Window->style & WS_MINIMIZE)
                 {
-                    NtUserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+                    UserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
                 }
+                UserSetActiveWindow(Window);
             }
-            NtUserSetActiveWindow(hwnd);
             break;
         }
 
