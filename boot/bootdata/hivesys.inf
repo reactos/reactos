@@ -1490,6 +1490,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Windows",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
   fe,0f,dc,ba,00,00,00,00
 
+; Unsecure objects names
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\kernel","ObUnsecureGlobalNames",0x00010000,"netfxcustomerfcounters.1.0","SharedPerfIPCBlock","Cor_Private_IPCBlock","Cor_Public_IPCBlock_"
+
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\WOW",,0x00000012
 
