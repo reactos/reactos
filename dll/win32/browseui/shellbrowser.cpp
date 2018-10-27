@@ -2020,6 +2020,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
                     memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
                     FireCommandStateChangeAll();
                 }
+                else
+                {
+                    OnSearch();
+                }
                 return S_OK;
             case 0x1d: //Toggle History
             case 0x1e: //Toggle Favorites
@@ -2139,20 +2143,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
                 // Reset All Folders option in Folder Options
                 break;
         }
-    }
-    else if (IsEqualIID(*pguidCmdGroup, CLSID_CommonButtons))
-    {
-        // Windows seems to use this as proxy for toolbar buttons.
-        // We use it for search band for now to remove code duplication,
-        // let's see if it could be useful in the future.
-        switch (nCmdID)
-        {
-            case 0x123:
-                // Show search band from toolbar
-                OnSearch();
-                return S_OK;
-        }
-        return E_NOTIMPL;
     }
     else
     {

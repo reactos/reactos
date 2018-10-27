@@ -1526,13 +1526,8 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    OLECMD cmd;
-    cmd.cmdID = 0x1c;
-    IUnknown_QueryStatus(fSite, CGID_Explorer, 1, &cmd, NULL);
-    if (cmd.cmdf & OLECMDF_LATCHED)
-        return IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL); 
-    else
-        return IUnknown_Exec(fSite, CLSID_CommonButtons, 0x123, 1, NULL, NULL); 
+    IUnknown_Exec(fSite, CGID_Explorer, 0x1c, 1, NULL, NULL); 
+    return 1;
 }
 
 LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
