@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          NtUserCallXxx call stubs
  * FILE:             win32ss/user/ntuser/simplecall.c
- * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
+ * PROGRAMERS:       Ge van Geldorp (ge@gse.nl)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -505,9 +506,25 @@ NtUserCallTwoParam(
         }
 
         case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
-            STUB
+        {
+            HWND hwnd = (HWND)Param1;
             Ret = 0;
+            Window = UserGetWindowObject(hwnd);
+            if (!Window)
+            {
+                break;
+            }
+            hwnd = Window->head.h;
+            if ((BOOL)Param2)
+            {
+                if (Window->style & WS_MINIMIZE)
+                {
+                    NtUserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+                }
+            }
+            NtUserSetActiveWindow(hwnd);
             break;
+        }
 
         case TWOPARAM_ROUTINE_SETCARETPOS:
             Ret = (DWORD_PTR)co_IntSetCaretPos((int)Param1, (int)Param2);

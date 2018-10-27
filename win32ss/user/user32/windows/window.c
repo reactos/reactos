@@ -79,22 +79,9 @@ BringWindowToTop(HWND hWnd)
 
 
 VOID WINAPI
-SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
+SwitchToThisWindow(HWND hwnd, BOOL bUnknown)
 {
-    HWND hwndFG;
-    if (fAltTab)
-    {
-        if (IsIconic(hwnd))
-            PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-        SetForegroundWindow(hwnd);
-    }
-    else
-    {
-        hwndFG = GetForegroundWindow();
-        PostMessageW(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-        SetWindowPos(hwnd, hwndFG, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        SetWindowPos(hwndFG, hwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    }
+    NtUserxSwitchToThisWindow(hwnd, bUnknown);
 }
 
 
