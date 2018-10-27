@@ -356,6 +356,56 @@ ObpDeleteNameCheck(IN PVOID Object)
     }
 }
 
+BOOLEAN
+NTAPI
+ObpIsUnsecureName(IN PUNICODE_STRING ObjectName,
+                  IN BOOLEAN CaseInSensitive)
+{
+    BOOLEAN Unsecure;
+    PWSTR UnsecureBuffer;
+    UNICODE_STRING UnsecureName;
+
+    /* No unsecure names known, quit */
+    if (ObpUnsecureGlobalNamesBuffer[0] == UNICODE_NULL)
+    {
+        return FALSE;
+    }
+
+    /* By default, we have a secure name */
+    Unsecure = FALSE;
+    /* We will browse the whole string */
+    UnsecureBuffer = &ObpUnsecureGlobalNamesBuffer[0];
+    while (TRUE)
+    {
+        /* Initialize the unicode string */
+        RtlInitUnicodeString(&UnsecureName, UnsecureBuffer);
+        /* We're at the end of the multisz string! */
+        if (UnsecureName.Length == 0)
+        {
+            break;
+        }
+
+        /*
+         * Does the unsecure name prefix the object name?
+         * If so, that's an unsecure name, and return so
+         */
+        if (RtlPrefixUnicodeString(&UnsecureName, ObjectName, CaseInSensitive))
+        {
+            Unsecure = TRUE;
+            break;
+        }
+
+        /*
+         * Move to the next string. As a reminder, ObpUnsecureGlobalNamesBuffer is
+         * a multisz, so we move the string next to the current UNICODE_NULL char
+         */
+        UnsecureBuffer = (PWSTR)((ULONG_PTR)UnsecureBuffer + UnsecureName.Length + sizeof(UNICODE_NULL));
+    }
+
+    /* Return our findings */
+    return Unsecure;
+}
+
 NTSTATUS
 NTAPI
 ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
