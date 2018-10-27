@@ -299,6 +299,7 @@ private:
     CComPtr<ITravelLog>                     fTravelLog;
     HMENU                                   fCurrentMenuBar;
     CABINETSTATE                            fCabinetState;
+    GUID                                    fCurrentVertBar;             //The guid of the built in vertical bar that is being shown
     // The next three fields support persisted history for shell views.
     // They do not need to be reference counted.
     IOleObject                              *fHistoryObject;
@@ -1276,6 +1277,12 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
+    if (vertical)
+    {
+        fCurrentVertBar = classID;
+        FireCommandStateChangeAll();
+    }
+
     return S_OK;
 }
 
@@ -1939,15 +1946,28 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
             {
                 case 0x1c:  // search
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_IE_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_FileSearchBand, fCurrentVertBar))
+                    {
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
+                    }
                     break;
                 case 0x1d:  // history
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsEqualCLSID(CLSID_SH_HistBand, fCurrentVertBar))
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case 0x1e:  // favorites
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsEqualCLSID(CLSID_SH_FavBand, fCurrentVertBar))
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case 0x23:  // folders
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED | OLECMDF_LATCHED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    if (IsEqualCLSID(CLSID_ExplorerBand, fCurrentVertBar))
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 default:
                     prgCmds->cmdf = 0;
@@ -1990,8 +2010,46 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
     {
         switch (nCmdID)
         {
-            case 0x23:
-                hResult = ShowBand(CLSID_ExplorerBand, true);
+            case 0x1c: //Toggle Search
+                if (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
+                    IsEqualCLSID(CLSID_SearchBand, fCurrentVertBar) ||
+                    IsEqualCLSID(CLSID_IE_SearchBand, fCurrentVertBar) ||
+                    IsEqualCLSID(CLSID_FileSearchBand, fCurrentVertBar))
+                {
+                    hResult = IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
+                    memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
+                    FireCommandStateChangeAll();
+                }
+                return S_OK;
+            case 0x1d: //Toggle History
+            case 0x1e: //Toggle Favorites
+            case 0x23: //Toggle Folders
+                const GUID* pclsid;
+                if (nCmdID == 0x1d) pclsid = &CLSID_SH_HistBand;
+                else if (nCmdID == 0x1e) pclsid = &CLSID_SH_FavBand;
+                else pclsid = &CLSID_ExplorerBand;
+
+                if (IsEqualCLSID(*pclsid, fCurrentVertBar))
+                {
+                    hResult = IUnknown_ShowDW(fClientBars[BIVerticalBaseBar].clientBar.p, FALSE);
+                    memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
+                    FireCommandStateChangeAll();
+                }
+                else
+                {
+                    hResult = ShowBand(*pclsid, true);
+                }
+                return S_OK;
+            case 0x22:
+                //Sent when a band closes
+                if (V_VT(pvaIn) != VT_UNKNOWN)
+                    return E_INVALIDARG;
+
+                if (IUnknownIsEqual(V_UNKNOWN(pvaIn), fClientBars[BIVerticalBaseBar].clientBar.p))
+                {
+                    memset(&fCurrentVertBar, 0, sizeof(fCurrentVertBar));
+                    FireCommandStateChangeAll();
+                }
                 return S_OK;
             case 0x27:
                 if (nCmdexecopt == 1)

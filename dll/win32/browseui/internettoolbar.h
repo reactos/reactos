@@ -104,6 +104,7 @@ public:
     HRESULT CreateAndInitBandProxy();
     HRESULT IsBandVisible(int BandID);
     HRESULT ToggleBandVisibility(int BandID);
+    HRESULT SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd);
 
 public:
     // *** IInputObject specific methods ***

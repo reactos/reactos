@@ -261,8 +261,17 @@ HRESULT STDMETHODCALLTYPE CBaseBar::Exec(const GUID *pguidCmdGroup, DWORD nCmdID
         switch (nCmdID)
         {
             case 0:
+            {
                 // hide current band
+                ShowDW(0);
+
+                // Inform our site that we closed
+                VARIANT var;
+                V_VT(&var) = VT_UNKNOWN;
+                V_UNKNOWN(&var) = static_cast<IDeskBar *>(this);
+                IUnknown_Exec(fSite, CGID_Explorer, 0x22, 0, &var, NULL);
                 break;
+            }
             case 2:
                 // switch bands
                 break;
