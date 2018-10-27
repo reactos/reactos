@@ -814,11 +814,27 @@ ParseFromRoot:
                 /* Get the object header */
                 ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
 
-                /* FIXME: Check if this is a Section Object or Sym Link */
-                /* FIXME: If it is, then check if this isn't session 0 */
-                /* FIXME: If it isn't, check for SeCreateGlobalPrivilege */
-                /* FIXME: If privilege isn't there, check for unsecure name */
-                /* FIXME: If it isn't a known unsecure name, then fail */
+                /*
+                 * Deny object creation if:
+                 * That's a section object or a symbolic link
+                 * Which isn't in the same section that root directory
+                 * That doesn't have the SeCreateGlobalPrivilege
+                 * And that is not a known unsecure name
+                 */
+                if (RootDirectory->SessionId != -1)
+                {
+                    if (ObjectHeader->Type == MmSectionObjectType ||
+                        ObjectHeader->Type == ObpSymbolicLinkObjectType)
+                    {
+                        if (RootDirectory->SessionId != PsGetCurrentProcessSessionId() &&
+                            !SeSinglePrivilegeCheck(SeCreateGlobalPrivilege, AccessCheckMode) &&
+                            !ObpIsUnsecureName(&ComponentName, BooleanFlagOn(Attributes, OBJ_CASE_INSENSITIVE)))
+                        {
+                            Status = STATUS_ACCESS_DENIED;
+                            break;
+                        }
+                    }
+                }
 
                 /* Create Object Name */
                 NewName = ExAllocatePoolWithTag(PagedPool,
