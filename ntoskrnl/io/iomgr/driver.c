@@ -1045,7 +1045,7 @@ IopInitializeBootDrivers(VOID)
                                           NULL,
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
-            DPRINT1("IopOpenRegistryKeyEx(%wZ) returned 0x%08lx\n", &BootEntry->RegistryPath, Status);
+            DPRINT("IopOpenRegistryKeyEx(%wZ) returned 0x%08lx\n", &BootEntry->RegistryPath, Status);
 #if 0
             if (NT_SUCCESS(Status))
 #else // Hack still needed...

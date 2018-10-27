@@ -2363,9 +2363,9 @@ CmpEnumerateOpenSubKeys(
 
                     if (CachedKcb->RefCount > 0)
                     {
-                        DPRINT1("Found a sub key pointing to '%.*s', RefCount = %u\n",
-                                CachedKcb->NameBlock->NameLength, CachedKcb->NameBlock->Name,
-                                CachedKcb->RefCount);
+                        DPRINT("Found a sub key pointing to '%.*s', RefCount = %u\n",
+                               CachedKcb->NameBlock->NameLength, CachedKcb->NameBlock->Name,
+                               CachedKcb->RefCount);
 
                         /* If we dereference opened KCBs, don't touch read-only keys */
                         if (DereferenceOpenedEntries &&
