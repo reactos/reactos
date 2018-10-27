@@ -114,7 +114,9 @@ ChildWindowFromPointEx(HWND hwndParent,
 BOOL WINAPI
 CloseWindow(HWND hWnd)
 {
-    return PostMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+    /* NOTE: CloseWindow does minimizes, and doesn't close. */
+    SetActiveWindow(hWnd);
+    return ShowWindow(hWnd, SW_SHOWMINIMIZED);
 }
 
 FORCEINLINE
