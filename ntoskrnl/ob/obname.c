@@ -29,6 +29,9 @@ UNICODE_STRING ObpDosDevicesShortName =
     (PWSTR)&ObpDosDevicesShortNamePrefix
 };
 
+WCHAR ObpUnsecureGlobalNamesBuffer[128] = {0};
+ULONG ObpUnsecureGlobalNamesLength = sizeof(ObpUnsecureGlobalNamesBuffer);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS

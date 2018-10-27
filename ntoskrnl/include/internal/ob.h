@@ -613,6 +613,8 @@ extern BOOLEAN IoCountOperations;
 extern ALIGNEDNAME ObpDosDevicesShortNamePrefix;
 extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
 extern UNICODE_STRING ObpDosDevicesShortName;
+extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
+extern ULONG ObpUnsecureGlobalNamesLength;
 
 //
 // Inlined Functions
