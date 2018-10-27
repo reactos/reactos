@@ -78,7 +78,7 @@ CcpMapData(
     OUT PROS_VACB *pVacb,
     OUT PVOID *pBuffer)
 {
-    LONGLONG ReadOffset;
+    LONGLONG ReadOffset, BaseOffset;
     BOOLEAN Valid;
     PROS_VACB Vacb;
     NTSTATUS Status;
@@ -109,12 +109,14 @@ CcpMapData(
         }
     }
 
+    /* Properly round offset and call internal helper for getting a VACB */
     ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
-    Status = CcRosRequestVacb(SharedCacheMap,
-                              ROffset,
-                              pBuffer,
-                              &Valid,
-                              &Vacb);
+    Status = CcRosGetVacb(SharedCacheMap,
+                          ROffset,
+                          &BaseOffset,
+                          pBuffer,
+                          &Valid,
+                          &Vacb);
     if (!NT_SUCCESS(Status))
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
