@@ -688,9 +688,9 @@ EXTINLINE BOOL NtUserxUpdateUiState(HWND hWnd, DWORD Param)
     return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)Param, TWOPARAM_ROUTINE_ROS_UPDATEUISTATE);
 }
 
-EXTINLINE VOID NtUserxSwitchToThisWindow(HWND hWnd, BOOL bUnknown)
+EXTINLINE VOID NtUserxSwitchToThisWindow(HWND hWnd, BOOL fAltTab)
 {
-    NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)bUnknown, TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW);
+    NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)fAltTab, TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW);
 }
 
 EXTINLINE BOOL NtUserxShowOwnedPopups(HWND hWnd, BOOL fShow)
