@@ -1116,7 +1116,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                 case ITID_TOOLBARBANDSHOWN: // toolbar visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
                     if (IsBandVisible(ITBBID_TOOLSBAND) == S_OK)
-                        prgCmds->cmdf |= OLECMDF_LATCHED;                       
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_ADDRESSBANDSHOWN: // address bar visibility
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
