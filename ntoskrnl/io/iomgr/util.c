@@ -192,82 +192,79 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                         IN ULONG EaLength,
                         OUT PULONG ErrorOffset)
 {
-    PFILE_FULL_EA_INFORMATION EaBufferEnd;
-    ULONG NextEaBufferOffset;
-    LONG IntEaLength;
+    ULONG NextEntryOffset;
+    UCHAR EaNameLength;
+    ULONG ComputedLength;
+    PFILE_FULL_EA_INFORMATION Current;
 
     PAGED_CODE();
 
-    /* Length of the rest */
-    IntEaLength = EaLength;
-    EaBufferEnd = EaBuffer;
-
-    /* The rest length of the buffer */
-    while (IntEaLength >= FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]))
+    /* We will browse all the entries */
+    for (Current = EaBuffer; ; Current = (PFILE_FULL_EA_INFORMATION)((ULONG_PTR)Current + NextEntryOffset))
     {
-        /*
-         * The rest of buffer must greater than
-         * sizeof(FILE_FULL_EA_INFORMATION) + buffer
-         */
-        NextEaBufferOffset =
-            EaBufferEnd->EaNameLength + EaBufferEnd->EaValueLength +
-            FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]) + 1;
-
-        if ((ULONG)IntEaLength >= NextEaBufferOffset)
+        /* Check that we have enough bits left for the current entry */
+        if (EaLength < FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName))
         {
-            /* is the EaBufferName terminated with zero? */
-            if (EaBufferEnd->EaName[EaBufferEnd->EaNameLength]==0)
-            {
-                /* more EaBuffers ahead */
-                if (EaBufferEnd->NextEntryOffset == 0)
-                {
-                    /* test the rest buffersize */
-                    IntEaLength = IntEaLength - NextEaBufferOffset;
-                    if (IntEaLength >= 0)
-                    {
-                        return STATUS_SUCCESS;
-                    }
-                }
-                else
-                {
-                    /*
-                     * From MSDN:
-                     * http://msdn2.microsoft.com/en-us/library/ms795740.aspx
-                     * For all entries except the last one, the value of
-                     * NextEntryOffset must be greater than zero and
-                     * must fall on a ULONG boundary.
-                     */
-                    NextEaBufferOffset = ((NextEaBufferOffset + 3) & ~3);
-                    if ((EaBufferEnd->NextEntryOffset == NextEaBufferOffset) &&
-                        ((LONG)EaBufferEnd->NextEntryOffset > 0))
-                    {
-                        /*
-                         * The rest of buffer must be greater
-                         * than the following offset.
-                         */
-                        IntEaLength =
-                            IntEaLength - EaBufferEnd->NextEntryOffset;
-
-                        if (IntEaLength >= 0)
-                        {
-                            EaBufferEnd = (PFILE_FULL_EA_INFORMATION)
-                                ((ULONG_PTR)EaBufferEnd +
-                                 EaBufferEnd->NextEntryOffset);
-                            continue;
-                        }
-                    }
-                }
-            }
+            goto FailPath;
         }
-        break;
+
+        EaNameLength = Current->EaNameLength;
+        ComputedLength = Current->EaValueLength + EaNameLength + FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName) + 1;
+        /* Check that we have enough bits left for storing the name and its value */
+        if (EaLength < ComputedLength)
+        {
+            goto FailPath;
+        }
+
+        /* Make sure the name is null terminated */
+        if (Current->EaName[EaNameLength] != ANSI_NULL)
+        {
+            goto FailPath;
+        }
+
+        /* Get the next entry offset */
+        NextEntryOffset = Current->NextEntryOffset;
+        /* If it's 0, it's a termination case */
+        if (NextEntryOffset == 0)
+        {
+            /* If we don't overflow! */
+            if (EaLength - ComputedLength < 0)
+            {
+                goto FailPath;
+            }
+
+            break;
+        }
+
+        /* Compare the next offset we computed with the provided one, they must match */
+        if (ALIGN_UP_BY(ComputedLength, sizeof(ULONG)) != NextEntryOffset)
+        {
+            goto FailPath;
+        }
+
+        /* Check next entry offset value is positive */
+        if (NextEntryOffset < 0)
+        {
+            goto FailPath;
+        }
+
+        /* Compute the remaining bits */
+        EaLength -= NextEntryOffset;
+        /* We must have bits left */
+        if (EaLength < 0)
+        {
+            goto FailPath;
+        }
+
+        /* Move to the next entry */
     }
 
-    if (ErrorOffset != NULL)
-    {
-        /* Calculate the error offset */
-        *ErrorOffset = (ULONG)((ULONG_PTR)EaBufferEnd - (ULONG_PTR)EaBuffer);
-    }
+    /* If we end here, everything went OK */
+    return STATUS_SUCCESS;
 
+FailPath:
+    /* If we end here, we failed, set failed offset */
+    *ErrorOffset = (ULONG_PTR)Current - (ULONG_PTR)EaBuffer;
     return STATUS_EA_LIST_INCONSISTENT;
 }
 
