@@ -79,9 +79,9 @@ BringWindowToTop(HWND hWnd)
 
 
 VOID WINAPI
-SwitchToThisWindow(HWND hwnd, BOOL bUnknown)
+SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
 {
-    NtUserxSwitchToThisWindow(hwnd, bUnknown);
+    NtUserxSwitchToThisWindow(hwnd, fAltTab);
 }
 
 
