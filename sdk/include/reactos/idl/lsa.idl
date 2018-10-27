@@ -1126,55 +1126,55 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
     NTSTATUS
     __stdcall
     CredrWrite(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName); /* FIXME */
 
     /* Function 61 */
     NTSTATUS
     __stdcall
     CredrRead(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName); /* FIXME */
 
     /* Function 62 */
     NTSTATUS
     __stdcall
     CredrEnumerate(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName); /* FIXME */
 
     /* Function 63 */
     NTSTATUS
     __stdcall
     CredrWriteDomainCredentials(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName); /* FIXME */
 
     /* Function 64 */
     NTSTATUS
     __stdcall
     CredrReadDomainCredentials(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName); /* FIXME */
 
     /* Function 65 */
     NTSTATUS
     __stdcall
     CredrDelete(
-        [in] handle_t hBinding,
+        [in, unique] PLSAPR_SERVER_NAME SystemName,
         [in, unique, string] LPWSTR TargetName,
         [in] DWORD Type,
-        [in] DWORD Flags); /* FIXME */
+        [in] DWORD Flags);
 
     /* Function 66 */
     NTSTATUS
     __stdcall
     CredrGetTargetInfo(
-        [in] handle_t hBinding,
+        [in, unique] PLSAPR_SERVER_NAME SystemName,
         [in, unique, string] LPWSTR TargetName,
         [in] DWORD Flags,
-        [out] CREDPR_TARGET_INFORMATION *TargetInformation); /* FIXME */
+        [out] CREDPR_TARGET_INFORMATION *TargetInformation);
 
     /* Function 67 */
     NTSTATUS
     __stdcall
     CredrProfileLoaded(
-        [in] handle_t hBinding); /* FIXME */
+        [in, unique] PLSAPR_SERVER_NAME SystemName);
 
     /* Function 68 */
     NTSTATUS
@@ -1194,9 +1194,9 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
     NTSTATUS
     __stdcall
     CredrGetSessionTypes(
-        [in] handle_t hBinding,
+        [in, unique] PLSAPR_SERVER_NAME SystemName,
         [in] DWORD MaximumPersistCount,
-        [out, size_is(MaximumPersistCount)] DWORD *MaximumPersist); /* FIXME */
+        [out, size_is(MaximumPersistCount)] DWORD *MaximumPersist);
 
     /* Function 70 */
     NTSTATUS
@@ -1240,11 +1240,11 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
     NTSTATUS
     __stdcall
     CredrRename(
-        [in] handle_t hBinding,
+        [in, unique] PLSAPR_SERVER_NAME SystemName,
         [in, unique, string] LPWSTR OldTargetName,
         [in, unique, string] LPWSTR NewTargetName,
         [in] DWORD Type,
-        [in] DWORD Flags); /* FIXME */
+        [in] DWORD Flags);
 
     /* Function 76 */
     NTSTATUS
