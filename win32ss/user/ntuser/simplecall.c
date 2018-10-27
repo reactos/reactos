@@ -520,8 +520,8 @@ NtUserCallTwoParam(
                 {
                     UserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
                 }
-                UserSetActiveWindow(Window);
             }
+            UserSetActiveWindow(Window);
             break;
         }
 
