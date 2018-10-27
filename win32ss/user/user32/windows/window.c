@@ -129,7 +129,7 @@ CloseWindow(HWND hWnd)
 {
     PostMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 
-    return ValidateHwnd(hWndParent) != NULL;
+    return ValidateHwnd(hWnd) != NULL;
 }
 
 FORCEINLINE
