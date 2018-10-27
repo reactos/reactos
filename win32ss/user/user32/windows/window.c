@@ -127,9 +127,7 @@ ChildWindowFromPointEx(HWND hwndParent,
 BOOL WINAPI
 CloseWindow(HWND hWnd)
 {
-    PostMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-
-    return ValidateHwnd(hWnd) != NULL;
+    return PostMessageW(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 }
 
 FORCEINLINE
