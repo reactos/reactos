@@ -508,13 +508,14 @@ NtUserCallTwoParam(
         case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
         {
             HWND hwnd = (HWND)Param1;
+            BOOL fAltTab = (BOOL)Param2;
             Ret = 0;
             Window = UserGetWindowObject(hwnd);
             if (!Window)
             {
                 break;
             }
-            if ((BOOL)Param2)
+            if (fAltTab)
             {
                 if (Window->style & WS_MINIMIZE)
                 {
