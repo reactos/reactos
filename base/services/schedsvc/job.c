@@ -35,6 +35,54 @@ RTL_RESOURCE StartListLock;
 
 /* FUNCTIONS *****************************************************************/
 
+DWORD
+GetNextJobTimeout(VOID)
+{
+    FILETIME FileTime;
+    SYSTEMTIME SystemTime;
+    ULARGE_INTEGER CurrentTime, Timeout;
+    PJOB pNextJob;
+
+    if (IsListEmpty(&StartListHead))
+    {
+        TRACE("No job in list! Wait until next update.\n");
+        return INFINITE;
+    }
+
+    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
+
+    FileTime.dwLowDateTime = pNextJob->StartTime.u.LowPart;
+    FileTime.dwHighDateTime = pNextJob->StartTime.u.HighPart;
+    FileTimeToSystemTime(&FileTime, &SystemTime);
+
+    TRACE("Start next job (%lu) at %02hu:%02hu %02hu.%02hu.%hu\n",
+          pNextJob->JobId, SystemTime.wHour, SystemTime.wMinute,
+          SystemTime.wDay, SystemTime.wMonth, SystemTime.wYear);
+
+    GetLocalTime(&SystemTime);
+    SystemTimeToFileTime(&SystemTime, &FileTime);
+
+    CurrentTime.u.LowPart = FileTime.dwLowDateTime;
+    CurrentTime.u.HighPart = FileTime.dwHighDateTime;
+
+    if (CurrentTime.QuadPart >= pNextJob->StartTime.QuadPart)
+    {
+        TRACE("Next event has already gone by!\n");
+        return 0;
+    }
+
+    Timeout.QuadPart = (pNextJob->StartTime.QuadPart - CurrentTime.QuadPart) / 10000;
+    if (Timeout.u.HighPart != 0)
+    {
+        TRACE("Event happens too far in the future!\n");
+        return INFINITE;
+    }
+
+    TRACE("Timeout: %lu\n", Timeout.u.LowPart);
+    return Timeout.u.LowPart;
+}
+
+
 static
 VOID
 GetJobName(
@@ -276,8 +324,6 @@ LoadJobs(VOID)
                 pJob->JobId = dwNextJobId++;
                 dwJobCount++;
 
-                // Cancel the start timer
-
                 /* Append the new job to the job list */
                 InsertTailList(&JobListHead, &pJob->JobEntry);
 
@@ -289,8 +335,6 @@ LoadJobs(VOID)
 #if 0
                 DumpStartList(&StartListHead);
 #endif
-
-                // Update the start timer
 
                 /* Release the job list lock */
                 RtlReleaseResource(&JobListLock);
@@ -333,7 +377,8 @@ DaysOfMonth(
 
 
 VOID
-CalculateNextStartTime(PJOB pJob)
+CalculateNextStartTime(
+    _In_ PJOB pJob)
 {
     SYSTEMTIME StartTime;
     FILETIME FileTime;
