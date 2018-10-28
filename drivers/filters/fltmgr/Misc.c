@@ -82,3 +82,24 @@ FltGetFileNameInformation(
     *FileNameInformation = NULL;
     return 0;
 }
+
+NTSTATUS
+FLTAPI
+FltGetDestinationFileNameInformation(
+    _In_ PFLT_INSTANCE Instance,
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ HANDLE RootDirectory,
+    _In_reads_bytes_(FileNameLength) PWSTR FileName,
+    _In_ ULONG FileNameLength,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *RetFileNameInformation)
+{
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(RootDirectory);
+    UNREFERENCED_PARAMETER(FileName);
+    UNREFERENCED_PARAMETER(FileNameLength);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *RetFileNameInformation = NULL;
+    return 0;
+}
