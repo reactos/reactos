@@ -15,4 +15,5 @@
  @ stdcall FltCloseClientPort(ptr ptr)
  @ stdcall FltClose(ptr)
  @ stdcall FltCreateFileEx(ptr ptr ptr ptr long ptr ptr ptr long long long long ptr long long)
+ @ stdcall FltCreateFile(ptr ptr ptr long ptr ptr ptr long long long long ptr long long)
 
