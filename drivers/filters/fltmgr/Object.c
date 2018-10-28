@@ -134,6 +134,40 @@ FltReleasePushLock(_Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_
     KeLeaveCriticalRegion();
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+FLTAPI
+FltClose(_In_ HANDLE FileHandle)
+{
+    PAGED_CODE();
+
+    return ZwClose(FileHandle);
+}
+
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+FLTAPI
+FltCreateFileEx(_In_ PFLT_FILTER Filter,
+                _In_opt_ PFLT_INSTANCE Instance,
+                _Out_ PHANDLE FileHandle,
+                _Outptr_opt_ PFILE_OBJECT *FileObject,
+                _In_ ACCESS_MASK DesiredAccess,
+                _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+                _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+                _In_opt_ PLARGE_INTEGER AllocationSize,
+                _In_ ULONG FileAttributes,
+                _In_ ULONG ShareAccess,
+                _In_ ULONG CreateDisposition,
+                _In_ ULONG CreateOptions,
+                _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
+                _In_ ULONG EaLength,
+                _In_ ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 
 /* INTERNAL FUNCTIONS ******************************************************/

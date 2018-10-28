@@ -13,4 +13,6 @@
  @ stdcall FltEnumerateVolumes(ptr ptr long ptr)
  @ stdcall FltGetFileNameInformationUnsafe(ptr ptr long ptr)
  @ stdcall FltCloseClientPort(ptr ptr)
+ @ stdcall FltClose(ptr)
+ @ stdcall FltCreateFileEx(ptr ptr ptr ptr long ptr ptr ptr long long long long ptr long long)
 
