@@ -480,6 +480,132 @@ static int SetupHandleSimpleList(PINPUT_RECORD Ir, int* listLines, int cLines, i
     return Line;
 }
 
+typedef BOOL (*INPUT_FILTER_FN)(WCHAR ch);
+
+static int SetupHandleEditField(PINPUT_RECORD Ir, SHORT x, SHORT y, SHORT len, WCHAR* Buffer, BOOLEAN bAcceptCancel, INPUT_FILTER_FN filter)
+{
+    WCHAR c;
+    ULONG Length, Pos;
+
+    Length = wcslen(Buffer);
+    Pos = Length;
+
+    CONSOLE_SetInputTextXY(x, y, len, Buffer);
+    CONSOLE_SetCursorXY(x + Pos, y);
+    CONSOLE_SetCursorType(TRUE, TRUE);
+
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            CONSOLE_SetCursorType(TRUE, FALSE);
+
+            if (ConfirmQuit(Ir))
+                return SETUP_QUIT;
+
+            return SETUP_QUIT_CANCELED;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
+        {
+            if (Pos < Length)
+            {
+                memmove(&Buffer[Pos],
+                        &Buffer[Pos + 1],
+                        (Length - Pos - 1) * sizeof(WCHAR));
+                Buffer[Length - 1] = UNICODE_NULL;
+
+                Length--;
+                CONSOLE_SetInputTextXY(x, y, len, Buffer);
+                CONSOLE_SetCursorXY(x + Pos, y);
+            }
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_HOME))  /* HOME */
+        {
+            Pos = 0;
+            CONSOLE_SetCursorXY(x + Pos, y);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_END))  /* END */
+        {
+            Pos = Length;
+            CONSOLE_SetCursorXY(x + Pos, y);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_LEFT))  /* LEFT */
+        {
+            if (Pos > 0)
+            {
+                Pos--;
+                CONSOLE_SetCursorXY(x + Pos, y);
+            }
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RIGHT))  /* RIGHT */
+        {
+            if (Pos < Length)
+            {
+                Pos++;
+                CONSOLE_SetCursorXY(x + Pos, y);
+            }
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+        {
+            CONSOLE_SetCursorType(TRUE, FALSE);
+            break;
+        }
+        else if (bAcceptCancel && Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)    /* ESCAPE */
+        {
+            Buffer[0] = UNICODE_NULL;
+            CONSOLE_SetCursorType(TRUE, FALSE);
+            return SETUP_CANCEL;
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
+        {
+            if (Pos > 0)
+            {
+                if (Pos < Length)
+                    memmove(&Buffer[Pos - 1],
+                            &Buffer[Pos],
+                            (Length - Pos) * sizeof(WCHAR));
+                Buffer[Length - 1] = UNICODE_NULL;
+
+                Pos--;
+                Length--;
+                CONSOLE_SetInputTextXY(x, y, len, Buffer);
+                CONSOLE_SetCursorXY(x + Pos, y);
+            }
+        }
+        else if (isprint(Ir->Event.KeyEvent.uChar.AsciiChar))
+        {
+            if (Length < len - 1)
+            {
+                c = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
+                if (filter && !filter(c))
+                    continue;
+
+                if (Pos < Length)
+                    memmove(&Buffer[Pos + 1],
+                            &Buffer[Pos],
+                            (Length - Pos) * sizeof(WCHAR));
+                Buffer[Length + 1] = UNICODE_NULL;
+                Buffer[Pos] = c;
+
+                Pos++;
+                Length++;
+                CONSOLE_SetInputTextXY(x, y, len, Buffer);
+                CONSOLE_SetCursorXY(x + Pos, y);
+            }
+        }
+    }
+
+    return SETUP_OK;
+}
+
 static VOID
 UpdateKBLayout(VOID)
 {
@@ -1739,30 +1865,25 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 /* Restriction for MaxSize: pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1 */
 #define PARTITION_MAXSIZE (pow(10, (PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)) - 1)
 
-static VOID
+BOOL DigitFilter(WCHAR ch)
+{
+    return (ch >= L'0') && (ch <= L'9');
+}
+
+static int
 ShowPartitionSizeInputBox(SHORT Left,
                           SHORT Top,
                           SHORT Right,
                           SHORT Bottom,
                           ULONG MaxSize,
-                          PWSTR InputBuffer,
-                          PBOOLEAN Quit,
-                          PBOOLEAN Cancel)
+                          PWSTR InputBuffer)
 {
     INPUT_RECORD Ir;
     COORD coPos;
     DWORD Written;
     CHAR Buffer[128];
-    INT Length, Pos;
-    WCHAR ch;
     SHORT iLeft;
     SHORT iTop;
-
-    if (Quit != NULL)
-        *Quit = FALSE;
-
-    if (Cancel != NULL)
-        *Cancel = FALSE;
 
     DrawBox(Left, Top, Right - Left + 1, Bottom - Top + 1);
 
@@ -1789,136 +1910,14 @@ ShowPartitionSizeInputBox(SHORT Left,
                                  &Written);
 
     swprintf(InputBuffer, L"%lu", MaxSize);
-    Length = wcslen(InputBuffer);
-    Pos = Length;
-    CONSOLE_SetInputTextXY(iLeft,
-                           iTop,
-                           PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                           InputBuffer);
-    CONSOLE_SetCursorXY(iLeft + Length, iTop);
-    CONSOLE_SetCursorType(TRUE, TRUE);
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(&Ir);
-
-        if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir.Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (Quit != NULL)
-                *Quit = TRUE;
-
-            InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
-            break;
-        }
-        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)    /* ENTER */
-        {
-            CONSOLE_SetCursorType(TRUE, FALSE);
-            break;
-        }
-        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)    /* ESCAPE */
-        {
-            if (Cancel != NULL)
-                *Cancel = TRUE;
-
-            InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
-            break;
-        }
-        else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir.Event.KeyEvent.wVirtualKeyCode == VK_HOME))  /* HOME */
-        {
-            Pos = 0;
-            CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-        }
-        else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir.Event.KeyEvent.wVirtualKeyCode == VK_END))  /* END */
-        {
-            Pos = Length;
-            CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-        }
-        else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir.Event.KeyEvent.wVirtualKeyCode == VK_LEFT))  /* LEFT */
-        {
-            if (Pos > 0)
-            {
-                Pos--;
-                CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-            }
-        }
-        else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT))  /* RIGHT */
-        {
-            if (Pos < Length)
-            {
-                Pos++;
-                CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-            }
-        }
-        else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir.Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
-        {
-            if (Pos < Length)
-            {
-                memmove(&InputBuffer[Pos],
-                        &InputBuffer[Pos + 1],
-                        (Length - Pos - 1) * sizeof(WCHAR));
-                InputBuffer[Length - 1] = UNICODE_NULL;
-
-                Length--;
-                CONSOLE_SetInputTextXY(iLeft,
+    return SetupHandleEditField(&Ir, 
+                                iLeft, 
                                 iTop, 
                                 PARTITION_SIZE_INPUT_FIELD_LENGTH, 
-                                       InputBuffer);
-                CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-}
-        }
-        else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_BACK)  /* BACKSPACE */
-        {
-            if (Pos > 0)
-            {
-                if (Pos < Length)
-                    memmove(&InputBuffer[Pos - 1],
-                            &InputBuffer[Pos],
-                            (Length - Pos) * sizeof(WCHAR));
-                InputBuffer[Length - 1] = UNICODE_NULL;
-
-                Pos--;
-                Length--;
-                CONSOLE_SetInputTextXY(iLeft,
-                                       iTop,
-                                       PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                                       InputBuffer);
-                CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-            }
-        }
-        else if (Ir.Event.KeyEvent.uChar.AsciiChar != 0x00)
-        {
-            if (Length < PARTITION_SIZE_INPUT_FIELD_LENGTH - 1)
-            {
-                ch = (WCHAR)Ir.Event.KeyEvent.uChar.AsciiChar;
-
-                if ((ch >= L'0') && (ch <= L'9'))
-                {
-                    if (Pos < Length)
-                        memmove(&InputBuffer[Pos + 1],
-                                &InputBuffer[Pos],
-                                (Length - Pos) * sizeof(WCHAR));
-                    InputBuffer[Length + 1] = UNICODE_NULL;
-                    InputBuffer[Pos] = ch;
-
-                    Pos++;
-                    Length++;
-                    CONSOLE_SetInputTextXY(iLeft,
-                                           iTop,
-                                           PARTITION_SIZE_INPUT_FIELD_LENGTH,
-                                           InputBuffer);
-                    CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-                }
-            }
-        }
-    }
+                                InputBuffer, 
+                                TRUE, 
+                                DigitFilter);
 }
 
 
@@ -1938,14 +1937,13 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    BOOLEAN Quit;
-    BOOLEAN Cancel;
     WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    int res;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2022,20 +2020,12 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         if (MaxSize > PARTITION_MAXSIZE)
             MaxSize = PARTITION_MAXSIZE;
 
-        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
-                                  MaxSize, InputBuffer, &Quit, &Cancel);
-
-        if (Quit)
-        {
-            if (ConfirmQuit(Ir))
+        res = ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+                                        MaxSize, InputBuffer);
+        if (res == SETUP_QUIT)
             return QUIT_PAGE;
-
+        else if (res == SETUP_QUIT_CANCELED)
             break;
-        }
-        else if (Cancel)
-        {
-            return SELECT_PARTITION_PAGE;
-        }
         else
         {
             PartSize = _wcstoui64(InputBuffer, NULL, 10);
@@ -2097,14 +2087,13 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    BOOLEAN Quit;
-    BOOLEAN Cancel;
     WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    int res;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2181,20 +2170,12 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         if (MaxSize > PARTITION_MAXSIZE)
             MaxSize = PARTITION_MAXSIZE;
 
-        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
-                                  MaxSize, InputBuffer, &Quit, &Cancel);
-
-        if (Quit)
-        {
-            if (ConfirmQuit(Ir))
+        res = ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+                                        MaxSize, InputBuffer);
+        if (res == SETUP_QUIT)
             return QUIT_PAGE;
-
+        else if (res == SETUP_QUIT_CANCELED)
             break;
-        }
-        else if (Cancel)
-        {
-            return SELECT_PARTITION_PAGE;
-        }
         else
         {
             PartSize = _wcstoui64(InputBuffer, NULL, 10);
@@ -2255,14 +2236,13 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    BOOLEAN Quit;
-    BOOLEAN Cancel;
     WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    int res;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2339,20 +2319,12 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         if (MaxSize > PARTITION_MAXSIZE)
             MaxSize = PARTITION_MAXSIZE;
 
-        ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
-                                  MaxSize, InputBuffer, &Quit, &Cancel);
-
-        if (Quit)
-        {
-            if (ConfirmQuit(Ir))
+        res = ShowPartitionSizeInputBox(12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+                                        MaxSize, InputBuffer);
+        if (res == SETUP_QUIT)
             return QUIT_PAGE;
-
+        else if (res == SETUP_QUIT_CANCELED)
             break;
-        }
-        else if (Cancel)
-        {
-            return SELECT_PARTITION_PAGE;
-        }
         else
         {
             PartSize = _wcstoui64(InputBuffer, NULL, 10);
@@ -3216,7 +3188,11 @@ IsValidPath(
     return TRUE;
 }
 
-                    
+BOOL PathFilter(WCHAR c)
+{
+    return (iswalpha(c) || iswdigit(c) || c == '.' || c == '\\' || c == '-' || c == '_');
+}
+
 /*
  * Displays the InstallDirectoryPage.
  *
@@ -3233,8 +3209,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     WCHAR InstallDir[MAX_PATH];
-    WCHAR c;
-    ULONG Length, Pos;
 
     /* We do not need the filesystem list anymore */
     if (FileSystemList != NULL)
@@ -3269,100 +3243,18 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      * of an invalid path, or we are in regular setup), display the UI and allow
      * the user to specify a new installation path.
      */
-    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidPath(InstallDir))
+    if ((!RepairUpdateFlag && !IsUnattendedSetup) || !IsValidPath(InstallDir))
     {
-        BuildInstallPaths(InstallDir,
-                          DiskEntry,
-                          PartEntry);
-
-        /*
-         * Check whether the user attempts to install ReactOS within the
-         * installation source directory, or in a subdirectory thereof.
-         * If so, fail with an error.
-         */
-        if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-        {
-            PopupError("You cannot install ReactOS within the installation source directory!",
-                       MUIGetString(STRING_CONTINUE),
-                       Ir, POPUP_WAIT_ENTER);
-            return INSTALL_DIRECTORY_PAGE;
-        }
-
-        return PREPARE_COPY_PAGE;
-    }
-
-    Length = wcslen(InstallDir);
-    Pos = Length;
+        int res;
 
         MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
-    CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
-    CONSOLE_SetCursorXY(8 + Pos, 11);
-    CONSOLE_SetCursorType(TRUE, TRUE);
-
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            CONSOLE_SetCursorType(TRUE, FALSE);
-
-            if (ConfirmQuit(Ir))
+        res = SetupHandleEditField(Ir, 8, 11, 51, InstallDir, FALSE, PathFilter);
+        if (res == SETUP_QUIT)
             return QUIT_PAGE;
-
-            CONSOLE_SetCursorType(TRUE, TRUE);
-            break;
+        else if (res == SETUP_QUIT_CANCELED)
+            return INSTALL_DIRECTORY_PAGE;
     }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
-        {
-            if (Pos < Length)
-            {
-                memmove(&InstallDir[Pos],
-                        &InstallDir[Pos + 1],
-                        (Length - Pos - 1) * sizeof(WCHAR));
-                InstallDir[Length - 1] = UNICODE_NULL;
     
-                Length--;
-                CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
-                CONSOLE_SetCursorXY(8 + Pos, 11);
-            }
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_HOME))  /* HOME */
-        {
-            Pos = 0;
-            CONSOLE_SetCursorXY(8 + Pos, 11);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_END))  /* END */
-        {
-            Pos = Length;
-            CONSOLE_SetCursorXY(8 + Pos, 11);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_LEFT))  /* LEFT */
-        {
-            if (Pos > 0)
-            {
-                Pos--;
-                CONSOLE_SetCursorXY(8 + Pos, 11);
-            }
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RIGHT))  /* RIGHT */
-        {
-            if (Pos < Length)
-            {
-                Pos++;
-                CONSOLE_SetCursorXY(8 + Pos, 11);
-            }
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            CONSOLE_SetCursorType(TRUE, FALSE);
-
     /*
      * Check for the validity of the installation directory and pop up
      * an error if it is not the case. Then the user can fix its input.
@@ -3391,47 +3283,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     }
 
     return PREPARE_COPY_PAGE;
-}
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
-        {
-            if (Pos > 0)
-            {
-                if (Pos < Length)
-                    memmove(&InstallDir[Pos - 1],
-                            &InstallDir[Pos],
-                            (Length - Pos) * sizeof(WCHAR));
-                InstallDir[Length - 1] = UNICODE_NULL;
-
-                Pos--;
-                Length--;
-                CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
-                CONSOLE_SetCursorXY(8 + Pos, 11);
-            }
-        }
-        else if (isprint(Ir->Event.KeyEvent.uChar.AsciiChar))
-        {
-            if (Length < 50)
-            {
-                c = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
-                if (iswalpha(c) || iswdigit(c) || c == '.' || c == '\\' || c == '-' || c == '_')
-                {
-                    if (Pos < Length)
-                        memmove(&InstallDir[Pos + 1],
-                                &InstallDir[Pos],
-                                (Length - Pos) * sizeof(WCHAR));
-                    InstallDir[Length + 1] = UNICODE_NULL;
-                    InstallDir[Pos] = c;
-
-                    Pos++;
-                    Length++;
-                    CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
-                    CONSOLE_SetCursorXY(8 + Pos, 11);
-                }
-            }
-        }
-    }
-
-    return INSTALL_DIRECTORY_PAGE;
 }
 
 
