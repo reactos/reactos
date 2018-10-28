@@ -23,4 +23,5 @@
  @ stdcall FltCloseCommunicationPort(ptr)
  @ stdcall FltAttachVolume(ptr ptr ptr ptr)
  @ stdcall FltGetDestinationFileNameInformation(ptr ptr ptr ptr long long ptr)
+ @ stdcall FltReleaseFileNameInformation(ptr)
 
