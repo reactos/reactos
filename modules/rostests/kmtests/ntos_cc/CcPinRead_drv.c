@@ -144,6 +144,15 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
+#define ok_bcb(B, L, O)                                                                 \
+{                                                                                       \
+    PPUBLIC_BCB public_bcb = (B);                                                       \
+    ok(public_bcb->NodeTypeCode == 0x2FD, "Not a BCB: %x\n", public_bcb->NodeTypeCode); \
+    ok(public_bcb->NodeByteSize == 0, "Invalid size: %d\n", public_bcb->NodeByteSize);  \
+    ok_eq_ulong(public_bcb->MappedLength, (L));                                         \
+    ok_eq_longlong(public_bcb->MappedFileOffset.QuadPart, (O));                         \
+}
+
 static
 VOID
 NTAPI
@@ -172,7 +181,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, Offset.QuadPart);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -185,7 +194,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, Offset.QuadPart);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -198,7 +207,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, Offset.QuadPart);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -226,7 +235,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, 4096);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -239,7 +248,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, 4096);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -252,7 +261,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
-        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+        ok_bcb(Bcb, 12288, 4096);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -393,7 +402,7 @@ PerformTest(
 
                     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                     {
-                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+                        ok_bcb(Bcb, ((4 - TestId) * 4096), Offset.QuadPart);
                         ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
 
                         CcUnpinData(Bcb);
@@ -427,7 +436,7 @@ PerformTest(
                         {
                             PKTHREAD ThreadHandle;
 
-                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+                            ok_bcb(TestContext->Bcb, 12288, Offset.QuadPart);
 
 #ifdef _X86_
                             /* FIXME: Should be fixed, will fail under certains conditions */
@@ -460,7 +469,7 @@ PerformTest(
                         {
                             PKTHREAD ThreadHandle;
 
-                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+                            ok_bcb(TestContext->Bcb, 12288, Offset.QuadPart);
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThreadExclusive, TestContext);
@@ -482,7 +491,7 @@ PerformTest(
 
                     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                     {
-                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
+                        ok_bcb(Bcb, 12288, Offset.QuadPart);
                         ok_eq_ulong(Buffer[0x2000 / sizeof(ULONG)], 0);
 
                         CcUnpinData(Bcb);
