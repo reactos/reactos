@@ -379,6 +379,106 @@ ConfirmQuit(PINPUT_RECORD Ir)
     return Result;
 }
 
+#define SETUP_QUIT          -1
+#define SETUP_QUIT_CANCELED -2
+#define SETUP_CANCEL        -3
+#define SETUP_OK             0
+
+static int SetupGetSimpleInput(PINPUT_RECORD Ir, BOOLEAN bAcceptCancel, CHAR* pchValidChars)
+{
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir))
+                return SETUP_QUIT;
+
+            return SETUP_QUIT_CANCELED;
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
+        {
+            break;
+        }
+        else if (bAcceptCancel && Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+        {
+            return SETUP_CANCEL;
+        }
+        else if (pchValidChars && (Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        {
+            CHAR input = toupper(Ir->Event.KeyEvent.uChar.AsciiChar);
+            CHAR* pchValidChar = pchValidChars;
+
+            while (*pchValidChar)
+            {
+                if (input == *pchValidChar)
+                    return input;
+
+                pchValidChar++;
+            }
+        }
+    }
+
+    return SETUP_OK;
+}
+
+static int SetupHandleSimpleList(PINPUT_RECORD Ir, int* listLines, int cLines, int left, int width)
+{
+    ULONG Line = listLines[0];
+    int currentIndex = 0;
+
+    CONSOLE_InvertTextXY(left, Line, width, 1);
+
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
+        {
+            CONSOLE_NormalTextXY(left, Line, width, 1);
+
+            if (currentIndex == cLines-1)
+                currentIndex = 0;
+            else
+                currentIndex++;
+
+            Line = listLines[currentIndex];
+
+            CONSOLE_InvertTextXY(left, Line, width, 1);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
+        {
+            CONSOLE_NormalTextXY(left, Line, width, 1);
+
+            if (currentIndex == 0)
+                currentIndex = cLines-1;
+            else
+                currentIndex--;
+
+            Line = listLines[currentIndex];
+
+            CONSOLE_InvertTextXY(left, Line, width, 1);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir))
+                return SETUP_QUIT;
+
+            return SETUP_QUIT_CANCELED;
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+        {
+            break;
+        }
+    }
+
+    return Line;
+}
 
 static VOID
 UpdateKBLayout(VOID)
@@ -723,33 +823,21 @@ WelcomePage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(WELCOME_PAGE);
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, "RL"))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return INSTALL_INTRO_PAGE;
-        }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
-        {
-            return RECOVERY_PAGE; // REPAIR_INTRO_PAGE;
-        }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* L */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return WELCOME_PAGE;
+        case 'R':
+            return RECOVERY_PAGE;
+        case 'L':
             return LICENSE_PAGE;
-        }
+        case SETUP_OK:
+            return INSTALL_INTRO_PAGE;
     }
-
-    return WELCOME_PAGE;
+    ASSERT(FALSE);
+    return INSTALL_INTRO_PAGE;
 }
 
 
@@ -767,17 +855,17 @@ LicensePage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(LICENSE_PAGE);
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
-        {
+        case SETUP_QUIT: 
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED: 
+            return LICENSE_PAGE;
+        case SETUP_OK:
             return WELCOME_PAGE;
-        }
     }
-
-    return LICENSE_PAGE;
+    ASSERT(FALSE);
+    return WELCOME_PAGE;
 }
 
 
@@ -798,31 +886,24 @@ RepairIntroPage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(REPAIR_INTRO_PAGE);
 
-    while(TRUE)
+    switch(SetupGetSimpleInput(Ir, TRUE, "RU"))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
-        {
-            return REBOOT_PAGE;
-        }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return REPAIR_INTRO_PAGE;
+        case SETUP_CANCEL:
+            return WELCOME_PAGE;
+        case 'U':
             RepairUpdateFlag = TRUE;
             return INSTALL_INTRO_PAGE;
-        }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')  /* R */
-        {
+        case 'R':
             return RECOVERY_PAGE;
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
-        {
-            return WELCOME_PAGE;
-        }
+        case SETUP_OK:
+            return REBOOT_PAGE;
     }
-
-    return REPAIR_INTRO_PAGE;
+    ASSERT(FALSE);
+    return REBOOT_PAGE;
 }
 
 /*
@@ -995,25 +1076,17 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(INSTALL_INTRO_PAGE);
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return INSTALL_INTRO_PAGE;
+        case SETUP_OK:
             return UPGRADE_REPAIR_PAGE;
-        }
     }
-
-    return INSTALL_INTRO_PAGE;
+    ASSERT(FALSE);
+    return UPGRADE_REPAIR_PAGE;
 }
 
 
@@ -1032,25 +1105,17 @@ ScsiControllerPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return SCSI_CONTROLLER_PAGE;
+        case SETUP_OK:
             return DEVICE_SETTINGS_PAGE;
-        }
     }
-
-    return SCSI_CONTROLLER_PAGE;
+    ASSERT(FALSE);
+    return DEVICE_SETTINGS_PAGE;
 }
 
 static PAGE_NUMBER
@@ -1064,25 +1129,17 @@ OemDriverPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return OEM_DRIVER_PAGE;
+        case SETUP_OK:
             return DEVICE_SETTINGS_PAGE;
-        }
     }
-
-    return OEM_DRIVER_PAGE;
+    ASSERT(FALSE);
+    return DEVICE_SETTINGS_PAGE;
 }
 #endif
 
@@ -1111,7 +1168,8 @@ OemDriverPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
-    static ULONG Line = 16;
+    int Line;
+    int options[5] = {16,11,12,13,14};
 
     /* Initialize the computer settings list */
     if (USetupData.ComputerList == NULL)
@@ -1171,63 +1229,26 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
     DrawGenericListCurrentItem(USetupData.KeyboardList, GetSettingDescription, 25, 13);
     DrawGenericListCurrentItem(USetupData.LayoutList  , GetSettingDescription, 25, 14);
 
-    CONSOLE_InvertTextXY(24, Line, 48, 1);
-
-    while (TRUE)
+    Line = SetupHandleSimpleList(Ir, options, 5, 24, 48);
+    switch(Line)
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            CONSOLE_NormalTextXY(24, Line, 48, 1);
-
-            if (Line == 14)
-                Line = 16;
-            else if (Line == 16)
-                Line = 11;
-            else
-                Line++;
-
-            CONSOLE_InvertTextXY(24, Line, 48, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            CONSOLE_NormalTextXY(24, Line, 48, 1);
-
-            if (Line == 11)
-                Line = 16;
-            else if (Line == 16)
-                Line = 14;
-            else
-                Line--;
-
-            CONSOLE_InvertTextXY(24, Line, 48, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            if (Line == 11)
-                return COMPUTER_SETTINGS_PAGE;
-            else if (Line == 12)
-                return DISPLAY_SETTINGS_PAGE;
-            else if (Line == 13)
-                return KEYBOARD_SETTINGS_PAGE;
-            else if (Line == 14)
-                return LAYOUT_SETTINGS_PAGE;
-            else if (Line == 16)
-                return SELECT_PARTITION_PAGE;
-        }
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return DEVICE_SETTINGS_PAGE;
+        case 11:
+            return COMPUTER_SETTINGS_PAGE;
+        case 12:
+            return DISPLAY_SETTINGS_PAGE;
+        case 13:
+            return KEYBOARD_SETTINGS_PAGE;
+        case 14:
+            return LAYOUT_SETTINGS_PAGE;
+        case 16:
+            return SELECT_PARTITION_PAGE;
     }
-
+    
+    ASSERT(FALSE);
     return DEVICE_SETTINGS_PAGE;
 }
 
@@ -1847,11 +1868,11 @@ ShowPartitionSizeInputBox(SHORT Left,
 
                 Length--;
                 CONSOLE_SetInputTextXY(iLeft,
-                                       iTop,
-                                       PARTITION_SIZE_INPUT_FIELD_LENGTH,
+                                iTop, 
+                                PARTITION_SIZE_INPUT_FIELD_LENGTH, 
                                        InputBuffer);
                 CONSOLE_SetCursorXY(iLeft + Pos, iTop);
-            }
+}
         }
         else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_BACK)  /* BACKSPACE */
         {
@@ -2007,7 +2028,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         if (Quit)
         {
             if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
+            return QUIT_PAGE;
 
             break;
         }
@@ -2166,7 +2187,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         if (Quit)
         {
             if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
+            return QUIT_PAGE;
 
             break;
         }
@@ -2324,7 +2345,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         if (Quit)
         {
             if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
+            return QUIT_PAGE;
 
             break;
         }
@@ -2393,29 +2414,19 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(CONFIRM_DELETE_SYSTEM_PARTITION_PAGE);
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, TRUE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
-        {
-            return DELETE_PARTITION_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
+        case SETUP_CANCEL:
             return SELECT_PARTITION_PAGE;
-        }
+        case SETUP_OK:
+            return DELETE_PARTITION_PAGE;
     }
-
-    return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
+    ASSERT(FALSE);
+    return SELECT_PARTITION_PAGE;
 }
 
 
@@ -2540,31 +2551,21 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->NoMbr ? "GPT" : "MBR");
     }
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, TRUE, "D"))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
-        {
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_CANCEL:
             return SELECT_PARTITION_PAGE;
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
-        {
+        case 'D':
             DeleteCurrentPartition(PartitionList);
-
             return SELECT_PARTITION_PAGE;
-        }
+        case SETUP_QUIT_CANCELED:
+        case SETUP_OK:
+            return DELETE_PARTITION_PAGE;
     }
-
-    return DELETE_PARTITION_PAGE;
+    ASSERT(FALSE);
+    return SELECT_PARTITION_PAGE;
 }
 
 
@@ -2949,132 +2950,108 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     SelectedFileSystem = FileSystemList->Selected;
 
-    while (TRUE)
+    if (!IsUnattendedSetup)
     {
-        if (!IsUnattendedSetup)
+        switch(SetupGetSimpleInput(Ir, FALSE, NULL))
         {
-            CONSOLE_ConInKey(Ir);
-        }
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
+            case SETUP_QUIT:
                 return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
-        {
-            CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-            if (!PreparePartitionForFormatting(PartEntry, SelectedFileSystem->FileSystem))
-            {
-                /* FIXME: show an error dialog */
-                return QUIT_PAGE;
-            }
-
-#ifndef NDEBUG
-            CONSOLE_PrintTextXY(6, 12,
-                                "Cylinders: %I64u  Tracks/Cyl: %lu  Sectors/Trk: %lu  Bytes/Sec: %lu  %c",
-                                DiskEntry->Cylinders,
-                                DiskEntry->TracksPerCylinder,
-                                DiskEntry->SectorsPerTrack,
-                                DiskEntry->BytesPerSector,
-                                DiskEntry->Dirty ? '*' : ' ');
-
-            Line = 13;
-
-            for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
-            {
-                PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
-
-                CONSOLE_PrintTextXY(6, Line,
-                                    "%2u:  %2lu  %c  %12I64u  %12I64u  %02x",
-                                    i,
-                                    PartitionInfo->PartitionNumber,
-                                    PartitionInfo->BootIndicator ? 'A' : '-',
-                                    PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
-                                    PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
-                                    PartitionInfo->PartitionType);
-                Line++;
-            }
-#endif
-
-            /* Commit the partition changes to the disk */
-            if (!WritePartitionsToDisk(PartitionList))
-            {
-                DPRINT("WritePartitionsToDisk() failed\n");
-                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
-
-            /* Set PartitionRootPath */
-            RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                    L"\\Device\\Harddisk%lu\\Partition%lu",
-                    DiskEntry->DiskNumber,
-                    PartEntry->PartitionNumber);
-            RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
-            DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
-
-            /* Format the partition */
-            if (SelectedFileSystem->FileSystem)
-            {
-                Status = FormatPartition(&PartitionRootPath,
-                                         SelectedFileSystem);
-                if (Status == STATUS_NOT_SUPPORTED)
-                {
-                    sprintf(Buffer,
-                            "Setup is currently unable to format a partition in %S.\n"
-                            "\n"
-                            "  \x07  Press ENTER to continue Setup.\n"
-                            "  \x07  Press F3 to quit Setup.",
-                            SelectedFileSystem->FileSystem->FileSystemName);
-
-                    PopupError(Buffer,
-                               MUIGetString(STRING_QUITCONTINUE),
-                               NULL, POPUP_WAIT_NONE);
-
-                    while (TRUE)
-                    {
-                        CONSOLE_ConInKey(Ir);
-
-                        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00 &&
-                            Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)  /* F3 */
-                        {
-                            if (ConfirmQuit(Ir))
-                                return QUIT_PAGE;
-                            else
-                                return SELECT_FILE_SYSTEM_PAGE;
-                        }
-                        else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
-                        {
-                            return SELECT_FILE_SYSTEM_PAGE;
-                        }
-                    }
-                }
-                else if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
-                    MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
-                    return QUIT_PAGE;
-                }
-
-                PartEntry->FormatState = Formatted;
-                // PartEntry->FileSystem  = FileSystem;
-                PartEntry->New = FALSE;
-            }
-
-#ifndef NDEBUG
-            CONSOLE_SetStatusText("   Done.  Press any key ...");
-            CONSOLE_ConInKey(Ir);
-#endif
-
-            return SELECT_FILE_SYSTEM_PAGE;
+            case SETUP_QUIT_CANCELED:
+                return FORMAT_PARTITION_PAGE;
         }
     }
 
-    return FORMAT_PARTITION_PAGE;
+    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    if (!PreparePartitionForFormatting(PartEntry, SelectedFileSystem->FileSystem))
+    {
+        /* FIXME: show an error dialog */
+        return QUIT_PAGE;
+    }
+
+#ifndef NDEBUG
+    CONSOLE_PrintTextXY(6, 12,
+                        "Cylinders: %I64u  Tracks/Cyl: %lu  Sectors/Trk: %lu  Bytes/Sec: %lu  %c",
+                        DiskEntry->Cylinders,
+                        DiskEntry->TracksPerCylinder,
+                        DiskEntry->SectorsPerTrack,
+                        DiskEntry->BytesPerSector,
+                        DiskEntry->Dirty ? '*' : ' ');
+
+    Line = 13;
+
+    for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
+    {
+        PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
+
+        CONSOLE_PrintTextXY(6, Line,
+                            "%2u:  %2lu  %c  %12I64u  %12I64u  %02x",
+                            i,
+                            PartitionInfo->PartitionNumber,
+                            PartitionInfo->BootIndicator ? 'A' : '-',
+                            PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                            PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                            PartitionInfo->PartitionType);
+        Line++;
+    }
+#endif
+
+    /* Commit the partition changes to the disk */
+    if (!WritePartitionsToDisk(PartitionList))
+    {
+        DPRINT("WritePartitionsToDisk() failed\n");
+        MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    /* Set PartitionRootPath */
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu",
+            DiskEntry->DiskNumber,
+            PartEntry->PartitionNumber);
+    RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
+    DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
+
+    /* Format the partition */
+    if (SelectedFileSystem->FileSystem)
+    {
+        Status = FormatPartition(&PartitionRootPath,
+                                 SelectedFileSystem);
+        if (Status == STATUS_NOT_SUPPORTED)
+        {
+            int selection;
+            sprintf(Buffer,
+                    "Setup is currently unable to format a partition in %S.\n"
+                    "\n"
+                    "  \x07  Press ENTER to continue Setup.\n"
+                    "  \x07  Press F3 to quit Setup.",
+                    SelectedFileSystem->FileSystem->FileSystemName);
+
+            PopupError(Buffer,
+                       MUIGetString(STRING_QUITCONTINUE),
+                       NULL, POPUP_WAIT_NONE);
+
+            selection = SetupGetSimpleInput(Ir, FALSE, NULL);
+            return (selection == SETUP_QUIT) ? QUIT_PAGE : SELECT_FILE_SYSTEM_PAGE;
+        }
+        else if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
+            MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
+            return QUIT_PAGE;
+        }
+
+        PartEntry->FormatState = Formatted;
+        // PartEntry->FileSystem  = FileSystem;
+        PartEntry->New = FALSE;
+    }
+
+#ifndef NDEBUG
+    CONSOLE_SetStatusText("   Done.  Press any key ...");
+    CONSOLE_ConInKey(Ir);
+#endif
+
+    return SELECT_FILE_SYSTEM_PAGE;
 }
 
 
@@ -3150,24 +3127,14 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
                    MUIGetString(STRING_QUITCONTINUE),
                    NULL, POPUP_WAIT_NONE);
 
-        while (TRUE)
+        switch(SetupGetSimpleInput(Ir, FALSE, NULL))
         {
-            CONSOLE_ConInKey(Ir);
-
-            if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00 &&
-                Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)  /* F3 */
-            {
-                if (ConfirmQuit(Ir))
-                    return QUIT_PAGE;
-                else
-                    return CHECK_FILE_SYSTEM_PAGE;
-            }
-            else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
-            {
-                PartEntry->NeedsCheck = FALSE;
+            case SETUP_QUIT:
+                return QUIT_PAGE;
+            case SETUP_QUIT_CANCELED:
                 return CHECK_FILE_SYSTEM_PAGE;
-            }
         }
+
     }
     else if (!NT_SUCCESS(Status))
     {
@@ -3249,7 +3216,7 @@ IsValidPath(
     return TRUE;
 }
 
-
+                    
 /*
  * Displays the InstallDirectoryPage.
  *
@@ -3327,7 +3294,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     Length = wcslen(InstallDir);
     Pos = Length;
 
-    MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
+        MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
     CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
     CONSOLE_SetCursorXY(8 + Pos, 11);
     CONSOLE_SetCursorType(TRUE, TRUE);
@@ -3342,11 +3309,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
             CONSOLE_SetCursorType(TRUE, FALSE);
 
             if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
+            return QUIT_PAGE;
 
             CONSOLE_SetCursorType(TRUE, TRUE);
             break;
-        }
+    }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
         {
@@ -3356,7 +3323,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
                         &InstallDir[Pos + 1],
                         (Length - Pos - 1) * sizeof(WCHAR));
                 InstallDir[Length - 1] = UNICODE_NULL;
-
+    
                 Length--;
                 CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
                 CONSOLE_SetCursorXY(8 + Pos, 11);
@@ -3396,35 +3363,35 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetCursorType(TRUE, FALSE);
 
-            /*
-             * Check for the validity of the installation directory and pop up
-             * an error if it is not the case. Then the user can fix its input.
-             */
-            if (!IsValidPath(InstallDir))
-            {
-                MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
+    /*
+     * Check for the validity of the installation directory and pop up
+     * an error if it is not the case. Then the user can fix its input.
+     */
+    if (!IsValidPath(InstallDir))
+    {
+        MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
+        return INSTALL_DIRECTORY_PAGE;
+    }
 
-            BuildInstallPaths(InstallDir,
-                              DiskEntry,
-                              PartEntry);
+    BuildInstallPaths(InstallDir,
+                      DiskEntry,
+                      PartEntry);
 
-            /*
-             * Check whether the user attempts to install ReactOS within the
-             * installation source directory, or in a subdirectory thereof.
-             * If so, fail with an error.
-             */
-            if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-            {
-                PopupError("You cannot install ReactOS within the installation source directory!",
-                           MUIGetString(STRING_CONTINUE),
-                           Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
+    /*
+     * Check whether the user attempts to install ReactOS within the
+     * installation source directory, or in a subdirectory thereof.
+     * If so, fail with an error.
+     */
+    if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
+    {
+        PopupError("You cannot install ReactOS within the installation source directory!",
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
+        return INSTALL_DIRECTORY_PAGE;
+    }
 
-            return PREPARE_COPY_PAGE;
-        }
+    return PREPARE_COPY_PAGE;
+}
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
         {
             if (Pos > 0)
@@ -3846,7 +3813,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     BOOLEAN InstallOnFloppy;
-    USHORT Line = 12;
+    int Line;
+    int options[4] = {12,13,14,15};
     WCHAR PathBuffer[MAX_PATH];
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
@@ -3935,77 +3903,32 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
-    CONSOLE_InvertTextXY(8, Line, 60, 1);
 
-    while (TRUE)
+    Line = SetupHandleSimpleList(Ir, options, 4, 8, 60);
+    switch(Line)
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line++;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
-        {
-            CONSOLE_NormalTextXY(8, Line, 60, 1);
-
-            Line--;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
-
-            CONSOLE_InvertTextXY(8, Line, 60, 1);
-        }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
-        {
-            if (Line == 12)
-            {
-                /* Install on both MBR and VBR */
-                USetupData.MBRInstallType = 2;
-                break;
-            }
-            else if (Line == 13)
-            {
-                /* Install on VBR only */
-                USetupData.MBRInstallType = 3;
-                break;
-            }
-            else if (Line == 14)
-            {
-                /* Install on floppy */
-                USetupData.MBRInstallType = 1;
-                break;
-            }
-            else if (Line == 15)
-            {
-                /* Skip MBR installation */
-                USetupData.MBRInstallType = 0;
-                break;
-            }
-
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
             return BOOT_LOADER_PAGE;
-        }
+        case 12:
+            /* Install on both MBR and VBR */
+            USetupData.MBRInstallType = 2;
+            break;
+        case 13:
+            /* Install on VBR only */
+            USetupData.MBRInstallType = 3;
+            break;
+        case 14:
+            /* Install on floppy */
+            USetupData.MBRInstallType = 1;
+            break;
+        case 15:
+            /* Skip MBR installation */
+            USetupData.MBRInstallType = 0;
+            break;
+        default:
+            ASSERT(FALSE);
     }
 
 Quit:
@@ -4054,36 +3977,26 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 
 //  CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    while (TRUE)
+    switch(SetupGetSimpleInput(Ir, FALSE, NULL))
     {
-        CONSOLE_ConInKey(Ir);
-
-        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
-        {
-            if (ConfirmQuit(Ir))
-                return QUIT_PAGE;
-
-            break;
-        }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
-        {
-            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
-                                                &USetupData.DestinationArcPath);
-            if (!NT_SUCCESS(Status))
-            {
-                if (Status == STATUS_DEVICE_NOT_READY)
-                    MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
-
-                /* TODO: Print error message */
-                return BOOT_LOADER_FLOPPY_PAGE;
-            }
-
-            return SUCCESS_PAGE;
-        }
+        case SETUP_QUIT:
+            return QUIT_PAGE;
+        case SETUP_QUIT_CANCELED:
+            return BOOT_LOADER_FLOPPY_PAGE;
     }
 
-    return BOOT_LOADER_FLOPPY_PAGE;
+    Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
+                                        &USetupData.DestinationArcPath);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_DEVICE_NOT_READY)
+            MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
+
+        /* TODO: Print error message */
+        return BOOT_LOADER_FLOPPY_PAGE;
+    }
+
+    return SUCCESS_PAGE;
 }
 
 
