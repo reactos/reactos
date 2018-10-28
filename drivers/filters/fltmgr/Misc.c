@@ -69,3 +69,16 @@ FltGetFileNameInformationUnsafe(
     *FileNameInformation = NULL;
     return 0;
 }
+
+NTSTATUS
+FLTAPI
+FltGetFileNameInformation(
+    _In_ PFLT_CALLBACK_DATA CallbackData,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(CallbackData);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *FileNameInformation = NULL;
+    return 0;
+}
