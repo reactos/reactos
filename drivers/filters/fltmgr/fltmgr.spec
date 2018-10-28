@@ -11,4 +11,5 @@
  @ stdcall FltObjectDereference(ptr)
  @ stdcall FltSendMessage(ptr ptr ptr long ptr ptr ptr)
  @ stdcall FltEnumerateVolumes(ptr ptr long ptr)
+ @ stdcall FltGetFileNameInformationUnsafe(ptr ptr long ptr)
 

@@ -54,3 +54,18 @@ FltGetDiskDeviceObject(
     UNREFERENCED_PARAMETER(DiskDeviceObject);
     return 0;
 }
+
+NTSTATUS
+FLTAPI
+FltGetFileNameInformationUnsafe(
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ PFLT_INSTANCE Instance,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *FileNameInformation = NULL;
+    return 0;
+}
