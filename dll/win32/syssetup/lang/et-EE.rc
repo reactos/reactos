@@ -2,51 +2,51 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tere tulemast ReactOSi paigaldusprogrammi.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Selle programmi abil paigaldatakse ReactOS arvutisse. Selleks peab esmalt koguma natuke andmeid sinu ja su arvuti kohta.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Vajuta Järgmine, et jätkata paigaldamist.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Tere tulemast ReactOS'i häälestusviisardisse.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Selle viisardi abil paigaldatakse ReactOS Teie arvutisse. Selleks peab esmalt koguma natuke andmeid Teie ja Te arvuti kohta.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOSi arendajad sooviksid tunnustada järgmisi avatud lähtekoodiga projekte, mida kasutati ReactOSi loomisel:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS'i arendajad sooviksid tunnustada järgmisi avatud lähtekoodiga projekte, mida kasutati ReactOS'i loomisel:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOSi litsentsiks on GPL, seega kui soovid ReactOSi (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas.", IDC_STATIC, 15, 110, 220, 22
+    LTEXT "ReactOS'i litsentsiks on GPL, seega kui soovite ReactOS'i (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas.", IDC_STATIC, 15, 110, 220, 24
     PUSHBUTTON "&Vaata GPL litsentsi...", IDC_VIEWGPL, 230, 110, 71, 19
-    LTEXT "Vajuta Järgmine, et jätkata paigaldamist.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Sisesta enda täisnimi ja oma firma või asutuse nimi.", IDC_STATIC, 54, 7, 242, 21
+    LTEXT "Sisestage enda täisnimi ja oma firma või asutuse nimi.", IDC_STATIC, 54, 7, 242, 21
     LTEXT "Ni&mi:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organisatsioon:", IDC_STATIC, 54, 57, 47, 8
+    LTEXT "&Ettevõtte:", IDC_STATIC, 54, 57, 47, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Anna oma arvutile nimi. See ei tohi olla pikem kui 15 tähemärki. Võrgus peab arvuti nimi olema unikaalne.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "Andke oma arvutile nimi. See ei tohi olla pikem kui 15 tähemärki. Arvuti nimi peab võrgus olema unikaalne.", IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Arvuti nimi:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Arvuti täielikuks haldamiseks luuakse administraatori konto (Administrator). ", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Sisesta administraatori parool, mille pikkus on maksimaalselt 127 tähemärki.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "Sisestage administraatori parool, mille pikkus on maksimaalselt 127 tähemärki.", IDC_STATIC, 54, 87, 250, 8
     LTEXT "A&dministraatori parool:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "&Kinnita parool:", IDC_STATIC, 54, 123, 105, 8
@@ -55,13 +55,13 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Süsteemi lokaat peaks olema ühtiv nende programmide keelega, mida soovid kasutada. Kasutaja lokaat määrab, kuidas näidatakse numbreid, valuutat ja kuupäeva.", IDC_STATIC, 53, 7, 253, 22
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Süsteemi või kasutaja lokaadi muutmiseks vajuta Täpsusta.", IDC_STATIC, 53, 60, 196, 8
+    LTEXT "Süsteemi lokaat peaks olema ühtiv nende programmide keelega, mida soovid kasutada. Kasutaja lokaat määrab, kuidas näidatakse numbreid, valuutat ja kuupäeva.", IDC_STATIC, 53, 7, 253, 24
+    LTEXT "", IDC_LOCALETEXT, 53, 31, 250, 16
+    LTEXT "Süsteemi või kasutaja lokaadi muutmiseks vajutage Täpsusta.", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "Tä&psusta...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "Klaviatuuriasetus määrab tähemärgid, mis klaviatuuril kirjutades ilmuvad.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
@@ -71,7 +71,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -85,16 +85,16 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus teema", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Klassikaline teema", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -104,13 +104,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamise lõpetamine"
+CAPTION "ReactOS'i paigalduse lõpetamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOSi paigalduse lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS'i paigalduse lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS on edukalt paigaldatud.\n\nPärast Lõpeta vajutamist taaskäivitatakse arvuti.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Kui CD draivis on CD, siis eemalda see. Seejärel vajuta taaskäivitamiseks Lõpeta.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Kui CD on veel draivis, siis eemaldage see. Seejärel vajuta taaskäivitamiseks Lõpeta.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -133,43 +133,43 @@ END
 
 IDD_PS2MOUSEPROPERTIES DIALOGEX 0, 0, 252, 218
 STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Täpsemad suvandid"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "&Sample Rate:", -1, 27, 35, 90, 8
-    LTEXT "reports per second", -1, 169, 35, 76, 8
+    RTEXT "&Diskreetimissagedus:", -1, 27, 35, 90, 8
+    LTEXT "raporti sekundis", -1, 169, 35, 76, 8
     COMBOBOX IDC_PS2MOUSESAMPLERATE, 124, 33, 42, 41, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Wheel Detection:", -1, 27, 55, 90, 8
+    RTEXT "&Rulliku tuvastamine:", -1, 27, 55, 90, 8
     COMBOBOX IDC_PS2MOUSEWHEEL, 124, 53, 95, 46, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Input buffer length:", -1, 27, 75, 90, 8
-    LTEXT "packets", -1, 169, 75, 26, 8
+    RTEXT "&Sisendi puhvri pikkus:", -1, 27, 75, 90, 8
+    LTEXT "paketid", -1, 169, 75, 26, 8
     EDITTEXT IDC_PS2MOUSEINPUTLEN, 124, 72, 40, 14, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | ES_NUMBER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER
     CONTROL "", IDC_PS2MOUSEINPUTUPDN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 168, 70, 10, 14
-    AUTOCHECKBOX "&Fast Initialization", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
-    PUSHBUTTON "&Defaults", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
+    AUTOCHECKBOX "&Kiire lähtestamine", IDC_PS2MOUSEFASTINIT, 124, 97, 90, 10
+    PUSHBUTTON "&Vaikesätted", IDC_PS2MOUSEDEFAULTS, 195, 188, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE "Tänud"
-    IDS_ACKSUBTITLE "Kellele toetub ReactOS ja informatsioon litsentsi kohta"
+    IDS_ACKTITLE "Tänusõnad"
+    IDS_ACKSUBTITLE "Kellele ReactOS toetub ja informatsioon litsentsi kohta"
     IDS_OWNERTITLE "Tee tarkvara isikupäraseks"
-    IDS_OWNERSUBTITLE "Seda informatsiooni kasutatakse ReactOSi isikupäraseks tegemiseks."
+    IDS_OWNERSUBTITLE "Seda informatsiooni kasutatakse ReactOS'i isikupäraseks tegemiseks."
     IDS_COMPUTERTITLE "Arvuti nimi ja administraatori parool"
     IDS_COMPUTERSUBTITLE "Arvutile tuleb anda nimi ja administraatori parool."
     IDS_LOCALETITLE "Regionaalsed seaded"
-    IDS_LOCALESUBTITLE "ReactOSi saab kohandada erinevatele regioonidele ja keeltele vastavaks."
+    IDS_LOCALESUBTITLE "ReactOS'i saab kohandada erinevatele regioonidele ja keeltele vastavaks."
     IDS_DATETIMETITLE "Kuupäev ja kellaaeg"
     IDS_DATETIMESUBTITLE "Sisesta õige kellaaeg ja kuupäev."
     IDS_PROCESSTITLE "Komponentide registreerimine"
     IDS_PROCESSSUBTITLE "Palun oota..."
-    IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
+    IDS_THEMESELECTIONTITLE "Välimus"
+    IDS_THEMESELECTIONSUBTITLE "Vali endale eelistatav teema."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOSi paigaldamine"
+    IDS_REACTOS_SETUP "ReactOS'i paigaldus"
     IDS_UNKNOWN_ERROR "Tundmatu viga"
     IDS_REGISTERING_COMPONENTS "Komponentide registreerimine..."
     IDS_LOADLIBRARY_FAILED "LoadLibrary ebaõnnestus: "
@@ -190,9 +190,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME "Paigaldamine ei saa jätkuda enne kui on sisestatud nimi."
+    IDS_WZD_NAME "Paigaldus ei saa jätkuda enne kui on sisestatud nimi."
     IDS_WZD_SETCOMPUTERNAME "Arvuti nime ei õnnestunud seadistada."
-    IDS_WZD_COMPUTERNAME "Paigaldamine ei saa jätkuda enne kui on sisestatud arvuti nimi."
+    IDS_WZD_COMPUTERNAME "Paigaldus ei saa jätkuda enne kui on sisestatud arvuti nimi."
     IDS_WZD_PASSWORDEMPTY "Sa pead parooli sisestama!"
     IDS_WZD_PASSWORDMATCH "Paroolid ei klapi. Proovi paroolid uuesti sisestada."
     IDS_WZD_PASSWORDCHAR "Paroolis on vigased tähemärgid. Proovi teistsugust parooli."
@@ -207,13 +207,13 @@ END
 /* ATTENTION: Synchronize the translation of these strings with shell32 */
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_PROGRAMFILES "%SystemDrive%\\Programmifailid"
     IDS_COMMONFILES "Common Files"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DETECTIONDISABLED "Detection disabled"
-    IDS_LOOKFORWHEEL "Look for wheel"
-    IDS_ASSUMEPRESENT "Assume wheel is present"
+    IDS_DETECTIONDISABLED "Tuvastamine keelatud"
+    IDS_LOOKFORWHEEL "Otsi rullikut"
+    IDS_ASSUMEPRESENT "Eelda rullik on olemas"
 END

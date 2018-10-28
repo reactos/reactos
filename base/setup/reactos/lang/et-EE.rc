@@ -2,23 +2,23 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tere tulemast ReactOSi paigaldamisprogrammi", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Selle CD pealt ei saa praegu veel ReactOSi paigaldada! ReactOSi paigaldamiseks on tarvis arvuti taaskäivitada selle CD-ga.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Tere tulemast ReactOS'i paigaldamus viisardisse", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Selle CD pealt ei saa praegu veel ReactOS'i paigaldada! ReactOS'i paigaldamiseks on tarvis arvuti taaskäivitada selle CD-ga.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Vajuta lõpeta, et installeerimine lõpetada.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Installeeri ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Paranda või uuenda installeeritud ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    AUTORADIOBUTTON "Installeeri ReactOS", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "Paigalda uus koopia ReactOS'ist. See valik ei jäta alles teie faile, suvandeid ja programme. Võite teha muudatusi kettastele ja partitsioonidele.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "Paranda või uuenda installeeritud ReactOS'i", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Uuenda või paranda oma ReactOS'i installatsiooni. See valik säilitab teie failid, suvandid ja programmid. See valik on saadaval juhul kui ReactOS on juba paigaldatud siin arvutis.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Vajuta Järgmine, et seadmeid paigaldada.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -35,12 +35,12 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Arvuti:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
-    LTEXT "Monitor:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "Ekraan:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
     LTEXT "Klaviatuur:", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
@@ -49,7 +49,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -84,8 +84,8 @@ BEGIN
     CONTROL "Paigaldamise kaust", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
     EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
     CONTROL "Alglaaduri paigaldamine", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Paigalda alglaadur kõvakettale (MBR and VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Paigalda alglaadur kõvakettale (VBR only)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "Paigalda alglaadur kõvakettale (MBR ja VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "Paigalda alglaadur kõvakettale (ainult VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
     CONTROL "Ära paigalda alglaadurit", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
     PUSHBUTTON "&Olgu", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Tühista", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
@@ -93,7 +93,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
@@ -119,21 +119,21 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Install files...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Install failid...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOSi paigaldamine"
+CAPTION "ReactOS'i paigalduse lõpetamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOSi paigaldamise esimene järk on edukalt lõpetatud.", IDC_STATIC, 20, 50, 277, 10
+    LTEXT "Reactos'i paigaldusviisardi lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS'i paigaldamise esimene järk on edukalt lõpetatud.", IDC_STATIC, 20, 50, 277, 10
     LTEXT "Vajuta Lõpeta, et arvuti taaskäivitada.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
     LTEXT "Võta CD välja ja vajuta Lõpeta, et arvuti taaskäivitada.", IDC_STATIC, 10, 180, 297, 20
@@ -141,10 +141,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Tere tulemast ReactOSi paigaldama"
+    IDS_TYPETITLE "Tere tulemast ReactOS'i paigaldama"
     IDS_TYPESUBTITLE "Vali paigalduse tüüp."
     IDS_DEVICETITLE "Põhiliste seadmete paigaldamine"
-    IDS_DEVICESUBTITLE "Monitori ja klaviatuuri seadistamine."
+    IDS_DEVICESUBTITLE "Ekraani ja klaviatuuri seadistamine."
     IDS_DRIVETITLE "Partitsioonide ja süsteemikausta seadistamine"
     IDS_DRIVESUBTITLE "Sihtpartitsiooni, süsteemikausta ja alglaaduri ettevalmistamine."
     IDS_PROCESSTITLE "Partitsiooni ettevalmistamine, failide kopeerimine ja süsteemi üles seadmine"
@@ -153,23 +153,23 @@ BEGIN
     IDS_RESTARTSUBTITLE "Paigaldamise esimene järk on lõpetatud, teise järgu alustamiseks taaskäivita arvuti"
     IDS_SUMMARYTITLE "Paigaldamise kokkuvõte"
     IDS_SUMMARYSUBTITLE "Seadete kontrollimine enne paigaldamise alustamist"
-    IDS_ABORTSETUP "ReactOS ei ole veel täielikult paigaldatud. Kas tõesti lahkuda?"
+    IDS_ABORTSETUP "ReactOS ei ole veel lõplikult paigaldatud. Kas soovite tõesti lahkuda?"
     IDS_ABORTSETUP2 "Katkestada paigaldamine?"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
-    IDS_CAPTION "ReactOSi paigaldamine"
+    IDS_NO_TXTSETUP_SIF "Ei leitud faili 'txtsetup.sif'.\nPaigaldust ei saa lõpuni viia."
+    IDS_CAPTION "ReactOS'i paigaldamine"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "Nimi"
+    IDS_INSTALLATION_PATH "Installeerimise teekond"
+    IDS_INSTALLATION_VENDOR "Müüja nimi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_TYPE "Type"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_NAME "Ninim"
+    IDS_PARTITION_TYPE "Tüüp"
+    IDS_PARTITION_SIZE "Suurus"
+    IDS_PARTITION_STATUS "Olek"
 END
