@@ -675,6 +675,10 @@ InitializeSetup(
         // pSetupData->LayoutList   = NULL;
         // pSetupData->LanguageList = NULL;
 
+        /* Initialize error handling */
+        pSetupData->LastErrorNumber = ERROR_SUCCESS;
+        pSetupData->ErrorRoutine = NULL;
+
         /* Initialize global unicode strings */
         RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
         RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);

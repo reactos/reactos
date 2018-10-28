@@ -3481,6 +3481,29 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 }
 
 
+// PSETUP_ERROR_ROUTINE
+static VOID
+__cdecl
+USetupErrorRoutine(
+    IN PUSETUP_DATA pSetupData,
+    ...)
+{
+    INPUT_RECORD Ir;
+    va_list arg_ptr;
+
+    va_start(arg_ptr, pSetupData);
+
+    if (pSetupData->LastErrorNumber >= ERROR_SUCCESS &&
+        pSetupData->LastErrorNumber <  ERROR_LAST_ERROR_CODE)
+    {
+        // Note: the "POPUP_WAIT_ENTER" actually depends on the LastErrorNumber...
+        MUIDisplayErrorV(pSetupData->LastErrorNumber, &Ir, POPUP_WAIT_ENTER, arg_ptr);
+    }
+
+    va_end(arg_ptr);
+}
+
+
 static BOOLEAN
 AddSectionToCopyQueueCab(HINF InfFile,
                          PCWSTR SectionName,
@@ -5001,6 +5024,7 @@ RunUSetup(VOID)
 
     /* Initialize Setup, phase 0 */
     InitializeSetup(&USetupData, 0);
+    USetupData.ErrorRoutine = USetupErrorRoutine;
 
     /* Hide the cursor */
     CONSOLE_SetCursorType(TRUE, FALSE);

@@ -58,8 +58,15 @@ extern HANDLE ProcessHeap;
 
 struct _USETUP_DATA;
 
+typedef VOID
+(__cdecl *PSETUP_ERROR_ROUTINE)(IN struct _USETUP_DATA*, ...);
+
 typedef struct _USETUP_DATA
 {
+/* Error handling *****/
+    ERROR_NUMBER LastErrorNumber;
+    PSETUP_ERROR_ROUTINE ErrorRoutine;
+
 /* Setup INFs *****/
     HINF SetupInf;
 
