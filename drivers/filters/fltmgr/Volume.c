@@ -192,6 +192,18 @@ FltDetachVolume(
 
 NTSTATUS
 FLTAPI
+FltAttachVolume(
+    _Inout_ PFLT_FILTER Filter,
+    _Inout_ PFLT_VOLUME Volume,
+    _In_opt_ PCUNICODE_STRING InstanceName,
+    _Outptr_opt_result_maybenull_ PFLT_INSTANCE *RetInstance)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+FLTAPI
 FltGetVolumeName(
     _In_ PFLT_VOLUME Volume,
     _Inout_opt_ PUNICODE_STRING VolumeName,
