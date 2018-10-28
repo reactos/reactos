@@ -96,10 +96,10 @@ EnumerateInstallations(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
-        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
-                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
-        DPRINT1("    An installation '%S' of unsupported type %lu\n",
-                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
+        // DPRINT("    An installation '%S' of unsupported type '%S'\n",
+               // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT("    An installation '%S' of unsupported type %lu\n",
+               BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
@@ -113,10 +113,10 @@ EnumerateInstallations(
         return STATUS_SUCCESS;
     }
 
-    DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
-            BootEntry->FriendlyName, Options->OsLoadPath);
-    // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
-            // BootEntry->FriendlyName, Options->OsLoadPath);
+    DPRINT("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
+           BootEntry->FriendlyName, Options->OsLoadPath);
+    // DPRINT("    Found a Win2k3 install '%S' with ARC path '%S'\n",
+           // BootEntry->FriendlyName, Options->OsLoadPath);
 
     // TODO: Normalize the ARC path.
 
@@ -127,8 +127,8 @@ EnumerateInstallations(
     NtOsInstall = FindExistingNTOSInstall(Data->List, Options->OsLoadPath, NULL);
     if (NtOsInstall)
     {
-        DPRINT1("    An NTOS installation with name \"%S\" from vendor \"%S\" already exists in SystemRoot '%wZ'\n",
-                NtOsInstall->InstallationName, NtOsInstall->VendorName, &NtOsInstall->SystemArcPath);
+        DPRINT("    An NTOS installation with name \"%S\" from vendor \"%S\" already exists in SystemRoot '%wZ'\n",
+               NtOsInstall->InstallationName, NtOsInstall->VendorName, &NtOsInstall->SystemArcPath);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
@@ -146,8 +146,8 @@ EnumerateInstallations(
         return STATUS_SUCCESS;
     }
 
-    DPRINT1("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n",
-            Options->OsLoadPath, &SystemRootPath);
+    DPRINT("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n",
+           Options->OsLoadPath, &SystemRootPath);
 
     /*
      * Check whether we already have an installation with this NT path.
@@ -162,7 +162,7 @@ EnumerateInstallations(
         return STATUS_SUCCESS;
     }
 
-    DPRINT1("EnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
+    DPRINT("EnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
 
     /* Check if this is a valid NTOS installation; stop there if it isn't one */
     RtlInitEmptyUnicodeString(&VendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
@@ -172,14 +172,14 @@ EnumerateInstallations(
         return STATUS_SUCCESS;
     }
 
-    DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n",
-            Options->OsLoadPath, &SystemRootPath);
+    DPRINT("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n",
+           Options->OsLoadPath, &SystemRootPath);
 
     /* From the NT path, compute the disk, partition and path components */
     if (NtPathToDiskPartComponents(SystemRootPath.Buffer, &DiskNumber, &PartitionNumber, &PathComponent))
     {
-        DPRINT1("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
-                &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
+        DPRINT("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
+               &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
 
         /* Retrieve the corresponding disk and partition */
         if (!GetDiskOrPartition(Data->PartList, DiskNumber, PartitionNumber, &DiskEntry, &PartEntry))
@@ -307,7 +307,7 @@ CheckForValidPEAndVendor(
         if (NT_SUCCESS(Status) /*&& pvData*/)
         {
             /* BufLen includes the NULL terminator count */
-            DPRINT1("Found version vendor: \"%S\" for file '%S'\n", pvData, PathNameToFile);
+            DPRINT("Found version vendor: \"%S\" for file '%S'\n", pvData, PathNameToFile);
 
             RtlStringCbCopyNW(VendorName->Buffer, VendorName->MaximumLength,
                               pvData, BufLen * sizeof(WCHAR));
@@ -318,7 +318,7 @@ CheckForValidPEAndVendor(
     }
 
     if (!NT_SUCCESS(Status))
-        DPRINT1("No version vendor found for file '%S'\n", PathNameToFile);
+        DPRINT("No version vendor found for file '%S'\n", PathNameToFile);
 
 UnmapCloseFile:
     /* Finally, unmap and close the file */
@@ -417,7 +417,7 @@ IsValidNTOSInstallationByHandle(
             if (Success)
             {
                 /* We have found a correct vendor combination */
-                DPRINT1("IsValidNTOSInstallation: We've got an NTOS installation from %S !\n", KnownVendors[i]);
+                DPRINT("IsValidNTOSInstallation: We've got an NTOS installation from %S !\n", KnownVendors[i]);
                 break;
             }
         }
@@ -445,7 +445,7 @@ IsValidNTOSInstallationByHandle(
             if (!!FindSubStrI(LocalVendorName.Buffer, KnownVendors[i]))
             {
                 /* We have found a correct vendor combination */
-                DPRINT1("IsValidNTOSInstallation: The user-mode DLL '%S' is from %S\n", PathName, KnownVendors[i]);
+                DPRINT("IsValidNTOSInstallation: The user-mode DLL '%S' is from %S\n", PathName, KnownVendors[i]);
                 break;
             }
         }
@@ -498,6 +498,7 @@ IsValidNTOSInstallation(
     return Success;
 }
 
+#ifndef NDEBUG
 static VOID
 DumpNTOSInstalls(
     IN PGENERIC_LIST List)
@@ -506,22 +507,23 @@ DumpNTOSInstalls(
     PNTOS_INSTALLATION NtOsInstall;
     ULONG NtOsInstallsCount = GetNumberOfListEntries(List);
 
-    DPRINT1("There %s %d installation%s detected:\n",
-            NtOsInstallsCount >= 2 ? "are" : "is",
-            NtOsInstallsCount,
-            NtOsInstallsCount >= 2 ? "s" : "");
+    DPRINT("There %s %d installation%s detected:\n",
+           NtOsInstallsCount >= 2 ? "are" : "is",
+           NtOsInstallsCount,
+           NtOsInstallsCount >= 2 ? "s" : "");
 
     for (Entry = GetFirstListEntry(List); Entry; Entry = GetNextListEntry(Entry))
     {
         NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
 
-        DPRINT1("    On disk #%d, partition #%d: Installation \"%S\" in SystemRoot '%wZ'\n",
-                NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber,
-                NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
+        DPRINT("    On disk #%d, partition #%d: Installation \"%S\" in SystemRoot '%wZ'\n",
+               NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber,
+               NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
     }
 
-    DPRINT1("Done.\n");
+    DPRINT("Done.\n");
 }
+#endif
 
 static PNTOS_INSTALLATION
 FindExistingNTOSInstall(
@@ -661,7 +663,7 @@ FindNTOSInstallations(
                         L"\\Device\\Harddisk%lu\\Partition%lu\\",
                         DiskNumber, PartitionNumber);
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
-    DPRINT1("FindNTOSInstallations: PartitionRootPath: '%wZ'\n", &PartitionRootPath);
+    DPRINT("FindNTOSInstallations: PartitionRootPath: '%wZ'\n", &PartitionRootPath);
 
     /* Open the partition */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -691,14 +693,14 @@ FindNTOSInstallations(
         if (!NT_SUCCESS(Status))
         {
             /* The loader does not exist, continue with another one */
-            DPRINT1("Loader type '%d' does not exist, or an error happened (Status 0x%08lx), continue with another one...\n",
-                    Type, Status);
+            DPRINT("Loader type '%d' does not exist, or an error happened (Status 0x%08lx), continue with another one...\n",
+                   Type, Status);
             continue;
         }
 
         /* The loader exists, try to enumerate its boot entries */
-        DPRINT1("Analyse the OS installations for loader type '%d' in disk #%d, partition #%d\n",
-                Type, DiskNumber, PartitionNumber);
+        DPRINT("Analyze the OS installations for loader type '%d' in disk #%d, partition #%d\n",
+               Type, DiskNumber, PartitionNumber);
 
         Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
         if (!NT_SUCCESS(Status))
@@ -750,7 +752,7 @@ CreateNTOSInstallationsList(
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
         Entry = Entry->Flink;
 
-        DPRINT1("Disk #%d\n", DiskEntry->DiskNumber);
+        DPRINT("Disk #%d\n", DiskEntry->DiskNumber);
 
         /* ... and for each disk, loop each available partition */
 
@@ -763,14 +765,14 @@ CreateNTOSInstallationsList(
 
             ASSERT(PartEntry->DiskEntry == DiskEntry);
 
-            DPRINT1("   Primary Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
-                    PartEntry->PartitionNumber, PartEntry->PartitionIndex,
-                    PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
-                    PartEntry->IsPartitioned ? "TRUE" : "FALSE",
-                    PartEntry->New ? "Yes" : "No",
-                    PartEntry->AutoCreate ? "Yes" : "No",
-                    PartEntry->FormatState,
-                    ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
+            DPRINT("   Primary Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
+                   PartEntry->PartitionNumber, PartEntry->PartitionIndex,
+                   PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
+                   PartEntry->IsPartitioned ? "TRUE" : "FALSE",
+                   PartEntry->New ? "Yes" : "No",
+                   PartEntry->AutoCreate ? "Yes" : "No",
+                   PartEntry->FormatState,
+                   ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
 
             if (ShouldICheckThisPartition(PartEntry))
                 FindNTOSInstallations(List, PartList, PartEntry);
@@ -785,22 +787,24 @@ CreateNTOSInstallationsList(
 
             ASSERT(PartEntry->DiskEntry == DiskEntry);
 
-            DPRINT1("   Logical Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
-                    PartEntry->PartitionNumber, PartEntry->PartitionIndex,
-                    PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
-                    PartEntry->IsPartitioned ? "TRUE" : "FALSE",
-                    PartEntry->New ? "Yes" : "No",
-                    PartEntry->AutoCreate ? "Yes" : "No",
-                    PartEntry->FormatState,
-                    ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
+            DPRINT("   Logical Partition #%d, index %d - Type 0x%02x, IsLogical = %s, IsPartitioned = %s, IsNew = %s, AutoCreate = %s, FormatState = %lu -- Should I check it? %s\n",
+                   PartEntry->PartitionNumber, PartEntry->PartitionIndex,
+                   PartEntry->PartitionType, PartEntry->LogicalPartition ? "TRUE" : "FALSE",
+                   PartEntry->IsPartitioned ? "TRUE" : "FALSE",
+                   PartEntry->New ? "Yes" : "No",
+                   PartEntry->AutoCreate ? "Yes" : "No",
+                   PartEntry->FormatState,
+                   ShouldICheckThisPartition(PartEntry) ? "YES!" : "NO!");
 
             if (ShouldICheckThisPartition(PartEntry))
                 FindNTOSInstallations(List, PartList, PartEntry);
         }
     }
 
+#ifndef NDEBUG
     /**** Debugging: List all the collected installations ****/
     DumpNTOSInstalls(List);
+#endif
 
     return List;
 }

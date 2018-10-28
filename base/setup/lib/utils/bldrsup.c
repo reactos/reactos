@@ -156,18 +156,18 @@ FindBootStore( // By handle
         if (DoesFileExist(PartitionDirectoryHandle, LoaderExecutable))
         {
             /* A loader was found, stop there */
-            DPRINT1("Found loader executable '%S'\n", LoaderExecutable);
+            DPRINT("Found loader executable '%S'\n", LoaderExecutable);
             break;
         }
 
         /* The loader does not exist, continue with another one */
-        DPRINT1("Loader executable '%S' does not exist, continue with another one...\n", LoaderExecutable);
+        DPRINT("Loader executable '%S' does not exist, continue with another one...\n", LoaderExecutable);
         LoaderExecutable += wcslen(LoaderExecutable) + 1;
     }
     if (!*LoaderExecutable)
     {
         /* No loader was found */
-        DPRINT1("No loader executable was found\n");
+        DPRINT("No loader executable was found\n");
         return STATUS_NOT_FOUND;
     }
 
@@ -1308,7 +1308,7 @@ FreeLdrEnumerateBootEntries(
             InstallName = Buffer;
         }
 
-        DPRINT1("Boot entry '%S' in OS section '%S'\n", InstallName, SectionName);
+        DPRINT("Boot entry '%S' in OS section '%S'\n", InstallName, SectionName);
 
         BootEntry->Version = FreeLdr;
         BootEntry->BootEntryKey = MAKESTRKEY(SectionName);
@@ -1337,7 +1337,7 @@ FreeLdrEnumerateBootEntries(
             /* BootType is Windows2003 */
             PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
-            DPRINT1("This is a '%S' boot entry\n", KeyData);
+            DPRINT("This is a '%S' boot entry\n", KeyData);
 
             BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
             RtlCopyMemory(Options->Signature,
@@ -1368,7 +1368,7 @@ FreeLdrEnumerateBootEntries(
             /* BootType is BootSector */
             PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
-            DPRINT1("This is a '%S' boot entry\n", KeyData);
+            DPRINT("This is a '%S' boot entry\n", KeyData);
 
             BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
             RtlCopyMemory(Options->Signature,

@@ -356,10 +356,10 @@ EnumerateReactOSEntries(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
-        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
-                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
-        DPRINT1("    An installation '%S' of unsupported type %lu\n",
-                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
+        // DPRINT("    An installation '%S' of unsupported type '%S'\n",
+               // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT("    An installation '%S' of unsupported type %lu\n",
+               BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
         goto SkipThisEntry;
     }
@@ -388,12 +388,12 @@ EnumerateReactOSEntries(
         }
     }
 
-    DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
-            BootEntry->FriendlyName, Options->OsLoadPath);
-    // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
-            // BootEntry->FriendlyName, Options->OsLoadPath);
+    DPRINT("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
+           BootEntry->FriendlyName, Options->OsLoadPath);
+    // DPRINT("    Found a Win2k3 install '%S' with ARC path '%S'\n",
+           // BootEntry->FriendlyName, Options->OsLoadPath);
 
-    DPRINT1("EnumerateReactOSEntries: OsLoadPath: '%S'\n", Options->OsLoadPath);
+    DPRINT("EnumerateReactOSEntries: OsLoadPath: '%S'\n", Options->OsLoadPath);
 
     Data->UseExistingEntry = TRUE;
     RtlStringCchCopyW(Data->OsName, ARRAYSIZE(Data->OsName), BootEntry->FriendlyName);
