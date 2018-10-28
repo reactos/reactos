@@ -8,16 +8,26 @@
 
 static
 __inline
-VOID
-IopLockFileObject(IN PFILE_OBJECT FileObject)
+NTSTATUS
+IopLockFileObject(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ KPROCESSOR_MODE WaitMode)
 {
+    BOOLEAN LockFailed;
+
     /* Lock the FO and check for contention */
-    InterlockedIncrement((PLONG)&FileObject->Waiters);
-    while (InterlockedCompareExchange((PLONG)&FileObject->Busy, TRUE, FALSE) != FALSE)
+    if (InterlockedExchange((PLONG)&FileObject->Busy, TRUE) == FALSE)
     {
-        /* FIXME - pause for a little while? */
+        ObReferenceObject(FileObject);
+        return STATUS_SUCCESS;
     }
-    InterlockedDecrement((PLONG)&FileObject->Waiters);
+    else
+    {
+        return IopAcquireFileObjectLock(FileObject,
+                                        WaitMode,
+                                        BooleanFlagOn(FileObject->Flags, FO_ALERTABLE_IO),
+                                        &LockFailed);
+    }
 }
 
 static
@@ -26,8 +36,12 @@ VOID
 IopUnlockFileObject(IN PFILE_OBJECT FileObject)
 {
     /* Unlock the FO and wake any waiters up */
-    InterlockedExchange((PLONG)&FileObject->Busy, FALSE);
-    if (FileObject->Waiters) KeSetEvent(&FileObject->Lock, 0, FALSE);
+    NT_VERIFY(InterlockedExchange((PLONG)&FileObject->Busy, FALSE) == TRUE);
+    if (FileObject->Waiters)
+    {
+        KeSetEvent(&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+    }
+    ObDereferenceObject(FileObject);
 }
 
 FORCEINLINE

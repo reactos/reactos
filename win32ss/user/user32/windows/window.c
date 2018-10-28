@@ -81,20 +81,7 @@ BringWindowToTop(HWND hWnd)
 VOID WINAPI
 SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
 {
-    HWND hwndFG;
-    if (fAltTab)
-    {
-        if (IsIconic(hwnd))
-            ShowWindowAsync(hwnd, SW_RESTORE);
-        SetForegroundWindow(hwnd);
-    }
-    else
-    {
-        hwndFG = GetForegroundWindow();
-        ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
-        SetWindowPos(hwnd, hwndFG, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-        SetWindowPos(hwndFG, hwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    }
+    NtUserxSwitchToThisWindow(hwnd, fAltTab);
 }
 
 
@@ -127,9 +114,9 @@ ChildWindowFromPointEx(HWND hwndParent,
 BOOL WINAPI
 CloseWindow(HWND hWnd)
 {
-    SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
-
-    return HandleToUlong(hWnd);
+    /* NOTE: CloseWindow does minimizes, and doesn't close. */
+    SetActiveWindow(hWnd);
+    return ShowWindow(hWnd, SW_SHOWMINIMIZED);
 }
 
 FORCEINLINE

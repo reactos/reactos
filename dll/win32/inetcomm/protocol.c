@@ -83,16 +83,16 @@ static HRESULT parse_mhtml_url(const WCHAR *url, mhtml_url_t *r)
 {
     const WCHAR *p;
 
-    if(strncmpiW(url, mhtml_prefixW, sizeof(mhtml_prefixW)/sizeof(WCHAR)))
+    if(strncmpiW(url, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW)))
         return E_FAIL;
 
-    r->mhtml = url + sizeof(mhtml_prefixW)/sizeof(WCHAR);
+    r->mhtml = url + ARRAY_SIZE(mhtml_prefixW);
     p = strchrW(r->mhtml, '!');
     if(p) {
         r->mhtml_len = p - r->mhtml;
         /* FIXME: We handle '!' and '!x-usc:' in URLs as the same thing. Those should not be the same. */
-        if(!strncmpW(p, mhtml_separatorW, sizeof(mhtml_separatorW)/sizeof(WCHAR)))
-            p += sizeof(mhtml_separatorW)/sizeof(WCHAR);
+        if(!strncmpW(p, mhtml_separatorW, ARRAY_SIZE(mhtml_separatorW)))
+            p += ARRAY_SIZE(mhtml_separatorW);
         else
             p++;
     }else {
@@ -657,7 +657,7 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
         DWORD cchResult, DWORD* pcchResult, DWORD dwReserved)
 {
     MimeHtmlProtocol *This = impl_from_IInternetProtocolInfo(iface);
-    size_t len = sizeof(mhtml_prefixW)/sizeof(WCHAR);
+    size_t len = ARRAY_SIZE(mhtml_prefixW);
     mhtml_url_t url;
     WCHAR *p;
     HRESULT hres;
@@ -670,26 +670,26 @@ static HRESULT WINAPI MimeHtmlProtocolInfo_CombineUrl(IInternetProtocolInfo *ifa
     if(FAILED(hres))
         return hres;
 
-    if(!strncmpiW(pwzRelativeUrl, mhtml_prefixW, sizeof(mhtml_prefixW)/sizeof(WCHAR))) {
+    if(!strncmpiW(pwzRelativeUrl, mhtml_prefixW, ARRAY_SIZE(mhtml_prefixW))) {
         FIXME("Relative URL is mhtml protocol\n");
         return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
     }
 
     len += url.mhtml_len;
     if(*pwzRelativeUrl)
-        len += strlenW(pwzRelativeUrl) + sizeof(mhtml_separatorW)/sizeof(WCHAR);
+        len += strlenW(pwzRelativeUrl) + ARRAY_SIZE(mhtml_separatorW);
     if(len >= cchResult) {
         *pcchResult = 0;
         return E_FAIL;
     }
 
     memcpy(pwzResult, mhtml_prefixW, sizeof(mhtml_prefixW));
-    p = pwzResult + sizeof(mhtml_prefixW)/sizeof(WCHAR);
+    p = pwzResult + ARRAY_SIZE(mhtml_prefixW);
     memcpy(p, url.mhtml, url.mhtml_len*sizeof(WCHAR));
     p += url.mhtml_len;
     if(*pwzRelativeUrl) {
         memcpy(p, mhtml_separatorW, sizeof(mhtml_separatorW));
-        p += sizeof(mhtml_separatorW)/sizeof(WCHAR);
+        p += ARRAY_SIZE(mhtml_separatorW);
         strcpyW(p, pwzRelativeUrl);
     }else {
         *p = 0;

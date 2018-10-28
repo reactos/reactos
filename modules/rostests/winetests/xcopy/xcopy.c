@@ -73,6 +73,65 @@ static void test_date_format(void)
     DeleteFileA("xcopytest\\xcopy1");
 }
 
+static void test_parms_syntax(void)
+{
+    DWORD rc;
+
+    rc = runcmd("xcopy /H/D:20-01-2000 xcopy1 xcopytest");
+    ok(rc == 4, "xcopy /H/D:d-m-y test returned rc=%u\n", rc);
+    ok(GetFileAttributesA("xcopytest\\xcopy1") == INVALID_FILE_ATTRIBUTES,
+       "xcopy should not have created xcopytest\\xcopy1\n");
+
+    rc = runcmd("xcopy /D:01-20-2000/H xcopy1 xcopytest");
+    ok(rc == 0, "xcopy /H/D:m-d-y test failed rc=%u\n", rc);
+    ok(GetFileAttributesA("xcopytest\\xcopy1") != INVALID_FILE_ATTRIBUTES,
+       "xcopy did not create xcopytest\\xcopy1\n");
+    DeleteFileA("xcopytest\\xcopy1");
+
+    /* The following test is commented out as under wine it generates
+       a recursively deep directory tree (todo_wine)
+    rc = runcmd("xcopy /D:1-20-2000/E xcopy1 xcopytest");
+    ok(rc == 0, "xcopy /D:m-d-y/E test failed rc=%u\n", rc);
+    ok(GetFileAttributesA("xcopytest\\xcopy1") != INVALID_FILE_ATTRIBUTES,
+       "xcopy did not create xcopytest\\xcopy1\n");
+    DeleteFileA("xcopytest\\xcopy1"); */
+
+    rc = runcmd("xcopy /D/S xcopytest xcopytest2\\");
+    ok(rc == 0, "xcopy /D/S test failed rc=%u\n", rc);
+    ok(GetFileAttributesA("xcopytest2") == INVALID_FILE_ATTRIBUTES,
+       "xcopy copied empty directory incorrectly\n");
+
+    rc = runcmd("xcopy /D/S/E xcopytest xcopytest2\\");
+    ok(rc == 0, "xcopy /D/S/E test failed rc=%u\n", rc);
+    ok(GetFileAttributesA("xcopytest2") != INVALID_FILE_ATTRIBUTES,
+       "xcopy failed to copy empty directory\n");
+    RemoveDirectoryA("xcopytest2");
+}
+
+static void test_keep_attributes(void)
+{
+    DWORD rc;
+
+    SetFileAttributesA("xcopy1", FILE_ATTRIBUTE_READONLY);
+
+    rc = runcmd("xcopy xcopy1 xcopytest");
+    ok(rc == 0, "xcopy failed to copy read only file\n");
+    ok((GetFileAttributesA("xcopytest\\xcopy1") & FILE_ATTRIBUTE_READONLY) != FILE_ATTRIBUTE_READONLY,
+       "xcopy should not have copied file permissions\n");
+    SetFileAttributesA("xcopytest\\xcopy1", FILE_ATTRIBUTE_NORMAL);
+    DeleteFileA("xcopytest\\xcopy1");
+
+    rc = runcmd("xcopy /K xcopy1 xcopytest");
+    ok(rc == 0, "xcopy failed to copy read only file with /k\n");
+    ok((GetFileAttributesA("xcopytest\\xcopy1") & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY,
+       "xcopy did not keep file permissions\n");
+    SetFileAttributesA("xcopytest\\xcopy1", FILE_ATTRIBUTE_NORMAL);
+    DeleteFileA("xcopytest\\xcopy1");
+
+    SetFileAttributesA("xcopy1", FILE_ATTRIBUTE_NORMAL);
+
+    }
+
 START_TEST(xcopy)
 {
     char tmpdir[MAX_PATH];
@@ -94,6 +153,8 @@ START_TEST(xcopy)
     CloseHandle(hfile);
 
     test_date_format();
+    test_parms_syntax();
+    test_keep_attributes();
 
     DeleteFileA("xcopy1");
     RemoveDirectoryA("xcopytest");

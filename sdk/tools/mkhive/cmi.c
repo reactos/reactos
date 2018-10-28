@@ -21,11 +21,16 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/cmi.c
  * PURPOSE:         Registry file manipulation routines
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermès Bélusca-Maïto
  */
+
+/* INCLUDES *****************************************************************/
 
 #define NDEBUG
 #include "mkhive.h"
+
+/* FUNCTIONS ****************************************************************/
 
 PVOID
 NTAPI
@@ -343,62 +348,17 @@ NTSTATUS
 CmiAddValueKey(
     IN PCMHIVE RegistryHive,
     IN PCM_KEY_NODE Parent,
+    IN ULONG ChildIndex,
     IN PCUNICODE_STRING ValueName,
     OUT PCM_KEY_VALUE *pValueCell,
     OUT HCELL_INDEX *pValueCellOffset)
 {
-    PCELL_DATA ValueListCell;
-    PCM_KEY_VALUE NewValueCell;
-    HCELL_INDEX ValueListCellOffset;
-    HCELL_INDEX NewValueCellOffset;
-    ULONG CellSize;
+    NTSTATUS Status;
     HSTORAGE_TYPE Storage;
-
-#ifndef FIELD_SIZE
-#define FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
-#endif
+    PCM_KEY_VALUE NewValueCell;
+    HCELL_INDEX NewValueCellOffset;
 
     Storage = (Parent->Flags & KEY_IS_VOLATILE) ? Volatile : Stable;
-    if (Parent->ValueList.List == HCELL_NIL)
-    {
-        /* Allocate some room for the value list */
-        CellSize = FIELD_SIZE(CELL_DATA, u.KeyList) + (3 * sizeof(HCELL_INDEX));
-        ValueListCellOffset = HvAllocateCell(&RegistryHive->Hive, CellSize, Storage, HCELL_NIL);
-        if (ValueListCellOffset == HCELL_NIL)
-            return STATUS_INSUFFICIENT_RESOURCES;
-
-        ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
-        if (!ValueListCell)
-        {
-            HvFreeCell(&RegistryHive->Hive, ValueListCellOffset);
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        Parent->ValueList.List = ValueListCellOffset;
-    }
-    else
-    {
-        ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, Parent->ValueList.List);
-        if (!ValueListCell)
-            return STATUS_UNSUCCESSFUL;
-
-        CellSize = ABS_VALUE(HvGetCellSize(&RegistryHive->Hive, ValueListCell));
-
-        if (Parent->ValueList.Count >= CellSize / sizeof(HCELL_INDEX))
-        {
-            CellSize *= 2;
-            ValueListCellOffset = HvReallocateCell(&RegistryHive->Hive, Parent->ValueList.List, CellSize);
-            if (ValueListCellOffset == HCELL_NIL)
-                return STATUS_INSUFFICIENT_RESOURCES;
-
-            ValueListCell = (PCELL_DATA)HvGetCell(&RegistryHive->Hive, ValueListCellOffset);
-            if (!ValueListCell)
-                return STATUS_UNSUCCESSFUL;
-
-            Parent->ValueList.List = ValueListCellOffset;
-        }
-    }
-
 
     NewValueCellOffset = HvAllocateCell(&RegistryHive->Hive,
                                FIELD_OFFSET(CM_KEY_VALUE, Name) +
@@ -438,15 +398,36 @@ CmiAddValueKey(
     NewValueCell->DataLength = 0;
     NewValueCell->Data = HCELL_NIL;
 
-
-    ValueListCell->u.KeyList[Parent->ValueList.Count] = NewValueCellOffset;
-    Parent->ValueList.Count++;
-
-    HvMarkCellDirty(&RegistryHive->Hive, Parent->ValueList.List, FALSE);
     HvMarkCellDirty(&RegistryHive->Hive, NewValueCellOffset, FALSE);
 
-    *pValueCell = NewValueCell;
-    *pValueCellOffset = NewValueCellOffset;
+    /* Check if we already have a value list */
+    if (Parent->ValueList.Count)
+    {
+        /* Then make sure it's valid and dirty it */
+        ASSERT(Parent->ValueList.List != HCELL_NIL);
+        HvMarkCellDirty(&RegistryHive->Hive, Parent->ValueList.List, FALSE);
+    }
 
-    return STATUS_SUCCESS;
+    /* Add this value cell to the child list */
+    Status = CmpAddValueToList(&RegistryHive->Hive,
+                               NewValueCellOffset,
+                               ChildIndex,
+                               Storage,
+                               &Parent->ValueList);
+
+    /* If we failed, free the entire cell, including the data */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Overwrite the status with a known one */
+        CmpFreeValue(&RegistryHive->Hive, NewValueCellOffset);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+    else
+    {
+        *pValueCell = NewValueCell;
+        *pValueCellOffset = NewValueCellOffset;
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
 }

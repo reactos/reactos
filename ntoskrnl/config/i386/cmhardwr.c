@@ -401,12 +401,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                          NULL,
                          REG_OPTION_NON_VOLATILE,
                          &Disposition);
-    if (ExpInTextModeSetup)
-    {
-        if (!NT_SUCCESS(Status))
-            BiosHandle = NULL;
-    }
-    else if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         NtClose(SystemHandle);
         return Status;

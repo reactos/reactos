@@ -102,6 +102,10 @@ public:
     HRESULT LockUnlockToolbars(bool locked);
     HRESULT CommandStateChanged(bool newValue, int commandID);
     HRESULT CreateAndInitBandProxy();
+    HRESULT IsBandVisible(int BandID);
+    HRESULT ToggleBandVisibility(int BandID);
+    HRESULT SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd);
+
 public:
     // *** IInputObject specific methods ***
     virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);

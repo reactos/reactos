@@ -1228,6 +1228,138 @@ SETUP_GetClassDevPropertySheetsCallback(
     return PropPageData->DontCancel;
 }
 
+static DWORD
+SETUP_GetValueString(
+    IN HKEY hKey,
+    IN LPWSTR lpValueName,
+    OUT LPWSTR *lpString)
+{
+    LPWSTR lpBuffer;
+    DWORD dwLength = 0;
+    DWORD dwRegType;
+    DWORD rc;
+
+    *lpString = NULL;
+
+    RegQueryValueExW(hKey, lpValueName, NULL, &dwRegType, NULL, &dwLength);
+
+    if (dwLength == 0 || dwRegType != REG_SZ)
+        return ERROR_FILE_NOT_FOUND;
+
+    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
+    if (lpBuffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    rc = RegQueryValueExW(hKey, lpValueName, NULL, NULL, (LPBYTE)lpBuffer, &dwLength);
+    if (rc != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, lpBuffer);
+        return rc;
+    }
+
+    lpBuffer[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
+
+    *lpString = lpBuffer;
+
+    return ERROR_SUCCESS;
+}
+
+static
+BOOL
+SETUP_CallInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_ADDPROPERTYPAGE_DATA PageData)
+{
+    PSP_CLASSINSTALL_HEADER pClassInstallParams = NULL;
+    DWORD dwSize = 0;
+    DWORD dwError;
+    BOOL ret = TRUE;
+
+    /* Get the size of the old class install parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      NULL,
+                                      0,
+                                      &dwSize))
+    {
+        dwError = GetLastError();
+        if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        {
+            ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", dwError);
+            return FALSE;
+        }
+    }
+
+    /* Allocate a buffer for the old class install parameters */
+    pClassInstallParams = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (pClassInstallParams == NULL)
+    {
+        ERR("Failed to allocate the parameters buffer!\n");
+        return FALSE;
+    }
+
+    /* Save the old class install parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      pClassInstallParams,
+                                      dwSize,
+                                      &dwSize))
+    {
+        ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
+        ret = FALSE;
+        goto done;
+    }
+
+    /* Set the new class install parameters */
+    if (!SetupDiSetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      &PageData->ClassInstallHeader,
+                                      sizeof(SP_ADDPROPERTYPAGE_DATA)))
+    {
+        ERR("SetupDiSetClassInstallParams failed (Error %lu)\n", dwError);
+        ret = FALSE;
+        goto done;
+    }
+
+    /* Call the installer */
+    ret = SetupDiCallClassInstaller(InstallFunction,
+                                    DeviceInfoSet,
+                                    DeviceInfoData);
+    if (ret == FALSE)
+    {
+        ERR("SetupDiCallClassInstaller failed\n");
+        goto done;
+    }
+
+    /* Read the new class installer parameters */
+    if (!SetupDiGetClassInstallParams(DeviceInfoSet,
+                                      DeviceInfoData,
+                                      &PageData->ClassInstallHeader,
+                                      sizeof(SP_ADDPROPERTYPAGE_DATA),
+                                      NULL))
+    {
+        ERR("SetupDiGetClassInstallParams failed (Error %lu)\n", GetLastError());
+        ret = FALSE;
+        goto done;
+    }
+
+done:
+    /* Restore and free the old class install parameters */
+    if (pClassInstallParams != NULL)
+    {
+        SetupDiSetClassInstallParams(DeviceInfoSet,
+                                     DeviceInfoData,
+                                     pClassInstallParams,
+                                     dwSize);
+
+        HeapFree(GetProcessHeap(), 0, pClassInstallParams);
+    }
+
+    return ret;
+}
+
 /***********************************************************************
  *		SetupDiGetClassDevPropertySheetsW(SETUPAPI.@)
  */
@@ -1240,7 +1372,8 @@ SetupDiGetClassDevPropertySheetsW(
     OUT PDWORD RequiredSize OPTIONAL,
     IN DWORD PropertySheetType)
 {
-    struct DeviceInfoSet *list;
+    struct DeviceInfoSet *devInfoSet = NULL;
+    struct DeviceInfo *devInfo = NULL;
     BOOL ret = FALSE;
 
     TRACE("%p %p %p 0%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
@@ -1251,7 +1384,7 @@ SetupDiGetClassDevPropertySheetsW(
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    else if ((devInfoSet = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!PropertySheetHeader)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1259,7 +1392,7 @@ SetupDiGetClassDevPropertySheetsW(
         SetLastError(ERROR_INVALID_FLAGS);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (!DeviceInfoData && IsEqualIID(&list->ClassGuid, &GUID_NULL))
+    else if (!DeviceInfoData && IsEqualIID(&devInfoSet->ClassGuid, &GUID_NULL))
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (PropertySheetType != DIGCDP_FLAG_ADVANCED
           && PropertySheetType != DIGCDP_FLAG_BASIC
@@ -1274,74 +1407,67 @@ SetupDiGetClassDevPropertySheetsW(
         HMODULE hModule = NULL;
         PROPERTY_PAGE_PROVIDER pPropPageProvider = NULL;
         struct ClassDevPropertySheetsData PropPageData;
-        DWORD dwLength, dwRegType;
-        DWORD InitialNumberOfPages;
+        SP_ADDPROPERTYPAGE_DATA InstallerPropPageData;
+        DWORD InitialNumberOfPages, i;
         DWORD rc;
 
         if (DeviceInfoData)
-            hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
-        else
-        {
-            hKey = SetupDiOpenClassRegKeyExW(&list->ClassGuid, KEY_QUERY_VALUE,
-                DIOCR_INSTALLER, list->MachineName + 2, NULL);
-        }
-        if (hKey == INVALID_HANDLE_VALUE)
-            goto cleanup;
+            devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
 
-        rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, &dwRegType, NULL, &dwLength);
-        if (rc == ERROR_FILE_NOT_FOUND)
+        /* Get the class property page provider */
+        if (devInfoSet->hmodClassPropPageProvider == NULL)
         {
-            /* No registry key. As it is optional, don't say it's a bad error */
-            if (RequiredSize)
-                *RequiredSize = 0;
-            ret = TRUE;
-            goto cleanup;
-        }
-        else if (rc != ERROR_SUCCESS && dwRegType != REG_SZ)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
-
-        PropPageProvider = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
-        if (!PropPageProvider)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, NULL, (LPBYTE)PropPageProvider, &dwLength);
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
-        PropPageProvider[dwLength / sizeof(WCHAR)] = 0;
-
-        rc = GetFunctionPointer(PropPageProvider, &hModule, (PVOID*)&pPropPageProvider);
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(ERROR_INVALID_PROPPAGE_PROVIDER);
-            goto cleanup;
-        }
-
-        if (DeviceInfoData)
-        {
-            struct DeviceInfo *devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
-
-            if (devInfo->hmodDevicePropPageProvider == NULL)
+            hKey = SetupDiOpenClassRegKeyExW(devInfo ? &devInfo->ClassGuid : &devInfoSet->ClassGuid, KEY_QUERY_VALUE,
+                    DIOCR_INSTALLER, NULL/*devInfoSet->MachineName + 2*/, NULL);
+            if (hKey != INVALID_HANDLE_VALUE)
             {
-                devInfo->hmodDevicePropPageProvider = hModule;
-                devInfo->pDevicePropPageProvider = pPropPageProvider;
+                rc = SETUP_GetValueString(hKey, REGSTR_VAL_ENUMPROPPAGES_32, &PropPageProvider);
+                if (rc == ERROR_SUCCESS)
+                {
+                    rc = GetFunctionPointer(PropPageProvider, &hModule, (PVOID*)&pPropPageProvider);
+                    if (rc != ERROR_SUCCESS)
+                    {
+                        SetLastError(ERROR_INVALID_PROPPAGE_PROVIDER);
+                        goto cleanup;
+                    }
+
+                    devInfoSet->hmodClassPropPageProvider = hModule;
+                    devInfoSet->pClassPropPageProvider = pPropPageProvider;
+
+                    HeapFree(GetProcessHeap(), 0, PropPageProvider);
+                    PropPageProvider = NULL;
+                }
+
+                RegCloseKey(hKey);
+                hKey = INVALID_HANDLE_VALUE;
             }
         }
-        else
-        {
-            struct DeviceInfoSet *devInfoSet = (struct DeviceInfoSet *)DeviceInfoSet;
 
-            if (devInfoSet->hmodClassPropPageProvider == NULL)
+        /* Get the device property page provider */
+        if (devInfo != NULL && devInfo->hmodDevicePropPageProvider == NULL)
+        {
+            hKey = SETUPDI_OpenDrvKey(devInfoSet->HKLM, devInfo, KEY_QUERY_VALUE);
+            if (hKey != INVALID_HANDLE_VALUE)
             {
-                devInfoSet->hmodClassPropPageProvider = hModule;
-                devInfoSet->pClassPropPageProvider = pPropPageProvider;
+                rc = SETUP_GetValueString(hKey, REGSTR_VAL_ENUMPROPPAGES_32, &PropPageProvider);
+                if (rc == ERROR_SUCCESS)
+                {
+                    rc = GetFunctionPointer(PropPageProvider, &hModule, (PVOID*)&pPropPageProvider);
+                    if (rc != ERROR_SUCCESS)
+                    {
+                        SetLastError(ERROR_INVALID_PROPPAGE_PROVIDER);
+                        goto cleanup;
+                    }
+
+                    devInfo->hmodDevicePropPageProvider = hModule;
+                    devInfo->pDevicePropPageProvider = pPropPageProvider;
+
+                    HeapFree(GetProcessHeap(), 0, PropPageProvider);
+                    PropPageProvider = NULL;
+                }
+
+                RegCloseKey(hKey);
+                hKey = INVALID_HANDLE_VALUE;
             }
         }
 
@@ -1357,7 +1483,37 @@ SetupDiGetClassDevPropertySheetsW(
         PropPageData.NumberOfPages = 0;
         PropPageData.DontCancel = (RequiredSize != NULL) ? TRUE : FALSE;
 
-        pPropPageProvider(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
+        /* Call the class property page provider */
+        if (devInfoSet->pClassPropPageProvider != NULL)
+            ((PROPERTY_PAGE_PROVIDER)devInfoSet->pClassPropPageProvider)(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
+
+        /* Call the device property page provider */
+        if (devInfo != NULL && devInfo->pDevicePropPageProvider != NULL)
+            ((PROPERTY_PAGE_PROVIDER)devInfo->pDevicePropPageProvider)(&Request, SETUP_GetClassDevPropertySheetsCallback, (LPARAM)&PropPageData);
+
+        /* Call the class installer and add the returned pages */
+        ZeroMemory(&InstallerPropPageData, sizeof(SP_ADDPROPERTYPAGE_DATA));
+        InstallerPropPageData.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+        InstallerPropPageData.ClassInstallHeader.InstallFunction = DIF_ADDPROPERTYPAGE_ADVANCED;
+        InstallerPropPageData.hwndWizardDlg = PropertySheetHeader->hwndParent;
+
+        if (SETUP_CallInstaller(DIF_ADDPROPERTYPAGE_ADVANCED,
+                                DeviceInfoSet,
+                                DeviceInfoData,
+                                &InstallerPropPageData))
+        {
+            for (i = 0; i < InstallerPropPageData.NumDynamicPages; i++)
+            {
+                if (PropPageData.PropertySheetHeader->nPages < PropertySheetHeaderPageListSize)
+                {
+                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] = 
+                        InstallerPropPageData.DynamicPages[i];
+                    PropPageData.PropertySheetHeader->nPages++;
+                }
+            }
+
+            PropPageData.NumberOfPages += InstallerPropPageData.NumDynamicPages;
+        }
 
         if (RequiredSize)
             *RequiredSize = PropPageData.NumberOfPages;
@@ -1374,7 +1530,9 @@ SetupDiGetClassDevPropertySheetsW(
 cleanup:
         if (hKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hKey);
-        HeapFree(GetProcessHeap(), 0, PropPageProvider);
+
+        if (PropPageProvider != NULL)
+            HeapFree(GetProcessHeap(), 0, PropPageProvider);
     }
 
     TRACE("Returning %d\n", ret);

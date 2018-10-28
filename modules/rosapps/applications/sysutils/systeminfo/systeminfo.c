@@ -179,6 +179,50 @@ FormatDateTime(time_t Time, LPWSTR lpBuf)
     GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, 0, &SysTime, NULL, lpBuf + i, BUFFER_SIZE - i);
 }
 
+ULONGLONG GetSecondsQPC(VOID)
+{
+    LARGE_INTEGER Counter, Frequency;
+
+    QueryPerformanceCounter(&Counter);
+    QueryPerformanceFrequency(&Frequency);
+
+    return Counter.QuadPart / Frequency.QuadPart;
+}
+
+ULONGLONG GetSeconds(VOID)
+{
+    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
+    ULONGLONG Ticks64;
+    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+    if (pGetTickCount64)
+    {
+        return pGetTickCount64() / 1000;
+    }
+
+    hModule = LoadLibraryW(L"kernel32_vista.dll");
+
+    if (!hModule)
+    {
+        return GetSecondsQPC();
+    }
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+
+    if (pGetTickCount64)
+    {
+        Ticks64 = pGetTickCount64() / 1000;
+    }
+    else
+    {
+        Ticks64 = GetSecondsQPC();
+    }
+
+    FreeLibrary(hModule);
+    return Ticks64;
+}
+
 /* Show usage */
 static
 VOID
@@ -317,7 +361,7 @@ AllSysInfo(VOID)
     RegCloseKey(hKey);
 
     //getting System Up Time
-    cSeconds = GetTickCount() / 1000;
+    cSeconds = GetSeconds();
     if (!LoadStringW(GetModuleHandle(NULL), IDS_UP_TIME_FORMAT, Tmp, BUFFER_SIZE))
         Tmp[0] = L'\0';
     swprintf(Buf, Tmp, cSeconds / (60*60*24), (cSeconds / (60*60)) % 24, (cSeconds / 60) % 60, cSeconds % 60);

@@ -178,10 +178,11 @@ wWinMain(HINSTANCE hInstance,
 
     /* FIXME: more initialization */
 
-    /* Read the control set values */
-    if (!ScmGetControlSetValues())
+    /* Create the 'Last Known Good' control set */
+    dwError = ScmCreateLastKnownGoodControlSet();
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: Failed to read the control set values\n");
+        DPRINT1("SERVICES: Failed to create the 'Last Known Good' control set (Error %lu)\n", dwError);
         goto done;
     }
 

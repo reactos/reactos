@@ -52,8 +52,13 @@ extern RTL_RESOURCE JobListLock;
 extern LIST_ENTRY StartListHead;
 extern RTL_RESOURCE StartListLock;
 
+extern HANDLE Events[2];
+
 
 /* job.c */
+
+DWORD
+GetNextJobTimeout(VOID);
 
 LONG
 SaveJob(

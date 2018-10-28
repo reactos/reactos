@@ -287,7 +287,7 @@ static HRESULT WINAPI ITS_IMonikerImpl_GetDisplayName(
     ITS_IMonikerImpl *This = impl_from_IMoniker(iface);
     static const WCHAR szFormat[] = {
         'm','s','-','i','t','s',':','%','s',':',':','%','s',0 };
-    DWORD len = sizeof szFormat / sizeof(WCHAR);
+    DWORD len;
     LPWSTR str;
 
     TRACE("%p %p %p %p\n", iface, pbc, pmkToLeft, ppszDisplayName);
@@ -435,7 +435,7 @@ static HRESULT WINAPI ITS_IParseDisplayNameImpl_ParseDisplayName(
 {
     static const WCHAR szPrefix[] = { 
         '@','M','S','I','T','S','t','o','r','e',':',0 };
-    const DWORD prefix_len = (sizeof szPrefix/sizeof szPrefix[0])-1;
+    const DWORD prefix_len = ARRAY_SIZE(szPrefix)-1;
     DWORD n;
 
     ITS_IParseDisplayNameImpl *This = impl_from_IParseDisplayName(iface);

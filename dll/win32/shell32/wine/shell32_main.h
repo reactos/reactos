@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
+
 /*******************************************
 *  global SHELL32.DLL variables
 */

@@ -316,6 +316,13 @@ SeIsTokenChild(
 
 NTSTATUS
 NTAPI
+SeIsTokenSibling(
+    IN PTOKEN Token,
+    OUT PBOOLEAN IsSibling
+);
+
+NTSTATUS
+NTAPI
 SepCreateImpersonationTokenDacl(
     _In_ PTOKEN Token,
     _In_ PTOKEN PrimaryToken,
@@ -477,6 +484,12 @@ SeReleaseSidAndAttributesArray(
     _In_ _Post_invalid_ PSID_AND_ATTRIBUTES CapturedSidAndAttributes,
     _In_ KPROCESSOR_MODE AccessMode,
     _In_ BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+NTAPI
+SeComputeQuotaInformationSize(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Out_ PULONG QuotaInfoSize);
 
 NTSTATUS
 NTAPI

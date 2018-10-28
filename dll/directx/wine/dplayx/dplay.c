@@ -4335,7 +4335,7 @@ static HRESULT WINAPI IDirectPlay4AImpl_EnumConnections( IDirectPlay4A *iface,
       RegCloseKey(hkServiceProvider);
 
       /* FIXME: Check return types to ensure we're interpreting data right */
-      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, sizeof(buff)/sizeof(WCHAR) );
+      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, ARRAY_SIZE( buff ));
       CLSIDFromString( buff, &serviceProviderGUID );
       /* FIXME: Have I got a memory leak on the serviceProviderGUID? */
 
@@ -4433,7 +4433,7 @@ static HRESULT WINAPI IDirectPlay4AImpl_EnumConnections( IDirectPlay4A *iface,
       RegCloseKey(hkServiceProvider);
 
       /* FIXME: Check return types to ensure we're interpreting data right */
-      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, sizeof(buff)/sizeof(WCHAR) );
+      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, ARRAY_SIZE( buff ));
       CLSIDFromString( buff, &serviceProviderGUID );
       /* FIXME: Have I got a memory leak on the serviceProviderGUID? */
 
@@ -4682,7 +4682,7 @@ static HMODULE DP_LoadSP( LPCGUID lpcGuid, LPSPINITDATA lpSpData, LPBOOL lpbIsDp
       }
 
       /* FIXME: Check return types to ensure we're interpreting data right */
-      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, sizeof(buff)/sizeof(WCHAR) );
+      MultiByteToWideChar( CP_ACP, 0, returnBuffer, -1, buff, ARRAY_SIZE( buff ));
       CLSIDFromString( buff, &serviceProviderGUID );
       /* FIXME: Have I got a memory leak on the serviceProviderGUID? */
 
@@ -5811,7 +5811,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
     dwIndex = 0;
     do
     {
-	sizeOfSubKeyName = sizeof(subKeyName) / sizeof(WCHAR);
+        sizeOfSubKeyName = ARRAY_SIZE(subKeyName);
 	ret_value = RegEnumKeyW(hkResult, dwIndex, subKeyName, sizeOfSubKeyName);
 	dwIndex++;
     }
@@ -5836,8 +5836,8 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	HKEY  hkServiceProvider;
 	WCHAR guidKeyContent[(2 * 16) + 1 + 6 /* This corresponds to '{....-..-..-..-......}' */ ];
 	DWORD sizeOfGuidKeyContent = sizeof(guidKeyContent);
-	
-	sizeOfSubKeyName = sizeof(subKeyName) / sizeof(WCHAR);
+
+        sizeOfSubKeyName = ARRAY_SIZE(subKeyName);
 	ret_value = RegEnumKeyExW(hkResult, dwIndex, subKeyName, &sizeOfSubKeyName,
 				  NULL, NULL, NULL, &filetime);
 	if (ret_value == ERROR_NO_MORE_ITEMS)

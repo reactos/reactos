@@ -112,8 +112,6 @@ NetrJobAdd(
     pJob->JobId = dwNextJobId++;
     dwJobCount++;
 
-    // Cancel the start timer
-
     /* Append the new job to the job list */
     InsertTailList(&JobListHead, &pJob->JobEntry);
 
@@ -129,10 +127,12 @@ NetrJobAdd(
     DumpStartList(&StartListHead);
 #endif
 
-    // Update the start timer
-
     /* Release the job list lock */
     RtlReleaseResource(&JobListLock);
+
+    /* Set the update event */
+    if (Events[1] != NULL)
+        SetEvent(Events[1]);
 
     /* Return the new job ID */
     *pJobId = pJob->JobId;
@@ -161,8 +161,6 @@ NetrJobDel(
 
     /* Acquire the job list lock exclusively */
     RtlAcquireResourceExclusive(&JobListLock, TRUE);
-
-    // Cancel the start timer
 
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
@@ -193,10 +191,12 @@ NetrJobDel(
         JobEntry = JobEntry->Flink;
     }
 
-    // Update the start timer
-
     /* Release the job list lock */
     RtlReleaseResource(&JobListLock);
+
+    /* Set the update event */
+    if (Events[1] != NULL)
+        SetEvent(Events[1]);
 
     return ERROR_SUCCESS;
 }

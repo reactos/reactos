@@ -60,7 +60,7 @@ typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
 typedef struct _COPYCONTEXT
 {
     LPCWSTR DestinationRootPath; /* Not owned by this structure */
-    LPCWSTR InstallPath; /* Not owned by this structure */
+    LPCWSTR InstallPath;         /* Not owned by this structure */
     ULONG TotalOperations;
     ULONG CompletedOperations;
     PPROGRESSBAR ProgressBar;
@@ -68,6 +68,12 @@ typedef struct _COPYCONTEXT
 } COPYCONTEXT, *PCOPYCONTEXT;
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationFileName);
 
 HSPFILEQ
 WINAPI
@@ -78,6 +84,7 @@ WINAPI
 SetupCloseFileQueue(
     IN HSPFILEQ QueueHandle);
 
+#if 0 // This is the API that is declared in setupapi.h and exported by setupapi.dll
 BOOL
 WINAPI
 SetupQueueCopyWNew(
@@ -90,6 +97,7 @@ SetupQueueCopyWNew(
     IN PCWSTR TargetDirectory,
     IN PCWSTR TargetFileName,
     IN DWORD CopyStyle);
+#endif
 
 BOOL
 SetupQueueCopy(

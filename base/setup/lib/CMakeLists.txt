@@ -1,14 +1,25 @@
 
+add_definitions(${I18N_DEFS})
+
+include_directories(utils)
+
 list(APPEND SOURCE
-    arcname.c
-    bldrsup.c
-    filesup.c
+    utils/arcname.c
+    utils/bldrsup.c
+    utils/filesup.c
+    utils/genlist.c
+    utils/infsupp.c
+    utils/inicache.c
+    utils/ntverrsrc.c
+    utils/osdetect.c
+    utils/partlist.c
+    utils/regutil.c
+    bootsup.c
     fsutil.c
-    genlist.c
-    inicache.c
-    ntverrsrc.c
-    osdetect.c
-    partlist.c
+    mui.c
+    registry.c
+    settings.c
+    setuplib.c
     precomp.h)
 
 add_library(setuplib ${SOURCE})

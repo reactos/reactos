@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS elGRLayouts[] =
-{
-    { L"0408", L"00000408" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY elGRLanguagePageEntries[] =
 {
     {
@@ -82,7 +75,7 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         7,
         15,
-        "\x07  ПШлуйлЬ ENTER ЪаШ дШ ЬЪбШлШйлуйЬлЬ лж ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -471,6 +464,76 @@ static MUI_ENTRY elGRRepairPageEntries[] =
         0,
         "   ESC = ЙчиаШ йЬвхЫШ  ENTER = ДзШдЬббхдЮйЮ",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY elGRUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1391,7 +1454,7 @@ MUI_ERROR elGRErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "Тж ReactOS ЫЬд ЬЪбШлШйлсЯЮбЬ звуирк йлжд\n"
         "мзжвжЪайлу йШк. Ад ШзжориуйЬлЬ Шзц лЮд ДЪбШлсйлШйЮ лщиШ, ЯШ зитзЬа дШ\n"
         "еШдШлитеЬлЬ лЮд ДЪбШлсйлШйЮ ЪаШ дШ ЬЪбШлШйлуйЬл лж ReactOS.\n"
@@ -1401,62 +1464,62 @@ MUI_ERROR elGRErrorEntries[] =
         "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ ЩиЬа бсзжажд йбвЮиц Ыхйбж.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup could not find its source drive.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лж ШиоЬхж TXTSETUP.SIF.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Ж ЬЪбШлсйлйЮ ЩиубЬ тдШ бШлЬйлиШгтдж ШиоЬхж TXTSETUP.SIF.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Ж ДЪбШлсйлШйЮ ЩиубЬ гаШ гЮ тЪбмиЮ мзжЪиШну йлж TXTSETUP.SIF.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лак звЮижнжихЬк лжм Ыхйбжм ймйлугШлжк.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Setup failed to install FAT bootcode on the system partition.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лЮ вхйлШ лчзрд мзжвжЪайлу.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лЮ вхйлШ лчзрд ЬгнсдайЮк.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лЮ вхйлШ лчзрд звЮближвжЪхжм.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ нжилщйЬа лЮ вхйлШ ЫаШлсеЬрд звЮближвжЪхжм.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Ж ЬЪбШлсйлШйЮ ЩиубЬ цла лжмвсоайлжд тдШк йбвЮицк Ыхйбжк зЬиатоЬа тдШ гЮ ймгЩШлц\n"
           "partition table зжм ЫЬ гзжиЬх дШ ЬвЬЪоЯЬх йрйлс!\n"
           "\n"
@@ -1467,7 +1530,7 @@ MUI_ERROR elGRErrorEntries[] =
           "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "ГЬ гзжиЬхлЬ дШ ЫЮгажмиЪуйЬлЬ тдШ Partition гтйШ йЬ\n"
         "тдШ сввж мзсиожд Partition!\n"
         "\n"
@@ -1475,146 +1538,140 @@ MUI_ERROR elGRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "ГЬ гзжиЬхлЬ дШ ЫаШЪиспЬлЬ тдШд гЮ ЫаШгжинргтдж ощиж Ыхйбжм!\n"
         "\n"
         "  * ПШлуйлЬ жзжажЫузжлЬ звуближ ЪаШ дШ ймдЬохйЬлЬ.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the FAT bootcode on the system partition.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "ГЬд мзсиоЬа ЫайбтлШ йлж A:.",
         "ENTER = СмдтоЬаШ"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Ж ДЪбШлсйШйЮ ШзтлмоЬ дШ ШдШдЬщйЬа лак имЯгхйЬак ЪаШ лЮ ЫаслШеЮ звЮближвжЪхжм.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ШдШдЬщйЬа лак имЯгхйЬак гЮлищжм ЪаШ лЮд ЬгнсдайЮ.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ нжилщйЬа тдШ hive ШиоЬхж.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Ж ЬЪбШлсйШйЮ ШзтлмоЬ дШ ЩиЬа лШ ШиоЬхШ ЫЬЫжгтдрд лжм гЮлищжм.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЫЮгажмиЪуйЬа лШ registry hives.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ШиоабжзжауйЬа лж гЮлищж.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Тж cabinet ЫЬд тоЬа тЪбмиж ШиоЬхж inf.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Тж cabinet ЫЬ ЩитЯЮбЬ.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Тж cabinet ЫЬд тоЬа бШдтдШ йбиазл ЬЪбШлсйлШйЮк.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ШджхеЬа лЮд жмис ШиоЬхрд зижк ШдлаЪиШну.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ ЫЮгажмиЪуйЬа лжмк бШлШвцЪжмк ЬЪбШлсйлШйЮк.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЩиЬа лжд лжгтШ 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЩиЬа лжд лжгтШ '%S'\n"
         "йлж TXTSETUP.SIF.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЩиЬа лжд лжгтШ 'Directories'\n"
+        // ERROR_CABINET_SECTION,
+        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЩиЬа лжд лжгтШ '%S'\n"
         "йлж cabinet.\n",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Ж ЬЪбШлсйлШйЮ ЫЬ гзциЬйЬ дШ ЫЮгажмиЪуйЬа лжд бШлсвжЪж ЬЪбШлсйлШйЮк.",
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЩиЬа лжд лжгтШ 'SetupData'\n"
-        "йлж TXTSETUP.SIF.\n",
-        "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ ЪиспЬа лШ partition tables.\n"
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Ж ЬЪбШлсйлШйЮ ШзтлмоЬ дШ зижйЯтйЬа лак ЫаШлсеЬак звЮближвжЪхрд йлж гЮлищж.\n"
         "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1633,7 +1690,7 @@ MUI_PAGE elGRPages[] =
         elGRLanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        elGRWelcomePageEntries
     },
     {
@@ -1651,6 +1708,10 @@ MUI_PAGE elGRPages[] =
     {
         REPAIR_INTRO_PAGE,
         elGRRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        elGRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1774,8 +1835,12 @@ MUI_STRING elGRStrings[] =
     "F3 = АзжощиЮйЮ  ENTER = СмдтоЬаШ"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ДзШдЬббхдЮйЮ мзжвжЪайлу"},
-    {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   АдлаЪиснЬлШа лж ШиоЬхж: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1784,7 +1849,7 @@ MUI_STRING elGRStrings[] =
     "   ВхдЬлШа ШдШдтрйЮ лрд registry hives..."},
     {STRING_IMPORTFILE,
     "   ВхдЬлШа ЬайШЪрЪу лжм %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЬгнсдайЮк лжм гЮлищжм..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   ВхдЬлШа ШдШдтрйЮ лрд имЯгхйЬрд ЪвщййШк..."},
@@ -1814,28 +1879,28 @@ MUI_STRING elGRStrings[] =
     " ГаШгцинрйЮ лжм partition рк %S йчйлЮгШ ШиоЬхрд "},
     {STRING_KEEPFORMAT,
     " МШ зШиШгЬхдЬа лж йчйлЮгШ ШиоЬхрд рк тоЬа (бШгхШ ШввШЪу) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "СбвЮицк Ыхйбжк %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "СбвЮицк Ыхйбжк %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "йлж йбвЮиц Ыхйбж %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  СбвЮицк Ыхйбжк %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Ж ЬЪбШлсйлШйЮ ЫЮгажчиЪЮйЬ тдШ дтж partition йлж"},
     {STRING_UNPSPACE,

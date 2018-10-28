@@ -134,8 +134,8 @@ static void delnode_test(void)
 
     /* Native DelNode apparently does not support relative paths, so we use
        absolute paths for testing */
-    currDirLen = GetCurrentDirectoryA(sizeof(currDir) / sizeof(CHAR), currDir);
-    assert(currDirLen > 0 && currDirLen < sizeof(currDir) / sizeof(CHAR));
+    currDirLen = GetCurrentDirectoryA(ARRAY_SIZE(currDir), currDir);
+    assert(currDirLen > 0 && currDirLen < ARRAY_SIZE(currDir));
 
     if(currDir[currDirLen - 1] == '\\')
         currDir[--currDirLen] = 0;

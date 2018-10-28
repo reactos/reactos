@@ -19,7 +19,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS oparty jest na licencji GPL, więc by w całości lub częściowo wykorzystać źródła ReactOS, musisz przestrzegać postanowień licencji.", IDC_STATIC, 15, 110, 247, 19
     PUSHBUTTON "Pokaż &GPL..", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "Naciśnij Dalej, by kontynuować.", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "Naciśnij Dalej, by kontynuować.", IDC_STATIC, 15, 135, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -59,8 +59,8 @@ CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokalizacja systemu powinna być zgodna (językowo) z aplikacjami, których planujesz używać. Lokalizacja odpowiada również za wyświetlanie danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 25
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "Lokalizacja systemu powinna być zgodna (językowo) z aplikacjami, których planujesz używać. Lokalizacja odpowiada również za wyświetlanie danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 28
+    LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 16
     LTEXT "By zmienić lokalizację systemu, naciśnij Ustaw.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Ustaw...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Układ klawiatury decyduje o przyporządkowaniu znaków pod klawisze.", IDC_STATIC, 53, 86, 253, 8

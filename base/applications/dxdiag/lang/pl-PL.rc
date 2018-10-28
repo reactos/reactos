@@ -251,7 +251,7 @@ BEGIN
     IDS_OPTION_NO "Nie"
     IDS_D3DTEST_DESCRIPTION "Uruchomiony zostanie test interfejsu Direct3D. Kontynuować?"
     IDS_D3DTEST_D3Dx "Test obejmie przyspieszany sprzętowo interfejs Direct3D dla %u."
-    IDS_OS_VERSION "%s %s (%d.%d, Build %d)"
+    IDS_OS_VERSION "%s %s (%d.%d, kompilacja %d)"
     IDS_DMUSIC_DESC "Opis"
     IDS_DMUSIC_TYPE "Typ"
     IDS_DMUSIC_KERNEL "Tryb jądra"

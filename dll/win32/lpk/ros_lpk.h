@@ -18,6 +18,8 @@
 #include <winnls.h>
 #include <usp10.h>
 #include <strsafe.h>
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 /* FIXME USP10 api that does not have prototype in any include file */
 VOID WINAPI LpkPresent(VOID);
@@ -66,7 +68,6 @@ DWORD WINAPI LpkTabbedTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD
 BOOL WINAPI LpkDllInitialize (HANDLE  hDll, DWORD dwReason, LPVOID lpReserved);
 DWORD WINAPI LpkDrawTextEx(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9, DWORD x10);
 DWORD WINAPI LpkGetTextExtentExPoint(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6,DWORD x7,DWORD x8,DWORD x9);
-DWORD WINAPI LpkPSMTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6);
 DWORD WINAPI LpkUseGDIWidthCache(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 DWORD WINAPI ftsWordBreak(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5);
 
@@ -77,6 +78,8 @@ BOOL WINAPI LpkExtTextOut(HDC hdc, int x, int y, UINT fuOptions, const RECT *lpr
 
 DWORD WINAPI LpkGetCharacterPlacement(HDC hdc, LPCWSTR lpString, INT uCount, INT nMaxExtent, 
                                       GCP_RESULTSW *lpResults, DWORD dwFlags, DWORD dwUnused);
+
+INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags);
 /* bidi.c */
 
 #define WINE_GCPW_FORCE_LTR 0

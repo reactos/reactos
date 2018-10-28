@@ -50,6 +50,7 @@ Parameters:\n\
 [/A]  Kopieer alleen bestanden met archiveringsattribuut aan\n\
 [/M]  Kopieer alleen bestanden met archiveringsattribuut aan, verwijdert\n\
 \tdit archiveringsattribuut\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Kopieer bestanden die nieuw zijn of gewijzigd zijn na de opgegeven\n\
 \t\tdatum. Als geen datum wordt gegeven, kopieer alleen als bron nieuwer is.\n\n"
 

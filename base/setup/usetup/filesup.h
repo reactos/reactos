@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/filesup.h
  * PURPOSE:         File support functions
- * PROGRAMMER:
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #pragma once
@@ -11,18 +11,6 @@
 NTSTATUS
 SetupCreateDirectory(
     PWCHAR DirectoryName);
-
-NTSTATUS
-SetupCopyFile(
-    PWCHAR SourceFileName,
-    PWCHAR DestinationFileName);
-
-NTSTATUS
-SetupExtractFile(
-    PWCHAR CabinetFileName,
-    PWCHAR SourceFileName,
-    PWCHAR DestinationFileName);
-
 
 BOOLEAN
 IsValidPath(

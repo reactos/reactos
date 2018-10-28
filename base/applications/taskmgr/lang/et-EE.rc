@@ -1,0 +1,449 @@
+/*
+ * PROJECT:     Task Manager for ReactOS
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/taskmgr/lang/et-EE.rc
+ * PURPOSE:     Estonian Language resource file
+ * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ */
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+IDR_TASKMANAGER MENU
+BEGIN
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "&Uus tegum (käivita...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Välja Tegumihaldurist", ID_FILE_EXIT
+    END
+    POPUP "&Suvandid"
+    BEGIN
+        MENUITEM "&Alati pealmiseks", ID_OPTIONS_ALWAYSONTOP, CHECKED
+        MENUITEM "&Minimeeri kasutamisel", ID_OPTIONS_MINIMIZEONUSE, CHECKED
+        MENUITEM "Minmeerimisel &peida", ID_OPTIONS_HIDEWHENMINIMIZED, CHECKED
+        MENUITEM "&Näita 16-bitiseid tegumeid", ID_OPTIONS_SHOW16BITTASKS, CHECKED
+    END
+    POPUP "&Vaade"
+    BEGIN
+        MENUITEM "Värskenda &nüüd", ID_VIEW_REFRESH
+        POPUP "Värskenduse &kiirus"
+        BEGIN
+            MENUITEM "&Suur", ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "&Tavaline", ID_VIEW_UPDATESPEED_NORMAL, CHECKED
+            MENUITEM "&Väike", ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "&Peatatud", ID_VIEW_UPDATESPEED_PAUSED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "S&uured ikoonid", ID_VIEW_LARGE
+        MENUITEM "Vä&ikesed ikoonid", ID_VIEW_SMALL
+        MENUITEM "&Detailid", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "Va&li veerud...", ID_VIEW_SELECTCOLUMNS
+        POPUP "&CPU Ajalugu"
+        BEGIN
+            MENUITEM "&Üks diagramm kõigile protsessoritele", ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "Üks diagramm protsessori kohta", ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
+        END
+        MENUITEM "&Kuva tuumaajad", ID_VIEW_SHOWKERNELTIMES
+    END
+    POPUP "&Aknad"
+    BEGIN
+        MENUITEM "Paani &horisontaalselt", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Paani &vertikaalselt", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimeeri", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ksimeeri", ID_WINDOWS_MAXIMIZE
+        MENUITEM "Vi&rnasta", ID_WINDOWS_CASCADE
+        MENUITEM "&Too kõige ette", ID_WINDOWS_BRINGTOFRONT
+    END
+    POPUP "S&ulgemine"
+    BEGIN
+        MENUITEM "&Puhkerežiim",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "&Talveuni",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Lül&ita välja",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "T&aaskäivita",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Logi välja %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Vaheta kasutajat\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "Lu&kusta arvuti\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "Katkesta &ühendus",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Eemalda arvuti",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+    END
+    POPUP "S&pikker"
+    BEGIN
+        MENUITEM "Tegumihalduri &spikriteemad", ID_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Teave &Tegumihalduri kohta", ID_HELP_ABOUT
+    END
+END
+
+IDR_WINDOWSMENU MENU
+BEGIN
+    MENUITEM "Paani &horisontaalselt", ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Paani &vertikaalselt", ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Minimeeri", ID_WINDOWS_MINIMIZE
+    MENUITEM "Ma&ksimeeri", ID_WINDOWS_MAXIMIZE
+    MENUITEM "Vi&rnasta", ID_WINDOWS_CASCADE
+    MENUITEM "&Too kõige ette", ID_WINDOWS_BRINGTOFRONT
+END
+
+IDR_APPLICATION_PAGE_CONTEXT1 MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Uus tegum (käivita...)", ID_FILE_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "S&uured ikoonid", ID_VIEW_LARGE
+        MENUITEM "Vä&ikesed ikoonid", ID_VIEW_SMALL
+        MENUITEM "&Detailid", ID_VIEW_DETAILS, CHECKED
+    END
+END
+
+IDR_APPLICATION_PAGE_CONTEXT2 MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Aktiveeri", ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&Too kõige ette", ID_WINDOWS_BRINGTOFRONT
+        MENUITEM SEPARATOR
+        MENUITEM "Paani &horisontaalselt", ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Paani &vertikaalselt", ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimeeri", ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ksimeeri", ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Virnasta", ID_WINDOWS_CASCADE
+        MENUITEM SEPARATOR
+        MENUITEM "Lõ&peta tegum", ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "M&ine protsessile", ID_APPLICATION_PAGE_GOTOPROCESS
+    END
+END
+
+IDR_TRAY_POPUP MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Taasta", ID_RESTORE
+        MENUITEM "&Sule", ID_FILE_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Alati pealmiseks", ID_OPTIONS_ALWAYSONTOP
+    END
+END
+
+IDR_PROCESS_PAGE_CONTEXT MENU
+BEGIN
+    POPUP "DUMMY"
+    BEGIN
+        MENUITEM "&Lõpeta protsess", ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Lõpeta protsessi&puu", ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Silu", ID_PROCESS_PAGE_DEBUG
+        MENUITEM SEPARATOR
+        POPUP "Mää&ra prioriteet"
+        BEGIN
+            MENUITEM "&Reaalajas", ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "&Kõrge", ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "&Üle tavalise", ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "&Normaalne", ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "&Alla tavalise", ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&Madal", ID_PROCESS_PAGE_SETPRIORITY_LOW
+        END
+        MENUITEM "Määra &ühtivus...", ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Muuda silumiskanaleid...", ID_PROCESS_PAGE_DEBUGCHANNELS
+    END
+END
+
+/* Dialogs */
+
+IDD_TASKMGR_DIALOG DIALOGEX 0, 0, 264, 246
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Tegumihaldur"
+MENU IDR_TASKMANAGER
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 3, 3, 257, 228
+END
+
+IDD_APPLICATION_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_APPLIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&Uus tegum...", IDC_NEWTASK, 187, 189, 53, 14
+    PUSHBUTTON "&Aktiveeri", IDC_SWITCHTO, 131, 189, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Lõpeta tegum", IDC_ENDTASK, 75, 189, 53, 14, WS_DISABLED
+END
+
+IDD_PROCESS_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
+    PUSHBUTTON "&Lõpeta protsess", IDC_ENDPROCESS, 171, 189, 69, 14
+    CONTROL "&Näita protsesse kõigilt kasutajatelt", IDC_SHOWALLPROCESSES, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+END
+
+/* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
+IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "CPU hõivatus", IDC_CPU_USAGE_FRAME, 5, 5, 60, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Füüisline mälu", IDC_MEM_USAGE_FRAME, 5, 63, 60, 54, BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX "Kokkuvõte", IDC_TOTALS_FRAME, 5, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Hõivatud mälu (K)", IDC_COMMIT_CHARGE_FRAME, 5, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Füüsiline mälu (K)", IDC_PHYSICAL_MEMORY_FRAME, 131, 122, 111, 39, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Tuumamälu (K)", IDC_KERNEL_MEMORY_FRAME, 131, 166, 111, 39, 0, WS_EX_TRANSPARENT
+    LTEXT "Sangu", IDS_TOTALS_HANDLE_COUNT, 12, 131, 27, 8
+    LTEXT "Lõimi", IDS_TOTALS_THREAD_COUNT, 12, 140, 27, 8
+    LTEXT "Protsesse", IDS_TOTALS_PROCESS_COUNT, 12, 149, 34, 8
+    EDITTEXT IDC_TOTALS_HANDLE_COUNT, 65, 131, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_THREAD_COUNT, 65, 140, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_TOTALS_PROCESS_COUNT, 65, 149, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Kokku", IDS_COMMIT_CHARGE_TOTAL, 12, 175, 27, 8
+    LTEXT "Limiit", IDS_COMMIT_CHARGE_LIMIT, 12, 184, 15, 8, NOT WS_BORDER
+    LTEXT "Tipp", IDS_COMMIT_CHARGE_PEAK, 12, 193, 34, 8
+    EDITTEXT IDC_COMMIT_CHARGE_TOTAL, 65, 174, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_LIMIT, 65, 184, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_COMMIT_CHARGE_PEAK, 65, 193, 45, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Kokku", IDS_PHYSICAL_MEMORY_TOTAL, 137, 131, 27, 8
+    LTEXT "Saadaval", IDS_PHYSICAL_MEMORY_AVAILABLE, 137, 140, 30, 8
+    LTEXT "Vahemälus", IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, 137, 149, 46, 8
+    EDITTEXT IDC_PHYSICAL_MEMORY_TOTAL, 185, 131, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_AVAILABLE, 185, 140, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_PHYSICAL_MEMORY_SYSTEM_CACHE, 185, 149, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Kokku", IDS_KERNEL_MEMORY_TOTAL, 137, 174, 27, 8
+    LTEXT "Saalitud", IDS_KERNEL_MEMORY_PAGED, 137, 184, 21, 8
+    LTEXT "Saalimata", IDS_KERNEL_MEMORY_NONPAGED, 137, 193, 34, 8
+    EDITTEXT IDC_KERNEL_MEMORY_TOTAL, 185, 174, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_PAGED, 185, 184, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT IDC_KERNEL_MEMORY_NONPAGED, 185, 193, 48, 8, ES_RIGHT | ES_READONLY |
+             ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX "CPU hõivatuse ajalugu", IDC_CPU_USAGE_HISTORY_FRAME, 74, 5, 168, 54, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Füüsilise mälu hõivatuse ajalugu", IDC_MEMORY_USAGE_HISTORY_FRAME, 74, 63, 168, 54, 0, WS_EX_TRANSPARENT
+    PUSHBUTTON "CPU hõivatuse kuva", IDC_CPU_USAGE_GRAPH, 12, 17, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Füüsilise mälu hõivatuse kuva", IDC_MEM_USAGE_GRAPH, 12, 75, 47, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "CPU hõivatuse ajalugu", IDC_CPU_USAGE_HISTORY_GRAPH, 81, 17, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON "Füüsilise mälu hõivatuse ajalugu", IDC_MEM_USAGE_HISTORY_GRAPH, 81, 75, 153, 37, NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+END
+
+IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Silumiskanalid"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+            LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP | LVS_SORTASCENDING, 7, 7, 233, 177
+    PUSHBUTTON "Sule", IDOK, 171, 189, 69, 14
+END
+
+IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Protessori ühtivus"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 120, 133, 50, 14
+    PUSHBUTTON "Sule", IDCANCEL, 174, 133, 50, 14
+    LTEXT "Protsessori ühtivuse säte juhib millistel protsessoritel tegum võib tööd teha.", IDC_STATIC, 5, 5, 220, 16
+    CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
+    CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
+    CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
+    CONTROL "CPU 3", IDC_CPU3, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 67, 37, 10
+    CONTROL "CPU 4", IDC_CPU4, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 80, 37, 10
+    CONTROL "CPU 5", IDC_CPU5, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 93, 37, 10
+    CONTROL "CPU 6", IDC_CPU6, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 106, 37, 10
+    CONTROL "CPU 7", IDC_CPU7, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 119, 37, 10
+    CONTROL "CPU 8", IDC_CPU8, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 28, 37, 10
+    CONTROL "CPU 9", IDC_CPU9, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 41, 37, 10
+    CONTROL "CPU 10", IDC_CPU10, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 54, 41, 10
+    CONTROL "CPU 11", IDC_CPU11, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 67, 41, 10
+    CONTROL "CPU 12", IDC_CPU12, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 80, 41, 10
+    CONTROL "CPU 13", IDC_CPU13, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 93, 41, 10
+    CONTROL "CPU 14", IDC_CPU14, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 106, 41, 10
+    CONTROL "CPU 15", IDC_CPU15, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 61, 119, 41, 10
+    CONTROL "CPU 16", IDC_CPU16, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 28, 41, 10
+    CONTROL "CPU 17", IDC_CPU17, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 41, 41, 10
+    CONTROL "CPU 18", IDC_CPU18, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 54, 41, 10
+    CONTROL "CPU 19", IDC_CPU19, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 67, 41, 10
+    CONTROL "CPU 20", IDC_CPU20, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 80, 41, 10
+    CONTROL "CPU 21", IDC_CPU21, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 93, 41, 10
+    CONTROL "CPU 22", IDC_CPU22, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 106, 41, 10
+    CONTROL "CPU 23", IDC_CPU23, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 116, 119, 41, 10
+    CONTROL "CPU 24", IDC_CPU24, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 28, 41, 10
+    CONTROL "CPU 25", IDC_CPU25, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 41, 41, 10
+    CONTROL "CPU 26", IDC_CPU26, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 54, 41, 10
+    CONTROL "CPU 27", IDC_CPU27, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 67, 41, 10
+    CONTROL "CPU 28", IDC_CPU28, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 80, 41, 10
+    CONTROL "CPU 29", IDC_CPU29, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 93, 41, 10
+    CONTROL "CPU 30", IDC_CPU30, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 106, 41, 10
+    CONTROL "CPU 31", IDC_CPU31, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 175, 119, 41, 10
+END
+
+IDD_COLUMNS_DIALOG DIALOGEX 0, 0, 195, 199
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Vali veerud"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 84, 178, 50, 14
+    PUSHBUTTON "Sule", IDCANCEL, 138, 178, 50, 14
+    LTEXT "Valige veerud, mis kuvatakse tegumihalduri vahekaardil Protsessid.", IDC_STATIC, 7, 7, 181, 17
+    CONTROL "&Faili nimi", IDC_IMAGENAME, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 7, 28, 56, 10
+    CONTROL "&PID (Protsessi indikaator)", IDC_PID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 39, 92, 10
+    CONTROL "&CPU hõivatus", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
+    CONTROL "Prots&essoriaeg", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 59, 10
+    CONTROL "&Mälukasutus", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
+    CONTROL "Mälukasutuse &delta", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 82, 10
+    CONTROL "Mälukasutuse &tipp", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 82, 10
+    CONTROL "Saalet&õrked", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 53, 10
+    CONTROL "&USER-objektide arv", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
+    CONTROL "I/O lugemisi", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 49, 10
+    CONTROL "I/O loetud baite", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 65, 10
+    CONTROL "&Seanssi ID", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
+    CONTROL "Kasutaja &nimi", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 55, 10
+    CONTROL "Lehe tõ&rke delta", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 28, 72, 10
+    CONTROL "&Virtuaalmälu suurus", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 39, 77, 10
+    CONTROL "Saal&itav puul", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 50, 53, 10
+    CONTROL "S&aalimata puul", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 61, 55, 10
+    CONTROL "Baaspri&oriteet", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 72, 55, 10
+    CONTROL "San&gu", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 83, 59, 10
+    CONTROL "&Lõimi", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 94, 59, 10
+    CONTROL "GDI-objektide arv", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 105, 55, 10
+    CONTROL "I/O kirjutusi", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 116, 49, 10
+    CONTROL "I/O kirjutatud baite", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 73, 10
+    CONTROL "I/O muid", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
+    CONTROL "I/O muid baite", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "K&äsurida", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Tegumihaldur"
+    IDC_TASKMGR "Tegumihaldur"
+    IDS_IDLE_PROCESS "Süsteemi jõudeoleku protsess"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW "Käivitab uue programmi"
+    ID_OPTIONS_ALWAYSONTOP "Tegumihaldur jääb kõige muude akende ette, v.a. minimeerituna"
+    ID_OPTIONS_MINIMIZEONUSE "Tegumihaldur minimeeritakse nupu Aktiveeri toimingu ajaks"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Peida tegumihaldur minimeerimisel"
+    ID_VIEW_REFRESH "Sundige Tegumihaldur praegu värskenduma, sättest Värskenduskiirus olenemata"
+    ID_VIEW_LARGE "Kuva tegumeid suurte ikoonidega"
+    ID_VIEW_SMALL "Kuva tegumeid väikeste ikoonidega"
+    ID_VIEW_DETAILS "Kuvab informatsiooni iga tegumi kohta"
+    ID_VIEW_UPDATESPEED_HIGH "Värskendab kuva kaks korda sekundis"
+    ID_VIEW_UPDATESPEED_NORMAL "Värskendab kuva iga kahe sekundi järel"
+    ID_VIEW_UPDATESPEED_LOW "Värskendab kuva iga nelja sekundi järel"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_UPDATESPEED_PAUSED "Ei värskenda automaatselt"
+    ID_WINDOWS_TILEHORIZONTALLY "Paanib aknad töölaual horisontaalselt"
+    ID_WINDOWS_TILEVERTICALLY "Paanib aknad töölaual vertikaalselt"
+    ID_WINDOWS_MINIMIZE "Minimeerib aknad"
+    ID_WINDOWS_MAXIMIZE "Maksimeerib aknad"
+    ID_WINDOWS_CASCADE "Virnastab aknad töölaual diagonaalselt"
+    ID_WINDOWS_BRINGTOFRONT "Toob akna esiplaanile, kuid ei aktiveeri seda"
+    ID_HELP_TOPICS "Kuvab Tegumihalduri spikriteemad"
+    ID_HELP_ABOUT "Kuvab programmiteabe, versiooninumbrit ja autoriõigust"
+    ID_FILE_EXIT "Väljub Tegumihaldurist"
+    ID_OPTIONS_SHOW16BITTASKS "Kuvab ntvdm.exe-ga seotud 16-bittiseid tegumeid"
+    ID_VIEW_SELECTCOLUMNS "Valige, millised veerud kuvatakse vahekaardil Protsess"
+    ID_VIEW_SHOWKERNELTIMES "Kuvab jõudlusdiagrammides tuuma aja"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "Üks ajalgoodiagramm kõigi protsessorite kohta"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Igal protsessoril on oma ajaloodiagram"
+    ID_APPLICATION_PAGE_SWITCHTO "Toob akna esiplaanile ja aktiveerib selle"
+END
+
+STRINGTABLE
+BEGIN
+    ID_ENDTASK "Teavitab valitud tegumitel sulgeda"
+    ID_GOTOPROCESS "Muudab fookuse valitud tegumi protsessile"
+    ID_RESTORE "Taastab Tegumihalduri peidetud olekust"
+    ID_PROCESS_PAGE_ENDPROCESS "Eemaldab protsessi süsteemist"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "Eemaldab selle protsessi ja selle järglased süsteemist"
+    ID_PROCESS_PAGE_DEBUG "Ühendab siluri sellele protsessile"
+    ID_PROCESS_PAGE_SETAFFINITY "Juhib millistel protsessoritel võib protsess tööd teha"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sätib protsessi reaalajas prioriteedile"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sätib protsessi kõrgele prioriteedile"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sätib protsessi üle keskmise prioriteedile"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sätib protsessi keskmisele prioriteedile"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "SSätib protsessi alla keskmise prioriteedile"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sätib protsessi madalals prioriteedile"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TAB_APPS "Rakendused"
+    IDS_TAB_PROCESSES "Protsessid"
+    IDS_TAB_PERFORMANCE "Jõudlus"
+    IDS_TAB_TASK "Tegum"
+    IDS_TAB_STATUS "Olek"
+    IDS_TAB_IMAGENAME "Faili nimi"
+    IDS_TAB_PID "PID"
+    IDS_TAB_USERNAME "Kasutajanimi"
+    IDS_TAB_SESSIONID "Seansi ID"
+    IDS_TAB_CPU "Protsessor"
+    IDS_TAB_CPUTIME "Protsessoriaeg"
+    IDS_TAB_MEMUSAGE "Töökomplekt (mälu)"
+    IDS_TAB_PEAKMEMUSAGE "Haripunkti töökomplekt (mälu)"
+    IDS_TAB_MEMDELTA "Töökomplekt Delta (mälu)"
+    IDS_TAB_PAGEFAULT "Saaletõrkeid"
+    IDS_TAB_PFDELTA "Saaletõrgete arvu muut"
+    IDS_TAB_VMSIZE "VM suurus"
+    IDS_TAB_PAGEDPOOL "Saalitud"
+    IDS_TAB_NPPOOL "Saalimata"
+    IDS_TAB_BASEPRI "Baasprioriteet"
+    IDS_TAB_HANDLES "Sangu"
+    IDS_TAB_THREADS "Lõimi"
+    IDS_TAB_USERPBJECTS "USER-objektide arv"
+    IDS_TAB_GDIOBJECTS "GDI-objektide arv"
+    IDS_TAB_IOREADS "I/O lugemisi"
+    IDS_TAB_IOWRITES "I/O kirjutusi"
+    IDS_TAB_IOOTHER "I/O muid"
+    IDS_TAB_IOREADBYTES "I/O loetud baite"
+    IDS_TAB_IOWRITESBYTES "I/O kirjutatud baite"
+    IDS_TAB_IOOTHERBYTES "I/O muid baite"
+    IDS_TAB_COMMANDLINE "Käsurida"
+    IDS_MENU_SELECTCOLUMNS "&Vali veerud..."
+    IDS_MENU_16BITTASK "&Näita 16-bittiseid tegumeid"
+    IDS_MENU_WINDOWS "&Aknad"
+    IDS_MENU_LARGEICONS "Suur&ed ikoonid"
+    IDS_MENU_SMALLICONS "V&äikesed ikoonid"
+    IDS_MENU_DETAILS "&Detailid"
+    IDS_MENU_ONEGRAPHALLCPUS "&Üks diagramm, kõik protsessorid"
+    IDS_MENU_ONEGRAPHPERCPU "Üks diagramm &protsessori kohta"
+    IDS_MENU_CPUHISTORY "&CPU ajalugu"
+    IDS_MENU_SHOWKERNELTIMES "Näita &tuumaaegu"
+    IDS_CREATENEWTASK "Loo uus tegum"
+    IDS_CREATENEWTASK_DESC "Sisetage programmi, kausta, dokumendi või Interneti-ressursi nimi ja ReactOS avab selle."
+    IDS_MSG_ACCESSPROCESSAFF "Ei saa ligi ega sätestada protsessi ühtivust"
+    IDS_MSG_PROCESSONEPRO "Protsessil peab olema ühtivus vähemalt ühe protsessoriga."
+    IDS_MSG_INVALIDOPTION "Sobimatu suvand"
+    IDS_MSG_UNABLEDEBUGPROCESS "Ei saa siluda protsessi"
+    IDS_MSG_WARNINGDEBUG "HOIATUS: Selle protsessi silumine võib põhjustada andmete kadu.\nKas oled kindel et tahad kinnitada silurit?"
+    IDS_MSG_TASKMGRWARNING "Tegumihalduri hoiatus"
+    IDS_MSG_WARNINGTERMINATING "HOIATUS: Protsessi lõpetamine võib kaasa tuua soovimatuid tagajärgi\nsealhulgas andmekadu ja süsteemi ebastabiilsust. Protsessile ei anta\nvõimalust enda seisundit või andmeid salvestada.\nKas olete kindel et soovite protsessi lõpetada?"
+    IDS_MSG_UNABLETERMINATEPRO "Protsessi ei saa lõpetada"
+    IDS_MSG_CLOSESYSTEMPROCESS "See on kriitiline süsteemi protsess. Tegumihaldur ei lõpeta seda protsessi."
+    IDS_MSG_UNABLECHANGEPRIORITY "Prioriteeti ei saa muuta"
+    IDS_MSG_WARNINGCHANGEPRIORITY "HOIATUS: Selle protsessi prioriteedi muutmine võib põhjustada soovimatuid\ntagajärgi sealhulgas süsteemi ebastabiilsust.\nKas olete kindel et tahate muuta prioriteeti?"
+    IDS_MSG_TRAYICONCPUUSAGE "CPU hõivatus: %d%%"
+    IDS_STATUS_MEMUSAGE "Hõivatud mälu: %s / %s (%d%%)"
+    IDS_STATUS_CPUUSAGE "CPU hõivatus: %3d%%"
+    IDS_STATUS_PROCESSES "Protsesse: %d"
+    IDS_NOT_RESPONDING "Ei vasta"
+    IDS_RUNNING "Töötab"
+END

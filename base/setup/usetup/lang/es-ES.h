@@ -2,13 +2,6 @@
 
 #pragma once
 
-MUI_LAYOUTS esESLayouts[] =
-{
-    { L"040A", L"0000040A" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY esESLanguagePageEntries[] =
 {
     {
@@ -84,7 +77,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Presione INTRO para instalar ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -472,6 +465,76 @@ static MUI_ENTRY esESRepairPageEntries[] =
         0,
         0,
         "ESC = Men£ inicial  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY esESUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1370,7 +1433,7 @@ MUI_ERROR esESErrorEntries[] =
         "Completado correctamente\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS no est  completamente instalado en su\n"
         "equipo. Si cierra ahora el Instalador, necesitar \n"
         "ejecutarlo otra vez para instalar ReactOS.\n"
@@ -1380,62 +1443,62 @@ MUI_ERROR esESErrorEntries[] =
         "F3 = Salir  INTRO = Continuar"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "El instalador no pudo encontrar un disco duro.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "El instalador no pudo encontrar su unidad fuente.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "El instalador fall¢ al cargar el archivo TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "El instalador encontr¢ un archivo TXTSETUP.SIF corrupto.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "El instalador encontr¢ una firma incorrecta en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "El instalador no pudo recibir informaci¢n del disco del sistema.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "El instalador fall¢ al cargar la lista de tipos de equipos.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "El instalador fall¢ al cargar la lista de resoluciones de pantalla.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "El instalador fall¢ al cargar la lista de teclados.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "El instalador fall¢ al cargar la lista de distribuciones de teclado.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "­El instalador encontr¢ que al menos un disco duro contiene una tabla\n"
         "de partici¢n incompatible que no puede ser manejada correctamente!\n"
         "\n"
@@ -1446,7 +1509,7 @@ MUI_ERROR esESErrorEntries[] =
         "F3 = Salir  INTRO = Continuar"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "­No puede crear una nueva partici¢n dentro\n"
         "de una partici¢n existente!\n"
         "\n"
@@ -1454,133 +1517,127 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "­No se puede borrar un espacio de disco sin particionar!\n"
         "\n"
         "  * Presione cualquier tecla para continuar.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "No hay disco en la unidad A:.",
         "INTRO = Continuar"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "El instalador fall¢ al actualizar la configuraci¢n de distribuci¢n de teclado.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "El instalador fall¢ al actualizar la configuraci¢n de la pantalla.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "El instalador fall¢ al importar un archivo de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "El instalador fall¢ al buscar los archivos de datos registrados.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "El instalador fall¢ al crear el registro de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "El instalador fall¢ al configurar el registro de inicio.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet no tiene un archivo inf v lido.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet no encontrado.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet no tiene ning£n script de instalaci¢n.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "El instalador fall¢ al abrir la lista de archivos a copiar.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "El instalador no puede crear los directorios de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "El instalador fall¢ al buscar la secci¢n '%S'\n"
         "en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
+        // ERROR_CABINET_SECTION,
+        "El instalador fall¢ al buscar la secci¢n '%S'\n"
         "en el cabinet.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "El instalador no puede crear el directorio de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "El instalador fall¢ al buscar la secci¢n 'SetupData'\n"
-        "en TXTSETUP.SIF.\n",
-        "INTRO = Reiniciar el equipo"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "El instalador fall¢ al escribir la tabla de particiones.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "El instalador fall¢ al a¤adir el c¢digo de p ginas al registro.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "El instalador no pudo configurar el idioma del sistema.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "El instalador no ha podido agregar los layouts de teclado al registro.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "El instalador no ha podido configurar el ID geogr fico.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nombre de carpeta no v lido.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "La partici¢n selecionada no es lo suficientemente grande como para.\n"
         "instalar ReactOS. Se necesita una partici¢n de al menos %lu MB.\n"
         "\n"
@@ -1588,20 +1645,20 @@ MUI_ERROR esESErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "No es posible a¤adir una partici¢n primaria o extendida en la\n"
         "tabla de partici¢n de este disco, ya que est  completamente llena.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "No es posible crear m s de una partici¢n extendida por disco.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "El instalador es incapaz de formatear la partici¢n:\n"
         " %S\n"
         "\n"
@@ -1620,7 +1677,7 @@ MUI_PAGE esESPages[] =
         esESLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         esESWelcomePageEntries
     },
     {
@@ -1638,6 +1695,10 @@ MUI_PAGE esESPages[] =
     {
         REPAIR_INTRO_PAGE,
         esESRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        esESUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1759,8 +1820,12 @@ MUI_STRING esESStrings[] =
     "F3 = Salir  INTRO = Continuar"},
     {STRING_REBOOTCOMPUTER,
     "INTRO = Reiniciar el equipo"},
-    {STRING_TXTSETUPFAILED,
-    "El instalador fall¢ al buscar la secci¢n\nen TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1769,7 +1834,7 @@ MUI_STRING esESStrings[] =
     "   Actualizando el  rbol del registro..."},
     {STRING_IMPORTFILE,
     "   Importando %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Actualizando configuraci¢n del tipo de pantalla..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Actualizando configuraci¢n regional..."},
@@ -1799,28 +1864,28 @@ MUI_STRING esESStrings[] =
     " Formatear la partici¢n con sistema de archivos %S "},
     {STRING_KEEPFORMAT,
     " Mantener el sistema de archivos actual (sin cambios) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ."},
-    {STRING_HDDINFOUNK3,
-    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "en %I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tipo 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "en Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "en Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTipo %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "El instalador ha creado una nueva partici¢n en"},
     {STRING_UNPSPACE,

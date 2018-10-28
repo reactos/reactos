@@ -6,14 +6,6 @@
 
 #pragma once
 
-MUI_LAYOUTS csCZLayouts[] =
-{
-    { L"0405", L"00000405" },
-    { L"0405", L"00010405" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY csCZLanguagePageEntries[] =
 {
     {
@@ -89,13 +81,13 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Stisknut¡m kl vesy ENTER zah j¡te instalaci ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknut¡m R zah j¡te opravu nebo aktualizaci ReactOS.",
+        "\x07  Stisknut¡m R zah j¡te opravu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -477,6 +469,76 @@ static MUI_ENTRY csCZRepairPageEntries[] =
         0,
         0,
         "ESC = Hlavn¡ str nka  U = Aktualizovat  R = Z chrana  ENTER = Restartovat",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY csCZUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1374,7 +1436,7 @@ MUI_ERROR csCZErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS nen¡ ve vaçem poŸ¡taŸi kompletnØ nainstalov n.\n"
         "Pokud nyn¡ instalaci ukonŸ¡te, budete ji muset pro\n"
         "nainstalov n¡ ReactOS spustit znovu.\n"
@@ -1384,62 +1446,62 @@ MUI_ERROR csCZErrorEntries[] =
         "F3 = UkonŸit  ENTER = PokraŸovat"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Instalace nedok zala naj¡t harddisk.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Instalace nedok zala naj¡t svou zdrojovou mechaniku.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Nepodaýilo se naŸ¡st soubor TXTSETUP.SIF.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Soubor TXTSETUP.SIF je poçkozen.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Soubor TXTSETUP.SIF je neplatnØ podepsanì.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Instalace nedok zala z¡skat informace o syst‚movìch disc¡ch.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Nepodaýilo se naŸ¡st seznam typ… poŸ¡taŸe.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Nepodaýilo se naŸ¡st seznam nastaven¡ obrazovek.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Nepodaýilo se naŸ¡st seznam typ… kl vesnic.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Nepodaýilo se naŸ¡st seznam rozlo§en¡ kl ves.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Instalace zjistila, §e alespoå jeden pevnì disk obsahuje\n"
           "nekompatibiln¡ tabulku odd¡l…, kter  nem…§e bìt spr vnØ zpracov na!\n"
           "\n"
@@ -1450,7 +1512,7 @@ MUI_ERROR csCZErrorEntries[] =
           "F3 = UkonŸit  ENTER = PokraŸovat"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Nelze vytvoýit novì odd¡l uvnitý ji§\n"
         "existuj¡c¡ho odd¡lu!\n"
         "\n"
@@ -1458,133 +1520,127 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Nelze vymazat m¡sto na disku, kter‚ nepatý¡ § dn‚mu odd¡lu!\n"
         "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "V jednotce A: nen¡ disketa.",
         "ENTER = PokraŸovat"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Nepodaýilo se aktualizovat nastaven¡ rozlo§en¡ kl ves.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Nepodaýilo se aktualizovat nastaven¡ zobrazen¡ registru.", //display registry settings
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Nepodaýilo se naimportovat soubor registru.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Nepodaýilo se nal‚zt datov‚ soubory registru.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Nepodaýilo se zalo§it registr.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Nepodaýilo se inicializovat registry.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "V archivu nen¡ platnì soubor inf.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Archiv nebyl nalezen.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Archiv neobsahuje instalaŸn¡ skript.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Nepodaýilo se otevý¡t frontu kop¡rov n¡.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Nepodaýilo se vytvoýit instalaŸn¡ adres ýe.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Nepodaýilo se nal‚zt sekci 'Directories' v souboru\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Nepodaýilo se nal‚zt sekci '%S' v souboru\n"
         "TXTSETUP.SIF.\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Nepodaýilo se nal‚zt sekci 'Directories' v archivu.\n"
+        // ERROR_CABINET_SECTION,
+        "Nepodaýilo se nal‚zt sekci '%S' v archivu.\n"
         "\n",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Nepodaýilo se vytvoýit instalaŸn¡ adres ý.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Nepodaýilo se nal‚zt sekci 'SetupData' v souboru\n"
-        "TXTSETUP.SIF.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Nepodaýilo se zapsat tabulky odd¡l….\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Nepodaýilo se pýidat k¢dovou str nku do registru.\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Nepodaýilo se nastavit m¡stn¡ nastaven¡.\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Nepodaýilo se pýidat rozlo§en¡ kl vesnice do registru.\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Nepodaýilo se nastavit geo id.\n"
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Neplatnì n zev adres ýe.\n"
         "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Zvolenì odd¡l nen¡ pro instalaci ReactOS dostateŸnØ velkì.\n"
         "InstalaŸn¡ odd¡l mus¡ m¡t velikost alespoå %lu MB.\n"
         "\n"
@@ -1592,20 +1648,20 @@ MUI_ERROR csCZErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Nepodaýilo se vytvoýit novì prim rn¡ nebo rozç¡ýenì odd¡l\n"
         "v tabulce odd¡l… na zvolen‚m disku, proto§e tabulka odd¡l… je pln .\n"
         "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Nen¡ mo§n‚ vytvoýit v¡ce ne§ jeden rozç¡ýenì odd¡l na disk.\n"
         "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1624,7 +1680,7 @@ MUI_PAGE csCZPages[] =
         csCZLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         csCZWelcomePageEntries
     },
     {
@@ -1642,6 +1698,10 @@ MUI_PAGE csCZPages[] =
     {
         REPAIR_INTRO_PAGE,
         csCZRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        csCZUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1763,8 +1823,12 @@ MUI_STRING csCZStrings[] =
     "F3 = UkonŸit  ENTER = PokraŸovat"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Restartovat poŸ¡taŸ"},
-    {STRING_TXTSETUPFAILED,
-    "Nepodaýilo se naj¡t sekci '%S' v souboru\n TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kop¡ruji soubor: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1773,7 +1837,7 @@ MUI_STRING csCZStrings[] =
     "   Aktualizuji registr..."},
     {STRING_IMPORTFILE,
     "   Importuji %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aktualizuji nastaven¡ zobrazen¡ registru..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizuji m¡stn¡ nastaven¡..."},
@@ -1803,28 +1867,28 @@ MUI_STRING csCZStrings[] =
     " Zform tovat odd¡l na souborovì syst‚m %S "},
     {STRING_KEEPFORMAT,
     " Ponechat souŸasnì souborovì syst‚m (bez zmØny) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK3,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                     %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalace vytvoýila novì odd¡l na"},
     {STRING_UNPSPACE,

@@ -62,6 +62,9 @@ END
 #ifdef LANGUAGE_NO_NO
     #include "lang/no-NO.rc"
 #endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif

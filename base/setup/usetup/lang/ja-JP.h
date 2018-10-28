@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS jaJPLayouts[] =
-{
-//    { L"0411", L"e0010411" },
-    { L"0411", L"00000411" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY jaJPLanguagePageEntries[] =
 {
     {
@@ -82,7 +75,7 @@ static MUI_ENTRY jaJPWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -470,6 +463,76 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
         0,
         0,
         "ESC = Ò²ÝÍß°¼Þ  U = º³¼Ý  R = ¶²Ì¸  ENTER = »²·ÄÞ³",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY jaJPUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1368,7 +1431,7 @@ MUI_ERROR jaJPErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS Ê ºÝËß­°ÀÆ ¶Ý¾ÞÝÆ ²Ý½Ä°Ù\n"
         "»ÚÏ¾Ý¡ ¾¯Ä±¯Ìß¦ Á­³¼ ½Ù ÊÞ±²¤ ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ¾¯Ä±¯Ìß¦\n"
         "Ó³²ÁÄÞ ¼Þ¯º³ ½Ù ËÂÖ³¶Þ ±ØÏ½¡\n"
@@ -1378,62 +1441,62 @@ MUI_ERROR jaJPErrorEntries[] =
         "F3 = Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "¾¯Ä±¯ÌßÊ Ê°ÄÞÃÞ¨½¸¦ ¹Ý¼­Â ÃÞ·Ï¾Ý ÃÞ¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "¾¯Ä±¯ÌßÊ ¿°½ ÄÞ×²ÌÞ¦ ¹Ý¼­Â ÃÞ·Ï¾Ý ÃÞ¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "¾¯Ä±¯ÌßÊ Ì§²Ù TXTSETUP.SIF É ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "¾¯Ä±¯ÌßÊ  TXTSETUP.SIF ¶Þ Ê¿Ý ¼Ã²Ù ºÄ¦ ¹Ý¼­Â ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "¾¯Ä±¯ÌßÊ TXTSETUP.SIF É Ñº³Å ¼®Ò²¦ ¹Ý¼­Â ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ ÄÞ×²ÌÞÉ ¼Þ®³Î³¦ ¼ÐÄØ ÃÞ·Ï¾Ý ÃÞ¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ Êß°Ã¨¼®Ý ¼Þ®³ÍÉ FAT ÌÞ°Äº°ÄÞÉ ²Ý½Ä°ÙÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "¾¯Ä±¯ÌßÊ ºÝËß­°ÀÉ ¼­Ù² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É ¾¯Ã² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞÉ ¼­Ù² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞ Ú²±³Ä Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "¾¯Ä±¯ÌßÊ ½¸Å¸ÄÓ 1ÂÉ Ê°ÄÞÃÞ¨½¸¶Þ Ã·¾ÂÆ ±Â¶´Å² ºÞ¶Ý¾²É Å²\n"
           "Êß°Ã¨¼®Ý Ã°ÌÞÙ¦ Ì¸Ñ ºÄ¦ ¹Ý¼­Â ¼Ï¼À!\n"
           "\n"
@@ -1444,7 +1507,7 @@ MUI_ERROR jaJPErrorEntries[] =
           "F3 = Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "±À×¼² Êß°Ã¨¼®Ý¦ ½ÃÞÆ ¿Ý»Þ²½Ù\n"
         "Êß°Ã¨¼®ÝÉ Å²ÌÞÆ »¸¾² ½ÙºÄÊ ÃÞ·Ï¾Ý!\n"
         "\n"
@@ -1452,133 +1515,127 @@ MUI_ERROR jaJPErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "ÐÌÞÝ¶Â É ÃÞ¨½¸ ½Íß°½ ¦ »¸¼Þ® ½ÙºÄÊ ÃÞ·Ï¾Ý!\n"
         "\n"
         "  * ¿Þ¯º³ ½ÙÆÊ ÅÆ¶ ·°¦ µ¼Ã ¸ÀÞ»²¡",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ Êß°Ã¨¼®Ý ¼Þ®³ÍÉ FAT ÌÞ°Ä Úº°ÄÞ É ²Ý½Ä°ÙÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "ÄÞ×²ÌÞ A: Æ ÃÞ¨½¸¶Þ ±ØÏ¾Ý¡",
         "ENTER = ¿Þ¯º³"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞ Ú²±³Ä É ¾¯Ã²É º³ÆÝÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É Ú¼Þ½ÄØ ¾¯Ã²É º³¼ÝÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "¾¯Ä±¯ÌßÊ Ê²ÌÞ Ì§²ÙÉ ²ÝÎß°ÄÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ ÃÞ°À Ì§²ÙÉ ¹Ý¼­ÂÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ Ê²ÌÞÉ »¸¾²Æ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØÉ ¼®·¶Æ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "·¬ËÞÈ¯ÄÆ Ñº³Å inf Ì§²Ù¶Þ Ì¸ÏÚÃ ²Ï½¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "·¬ËÞÈ¯Ä¶Þ ÐÂ¶ØÏ¾Ý¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "·¬ËÞÈ¯ÄÅ²Æ ¾¯Ä±¯Ìß ½¸ØÌßÄ¶Þ ÐÂ¶ØÏ¾Ý¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "¾¯Ä±¯ÌßÊ ºËß° Ì§²Ù ·­°É µ°ÌßÝÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'Directories' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
+        // ERROR_TXTSETUP_SECTION,
+        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É '%S' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
         "¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "¾¯Ä±¯ÌßÊ ·¬ËÞÈ¯ÄÅ²É 'Directories' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
+        // ERROR_CABINET_SECTION,
+        "¾¯Ä±¯ÌßÊ ·¬ËÞÈ¯ÄÅ²É '%S' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
         "¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'SetupData' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
-        "¼¯Êß² ¼Ï¼À¡\n",
-        "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "¾¯Ä±¯ÌßÊ Êß°Ã¨¼®Ý Ã°ÌÞÙÉ ¶·ºÐÆ ¼¯Êß² ¼Ï¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØÍÉ º°ÄÞÍß°¼ÞÉ Â²¶Æ ¼¯Êß² ¼Ï¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "¾¯Ä±¯ÌßÊ ¼½ÃÑ Û¹°Ù¦ ¾¯Ã² ÃÞ·Ï¾Ý ÃÞ¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØÍÉ ·°ÎÞ°ÄÞ Ú²±³ÄÉ Â²¶Æ ¼¯Êß² ¼Ï¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "¾¯Ä±¯ÌßÊ geo id ¦ ¾¯Ã² ÃÞ·Ï¾Ý ÃÞ¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1586,20 +1643,20 @@ MUI_ERROR jaJPErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1618,7 +1675,7 @@ MUI_PAGE jaJPPages[] =
         jaJPLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         jaJPWelcomePageEntries
     },
     {
@@ -1636,6 +1693,10 @@ MUI_PAGE jaJPPages[] =
     {
         REPAIR_INTRO_PAGE,
         jaJPRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        jaJPUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1759,8 +1820,12 @@ MUI_STRING jaJPStrings[] =
     "F3 = Á­³¼  ENTER = ¿Þ¯º³"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"},
-    {STRING_TXTSETUPFAILED,
-    "¾¯Ä±¯ÌßÊ TXTSETUP.SIF É '%S' ¾¸¼®ÝÉ ¹Ý¼­ÂÆ\n¼¯Êß² ¼Ï¼À¡\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   ºËß° Á­³É Ì§²Ù: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1769,7 +1834,7 @@ MUI_STRING jaJPStrings[] =
     "   Ú¼Þ½ÄØ Ê²ÌÞÉ º³¼Ý Á­³..."},
     {STRING_IMPORTFILE,
     "   %S ¦ ²ÝÎß°Ä Á­³..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   ÃÞ¨½ÌßÚ² Ú¼Þ½ÄØ ¾¯Ã²¦ º³¼Ý Á­³..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Á²· ¾¯Ã²É º³¼Ý Á­³..."},
@@ -1799,28 +1864,28 @@ MUI_STRING jaJPStrings[] =
     " Êß°Ã¨¼®Ý¦ %S Ì§²Ù ¼½ÃÑ ÃÞÌ«°Ï¯Ä "},
     {STRING_KEEPFORMAT,
     " ¹ÞÝ»Þ²É Ì§²Ù ¼½ÃÑÉ ÏÏ (ÍÝº³ ¼Å²) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  ¼­Ù² 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  ¼­Ù² 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Ê°ÄÞÃÞ¨½¸ %lu (%I64u %s), Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %s¼­Ù² %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Ê°ÄÞÃÞ¨½¸ %lu  (Îß°Ä=%hu, ÊÞ½=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "¾¯Ä±¯ÌßÊ ±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²¼Ï¼À:"},
     {STRING_UNPSPACE,

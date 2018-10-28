@@ -13,7 +13,7 @@ BEGIN
     LTEXT "Vítejte", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Tento průvodce nainstaluje ovladač nového zařízení pro:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Pokračujte kliknutím na Další.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "POZOR! INSTALACE VLASTNÍHO ZAŘÍZENÍ MŮŽE ZASEKNOUT POČÍTAČ NEBO ZNEMOŽNIT START OPERAČNÍHO SYSTÉMU!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Nainstalovat ovladač automaticky", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Nainstalovat ovladač ze specifického umístění", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -37,7 +37,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalace selhala", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Zařízení nemohlo být nainstalováno, protože se vyskytla neočekávaná chyba.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Instalace je kompletní", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Bude potřeba restartovat systém, aby mohla být dokončena instalace:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na Dokončit zavřete průvodce.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "Instalace je kompletní", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Průvodce dokončil instalaci ovladače pro:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na Dokončit zavřete průvodce.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

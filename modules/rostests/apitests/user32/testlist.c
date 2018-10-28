@@ -24,6 +24,7 @@ extern void func_InitializeLpkHooks(void);
 extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
 extern void func_NextDlgItem(void);
+extern void func_PrivateExtractIcons(void);
 extern void func_RealGetWindowClass(void);
 extern void func_RedrawWindow(void);
 extern void func_RegisterHotKey(void);
@@ -37,6 +38,7 @@ extern void func_SetParent(void);
 extern void func_SetProp(void);
 extern void func_SetScrollInfo(void);
 extern void func_SetScrollRange(void);
+extern void func_SwitchToThisWindow(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
@@ -65,6 +67,7 @@ const struct test winetest_testlist[] =
     { "LoadImage", func_LoadImage },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
     { "NextDlgItem", func_NextDlgItem },
+    { "PrivateExtractIcons", func_PrivateExtractIcons },
     { "RealGetWindowClass", func_RealGetWindowClass },
     { "RedrawWindow", func_RedrawWindow },
     { "RegisterHotKey", func_RegisterHotKey },
@@ -78,6 +81,7 @@ const struct test winetest_testlist[] =
     { "SetProp", func_SetProp },
     { "SetScrollInfo", func_SetScrollInfo },
     { "SetScrollRange", func_SetScrollRange },
+    { "SwitchToThisWindow", func_SwitchToThisWindow },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },

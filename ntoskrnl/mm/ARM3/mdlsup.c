@@ -21,6 +21,8 @@ BOOLEAN MmTrackPtes;
 BOOLEAN MmTrackLockedPages;
 SIZE_T MmSystemLockPagesCount;
 
+ULONG MiCacheOverride[MiNotMapped + 1];
+
 /* INTERNAL FUNCTIONS *********************************************************/
 static
 PVOID
@@ -36,6 +38,7 @@ MiMapLockedPagesInUserSpace(
     PETHREAD Thread = PsGetCurrentThread();
     TABLE_SEARCH_RESULT Result;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
+    MI_PFN_CACHE_ATTRIBUTE EffectiveCacheAttribute;
     BOOLEAN IsIoMapping;
     KIRQL OldIrql;
     ULONG_PTR StartingVa;
@@ -180,23 +183,50 @@ MiMapLockedPagesInUserSpace(
                                   MM_READWRITE,
                                   *MdlPages);
 
-        /* FIXME: We need to respect the PFN's caching information in some cases */
+        EffectiveCacheAttribute = CacheAttribute;
+
+        /* We need to respect the PFN's caching information in some cases */
         Pfn2 = MiGetPfnEntry(*MdlPages);
         if (Pfn2 != NULL)
         {
             ASSERT(Pfn2->u3.e2.ReferenceCount != 0);
 
-            if (Pfn2->u3.e1.CacheAttribute != CacheAttribute)
+            switch (Pfn2->u3.e1.CacheAttribute)
             {
-                DPRINT1("FIXME: Using caller's cache attribute instead of PFN override\n");
-            }
+                case MiNonCached:
+                    if (CacheAttribute != MiNonCached)
+                    {
+                        MiCacheOverride[1]++;
+                        EffectiveCacheAttribute = MiNonCached;
+                    }
+                    break;
 
-            /* We don't support AWE magic */
-            ASSERT(Pfn2->u3.e1.CacheAttribute != MiNotMapped);
+                case MiCached:
+                    if (CacheAttribute != MiCached)
+                    {
+                        MiCacheOverride[0]++;
+                        EffectiveCacheAttribute = MiCached;
+                    }
+                    break;
+
+                case MiWriteCombined:
+                    if (CacheAttribute != MiWriteCombined)
+                    {
+                        MiCacheOverride[2]++;
+                        EffectiveCacheAttribute = MiWriteCombined;
+                    }
+                    break;
+
+                default:
+                    /* We don't support AWE magic (MiNotMapped) */
+                    DPRINT1("FIXME: MiNotMapped is not supported\n");
+                    ASSERT(FALSE);
+                    break;
+            }
         }
 
         /* Configure caching */
-        switch (CacheAttribute)
+        switch (EffectiveCacheAttribute)
         {
             case MiNonCached:
                 MI_PAGE_DISABLE_CACHE(&TempPte);

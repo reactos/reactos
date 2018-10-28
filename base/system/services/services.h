@@ -159,7 +159,8 @@ ScmDecryptPassword(
 
 /* controlset.c */
 
-BOOL ScmGetControlSetValues(VOID);
+DWORD
+ScmCreateLastKnownGoodControlSet(VOID);
 
 
 /* database.c */

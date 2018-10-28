@@ -2,14 +2,6 @@
 
 #pragma once
 
-MUI_LAYOUTS trTRLayouts[] =
-{
-    { L"041F", L"0000041F" },
-    { L"041F", L"0001041f" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY trTRLanguagePageEntries[] =
 {
     {
@@ -85,7 +77,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  ReactOS'u kurmak iáin Giriü'e basçnçz.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -468,6 +460,76 @@ static MUI_ENTRY trTRRepairPageEntries[] =
         0,
         0,
         "Äçkçü = Ana Sayfa  U = YÅkselt  R = Kurtarma  Giriü = Yeniden Baülat",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY trTRUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1347,7 +1409,7 @@ MUI_ERROR trTRErrorEntries[] =
         "Baüarçlç\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS, bilgisayara tÅmÅyle kurulmadç. Eßer üimdi\n"
         "Kur'dan áçkarsançz ReactOS'u kurmak iáin Kur'u\n"
         "yeniden áalçütçrmaya gereksinim duyacaksçnçz.\n"
@@ -1357,65 +1419,65 @@ MUI_ERROR trTRErrorEntries[] =
         "F3 = Äçk  Giriü = SÅrdÅr"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Kur, bir sÉbit disk bulamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Kur, kaynak sÅrÅcÅyÅ bulamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Kur, TXTSETUP.SIF kÅtÅßÅnÅ yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Kur, bozuk bir TXTSETUP.SIF buldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Kur, TXTSETUP.SIF'ta geáersiz bir im buldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Kur, dizge sÅrÅcÅ bilgisini alamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Kur, dizge bîlÅmÅne FAT în yÅkleme kodunu kuramadç.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Kur, bilgisayar tÅrÅ dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Kur, gîrÅntÅ ayarlarç dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Kur, dÅßme takçmç tÅrÅ dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Kur, dÅßme takçmç dÅzeni dizelgesini yÅklemede baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Kur, dÅzgÅn yînetilemeyen bir uyumsuz bîlÅm tablosu iáeren en az\n"
         "bir sÉbit disk buldu!\n"
-        "\n"         
+        "\n"
         "BîlÅmleri oluüturmak veyÉ silmek bîlÅm tablosunu yok edebilir.\n"
         "\n"
         "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.\n"
@@ -1423,7 +1485,7 @@ MUI_ERROR trTRErrorEntries[] =
         "F3 = Äçk   Giriü = SÅrdÅr"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "ôneden var olan bir bîlÅmÅn iáine yeni\n"
         "bir bîlÅm oluüturamazsçnçz!\n"
         "\n"
@@ -1431,133 +1493,127 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "BîlÅmlenmemiü disk boülußunu silemezsiniz!\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Kur, dizge bîlÅmÅ Åzerinde FAT în yÅkleme kodunu kurmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "A: sÅrÅcÅsÅnde disk yok.",
         "Giriü = SÅrdÅr"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Kur, dÅßme takçmç dÅzeni ayarlarçnç üimdikileütirmede baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Kur, gîrÅntÅ deßer ayarlarçnç üimdikileütirmede baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Kur, bir yçßçn kÅtÅßÅ almada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Kur, deßer veri kÅtÅklerini bulmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Kur, deßer yçßçnlarçnç oluüturmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Kur, Deßer Defteri'ni baülatmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Dolabçn geáerli yapçlandçrma kÅtÅßÅ yok.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Dolap bulunamadç.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Dolabçn kurulum betißi yok.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Kur, kÅtÅk áoßaltma kuyrußunu aámada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Kur, kurulum dizinlerini oluüturmada baüarçsçz oldu.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Kur, TXTSETUP.SIF'de ""Directories"" bîlÅmÅnÅ\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Kur, TXTSETUP.SIF'de '%S' bîlÅmÅnÅ\n"
         "bulmada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Kur, dolapta ""Directories"" bîlÅmÅnÅ\n"
+        // ERROR_CABINET_SECTION,
+        "Kur, dolapta '%S' bîlÅmÅnÅ\n"
         "bulmada baüarçsçz oldu.\n",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Kur, kurulum dizinini oluüturamadç.",
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Kur, TXTSETUP.SIF'de ""SetupData"" bîlÅmÅnÅ\n"
-        "bulmada baüarçsçz oldu.\n",
-        "Giriü = Bilgisayarç Yeniden Baülat"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Kur, bîlÅm tablolarç yazmada baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Kur, Deßer Defteri'ne kod sayfasç eklemede baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Kur, dizge yerli ayÉrçnç yapamadç.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Kur, Deßer Defteri'ne dÅßme takçmç dÅzenleri eklemede baüarçsçz oldu.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Kur, coßrÉfå kimlißi ayarlayamadç.\n"
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Geáersiz dizin adç.\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Seáili bîlÅm ReactOS'u kurmak iáin yetecek îláÅde bÅyÅk deßil.\n"
         "Kurulum bîlÅmÅ en az %lu MB bÅyÅklÅßÅnde olmalç.\n"
         "\n"
@@ -1565,20 +1621,20 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "BîlÅm tablosu dolu oldußundan dolayç bu diskin bîlÅm tablosunda yeni bir ana bîlÅm\n"
         "ya da yeni bir geniületilmiü bîlÅm oluüturamazsçnçz.\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Bir diskte birden áok geniületilmiü bîlÅm oluüturamazsçnçz.\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Kur, bîlÅmÅ biáimlendiremez::\n"
         " %S\n"
         "\n"
@@ -1597,7 +1653,7 @@ MUI_PAGE trTRPages[] =
         trTRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         trTRWelcomePageEntries
     },
     {
@@ -1615,6 +1671,10 @@ MUI_PAGE trTRPages[] =
     {
         REPAIR_INTRO_PAGE,
         trTRRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        trTRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1736,17 +1796,21 @@ MUI_STRING trTRStrings[] =
     "F3 = Äçk   Giriü = SÅrdÅr"},
     {STRING_REBOOTCOMPUTER,
     "Giriü = Bilgisayarç Yeniden Baülat"},
-    {STRING_TXTSETUPFAILED,
-    "Kur, TXTSETUP.SIF'de ""%S"" bîlÅmÅnÅ\nbulmada baüarçsçz oldu.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
-    "   KÅtÅk áoßaltçlçyor: %S..."},
+    "   KÅtÅk áoßaltçlçyor: %S"},
     {STRING_SETUPCOPYINGFILES,
     "Kur, kÅtÅkleri áoßaltçyor..."},
     {STRING_REGHIVEUPDATE,
     "   Deßer yçßçnlarç üimdikileütiriliyor..."},
     {STRING_IMPORTFILE,
     "   Alçnçyor: %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   GîrÅntÅ ayarlarç deßerleri üimdikileütiriliyor..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Yerli ayarlar üimdikileütiriliyor..."},
@@ -1776,28 +1840,28 @@ MUI_STRING trTRStrings[] =
     " BîlÅmÅ %S kÅtÅk dizgesiyle biáimlendir. "},
     {STRING_KEEPFORMAT,
     " ûimdiki kÅtÅk dizgesini koru. (Deßiüiklik yok.) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  TÅr  0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde."},
-    {STRING_HDDINFOUNK3,
-    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "özerinde: %I64u %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  TÅr  0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTÅr  %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %S Åzerinde"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %wZ Åzerinde [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Kur, Åzerinde bir yeni bîlÅm oluüturdu:"},
     {STRING_UNPSPACE,

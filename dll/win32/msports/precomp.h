@@ -2,6 +2,8 @@
 #define _MSPORTS_PCH_
 
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -11,6 +13,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <windowsx.h>
 #include <msports.h>
 #include <setupapi.h>
 

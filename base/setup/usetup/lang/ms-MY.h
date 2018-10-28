@@ -1,11 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS msMYLayouts[] =
-{
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY msMYLanguagePageEntries[] =
 {
     {
@@ -81,7 +75,7 @@ static MUI_ENTRY msMYWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Tekan ENTER untuk memasang ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -469,6 +463,76 @@ static MUI_ENTRY msMYRepairPageEntries[] =
         0,
         0,
         "ESC = Halaman Utama  U = Mengemaskini  R = Pemulihan  ENTER = But Semula",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY msMYUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1266,7 +1330,7 @@ MUI_ERROR msMYErrorEntries[] =
         "Berjaya\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS tidak benar-benar dipasang pada\n"
         "komputer anda. Jika anda berhenti persediaan sekarang, anda akan perlu\n"
         "untuk menjalankan persediaan untuk memasang ReactOS lagi.\n"
@@ -1276,62 +1340,62 @@ MUI_ERROR msMYErrorEntries[] =
         "F3 = Keluar  ENTER = Teruskan"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Persediaan tidak dapat mencari cakera keras.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Persediaan tidak dapat mencari sumber cakera.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Persediaan gagal untuk memuatkan fail TXTSETUP.SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Persediaan mendapati TXTSETUP.SIF yang rosak.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Persediaan ditemui untuk tandatangan tidak sah dalam TXTSETUP.SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Persediaan tidak dapat mendapatkan semula maklumat sistem cakera.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Persediaan gagal untuk memuatkan senarai jenis komputer.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Persediaan gagal untuk memuatkan pengesetan paparan senarai.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Persediaan gagal untuk memuatkan senarai jenis papan kekunci.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Persediaan gagal untuk memuatkan senarai susun atur papan kekunci.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Persediaan mendapati bahawa sekurang-kurangnya satu cakera keras mengandungi\n"
           "jadual partition yang sesuai untuk yang tidak boleh dikendalikan dengan betul!\n"
           "\n"
@@ -1342,7 +1406,7 @@ MUI_ERROR msMYErrorEntries[] =
           "F3 = Keluar  ENTER = Teruskan"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Anda tidak boleh mencipta satu partition baru\n"
         "dalam partition yang telah sedia ada!\n"
         "\n"
@@ -1350,133 +1414,127 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Anda tidak boleh menghapuskan ruang cakera yang tiada partition!\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Persediaan gagal memasang bootcode FAT pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Tiada cakera dalam cakera A:.",
         "ENTER = Teruskan"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Persediaan gagal mengemaskini seting susun atur papan kekunci.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Persediaan gagal mengemaskini daftaran seting paparan.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Persediaan gagal untuk mengimport fail gatal.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Persediaan gagal untuk mencari pendaftaran fail data.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Persediaan gagal mencipta gatal daftaran.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Persediaan gagal untuk diawalkan daftaran.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabinet mempunyai fail inf tidak sah.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabinet tidak dijumpai.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabinet mempunyai skrip tiada persediaan.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Persediaan gagal membuka baris gilir fail salinan.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Persediaan tidak dapat mencipta direktori pasang.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Persediaan gagal untuk mencari bahagian 'Direktori'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Persediaan gagal untuk mencari bahagian '%S'\n"
         "dalam TXTSETUP. SIF.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Persediaan gagal menemui bahagian 'Direktori'\n"
+        // ERROR_CABINET_SECTION,
+        "Persediaan gagal menemui bahagian '%S'\n"
         "dalam kabinet.\n",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Persediaan tidak dapat mencipta direktori pasang.",
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Persediaan gagal untuk mencari bahagian 'SetupData'\n"
-        "dalam TXTSETUP.SIF.\n",
-        "ENTER = Memulakan semula komputer"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Persediaan gagal menulis jadual partition.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Persediaan gagal untuk menambah codepage ke daftaran.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Persediaan tidak dapat menyediakan penempatan sistem.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Persediaan gagal untuk menambah susun atur papan kekunci daftaran.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Persediaan tidak dapat disetkan geo id.\n"
         "ENTER = Memulakan semula komputer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Nama direktori tidak sah.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partition yang dipilih adalah tidak cukup besar untuk memasang ReactOS.\n"
         "Partition yang pasang hendaklah mempunyai saiz sekurang-kurangnya %lu MB.\n"
         "\n"
@@ -1484,14 +1542,14 @@ MUI_ERROR msMYErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Anda tidak boleh mencipta satu partition baru utama atau yang dilanjutkan\n"
         "dalam jadual partition cakera ini kerana jadual partition telah penuh.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Anda tidak boleh mencipta lebih daripada satu petak lanjutan setiap cakera.\n"
         "\n"
         "  * Tekan sebarang kunci untuk meneruskan."
@@ -1509,7 +1567,7 @@ MUI_PAGE msMYPages[] =
         msMYLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         msMYWelcomePageEntries
     },
     {
@@ -1527,6 +1585,10 @@ MUI_PAGE msMYPages[] =
     {
         REPAIR_INTRO_PAGE,
         msMYRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        msMYUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1644,8 +1706,12 @@ MUI_STRING msMYStrings[] =
     "F3 = Keluar  ENTER = Teruskan"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Memulakan semuala komputer"},
-    {STRING_TXTSETUPFAILED,
-    "Persediaan yang gagal menemui bahagian '%S'\ndalam TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Menyalin fail: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1654,7 +1720,7 @@ MUI_STRING msMYStrings[] =
     "   Mengemaskini daftaran gatal..."},
     {STRING_IMPORTFILE,
     "   Mengimport %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Mengemaskini seting paparan pendaftaran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mengemaskini seting tempatan..."},
@@ -1684,28 +1750,28 @@ MUI_STRING msMYStrings[] =
     " Format partition seperti sistem fail %S "},
     {STRING_KEEPFORMAT,
     " Memastikan sistem fail semasa (tiada perubahan) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Persediaan yang dicipta partition yang baru di"},
     {STRING_UNPSPACE,

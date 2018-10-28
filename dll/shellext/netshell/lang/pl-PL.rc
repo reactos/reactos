@@ -34,7 +34,7 @@ CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Połączenie", -1, 9, 8, 182, 58, BS_GROUPBOX
-    LTEXT "Status:", -1, 19, 20, 60, 8
+    LTEXT "Stan:", -1, 19, 20, 60, 8
     LTEXT "Czas trwania:", -1, 19, 34, 60, 8
     LTEXT "Szybkość:", -1, 19, 48, 60, 8
     GROUPBOX "Aktywność", -1, 9, 74, 182, 70, BS_GROUPBOX
@@ -56,7 +56,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Szczegóły"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Status połączenia", -1, 9, 8, 190, 88, BS_GROUPBOX
+    GROUPBOX "Stan połączenia", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Typ adresu:", -1, 22, 20, 80, 8
     LTEXT "Adres IP:", -1, 22, 34, 80, 8
     LTEXT "Maska podsieci:", -1, 22, 48, 80, 8
@@ -136,7 +136,7 @@ BEGIN
     IDS_NETWORKCONNECTION "Połączenia sieciowe"
     IDS_SHV_COLUMN_NAME "Nazwa"
     IDS_SHV_COLUMN_TYPE "Typ"
-    IDS_SHV_COLUMN_STATE "Status"
+    IDS_SHV_COLUMN_STATE "Stan"
     IDS_SHV_COLUMN_DEVNAME "Nazwa urządzenia"
     IDS_SHV_COLUMN_PHONE "Numer telefonu lub adres hosta"
     IDS_SHV_COLUMN_OWNER "Właściciel"
@@ -149,7 +149,7 @@ BEGIN
     IDS_STATUS_OPERATIONAL "Połączony"
     IDS_NET_ACTIVATE "Włącz"
     IDS_NET_DEACTIVATE "Wyłącz"
-    IDS_NET_STATUS "Status"
+    IDS_NET_STATUS "Stan"
     IDS_NET_REPAIR "Napraw"
     IDS_NET_CREATELINK "Utwórz skrót"
     IDS_NET_DELETE "Usuń"

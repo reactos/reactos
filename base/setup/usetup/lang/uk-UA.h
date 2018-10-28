@@ -1,16 +1,9 @@
 /*
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
  *      http://www.reactos.org/uk/
- */ 
+ */
 
 #pragma once
-
-MUI_LAYOUTS ukUALayouts[] =
-{
-    { L"0422", L"00000422" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
 
 static MUI_ENTRY ukUALanguagePageEntries[] =
 {
@@ -87,7 +80,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Натиснiть ENTER щоб встановити ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -475,6 +468,76 @@ static MUI_ENTRY ukUARepairPageEntries[] =
         0,
         0,
         "ESC = Головна Сторiнка  U = Оновити  R = Вiдновити  ENTER = Перезавантажити",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ukUAUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1373,7 +1436,7 @@ MUI_ERROR ukUAErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS не був повнiстю встановлений на Ваш\n"
         "комп'ютер. Якщо ви вийдете з встановлювача зараз,\n"
         "то Вам буде необхiдно запустити програму встановлення\n"
@@ -1384,62 +1447,62 @@ MUI_ERROR ukUAErrorEntries[] =
         "F3 = Вийти  ENTER = Продовжити"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Не вдалось знайти жорсткий диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Не вдалось знайти установочний диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Не вдалось завантажити файл TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Файл TXTSETUP.SIF пошкоджений.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Виявлено некоректний пiдпис в TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Не вдалось отримати данi про системний диск.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Не вдалось завантажити список типiв комп'ютера.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Не вдалось завантажити список режимiв екрану.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Не вдалось завантажити список типiв клавiатури.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Не вдалось завантажити список розкладок клавiатури.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Знайдено як мiнiмум один жорсткий диск, що мiстить роздiл,\n"
           "який не пiдтримується ReactOS!\n"
           "\n"
@@ -1450,7 +1513,7 @@ MUI_ERROR ukUAErrorEntries[] =
           "F3 = Вийти  ENTER = Продовжити"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Ви не можете створити новий роздiл на\n"
         "вже iснуючому роздiлi!\n"
         "\n"
@@ -1458,133 +1521,127 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Не можна видалити нерозмiчену область на диску!\n"
         "\n"
         "  * Натиснiть будь-яку клавiшу щоб продовжити.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Вiдсутня дискета в дисководi A:.",
         "ENTER = Продовжити"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Не вдалось оновити параметри розкладки клавiатури.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Не вдалось оновити параметри екрану в реєстрi.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Не вдалось iмпортувати файл кущiв реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Не вдалось знайти файли даних реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Не вдалось створити кущi реєстру.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Не вдалось iнiцiалiзувати реєстр.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet має некоректний inf-файл.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet не знайдено.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet не має установочного сценарiю.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Не вдалось вiдкрити чергу копiювання файлiв.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Не вдалось створити директорiї для встановлення.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Не вдалось знайти секцiю '%S'\n"
         "в файлi TXTSETUP.SIF.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
+        // ERROR_CABINET_SECTION,
+        "Не вдалось знайти секцiю '%S'\n"
         "в cabinet.\n",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Не вдалось створити директорiю для встановлння.",
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Не вдалось знайти секцiю 'SetupData'\n"
-        "в файлi TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Не вдалось записати таблицi роздiлiв.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Не вдалось додати параметри кодування в реєстр.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Не вдалось встановити локаль системи.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Не вдалось додати розкладки клавiатури до реєстру.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Не вдалось встановити geo id.\n"
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1592,20 +1649,20 @@ MUI_ERROR ukUAErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1624,7 +1681,7 @@ MUI_PAGE ukUAPages[] =
         ukUALanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ukUAWelcomePageEntries
     },
     {
@@ -1642,6 +1699,10 @@ MUI_PAGE ukUAPages[] =
     {
         REPAIR_INTRO_PAGE,
         ukUARepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        ukUAUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1765,8 +1826,12 @@ MUI_STRING ukUAStrings[] =
     "F3 = Вийти  ENTER = Продовжити"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезавантажити комп'ютер"},
-    {STRING_TXTSETUPFAILED,
-    "Встановлювач не змiг знайти секцiю '%S' \nв файлi TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Копiювання: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1775,7 +1840,7 @@ MUI_STRING ukUAStrings[] =
     "   Оновлення кущiв реєстру..."},
     {STRING_IMPORTFILE,
     "   Iмпортування %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Оновлення параметрiв екрану в реєстрi..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Оновлення параметрiв локалi..."},
@@ -1805,28 +1870,28 @@ MUI_STRING ukUAStrings[] =
     " Форматувати роздiл в файловiй системi %S  "},
     {STRING_KEEPFORMAT,
     " Залишити iснуючу файлову систему (без змiн) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Жорсткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Жорсткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Встановлювач створив новий роздiл на"},
     {STRING_UNPSPACE,

@@ -82,7 +82,7 @@ static const WCHAR *find_class( const WCHAR *alias )
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(alias_map)/sizeof(alias_map[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(alias_map); i++)
     {
         if (!strcmpiW( alias, alias_map[i].alias )) return alias_map[i].class;
     }
@@ -158,7 +158,7 @@ static int output_message( int msg )
     static const WCHAR fmtW[] = {'%','s',0};
     WCHAR buffer[8192];
 
-    LoadStringW( GetModuleHandleW(NULL), msg, buffer, sizeof(buffer)/sizeof(WCHAR) );
+    LoadStringW( GetModuleHandleW(NULL), msg, buffer, ARRAY_SIZE(buffer));
     return output_string( fmtW, buffer );
 }
 
@@ -193,7 +193,7 @@ static int query_prop( const WCHAR *class, const WCHAR *propname )
     hr = IWbemLocator_ConnectServer( locator, path, NULL, NULL, NULL, 0, NULL, NULL, &services );
     if (hr != S_OK) goto done;
 
-    len = strlenW( class ) + sizeof(select_allW) / sizeof(select_allW[0]);
+    len = strlenW( class ) + ARRAY_SIZE(select_allW);
     if (!(query = SysAllocStringLen( NULL, len ))) goto done;
     strcpyW( query, select_allW );
     strcatW( query, class );

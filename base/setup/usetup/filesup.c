@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/filesup.c
  * PURPOSE:         File support functions
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,10 +14,6 @@
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
-
-static BOOLEAN HasCurrentCabinet = FALSE;
-static WCHAR CurrentCabinetName[MAX_PATH];
-static CAB_SEARCH Search;
 
 static
 NTSTATUS
@@ -112,7 +108,7 @@ SetupCreateDirectory(
             *Ptr = 0;
 
             DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesPathExist(NULL, PathBuffer))
+            if (!DoesDirExist(NULL, PathBuffer))
             {
                 DPRINT("Create: %S\n", PathBuffer);
                 Status = SetupCreateSingleDirectory(PathBuffer);
@@ -126,7 +122,7 @@ SetupCreateDirectory(
         Ptr++;
     }
 
-    if (!DoesPathExist(NULL, PathBuffer))
+    if (!DoesDirExist(NULL, PathBuffer))
     {
         DPRINT("Create: %S\n", PathBuffer);
         Status = SetupCreateSingleDirectory(PathBuffer);
@@ -141,322 +137,6 @@ done:
 
     return Status;
 }
-
-NTSTATUS
-SetupCopyFile(
-    PWCHAR SourceFileName,
-    PWCHAR DestinationFileName)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE FileHandleSource;
-    HANDLE FileHandleDest;
-    static IO_STATUS_BLOCK IoStatusBlock;
-    FILE_STANDARD_INFORMATION FileStandard;
-    FILE_BASIC_INFORMATION FileBasic;
-    ULONG RegionSize;
-    UNICODE_STRING FileName;
-    NTSTATUS Status;
-    PVOID SourceFileMap = 0;
-    HANDLE SourceFileSection;
-    SIZE_T SourceSectionSize = 0;
-    LARGE_INTEGER ByteOffset;
-
-    RtlInitUnicodeString(&FileName,
-                         SourceFileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandleSource,
-                        GENERIC_READ,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ,
-                        FILE_SEQUENTIAL_ONLY);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile failed: %x, %wZ\n", Status, &FileName);
-        goto done;
-    }
-
-    Status = NtQueryInformationFile(FileHandleSource,
-                                    &IoStatusBlock,
-                                    &FileStandard,
-                                    sizeof(FILE_STANDARD_INFORMATION),
-                                    FileStandardInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile failed: %x\n", Status);
-        goto closesrc;
-    }
-
-    Status = NtQueryInformationFile(FileHandleSource,
-                                    &IoStatusBlock,&FileBasic,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile failed: %x\n", Status);
-        goto closesrc;
-    }
-
-    Status = NtCreateSection(&SourceFileSection,
-                             SECTION_MAP_READ,
-                             NULL,
-                             NULL,
-                             PAGE_READONLY,
-                             SEC_COMMIT,
-                             FileHandleSource);
-    if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtCreateSection failed: %x, %S\n", Status, SourceFileName);
-      goto closesrc;
-    }
-
-    Status = NtMapViewOfSection(SourceFileSection,
-                                NtCurrentProcess(),
-                                &SourceFileMap,
-                                0,
-                                0,
-                                NULL,
-                                &SourceSectionSize,
-                                ViewUnmap,
-                                0,
-                                PAGE_READONLY );
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtMapViewOfSection failed: %x, %S\n", Status, SourceFileName);
-        goto closesrcsec;
-    }
-
-    RtlInitUnicodeString(&FileName,
-                         DestinationFileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandleDest,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_OVERWRITE_IF,
-                          FILE_NO_INTERMEDIATE_BUFFERING |
-                          FILE_SEQUENTIAL_ONLY |
-                          FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Open may have failed because the file to overwrite
-         * is in readonly mode
-         */
-        if (Status == STATUS_ACCESS_DENIED)
-        {
-            FILE_BASIC_INFORMATION FileBasicInfo;
-
-            /* Reattempt to open it with limited access */
-            Status = NtCreateFile(&FileHandleDest,
-                                  FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
-                                  &ObjectAttributes,
-                                  &IoStatusBlock,
-                                  NULL,
-                                  FILE_ATTRIBUTE_NORMAL,
-                                  0,
-                                  FILE_OPEN,
-                                  FILE_NO_INTERMEDIATE_BUFFERING |
-                                  FILE_SEQUENTIAL_ONLY |
-                                  FILE_SYNCHRONOUS_IO_NONALERT,
-                                  NULL,
-                                  0);
-            /* Fail for real if we cannot open it that way */
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
-                goto unmapsrcsec;
-            }
-
-            /* Zero our basic info, just to set attributes */
-            RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
-            /* Reset attributes to normal, no read-only */
-            FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
-            /* We basically don't care about whether it succeed:
-             * if it didn't, later open will fail
-             */
-            NtSetInformationFile(FileHandleDest, &IoStatusBlock, &FileBasicInfo,
-                                 sizeof(FileBasicInfo), FileBasicInformation);
-
-            /* Close file */
-            NtClose(FileHandleDest);
-
-            /* And re-attempt overwrite */
-            Status = NtCreateFile(&FileHandleDest,
-                                  GENERIC_WRITE | SYNCHRONIZE,
-                                  &ObjectAttributes,
-                                  &IoStatusBlock,
-                                  NULL,
-                                  FILE_ATTRIBUTE_NORMAL,
-                                  0,
-                                  FILE_OVERWRITE_IF,
-                                  FILE_NO_INTERMEDIATE_BUFFERING |
-                                  FILE_SEQUENTIAL_ONLY |
-                                  FILE_SYNCHRONOUS_IO_NONALERT,
-                                  NULL,
-                                  0);
-        }
-
-        /* We failed */
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
-            goto unmapsrcsec;
-        }
-    }
-
-    RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
-    IoStatusBlock.Status = 0;
-    ByteOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandleDest,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         SourceFileMap,
-                         RegionSize,
-                         &ByteOffset,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtWriteFile failed: %x:%x, iosb: %p src: %p, size: %x\n", Status, IoStatusBlock.Status, &IoStatusBlock, SourceFileMap, RegionSize);
-        goto closedest;
-    }
-
-    /* Copy file date/time from source file */
-    Status = NtSetInformationFile(FileHandleDest,
-                                  &IoStatusBlock,
-                                  &FileBasic,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile failed: %x\n", Status);
-        goto closedest;
-    }
-
-    /* shorten the file back to it's real size after completing the write */
-    Status = NtSetInformationFile(FileHandleDest,
-                                  &IoStatusBlock,
-                                  &FileStandard.EndOfFile,
-                                  sizeof(FILE_END_OF_FILE_INFORMATION),
-                                  FileEndOfFileInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile failed: %x\n", Status);
-    }
-
-closedest:
-    NtClose(FileHandleDest);
-
-unmapsrcsec:
-    NtUnmapViewOfSection(NtCurrentProcess(), SourceFileMap);
-
-closesrcsec:
-    NtClose(SourceFileSection);
-
-closesrc:
-    NtClose(FileHandleSource);
-
-done:
-    return Status;
-}
-
-
-NTSTATUS
-SetupExtractFile(
-    PWCHAR CabinetFileName,
-    PWCHAR SourceFileName,
-    PWCHAR DestinationPathName)
-{
-    ULONG CabStatus;
-
-    DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
-           CabinetFileName, SourceFileName, DestinationPathName);
-
-    if (HasCurrentCabinet)
-    {
-        DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
-    }
-
-    if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
-    {
-        DPRINT("Using same cabinet as last time\n");
-
-        /* Use our last location because the files should be sequential */
-        CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
-        if (CabStatus != CAB_STATUS_SUCCESS)
-        {
-            DPRINT("Sequential miss on file: %S\n", SourceFileName);
-
-            /* Looks like we got unlucky */
-            CabStatus = CabinetFindFirst(SourceFileName, &Search);
-        }
-    }
-    else
-    {
-        DPRINT("Using new cabinet\n");
-
-        if (HasCurrentCabinet)
-        {
-            CabinetCleanup();
-        }
-
-        wcscpy(CurrentCabinetName, CabinetFileName);
-
-        CabinetInitialize();
-        CabinetSetEventHandlers(NULL, NULL, NULL);
-        CabinetSetCabinetName(CabinetFileName);
-
-        CabStatus = CabinetOpen();
-        if (CabStatus == CAB_STATUS_SUCCESS)
-        {
-            DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
-            HasCurrentCabinet = TRUE;
-        }
-        else
-        {
-            DPRINT("Cannot open cabinet (%d)\n", CabStatus);
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        /* We have to start at the beginning here */
-        CabStatus = CabinetFindFirst(SourceFileName, &Search);
-    }
-
-    if (CabStatus != CAB_STATUS_SUCCESS)
-    {
-        DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    CabinetSetDestinationPath(DestinationPathName);
-    CabStatus = CabinetExtractFile(&Search);
-    if (CabStatus != CAB_STATUS_SUCCESS)
-    {
-        DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    return STATUS_SUCCESS;
-}
-
 
 BOOLEAN
 IsValidPath(

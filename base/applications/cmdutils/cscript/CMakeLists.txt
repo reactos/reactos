@@ -1,5 +1,5 @@
 
-add_definitions(-DCSCRIPT_BUILD)
+add_definitions(-DCSCRIPT_BUILD -D__WINESRC__)
 set(wscript_folder ${REACTOS_SOURCE_DIR}/base/applications/cmdutils/wscript)
 include_directories(${wscript_folder})
 

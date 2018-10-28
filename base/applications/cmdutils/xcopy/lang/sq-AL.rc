@@ -54,6 +54,7 @@ Where:\n\
 [/A]  Kopjo vetëm dokumenta me arkiva me atribjute te përcaktuar\n\
 [/M]  Kopjo vetëm dokumente me arkiva dhe atribjute te caktuar, hiqnt\n\
 \tarkivat te atribuara\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Kopjo dokumentët e ri ose modifiko ato pas datës së furnizuar.\n\
 \t\tNëse asnjë datë është paraqitur, vetëm kopjoni nëse destinacioni është i vjetër\n\
 \t\tse burimi\n\n"

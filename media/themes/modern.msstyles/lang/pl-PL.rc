@@ -1,0 +1,39 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Jasny"
+1001, "Ciemny"
+}
+
+STRINGTABLE
+{
+2000, "Modern Light"
+2001, "Modern Dark"
+}
+
+STRINGTABLE
+{
+3000, "Normalne czcionki"
+3001, "Duże czcionki"
+3002, "Bardzo duże czcionki"
+}
+
+STRINGTABLE
+{
+4000, "Normalne czcionki"
+4001, "Duże czcionki"
+4002, "Bardzo duże czcionki"
+}
+
+STRINGTABLE
+{
+5000, "Modern"
+5001, "Styl wizualny"
+5002, "Fundacja ReactOS"
+5003, "Polar, oparte na wyglądzie win10"
+5004, "Wydane na licencji GNU/GPL 3.0, 2018"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Motyw Modern dla systemu ReactOS"
+}

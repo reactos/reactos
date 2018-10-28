@@ -350,7 +350,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
     PNET_ITEM pItem;
     CNetConnectionPropertyUi * This;
     LPPSHNOTIFY lppsn;
-    DWORD dwShowIcon;
+    DWORD dwShowIcon, dwNotifyDisconnect;
     HRESULT hr;
     WCHAR szKey[200];
     LPOLESTR pStr;
@@ -382,6 +382,10 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 else
                     dwShowIcon = 0;
 
+                if (SendDlgItemMessageW(hwndDlg, IDC_NOTIFYNOCONNECTION, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    dwNotifyDisconnect = 1;
+                else
+                    dwNotifyDisconnect = 0;
 
                 if (StringFromCLSID((CLSID)This->m_pProperties->guidId, &pStr) == ERROR_SUCCESS)
                 {
@@ -390,6 +394,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
                     {
                         RegSetValueExW(hKey, L"ShowIcon", 0, REG_DWORD, (LPBYTE)&dwShowIcon, sizeof(DWORD));
+                        RegSetValueExW(hKey, L"IpCheckingEnabled", 0, REG_DWORD, (LPBYTE)&dwNotifyDisconnect, sizeof(DWORD));
                         RegCloseKey(hKey);
                     }
                 }

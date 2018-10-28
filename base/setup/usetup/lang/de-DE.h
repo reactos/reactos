@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS deDELayouts[] =
-{
-    { L"0407", L"00000407" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY deDELanguagePageEntries[] =
 {
     {
@@ -82,13 +75,13 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  DrÅcken Sie die EINGABETASTE, um ReactOS zu installieren.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  DrÅcken Sie R, um ReactOS zu reparieren oder aktualisieren.",
+        "\x07  DrÅcken Sie R, um ReactOS zu reparieren.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -476,6 +469,76 @@ static MUI_ENTRY deDERepairPageEntries[] =
         0,
         0,
         "ESC = ZurÅck  U = Aktualisieren  R = Wiederherst.  EINGABETASTE = Neustart",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1367,7 +1430,7 @@ MUI_ERROR deDEErrorEntries[] =
         "Erfolg\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS wurde nicht vollstÑndig auf Ihrem System installiert.\n"
         "Wenn Sie die Installation jetzt beenden, mÅssen Sie diese\n"
         "erneut starten, um ReactOS zu installieren.\n"
@@ -1377,62 +1440,62 @@ MUI_ERROR deDEErrorEntries[] =
         "F3 = Beenden  EINGABETASTE = Fortsetzen"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Es konnte keine Festplatte gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Es konnte kein Installationsmedium gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "TXTSETUP.SIF konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "TXTSETUP.SIF scheint beschÑdigt zu sein.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Es wurde eine ungÅltige Signatur in TXTSETUP.SIF gefunden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Es konnten keine Laufwerksinformationen abgefragt werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Computertypenliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Displayeinstellungsliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Tastaturtypenliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Die Liste der Tastaturlayouts konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Es wurde mindestens eine Festplatte mit einer inkompatiblen\n"
         "Partitionstabelle gefunden, die nicht richtig verwendet werden kann.\n"
         "\n"
@@ -1443,7 +1506,7 @@ MUI_ERROR deDEErrorEntries[] =
         "F3 = Beenden  ENTER = EINGABETASTE"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Sie kînnen keine neue Partition in einer bereits\n"
         "vorhandenen Partition erstellen!\n"
         "\n"
@@ -1451,136 +1514,130 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Sie kînnen unpartitionierten Speicher nicht lîschen!\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Keine Diskette in Laufwerk A: gefunden.",
         "EINGABETASTE = Fortsetzen"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Das Tastaturlayout konnte nicht aktualisiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Die RegistrierungseintrÑge der Anzeigeeinstellungen\n"
         "konnten nicht aktualisiert werden.",
         "EINGABETASTER = Computer neu starten"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Es konnte keine Hive-Datei importiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Die Registrierungsdateien konnten nicht gefunden werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Die Zweige in der Registrierung konnten nicht erstellt werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Die Registrierung konnte nicht initialisiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Das CAB-Archiv besitzt keine gÅltige INF-Datei.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Das CAB-Archiv wurde nicht gefunden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Das CAB-Archiv enthÑlt kein Setup-Skript.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Die Liste mit den zu kopierenden Dateien\n"
         "konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Die Installationspfade konnten nicht erstellt werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Der Abschnitt 'Ordner' konnte in\n"
-        "TXTSETUP.SIF nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_CABINET_SECTION,
-        "Der Abschnitt 'Ordner' konnte\n"
-        "im im CAB-Archiv nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_CREATE_INSTALL_DIR
-        "Setup konnte den Installationspfad nicht erstellen.",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_FIND_SETUPDATA,
-        "Setup konnte die 'SetupData'-Sektion in\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup konnte die '%S'-Sektion in\n"
         "TXTSETUP.SIF nicht finden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_CABINET_SECTION,
+        "Setup konnte die '%S'-Sektion im\n"
+        "CAB-Archiv nicht finden.\n",
+        "EINGABETASTE = Computer neu starten"
+    },
+    {
+        // ERROR_CREATE_INSTALL_DIR
+        "Setup konnte den Installationspfad nicht erstellen.",
+        "EINGABETASTE = Computer neu starten"
+    },
+    {
+        // ERROR_WRITE_PTABLE,
         "Die Partitionstabellen konnten nicht geschrieben werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Es konnte kein Codepage-Eintrag hinzugefÅgt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Die Systemsprache konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Die Tastaturlayouts konnten nicht in die Registrierung\n"
         "eingetragen werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Der geografische Standort konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "UnzulÑssiger Verzeichnisname.\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Die gewÑhlten Partition ist nicht gro· genug, um ReactOS zu installieren.\n"
         "Die Installationspartition muss mindestens %lu MB gro· sein.\n"
         "\n"
@@ -1588,20 +1645,20 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Sie kînnen keine weitere primÑre oder erweiterte Partition in\n"
         "der Partitionstabelle erstellen, weil die Tabelle voll ist.\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Sie kînnen nur eine erweiterte Partition auf jeder Festplatte anlegen.\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1620,7 +1677,7 @@ MUI_PAGE deDEPages[] =
         deDELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         deDEWelcomePageEntries
     },
     {
@@ -1638,6 +1695,10 @@ MUI_PAGE deDEPages[] =
     {
         REPAIR_INTRO_PAGE,
         deDERepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        deDEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1759,8 +1820,12 @@ MUI_STRING deDEStrings[] =
     "F3 = Beenden  EINGABETASTE = Fortsetzen"},
     {STRING_REBOOTCOMPUTER,
     "EINGABETASTE = Computer neu starten"},
-    {STRING_TXTSETUPFAILED,
-    "Der Abschnitt '%S'in TXTSETUP.SIF\nkonnte nicht gefunden werden.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kopiere Datei: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1769,7 +1834,7 @@ MUI_STRING deDEStrings[] =
     "   RegistrierungseintrÑge werden aktualisiert..."},
     {STRING_IMPORTFILE,
     "   Importiere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Anzeigeeinstellungen werden aktualisiert..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokalisierungseinstellungen werden aktualisiert..."},
@@ -1799,28 +1864,28 @@ MUI_STRING deDEStrings[] =
     " Partition mit dem %S-Dateisystem formatieren "},
     {STRING_KEEPFORMAT,
     " Dateisystem beibehalten (Keine VerÑnderungen) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ."},
-    {STRING_HDDINFOUNK3,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,

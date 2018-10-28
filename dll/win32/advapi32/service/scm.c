@@ -1693,6 +1693,11 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    /*
+     * NOTE: A size of 1 character would be enough, but tests show that
+     * Windows returns 2 characters instead, certainly due to a WCHAR/bytes
+     * mismatch in their code.
+     */
     if (!lpDisplayName || *lpcchBuffer < sizeof(WCHAR))
     {
         lpNameBuffer = szEmptyName;
@@ -1810,6 +1815,11 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    /*
+     * NOTE: A size of 1 character would be enough, but tests show that
+     * Windows returns 2 characters instead, certainly due to a WCHAR/bytes
+     * mismatch in their code.
+     */
     if (!lpServiceName || *lpcchBuffer < sizeof(WCHAR))
     {
         lpNameBuffer = szEmptyName;

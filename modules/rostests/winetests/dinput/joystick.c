@@ -30,8 +30,6 @@
 #include "wingdi.h"
 #include "dinput.h"
 
-#define numObjects(x) (sizeof(x) / sizeof(x[0]))
-
 typedef struct tagUserData {
     IDirectInputA *pDI;
     DWORD version;
@@ -62,7 +60,7 @@ static const DIDATAFORMAT c_dfDIJoystickTest = {
     sizeof(DIOBJECTDATAFORMAT),
     DIDF_ABSAXIS,
     sizeof(DIJOYSTATE2),
-    numObjects(dfDIJoystickTest),
+    ARRAY_SIZE(dfDIJoystickTest),
     (LPDIOBJECTDATAFORMAT)dfDIJoystickTest
 };
 
@@ -178,7 +176,7 @@ static const struct effect_id
 static const struct effect_id* effect_from_guid(const GUID *guid)
 {
     unsigned int i;
-    for (i = 0; i < sizeof(effect_conversion) / sizeof(effect_conversion[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(effect_conversion); i++)
         if (IsEqualGUID(guid, effect_conversion[i].guid))
             return &effect_conversion[i];
     return NULL;
@@ -504,7 +502,7 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     effect_data.eff.dwDuration      = INFINITE;
     effect_data.eff.dwGain          = DI_FFNOMINALMAX;
     effect_data.eff.dwTriggerButton = DIEB_NOTRIGGER;
-    effect_data.eff.cAxes           = sizeof(axes) / sizeof(axes[0]);
+    effect_data.eff.cAxes           = ARRAY_SIZE(axes);
     effect_data.eff.rgdwAxes        = axes;
     effect_data.eff.rglDirection    = direction;
 

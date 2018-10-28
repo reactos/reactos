@@ -27,6 +27,7 @@
 #include <commctrl.h>
 
 extern HMODULE hcpl;
+INT_PTR CALLBACK connections_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 INT_PTR CALLBACK content_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 INT_PTR CALLBACK general_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
@@ -40,6 +41,8 @@ INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 #define ICO_CERTIFICATES    1314
 #define ICO_HISTORY         1315
 #define ICO_HOME            1316
+#define ICO_TRUSTED         4480
+#define ICO_RESTRICTED      4481
 #endif
 
 /* strings */
@@ -88,5 +91,13 @@ INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 #define IDD_CONTENT         4000
 #define IDC_CERT            4100
 #define IDC_CERT_PUBLISHER  4101
+
+#define IDD_CONNECTIONS         5000
+#define IDC_USE_WPAD            5100
+#define IDC_USE_PAC_SCRIPT      5101
+#define IDC_EDIT_PAC_SCRIPT     5102
+#define IDC_USE_PROXY_SERVER    5200
+#define IDC_EDIT_PROXY_SERVER   5201
+#define IDC_EDIT_PROXY_PORT     5202
 
 #endif

@@ -1,4 +1,5 @@
 
+add_definitions(-D__WINESRC__)
 add_executable(taskkill taskkill.c taskkill.rc)
 target_link_libraries(taskkill wine)
 set_module_type(taskkill win32cui UNICODE)

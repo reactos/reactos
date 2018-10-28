@@ -78,7 +78,8 @@ BEGIN
     IDS_DOWNLOADING "Загрузка..."
     IDS_INSTALLING "Установка..."
     IDS_INVALID_SHA "Ошибка контрольной суммы загруженного файла. Прерывание установки поврежденного файла."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_NEW_INTERNET_SHORTCUT "Новый ярлык интернета"
+    IDS_DWL_FAILED "Не удалось скачать пакет установки Gecko, проверьте ваше подключение к сети интернет. Установка будет продолжена без включения пакета Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Не удалось создать ярлык интернета."
+    IDS_CANTMAKESHORTCUT "Не удалось создать ярлык."
 END

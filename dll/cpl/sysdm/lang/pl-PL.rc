@@ -15,16 +15,19 @@ CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "System:", IDC_STATIC, 4, 132, 32, 9
-    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
-    LTEXT "Wersja", IDC_ROSVERSION, 10, 153, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 110, 9
-    LTEXT "Komputer:", IDC_STATIC, 124, 132, 34, 9
-    LTEXT "", IDC_MACHINELINE1, 130, 144, 118, 9
-    LTEXT "", IDC_MACHINELINE2, 130, 153, 118, 9
-    LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
-    LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
-    LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
+    LTEXT "System:", IDC_STATIC, 4, 116, 32, 9
+    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
+    LTEXT "Wersja", IDC_ROSVERSION, 10, 137, 116, 9
+    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Czas pracy systemu:", IDC_STATIC, 4, 158, 86, 9
+    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
+    LTEXT "Komputer:", IDC_STATIC, 124, 116, 34, 9
+    LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
+    LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
+    LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
+    LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
+    LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
+    LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
     CONTROL "Odwiedź <A HREF=""http://www.reactos.org/"">Stronę domową ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Wyświetl &licencję...", IDC_LICENCE, 170, 198, 78, 15
 END
@@ -74,8 +77,8 @@ CAPTION "Ustawienia systemowe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informowanie o wersji", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Zgłaszaj jako stację roboczą", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     LTEXT "ReactOS jest zbudowany w oparciu o wersję serwerową. Zaznacz pole, aby ReactOS zgłaszał się aplikacjom jako stacja robocza.", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "Zgłaszaj jako stację roboczą", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 
@@ -287,6 +290,9 @@ BEGIN
     IDS_GIGABYTE "GB RAM"
     IDS_TERABYTE "TB RAM"
     IDS_PETABYTE "PB RAM"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
+    IDS_UPTIME_FORMAT "%u dni, %02u:%02u:%02u"
     IDS_VARIABLE "Zmienna"
     IDS_VALUE "Wartość"
     IDS_NO_DUMP "(Brak)"
