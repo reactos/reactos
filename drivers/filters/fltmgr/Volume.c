@@ -190,5 +190,50 @@ FltDetachVolume(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+FLTAPI
+FltGetVolumeName(
+    _In_ PFLT_VOLUME Volume,
+    _Inout_opt_ PUNICODE_STRING VolumeName,
+    _Out_opt_ PULONG BufferSizeNeeded)
+{
+    NTSTATUS Status;
+
+    /* Check if caller just probes for size */
+    if (VolumeName == NULL)
+    {
+        /* Totally broken call */
+        if (BufferSizeNeeded == NULL)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Return the appropriate size and quit */
+        *BufferSizeNeeded = Volume->DeviceName.Length;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* We have an output buffer! Assume it's too small */
+    Status = STATUS_BUFFER_TOO_SMALL;
+
+    /* If we have output size, fill it */
+    if (BufferSizeNeeded != NULL)
+    {
+        *BufferSizeNeeded = Volume->DeviceName.Length;
+    }
+
+    /* Init that we didn't return a thing */
+    VolumeName->Length = 0;
+
+    /* If we have enough room, copy and return success */
+    if (VolumeName->MaximumLength >= Volume->DeviceName.Length)
+    {
+        RtlCopyUnicodeString(VolumeName, &Volume->DeviceName);
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
+}
+
 
 /* INTERNAL FUNCTIONS ******************************************************/
