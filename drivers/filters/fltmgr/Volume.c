@@ -179,5 +179,16 @@ FltEnumerateVolumes(
     return Status;
 }
 
+NTSTATUS
+FLTAPI
+FltDetachVolume(
+    _Inout_ PFLT_FILTER Filter,
+    _Inout_ PFLT_VOLUME Volume,
+    _In_opt_ PCUNICODE_STRING InstanceName)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* INTERNAL FUNCTIONS ******************************************************/
