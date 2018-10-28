@@ -8,4 +8,6 @@
  @ stdcall FltFreeSecurityDescriptor(ptr)
  @ stdcall FltGetDiskDeviceObject(ptr ptr)
  @ stdcall FltGetVolumeProperties(ptr ptr long ptr)
+ @ stdcall FltObjectDereference(ptr)
+ @ stdcall FltSendMessage(ptr ptr ptr long ptr ptr ptr)
 
