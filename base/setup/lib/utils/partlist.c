@@ -2710,8 +2710,7 @@ CheckActiveSystemPartition(
     }
     // HACK: WARNING: We cannot write on this FS yet!
     // See fsutil.c:GetFileSystem()
-    if (List->OriginalSystemPartition->PartitionType == PARTITION_EXT2 ||
-        List->OriginalSystemPartition->PartitionType == PARTITION_IFS)
+    if (List->OriginalSystemPartition->PartitionType == PARTITION_IFS)
     {
         DPRINT1("Recognized file system %S that doesn't support write support yet!\n",
                 FileSystem->FileSystemName);
