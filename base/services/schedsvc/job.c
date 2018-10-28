@@ -85,6 +85,87 @@ GetNextJobTimeout(VOID)
 
 static
 VOID
+ReScheduleJob(
+    PJOB pJob)
+{
+    /* Remove the job from the start list */
+    RemoveEntryList(&pJob->StartEntry);
+
+    /* No repetition, remove the job */
+    if (pJob->DaysOfMonth == 0 && pJob->DaysOfWeek == 0)
+    {
+        /* Remove the job from the registry */
+        DeleteJob(pJob);
+
+        /* Remove the job from the job list */
+        RemoveEntryList(&pJob->JobEntry);
+        dwJobCount--;
+
+        /* Free the job object */
+        HeapFree(GetProcessHeap(), 0, pJob);
+        return;
+    }
+
+    /* Calculate the next start time */
+    CalculateNextStartTime(pJob);
+
+    /* Insert the job into the start list again */
+    InsertJobIntoStartList(&StartListHead, pJob);
+#if 0
+    DumpStartList(&StartListHead);
+#endif
+}
+
+
+VOID
+RunNextJob(VOID)
+{
+#if 0
+    PROCESS_INFORMATION ProcessInformation;
+    STARTUPINFOW StartupInfo;
+    WCHAR CommandLine[256];
+    BOOL bRet;
+#endif
+    PJOB pNextJob;
+
+    if (IsListEmpty(&StartListHead))
+    {
+        ERR("No job in list!\n");
+        return;
+    }
+
+    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
+
+    ERR("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
+
+#if 0
+    bRet = CreateProcess(NULL,
+                         CommandLine,
+                         NULL,
+                         NULL,
+                         FALSE,
+                         CREATE_NEW_CONSOLE | CREATE_SEPARATE_WOW_VDM,
+                         NULL,
+                         NULL,
+                         &StartupInfo,
+                         &ProcessInformation);
+    if (bRet == FALSE)
+    {
+        // FIXME: Log the failure!
+    }
+    else
+    {
+        CloseHandle(ProcessInformation.hThread);
+        CloseHandle(ProcessInformation.hProcess);
+    }
+#endif
+
+    ReScheduleJob(pNextJob);
+}
+
+
+static
+VOID
 GetJobName(
     HKEY hJobsKey,
     PWSTR pszJobName)
@@ -396,26 +477,37 @@ CalculateNextStartTime(
     StartTime.wHour = (WORD)(pJob->JobTime / 3600000);
     StartTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
 
-    /* Start the job tomorrow */
-    if (Now > pJob->JobTime)
+    if (pJob->DaysOfMonth != 0)
     {
-        if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
+         FIXME("Support DaysOfMonth!\n");
+    }
+    else if (pJob->DaysOfWeek != 0)
+    {
+         FIXME("Support DaysOfWeek!\n");
+    }
+    else
+    {
+        /* Start the job tomorrow */
+        if (Now > pJob->JobTime)
         {
-            if (StartTime.wMonth == 12)
+            if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth = 1;
-                StartTime.wYear++;
+                if (StartTime.wMonth == 12)
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth = 1;
+                    StartTime.wYear++;
+                }
+                else
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth++;
+                }
             }
             else
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth++;
+                StartTime.wDay++;
             }
-        }
-        else
-        {
-            StartTime.wDay++;
         }
     }
 

@@ -60,6 +60,9 @@ extern HANDLE Events[2];
 DWORD
 GetNextJobTimeout(VOID);
 
+VOID
+RunNextJob(VOID);
+
 LONG
 SaveJob(
     PJOB pJob);

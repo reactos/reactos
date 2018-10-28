@@ -231,12 +231,19 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
         else if (dwWait == WAIT_OBJECT_0 + 1)
         {
             TRACE("Update event signaled!\n");
+
+            RtlAcquireResourceShared(&JobListLock, TRUE);
             dwTimeout = GetNextJobTimeout();
+            RtlReleaseResource(&JobListLock);
         }
         else if (dwWait == WAIT_TIMEOUT)
         {
             TRACE("Timeout: Start the next job!\n");
 
+            RtlAcquireResourceExclusive(&JobListLock, TRUE);
+            RunNextJob();
+            dwTimeout = GetNextJobTimeout();
+            RtlReleaseResource(&JobListLock);
         }
     }
 
