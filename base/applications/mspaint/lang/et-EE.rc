@@ -15,12 +15,12 @@ BEGIN
         MENUITEM "&Uus\tCtrl+N", IDM_FILENEW
         MENUITEM "&Ava...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Salvesta\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Salvesta &Nimega...", IDM_FILESAVEAS
+        MENUITEM "Salvesta &nimega...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Skännerist või Kaamerast...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Skännerist või kaamerast...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Lehe Vaade", IDM_FILEPAGEVIEW
-        MENUITEM "Lehe Ülesehitus...", IDM_FILEPAGESETUP
+        MENUITEM "Lehe vaade", IDM_FILEPAGEVIEW
+        MENUITEM "Lehe ülesehitus...", IDM_FILEPAGESETUP
         MENUITEM "&Prindi...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Saada...", IDM_FILESEND
@@ -35,18 +35,18 @@ BEGIN
     END
     POPUP "&Redigeeri"
     BEGIN
-        MENUITEM "&Võta Tagasi\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "&Tee Tagasi\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Võta tagasi\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Tee uuesti\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "&Lõika\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Kopeeri\tCtrl+C", IDM_EDITCOPY
         MENUITEM "K&leebi\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Kustuta &valik\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "&Pööra valik", IDM_EDITINVERTSELECTION
+        MENUITEM "&Pööra valikut", IDM_EDITINVERTSELECTION
         MENUITEM "Vali k&õik\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Kopee&ri kuhu...", IDM_EDITCOPYTO
-        MENUITEM "Klee&bi kust...", IDM_EDITPASTEFROM
+        MENUITEM "Kopee&ri asukohta...", IDM_EDITCOPYTO
+        MENUITEM "Klee&bi asukohast...", IDM_EDITPASTEFROM
     END
     POPUP "&Vaade"
     BEGIN

@@ -33,16 +33,16 @@ BEGIN
         MENUITEM "&Uus\tCtrl+N", CMD_NEW
         MENUITEM "&Ava...\tCtrl+O", CMD_OPEN
         MENUITEM "&Salvesta\tCtrl+S", CMD_SAVE
-        MENUITEM "Salvesta &Nimega...", CMD_SAVE_AS
+        MENUITEM "Salvesta &nimega...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Lehe Ülese&hitus...", CMD_PAGE_SETUP
+        MENUITEM "Lehe ülese&hitus...", CMD_PAGE_SETUP
         MENUITEM "&Prindi...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Välju", CMD_EXIT
     END
     POPUP "&Redigeeri"
     BEGIN
-        MENUITEM "&Võta Tagasi\tCtrl+Z", CMD_UNDO
+        MENUITEM "&Võta tagasi\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Lõika\tCtrl+X", CMD_CUT
         MENUITEM "&Kopeeri\tCtrl+C", CMD_COPY
@@ -50,16 +50,16 @@ BEGIN
         MENUITEM "Kus&tuta\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "L&eia...\tCtrl+F", CMD_SEARCH
-        MENUITEM "Leia &Järgmine\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Leia &järgmine\tF3", CMD_SEARCH_NEXT
         MENUITEM "Asen&da...\tCtrl+H", CMD_REPLACE
-        MENUITEM "&Mine Asukohta...\tCtrl+G", CMD_GOTO
+        MENUITEM "&Mine...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Vali Kõ&ik\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Vali kõ&ik\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Aeg/Ku&upäev\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormaat"
     BEGIN
-        MENUITEM "&Sõna Mähkimine", CMD_WRAP
+        MENUITEM "&Sõna mähkimine", CMD_WRAP
         MENUITEM "&Font...", CMD_FONT
     END
     POPUP "&Vaade"
@@ -68,7 +68,7 @@ BEGIN
     END
     POPUP "&Abi"
     BEGIN
-        MENUITEM "&Vaata Abi", CMD_HELP_CONTENTS
+        MENUITEM "&Vaata abi", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "&Teave Notepad'ist", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
@@ -79,7 +79,7 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Lehe Ülesehitus"
+CAPTION "Lehe ülesehitus"
 BEGIN
     GROUPBOX "Eelvaade", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
@@ -108,7 +108,7 @@ BEGIN
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Abi", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Tühista", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 254, 170, 50, 14
     PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
 END
 
@@ -133,7 +133,7 @@ BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "Rea number:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
-    PUSHBUTTON "Tühista", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Loobu", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
@@ -143,7 +143,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "ReactOS Notepad v1.0\r\nAutoriõigus 1997,98 Marcel Baur\r\nAutoriõigus 2000 Mike McCormack\r\nAutoriõigus 2002 Sylvain Petreolle\r\nAutoriõigus 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Sulge", IDOK, 114, 149, 44, 15, WS_GROUP
+    DEFPUSHBUTTON "Sule", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
     EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -156,13 +156,13 @@ END
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
-    STRING_PAGESETUP_FOOTERVALUE "Page &s" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Lk &s" /* FIXME */
     STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
     STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
     STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Notepad"
-    STRING_ERROR "ERROR"
+    STRING_ERROR "TÕRGE"
     STRING_WARNING "HOIATUS"
     STRING_INFO "Informatsioon"
     STRING_UNTITLED "Nimetu"
@@ -188,7 +188,7 @@ käsu lõpetamiseks. \nSulge üks või enam rakendust, et suurendada \nvaba mäl
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Rida %d, veerg %d"
-    STRING_PRINTERROR "Ei suuda printida faili '%s'.\n\nVeendu et printer on sisse lülitatud ja korralikult seadistatud."
+    STRING_PRINTERROR "Ei suuda printida faili '%s'.\n\nVeendu et printer on sisse lülitatud ja korralikult sättestatud."
 
     STRING_TEXT_DOCUMENT "Tekstidokument"
 END
