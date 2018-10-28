@@ -103,3 +103,11 @@ FltGetDestinationFileNameInformation(
     *RetFileNameInformation = NULL;
     return 0;
 }
+
+VOID
+FLTAPI
+FltReleaseFileNameInformation(
+    _In_ PFLT_FILE_NAME_INFORMATION FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(FileNameInformation);
+}
