@@ -221,7 +221,7 @@ GetFileSystem(
         else
             FileSystemName = NULL;
     }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    else if (PartEntry->PartitionType == PARTITION_LINUX)
     {
         if (CheckExt2Format())
             FileSystemName = L"EXT2";
@@ -386,7 +386,7 @@ PreparePartitionForFormatting(
 #if 0
     else if (wcscmp(FileSystem->FileSystemName, L"EXT2") == 0)
     {
-        SetPartitionType(PartEntry, PARTITION_EXT2);
+        SetPartitionType(PartEntry, PARTITION_LINUX);
     }
     else if (wcscmp(FileSystem->FileSystemName, L"NTFS") == 0)
     {
