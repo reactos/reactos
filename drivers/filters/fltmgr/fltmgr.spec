@@ -18,4 +18,5 @@
  @ stdcall FltCreateFile(ptr ptr ptr long ptr ptr ptr long long long long ptr long long)
  @ stdcall FltDetachVolume(ptr ptr ptr)
  @ stdcall FltGetVolumeName(ptr ptr ptr)
+ @ stdcall FltGetFileNameInformation(ptr long ptr)
 
