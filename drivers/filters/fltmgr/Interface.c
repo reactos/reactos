@@ -29,6 +29,8 @@
       ((_devObj)->DeviceExtension != NULL))
 
 extern PDEVICE_OBJECT CommsDeviceObject;
+extern LIST_ENTRY FilterList;
+extern ERESOURCE FilterListLock;
 
 
 DRIVER_INITIALIZE DriverEntry;
@@ -2128,6 +2130,9 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     Status = IoRegisterFsRegistrationChange(DriverObject, FltpFsNotification);
     FLT_ASSERT(Status != STATUS_DEVICE_ALREADY_ATTACHED); // Windows checks for this, I'm not sure how it can happen. Needs investigation??
     if (!NT_SUCCESS(Status))  goto Cleanup;
+
+    InitializeListHead(&FilterList);
+    ExInitializeResourceLite(&FilterListLock);
 
     /* IoRegisterFsRegistrationChange isn't notified about the raw  file systems, so we attach to them manually */
     RtlInitUnicodeString(&ObjectName, L"\\Device\\RawDisk");
