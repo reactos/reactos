@@ -1,7 +1,6 @@
 
  @ stdcall FltRegisterFilter(ptr ptr ptr)
  @ stdcall FltUnregisterFilter(ptr)
- @ stdcall FltCloseCommunicationPort(ptr)
  @ stdcall FltStartFiltering(ptr)
  @ stdcall FltBuildDefaultSecurityDescriptor(ptr long)
  @ stdcall FltFreeSecurityDescriptor(ptr)
