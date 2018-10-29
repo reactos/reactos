@@ -250,7 +250,7 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
     Filter->OldDriverUnload = (PFLT_FILTER_UNLOAD_CALLBACK)DriverObject->DriverUnload;
 
     /* Check we opted not to have an unload routine, or if we want to stop the driver from being unloaded */
-    if (!FlagOn(Filter->Flags, FLTFL_REGISTRATION_DO_NOT_SUPPORT_SERVICE_STOP))
+    if (Registration->FilterUnloadCallback && !FlagOn(Filter->Flags, FLTFL_REGISTRATION_DO_NOT_SUPPORT_SERVICE_STOP))
     {
         DriverObject->DriverUnload = (PDRIVER_UNLOAD)FltpMiniFilterDriverUnload;
     }
