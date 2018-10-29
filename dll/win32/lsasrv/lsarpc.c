@@ -3874,7 +3874,7 @@ NTSTATUS WINAPI LsarCreateTrustedDomainEx2(
 
 /* Function 60 */
 NTSTATUS WINAPI CredrWrite(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3883,7 +3883,7 @@ NTSTATUS WINAPI CredrWrite(
 
 /* Function 61 */
 NTSTATUS WINAPI CredrRead(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3892,7 +3892,7 @@ NTSTATUS WINAPI CredrRead(
 
 /* Function 62 */
 NTSTATUS WINAPI CredrEnumerate(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3901,7 +3901,7 @@ NTSTATUS WINAPI CredrEnumerate(
 
 /* Function 63 */
 NTSTATUS WINAPI CredrWriteDomainCredentials(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3910,7 +3910,7 @@ NTSTATUS WINAPI CredrWriteDomainCredentials(
 
 /* Function 64 */
 NTSTATUS WINAPI CredrReadDomainCredentials(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3921,7 +3921,7 @@ NTSTATUS WINAPI CredrReadDomainCredentials(
 NTSTATUS
 WINAPI
 CredrDelete(
-    handle_t hBinding,
+    PLSAPR_SERVER_NAME SystemName,
     LPWSTR TargetName,
     DWORD Type,
     DWORD Flags)
@@ -3935,7 +3935,7 @@ CredrDelete(
 NTSTATUS
 WINAPI
 CredrGetTargetInfo(
-    handle_t hBinding,
+    PLSAPR_SERVER_NAME SystemName,
     LPWSTR TargetName,
     DWORD Flags,
     CREDPR_TARGET_INFORMATION *TargetInformation)
@@ -3949,7 +3949,7 @@ CredrGetTargetInfo(
 NTSTATUS
 WINAPI
 CredrProfileLoaded(
-    handle_t hBinding)
+    PLSAPR_SERVER_NAME SystemName)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3998,7 +3998,7 @@ NTSTATUS WINAPI LsarLookupNames3(
 NTSTATUS
 WINAPI
 CredrGetSessionTypes(
-    handle_t hBinding,
+    PLSAPR_SERVER_NAME SystemName,
     DWORD MaximumPersistCount,
     DWORD *MaximumPersist)
 {
@@ -4064,7 +4064,7 @@ NTSTATUS WINAPI LsarSetForestTrustInformation(
 NTSTATUS
 WINAPI
 CredrRename(
-    handle_t hBinding,
+    PLSAPR_SERVER_NAME SystemName,
     LPWSTR OldTargetName,
     LPWSTR NewTargetName,
     DWORD Type,

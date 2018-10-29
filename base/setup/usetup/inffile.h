@@ -21,59 +21,32 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/inffile.h
  * PURPOSE:         .inf files support functions
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
 
-#include <infcommon.h>
+#ifdef __REACTOS__
 
-#define SetupFindFirstLineW InfpFindFirstLineW
-#define SetupGetFieldCount InfGetFieldCount
-#define SetupGetIntField InfGetIntField
-#define SetupOpenInfFileW InfpOpenInfFileW
+// HACK around the fact INFLIB unconditionally defines MAX_INF_STRING_LENGTH.
+#undef MAX_INF_STRING_LENGTH
 
-#define INF_STYLE_WIN4 0x00000002
+/* Functions from the INFLIB library */
+// #include <infcommon.h>
+#include <infros.h>
 
-/* FIXME: this structure is the one used in inflib, not in setupapi
- * Delete it once we don't use inflib anymore */
-typedef struct _INFCONTEXT
-{
-  HINF Inf;
-  HINF CurrentInf;
-  UINT Section;
-  UINT Line;
-} INFCONTEXT;
-C_ASSERT(sizeof(INFCONTEXT) == 2 * sizeof(PVOID) + 2 * sizeof(UINT));
+#undef MAX_INF_STRING_LENGTH
+#define MAX_INF_STRING_LENGTH   1024
 
-BOOL
-WINAPI
-InfpFindFirstLineW(
-    IN HINF InfHandle,
-    IN PCWSTR Section,
-    IN PCWSTR Key,
-    IN OUT PINFCONTEXT Context);
+extern VOID InfSetHeap(PVOID Heap);
 
-HINF
-WINAPI
-InfpOpenInfFileW(
-    IN PCWSTR FileName,
-    IN PCWSTR InfClass,
-    IN DWORD InfStyle,
-    IN LCID LocaleId,
-    OUT PUINT ErrorLine);
+#endif /* __REACTOS__ */
 
-BOOLEAN
-INF_GetData(
-    IN PINFCONTEXT Context,
-    OUT PWCHAR *Key,
-    OUT PWCHAR *Data);
+// #include "../lib/utils/infsupp.h"
 
-BOOLEAN
-INF_GetDataField(
-    IN PINFCONTEXT Context,
-    IN ULONG FieldIndex,
-    OUT PWCHAR *Data);
+
+/* HELPER FUNCTIONS **********************************************************/
 
 HINF WINAPI
 INF_OpenBufferedFileA(

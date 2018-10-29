@@ -26,7 +26,13 @@
 
 #pragma once
 
-#include "../lib/genlist.h"
+// #include "../lib/utils/genlist.h"
+
+typedef NTSTATUS
+(NTAPI *PGET_ENTRY_DESCRIPTION)(
+    IN PGENERIC_LIST_ENTRY Entry,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize);
 
 typedef struct _GENERIC_LIST_UI
 {
@@ -34,18 +40,29 @@ typedef struct _GENERIC_LIST_UI
 
     PLIST_ENTRY FirstShown;
     PLIST_ENTRY LastShown;
+    PGENERIC_LIST_ENTRY BackupEntry;
+
+    PGET_ENTRY_DESCRIPTION GetEntryDescriptionProc;
 
     SHORT Left;
     SHORT Top;
     SHORT Right;
     SHORT Bottom;
     BOOL Redraw;
+
+    CHAR CurrentItemText[256];
+
 } GENERIC_LIST_UI, *PGENERIC_LIST_UI;
 
 VOID
 InitGenericListUi(
     IN OUT PGENERIC_LIST_UI ListUi,
-    IN PGENERIC_LIST List);
+    IN PGENERIC_LIST List,
+    IN PGET_ENTRY_DESCRIPTION GetEntryDescriptionProc);
+
+VOID
+RestoreGenericListUiState(
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 DrawGenericList(
@@ -54,6 +71,13 @@ DrawGenericList(
     IN SHORT Top,
     IN SHORT Right,
     IN SHORT Bottom);
+
+VOID
+DrawGenericListCurrentItem(
+    IN PGENERIC_LIST List,
+    IN PGET_ENTRY_DESCRIPTION GetEntryDescriptionProc,
+    IN SHORT Left,
+    IN SHORT Top);
 
 VOID
 ScrollDownGenericList(

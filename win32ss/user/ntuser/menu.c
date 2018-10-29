@@ -1657,8 +1657,11 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
     int h = rect->bottom - rect->top;
     int bmp_xoffset = 0;
     int left, top;
+    BOOL flat_menu;
     HBITMAP hbmToDraw = lpitem->hbmp;
     bmp = hbmToDraw;
+
+    UserSystemParametersInfo(SPI_GETFLATMENU, 0, &flat_menu, 0);
 
     /* Check if there is a magic menu item associated with this item */
     if (IS_MAGIC_BITMAP(hbmToDraw))
@@ -1778,6 +1781,13 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
     rop=((lpitem->fState & MF_HILITE) && !IS_MAGIC_BITMAP(hbmToDraw)) ? NOTSRCCOPY : SRCCOPY;
     if ((lpitem->fState & MF_HILITE) && lpitem->hbmp)
         IntGdiSetBkColor(hdc, IntGetSysColor(COLOR_HIGHLIGHT));
+    if (MenuBar &&
+        !flat_menu &&
+        (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
+    {
+        ++left;
+        ++top;
+    }
     NtGdiBitBlt( hdc, left, top, w, h, hdcMem, bmp_xoffset, 0, rop , 0, 0);
     IntGdiDeleteDC( hdcMem, FALSE );
 }
@@ -2099,7 +2109,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
     //TRACE("lprect %p %s\n", lprect, wine_dbgstr_rect( lprect));
     lppop->cxMenu  = lprect->right - lprect->left;
     lppop->cyMenu = 0;
-    maxY = lprect->top+1;
+    maxY = lprect->top;
     start = 0;
     helpPos = ~0U;
     lppop->cxTextAlign = 0;
@@ -2140,7 +2150,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
 	start = i; /* This works! */
     }
 
-    lprect->bottom = maxY;
+    lprect->bottom = maxY + 1;
     lppop->cyMenu = lprect->bottom - lprect->top;
 
     /* Flush right all items between the MF_RIGHTJUSTIFY and */
@@ -2325,10 +2335,15 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
         }
         else
         {
-            if(menuBar)
+            if (menuBar)
+            {
+                FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_MENU));
                 DrawEdge(hdc, &rect, BDR_SUNKENOUTER, BF_RECT);
+            }
             else
+            {
                 FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_HIGHLIGHT));
+            }
         }
     }
     else
@@ -2517,6 +2532,13 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                     break;
         }
 
+        if (menuBar &&
+            !flat_menu &&
+            (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
+        {
+            RECTL_vOffsetRect(&rect, +1, +1);
+        }
+
         if(lpitem->fState & MF_GRAYED)
         {
             if (!(lpitem->fState & MF_HILITE) )
@@ -2556,6 +2578,13 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                 IntGdiSetTextColor(hdc, IntGetSysColor(COLOR_BTNSHADOW));
             }
             DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat );
+        }
+
+        if (menuBar &&
+            !flat_menu &&
+            (lpitem->fState & (MF_HILITE | MF_GRAYED)) == MF_HILITE)
+        {
+            RECTL_vOffsetRect(&rect, -1, -1);
         }
 
         if (hfontOld)

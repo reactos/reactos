@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -315,6 +315,17 @@ AcpiEvAddressSpaceDispatch (
     {
         ACPI_EXCEPTION ((AE_INFO, Status, "Returned by Handler for [%s]",
             AcpiUtGetRegionName (RegionObj->Region.SpaceId)));
+
+        /*
+         * Special case for an EC timeout. These are seen so frequently
+         * that an additional error message is helpful
+         */
+        if ((RegionObj->Region.SpaceId == ACPI_ADR_SPACE_EC) &&
+            (Status == AE_TIME))
+        {
+            ACPI_ERROR ((AE_INFO,
+                "Timeout from EC hardware or EC device driver"));
+        }
     }
 
     if (!(HandlerDesc->AddressSpace.HandlerFlags &
@@ -719,6 +730,20 @@ AcpiEvExecuteRegMethods (
 
     ACPI_FUNCTION_TRACE (EvExecuteRegMethods);
 
+    /*
+     * These address spaces do not need a call to _REG, since the ACPI
+     * specification defines them as: "must always be accessible". Since
+     * they never change state (never become unavailable), no need to ever
+     * call _REG on them. Also, a DataTable is not a "real" address space,
+     * so do not call _REG. September 2018.
+     */
+    if ((SpaceId == ACPI_ADR_SPACE_SYSTEM_MEMORY) ||
+        (SpaceId == ACPI_ADR_SPACE_SYSTEM_IO) ||
+        (SpaceId == ACPI_ADR_SPACE_DATA_TABLE))
+    {
+        return_VOID;
+    }
+
     Info.SpaceId = SpaceId;
     Info.Function = Function;
     Info.RegRunCount = 0;
@@ -785,8 +810,8 @@ AcpiEvRegRun (
     }
 
     /*
-     * We only care about regions.and objects that are allowed to have address
-     * space handlers
+     * We only care about regions and objects that are allowed to have
+     * address space handlers
      */
     if ((Node->Type != ACPI_TYPE_REGION) &&
         (Node != AcpiGbl_RootNode))

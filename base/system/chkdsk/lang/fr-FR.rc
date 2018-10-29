@@ -1,0 +1,31 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Utilisation : %s [lecteur:] [-F] [-V] [-R] [-C] \n\n\
+[lecteur:]    Spécifie le lecteur à vérifier.\n\
+-F            Corrige les erreurs sur le disque.\n\
+-V            Affiche le chemin complet de chaque fichier sur le disque.\n\
+-R            Localise les secteurs défectueux et récupère les informations lisibles.\n\
+-C            Vérifie le lecteur seulement si nécessaire.\n\
+\n"
+
+    IDS_PERCENT_COMPL "%d pourcent(s) complété(s).\r"
+    IDS_FILE_SYSTEM "Le type du système de fichier est %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 par Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+Adaptation pour ReactOS en 1999 par Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Le volume est en cours d'utilisation et ne peut pas être verrouillé\n"
+    IDS_CHKDSK_FAIL "Chkdsk n'a pas pu terminer avec succès.\n\n"
+    IDS_NO_ENTRY_POINT "Impossible de trouver les points d'entrée FMIFS.\n\n"
+    IDS_BAD_ARGUMENT "Argument inconnu : %s\n"
+    IDS_NO_CURRENT_DIR "Impossible de récupérer le répertoire courant. Code d'erreur : "
+    IDS_NO_QUERY_VOL "Impossible de requête le volume. Code d'erreur : "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk ne peut pas s'exécuter car le volume est en cours d'utilisation par un autre processus.\n\n"
+END

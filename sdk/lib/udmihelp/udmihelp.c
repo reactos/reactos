@@ -151,7 +151,13 @@ GetSMBiosStringW(
     SIZE_T cChars;
 
     if (!DmiString)
+    {
+        if (cchBuf >= 1)
+        {
+            *pBuf = 0;
+        }
         return 0;
+    }
 
     cChars = MultiByteToWideChar(CP_OEMCP, 0, DmiString, -1, pBuf, cchBuf);
 

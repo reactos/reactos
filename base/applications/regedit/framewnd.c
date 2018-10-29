@@ -52,8 +52,8 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
     if (IsWindowVisible(hStatusBar))
     {
         SetupStatusBar(hWnd, TRUE);
-        GetClientRect(hStatusBar, &rt);
-        prect->bottom -= rt.bottom;
+        GetWindowRect(hStatusBar, &rt);
+        prect->bottom -= rt.bottom - rt.top;
     }
     MoveWindow(g_pChildWnd->hWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }

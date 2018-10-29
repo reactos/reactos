@@ -29,6 +29,9 @@ UNICODE_STRING ObpDosDevicesShortName =
     (PWSTR)&ObpDosDevicesShortNamePrefix
 };
 
+WCHAR ObpUnsecureGlobalNamesBuffer[128] = {0};
+ULONG ObpUnsecureGlobalNamesLength = sizeof(ObpUnsecureGlobalNamesBuffer);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
@@ -351,6 +354,56 @@ ObpDeleteNameCheck(IN PVOID Object)
         /* Remove the reference we added */
         ObpDereferenceNameInfo(ObjectNameInfo);
     }
+}
+
+BOOLEAN
+NTAPI
+ObpIsUnsecureName(IN PUNICODE_STRING ObjectName,
+                  IN BOOLEAN CaseInSensitive)
+{
+    BOOLEAN Unsecure;
+    PWSTR UnsecureBuffer;
+    UNICODE_STRING UnsecureName;
+
+    /* No unsecure names known, quit */
+    if (ObpUnsecureGlobalNamesBuffer[0] == UNICODE_NULL)
+    {
+        return FALSE;
+    }
+
+    /* By default, we have a secure name */
+    Unsecure = FALSE;
+    /* We will browse the whole string */
+    UnsecureBuffer = &ObpUnsecureGlobalNamesBuffer[0];
+    while (TRUE)
+    {
+        /* Initialize the unicode string */
+        RtlInitUnicodeString(&UnsecureName, UnsecureBuffer);
+        /* We're at the end of the multisz string! */
+        if (UnsecureName.Length == 0)
+        {
+            break;
+        }
+
+        /*
+         * Does the unsecure name prefix the object name?
+         * If so, that's an unsecure name, and return so
+         */
+        if (RtlPrefixUnicodeString(&UnsecureName, ObjectName, CaseInSensitive))
+        {
+            Unsecure = TRUE;
+            break;
+        }
+
+        /*
+         * Move to the next string. As a reminder, ObpUnsecureGlobalNamesBuffer is
+         * a multisz, so we move the string next to the current UNICODE_NULL char
+         */
+        UnsecureBuffer = (PWSTR)((ULONG_PTR)UnsecureBuffer + UnsecureName.Length + sizeof(UNICODE_NULL));
+    }
+
+    /* Return our findings */
+    return Unsecure;
 }
 
 NTSTATUS
@@ -761,11 +814,27 @@ ParseFromRoot:
                 /* Get the object header */
                 ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
 
-                /* FIXME: Check if this is a Section Object or Sym Link */
-                /* FIXME: If it is, then check if this isn't session 0 */
-                /* FIXME: If it isn't, check for SeCreateGlobalPrivilege */
-                /* FIXME: If privilege isn't there, check for unsecure name */
-                /* FIXME: If it isn't a known unsecure name, then fail */
+                /*
+                 * Deny object creation if:
+                 * That's a section object or a symbolic link
+                 * Which isn't in the same section that root directory
+                 * That doesn't have the SeCreateGlobalPrivilege
+                 * And that is not a known unsecure name
+                 */
+                if (RootDirectory->SessionId != -1)
+                {
+                    if (ObjectHeader->Type == MmSectionObjectType ||
+                        ObjectHeader->Type == ObpSymbolicLinkObjectType)
+                    {
+                        if (RootDirectory->SessionId != PsGetCurrentProcessSessionId() &&
+                            !SeSinglePrivilegeCheck(SeCreateGlobalPrivilege, AccessCheckMode) &&
+                            !ObpIsUnsecureName(&ComponentName, BooleanFlagOn(Attributes, OBJ_CASE_INSENSITIVE)))
+                        {
+                            Status = STATUS_ACCESS_DENIED;
+                            break;
+                        }
+                    }
+                }
 
                 /* Create Object Name */
                 NewName = ExAllocatePoolWithTag(PagedPool,

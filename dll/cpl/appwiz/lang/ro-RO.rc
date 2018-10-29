@@ -85,6 +85,7 @@ BEGIN
     IDS_INSTALLING "În curs de instalare…"
     IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
     IDS_NEW_INTERNET_SHORTCUT "Creare scurtătură la Internet"
+    IDS_DWL_FAILED "Descărcarea pachetului Gecko a eșuat. Asigurați-vă că aveți conexiune la internet pentru a putea descărca. Asistentul va continua fără a instala pachetul Gecko."
     IDS_CANTMAKEINETSHORTCUT "Eșec în crearea scurtăturii la Internet."
     IDS_CANTMAKESHORTCUT "Eșec în crearea scurtăturii."
 END

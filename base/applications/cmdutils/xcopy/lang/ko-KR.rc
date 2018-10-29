@@ -50,6 +50,7 @@ Where:\n\
 [/A]  오직 압축 속성이 설정되어있는 파일만 복사\n\
 [/M]  오직 압축 속성을 제거하면서  압축 속성이 설정되어있는\n\
 \t파일만 복사\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] 지정된 날짜 후에 수정되거나 새로운 파일 복사.\n\
 \t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다\n\
 \t\t대상이 오래된 것만 복사\n\n"

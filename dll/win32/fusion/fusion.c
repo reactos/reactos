@@ -144,9 +144,9 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
         case ASM_CACHE_GAC:
         {
             strcpyW(path + len, assembly);
-            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            len += ARRAY_SIZE(assembly) - 1;
             strcpyW(path + len, gac);
-            len += sizeof(gac)/sizeof(WCHAR) - 1;
+            len += ARRAY_SIZE(gac) - 1;
             break;
         }
         case ASM_CACHE_DOWNLOAD:
@@ -156,13 +156,13 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
         }
         case ASM_CACHE_ROOT:
             strcpyW(path + len, assembly);
-            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            len += ARRAY_SIZE(assembly) - 1;
             break;
         case ASM_CACHE_ROOT_EX:
             strcpyW(path + len, dotnet);
-            len += sizeof(dotnet)/sizeof(WCHAR) - 1;
+            len += ARRAY_SIZE(dotnet) - 1;
             strcpyW(path + len, assembly);
-            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            len += ARRAY_SIZE(assembly) - 1;
             break;
         default:
             return E_INVALIDARG;

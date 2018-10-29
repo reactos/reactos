@@ -385,7 +385,7 @@ static HRESULT WINAPI EnumOLEVERB_Next(IEnumOLEVERB *iface, ULONG celt, OLEVERB 
     if(pceltFetched)
         *pceltFetched = 0;
 
-    if(This->iter == sizeof(verbs)/sizeof(*verbs))
+    if(This->iter == ARRAY_SIZE(verbs))
         return S_FALSE;
 
     if(celt)

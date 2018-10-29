@@ -27,38 +27,44 @@
 #ifndef _REACTOS_PCH_
 #define _REACTOS_PCH_
 
+/* C Headers */
+#include <stdlib.h>
 #include <stdarg.h>
+#include <tchar.h>
+
+/* PSDK/NDK */
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include <tchar.h>
-#include <setupapi.h>
+
+#include <strsafe.h>
+
+#include <commctrl.h>
+/**/#include <setupapi.h>/**/
 #include <devguid.h>
-#include <wine/unicode.h>
+
+#define NTOS_MODE_USER
+#include <ndk/cmtypes.h> // For CM_DISK stuff
+#include <ndk/iofuncs.h> // For NtCreate/OpenFile
+#include <ndk/rtlfuncs.h>
 
 
-typedef struct _LANG
-{
-    TCHAR LangId[9];
-    TCHAR LangName[128];
-} LANG, *PLANG;
+/* Setup library headers */
+// #include <reactos/rosioctl.h>
+#include <../lib/setuplib.h>
 
+#if 0
 typedef struct _KBLAYOUT
 {
     TCHAR LayoutId[9];
     TCHAR LayoutName[128];
     TCHAR DllName[128];
 } KBLAYOUT, *PKBLAYOUT;
+#endif
 
-
-// generic entries with simple 1:1 mapping
-typedef struct _GENENTRY
-{
-    TCHAR Id[24];
-    TCHAR Value[128];
-} GENENTRY, *PGENENTRY;
 
 typedef struct _SETUPDATA
 {
@@ -71,34 +77,38 @@ typedef struct _SETUPDATA
     TCHAR szAbortMessage[512];
     TCHAR szAbortTitle[64];
 
-    // Settings
-    LONG DestDiskNumber; // physical disk
-    LONG DestPartNumber; // partition on disk
+    USETUP_DATA USetupData;
+
+    BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
+
+    PPARTLIST PartitionList;
+    PNTOS_INSTALLATION CurrentInstallation;
+    PGENERIC_LIST NtOsInstallsList;
+
+
+    /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
     LONG FSType; // file system type on partition 
-    LONG MBRInstallType; // install bootloader
     LONG FormatPart; // type of format the partition
+
     LONG SelectedLangId; // selected language (table index)
     LONG SelectedKBLayout; // selected keyboard layout (table index)
-    TCHAR InstallDir[MAX_PATH]; // installation directory on hdd
     LONG SelectedComputer; // selected computer type (table index)
     LONG SelectedDisplay; // selected display type (table index)
     LONG SelectedKeyboard; // selected keyboard type (table index)
-    BOOLEAN RepairUpdateFlag; // flag for update/repair an installed reactos
-    // txtsetup.sif data
-    LONG DefaultLang; // default language (table index)
-    PLANG pLanguages;
-    LONG LangCount;
-    LONG DefaultKBLayout; // default keyboard layout (table index)
-    PKBLAYOUT pKbLayouts;
-    LONG KbLayoutCount;
-    PGENENTRY pComputers;
-    LONG CompCount;
-    PGENENTRY pDisplays;
-    LONG DispCount;
-    PGENENTRY pKeyboards;
-    LONG KeybCount;
+
+    /* txtsetup.sif data */
+    // LONG DefaultLang; // default language (table index)
+    // LONG DefaultKBLayout; // default keyboard layout (table index)
+    PCWSTR SelectedLanguageId;
+    WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
+    WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
+
 } SETUPDATA, *PSETUPDATA;
+
+extern HANDLE ProcessHeap;
+extern BOOLEAN IsUnattendedSetup;
+
 
 typedef struct _IMGINFO
 {
@@ -108,8 +118,28 @@ typedef struct _IMGINFO
 } IMGINFO, *PIMGINFO;
 
 
+/*
+ * Attempts to convert a pure NT file path into a corresponding Win32 path.
+ * Adapted from GetInstallSourceWin32() in dll/win32/syssetup/wizard.c
+ */
+BOOL
+ConvertNtPathToWin32Path(
+    OUT PWSTR pwszPath,
+    IN DWORD cchPathMax,
+    IN PCWSTR pwszNTPath);
+
 
 /* drivepage.c */
+
+BOOL
+CreateListViewColumns(
+    IN HINSTANCE hInstance,
+    IN HWND hWndListView,
+    IN const UINT* pIDs,
+    IN const INT* pColsWidth,
+    IN const INT* pColsAlign,
+    IN UINT nNumOfColumns);
+
 INT_PTR
 CALLBACK
 DriveDlgProc(

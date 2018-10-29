@@ -49,6 +49,7 @@ hvor:\n\
 [/C]  Fortsæt selv om det opstår fejl under kopieringen\n\
 [/A]  Kopier ikke filer som er markeret som arkiv\n\
 [/M]  Kopier kun filer som er markeret som akriv; fjerner denne markering\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-å] Kopier kun nye filer eller dem som er ændret efter\n\
 \t\tden opgivne dato.\n\
 \t\tHvis ingen dato opgives kopieres kun de filer hvor\n\

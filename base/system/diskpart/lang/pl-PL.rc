@@ -1,0 +1,391 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_HEADER "ReactOS DiskPart"
+    IDS_APP_USAGE "\nInterpreter partycjonowania dysku.\n\n\
+Sposób użycia: DISKPART [/S nazwa_pliku] [/T limit_czasu] [/?]\n\n\
+/S nazwa_pliku\tUruchamia podany skrypt.\n\
+/T limit_czasu\tZastosuj limit czasu w sekundach, aby zapobiec nakładaniu się funkcji programu DiskPart.\n\
+/?\t\tWyświetla tę pomoc.\n\n"
+    IDS_APP_LICENSE "Na licencji GNU GPLv2\n"
+    IDS_APP_CURR_COMPUTER "Na komputerze: %s\n\n"
+    IDS_APP_LEAVING "\nOpuszczanie programu DiskPart...\n"
+    IDS_APP_PROMPT "DISKPART> "
+END
+
+/* Disk Information Labels */
+STRINGTABLE
+BEGIN
+    IDS_DETAIL_INFO_DISK_ID "Dysk"
+    IDS_DETAIL_INFO_TYPE "Typ"
+    IDS_DETAIL_INFO_STATUS "Stan"
+    IDS_DETAIL_INFO_PATH "Ścieżka"
+    IDS_DETAIL_INFO_TARGET "Docelowy"
+    IDS_DETAIL_INFO_LUN_ID "Identyfikator LUN"
+    IDS_DETAIL_INFO_LOC_PATH "Ścieżka lokalizacji"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Aktualny stan Read-only"
+    IDS_DETAIL_INFO_RO "Tylko do odczytu"
+    IDS_DETAIL_INFO_BOOT_DSK "Dysk rozruchowy"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Dysk pliku stronicowania"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Dysk pliku hibernacji"
+    IDS_DETAIL_INFO_CRASH_DSK "Dysk zrzutu awarii systemu"
+    IDS_DETAIL_INFO_CLST_DSK "Dysk klastrowany"
+END
+
+/* Detail header titles */
+STRINGTABLE
+BEGIN
+    IDS_LIST_DISK_HEAD "\nDysk ###  Stan        Rozmiar  Wolne    Dyn  Gpt\n"
+    IDS_LIST_DISK_LINE "  --------  ----------  -------  -------  ---  ---\n"
+    IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
+    IDS_LIST_PARTITION_HEAD "\nPartycja       Typ               Rozmiar  Przesunięcie\n"
+    IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  ------------\n"
+    IDS_LIST_PARTITION_FORMAT "%c Partycja    %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_NO_DISK "\nNie wybrano dysku do wyświetlenia partycji.\nWybierz dysk i spróbuj ponownie.\n\n"
+    IDS_LIST_VOLUME_HEAD "  Wolumin ###  Lit  Etykieta\n"
+END
+
+/* RESCAN command string */
+STRINGTABLE
+BEGIN
+    IDS_RESCAN_START "\nCzekaj, aż program DiskPart przeskanuje konfigurację...\n"
+    IDS_RESCAN_END "\nProgram DiskPart zakończył skanowanie tej konfiguracji.\n\n"
+END
+
+/* Select command strings */
+STRINGTABLE
+BEGIN
+    IDS_SELECT_NO_DISK "\nNie wybrano dysku.\nWybierz dysk i spróbuj ponownie.\n\n"
+    IDS_SELECT_DISK "\nObecnie wybranym dyskiem jest dysk %lu.\n\n"
+    IDS_SELECT_DISK_INVALID "\nNieprawidłowy dysk.\n\n"
+    IDS_SELECT_NO_PARTITION "\nNie wybrano partycji.\nWybierz partycję i spróbuj ponownie.\n\n"
+    IDS_SELECT_PARTITION "\nObecnie wybraną partycją jest partycja %lu.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nNie wybrano dysku do ustawienia partycji\nWybierz dysk i spróbuj ponownie.\n\n"
+    IDS_SELECT_PARTITION_INVALID "\nNieprawidłowa partycja.\n\n"
+    IDS_SELECT_NO_VOLUME "\nNie wybrano woluminu.\nWybierz dysk i spróbuj ponownie.\n\n"
+    IDS_SELECT_VOLUME "\nObecnie wybranym woluminem jest wolumin %lu.\n\n"
+END
+
+/* Disk Status */
+STRINGTABLE
+BEGIN
+    IDS_STATUS_YES "Tak"
+    IDS_STATUS_NO "Nie"
+    IDS_STATUS_DISK_HEALTHY "Zdrowy"
+    IDS_STATUS_DISK_SICK "Chory"
+    IDS_STATUS_UNAVAILABLE "NIEDOSTĘPNY"
+    IDS_STATUS_ONLINE "Online"
+    IDS_STATUS_OFFLINE "Offline"
+    IDS_STATUS_NO_MEDIA "Brak nośnika"
+END
+
+/* CMD Messages for commands */
+STRINGTABLE
+BEGIN
+    IDS_MSG_ARG_SYNTAX_ERROR "Argument(y) określone dla tego polecenia są nieprawidłowe.\nAby uzyskać więcej infromacji dotyczących tego polecenia, wpisz:"
+END
+
+/* Help Command Descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DESC_ACTIVE "ACTIVE\t\t- Oznacza bieżącą partycję podstawową jako aktywną.\n"
+    IDS_HELP_CMD_DESC_ADD "ADD\t\t- Dodaje dublowanie do woluminu prostego.\n"
+    IDS_HELP_CMD_DESC_ASSIGN "ASSIGN\t\t- Przypisz literę dysku lub punkt instalacji dla wybranego\n\t\t  woluminu.\n"
+    IDS_HELP_CMD_DESC_ATTACH "ATTACH\t\t- Dołącza wirtualny dysk.\n"
+    IDS_HELP_CMD_DESC_ATTRIBUTES "ATTRIBUTES\t- Manipuluje atrybutami woluminu lub dysku.\n"
+    IDS_HELP_CMD_DESC_AUTOMOUNT "AUTOMOUNT\t- Włącza i wyłącza automatyczne instalowanie woluminów\n\t\t  podstawowych.\n"
+    IDS_HELP_CMD_DESC_BREAK "BREAK\t\t- Dzieli zestaw dublowania.\n"
+    IDS_HELP_CMD_DESC_CLEAN "CLEAN\t\t- Usuń informacje o konfiguracji lub wszystkie informacje\n\t\t  z dysku.\n"
+    IDS_HELP_CMD_DESC_COMPACT "COMPACT\t\t- Próbuje zmniejszyć fizyczny rozmiaru pliku.\n"
+    IDS_HELP_CMD_DESC_CONVERT "CONVERT\t\t- Konwertuje między różnymi formatami dysków.\n"
+    IDS_HELP_CMD_DESC_CREATE "CREATE\t\t- Tworzy wolumin, partycję, lub dysk wirtualny.\n"
+    IDS_HELP_CMD_DESC_DELETE "DELETE\t\t- Usuń obiekt.\n"
+    IDS_HELP_CMD_DESC_DETACH "DETACH\t\t- Odłącza wirtualny dysk.\n"
+    IDS_HELP_CMD_DESC_DETAIL "DETAIL\t\t- Podaj szczegółowe informacje o obiekcie.\n"
+    IDS_HELP_CMD_DESC_EXIT "EXIT\t\t- Zakończ program DiskPart.\n"
+    IDS_HELP_CMD_DESC_EXPAND "EXPAND\t\t- Zwiększa maksymalny rozmiar dysku wirtualnego.\n"
+    IDS_HELP_CMD_DESC_EXTEND "EXTEND\t\t- Rozszerz wolumin.\n"
+    IDS_HELP_CMD_DESC_FS "FILESYSTEMS\t- Drukuj obecne i obsługiwane systemy plików na tym woluminie.\n"
+    IDS_HELP_CMD_DESC_FORMAT "FORMAT\t\t- Formatuje wolumin lub partycję.\n"
+    IDS_HELP_CMD_DESC_GPT "GPT\t\t- Przypisuje atrybuty do wybranej partycji GPT.\n"
+    IDS_HELP_CMD_DESC_HELP "HELP\t\t- Drukuje listę poleceń.\n"
+    IDS_HELP_CMD_DESC_IMPORT "IMPORT\t\t- Importuje grupę dysków.\n"
+    IDS_HELP_CMD_DESC_INACTIVE "INACTIVE\t- Oznacza bieżącą partycję podstawową jako nieaktywną.\n"
+    IDS_HELP_CMD_DESC_LIST "LIST\t\t- Drukuje listę obiektów.\n"
+    IDS_HELP_CMD_DESC_MERGE "MERGE\t\t- Scala dysk podrzędny z dyskami nadrzędnymi.\n"
+    IDS_HELP_CMD_DESC_OFFLINE "OFFLINE\t\t- Przęłącz do trybu offline obiekt będący w trybie online.\n"
+    IDS_HELP_CMD_DESC_ONLINE "ONLINE\t\t- Przęłącz do trybu online obiekt będący w trybie offline.\n"
+    IDS_HELP_CMD_DESC_RECOVER "RECOVER\t\t- Odświeża stan wszystkich dysków w nieprawidłowym pakiecie,\n\t\t  i ponownie synchronizuje woluminy RAID5 i woluminy dublowane\n\t\t  które mają nieaktualne dane plex lub parzystości.\n"
+    IDS_HELP_CMD_DESC_REM "REM\t\t- Nie wykonuje żadnej akcji. Służy do dodawania komentarzy\n\t\t  w skryptach..\n"
+    IDS_HELP_CMD_DESC_REMOVE "REMOVE\t\t- Usuń literę dysku lub przypisanie punktu instalacji.\n"
+    IDS_HELP_CMD_DESC_REPAIR "REPAIR\t\t- Naprawia wolumin RAID-5 z nieprawidłowym członkiem.\n"
+    IDS_HELP_CMD_DESC_RESCAN "RESCAN\t\t- Ponownie skanuj komputer w poszukiwaniu dysków i woluminów.\n"
+    IDS_HELP_CMD_DESC_RETAIN "RETAIN\t\t- Umieść zachowaną partycję w woluminie prostym.\n"
+    IDS_HELP_CMD_DESC_SAN "SAN\t\t- Wyświetla lub ustawia zasady SAN dla aktualnie uruchomionego\n\t\t  systemu operacyjnego.\n"
+    IDS_HELP_CMD_DESC_SELECT "SELECT\t\t- Przenieś fokus na jeden z obiektów.\n"
+    IDS_HELP_CMD_DESC_SETID "SETID\t\t- Zmien typ partycji.\n"
+    IDS_HELP_CMD_DESC_SHRINK "SHRINK\t\t- Zmniejsz rozmiar wybranego woluminu.\n"
+    IDS_HELP_CMD_DESC_UNIQUEID "UNIQUEID\t- Wyświetla lub ustawia identyfikator tabeli partycji GUID (GPT)\n\t\t  lub sygnaturę głównego rekordu rozruchowego (MBR)."
+END
+
+/* Common Error Messages */
+STRINGTABLE
+BEGIN
+    IDS_ERROR_MSG_NO_SCRIPT "Błąd podczas otwierania skryptu: %s\n"
+    IDS_ERROR_MSG_BAD_ARG "Błąd przetwarzania argumentu: %s\n"
+    IDS_ERROR_INVALID_ARGS "Nieprawidłowe argumenty\n"
+END
+
+/* Active help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ACTIVE "\n\
+<Add active command help text here>\n\n"
+END
+
+/* Add help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ADD "\n\
+<Add add command help text here>\n\n"
+END
+
+/* Assign help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ASSIGN "\n\
+<Add assign command help text here>\n\n"
+END
+
+/* Attach help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ATTACH "\n\
+<Add attach command help text here>\n\n"
+END
+
+/* Attributes Command Messages */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ATTRIBUTES "\n\
+<Add attributes command help text here>\n\n"
+END
+
+/* Automount help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_AUTOMOUNT "\n\
+<Add automount command help text here>\n\n"
+END
+
+/* Break help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_BREAK "\n\
+<Add break command help text here>\n\n"
+END
+
+/* Clean help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CLEAN "\n\
+<Add clean command help text here>\n\n"
+END
+
+/* Compact help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_COMPACT "\n\
+<Add compact command help text here>\n\n"
+END
+
+/* Convert help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CONVERT "\n\
+<Add convert command help text here>\n\n"
+END
+
+/* Convert help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_CREATE "\n\
+<Add create command help text here>\n\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DELETE "\n\
+<Add delete command help text here>\n\n"
+END
+
+/* Delete help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DETAIL "\n\
+<Add detail command help text here>\n\n"
+END
+
+/* Detach help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_DETACH "\n\
+<Add detach command help text here>\n\n"
+END
+
+/* Expand help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_EXPAND "\n\
+<Add expand command help text here>\n\n"
+END
+
+/* Extend help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_EXTEND "\n\
+<Add extend command help text here>\n\n"
+END
+
+/* Filesystems help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_FILESYSTEMS "\n\
+<Add filesystems command help text here>\n\n"
+END
+
+/* Format help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_FORMAT "\n\
+<Add format command help text here>\n\n"
+END
+
+/* GPT help description */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_GPT "\n\
+<Add gpt command help text here>\n\n"
+END
+
+/* Help help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_HELP "\n\
+<Add help command help text here>\n\n"
+END
+
+/* Import help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_IMPORT "\n\
+<Add import command help text here>\n\n"
+END
+
+/* Inactive help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_INACTIVE "\n\
+<Add inactive command help text here>\n\n"
+END
+
+/* List help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_LIST "\n\
+<Add list command help text here>\n\n"
+END
+
+/* Merge help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_MERGE "\n\
+<Add merge command help text here>\n\n"
+END
+
+/* Offline help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_OFFLINE "\n\
+<Add OFFLINE command help text here>\n\n"
+END
+
+/* Online help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_ONLINE "\n\
+<Add ONLINE command help text here>\n\n"
+END
+
+/* Recover help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RECOVER "\n\
+<Add RECOVER command help text here>\n\n"
+END
+
+/* Remove help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_REMOVE "\n\
+<Add REMOVE command help text here>\n\n"
+END
+
+/* Repair help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_REPAIR "\n\
+<Add REPAIR command help text here>\n\n"
+END
+
+/* Rescan help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RESCAN "\n\
+<Add RESCAN command help text here>\n\n"
+END
+
+/* Retain help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_RETAIN "\n\
+<Add RETAIN command help text here>\n\n"
+END
+
+/* San help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SAN "\n\
+<Add SAN command help text here>\n\n"
+END
+
+/* Select help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SELECT "\n\
+<Add SELECT command help text here>\n\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SETID "\n\
+<Add SETID command help text here>\n\n"
+END
+
+/* Setid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_SHRINK "\n\
+<Add SHRINK command help text here>\n\n"
+END
+
+/* Uniqueid help descriptions */
+STRINGTABLE
+BEGIN
+    IDS_HELP_CMD_UNIQUEID "\n\
+<Add UNIQUEID command help text here>\n\n"
+END

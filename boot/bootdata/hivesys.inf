@@ -386,7 +386,13 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955A
 
 ; Class Co-Installers
 HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E965-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E967-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96A-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96B-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96F-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E97B-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E97D-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
 
 
 ; Default computer name settings
@@ -1483,6 +1489,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Windows",0x0
 ; This is an empty App Compat cache
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
   fe,0f,dc,ba,00,00,00,00
+
+; Unsecure objects names
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\kernel","ObUnsecureGlobalNames",0x00010000,"netfxcustomerfcounters.1.0","SharedPerfIPCBlock","Cor_Private_IPCBlock","Cor_Public_IPCBlock_"
 
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\WOW",,0x00000012

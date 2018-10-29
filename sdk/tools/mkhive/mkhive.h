@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau
  */
 
@@ -32,17 +32,23 @@
 
 #include <typedefs.h>
 
+#ifndef _MSC_VER
+#ifndef _countof
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+#endif
+
 // Definitions copied from <ntstatus.h>
 // We only want to include host headers, so we define them manually
 #define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
 #define STATUS_UNSUCCESSFUL              ((NTSTATUS)0xC0000001)
-#define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
-#define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000D)
-#define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
-#define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
+// #define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
+// #define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000D)
+// #define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
+// #define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
 #define STATUS_OBJECT_NAME_NOT_FOUND     ((NTSTATUS)0xC0000034)
-#define STATUS_INVALID_PARAMETER_2       ((NTSTATUS)0xC00000F0)
-#define STATUS_BUFFER_OVERFLOW           ((NTSTATUS)0x80000005)
+// #define STATUS_INVALID_PARAMETER_2       ((NTSTATUS)0xC00000F0)
+// #define STATUS_BUFFER_OVERFLOW           ((NTSTATUS)0x80000005)
 
 unsigned char BitScanForward(ULONG * Index, unsigned long Mask);
 unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
@@ -61,6 +67,7 @@ VOID NTAPI
 RtlInitUnicodeString(
     IN OUT PUNICODE_STRING DestinationString,
     IN PCWSTR SourceString);
+
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
     IN WCHAR Source);
@@ -82,6 +89,10 @@ RegSetValueExW(
     IN ULONG dwType,
     IN const UCHAR* lpData,
     IN ULONG cbData);
+
+LONG WINAPI
+RegCloseKey(
+    IN HKEY hKey);
 
 LONG WINAPI
 RegDeleteKeyW(

@@ -56,6 +56,104 @@ typedef struct _FILEQUEUEHEADER
 
 /* FUNCTIONS ****************************************************************/
 
+static BOOLEAN HasCurrentCabinet = FALSE;
+static WCHAR CurrentCabinetName[MAX_PATH];
+static CAB_SEARCH Search;
+
+// HACK: Temporary compatibility code.
+#if 1
+    static CABINET_CONTEXT CabinetContext;
+    #define CabinetInitialize() (CabinetInitialize(&CabinetContext))
+    #define CabinetSetEventHandlers(a,b,c) (CabinetSetEventHandlers(&CabinetContext,(a),(b),(c)))
+    #define CabinetSetCabinetName(a) (CabinetSetCabinetName(&CabinetContext,(a)))
+    #define CabinetOpen() (CabinetOpen(&CabinetContext))
+    #define CabinetGetCabinetName() (CabinetGetCabinetName(&CabinetContext))
+    #define CabinetGetCabinetReservedArea(a) (CabinetGetCabinetReservedArea(&CabinetContext,(a)))
+    #define CabinetFindNextFileSequential(a,b) (CabinetFindNextFileSequential(&CabinetContext,(a),(b)))
+    #define CabinetFindFirst(a,b) (CabinetFindFirst(&CabinetContext,(a),(b)))
+    #define CabinetSetDestinationPath(a) (CabinetSetDestinationPath(&CabinetContext,(a)))
+    #define CabinetExtractFile(a) (CabinetExtractFile(&CabinetContext,(a)))
+    #define CabinetCleanup() (CabinetCleanup(&CabinetContext))
+#endif
+
+NTSTATUS
+SetupExtractFile(
+    PWCHAR CabinetFileName,
+    PWCHAR SourceFileName,
+    PWCHAR DestinationPathName)
+{
+    ULONG CabStatus;
+
+    DPRINT("SetupExtractFile(CabinetFileName %S, SourceFileName %S, DestinationPathName %S)\n",
+           CabinetFileName, SourceFileName, DestinationPathName);
+
+    if (HasCurrentCabinet)
+    {
+        DPRINT("CurrentCabinetName: %S\n", CurrentCabinetName);
+    }
+
+    if ((HasCurrentCabinet) && (wcscmp(CabinetFileName, CurrentCabinetName) == 0))
+    {
+        DPRINT("Using same cabinet as last time\n");
+
+        /* Use our last location because the files should be sequential */
+        CabStatus = CabinetFindNextFileSequential(SourceFileName, &Search);
+        if (CabStatus != CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Sequential miss on file: %S\n", SourceFileName);
+
+            /* Looks like we got unlucky */
+            CabStatus = CabinetFindFirst(SourceFileName, &Search);
+        }
+    }
+    else
+    {
+        DPRINT("Using new cabinet\n");
+
+        if (HasCurrentCabinet)
+        {
+            CabinetCleanup();
+        }
+
+        wcscpy(CurrentCabinetName, CabinetFileName);
+
+        CabinetInitialize();
+        CabinetSetEventHandlers(NULL, NULL, NULL);
+        CabinetSetCabinetName(CabinetFileName);
+
+        CabStatus = CabinetOpen();
+        if (CabStatus == CAB_STATUS_SUCCESS)
+        {
+            DPRINT("Opened cabinet %S\n", CabinetGetCabinetName());
+            HasCurrentCabinet = TRUE;
+        }
+        else
+        {
+            DPRINT("Cannot open cabinet (%d)\n", CabStatus);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* We have to start at the beginning here */
+        CabStatus = CabinetFindFirst(SourceFileName, &Search);
+    }
+
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT1("Unable to find '%S' in cabinet '%S'\n", SourceFileName, CabinetGetCabinetName());
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CabinetSetDestinationPath(DestinationPathName);
+    CabStatus = CabinetExtractFile(&Search);
+    if (CabStatus != CAB_STATUS_SUCCESS)
+    {
+        DPRINT("Cannot extract file %S (%d)\n", SourceFileName, CabStatus);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 HSPFILEQ
 WINAPI
 SetupOpenFileQueue(VOID)
@@ -156,7 +254,9 @@ SetupQueueCopy(
         SourceRootPath == NULL ||
         SourceFilename == NULL ||
         TargetDirectory == NULL)
+    {
         return FALSE;
+    }
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
@@ -184,7 +284,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourceCabinet, SourceCabinet, Length);
-        Entry->SourceCabinet[Length] = (WCHAR)0;
+        Entry->SourceCabinet[Length] = UNICODE_NULL;
     }
     else
     {
@@ -208,7 +308,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceRootPath, SourceRootPath, Length);
-    Entry->SourceRootPath[Length] = (WCHAR)0;
+    Entry->SourceRootPath[Length] = UNICODE_NULL;
 
     /* Copy source path */
     if (SourcePath != NULL)
@@ -232,7 +332,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourcePath, SourcePath, Length);
-        Entry->SourcePath[Length] = (WCHAR)0;
+        Entry->SourcePath[Length] = UNICODE_NULL;
     }
 
     /* Copy source file name */
@@ -254,7 +354,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceFilename, SourceFilename, Length);
-    Entry->SourceFilename[Length] = (WCHAR)0;
+    Entry->SourceFilename[Length] = UNICODE_NULL;
 
     /* Copy target directory */
     Length = wcslen(TargetDirectory);
@@ -278,7 +378,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->TargetDirectory, TargetDirectory, Length);
-    Entry->TargetDirectory[Length] = (WCHAR)0;
+    Entry->TargetDirectory[Length] = UNICODE_NULL;
 
     /* Copy optional target filename */
     if (TargetFilename != NULL)
@@ -303,7 +403,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->TargetFilename, TargetFilename, Length);
-        Entry->TargetFilename[Length] = (WCHAR)0;
+        Entry->TargetFilename[Length] = UNICODE_NULL;
     }
 
     /* Append queue entry */
@@ -427,7 +527,7 @@ SetupCommitFileQueueW(
         else
         {
             /* Copy the file */
-            Status = SetupCopyFile(FileSrcPath, FileDstPath);
+            Status = SetupCopyFile(FileSrcPath, FileDstPath, FALSE);
         }
 
         if (!NT_SUCCESS(Status))

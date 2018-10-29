@@ -70,7 +70,7 @@ WORKSTATION   Displays information about the configuration of the\n\
                         appears on displays listings of servers. Note that\n\
                         hiding a serverdoes not alter the permissions\n\
                         on that server. The default is NO.\n\n"
-    IDS_CONFIG_SERVER_HELP_5 "To display the current configuration for the Servr service,\n\
+    IDS_CONFIG_SERVER_HELP_5 "To display the current configuration for the Server service,\n\
 type NET CONFIG SERVER without parameters.\n\n"
     IDS_CONTINUE_SYNTAX "NET CONTINUE service\n\n"
     IDS_CONTINUE_HELP_1 "NET CONTINUE reactivates a service that has been suspended by NET PAUSE.\n\n"

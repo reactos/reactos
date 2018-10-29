@@ -6,6 +6,8 @@
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+#pragma once
+
 #include <fmifs/fmifs.h>
 
 typedef struct _FILE_SYSTEM

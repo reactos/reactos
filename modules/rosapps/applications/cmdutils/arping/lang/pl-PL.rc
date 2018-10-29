@@ -1,0 +1,25 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nSposób użycia: arping [-t] [-n liczba] -s źródłowy-adres-ip host-docelowy\n\n\
+Opcje:\n\
+    -t             Wysyłaj sygnał ping do określonego hosta aż do zatrzymania.\n\
+                   Aby zatrzymać - wciśnij Control-C.\n\
+    -n liczba      Liczba wysyłanych sond.\n\
+    -s             Użyj tego źródłowego adresu IP.\n\n\0"
+    IDS_BAD_OPTION_FORMAT "Nieprawidłowy format opcji %1.\n\0"
+    IDS_BAD_OPTION "Zła opcja %1.\n\0"
+    IDS_BAD_PARAMETER "Zły parametr %1.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Należy określić nazwę lub adres IP hosta docelowego.\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Nie można zainicjować winsock dll.\n\0"
+    IDS_UNKNOWN_HOST "Nieznany host %1.\n\0"
+    IDS_SRC_MUST_BE_SPECIFIED "Należy określić adres IP hosta źródłowego.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Zła wartość dla opcji -n, prawidłowy zakres wynosi od 1 do %1!u!.\n\0"
+    IDS_ARPING_TO_FROM "ARPING %1 z %2\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+    IDS_REPLY_FROM "Odpowiedź emisji pojedynczej z %1 [%2]  %3%4\n\0"
+    IDS_ARPING_STATISTICS "Wysłano %1!u! sond\n\
+Otrzymano %2!u! odpowiedź(odpowiedzi)\n\0"
+END

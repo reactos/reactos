@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,12 +77,12 @@ AcpiHwValidateRegister (
 
 ACPI_STATUS
 AcpiHwRead (
-    UINT32                  *Value,
+    UINT64                  *Value,
     ACPI_GENERIC_ADDRESS    *Reg);
 
 ACPI_STATUS
 AcpiHwWrite (
-    UINT32                  Value,
+    UINT64                  Value,
     ACPI_GENERIC_ADDRESS    *Reg);
 
 ACPI_BIT_REGISTER_INFO *

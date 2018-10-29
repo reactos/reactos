@@ -81,6 +81,7 @@ BEGIN
     IDS_INSTALLING "Installing..."
     IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
     IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
     IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
     IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

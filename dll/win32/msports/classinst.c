@@ -29,6 +29,8 @@ GetBootResourceList(HDEVINFO DeviceInfoSet,
                     PSP_DEVINFO_DATA DeviceInfoData,
                     PCM_RESOURCE_LIST *ppResourceList)
 {
+    WCHAR DeviceInstanceIdBuffer[128];
+    HKEY hEnumKey = NULL;
     HKEY hDeviceKey = NULL;
     HKEY hConfigKey = NULL;
     LPBYTE lpBuffer = NULL;
@@ -36,17 +38,41 @@ GetBootResourceList(HDEVINFO DeviceInfoSet,
     LONG lError;
     BOOL ret = FALSE;
 
+    FIXME("GetBootResourceList()\n");
+
     *ppResourceList = NULL;
 
-    hDeviceKey = SetupDiCreateDevRegKeyW(DeviceInfoSet,
-                                         DeviceInfoData,
-                                         DICS_FLAG_GLOBAL,
-                                         0,
-                                         DIREG_DEV,
-                                         NULL,
-                                         NULL);
-    if (!hDeviceKey)
+    if (!SetupDiGetDeviceInstanceIdW(DeviceInfoSet,
+                                     DeviceInfoData,
+                                     DeviceInstanceIdBuffer,
+                                     ARRAYSIZE(DeviceInstanceIdBuffer),
+                                     &dwDataSize))
+    {
+        ERR("SetupDiGetDeviceInstanceIdW() failed\n");
         return FALSE;
+    }
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SYSTEM\\CurrentControlSet\\Enum",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hEnumKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW() failed (Error %lu)\n", lError);
+        goto done;
+    }
+
+    lError = RegOpenKeyExW(hEnumKey,
+                           DeviceInstanceIdBuffer,
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hDeviceKey);
+    if (lError != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW() failed (Error %lu)\n", lError);
+        goto done;
+    }
 
     lError = RegOpenKeyExW(hDeviceKey,
                            L"LogConf",
@@ -54,7 +80,10 @@ GetBootResourceList(HDEVINFO DeviceInfoSet,
                            KEY_QUERY_VALUE,
                            &hConfigKey);
     if (lError != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW() failed (Error %lu)\n", lError);
         goto done;
+    }
 
     /* Get the configuration data size */
     lError = RegQueryValueExW(hConfigKey,
@@ -64,12 +93,18 @@ GetBootResourceList(HDEVINFO DeviceInfoSet,
                               NULL,
                               &dwDataSize);
     if (lError != ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW() failed (Error %lu)\n", lError);
         goto done;
+    }
 
     /* Allocate the buffer */
     lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwDataSize);
     if (lpBuffer == NULL)
+    {
+        ERR("Failed to allocate the resource list buffer\n");
         goto done;
+    }
 
     /* Retrieve the configuration data */
     lError = RegQueryValueExW(hConfigKey,
@@ -79,7 +114,10 @@ GetBootResourceList(HDEVINFO DeviceInfoSet,
                              (LPBYTE)lpBuffer,
                               &dwDataSize);
     if (lError == ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW() failed (Error %lu)\n", lError);
         ret = TRUE;
+    }
 
 done:
     if (ret == FALSE && lpBuffer != NULL)
@@ -90,6 +128,9 @@ done:
 
     if (hDeviceKey)
         RegCloseKey(hDeviceKey);
+
+    if (hEnumKey)
+        RegCloseKey(hEnumKey);
 
     if (ret != FALSE)
         *ppResourceList = (PCM_RESOURCE_LIST)lpBuffer;
@@ -442,42 +483,42 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
 
     if (dwPortNumber != 0)
     {
-    /* Set the 'PortName' value */
-    hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet,
-                                   DeviceInfoData,
-                                   DICS_FLAG_GLOBAL,
-                                   0,
-                                   DIREG_DEV,
-                                   NULL,
-                                   NULL);
-    if (hKey != INVALID_HANDLE_VALUE)
-    {
-        RegSetValueExW(hKey,
-                       L"PortName",
-                       0,
-                       REG_SZ,
-                       (LPBYTE)szPortName,
-                       (wcslen(szPortName) + 1) * sizeof(WCHAR));
+        /* Set the 'PortName' value */
+        hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet,
+                                       DeviceInfoData,
+                                       DICS_FLAG_GLOBAL,
+                                       0,
+                                       DIREG_DEV,
+                                       NULL,
+                                       NULL);
+        if (hKey != INVALID_HANDLE_VALUE)
+        {
+            RegSetValueExW(hKey,
+                           L"PortName",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szPortName,
+                           (wcslen(szPortName) + 1) * sizeof(WCHAR));
 
-        /*
-         * FIXME / HACK:
-         * This is to get the w2k3 parport.sys to work until we have our own.
-         * This setting makes the driver accept resources with an IRQ instead
-         * of only resources without an IRQ.
-         *
-         * We should probably also fix IO manager to actually give devices a
-         * chance to register without an IRQ. CORE-9645
-         */
-        dwValue = 0;
-        RegSetValueExW(hKey,
-                       L"FilterResourceMethod",
-                       0,
-                       REG_DWORD,
-                       (LPBYTE)&dwValue, 
-                       sizeof(dwValue));
+            /*
+             * FIXME / HACK:
+             * This is to get the w2k3 parport.sys to work until we have our own.
+             * This setting makes the driver accept resources with an IRQ instead
+             * of only resources without an IRQ.
+             *
+             * We should probably also fix IO manager to actually give devices a
+             * chance to register without an IRQ. CORE-9645
+             */
+            dwValue = 0;
+            RegSetValueExW(hKey,
+                           L"FilterResourceMethod",
+                           0,
+                           REG_DWORD,
+                           (LPBYTE)&dwValue, 
+                           sizeof(dwValue));
 
-        RegCloseKey(hKey);
-    }
+            RegCloseKey(hKey);
+        }
     }
 
     /* Install the device */
@@ -603,7 +644,7 @@ InstallDeviceData(IN HDEVINFO DeviceInfoSet,
 
     TRACE("Done\n");
 
-done:;
+done:
     if (hKey != NULL)
         RegCloseKey(hKey);
 
@@ -660,7 +701,7 @@ GetPortType(IN HDEVINFO DeviceInfoSet,
             PortType = SerialPort;
     }
 
-done:;
+done:
     if (hKey != NULL)
         RegCloseKey(hKey);
 

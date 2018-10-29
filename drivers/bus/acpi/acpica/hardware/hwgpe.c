@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,7 +109,7 @@ AcpiHwLowSetGpe (
 {
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
     ACPI_STATUS             Status = AE_OK;
-    UINT32                  EnableMask;
+    UINT64                  EnableMask;
     UINT32                  RegisterBit;
 
 
@@ -234,7 +234,7 @@ AcpiHwGetGpeStatus (
     ACPI_GPE_EVENT_INFO     *GpeEventInfo,
     ACPI_EVENT_STATUS       *EventStatus)
 {
-    UINT32                  InByte;
+    UINT64                  InByte;
     UINT32                  RegisterBit;
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
     ACPI_EVENT_STATUS       LocalEventStatus = 0;
@@ -550,7 +550,6 @@ AcpiHwDisableAllGpes (
 
 
     Status = AcpiEvWalkGpeList (AcpiHwDisableGpeBlock, NULL);
-    Status = AcpiEvWalkGpeList (AcpiHwClearGpeBlock, NULL);
     return_ACPI_STATUS (Status);
 }
 

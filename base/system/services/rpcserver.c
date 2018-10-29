@@ -2244,8 +2244,8 @@ done:
     if (lpClearTextPassword != NULL)
     {
         /* Wipe and release the password buffer */
-        ZeroMemory(lpClearTextPassword,
-                   (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
+        SecureZeroMemory(lpClearTextPassword,
+                         (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpClearTextPassword);
     }
 
@@ -2648,8 +2648,8 @@ done:
     if (lpClearTextPassword != NULL)
     {
         /* Wipe and release the password buffer */
-        ZeroMemory(lpClearTextPassword,
-                   (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
+        SecureZeroMemory(lpClearTextPassword,
+                         (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpClearTextPassword);
     }
 

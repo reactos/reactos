@@ -71,7 +71,7 @@ static void CRYPT_RegReadSerializedFromReg(HKEY key, DWORD contextType,
     WCHAR subKeyName[MAX_PATH];
 
     do {
-        DWORD size = sizeof(subKeyName) / sizeof(WCHAR);
+        DWORD size = ARRAY_SIZE(subKeyName);
 
         rc = RegEnumKeyExW(key, index++, subKeyName, &size, NULL, NULL, NULL,
          NULL);
@@ -163,7 +163,7 @@ static void CRYPT_RegReadFromReg(HKEY key, HCERTSTORE store)
      CERT_STORE_CRL_CONTEXT_FLAG, CERT_STORE_CTL_CONTEXT_FLAG };
     DWORD i;
 
-    for (i = 0; i < sizeof(subKeys) / sizeof(subKeys[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(subKeys); i++)
     {
         HKEY hKey;
         LONG rc;
@@ -255,7 +255,7 @@ static BOOL CRYPT_RegWriteToReg(WINE_REGSTOREINFO *store)
     BOOL ret = TRUE;
     DWORD i;
 
-    for (i = 0; ret && i < sizeof(subKeys) / sizeof(subKeys[0]); i++)
+    for (i = 0; ret && i < ARRAY_SIZE(subKeys); i++)
     {
         HKEY key;
         LONG rc = RegCreateKeyExW(store->key, subKeys[i], 0, NULL, 0,
@@ -561,8 +561,7 @@ WINECRYPT_CERTSTORE *CRYPT_RegOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
                     CRYPT_RegReadFromReg(regInfo->key, regInfo->memStore);
                     regInfo->dirty = FALSE;
                     provInfo.cbSize = sizeof(provInfo);
-                    provInfo.cStoreProvFunc = sizeof(regProvFuncs) /
-                     sizeof(regProvFuncs[0]);
+                    provInfo.cStoreProvFunc = ARRAY_SIZE(regProvFuncs);
                     provInfo.rgpvStoreProvFunc = regProvFuncs;
                     provInfo.hStoreProv = regInfo;
                     store = CRYPT_ProvCreateStore(dwFlags, memStore, &provInfo);

@@ -207,7 +207,7 @@ static void test_line2(void)
     status = GdipAddPathLine2(path, &(line2_points[6]), 3);
     expect(Ok, status);
 
-    ok_path(path, line2_path, sizeof(line2_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, line2_path, ARRAY_SIZE(line2_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -278,7 +278,7 @@ static void test_arc(void)
     status = GdipAddPathArc(path, 100.0, 100.0, 500.0, 700.0, 50.0, 0.0);
     expect(Ok, status);
 
-    ok_path(path, arc_path, sizeof(arc_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, arc_path, ARRAY_SIZE(arc_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -458,7 +458,7 @@ static void test_pathpath(void)
     status = GdipAddPathPath(path1, path2, TRUE);
     expect(Ok, status);
 
-    ok_path(path1, pathpath_path, sizeof(pathpath_path)/sizeof(path_test_t), FALSE);
+    ok_path(path1, pathpath_path, ARRAY_SIZE(pathpath_path), FALSE);
 
     GdipDeletePath(path1);
     GdipDeletePath(path2);
@@ -529,7 +529,7 @@ static void test_ellipse(void)
     status = GdipAddPathEllipse(path, 10.0, 300.0, 0.0, 1.0);
     expect(Ok, status);
 
-    ok_path(path, ellipse_path, sizeof(ellipse_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, ellipse_path, ARRAY_SIZE(ellipse_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -565,7 +565,7 @@ static void test_linei(void)
     status = GdipAddPathLineI(path, 35.0, 35.0, 36.0, 38.0);
     expect(Ok, status);
 
-    ok_path(path, linei_path, sizeof(linei_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, linei_path, ARRAY_SIZE(linei_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -614,7 +614,7 @@ static void test_polygon(void)
     status = GdipAddPathPolygon(path, points, 5);
     expect(Ok, status);
     /* check resulting path */
-    ok_path(path, poly_path, sizeof(poly_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, poly_path, ARRAY_SIZE(poly_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -643,7 +643,7 @@ static void test_rect(void)
     status = GdipAddPathRectangle(path, 100.0, 50.0, 120.0, 30.0);
     expect(Ok, status);
 
-    ok_path(path, rect_path, sizeof(rect_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, rect_path, ARRAY_SIZE(rect_path), FALSE);
 
     GdipDeletePath(path);
 
@@ -661,7 +661,7 @@ static void test_rect(void)
     status = GdipAddPathRectangles(path, (GDIPCONST GpRectF*)&rects, 2);
     expect(Ok, status);
 
-    ok_path(path, rect_path, sizeof(rect_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, rect_path, ARRAY_SIZE(rect_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -756,7 +756,7 @@ static void test_addcurve(void)
     /* add to empty path */
     status = GdipAddPathCurve2(path, points, 4, 1.0);
     expect(Ok, status);
-    ok_path(path, addcurve_path, sizeof(addcurve_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, addcurve_path, ARRAY_SIZE(addcurve_path), FALSE);
     GdipDeletePath(path);
 
     /* add to notempty path and opened figure */
@@ -764,7 +764,7 @@ static void test_addcurve(void)
     GdipAddPathLine(path, 100.0, 120.0, 123.0, 10.0);
     status = GdipAddPathCurve2(path, points, 4, 1.0);
     expect(Ok, status);
-    ok_path(path, addcurve_path2, sizeof(addcurve_path2)/sizeof(path_test_t), FALSE);
+    ok_path(path, addcurve_path2, ARRAY_SIZE(addcurve_path2), FALSE);
 
     /* NULL args */
     GdipResetPath(path);
@@ -789,12 +789,12 @@ static void test_addcurve(void)
     /* use all points */
     status = GdipAddPathCurve3(path, points, 4, 0, 3, 1.0);
     expect(Ok, status);
-    ok_path(path, addcurve_path, sizeof(addcurve_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, addcurve_path, ARRAY_SIZE(addcurve_path), FALSE);
     GdipResetPath(path);
 
     status = GdipAddPathCurve3(path, points, 4, 1, 2, 1.0);
     expect(Ok, status);
-    ok_path(path, addcurve_path3, sizeof(addcurve_path3)/sizeof(path_test_t), FALSE);
+    ok_path(path, addcurve_path3, ARRAY_SIZE(addcurve_path3), FALSE);
 
     GdipDeletePath(path);
 }
@@ -844,7 +844,7 @@ static void test_addclosedcurve(void)
     /* add to empty path */
     status = GdipAddPathClosedCurve2(path, points, 4, 1.0);
     expect(Ok, status);
-    ok_path(path, addclosedcurve_path, sizeof(addclosedcurve_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, addclosedcurve_path, ARRAY_SIZE(addclosedcurve_path), FALSE);
     GdipDeletePath(path);
 }
 
@@ -886,7 +886,7 @@ static void test_reverse(void)
 
     status = GdipReversePath(path);
     expect(Ok, status);
-    ok_path(path, reverse_path, sizeof(reverse_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, reverse_path, ARRAY_SIZE(reverse_path), FALSE);
 
     GdipDeletePath(path);
 }
@@ -917,21 +917,21 @@ static void test_addpie(void)
 
     status = GdipAddPathPie(path, 0.0, 0.0, 100.0, 50.0, 10.0, 50.0);
     expect(Ok, status);
-    ok_path(path, addpie_path, sizeof(addpie_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, addpie_path, ARRAY_SIZE(addpie_path), FALSE);
     status = GdipResetPath(path);
     expect(Ok, status);
 
     /* zero width base ellipse */
     status = GdipAddPathPie(path, 0.0, 0.0, 0.0, 60.0, -90.0, 24.0);
     expect(InvalidParameter, status);
-    ok_path(path, addpie_path2, sizeof(addpie_path2)/sizeof(path_test_t), FALSE);
+    ok_path(path, addpie_path2, ARRAY_SIZE(addpie_path2), FALSE);
     status = GdipResetPath(path);
     expect(Ok, status);
 
     /* zero height base ellipse */
     status = GdipAddPathPie(path, 0.0, 0.0, 60.0, 0.0 , -90.0, 24.0);
     expect(InvalidParameter, status);
-    ok_path(path, addpie_path3, sizeof(addpie_path3)/sizeof(path_test_t), FALSE);
+    ok_path(path, addpie_path3, ARRAY_SIZE(addpie_path3), FALSE);
 
     GdipDeletePath(path);
 }
@@ -1020,7 +1020,7 @@ static void test_flatten(void)
 
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
-    ok_path(path, flattenellipse_path, sizeof(flattenellipse_path)/sizeof(path_test_t), TRUE);
+    ok_path(path, flattenellipse_path, ARRAY_SIZE(flattenellipse_path), TRUE);
 
     status = GdipResetPath(path);
     expect(Ok, status);
@@ -1028,7 +1028,7 @@ static void test_flatten(void)
     expect(Ok, status);
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
-    ok_path(path, flattenline_path, sizeof(flattenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, flattenline_path, ARRAY_SIZE(flattenline_path), FALSE);
 
     status = GdipResetPath(path);
     expect(Ok, status);
@@ -1036,7 +1036,7 @@ static void test_flatten(void)
     expect(Ok, status);
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
-    ok_path(path, flattenarc_path, sizeof(flattenarc_path)/sizeof(path_test_t), TRUE);
+    ok_path(path, flattenarc_path, ARRAY_SIZE(flattenarc_path), TRUE);
 
     /* easy case - quater of a full circle */
     status = GdipResetPath(path);
@@ -1045,7 +1045,7 @@ static void test_flatten(void)
     expect(Ok, status);
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
-    ok_path(path, flattenquater_path, sizeof(flattenquater_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, flattenquater_path, ARRAY_SIZE(flattenquater_path), FALSE);
 
     GdipDeleteMatrix(m);
     GdipDeletePath(path);
@@ -1119,7 +1119,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     /* horizontal 2x stretch */
     status = GdipResetPath(path);
@@ -1132,7 +1132,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     /* vertical 2x stretch */
     status = GdipResetPath(path);
@@ -1145,7 +1145,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     status = GdipScaleMatrix(m, 1.0, 0.5, MatrixOrderAppend);
     expect(Ok, status);
@@ -1161,7 +1161,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_dash_path, sizeof(widenline_dash_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_dash_path, ARRAY_SIZE(widenline_dash_path), FALSE);
 
     status = GdipSetPenDashStyle(pen, DashStyleSolid);
     expect(Ok, status);
@@ -1178,7 +1178,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     /* horizontal 2x stretch */
     status = GdipResetPath(path);
@@ -1191,7 +1191,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     /* vertical 2x stretch */
     status = GdipResetPath(path);
@@ -1204,7 +1204,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_wide_path, sizeof(widenline_wide_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_wide_path, ARRAY_SIZE(widenline_wide_path), FALSE);
 
     status = GdipScaleMatrix(m, 1.0, 0.5, MatrixOrderAppend);
     expect(Ok, status);
@@ -1221,7 +1221,7 @@ static void test_widen(void)
 
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
-    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+    ok_path(path, widenline_path, ARRAY_SIZE(widenline_path), FALSE);
 
     /* pen width = 0 pixels - native fails to widen but can draw with this pen */
     GdipDeletePen(pen);

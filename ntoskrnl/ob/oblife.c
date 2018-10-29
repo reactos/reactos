@@ -460,6 +460,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                   IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                                   OUT PUNICODE_STRING ObjectName)
 {
+    ULONG SdCharge, QuotaInfoSize;
     NTSTATUS Status = STATUS_SUCCESS;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_QUALITY_OF_SERVICE SecurityQos;
@@ -518,8 +519,21 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
                     _SEH2_YIELD(return Status);
                 }
 
+                /*
+                 * By default, assume a SD size of 1024 and allow twice its
+                 * size.
+                 * If SD size happen to be bigger than that, then allow it
+                 */
+                SdCharge = 2048;
+                SeComputeQuotaInformationSize(ObjectCreateInfo->SecurityDescriptor,
+                                              &QuotaInfoSize);
+                if ((2 * QuotaInfoSize) > 2048)
+                {
+                    SdCharge = 2 * QuotaInfoSize;
+                }
+
                 /* Save the probe mode and security descriptor size */
-                ObjectCreateInfo->SecurityDescriptorCharge = 2048; /* FIXME */
+                ObjectCreateInfo->SecurityDescriptorCharge = SdCharge;
                 ObjectCreateInfo->ProbeMode = AccessMode;
             }
 

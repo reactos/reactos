@@ -23,6 +23,9 @@ IDI_ICON ICON "res/setup.ico"
 #ifdef LANGUAGE_MS_MY
     #include "lang/ms-MY.rc"
 #endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif

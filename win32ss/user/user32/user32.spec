@@ -719,7 +719,7 @@
 710 stdcall User32InitializeImmEntryTable(ptr)
 711 stdcall UserClientDllInitialize(long long ptr) DllMain
 712 stdcall UserHandleGrantAccess(ptr ptr long) NtUserUserHandleGrantAccess
-713 stdcall UserLpkPSMTextOut(long long long long long long)
+713 stdcall UserLpkPSMTextOut(long long long wstr long long)
 714 stdcall UserLpkTabbedTextOut(long long long long long long long long long long long long)
 715 stdcall UserRealizePalette(long)
 716 stdcall UserRegisterWowHandlers(ptr ptr)

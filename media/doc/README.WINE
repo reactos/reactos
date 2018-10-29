@@ -24,28 +24,28 @@ The following libraries are shared with Wine.
 reactos/dll/directx/wine/amstream       # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3d8           # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3d9           # Synced to WineStaging-3.9
-reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-3.3
+reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-3.17
 reactos/dll/directx/wine/d3drm          # Synced to WineStaging-3.9
-reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-3.9
-reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-3.3
+reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-3.17
+reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-3.17
 reactos/dll/directx/wine/ddraw          # Synced to WineStaging-3.9
 reactos/dll/directx/wine/devenum        # Synced to WineStaging-3.9
-reactos/dll/directx/wine/dinput         # Synced to WineStaging-3.9
+reactos/dll/directx/wine/dinput         # Synced to WineStaging-3.17
 reactos/dll/directx/wine/dinput8        # Synced to WineStaging-3.3
-reactos/dll/directx/wine/dmusic         # Synced to WineStaging-3.9
+reactos/dll/directx/wine/dmusic         # Synced to WineStaging-3.17
 reactos/dll/directx/wine/dplay          # Synced to WineStaging-3.3
-reactos/dll/directx/wine/dplayx         # Synced to WineStaging-3.3
+reactos/dll/directx/wine/dplayx         # Synced to WineStaging-3.17
 reactos/dll/directx/wine/dsound         # Synced to Wine-1.3.29
 reactos/dll/directx/wine/dxdiagn        # Synced to WineStaging-3.3
-reactos/dll/directx/wine/msdmo          # Synced to WineStaging-3.9
-reactos/dll/directx/wine/qedit          # Synced to WineStaging-3.3
+reactos/dll/directx/wine/msdmo          # Synced to WineStaging-3.17
+reactos/dll/directx/wine/qedit          # Synced to WineStaging-3.17
 reactos/dll/directx/wine/quartz         # Synced to WineStaging-3.9
 reactos/dll/directx/wine/wined3d        # Synced to WineStaging-3.9
 
 reactos/dll/win32/activeds            # Synced to WineStaging-3.3
 reactos/dll/win32/actxprxy            # Synced to WineStaging-3.3
-reactos/dll/win32/advpack             # Synced to WineStaging-3.3
-reactos/dll/win32/atl                 # Synced to WineStaging-3.3
+reactos/dll/win32/advpack             # Synced to WineStaging-3.17
+reactos/dll/win32/atl                 # Synced to WineStaging-3.17
 reactos/dll/win32/atl80               # Synced to WineStaging-3.3
 reactos/dll/win32/atl100              # Synced to WineStaging-3.3
 reactos/dll/win32/avifil32            # Synced to WineStaging-3.9
@@ -55,36 +55,36 @@ reactos/dll/win32/cabinet             # Synced to WineStaging-3.3
 reactos/dll/win32/clusapi             # Synced to WineStaging-3.3
 reactos/dll/win32/comcat              # Synced to WineStaging-3.3
 reactos/dll/win32/comctl32            # Synced to Wine-3.0
-reactos/dll/win32/comdlg32            # Synced to WineStaging-3.9
+reactos/dll/win32/comdlg32            # Synced to WineStaging-3.17
 reactos/dll/win32/compstui            # Synced to WineStaging-3.3
-reactos/dll/win32/credui              # Synced to WineStaging-3.3
-reactos/dll/win32/crypt32             # Synced to WineStaging-3.9
+reactos/dll/win32/credui              # Synced to WineStaging-3.17
+reactos/dll/win32/crypt32             # Synced to WineStaging-3.17
 reactos/dll/win32/cryptdlg            # Synced to WineStaging-3.3
 reactos/dll/win32/cryptdll            # Synced to WineStaging-3.3
 reactos/dll/win32/cryptnet            # Synced to WineStaging-3.3
-reactos/dll/win32/cryptui             # Synced to WineStaging-3.3
+reactos/dll/win32/cryptui             # Synced to WineStaging-3.17
 reactos/dll/win32/dbghelp             # Synced to WineStaging-3.9
 reactos/dll/win32/dciman32            # Synced to WineStaging-3.3
 reactos/dll/win32/faultrep            # Synced to WineStaging-2.9
 reactos/dll/win32/fontsub             # Synced to WineStaging-2.9
-reactos/dll/win32/fusion              # Synced to WineStaging-3.3
-reactos/dll/win32/gdiplus             # Synced to WineStaging-3.9
-reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-3.3
+reactos/dll/win32/fusion              # Synced to WineStaging-3.17
+reactos/dll/win32/gdiplus             # Synced to WineStaging-3.17
+reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-3.17
 reactos/dll/win32/hlink               # Synced to WineStaging-3.3
 reactos/dll/win32/hnetcfg             # Synced to WineStaging-3.9
 reactos/dll/win32/httpapi             # Synced to WineStaging-3.3
 reactos/dll/win32/iccvid              # Synced to WineStaging-3.3
-reactos/dll/win32/ieframe             # Synced to WineStaging-3.9
-reactos/dll/win32/imaadp32.acm        # Synced to WineStaging-3.3
+reactos/dll/win32/ieframe             # Synced to WineStaging-3.17
+reactos/dll/win32/imaadp32.acm        # Synced to WineStaging-3.17
 reactos/dll/win32/imagehlp            # Synced to WineStaging-3.3
-reactos/dll/win32/imm32               # Synced to WineStaging-3.9
-reactos/dll/win32/inetcomm            # Synced to WineStaging-3.3
-reactos/dll/win32/inetmib1            # Synced to WineStaging-3.3
+reactos/dll/win32/imm32               # Synced to WineStaging-3.17
+reactos/dll/win32/inetcomm            # Synced to WineStaging-3.17
+reactos/dll/win32/inetmib1            # Synced to WineStaging-3.17
 reactos/dll/win32/initpki             # Synced to WineStaging-3.3
 reactos/dll/win32/inseng              # Synced to WineStaging-3.3
 reactos/dll/win32/iphlpapi            # Out of sync
 reactos/dll/win32/itircl              # Synced to WineStaging-3.3
-reactos/dll/win32/itss                # Synced to WineStaging-3.9
+reactos/dll/win32/itss                # Synced to WineStaging-3.17
 reactos/dll/win32/jscript             # Synced to WineStaging-3.9
 reactos/dll/win32/jsproxy             # Synced to WineStaging-3.3
 reactos/dll/win32/loadperf            # Synced to WineStaging-3.3
@@ -220,19 +220,19 @@ reactos/dll/win32/xinput1_3           # Synced to WineStaging-2.9
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-2.9
 reactos/dll/win32/xmllite             # Synced to WineStaging-3.3
 
-reactos/dll/cpl/inetcpl               # Synced to WineStaging-3.3
+reactos/dll/cpl/inetcpl               # Synced to WineStaging-3.17
 
 reactos/win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-3.3 (known there as /dll/win32/localui)
 
 ReactOS shares the following programs with Winehq.
 
-reactos/base/applications/cmdutils/cscript  # Synced to WineStaging-3.3
-reactos/base/applications/cmdutils/reg      # Synced to WineStaging-3.9
+reactos/base/applications/cmdutils/cscript  # Synced to WineStaging-3.17
+reactos/base/applications/cmdutils/reg      # Synced to WineStaging-3.17
 reactos/base/applications/cmdutils/schtasks # Synced to WineStaging-3.3
-reactos/base/applications/cmdutils/taskkill # Synced to WineStaging-3.3
-reactos/base/applications/cmdutils/wmic     # Synced to WineStaging-3.3
-reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-3.3
-reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-3.3
+reactos/base/applications/cmdutils/taskkill # Synced to WineStaging-3.17
+reactos/base/applications/cmdutils/wmic     # Synced to WineStaging-3.17
+reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-3.17
+reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-3.17
 reactos/base/applications/games/winmine     # Synced to WineStaging-2.16 with our own resources.
 reactos/base/applications/extrac32          # Synced to WineStaging-3.3
 reactos/base/applications/iexplore          # Synced to WineStaging-3.3

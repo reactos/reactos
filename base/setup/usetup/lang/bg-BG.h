@@ -1,14 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS bgBGLayouts[] =
-{
-    { L"0402", L"00000402" },
-    { L"0402", L"00020402" },
-    { L"0402", L"00030402" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY bgBGLanguagePageEntries[] =
 {
     {
@@ -84,7 +75,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Натиснете ENTER за слагане на РеактОС.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -479,6 +470,76 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
         0,
         "   ESC = Главна страница  ENTER = Презапуск",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bgBGUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1377,7 +1438,7 @@ MUI_ERROR bgBGErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "РеактОС не е напълно сложен на компютъра\n"
         "ви. Ако сега излезете от слаганете, ще трябва\n"
         "да пуснете настройката отново, за да инсталирате РеактОС.\n"
@@ -1387,62 +1448,62 @@ MUI_ERROR bgBGErrorEntries[] =
         "F3 = Изход ENTER = Продължаване"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Настройвачът не намери твърд диск.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Настройвачът не намери изходното си устройство.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Настройвачът не успя да намери файл TXTSETUP.SIF.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Настройвачът намери повреден файл TXTSETUP.SIF.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Настройвачът намери нереден подпис в TXTSETUP.SIF.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Настройвачът не успя да открие сведенията на системното ви устройство.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Неуспешно слагане на означаваш запис (bootcode) за FAT в системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Настройвачът не успя да зареди списъка с видовете компютри.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Настройвачът не успя да зареди списъка с натройки за монитори.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Настройвачът не успя да зареди списъка с видовете клавиатури.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Настройвачът не успя да зареди списъка с клавиатурните подредби.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Настройвачът установи, че поне един твърд диск съдържа несъвместима\n"
           "дялова таблица, с която не може да се работи правилно!\n"
           "\n"
@@ -1453,7 +1514,7 @@ MUI_ERROR bgBGErrorEntries[] =
           "F3 = Изход ENTER = Продължаване"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Не можете да създадете нов дял в дял,\n"
         "който вече съществува!\n"
         "\n"
@@ -1461,135 +1522,129 @@ MUI_ERROR bgBGErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Не можете за изтриете неразпределеното дисково място!\n"
         "\n"
         "  * Натиснете клавиш, за да продължите.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         //"Setup failed to install the FAT bootcode on the system partition.",
         "Неуспешно слагане на обуващия код за FAT на системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "В устройство A: няма носител.",
         "ENTER = Продължаване"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Неуспешно обновяване на настройките на клавиатурната подредба.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Неуспешно обновяване на регистърни настройки за монитора.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Неуспешно внасяне на роевия файл.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Не бяха открити файловете с регистърни данни.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Настройвачът не успя да създаде регистърните роеве.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         //There is something wrong with this line.
         "Неуспешно задаване на начални стойности на регистъра.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cab файлът няма правилен inf файл.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cab файлът не е открит.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cab файлът няма настроечно писание.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Неуспешно отваряне на опашката от файлове за запис.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Неуспешно създаване на папките за слагане.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Разделът 'Directories' не бе открит\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Разделът '%S' не бе открит\n"
         "в TXTSETUP.SIF.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Разделът 'Directories' не бе открит\n"
+        // ERROR_CABINET_SECTION,
+        "Разделът '%S' не бе открит\n"
         "в cab файла.\n",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Неуспешно създаване на папката за слагане.",
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Разделът 'SetupData' не бе открит\n"
-        "в TXTSETUP.SIF.\n",
-        "ENTER = Презапускане на компютъра"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Неуспешно записване на дяловите таблици.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Неуспешно добавяне на знаковия набор в регистъра.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Неуспешно установяване на местните настройки.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Неуспешно добавяне на клавиатурните подредби в регистъра.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Настройката не можа да установи означителя на географското положение.\n"
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1597,20 +1652,20 @@ MUI_ERROR bgBGErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1629,7 +1684,7 @@ MUI_PAGE bgBGPages[] =
         bgBGLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         bgBGWelcomePageEntries
     },
     {
@@ -1647,6 +1702,10 @@ MUI_PAGE bgBGPages[] =
     {
         REPAIR_INTRO_PAGE,
         bgBGRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        bgBGUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1770,8 +1829,12 @@ MUI_STRING bgBGStrings[] =
     "F3 = Изход  ENTER = Продължаване"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Презапускане на компютъра"},
-    {STRING_TXTSETUPFAILED,
-    "Не бе намерен раздел '%S'\nв TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1780,7 +1843,7 @@ MUI_STRING bgBGStrings[] =
     "   Осъвременяване на регистърните роеве..."},
     {STRING_IMPORTFILE,
     "   Внасяне на %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Осъвременяване регистровите настройки на екрана..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Осъвременяване на местните настройки..."},
@@ -1810,28 +1873,28 @@ MUI_STRING bgBGStrings[] =
     " Форматиране на дяла като %S файлова уредба "},
     {STRING_KEEPFORMAT,
     " Запазване на файловата уредба (без промени) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  вид 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ."},
-    {STRING_HDDINFOUNK3,
-    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "на %I64u %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  вид 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sвид %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Бе създаден нов дял на"},
     {STRING_UNPSPACE,

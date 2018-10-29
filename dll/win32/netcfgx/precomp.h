@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <windowsx.h>
 #include <objbase.h>
 #include <netcfgx.h>
 #include <setupapi.h>
@@ -21,7 +22,11 @@
 #include <devguid.h>
 #include <commctrl.h>
 
+#include <wine/debug.h>
+
 #include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(netcfgx);
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 typedef struct {

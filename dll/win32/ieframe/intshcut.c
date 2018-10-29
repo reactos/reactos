@@ -93,7 +93,7 @@ static BOOL run_winemenubuilder( const WCHAR *args )
     WCHAR app[MAX_PATH];
     void *redir;
 
-    GetSystemDirectoryW( app, MAX_PATH - sizeof(menubuilder)/sizeof(WCHAR) );
+    GetSystemDirectoryW( app, MAX_PATH - ARRAY_SIZE( menubuilder ));
     strcatW( app, menubuilder );
 
     len = (strlenW( app ) + strlenW( args ) + 1) * sizeof(WCHAR);
@@ -278,7 +278,7 @@ static HRESULT WINAPI UniformResourceLocatorW_InvokeCommand(IUniformResourceLoca
         return E_NOTIMPL;
     }
 
-    hres = CoInternetParseUrl(This->url, PARSE_SCHEMA, 0, app, sizeof(app)/sizeof(WCHAR), NULL, 0);
+    hres = CoInternetParseUrl(This->url, PARSE_SCHEMA, 0, app, ARRAY_SIZE(app), NULL, 0);
     if(FAILED(hres))
         return E_FAIL;
 

@@ -70,7 +70,7 @@ static const WCHAR ADDRESSBOOK[] = {'A','D','D','R','E','S','S','B','O','O','K',
 static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',0};
 static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
 static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
-static WCHAR LocalizedNames[sizeof(LocalizedKeys)/sizeof(LocalizedKeys[0])][256];
+static WCHAR LocalizedNames[ARRAY_SIZE(LocalizedKeys)][256];
 
 static void free_function_sets(void)
 {
@@ -1007,7 +1007,7 @@ static void oid_init_localizednames(void)
 {
     unsigned int i;
 
-    for(i = 0; i < sizeof(LocalizedKeys)/sizeof(LPCWSTR); i++)
+    for(i = 0; i < ARRAY_SIZE(LocalizedKeys); i++)
     {
         LoadStringW(hInstance, IDS_LOCALIZEDNAME_ROOT+i, LocalizedNames[i], 256);
     }
@@ -1020,7 +1020,7 @@ LPCWSTR WINAPI CryptFindLocalizedName(LPCWSTR pwszCryptName)
 {
     unsigned int i;
 
-    for(i = 0; i < sizeof(LocalizedKeys)/sizeof(LPCWSTR); i++)
+    for(i = 0; i < ARRAY_SIZE(LocalizedKeys); i++)
     {
         if(!lstrcmpiW(LocalizedKeys[i], pwszCryptName))
         {
@@ -1129,16 +1129,14 @@ static const DWORD dssSign[2] = { CALG_DSS_SIGN,
 static const DWORD mosaicSign[2] = { CALG_DSS_SIGN,
  CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
  CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
-static const DWORD ecdsaSign[2] = { CALG_OID_INFO_PARAMETERS,
- CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
+static const DWORD ecdsaSign[2] = { CALG_OID_INFO_PARAMETERS, CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
 static const CRYPT_DATA_BLOB rsaSignBlob = { sizeof(rsaSign),
  (LPBYTE)&rsaSign };
 static const CRYPT_DATA_BLOB dssSignBlob = { sizeof(dssSign),
  (LPBYTE)dssSign };
 static const CRYPT_DATA_BLOB mosaicSignBlob = { sizeof(mosaicSign),
  (LPBYTE)mosaicSign };
-static const CRYPT_DATA_BLOB ecdsaSignBlob = { sizeof(ecdsaSign),
- (LPBYTE)ecdsaSign };
+static const CRYPT_DATA_BLOB ecdsaSignBlob = { sizeof(ecdsaSign), (BYTE *)ecdsaSign };
 
 static const DWORD ia5String[] = { CERT_RDN_IA5_STRING, 0 };
 static const DWORD numericString[] = { CERT_RDN_NUMERIC_STRING, 0 };
@@ -1160,8 +1158,8 @@ static const struct OIDInfoConstructor {
     UINT    Algid;
     LPCWSTR pwszName;
     const CRYPT_DATA_BLOB *blob;
-    LPCWSTR pwszCNGAlgid;
-    LPCWSTR pwszCNGExtraAlgid;
+    const WCHAR *pwszCNGAlgid;
+    const WCHAR *pwszCNGExtraAlgid;
 } oidInfoConstructors[] = {
  { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha1, NULL },
  { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha, NULL },
@@ -1412,8 +1410,7 @@ static void init_oid_info(void)
     DWORD i;
 
     oid_init_localizednames();
-    for (i = 0; i < sizeof(oidInfoConstructors) /
-     sizeof(oidInfoConstructors[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(oidInfoConstructors); i++)
     {
         if (!IS_INTRESOURCE(oidInfoConstructors[i].pwszName))
         {

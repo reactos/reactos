@@ -1,12 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS ruRULayouts[] =
-{
-    { L"0419", L"00000419" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY ruRULanguagePageEntries[] =
 {
     {
@@ -82,7 +75,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Нажмите ENTER для установки ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -470,6 +463,76 @@ static MUI_ENTRY ruRURepairPageEntries[] =
         0,
         0,
         "ESC = На главную  U = Обновление  R = Восстановление  ENTER = Перезагрузка",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ruRUUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1367,7 +1430,7 @@ MUI_ERROR ruRUErrorEntries[] =
         "Успешно\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS не был полностью установлен на ваш\n"
         "компьютер. Если вы выйдите из установки сейчас,\n"
         "то вам нужно запустить программу установки снова,\n"
@@ -1377,62 +1440,62 @@ MUI_ERROR ruRUErrorEntries[] =
         "F3 = Выход  ENTER = Продолжить"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Не удалось найти жесткий диск.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Не удалось найти установочный диск.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Не удалось загрузить файл TXTSETUP.SIF.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Файл TXTSETUP.SIF поврежден.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Обнаружена некорректная подпись в TXTSETUP.SIF.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Не удалось получить информацию о системном диске.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Не удалось загрузить список типов компьютера.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Не удалось загрузить список режимов экрана.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Не удалось загрузить список типов клавиатуры.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Не удалось загрузить список раскладок клавиатуры.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Найден по крайней мере один жесткий диск, который содержит раздел\n"
         "неподдерживаемый ReactOS!\n"
         "\n"
@@ -1443,7 +1506,7 @@ MUI_ERROR ruRUErrorEntries[] =
         "F3 = Выход  ENTER = Продолжить"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Вы не можете создать новый раздел диска в\n"
         "уже существующем разделе!\n"
         "\n"
@@ -1451,133 +1514,127 @@ MUI_ERROR ruRUErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Вы не можете удалить неразделенное дисковое пространство!\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Не удалось установить загрузчик FAT на системный раздел.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Нет диска в дисководе A:.",
         "ENTER = Продолжить"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Не удалось обновить параметры раскладки клавиатуры.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Не удалось обновить параметры экрана в реестре.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Не удалось импортировать файлы кустов реестра.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Не удалось найти файлы системного реестра.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Не удалось создать кусты системного реестра.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Не удалось инициализировать системный реестр.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet не получил корректный inf-файл.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet не найден.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet не смог найти установочный скрипт.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Не удалось открыть очередь копирования файлов.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Не удалось создать установочные директории.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Не удалось найти секцию 'Directories'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Не удалось найти секцию '%S'\n"
         "в файле TXTSETUP.SIF.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Не удалось найти секцию 'Directories'\n"
+        // ERROR_CABINET_SECTION,
+        "Не удалось найти секцию '%S'\n"
         "в cabinet.\n",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Не удалось создать директорию для установки.",
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Не удалось найти секцию 'SetupData'\n"
-        "в файле TXTSETUP.SIF.\n",
-        "ENTER = Перезагрузка"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Не удалось записать таблицу разделов.\n"
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Не удалось добавить параметры кодировки в реестр.\n"
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Не удалось установить язык системы.\n"
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Не удалось добавить раскладку клавиатуры в реестр.\n"
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Не удалось установить geo id.\n"
         "ENTER = Перезагрузка"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Неверное название директории.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Выбранный раздел слишком мал для установки ReactOS.\n"
         "Установочный раздел должен иметь по крайней мере %lu MB пространства.\n"
         "\n"
@@ -1585,20 +1642,20 @@ MUI_ERROR ruRUErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Вы не можете создать первичный или расширенный раздел в таблице\n"
         "разделов диска, потому что она заполнена.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Вы не можете создать больше одного расширенного раздела на диск.\n"
         "\n"
         "  * Нажмите любую клавишу для продолжения."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Не удалось форматировать раздел:\n"
         " %S\n"
         "\n"
@@ -1617,7 +1674,7 @@ MUI_PAGE ruRUPages[] =
         ruRULanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ruRUWelcomePageEntries
     },
     {
@@ -1635,6 +1692,10 @@ MUI_PAGE ruRUPages[] =
     {
         REPAIR_INTRO_PAGE,
         ruRURepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        ruRUUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1756,8 +1817,12 @@ MUI_STRING ruRUStrings[] =
     "F3 = Выход  ENTER = Продолжить"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезагрузка"},
-    {STRING_TXTSETUPFAILED,
-    "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Копирование файла: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1766,7 +1831,7 @@ MUI_STRING ruRUStrings[] =
     "   Обновление кустов реестра..."},
     {STRING_IMPORTFILE,
     "   Импортирование %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Обновление параметров экрана в реестре..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Обновление параметров языка..."},
@@ -1796,28 +1861,28 @@ MUI_STRING ruRUStrings[] =
     " Форматирование раздела в файловой системе %S "},
     {STRING_KEEPFORMAT,
     " Оставить существующую файловую систему (без изменений) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Запись 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ."},
-    {STRING_HDDINFOUNK3,
-    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Жесткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "на %I64u %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Жесткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Запись 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sЗапись %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Программа установки создала новый раздел на:"},
     {STRING_UNPSPACE,

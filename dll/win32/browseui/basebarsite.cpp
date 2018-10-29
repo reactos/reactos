@@ -692,17 +692,10 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CBaseBarSite::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    HRESULT                             hResult;
-    CComPtr<IDockingWindow>             parentSite;
-
     if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDM_BASEBAR_CLOSE)
     {
-        hResult = fDeskBarSite->QueryInterface(IID_PPV_ARG(IDockingWindow, &parentSite));
-        if (!SUCCEEDED(hResult))
-        {
-            return E_FAIL;
-        }
-        parentSite->ShowDW(FALSE);
+        /* Tell the base bar to hide */
+        IUnknown_Exec(fDeskBarSite, IID_IDeskBarClient, 0, 0, NULL, NULL);
         bHandled = TRUE;
     }
     return 0;

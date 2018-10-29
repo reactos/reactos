@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -330,6 +330,7 @@ AcpiPsGetChild (
 
     case AML_BUFFER_OP:
     case AML_PACKAGE_OP:
+    case AML_VARIABLE_PACKAGE_OP:
     case AML_METHOD_OP:
     case AML_IF_OP:
     case AML_WHILE_OP:

@@ -74,10 +74,10 @@ static void expect_guid(REFGUID expected, REFGUID got, int line, BOOL todo)
     char buffer[39];
     char buffer2[39];
 
-    StringFromGUID2(got, bufferW, sizeof(bufferW)/sizeof(bufferW[0]));
-    WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer, sizeof(buffer), NULL, NULL);
-    StringFromGUID2(expected, bufferW, sizeof(bufferW)/sizeof(bufferW[0]));
-    WideCharToMultiByte(CP_ACP, 0, bufferW, sizeof(bufferW)/sizeof(bufferW[0]), buffer2, sizeof(buffer2), NULL, NULL);
+    StringFromGUID2(got, bufferW, ARRAY_SIZE(bufferW));
+    WideCharToMultiByte(CP_ACP, 0, bufferW, ARRAY_SIZE(bufferW), buffer, sizeof(buffer), NULL, NULL);
+    StringFromGUID2(expected, bufferW, ARRAY_SIZE(bufferW));
+    WideCharToMultiByte(CP_ACP, 0, bufferW, ARRAY_SIZE(bufferW), buffer2, sizeof(buffer2), NULL, NULL);
     todo_wine_if (todo)
         ok_(__FILE__, line)(IsEqualGUID(expected, got), "Expected %s, got %s\n", buffer2, buffer);
 }
@@ -3328,7 +3328,7 @@ static void test_image_properties(void)
         char buf[256];
     } item;
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         image = load_image(td[i].image_data, td[i].image_size);
         if (!image)
@@ -3646,9 +3646,9 @@ static void test_tiff_properties(void)
     prop_count = 0xdeadbeef;
     status = GdipGetPropertyCount(image, &prop_count);
     expect(Ok, status);
-    ok(prop_count == sizeof(td)/sizeof(td[0]) ||
-       broken(prop_count == sizeof(td)/sizeof(td[0]) - 1) /* Win7 SP0 */,
-       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+    ok(prop_count == ARRAY_SIZE(td) ||
+       broken(prop_count == ARRAY_SIZE(td) - 1) /* Win7 SP0 */,
+       "expected property count %u, got %u\n", (UINT) ARRAY_SIZE(td), prop_count);
 
     prop_id = HeapAlloc(GetProcessHeap(), 0, prop_count * sizeof(*prop_id));
 
@@ -3756,8 +3756,8 @@ static void test_GdipGetAllPropertyItems(void)
     prop_count = 0xdeadbeef;
     status = GdipGetPropertyCount(image, &prop_count);
     expect(Ok, status);
-    ok(prop_count == sizeof(td)/sizeof(td[0]),
-       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+    ok(prop_count == ARRAY_SIZE(td),
+       "expected property count %u, got %u\n", (UINT) ARRAY_SIZE(td), prop_count);
 
     prop_id = HeapAlloc(GetProcessHeap(), 0, prop_count * sizeof(*prop_id));
 
@@ -4031,7 +4031,7 @@ static void test_bitmapbits(void)
     } palette;
     ARGB *entries = palette.pal.Entries;
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         BYTE pixels[sizeof(pixels_24)];
         memcpy(pixels, pixels_24, sizeof(pixels_24));
@@ -4300,7 +4300,7 @@ static void test_image_format(void)
     BitmapData data;
     UINT i, ret;
 
-    for (i = 0; i < sizeof(fmt)/sizeof(fmt[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(fmt); i++)
     {
         status = GdipCreateBitmapFromScan0(1, 1, 0, fmt[i], NULL, &bitmap);
         ok(status == Ok || broken(status == InvalidParameter) /* before win7 */,
@@ -4452,7 +4452,7 @@ static void test_DrawImage_scale(void)
     status = GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
     expect(Ok, status);
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         status = GdipSetPixelOffsetMode(graphics, td[i].pixel_offset_mode);
         expect(Ok, status);
@@ -4558,10 +4558,10 @@ static void test_gif_properties(void)
 
     status = GdipGetPropertyCount(image, &prop_count);
     expect(Ok, status);
-    ok(prop_count == sizeof(td)/sizeof(td[0]) || broken(prop_count == 1) /* before win7 */,
-       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+    ok(prop_count == ARRAY_SIZE(td) || broken(prop_count == 1) /* before win7 */,
+       "expected property count %u, got %u\n", (UINT) ARRAY_SIZE(td), prop_count);
 
-    if (prop_count != sizeof(td)/sizeof(td[0]))
+    if (prop_count != ARRAY_SIZE(td))
     {
         GdipDisposeImage(image);
         return;
@@ -4834,7 +4834,7 @@ static void test_supported_encoders(void)
     status = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat24bppRGB, NULL, &bm);
     ok(status == Ok, "GdipCreateBitmapFromScan0 error %d\n", status);
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         ret = get_encoder_clsid(td[i].mime, &format, &clsid);
         ok(ret, "%s encoder is not in the list\n", wine_dbgstr_w(td[i].mime));
@@ -4883,7 +4883,7 @@ static void test_createeffect(void)
     stat = pGdipCreateEffect(noneffect, &effect);
     todo_wine expect(Win32Error, stat);
 
-    for(i=0; i < sizeof(effectlist) / sizeof(effectlist[0]); i++)
+    for(i=0; i < ARRAY_SIZE(effectlist); i++)
     {
         stat = pGdipCreateEffect(*effectlist[i], &effect);
         todo_wine expect(Ok, stat);
@@ -4996,7 +4996,7 @@ static void test_histogram(void)
     expect(Ok, stat);
     expect(256, num);
 
-    for (i = 0; i < sizeof(test_formats)/sizeof(test_formats[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(test_formats); i++)
     {
         num = 0;
         stat = pGdipBitmapGetHistogramSize(test_formats[i], &num);
@@ -5146,7 +5146,7 @@ static void test_png_color_formats(void)
     UINT flags;
     int i;
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         memcpy(buf, png_1x1_data, sizeof(png_1x1_data));
         buf[24] = td[i].bit_depth;

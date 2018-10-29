@@ -1,14 +1,8 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
  * DATE OF TR:  29-11-2013
 */
 
 #pragma once
-
-MUI_LAYOUTS sqALLayouts[] =
-{
-    { L"041C", L"0000041C" },
-        { NULL, NULL }
-};
 
 static MUI_ENTRY sqALLanguagePageEntries[] =
 {
@@ -85,7 +79,7 @@ static MUI_ENTRY sqALWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Kliko ENTER p‰r instalimin e ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -473,6 +467,76 @@ static MUI_ENTRY sqALRepairPageEntries[] =
         0,
         0,
         "ESC = Menuja Kryesore  U = Apdejto  R = Riparo  ENTER = Rinis sistemin",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY sqALUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1371,7 +1435,7 @@ MUI_ERROR sqALErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS nuk ‰shte instaluar plotesisht ne kompjuterin\n"
         "tuaj. N‰se dilni nga instalimi tani, ju do t‰ duhet t‰\n"
         "rifilloni instalimin e ReactOS p‰rs‰ri.\n"
@@ -1381,62 +1445,62 @@ MUI_ERROR sqALErrorEntries[] =
         "F3 = Dil  ENTER = Vazhdo"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Instalimi nuk mund t‰ gjej nj‰ harddisk.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Instalimi nuk mund t‰ gjej burimin e t‰ dh‰nave/drive.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Instalimi d‰shtoj p‰r t‰ ngarkuar dokumentin TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Instalimi zbuloj nj‰ dokument t‰ korruptuar TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Instalimi zbuloj nj‰ firm‰ t‰ pavleshm‰ ne TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Instalimi nuk gjeti informacionet n‰ drive'rin e systemit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Instalimi deshtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ kompjuterit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ konfigurimit t‰ ekranit.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit t‰ p‰rzgjsdhjes t‰ tastier‰s.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit t‰ p‰rzgjedhjes t‰ tastier‰s.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Instalimi zbuloi q‰ t‰ pakten nj‰ harddisk p‰rmban nj‰ mosp‰rputhshmeri\n"
           "n‰ tabel‰n e particionit q‰ nuk mund t‰ trajtohet tamam!\n"
           "\n"
@@ -1447,7 +1511,7 @@ MUI_ERROR sqALErrorEntries[] =
           "F3 = Dil  ENTER = Vazhdo"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Tani ju mund t‰ krijoni nj‰ particion brenda\n"
         "nj‰ particioni ekzistues!\n"
         "\n"
@@ -1455,91 +1519,91 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Ju nuk mund t‰ fshini hap‰sir‰ n‰ disk jasht particioneve!\n"
         "\n"
         "  * Shtypni nj‰ tast cfar‰do p‰r t‰ vazhduar.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Instalimi d‰shtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Ska disk n‰ drive A:.",
         "ENTER = Vazhdo"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Instalimi d‰shtoj n‰ ngarkimin e list‰s s‰ tipit tv p‰rzgjsdhjes t‰ tastier‰s.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Instalimi d‰shtoi p‰r t‰ rinovuar konfigurimet e regjistrit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Instalimi d‰shtoi n‰ importimin e skedes koshere.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Instalimi d‰shtoi p‰r t‰ gjetur dokumentat e regjistrit t‰ t‰ dh‰nave.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Instalimi d‰shtoi p‰r t krijuar rgjistrin e koshere.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Instalimi d‰shtoi n‰ nisjen e regjistrit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabineti nuk ka t‰ vlefshme dokumentin inf.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabineti nuk u gj‰nd.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabineti ska asnj‰ skript konfigurimi.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Installimi d‰shtoi rradh‰n e kopjimit t‰ dokumentave.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Instalimi nuk mund t‰ krijoj‰ skedat p‰r instalim.",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Instalimi d‰shtoi p‰r t‰ gjetur seksionin e 'sked‰s'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Instalimi d‰shtoi p‰r t‰ gjetur '%S' seksionin\n"
         "ne TXTSETUP.SIF.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Instalimi d‰shtoi p‰r t‰ gjetur seksionin e 'sked‰s'\n"
+        // ERROR_CABINET_SECTION,
+        "Instalimi d‰shtoi p‰r t‰ gjetur '%S' seksionin\n"
         "ne kabinet.\n",
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Instalimi nuk mund t‰ krijoj‰ skedat p‰r instalim.",
         "‰NT‰R = Ristarto kompjuterin"
     },
@@ -1550,38 +1614,38 @@ MUI_ERROR sqALErrorEntries[] =
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Instalimi d‰shtoi p‰r t‰ shkruar tabelen e particionit.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Instalimi d‰shtoi p‰r t‰ shtuar codepage n‰ regjister.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Instalimi nuk mund t‰ v‰ndosi v‰ndnoshjen n‰ sistem.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Instalimi d‰shtoi p‰r t‰ shtuar zgj‰dhjen e tastier‰s n‰ regjister.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Instalimi nuk mund t‰ vendosni id geo.\n"
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1589,20 +1653,20 @@ MUI_ERROR sqALErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1621,7 +1685,7 @@ MUI_PAGE sqALPages[] =
         sqALLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         sqALWelcomePageEntries
     },
     {
@@ -1639,6 +1703,10 @@ MUI_PAGE sqALPages[] =
     {
         REPAIR_INTRO_PAGE,
         sqALRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        sqALUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1762,8 +1830,12 @@ MUI_STRING sqALStrings[] =
     "F3 = Dil  ENTER = Vazhdo"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Ristarto kompjuterin"},
-    {STRING_TXTSETUPFAILED,
-    "Instalimi d‰shtoj p‰r t‰ gjetur '%S' sectorin\nne TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kopjo dokumentat: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1772,7 +1844,7 @@ MUI_STRING sqALStrings[] =
     "   Apdejtimi i kosheres s‰ regjistrit..."},
     {STRING_IMPORTFILE,
     "   Importimi %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Apdejtimi i regjistrit p‰r ekranin..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Apdejtimi i konfigurimit vendas..."},
@@ -1802,28 +1874,28 @@ MUI_STRING sqALStrings[] =
     " Formato particionin si %S dokumentat e sistemit"},
     {STRING_KEEPFORMAT,
     " Mbaj dokumentat e sistemit siq jan‰ (pa ndryshime) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tipi 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tipi 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTipi %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalimi krijoj nj‰ particion t‰ ri n‰"},
     {STRING_UNPSPACE,

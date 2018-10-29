@@ -1,0 +1,258 @@
+/*
+ * PROJECT:     RAPPS for ReactOS
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * FILE:        base/applications/rapps/lang/et-EE.rc
+ * PURPOSE:     Estonian Language resource file
+ * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
+ */
+
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "&Sätted", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Välju", ID_EXIT
+    END
+    POPUP "&Programmid"
+    BEGIN
+        MENUITEM "&Installi\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Desinstalli\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Muuda", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Eemalda registrist", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Värskenda\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Uuenda an&dmebaasi\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Abi"
+    BEGIN
+        MENUITEM "Abi\tF1", ID_HELP, GRAYED
+        MENUITEM "&Info", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Ava link brauseris", ID_OPEN_LINK
+        MENUITEM "&Kopeeri link lõikelauale", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Installi\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Desinstalli\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Muuda", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Eemalda registrist", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Värskenda\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Uuenda an&dmebaasi\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sätted"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Üldine", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Salvesta akna asukoht", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "Installeerimiste ja eemalduste &logi", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Allalaadimine", -1, 4, 65, 240, 51
+    LTEXT "Allalaadimiste kaust:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Vali", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Kustuta programmi installeri peale installeerimist", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Puhverserver", -1, 4, 116, 240, 76
+    CONTROL "Süsteemi puhverserveri sätted", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Otse (Puhverserverita)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Puhverserver", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Puhverserverita", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Vaikimisi", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Programmi installimine"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Installi kettalt (CD või DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Lae alla ja installi", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
+STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "%ls allalaadimine…"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Loobu", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Info"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS Rakenduste Haldur\nAutoriõigus (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Close", IDOK, 133, 46, 50, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Installi"
+    IDS_TOOLTIP_UNINSTALL "Desinstalli"
+    IDS_TOOLTIP_MODIFY "Muuda"
+    IDS_TOOLTIP_SETTINGS "Sätted"
+    IDS_TOOLTIP_REFRESH "Värskenda"
+    IDS_TOOLTIP_UPDATE_DB "Uuenda andmebaasi"
+    IDS_TOOLTIP_EXIT "Välju"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Nimi"
+    IDS_APP_INST_VERSION "Versioon"
+    IDS_APP_DESCRIPTION "Kirjeldus"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVersioon: "
+    IDS_INFO_DESCRIPTION "\nKirjeldus: "
+    IDS_INFO_PUBLISHER "\nAvaldaja: "
+    IDS_INFO_HELPLINK "\nSpikrilink: "
+    IDS_INFO_HELPPHONE "\nTugitelefon: "
+    IDS_INFO_README "\nSeletusfail: "
+    IDS_INFO_REGOWNER "\nRegistreeritud omanik: "
+    IDS_INFO_PRODUCTID "\nProductID: "
+    IDS_INFO_CONTACT "\nKontakt: "
+    IDS_INFO_UPDATEINFO "\nUuenduse info: "
+    IDS_INFO_INFOABOUT "\nInformatsioon: "
+    IDS_INFO_COMMENTS "\nKommentaarid: "
+    IDS_INFO_INSTLOCATION "\nInstalli asukoht: "
+    IDS_INFO_INSTALLSRC "\nInstalli allikas: "
+    IDS_INFO_UNINSTALLSTR "\nDesinstalli string: "
+    IDS_INFO_MODIFYPATH "\nMuutmise tee: "
+    IDS_INFO_INSTALLDATE "\nInstalli kuupäev: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVersioon: "
+    IDS_AINFO_AVAILABLEVERSION "\nSaadav versioon: "
+    IDS_AINFO_DESCRIPTION "\nKirjeldus: "
+    IDS_AINFO_SIZE "\nSuurus: "
+    IDS_AINFO_URLSITE "\nKoduleht: "
+    IDS_AINFO_LICENSE "\nLitsents: "
+    IDS_AINFO_URLDOWNLOAD "\nAllalaadimislink: "
+    IDS_AINFO_LANGUAGES "\nKeeled: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Audio"
+    IDS_CAT_DEVEL "Arendus"
+    IDS_CAT_DRIVERS "Draiverid"
+    IDS_CAT_EDU "Hariv meelelahutus"
+    IDS_CAT_ENGINEER "Tehnika"
+    IDS_CAT_FINANCE "Finants"
+    IDS_CAT_GAMES "Mängud & meelelahutus"
+    IDS_CAT_GRAPHICS "Pildid"
+    IDS_CAT_INTERNET "Internet & võrk"
+    IDS_CAT_LIBS "Teegid"
+    IDS_CAT_OFFICE "Kontor"
+    IDS_CAT_OTHER "Muu"
+    IDS_CAT_SCIENCE "Teadus"
+    IDS_CAT_TOOLS "Tööriistad"
+    IDS_CAT_VIDEO "Video"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Rakenduste Haldur"
+    IDS_SEARCH_TEXT "Otsi…"
+    IDS_INSTALL "Installi"
+    IDS_UNINSTALL "Desinstalli"
+    IDS_MODIFY "Muuda"
+    IDS_APPS_COUNT "Rakenduste arv: %d; Valitud: %d"
+    IDS_WELCOME_TITLE "Tere tulemast ReactOSi Rakenduste Haldurisse!\n\n"
+    IDS_WELCOME_TEXT "Vali vasakult teema, siis vali paremalt rakendusi mida soovid installida või desinstallida.\nReactOSi veebileht: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Installitud"
+    IDS_AVAILABLEFORINST "Installimiseks saadaval"
+    IDS_UPDATES "Uuendused"
+    IDS_APPLICATIONS "Rakendused"
+    IDS_CHOOSE_FOLDER_TEXT "Vali kaust allalaadimiste jaoks:"
+    IDS_CHOOSE_FOLDER_ERROR "Antud kausta ei ole olemas. Kas soovid selle luua?"
+    IDS_APP_REG_REMOVE "Kas soovid kindlalt kustutada installitud programmi andmed registrist?"
+    IDS_INFORMATION "Informatsioon"
+    IDS_UNABLE_TO_DOWNLOAD "Pakendi allalaadimine ebaõnnestus! Aadressit ei leitud!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Pakendi allalaadimine ebaõnnestus! Kontrolli interneti ühendust!"
+    IDS_UNABLE_TO_REMOVE "Programmi andmete registrist eemaldamine ebaõnnestus!"
+    IDS_UNABLE_TO_INSTALL "Installeri avamine ebaõnnestus!"
+    IDS_UNABLE_TO_QUERY_CERT "Sertifikaadi informatsiooni hankimine ebaõnnestus.\n\nKas soovid siiski jätkata?"
+    IDS_INTEG_CHECK_TITLE "Kinnitab pakendi terviklust…"
+    IDS_INTEG_CHECK_FAIL "Pakend ei läbinud tervikluse testi, pakend võib olla vigane või omavoliliselt muudetud olla keset allalaadimist. Tarkvara kasutamist ei ole soovitatud."
+    IDS_INTERRUPTED_DOWNLOAD "Allalaadimist katkestati. Kontrolli interneti ühendust."
+    IDS_UNABLE_TO_WRITE "Kettale kirjutamine ebaõnnetus. Ketas võib täis olla."
+    IDS_SELECT_ALL "Vali/Tühista kõik"
+    IDS_INSTALL_SELECTED "Installi valitud"
+    IDS_SELECTEDFORINST "Installimiseks valitud"
+    IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Installitud"
+    IDS_STATUS_NOTINSTALLED "Installimata"
+    IDS_STATUS_DOWNLOADED "Alla laetud"
+    IDS_STATUS_UPDATE_AVAILABLE "Uuendus saadaval"
+    IDS_STATUS_DOWNLOADING "Allalaadimine…"
+    IDS_STATUS_INSTALLING "Installimine…"
+    IDS_STATUS_WAITING "Installimise ootel…"
+    IDS_STATUS_FINISHED "Lõpetatud"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Avatud lähtekoodiga"
+    IDS_LICENSE_FREEWARE "Vabavara"
+    IDS_LICENSE_TRIAL "Prooviversioon/Demo"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Toetab sinu keelt"
+    IDS_LANGUAGE_NO_TRANSLATION "Toetab teisi keeli"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Toetab inglise keelt"
+    IDS_LANGUAGE_SINGLE "Ühe keelne"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d veel)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d saadaval)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DL_DIALOG_DB_DISP "Rakenduste andmebaas"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Andmebaasi uuendamine…"
+END

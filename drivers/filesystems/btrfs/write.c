@@ -2333,6 +2333,10 @@ void free_write_data_stripes(write_data_context* wtc) {
 
         last_mdl = stripe->mdl;
 
+#ifdef __REACTOS__
+        if (stripe->Irp)
+            IoFreeIrp(stripe->Irp);
+#endif
         le = le->Flink;
     }
 

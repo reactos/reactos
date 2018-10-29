@@ -280,8 +280,14 @@ VfatHasFileSystem(
                 BootFatX->SysType[2] != 'T' ||
                 BootFatX->SysType[3] != 'X')
             {
-                DPRINT1("SysType %c%c%c%c\n", BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3]);
-                *RecognizedFS=FALSE;
+                DPRINT1("SysType %02X%02X%02X%02X (%c%c%c%c)\n",
+                        BootFatX->SysType[0], BootFatX->SysType[1], BootFatX->SysType[2], BootFatX->SysType[3],
+                        isprint(BootFatX->SysType[0]) ? BootFatX->SysType[0] : '.',
+                        isprint(BootFatX->SysType[1]) ? BootFatX->SysType[1] : '.',
+                        isprint(BootFatX->SysType[2]) ? BootFatX->SysType[2] : '.',
+                        isprint(BootFatX->SysType[3]) ? BootFatX->SysType[3] : '.');
+
+                *RecognizedFS = FALSE;
             }
 
             if (*RecognizedFS &&

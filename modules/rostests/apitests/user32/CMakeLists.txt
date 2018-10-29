@@ -22,6 +22,7 @@ list(APPEND SOURCE
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
     NextDlgItem.c
+    PrivateExtractIcons.c
     RealGetWindowClass.c
     RedrawWindow.c
     RegisterClassEx.c
@@ -35,6 +36,7 @@ list(APPEND SOURCE
     SetProp.c
     SetScrollInfo.c
     SetScrollRange.c
+    SwitchToThisWindow.c
     SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c

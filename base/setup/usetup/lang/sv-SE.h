@@ -1,17 +1,10 @@
 /*
  * PROJECT:         ReactOS Setup
- * FILE:            base/setup/usetup/lang/sv-SE.h  
+ * FILE:            base/setup/usetup/lang/sv-SE.h
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly plus perhaps GreatLord if blame and translate.reactos.se is consulted.
  */
 #pragma once
-
-MUI_LAYOUTS svSELayouts[] =
-{
-    { L"041D", L"0000041D" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
 
 static MUI_ENTRY svSELanguagePageEntries[] =
 {
@@ -88,7 +81,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Tryck p† ENTER f”r att installera ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -477,6 +470,76 @@ static MUI_ENTRY svSERepairPageEntries[] =
         0,
         "   ESC = G† till f”reg†ende sida  ENTER = Starta om datorn",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY svSEUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1374,7 +1437,7 @@ MUI_ERROR svSEErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS installerades inte fullst„ndigt p† din\n"
         "dator. Om du avslutar Setup nu, kommer du att beh”va\n"
         "k”ra Setup igen f”r att installera ReactOS.\n"
@@ -1384,62 +1447,62 @@ MUI_ERROR svSEErrorEntries[] =
         "F3 = Avsluta  ENTER = Forts„tta"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup kunde inte hitta n†gon h†rddisk.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup kunde inte hitta sin k„lldisk.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup misslyckades att l„sa in filen TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup fann en korrupt TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup hittade en ogiltig signatur i TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup kunde inte l„sa in informationen om systemenheten.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Setup misslyckades installera FAT bootkod p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup misslyckades att l„sa datortypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup misslyckades att l„sa in sk„rminst„llningslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup misslyckades att l„sa in tangentbordstypslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup misslyckades att l„sa in tangentbordslayoutslistan.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Setup fann att minst en h†rdisk inneh†ller en partitionstabell\n"
         "inte „r kompatibel och inte kan hanteras korrekt!\n"
         "\n"
@@ -1450,7 +1513,7 @@ MUI_ERROR svSEErrorEntries[] =
         "F3 = Avsluta  ENTER = Forts„tt"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Du kan inte skapa en partition inuti\n"
         "en redat befintlig partition!\n"
         "\n"
@@ -1458,133 +1521,127 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Du kan inte ta bort opartitionerrat diskutrymme!\n"
         "\n"
         "  * Tryck valfri tangent f”r att forts„tta.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Setup misslyckades att installera FAT bootkoden p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Ingen disk i enhet A:.",
         "ENTER = Forts„tt"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup misslyckades att updatera inst„llninarna f”r tangentbordslayout.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup misslyckades att uppdatera sk„rmregisterinst„llningen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup misslyckades att improterea en registerdatafil.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup misslyckades att hitta registerdatafilerna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup misslyckades att skapa registerdatafilerna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup misslyckades att initialisera registret.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Kabinettet has inen giltig inf fil.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Kabinettet hittades inte.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Kabinettet har inget installationsskript.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup misslyckades att ”ppna filkopierningsk”n.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Setup kunnde inte skapa installationsmapparna.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup misslyckades att hitta '%S' sektionen\n"
         "i TXTSETUP.SIF.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup misslyckades att hitta 'Directories' sektionen\n"
+        // ERROR_CABINET_SECTION,
+        "Setup misslyckades att hitta '%S' sektionen\n"
         "i kabinettet.\n",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
+        // ERROR_CREATE_INSTALL_DIR
         "Setup kunnde inte skapa installationsmappen.",
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup misslyckades att hitta 'SetupData' sektionen\n"
-        "i TXTSETUP.SIF.\n",
-        "ENTER = Starta om datorn"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup misslyckades att skriva partitionstabellen.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup misslyckades att l„gga till vald codepage till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup kunnde inte st„lla in 'system locale'.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Setup misslyckades att l„gga till tangentbordslayouten till registret.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup kunde inte stalla int 'geo id'.\n"
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1592,20 +1649,20 @@ MUI_ERROR svSEErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1624,7 +1681,7 @@ MUI_PAGE svSEPages[] =
         svSELanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        svSEWelcomePageEntries
     },
     {
@@ -1642,6 +1699,10 @@ MUI_PAGE svSEPages[] =
     {
         REPAIR_INTRO_PAGE,
         svSERepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        svSEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1765,8 +1826,12 @@ MUI_STRING svSEStrings[] =
     "F3 = Avsluta  ENTER = Forts„tt"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Starta om datorn"},
-    {STRING_TXTSETUPFAILED,
-    "Setup misslyckades att hitta '%S' sektionen\ni TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kopierar fil: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1775,7 +1840,7 @@ MUI_STRING svSEStrings[] =
     "   Uppdaterar registerdatafiler..."},
     {STRING_IMPORTFILE,
     "   Importerar %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Uppdaterar sk„rmregisterinst„llningar..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Uppdaterar lokala inst„llningar..."},
@@ -1805,28 +1870,28 @@ MUI_STRING svSEStrings[] =
     " Formaterar partition som %S filsystem "},
     {STRING_KEEPFORMAT,
     " Beh†ll nuvarande filsystem (inga f”r„ndringar) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "p† H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "p† H†rddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  H†rddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup skapade en ny partition p†"},
     {STRING_UNPSPACE,

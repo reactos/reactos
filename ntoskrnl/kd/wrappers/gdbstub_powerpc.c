@@ -1244,7 +1244,7 @@ GspUnloadBreakpoints(PKTRAP_FRAME TrapFrame)
 
 static BOOLEAN gdb_attached_yet = FALSE;
 /*
- * This function does all command procesing for interfacing to gdb.
+ * This function does all command processing for interfacing to gdb.
  */
 KD_CONTINUE_TYPE
 NTAPI
@@ -1295,7 +1295,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
         {
           LONG Esp;
 
-          stop_reply:
+stop_reply:
           /* reply to host that an exception has occurred */
           SigVal = GspComputeSignal(ExceptionRecord->ExceptionCode);
 
@@ -1342,13 +1342,16 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           switch(*ptr++)
             {
             case '?':
+#if 1
               /* a little hack to send more complete status information */
               goto stop_reply;
+#else
               GspOutBuffer[0] = 'S';
               GspOutBuffer[1] = HexChars[SigVal >> 4];
               GspOutBuffer[2] = HexChars[SigVal % 16];
               GspOutBuffer[3] = 0;
               break;
+#endif
             case 'd':
               GspRemoteDebug = !GspRemoteDebug; /* toggle debug flag */
               break;
@@ -1525,13 +1528,11 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                 ExReleaseFastMutex(&GspLock);
                 DPRINT("Thread %p leaving stub\n", PsGetCurrentThread());
                 return kdContinue;
-                break;
               }
 
             case 'k':  /* kill the program */
               strcpy(GspOutBuffer, "OK");
               break;
-              /* kill the program */
 
             case 'H': /* Set thread */
               GspSetThread(ptr);

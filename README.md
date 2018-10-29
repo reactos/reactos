@@ -1,5 +1,7 @@
 <p align=center>
-  <img src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
+  <a href="https://reactos.org">
+    <img alt="ReactOS" src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
+  </a>
 </p>
 
 ---
@@ -61,6 +63,8 @@ To build a bootable CD image run `ninja bootcd` from the
 build directory. This will create a CD image with a filename `bootcd.iso`.
 
 See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
+
+You can always download fresh binary builds of bootable images from the ["Daily builds"](https://www.reactos.org/getbuilds/) page.
 
 ## Installing
 

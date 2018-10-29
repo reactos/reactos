@@ -1827,13 +1827,10 @@ static dxtn_conversion_func get_dxtn_conversion_func(D3DFORMAT format, BOOL enco
     switch (format)
     {
         case D3DFMT_DXT1:
-            if (!wined3d_dxtn_supported()) return NULL;
             return encode ? wined3d_dxt1_encode : wined3d_dxt1_decode;
         case D3DFMT_DXT3:
-            if (!wined3d_dxtn_supported()) return NULL;
             return encode ? wined3d_dxt3_encode : wined3d_dxt3_decode;
         case D3DFMT_DXT5:
-            if (!wined3d_dxtn_supported()) return NULL;
             return encode ? wined3d_dxt5_encode : wined3d_dxt5_decode;
         default:
             return NULL;

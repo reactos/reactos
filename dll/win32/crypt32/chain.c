@@ -146,9 +146,9 @@ HCERTCHAINENGINE CRYPT_CreateChainEngine(HCERTSTORE root, DWORD system_store, co
     worldStores[2] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, myW);
     worldStores[3] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, trustW);
 
-    CRYPT_AddStoresToCollection(engine->hWorld,  sizeof(worldStores) / sizeof(worldStores[0]), worldStores);
-    CRYPT_AddStoresToCollection(engine->hWorld,  config->cAdditionalStore, config->rghAdditionalStore);
-    CRYPT_CloseStores(sizeof(worldStores) / sizeof(worldStores[0]), worldStores);
+    CRYPT_AddStoresToCollection(engine->hWorld, ARRAY_SIZE(worldStores), worldStores);
+    CRYPT_AddStoresToCollection(engine->hWorld, config->cAdditionalStore, config->rghAdditionalStore);
+    CRYPT_CloseStores(ARRAY_SIZE(worldStores), worldStores);
 
     engine->dwFlags = config->dwFlags;
     engine->dwUrlRetrievalTimeout = config->dwUrlRetrievalTimeout;
@@ -265,10 +265,10 @@ typedef struct _CertificateChain
     LONG ref;
 } CertificateChain;
 
-BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
+DWORD CRYPT_IsCertificateSelfSigned(const CERT_CONTEXT *cert)
 {
+    DWORD size, status = 0;
     PCERT_EXTENSION ext;
-    DWORD size;
     BOOL ret;
 
     if ((ext = CertFindExtension(szOID_AUTHORITY_KEY_IDENTIFIER2,
@@ -296,11 +296,9 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
                          &info->AuthorityCertIssuer.rgAltEntry[i];
                 if (directoryName)
                 {
-                    ret = CertCompareCertificateName(cert->dwCertEncodingType,
-                     &directoryName->u.DirectoryName, &cert->pCertInfo->Issuer)
-                     && CertCompareIntegerBlob(&info->AuthorityCertSerialNumber,
-                     &cert->pCertInfo->SerialNumber);
-                     if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
+                    if (CertCompareCertificateName(cert->dwCertEncodingType, &directoryName->u.DirectoryName, &cert->pCertInfo->Issuer)
+                            && CertCompareIntegerBlob(&info->AuthorityCertSerialNumber, &cert->pCertInfo->SerialNumber))
+                        status = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
                 }
                 else
                 {
@@ -318,17 +316,12 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
 
                     if (buf)
                     {
-                        CertGetCertificateContextProperty(cert,
-                         CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
-                        ret = !memcmp(buf, info->KeyId.pbData, size);
+                        CertGetCertificateContextProperty(cert, CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
+                        if (!memcmp(buf, info->KeyId.pbData, size))
+                            status = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                         CryptMemFree(buf);
-                        if (type) *type = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                     }
-                    else
-                        ret = FALSE;
                 }
-                else
-                    ret = FALSE;
             }
             LocalFree(info);
         }
@@ -346,11 +339,9 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
         {
             if (info->CertIssuer.cbData && info->CertSerialNumber.cbData)
             {
-                ret = CertCompareCertificateName(cert->dwCertEncodingType,
-                 &info->CertIssuer, &cert->pCertInfo->Issuer) &&
-                 CertCompareIntegerBlob(&info->CertSerialNumber,
-                 &cert->pCertInfo->SerialNumber);
-                if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
+                if (CertCompareCertificateName(cert->dwCertEncodingType, &info->CertIssuer, &cert->pCertInfo->Issuer)
+                        && CertCompareIntegerBlob(&info->CertSerialNumber, &cert->pCertInfo->SerialNumber))
+                    status = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
             }
             else if (info->KeyId.cbData)
             {
@@ -364,28 +355,23 @@ BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert, DWORD *type)
                     {
                         CertGetCertificateContextProperty(cert,
                          CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
-                        ret = !memcmp(buf, info->KeyId.pbData, size);
+                        if (!memcmp(buf, info->KeyId.pbData, size))
+                            status = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                         CryptMemFree(buf);
-                        if (type) *type = CERT_TRUST_HAS_KEY_MATCH_ISSUER;
                     }
-                    else
-                        ret = FALSE;
                 }
-                else
-                    ret = FALSE;
             }
-            else
-                ret = FALSE;
             LocalFree(info);
         }
     }
     else
-    {
-        ret = CertCompareCertificateName(cert->dwCertEncodingType,
-         &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer);
-        if (type) *type = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
-    }
-    return ret;
+        if (CertCompareCertificateName(cert->dwCertEncodingType, &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer))
+            status = CERT_TRUST_HAS_NAME_MATCH_ISSUER;
+
+    if (status)
+        status |= CERT_TRUST_IS_SELF_SIGNED;
+
+    return status;
 }
 
 static void CRYPT_FreeChainElement(PCERT_CHAIN_ELEMENT element)
@@ -745,8 +731,7 @@ static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
         /* Ignore any path or query portion of the URL. */
         if (*authority_end)
         {
-            if (authority_end - name < sizeof(hostname_buf) /
-             sizeof(hostname_buf[0]))
+            if (authority_end - name < ARRAY_SIZE(hostname_buf))
             {
                 memcpy(hostname_buf, name,
                  (authority_end - name) * sizeof(WCHAR));
@@ -1327,7 +1312,7 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
                      * constraints checked unless they're the end cert.
                      */
                     if (j == 0 || !CRYPT_IsCertificateSelfSigned(
-                     chain->rgpElement[j]->pCertContext, NULL))
+                     chain->rgpElement[j]->pCertContext))
                     {
                         CRYPT_CheckNameConstraints(nameConstraints,
                          chain->rgpElement[j]->pCertContext->pCertInfo,
@@ -1695,11 +1680,9 @@ static LPCSTR filetime_to_str(const FILETIME *time)
 
     if (!time) return "(null)";
 
-    GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt,
-     sizeof(dateFmt) / sizeof(dateFmt[0]));
+    GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt, ARRAY_SIZE(dateFmt));
     FileTimeToSystemTime(time, &sysTime);
-    GetDateFormatA(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date,
-     sizeof(date) / sizeof(date[0]));
+    GetDateFormatA(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, date, ARRAY_SIZE(date));
     return wine_dbg_sprintf("%s", date);
 }
 
@@ -1900,7 +1883,7 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
     int i;
     BOOL pathLengthConstraintViolated = FALSE;
     CERT_BASIC_CONSTRAINTS2_INFO constraints = { FALSE, FALSE, 0 };
-    DWORD type;
+    DWORD status;
 
     TRACE_(chain)("checking chain with %d elements for time %s\n",
      chain->cElement, filetime_to_str(time));
@@ -1912,7 +1895,7 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
             dump_element(chain->rgpElement[i]->pCertContext);
         if (i == chain->cElement - 1)
             isRoot = CRYPT_IsCertificateSelfSigned(
-             chain->rgpElement[i]->pCertContext, NULL);
+             chain->rgpElement[i]->pCertContext);
         else
             isRoot = FALSE;
         if (!CRYPT_IsCertVersionValid(chain->rgpElement[i]->pCertContext))
@@ -1988,10 +1971,9 @@ static void CRYPT_CheckSimpleChain(CertificateChainEngine *engine,
     }
     CRYPT_CheckChainNameConstraints(chain);
     CRYPT_CheckChainPolicies(chain);
-    if (CRYPT_IsCertificateSelfSigned(rootElement->pCertContext, &type))
+    if ((status = CRYPT_IsCertificateSelfSigned(rootElement->pCertContext)))
     {
-        rootElement->TrustStatus.dwInfoStatus |=
-         CERT_TRUST_IS_SELF_SIGNED | type;
+        rootElement->TrustStatus.dwInfoStatus |= status;
         CRYPT_CheckRootCert(engine->hRoot, rootElement);
     }
     CRYPT_CombineTrustStatus(&chain->TrustStatus, &rootElement->TrustStatus);
@@ -2203,7 +2185,7 @@ static BOOL CRYPT_BuildSimpleChain(const CertificateChainEngine *engine,
     PCCERT_CONTEXT cert = chain->rgpElement[chain->cElement - 1]->pCertContext;
 
     while (ret && !CRYPT_IsSimpleChainCyclic(chain) &&
-     !CRYPT_IsCertificateSelfSigned(cert, NULL))
+     !CRYPT_IsCertificateSelfSigned(cert))
     {
         PCCERT_CONTEXT issuer = CRYPT_GetIssuer(engine, world, cert, NULL, flags,
          &chain->rgpElement[chain->cElement - 1]->TrustStatus.dwInfoStatus);
@@ -2712,19 +2694,14 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
                     revocationPara.pIssuerCert =
                      chain->rgpChain[i]->rgpElement[j + 1]->pCertContext;
                 else
-                    revocationPara.pIssuerCert = certToCheck;
-
+                    revocationPara.pIssuerCert = NULL;
                 ret = CertVerifyRevocation(X509_ASN_ENCODING,
                  CERT_CONTEXT_REVOCATION_TYPE, 1, (void **)&certToCheck,
                  revocationFlags, &revocationPara, &revocationStatus);
 
-                if (!ret && revocationStatus.dwError == CRYPT_E_NO_REVOCATION_CHECK &&
-                    revocationPara.pIssuerCert == certToCheck)
-                {
-                    FIXME("Unable to find CRL for CA certificate\n");
+                if (!ret && chainFlags & CERT_CHAIN_REVOCATION_CHECK_CHAIN
+                    && revocationStatus.dwError == CRYPT_E_NO_REVOCATION_CHECK && revocationPara.pIssuerCert == NULL)
                     ret = TRUE;
-                    revocationStatus.dwError = 0;
-                }
 
                 if (!ret)
                 {
@@ -3135,8 +3112,7 @@ static BOOL WINAPI verify_authenticode_policy(LPCSTR szPolicyOID,
         };
 
         /* Check whether the root is an MS test root */
-        for (i = 0; !isMSTestRoot && i < sizeof(keyBlobs) / sizeof(keyBlobs[0]);
-         i++)
+        for (i = 0; !isMSTestRoot && i < ARRAY_SIZE(keyBlobs); i++)
         {
             msPubKey.PublicKey.cbData = keyBlobs[i].cbData;
             msPubKey.PublicKey.pbData = keyBlobs[i].pbData;
@@ -3426,7 +3402,7 @@ static BOOL match_dns_to_subject_dn(PCCERT_CONTEXT cert, LPCWSTR server_name)
 
                 end = dot ? dot : ptr + strlenW(ptr);
                 len = end - ptr;
-                if (len >= sizeof(component) / sizeof(component[0]))
+                if (len >= ARRAY_SIZE(component))
                 {
                     WARN_(chain)("domain component %s too long\n",
                      debugstr_wn(ptr, len));
@@ -3708,8 +3684,7 @@ static BOOL WINAPI verify_ms_root_policy(LPCSTR szPolicyOID,
         PCCERT_CONTEXT root =
          rootChain->rgpElement[rootChain->cElement - 1]->pCertContext;
 
-        for (i = 0; !isMSRoot && i < sizeof(keyBlobs) / sizeof(keyBlobs[0]);
-         i++)
+        for (i = 0; !isMSRoot && i < ARRAY_SIZE(keyBlobs); i++)
         {
             msPubKey.PublicKey.cbData = keyBlobs[i].cbData;
             msPubKey.PublicKey.pbData = keyBlobs[i].pbData;

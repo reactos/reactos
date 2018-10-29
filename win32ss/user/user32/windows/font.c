@@ -383,3 +383,115 @@ INT WINAPI DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )
     }
     return DrawTextExA( hdc, (LPSTR)str, count, rect, flags, &dtp );
 }
+
+/***************************************************************************
+ *       UserLpkPSMTextOut
+ * 
+ * Stripped down version of DrawText, can only draw single line text and
+ * Prefix underscore (only on the last found amperstand)
+ * only flags to be found to be of use in testing:
+ * 
+ * DT_NOPREFIX   - Draw the string as is it without any changes
+ * DT_HIDEPREFIX - Draw the string without underscore
+ * DT_PREFIXONLY - Draw only the underscore
+ * 
+ * without any of these flags the behavior is the string being drawn without the amperstands and
+ * with the underscore.
+ * 
+ * lpk has an equivalent function - LpkPSMTextOut
+ * Notes by testing:
+ * This function in windows doesn't check if lpString is NULL, which results a crash,
+ * returns seemingly random values without any logic, and ignores the DT_NOPREFIX value.
+ * All of these issues don't exist in the LPK version.
+ * 
+ * Note: lpString does not need to be null terminated
+ */
+#define PREFIX 38
+#define ALPHA_PREFIX 30 /* Win16: Alphabet prefix */
+#define KANA_PREFIX  31 /* Win16: Katakana prefix */
+
+INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags)
+{
+    SIZE size;
+    TEXTMETRICW tm;
+    int len, i = 0, j = 0;
+    int prefix_count = 0, prefix_offset = -1;
+    LPWSTR display_str = NULL;
+    int prefix_x, prefix_end;
+    HPEN hpen;
+    HPEN oldPen;
+
+    if (!lpString || cString <= 0)
+        return 0;
+
+    if (dwFlags & DT_NOPREFIX) /* Windows ignores this */
+    {
+        TextOutW(hdc, x, y, lpString, cString);
+        GetTextExtentPointW(hdc, lpString, cString, &size);
+        return size.cx;
+    }
+
+    display_str = HeapAlloc(GetProcessHeap(), 0, (cString + 1) * sizeof(WCHAR));
+
+    if (!display_str)
+        return 0;
+
+    while (i < cString)
+    {
+        if (lpString[i] == PREFIX || (iswspace(lpString[i]) && lpString[i] != L' '))
+        {
+            if (i < cString - 1 && lpString[i + 1] == PREFIX)
+                display_str[j++] = lpString[i++];
+            else
+                i++;
+        }
+        else
+        {
+            display_str[j++] = lpString[i++];
+        }
+    }
+
+    display_str[j] = L'\0';   
+    len = wcslen(display_str);
+
+    if (!(dwFlags & DT_PREFIXONLY))
+        TextOutW(hdc, x, y, display_str, len);
+
+    if (!(dwFlags & DT_HIDEPREFIX))
+    {
+        
+        for (i = 0; i < cString - 1; i++)
+        {
+            if (lpString[i] == PREFIX && lpString[i + 1] != PREFIX)
+            {
+                prefix_offset = i - prefix_count;
+                prefix_count++;
+            }
+            else if (lpString[i] == PREFIX && lpString[i + 1] == PREFIX)
+            {
+                i++;
+            }
+        }
+
+        GetTextMetricsW(hdc, &tm);
+        
+        if (prefix_offset != -1)
+        {
+            GetTextExtentPointW(hdc, display_str, prefix_offset, &size);
+            prefix_x = x + size.cx;
+            GetTextExtentPointW(hdc, display_str, prefix_offset + 1, &size);
+            prefix_end = x + size.cx - 1;
+            hpen = CreatePen(PS_SOLID, 1, GetTextColor(hdc));
+            oldPen = SelectObject(hdc, hpen);
+            MoveToEx(hdc, prefix_x, y + tm.tmAscent + 1, NULL);
+            LineTo(hdc, prefix_end, y + tm.tmAscent + 1);
+            SelectObject(hdc, oldPen);
+            DeleteObject(hpen);
+        }
+    }
+
+    GetTextExtentPointW(hdc, display_str, len + 1, &size);
+    HeapFree(GetProcessHeap(), 0, display_str);
+
+    return size.cx;
+}

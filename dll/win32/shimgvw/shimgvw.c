@@ -9,6 +9,7 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#define INITGUID
 
 #include <stdarg.h>
 
@@ -31,7 +32,6 @@
 
 #include "shimgvw.h"
 
-
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
 SHIMGVW_FILENODE *currentFile;
@@ -48,6 +48,137 @@ static const UINT ZoomSteps[] =
 {
     10, 25, 50, 100, 200, 400, 800, 1600
 };
+
+/* animation */
+UINT            m_nFrameIndex = 0;
+UINT            m_nFrameCount = 0;
+UINT            m_nLoopIndex = 0;
+UINT            m_nLoopCount = (UINT)-1;
+PropertyItem   *m_pDelayItem = NULL;
+
+#define ANIME_TIMER_ID  9999
+
+static void Anime_FreeInfo(void)
+{
+    if (m_pDelayItem)
+    {
+        free(m_pDelayItem);
+        m_pDelayItem = NULL;
+    }
+    m_nFrameIndex = 0;
+    m_nFrameCount = 0;
+    m_nLoopIndex = 0;
+    m_nLoopCount = (UINT)-1;
+}
+
+static BOOL Anime_LoadInfo(void)
+{
+    GUID *dims;
+    UINT nDimCount = 0;
+    UINT cbItem;
+    UINT result;
+    PropertyItem *pItem;
+
+    Anime_FreeInfo();
+    KillTimer(hDispWnd, ANIME_TIMER_ID);
+
+    if (!image)
+        return FALSE;
+
+    GdipImageGetFrameDimensionsCount(image, &nDimCount);
+    if (nDimCount)
+    {
+        dims = (GUID *)calloc(nDimCount, sizeof(GUID));
+        if (dims)
+        {
+            GdipImageGetFrameDimensionsList(image, dims, nDimCount);
+            GdipImageGetFrameCount(image, dims, &result);
+            m_nFrameCount = result;
+            free(dims);
+        }
+    }
+
+    result = 0;
+    GdipGetPropertyItemSize(image, PropertyTagFrameDelay, &result);
+    cbItem = result;
+    if (cbItem)
+    {
+        m_pDelayItem = (PropertyItem *)malloc(cbItem);
+        GdipGetPropertyItem(image, PropertyTagFrameDelay, cbItem, m_pDelayItem);
+    }
+
+    result = 0;
+    GdipGetPropertyItemSize(image, PropertyTagLoopCount, &result);
+    cbItem = result;
+    if (cbItem)
+    {
+        pItem = (PropertyItem *)malloc(cbItem);
+        if (pItem)
+        {
+            if (GdipGetPropertyItem(image, PropertyTagLoopCount, cbItem, pItem) == Ok)
+            {
+                m_nLoopCount = *(WORD *)pItem->value;
+            }
+            free(pItem);
+        }
+    }
+
+    if (m_pDelayItem)
+    {
+        SetTimer(hDispWnd, ANIME_TIMER_ID, 0, NULL);
+    }
+
+    return m_pDelayItem != NULL;
+}
+
+static void Anime_SetFrameIndex(UINT nFrameIndex)
+{
+    if (nFrameIndex < m_nFrameCount)
+    {
+        GUID guid = FrameDimensionTime;
+        if (Ok != GdipImageSelectActiveFrame(image, &guid, nFrameIndex))
+        {
+            guid = FrameDimensionPage;
+            GdipImageSelectActiveFrame(image, &guid, nFrameIndex);
+        }
+    }
+    m_nFrameIndex = nFrameIndex;
+}
+
+DWORD Anime_GetFrameDelay(UINT nFrameIndex)
+{
+    if (nFrameIndex < m_nFrameCount && m_pDelayItem)
+    {
+        return ((DWORD *)m_pDelayItem->value)[m_nFrameIndex] * 10;
+    }
+    return 0;
+}
+
+BOOL Anime_Step(DWORD *pdwDelay)
+{
+    *pdwDelay = INFINITE;
+    if (m_nLoopCount == (UINT)-1)
+        return FALSE;
+
+    if (m_nFrameIndex + 1 < m_nFrameCount)
+    {
+        *pdwDelay = Anime_GetFrameDelay(m_nFrameIndex);
+        Anime_SetFrameIndex(m_nFrameIndex);
+        ++m_nFrameIndex;
+        return TRUE;
+    }
+
+    if (m_nLoopCount == 0 || m_nLoopIndex < m_nLoopCount)
+    {
+        *pdwDelay = Anime_GetFrameDelay(m_nFrameIndex);
+        Anime_SetFrameIndex(m_nFrameIndex);
+        m_nFrameIndex = 0;
+        ++m_nLoopIndex;
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 static void ZoomInOrOut(BOOL bZoomIn)
 {
@@ -171,6 +302,7 @@ static void pLoadImage(LPWSTR szOpenFileName)
         DPRINT1("GdipLoadImageFromFile() failed\n");
         return;
     }
+    Anime_LoadInfo();
 
     /* reset zoom */
     ResetZoom();
@@ -257,9 +389,26 @@ static void pSaveImageAs(HWND hwnd)
 
     if (GetSaveFileNameW(&sfn))
     {
-        if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+        if (m_pDelayItem)
         {
-            DPRINT1("GdipSaveImageToFile() failed\n");
+            /* save animation */
+            KillTimer(hDispWnd, ANIME_TIMER_ID);
+
+            DPRINT1("FIXME: save animation\n");
+            if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+            {
+                DPRINT1("GdipSaveImageToFile() failed\n");
+            }
+
+            SetTimer(hDispWnd, ANIME_TIMER_ID, 0, NULL);
+        }
+        else
+        {
+            /* save non-animation */
+            if (GdipSaveImageToFile(image, szSaveFileName, &codecInfo[sfn.nFilterIndex - 1].Clsid, NULL) != Ok)
+            {
+                DPRINT1("GdipSaveImageToFile() failed\n");
+            }
         }
     }
 
@@ -438,8 +587,10 @@ ImageView_DrawImage(HWND hwnd)
     UINT ImageWidth, ImageHeight;
     INT ZoomedWidth, ZoomedHeight, x, y;
     PAINTSTRUCT ps;
-    RECT rect;
+    RECT rect, margin;
     HDC hdc;
+    HBRUSH white;
+    HGDIOBJ hbrOld;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -460,13 +611,30 @@ ImageView_DrawImage(HWND hwnd)
 
     if (GetClientRect(hwnd, &rect))
     {
-        FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
         ZoomedWidth = (ImageWidth * ZoomPercents) / 100;
         ZoomedHeight = (ImageHeight * ZoomPercents) / 100;
 
         x = (rect.right - ZoomedWidth) / 2;
         y = (rect.bottom - ZoomedHeight) / 2;
+
+        white = GetStockObject(WHITE_BRUSH);
+        // Fill top part
+        margin = rect;
+        margin.bottom = y - 1;
+        FillRect(hdc, &margin, white);
+        // Fill bottom part
+        margin.top = y + ZoomedHeight + 1;
+        margin.bottom = rect.bottom;
+        FillRect(hdc, &margin, white);
+        // Fill left part
+        margin.top = y - 1;
+        margin.bottom = y + ZoomedHeight + 1;
+        margin.right = x - 1;
+        FillRect(hdc, &margin, white);
+        // Fill right part
+        margin.left = x + ZoomedWidth + 1;
+        margin.right = rect.right;
+        FillRect(hdc, &margin, white);
 
         DPRINT("x = %d, y = %d, ImageWidth = %u, ImageHeight = %u\n");
         DPRINT("rect.right = %ld, rect.bottom = %ld\n", rect.right, rect.bottom);
@@ -484,7 +652,9 @@ ImageView_DrawImage(HWND hwnd)
             GdipSetSmoothingMode(graphics, SmoothingModeHighQuality);
         }
 
+        hbrOld = SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Rectangle(hdc, x - 1, y - 1, x + ZoomedWidth + 1, y + ZoomedHeight + 1);
+        SelectObject(hdc, hbrOld);
         GdipDrawImageRectI(graphics, image, x, y, ZoomedWidth, ZoomedHeight);
     }
     GdipDeleteGraphics(graphics);
@@ -595,6 +765,19 @@ ImageView_CreateToolBar(HWND hwnd)
     return FALSE;
 }
 
+static void ImageView_OnTimer(HWND hwnd)
+{
+    DWORD dwDelay;
+
+    KillTimer(hwnd, ANIME_TIMER_ID);
+    InvalidateRect(hwnd, NULL, FALSE);
+
+    if (Anime_Step(&dwDelay))
+    {
+        SetTimer(hwnd, ANIME_TIMER_ID, dwDelay, NULL);
+    }
+}
+
 LRESULT CALLBACK
 ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -604,6 +787,15 @@ ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             ImageView_DrawImage(hwnd);
             return 0L;
+        }
+        case WM_TIMER:
+        {
+            if (wParam == ANIME_TIMER_ID)
+            {
+                ImageView_OnTimer(hwnd);
+                return 0;
+            }
+            break;
         }
     }
     return CallWindowProc(PrevProc, hwnd, Message, wParam, lParam);
@@ -874,6 +1066,9 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 
     if (image)
         GdipDisposeImage(image);
+
+    Anime_FreeInfo();
+
     GdiplusShutdown(gdiplusToken);
     return -1;
 }

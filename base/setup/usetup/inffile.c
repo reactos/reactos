@@ -21,7 +21,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/inffile.c
  * PURPOSE:         .inf files support functions
- * PROGRAMMER:      Hervé Poussineau
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES ******************************************************************/
@@ -31,11 +32,23 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/
 
+/* Functions from the INFLIB library */
+
+extern VOID InfCloseFile(HINF InfHandle);
+// #define SetupCloseInfFile InfCloseFile
+VOID
+WINAPI
+SetupCloseInfFile(HINF InfHandle)
+{
+    InfCloseFile(InfHandle);
+}
+
+// #define SetupFindFirstLineW InfpFindFirstLineW
 BOOL
 WINAPI
-InfpFindFirstLineW(
+SetupFindFirstLineW(
     IN HINF InfHandle,
     IN PCWSTR Section,
     IN PCWSTR Key,
@@ -53,10 +66,128 @@ InfpFindFirstLineW(
     return TRUE;
 }
 
+extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
+                               PINFCONTEXT ContextOut);
+// #define SetupFindNextLine InfFindNextLine
+BOOL
+WINAPI
+SetupFindNextLine(PINFCONTEXT ContextIn,
+                  PINFCONTEXT ContextOut)
+{
+    return !!InfFindNextLine(ContextIn, ContextOut);
+}
 
+extern LONG InfGetFieldCount(PINFCONTEXT Context);
+// #define SetupGetFieldCount InfGetFieldCount
+LONG
+WINAPI
+SetupGetFieldCount(PINFCONTEXT Context)
+{
+    return InfGetFieldCount(Context);
+}
+
+/*
+ * This function corresponds to an undocumented but exported setupapi API
+ * that exists since WinNT4 and is still present in Win10.
+ * The returned string pointer is a read-only pointer to a string in the
+ * maintained INF cache, and is always in UNICODE (on NT systems).
+ */
+extern BOOLEAN InfGetDataField(PINFCONTEXT Context,
+                               ULONG FieldIndex,
+                               PWCHAR *Data);
+PCWSTR
+WINAPI
+pSetupGetField(PINFCONTEXT Context,
+               ULONG FieldIndex)
+{
+    PWCHAR Data = NULL;
+    if (!InfGetDataField(Context, FieldIndex, &Data))
+        return NULL;
+    return Data;
+}
+
+extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PUCHAR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+// #define SetupGetBinaryField InfGetBinaryField
+BOOL
+WINAPI
+SetupGetBinaryField(PINFCONTEXT Context,
+                    ULONG FieldIndex,
+                    PUCHAR ReturnBuffer,
+                    ULONG ReturnBufferSize,
+                    PULONG RequiredSize)
+{
+    return !!InfGetBinaryField(Context,
+                               FieldIndex,
+                               ReturnBuffer,
+                               ReturnBufferSize,
+                               RequiredSize);
+}
+
+extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
+                              ULONG FieldIndex,
+                              INT *IntegerValue);
+// #define SetupGetIntField InfGetIntField
+BOOL
+WINAPI
+SetupGetIntField(PINFCONTEXT Context,
+                 ULONG FieldIndex,
+                 INT *IntegerValue) // PINT
+{
+    return !!InfGetIntField(Context, FieldIndex, IntegerValue);
+}
+
+extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
+                                  ULONG FieldIndex,
+                                  PWSTR ReturnBuffer,
+                                  ULONG ReturnBufferSize,
+                                  PULONG RequiredSize);
+// #define SetupGetMultiSzFieldW InfGetMultiSzField
+BOOL
+WINAPI
+SetupGetMultiSzFieldW(PINFCONTEXT Context,
+                      ULONG FieldIndex,
+                      PWSTR ReturnBuffer,
+                      ULONG ReturnBufferSize,
+                      PULONG RequiredSize)
+{
+    return !!InfGetMultiSzField(Context,
+                                FieldIndex,
+                                ReturnBuffer,
+                                ReturnBufferSize,
+                                RequiredSize);
+}
+
+extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PWSTR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+// #define SetupGetStringFieldW InfGetStringField
+BOOL
+WINAPI
+SetupGetStringFieldW(PINFCONTEXT Context,
+                     ULONG FieldIndex,
+                     PWSTR ReturnBuffer,
+                     ULONG ReturnBufferSize,
+                     PULONG RequiredSize)
+{
+    return !!InfGetStringField(Context,
+                               FieldIndex,
+                               ReturnBuffer,
+                               ReturnBufferSize,
+                               RequiredSize);
+}
+
+
+/* SetupOpenInfFileW with support for a user-provided LCID */
+// #define SetupOpenInfFileExW InfpOpenInfFileW
 HINF
 WINAPI
-InfpOpenInfFileW(
+SetupOpenInfFileExW(
     IN PCWSTR FileName,
     IN PCWSTR InfClass,
     IN DWORD InfStyle,
@@ -81,25 +212,7 @@ InfpOpenInfFileW(
 }
 
 
-BOOLEAN
-INF_GetData(
-    IN PINFCONTEXT Context,
-    OUT PWCHAR *Key,
-    OUT PWCHAR *Data)
-{
-    return InfGetData(Context, Key, Data);
-}
-
-
-BOOLEAN
-INF_GetDataField(
-    IN PINFCONTEXT Context,
-    IN ULONG FieldIndex,
-    OUT PWCHAR *Data)
-{
-    return InfGetDataField(Context, FieldIndex, Data);
-}
-
+/* HELPER FUNCTIONS **********************************************************/
 
 HINF WINAPI
 INF_OpenBufferedFileA(

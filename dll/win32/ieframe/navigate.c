@@ -111,7 +111,7 @@ static void set_status_text(BindStatusCallback *This, ULONG statuscode, LPCWSTR 
         fmt[0] = 0;
         /* the format string must have one "%s" for the str */
         LoadStringW(ieframe_instance, IDS_STATUSFMT_FIRST + statuscode, fmt, IDS_STATUSFMT_MAXLEN);
-        snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), fmt, str);
+        snprintfW(buffer, ARRAY_SIZE(buffer), fmt, str);
     }
 
     V_VT(&arg) = VT_BSTR;
@@ -576,7 +576,7 @@ static void on_before_navigate2(DocHost *This, LPCWSTR url, SAFEARRAY *post_data
     DISPPARAMS dispparams;
     VARIANTARG params[7];
     WCHAR file_path[MAX_PATH];
-    DWORD file_path_len = sizeof(file_path) / sizeof(*file_path);
+    DWORD file_path_len = ARRAY_SIZE(file_path);
 
     dispparams.cArgs = 7;
     dispparams.cNamedArgs = 0;
@@ -642,7 +642,7 @@ static BOOL try_application_url(LPCWSTR url)
 
     static const WCHAR wszURLProtocol[] = {'U','R','L',' ','P','r','o','t','o','c','o','l',0};
 
-    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, app, sizeof(app)/sizeof(WCHAR), NULL, 0);
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, app, ARRAY_SIZE(app), NULL, 0);
     if(FAILED(hres))
         return FALSE;
 
@@ -674,7 +674,7 @@ static HRESULT create_moniker(LPCWSTR url, IMoniker **mon)
     if(PathIsURLW(url))
         return CreateURLMoniker(NULL, url, mon);
 
-    size = sizeof(new_url)/sizeof(WCHAR);
+    size = ARRAY_SIZE(new_url);
     hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE | URL_APPLY_DEFAULT);
     TRACE("was %s got %s\n", debugstr_w(url), debugstr_w(new_url));
     if(FAILED(hres)) {
@@ -978,7 +978,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
         }else {
             DWORD size;
 
-            size = sizeof(new_url)/sizeof(WCHAR);
+            size = ARRAY_SIZE(new_url);
             hres = UrlApplySchemeW(url, new_url, &size,
                     URL_APPLY_GUESSSCHEME | URL_APPLY_GUESSFILE | URL_APPLY_DEFAULT);
             if(FAILED(hres)) {

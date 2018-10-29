@@ -13,7 +13,7 @@ BEGIN
     LTEXT "Bienvenido", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Este asistente le ayudará a instalar un nuevo controlador de dispositivo para:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Haga clic en Siguiente para continuar.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "¡Advertencia! ¡Instalar un dispositivo puede ralentizar su equipo o volverlo inestable!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Instalar un controlador automáticamente", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Instalar un controlador específico", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -37,7 +37,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "La instalación ha fallado", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "El dispositivo no se pudo instalar al producirse un error inesperado.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Instalación completa", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Necesita reiniciar su equipo para finalizar la instalación de:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Haga clic en Finalizar para cerrar el asistente.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "Instalación completa.", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "El asistente ha terminado de instalar el controlador de dispositivo:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Haga clic en Finalizar para cerrar el asistente.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

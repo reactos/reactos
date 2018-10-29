@@ -129,6 +129,12 @@ static void display_cpl_sheets(HWND parent)
     psp[id].pfnDlgProc = content_dlgproc;
     id++;
 
+    psp[id].dwSize = sizeof (PROPSHEETPAGEW);
+    psp[id].hInstance = hcpl;
+    psp[id].u.pszTemplate = MAKEINTRESOURCEW(IDD_CONNECTIONS);
+    psp[id].pfnDlgProc = connections_dlgproc;
+    id++;
+
     /* Fill out the PROPSHEETHEADER */
     psh.dwSize = sizeof (PROPSHEETHEADERW);
     psh.dwFlags = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;

@@ -59,6 +59,7 @@ list(APPEND ACPICA_SOURCE
     acpica/executer/exresnte.c
     acpica/executer/exresolv.c
     acpica/executer/exresop.c
+    acpica/executer/exserial.c
     acpica/executer/exstore.c
     acpica/executer/exstoren.c
     acpica/executer/exstorob.c
@@ -162,6 +163,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c
     acpica/utilities/utstrtoul64.c
+    acpica/utilities/utstrsuppt.c
     # acpica/utilities/utuuid.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c

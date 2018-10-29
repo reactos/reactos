@@ -47,7 +47,7 @@ static int taskkill_vprintfW(const WCHAR *msg, __ms_va_list va_args)
     WCHAR msg_buffer[8192];
 
     wlen = FormatMessageW(FORMAT_MESSAGE_FROM_STRING, msg, 0, 0, msg_buffer,
-                          sizeof(msg_buffer)/sizeof(*msg_buffer), &va_args);
+                          ARRAY_SIZE(msg_buffer), &va_args);
 
     ret = WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), msg_buffer, wlen, &count, NULL);
     if (!ret)
@@ -92,8 +92,7 @@ static int WINAPIV taskkill_message_printfW(int msg, ...)
     WCHAR msg_buffer[8192];
     int len;
 
-    LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer,
-        sizeof(msg_buffer)/sizeof(WCHAR));
+    LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer, ARRAY_SIZE(msg_buffer));
 
     __ms_va_start(va_args, msg);
     len = taskkill_vprintfW(msg_buffer, va_args);
@@ -107,8 +106,7 @@ static int taskkill_message(int msg)
     static const WCHAR formatW[] = {'%','1',0};
     WCHAR msg_buffer[8192];
 
-    LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer,
-        sizeof(msg_buffer)/sizeof(WCHAR));
+    LoadStringW(GetModuleHandleW(NULL), msg, msg_buffer, ARRAY_SIZE(msg_buffer));
 
     return taskkill_printfW(formatW, msg_buffer);
 }

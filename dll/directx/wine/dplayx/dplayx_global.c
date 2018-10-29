@@ -120,9 +120,9 @@ static LPVOID DPLAYX_PrivHeapAlloc( DWORD flags, DWORD size )
 
   /* Find blank area */
   uBlockUsed = 0;
-  while( lpMemArea[ uBlockUsed ].used && uBlockUsed <= dwMaxBlock ) { uBlockUsed++; }
+  while( uBlockUsed < dwMaxBlock && lpMemArea[ uBlockUsed ].used ) { uBlockUsed++; }
 
-  if( uBlockUsed <= dwMaxBlock )
+  if( uBlockUsed < dwMaxBlock )
   {
     /* Set the area used */
     lpMemArea[ uBlockUsed ].used = TRUE;

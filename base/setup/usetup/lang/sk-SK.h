@@ -6,14 +6,6 @@
 
 #pragma once
 
-MUI_LAYOUTS skSKLayouts[] =
-{
-    { L"041B", L"0000041B" },
-    { L"041B", L"0001041B" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY skSKLanguagePageEntries[] =
 {
     {
@@ -89,13 +81,13 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  StlaŸte ENTER pre nainçtalovanie syst‚mu ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaŸte R pre opravu alebo aktualiz ciu syst‚mu ReactOS.",
+        "\x07  StlaŸte R pre opravu ciu syst‚mu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -477,6 +469,76 @@ static MUI_ENTRY skSKRepairPageEntries[] =
         0,
         0,
         "ESC = Hlavn  str nka  U = Aktualizovaœ  R = Z chrana  ENTER = Reçtart",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY skSKUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1375,7 +1437,7 @@ MUI_ERROR skSKErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "Syst‚m ReactOS nie je kompletne nainçtalovanì na Vaçom\n"
         "poŸ¡taŸi. Ak teraz preruç¡te inçtal ciu, budete musieœ\n"
         "spustiœ Inçtal tor znova, aby sa syst‚m ReactOS nainçtaloval.\n"
@@ -1385,63 +1447,63 @@ MUI_ERROR skSKErrorEntries[] =
         "F3 = SkonŸiœ  ENTER = PokraŸovaœ"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Inçtal toru sa nepodarilo n jsœ pevnì disk.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Inçtal toru sa nepodarilo n jsœ jej zdrojov£ mechaniku.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Inçtal tor zlyhal pri nahr van¡ s£boru TXTSETUP.SIF.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Inçtal tor naçiel poçkodenì s£bor TXTSETUP.SIF.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, znaŸka, çifra)
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Inçtal tor nemohol z¡skaœ inform cie o syst‚movìch diskoch.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Inçtal tor zlyhal pri nahr van¡ zoznamu typov poŸ¡taŸov.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Inçtal tor zlyhal pri nahr van¡ zoznamu nastaven¡ monitora.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Inçtal tor zlyhal pri nahr van¡ zoznamu typov kl vesn¡c.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Inçtal tor zlyhal pri nahr van¡ zoznamu rozlo§enia kl vesn¡c.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
 //          "Inçtal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
           "Inçtal tor naçiel najmenej na jednom pevnom disku nekompatibiln£\n"
           "tabu–ku oblast¡, s ktorou sa ned  spr vne zaobch dzaœ!\n"
@@ -1453,7 +1515,7 @@ MUI_ERROR skSKErrorEntries[] =
           "F3 = SkonŸiœ  ENTER = PokraŸovaœ"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Nem“§ete vytvoriœ nov£ oblasœ\n"
         "vo vn£tri u§ existuj£cej oblasti!\n"
         "\n"
@@ -1461,134 +1523,128 @@ MUI_ERROR skSKErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Nem“§ete odstr niœ miesto na disku, ktor‚ nie je oblasœou!\n"
         "\n"
         "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "V mechanike A: nie je disketa.",
         "ENTER = PokraŸovaœ"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Inçtal tor zlyhal pri aktualiz cii nastaven¡ rozlo§enia kl vesnice.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup failed to set the initialize the registry.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet not found.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet has no setup script.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Inçtal tor nemohol vytvoriœ inçtalaŸn‚ adres re.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
-    },
-    {
-        //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
-    },
-    {
-        //ERROR_CREATE_INSTALL_DIR
-        "Inçtal tor nemohol vytvoriœ inçtalaŸnì adres r.", //could not = nemohol
-        "ENTER = Reçtart poŸ¡taŸa"
-    },
-    {
-        //ERROR_FIND_SETUPDATA,
-        "Inçtal tor zlyhal pri h–adan¡ sekcie 'SetupData'\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\n"
         "v s£bore TXTSETUP.SIF.\n",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_CABINET_SECTION,
+        "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\n"
+        "v s£bore cabinet.\n",
+        "ENTER = Reçtart poŸ¡taŸa"
+    },
+    {
+        // ERROR_CREATE_INSTALL_DIR
+        "Inçtal tor nemohol vytvoriœ inçtalaŸnì adres r.", //could not = nemohol
+        "ENTER = Reçtart poŸ¡taŸa"
+    },
+    {
+        // ERROR_WRITE_PTABLE,
         "Inçtal tor zlyhal pri z pise do tabuliek oblast¡.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Inçtal tor zlyhal pri prid van¡ k¢dovej str nky do registrov.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Inçtal tor zlyhal pri prid van¡ rozlo§en¡ kl vesnice do registrov.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Inçtal tor nemohol nastaviœ geo id.\n"
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1596,20 +1652,20 @@ MUI_ERROR skSKErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1628,7 +1684,7 @@ MUI_PAGE skSKPages[] =
         skSKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         skSKWelcomePageEntries
     },
     {
@@ -1646,6 +1702,10 @@ MUI_PAGE skSKPages[] =
     {
         REPAIR_INTRO_PAGE,
         skSKRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        skSKUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1769,8 +1829,12 @@ MUI_STRING skSKStrings[] =
     "F3 = SkonŸiœ  ENTER = PokraŸovaœ"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reçtart poŸ¡taŸa"},
-    {STRING_TXTSETUPFAILED,
-    "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1779,7 +1843,7 @@ MUI_STRING skSKStrings[] =
     "   Aktualizujem polo§ky registrov..."},
     {STRING_IMPORTFILE,
     "   Importujem %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Aktualizujem nastavenia obrazovky v registrov..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizujem miestne nastavenia..."},
@@ -1809,28 +1873,28 @@ MUI_STRING skSKStrings[] =
     " Naform tovaœ oblasœ ako syst‚m s£borov %S "},
     {STRING_KEEPFORMAT,
     " Ponechaœ s£Ÿasnì syst‚m s£borov (bez zmeny) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK3,
-    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "pevnì disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "pevnì disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %styp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Inçtal tor vytvoril nov£ oblasœ na"},
     {STRING_UNPSPACE,

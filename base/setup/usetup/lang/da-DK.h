@@ -1,11 +1,5 @@
 #pragma once
 
-MUI_LAYOUTS daDKLayouts[] =
-{
-    { L"0406", L"00000406" },
-    { NULL, NULL }
-};
-
 static MUI_ENTRY daDKLanguagePageEntries[] =
 {
     {
@@ -81,13 +75,13 @@ static MUI_ENTRY daDKWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Tryk p† ENTER for at installere ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryk p† R reparere eller opdatere ReactOS.",
+        "\x07  Tryk p† R reparere ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -484,6 +478,77 @@ static MUI_ENTRY daDKRepairPageEntries[] =
         0
     }
 };
+
+static MUI_ENTRY daDKUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY daDKComputerPageEntries[] =
 {
     {
@@ -930,7 +995,6 @@ static MUI_ENTRY daDKConfirmDeleteSystemPartitionEntries[] =
         0
     }
 };
-
 
 static MUI_ENTRY daDKFormatPartitionEntries[] =
 {
@@ -1379,7 +1443,7 @@ MUI_ERROR daDKErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS er endnu ikke f‘rdiginstalleret p†\n"
         "din computer. Hvis du afslutter installationen nu skal\n"
         "du k›rer installationen igen for at installere ReactOS.\n"
@@ -1389,62 +1453,62 @@ MUI_ERROR daDKErrorEntries[] =
         "F3 = Afslut  ENTER = Forts‘t"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Installationen kunne ikke finde en harddisk.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Installationen kunne ikke finde dets kildedrev.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Installationen kunne ikke indl‘st TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Installationen fasdt en ›delagt TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Installationen fandt en ubrugbar signatur i TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Installationen kunne ikke hente information fra registreringsdatabasen.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_WRITE_BOOT,
+        // ERROR_WRITE_BOOT,
         "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Installationen kunne ikke indl‘se listen over computertyper.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Installationen kunne ikke indl‘ste listen over sk‘rmindstillinger.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Installationen kunne ikke indl‘se listen over tastaturtyper.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Installationen kunne ikke indl‘se listen over tastaturlayouts.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Installationen fandt ud af at midst en harddisk indeholder en\n"
         "indkompatibel partitionstabel og kan ikke h†ndteeres korrekt!\n"
         "\n"
@@ -1455,7 +1519,7 @@ MUI_ERROR daDKErrorEntries[] =
         "F3 = Afslut  ENTER = Forts‘t"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "Du kan ikke lave en partitionstabel\n"
         "inde i en allerede eksisterende partition!\n"
         "\n"
@@ -1463,133 +1527,127 @@ MUI_ERROR daDKErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "Du kan ikke slette upartitionernet diskplads!\n"
         "\n"
         "  * Tryk p† en vilk†rligtast for at forts‘tte.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
+        // ERROR_INSTALL_BOOTCODE,
         "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Der er ingen diskette i drev A:.",
         "ENTER = Forts‘t"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Installationen kunne ikke opdatere indstillingene for tastaturlayout.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Installationen kunne ikke opdatere indstillingerne for sk‘rmregistrereing",
         "ENTER = Genstart"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Installationen kunne ikke importere registreringsdatabasen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Installationen kunne ikke finde filerne til registreringsdatabasen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Installationen kunne ikke lave registreringsdatabasen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Installationen kunne ikke indl‘e registreringsdatabasen.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet-filen indeholder ingen brugbar inf-fil.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet-filen blev ikke fundet.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet-filen har ingen installationsscript.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Installationen kunne ikke †bne filkopieringsk›en.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Installationen kunne ikke lave installationsmapperne.",
         "ENTER = Genstart"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Installationen kunne ikke finde 'Directories'-sektionen\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Genstart"
-    },
-    {
-        //ERROR_CABINET_SECTION,
-        "Installationen kunne ikke finde 'Directories'-sektionen\n"
-        "i cabinet-filen.\n",
-        "ENTER = Genstart"
-    },
-    {
-        //ERROR_CREATE_INSTALL_DIR
-        "Installationen kunne ikke lave installationsmappen.",
-        "ENTER = Genstart"
-    },
-    {
-        //ERROR_FIND_SETUPDATA,
-        "Installationen kunne ikkde finde 'SetupData'-sektionen\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Installationen kunne ikke finde '%S'-sektionen\n"
         "i TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_CABINET_SECTION,
+        "Installationen kunne ikke finde '%S'-sektionen\n"
+        "i cabinet-filen.\n",
+        "ENTER = Genstart"
+    },
+    {
+        // ERROR_CREATE_INSTALL_DIR
+        "Installationen kunne ikke lave installationsmappen.",
+        "ENTER = Genstart"
+    },
+    {
+        // ERROR_WRITE_PTABLE,
         "Installationen kunne ikke skrive partitionstabllerne.\n"
         "ENTER = Genstart"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Installationen kunne ikke tilf›je en tegntabel til registreringsdatabasen.\n"
         "ENTER = Genstart"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Installationen kunne ikke s‘tte systemsproget.\n"
         "ENTER = Genstart"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Installationen kunne ikke tilf›je tastaturlayouts til registrereingsdatabasen.\n"
         "ENTER = Genstart"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Installationen kunne ikke s‘tte geo id'et.\n"
         "ENTER = Genstart"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Ubrugligt mappenavn.\n"
         "\n"
         "  * Tryk p† en vilk†rligtast for at forts‘tte."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Den valgte partition er ikke stor nok til at installere ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "installationspartitionen skal mindst have %lu MB ledig.\n"
@@ -1598,20 +1656,20 @@ MUI_ERROR daDKErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "Du kan ikke lave en ny prim‘r eller udviddet partition i\n"
         "partitionstabellen p† denne disk da den er fuld..\n"
         "\n"
         "  * Tryk p† en vilk†rligtast for at forts‘tte."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "Du kan ikke lave mere end en udviddet partition per disk.\n"
         "\n"
         "  * Tryk p† en vilk†rligtast for at forts‘tte."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Installationen kan ikke formatere partitionen:\n"
         " %S\n"
         "\n"
@@ -1630,7 +1688,7 @@ MUI_PAGE daDKPages[] =
         daDKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         daDKWelcomePageEntries
     },
     {
@@ -1648,6 +1706,10 @@ MUI_PAGE daDKPages[] =
     {
         REPAIR_INTRO_PAGE,
         daDKRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        daDKUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1769,8 +1831,12 @@ MUI_STRING daDKStrings[] =
     "F3 = Afslut  ENTER = Forts‘t"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Genstart"},
-    {STRING_TXTSETUPFAILED,
-    "Installationen kunne ikke finde '%S'-sektionen\ni TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kopiere filen: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1779,7 +1845,7 @@ MUI_STRING daDKStrings[] =
     "   Opdatere registreringsdatabasen..."},
     {STRING_IMPORTFILE,
     "   Importere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Opdatere indstillinger for registrering af sk‘rm..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Opdatere indstillinger for sprog..."},
@@ -1809,28 +1875,28 @@ MUI_STRING daDKStrings[] =
     " Formater partitionen som %S-filesystemet "},
     {STRING_KEEPFORMAT,
     " Behold nuv‘rende filsystem (ingen ‘ndringer) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ."},
-    {STRING_HDDINFOUNK3,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "p† harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "p† harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %stype %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Installationen har lavet en ny partition p†"},
     {STRING_UNPSPACE,

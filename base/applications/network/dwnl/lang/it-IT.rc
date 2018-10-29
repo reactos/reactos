@@ -1,0 +1,32 @@
+/*
+ * PROJECT:     ReactOS File Download Utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+ 
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Uso: dwnl URL [DESTINAZIONE]\n"
+    IDS_RESOLVING "Risolvere %s... "
+    IDS_DONE "fatto.\n"
+    IDS_LENGTH_FULL "Lunghezza: %I64u [%s]\n"
+    IDS_LENGTH "Lunghezza: %I64u\n"
+    IDS_FILE_SAVED "\nIl file è stato salvato.\n"
+    IDS_CONNECTING_TO_FULL "Connettersi a %s [%s]... "
+    IDS_CONNECTING_TO "Connettersi a %s... "
+    IDS_REDIRECTING_TO "Reindirizzato a %s... "
+    IDS_SEND_REQUEST "Invio richiesta... "
+    IDS_BYTES_DOWNLOADED "%I64u byte scaricati"
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (%I64u byte scaricati)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\nERRORE: Download fallito.\n"
+    IDS_ERROR_CODE "\nERRORE: %u\n"
+    IDS_ERROR_FILENAME "\nERRORE: Impossibile determinare il nome del file, si prega di specificare una destinazione.\n"
+    IDS_ERROR_PROTOCOL "\nERRORE: Protocollo non supportato.\n"
+END

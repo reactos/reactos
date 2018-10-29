@@ -666,7 +666,14 @@ static int check_file(DOS_FS * fs, DOS_FILE * file)
 		   (rw) ? " Assuming EOF." : "");
 #endif
 	    if (prev)
+#ifdef __REACTOS__
+	    {
+	    if (rw)
+#endif
 		set_fat(fs, prev, -1);
+#ifdef __REACTOS__
+	    }
+#endif
 	    else if (!file->offset)
 		die("FAT32 root dir starts with a bad cluster!");
 	    else

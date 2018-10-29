@@ -207,7 +207,7 @@ NTAPI
 CmpAddValueToList(IN PHHIVE Hive,
                   IN HCELL_INDEX ValueCell,
                   IN ULONG Index,
-                  IN ULONG Type,
+                  IN HSTORAGE_TYPE StorageType,
                   IN OUT PCHILD_LIST ChildList)
 {
     HCELL_INDEX ListCell;
@@ -223,6 +223,8 @@ CmpAddValueToList(IN PHHIVE Hive,
     ChildCount++;
     if (ChildCount > 1)
     {
+        ASSERT(ChildList->List != HCELL_NIL);
+
         /* The cell should be dirty at this point */
         ASSERT(HvIsCellDirty(Hive, ChildList->List));
 
@@ -249,7 +251,8 @@ CmpAddValueToList(IN PHHIVE Hive,
     else
     {
         /* This is our first child, so allocate a single cell */
-        ListCell = HvAllocateCell(Hive, sizeof(HCELL_INDEX), Type, HCELL_NIL);
+        ASSERT(ChildList->List == HCELL_NIL);
+        ListCell = HvAllocateCell(Hive, sizeof(HCELL_INDEX), StorageType, HCELL_NIL);
     }
 
     /* Fail if we couldn't get a cell */
@@ -286,7 +289,7 @@ NTAPI
 CmpSetValueDataNew(IN PHHIVE Hive,
                    IN PVOID Data,
                    IN ULONG DataSize,
-                   IN ULONG StorageType,
+                   IN HSTORAGE_TYPE StorageType,
                    IN HCELL_INDEX ValueCell,
                    OUT PHCELL_INDEX DataCell)
 {

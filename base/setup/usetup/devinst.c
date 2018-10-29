@@ -46,6 +46,9 @@ InstallDriver(
     UNICODE_STRING ImagePathU = RTL_CONSTANT_STRING(L"ImagePath");
     UNICODE_STRING StartU = RTL_CONSTANT_STRING(L"Start");
     UNICODE_STRING TypeU = RTL_CONSTANT_STRING(L"Type");
+    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
+    PWSTR keyboardClass = L"kbdclass\0";
+
     UNICODE_STRING StringU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
@@ -55,8 +58,6 @@ InstallDriver(
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
-    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
-    PWSTR keyboardClass = L"kbdclass\0";
 
     /* Check if we know the hardware */
     if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
@@ -76,11 +77,17 @@ InstallDriver(
      && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
      && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
     {
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 1, &ImagePath))
+    {
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
+    }
 
     /* Prepare full driver path */
     dwValue = PathPrefix.MaximumLength + wcslen(ImagePath) * sizeof(WCHAR);
@@ -88,6 +95,9 @@ InstallDriver(
     if (!FullImagePath)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
+        INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
@@ -97,12 +107,15 @@ InstallDriver(
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);
-    InitializeObjectAttributes(&ObjectAttributes, &StringU, 0, hServices, NULL);
-    Status = NtCreateKey(&hService, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, &Disposition);
+    InitializeObjectAttributes(&ObjectAttributes, &StringU, OBJ_CASE_INSENSITIVE, hServices, NULL);
+    Status = NtCreateKey(&hService, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08x\n", &StringU, Status);
         RtlFreeHeap(ProcessHeap, 0, FullImagePath);
+        INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
 
@@ -110,38 +123,38 @@ InstallDriver(
     if (Disposition == REG_CREATED_NEW_KEY)
     {
         dwValue = 0;
-        NtSetValueKey(
-            hService,
-            &ErrorControlU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &ErrorControlU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
+
         dwValue = 0;
-        NtSetValueKey(
-            hService,
-            &StartU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &StartU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
+
         dwValue = SERVICE_KERNEL_DRIVER;
-        NtSetValueKey(
-            hService,
-            &TypeU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &TypeU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
     }
     /* HACK: don't put any path in registry */
-    NtSetValueKey(
-        hService,
-        &ImagePathU,
-        0,
-        REG_SZ,
-        ImagePath,
-        (wcslen(ImagePath) + 1) * sizeof(WCHAR));
+    NtSetValueKey(hService,
+                  &ImagePathU,
+                  0,
+                  REG_SZ,
+                  ImagePath,
+                  (wcslen(ImagePath) + 1) * sizeof(WCHAR));
+
+    INF_FreeData(ImagePath);
 
     if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
@@ -154,29 +167,32 @@ InstallDriver(
                       (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
     }
 
+    INF_FreeData(ClassGuid);
+
     /* Associate device with the service we just filled */
-    Status = NtSetValueKey(
-        hDeviceKey,
-        &ServiceU,
-        0,
-        REG_SZ,
-        Driver,
-        (wcslen(Driver) + 1) * sizeof(WCHAR));
+    Status = NtSetValueKey(hDeviceKey,
+                           &ServiceU,
+                           0,
+                           REG_SZ,
+                           Driver,
+                           (wcslen(Driver) + 1) * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
         /* Restart the device, so it will use the driver we registered */
         deviceInstalled = ResetDevice(DeviceId);
     }
 
+    INF_FreeData(Driver);
+
     /* HACK: Update driver path */
-    NtSetValueKey(
-        hService,
-        &ImagePathU,
-        0,
-        REG_SZ,
-        FullImagePath,
-        (wcslen(FullImagePath) + 1) * sizeof(WCHAR));
+    NtSetValueKey(hService,
+                  &ImagePathU,
+                  0,
+                  REG_SZ,
+                  FullImagePath,
+                  (wcslen(FullImagePath) + 1) * sizeof(WCHAR));
     RtlFreeHeap(ProcessHeap, 0, FullImagePath);
+
     NtClose(hService);
 
     return deviceInstalled;
@@ -191,6 +207,7 @@ InstallDevice(
 {
     UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
     UNICODE_STRING CompatibleIDsU = RTL_CONSTANT_STRING(L"CompatibleIDs");
+
     UNICODE_STRING DeviceIdU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     LPCWSTR HardwareID;
@@ -201,7 +218,7 @@ InstallDevice(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
-    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, 0, hEnum, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, OBJ_CASE_INSENSITIVE, hEnum, NULL);
     Status = NtOpenKey(&hDeviceKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -324,14 +341,15 @@ EventThread(IN LPVOID lpParameter)
 {
     UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
     UNICODE_STRING ServicesU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
+
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG PnpEventSize;
     HINF hInf;
     HANDLE hEnum, hServices;
     NTSTATUS Status;
 
-    hInf = *(HINF *)lpParameter;
+    hInf = *(HINF*)lpParameter;
 
     InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenKey(&hEnum, KEY_QUERY_VALUE, &ObjectAttributes);
@@ -342,7 +360,7 @@ EventThread(IN LPVOID lpParameter)
     }
 
     InitializeObjectAttributes(&ObjectAttributes, &ServicesU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtCreateKey(&hServices, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, 0, NULL);
+    Status = NtCreateKey(&hServices, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08lx\n", &ServicesU, Status);
@@ -351,33 +369,31 @@ EventThread(IN LPVOID lpParameter)
     }
 
     PnpEventSize = 0x1000;
-    PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
+    PnpEvent = RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
     if (PnpEvent == NULL)
     {
-        NtClose(hEnum);
-        NtClose(hServices);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
     }
 
     for (;;)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-            PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
-            if (PnpEvent == NULL)
+            NewPnpEvent = RtlReAllocateHeap(ProcessHeap, 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
             {
-                NtClose(hEnum);
-                NtClose(hServices);
-                return STATUS_NO_MEMORY;
+                Status = STATUS_NO_MEMORY;
+                goto Quit;
             }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
@@ -387,7 +403,7 @@ EventThread(IN LPVOID lpParameter)
             break;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
         if (IsEqualIID(&PnpEvent->EventGuid, (REFGUID)&GUID_DEVICE_ENUMERATED))
         {
@@ -399,15 +415,20 @@ EventThread(IN LPVOID lpParameter)
             DPRINT("Unknown event\n");
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
-    RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-    NtClose(hEnum);
-    NtClose(hServices);
+    Status = STATUS_SUCCESS;
 
-    return STATUS_SUCCESS;
+Quit:
+    if (PnpEvent)
+        RtlFreeHeap(ProcessHeap, 0, PnpEvent);
+
+    NtClose(hServices);
+    NtClose(hEnum);
+
+    return Status;
 }
 
 DWORD WINAPI

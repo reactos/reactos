@@ -12,7 +12,7 @@ BEGIN
     LTEXT "Mirëseerdhët", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Ky magjistar instalon një komandues të ri të pajisjes për:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Klikoni Vazhdo për të vazhduar.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "KUJDES! INSTALIMI I NJË PAJISJE TË PERSONALIZUAR MUND TË NGRIJË KOMPJUTERIN TUAJ OSE TA BËJNË TË MOS NISET!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Instalo komanduesit automatikisht", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Instalo komanduesit nga një vend specifik", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -36,7 +36,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalimi dështoj", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Pajisja nuk mund të instalohet për shkak se një gabim i papritur ka ndodhur.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -76,7 +76,7 @@ BEGIN
     LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Ju duhet të rinisni për të përfunduar të instaluari të:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -87,7 +87,7 @@ BEGIN
     LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Magjistar ka përfunduar instalimin e komanduesit për:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

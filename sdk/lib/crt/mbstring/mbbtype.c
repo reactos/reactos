@@ -25,7 +25,7 @@ int _mbbtype(unsigned char c , int type)
 		{
 			return _MBC_TRAIL;
 		}
-		else if (( c >= 0x20 && c >= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) ||
+		else if (( c >= 0x20 && c <= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) ||
 			 ( c >= 0x81 && c <= 0x9F ) || ( c >= 0xE0 && c <= 0xFC ) )
 			 return _MBC_ILLEGAL;
 		else
@@ -36,7 +36,7 @@ int _mbbtype(unsigned char c , int type)
 		}
 		else if ( (c >= 0x81 && c <= 0x9F ) || ( c >= 0xE0 && c <= 0xFC) )
 			return _MBC_LEAD;
-		else if (( c >= 0x20 && c >= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) ||
+		else if (( c >= 0x20 && c <= 0x7E ) || ( c >= 0xA1 && c <= 0xDF ) ||
 			 ( c >= 0x81 && c <= 0x9F ) || ( c >= 0xE0 && c <= 0xFC ) )
 			 return _MBC_ILLEGAL;
 		else

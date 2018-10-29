@@ -902,6 +902,7 @@ static void test_AtlAxAttachControl(void)
     hr = AtlAxAttachControl(control, hwnd, &container);
     ok(hr == S_OK, "Expected AtlAxAttachControl to return S_OK, got 0x%08x\n", hr);
     ok(container != NULL, "Expected not NULL!\n");
+    IUnknown_Release(container);
     val = GetWindowLongW(hwnd, GWLP_USERDATA);
     ok(val == 0xdeadbeef, "Expected unchanged, returned %08x\n", val);
     DestroyWindow(hwnd);
