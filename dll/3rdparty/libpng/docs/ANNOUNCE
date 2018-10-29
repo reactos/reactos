@@ -1,35 +1,48 @@
-Libpng 1.6.34 - September 29, 2017
+Libpng 1.6.35 - July 15, 2018
 
-This is a public release of libpng, intended for use in production codes.
+This is a public release of libpng, intended for use in production code.
 
 Files available for download:
 
-Source files with LF line endings (for Unix/Linux) and with a
-"configure" script
+Source files with LF line endings (for Unix/Linux):
 
-   libpng-1.6.34.tar.xz (LZMA-compressed, recommended)
-   libpng-1.6.34.tar.gz
+   libpng-1.6.35.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.35.tar.gz
 
-Source files with CRLF line endings (for Windows), without the
-"configure" script
+Source files with CRLF line endings (for Windows):
 
-   lpng1634.7z  (LZMA-compressed, recommended)
-   lpng1634.zip
+   lp1635.7z  (LZMA-compressed, recommended)
+   lp1635.zip
 
 Other information:
 
-   libpng-1.6.34-README.txt
-   libpng-1.6.34-LICENSE.txt
-   libpng-1.6.34-*.asc (armored detached GPG signatures)
+   libpng-1.6.35-README.txt
+   libpng-1.6.35-LICENSE.txt
 
-Changes since the last public release (1.6.33):
-  Removed contrib/pngsuite/i*.png; some of these were incorrect and caused
-    test failures.
+Changes since the last public release (1.6.34):
+
+  Restored 21 of the contrib/pngsuite/i*.png, which do not cause test
+    failures. Placed the remainder in contrib/pngsuite/interlaced/i*.png.
+  Added calls to png_set_*() transforms commonly used by browsers to
+    the fuzzer.
+  Removed some unnecessary brackets in pngrtran.c
+  Fixed miscellaneous typos (Patch by github user "luzpaz").
+  Change "ASM C" to "C ASM" in CMakeLists.txt
+  Fixed incorrect handling of bKGD chunk in sub-8-bit files (Cosmin)
+  Added hardware optimization directories to zip and 7z distributions.
+  Fixed incorrect bitmask for options.
+  Fixed many spelling typos.
+  Make png_get_iCCP consistent with man page (allow compression-type argument
+    to be NULL, bug report by Lenard Szolnoki).
+  Replaced the remaining uses of png_size_t with size_t (Cosmin)
+  Fixed the calculation of row_factor in png_check_chunk_length
+    (reported by Thuan Pham in SourceForge issue #278)
+  Added missing parentheses to a macro definition
+    (suggested by "irwir" in GitHub issue #216)
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
-to subscribe)
-or to glennrp at users.sourceforge.net
+to subscribe).
 
 Glenn R-P

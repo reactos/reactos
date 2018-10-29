@@ -1,9 +1,8 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.34 - September 29, 2017
+ libpng version 1.6.35 - July 15, 2018
  Updated and distributed by Glenn Randers-Pehrson
- <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2017 Glenn Randers-Pehrson
+ Copyright (c) 1998-2018 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,7 +10,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.34 - September 29, 2017
+ libpng versions 0.97, January 1998, through 1.6.35 - July 15, 2018
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2017 Glenn Randers-Pehrson
 
@@ -348,18 +347,18 @@ Customizing libpng.
     FILE *fp = fopen(file_name, "rb");
     if (!fp)
     {
-       return (ERROR);
+       return ERROR;
     }
 
     if (fread(header, 1, number, fp) != number)
     {
-       return (ERROR);
+       return ERROR;
     }
 
     is_png = !png_sig_cmp(header, 0, number);
     if (!is_png)
     {
-       return (NOT_PNG);
+       return NOT_PNG;
     }
 
 Next, png_struct and png_info need to be allocated and initialized.  In
@@ -378,7 +377,7 @@ create the structure, so your application should check for that.
         user_error_fn, user_warning_fn);
 
     if (!png_ptr)
-       return (ERROR);
+       return ERROR;
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
 
@@ -386,7 +385,7 @@ create the structure, so your application should check for that.
     {
        png_destroy_read_struct(&png_ptr,
            (png_infopp)NULL, (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
 If you want to use your own memory allocation routines,
@@ -421,7 +420,7 @@ free any memory.
        png_destroy_read_struct(&png_ptr, &info_ptr,
            &end_info);
        fclose(fp);
-       return (ERROR);
+       return ERROR;
     }
 
 Pass (png_infopp)NULL instead of &end_info if you didn't create
@@ -503,7 +502,7 @@ input stream. You must supply the function
 
            png_byte name[5];
            png_byte *data;
-           png_size_t size;
+           size_t size;
 
        /* Note that libpng has already taken care of
           the CRC handling */
@@ -512,9 +511,9 @@ input stream. You must supply the function
           unknown chunk structure, process it, and return one
           of the following: */
 
-       return (-n); /* chunk had an error */
-       return (0); /* did not recognize */
-       return (n); /* success */
+       return -n; /* chunk had an error */
+       return 0; /* did not recognize */
+       return n; /* success */
     }
 
 (You can give your function another name that you like instead of
@@ -1003,7 +1002,7 @@ chunks to be assumed to be encoded using sRGB.
     png_set_alpha_mode(pp, PNG_ALPHA_PNG, PNG_GAMMA_MAC);
 
 In this case the output is assumed to be something like an sRGB conformant
-display preceeded by a power-law lookup table of power 1.45.  This is how
+display preceded by a power-law lookup table of power 1.45.  This is how
 early Mac systems behaved.
 
     png_set_alpha_mode(pp, PNG_ALPHA_STANDARD, PNG_GAMMA_LINEAR);
@@ -1055,7 +1054,7 @@ faster.)
 
 When the default gamma of PNG files doesn't match the output gamma.
 If you have PNG files with no gamma information png_set_alpha_mode allows
-you to provide a default gamma, but it also sets the ouput gamma to the
+you to provide a default gamma, but it also sets the output gamma to the
 matching value.  If you know your PNG files have a gamma that doesn't
 match the output you can take advantage of the fact that
 png_set_alpha_mode always sets the output gamma but only sets the PNG
@@ -2409,7 +2408,7 @@ separate.
     {
        png_destroy_read_struct(&png_ptr, &info_ptr,
            (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
    png_read_end(png_ptr, end_info);
@@ -2549,7 +2548,7 @@ png_infop info_ptr;
          user_error_fn, user_warning_fn);
 
     if (!png_ptr)
-        return (ERROR);
+        return ERROR;
 
     info_ptr = png_create_info_struct(png_ptr);
 
@@ -2557,14 +2556,14 @@ png_infop info_ptr;
     {
        png_destroy_read_struct(&png_ptr,
           (png_infopp)NULL, (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
     if (setjmp(png_jmpbuf(png_ptr)))
     {
        png_destroy_read_struct(&png_ptr, &info_ptr,
           (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
     /* This one's new.  You can provide functions
@@ -2598,7 +2597,7 @@ png_infop info_ptr;
     {
        png_destroy_read_struct(&png_ptr, &info_ptr,
            (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
     /* This one's new also.  Simply give it a chunk
@@ -2742,7 +2741,7 @@ custom writing functions.  See the discussion under Customizing libpng.
     FILE *fp = fopen(file_name, "wb");
 
     if (!fp)
-       return (ERROR);
+       return ERROR;
 
 Next, png_struct and png_info need to be allocated and initialized.
 As these can be both relatively large, you may not want to store these
@@ -2757,14 +2756,14 @@ both "png_ptr"; you can call them anything you like, such as
         user_error_fn, user_warning_fn);
 
     if (!png_ptr)
-       return (ERROR);
+       return ERROR;
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
     {
        png_destroy_write_struct(&png_ptr,
            (png_infopp)NULL);
-       return (ERROR);
+       return ERROR;
     }
 
 If you want to use your own memory allocation routines,
@@ -2791,7 +2790,7 @@ section below for more information on the libpng error handling.
     {
     png_destroy_write_struct(&png_ptr, &info_ptr);
        fclose(fp);
-       return (ERROR);
+       return ERROR;
     }
     ...
     return;
@@ -3779,7 +3778,7 @@ in-memory bitmap formats or to be written from the same formats.  If these
 formats do not accommodate your needs then you can, and should, use the more
 sophisticated APIs above - these support a wide variety of in-memory formats
 and a wide variety of sophisticated transformations to those formats as well
-as a wide variety of APIs to manipulate ancilliary information.
+as a wide variety of APIs to manipulate ancillary information.
 
 To read a PNG file using the simplified API:
 
@@ -4102,7 +4101,7 @@ READ APIs
       The PNG header is read from the stdio FILE object.
 
    int png_image_begin_read_from_memory(png_imagep image,
-      png_const_voidp memory, png_size_t size)
+      png_const_voidp memory, size_t size)
 
       The PNG header is read from the given memory buffer.
 
@@ -4255,10 +4254,10 @@ png_get_io_ptr().  For example:
 The replacement I/O functions must have prototypes as follows:
 
     void user_read_data(png_structp png_ptr,
-        png_bytep data, png_size_t length);
+        png_bytep data, size_t length);
 
     void user_write_data(png_structp png_ptr,
-        png_bytep data, png_size_t length);
+        png_bytep data, size_t length);
 
     void user_flush_data(png_structp png_ptr);
 
@@ -4784,7 +4783,7 @@ behavior in case the application runs out of memory part-way through
 the process.
 
 We changed the prototypes of png_get_compression_buffer_size() and
-png_set_compression_buffer_size() to work with png_size_t instead of
+png_set_compression_buffer_size() to work with size_t instead of
 png_uint_32.
 
 Support for numbered error messages was removed by default, since we
@@ -5255,9 +5254,8 @@ or you can browse it with a web browser at
     https://github.com/glennrp/libpng or
     https://sourceforge.net/p/libpng/code/ci/libpng16/tree/
 
-Patches can be sent to glennrp at users.sourceforge.net or to
-png-mng-implement at lists.sourceforge.net or you can upload them to
-the libpng bug tracker at
+Patches can be sent to png-mng-implement at lists.sourceforge.net or
+you can upload them to the libpng bug tracker at
 
     https://libpng.sourceforge.io/
 
@@ -5266,9 +5264,9 @@ or as a "pull request" to
     https://github.com/glennrp/libpng/pulls
 
 We also accept patches built from the tar or zip distributions, and
-simple verbal discriptions of bug fixes, reported either to the
+simple verbal descriptions of bug fixes, reported either to the
 SourceForge bug tracker, to the png-mng-implement at lists.sf.net
-mailing list, as github issues, or directly to glennrp.
+mailing list, as github issues.
 
 XV. Coding style
 
@@ -5289,7 +5287,7 @@ braces on separate lines:
 The braces can be omitted from simple one-line actions:
 
     if (condition)
-       return (0);
+       return 0;
 
 We use 3-space indentation, except for continued statements which
 are usually indented the same as the first line of the statement
@@ -5414,7 +5412,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.34 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.35 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

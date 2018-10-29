@@ -2,13 +2,14 @@
 #if 0 /* in case someone actually tries to compile this */
 
 /* example.c - an example of using libpng
- * Last changed in libpng 1.6.24 [August 4, 2016]
+ * Last changed in libpng 1.6.35 [July 15, 2018]
+ * Maintained 2018 Cosmin Truta
  * Maintained 1998-2016 Glenn Randers-Pehrson
  * Maintained 1996, 1997 Andreas Dilger)
  * Written 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  * To the extent possible under law, the authors have waived
  * all copyright and related or neighboring rights to this file.
- * This work is published from: United States.
+ * This work is published from: United States, Canada.
  */
 
 /* This is an example of how to use libpng to read and write PNG files.
@@ -257,7 +258,7 @@ int check_if_png(char *file_name, FILE **fp)
    /* Compare the first PNG_BYTES_TO_CHECK bytes of the signature.
       Return nonzero (true) if they match */
 
-   return(!png_sig_cmp(buf, (png_size_t)0, PNG_BYTES_TO_CHECK));
+   return(!png_sig_cmp(buf, 0, PNG_BYTES_TO_CHECK));
 }
 
 /* Read a PNG file.  You may want to return an error code if the read
