@@ -172,6 +172,8 @@ START_TEST(CloseWindow)
     HWND hwnd;
     MSG msg;
 
+    ok(!CloseWindow(NULL), "CloseWindow(NULL) should be failed\n");
+
     hIcon = LoadIcon(NULL, IDI_APPLICATION);
     ok(hIcon != NULL, "hIcon was NULL\n");
     hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -195,7 +197,7 @@ START_TEST(CloseWindow)
         return;
     }
 
-    hwnd = CreateWindowW(s_szClassName, L"SwitchToThisWindow", WS_OVERLAPPEDWINDOW,
+    hwnd = CreateWindowW(s_szClassName, L"CloseWindow testcase", WS_OVERLAPPEDWINDOW,
                          CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
     ok(hwnd != NULL, "CreateWindowW failed\n");
