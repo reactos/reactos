@@ -346,9 +346,8 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
 
     /* Initialize it */
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
-    Section->Type = 'SC';
-    Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    Section->u.Flags.filler0 = 1;
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
     Section->Segment = NULL;
 
@@ -437,7 +436,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     Segment->ReferenceCount = 1;
     Segment->Locked = TRUE;
     RtlZeroMemory(&Segment->Image, sizeof(Segment->Image));
-    Section->Segment = Segment;
+    Section->Segment = (PSEGMENT)Segment;
 
     KeAcquireSpinLock(&FileObject->IrpListLock, &OldIrql);
     /*
@@ -487,7 +486,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         * to extend it
         */
         Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->DataSectionObject;
-        Section->Segment = Segment;
+        Section->Segment = (PSEGMENT)Segment;
         (void)InterlockedIncrementUL(&Segment->ReferenceCount);
 
         MmLockSectionSegment(Segment);
@@ -760,7 +759,7 @@ MmExtendCacheSection(PROS_SECTION_OBJECT Section,
                      BOOLEAN ExtendFile)
 {
     LARGE_INTEGER OldSize;
-    PMM_SECTION_SEGMENT Segment = Section->Segment;
+    PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
     DPRINT("Extend Segment %p\n", Segment);
 
     MmLockSectionSegment(Segment);

@@ -191,16 +191,13 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 
 typedef struct _ROS_SECTION_OBJECT
 {
-    CSHORT Type;
-    CSHORT Size;
+	SECTION;
     LARGE_INTEGER MaximumSize;
-    ULONG SectionPageProtection;
     ULONG AllocationAttributes;
     PFILE_OBJECT FileObject;
     union
     {
         PMM_IMAGE_SECTION_OBJECT ImageSection;
-        PMM_SECTION_SEGMENT Segment;
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 

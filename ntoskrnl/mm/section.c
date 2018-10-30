@@ -2707,23 +2707,25 @@ MmpDeleteSection(PVOID ObjectBody)
 #endif
     else
     {
+    	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+
         /*
          * NOTE: Section->Segment can be NULL for short time
          * during the section creating.
          */
-        if (Section->Segment == NULL)
+        if (Segment == NULL)
             return;
 
-        if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
+        if (Segment->Flags & MM_PAGEFILE_SEGMENT)
         {
-            MmpFreePageFileSegment(Section->Segment);
-            MmFreePageTablesSectionSegment(Section->Segment, NULL);
-            ExFreePool(Section->Segment);
+            MmpFreePageFileSegment(Segment);
+            MmFreePageTablesSectionSegment(Segment, NULL);
+            ExFreePool(Segment);
             Section->Segment = NULL;
         }
         else
         {
-            (void)InterlockedDecrementUL(&Section->Segment->ReferenceCount);
+            (void)InterlockedDecrementUL(&Segment->ReferenceCount);
         }
     }
     if (Section->FileObject != NULL)
@@ -2757,6 +2759,7 @@ MmCreatePhysicalMemorySection(VOID)
     UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
     LARGE_INTEGER SectionSize;
     HANDLE Handle;
+    PMM_SECTION_SEGMENT Segment;
 
     /*
      * Create the section mapping physical memory
@@ -2792,7 +2795,8 @@ MmCreatePhysicalMemorySection(VOID)
     }
     ObCloseHandle(Handle, KernelMode);
     PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
-    PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
+    Segment = (PMM_SECTION_SEGMENT)PhysSection->Segment;
+    Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
     return(STATUS_SUCCESS);
 }
@@ -2876,9 +2880,9 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
-    Section->Type = 'SC';
-    Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    /* Mark it as a "ROS" Section */
+    Section->u.Flags.filler0 = 1;
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
     Section->MaximumSize = MaximumSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
@@ -2889,7 +2893,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
         return(STATUS_NO_MEMORY);
     }
     RtlZeroMemory(Segment, sizeof(MM_SECTION_SEGMENT));
-    Section->Segment = Segment;
+    Section->Segment = (PSEGMENT)Segment;
     Segment->ReferenceCount = 1;
     ExInitializeFastMutex(&Segment->Lock);
     Segment->Image.FileOffset = 0;
@@ -2946,9 +2950,10 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
-    Section->Type = 'SC';
-    Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    /* Mark it as a ROS Section */
+    Section->u.Flags.filler0 = 1;
+
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
     /*
@@ -3037,7 +3042,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
             ObDereferenceObject(FileObject);
             return(STATUS_NO_MEMORY);
         }
-        Section->Segment = Segment;
+        Section->Segment = (PSEGMENT)Segment;
         Segment->ReferenceCount = 1;
         ExInitializeFastMutex(&Segment->Lock);
         /*
@@ -3073,7 +3078,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
         Segment =
             (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
             DataSectionObject;
-        Section->Segment = Segment;
+        Section->Segment = (PSEGMENT)Segment;
         (void)InterlockedIncrementUL(&Segment->ReferenceCount);
         MmLockSectionSegment(Segment);
 
@@ -3768,9 +3773,10 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
-    Section->Type = 'SC';
-    Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    /* Mark it as a "ROS" section */
+    Section->u.Flags.filler0 = 1;
+
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
     if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
@@ -4335,8 +4341,10 @@ NtQuerySection(
                     }
                     else
                     {
-                        Sbi->BaseAddress = (PVOID)RosSection->Segment->Image.VirtualAddress;
-                        Sbi->Size.QuadPart = RosSection->Segment->Length.QuadPart;
+                    	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)RosSection->Segment;
+
+                        Sbi->BaseAddress = (PVOID)Segment->Image.VirtualAddress;
+                        Sbi->Size.QuadPart = Segment->Length.QuadPart;
                     }
 
                     if (ResultLength != NULL)
@@ -4635,23 +4643,25 @@ MmMapViewOfSection(IN PVOID SectionObject,
     }
     else
     {
+    	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+
         /* check for write access */
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
-                !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
+                !(Section->InitialPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
         }
         /* check for read access */
         if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
-                !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+                !(Section->InitialPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
         }
         /* check for execute access */
         if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
-                !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+                !(Section->InitialPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
@@ -4683,16 +4693,16 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         *ViewSize = PAGE_ROUND_UP(*ViewSize);
 
-        MmLockSectionSegment(Section->Segment);
+        MmLockSectionSegment(Segment);
         Status = MmMapViewOfSegment(AddressSpace,
                                     Section,
-                                    Section->Segment,
+                                    Segment,
                                     BaseAddress,
                                     *ViewSize,
                                     Protect,
                                     ViewOffset,
                                     AllocationType & (MEM_TOP_DOWN|SEC_NO_CHANGE));
-        MmUnlockSectionSegment(Section->Segment);
+        MmUnlockSectionSegment(Segment);
         if (!NT_SUCCESS(Status))
         {
             MmUnlockAddressSpace(AddressSpace);
@@ -4843,6 +4853,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                         IN OUT PSIZE_T ViewSize)
 {
     PROS_SECTION_OBJECT Section;
+    PMM_SECTION_SEGMENT Segment;
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;
     PAGED_CODE();
@@ -4858,6 +4869,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
     DPRINT("MmMapViewInSystemSpace() called\n");
 
     Section = (PROS_SECTION_OBJECT)SectionObject;
+    Segment = (PMM_SECTION_SEGMENT)Section->Segment;
     AddressSpace = MmGetKernelAddressSpace();
 
     MmLockAddressSpace(AddressSpace);
@@ -4872,19 +4884,19 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
         (*ViewSize) = Section->MaximumSize.u.LowPart;
     }
 
-    MmLockSectionSegment(Section->Segment);
+    MmLockSectionSegment(Segment);
 
 
     Status = MmMapViewOfSegment(AddressSpace,
                                 Section,
-                                Section->Segment,
+                                Segment,
                                 MappedBase,
                                 *ViewSize,
                                 PAGE_READWRITE,
                                 0,
                                 0);
 
-    MmUnlockSectionSegment(Section->Segment);
+    MmUnlockSectionSegment(Segment);
     MmUnlockAddressSpace(AddressSpace);
 
     return Status;
