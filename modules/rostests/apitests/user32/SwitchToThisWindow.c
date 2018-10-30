@@ -19,30 +19,68 @@ static INT s_nWM_ACTIVATE = 0;
 
 #define TIMER_INTERVAL 200
 
+static const char *
+DumpInSMEX(void)
+{
+    static char s_buf[128];
+    DWORD dwRet = InSendMessageEx(NULL);
+    if (dwRet == ISMEX_NOSEND)
+    {
+        strcpy(s_buf, "ISMEX_NOSEND,");
+        return s_buf;
+    }
+    s_buf[0] = 0;
+    if (dwRet & ISMEX_CALLBACK)
+        strcat(s_buf, "ISMEX_CALLBACK,");
+    if (dwRet & ISMEX_NOTIFY)
+        strcat(s_buf, "ISMEX_NOTIFY,");
+    if (dwRet & ISMEX_REPLIED)
+        strcat(s_buf, "ISMEX_REPLIED,");
+    if (dwRet & ISMEX_SEND)
+        strcat(s_buf, "ISMEX_SEND,");
+    return s_buf;
+}
+
 static void
 DoMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == WM_TIMER || !s_bTracing)
         return;
 
-    trace("uMsg:0x%04X, wParam:0x%08lX, lParam:0x%08lX\n", uMsg, (LONG)wParam, (LONG)lParam);
+    trace("%s: uMsg:0x%04X, wParam:0x%08lX, lParam:0x%08lX, ISMEX_:%s\n",
+          (InSendMessage() ? "S" : "P"), uMsg, (LONG)wParam, (LONG)lParam,
+           DumpInSMEX());
 
-    if (uMsg == WM_SYSCOMMAND)
+    if (uMsg == WM_SYSCOMMAND)  // 0x0112
     {
+        ok(InSendMessageEx(NULL) == ISMEX_NOSEND,
+           "InSendMessageEx(NULL) was 0x%08lX\n", InSendMessageEx(NULL));
         if (wParam == SC_RESTORE)
             ++s_nWM_SYSCOMMAND_SC_RESTORE;
         else
             ++s_nWM_SYSCOMMAND_NOT_SC_RESTORE;
     }
 
-    if (uMsg == WM_NCACTIVATE)
+    if (uMsg == WM_NCACTIVATE)  // 0x0086
+    {
+        ok(InSendMessageEx(NULL) == ISMEX_NOSEND,
+           "InSendMessageEx(NULL) was 0x%08lX\n", InSendMessageEx(NULL));
         ++s_nWM_NCACTIVATE;
+    }
 
-    if (uMsg == WM_WINDOWPOSCHANGING)
+    if (uMsg == WM_WINDOWPOSCHANGING)   // 0x0046
+    {
+        ok(InSendMessageEx(NULL) == ISMEX_NOSEND,
+           "InSendMessageEx(NULL) was 0x%08lX\n", InSendMessageEx(NULL));
         ++s_nWM_WINDOWPOSCHANGING;
+    }
 
-    if (uMsg == WM_ACTIVATE)
+    if (uMsg == WM_ACTIVATE)    // 0x0006
+    {
+        ok(InSendMessageEx(NULL) == ISMEX_NOSEND,
+           "InSendMessageEx(NULL) was 0x%08lX\n", InSendMessageEx(NULL));
         ++s_nWM_ACTIVATE;
+    }
 }
 
 // WM_TIMER
@@ -84,9 +122,9 @@ OnTimer(HWND hwnd, UINT id)
             ok(GetFocus() == hwnd, "GetFocus() != hwnd\n");
             ok(s_nWM_SYSCOMMAND_SC_RESTORE == 1, "WM_SYSCOMMAND SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_SC_RESTORE);
             ok(!s_nWM_SYSCOMMAND_NOT_SC_RESTORE, "WM_SYSCOMMAND non-SC_RESTORE: %d\n", s_nWM_SYSCOMMAND_NOT_SC_RESTORE);
-            ok(s_nWM_NCACTIVATE > 0, "WM_NCACTIVATE: not found\n");
-            ok(s_nWM_WINDOWPOSCHANGING > 0, "WM_WINDOWPOSCHANGING: not found\n");
-            ok(s_nWM_ACTIVATE > 0, "WM_ACTIVATE: not found\n");
+            ok(s_nWM_NCACTIVATE == 1, "WM_NCACTIVATE: %d\n", s_nWM_NCACTIVATE);
+            ok(s_nWM_WINDOWPOSCHANGING == 2, "WM_WINDOWPOSCHANGING: %d\n", s_nWM_WINDOWPOSCHANGING);
+            ok(s_nWM_ACTIVATE == 1, "WM_ACTIVATE: %d\n", s_nWM_ACTIVATE);
             break;
         //
         // SwitchToThisWindow(FALSE)
