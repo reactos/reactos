@@ -2884,7 +2884,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
     Section->u.Flags.filler0 = 1;
     Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
-    Section->MaximumSize = MaximumSize;
+    Section->SizeOfSection = MaximumSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                     TAG_MM_SECTION_SEGMENT);
     if (Segment == NULL)
@@ -3091,7 +3091,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     }
     MmUnlockSectionSegment(Segment);
     Section->FileObject = FileObject;
-    Section->MaximumSize = MaximumSize;
+    Section->SizeOfSection = MaximumSize;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
 #endif
@@ -4684,11 +4684,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         if ((*ViewSize) == 0)
         {
-            (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
         }
-        else if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
+        else if (((*ViewSize)+ViewOffset) > Section->SizeOfSection.u.LowPart)
         {
-            (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
         }
 
         *ViewSize = PAGE_ROUND_UP(*ViewSize);
@@ -4877,11 +4877,11 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     if ((*ViewSize) == 0)
     {
-        (*ViewSize) = Section->MaximumSize.u.LowPart;
+        (*ViewSize) = Section->SizeOfSection.u.LowPart;
     }
-    else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+    else if ((*ViewSize) > Section->SizeOfSection.u.LowPart)
     {
-        (*ViewSize) = Section->MaximumSize.u.LowPart;
+        (*ViewSize) = Section->SizeOfSection.u.LowPart;
     }
 
     MmLockSectionSegment(Segment);
@@ -5151,6 +5151,9 @@ MmCreateSection (OUT PVOID  * Section,
         if ((AllocationAttributes & SEC_PHYSICALMEMORY) == 0)
         {
             DPRINT1("Invalid path: %lx %p %p\n", AllocationAttributes, FileObject, FileHandle);
+
+            /* We should have called the ARM3 implementation. */
+            ASSERT(FALSE);
         }
 //        ASSERT(AllocationAttributes & SEC_PHYSICALMEMORY);
         Status = MmCreatePageFileSection(SectionObject,

@@ -501,7 +501,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
 
     MmUnlockSectionSegment(Segment);
 
-    Section->MaximumSize.QuadPart = MaximumSize.QuadPart;
+    Section->SizeOfSection.QuadPart = MaximumSize.QuadPart;
 
     /* Extend file if section is longer */
     DPRINT("MaximumSize %I64x ValidDataLength %I64x\n",
