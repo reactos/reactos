@@ -2,7 +2,8 @@
  * \file pkcs12.h
  *
  * \brief PKCS#12 Personal Information Exchange Syntax
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

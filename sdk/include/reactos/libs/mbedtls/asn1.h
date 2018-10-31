@@ -2,7 +2,8 @@
  * \file asn1.h
  *
  * \brief Generic ASN.1 parsing
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -61,7 +62,7 @@
 
 /**
  * \name DER constants
- * These constants comply with DER encoded the ANS1 type tags.
+ * These constants comply with the DER encoded ASN.1 type tags.
  * DER encoding uses hexadecimal representation.
  * An example DER sequence is:\n
  * - 0x02 -- tag indicating INTEGER
@@ -89,6 +90,21 @@
 #define MBEDTLS_ASN1_PRIMITIVE               0x00
 #define MBEDTLS_ASN1_CONSTRUCTED             0x20
 #define MBEDTLS_ASN1_CONTEXT_SPECIFIC        0x80
+
+/*
+ * Bit masks for each of the components of an ASN.1 tag as specified in
+ * ITU X.690 (08/2015), section 8.1 "General rules for encoding",
+ * paragraph 8.1.2.2:
+ *
+ * Bit  8     7   6   5          1
+ *     +-------+-----+------------+
+ *     | Class | P/C | Tag number |
+ *     +-------+-----+------------+
+ */
+#define MBEDTLS_ASN1_TAG_CLASS_MASK          0xC0
+#define MBEDTLS_ASN1_TAG_PC_MASK             0x20
+#define MBEDTLS_ASN1_TAG_VALUE_MASK          0x1F
+
 /* \} name */
 /* \} addtogroup asn1_module */
 

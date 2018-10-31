@@ -4,7 +4,8 @@
  * \brief PKCS#5 functions
  *
  * \author Mathias Olsson <mathias@kompetensum.com>
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

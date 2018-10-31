@@ -2,7 +2,8 @@
  * \file pem.h
  *
  * \brief Privacy Enhanced Mail (PEM) decoding
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

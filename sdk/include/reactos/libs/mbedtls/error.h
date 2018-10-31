@@ -2,7 +2,8 @@
  * \file error.h
  *
  * \brief Error to string translation
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -51,23 +52,32 @@
  *
  * Module   Nr  Codes assigned
  * MPI       7  0x0002-0x0010
- * GCM       2  0x0012-0x0014
- * BLOWFISH  2  0x0016-0x0018
+ * GCM       3  0x0012-0x0014   0x0013-0x0013
+ * BLOWFISH  3  0x0016-0x0018   0x0017-0x0017
  * THREADING 3  0x001A-0x001E
- * AES       2  0x0020-0x0022
- * CAMELLIA  2  0x0024-0x0026
- * XTEA      1  0x0028-0x0028
+ * AES       4  0x0020-0x0022   0x0023-0x0025
+ * CAMELLIA  3  0x0024-0x0026   0x0027-0x0027
+ * XTEA      2  0x0028-0x0028   0x0029-0x0029
  * BASE64    2  0x002A-0x002C
  * OID       1  0x002E-0x002E   0x000B-0x000B
  * PADLOCK   1  0x0030-0x0030
- * DES       1  0x0032-0x0032
+ * DES       2  0x0032-0x0032   0x0033-0x0033
  * CTR_DBRG  4  0x0034-0x003A
  * ENTROPY   3  0x003C-0x0040   0x003D-0x003F
  * NET      11  0x0042-0x0052   0x0043-0x0045
  * ASN1      7  0x0060-0x006C
+ * CMAC      1  0x007A-0x007A
  * PBKDF2    1  0x007C-0x007C
- * HMAC_DRBG 4  0x0003-0x0009
- * CCM       2                  0x000D-0x000F
+ * HMAC_DRBG 4                  0x0003-0x0009
+ * CCM       3                  0x000D-0x0011
+ * ARC4      1                  0x0019-0x0019
+ * MD2       1                  0x002B-0x002B
+ * MD4       1                  0x002D-0x002D
+ * MD5       1                  0x002F-0x002F
+ * RIPEMD160 1                  0x0031-0x0031
+ * SHA1      1                  0x0035-0x0035
+ * SHA256    1                  0x0037-0x0037
+ * SHA512    1                  0x0039-0x0039
  *
  * High-level module nr (3 bits - 0x0...-0x7...)
  * Name      ID  Nr of Errors
@@ -75,12 +85,12 @@
  * PKCS#12   1   4 (Started from top)
  * X509      2   20
  * PKCS5     2   4 (Started from top)
- * DHM       3   9
- * PK        3   14 (Started from top)
- * RSA       4   9
- * ECP       4   8 (Started from top)
- * MD        5   4
- * CIPHER    6   6
+ * DHM       3   11
+ * PK        3   15 (Started from top)
+ * RSA       4   11
+ * ECP       4   9 (Started from top)
+ * MD        5   5
+ * CIPHER    6   8
  * SSL       6   17 (Started from top)
  * SSL       7   31
  *

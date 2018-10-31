@@ -2,7 +2,8 @@
  * \file net_sockets.h
  *
  * \brief Network communication functions
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -119,9 +120,10 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
  *
  * \param bind_ctx  Relevant socket
  * \param client_ctx Will contain the connected client socket
- * \param client_ip Will contain the client IP address
+ * \param client_ip Will contain the client IP address, can be NULL
  * \param buf_size  Size of the client_ip buffer
- * \param ip_len    Will receive the size of the client IP written
+ * \param ip_len    Will receive the size of the client IP written,
+ *                  can be NULL if client_ip is null
  *
  * \return          0 if successful, or
  *                  MBEDTLS_ERR_NET_ACCEPT_FAILED, or

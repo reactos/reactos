@@ -58,10 +58,6 @@
 #define mbedtls_free   free
 #endif
 
-#if defined(MBEDTLS_ARC4_C) || defined(MBEDTLS_CIPHER_NULL_CIPHER)
-#define MBEDTLS_CIPHER_MODE_STREAM
-#endif
-
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
@@ -327,8 +323,10 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
         /*
          * If there is not enough data for a full block, cache it.
          */
-        if( ( ctx->operation == MBEDTLS_DECRYPT &&
+        if( ( ctx->operation == MBEDTLS_DECRYPT && NULL != ctx->add_padding &&
                 ilen <= block_size - ctx->unprocessed_len ) ||
+            ( ctx->operation == MBEDTLS_DECRYPT && NULL == ctx->add_padding &&
+                ilen < block_size - ctx->unprocessed_len ) ||
              ( ctx->operation == MBEDTLS_ENCRYPT &&
                 ilen < block_size - ctx->unprocessed_len ) )
         {
@@ -374,9 +372,17 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
                 return MBEDTLS_ERR_CIPHER_INVALID_CONTEXT;
             }
 
+            /* Encryption: only cache partial blocks
+             * Decryption w/ padding: always keep at least one whole block
+             * Decryption w/o padding: only cache partial blocks
+             */
             copy_len = ilen % block_size;
-            if( copy_len == 0 && ctx->operation == MBEDTLS_DECRYPT )
+            if( copy_len == 0 &&
+                ctx->operation == MBEDTLS_DECRYPT &&
+                NULL != ctx->add_padding)
+            {
                 copy_len = block_size;
+            }
 
             memcpy( ctx->unprocessed_data, &( input[ilen - copy_len] ),
                     copy_len );
@@ -518,14 +524,14 @@ static int get_one_and_zeros_padding( unsigned char *input, size_t input_len,
     if( NULL == input || NULL == data_len )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
-    bad = 0xFF;
+    bad = 0x80;
     *data_len = 0;
     for( i = input_len; i > 0; i-- )
     {
         prev_done = done;
-        done |= ( input[i-1] != 0 );
+        done |= ( input[i - 1] != 0 );
         *data_len |= ( i - 1 ) * ( done != prev_done );
-        bad &= ( input[i-1] ^ 0x80 ) | ( done == prev_done );
+        bad ^= input[i - 1] * ( done != prev_done );
     }
 
     return( MBEDTLS_ERR_CIPHER_INVALID_PADDING * ( bad != 0 ) );

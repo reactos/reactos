@@ -2,7 +2,8 @@
  * \file aesni.h
  *
  * \brief AES-NI for hardware AES acceleration on some Intel processors
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

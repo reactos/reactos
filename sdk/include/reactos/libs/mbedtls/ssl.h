@@ -2,7 +2,8 @@
  * \file ssl.h
  *
  * \brief SSL/TLS functions.
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -54,7 +55,7 @@
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "platform_time.h"
 #endif
 
 /*
@@ -930,14 +931,6 @@ extern int (*mbedtls_ssl_hw_record_finish)(mbedtls_ssl_context *ssl);
 #endif /* MBEDTLS_SSL_HW_RECORD_ACCEL */
 
 /**
- * \brief Returns the list of ciphersuites supported by the SSL/TLS module.
- *
- * \return              a statically allocated array of ciphersuites, the last
- *                      entry is 0.
- */
-const int *mbedtls_ssl_list_ciphersuites( void );
-
-/**
  * \brief               Return the name of the ciphersuite associated with the
  *                      given ID
  *
@@ -972,8 +965,13 @@ void mbedtls_ssl_init( mbedtls_ssl_context *ssl );
  * \note           No copy of the configuration context is made, it can be
  *                 shared by many mbedtls_ssl_context structures.
  *
- * \warning        Modifying the conf structure after it has been used in this
- *                 function is unsupported!
+ * \warning        The conf structure will be accessed during the session.
+ *                 It must not be modified or freed as long as the session
+ *                 is active.
+ *
+ * \warning        This function must be called exactly once per context.
+ *                 Calling mbedtls_ssl_setup again is not supported, even
+ *                 if no session is active.
  *
  * \param ssl      SSL context
  * \param conf     SSL configuration to use
@@ -1588,6 +1586,10 @@ void mbedtls_ssl_conf_cert_profile( mbedtls_ssl_config *conf,
 /**
  * \brief          Set the data required to verify peer certificate
  *
+ * \note           See \c mbedtls_x509_crt_verify() for notes regarding the
+ *                 parameters ca_chain (maps to trust_ca for that function)
+ *                 and ca_crl.
+ *
  * \param conf     SSL configuration
  * \param ca_chain trusted CA chain (meaning all fully trusted top-level CAs)
  * \param ca_crl   trusted CA CRLs
@@ -1701,18 +1703,50 @@ void mbedtls_ssl_conf_psk_cb( mbedtls_ssl_config *conf,
 #endif /* MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED */
 
 #if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_SSL_SRV_C)
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+
+#if defined(MBEDTLS_DEPRECATED_WARNING)
+#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
+#else
+#define MBEDTLS_DEPRECATED
+#endif
+
 /**
  * \brief          Set the Diffie-Hellman public P and G values,
  *                 read as hexadecimal strings (server-side only)
- *                 (Default: MBEDTLS_DHM_RFC5114_MODP_2048_[PG])
+ *                 (Default values: MBEDTLS_DHM_RFC3526_MODP_2048_[PG])
  *
  * \param conf     SSL configuration
  * \param dhm_P    Diffie-Hellman-Merkle modulus
  * \param dhm_G    Diffie-Hellman-Merkle generator
  *
+ * \deprecated     Superseded by \c mbedtls_ssl_conf_dh_param_bin.
+ *
  * \return         0 if successful
  */
-int mbedtls_ssl_conf_dh_param( mbedtls_ssl_config *conf, const char *dhm_P, const char *dhm_G );
+MBEDTLS_DEPRECATED int mbedtls_ssl_conf_dh_param( mbedtls_ssl_config *conf,
+                                                  const char *dhm_P,
+                                                  const char *dhm_G );
+
+#endif /* MBEDTLS_DEPRECATED_REMOVED */
+
+/**
+ * \brief          Set the Diffie-Hellman public P and G values
+ *                 from big-endian binary presentations.
+ *                 (Default values: MBEDTLS_DHM_RFC3526_MODP_2048_[PG]_BIN)
+ *
+ * \param conf     SSL configuration
+ * \param dhm_P    Diffie-Hellman-Merkle modulus in big-endian binary form
+ * \param P_len    Length of DHM modulus
+ * \param dhm_G    Diffie-Hellman-Merkle generator in big-endian binary form
+ * \param G_len    Length of DHM generator
+ *
+ * \return         0 if successful
+ */
+int mbedtls_ssl_conf_dh_param_bin( mbedtls_ssl_config *conf,
+                                   const unsigned char *dhm_P, size_t P_len,
+                                   const unsigned char *dhm_G,  size_t G_len );
 
 /**
  * \brief          Set the Diffie-Hellman public P and G values,
@@ -1796,15 +1830,22 @@ void mbedtls_ssl_conf_sig_hashes( mbedtls_ssl_config *conf,
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
- * \brief          Set the hostname to check against the received server
- *                 certificate. It sets the ServerName TLS extension too,
- *                 if the extension is enabled.
- *                 (client-side only)
+ * \brief          Set or reset the hostname to check against the received
+ *                 server certificate. It sets the ServerName TLS extension,
+ *                 too, if that extension is enabled. (client-side only)
  *
  * \param ssl      SSL context
- * \param hostname the server hostname
+ * \param hostname the server hostname, may be NULL to clear hostname
  *
- * \return         0 if successful or MBEDTLS_ERR_SSL_ALLOC_FAILED
+ * \note           Maximum hostname length MBEDTLS_SSL_MAX_HOST_NAME_LEN.
+ *
+ * \return         0 if successful, MBEDTLS_ERR_SSL_ALLOC_FAILED on
+ *                 allocation failure, MBEDTLS_ERR_SSL_BAD_INPUT_DATA on
+ *                 too long input hostname.
+ *
+ *                 Hostname set to the one provided on success (cleared
+ *                 when NULL). On allocation failure hostname is cleared.
+ *                 On too long input failure, old hostname is unchanged.
  */
 int mbedtls_ssl_set_hostname( mbedtls_ssl_context *ssl, const char *hostname );
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
@@ -2331,7 +2372,6 @@ const mbedtls_x509_crt *mbedtls_ssl_get_peer_cert( const mbedtls_ssl_context *ss
  * \brief          Save session in order to resume it later (client-side only)
  *                 Session data is copied to presented session structure.
  *
- * \warning        Currently, peer certificate is lost in the operation.
  *
  * \param ssl      SSL context
  * \param session  session context
@@ -2339,7 +2379,18 @@ const mbedtls_x509_crt *mbedtls_ssl_get_peer_cert( const mbedtls_ssl_context *ss
  * \return         0 if successful,
  *                 MBEDTLS_ERR_SSL_ALLOC_FAILED if memory allocation failed,
  *                 MBEDTLS_ERR_SSL_BAD_INPUT_DATA if used server-side or
- *                 arguments are otherwise invalid
+ *                 arguments are otherwise invalid.
+ *
+ * \note           Only the server certificate is copied, and not the full chain,
+ *                 so you should not attempt to validate the certificate again
+ *                 by calling \c mbedtls_x509_crt_verify() on it.
+ *                 Instead, you should use the results from the verification
+ *                 in the original handshake by calling \c mbedtls_ssl_get_verify_result()
+ *                 after loading the session again into a new SSL context
+ *                 using \c mbedtls_ssl_set_session().
+ *
+ * \note           Once the session object is not needed anymore, you should
+ *                 free it by calling \c mbedtls_ssl_session_free().
  *
  * \sa             mbedtls_ssl_set_session()
  */
@@ -2465,15 +2516,19 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
  *                 or MBEDTLS_ERR_SSL_WANT_WRITE or MBEDTLS_ERR_SSL_WANT_READ,
  *                 or another negative error code.
  *
- * \note           If this function returns something other than a positive
- *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE, the ssl context
- *                 becomes unusable, and you should either free it or call
- *                 \c mbedtls_ssl_session_reset() on it before re-using it for
- *                 a new connection; the current connection must be closed.
+ * \note           If this function returns something other than 0, a positive
+ *                 value or MBEDTLS_ERR_SSL_WANT_READ/WRITE, you must stop
+ *                 using the SSL context for reading or writing, and either
+ *                 free it or call \c mbedtls_ssl_session_reset() on it before
+ *                 re-using it for a new connection; the current connection
+ *                 must be closed.
  *
  * \note           When this function returns MBEDTLS_ERR_SSL_WANT_WRITE/READ,
  *                 it must be called later with the *same* arguments,
- *                 until it returns a positive value.
+ *                 until it returns a value greater that or equal to 0. When
+ *                 the function returns MBEDTLS_ERR_SSL_WANT_WRITE there may be
+ *                 some partial data in the output buffer, however this is not
+ *                 yet sent.
  *
  * \note           If the requested length is greater than the maximum
  *                 fragment length (either the built-in limit or the one set
@@ -2482,6 +2537,9 @@ int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len )
  *                 - with DTLS, MBEDTLS_ERR_SSL_BAD_INPUT_DATA is returned.
  *                 \c mbedtls_ssl_get_max_frag_len() may be used to query the
  *                 active maximum fragment length.
+ *
+ * \note           Attempting to write 0 bytes will result in an empty TLS
+ *                 application record being sent.
  */
 int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len );
 
@@ -2573,6 +2631,9 @@ void mbedtls_ssl_session_init( mbedtls_ssl_session *session );
 /**
  * \brief          Free referenced items in an SSL session including the
  *                 peer certificate and clear memory
+ *
+ * \note           A session object can be freed even if the SSL context
+ *                 that was used to retrieve the session is still in use.
  *
  * \param session  SSL session
  */
