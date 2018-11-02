@@ -1410,6 +1410,29 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
+
+    /* Check for a NOACCESS mapping */
+    if (Region->Protect & PAGE_NOACCESS)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    if (Region->Protect & PAGE_GUARD)
+    {
+        /* Remove it */
+        Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
+                &MemoryArea->Data.SectionData.RegionListHead,
+                Address, PAGE_SIZE, Region->Type, Region->Protect & ~PAGE_GUARD,
+                MmAlterViewAttributes);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Removing PAGE_GUARD protection failed : 0x%08x.\n", Status);
+        }
+
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
     /*
      * Lock the segment
      */
