@@ -745,7 +745,7 @@ static VOID
 IntUnicodeStringToBuffer(LPWSTR pszBuffer, USHORT cbBuffer, const UNICODE_STRING *pString)
 {
     USHORT cbLength = pString->Length;
-    if (cbLength + sizeof(UNICODE_NULL) < cbBuffer)
+    if (cbLength + sizeof(UNICODE_NULL) > cbBuffer)
         cbLength = cbBuffer - sizeof(UNICODE_NULL);
 
     if (cbLength < sizeof(UNICODE_NULL))
