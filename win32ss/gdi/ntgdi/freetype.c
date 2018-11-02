@@ -741,6 +741,21 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
     return FALSE;
 }
 
+static VOID
+IntUnicodeStringToBuffer(LPWSTR pszBuffer, USHORT cbBuffer, const UNICODE_STRING *pString)
+{
+    USHORT cbLength = pString->Length;
+
+    if (cbBuffer < sizeof(UNICODE_NULL))
+        return;
+
+    if (cbLength > cbBuffer - sizeof(UNICODE_NULL))
+        cbLength = cbBuffer - sizeof(UNICODE_NULL);
+
+    RtlCopyMemory(pszBuffer, pString->Buffer, cbLength);
+    pszBuffer[cbLength / sizeof(WCHAR)] = UNICODE_NULL;
+}
+
 static BOOL
 SubstituteFontRecurse(LOGFONTW* pLogFont)
 {
@@ -763,7 +778,7 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
         if (!Found)
             break;
 
-        RtlStringCchCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
+        IntUnicodeStringToBuffer(pLogFont->lfFaceName, sizeof(pLogFont->lfFaceName), &OutputNameW);
 
         if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
             CharSetMap[FONTSUBST_FROM] == pLogFont->lfCharSet)
@@ -1037,8 +1052,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;   /* failure */
         }
-        RtlCopyMemory(FontGDI->Filename, pFileName->Buffer, pFileName->Length);
-        FontGDI->Filename[pFileName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+        IntUnicodeStringToBuffer(FontGDI->Filename, sizeof(FontGDI->Filename), pFileName);
     }
     else
     {
@@ -2588,7 +2603,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     /* full name */
     if (!FullName)
         FullName = (WCHAR*)((ULONG_PTR) Otm + (ULONG_PTR)Otm->otmpFaceName);
-    
+
     RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
                      sizeof(Info->EnumLogFontEx.elfFullName),
                      FullName);
@@ -2815,7 +2830,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                 continue;   /* mismatch */
         }
 
-        RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
+        IntUnicodeStringToBuffer(lf.lfFaceName, sizeof(lf.lfFaceName), pFromW);
         SubstituteFontRecurse(&lf);
 
         RtlInitUnicodeString(&NameW, lf.lfFaceName);
@@ -4986,9 +5001,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             if (NT_SUCCESS(Status))
             {
                 /* truncated copy */
-                Name.Length = (USHORT)min(Name.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
-                RtlStringCbCopyNW(TextObj->TextFace, Name.Length + sizeof(WCHAR), Name.Buffer, Name.Length);
-
+                IntUnicodeStringToBuffer(TextObj->TextFace, sizeof(TextObj->TextFace), &Name);
                 RtlFreeUnicodeString(&Name);
             }
         }
