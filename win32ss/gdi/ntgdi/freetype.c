@@ -4456,10 +4456,11 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     }
 
     Byte = LogFont->lfOutPrecision;
-    if (Byte == OUT_DEFAULT_PRECIS)
-        Byte = OUT_OUTLINE_PRECIS;  /* Is it OK? */
     switch (Byte)
     {
+        case OUT_DEFAULT_PRECIS:
+            /* nothing to do */
+            break;
         case OUT_DEVICE_PRECIS:
             if (!(TM->tmPitchAndFamily & TMPF_DEVICE) ||
                 !(TM->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
