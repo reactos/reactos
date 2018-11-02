@@ -1722,6 +1722,8 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     int Ascent, Descent;
     FT_Face Face = FontGDI->SharedFace->Face;
 
+    ASSERT_FREETYPE_LOCK_HELD();
+
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
 
