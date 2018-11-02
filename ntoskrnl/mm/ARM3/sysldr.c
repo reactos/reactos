@@ -158,7 +158,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Reserve system PTEs needed */
-    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
+    PteCount = ROUND_TO_PAGES(((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte)
     {
@@ -2871,7 +2871,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PWCHAR MissingDriverName;
     HANDLE SectionHandle;
     ACCESS_MASK DesiredAccess;
-    PVOID Section = NULL;
+    PSECTION Section = NULL;
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
@@ -3086,7 +3086,7 @@ LoaderScan:
                                            SECTION_MAP_EXECUTE,
                                            MmSectionObjectType,
                                            KernelMode,
-                                           &Section,
+                                           (PVOID*)&Section,
                                            NULL);
         ZwClose(SectionHandle);
         if (!NT_SUCCESS(Status)) goto Quickie;
@@ -3109,7 +3109,7 @@ LoaderScan:
     }
 
     /* Load the image */
-    Status = MiLoadImageSection(&Section,
+    Status = MiLoadImageSection((PVOID*)&Section,
                                 &ModuleLoadBase,
                                 FileName,
                                 FALSE,
@@ -3117,7 +3117,7 @@ LoaderScan:
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
-    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageInformation.ImageFileSize;
+    DriverSize = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize;
 
     /* Make sure we're not being loaded into session space */
     if (!Flags)

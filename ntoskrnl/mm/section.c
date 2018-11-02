@@ -2656,6 +2656,7 @@ MmpDeleteSection(PVOID ObjectBody)
         ULONG NrSegments;
         ULONG RefCount;
         PMM_SECTION_SEGMENT SectionSegments;
+        PMM_IMAGE_SECTION_OBJECT ImageSection = (PMM_IMAGE_SECTION_OBJECT)Section->Segment;
 
         /*
          * NOTE: Section->ImageSection can be NULL for short time
@@ -2663,11 +2664,11 @@ MmpDeleteSection(PVOID ObjectBody)
          * until the image section is properly initialized we shouldn't
          * process further here.
          */
-        if (Section->ImageSection == NULL)
+        if (ImageSection == NULL)
             return;
 
-        SectionSegments = Section->ImageSection->Segments;
-        NrSegments = Section->ImageSection->NrSegments;
+        SectionSegments = ImageSection->Segments;
+        NrSegments = ImageSection->NrSegments;
 
         for (i = 0; i < NrSegments; i++)
         {
@@ -3815,7 +3816,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             return(Status);
         }
 
-        Section->ImageSection = ImageSectionObject;
+        Section->Segment = (PSEGMENT)ImageSectionObject;
         ASSERT(ImageSectionObject->Segments);
 
         /*
@@ -3840,7 +3841,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             ExFreePool(ImageSectionObject->Segments);
             ExFreePool(ImageSectionObject);
             ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
-            Section->ImageSection = ImageSectionObject;
+            Section->Segment = (PSEGMENT)ImageSectionObject;
             SectionSegments = ImageSectionObject->Segments;
 
             for (i = 0; i < ImageSectionObject->NrSegments; i++)
@@ -3865,7 +3866,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
         }
 
         ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
-        Section->ImageSection = ImageSectionObject;
+        Section->Segment = (PSEGMENT)ImageSectionObject;
         SectionSegments = ImageSectionObject->Segments;
 
         /*
@@ -4175,7 +4176,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         PMM_SECTION_SEGMENT Segment;
 
         Segment = MemoryArea->Data.SectionData.Segment;
-        ImageSectionObject = Section->ImageSection;
+        ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)Section->Segment;
         SectionSegments = ImageSectionObject->Segments;
         NrSegments = ImageSectionObject->NrSegments;
 
@@ -4370,8 +4371,7 @@ NtQuerySection(
                 {
                     if (RosSection->AllocationAttributes & SEC_IMAGE)
                     {
-                        PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
-                        ImageSectionObject = RosSection->ImageSection;
+                        PMM_IMAGE_SECTION_OBJECT ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)Section->Segment;
 
                         *Sii = ImageSectionObject->ImageInformation;
                     }
@@ -4559,7 +4559,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
         PMM_SECTION_SEGMENT SectionSegments;
 
-        ImageSectionObject = Section->ImageSection;
+        ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)Section->Segment;
         SectionSegments = ImageSectionObject->Segments;
         NrSegments = ImageSectionObject->NrSegments;
 

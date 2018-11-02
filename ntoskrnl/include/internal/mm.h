@@ -194,10 +194,6 @@ typedef struct _ROS_SECTION_OBJECT
 	SECTION;
     ULONG AllocationAttributes;
     PFILE_OBJECT FileObject;
-    union
-    {
-        PMM_IMAGE_SECTION_OBJECT ImageSection;
-    };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)

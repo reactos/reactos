@@ -1754,7 +1754,7 @@ VOID
 NTAPI
 MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
 {
-    PSECTION_OBJECT SectionObject;
+    PSECTION SectionObject;
 
     /* Get the section object of this process*/
     SectionObject = PsGetCurrentProcess()->SectionObject;
@@ -1762,7 +1762,7 @@ MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
     ASSERT(MiIsRosSectionObject(SectionObject) == TRUE);
 
     /* Return the image information */
-    *ImageInformation = ((PROS_SECTION_OBJECT)SectionObject)->ImageSection->ImageInformation;
+    *ImageInformation = ((PMM_IMAGE_SECTION_OBJECT)SectionObject->Segment)->ImageInformation;
 }
 
 NTSTATUS

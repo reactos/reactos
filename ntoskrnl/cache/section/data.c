@@ -351,8 +351,6 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     Section->AllocationAttributes = AllocationAttributes;
     Section->Segment = NULL;
 
-    Section->FileObject = FileObject;
-
     DPRINT("Getting original file size\n");
     /* A hack: If we're cached, we can overcome deadlocking with the upper
     * layer filesystem call by retriving the object sizes from the cache
