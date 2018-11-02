@@ -749,11 +749,8 @@ IntUnicodeStringToBuffer(LPWSTR pszBuffer, USHORT cbBuffer, const UNICODE_STRING
     if (cbBuffer < sizeof(UNICODE_NULL))
         return;
 
-    if (cbLength + sizeof(UNICODE_NULL) > cbBuffer)
+    if (cbLength > cbBuffer - sizeof(UNICODE_NULL))
         cbLength = cbBuffer - sizeof(UNICODE_NULL);
-
-    if (cbLength < sizeof(UNICODE_NULL))
-        return;
 
     RtlCopyMemory(pszBuffer, pString->Buffer, cbLength);
     pszBuffer[cbLength / sizeof(WCHAR)] = UNICODE_NULL;
