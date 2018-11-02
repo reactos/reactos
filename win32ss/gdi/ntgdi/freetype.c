@@ -4322,8 +4322,6 @@ ftGdiGetTextMetricsW(
 
             Error = FT_Get_WinFNT_Header(Face, &Win);
 
-            IntUnLockFreeType();
-
             if (NT_SUCCESS(Status))
             {
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
@@ -4331,6 +4329,8 @@ ftGdiGetTextMetricsW(
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
+
+            IntUnLockFreeType();
         }
         TEXTOBJ_UnlockText(TextObj);
     }
