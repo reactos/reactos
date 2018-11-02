@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
+#include "reactos.h"
 
 #define NDEBUG
 #include <debug.h>
