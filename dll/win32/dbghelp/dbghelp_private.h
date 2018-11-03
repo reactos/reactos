@@ -655,9 +655,9 @@ extern BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
                                        CONTEXT* context, struct pdb_cmd_pair* cpair) DECLSPEC_HIDDEN;
 
 /* path.c */
-extern BOOL         path_find_symbol_file(const struct process* pcs, PCSTR full_path,
-                                          const GUID* guid, DWORD dw1, DWORD dw2, PSTR buffer,
-                                          BOOL* is_unmatched) DECLSPEC_HIDDEN;
+extern BOOL         path_find_symbol_file(const struct process* pcs, const struct module* module,
+                                          PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2, 
+                                          PSTR buffer, BOOL* is_unmatched) DECLSPEC_HIDDEN;
 
 /* pe_module.c */
 extern BOOL         pe_load_nt_header(HANDLE hProc, DWORD64 base, IMAGE_NT_HEADERS* nth) DECLSPEC_HIDDEN;

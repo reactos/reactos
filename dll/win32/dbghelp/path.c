@@ -49,6 +49,17 @@ static inline const WCHAR* file_nameW(const WCHAR* str)
     return p + 1;
 }
 
+static inline void file_pathW(const WCHAR* srcFileNameW,
+    WCHAR* dstFilePathW)
+{
+    int len;
+
+    for (len = strlenW(srcFileNameW) - 1; (len > 0) && (!is_sepW(srcFileNameW[len])); len--);
+
+    strncpyW(dstFilePathW, srcFileNameW, len);
+    dstFilePathW[len] = L'\0';
+}
+
 /******************************************************************
  *		FindDebugInfoFile (DBGHELP.@)
  *
@@ -612,9 +623,9 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
     return mf->matched == 2;
 }
 
-BOOL path_find_symbol_file(const struct process* pcs, PCSTR full_path,
-                           const GUID* guid, DWORD dw1, DWORD dw2, PSTR buffer,
-                           BOOL* is_unmatched)
+BOOL path_find_symbol_file(const struct process* pcs, const struct module* module,
+                           PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2,
+                           PSTR buffer, BOOL* is_unmatched)
 {
     struct module_find  mf;
     WCHAR               full_pathW[MAX_PATH];
@@ -643,6 +654,24 @@ BOOL path_find_symbol_file(const struct process* pcs, PCSTR full_path,
         return TRUE;
     }
 
+    /* FIXME: Use Environment-Variables (see MS docs)
+                 _NT_SYMBOL_PATH and _NT_ALT_SYMBOL_PATH    
+       FIXME: Implement "Standard Path Elements" (Path) ... (see MS docs) 
+              do a search for (every?) path-element like this ...
+              <path>
+              <path>\dll
+              <path>\symbols\dll
+              (dll may be exe, or sys depending on the file extension)   */
+    
+    /* 2. check module-path */
+    file_pathW(module->module.LoadedImageName, tmp);
+    if (do_searchW(filename, tmp, FALSE, module_find_cb, &mf))
+    { 
+        WideCharToMultiByte(CP_ACP, 0, tmp, -1, buffer, MAX_PATH, NULL, NULL);
+        return TRUE;
+    }
+    
+    /* 3. check search-path */
     while (searchPath)
     {
         ptr = strchrW(searchPath, ';');
