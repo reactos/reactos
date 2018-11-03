@@ -452,7 +452,7 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
     ViewSize = 0;
     SectionOffset.QuadPart = 0;
     Status = ZwMapViewOfSection(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_GUARD | PAGE_READWRITE);
-    if (!skip(NT_SUCCESS(Status), "Error mapping view with PAGE_NOACCESS priv. Error = %p\n", Status))
+    if (!skip(NT_SUCCESS(Status), "Error mapping view with PAGE_GUARD priv. Error = %p\n", Status))
     {
         KmtStartSeh()
             RtlCompareMemory(BaseAddress, TestString, TestStringSize);
