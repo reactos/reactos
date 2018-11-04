@@ -429,6 +429,8 @@ END
 /* Winkeltypen */
 STRINGTABLE
 BEGIN
+    IDS_ANGLE_ARCMINUTES "Minute of arc"
+    IDS_ANGLE_ARCSECONDS "Second of arc"
     IDS_ANGLE_DEGREES "Grad"
     IDS_ANGLE_GRADIANS "Gon"
     IDS_ANGLE_RADIANS "Radiant"
