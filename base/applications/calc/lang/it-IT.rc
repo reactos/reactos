@@ -429,6 +429,8 @@ END
 /* Tipi di angoli */
 STRINGTABLE
 BEGIN
+    IDS_ANGLE_ARCMINUTES "Minuti d'arco"
+    IDS_ANGLE_ARCSECONDS "Secondi d'arco"
     IDS_ANGLE_DEGREES "Sessagesimali"
     IDS_ANGLE_GRADIANS "Centesimali (Gradienti)"
     IDS_ANGLE_RADIANS "Radianti"

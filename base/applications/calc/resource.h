@@ -126,9 +126,11 @@
 #define IDS_CONV_WEIGHT                 2012
 
 /* TYPES OF ANGLES */
-#define IDS_ANGLE_DEGREES               2100
-#define IDS_ANGLE_GRADIANS              2101
-#define IDS_ANGLE_RADIANS               2102
+#define IDS_ANGLE_ARCMINUTES            2100
+#define IDS_ANGLE_ARCSECONDS            2101
+#define IDS_ANGLE_DEGREES               2102
+#define IDS_ANGLE_GRADIANS              2103
+#define IDS_ANGLE_RADIANS               2104
 
 /* TYPES OF AREAS */
 #define IDS_AREA_ACRES                  2200

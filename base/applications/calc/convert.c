@@ -64,13 +64,17 @@ typedef struct {
     { 0, NULL, NULL },
 
 /*
-    1 gradian = 0.9 deg
-    1 radian = 57.29577951308233 deg
+    1 arcminute ....... = 1/60 deg
+    1 arcsecond ....... = 1/3600 deg
+    1 gradian ......... = 0.9 deg
+    1 radian .......... = 57.29577951308233 deg
 */
 static const conv_t conv_ANGLE[] = {
-    DECLARE_CONV_UNIT(ANGLE, DEGREES,  "$", "$")
-    DECLARE_CONV_UNIT(ANGLE, GRADIANS, "$*0.9", "$/0.9")
-    DECLARE_CONV_UNIT(ANGLE, RADIANS,  "$/P*180", "$*P/180")
+    DECLARE_CONV_UNIT(ANGLE, ARCMINUTES, "$/60",    "$*60")
+    DECLARE_CONV_UNIT(ANGLE, ARCSECONDS, "$/3600",  "$*3600")
+    DECLARE_CONV_UNIT(ANGLE, DEGREES,    "$",       "$")
+    DECLARE_CONV_UNIT(ANGLE, GRADIANS,   "$*0.9",   "$/0.9")
+    DECLARE_CONV_UNIT(ANGLE, RADIANS,    "$/P*180", "$*P/180")
     DECLARE_CONV_END
 };
 
