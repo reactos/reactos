@@ -2583,10 +2583,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
     if (0 == Ntm->ntmFlags) Ntm->ntmFlags = NTM_REGULAR;
 
-    Ntm->ntmSizeEM = Otm->otmEMSquare;
-    Ntm->ntmCellHeight = Otm->otmEMSquare;
-    Ntm->ntmAvgWidth = 0;
-
     Info->FontType = (0 != (TM->tmPitchAndFamily & TMPF_TRUETYPE)
                       ? TRUETYPE_FONTTYPE : 0);
 
@@ -2628,6 +2624,10 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
         IntUnLockFreeType();
         return;
     }
+
+    Ntm->ntmSizeEM = Otm->otmEMSquare;
+    Ntm->ntmCellHeight = pOS2->usWinAscent + pOS2->usWinDescent;
+    Ntm->ntmAvgWidth = 0;
 
     fs.fsCsb[0] = pOS2->ulCodePageRange1;
     fs.fsCsb[1] = pOS2->ulCodePageRange2;
