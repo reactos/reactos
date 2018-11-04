@@ -435,6 +435,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
+    IDS_ANGLE_ARCMINUTES "Minute of arc"
+    IDS_ANGLE_ARCSECONDS "Second of arc"
     IDS_ANGLE_DEGREES "Градуси"
     IDS_ANGLE_GRADIANS "Гради"
     IDS_ANGLE_RADIANS "Радиани"
