@@ -31,6 +31,14 @@ typedef struct _AT_ENUM_CONTAINER
     [size_is( EntriesRead)] LPAT_ENUM Buffer;
 } AT_ENUM_CONTAINER, *PAT_ENUM_CONTAINER, *LPAT_ENUM_CONTAINER;
 
+cpp_quote("#define JOB_RUN_PERIODICALLY  1")
+cpp_quote("#define JOB_EXEC_ERROR        2")
+cpp_quote("#define JOB_RUNS_TODAY        4")
+cpp_quote("#define JOB_ADD_CURRENT_DATE  8")
+cpp_quote("#define JOB_NONINTERACTIVE   16")
+cpp_quote("#define JOB_INPUT_FLAGS      (JOB_RUN_PERIODICALLY|JOB_ADD_CURRENT_DATE|JOB_NONINTERACTIVE)")
+cpp_quote("#define JOB_OUTPUT_FLAGS     (JOB_RUN_PERIODICALLY|JOB_EXEC_ERROR|JOB_RUNS_TODAY|JOB_NONINTERACTIVE)")
+
 [
     uuid(1FF70682-0A51-30E8-076D-740BE8CEE98B),
     version(1.0),

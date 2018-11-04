@@ -11,6 +11,8 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <winuser.h>
+#include <undocuser.h>
 
 #include <ndk/rtlfuncs.h>
 

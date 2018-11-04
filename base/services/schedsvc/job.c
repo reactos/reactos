@@ -91,8 +91,8 @@ ReScheduleJob(
     /* Remove the job from the start list */
     RemoveEntryList(&pJob->StartEntry);
 
-    /* No repetition, remove the job */
-    if (pJob->DaysOfMonth == 0 && pJob->DaysOfWeek == 0)
+    /* Non-periodical job, remove it */
+    if ((pJob->Flags & JOB_RUN_PERIODICALLY) == 0)
     {
         /* Remove the job from the registry */
         DeleteJob(pJob);
@@ -120,12 +120,9 @@ ReScheduleJob(
 VOID
 RunNextJob(VOID)
 {
-#if 0
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
-    WCHAR CommandLine[256];
     BOOL bRet;
-#endif
     PJOB pNextJob;
 
     if (IsListEmpty(&StartListHead))
@@ -136,29 +133,39 @@ RunNextJob(VOID)
 
     pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
 
-    ERR("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
+    TRACE("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
 
-#if 0
-    bRet = CreateProcess(NULL,
-                         CommandLine,
-                         NULL,
-                         NULL,
-                         FALSE,
-                         CREATE_NEW_CONSOLE | CREATE_SEPARATE_WOW_VDM,
-                         NULL,
-                         NULL,
-                         &StartupInfo,
-                         &ProcessInformation);
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    StartupInfo.lpTitle = pNextJob->Command;
+    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+    StartupInfo.wShowWindow = SW_SHOWDEFAULT;
+
+    if ((pNextJob->Flags & JOB_NONINTERACTIVE) == 0)
+    {
+        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+    }
+
+    bRet = CreateProcessW(NULL,
+                          pNextJob->Command,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          CREATE_NEW_CONSOLE,
+                          NULL,
+                          NULL,
+                          &StartupInfo,
+                          &ProcessInformation);
     if (bRet == FALSE)
     {
-        // FIXME: Log the failure!
+        ERR("CreateProcessW() failed (Error %lu)\n", GetLastError());
     }
     else
     {
         CloseHandle(ProcessInformation.hThread);
         CloseHandle(ProcessInformation.hProcess);
     }
-#endif
 
     ReScheduleJob(pNextJob);
 }
