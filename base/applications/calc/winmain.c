@@ -651,14 +651,19 @@ static void prepare_rpn_result(calc_number_t *rpn, TCHAR *buffer, int size, int 
     prepare_rpn_result_2(rpn, buffer, size, base);
 }
 
-static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
+static void set_rpn_result(HWND hwnd, calc_number_t *rpn)
 {
     calc.sci_in = FALSE;
     prepare_rpn_result(rpn, calc.buffer, SIZEOF(calc.buffer), calc.base);
     calc.ptr = calc.buffer + _tcslen(calc.buffer);
     update_lcd_display(hwnd);
-    calc.ptr = calc.buffer;
     update_parent_display(hwnd);
+}
+
+static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
+{
+    set_rpn_result(hwnd, rpn);
+    calc.ptr = calc.buffer;
 }
 
 static int get_modifiers(HWND hWnd)
@@ -1811,7 +1816,12 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                     if (cb != NULL) {
                         convert_text2number(&calc.code);
                         cb(&calc.code);
-                        display_rpn_result(hWnd, &calc.code);
+//                        display_rpn_result(hWnd, &calc.code);
+                        set_rpn_result(hWnd, &calc.code);
+
+                        if ((function_table[x].range & NO_CHAIN))
+                            calc.ptr = calc.buffer;
+
 //                        if (!(function_table[x].range & NO_CHAIN))
 //                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
