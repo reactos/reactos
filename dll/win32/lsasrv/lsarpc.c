@@ -1161,8 +1161,12 @@ LsarCreateTrustedDomain(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *TrustedDomainHandle)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -2045,6 +2049,10 @@ LsarOpenTrustedDomain(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *TrustedDomainHandle)
 {
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -3405,8 +3413,12 @@ LsarQueryTrustedDomainInfo(
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO *TrustedDomainInformation)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -3419,8 +3431,12 @@ LsarSetTrustedDomainInfo(
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO TrustedDomainInformation)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -3431,8 +3447,12 @@ LsarDeleteTrustedDomain(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -3763,6 +3783,10 @@ LsarQueryTrustedDomainInfoByName(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO *PolicyInformation)
 {
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
     /* FIXME: We are not running an AD yet */
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
@@ -3777,6 +3801,10 @@ LsarSetTrustedDomainInfoByName(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO PolicyInformation)
 {
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
     /* FIXME: We are not running an AD yet */
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
@@ -3791,6 +3819,10 @@ LsarEnumerateTrustedDomainsEx(
     PLSAPR_TRUSTED_ENUM_BUFFER_EX EnumerationBuffer,
     DWORD PreferedMaximumLength)
 {
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
     /* FIXME: We are not running an AD yet */
     EnumerationBuffer->EntriesRead = 0;
     EnumerationBuffer->EnumerationBuffer = NULL;
@@ -3808,8 +3840,12 @@ LsarCreateTrustedDomainEx(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *TrustedDomainHandle)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -3859,8 +3895,12 @@ LsarOpenTrustedDomainByName(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *TrustedDomainHandle)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -3989,8 +4029,12 @@ LsarCreateTrustedDomainEx2(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *TrustedDomainHandle)
 {
-    /* FIXME: We are not running an AD yet */
-    return STATUS_DIRECTORY_SERVICE_REQUIRED;
+    /* Fail, if we are not a domain controller */
+    if (LsapProductType != NtProductLanManNt)
+        return STATUS_DIRECTORY_SERVICE_REQUIRED;
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 

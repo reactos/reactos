@@ -28,6 +28,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/ketypes.h>
 #include <ndk/setypes.h>
 
 #include <ntsam.h>
@@ -84,6 +85,8 @@ typedef struct _SAMPR_ULONG_ARRAY
     unsigned long Count;
     unsigned long *Element;
 } SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
+extern NT_PRODUCT_TYPE LsapProductType;
 
 extern SID_IDENTIFIER_AUTHORITY NullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY WorldSidAuthority;
