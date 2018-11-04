@@ -429,6 +429,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
+    IDS_ANGLE_ARCMINUTES "Minute of arc"
+    IDS_ANGLE_ARCSECONDS "Second of arc"
     IDS_ANGLE_DEGREES "Βαθμοί"
     IDS_ANGLE_GRADIANS "Ακτίνια"
     IDS_ANGLE_RADIANS "Μοίρες"
