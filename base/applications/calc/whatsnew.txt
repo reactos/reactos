@@ -1,10 +1,11 @@
-1.12 (20180806)
+1.12 (20181104)
 =======================
 * Fixed bug 12.37 13/06/2009 into multiprecision display (unicode only).
 * Added support for average of squares and mean of squares into statistical functions.
 * pop() and push() functions in RPN engines now work with nodes instead of stack units.
 * Updated translations from ReactOS' repository.
 * Added support for new conversion units:
+   - ANGLE: 'minute of arc', 'second of arc'.
    - AREA: 'mu', 'rai'.
    - LENGTH: 'chi', 'cun'. 'sun' optimized.
    - TIME: 'nanoseconds'.
