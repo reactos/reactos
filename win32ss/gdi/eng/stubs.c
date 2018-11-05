@@ -324,23 +324,6 @@ EngStrokeAndFillPath(
     return FALSE;
 }
 
-BOOL
-APIENTRY
-EngStrokePath(
-    IN SURFOBJ  *pso,
-    IN PATHOBJ  *ppo,
-    IN CLIPOBJ  *pco,
-    IN XFORMOBJ  *pxo,
-    IN BRUSHOBJ  *pbo,
-    IN POINTL  *pptlBrushOrg,
-    IN LINEATTRS  *plineattrs,
-    IN MIX  mix)
-{
-    // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 INT
 APIENTRY
 EngWideCharToMultiByte(

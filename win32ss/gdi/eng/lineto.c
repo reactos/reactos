@@ -736,4 +736,117 @@ IntEngPolyline(SURFOBJ *psoDest,
     return ret;
 }
 
+#undef XFORMOBJ
+
+ENGAPI
+BOOL
+APIENTRY
+EngStrokePath(
+    IN SURFOBJ *pso,
+    IN PATHOBJ *ppo,
+    IN CLIPOBJ *pco,
+    IN XFORMOBJ *pxo,
+    IN BRUSHOBJ *pbo,
+    IN POINTL *pptlBrushOrg,
+    IN LINEATTRS *plineattrs,
+    IN MIX mix)
+{
+    // TODO: use pxo, pco
+    // www.osr.com/ddk/graphics/gdifncs_4yaw.htm
+    PATHDATA data;
+    PPOINTFIX pptfx;
+    ULONG i;
+    PPATH pPath, pWidenPath;
+    PREGION ClipRgn;
+    XCLIPOBJ xcoClip;
+    BOOL bRet;
+    LONG x1, y1, x2, y2;
+
+    if ((plineattrs->pstyle->l & PS_COSMETIC) && plineattrs->elWidth.l <= 1 &&
+        (plineattrs->pstyle->l & PS_STYLE_MASK) == PS_SOLID)
+    {
+        // cosmetic and line width is 1 and solid
+        PATHOBJ_vEnumStart(ppo);
+        while (PATHOBJ_bEnum(ppo, &data) && data.count > 0)
+        {
+            pptfx = data.pptfx;
+            if (data.flags & PD_BEZIERS)
+            {
+                // TODO: use GDI_Bezier and FIX2LONG
+            }
+            else
+            {
+                for (i = 0; i < data.count - 1; ++i)
+                {
+                    x1 = FIX2LONG(pptfx[i].x);
+                    y1 = FIX2LONG(pptfx[i].y);
+                    x2 = FIX2LONG(pptfx[i + 1].x);
+                    y2 = FIX2LONG(pptfx[i + 1].y);
+                    EngLineTo(pso,
+                              pco,
+                              pbo,
+                              x1, y1, x2, y2,
+                              NULL,
+                              mix);
+                }
+                if (data.flags & PD_CLOSEFIGURE)
+                {
+                    x1 = FIX2LONG(pptfx[i].x);
+                    y1 = FIX2LONG(pptfx[i].y);
+                    x2 = FIX2LONG(pptfx[0].x);
+                    y2 = FIX2LONG(pptfx[0].y);
+                    EngLineTo(pso,
+                              pco,
+                              pbo,
+                              x1, y1, x2, y2,
+                              NULL,
+                              mix);
+                }
+            }
+        }
+        return TRUE;
+    }
+
+    pPath = PATH_FromPathObj(ppo);
+    if (!pPath)
+        return FALSE;
+
+    pWidenPath = IntGdiWidenPath(pPath, plineattrs->elWidth.l, plineattrs->pstyle->l,
+                                 plineattrs->eMiterLimit);
+    if (!pWidenPath)
+    {
+        PATH_Delete(pPath->BaseObject.hHmgr);
+        return FALSE;
+    }
+
+    ClipRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (!ClipRgn)
+    {
+        PATH_Delete(pWidenPath->BaseObject.hHmgr);
+        PATH_Delete(pPath->BaseObject.hHmgr);
+        return FALSE;
+    }
+
+    PATH_PathToRegion(pWidenPath, WINDING, ClipRgn);
+
+    IntEngInitClipObj(&xcoClip);
+    IntEngUpdateClipRegion(&xcoClip,
+                           ClipRgn->rdh.nCount,
+                           ClipRgn->Buffer,
+                           &ClipRgn->rdh.rcBound);
+
+    bRet = IntEngPaint(pso,
+                       (CLIPOBJ *)&xcoClip,
+                       pbo,
+                       pptlBrushOrg,
+                       mix);
+
+    REGION_Delete(ClipRgn);
+    PATH_Delete(pWidenPath->BaseObject.hHmgr);
+    PATH_Delete(pPath->BaseObject.hHmgr);
+    IntEngFreeClipResources(&xcoClip);
+
+    return bRet;
+}
+
 /* EOF */

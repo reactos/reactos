@@ -2277,6 +2277,67 @@ cleanup:
     return bResult;
 }
 
+// Convert PATHOBJ to PATH
+PPATH FASTCALL
+PATH_FromPathObj(PATHOBJ *pPathObj)
+{
+    ULONG i;
+    PATHDATA data;
+    PPOINTFIX pptfx;
+    POINT pt;
+    BOOL bRet = TRUE;
+    PPATH pPath = PATH_CreatePath(0);
+    if (!pPath)
+        return NULL;
+
+    PATHOBJ_vEnumStart(pPathObj);
+    while (PATHOBJ_bEnum(pPathObj, &data) && data.count > 0)
+    {
+        pptfx = data.pptfx;
+        for (i = 0; i < data.count - 1; ++i)
+        {
+            pt.x = FIX2LONG(pptfx[i].x);
+            pt.y = FIX2LONG(pptfx[i].y);
+            if (data.flags & PD_BEGINSUBPATH)
+            {
+                if (!PATH_AddEntry(pPath, &pt, PT_MOVETO))
+                {
+                    bRet = FALSE;
+                    break;
+                }
+            }
+            else if (data.flags & PD_BEZIERS)
+            {
+                if (!PATH_AddEntry(pPath, &pt, PT_BEZIERTO))
+                {
+                    bRet = FALSE;
+                    break;
+                }
+            }
+            else
+            {
+                if (!PATH_AddEntry(pPath, &pt, PT_LINETO))
+                {
+                    bRet = FALSE;
+                    break;
+                }
+            }
+            if (data.flags & PD_CLOSEFIGURE)
+            {
+                IntGdiCloseFigure(pPath);
+            }
+        }
+    }
+
+    if (!bRet)
+    {
+        PATH_Delete(pPath);
+        pPath = NULL;
+    }
+
+    return pPath;
+}
+
 /**********************************************************************
  *      PATH_ExtTextOut
  */
