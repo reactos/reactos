@@ -1053,7 +1053,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             return 0;   /* failure */
         }
 
-        IntUnicodeStringToBuffer(FontGDI->Filename, sizeof(FontGDI->Filename), pFileName);
+        RtlCopyMemory(FontGDI->Filename, pFileName->Buffer, pFileName->Length);
+        FontGDI->Filename[pFileName->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
     else
     {
