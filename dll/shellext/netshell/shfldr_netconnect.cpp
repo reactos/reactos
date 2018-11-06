@@ -28,7 +28,10 @@
 
 class CNetworkConnections final :
     public IPersistFolder2,
+    public IShellExtInit,
     public IShellFolder2,
+    public IOleCommandTarget,
+    public IShellFolderViewCB,
     public IShellExecuteHookW
 {
     public:
@@ -38,6 +41,11 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
+
+        // IPersistFolder2
+        virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE *pidl);
 
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
@@ -51,7 +59,7 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
         virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
 
-        /* IShellFolder2 */
+        // IShellFolder2
         virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
         virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
         virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
@@ -60,10 +68,15 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
         virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
 
-        // IPersistFolder2
-        virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
-        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
-        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE *pidl);
+        // IShellExtInit
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+
+        // IOleCommandTarget
+        virtual HRESULT WINAPI Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+        virtual HRESULT WINAPI QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText);
+
+        // IShellFolderViewCB
+        virtual HRESULT WINAPI MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         // IShellExecuteHookW
         virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOW pei);
@@ -181,6 +194,18 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
     {
         *ppvObj = static_cast<IShellFolder2*>(this);
     }
+    else if (IsEqualIID(riid, IID_IShellExtInit))
+    {
+        *ppvObj = static_cast<IShellExtInit*>(this);
+    }
+    else if (IsEqualIID(riid, IID_IOleCommandTarget))
+    {
+        *ppvObj = static_cast<IOleCommandTarget*>(this);
+    }
+    else if (IsEqualIID(riid, IID_IShellFolderViewCB))
+    {
+        *ppvObj = static_cast<IShellFolderViewCB*>(this);
+    }
     else if (IsEqualIID(riid, IID_IShellExecuteHookW))
     {
         *ppvObj = static_cast<IShellExecuteHookW*>(this);
@@ -191,12 +216,6 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
         AddRef();
         return S_OK;
     }
-
-    /* TODO:
-     * IID_IShellExtInit
-     * IID_IOleCommandTarget
-     * IID_IShellFolderViewCB
-     */
 
     return E_NOINTERFACE;
 }
@@ -831,7 +850,10 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
+    if (pProperties->Status == NCS_CONNECTED)
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
+    else
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
     NcFreeNetconProperties(pProperties);
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
@@ -1161,6 +1183,30 @@ HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
     NcFreeNetconProperties(pProperties);
 
     return S_OK;
+}
+
+HRESULT WINAPI CNetworkConnections::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID)
+{
+    FIXME("CNetworkConnections::Initialize()\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CNetworkConnections::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+{
+    FIXME("CNetworkConnections::Exec()\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CNetworkConnections::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
+{
+    FIXME("CNetworkConnections::QueryStatus()\n");
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI CNetworkConnections::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    FIXME("CNetworkConnections::MessageSFVCB()\n");
+    return E_NOTIMPL;
 }
 
 HRESULT WINAPI CNetConUiObject::GetInfoFlags(DWORD *pdwFlags)
