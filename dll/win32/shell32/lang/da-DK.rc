@@ -1,22 +1,16 @@
-/* PROJECT: ReactOS Shell Library
- * FILE:    dll/win32/shell32/lang/da-DK.rc
- * PURPOSE: Danish resource file
- * UPDATED: 01 May 2009
- */
-
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "Sto&re Ikoner", FCIDM_SHVIEW_BIGICON
-    MENUITEM "S&må Ikoner", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "Sto&re ikoner", FCIDM_SHVIEW_BIGICON
+    MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "Arrangere &Ikoner", FCIDM_SHVIEW_ARRANGE
+    POPUP "Arranger &ikoner efter", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Arrangere Automatisk", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "&Arranger automatisk", FCIDM_SHVIEW_AUTOARRANGE
     END
 END
 
@@ -25,43 +19,43 @@ MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Visning", FCIDM_SHVIEW_VIEW
+        POPUP "&Vis", FCIDM_SHVIEW_VIEW
         BEGIN
-            MENUITEM "Sto&re Ikoner", FCIDM_SHVIEW_BIGICON
-            MENUITEM "S&må Ikoner", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "Sto&re ikoner", FCIDM_SHVIEW_BIGICON
+            MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "Arrangere &Ikoner", FCIDM_SHVIEW_ARRANGE
+        POPUP "Arranger &ikoner efter", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Arrangere Automatisk", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "&Arranger automatisk", FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "Line up Ikoner", FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "Juster ikoner til gitter", FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Opfrisk", FCIDM_SHVIEW_REFRESH
+        MENUITEM "Opdater", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Indsæt", FCIDM_SHVIEW_INSERT
-        MENUITEM "Indsæt som Link", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Sæt ind", FCIDM_SHVIEW_INSERT
+        MENUITEM "Indsæt som link", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Fortryd\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "&Klip\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "K&opier\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Sæt ind\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Indsæt genve&j", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Ko&pier til mappe...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "F&lyt til mappe...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Marker al&t\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Omvendt markering", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -70,14 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "K&lip", IDM_CUT
-        MENUITEM "&Kopiere", IDM_COPY
+        MENUITEM "&Klip", IDM_CUT
+        MENUITEM "K&opier", IDM_COPY
+        MENUITEM "Sæt ind", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Opret &Link", IDM_CREATELINK
+        MENUITEM "Opret &genvej", IDM_CREATELINK
         MENUITEM "&Slet", IDM_DELETE
         MENUITEM "&Omdøb", IDM_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Egenskabe", IDM_PROPERTIES
+        MENUITEM "&Egenskaber", IDM_PROPERTIES
     END
 END
 
@@ -85,21 +80,21 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Kopier hertil", IDM_COPYHERE
+        MENUITEM "&Flyt hertil", IDM_MOVEHERE
+        MENUITEM "Opret &genveje her", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Annuller", 0
     END
 END
 
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Søg efter Mappe"
+CAPTION "Søg efter mappe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Fortryd", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Annuller", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 12
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -107,17 +102,17 @@ END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Browse for Folder"
+CAPTION "Søg efter mappe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
-    LTEXT "Folder:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
+    LTEXT "Mappe:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS  | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Make New Folder", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Opret ny mappe", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Annuller", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -125,10 +120,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Message"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Yes to &all", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ja til &alle", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Nej", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ann&uller", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -149,11 +144,11 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Denne ReactOS-version er registreret til:", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-    LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "Installeret fysisk hukommelse:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
@@ -177,7 +172,7 @@ BEGIN
     LTEXT "&Åbn:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14, WS_TABSTOP
-    PUSHBUTTON "Fortryd", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
+    PUSHBUTTON "Annuller", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
     PUSHBUTTON "&Gennemse...", 12288, 160, 70, 59, 14, WS_TABSTOP
 END
 
@@ -725,30 +720,30 @@ BEGIN
     IDS_SHV_COLUMN_SIZE "Størrelse"
     IDS_SHV_COLUMN_TYPE "Type"
     IDS_SHV_COLUMN_MODIFIED "Ændret"
-    IDS_SHV_COLUMN_ATTRIBUTES "Attributer"
+    IDS_SHV_COLUMN_ATTRIBUTES "Attributter"
     IDS_SHV_COLUMN_DISK_CAPACITY "Størrelse"
     IDS_SHV_COLUMN_DISK_AVAILABLE "Størrelse tilgængelig"
     IDS_SHV_COLUMN_OWNER "Owner"
     IDS_SHV_COLUMN_GROUP "Group"
-    IDS_SHV_COLUMN_FILENAME "Filename"
-    IDS_SHV_COLUMN_CATEGORY "Category"
+    IDS_SHV_COLUMN_FILENAME "Filnavn"
+    IDS_SHV_COLUMN_CATEGORY "Kategori"
     IDS_SHV_COLUMN_DELFROM "Original location"
     IDS_SHV_COLUMN_DELDATE "Date deleted"
     IDS_SHV_COLUMN_FONTTYPE "Fonttype"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_COLUMN_NETLOCATION "Network Location"
-    IDS_SHV_COLUMN_DOCUMENTS "Documents"
+    IDS_SHV_COLUMN_WORKGROUP "Arbejdsgruppe"
+    IDS_SHV_COLUMN_NETLOCATION "Netværksplacering"
+    IDS_SHV_COLUMN_DOCUMENTS "Dokumenter"
     IDS_SHV_COLUMN_STATUS "Status"
     IDS_SHV_COLUMN_COMMENTS "Kommentar"
-    IDS_SHV_COLUMN_LOCATION "Location"
+    IDS_SHV_COLUMN_LOCATION "Placering"
     IDS_SHV_COLUMN_MODEL "Model"
 
     /* special folders */
     IDS_DESKTOP "Skrivebord"
     IDS_MYCOMPUTER "Min Computer"
-    IDS_RECYCLEBIN_FOLDER_NAME "Recycle Bin"
-    IDS_CONTROLPANEL "Control Panel"
-    IDS_ADMINISTRATIVETOOLS "Administrative Tools"
+    IDS_RECYCLEBIN_FOLDER_NAME "Papirkurv"
+    IDS_CONTROLPANEL "Kontrolpanel"
+    IDS_ADMINISTRATIVETOOLS "Administrative værktøjer"
 
     /* special folders descriptions */
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
@@ -757,22 +752,22 @@ BEGIN
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
     /* context menus */
-    IDS_VIEW_LARGE "Sto&re Ikoner"
-    IDS_VIEW_SMALL "S&må Ikoner"
+    IDS_VIEW_LARGE "Sto&re ikoner"
+    IDS_VIEW_SMALL "S&må ikoner"
     IDS_VIEW_LIST "&Liste"
     IDS_VIEW_DETAILS "&Detaljer"
     IDS_SELECT "Vælg"
     IDS_OPEN "Åbn"
-    IDS_CREATELINK "Create &Link"
-    IDS_COPY "&Copy"
-    IDS_DELETE "Delete"
-    IDS_PROPERTIES "Properties"
-    IDS_CUT "C&ut"
-    IDS_RESTORE "Restore"
-    IDS_FORMATDRIVE "Format..."
-    IDS_RENAME "Rename"
-    IDS_PASTE "Paste"
-    IDS_EJECT "Eject"
+    IDS_CREATELINK "Opret &genvej"
+    IDS_COPY "&Kopier"
+    IDS_DELETE "Slet"
+    IDS_PROPERTIES "Egenskaber"
+    IDS_CUT "&Klip"
+    IDS_RESTORE "Gendan"
+    IDS_FORMATDRIVE "Formater..."
+    IDS_RENAME "Omdøb"
+    IDS_PASTE "Sæt ind"
+    IDS_EJECT "Skub ud"
     IDS_DISCONNECT "Disconnect"
 
     IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
@@ -790,18 +785,18 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Bekræft overskrivelse af fil"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_COPYING "Kopierer..."
+    IDS_FILEOOP_MOVING "Flytter..."
+    IDS_FILEOOP_DELETING "Sletter..."
+    IDS_FILEOOP_FROM_TO "Fra %1 til %2"
+    IDS_FILEOOP_FROM "Fra %1"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Genstart"
-    IDS_RESTART_PROMPT "Ønsker du at Genstarte Systemet?"
+    IDS_RESTART_PROMPT "Ønsker du at genstarte systemet?"
     IDS_SHUTDOWN_TITLE "Luk Ned"
-    IDS_SHUTDOWN_PROMPT "Ønsker du at Lukke Ned?"
+    IDS_SHUTDOWN_PROMPT "Ønsker du at lukke ned?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
@@ -810,13 +805,13 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
     /* shell folder path default values */
-    IDS_PROGRAMS "Start Menu\\Programmer"
+    IDS_PROGRAMS "Menuen start\\Programmer"
     IDS_PERSONAL "Mine Dokumenter"
     IDS_FAVORITES "Favoritter"
-    IDS_STARTUP "Start Menu\\Programer\\Opstart"
-    IDS_RECENT "Midlertidige"
-    IDS_SENDTO "Send Til"
-    IDS_STARTMENU "Start Menu"
+    IDS_STARTUP "Menuen start\\Programmer\\Start"
+    IDS_RECENT "Seneste"
+    IDS_SENDTO "Send til"
+    IDS_STARTMENU "Menuen start"
     IDS_MYMUSIC "Mine Dokumenter\\Min Musik"
     IDS_MYVIDEO "Mine Dokumenter\\Mine Videoer"
     IDS_DESKTOPDIRECTORY "Skrivebord"
@@ -824,46 +819,46 @@ BEGIN
     IDS_TEMPLATES "Skabeloner"
     IDS_APPDATA "Application Data"
     IDS_PRINTHOOD "PrintHood"
-    IDS_LOCAL_APPDATA "Lokale Indstillinger\\Application Data"
-    IDS_INTERNET_CACHE "Midlertidige Internet Filer"
+    IDS_LOCAL_APPDATA "Lokale indstillinger\\Application Data"
+    IDS_INTERNET_CACHE "Lokale indstillinger\\Midlertidige Internet Filer"
     IDS_COOKIES "Cookies"
-    IDS_HISTORY "Historie"
+    IDS_HISTORY "Lokale indstillinger\\Historik"
     IDS_PROGRAM_FILES "Programmer"
-    IDS_MYPICTURES "Mine Dokumenter\\Mine Billeder"
+    IDS_MYPICTURES "Mine Billeder"
     IDS_PROGRAM_FILES_COMMON "Programmer\\Fælles Filer"
     IDS_COMMON_DOCUMENTS "Dokumenter"
-    IDS_ADMINTOOLS "Start Menu\\Programmer\\Administrative Værktøjer"
+    IDS_ADMINTOOLS "Menuen start\\Programmer\\Administrative Værktøjer"
     IDS_COMMON_MUSIC "Dokumenter\\Min Musik"
     IDS_COMMON_PICTURES "Dokumenter\\Mine Billeder"
     IDS_COMMON_VIDEO "Dokumenter\\Mine Videoer"
     IDS_CDBURN_AREA "Lokale Indstillinger\\Application Data\\Microsoft\\CD Brænding"
     IDS_NETWORKPLACE "My Network Places"
 
-    IDS_NEWFOLDER "Ny Mappe"
+    IDS_NEWFOLDER "Ny mappe"
 
-    IDS_DRIVE_FIXED "Local Disk"
-    IDS_DRIVE_CDROM "CD Drive"
-    IDS_DRIVE_NETWORK "Network Disk"
+    IDS_DRIVE_FIXED "Lokal disk"
+    IDS_DRIVE_CDROM "CD-drev"
+    IDS_DRIVE_NETWORK "Netværksdisk"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_REMOVABLE "Flytbar disk"
+    IDS_FS_UNKNOWN "Ukendt"
 
     /* Open With */
-    IDS_OPEN_WITH "Open With"
-    IDS_OPEN_WITH_CHOOSE "Choose Program..."
+    IDS_OPEN_WITH "Åbn med"
+    IDS_OPEN_WITH_CHOOSE "Vælg program..."
     IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_OTHER "Andre programmer:"
 
-    IDS_SHELL_ABOUT_AUTHORS "&Authors"
-    IDS_SHELL_ABOUT_BACK "< &Back"
+    IDS_SHELL_ABOUT_AUTHORS "&Forfattere"
+    IDS_SHELL_ABOUT_BACK "< &Tilbage"
     FCIDM_SHVIEW_NEW "Ny"
-    FCIDM_SHVIEW_NEWFOLDER "Ny &Mappe"
-    FCIDM_SHVIEW_NEWLINK "Nyt &Link"
+    FCIDM_SHVIEW_NEWFOLDER "Ny &mappe"
+    FCIDM_SHVIEW_NEWLINK "Ny &genvej"
     IDS_FOLDER_OPTIONS "Folder Options"
     IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
     IDS_RECYCLEBIN_DISKSPACE "Space Available"
     IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
-    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_PICK_ICON_TITLE "Vælg ikon"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
@@ -874,7 +869,7 @@ BEGIN
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
 
     /* Friendly File Type Names */
-    IDS_DIRECTORY "Folder"
+    IDS_DIRECTORY "Mappe"
     IDS_BAT_FILE "ReactOS Batch File"
     IDS_CMD_FILE "ReactOS Command Script"
     IDS_COM_FILE "DOS Application"
@@ -892,7 +887,7 @@ BEGIN
     IDS_TTF_FILE "TrueType Font file"
     IDS_OTF_FILE "OpenType Font file"
     IDS_HLP_FILE "Help File"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "Ikon"
     IDS_INI_FILE "Configuration Settings"
     IDS_LNK_FILE "Shortcut"
     IDS_NT__FILE "NT DOS32 Configuration File"
@@ -900,37 +895,37 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "System File"
     IDS_VXD_FILE "Virtual Device Driver"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-fil"
 
-    IDS_OPEN_VERB "Open"
+    IDS_OPEN_VERB "Åbn"
     IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Run as..."
-    IDS_EDIT_VERB "Edit"
+    IDS_RUNAS_VERB "Kør som..."
+    IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Find"
-    IDS_PRINT_VERB "Print"
+    IDS_PRINT_VERB "Udskriv"
 
-    IDS_FILE_FOLDER "%u Files, %u Folders"
-    IDS_PRINTERS "Printers"
-    IDS_FONTS "Fonts"
-    IDS_INSTALLNEWFONT "Install New Font..."
+    IDS_FILE_FOLDER "%u filer, %u mapper"
+    IDS_PRINTERS "Printere"
+    IDS_FONTS "Skrifttyper"
+    IDS_INSTALLNEWFONT "Installer ny skrifttype..."
 
     IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
-    IDS_COPY_OF "Copy of"
+    IDS_COPY_OF "Kopi af"
 
     IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
 
     IDS_FILE_DETAILS "Details for '%s' extension"
     IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
-    IDS_FILE_TYPES "File Types"
-    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_FILE_TYPES "Filtyper"
+    IDS_COLUMN_EXTENSION "Udvidelser"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "%s-fil"
 
     IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_UNKNOWN_APP "Ukendt program"
+    IDS_EXE_DESCRIPTION "Beskrivelse:"
 
     IDS_MENU_EMPTY "(Empty)"
     IDS_OBJECTS "%d Objects"
