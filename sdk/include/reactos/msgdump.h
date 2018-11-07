@@ -23,7 +23,7 @@
 /*--------------------------------------------------------------------------*/
 /* MD_msgdump function to dump the message info */
 
-static __inline int MSGDUMP_API
+static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*--------------------------------------------------------------------------*/
@@ -1449,7 +1449,7 @@ MD_OnAppCommand(HWND hwnd, HWND hwndTarget, UINT cmd, UINT nDevice, UINT nKey)
 
 /*--------------------------------------------------------------------------*/
 
-static __inline int MSGDUMP_API
+static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
