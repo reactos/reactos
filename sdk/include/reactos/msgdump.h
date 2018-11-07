@@ -24,14 +24,13 @@
     #define MSGDUMP_PREFIX ""
 #endif
 
-/*--------------------------------------------------------------------------*/
-/* MD_msgdump function */
-
 /* NOTE: This header file takes time to compile. You might indirectly use this function. */
+
+/* MD_msgdump function */
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-/*--------------------------------------------------------------------------*/
+/*---- The below code is boring details of MD_msgdump implementation. ----*/
 
 static __inline const char * MSGDUMP_API
 MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
@@ -48,7 +47,6 @@ MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
     return buf;
 }
 
-/*--------------------------------------------------------------------------*/
 
 static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1521,8 +1519,6 @@ MD_OnAppCommand(HWND hwnd, HWND hwndTarget, UINT cmd, UINT nDevice, UINT nKey)
                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTarget, cmd, nDevice, nKey);
     return FALSE;
 }
-
-/*--------------------------------------------------------------------------*/
 
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
