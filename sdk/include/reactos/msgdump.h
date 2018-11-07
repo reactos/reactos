@@ -8,9 +8,9 @@
 #define _INC_MSGDUMP
 
 /*
- * NOTE: MS_msgdump function in this file provides Win32API message dump feature.
+ * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
  * NOTE: This header file takes time to compile.
- *       You might indirectly use MS_msgdump function.
+ *       You might indirectly use MD_msgdump function.
  */
 #pragma once
 
