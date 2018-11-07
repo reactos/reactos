@@ -5,7 +5,14 @@
  * COPYRIGHT:   Copyright 2018 Stanislav Motylkov
  */
 
-#pragma once
+#ifndef UDMIHELP_H
+#define UDMIHELP_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <../dmilib/dmilib.h>
 
 PVOID
 LoadSMBiosData(
@@ -25,3 +32,9 @@ GetSMBiosStringW(
 VOID
 FreeSMBiosData(
     _In_ PVOID Buffer);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif /* UDMIHELP_H */
