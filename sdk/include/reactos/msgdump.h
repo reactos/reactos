@@ -10,15 +10,16 @@
 
 #pragma once
 
-#include "winxx.h"  /* An unofficial extension of <windowsx.h>. */
+#include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
 #include <strsafe.h>
 
 #ifndef MSGDUMP_PRINTF
     #error Please define MSGDUMP_PRINTF macro before #include "msgdump.h".
 #endif
 
-#define MSGDUMP_API  WINAPI
-#define MSGDUMP_MAX_RECT_TEXT   64
+#ifndef MSGDUMP_API
+    #define MSGDUMP_API  WINAPI
+#endif
 
 #ifndef MSGDUMP_PREFIX
     #define MSGDUMP_PREFIX ""
@@ -31,6 +32,8 @@ static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*---- The below code is boring details of MD_msgdump implementation. ----*/
+
+#define MSGDUMP_MAX_RECT_TEXT   64
 
 static __inline const char * MSGDUMP_API
 MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
@@ -1784,7 +1787,5 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
-
-/*--------------------------------------------------------------------------*/
 
 #endif  /* ndef _INC_MSGDUMP */
