@@ -752,6 +752,7 @@ EngStrokePath(
     IN MIX mix)
 {
     // TODO: use pxo, pco
+    // https://docs.microsoft.com/en-us/windows/desktop/api/winddi/nf-winddi-engstrokepath
     // https://web.archive.org/web/20040118234421/www.osr.com/ddk/graphics/gdifncs_4yaw.htm
     PATHDATA data;
     PPOINTFIX pptfx;
