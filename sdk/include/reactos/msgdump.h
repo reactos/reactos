@@ -48,7 +48,7 @@ MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
 static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    MSGDUMP_PRINTF("%u(hwnd:%p, wParam:%p, lParam:%p)\n",
+    MSGDUMP_PRINTF("WM_(%u)(hwnd:%p, wParam:%p, lParam:%p)\n",
                    uMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
