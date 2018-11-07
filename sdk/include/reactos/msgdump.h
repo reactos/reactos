@@ -104,7 +104,8 @@ MD_OnMove(HWND hwnd, int x, int y)
 static __inline void MSGDUMP_API
 MD_OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SIZE(hwnd:%p, state:%u, cx:%d, cy:%d)\n", (void *)hwnd, state, cx, cy);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SIZE(hwnd:%p, state:%u, cx:%d, cy:%d)\n",
+                   (void *)hwnd, state, cx, cy);
 }
 
 static __inline void MSGDUMP_API
@@ -137,16 +138,19 @@ MD_OnEnable(HWND hwnd, BOOL fEnable)
 static __inline void MSGDUMP_API
 MD_OnSetRedraw(HWND hwnd, BOOL fRedraw)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETREDRAW(hwnd:%p, fRedraw:%d)\n", (void *)hwnd, fRedraw);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETREDRAW(hwnd:%p, fRedraw:%d)\n",
+                   (void *)hwnd, fRedraw);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSetText(HWND hwnd, LPCTSTR lpszText)
 {
 #ifdef UNICODE
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETTEXT(hwnd:%p, lpszText:%ls)\n", (void *)hwnd, lpszText);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETTEXT(hwnd:%p, lpszText:%ls)\n",
+                   (void *)hwnd, lpszText);
 #else
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETTEXT(hwnd:%p, lpszText:%s)\n", (void *)hwnd, lpszText);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SETTEXT(hwnd:%p, lpszText:%s)\n",
+                   (void *)hwnd, lpszText);
 #endif
 }
 
@@ -194,7 +198,8 @@ MD_OnQueryOpen(HWND hwnd)
 static __inline void MSGDUMP_API
 MD_OnEndSession(HWND hwnd, BOOL fEnding)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ENDSESSION(hwnd:%p, fEnding:%d)\n", (void *)hwnd, fEnding);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ENDSESSION(hwnd:%p, fEnding:%d)\n",
+                   (void *)hwnd, fEnding);
 }
 
 static __inline void MSGDUMP_API
@@ -206,7 +211,8 @@ MD_OnQuit(HWND hwnd, int exitCode)
 static __inline BOOL MSGDUMP_API
 MD_OnEraseBkgnd(HWND hwnd, HDC hdc)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ERASEBKGND(hwnd:%p, hdc:%p)\n", (void *)hwnd, (void *)hdc);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ERASEBKGND(hwnd:%p, hdc:%p)\n",
+                   (void *)hwnd, (void *)hdc);
     return FALSE;
 }
 
@@ -316,7 +322,8 @@ MD_OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO lpMinMaxInfo)
 static __inline BOOL MSGDUMP_API
 MD_OnIconEraseBkgnd(HWND hwnd, HDC hdc)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ICONERASEBKGND(hwnd:%p, hdc:%p)\n", (void *)hwnd, (void *)hdc);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_ICONERASEBKGND(hwnd:%p, hdc:%p)\n",
+                   (void *)hwnd, (void *)hdc);
     return FALSE;
 }
 
@@ -338,7 +345,8 @@ MD_OnSpoolerStatus(HWND hwnd, UINT status, int cJobInQueue)
 static __inline void MSGDUMP_API
 MD_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT * lpDrawItem)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DRAWITEM(hwnd:%p, lpDrawItem:%p)\n", (void *)hwnd, (void *)lpDrawItem);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DRAWITEM(hwnd:%p, lpDrawItem:%p)\n",
+                   (void *)hwnd, (void *)lpDrawItem);
 }
 
 static __inline void MSGDUMP_API
@@ -403,13 +411,15 @@ MD_OnCompareItem(HWND hwnd, const COMPAREITEMSTRUCT * lpCompareItem)
 static __inline void MSGDUMP_API
 MD_OnCompacting(HWND hwnd, UINT compactRatio)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_COMPACTING(hwnd:%p, compactRatio:%u)\n", (void *)hwnd, compactRatio);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_COMPACTING(hwnd:%p, compactRatio:%u)\n",
+                   (void *)hwnd, compactRatio);
 }
 
 static __inline void MSGDUMP_API
 MD_OnCommNotify(HWND hwnd, int cid, UINT flags)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_COMMNOTIFY(hwnd:%p, cid:%d, flags:%u)\n", (void *)hwnd, cid, flags);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_COMMNOTIFY(hwnd:%p, cid:%d, flags:%u)\n",
+                   (void *)hwnd, cid, flags);
 }
 
 static __inline BOOL MSGDUMP_API
@@ -423,7 +433,8 @@ MD_OnWindowPosChanging(HWND hwnd, LPWINDOWPOS lpwpos)
 static __inline void MSGDUMP_API
 MD_OnWindowPosChanged(HWND hwnd, const LPWINDOWPOS lpwpos)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_WINDOWPOSCHANGED(hwnd:%p, lpwpos:%p)\n", (void *)hwnd, (void *)lpwpos);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_WINDOWPOSCHANGED(hwnd:%p, lpwpos:%p)\n",
+                   (void *)hwnd, (void *)lpwpos);
 }
 
 static __inline void MSGDUMP_API
@@ -494,7 +505,8 @@ MD_OnNCHitTest(HWND hwnd, int x, int y)
 static __inline void MSGDUMP_API
 MD_OnNCPaint(HWND hwnd, HRGN hrgn)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_NCPAINT(hwnd:%p, hrgn:%p)\n", (void *)hwnd, (void *)hrgn);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_NCPAINT(hwnd:%p, hrgn:%p)\n",
+                   (void *)hwnd, (void *)hrgn);
 }
 
 static __inline BOOL MSGDUMP_API
@@ -508,7 +520,8 @@ MD_OnNCActivate(HWND hwnd, BOOL fActive, HWND hwndActDeact, BOOL fMinimized)
 static __inline UINT MSGDUMP_API
 MD_OnGetDlgCode(HWND hwnd, LPMSG lpmsg)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_GETDLGCODE(hwnd:%p, lpmsg:%p)\n", (void *)hwnd, (void *)lpmsg);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_GETDLGCODE(hwnd:%p, lpmsg:%p)\n",
+                   (void *)hwnd, (void *)lpmsg);
     return 0;
 }
 
@@ -603,13 +616,15 @@ MD_OnKey(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 static __inline void MSGDUMP_API
 MD_OnChar(HWND hwnd, TCHAR ch, int cRepeat)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_CHAR(hwnd:%p, ch:%u, cRepeat:%d)\n", (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_CHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDeadChar(HWND hwnd, TCHAR ch, int cRepeat)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n", (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
@@ -630,13 +645,15 @@ MD_OnSysKey(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 static __inline void MSGDUMP_API
 MD_OnSysChar(HWND hwnd, TCHAR ch, int cRepeat)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n", (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSysDeadChar(HWND hwnd, TCHAR ch, int cRepeat)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSDEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n", (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSDEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   (void *)hwnd, ch, cRepeat);
 }
 
 static __inline BOOL MSGDUMP_API
@@ -657,7 +674,8 @@ MD_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 static __inline void MSGDUMP_API
 MD_OnSysCommand(HWND hwnd, UINT cmd, int x, int y)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSCOMMAND(hwnd:%p, cmd:%u, x:%d, y:%d)\n", (void *)hwnd, cmd, x, y);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_SYSCOMMAND(hwnd:%p, cmd:%u, x:%d, y:%d)\n",
+                   (void *)hwnd, cmd, x, y);
 }
 
 static __inline void MSGDUMP_API
@@ -683,7 +701,8 @@ MD_OnVScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 static __inline void MSGDUMP_API
 MD_OnInitMenu(HWND hwnd, HMENU hMenu)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_INITMENU(hwnd:%p, hMenu:%p)\n", (void *)hwnd, (void *)hMenu);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_INITMENU(hwnd:%p, hMenu:%p)\n",
+                   (void *)hwnd, (void *)hMenu);
 }
 
 static __inline void MSGDUMP_API
@@ -821,7 +840,8 @@ MD_OnDeviceChange(HWND hwnd, UINT uEvent, DWORD dwEventData)
 static __inline HWND MSGDUMP_API
 MD_MDICreate(HWND hwnd, const LPMDICREATESTRUCT lpmcs)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_MDICREATE(hwnd:%p, lpmcs:%p)\n", (void *)hwnd, (void *)lpmcs);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_MDICREATE(hwnd:%p, lpmcs:%p)\n",
+                   (void *)hwnd, (void *)lpmcs);
     return NULL;
 }
 
@@ -836,7 +856,7 @@ static __inline void MSGDUMP_API
 MD_MDIActivate(HWND hwnd, BOOL fActive, HWND hwndActivate, HWND hwndDeactivate)
 {
     MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_MDIACTIVATE(hwnd:%p, fActive:%d, hwndActivate:%p, hwndDeactivate:%p)\n",
-        (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
+                   (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
 }
 
 static __inline void MSGDUMP_API
@@ -899,7 +919,8 @@ MD_MDISetMenu(HWND hwnd, BOOL fRefresh, HMENU hmenuFrame, HMENU hmenuWindow)
 static __inline void MSGDUMP_API
 MD_OnDropFiles(HWND hwnd, HDROP hdrop)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DROPFILES(hwnd:%p, hdrop:%p)\n", (void *)hwnd, (void *)hdrop);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_DROPFILES(hwnd:%p, hdrop:%p)\n",
+                   (void *)hwnd, (void *)hdrop);
 }
 
 static __inline void MSGDUMP_API
@@ -1088,7 +1109,8 @@ MD_OnTCard(HWND hwnd, UINT idAction, DWORD dwActionData)
 static __inline void MSGDUMP_API
 MD_OnHelp(HWND hwnd, LPHELPINFO lpHelpInfo)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_HELP(hwnd:%p, lpHelpInfo:%p)\n", (void *)hwnd, (void *)lpHelpInfo);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_HELP(hwnd:%p, lpHelpInfo:%p)\n",
+                   (void *)hwnd, (void *)lpHelpInfo);
 }
 
 static __inline void MSGDUMP_API
@@ -1148,12 +1170,12 @@ MD_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest, WORD fwButton,
     if (fDoubleClick)
     {
         MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
-            (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+                       (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
     else
     {
         MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_NCXBUTTONDOWN(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
-            (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+                       (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
 }
 
@@ -1201,7 +1223,8 @@ MD_OnMenuDrag(HWND hwnd, UINT nPos, HMENU hMenu)
 static __inline UINT MSGDUMP_API
 MD_OnMenuGetObject(HWND hwnd, MENUGETOBJECTINFO *pmgoi)
 {
-    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_MENUGETOBJECT(hwnd:%p, pmgoi:%p)\n", (void *)hwnd, (void *)pmgoi);
+    MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_MENUGETOBJECT(hwnd:%p, pmgoi:%p)\n",
+                   (void *)hwnd, (void *)pmgoi);
     return 0;
 }
 
@@ -1246,7 +1269,7 @@ MD_OnXButtonDown(HWND hwnd, BOOL fDoubleClick, WORD fwKeys, WORD fwButton, INT x
     if (fDoubleClick)
     {
         MSGDUMP_PRINTF(MSGDUMP_PREFIX "WM_XBUTTONDBLCLK(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
-            (void *)hwnd, fwKeys, fwButton, xPos, yPos);
+                       (void *)hwnd, fwKeys, fwButton, xPos, yPos);
     }
     else
     {
