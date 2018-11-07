@@ -4,10 +4,14 @@
  * PURPOSE:     Win32API message dumping
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #ifndef _INC_MSGDUMP
 #define _INC_MSGDUMP
 
+/*
+ * NOTE: MS_msgdump function in this file provides Win32API message dump feature.
+ * NOTE: This header file takes time to compile.
+ *       You might indirectly use MS_msgdump function.
+ */
 #pragma once
 
 #include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
@@ -25,13 +29,11 @@
     #define MSGDUMP_PREFIX ""
 #endif
 
-/* NOTE: This header file takes time to compile. You might indirectly use this function. */
-
 /* MD_msgdump function */
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-/*---- The below code is boring details of MD_msgdump implementation. ----*/
+/*---- The below codes are boring details of MD_msgdump implementation. ----*/
 
 #define MSGDUMP_MAX_RECT_TEXT   64
 
@@ -49,7 +51,6 @@ MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
     }
     return buf;
 }
-
 
 static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1554,7 +1555,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_SHOWWINDOW, MD_OnShowWindow);
         HANDLE_MSG(hwnd, WM_WININICHANGE, MD_OnWinIniChange);
         /*HANDLE_MSG(hwnd, WM_SETTINGCHANGE, MD_OnSettingChange);*/
-            /* duplicated to WM_WININICHANGE */
+            /* WM_SETTINGCHANGE duplicates WM_WININICHANGE */
         HANDLE_MSG(hwnd, WM_DEVMODECHANGE, MD_OnDevModeChange);
         HANDLE_MSG(hwnd, WM_ACTIVATEAPP, MD_OnActivateApp);
         HANDLE_MSG(hwnd, WM_FONTCHANGE, MD_OnFontChange);
@@ -1788,4 +1789,4 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-#endif  /* ndef _INC_MSGDUMP */
+#endif

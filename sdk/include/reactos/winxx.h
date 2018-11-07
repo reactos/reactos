@@ -537,4 +537,4 @@
 #define FORWARD_WM_NCACTIVATE(hwnd, fActive, hwndActDeact, fMinimized, fn) \
     (BOOL)(DWORD)(fn)((hwnd), WM_NCACTIVATE, (WPARAM)(BOOL)(fActive), 0L)
 
-#endif  /* ndef _INC_WINXX */
+#endif
