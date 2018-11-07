@@ -1694,6 +1694,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_APPCOMMAND, MD_OnAppCommand);
 #endif
         default:
+        {
             if (WM_USER <= uMsg && uMsg <= 0x7FFF)
             {
                 return MD_OnUser(hwnd, uMsg, wParam, lParam);
@@ -1703,6 +1704,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return MD_OnApp(hwnd, uMsg, wParam, lParam);
             }
             return MD_OnUnknown(hwnd, uMsg, wParam, lParam);
+        }
     }
     return 0;
 }
