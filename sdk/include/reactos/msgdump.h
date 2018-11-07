@@ -29,7 +29,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /*--------------------------------------------------------------------------*/
 
 static __inline const char * MSGDUMP_API
-MD_dump_rect(char *buf, size_t bufsize, const RECT *prc)
+MD_rect_text(char *buf, size_t bufsize, const RECT *prc)
 {
     if (prc == NULL)
     {
@@ -973,7 +973,7 @@ MD_OnSizeClipboard(HWND hwnd, HWND hwndCBViewer, const LPRECT lprc)
     char buf[MSGDUMP_MAX_RECT_TEXT];
     MSGDUMP_PRINTF("WM_SIZECLIPBOARD(hwnd:%p, hwndCBViewer:%p, lprc:%s)\n",
                    (void *)hwnd, (void *)hwndCBViewer,
-                   MD_dump_rect(buf, sizeof(buf), lprc));
+                   MD_rect_text(buf, sizeof(buf), lprc));
 }
 
 static __inline void MSGDUMP_API
@@ -1287,7 +1287,7 @@ MD_OnSizing(HWND hwnd, UINT nSide, LPRECT lpRect)
 {
     char buf[MSGDUMP_MAX_RECT_TEXT];
     MSGDUMP_PRINTF("WM_SIZING(hwnd:%p, nSide:%u, lpRect:%s)\n",
-                   (void *)hwnd, nSide, MD_dump_rect(buf, sizeof(buf), lpRect));
+                   (void *)hwnd, nSide, MD_rect_text(buf, sizeof(buf), lpRect));
 }
 
 static __inline void MSGDUMP_API
@@ -1302,7 +1302,7 @@ MD_OnMoving(HWND hwnd, UINT nSide, LPRECT lpRect)
 {
     char buf[MSGDUMP_MAX_RECT_TEXT];
     MSGDUMP_PRINTF("WM_MOVING(hwnd:%p, nSide:%u, lpRect:%s)\n",
-                   (void *)hwnd, nSide, MD_dump_rect(buf, sizeof(buf), lpRect));
+                   (void *)hwnd, nSide, MD_rect_text(buf, sizeof(buf), lpRect));
 }
 
 static __inline LRESULT MSGDUMP_API
