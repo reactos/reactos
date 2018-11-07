@@ -6,7 +6,7 @@
  */
 
 #ifndef _INC_WINXX
-#define _INC_WINXX      4
+#define _INC_WINXX
 
 #pragma once
 

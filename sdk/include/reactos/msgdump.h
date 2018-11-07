@@ -6,7 +6,7 @@
  */
 
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP   3
+#define _INC_MSGDUMP
 
 #pragma once
 
