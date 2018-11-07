@@ -1479,7 +1479,7 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Неуспешно слагане на означаваш запис (bootcode) за FAT в системния дял.",
+        "Неуспешно слагане на означаваш запис (bootcode) за %S в системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {
@@ -1531,7 +1531,7 @@ MUI_ERROR bgBGErrorEntries[] =
     {
         // ERROR_INSTALL_BOOTCODE,
         //"Setup failed to install the FAT bootcode on the system partition.",
-        "Неуспешно слагане на обуващия код за FAT на системния дял.",
+        "Неуспешно слагане на обуващия код за %S на системния дял.",
         "ENTER = Презапускане на компютъра"
     },
     {

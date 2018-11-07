@@ -1493,7 +1493,7 @@ MUI_ERROR nlNLErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
+        "Setup kan de %S bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
     },
     {
@@ -1545,7 +1545,7 @@ MUI_ERROR nlNLErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Setup kan de FAT bootcode op de systeempartitie niet installeren.",
+        "Setup kan de %S bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
     },
     {

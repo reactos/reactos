@@ -4105,13 +4105,15 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
 
+    // FIXME! We must not use the partition type, but instead use the partition FileSystem!!
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
                                    &USetupData.DestinationArcPath,
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                        PartitionList->SystemPartition->FileSystem->FileSystemName);
         return QUIT_PAGE;
     }
 
@@ -4140,13 +4142,15 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
     /* Step 1: Write the VBR */
+    // FIXME! We must not use the partition type, but instead use the partition FileSystem!!
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
                                    &USetupData.DestinationArcPath,
                                    PartitionList->SystemPartition->PartitionType);
     if (!NT_SUCCESS(Status))
     {
-        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                        PartitionList->SystemPartition->FileSystem->FileSystemName);
         return QUIT_PAGE;
     }
 
@@ -4160,7 +4164,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
-        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
+        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
         return QUIT_PAGE;
     }
 

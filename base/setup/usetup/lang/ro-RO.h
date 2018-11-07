@@ -1504,7 +1504,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Eºec la instalarea codului FAT de iniþializare\n"
+        "Eºec la instalarea codului %S de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },
@@ -1562,7 +1562,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Eºec la instalarea codului FAT de iniþializare\n"
+        "Eºec la instalarea codului %S de iniþializare\n"
         "pe partiþia de sistem.",
         "ENTER = Repornire calculator"
     },

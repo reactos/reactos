@@ -1478,7 +1478,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "Inçtal toru sa nepodarilo nainçtalovaœ %S zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
@@ -1531,7 +1531,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "Inçtal toru sa nepodarilo nainçtalovaœ %S zav dzac¡ k¢d s£borov‚ho\n"
         "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },

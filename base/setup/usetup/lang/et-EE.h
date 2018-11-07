@@ -1472,7 +1472,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "SÅsteemikettale ei ‰nnestunud kirjutada FAT alglaadimiskoodi.",
+        "SÅsteemikettale ei ‰nnestunud kirjutada %S alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
@@ -1523,7 +1523,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "SÅsteemikettale ei ‰nnestunud paigaldada FAT alglaadimiskoodi.",
+        "SÅsteemikettale ei ‰nnestunud paigaldada %S alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {

@@ -1450,7 +1450,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Kur, dizge b”lmne FAT ”n ykleme kodunu kuramad.",
+        "Kur, dizge b”lmne %S ”n ykleme kodunu kuramad.",
         "GiriŸ = Bilgisayar Yeniden BaŸlat"
     },
     {
@@ -1501,7 +1501,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Kur, dizge b”lm zerinde FAT ”n ykleme kodunu kurmada baŸarsz oldu.",
+        "Kur, dizge b”lm zerinde %S ”n ykleme kodunu kurmada baŸarsz oldu.",
         "GiriŸ = Bilgisayar Yeniden BaŸlat"
     },
     {

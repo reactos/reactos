@@ -1495,7 +1495,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Setup failed to install %S bootcode on the system partition.",
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {
@@ -1546,7 +1546,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = „§˜¤œ¡¡å¤ž©ž ¬§¦¢¦š ©«ã"
     },
     {

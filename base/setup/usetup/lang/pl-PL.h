@@ -1480,7 +1480,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Nieudane zapisanie FAT bootcode na partycji systemowej.",
+        "Nieudane zapisanie %S bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {
@@ -1531,7 +1531,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Nieudana instalacja FAT bootcode na partycji systemowej.",
+        "Nieudana instalacja %S bootcode na partycji systemowej.",
         "ENTER = Restart komputera"
     },
     {

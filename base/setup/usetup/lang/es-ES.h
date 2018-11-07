@@ -1474,7 +1474,7 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
+        "El instalador fall¢ al instalar el c¢digo de inicio %S en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
@@ -1525,7 +1525,7 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
+        "El instalador fall¢ al instalar el c¢digo de inicio %S en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
