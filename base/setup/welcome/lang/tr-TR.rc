@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -9,7 +9,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - Hoş Geldiniz"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Dizgesi'ne hoş geldiniz.\n\nSolda bir konuya tıklayınız."
+    IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Sistemi'ne hoş geldiniz.\n\nSoldaki bir konuya tıklayınız."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Bu iletiyi yine göster."
     IDS_CLOSETEXT "&Çıkış"
