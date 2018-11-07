@@ -21,8 +21,9 @@
 #define MSGDUMP_MAX_RECT_TEXT   64
 
 /*--------------------------------------------------------------------------*/
-/* MD_msgdump function to dump the message info */
+/* MD_msgdump function */
 
+/* NOTE: This header file takes time to compile. You might indirectly use this function. */
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
