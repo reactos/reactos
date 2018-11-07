@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0.html)
- * PURPOSE:     An inofficial extension of <windowsx.h>
+ * PURPOSE:     An unofficial extension of <windowsx.h>
  * COPYRIGHT:   Copyright 2017-2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 

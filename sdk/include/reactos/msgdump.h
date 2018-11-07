@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "winxx.h"  /* An inofficial extension of <windowsx.h>. */
+#include "winxx.h"  /* An unofficial extension of <windowsx.h>. */
 
 #ifndef MSGDUMP_PRINTF
     #error Please define MSGDUMP_PRINTF macro before #include "msgdump.h".
