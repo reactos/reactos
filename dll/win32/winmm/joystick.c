@@ -60,7 +60,11 @@ static	BOOL JOY_LoadDriver(DWORD dwJoyID)
     if (JOY_Sticks[dwJoyID].hDriver)
 	return TRUE;
 
+#ifdef __REACTOS__
+    JOY_Sticks[dwJoyID].hDriver = OpenDriverA("joystick.drv", 0, dwJoyID);
+#else
     JOY_Sticks[dwJoyID].hDriver = OpenDriverA("winejoystick.drv", 0, dwJoyID);
+#endif
     return (JOY_Sticks[dwJoyID].hDriver != 0);
 }
 
