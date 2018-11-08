@@ -348,7 +348,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
     Section->u.Flags.filler0 = 1;
     Section->InitialPageProtection = SectionPageProtection;
-    Section->AllocationAttributes = AllocationAttributes;
+    Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
     Section->Segment = NULL;
 
     DPRINT("Getting original file size\n");

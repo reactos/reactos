@@ -256,7 +256,7 @@ KdbSymPrintAddress(
 		}
 
 		SectionObject = MemoryArea->Data.SectionData.Section;
-		if (!(SectionObject->AllocationAttributes & SEC_IMAGE)) goto end;
+		if (!SectionObject->u.Flags.Image) goto end;
 #if 0
 		if (MemoryArea->StartingAddress != (PVOID)KdbpImageBase)
 		{

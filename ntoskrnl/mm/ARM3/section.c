@@ -1805,22 +1805,12 @@ MmGetFileNameForSection(IN PVOID Section,
     PFILE_OBJECT FileObject;
 
     /* Make sure it's an image section */
-    if (MiIsRosSectionObject(Section) == FALSE)
-    {
-        /* Check ARM3 Section flag */
-        if (((PSECTION)Section)->u.Flags.Image == 0)
-        {
-            /* It's not, fail */
-            DPRINT1("Not an image section\n");
-            return STATUS_SECTION_NOT_IMAGE;
-        }
-    }
-    else if (!(((PROS_SECTION_OBJECT)Section)->AllocationAttributes & SEC_IMAGE))
-    {
-        /* It's not, fail */
-        DPRINT1("Not an image section\n");
-        return STATUS_SECTION_NOT_IMAGE;
-    }
+	if (((PSECTION)Section)->u.Flags.Image == 0)
+	{
+		/* It's not, fail */
+		DPRINT1("Not an image section\n");
+		return STATUS_SECTION_NOT_IMAGE;
+	}
 
     /* Get the file object */
     FileObject = MmGetFileObjectForSection(Section);
@@ -3564,7 +3554,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     PVOID SafeBaseAddress;
     LARGE_INTEGER SafeSectionOffset;
     SIZE_T SafeViewSize;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PEPROCESS Process;
     NTSTATUS Status;
     ACCESS_MASK DesiredAccess;
@@ -3694,8 +3684,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         return Status;
     }
 
-    if (MiIsRosSectionObject(Section) &&
-        (Section->AllocationAttributes & SEC_PHYSICALMEMORY))
+    if (MiIsRosSectionObject(Section) && Section->u.Flags.PhysicalMemory)
     {
         if (PreviousMode == UserMode &&
             SafeSectionOffset.QuadPart + SafeViewSize > MmHighestPhysicalPage << PAGE_SHIFT)
@@ -3744,7 +3733,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     {
         /* Check if this is an image for the current process */
         if (MiIsRosSectionObject(Section) &&
-            (Section->AllocationAttributes & SEC_IMAGE) &&
+            Section->u.Flags.Image &&
             (Process == PsGetCurrentProcess()) &&
             (Status != STATUS_IMAGE_NOT_AT_BASE))
         {
@@ -3815,7 +3804,7 @@ NtExtendSection(IN HANDLE SectionHandle,
                 IN OUT PLARGE_INTEGER NewMaximumSize)
 {
     LARGE_INTEGER SafeNewMaximumSize;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
@@ -3852,7 +3841,7 @@ NtExtendSection(IN HANDLE SectionHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Really this should go in MmExtendSection */
-    if (!(Section->AllocationAttributes & SEC_FILE))
+    if (!Section->u.Flags.File)
     {
         DPRINT1("Not extending a file\n");
         ObDereferenceObject(Section);

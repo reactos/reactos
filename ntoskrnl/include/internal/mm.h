@@ -192,7 +192,6 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 typedef struct _ROS_SECTION_OBJECT
 {
 	SECTION;
-    ULONG AllocationAttributes;
     PFILE_OBJECT FileObject;
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
