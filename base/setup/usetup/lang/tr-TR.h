@@ -31,7 +31,7 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Bu dil, kurulacak dizgenin întançmlç dili olacaktçr.",
+        "\x07  Bu dil, kurulacak sistemin întançmlç dili olacaktçr.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -481,7 +481,7 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, aüaßçda listelenen bir mevcut ReactOS kurulumunu ",
+        "ReactOS Kur, aüaßçda listelenen bir mevcut ReactOS kurulumunu",
         TEXT_STYLE_NORMAL
     },
     {
@@ -621,7 +621,7 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         0,
         0,
-        "ôn bellek arçnçyor...",
+        "ôn bellek temizleniyor...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1117,7 +1117,7 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         8,
         13,
-        "ônyÅkleyiciyi sÉbit diskin Åzerine kur. (Yalnçzca VBR)",
+        "ônyÅkleyiciyi sabit diskin Åzerine kur. (Yalnçzca VBR)",
         TEXT_STYLE_NORMAL
     },
     {
