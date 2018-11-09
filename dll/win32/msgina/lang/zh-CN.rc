@@ -1,5 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Improved by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -176,7 +176,7 @@ STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS
 CAPTION "Luna-XP-style Shut Down dialog"
 FONT 9, "宋体"
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    DEFPUSHBUTTON "确定", IDOK, 80, 122, 55, 14, WS_GROUP
 END
 
 STRINGTABLE
@@ -201,7 +201,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "您的帐户已被禁用。请参阅您的系统管理员。"
     IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登录的密码。"
     IDS_PASSWORDEXPIRED "您的密码已过期，必须更改。"
-    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
+    IDS_ACCOUNTEXPIRED "您的帐户已过期。请咨询您的系统管理员。"
 END
 
 /* Shutdown Dialog Strings */

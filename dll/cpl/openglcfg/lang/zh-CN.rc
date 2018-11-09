@@ -26,5 +26,5 @@ BEGIN
     IDS_CPLDESCRIPTION "设置 OpenGL 渲染器"
     IDS_DEBUG_SET "Set"
     IDS_DEBUG_CLEAR "Clear"
-    IDS_DEBUG_DNM "请勿修改"
+    IDS_DEBUG_DNM "不作修改"
 END
