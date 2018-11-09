@@ -204,7 +204,7 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "Programın girişi kayıt defterinden silinemiyor."
-    IDS_UNABLE_TO_INSTALL Yükleyici açılamıyor!"
+    IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
     IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de sürdürülsün mü?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
