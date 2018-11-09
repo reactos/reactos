@@ -650,7 +650,7 @@ BEGIN
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "新建扩展名"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
@@ -664,7 +664,7 @@ BEGIN
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "编辑文件类型"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
@@ -700,7 +700,7 @@ BEGIN
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "自定义"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
@@ -884,10 +884,10 @@ BEGIN
     IDS_COM_FILE "DOS 应用程序"
     IDS_CPL_FILE "控制面板项"
     IDS_CUR_FILE "光标"
-    IDS_DB__FILE "Database File"
+    IDS_DB__FILE "数据库文件"
     IDS_DLL_FILE "应用程序扩展"
     IDS_DRV_FILE "设备驱动程序"
-    IDS_EFI_FILE "Extensible Firmware Interface Executable"
+    IDS_EFI_FILE "可扩展固件接口(EFI) 可执行文件"
     IDS_EXE_FILE "应用程序"
     IDS_NLS_FILE "National Language Support File"
     IDS_OCX_FILE "ActiveX Control"
@@ -899,7 +899,7 @@ BEGIN
     IDS_ICO_FILE "图标"
     IDS_INI_FILE "配置设置"
     IDS_LNK_FILE "快捷方式"
-    IDS_NT__FILE "NT DOS32 Configuration File"
+    IDS_NT__FILE "NT DOS32 配置文件"
     IDS_PIF_FILE "NT VDM 程序信息文件"
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
@@ -963,17 +963,17 @@ BEGIN
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
     IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
+    IDS_NEWEXT_SPECIFY_EXT "您必须指定一个扩展名。"
     IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_EXT_IN_USE "扩展名正在被使用"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
+    IDS_SPECIFY_ACTION "您必须指定一个操作。"
+    IDS_INVALID_PROGRAM "找不到指定的程序。请确保文件名和路径正确无误。"
+    IDS_REMOVE_ACTION "您确定要移除此操作吗？"
     IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
     IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
     IDS_EDITING_ACTION "Editing action for type: "
     IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_FILE_NOT_FOUND "无法找到文件 '%s'。"
 END
