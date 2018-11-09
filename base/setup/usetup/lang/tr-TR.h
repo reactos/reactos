@@ -31,7 +31,7 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Bu dil, kurulacak sistemin întançmlç dili olacaktçr.",
+        "\x07  Bu dil, kurulacak sistemin în tançmlç dili olacaktçr.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -223,7 +223,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         10,
-        "bîlÅmlerin üartlarç altçnda ruhsatlanmçütçr.",
+        "bîlÅmlerin üartlarç altçnda lisanslanmçütçr.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -557,13 +557,13 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  òstenen bilgisyar tÅrÅnÅ seámek iáin Yukarç'ya veya Aüaßç'ya basçnçz.",
+        "\x07  òstenen bilgisyar tÅrÅnÅ seámek iáin YUKARI'ya veya AûA¶I'ya basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Ardçndan Giriü'e basçnçz.",
+        "   Ardçndan ENTER'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1837,7 +1837,7 @@ MUI_STRING trTRStrings[] =
     {STRING_FORMATDISK1,
     " BîlÅmÅ %S dosya sistemiyle hçzlç biáimlendir. "},
     {STRING_FORMATDISK2,
-    " BîlÅmÅ %S dosya sistemiylee biáimlendir. "},
+    " BîlÅmÅ %S dosya sistemiyle biáimlendir. "},
     {STRING_KEEPFORMAT,
     " ûimdiki dosya sistemini koru. (Deßiüiklik yok.) "},
     {STRING_HDINFOPARTCREATE_1,
