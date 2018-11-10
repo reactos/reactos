@@ -1,8 +1,8 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_DllNotLoaded "LoadLibrary, ""%s"" kitaplığını yüklemede başarısız oldu."
-    IDS_MissingEntry "%s içinde %s giriş noktası eksik."
+    IDS_DllNotLoaded "LoadLibrary, ""%s""'yi yüklemede başarısız oldu."
+    IDS_MissingEntry "Giriş noktası eksik: %s içinde %s"
 END
