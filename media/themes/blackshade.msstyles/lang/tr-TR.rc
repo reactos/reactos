@@ -4,12 +4,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Kara Gölge"
+1000, "Black Shade"
 }
 
 STRINGTABLE
 {
-2000, "Kara Gölge"
+2000, "Black Shade"
 }
 
 STRINGTABLE
@@ -21,14 +21,14 @@ STRINGTABLE
 
 STRINGTABLE
 {
-4000, "Düzgülü"
+4000, "Normal"
 4001, "Büyük Yazı Tipleri"
 4002, "Çok Büyük Yazı Tipleri"
 }
 
 STRINGTABLE
 {
-5000, "Kara Gölge"
+5000, "Black Shade"
 5001, "Görsel Biçim"
 5002, "ReactOS Vakfı"
 5003, "David Quintana <gigaherz@gmail.com> tarafından resimler"
