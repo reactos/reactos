@@ -1488,6 +1488,8 @@ NtQueryObject(IN HANDLE ObjectHandle,
     PVOID Object = NULL;
     NTSTATUS Status;
     POBJECT_HEADER_QUOTA_INFO ObjectQuota;
+    SECURITY_INFORMATION SecurityInformation;
+    POBJECT_TYPE ObjectType;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
 
@@ -1528,6 +1530,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
 
         /* Get the object header */
         ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+        ObjectType = ObjectHeader->Type;
     }
 
     _SEH2_TRY
@@ -1583,9 +1586,6 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 BasicInfo->NameInfoSize = 0; /* FIXME*/
                 BasicInfo->TypeInfoSize = 0; /* FIXME*/
 
-                /* Copy security information */
-                BasicInfo->SecurityDescriptorSize = 0; /* FIXME*/
-
                 /* Check if this is a symlink */
                 if (ObjectHeader->Type == ObpSymbolicLinkObjectType)
                 {
@@ -1597,6 +1597,26 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 {
                     /* Otherwise return 0 */
                     BasicInfo->CreationTime.QuadPart = (ULONGLONG)0;
+                }
+
+                /* Copy security information */
+                BasicInfo->SecurityDescriptorSize = 0;
+                if (BooleanFlagOn(HandleInfo.GrantedAccess, READ_CONTROL) &&
+                    ObjectHeader->SecurityDescriptor != NULL)
+                {
+                    SecurityInformation = OWNER_SECURITY_INFORMATION |
+                                          GROUP_SECURITY_INFORMATION |
+                                          DACL_SECURITY_INFORMATION |
+                                          SACL_SECURITY_INFORMATION;
+
+                    ObjectType->TypeInfo.SecurityProcedure(Object,
+                                                           QuerySecurityDescriptor,
+                                                           &SecurityInformation,
+                                                           NULL,
+                                                           &BasicInfo->SecurityDescriptorSize,
+                                                           &ObjectHeader->SecurityDescriptor,
+                                                           ObjectType->TypeInfo.PoolType,
+                                                           &ObjectType->TypeInfo.GenericMapping);
                 }
 
                 /* Break out with success */
