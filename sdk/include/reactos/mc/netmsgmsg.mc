@@ -314,6 +314,413 @@ Language=Russian
 The computer name already exists on the network. Change it and restart the computer.
 .
 
+MessageId=2146
+Severity=Success
+Facility=System
+SymbolicName=NERR_CfgCompNotFound
+Language=English
+The specified component could not be found in the configuration information.
+.
+Language=Russian
+The specified component could not be found in the configuration information.
+.
+
+MessageId=2147
+Severity=Success
+Facility=System
+SymbolicName=NERR_CfgParamNotFound
+Language=English
+The specified parameter could not be found in the configuration information.
+.
+Language=Russian
+The specified parameter could not be found in the configuration information.
+.
+
+MessageId=2149
+Severity=Success
+Facility=System
+SymbolicName=NERR_LineTooLong
+Language=English
+A line in the configuration file is too long.
+.
+Language=Russian
+A line in the configuration file is too long.
+.
+
+MessageId=2150
+Severity=Success
+Facility=System
+SymbolicName=NERR_QNotFound
+Language=English
+The printer does not exist.
+.
+Language=Russian
+The printer does not exist.
+.
+
+MessageId=2151
+Severity=Success
+Facility=System
+SymbolicName=NERR_JobNotFound
+Language=English
+The print job does not exist.
+.
+Language=Russian
+The print job does not exist.
+.
+
+MessageId=2152
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestNotFound
+Language=English
+The printer destination cannot be found.
+.
+Language=Russian
+The printer destination cannot be found.
+.
+
+MessageId=2153
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestExists
+Language=English
+The printer destination already exists.
+.
+Language=Russian
+The printer destination already exists.
+.
+
+MessageId=2154
+Severity=Success
+Facility=System
+SymbolicName=NERR_QExists
+Language=English
+The printer queue already exists.
+.
+Language=Russian
+The printer queue already exists.
+.
+
+MessageId=2155
+Severity=Success
+Facility=System
+SymbolicName=NERR_QNoRoom
+Language=English
+No more printers can be added.
+.
+Language=Russian
+No more printers can be added.
+.
+
+MessageId=2156
+Severity=Success
+Facility=System
+SymbolicName=NERR_JobNoRoom
+Language=English
+No more print jobs can be added.
+.
+Language=Russian
+No more print jobs can be added.
+.
+
+MessageId=2157
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestNoRoom
+Language=English
+No more printer destinations can be added.
+.
+Language=Russian
+No more printer destinations can be added.
+.
+
+MessageId=2158
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestIdle
+Language=English
+This printer destination is idle and cannot accept control operations.
+.
+Language=Russian
+This printer destination is idle and cannot accept control operations.
+.
+
+MessageId=2159
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestInvalidOp
+Language=English
+This printer destination request contains an invalid control function.
+.
+Language=Russian
+This printer destination request contains an invalid control function.
+.
+
+MessageId=2160
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProcNoRespond
+Language=English
+The print processor is not responding.
+.
+Language=Russian
+The print processor is not responding.
+.
+
+MessageId=2161
+Severity=Success
+Facility=System
+SymbolicName=NERR_SpoolerNotLoaded
+Language=English
+The spooler is not running.
+.
+Language=Russian
+The spooler is not running.
+.
+
+MessageId=2162
+Severity=Success
+Facility=System
+SymbolicName=NERR_DestInvalidState
+Language=English
+This operation cannot be performed on the print destination in its current state.
+.
+Language=Russian
+This operation cannot be performed on the print destination in its current state.
+.
+
+MessageId=2163
+Severity=Success
+Facility=System
+SymbolicName=NERR_QInvalidState
+Language=English
+This operation cannot be performed on the printer queue in its current state.
+.
+Language=Russian
+This operation cannot be performed on the printer queue in its current state.
+.
+
+MessageId=2164
+Severity=Success
+Facility=System
+SymbolicName=NERR_JobInvalidState
+Language=English
+This operation cannot be performed on the print job in its current state.
+.
+Language=Russian
+This operation cannot be performed on the print job in its current state.
+.
+
+MessageId=2165
+Severity=Success
+Facility=System
+SymbolicName=NERR_SpoolNoMemory
+Language=English
+A spooler memory allocation failure occurred.
+.
+Language=Russian
+A spooler memory allocation failure occurred.
+.
+
+MessageId=2166
+Severity=Success
+Facility=System
+SymbolicName=NERR_DriverNotFound
+Language=English
+The device driver does not exist.
+.
+Language=Russian
+The device driver does not exist.
+.
+
+MessageId=2167
+Severity=Success
+Facility=System
+SymbolicName=NERR_DataTypeInvalid
+Language=English
+The data type is not supported by the print processor.
+.
+Language=Russian
+The data type is not supported by the print processor.
+.
+
+MessageId=2168
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProcNotFound
+Language=English
+The print processor is not installed.
+.
+Language=Russian
+The print processor is not installed.
+.
+
+MessageId=2180
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceTableLocked
+Language=English
+The service database is locked.
+.
+Language=Russian
+The service database is locked.
+.
+
+MessageId=2181
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceTableFull
+Language=English
+The service table is full.
+.
+Language=Russian
+The service table is full.
+.
+
+MessageId=2182
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceInstalled
+Language=English
+The requested service has already been started.
+.
+Language=Russian
+The requested service has already been started.
+.
+
+MessageId=2183
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceEntryLocked
+Language=English
+The service does not respond to control actions.
+.
+Language=Russian
+The service does not respond to control actions.
+.
+
+MessageId=2184
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceNotInstalled
+Language=English
+The service has not been started.
+.
+Language=Russian
+The service has not been started.
+.
+
+MessageId=2185
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadServiceName
+Language=English
+The service name is invalid.
+.
+Language=Russian
+The service name is invalid.
+.
+
+MessageId=2186
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceCtlTimeout
+Language=English
+The service is not responding to the control function.
+.
+Language=Russian
+The service is not responding to the control function.
+.
+
+MessageId=2187
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceCtlBusy
+Language=English
+The service control is busy.
+.
+Language=Russian
+The service control is busy.
+.
+
+MessageId=2188
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadServiceProgName
+Language=English
+The configuration file contains an invalid service program name.
+.
+Language=Russian
+The configuration file contains an invalid service program name.
+.
+
+MessageId=2189
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceNotCtrl
+Language=English
+The service could not be controlled in its present state.
+.
+Language=Russian
+The service could not be controlled in its present state.
+.
+
+MessageId=2190
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceKillProc
+Language=English
+The service ended abnormally.
+.
+Language=Russian
+The service ended abnormally.
+.
+
+MessageId=2191
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceCtlNotValid
+Language=English
+The requested pause, continue, or stop is not valid for this service.
+.
+Language=Russian
+The requested pause, continue, or stop is not valid for this service.
+.
+
+MessageId=2192
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotInDispatchTbl
+Language=English
+The service control dispatcher could not find the service name in the dispatch table.
+.
+Language=Russian
+The service control dispatcher could not find the service name in the dispatch table.
+.
+
+MessageId=2193
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadControlRecv
+Language=English
+The service control dispatcher pipe read failed.
+.
+Language=Russian
+The service control dispatcher pipe read failed.
+.
+
+MessageId=2194
+Severity=Success
+Facility=System
+SymbolicName=NERR_ServiceNotStarting
+Language=English
+A thread for the new service could not be created.
+.
+Language=Russian
+A thread for the new service could not be created.
+.
+
 
 ;
 ; other message definitions
@@ -328,6 +735,28 @@ The command completed successfully.
 .
 Language=Russian
 The command completed successfully.
+.
+
+MessageId=3501
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3001
+Language=English
+You used an invalid option.
+.
+Language=Russian
+You used an invalid option.
+.
+
+MessageId=3514
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3514
+Language=English
+More help is available by typing NET HELPMSG %1.
+.
+Language=Russian
+More help is available by typing NET HELPMSG %1.
 .
 
 MessageId=3515
