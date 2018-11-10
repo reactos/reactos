@@ -1487,6 +1487,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     ULONG InfoLength = 0;
     PVOID Object = NULL;
     NTSTATUS Status;
+    POBJECT_HEADER_QUOTA_INFO ObjectQuota;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
 
@@ -1566,8 +1567,17 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 }
 
                 /* Copy quota information */
-                BasicInfo->PagedPoolCharge = 0; /* FIXME*/
-                BasicInfo->NonPagedPoolCharge = 0; /* FIXME*/
+                ObjectQuota = OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader);
+                if (ObjectQuota != NULL)
+                {
+                    BasicInfo->PagedPoolCharge = ObjectQuota->PagedPoolCharge;
+                    BasicInfo->NonPagedPoolCharge = ObjectQuota->NonPagedPoolCharge;
+                }
+                else
+                {
+                    BasicInfo->PagedPoolCharge = 0;
+                    BasicInfo->NonPagedPoolCharge = 0;
+                }
 
                 /* Copy name information */
                 BasicInfo->NameInfoSize = 0; /* FIXME*/
