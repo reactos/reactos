@@ -1613,6 +1613,7 @@ InstallBtrfsBootCodeToDisk(
     IN PCWSTR RootPath)
 {
     NTSTATUS Status;
+    NTSTATUS LockStatus;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -1754,6 +1755,30 @@ InstallBtrfsBootCodeToDisk(
         return Status;
     }
 
+    /*
+     * The BTRFS driver requires the volume to be locked in order to modify
+     * the first sectors of the partition, even though they are outside the
+     * file-system space / in the reserved area (they are situated before
+     * the super-block at 0x1000) and is in principle allowed by the NT
+     * storage stack.
+     * So we lock here in order to write the bootsector at sector 0.
+     * If locking fails, we ignore and continue nonetheless.
+     */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_LOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("WARNING: Failed to lock BTRFS volume for writing bootsector! Operations may fail! (Status 0x%lx)\n", LockStatus);
+    }
+
     /* Obtaining partition info and writing it to bootsector */
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
@@ -1768,9 +1793,7 @@ InstallBtrfsBootCodeToDisk(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
+        goto Quit;
     }
 
     /* Write new bootsector to RootPath */
@@ -1788,15 +1811,13 @@ InstallBtrfsBootCodeToDisk(
                          sizeof(BTRFS_BOOTSECTOR),
                          &FileOffset,
                          NULL);
-#if 0
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
+        goto Quit;
     }
 
+#if 0
     /* Write backup boot sector */
     if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
     {
@@ -1813,9 +1834,7 @@ InstallBtrfsBootCodeToDisk(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-            NtClose(FileHandle);
-            RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-            return Status;
+            goto Quit;
         }
     }
 
@@ -1835,6 +1854,25 @@ InstallBtrfsBootCodeToDisk(
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
     }
 #endif
+
+Quit:
+    /* Unlock the volume */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_UNLOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Failed to unlock BTRFS volume (Status 0x%lx)\n", LockStatus);
+    }
+
+    /* Close the volume */
     NtClose(FileHandle);
 
     /* Free the new boot sector */
