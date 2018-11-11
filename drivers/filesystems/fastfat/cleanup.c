@@ -161,7 +161,7 @@ VfatCleanupFile(
 #ifdef ENABLE_SWAPOUT
     if (IsVolume && BooleanFlagOn(DeviceExt->Flags, VCB_DISMOUNT_PENDING))
     {
-        VfatCheckForDismount(DeviceExt, FALSE);
+        VfatCheckForDismount(DeviceExt, TRUE);
     }
 #endif
 

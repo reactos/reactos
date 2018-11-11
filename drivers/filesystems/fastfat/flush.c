@@ -59,7 +59,9 @@ VfatFlushVolume(
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
 
-    DPRINT("VfatFlushVolume(DeviceExt %p, FatFcb %p)\n", DeviceExt, VolumeFcb);
+    DPRINT("VfatFlushVolume(DeviceExt %p, VolumeFcb %p)\n", DeviceExt, VolumeFcb);
+
+    ASSERT(VolumeFcb == DeviceExt->VolumeFcb);
 
     ListEntry = DeviceExt->FcbListHead.Flink;
     while (ListEntry != &DeviceExt->FcbListHead)
