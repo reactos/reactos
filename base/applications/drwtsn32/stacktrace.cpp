@@ -98,16 +98,16 @@ void PrintStackBacktrace(FILE* output, DumpData& data, ThreadData& thread)
         memset(sym, '\0', sizeof(*sym) + STACKWALK_MAX_NAMELEN);
         sym->SizeOfStruct = sizeof(*sym);
         sym->MaxNameLen = STACKWALK_MAX_NAMELEN;
-        DWORD64 displacement;
+        DWORD64 displacement = 0;
 
         if (!StackFrame.AddrPC.Offset || !SymFromAddr(data.ProcessHandle, StackFrame.AddrPC.Offset, &displacement, sym))
             strcpy(sym->Name, "<nosymbols>");
 
-        xfprintf(output, "%p %p %p %p %p %p %s!%s" NEWLINE,
+        xfprintf(output, "%p %p %p %p %p %p %s!%s +0x%I64x" NEWLINE,
                  (ULONG_PTR)StackFrame.AddrFrame.Offset, (ULONG_PTR)StackFrame.AddrPC.Offset,
                  (ULONG_PTR)StackFrame.Params[0], (ULONG_PTR)StackFrame.Params[1],
                  (ULONG_PTR)StackFrame.Params[2], (ULONG_PTR)StackFrame.Params[3],
-                 Module.ModuleName, sym->Name);
+                 Module.ModuleName, sym->Name, displacement);
     }
 
     UCHAR stackData[0x10 * 10];
