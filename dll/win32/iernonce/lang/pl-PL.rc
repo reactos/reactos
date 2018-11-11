@@ -12,13 +12,13 @@ BEGIN
     IDS_NODEPENDENCY "Nie można załadować pliku zależności %1."
     IDS_SETUPERROR "Podczas ustawiania %1 wystąpił błąd. Ten błąd został zarejestrowany. Instalacja będzie kontynuowana."
     IDS_INCOMPLETE "Poprzednia instalacja aplikacji nie została zakończona.\n\nZaloguj się używając konta administratora, aby dokończyć instalację."
-    IDS_SETUP "Instalator ReactOS"
+    IDS_SETUP "Instalator systemu ReactOS"
     IDS_SERVICEERROR "Niektóre usługi nie mogły zostać uruchomione. Instalator musi uruchomić ponownie system, aby uruchomić usługi."
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "System ReactOS ustawia teraz następujące elementy:", -1, 36, 13, 163, 11

@@ -13,71 +13,71 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Witaj w Kreatorze instalacji ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Obecnie nie możesz zainstalować ReactOS bezpośrednio! Uruchom ponownie komputer z tej płyty, aby zainstalować ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Naciśnij przycisk aby zakończyć pracę Instalatora.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Witamy w Kreatorze instalacji systemu ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Obecnie nie można zainstalować systemu ReactOS bezpośrednio! Uruchom ponownie komputer z tej płyty, aby zainstalować system ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Kliknij przycisk Anuluj, aby zakończyć pracę instalatora.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Zainstaluj ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Zainstaluj nową kopię ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Napraw lub zaktualizuj zainstalowany wcześniej ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Zaktualizuj lub napraw istniejącą kopię systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Naciśnij Dalej, aby zmienić ustawienia sprzętu.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "Zainstaluj system ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Zainstaluj nową kopię systemu ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    AUTORADIOBUTTON "Napraw lub uaktualnij istniejącą instalację systemu ReactOS", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Napraw istniejącą instalację lub wykonaj uaktualnienie do nowszej wersji systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli system ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "Kliknij Dalej, aby zmienić ustawienia sprzętu.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "Instalator może uaktualnić jedną z poniższych instalacji systemu ReactOS. Jeśl instalacja systemu ReactOS jest uszkodzona, instalator może podjąć próbę jej naprawy.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Do not upgrade", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
+    PUSHBUTTON  "&Nowa instalacja", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "Kliknij Dalej, aby uaktualnić wybraną instalację systemu, lub na 'Nowa instalacja' aby wykonać nową instalację systemu ReactOS.", IDC_STATIC, 7, 124, 216, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 150, 80
-    LTEXT "Ekran:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "Monitor:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 150, 80
     LTEXT "Klawiatura:", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 150, 80
-    LTEXT "Naciśnij Dalej, aby ustalić miejsce instalacji.", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "Kliknij Dalej, aby ustalić miejsce instalacji.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Stwórz", IDC_PARTCREATE, 7, 122, 50, 15
-    PUSHBUTTON "&Usuń", IDC_PARTDELETE, 63, 122, 50, 15
+    PUSHBUTTON "&Utwórz", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "U&suń", IDC_PARTDELETE, 63, 122, 50, 15
     PUSHBUTTON "S&terownik", IDC_DEVICEDRIVER, 169, 122, 50, 15, WS_DISABLED
     PUSHBUTTON "&Opcje zaawansowane...", IDC_PARTMOREOPTS, 225, 122, 86, 15
-    // LTEXT "Naciśnij Dalej, aby rozpocząć proces instalacji.", IDC_STATIC, 10, 180, 277, 20
+    // LTEXT "Kliknij Dalej, aby rozpocząć proces instalacji.", IDC_STATIC, 10, 180, 277, 20
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 145, 90
 STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Stwórz partycję"
+CAPTION "Utwórz partycję"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "Stwórz i sformatuj partycję", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    CONTROL "Utwórz i sformatuj partycję", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
     LTEXT "Rozmiar:",IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
@@ -104,33 +104,33 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
+    LTEXT "Typ instalacji:", IDC_STATIC, 18, 5, 74, 11
     EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Installation source:", IDC_STATIC, 18, 17, 74, 11
+    LTEXT "Źródło instalacji:", IDC_STATIC, 18, 17, 74, 11
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Architecture:", IDC_STATIC, 18, 29, 74, 11
+    LTEXT "Architektura:", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Computer:", IDC_STATIC, 18, 41, 74, 11
+    LTEXT "Komputer:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Display:", IDC_STATIC, 18, 53, 74, 11
+    LTEXT "Monitor:", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Keyboard:", IDC_STATIC, 18, 65, 74, 11
+    LTEXT "Klawiatura:", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination volume:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "Wolumin docelowy:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination directory:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "Katalog docelowy:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "I confirm that all the installation settings are correct. I also acknowledge that\nReactOS is alpha-quality software and may break on my computer or corrupt my data.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Please confirm that all the installation settings are correct,\nthen click on Install to start the installation process.", IDC_STATIC, 7, 124, 303, 18
+    AUTOCHECKBOX "Potwierdzam, że wszystkie ustawienia instalacji są poprawne. Przyjmuję równierz, że system ReactOS to oprogramowanie w fazie Alpha i może w każdej chwili przestać działać lub nieodwracalnie uszkodzić moje dane na dysku.",
+        IDC_CONFIRM_INSTALL, 7, 100, 303, 24, BS_MULTILINE
+    LTEXT "Potwierdź, że wszystkie ustawienia instalacji są poprawne, a następnie kliknij na Instaluj, aby rozpocząć proces instalacji.", IDC_STATIC, 7, 127, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalacja plików...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -140,41 +140,41 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Kończenie pracy Kreatora instalacji systemu ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Pierwszy etap instalacji ReactOS został pomyślnie zakończony.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Po kliknięciu na Zakończ ten komputer zostanie uruchomiony ponownie.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Po kliknięciu na przycisk Zakończ, komputer zostanie uruchomiony ponownie.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Jeśli w napędzie jest płyta CD, wyciągnij ją. Następnie naciśnij Zakończ, aby uruchomić ponownie komputer.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Jeśli w napędzie jest płyta CD, wyjmij ją. Następnie Kliknij Zakończ, aby ponownie uruchomić komputer.", IDC_STATIC, 10, 175, 297, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Witamy w Instalatorze ReactOS"
+    IDS_TYPETITLE "Witamy w Kreatorze instalacji systemu ReactOS"
     IDS_TYPESUBTITLE "Wybierz typ instalacji."
     IDS_DEVICETITLE "Ustawienia podstawowych urządzeń"
-    IDS_DEVICESUBTITLE "Zmień ustawienia ekranu i klawiatury."
-    IDS_DRIVETITLE "Ustaw partycję instalacji i folder systemowy"
-    IDS_DRIVESUBTITLE "Przygotuj partycje instalacji, folder systemowy i menedżer rozruchu."
+    IDS_DEVICESUBTITLE "Zmień ustawienia monitora i klawiatury."
+    IDS_DRIVETITLE "Ustaw partycję instalacji i katalog systemowy"
+    IDS_DRIVESUBTITLE "Przygotuj partycje instalacji, katalog systemowy i menedżer rozruchu."
     IDS_PROCESSTITLE "Przygotuj partycję, skopiuj pliki i zapisz ustawienia systemu"
     IDS_PROCESSSUBTITLE "Przygotuj i sformatuj partycję, skopiuj pliki, skopiuj i zainstaluj menedżer rozruchu"
-    IDS_RESTARTTITLE "Pierwszy etap instalacji zakończony sukcesem"
+    IDS_RESTARTTITLE "Pierwszy etap instalacji pomyślnie zakończony"
     IDS_RESTARTSUBTITLE "Pierwszy etap instalacji został zakończony, uruchom ponownie komputer, aby przejść do drugiego etapu"
     IDS_SUMMARYTITLE "Podsumowanie instalacji"
     IDS_SUMMARYSUBTITLE "Sprawdź ustawienia instalacji przed dokonaniem zmian na dysku"
-    IDS_ABORTSETUP "Instalacja ReactOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, będziesz musiał uruchomić Instalator ponownie, aby zainstalować ReactOS. Na pewno zakończyć?"
-    IDS_ABORTSETUP2 "Przerwać instalację?"
-    IDS_NO_TXTSETUP_SIF "Nie można znaleźć 'txtsetup.sif'.\nInstalator nie może kontynuować."
-    IDS_CAPTION "Instalator ReactOS"
+    IDS_ABORTSETUP "Instalacja systemu ReactOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, wymagane będzie ponowne uruchomienie instalatora, aby zainstalować system ReactOS. Czy na pewno chcesz teraz zakończyć?"
+    IDS_ABORTSETUP2 "Czy na pewno chcesz przerwać instalację?"
+    IDS_NO_TXTSETUP_SIF "Nie można znaleźć pliku 'txtsetup.sif'.\nInstalator nie może kontynuować."
+    IDS_CAPTION "Instalator systemu ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "Nazwa"
+    IDS_INSTALLATION_PATH "Ścieżka instalacji"
+    IDS_INSTALLATION_VENDOR "Nazwa dostawcy"
 END
 
 STRINGTABLE
@@ -182,5 +182,5 @@ BEGIN
     IDS_PARTITION_NAME "Nazwa"
     IDS_PARTITION_TYPE "Rodzaj"
     IDS_PARTITION_SIZE "Rozmiar"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_STATUS "Stan"
 END
