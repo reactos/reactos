@@ -131,41 +131,27 @@ RawCheckForDismount(IN PVCB Vcb,
     /* If we were to delete, delete the volume */
     if (Delete)
     {
-        PVPB DelVpb;
-
         /* Release our Vcb lock to be able delete us */
-        KeReleaseMutex(&Vcb->Mutex, 0);
+        KeReleaseMutex(&Vcb->Mutex, FALSE);
 
         /* If we have a local VPB, we'll have to delete it
          * but we won't dismount us - something went bad before
          */
         if (Vcb->LocalVpb)
         {
-            DelVpb = Vcb->LocalVpb;
+            ExFreePool(Vcb->LocalVpb);
         }
-        /* Otherwise, dismount our device if possible */
-        else
+        /* Otherwise, delete any of the available VPB if its reference count is zero */
+        else if (Vcb->Vpb->ReferenceCount == 0)
         {
-            if (Vcb->Vpb->ReferenceCount)
-            {
-                ObfDereferenceObject(Vcb->TargetDeviceObject);
-                IoDeleteDevice((PDEVICE_OBJECT)CONTAINING_RECORD(Vcb,
-                                                                 VOLUME_DEVICE_OBJECT,
-                                                                 Vcb));
-                return Delete;
-            }
-
-            DelVpb = Vcb->Vpb;
+            ExFreePool(Vcb->Vpb);
         }
 
-        /* Delete any of the available VPB and dismount */
-        ExFreePool(DelVpb);
+        /* Dismount our device if possible */
         ObfDereferenceObject(Vcb->TargetDeviceObject);
         IoDeleteDevice((PDEVICE_OBJECT)CONTAINING_RECORD(Vcb,
                                                          VOLUME_DEVICE_OBJECT,
                                                          Vcb));
-
-        return Delete;
     }
 
     return Delete;
@@ -227,7 +213,7 @@ RawClose(IN PVCB Vcb,
 
     /* Decrease the open count and check if this is a dismount */
     Vcb->OpenCount--;
-    if (!Vcb->OpenCount || !RawCheckForDismount(Vcb, FALSE))
+    if (Vcb->OpenCount != 0 || !RawCheckForDismount(Vcb, FALSE))
     {
         KeReleaseMutex(&Vcb->Mutex, FALSE);
     }
@@ -509,10 +495,10 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
         case FSCTL_LOCK_VOLUME:
 
             /* Make sure we're not locked, and that we're alone */
-            if (!(Vcb->VcbState & 1) && (Vcb->OpenCount == 1))
+            if (!(Vcb->VcbState & VCB_STATE_LOCKED) && (Vcb->OpenCount == 1))
             {
                 /* Lock the VCB */
-                Vcb->VcbState |= 1;
+                Vcb->VcbState |= VCB_STATE_LOCKED;
                 Status = STATUS_SUCCESS;
             }
             else
@@ -526,7 +512,7 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
         case FSCTL_UNLOCK_VOLUME:
 
             /* Make sure we're locked */
-            if (!(Vcb->VcbState & 1))
+            if (!(Vcb->VcbState & VCB_STATE_LOCKED))
             {
                 /* Let caller know we're not */
                 Status = STATUS_NOT_LOCKED;
@@ -534,7 +520,7 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
             else
             {
                 /* Unlock the VCB */
-                Vcb->VcbState &= ~1;
+                Vcb->VcbState &= ~VCB_STATE_LOCKED;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -543,7 +529,7 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
         case FSCTL_DISMOUNT_VOLUME:
 
             /* Make sure we're locked */
-            if (Vcb->VcbState & 1)
+            if (Vcb->VcbState & VCB_STATE_LOCKED)
             {
                 /* Do nothing, just return success */
                 Status = STATUS_SUCCESS;
@@ -616,18 +602,23 @@ RawFileSystemControl(IN PVCB Vcb,
 
         case IRP_MN_VERIFY_VOLUME:
 
+            /* Lock the device */
+            Status = KeWaitForSingleObject(&Vcb->Mutex,
+                                           Executive,
+                                           KernelMode,
+                                           FALSE,
+                                           NULL);
+            ASSERT(NT_SUCCESS(Status));
+
             /* We don't do verifies */
             Status = STATUS_WRONG_VOLUME;
             Vcb->Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
             /* Check if we should delete the device */
-            if (RawCheckForDismount(Vcb, FALSE))
+            if (Vcb->OpenCount != 0 || !RawCheckForDismount(Vcb, FALSE))
             {
-                /* Do it */
-                IoDeleteDevice((PDEVICE_OBJECT)
-                               CONTAINING_RECORD(Vcb,
-                                                 VOLUME_DEVICE_OBJECT,
-                                                 Vcb));
+                /* In case of deletion, the mutex is already released */
+                KeReleaseMutex(&Vcb->Mutex, FALSE);
             }
 
             /* We're done */
@@ -752,7 +743,7 @@ RawQueryFsVolumeInfo(IN PVCB Vcb,
     DPRINT("RawQueryFsVolumeInfo(%p, %p, %p)\n", Vcb, Buffer, Length);
 
     /* Clear the buffer and stub it out */
-    RtlZeroMemory( Buffer, sizeof(FILE_FS_VOLUME_INFORMATION));
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_VOLUME_INFORMATION));
     Buffer->VolumeSerialNumber = Vcb->Vpb->SerialNumber;
     Buffer->SupportsObjects = FALSE;
     Buffer->VolumeLabelLength = 0;
