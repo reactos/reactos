@@ -153,6 +153,7 @@
 #define NERR_DeviceShareConflict (NERR_BASE+218)
 #define NERR_BrowserTableIncomplete (NERR_BASE+219)
 #define NERR_NotLocalDomain (NERR_BASE+220)
+#define NERR_IsDfsShare (NERR_BASE+221)
 #define NERR_DevInvalidOpCode (NERR_BASE+231)
 #define NERR_DevNotFound (NERR_BASE+232)
 #define NERR_DevNotOpen (NERR_BASE+233)
