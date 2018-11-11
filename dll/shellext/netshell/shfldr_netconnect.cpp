@@ -989,6 +989,10 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     if (!val)
         return E_FAIL;
 
+    /* We should get this when F2 is pressed in explorer */
+    if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
+        lpcmi->lpVerb = MAKEINTRESOURCEA(IDS_NET_RENAME);
+
     if (HIWORD(lpcmi->lpVerb))
     {
         //FIXME
@@ -1000,6 +1004,20 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     switch(CmdId)
     {
+        case IDS_NET_RENAME:
+        {
+            HRESULT hr;
+            IShellView *psv;
+            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_IShellView, (PVOID*)&psv);
+            if (SUCCEEDED(hr))
+            {
+                SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
+                psv->SelectItem(m_pidl, selFlags);
+            }
+            psv->Release();
+
+            return S_OK;
+        }
         case IDS_NET_STATUS:
         case IDS_NET_STATUS-1:  //HACK for Windows XP
             return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
@@ -1008,7 +1026,7 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
             return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
     }
 
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 /**************************************************************************
