@@ -18,6 +18,7 @@
 #endif
 #include <fltuser.h>
 #include <atlstr.h>
+#include <strsafe.h>
 #include "resource.h"
 
 EXTERN_C int wmain(int argc, WCHAR *argv[]);
@@ -131,34 +132,55 @@ PrintFilterInfo(_In_ PVOID Buffer,
                 _In_ BOOL IsNewStyle)
 {
     WCHAR FilterName[128] = { 0 };
+    WCHAR NumOfInstances[16] = { 0 };
     WCHAR Altitude[64] = { 0 };
+    WCHAR Frame[16] = { 0 };
 
     if (IsNewStyle)
     {
         PFILTER_AGGREGATE_STANDARD_INFORMATION FilterAggInfo;
         FilterAggInfo = (PFILTER_AGGREGATE_STANDARD_INFORMATION)Buffer;
 
-        if (FilterAggInfo->Type.MiniFilter.FilterNameLength < 128)
+        if (FilterAggInfo->Flags & FLTFL_ASI_IS_MINIFILTER)
         {
-            CopyMemory(FilterName,
-                (PCHAR)FilterAggInfo + FilterAggInfo->Type.MiniFilter.FilterNameBufferOffset,
-                       FilterAggInfo->Type.MiniFilter.FilterNameLength);
-            FilterName[FilterAggInfo->Type.MiniFilter.FilterNameLength] = UNICODE_NULL;
+            if (FilterAggInfo->Type.MiniFilter.FilterNameLength < 128)
+            {
+                CopyMemory(FilterName,
+                           (PCHAR)FilterAggInfo + FilterAggInfo->Type.MiniFilter.FilterNameBufferOffset,
+                           FilterAggInfo->Type.MiniFilter.FilterNameLength);
+                FilterName[FilterAggInfo->Type.MiniFilter.FilterNameLength] = UNICODE_NULL;
+            }
+
+            StringCchPrintfW(NumOfInstances, 16, L"%lu", FilterAggInfo->Type.MiniFilter.NumberOfInstances);
+
+            if (FilterAggInfo->Type.MiniFilter.FilterAltitudeLength < 64)
+            {
+                CopyMemory(Altitude,
+                           (PCHAR)FilterAggInfo + FilterAggInfo->Type.MiniFilter.FilterAltitudeBufferOffset,
+                           FilterAggInfo->Type.MiniFilter.FilterAltitudeLength);
+                FilterName[FilterAggInfo->Type.MiniFilter.FilterAltitudeLength] = UNICODE_NULL;
+            }
+
+            StringCchPrintfW(Frame, 16, L"%lu", FilterAggInfo->Type.MiniFilter.FrameID);
+        }
+        else if (FilterAggInfo->Flags & FLTFL_ASI_IS_LEGACYFILTER)
+        {
+            if (FilterAggInfo->Type.LegacyFilter.FilterNameLength < 128)
+            {
+                CopyMemory(FilterName,
+                           (PCHAR)FilterAggInfo + FilterAggInfo->Type.LegacyFilter.FilterNameBufferOffset,
+                           FilterAggInfo->Type.LegacyFilter.FilterNameLength);
+                FilterName[FilterAggInfo->Type.LegacyFilter.FilterNameLength] = UNICODE_NULL;
+            }
+
+            StringCchCopyW(Frame, 16, L"<Legacy>"); //Fixme: is this localized?
         }
 
-        if (FilterAggInfo->Type.MiniFilter.FilterNameLength < 64)
-        {
-            CopyMemory(Altitude,
-                (PCHAR)FilterAggInfo + FilterAggInfo->Type.MiniFilter.FilterAltitudeBufferOffset,
-                       FilterAggInfo->Type.MiniFilter.FilterAltitudeLength);
-            FilterName[FilterAggInfo->Type.MiniFilter.FilterAltitudeLength] = UNICODE_NULL;
-        }
-
-        wprintf(L"%-38s %-10lu %-10s %-10lu\n",
+        wprintf(L"%-38s %-10s %-10s %3s\n",
                 FilterName,
-                FilterAggInfo->Type.MiniFilter.NumberOfInstances,
+                NumOfInstances,
                 Altitude,
-                FilterAggInfo->Type.MiniFilter.FrameID);
+                Frame);
     }
     else
     {
@@ -287,7 +309,6 @@ int wmain(int argc, WCHAR *argv[])
             wprintf(L"fltmc.exe unload [name]\n\n");
         }
     }
-    else 
 
     return 0;
 }
