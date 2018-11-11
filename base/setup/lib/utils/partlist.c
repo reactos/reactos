@@ -819,7 +819,10 @@ ScanForUnpartitionedDiskSpace(
         NewPartEntry->DiskEntry = DiskEntry;
 
         NewPartEntry->IsPartitioned = FALSE;
-        NewPartEntry->StartSector.QuadPart = (ULONGLONG)DiskEntry->SectorAlignment;
+        if (DiskEntry->SectorAlignment < 2048)
+            NewPartEntry->StartSector.QuadPart = 2048ULL;
+        else
+            NewPartEntry->StartSector.QuadPart = (ULONGLONG)DiskEntry->SectorAlignment;
         NewPartEntry->SectorCount.QuadPart = AlignDown(DiskEntry->SectorCount.QuadPart, DiskEntry->SectorAlignment) -
                                              NewPartEntry->StartSector.QuadPart;
 
@@ -837,7 +840,10 @@ ScanForUnpartitionedDiskSpace(
     }
 
     /* Start partition at head 1, cylinder 0 */
-    LastStartSector = DiskEntry->SectorAlignment;
+    if (DiskEntry->SectorAlignment < 2048)
+        LastStartSector = 2048ULL;
+    else
+        LastStartSector = DiskEntry->SectorAlignment;
     LastSectorCount = 0ULL;
     LastUnusedSectorCount = 0ULL;
 
