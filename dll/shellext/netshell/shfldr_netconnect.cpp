@@ -851,40 +851,40 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
         return E_FAIL;
 
     if (pProperties->Status == NCS_HARDWARE_DISABLED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_ACTIVATE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_ACTIVATE), MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_ACTIVATE), MFS_DEFAULT);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DEACTIVATE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DEACTIVATE), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DEACTIVATE), MFS_ENABLED);
 
     if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_GRAYED);
     else if (pProperties->Status == NCS_CONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_DEFAULT);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_STATUS, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_ENABLED);
 
     if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_REPAIR, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_GRAYED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_REPAIR, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_ENABLED);
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 4, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
 
     if (pProperties->dwCharacter & NCCF_ALLOW_REMOVAL)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
 
     if (pProperties->dwCharacter & NCCF_ALLOW_RENAME)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
     if (pProperties->Status == NCS_CONNECTED)
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
     else
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
+        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
     NcFreeNetconProperties(pProperties);
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
@@ -993,17 +993,23 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
         lpcmi->lpVerb = MAKEINTRESOURCEA(IDS_NET_RENAME);
 
-    if (HIWORD(lpcmi->lpVerb))
+    if (HIWORD(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
     {
-        //FIXME
+        FIXME("Got invalid command\n");
         return E_NOTIMPL;
     }
 
-    CmdId = LOWORD(lpcmi->lpVerb);
-
+    CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
 
     switch(CmdId)
     {
+        case IDS_NET_ACTIVATE:
+        case IDS_NET_DEACTIVATE:
+        case IDS_NET_REPAIR:
+        case IDS_NET_CREATELINK:
+        case IDS_NET_DELETE:
+            FIXME("Command %u is not implemented\n", CmdId);
+            return E_NOTIMPL;
         case IDS_NET_RENAME:
         {
             HRESULT hr;
@@ -1019,10 +1025,8 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
             return S_OK;
         }
         case IDS_NET_STATUS:
-        case IDS_NET_STATUS-1:  //HACK for Windows XP
             return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
         case IDS_NET_PROPERTIES:
-        case 10099:             //HACK for Windows XP
             return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
     }
 
