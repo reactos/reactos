@@ -1238,6 +1238,314 @@ Language=Russian
 This replicant database is outdated; synchronization is required.
 .
 
+MessageId=2250
+Severity=Success
+Facility=System
+SymbolicName=NERR_UseNotFound
+Language=English
+The network connection could not be found.
+.
+Language=Russian
+The network connection could not be found.
+.
+
+MessageId=2251
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadAsgType
+Language=English
+This asg_type is invalid.
+.
+Language=Russian
+This asg_type is invalid.
+.
+
+MessageId=2252
+Severity=Success
+Facility=System
+SymbolicName=NERR_DeviceIsShared
+Language=English
+This device is currently being shared.
+.
+Language=Russian
+This device is currently being shared.
+.
+
+MessageId=2270
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoComputerName
+Language=English
+The computer name could not be added as a message alias.  The name may already exist on the network.
+.
+Language=Russian
+The computer name could not be added as a message alias.  The name may already exist on the network.
+.
+
+MessageId=2271
+Severity=Success
+Facility=System
+SymbolicName=NERR_MsgAlreadyStarted
+Language=English
+The Messenger service is already started.
+.
+Language=Russian
+The Messenger service is already started.
+.
+
+MessageId=2272
+Severity=Success
+Facility=System
+SymbolicName=NERR_MsgInitFailed
+Language=English
+The Messenger service failed to start.
+.
+Language=Russian
+The Messenger service failed to start.
+.
+
+MessageId=2273
+Severity=Success
+Facility=System
+SymbolicName=NERR_NameNotFound
+Language=English
+The message alias could not be found on the network.
+.
+Language=Russian
+The message alias could not be found on the network.
+.
+
+MessageId=2274
+Severity=Success
+Facility=System
+SymbolicName=NERR_AlreadyForwarded
+Language=English
+This message alias has already been forwarded.
+.
+Language=Russian
+This message alias has already been forwarded.
+.
+
+MessageId=2275
+Severity=Success
+Facility=System
+SymbolicName=NERR_AddForwarded
+Language=English
+This message alias has been added but is still forwarded.
+.
+Language=Russian
+This message alias has been added but is still forwarded.
+.
+
+MessageId=2276
+Severity=Success
+Facility=System
+SymbolicName=NERR_AlreadyExists
+Language=English
+This message alias already exists locally.
+.
+Language=Russian
+This message alias already exists locally.
+.
+
+MessageId=2277
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyNames
+Language=English
+The maximum number of added message aliases has been exceeded.
+.
+Language=Russian
+The maximum number of added message aliases has been exceeded.
+.
+
+MessageId=2278
+Severity=Success
+Facility=System
+SymbolicName=NERR_DelComputerName
+Language=English
+The computer name could not be deleted.
+.
+Language=Russian
+The computer name could not be deleted.
+.
+
+MessageId=2279
+Severity=Success
+Facility=System
+SymbolicName=NERR_LocalForward
+Language=English
+Messages cannot be forwarded back to the same workstation.
+.
+Language=Russian
+Messages cannot be forwarded back to the same workstation.
+.
+
+MessageId=2280
+Severity=Success
+Facility=System
+SymbolicName=NERR_GrpMsgProcessor
+Language=English
+An error occurred in the domain message processor.
+.
+Language=Russian
+An error occurred in the domain message processor.
+.
+
+MessageId=2281
+Severity=Success
+Facility=System
+SymbolicName=NERR_PausedRemote
+Language=English
+The message was sent, but the recipient has paused the Messenger service.
+.
+Language=Russian
+The message was sent, but the recipient has paused the Messenger service.
+.
+
+MessageId=2282
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadReceive
+Language=English
+The message was sent but not received.
+.
+Language=Russian
+The message was sent but not received.
+.
+
+MessageId=2283
+Severity=Success
+Facility=System
+SymbolicName=NERR_NameInUse
+Language=English
+The message alias is currently in use. Try again later.
+.
+Language=Russian
+The message alias is currently in use. Try again later.
+.
+
+MessageId=2284
+Severity=Success
+Facility=System
+SymbolicName=NERR_MsgNotStarted
+Language=English
+The Messenger service has not been started.
+.
+Language=Russian
+The Messenger service has not been started.
+.
+
+MessageId=2285
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotLocalName
+Language=English
+The name is not on the local computer.
+.
+Language=Russian
+The name is not on the local computer.
+.
+
+MessageId=2286
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoForwardName
+Language=English
+The forwarded message alias could not be found on the network.
+.
+Language=Russian
+The forwarded message alias could not be found on the network.
+.
+
+MessageId=2287
+Severity=Success
+Facility=System
+SymbolicName=NERR_RemoteFull
+Language=English
+The message alias table on the remote station is full.
+.
+Language=Russian
+The message alias table on the remote station is full.
+.
+
+MessageId=2288
+Severity=Success
+Facility=System
+SymbolicName=NERR_NameNotForwarded
+Language=English
+Messages for this alias are not currently being forwarded.
+.
+Language=Russian
+Messages for this alias are not currently being forwarded.
+.
+
+MessageId=2289
+Severity=Success
+Facility=System
+SymbolicName=NERR_TruncatedBroadcast
+Language=English
+The broadcast message was truncated.
+.
+Language=Russian
+The broadcast message was truncated.
+.
+
+MessageId=2294
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidDevice
+Language=English
+This is an invalid device name.
+.
+Language=Russian
+This is an invalid device name.
+.
+
+MessageId=2295
+Severity=Success
+Facility=System
+SymbolicName=NERR_WriteFault
+Language=English
+A write fault occurred.
+.
+Language=Russian
+A write fault occurred.
+.
+
+MessageId=2297
+Severity=Success
+Facility=System
+SymbolicName=NERR_DuplicateName
+Language=English
+A duplicate message alias exists on the network.
+.
+Language=Russian
+A duplicate message alias exists on the network.
+.
+
+MessageId=2298
+Severity=Success
+Facility=System
+SymbolicName=NERR_DeleteLater
+Language=English
+This message alias will be deleted later.
+.
+Language=Russian
+This message alias will be deleted later.
+.
+
+MessageId=2299
+Severity=Success
+Facility=System
+SymbolicName=NERR_IncompleteDel
+Language=English
+The message alias was not successfully deleted from all networks.
+.
+Language=Russian
+The message alias was not successfully deleted from all networks.
+.
+
 
 ;
 ; other message definitions
@@ -1329,6 +1637,50 @@ Option %1 is ambiguous.
 .
 Language=Russian
 Option %1 is ambiguous.
+.
+
+MessageId=3510
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3510
+Language=English
+A command was used with conflicting switches.
+.
+Language=Russian
+A command was used with conflicting switches.
+.
+
+MessageId=3511
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3511
+Language=English
+Could not find subprogram %1.
+.
+Language=Russian
+Could not find subprogram %1.
+.
+
+MessageId=3512
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3512
+Language=English
+The software requires a newer version of the operating\nsystem.
+.
+Language=Russian
+The software requires a newer version of the operating\nsystem.
+.
+
+MessageId=3513
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3513
+Language=English
+More data is available than can be returned by the operating\nsystem.
+.
+Language=Russian
+More data is available than can be returned by the operating\nsystem.
 .
 
 MessageId=3514
