@@ -108,6 +108,7 @@ RawCheckForDismount(IN PVCB Vcb,
             Vcb->LocalVpb = NULL;
             Vcb->Vpb->Flags |= VPB_PERSISTENT;
         }
+
         /* Don't do anything */
         Delete = FALSE;
     }
@@ -124,10 +125,10 @@ RawCheckForDismount(IN PVCB Vcb,
         }
     }
 
-    /* Release lock and return status */
+    /* Release the VPB lock */
     IoReleaseVpbSpinLock(OldIrql);
 
-    /* If we were to delete, delete volume */
+    /* If we were to delete, delete the volume */
     if (Delete)
     {
         PVPB DelVpb;
@@ -311,7 +312,7 @@ RawCreate(IN PVCB Vcb,
                 }
 
                 /* Increase the open count and set the VPB */
-                Vcb->OpenCount += 1;
+                Vcb->OpenCount++;
                 IoStackLocation->FileObject->Vpb = Vcb->Vpb;
 
                 /* Set IRP status and disable intermediate buffering */
@@ -330,10 +331,10 @@ RawCreate(IN PVCB Vcb,
     }
 
     /* Check if the request failed */
-    if (!(NT_SUCCESS(Status)) && !(Vcb->OpenCount))
+    if (!NT_SUCCESS(Status) && !Vcb->OpenCount)
     {
         /* Check if we can dismount the device */
-        Deleted = RawCheckForDismount(Vcb, TRUE);   
+        Deleted = RawCheckForDismount(Vcb, TRUE);
     }
 
     /* In case of deletion, the mutex is already released */
@@ -464,11 +465,10 @@ RawMountVolume(IN PIO_STACK_LOCATION IoStackLocation)
 
     /* Increment OpenCount by two to avoid dismount when RawClose() will be called on ObDereferenceObject() */
     Volume->Vcb.OpenCount += 2;
-    /* Notify for sucessful mount */
+    /* Notify for successful mount */
     FsRtlNotifyVolumeEvent(FileObject, FSRTL_VOLUME_MOUNT);
-    /* Decrease refcount to 0 to make FileObject being released */
+    /* It's not opened anymore, decrease the reference count to 0 to make FileObject being released */
     ObDereferenceObject(FileObject);
-    /* It's not open anymore, go back to 0 */
     Volume->Vcb.OpenCount -= 2;
 
     return Status;
