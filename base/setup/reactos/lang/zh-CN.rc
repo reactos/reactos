@@ -25,12 +25,12 @@ END
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安装程序"
-FONT 8, "MS Shell Dlg"
+FONT 9, "宋体"
 BEGIN
-    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "ReactOS 安装程序可以升级下面列出的一个可用的 ReactOS 安装，如果 ReactOS 安装损坏，安装程序可以尝试修复它。", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Do not upgrade", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
+    PUSHBUTTON  "不执行升级(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "单击“下一步”以升级所选的操作系统安装，或单击“不升级”以在不升级的情况下继续新安装。", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -53,7 +53,7 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "建立(&C)", IDC_PARTCREATE, 7, 122, 50, 15
+    PUSHBUTTON "新建(&C)", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "删除(&D)", IDC_PARTDELETE, 63, 122, 50, 15
     PUSHBUTTON "驱动器(&r)", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
     PUSHBUTTON "高级选项(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 15
@@ -96,25 +96,25 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
+    LTEXT "安装类型:", IDC_STATIC, 18, 5, 74, 11
     EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Installation source:", IDC_STATIC, 18, 17, 74, 11
+    LTEXT "安装源:", IDC_STATIC, 18, 17, 74, 11
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Architecture:", IDC_STATIC, 18, 29, 74, 11
+    LTEXT "架构:", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Computer:", IDC_STATIC, 18, 41, 74, 11
+    LTEXT "计算机:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Display:", IDC_STATIC, 18, 53, 74, 11
+    LTEXT "显示器:", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Keyboard:", IDC_STATIC, 18, 65, 74, 11
+    LTEXT "键盘:", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination volume:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "目标卷:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination directory:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "目标目录:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "I confirm that all the installation settings are correct. I also acknowledge that\nReactOS is alpha-quality software and may break on my computer or corrupt my data.",
+    AUTOCHECKBOX "我确认我的操作是无误的。我同样了解 ReactOS \n 是一款 alpha 级软件，可能会损害我的计算机或破坏我的数据。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Please confirm that all the installation settings are correct,\nthen click on Install to start the installation process.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "请确认所有安装设置正确，\n然后点击安装开始安装。", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -162,7 +162,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
+    IDS_INSTALLATION_PATH "安装目录"
     IDS_INSTALLATION_VENDOR "Vendor Name"
 END
 
@@ -171,5 +171,5 @@ BEGIN
     IDS_PARTITION_NAME "名称"
     IDS_PARTITION_TYPE "类型"
     IDS_PARTITION_SIZE "大小"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_STATUS "状态"
 END
