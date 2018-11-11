@@ -203,6 +203,64 @@ PrintFilterInfo(_In_ PVOID Buffer,
 }
 
 void
+PrintVolumeInfo(_In_ PVOID Buffer)
+{
+    PFILTER_VOLUME_STANDARD_INFORMATION FilterVolInfo;
+    WCHAR DosName[16] = { 0 };
+    WCHAR VolName[128] = { 0 };
+    WCHAR FileSystem[32] = { 0 };
+
+    FilterVolInfo = (PFILTER_VOLUME_STANDARD_INFORMATION)Buffer;
+
+    if (FilterVolInfo->FilterVolumeNameLength < 128)
+    {
+        CopyMemory(VolName,
+                   (PCHAR)FilterVolInfo->FilterVolumeName,
+                   FilterVolInfo->FilterVolumeNameLength);
+        VolName[FilterVolInfo->FilterVolumeNameLength] = UNICODE_NULL;
+    }
+
+    (void)FilterGetDosName(VolName, DosName, 16);
+
+    switch (FilterVolInfo->FileSystemType)
+    {
+    case FLT_FSTYPE_MUP:
+        StringCchCopyW(FileSystem, 32, L"Remote");
+        break;
+
+    case FLT_FSTYPE_NTFS:
+        StringCchCopyW(FileSystem, 32, L"NTFS");
+        break;
+
+    case FLT_FSTYPE_FAT:
+        StringCchCopyW(FileSystem, 32, L"FAT");
+        break;
+
+    case FLT_FSTYPE_EXFAT:
+        StringCchCopyW(FileSystem, 32, L"exFAT");
+        break;
+
+    case FLT_FSTYPE_NPFS:
+        StringCchCopyW(FileSystem, 32, L"NamedPipe");
+        break;
+
+    case FLT_FSTYPE_MSFS:
+        StringCchCopyW(FileSystem, 32, L"Mailslot");
+        break;
+
+    case FLT_FSTYPE_UNKNOWN:
+    default:
+        StringCchCopyW(FileSystem, 32, L"<Unknown>");
+        break;
+    }
+
+    wprintf(L"%-31s %-40s %-10s\n",
+            DosName,
+            VolName,
+            FileSystem);
+}
+
+void
 ListFilters()
 {
     HANDLE FindHandle;
@@ -260,7 +318,51 @@ ListFilters()
 
     if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS))
     {
-        LoadAndPrintString(IDS_ERROR_PRIV, hr);
+        LoadAndPrintString(IDS_ERROR_FILTERS, hr);
+        PrintErrorText(hr);
+    }
+}
+
+void
+ListVolumes()
+{
+    HANDLE FindHandle;
+    BYTE Buffer[1024];
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    hr = FilterVolumeFindFirst(FilterVolumeStandardInformation,
+                               Buffer,
+                               1024,
+                               &BytesReturned,
+                               &FindHandle);
+    if (SUCCEEDED(hr))
+    {
+        LoadAndPrintString(IDS_DISPLAY_VOLUMES);
+        wprintf(L"------------------------------  ---------------------------------------  ----------  --------\n");
+
+        PrintVolumeInfo(Buffer);
+
+        do
+        {
+            hr = FilterVolumeFindNext(FindHandle,
+                                      FilterVolumeStandardInformation,
+                                      Buffer,
+                                      1024,
+                                      &BytesReturned);
+            if (SUCCEEDED(hr))
+            {
+                PrintVolumeInfo(Buffer);
+            }
+
+        } while (SUCCEEDED(hr));
+
+        FilterVolumeFindClose(FindHandle);
+    }
+
+    if (!SUCCEEDED(hr) && hr != HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS))
+    {
+        LoadAndPrintString(IDS_ERROR_VOLUMES, hr);
         PrintErrorText(hr);
     }
 }
@@ -307,6 +409,18 @@ int wmain(int argc, WCHAR *argv[])
         {
             LoadAndPrintString(IDS_USAGE_UNLOAD);
             wprintf(L"fltmc.exe unload [name]\n\n");
+        }
+    }
+    else if (!_wcsicmp(argv[1], L"volumes"))
+    {
+        if (argc == 2)
+        {
+            ListVolumes();
+        }
+        else
+        {
+            LoadAndPrintString(IDS_USAGE_VOLUMES);
+            wprintf(L"fltmc.exe volumes [name]\n\n");
         }
     }
 
