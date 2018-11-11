@@ -721,6 +721,523 @@ Language=Russian
 A thread for the new service could not be created.
 .
 
+MessageId=2200
+Severity=Success
+Facility=System
+SymbolicName=NERR_AlreadyLoggedOn
+Language=English
+This workstation is already logged on to the local-area network.
+.
+Language=Russian
+This workstation is already logged on to the local-area network.
+.
+
+MessageId=2201
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotLoggedOn
+Language=English
+The workstation is not logged on to the local-area network.
+.
+Language=Russian
+The workstation is not logged on to the local-area network.
+.
+
+MessageId=2202
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadUsername
+Language=English
+The user name or group name parameter is invalid.
+.
+Language=Russian
+The user name or group name parameter is invalid.
+.
+
+MessageId=2203
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadPassword
+Language=English
+The password parameter is invalid.
+.
+Language=Russian
+The password parameter is invalid.
+.
+
+MessageId=2204
+Severity=Success
+Facility=System
+SymbolicName=NERR_UnableToAddName_W
+Language=English
+The logon processor did not add the message alias.
+.
+Language=Russian
+The logon processor did not add the message alias.
+.
+
+MessageId=2205
+Severity=Success
+Facility=System
+SymbolicName=NERR_UnableToAddName_F
+Language=English
+The logon processor did not add the message alias.
+.
+Language=Russian
+The logon processor did not add the message alias.
+.
+
+MessageId=2206
+Severity=Success
+Facility=System
+SymbolicName=NERR_UnableToDelName_W
+Language=English
+The logoff processor did not delete the message alias.
+.
+Language=Russian
+The logoff processor did not delete the message alias.
+.
+
+MessageId=2207
+Severity=Success
+Facility=System
+SymbolicName=NERR_UnableToDelName_F
+Language=English
+The logoff processor did not delete the message alias.
+.
+Language=Russian
+The logoff processor did not delete the message alias.
+.
+
+MessageId=2209
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonsPaused
+Language=English
+Network logons are paused.
+.
+Language=Russian
+Network logons are paused.
+.
+
+MessageId=2210
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonServerConflict
+Language=English
+A centralized logon-server conflict occurred.
+.
+Language=Russian
+A centralized logon-server conflict occurred.
+.
+
+MessageId=2211
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonNoUserPath
+Language=English
+The server is configured without a valid user path.
+.
+Language=Russian
+The server is configured without a valid user path.
+.
+
+MessageId=2212
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonScriptError
+Language=English
+An error occurred while loading or running the logon script.
+.
+Language=Russian
+An error occurred while loading or running the logon script.
+.
+
+MessageId=2214
+Severity=Success
+Facility=System
+SymbolicName=NERR_StandaloneLogon
+Language=English
+The logon server was not specified.  Your computer will be logged on as STANDALONE.
+.
+Language=Russian
+The logon server was not specified.  Your computer will be logged on as STANDALONE.
+.
+
+MessageId=2215
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonServerNotFound
+Language=English
+The logon server could not be found.
+.
+Language=Russian
+The logon server could not be found.
+.
+
+MessageId=2216
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonDomainExists
+Language=English
+There is already a logon domain for this computer.
+.
+Language=Russian
+There is already a logon domain for this computer.
+.
+
+MessageId=2217
+Severity=Success
+Facility=System
+SymbolicName=NERR_NonValidatedLogon
+Language=English
+The logon server could not validate the logon.
+.
+Language=Russian
+The logon server could not validate the logon.
+.
+
+MessageId=2219
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFNotFound
+Language=English
+The security database could not be found.
+.
+Language=Russian
+The security database could not be found.
+.
+
+MessageId=2220
+Severity=Success
+Facility=System
+SymbolicName=NERR_GroupNotFound
+Language=English
+The group name could not be found.
+.
+Language=Russian
+The group name could not be found.
+.
+
+MessageId=2221
+Severity=Success
+Facility=System
+SymbolicName=NERR_UserNotFound
+Language=English
+The user name could not be found.
+.
+Language=Russian
+The user name could not be found.
+.
+
+MessageId=2222
+Severity=Success
+Facility=System
+SymbolicName=NERR_ResourceNotFound
+Language=English
+The resource name could not be found.
+.
+Language=Russian
+The resource name could not be found.
+.
+
+MessageId=2223
+Severity=Success
+Facility=System
+SymbolicName=NERR_GroupExists
+Language=English
+The group already exists.
+.
+Language=Russian
+The group already exists.
+.
+
+MessageId=2224
+Severity=Success
+Facility=System
+SymbolicName=NERR_UserExists
+Language=English
+The account already exists.
+.
+Language=Russian
+The account already exists.
+.
+
+MessageId=2225
+Severity=Success
+Facility=System
+SymbolicName=NERR_ResourceExists
+Language=English
+The resource permission list already exists.
+.
+Language=Russian
+The resource permission list already exists.
+.
+
+MessageId=2226
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotPrimary
+Language=English
+This operation is only allowed on the primary domain controller of the domain.
+.
+Language=Russian
+This operation is only allowed on the primary domain controller of the domain.
+.
+
+MessageId=2227
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFNotLoaded
+Language=English
+The security database has not been started.
+.
+Language=Russian
+The security database has not been started.
+.
+
+MessageId=2228
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFNoRoom
+Language=English
+There are too many names in the user accounts database.
+.
+Language=Russian
+There are too many names in the user accounts database.
+.
+
+MessageId=2229
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFFileIOFail
+Language=English
+A disk I/O failure occurred.
+.
+Language=Russian
+A disk I/O failure occurred.
+.
+
+MessageId=2230
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFTooManyLists
+Language=English
+The limit of 64 entries per resource was exceeded.
+.
+Language=Russian
+The limit of 64 entries per resource was exceeded.
+.
+
+MessageId=2231
+Severity=Success
+Facility=System
+SymbolicName=NERR_UserLogon
+Language=English
+Deleting a user with a session is not allowed.
+.
+Language=Russian
+Deleting a user with a session is not allowed.
+.
+
+MessageId=2232
+Severity=Success
+Facility=System
+SymbolicName=NERR_ACFNoParent
+Language=English
+The parent directory could not be located.
+.
+Language=Russian
+The parent directory could not be located.
+.
+
+MessageId=2233
+Severity=Success
+Facility=System
+SymbolicName=NERR_CanNotGrowSegment
+Language=English
+Unable to add to the security database session cache segment.
+.
+Language=Russian
+Unable to add to the security database session cache segment.
+.
+
+MessageId=2234
+Severity=Success
+Facility=System
+SymbolicName=NERR_SpeGroupOp
+Language=English
+This operation is not allowed on this special group.
+.
+Language=Russian
+This operation is not allowed on this special group.
+.
+
+MessageId=2235
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotInCache
+Language=English
+This user is not cached in user accounts database session cache.
+.
+Language=Russian
+This user is not cached in user accounts database session cache.
+.
+
+MessageId=2236
+Severity=Success
+Facility=System
+SymbolicName=NERR_UserInGroup
+Language=English
+The user already belongs to this group.
+.
+Language=Russian
+The user already belongs to this group.
+.
+
+MessageId=2237
+Severity=Success
+Facility=System
+SymbolicName=NERR_UserNotInGroup
+Language=English
+The user does not belong to this group.
+.
+Language=Russian
+The user does not belong to this group.
+.
+
+MessageId=2238
+Severity=Success
+Facility=System
+SymbolicName=NERR_AccountUndefined
+Language=English
+This user account is undefined.
+.
+Language=Russian
+This user account is undefined.
+.
+
+MessageId=2239
+Severity=Success
+Facility=System
+SymbolicName=NERR_AccountExpired
+Language=English
+This user account has expired.
+.
+Language=Russian
+This user account has expired.
+.
+
+MessageId=2240
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidWorkstation
+Language=English
+The user is not allowed to log on from this workstation.
+.
+Language=Russian
+The user is not allowed to log on from this workstation.
+.
+
+MessageId=2241
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidLogonHours
+Language=English
+The user is not allowed to log on at this time.
+.
+Language=Russian
+The user is not allowed to log on at this time.
+.
+
+MessageId=2242
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordExpired
+Language=English
+The password of this user has expired.
+.
+Language=Russian
+The password of this user has expired.
+.
+
+MessageId=2243
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordCantChange
+Language=English
+The password of this user cannot change.
+.
+Language=Russian
+The password of this user cannot change.
+.
+
+MessageId=2244
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordHistConflict
+Language=English
+This password cannot be used now.
+.
+Language=Russian
+This password cannot be used now.
+.
+
+MessageId=2245
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordTooShort
+Language=English
+The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements.
+.
+Language=Russian
+The password does not meet the password policy requirements. Check the minimum password length, password complexity and password history requirements.
+.
+
+MessageId=2246
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordTooRecent
+Language=English
+The password of this user is too recent to change.
+.
+Language=Russian
+The password of this user is too recent to change.
+.
+
+MessageId=2247
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidDatabase
+Language=English
+The security database is corrupted.
+.
+Language=Russian
+The security database is corrupted.
+.
+
+MessageId=2248
+Severity=Success
+Facility=System
+SymbolicName=NERR_DatabaseUpToDate
+Language=English
+No updates are necessary to this replicant network/local security database.
+.
+Language=Russian
+No updates are necessary to this replicant network/local security database.
+.
+
+MessageId=2249
+Severity=Success
+Facility=System
+SymbolicName=NERR_SyncRequired
+Language=English
+This replicant database is outdated; synchronization is required.
+.
+Language=Russian
+This replicant database is outdated; synchronization is required.
+.
+
 
 ;
 ; other message definitions
@@ -729,7 +1246,7 @@ A thread for the new service could not be created.
 MessageId=3500
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3000
+SymbolicName=OTHER_3500
 Language=English
 The command completed successfully.
 .
@@ -740,12 +1257,78 @@ The command completed successfully.
 MessageId=3501
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3001
+SymbolicName=OTHER_3501
 Language=English
 You used an invalid option.
 .
 Language=Russian
 You used an invalid option.
+.
+
+MessageId=3502
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3502
+Language=English
+System error %1 has occurred.
+.
+Language=Russian
+System error %1 has occurred.
+.
+
+MessageId=3503
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3503
+Language=English
+The command contains an invalid number of arguments.
+.
+Language=Russian
+The command contains an invalid number of arguments.
+.
+
+MessageId=3504
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3504
+Language=English
+The command completed with one or more errors.
+.
+Language=Russian
+The command completed with one or more errors.
+.
+
+MessageId=3505
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3505
+Language=English
+You used an option with an invalid value.
+.
+Language=Russian
+You used an option with an invalid value.
+.
+
+MessageId=3506
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3506
+Language=English
+The option %1 is unknown.
+.
+Language=Russian
+The option %1 is unknown.
+.
+
+MessageId=3507
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3507
+Language=English
+Option %1 is ambiguous.
+.
+Language=Russian
+Option %1 is ambiguous.
 .
 
 MessageId=3514
