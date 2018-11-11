@@ -401,9 +401,32 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
         *rgfInOut = ~0;
 
     if (cidl == 0)
+    {
         *rgfInOut = dwNetConnectAttributes;
+    }
     else
+    {
         *rgfInOut = dwNetConnectItemAttributes;
+
+        while (cidl > 0 && *apidl)
+        {
+            const VALUEStruct * val;
+            NETCON_PROPERTIES * pProperties;
+
+            val = _ILGetValueStruct(*apidl);
+            if (!val)
+                continue;
+
+            if (val->pItem->GetProperties(&pProperties) != S_OK)
+                continue;
+
+            if (!(pProperties->dwCharacter & NCCF_ALLOW_RENAME))
+                *rgfInOut &= ~SFGAO_CANRENAME;
+
+            apidl++;
+            cidl--;
+        }
+    }
 
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
