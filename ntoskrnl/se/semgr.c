@@ -205,6 +205,9 @@ SepInitializationPhase1(VOID)
                                      &ObjectAttributes);
     ASSERT(NT_SUCCESS(Status));
 
+    /* Free the DACL */
+    ExFreePoolWithTag(Dacl, TAG_SE);
+
     /* Create 'LSA_AUTHENTICATION_INITIALIZED' event */
     RtlInitUnicodeString(&Name, L"LSA_AUTHENTICATION_INITIALIZED");
     InitializeObjectAttributes(&ObjectAttributes,
