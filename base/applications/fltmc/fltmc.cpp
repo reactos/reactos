@@ -245,15 +245,21 @@ ListFilters()
 
 int wmain(int argc, WCHAR *argv[])
 {
-    if (argc < 2)
-    {
-        LoadAndPrintString(IDS_USAGE);
-        return 0;
-    }
-
     wprintf(L"\n");
 
-    if (!_wcsicmp(argv[1], L"help"))
+    if ((argc < 2) || (!_wcsicmp(argv[1], L"filters")))
+    {
+        if (argc < 3)
+        {
+            ListFilters();
+        }
+        else
+        {
+            LoadAndPrintString(IDS_USAGE_FILTERS);
+            wprintf(L"fltmc.exe filters\n\n");
+        }
+    }
+    else if (!_wcsicmp(argv[1], L"help"))
     {
         LoadAndPrintString(IDS_USAGE);
     }
@@ -281,18 +287,7 @@ int wmain(int argc, WCHAR *argv[])
             wprintf(L"fltmc.exe unload [name]\n\n");
         }
     }
-    else if (!_wcsicmp(argv[1], L"filters"))
-    {
-        if (argc == 2)
-        {
-            ListFilters();
-        }
-        else
-        {
-            LoadAndPrintString(IDS_USAGE_FILTERS);
-            wprintf(L"fltmc.exe filters\n\n");
-        }
-    }
+    else 
 
     return 0;
 }
