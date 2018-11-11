@@ -1860,7 +1860,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 LVITEMW lvItem;
 
                 pidl = _PidlByItem(lpdi->item);
-                PITEMID_CHILD pidlNew;
+                PITEMID_CHILD pidlNew = NULL;
                 hr = m_pSFParent->SetNameOf(0, pidl, lpdi->item.pszText, SHGDN_INFOLDER, &pidlNew);
 
                 if (SUCCEEDED(hr) && pidlNew)
