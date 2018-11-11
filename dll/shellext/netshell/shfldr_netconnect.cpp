@@ -534,6 +534,7 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
                LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD * pPidlOut)
 {
     const VALUEStruct * val;
+    HRESULT hr;
 
     val = _ILGetValueStruct(pidl);
     if (!val)
@@ -542,7 +543,14 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
    if (!val->pItem)
        return E_FAIL;
 
-    return val->pItem->Rename(lpName);
+    hr = val->pItem->Rename(lpName);
+    if (FAILED(hr))
+        return hr;
+
+    /* The pidl hasn't changed */
+    *pPidlOut = ILClone(pidl);
+
+    return S_OK;
 }
 
 HRESULT WINAPI CNetworkConnections::GetDefaultSearchGUID(GUID * pguid)
