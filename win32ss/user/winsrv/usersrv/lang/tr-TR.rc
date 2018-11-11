@@ -36,8 +36,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCEL_DEBUG_PROGRAM    "Programda hata ayıklamak için İptal'e basınız."
     IDS_SYSTEM_PROCESS          "Sistem İşlemi"
     IDS_UNKNOWN_SOFTWARE_EXCEPT "bilinmeyen yazılım istisnası"
     IDS_OK_TERMINATE_PROGRAM    "Programı sonlandırmak için Tamam'a basınız."
+    IDS_CANCEL_DEBUG_PROGRAM    "Programda hata ayıklamak için İptal'e basınız."
 END
