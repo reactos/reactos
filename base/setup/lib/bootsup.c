@@ -576,7 +576,7 @@ IsThereAValidBootSector(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
         goto Quit;
@@ -644,7 +644,7 @@ SaveBootSector(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -747,7 +747,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -793,7 +793,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -845,7 +845,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
@@ -956,7 +956,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1005,7 +1005,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1054,7 +1054,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
@@ -1140,7 +1140,7 @@ InstallFat16BootCode(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1225,7 +1225,7 @@ InstallFat16BootCodeToFile(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1296,7 +1296,7 @@ InstallFat16BootCodeToDisk(
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1370,7 +1370,7 @@ InstallFat32BootCode(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1521,7 +1521,7 @@ InstallFat32BootCodeToFile(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1592,7 +1592,7 @@ InstallFat32BootCodeToDisk(
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1643,7 +1643,7 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1691,7 +1691,7 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1745,7 +1745,7 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
