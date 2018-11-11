@@ -74,15 +74,19 @@ VfatShutdown(
             ListEntry = ListEntry->Flink;
 
             ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
-            /* It was a clean volume mounted */
-            if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
+
+            /* Flush volume & files */
+            Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
+
+            /* We're performing a clean shutdown */
+            if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY) &&
+                BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY))
             {
-                /* So, drop the dirty bit we set */
+                /* Drop the dirty bit */
                 if (NT_SUCCESS(SetDirtyStatus(DeviceExt, FALSE)))
                     DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
             }
 
-            Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
             if (NT_SUCCESS(Status))
             {
                 Status = VfatDiskShutDown(DeviceExt);
@@ -97,7 +101,10 @@ VfatShutdown(
             }
             ExReleaseResourceLite(&DeviceExt->DirResource);
 
-            /* FIXME: Unmount the logical volume */
+            /* Unmount the logical volume */
+#ifdef ENABLE_SWAPOUT
+            VfatCheckForDismount(DeviceExt, FALSE);
+#endif
 
             if (!NT_SUCCESS(Status))
                 Irp->IoStatus.Status = Status;

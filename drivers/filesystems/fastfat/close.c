@@ -21,8 +21,8 @@ VfatCommonCloseFile(
     PDEVICE_EXTENSION DeviceExt,
     PVFATFCB pFcb)
 {
-    /* Nothing to do for volumes */
-    if (BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME))
+    /* Nothing to do for volumes or for the FAT file object */
+    if (BooleanFlagOn(pFcb->Flags, FCB_IS_FAT | FCB_IS_VOLUME))
     {
         return;
     }

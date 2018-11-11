@@ -531,7 +531,6 @@ VfatMount(
     NTSTATUS Status;
     PVFATFCB Fcb = NULL;
     PVFATFCB VolumeFcb = NULL;
-    PVFATCCB Ccb = NULL;
     PDEVICE_OBJECT DeviceToMount;
     PVPB Vpb;
     UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
@@ -706,23 +705,14 @@ VfatMount(
         goto ByeBye;
     }
 
-    Ccb = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
-    if (Ccb == NULL)
-    {
-        Status =  STATUS_INSUFFICIENT_RESOURCES;
+    Status = vfatAttachFCBToFileObject(DeviceExt, Fcb, DeviceExt->FATFileObject);
+    if (!NT_SUCCESS(Status))
         goto ByeBye;
-    }
 
-    RtlZeroMemory(Ccb, sizeof (VFATCCB));
-    DeviceExt->FATFileObject->FsContext = Fcb;
-    DeviceExt->FATFileObject->FsContext2 = Ccb;
-    DeviceExt->FATFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
     DeviceExt->FATFileObject->PrivateCacheMap = NULL;
-    DeviceExt->FATFileObject->Vpb = DeviceObject->Vpb;
     Fcb->FileObject = DeviceExt->FATFileObject;
 
-    Fcb->Flags |= FCB_IS_FAT;
-
+    Fcb->Flags = FCB_IS_FAT;
     Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector;
     Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
     Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
@@ -798,9 +788,15 @@ VfatMount(
         SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
     }
 
-    FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
-    FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
+    /* Initialize the notify list and synchronization object */
     InitializeListHead(&DeviceExt->NotifyList);
+    FsRtlNotifyInitializeSync(&DeviceExt->NotifySync);
+
+    /* The VCB is OK for usage */
+    SetFlag(DeviceExt->Flags, VCB_GOOD);
+
+    /* Send the mount notification */
+    FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
 
     DPRINT("Mount success\n");
 
@@ -811,15 +807,24 @@ ByeBye:
     {
         /* Cleanup */
         if (DeviceExt && DeviceExt->FATFileObject)
-            ObDereferenceObject (DeviceExt->FATFileObject);
+        {
+            LARGE_INTEGER Zero = {{0,0}};
+            PVFATCCB Ccb = (PVFATCCB)DeviceExt->FATFileObject->FsContext2;
+
+            CcUninitializeCacheMap(DeviceExt->FATFileObject,
+                                   &Zero,
+                                   NULL);
+            ObDereferenceObject(DeviceExt->FATFileObject);
+            if (Ccb)
+                vfatDestroyCCB(Ccb);
+            DeviceExt->FATFileObject = NULL;
+        }
+        if (Fcb)
+            vfatDestroyFCB(Fcb);
         if (DeviceExt && DeviceExt->SpareVPB)
             ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VPB);
         if (DeviceExt && DeviceExt->Statistics)
             ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
-        if (Fcb)
-            vfatDestroyFCB(Fcb);
-        if (Ccb)
-            vfatDestroyCCB(Ccb);
         if (DeviceObject)
             IoDeleteDevice(DeviceObject);
     }
@@ -1125,6 +1130,11 @@ VfatLockOrUnlockVolume(
         return STATUS_ACCESS_DENIED;
     }
 
+    if (Lock)
+    {
+        FsRtlNotifyVolumeEvent(IrpContext->Stack->FileObject, FSRTL_VOLUME_LOCK);
+    }
+
     /* Deny locking if we're not alone */
     if (Lock && DeviceExt->OpenHandleCount != 1)
     {
@@ -1208,6 +1218,8 @@ VfatLockOrUnlockVolume(
             }
         }
 
+        FsRtlNotifyVolumeEvent(IrpContext->Stack->FileObject, FSRTL_VOLUME_LOCK_FAILED);
+
         return STATUS_ACCESS_DENIED;
 
 #if 1
@@ -1225,6 +1237,18 @@ VfatLockOrUnlockVolume(
     /* Finally, proceed */
     if (Lock)
     {
+        /* Flush volume & files */
+        VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);
+
+        /* The volume is now clean */
+        if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY) &&
+            BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY))
+        {
+            /* Drop the dirty bit */
+            if (NT_SUCCESS(SetDirtyStatus(DeviceExt, FALSE)))
+                ClearFlag(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY);
+        }
+
         DeviceExt->Flags |= VCB_VOLUME_LOCKED;
         Vpb->Flags |= VPB_LOCKED;
     }
@@ -1232,6 +1256,8 @@ VfatLockOrUnlockVolume(
     {
         DeviceExt->Flags &= ~VCB_VOLUME_LOCKED;
         Vpb->Flags &= ~VPB_LOCKED;
+
+        FsRtlNotifyVolumeEvent(IrpContext->Stack->FileObject, FSRTL_VOLUME_UNLOCK);
     }
 
     return STATUS_SUCCESS;
@@ -1277,24 +1303,34 @@ VfatDismountVolume(
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
 
-    /* We're performing a clean shutdown */
-    if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY))
+    /* Flush volume & files */
+    VfatFlushVolume(DeviceExt, (PVFATFCB)FileObject->FsContext);
+
+    /* The volume is now clean */
+    if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY) &&
+        BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY))
     {
         /* Drop the dirty bit */
         if (NT_SUCCESS(SetDirtyStatus(DeviceExt, FALSE)))
             DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
     }
 
-    /* Flush volume & files */
-    VfatFlushVolume(DeviceExt, (PVFATFCB)FileObject->FsContext);
-
     /* Rebrowse the FCB in order to free them now */
     while (!IsListEmpty(&DeviceExt->FcbListHead))
     {
         NextEntry = RemoveTailList(&DeviceExt->FcbListHead);
         Fcb = CONTAINING_RECORD(NextEntry, VFATFCB, FcbListEntry);
+
+        if (Fcb == DeviceExt->RootFcb)
+            DeviceExt->RootFcb = NULL;
+        else if (Fcb == DeviceExt->VolumeFcb)
+            DeviceExt->VolumeFcb = NULL;
+
         vfatDestroyFCB(Fcb);
     }
+
+    /* We are uninitializing, the VCB cannot be used anymore */
+    ClearFlag(DeviceExt->Flags, VCB_GOOD);
 
     /* Mark we're being dismounted */
     DeviceExt->Flags |= VCB_DISMOUNT_PENDING;
@@ -1303,12 +1339,6 @@ VfatDismountVolume(
 #endif
 
     ExReleaseResourceLite(&DeviceExt->FatResource);
-
-    /* Release a few resources and quit, we're done */
-    ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
-    ExDeleteResourceLite(&DeviceExt->DirResource);
-    ExDeleteResourceLite(&DeviceExt->FatResource);
-    ObDereferenceObject(DeviceExt->FATFileObject);
 
     return STATUS_SUCCESS;
 }

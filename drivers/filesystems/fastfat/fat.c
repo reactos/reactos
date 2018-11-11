@@ -20,12 +20,6 @@
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
 		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 
-/* FIXME: because volume is not cached, we have to perform direct IOs
- * The day this is fixed, just comment out that line, and check
- * it still works (and delete old code ;-))
- */
-#define VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
-
 /* FUNCTIONS ****************************************************************/
 
 /*
