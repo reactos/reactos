@@ -18,7 +18,7 @@ BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName
     LONG Ret;
     HKEY HandleKey, HandleSubKey;
 
-    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ImageExecOptionsString, 0, KEY_WRITE | KEY_READ, &HandleKey);
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ImageExecOptionsString, 0, SamDesired, &HandleKey);
     if (Ret != ERROR_SUCCESS)
     {
         wprintf(L"OpenIFEO: RegOpenKeyEx failed (%d)\n", Ret);
@@ -31,7 +31,7 @@ BOOL OpenImageFileExecOptions(IN REGSAM SamDesired, IN OPTIONAL PCWSTR ImageName
         return TRUE;
     }
 
-    Ret = RegCreateKeyExW(HandleKey, ImageName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, NULL, &HandleSubKey, NULL);
+    Ret = RegCreateKeyExW(HandleKey, ImageName, 0, NULL, REG_OPTION_NON_VOLATILE, SamDesired, NULL, &HandleSubKey, NULL);
     CloseHandle(HandleKey);
 
     if (Ret != ERROR_SUCCESS)
