@@ -5,11 +5,14 @@ BEGIN
     IDS_USAGE "\nValid commands :\n\
                load        Loads a Filter driver\n\
                unload      Unloads a Filter driver\n\
-               filters     Lists the Filters currently registered in the system\n\n"
+               filters     Lists the Filters currently registered in the system\n\
+               volumes     Lists all volumes\n\n"
+    
 
     IDS_USAGE_LOAD      "Loads a filter driver\n"
     IDS_USAGE_UNLOAD    "Unloads a filter driver\n"
     IDS_USAGE_FILTERS   "Lists all registered filters\n"
+    IDS_USAGE_VOLUMES   "Lists all volumes\n"
 END
 
 STRINGTABLE

@@ -420,7 +420,7 @@ int wmain(int argc, WCHAR *argv[])
         else
         {
             LoadAndPrintString(IDS_USAGE_VOLUMES);
-            wprintf(L"fltmc.exe volumes [name]\n\n");
+            wprintf(L"fltmc.exe volumes\n\n");
         }
     }
 
