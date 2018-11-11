@@ -1546,6 +1546,886 @@ Language=Russian
 The message alias was not successfully deleted from all networks.
 .
 
+MessageId=2300
+Severity=Success
+Facility=System
+SymbolicName=NERR_MultipleNets
+Language=English
+This operation is not supported on computers with multiple networks.
+.
+Language=Russian
+This operation is not supported on computers with multiple networks.
+.
+
+MessageId=2310
+Severity=Success
+Facility=System
+SymbolicName=NERR_NetNameNotFound
+Language=English
+This shared resource does not exist.
+.
+Language=Russian
+This shared resource does not exist.
+.
+
+MessageId=2311
+Severity=Success
+Facility=System
+SymbolicName=NERR_DeviceNotShared
+Language=English
+This device is not shared.
+.
+Language=Russian
+This device is not shared.
+.
+
+MessageId=2312
+Severity=Success
+Facility=System
+SymbolicName=NERR_ClientNameNotFound
+Language=English
+A session does not exist with that computer name.
+.
+Language=Russian
+A session does not exist with that computer name.
+.
+
+MessageId=2314
+Severity=Success
+Facility=System
+SymbolicName=NERR_FileIdNotFound
+Language=English
+There is not an open file with that identification number.
+.
+Language=Russian
+There is not an open file with that identification number.
+.
+
+MessageId=2315
+Severity=Success
+Facility=System
+SymbolicName=NERR_ExecFailure
+Language=English
+A failure occurred when executing a remote administration command.
+.
+Language=Russian
+A failure occurred when executing a remote administration command.
+.
+
+MessageId=2316
+Severity=Success
+Facility=System
+SymbolicName=NERR_TmpFile
+Language=English
+A failure occurred when opening a remote temporary file.
+.
+Language=Russian
+A failure occurred when opening a remote temporary file.
+.
+
+MessageId=2317
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooMuchData
+Language=English
+The data returned from a remote administration command has been truncated to 64K.
+.
+Language=Russian
+The data returned from a remote administration command has been truncated to 64K.
+.
+
+MessageId=2318
+Severity=Success
+Facility=System
+SymbolicName=NERR_DeviceShareConflict
+Language=English
+This device cannot be shared as both a spooled and a non-spooled resource.
+.
+Language=Russian
+This device cannot be shared as both a spooled and a non-spooled resource.
+.
+
+MessageId=2319
+Severity=Success
+Facility=System
+SymbolicName=NERR_BrowserTableIncomplete
+Language=English
+The information in the list of servers may be incorrect.
+.
+Language=Russian
+The information in the list of servers may be incorrect.
+.
+
+MessageId=2320
+Severity=Success
+Facility=System
+SymbolicName=NERR_NotLocalDomain
+Language=English
+The computer is not active in this domain.
+.
+Language=Russian
+The computer is not active in this domain.
+.
+
+MessageId=2321
+Severity=Success
+Facility=System
+SymbolicName=NERR_IsDfsShare
+Language=English
+The share must be removed from the Distributed File System before it can be deleted.
+.
+Language=Russian
+The share must be removed from the Distributed File System before it can be deleted.
+.
+
+MessageId=2331
+Severity=Success
+Facility=System
+SymbolicName=NERR_DevInvalidOpCode
+Language=English
+The operation is invalid for this device.
+.
+Language=Russian
+The operation is invalid for this device.
+.
+
+MessageId=2332
+Severity=Success
+Facility=System
+SymbolicName=NERR_DevNotFound
+Language=English
+This device cannot be shared.
+.
+Language=Russian
+This device cannot be shared.
+.
+
+MessageId=2333
+Severity=Success
+Facility=System
+SymbolicName=NERR_DevNotOpen
+Language=English
+This device was not open.
+.
+Language=Russian
+This device was not open.
+.
+
+MessageId=2334
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadQueueDevString
+Language=English
+This device name list is invalid.
+.
+Language=Russian
+This device name list is invalid.
+.
+
+MessageId=2335
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadQueuePriority
+Language=English
+The queue priority is invalid.
+.
+Language=Russian
+The queue priority is invalid.
+.
+
+MessageId=2337
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoCommDevs
+Language=English
+There are no shared communication devices.
+.
+Language=Russian
+There are no shared communication devices.
+.
+
+MessageId=2338
+Severity=Success
+Facility=System
+SymbolicName=NERR_QueueNotFound
+Language=English
+The queue you specified does not exist.
+.
+Language=Russian
+The queue you specified does not exist.
+.
+
+MessageId=2340
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadDevString
+Language=English
+This list of devices is invalid.
+.
+Language=Russian
+This list of devices is invalid.
+.
+
+MessageId=2341
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadDev
+Language=English
+The requested device is invalid.
+.
+Language=Russian
+The requested device is invalid.
+.
+
+MessageId=2342
+Severity=Success
+Facility=System
+SymbolicName=NERR_InUseBySpooler
+Language=English
+This device is already in use by the spooler.
+.
+Language=Russian
+This device is already in use by the spooler.
+.
+
+MessageId=2343
+Severity=Success
+Facility=System
+SymbolicName=NERR_CommDevInUse
+Language=English
+This device is already in use as a communication device.
+.
+Language=Russian
+This device is already in use as a communication device.
+.
+
+MessageId=2351
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidComputer
+Language=English
+This computer name is invalid.
+.
+Language=Russian
+This computer name is invalid.
+.
+
+MessageId=2354
+Severity=Success
+Facility=System
+SymbolicName=NERR_MaxLenExceeded
+Language=English
+The string and prefix specified are too long.
+.
+Language=Russian
+The string and prefix specified are too long.
+.
+
+MessageId=2356
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadComponent
+Language=English
+This path component is invalid.
+.
+Language=Russian
+This path component is invalid.
+.
+
+MessageId=2357
+Severity=Success
+Facility=System
+SymbolicName=NERR_CantType
+Language=English
+Could not determine the type of input.
+.
+Language=Russian
+Could not determine the type of input.
+.
+
+MessageId=2362
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyEntries
+Language=English
+The buffer for types is not big enough.
+.
+Language=Russian
+The buffer for types is not big enough.
+.
+
+MessageId=2370
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileFileTooBig
+Language=English
+Profile files cannot exceed 64K.
+.
+Language=Russian
+Profile files cannot exceed 64K.
+.
+
+MessageId=2371
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileOffset
+Language=English
+The start offset is out of range.
+.
+Language=Russian
+The start offset is out of range.
+.
+
+MessageId=2372
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileCleanup
+Language=English
+The system cannot delete current connections to network resources.
+.
+Language=Russian
+The system cannot delete current connections to network resources.
+.
+
+MessageId=2373
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileUnknownCmd
+Language=English
+The system was unable to parse the command line in this file.
+.
+Language=Russian
+The system was unable to parse the command line in this file.
+.
+
+MessageId=2374
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileLoadErr
+Language=English
+An error occurred while loading the profile file.
+.
+Language=Russian
+An error occurred while loading the profile file.
+.
+
+MessageId=2375
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProfileSaveErr
+Language=English
+Errors occurred while saving the profile file.  The profile was partially saved.
+.
+Language=Russian
+Errors occurred while saving the profile file.  The profile was partially saved.
+.
+
+MessageId=2377
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogOverflow
+Language=English
+Log file %1 is full.
+.
+Language=Russian
+Log file %1 is full.
+.
+
+MessageId=2378
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogFileChanged
+Language=English
+This log file has changed between reads.
+.
+Language=Russian
+This log file has changed between reads.
+.
+
+MessageId=2379
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogFileCorrupt
+Language=English
+Log file %1 is corrupt.
+.
+Language=Russian
+Log file %1 is corrupt.
+.
+
+MessageId=2380
+Severity=Success
+Facility=System
+SymbolicName=NERR_SourceIsDir
+Language=English
+The source path cannot be a directory.
+.
+Language=Russian
+The source path cannot be a directory.
+.
+
+MessageId=2381
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadSource
+Language=English
+The source path is illegal.
+.
+Language=Russian
+The source path is illegal.
+.
+
+MessageId=2382
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadDest
+Language=English
+The destination path is illegal.
+.
+Language=Russian
+The destination path is illegal.
+.
+
+MessageId=2383
+Severity=Success
+Facility=System
+SymbolicName=NERR_DifferentServers
+Language=English
+The source and destination paths are on different servers.
+.
+Language=Russian
+The source and destination paths are on different servers.
+.
+
+MessageId=2385
+Severity=Success
+Facility=System
+SymbolicName=NERR_RunSrvPaused
+Language=English
+The Run server you requested is paused.
+.
+Language=Russian
+The Run server you requested is paused.
+.
+
+MessageId=2389
+Severity=Success
+Facility=System
+SymbolicName=NERR_ErrCommRunSrv
+Language=English
+An error occurred when communicating with a Run server.
+.
+Language=Russian
+An error occurred when communicating with a Run server.
+.
+
+MessageId=2391
+Severity=Success
+Facility=System
+SymbolicName=NERR_ErrorExecingGhost
+Language=English
+An error occurred when starting a background process.
+.
+Language=Russian
+An error occurred when starting a background process.
+.
+
+MessageId=2392
+Severity=Success
+Facility=System
+SymbolicName=NERR_ShareNotFound
+Language=English
+The shared resource you are connected to could not be found.
+.
+Language=Russian
+The shared resource you are connected to could not be found.
+.
+
+MessageId=2400
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidLana
+Language=English
+The LAN adapter number is invalid.
+.
+Language=Russian
+The LAN adapter number is invalid.
+.
+
+MessageId=2401
+Severity=Success
+Facility=System
+SymbolicName=NERR_OpenFiles
+Language=English
+There are open files on the connection.
+.
+Language=Russian
+There are open files on the connection.
+.
+
+MessageId=2402
+Severity=Success
+Facility=System
+SymbolicName=NERR_ActiveConns
+Language=English
+Active connections still exist.
+.
+Language=Russian
+Active connections still exist.
+.
+
+MessageId=2403
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadPasswordCore
+Language=English
+This share name or password is invalid.
+.
+Language=Russian
+This share name or password is invalid.
+.
+
+MessageId=2404
+Severity=Success
+Facility=System
+SymbolicName=NERR_DevInUse
+Language=English
+The device is being accessed by an active process.
+.
+Language=Russian
+The device is being accessed by an active process.
+.
+
+MessageId=2405
+Severity=Success
+Facility=System
+SymbolicName=NERR_LocalDrive
+Language=English
+The drive letter is in use locally.
+.
+Language=Russian
+The drive letter is in use locally.
+.
+
+MessageId=2430
+Severity=Success
+Facility=System
+SymbolicName=NERR_AlertExists
+Language=English
+The specified client is already registered for the specified event.
+.
+Language=Russian
+The specified client is already registered for the specified event.
+.
+
+MessageId=2431
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyAlerts
+Language=English
+The alert table is full.
+.
+Language=Russian
+The alert table is full.
+.
+
+MessageId=2432
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoSuchAlert
+Language=English
+An invalid or nonexistent alert name was raised.
+.
+Language=Russian
+An invalid or nonexistent alert name was raised.
+.
+
+MessageId=2433
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadRecipient
+Language=English
+The alert recipient is invalid.
+.
+Language=Russian
+The alert recipient is invalid.
+.
+
+MessageId=2434
+Severity=Success
+Facility=System
+SymbolicName=NERR_AcctLimitExceeded
+Language=English
+A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
+.
+Language=Russian
+A user's session with this server has been deleted\nbecause the user's logon hours are no longer valid.
+.
+
+MessageId=2440
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidLogSeek
+Language=English
+The log file does not contain the requested record number.
+.
+Language=Russian
+The log file does not contain the requested record number.
+.
+
+MessageId=2450
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadUasConfig
+Language=English
+The user accounts database is not configured correctly.
+.
+Language=Russian
+The user accounts database is not configured correctly.
+.
+
+MessageId=2451
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidUASOp
+Language=English
+This operation is not permitted when the Netlogon service is running.
+.
+Language=Russian
+This operation is not permitted when the Netlogon service is running.
+.
+
+MessageId=2452
+Severity=Success
+Facility=System
+SymbolicName=NERR_LastAdmin
+Language=English
+This operation is not allowed on the last administrative account.
+.
+Language=Russian
+This operation is not allowed on the last administrative account.
+.
+
+MessageId=2453
+Severity=Success
+Facility=System
+SymbolicName=NERR_DCNotFound
+Language=English
+Could not find domain controller for this domain.
+.
+Language=Russian
+Could not find domain controller for this domain.
+.
+
+MessageId=2454
+Severity=Success
+Facility=System
+SymbolicName=NERR_LogonTrackingError
+Language=English
+Could not set logon information for this user.
+.
+Language=Russian
+Could not set logon information for this user.
+.
+
+MessageId=2455
+Severity=Success
+Facility=System
+SymbolicName=NERR_NetlogonNotStarted
+Language=English
+The Netlogon service has not been started.
+.
+Language=Russian
+The Netlogon service has not been started.
+.
+
+MessageId=2456
+Severity=Success
+Facility=System
+SymbolicName=NERR_CanNotGrowUASFile
+Language=English
+Unable to add to the user accounts database.
+.
+Language=Russian
+Unable to add to the user accounts database.
+.
+
+MessageId=2457
+Severity=Success
+Facility=System
+SymbolicName=NERR_TimeDiffAtDC
+Language=English
+This server's clock is not synchronized with the primary domain controller's clock.
+.
+Language=Russian
+This server's clock is not synchronized with the primary domain controller's clock.
+.
+
+MessageId=2458
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordMismatch
+Language=English
+A password mismatch has been detected.
+.
+Language=Russian
+A password mismatch has been detected.
+.
+
+MessageId=2460
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoSuchServer
+Language=English
+The server identification does not specify a valid server.
+.
+Language=Russian
+The server identification does not specify a valid server.
+.
+
+MessageId=2461
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoSuchSession
+Language=English
+The session identification does not specify a valid session.
+.
+Language=Russian
+The session identification does not specify a valid session.
+.
+
+MessageId=2462
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoSuchConnection
+Language=English
+The connection identification does not specify a valid connection.
+.
+Language=Russian
+The connection identification does not specify a valid connection.
+.
+
+MessageId=2463
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyServers
+Language=English
+There is no space for another entry in the table of available servers.
+.
+Language=Russian
+There is no space for another entry in the table of available servers.
+.
+
+MessageId=2464
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManySessions
+Language=English
+The server has reached the maximum number of sessions it supports.
+.
+Language=Russian
+The server has reached the maximum number of sessions it supports.
+.
+
+MessageId=2465
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyConnections
+Language=English
+The server has reached the maximum number of connections it supports.
+.
+Language=Russian
+The server has reached the maximum number of connections it supports.
+.
+
+MessageId=2466
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyFiles
+Language=English
+The server cannot open more files because it has reached its maximum number.
+.
+Language=Russian
+The server cannot open more files because it has reached its maximum number.
+.
+
+MessageId=2467
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoAlternateServers
+Language=English
+There are no alternate servers registered on this server.
+.
+Language=Russian
+There are no alternate servers registered on this server.
+.
+
+MessageId=2470
+Severity=Success
+Facility=System
+SymbolicName=NERR_TryDownLevel
+Language=English
+Try down-level (remote admin protocol) version of API instead.
+.
+Language=Russian
+Try down-level (remote admin protocol) version of API instead.
+.
+
+MessageId=2480
+Severity=Success
+Facility=System
+SymbolicName=NERR_UPSDriverNotStarted
+Language=English
+The UPS driver could not be accessed by the UPS service.
+.
+Language=Russian
+The UPS driver could not be accessed by the UPS service.
+.
+
+MessageId=2481
+Severity=Success
+Facility=System
+SymbolicName=NERR_UPSInvalidConfig
+Language=English
+The UPS service is not configured correctly.
+.
+Language=Russian
+The UPS service is not configured correctly.
+.
+
+MessageId=2482
+Severity=Success
+Facility=System
+SymbolicName=NERR_UPSInvalidCommPort
+Language=English
+The UPS service could not access the specified Comm Port.
+.
+Language=Russian
+The UPS service could not access the specified Comm Port.
+.
+
+MessageId=2483
+Severity=Success
+Facility=System
+SymbolicName=NERR_UPSSignalAsserted
+Language=English
+The UPS indicated a line fail or low battery situation. Service not started.
+.
+Language=Russian
+The UPS indicated a line fail or low battery situation. Service not started.
+.
+
+MessageId=2484
+Severity=Success
+Facility=System
+SymbolicName=NERR_UPSShutdownFailed
+Language=English
+The UPS service failed to perform a system shut down.
+.
+Language=Russian
+The UPS service failed to perform a system shut down.
+.
+
 
 ;
 ; other message definitions
