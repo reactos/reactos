@@ -1,0 +1,31 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Sposób użycia: %s [dysk:] [-F] [-V] [-R] [-C] \n\n\
+[dysk:]     Określa dysk do sprawdzenia.\n\
+-F          Naprawia błędy na dysku.\n\
+-V          Wyświetla pełne ścieżki wszystkich plików na dysku.\n\
+-R          Lokalizuje uszkodzone sektory i odzyskuje czytelne informacje.\n\
+-C          Sprawdza dysk tylko w razie potrzeby.\n\
+\n"
+
+    IDS_PERCENT_COMPL "Wykonano %d procent.\r"
+    IDS_FILE_SYSTEM "Typ systemu plików to %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Wolumin jest w użyciu i nie może być zablokowany.\n"
+    IDS_CHKDSK_FAIL "Program Chkdsk nie mógł zakończyć się pomyślnie.\n\n"
+    IDS_NO_ENTRY_POINT "Nie znaleziono punktów wejścia FMIFS.\n\n"
+    IDS_BAD_ARGUMENT "Nieznany argument: %s\n"
+    IDS_NO_CURRENT_DIR "Aktualna ścieżka jest nieosiągalna. Kod błedu: "
+    IDS_NO_QUERY_VOL "Nie można wysłać kwerendy do woluminu. Kod błedu: "
+    IDS_VOLUME_IN_USE_PROC "Program Chkdsk nie może działać, ponieważ wolumin jest używany przez inny proces.\n\n"
+END
