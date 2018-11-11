@@ -2,6 +2,7 @@
  * Turkish resources for localui
  *
  * Copyright: 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ *            2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,7 +24,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_LOCALPORT "Yerli Giriş"
+    IDS_LOCALPORT "Yerel Giriş"
     IDS_INVALIDNAME """%s"", geçerli bir giriş adı değil."
     IDS_PORTEXISTS "%s girişi önceden var."
     IDS_NOTHINGTOCONFIG "Bu girişin yapılandırmak için seçeneği yok."
@@ -46,7 +47,7 @@ STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPU
 CAPTION "LPT Girişini Yapılandır"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Süre Aşımı (Sâniye)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    GROUPBOX "Süre Aşımı (Saniye)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
     LTEXT "&İletimi Yeniden Dene:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "Tamam", IDOK, 164, 10, 50, 14, WS_VISIBLE
