@@ -2426,6 +2426,1018 @@ Language=Russian
 The UPS service failed to perform a system shut down.
 .
 
+MessageId=2500
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadDosRetCode
+Language=English
+The program below returned a DOS error code:
+.
+Language=Russian
+The program below returned a DOS error code:
+.
+
+MessageId=2501
+Severity=Success
+Facility=System
+SymbolicName=NERR_ProgNeedsExtraMem
+Language=English
+The program below needs more memory:
+.
+Language=Russian
+The program below needs more memory:
+.
+
+MessageId=2502
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadDosFunction
+Language=English
+The program below called an unsupported DOS function:
+.
+Language=Russian
+The program below called an unsupported DOS function:
+.
+
+MessageId=2503
+Severity=Success
+Facility=System
+SymbolicName=NERR_RemoteBootFailed
+Language=English
+The workstation failed to boot.
+.
+Language=Russian
+The workstation failed to boot.
+.
+
+MessageId=2504
+Severity=Success
+Facility=System
+SymbolicName=NERR_BadFileCheckSum
+Language=English
+The file below is corrupt.
+.
+Language=Russian
+The file below is corrupt.
+.
+
+MessageId=2505
+Severity=Success
+Facility=System
+SymbolicName=NERR_NoRplBootSystem
+Language=English
+No loader is specified in the boot-block definition file.
+.
+Language=Russian
+No loader is specified in the boot-block definition file.
+.
+
+MessageId=2506
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplLoadrNetBiosErr
+Language=English
+NetBIOS returned an error: The NCB and SMB are dumped above.
+.
+Language=Russian
+NetBIOS returned an error: The NCB and SMB are dumped above.
+.
+
+MessageId=2507
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplLoadrDiskErr
+Language=English
+A disk I/O error occurred.
+.
+Language=Russian
+A disk I/O error occurred.
+.
+
+MessageId=2508
+Severity=Success
+Facility=System
+SymbolicName=NERR_ImageParamErr
+Language=English
+Image parameter substitution failed.
+.
+Language=Russian
+Image parameter substitution failed.
+.
+
+MessageId=2509
+Severity=Success
+Facility=System
+SymbolicName=NERR_TooManyImageParams
+Language=English
+Too many image parameters cross disk sector boundaries.
+.
+Language=Russian
+Too many image parameters cross disk sector boundaries.
+.
+
+MessageId=2510
+Severity=Success
+Facility=System
+SymbolicName=NERR_NonDosFloppyUsed
+Language=English
+The image was not generated from a DOS diskette formatted with /S.
+.
+Language=Russian
+The image was not generated from a DOS diskette formatted with /S.
+.
+
+MessageId=2511
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootRestart
+Language=English
+Remote boot will be restarted later.
+.
+Language=Russian
+Remote boot will be restarted later.
+.
+
+MessageId=2512
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplSrvrCallFailed
+Language=English
+The call to the Remoteboot server failed.
+.
+Language=Russian
+The call to the Remoteboot server failed.
+.
+
+MessageId=2513
+Severity=Success
+Facility=System
+SymbolicName=NERR_CantConnectRplSrvr
+Language=English
+Cannot connect to the Remoteboot server.
+.
+Language=Russian
+Cannot connect to the Remoteboot server.
+.
+
+MessageId=2514
+Severity=Success
+Facility=System
+SymbolicName=NERR_CantOpenImageFile
+Language=English
+Cannot open image file on the Remoteboot server.
+.
+Language=Russian
+Cannot open image file on the Remoteboot server.
+.
+
+MessageId=2515
+Severity=Success
+Facility=System
+SymbolicName=NERR_CallingRplSrvr
+Language=English
+Connecting to the Remoteboot server...
+.
+Language=Russian
+Connecting to the Remoteboot server...
+.
+
+MessageId=2516
+Severity=Success
+Facility=System
+SymbolicName=NERR_StartingRplBoot
+Language=English
+Connecting to the Remoteboot server...
+.
+Language=Russian
+Connecting to the Remoteboot server...
+.
+
+MessageId=2517
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootServiceTerm
+Language=English
+Remote boot service was stopped; check the error log for the cause of the problem.
+.
+Language=Russian
+Remote boot service was stopped; check the error log for the cause of the problem.
+.
+
+MessageId=2518
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootStartFailed
+Language=English
+Remote boot startup failed; check the error log for the cause of the problem.
+.
+Language=Russian
+Remote boot startup failed; check the error log for the cause of the problem.
+.
+
+MessageId=2519
+Severity=Success
+Facility=System
+SymbolicName=NERR_RPL_CONNECTED
+Language=English
+A second connection to a Remoteboot resource is not allowed.
+.
+Language=Russian
+A second connection to a Remoteboot resource is not allowed.
+.
+
+MessageId=2550
+Severity=Success
+Facility=System
+SymbolicName=NERR_BrowserConfiguredToNotRun
+Language=English
+The browser service was configured with MaintainServerList=No.
+.
+Language=Russian
+The browser service was configured with MaintainServerList=No.
+.
+
+MessageId=2610
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplNoAdaptersStarted
+Language=English
+Service failed to start since none of the network adapters started with this service.
+.
+Language=Russian
+Service failed to start since none of the network adapters started with this service.
+.
+
+MessageId=2611
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBadRegistry
+Language=English
+Service failed to start due to bad startup information in the registry.
+.
+Language=Russian
+Service failed to start due to bad startup information in the registry.
+.
+
+MessageId=2612
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBadDatabase
+Language=English
+Service failed to start because its database is absent or corrupt.
+.
+Language=Russian
+Service failed to start because its database is absent or corrupt.
+.
+
+MessageId=2613
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplRplfilesShare
+Language=English
+Service failed to start because RPLFILES share is absent.
+.
+Language=Russian
+Service failed to start because RPLFILES share is absent.
+.
+
+MessageId=2614
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplNotRplServer
+Language=English
+Service failed to start because RPLUSER group is absent.
+.
+Language=Russian
+Service failed to start because RPLUSER group is absent.
+.
+
+MessageId=2615
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplCannotEnum
+Language=English
+Cannot enumerate service records.
+.
+Language=Russian
+Cannot enumerate service records.
+.
+
+MessageId=2616
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplWkstaInfoCorrupted
+Language=English
+Workstation record information has been corrupted.
+.
+Language=Russian
+Workstation record information has been corrupted.
+.
+
+MessageId=2617
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplWkstaNotFound
+Language=English
+Workstation record was not found.
+.
+Language=Russian
+Workstation record was not found.
+.
+
+MessageId=2618
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplWkstaNameUnavailable
+Language=English
+Workstation name is in use by some other workstation.
+.
+Language=Russian
+Workstation name is in use by some other workstation.
+.
+
+MessageId=2619
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplProfileInfoCorrupted
+Language=English
+Profile record information has been corrupted.
+.
+Language=Russian
+Profile record information has been corrupted.
+.
+
+MessageId=2620
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplProfileNotFound
+Language=English
+Profile record was not found.
+.
+Language=Russian
+Profile record was not found.
+.
+
+MessageId=2621
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplProfileNameUnavailable
+Language=English
+Profile name is in use by some other profile.
+.
+Language=Russian
+Profile name is in use by some other profile.
+.
+
+MessageId=2622
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplProfileNotEmpty
+Language=English
+There are workstations using this profile.
+.
+Language=Russian
+There are workstations using this profile.
+.
+
+MessageId=2623
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplConfigInfoCorrupted
+Language=English
+Configuration record information has been corrupted.
+.
+Language=Russian
+Configuration record information has been corrupted.
+.
+
+MessageId=2624
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplConfigNotFound
+Language=English
+Configuration record was not found.
+.
+Language=Russian
+Configuration record was not found.
+.
+
+MessageId=2625
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplAdapterInfoCorrupted
+Language=English
+Adapter id record information has been corrupted.
+.
+Language=Russian
+Adapter id record information has been corrupted.
+.
+
+MessageId=2626
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplInternal
+Language=English
+An internal service error has occurred.
+.
+Language=Russian
+An internal service error has occurred.
+.
+
+MessageId=2627
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplVendorInfoCorrupted
+Language=English
+Vendor id record information has been corrupted.
+.
+Language=Russian
+Vendor id record information has been corrupted.
+.
+
+MessageId=2628
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootInfoCorrupted
+Language=English
+Boot block record information has been corrupted.
+.
+Language=Russian
+Boot block record information has been corrupted.
+.
+
+MessageId=2629
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplWkstaNeedsUserAcct
+Language=English
+The user account for this workstation record is missing.
+.
+Language=Russian
+The user account for this workstation record is missing.
+.
+
+MessageId=2630
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplNeedsRPLUSERAcct
+Language=English
+The RPLUSER local group could not be found.
+.
+Language=Russian
+The RPLUSER local group could not be found.
+.
+
+MessageId=2631
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootNotFound
+Language=English
+Boot block record was not found.
+.
+Language=Russian
+Boot block record was not found.
+.
+
+MessageId=2632
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplIncompatibleProfile
+Language=English
+Chosen profile is incompatible with this workstation.
+.
+Language=Russian
+Chosen profile is incompatible with this workstation.
+.
+
+MessageId=2633
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplAdapterNameUnavailable
+Language=English
+Chosen network adapter id is in use by some other workstation.
+.
+Language=Russian
+Chosen network adapter id is in use by some other workstation.
+.
+
+MessageId=2634
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplConfigNotEmpty
+Language=English
+There are profiles using this configuration.
+.
+Language=Russian
+There are profiles using this configuration.
+.
+
+MessageId=2635
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootInUse
+Language=English
+There are workstations, profiles or configurations using this boot block.
+.
+Language=Russian
+There are workstations, profiles or configurations using this boot block.
+.
+
+MessageId=2636
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBackupDatabase
+Language=English
+Service failed to backup Remoteboot database.
+.
+Language=Russian
+Service failed to backup Remoteboot database.
+.
+
+MessageId=2637
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplAdapterNotFound
+Language=English
+Adapter record was not found.
+.
+Language=Russian
+Adapter record was not found.
+.
+
+MessageId=2638
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplVendorNotFound
+Language=English
+Vendor record was not found.
+.
+Language=Russian
+Vendor record was not found.
+.
+
+MessageId=2639
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplVendorNameUnavailable
+Language=English
+Vendor name is in use by some other vendor record.
+.
+Language=Russian
+Vendor name is in use by some other vendor record.
+.
+
+MessageId=2640
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplBootNameUnavailable
+Language=English
+(boot name, vendor id) is in use by some other boot block record.
+.
+Language=Russian
+(boot name, vendor id) is in use by some other boot block record.
+.
+
+MessageId=2641
+Severity=Success
+Facility=System
+SymbolicName=NERR_RplConfigNameUnavailable
+Language=English
+Configuration name is in use by some other configuration.
+.
+Language=Russian
+Configuration name is in use by some other configuration.
+.
+
+MessageId=2660
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsInternalCorruption
+Language=English
+The internal database maintained by the DFS service is corrupt
+.
+Language=Russian
+The internal database maintained by the DFS service is corrupt
+.
+
+MessageId=2661
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsVolumeDataCorrupt
+Language=English
+One of the records in the internal DFS database is corrupt
+.
+Language=Russian
+One of the records in the internal DFS database is corrupt
+.
+
+MessageId=2662
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsNoSuchVolume
+Language=English
+There is no DFS name whose entry path matches the input Entry Path
+.
+Language=Russian
+There is no DFS name whose entry path matches the input Entry Path
+.
+
+MessageId=2663
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsVolumeAlreadyExists
+Language=English
+A root or link with the given name already exists
+.
+Language=Russian
+A root or link with the given name already exists
+.
+
+MessageId=2664
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsAlreadyShared
+Language=English
+The server share specified is already shared in the DFS
+.
+Language=Russian
+The server share specified is already shared in the DFS
+.
+
+MessageId=2665
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsNoSuchShare
+Language=English
+The indicated server share does not support the indicated DFS namespace
+.
+Language=Russian
+The indicated server share does not support the indicated DFS namespace
+.
+
+MessageId=2666
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsNotALeafVolume
+Language=English
+The operation is not valid on this portion of the namespace
+.
+Language=Russian
+The operation is not valid on this portion of the namespace
+.
+
+MessageId=2667
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsLeafVolume
+Language=English
+The operation is not valid on this portion of the namespace
+.
+Language=Russian
+The operation is not valid on this portion of the namespace
+.
+
+MessageId=2668
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsVolumeHasMultipleServers
+Language=English
+The operation is ambiguous because the link has multiple servers
+.
+Language=Russian
+The operation is ambiguous because the link has multiple servers
+.
+
+MessageId=2669
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsCantCreateJunctionPoint
+Language=English
+Unable to create a link
+.
+Language=Russian
+Unable to create a link
+.
+
+MessageId=2670
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsServerNotDfsAware
+Language=English
+The server is not DFS Aware
+.
+Language=Russian
+The server is not DFS Aware
+.
+
+MessageId=2671
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsBadRenamePath
+Language=English
+The specified rename target path is invalid
+.
+Language=Russian
+The specified rename target path is invalid
+.
+
+MessageId=2672
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsVolumeIsOffline
+Language=English
+The specified DFS link is offline
+.
+Language=Russian
+The specified DFS link is offline
+.
+
+MessageId=2673
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsNoSuchServer
+Language=English
+The specified server is not a server for this link
+.
+Language=Russian
+The specified server is not a server for this link
+.
+
+MessageId=2674
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsCyclicalName
+Language=English
+A cycle in the DFS name was detected
+.
+Language=Russian
+A cycle in the DFS name was detected
+.
+
+MessageId=2675
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsNotSupportedInServerDfs
+Language=English
+The operation is not supported on a server-based DFS
+.
+Language=Russian
+The operation is not supported on a server-based DFS
+.
+
+MessageId=2676
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsDuplicateService
+Language=English
+This link is already supported by the specified server-share
+.
+Language=Russian
+This link is already supported by the specified server-share
+.
+
+MessageId=2677
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsCantRemoveLastServerShare
+Language=English
+Can't remove the last server-share supporting this root or link
+.
+Language=Russian
+Can't remove the last server-share supporting this root or link
+.
+
+MessageId=2678
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsVolumeIsInterDfs
+Language=English
+The operation is not supported for an Inter-DFS link
+.
+Language=Russian
+The operation is not supported for an Inter-DFS link
+.
+
+MessageId=2679
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsInconsistent
+Language=English
+The internal state of the DFS Service has become inconsistent
+.
+Language=Russian
+The internal state of the DFS Service has become inconsistent
+.
+
+MessageId=2680
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsServerUpgraded
+Language=English
+The DFS Service has been installed on the specified server
+.
+Language=Russian
+The DFS Service has been installed on the specified server
+.
+
+MessageId=2681
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsDataIsIdentical
+Language=English
+The DFS data being reconciled is identical
+.
+Language=Russian
+The DFS data being reconciled is identical
+.
+
+MessageId=2682
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsCantRemoveDfsRoot
+Language=English
+The DFS root cannot be deleted - Uninstall DFS if required
+.
+Language=Russian
+The DFS root cannot be deleted - Uninstall DFS if required
+.
+
+MessageId=2683
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsChildOrParentInDfs
+Language=English
+A child or parent directory of the share is already in a DFS
+.
+Language=Russian
+A child or parent directory of the share is already in a DFS
+.
+
+MessageId=2690
+Severity=Success
+Facility=System
+SymbolicName=NERR_DfsInternalError
+Language=English
+DFS internal error
+.
+Language=Russian
+DFS internal error
+.
+
+MessageId=2691
+Severity=Success
+Facility=System
+SymbolicName=NERR_SetupAlreadyJoined
+Language=English
+This machine is already joined to a domain.
+.
+Language=Russian
+This machine is already joined to a domain.
+.
+
+MessageId=2692
+Severity=Success
+Facility=System
+SymbolicName=NERR_SetupNotJoined
+Language=English
+This machine is not currently joined to a domain.
+.
+Language=Russian
+This machine is not currently joined to a domain.
+.
+
+MessageId=2693
+Severity=Success
+Facility=System
+SymbolicName=NERR_SetupDomainController
+Language=English
+This machine is a domain controller and cannot be unjoined from a domain.
+.
+Language=Russian
+This machine is a domain controller and cannot be unjoined from a domain.
+.
+
+MessageId=2694
+Severity=Success
+Facility=System
+SymbolicName=NERR_DefaultJoinRequired
+Language=English
+The destination domain controller does not support creating machine accounts in OUs.
+.
+Language=Russian
+The destination domain controller does not support creating machine accounts in OUs.
+.
+
+MessageId=2695
+Severity=Success
+Facility=System
+SymbolicName=NERR_InvalidWorkgroupName
+Language=English
+The specified workgroup name is invalid.
+.
+Language=Russian
+The specified workgroup name is invalid.
+.
+
+MessageId=2696
+Severity=Success
+Facility=System
+SymbolicName=NERR_NameUsesIncompatibleCodePage
+Language=English
+The specified computer name is incompatible with the default language used on the domain controller.
+.
+Language=Russian
+The specified computer name is incompatible with the default language used on the domain controller.
+.
+
+MessageId=2697
+Severity=Success
+Facility=System
+SymbolicName=NERR_ComputerAccountNotFound
+Language=English
+The specified computer account could not be found.
+.
+Language=Russian
+The specified computer account could not be found.
+.
+
+MessageId=2698
+Severity=Success
+Facility=System
+SymbolicName=NERR_PersonalSku
+Language=English
+This version of the operating system cannot be joined to a domain.
+.
+Language=Russian
+This version of the operating system cannot be joined to a domain.
+.
+
+MessageId=2701
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordMustChange
+Language=English
+Password must change at next logon
+.
+Language=Russian
+Password must change at next logon
+.
+
+MessageId=2702
+Severity=Success
+Facility=System
+SymbolicName=NERR_AccountLockedOut
+Language=English
+Account is locked out
+.
+Language=Russian
+Account is locked out
+.
+
+MessageId=2703
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordTooLong
+Language=English
+Password is too long
+.
+Language=Russian
+Password is too long
+.
+
+MessageId=2704
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordNotComplexEnough
+Language=English
+Password doesn't meet the complexity policy
+.
+Language=Russian
+Password doesn't meet the complexity policy
+.
+
+MessageId=2705
+Severity=Success
+Facility=System
+SymbolicName=NERR_PasswordFilterError
+Language=English
+Password doesn't meet the requirements of the filter dll's
+.
+Language=Russian
+Password doesn't meet the requirements of the filter dll's
+.
+
+MessageId=2999
+Severity=Success
+Facility=System
+SymbolicName=MAX_NERR
+Language=English
+This is the last error in NERR range.
+.
+Language=Russian
+This is the last error in NERR range.
+.
+
 
 ;
 ; other message definitions
