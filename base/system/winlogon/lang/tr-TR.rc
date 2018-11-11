@@ -28,7 +28,7 @@ CAPTION "Sistemi Kapatma"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Bir sistem kapatma başlatıldı. Lütfen bütün işlerinizi kaydediniz ve oturumunuzu sonlandırınız.Bütün kaydedilmemiş işler, sistem kapatılırken kaybedilir.", -1, 38, 7, 135, 40
+    LTEXT "Bir sistem kapatma başlatıldı. Lütfen bütün işlerinizi kaydediniz ve oturumunuzu sonlandırınız. Bütün kaydedilmemiş işler, sistem kapatılırken kaybedilir.", -1, 38, 7, 135, 40
     LTEXT "Sistem kapatılıyor:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
     LTEXT "İleti:", -1, 38, 65, 135, 8
