@@ -6,6 +6,8 @@ The following material is addressed (in Chinese) to Chinese translators.
 
 1）Windows 的记事本会将 UTF-8 格式变成 UTF-8 BOM 格式。因此，请不要用记事本编辑 ReactOS 的文件，特别是翻译文件。您可以使用 Notepad++ 之类的第三方文本编辑器进行编辑。
 2）请不要将 USERENV 和 SHELL32 里面所提到的路径擅自翻译成中文，里面一些路径是可以翻译的，但是也有很多的路径是不可以进行翻译的，翻译的话会产生程序兼容性问题。曾经有段时间 ReactOS 里的路径都变成了中文，笔者在运行某个程序的时候就出现了问题。
-3）为了翻译的准确性，您可以参考 Windows 中的对应条目的翻译，但是请不要照搬 Windows 的翻译，这样可能会产生版权争议。
+3）为了翻译的准确性，您可以参考 Windows 中的对应条目的翻译，但是请不要照搬 Windows 的翻译，这样可能会产生版权争议导致法律问题。
+4）如果您是在 macOS 下进行翻译工作的，因为 macOS 的特性，子目录下面可能会产生 .DS_Store，所以需要在 git 提交前在代码根目录中执行 find . -name ".DS_Store" -depth -exec rm {} \; 以删除 .DS_Store
 
 祝您翻译愉快！
+

@@ -35,7 +35,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "重新安装 ReactOS 或更新你的 ReactOS 。"
+    IDS_TOPIC_DESC0 "重新安装 ReactOS 或更新你的 ReactOS。"
     IDS_TOPIC_DESC1 "浏览此 CD 的内容。"
     IDS_TOPIC_DESC2 "点击退出应用程序。"
 END
