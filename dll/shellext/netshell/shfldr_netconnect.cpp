@@ -983,21 +983,29 @@ ShowNetConnectionProperties(
 HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     const VALUEStruct * val;
+    UINT CmdId;
 
     val = _ILGetValueStruct(m_pidl);
     if (!val)
         return E_FAIL;
 
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS) ||
-        lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS-1)) //HACK for Windows XP
+    if (HIWORD(lpcmi->lpVerb))
     {
-        return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
+        //FIXME
+        return E_NOTIMPL;
     }
-    else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES) ||
-             lpcmi->lpVerb == MAKEINTRESOURCEA(10099)) //HACK for Windows XP
+
+    CmdId = LOWORD(lpcmi->lpVerb);
+
+
+    switch(CmdId)
     {
-        /* FIXME perform version checks */
-        return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
+        case IDS_NET_STATUS:
+        case IDS_NET_STATUS-1:  //HACK for Windows XP
+            return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
+        case IDS_NET_PROPERTIES:
+        case 10099:             //HACK for Windows XP
+            return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
     }
 
     return S_OK;
