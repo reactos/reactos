@@ -124,45 +124,36 @@ HRESULT
 CEnumIDList::Initialize()
 {
     HRESULT hr;
-    INetConnectionManager *pNetConMan;
-    IEnumNetConnection *pEnumCon;
-    INetConnection *INetCon;
+    CComPtr<INetConnectionManager> pNetConMan;
+    CComPtr<IEnumNetConnection> pEnumCon;
     ULONG Count;
     PITEMID_CHILD pidl;
 
     /* get an instance to of IConnectionManager */
-    hr = CNetConnectionManager_CreateInstance(IID_INetConnectionManager, (LPVOID*)&pNetConMan);
-    if (FAILED(hr))
+    hr = CNetConnectionManager_CreateInstance(IID_PPV_ARG(INetConnectionManager, &pNetConMan));
+    if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 
     hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
-    if (FAILED(hr))
-    {
-        pNetConMan->Release();
+    if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
+
+    while (TRUE)
+    {
+        CComPtr<INetConnection> INetCon;
+
+        hr = pEnumCon->Next(1, &INetCon, &Count);
+        if (hr != S_OK)
+            break;
+
+        pidl = ILCreateNetConnectItem(INetCon);
+        if (pidl)
+        {
+            AddToEnumList(pidl);
+        }
     }
 
-    do
-    {
-        hr = pEnumCon->Next(1, &INetCon, &Count);
-        if (hr == S_OK)
-        {
-            pidl = ILCreateNetConnectItem(INetCon);
-            if (pidl)
-            {
-                AddToEnumList(pidl);
-            }
-        }
-        else
-        {
-            break;
-        }
-    } while (TRUE);
-
-    pEnumCon->Release();
-    pNetConMan->Release();
-
-    return S_OK;    
+    return S_OK;
 }
 
 HRESULT

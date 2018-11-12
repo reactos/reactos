@@ -903,9 +903,9 @@ CLanStatus::InitializeNetTaskbarNotifications()
 {
     NOTIFYICONDATAW nid;
     HWND hwndDlg;
-    INetConnectionManager *pNetConMan;
-    IEnumNetConnection *pEnumCon;
-    INetConnection *pNetCon;
+    CComPtr<INetConnectionManager> pNetConMan;
+    CComPtr<IEnumNetConnection> pEnumCon;
+    CComPtr<INetConnection> pNetCon;
     NETCON_PROPERTIES* pProps;
     HRESULT hr;
     ULONG Count;
@@ -942,108 +942,100 @@ CLanStatus::InitializeNetTaskbarNotifications()
        return S_OK;
     }
     /* get an instance to of IConnectionManager */
-
-    //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&pNetConMan);
-
-    hr = CNetConnectionManager_CreateInstance(IID_INetConnectionManager, (LPVOID*)&pNetConMan);
-    if (FAILED(hr))
-    {
-        ERR("CNetConnectionManager_CreateInstance failed\n");
+    hr = CNetConnectionManager_CreateInstance(IID_PPV_ARG(INetConnectionManager, &pNetConMan));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
-    if (FAILED(hr))
-    {
-        ERR("EnumConnections failed\n");
-        pNetConMan->Release();
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     Index = 1;
-    do
+    while (TRUE)
     {
         hr = pEnumCon->Next(1, &pNetCon, &Count);
-        if (hr == S_OK)
+        if (hr != S_OK)
+            break;
+
+        TRACE("new connection\n");
+        pItem = static_cast<NOTIFICATION_ITEM*>(CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM)));
+        if (!pItem)
+            break;
+
+        pContext = static_cast<LANSTATUSUI_CONTEXT*>(CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT)));
+        if (!pContext)
         {
-            TRACE("new connection\n");
-            pItem = static_cast<NOTIFICATION_ITEM*>(CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM)));
-            if (!pItem)
-                break;
-
-            pContext = static_cast<LANSTATUSUI_CONTEXT*>(CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT)));
-            if (!pContext)
-            {
-                CoTaskMemFree(pItem);
-                break;
-            }
-
-            ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
-            pContext->uID = Index;
-            pContext->pNet = pNetCon;
-            pItem->uID = Index;
-            pItem->pNext = NULL;
-            pItem->pNet = pNetCon;
-            hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
-            if (hwndDlg)
-            {
-                ZeroMemory(&nid, sizeof(nid));
-                nid.cbSize = sizeof(nid);
-                nid.uID = Index++;
-                nid.uFlags = NIF_MESSAGE;
-                nid.uVersion = NOTIFYICON_VERSION;
-                nid.uCallbackMessage = WM_SHOWSTATUSDLG;
-                nid.hWnd = hwndDlg;
-
-                hr = pNetCon->GetProperties(&pProps);
-                if (SUCCEEDED(hr))
-                {
-                    CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
-                    if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
-                    {
-                        nid.dwState = NIS_HIDDEN;
-                        nid.dwStateMask = NIS_HIDDEN;
-                        nid.uFlags |= NIF_STATE;
-                    }
-                    if (pProps->Status == NCS_MEDIA_DISCONNECTED || pProps->Status == NCS_DISCONNECTED || pProps->Status == NCS_HARDWARE_DISABLED)
-                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF));
-                    else if (pProps->Status == NCS_CONNECTED)
-                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
-
-                    if (nid.hIcon)
-                        nid.uFlags |= NIF_ICON;
-
-                    wcscpy(nid.szTip, pProps->pszwName);
-                    nid.uFlags |= NIF_TIP;
-                }
-                pContext->hwndStatusDlg = hwndDlg;
-                pItem->hwndDlg = hwndDlg;
-
-                if (Shell_NotifyIconW(NIM_ADD, &nid))
-                {
-                    if (pLast)
-                        pLast->pNext = pItem;
-                    else
-                        m_pHead = pItem;
-
-                    pLast = pItem;
-                    Index++;
-                }
-                else
-                {
-                    ERR("Shell_NotifyIconW failed\n");
-                    CoTaskMemFree(pItem);
-                }
-
-                if (nid.uFlags & NIF_ICON)
-                    DestroyIcon(nid.hIcon);
-            } else
-                ERR("CreateDialogParamW failed\n");
+            CoTaskMemFree(pItem);
+            break;
         }
-    } while (hr == S_OK);
+
+        ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
+        pContext->uID = Index;
+        pContext->pNet = pNetCon;
+        pItem->uID = Index;
+        pItem->pNext = NULL;
+        pItem->pNet = pNetCon;
+        pNetCon->AddRef();
+        hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
+        if (!hwndDlg)
+        {
+            ERR("CreateDialogParamW failed\n");
+            continue;
+        }
+
+        ZeroMemory(&nid, sizeof(nid));
+        nid.cbSize = sizeof(nid);
+        nid.uID = Index++;
+        nid.uFlags = NIF_MESSAGE;
+        nid.uVersion = NOTIFYICON_VERSION;
+        nid.uCallbackMessage = WM_SHOWSTATUSDLG;
+        nid.hWnd = hwndDlg;
+
+        hr = pNetCon->GetProperties(&pProps);
+        if (SUCCEEDED(hr))
+        {
+            CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
+            if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
+            {
+                nid.dwState = NIS_HIDDEN;
+                nid.dwStateMask = NIS_HIDDEN;
+                nid.uFlags |= NIF_STATE;
+            }
+            if (pProps->Status == NCS_MEDIA_DISCONNECTED || pProps->Status == NCS_DISCONNECTED || pProps->Status == NCS_HARDWARE_DISABLED)
+                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF));
+            else if (pProps->Status == NCS_CONNECTED)
+                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+
+            if (nid.hIcon)
+                nid.uFlags |= NIF_ICON;
+
+            wcscpy(nid.szTip, pProps->pszwName);
+            nid.uFlags |= NIF_TIP;
+        }
+        pContext->hwndStatusDlg = hwndDlg;
+        pItem->hwndDlg = hwndDlg;
+
+        if (Shell_NotifyIconW(NIM_ADD, &nid))
+        {
+            if (pLast)
+                pLast->pNext = pItem;
+            else
+                m_pHead = pItem;
+
+            pLast = pItem;
+            Index++;
+        }
+        else
+        {
+            ERR("Shell_NotifyIconW failed\n");
+            CoTaskMemFree(pItem);
+        }
+
+        if (nid.uFlags & NIF_ICON)
+            DestroyIcon(nid.hIcon);
+    }
 
     m_lpNetMan = pNetConMan;
-    pEnumCon->Release();
     return S_OK;
 }
 
