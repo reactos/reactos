@@ -64,7 +64,7 @@ class CNetworkConnections:
 
         /* both paths are parsible from the desktop */
         PIDLIST_ABSOLUTE m_pidlRoot;
-        IOleCommandTarget *m_lpOleCmd;
+        CComPtr<IOleCommandTarget> m_lpOleCmd;
 
     public:
 
@@ -94,8 +94,8 @@ class CNetConUiObject:
 {
     private:
         PCUITEMID_CHILD m_pidl;
-        IUnknown *m_pUnknown;
-        IOleCommandTarget *m_lpOleCmd;
+        CComPtr<IUnknown> m_pUnknown;
+        CComPtr<IOleCommandTarget> m_lpOleCmd;
 
     public:
         CNetConUiObject();

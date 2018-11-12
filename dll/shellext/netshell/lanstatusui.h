@@ -47,7 +47,7 @@ class CLanStatus:
         HRESULT InitializeNetTaskbarNotifications();
         HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
 
-        INetConnectionManager *m_lpNetMan;
+        CComPtr<INetConnectionManager> m_lpNetMan;
         NOTIFICATION_ITEM *m_pHead;
 
     public:

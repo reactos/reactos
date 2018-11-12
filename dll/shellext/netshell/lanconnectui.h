@@ -50,9 +50,9 @@ class CNetConnectionPropertyUi:
         BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        INetConnection * m_pCon;
-        INetCfgLock *m_NCfgLock;
-        INetCfg * m_pNCfg;
+        CComPtr<INetConnection> m_pCon;
+        CComPtr<INetCfgLock> m_NCfgLock;
+        CComPtr<INetCfg> m_pNCfg;
         NETCON_PROPERTIES * m_pProperties;
 
     public:

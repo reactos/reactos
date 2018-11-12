@@ -57,18 +57,13 @@ CNetworkConnections::CNetworkConnections() :
     m_pidlRoot(_ILCreateNetConnect())
 {
     HRESULT hr;
-    hr = CoCreateInstance(CLSID_ConnectionTray, NULL, CLSCTX_INPROC_SERVER, IID_IOleCommandTarget, reinterpret_cast<PVOID*>(&m_lpOleCmd));
-    if (FAILED(hr))
-    {
-        ERR("CoCreateInstance failed with %lx\n", hr);
+    hr = CoCreateInstance(CLSID_ConnectionTray, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IOleCommandTarget, &m_lpOleCmd));
+    if (FAILED_UNEXPECTEDLY(hr))
         m_lpOleCmd = NULL;
-    }
 }
 
 CNetworkConnections::~CNetworkConnections()
 {
-    if (m_lpOleCmd)
-        m_lpOleCmd->Release();
     SHFree(m_pidlRoot);
 }
 
@@ -132,7 +127,6 @@ HRESULT WINAPI CNetworkConnections::CompareIDs(
 HRESULT WINAPI CNetworkConnections::CreateViewObject(
                HWND hwndOwner, REFIID riid, LPVOID * ppvOut)
 {
-    CSFV cvf;
     HRESULT hr = E_NOINTERFACE;
 
     if (!ppvOut)
@@ -142,17 +136,13 @@ HRESULT WINAPI CNetworkConnections::CreateViewObject(
 
     if (IsEqualIID(riid, IID_IShellView))
     {
-        ZeroMemory(&cvf, sizeof(cvf));
-        cvf.cbSize = sizeof(cvf);
-        cvf.pshf = static_cast<IShellFolder*>(this);
-
-        IShellView* pShellView;
+        CSFV cvf = {sizeof(cvf), this};
+        CComPtr<IShellView> pShellView;
         hr = SHCreateShellFolderViewEx(&cvf, &pShellView);
-        if (SUCCEEDED(hr))
-        {
-            hr = pShellView->QueryInterface(riid, ppvOut);
-            pShellView->Release();
-        }
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return pShellView->QueryInterface(riid, ppvOut);
     }
 
     return hr;
@@ -488,24 +478,18 @@ HRESULT WINAPI CNetworkConnections::MapColumnToSCID(UINT column, SHCOLUMNID *psc
 */
 
 CNetConUiObject::CNetConUiObject()
-    : m_pidl(NULL),
-      m_pUnknown(NULL),
-      m_lpOleCmd(NULL)
+    : m_pidl(NULL)
 {
 }
 
 CNetConUiObject::~CNetConUiObject()
 {
-    if (m_lpOleCmd)
-        m_lpOleCmd->Release();
 }
 
 HRESULT WINAPI CNetConUiObject::Initialize(PCUITEMID_CHILD pidl, IOleCommandTarget *lpOleCmd)
 {
     m_pidl = pidl;
     m_lpOleCmd = lpOleCmd;
-    if (m_lpOleCmd)
-        m_lpOleCmd->AddRef();
     return S_OK;
 }
 
@@ -657,7 +641,7 @@ ShowNetConnectionProperties(
     CLSID ClassID;
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
-    INetConnectionPropertyUi * pNCP;
+    CComPtr<INetConnectionPropertyUi> pNCP;
     NETCON_PROPERTIES * pProperties;
 
     if (pNetConnect->GetProperties(&pProperties) != S_OK)
@@ -695,7 +679,6 @@ ShowNetConnectionProperties(
                 hr = E_FAIL;
         }
     }
-    pNCP->Release();
     NcFreeNetconProperties(pProperties);
     return hr;
 }
@@ -737,14 +720,13 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         case IDS_NET_RENAME:
         {
             HRESULT hr;
-            IShellView *psv;
-            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_IShellView, (PVOID*)&psv);
+            CComPtr<IShellView> psv;
+            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
             if (SUCCEEDED(hr))
             {
                 SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
                 psv->SelectItem(m_pidl, selFlags);
             }
-            psv->Release();
 
             return S_OK;
         }
@@ -793,45 +775,18 @@ HRESULT WINAPI CNetConUiObject::HandleMenuMsg2(
 
 HRESULT WINAPI CNetConUiObject::GetSite(REFIID riid, PVOID *ppvSite)
 {
-    HRESULT hr;
-    IUnknown *pUnknown;
-
     if (!m_pUnknown)
     {
         *ppvSite = NULL;
         return E_FAIL;
     }
 
-    hr = m_pUnknown->QueryInterface(riid, reinterpret_cast<PVOID*>(&pUnknown));
-    if (SUCCEEDED(hr))
-    {
-        pUnknown->AddRef();
-        *ppvSite = pUnknown;
-        return S_OK;
-    }
-
-    *ppvSite = NULL;
-    return hr;
+    return m_pUnknown->QueryInterface(riid, ppvSite);
 }
 
 HRESULT WINAPI CNetConUiObject::SetSite(IUnknown *pUnkSite)
 {
-    if (!pUnkSite)
-    {
-        if (m_pUnknown)
-        {
-            m_pUnknown->Release();
-            m_pUnknown = NULL;
-        }
-    }
-    else
-    {
-        pUnkSite->AddRef();
-        if (m_pUnknown)
-            m_pUnknown->Release();
-        m_pUnknown = pUnkSite;
-    }
-
+    m_pUnknown = pUnkSite;
     return S_OK;
 }
 
