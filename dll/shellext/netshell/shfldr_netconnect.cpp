@@ -477,7 +477,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
         return E_FAIL;
     }
 
-    if (pdata->Status == NCS_HARDWARE_DISABLED)
+    if (pdata->Status == NCS_HARDWARE_DISABLED || pdata->Status == NCS_MEDIA_DISCONNECTED || pdata->Status == NCS_DISCONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_ACTIVATE), MFS_DEFAULT);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DEACTIVATE), MFS_ENABLED);
@@ -622,13 +622,6 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     switch(CmdId)
     {
-        case IDS_NET_ACTIVATE:
-        case IDS_NET_DEACTIVATE:
-        case IDS_NET_REPAIR:
-        case IDS_NET_CREATELINK:
-        case IDS_NET_DELETE:
-            FIXME("Command %u is not implemented\n", CmdId);
-            return E_NOTIMPL;
         case IDS_NET_RENAME:
         {
             HRESULT hr;
@@ -646,17 +639,28 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             return ShowNetConnectionStatus(m_lpOleCmd, m_pidl, lpcmi->hwnd);
         }
+        case IDS_NET_REPAIR:
+        case IDS_NET_CREATELINK:
+        case IDS_NET_DELETE:
+            FIXME("Command %u is not implemented\n", CmdId);
+            return E_NOTIMPL;
+    }
+
+    HRESULT hr;
+    CComPtr<INetConnection> pCon;
+
+    hr = ILGetConnection(m_pidl, &pCon);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    switch(CmdId)
+    {
+        case IDS_NET_ACTIVATE:
+            return pCon->Connect();
+        case IDS_NET_DEACTIVATE:
+            return pCon->Disconnect();
         case IDS_NET_PROPERTIES:
-        {
-            HRESULT hr;
-            CComPtr<INetConnection> pCon;
-
-            hr = ILGetConnection(m_pidl, &pCon);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
             return ShowNetConnectionProperties(pCon, lpcmi->hwnd);
-        }
     }
 
     return E_NOTIMPL;
