@@ -9,65 +9,8 @@
 
 #include <winsock.h>
 
-/// CLSID
-/// HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{7007ACCF-3202-11D1-AAD2-00805FC1270E}
-// IID B722BCCB-4E68-101B-A2BC-00AA00404770
-
-#define WM_SHOWSTATUSDLG    (WM_USER+10)
-
-typedef struct tagNotificationItem
-{
-    struct tagNotificationItem *pNext;
-    CLSID guidItem;
-    UINT uID;
-    HWND hwndDlg;
-    INetConnection *pNet;
-} NOTIFICATION_ITEM;
-
-typedef struct
-{
-    INetConnection *pNet;
-    HWND hwndStatusDlg;         /* LanStatusDlg window */
-    HWND hwndDlg;               /* status dialog window */
-    DWORD dwAdapterIndex;
-    UINT_PTR nIDEvent;
-    UINT DHCPEnabled;
-    DWORD dwInOctets;
-    DWORD dwOutOctets;
-    DWORD IpAddress;
-    DWORD SubnetMask;
-    DWORD Gateway;
-    UINT uID;
-    UINT Status;
-} LANSTATUSUI_CONTEXT;
-
-class CLanStatus final :
-    public IOleCommandTarget
-{
-    public:
-        CLanStatus();
-
-        // IUnknown
-        virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
-        virtual ULONG WINAPI AddRef();
-        virtual ULONG WINAPI Release();
-        
-        // IOleCommandTarget
-        virtual HRESULT WINAPI QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
-        virtual HRESULT WINAPI Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-    
-    private:
-        HRESULT InitializeNetTaskbarNotifications();
-        HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
-        
-        INetConnectionManager *m_lpNetMan;
-        LONG m_ref;
-        NOTIFICATION_ITEM *m_pHead;
-};
-
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
-    m_ref(0),
     m_pHead(NULL)
 {
 }
@@ -1002,10 +945,10 @@ CLanStatus::InitializeNetTaskbarNotifications()
 
     //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&pNetConMan);
 
-    hr = INetConnectionManager_Constructor(NULL, IID_INetConnectionManager, (LPVOID*)&pNetConMan);
+    hr = CNetConnectionManager_CreateInstance(IID_INetConnectionManager, (LPVOID*)&pNetConMan);
     if (FAILED(hr))
     {
-        ERR("INetConnectionManager_Constructor failed\n");
+        ERR("CNetConnectionManager_CreateInstance failed\n");
         return hr;
     }
 
@@ -1126,46 +1069,6 @@ CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
 
 HRESULT
 WINAPI
-CLanStatus::QueryInterface(
-    REFIID iid,
-    LPVOID *ppvObj)
-{
-    *ppvObj = NULL;
-
-    if (IsEqualIID(iid, IID_IUnknown) ||
-        IsEqualIID(iid, IID_IOleCommandTarget))
-    {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-ULONG
-WINAPI
-CLanStatus::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
-
-    return refCount;
-}
-
-ULONG
-WINAPI
-CLanStatus::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
-}
-
-HRESULT
-WINAPI
 CLanStatus::QueryStatus(
     const GUID *pguidCmdGroup,
     ULONG cCmds,
@@ -1199,26 +1102,3 @@ CLanStatus::Exec(
     }
     return S_OK;
 }
-
-HRESULT WINAPI LanConnectStatusUI_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv)
-{
-    TRACE("LanConnectStatusUI_Constructor\n");
-
-    if (!ppv)
-        return E_POINTER;
-
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
-
-    CLanStatus *pLanStatus = new CLanStatus;
-    if (!pLanStatus)
-        return E_OUTOFMEMORY;
-
-    pLanStatus->AddRef();
-    static volatile CLanStatus *pCachedLanStatus = NULL;
-    if (InterlockedCompareExchangePointer((void **)&pCachedLanStatus, pLanStatus, NULL) != NULL)
-        pLanStatus->Release();
-
-    return ((CLanStatus*)pCachedLanStatus)->QueryInterface(riid, ppv);
-}
-

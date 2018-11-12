@@ -7,78 +7,11 @@
 
 #include "precomp.h"
 
-#include <netcfgx.h>
-#include <netcfgn.h>
-#include <strsafe.h>
-
-/// CLASSID
-/// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
-/// open network properties and wlan properties
-
-typedef enum
-{
-    NET_TYPE_CLIENT = 1,
-    NET_TYPE_SERVICE = 2,
-    NET_TYPE_PROTOCOL = 3
-} NET_TYPE;
-
-typedef struct
-{
-    NET_TYPE Type;
-    DWORD dwCharacteristics;
-    LPWSTR szHelp;
-    INetCfgComponent  *pNCfgComp;
-    UINT NumPropDialogOpen;
-} NET_ITEM, *PNET_ITEM;
-
-class CNetConnectionPropertyUi final :
-    public INetConnectionConnectUi,
-    public INetConnectionPropertyUi2,
-    public INetLanConnectionUiInfo
-{
-    public:
-        CNetConnectionPropertyUi();
-
-        // IUnknown
-        virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
-        virtual ULONG WINAPI AddRef();
-        virtual ULONG WINAPI Release();
-
-        // INetConnectionPropertyUi2
-        virtual HRESULT WINAPI AddPages(HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-        virtual HRESULT WINAPI GetIcon(DWORD dwSize, HICON *phIcon);
-
-        // INetLanConnectionUiInfo
-        virtual HRESULT WINAPI GetDeviceGuid(GUID *pGuid);
-
-        // INetConnectionConnectUi
-        virtual HRESULT WINAPI SetConnection(INetConnection* pCon);
-        virtual HRESULT WINAPI Connect(HWND hwndParent, DWORD dwFlags);
-        virtual HRESULT WINAPI Disconnect(HWND hwndParent, DWORD dwFlags);
-
-    private:
-        ~CNetConnectionPropertyUi();
-
-        BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
-        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
-        VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
-        VOID ShowNetworkComponentProperties(HWND hwndDlg);
-        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
-        static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-        INetConnection * m_pCon;
-        INetCfgLock *m_NCfgLock;
-        INetCfg * m_pNCfg;
-        NETCON_PROPERTIES * m_pProperties;
-        LONG m_ref;
-};
-
 CNetConnectionPropertyUi::CNetConnectionPropertyUi() :
     m_pCon(NULL),
     m_NCfgLock(NULL),
     m_pNCfg(NULL),
-    m_pProperties(NULL),
-    m_ref(0)
+    m_pProperties(NULL)
 {
 }
 
@@ -97,26 +30,6 @@ CNetConnectionPropertyUi::~CNetConnectionPropertyUi()
     {
         NcFreeNetconProperties(m_pProperties);
     }
-}
-
-HPROPSHEETPAGE
-InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
-{
-    PROPSHEETPAGEW ppage;
-
-    memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
-    ppage.dwSize = sizeof(PROPSHEETPAGEW);
-    ppage.dwFlags = PSP_DEFAULT;
-    ppage.pszTemplate = resname;
-    ppage.pfnDlgProc = dlgproc;
-    ppage.lParam = lParam;
-    ppage.hInstance = netshell_hInstance;
-    if (szTitle)
-    {
-        ppage.dwFlags |= PSP_USETITLE;
-        ppage.pszTitle = szTitle;
-    }
-    return CreatePropertySheetPageW(&ppage);
 }
 
 VOID
@@ -530,59 +443,6 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
 
 HRESULT
 WINAPI
-CNetConnectionPropertyUi::QueryInterface(
-    REFIID iid,
-    LPVOID *ppvObj)
-{
-    *ppvObj = NULL;
-
-    if (IsEqualIID (iid, IID_IUnknown) ||
-        IsEqualIID (iid, IID_INetConnectionPropertyUi) ||
-        IsEqualIID (iid, IID_INetConnectionPropertyUi2))
-    {
-        *ppvObj = (INetConnectionPropertyUi2*)this;
-        AddRef();
-        return S_OK;
-    }
-    else if (IsEqualIID(iid, IID_INetLanConnectionUiInfo))
-    {
-        *ppvObj = (INetLanConnectionUiInfo*)this;
-        AddRef();
-        return S_OK;
-    }
-    else if (IsEqualIID(iid, IID_INetConnectionConnectUi))
-    {
-        *ppvObj = (INetConnectionConnectUi*)this;
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-ULONG
-WINAPI
-CNetConnectionPropertyUi::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
-
-    return refCount;
-}
-
-ULONG
-WINAPI
-CNetConnectionPropertyUi::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
-}
-
-HRESULT
-WINAPI
 CNetConnectionPropertyUi::AddPages(
     HWND hwndParent,
     LPFNADDPROPSHEETPAGE pfnAddPage,
@@ -678,25 +538,4 @@ CNetConnectionPropertyUi::Disconnect(
     MessageBoxW(NULL, szBuffer, NULL, MB_OK);
 
     return S_OK;
-}
-
-HRESULT WINAPI LanConnectUI_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
-{
-    TRACE("LanConnectUI_Constructor\n");
-
-    if (!ppv)
-        return E_POINTER;
-
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
-
-    CNetConnectionPropertyUi *pConPropUi = new CNetConnectionPropertyUi;
-    if (!pConPropUi)
-        return E_OUTOFMEMORY;
-
-    pConPropUi->AddRef();
-    HRESULT hr = pConPropUi->QueryInterface(riid, ppv);
-    pConPropUi->Release();
-
-    return hr;
 }
