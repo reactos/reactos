@@ -51,10 +51,14 @@ static const shvheader NetConnectSFHeader[] = {
 #define COLUMN_PHONE    4
 #define COLUMN_OWNER    5
 
-HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * pNetConnect, HWND hwnd);
+HRESULT
+ShowNetConnectionStatus(
+    IOleCommandTarget *lpOleCmd,
+    PCUITEMID_CHILD pidl,
+    HWND hwnd);
 
 CNetworkConnections::CNetworkConnections() :
-    m_pidlRoot(_ILCreateNetConnect())
+    m_pidlRoot(NULL)
 {
     HRESULT hr;
     hr = CoCreateInstance(CLSID_ConnectionTray, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IOleCommandTarget, &m_lpOleCmd));
@@ -64,7 +68,8 @@ CNetworkConnections::CNetworkConnections() :
 
 CNetworkConnections::~CNetworkConnections()
 {
-    SHFree(m_pidlRoot);
+    if (m_pidlRoot)
+        SHFree(m_pidlRoot);
 }
 
 /**************************************************************************
@@ -181,17 +186,11 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
 
         while (cidl > 0 && *apidl)
         {
-            const VALUEStruct * val;
-            NETCON_PROPERTIES * pProperties;
-
-            val = _ILGetValueStruct(*apidl);
-            if (!val)
+            PNETCONIDSTRUCT pdata = ILGetConnData(*apidl);
+            if (!pdata)
                 continue;
 
-            if (val->pItem->GetProperties(&pProperties) != S_OK)
-                continue;
-
-            if (!(pProperties->dwCharacter & NCCF_ALLOW_RENAME))
+            if (!(pdata->dwCharacter & NCCF_ALLOW_RENAME))
                 *rgfInOut &= ~SFGAO_CANRENAME;
 
             apidl++;
@@ -248,55 +247,20 @@ HRESULT WINAPI CNetworkConnections::GetUIObjectOf(
 */
 HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    LPWSTR pszName;
-    HRESULT hr = E_FAIL;
-    NETCON_PROPERTIES * pProperties;
-    const VALUEStruct * val;
-
     if (!strRet)
         return E_INVALIDARG;
 
-    pszName = static_cast<LPWSTR>(CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR)));
-    if (!pszName)
-        return E_OUTOFMEMORY;
+    if (!pidl)
+        return SHSetStrRet(strRet, netshell_hInstance, IDS_NETWORKCONNECTION);
 
-    if (_ILIsNetConnect(pidl))
+    PWCHAR pwchName = ILGetConnName(pidl);
+    if (!pwchName)
     {
-        if (LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, pszName, MAX_PATH))
-        {
-            pszName[MAX_PATH-1] = L'\0';
-            hr = S_OK;
-        }
-    }
-    else
-    {
-        val = _ILGetValueStruct(pidl);
-        if (val)
-        {
-            if (val->pItem->GetProperties(&pProperties) == S_OK)
-            {
-                if (pProperties->pszwName)
-                {
-                    wcscpy(pszName, pProperties->pszwName);
-                    hr = S_OK;
-                }
-                NcFreeNetconProperties(pProperties);
-            }
-        }
-
+        ERR("Got invalid pidl!\n");
+        return E_INVALIDARG;
     }
 
-    if (SUCCEEDED(hr))
-    {
-        strRet->uType = STRRET_WSTR;
-        strRet->pOleStr = pszName;
-    }
-    else
-    {
-        CoTaskMemFree(pszName);
-    }
-
-    return hr;
+    return SHSetStrRet(strRet, pwchName);
 }
 
 /**************************************************************************
@@ -315,22 +279,20 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
                HWND hwndOwner, PCUITEMID_CHILD pidl,	/*simple pidl */
                LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD * pPidlOut)
 {
-    const VALUEStruct * val;
     HRESULT hr;
+    CComPtr<INetConnection> pCon;
 
-    val = _ILGetValueStruct(pidl);
-    if (!val)
-        return E_FAIL;
-
-   if (!val->pItem)
-       return E_FAIL;
-
-    hr = val->pItem->Rename(lpName);
-    if (FAILED(hr))
+    hr = ILGetConnection(pidl, &pCon);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    /* The pidl hasn't changed */
-    *pPidlOut = ILClone(pidl);
+    hr = pCon->Rename(lpName);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    *pPidlOut = ILCreateNetConnectItem(pCon);
+    if (*pPidlOut == NULL)
+        return E_FAIL;
 
     return S_OK;
 }
@@ -372,97 +334,57 @@ HRESULT WINAPI CNetworkConnections::GetDetailsEx(
 HRESULT WINAPI CNetworkConnections::GetDetailsOf(
                PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS * psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-    HRESULT hr = E_FAIL;
-    const VALUEStruct * val;
-    NETCON_PROPERTIES * pProperties;
-
     if (iColumn >= NETCONNECTSHELLVIEWCOLUMNS)
         return E_FAIL;
 
     psd->fmt = NetConnectSFHeader[iColumn].fmt;
     psd->cxChar = NetConnectSFHeader[iColumn].cxChar;
     if (pidl == NULL)
-    {
-        psd->str.uType = STRRET_WSTR;
-        if (LoadStringW(netshell_hInstance, NetConnectSFHeader[iColumn].colnameid, buffer, MAX_PATH))
-            hr = SHStrDupW(buffer, &psd->str.pOleStr);
+        return SHSetStrRet(&psd->str, netshell_hInstance, NetConnectSFHeader[iColumn].colnameid);
 
-        return hr;
-    }
-
-    if (iColumn == COLUMN_NAME)
-    {
-        psd->str.uType = STRRET_WSTR;
-        return GetDisplayNameOf(pidl, SHGDN_NORMAL, &psd->str);
-    }
-
-    val = _ILGetValueStruct(pidl);
-    if (!val)
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
         return E_FAIL;
-
-   if (!val->pItem)
-       return E_FAIL;
-
-    if (val->pItem->GetProperties(&pProperties) != S_OK)
-        return E_FAIL;
-
 
     switch (iColumn)
     {
+        case COLUMN_NAME:
+            return SHSetStrRet(&psd->str, ILGetConnName(pidl));
         case COLUMN_TYPE:
-            if (pProperties->MediaType  == NCM_LAN || pProperties->MediaType == NCM_SHAREDACCESSHOST_RAS)
+            if (pdata->MediaType  == NCM_LAN || pdata->MediaType == NCM_SHAREDACCESSHOST_RAS)
             {
-                if (LoadStringW(netshell_hInstance, IDS_TYPE_ETHERNET, buffer, MAX_PATH))
-                {
-                    psd->str.uType = STRRET_WSTR;
-                    hr = SHStrDupW(buffer, &psd->str.pOleStr);
-                }
-            }
-            break;
-        case COLUMN_STATUS:
-            buffer[0] = L'\0';
-            if (pProperties->Status == NCS_HARDWARE_DISABLED)
-                LoadStringW(netshell_hInstance, IDS_STATUS_NON_OPERATIONAL, buffer, MAX_PATH);
-            else if (pProperties->Status == NCS_DISCONNECTED)
-                LoadStringW(netshell_hInstance, IDS_STATUS_UNREACHABLE, buffer, MAX_PATH);
-            else if (pProperties->Status == NCS_MEDIA_DISCONNECTED)
-                LoadStringW(netshell_hInstance, IDS_STATUS_DISCONNECTED, buffer, MAX_PATH);
-            else if (pProperties->Status == NCS_CONNECTING)
-                LoadStringW(netshell_hInstance, IDS_STATUS_CONNECTING, buffer, MAX_PATH);
-            else if (pProperties->Status == NCS_CONNECTED)
-                LoadStringW(netshell_hInstance, IDS_STATUS_CONNECTED, buffer, MAX_PATH);
-
-            if (buffer[0])
-            {
-                buffer[MAX_PATH-1] = L'\0';
-                psd->str.uType = STRRET_WSTR;
-                hr = SHStrDupW(buffer, &psd->str.pOleStr);
-            }
-            break;
-        case COLUMN_DEVNAME:
-            if (pProperties->pszwDeviceName)
-            {
-                wcscpy(buffer, pProperties->pszwDeviceName);
-                buffer[MAX_PATH-1] = L'\0';
-                psd->str.uType = STRRET_WSTR;
-                hr = SHStrDupW(buffer, &psd->str.pOleStr);
+                return SHSetStrRet(&psd->str, netshell_hInstance, IDS_TYPE_ETHERNET);
             }
             else
             {
-                psd->str.cStr[0] = '\0';
-                psd->str.uType = STRRET_CSTR;
+                return SHSetStrRet(&psd->str, "");
             }
             break;
+        case COLUMN_STATUS:
+            switch(pdata->Status)
+            {
+                case NCS_HARDWARE_DISABLED: 
+                    return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_NON_OPERATIONAL);
+                case NCS_DISCONNECTED: 
+                    return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_UNREACHABLE);
+                case NCS_MEDIA_DISCONNECTED: 
+                    return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_DISCONNECTED);
+                case NCS_CONNECTING: 
+                    return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTING);
+                case NCS_CONNECTED: 
+                    return SHSetStrRet(&psd->str, netshell_hInstance, IDS_STATUS_CONNECTED);
+                default: 
+                    return SHSetStrRet(&psd->str, "");
+            }
+            break;
+        case COLUMN_DEVNAME:
+            return SHSetStrRet(&psd->str, ILGetDeviceName(pidl));
         case COLUMN_PHONE:
         case COLUMN_OWNER:
-            psd->str.cStr[0] = '\0';
-            psd->str.uType = STRRET_CSTR;
-            break;
+            return SHSetStrRet(&psd->str, "");
     }
 
-    NcFreeNetconProperties(pProperties);
-    return hr;
+    return E_FAIL;
 }
 
 HRESULT WINAPI CNetworkConnections::MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
@@ -548,29 +470,26 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    const VALUEStruct * val;
-    NETCON_PROPERTIES * pProperties;
-
-    val = _ILGetValueStruct(m_pidl);
-    if (!val)
+    PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
+    if (!pdata)
+    {
+        ERR("Got invalid pidl!\n");
         return E_FAIL;
+    }
 
-    if (val->pItem->GetProperties(&pProperties) != S_OK)
-        return E_FAIL;
-
-    if (pProperties->Status == NCS_HARDWARE_DISABLED)
+    if (pdata->Status == NCS_HARDWARE_DISABLED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_ACTIVATE), MFS_DEFAULT);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 1, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DEACTIVATE), MFS_ENABLED);
 
-    if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED)
+    if (pdata->Status == NCS_HARDWARE_DISABLED || pdata->Status == NCS_MEDIA_DISCONNECTED || pdata->Status == NCS_DISCONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_GRAYED);
-    else if (pProperties->Status == NCS_CONNECTED)
+    else if (pdata->Status == NCS_CONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_DEFAULT);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 2, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_STATUS), MFS_ENABLED);
 
-    if (pProperties->Status == NCS_HARDWARE_DISABLED || pProperties->Status == NCS_MEDIA_DISCONNECTED)
+    if (pdata->Status == NCS_HARDWARE_DISABLED || pdata->Status == NCS_MEDIA_DISCONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_GRAYED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 3, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_REPAIR), MFS_ENABLED);
@@ -578,22 +497,22 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 4, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
 
-    if (pProperties->dwCharacter & NCCF_ALLOW_REMOVAL)
+    if (pdata->dwCharacter & NCCF_ALLOW_REMOVAL)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 5, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
 
-    if (pProperties->dwCharacter & NCCF_ALLOW_RENAME)
+    if (pdata->dwCharacter & NCCF_ALLOW_RENAME)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 6, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);
 
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
-    if (pProperties->Status == NCS_CONNECTED)
+    if (pdata->Status == NCS_CONNECTED)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES), MFS_ENABLED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + 7, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_PROPERTIES),  MFS_DEFAULT);
-    NcFreeNetconProperties(pProperties);
+
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 9);
 }
 
@@ -614,22 +533,20 @@ PropSheetExCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 HRESULT
 ShowNetConnectionStatus(
     IOleCommandTarget *lpOleCmd,
-    INetConnection *pNetConnect,
+    PCUITEMID_CHILD pidl,
     HWND hwnd)
 {
-    NETCON_PROPERTIES *pProperties;
-    HRESULT hr;
-
     if (!lpOleCmd)
         return E_FAIL;
 
-    if (pNetConnect->GetProperties(&pProperties) != S_OK)
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
+    {
+        ERR("Got invalid pidl!\n");
         return E_FAIL;
+    }
 
-    hr = lpOleCmd->Exec(&pProperties->guidId, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
-
-    NcFreeNetconProperties(pProperties);
-    return hr;
+    return lpOleCmd->Exec(&pdata->guidId, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
 }
 
 HRESULT
@@ -689,12 +606,7 @@ ShowNetConnectionProperties(
 */
 HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    const VALUEStruct * val;
     UINT CmdId;
-
-    val = _ILGetValueStruct(m_pidl);
-    if (!val)
-        return E_FAIL;
 
     /* We should get this when F2 is pressed in explorer */
     if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
@@ -731,9 +643,20 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
             return S_OK;
         }
         case IDS_NET_STATUS:
-            return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
+        {
+            return ShowNetConnectionStatus(m_lpOleCmd, m_pidl, lpcmi->hwnd);
+        }
         case IDS_NET_PROPERTIES:
-            return ShowNetConnectionProperties(val->pItem, lpcmi->hwnd);
+        {
+            HRESULT hr;
+            CComPtr<INetConnection> pCon;
+
+            hr = ILGetConnection(m_pidl, &pCon);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            return ShowNetConnectionProperties(pCon, lpcmi->hwnd);
+        }
     }
 
     return E_NOTIMPL;
@@ -800,9 +723,6 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
     int *piIndex,
     UINT *pwFlags)
 {
-    const VALUEStruct *val;
-    NETCON_PROPERTIES *pProperties;
-
     *pwFlags = 0;
     if (!GetModuleFileNameW(netshell_hInstance, szIconFile, cchMax))
     {
@@ -810,27 +730,19 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
         return E_FAIL;
     }
 
-    val = _ILGetValueStruct(m_pidl);
-    if (!val)
+    PNETCONIDSTRUCT pdata = ILGetConnData(m_pidl);
+    if (!pdata)
     {
-        ERR("_ILGetValueStruct failed\n");
+        ERR("Got invalid pidl!\n");
         return E_FAIL;
     }
 
-    if (val->pItem->GetProperties(&pProperties) != NOERROR)
-    {
-        ERR("INetConnection_GetProperties failed\n");
-        return E_FAIL;
-    }
-
-    if (pProperties->Status == NCS_CONNECTED || pProperties->Status == NCS_CONNECTING)
+    if (pdata->Status == NCS_CONNECTED || pdata->Status == NCS_CONNECTING)
         *piIndex = -IDI_NET_IDLE;
     else
         *piIndex = -IDI_NET_OFF;
 
-    NcFreeNetconProperties(pProperties);
-
-    return NOERROR;
+    return S_OK;
 }
 
 /************************************************************************
@@ -843,21 +755,7 @@ HRESULT WINAPI CNetConUiObject::Extract(
     HICON *phiconSmall,
     UINT nIconSize)
 {
-    //IContextMenuImpl * This = impl_from_IExtractIcon(iface);
-    if (nIconIndex == IDI_NET_IDLE)
-    {
-        *phiconLarge = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-        *phiconSmall = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-        return NOERROR;
-    }
-    else if (nIconIndex == IDI_NET_OFF)
-    {
-        *phiconLarge = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-        *phiconSmall = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-        return NOERROR;
-    }
-
-    return S_FALSE;
+    return SHDefExtractIconW(pszFile, nIconIndex, 0, phiconLarge, phiconSmall, nIconSize);
 }
 
 /************************************************************************
@@ -880,7 +778,8 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CNetworkConnections::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
-    SHFree(m_pidlRoot);
+    if (m_pidlRoot)
+        SHFree(m_pidlRoot);
     m_pidlRoot = ILClone(pidl);
 
     return S_OK;
@@ -904,23 +803,18 @@ HRESULT WINAPI CNetworkConnections::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
  */
 HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
 {
-    const VALUEStruct *val;
-    NETCON_PROPERTIES * pProperties;
-
-    val = _ILGetValueStruct(ILFindLastID((ITEMIDLIST*)pei->lpIDList));
-    if (!val)
-        return E_FAIL;
-
-    if (val->pItem->GetProperties(&pProperties) != NOERROR)
-        return E_FAIL;
-
-    if (pProperties->Status == NCS_CONNECTED)
+    PCUITEMID_CHILD pidl = ILFindLastID((ITEMIDLIST*)pei->lpIDList);
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
     {
-        NcFreeNetconProperties(pProperties);
-        return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, pei->hwnd);
+        ERR("Got invalid pidl!\n");
+        return E_FAIL;
     }
 
-    NcFreeNetconProperties(pProperties);
+    if (pdata->Status == NCS_CONNECTED)
+    {
+        return ShowNetConnectionStatus(m_lpOleCmd, pidl, pei->hwnd);
+    }
 
     return S_OK;
 }

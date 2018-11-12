@@ -49,20 +49,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define NCF_FILTER                      0x400
 #define NCF_NDIS_PROTOCOL               0x4000
 
-typedef struct tagVALUEStruct
-{
-    BYTE dummy;
-    INetConnection * pItem;
-} VALUEStruct;
-
 /* globals */
 extern HINSTANCE netshell_hInstance;
 
 /* enumlist.c */
-PITEMID_CHILD _ILCreateNetConnect(void);
-PITEMID_CHILD ILCreateNetConnectItem(INetConnection *pItem);
-BOOL _ILIsNetConnect(LPCITEMIDLIST pidl);
-const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl);
+typedef struct tagNETCONIDSTRUCT
+{
+    BYTE             type;
+    GUID             guidId;
+    NETCON_STATUS    Status;
+    NETCON_MEDIATYPE MediaType;
+    DWORD            dwCharacter;
+    ULONG_PTR        uNameOffset;
+    ULONG_PTR        uDeviceNameOffset;
+} NETCONIDSTRUCT, *PNETCONIDSTRUCT;
+
+PNETCONIDSTRUCT ILGetConnData(PCITEMID_CHILD pidl);
+PWCHAR ILGetConnName(PCITEMID_CHILD pidl);
+PWCHAR ILGetDeviceName(PCITEMID_CHILD pidl);
+PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem);
+HRESULT ILGetConnection(PCITEMID_CHILD pidl, INetConnection ** pItem);
 HRESULT CEnumIDList_CreateInstance(HWND hwndOwner, DWORD dwFlags, REFIID riid, LPVOID * ppv);
 
 #define NCCF_NOTIFY_DISCONNECTED 0x100000
