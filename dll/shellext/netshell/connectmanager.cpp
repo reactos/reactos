@@ -559,5 +559,9 @@ HRESULT CNetConnectionManager::Initialize()
 
 HRESULT WINAPI CNetConnectionManager_CreateInstance(REFIID riid, LPVOID * ppv)
 {
+#if USE_CUSTOM_CONMGR
     return ShellObjectCreatorInit<CNetConnectionManager>(riid, ppv);
+#else
+    return CoCreateInstance(CLSID_ConnectionManager, NULL, CLSCTX_ALL, riid, ppv);
+#endif
 }

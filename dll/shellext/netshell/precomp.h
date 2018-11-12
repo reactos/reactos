@@ -49,6 +49,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define NCF_FILTER                      0x400
 #define NCF_NDIS_PROTOCOL               0x4000
 
+#define USE_CUSTOM_CONMGR 1
+
 /* globals */
 extern HINSTANCE netshell_hInstance;
 
