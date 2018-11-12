@@ -7,6 +7,63 @@
 
 #include "precomp.h"
 
+
+typedef struct tagGUIDStruct
+{
+    BYTE dummy; /* offset 01 is unknown */
+    GUID guid;  /* offset 02 */
+} GUIDStruct;
+
+#define PT_GUID 0x1F
+
+typedef struct tagPIDLDATA
+{
+    BYTE type;			/*00*/
+    union
+    {
+        struct tagGUIDStruct guid;
+        struct tagVALUEStruct value;
+    } u;
+} PIDLDATA, *LPPIDLDATA;
+
+typedef struct tagENUMLIST
+{
+    struct tagENUMLIST *pNext;
+    PITEMID_CHILD pidl;
+} ENUMLIST, *LPENUMLIST;
+
+class CEnumIDList:
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IEnumIDList
+{
+    public:
+        CEnumIDList();
+        ~CEnumIDList();
+
+        HRESULT Initialize();
+
+        // IEnumIDList
+        virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, PITEMID_CHILD *rgelt, ULONG *pceltFetched);
+        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
+        virtual HRESULT STDMETHODCALLTYPE Reset();
+        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+
+    private:
+        BOOL AddToEnumList(PITEMID_CHILD pidl);
+
+        LPENUMLIST  m_pFirst;
+        LPENUMLIST  m_pLast;
+        LPENUMLIST  m_pCurrent;
+
+    public:
+        DECLARE_NOT_AGGREGATABLE(CEnumIDList)
+        DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+        BEGIN_COM_MAP(CEnumIDList)
+            COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
+};
+
 /**************************************************************************
  *  AddToEnumList()
  */
@@ -44,7 +101,6 @@ CEnumIDList::AddToEnumList(PITEMID_CHILD pidl)
 }
 
 CEnumIDList::CEnumIDList() :
-    m_ref(0),
     m_pFirst(NULL),
     m_pLast(NULL),
     m_pCurrent(NULL)
@@ -65,41 +121,48 @@ CEnumIDList::~CEnumIDList()
 }
 
 HRESULT
-WINAPI
-CEnumIDList::QueryInterface(
-    REFIID riid,
-    LPVOID *ppvObj)
+CEnumIDList::Initialize()
 {
-    *ppvObj = NULL;
+    HRESULT hr;
+    INetConnectionManager *pNetConMan;
+    IEnumNetConnection *pEnumCon;
+    INetConnection *INetCon;
+    ULONG Count;
+    PITEMID_CHILD pidl;
 
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IEnumIDList))
+    /* get an instance to of IConnectionManager */
+    hr = CNetConnectionManager_CreateInstance(IID_INetConnectionManager, (LPVOID*)&pNetConMan);
+    if (FAILED(hr))
+        return S_OK;
+
+    hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
+    if (FAILED(hr))
     {
-        *ppvObj = static_cast<IEnumIDList*>(this);
-        AddRef();
+        pNetConMan->Release();
         return S_OK;
     }
 
-    return E_NOINTERFACE;
-}
+    do
+    {
+        hr = pEnumCon->Next(1, &INetCon, &Count);
+        if (hr == S_OK)
+        {
+            pidl = ILCreateNetConnectItem(INetCon);
+            if (pidl)
+            {
+                AddToEnumList(pidl);
+            }
+        }
+        else
+        {
+            break;
+        }
+    } while (TRUE);
 
-ULONG
-WINAPI
-CEnumIDList::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
+    pEnumCon->Release();
+    pNetConMan->Release();
 
-    return refCount;
-}
-
-ULONG
-WINAPI CEnumIDList::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
+    return S_OK;    
 }
 
 HRESULT
@@ -263,4 +326,9 @@ const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl)
         return reinterpret_cast<const VALUEStruct*>(&pdata->u.value);
 
     return NULL;
+}
+
+HRESULT CEnumIDList_CreateInstance(HWND hwndOwner, DWORD dwFlags, REFIID riid, LPVOID * ppv)
+{
+    return ShellObjectCreatorInit<CEnumIDList>(riid, ppv);
 }
