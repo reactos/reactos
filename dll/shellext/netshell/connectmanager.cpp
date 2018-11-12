@@ -50,11 +50,137 @@ CNetConnection::Connect()
     return E_NOTIMPL;
 }
 
+BOOL
+FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
+{
+    DWORD dwIndex, dwSize;
+    HKEY hSubKey;
+    WCHAR szNetCfg[50];
+    WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
+
+    dwIndex = 0;
+    do
+    {
+        ZeroMemory(pDevInfo, sizeof(SP_DEVINFO_DATA));
+        pDevInfo->cbSize = sizeof(SP_DEVINFO_DATA);
+
+        /* get device info */
+        if (!SetupDiEnumDeviceInfo(hInfo, dwIndex++, pDevInfo))
+            break;
+
+        /* get device software registry path */
+        if (!SetupDiGetDeviceRegistryPropertyW(hInfo, pDevInfo, SPDRP_DRIVER, NULL, (LPBYTE)&szDetail[39], sizeof(szDetail)/sizeof(WCHAR) - 40, &dwSize))
+            break;
+
+        /* open device registry key */
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szDetail, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+            break;
+
+        /* query NetCfgInstanceId for current device */
+        dwSize = sizeof(szNetCfg);
+        if (RegQueryValueExW(hSubKey, L"NetCfgInstanceId", NULL, NULL, (LPBYTE)szNetCfg, &dwSize) != ERROR_SUCCESS)
+        {
+            RegCloseKey(hSubKey);
+            break;
+        }
+        RegCloseKey(hSubKey);
+        if (!_wcsicmp(pGuid, szNetCfg))
+        {
+            return TRUE;
+        }
+    } while (TRUE);
+
+    return FALSE;
+}
+
 HRESULT
 WINAPI
 CNetConnection::Disconnect()
 {
-    return E_NOTIMPL;
+    HKEY hKey;
+    NETCON_PROPERTIES * pProperties;
+    LPOLESTR pDisplayName;
+    WCHAR szPath[200];
+    DWORD dwSize, dwType;
+    LPWSTR pPnp;
+    HDEVINFO hInfo;
+    SP_DEVINFO_DATA DevInfo;
+    SP_PROPCHANGE_PARAMS PropChangeParams;
+    HRESULT hr;
+
+    hr = GetProperties(&pProperties);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_NET, NULL, NULL, DIGCF_PRESENT );
+    if (!hInfo)
+    {
+        NcFreeNetconProperties(pProperties);
+        return E_FAIL;
+    }
+
+    if (FAILED(StringFromCLSID((CLSID)pProperties->guidId, &pDisplayName)))
+    {
+        NcFreeNetconProperties(pProperties);
+        SetupDiDestroyDeviceInfoList(hInfo);
+        return E_FAIL;
+    }
+    NcFreeNetconProperties(pProperties);
+
+    if (FindNetworkAdapter(hInfo, &DevInfo, pDisplayName))
+    {
+        PropChangeParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
+        PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE; //;
+        PropChangeParams.StateChange = DICS_DISABLE;
+        PropChangeParams.Scope = DICS_FLAG_CONFIGSPECIFIC;
+        PropChangeParams.HwProfile = 0;
+
+        if (SetupDiSetClassInstallParams(hInfo, &DevInfo, &PropChangeParams.ClassInstallHeader, sizeof(SP_PROPCHANGE_PARAMS)))
+        {
+            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hInfo, &DevInfo);
+        }
+    }
+    SetupDiDestroyDeviceInfoList(hInfo);
+
+    swprintf(szPath, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pDisplayName);
+    CoTaskMemFree(pDisplayName);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    dwSize = 0;
+    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ)
+    {
+        RegCloseKey(hKey);
+        return E_FAIL;
+    }
+
+    pPnp = static_cast<PWSTR>(CoTaskMemAlloc(dwSize));
+    if (!pPnp)
+    {
+        RegCloseKey(hKey);
+        return E_FAIL;
+    }
+
+    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, (LPBYTE)pPnp, &dwSize) != ERROR_SUCCESS)
+    {
+        CoTaskMemFree(pPnp);
+        RegCloseKey(hKey);
+        return E_FAIL;
+    }
+    RegCloseKey(hKey);
+
+    swprintf(szPath, L"System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Enum\\%s", pPnp);
+    CoTaskMemFree(pPnp);
+
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    dwSize = 1; /* enable = 0, disable = 1 */
+    RegSetValueExW(hKey, L"CSConfigFlags", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
+    RegCloseKey(hKey);
+
+    return S_OK;
 }
 
 HRESULT
