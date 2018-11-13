@@ -81,8 +81,29 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     /* Do we have at least one page between here and the end of the stack? */
     if (((ULONG_PTR)NextStackAddress - PAGE_SIZE) <= (ULONG_PTR)DeallocationStack)
     {
-        /* We don't -- Windows would try to make this guard page valid now */
+        /* We don't -- Trying to make this guard page valid now */
         DPRINT1("Close to our death...\n");
+
+        /* Calculate the next memory address */
+        NextStackAddress = (PVOID)((ULONG_PTR)PAGE_ALIGN(DeallocationStack) + GuranteedSize);
+
+        /* Allocate the memory */
+        Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                         &NextStackAddress,
+                                         0,
+                                         &GuranteedSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Success! */
+            Teb->NtTib.StackLimit = NextStackAddress;
+        }
+        else
+        {
+            DPRINT1("Failed to allocate memory\n");
+        }
+
         return STATUS_STACK_OVERFLOW;
     }
 
