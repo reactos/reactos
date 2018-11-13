@@ -176,7 +176,7 @@ KdbSymPrintAddress(
 {
     int i;
 	PMEMORY_AREA MemoryArea = NULL;
-	PROS_SECTION_OBJECT SectionObject;
+	PSECTION SectionObject;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
 #if 0
     PROSSYM_KM_OWN_CONTEXT FileContext;

@@ -87,7 +87,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
                    IN BOOLEAN SessionLoad,
                    IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PROS_SECTION_OBJECT Section = *SectionPtr;
+	PSECTION Section = *SectionPtr;
     NTSTATUS Status;
     PEPROCESS Process;
     PVOID Base = NULL;

@@ -6,7 +6,7 @@ typedef struct _NOCC_BCB
     PUBLIC_BCB Bcb;
 
     struct _NOCC_CACHE_MAP *Map;
-    PROS_SECTION_OBJECT SectionObject;
+    PSECTION SectionObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;

@@ -121,7 +121,7 @@ C_ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, Si
 
 typedef struct
 {
-    PROS_SECTION_OBJECT Section;
+	PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER Offset;
     BOOLEAN WasDirty;
@@ -873,7 +873,7 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 
 BOOLEAN
 NTAPI
-MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
+MmUnsharePageEntrySectionSegment(PSECTION Section,
                                  PMM_SECTION_SEGMENT Segment,
                                  PLARGE_INTEGER Offset,
                                  BOOLEAN Dirty,
@@ -917,7 +917,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 #endif
 
         Page = PFN_FROM_SSE(Entry);
-        FileObject = Section->FileObject;
+        FileObject = FILE_OBJECT_FROM_SECTION(Section);
         if (FileObject != NULL &&
                 !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
         {
@@ -1026,7 +1026,7 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
     {
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PROS_VACB Vacb;
-        SharedCacheMap = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
+        SharedCacheMap = FILE_OBJECT_FROM_SECTION(MemoryArea->Data.SectionData.Section)->SectionObjectPointer->SharedCacheMap;
         Vacb = CcRosLookupVacb(SharedCacheMap, SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset);
         if (Vacb)
         {
@@ -1085,7 +1085,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     BOOLEAN IsImageSection;
     LONGLONG Length;
 
-    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+    FileObject = FILE_OBJECT_FROM_SECTION(MemoryArea->Data.SectionData.Section);
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     RawLength = MemoryArea->Data.SectionData.Segment->RawLength.QuadPart;
     FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
@@ -1366,7 +1366,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     LARGE_INTEGER Offset;
     PFN_NUMBER Page;
     NTSTATUS Status;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     ULONG_PTR Entry;
     ULONG_PTR Entry1;
@@ -1796,7 +1796,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                          PVOID Address)
 {
     PMM_SECTION_SEGMENT Segment;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PFN_NUMBER OldPage;
     PFN_NUMBER NewPage;
     NTSTATUS Status;
@@ -1939,7 +1939,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
     if (!PageOutContext->Private)
     {
         MmLockSectionSegment(PageOutContext->Segment);
-        MmUnsharePageEntrySectionSegment((PROS_SECTION_OBJECT)PageOutContext->Section,
+        MmUnsharePageEntrySectionSegment(PageOutContext->Section,
                                          PageOutContext->Segment,
                                          &PageOutContext->Offset,
                                          PageOutContext->WasDirty,
@@ -1998,7 +1998,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 #ifndef NEWCC
     FileOffset = Context.Offset.QuadPart + Context.Segment->Image.FileOffset;
     IsImageSection = Context.Section->u.Flags.Image;
-    FileObject = Context.Section->FileObject;
+    FileObject = FILE_OBJECT_FROM_SECTION(Context.Section);
 
     if (FileObject != NULL &&
             !(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -2372,7 +2372,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
                        ULONG PageEntry)
 {
     LARGE_INTEGER Offset;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER Page;
     SWAPENTRY SwapEntry;
@@ -2399,7 +2399,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     Section = MemoryArea->Data.SectionData.Section;
     IsImageSection = Section->u.Flags.Image;
 
-    FileObject = Section->FileObject;
+    FileObject = FILE_OBJECT_FROM_SECTION(Section);
     DirectMapped = FALSE;
     if (FileObject != NULL &&
             !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -2562,7 +2562,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
 {
     PMM_REGION Region;
     PVOID RegionBaseAddress;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
 
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
@@ -2640,7 +2640,8 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
 VOID NTAPI
 MmpDeleteSection(PVOID ObjectBody)
 {
-    PROS_SECTION_OBJECT Section = (PROS_SECTION_OBJECT)ObjectBody;
+    PSECTION Section = ObjectBody;
+    PFILE_OBJECT FileObject;
 
     /* Check if it's an ARM3, or ReactOS section */
     if (!MiIsRosSectionObject(Section))
@@ -2648,6 +2649,8 @@ MmpDeleteSection(PVOID ObjectBody)
         MiDeleteARM3Section(ObjectBody);
         return;
     }
+
+    FileObject = FILE_OBJECT_FROM_SECTION(Section);
 
     DPRINT("MmpDeleteSection(ObjectBody %p)\n", ObjectBody);
     if (Section->u.Flags.Image)
@@ -2729,13 +2732,12 @@ MmpDeleteSection(PVOID ObjectBody)
             (void)InterlockedDecrementUL(&Segment->ReferenceCount);
         }
     }
-    if (Section->FileObject != NULL)
+    if (FileObject != NULL)
     {
 #ifndef NEWCC
-        CcRosDereferenceCache(Section->FileObject);
+        CcRosDereferenceCache(FileObject);
 #endif
-        ObDereferenceObject(Section->FileObject);
-        Section->FileObject = NULL;
+        ObDereferenceObject(FileObject);
     }
 }
 
@@ -2754,7 +2756,7 @@ INIT_FUNCTION
 NTAPI
 MmCreatePhysicalMemorySection(VOID)
 {
-    PROS_SECTION_OBJECT PhysSection;
+	PSECTION PhysSection;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES Obj;
     UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
@@ -2820,7 +2822,7 @@ MmInitSectionImplementation(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Section");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(ROS_SECTION_OBJECT);
+    ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(SECTION);
     ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
@@ -2837,7 +2839,7 @@ MmInitSectionImplementation(VOID)
 
 NTSTATUS
 NTAPI
-MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreatePageFileSection(PSECTION *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
                         PLARGE_INTEGER UMaximumSize,
@@ -2848,7 +2850,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
  */
 {
     LARGE_INTEGER MaximumSize;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     NTSTATUS Status;
 
@@ -2867,10 +2869,10 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
                             ObjectAttributes,
                             ExGetPreviousMode(),
                             NULL,
-                            sizeof(ROS_SECTION_OBJECT),
+                            sizeof(*Section),
                             0,
                             0,
-                            (PVOID*)(PVOID)&Section);
+                            (PVOID*)&Section);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MmCreatePageFileSection: failed to create object (0x%lx)\n", Status);
@@ -2880,7 +2882,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
     /*
      * Initialize it
      */
-    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+    RtlZeroMemory(Section, sizeof(*Section));
     /* Mark it as a "ROS" Section */
     Section->u.Flags.filler0 = 1;
     Section->InitialPageProtection = SectionPageProtection;
@@ -2912,7 +2914,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
 
 NTSTATUS
 NTAPI
-MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreateDataFileSection(PSECTION *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
                         PLARGE_INTEGER UMaximumSize,
@@ -2923,7 +2925,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
  * Create a section backed by a data file
  */
 {
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     NTSTATUS Status;
     LARGE_INTEGER MaximumSize;
     PMM_SECTION_SEGMENT Segment;
@@ -2938,7 +2940,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                             ObjectAttributes,
                             ExGetPreviousMode(),
                             NULL,
-                            sizeof(ROS_SECTION_OBJECT),
+                            sizeof(*Section),
                             0,
                             0,
                             (PVOID*)&Section);
@@ -2950,7 +2952,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     /*
      * Initialize it
      */
-    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+    RtlZeroMemory(Section, sizeof(*Section));
     /* Mark it as a ROS Section */
     Section->u.Flags.filler0 = 1;
 
@@ -3069,6 +3071,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
         Segment->Image.VirtualAddress = 0;
         Segment->Locked = TRUE;
         MiInitializeSectionPageTable(Segment);
+        Segment->FileObject = FileObject;
     }
     else
     {
@@ -3091,7 +3094,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
         }
     }
     MmUnlockSectionSegment(Segment);
-    Section->FileObject = FileObject;
     Section->SizeOfSection = MaximumSize;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
@@ -3727,7 +3729,7 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
 }
 
 NTSTATUS
-MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreateImageSection(PSECTION *SectionObject,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
                      PLARGE_INTEGER UMaximumSize,
@@ -3735,7 +3737,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
                      ULONG AllocationAttributes,
                      PFILE_OBJECT FileObject)
 {
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     NTSTATUS Status;
     PMM_SECTION_SEGMENT SectionSegments;
     PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
@@ -3760,10 +3762,10 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
                              ObjectAttributes,
                              ExGetPreviousMode(),
                              NULL,
-                             sizeof(ROS_SECTION_OBJECT),
+                             sizeof(*Section),
                              0,
                              0,
-                             (PVOID*)(PVOID)&Section);
+                             (PVOID*)&Section);
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(FileObject);
@@ -3773,7 +3775,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     /*
      * Initialize it
      */
-    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+    RtlZeroMemory(Section, sizeof(*Section));
     /* Mark it as a "ROS" section */
     Section->u.Flags.filler0 = 1;
 
@@ -3834,6 +3836,8 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             return(Status);
         }
 
+        ImageSectionObject->FileObject = FileObject;
+
         if (NULL != InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
                 ImageSectionObject, NULL))
         {
@@ -3881,7 +3885,6 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 
         Status = STATUS_SUCCESS;
     }
-    Section->FileObject = FileObject;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
 #endif
@@ -3894,7 +3897,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 
 static NTSTATUS
 MmMapViewOfSegment(PMMSUPPORT AddressSpace,
-                   PROS_SECTION_OBJECT Section,
+                   PSECTION Section,
                    PMM_SECTION_SEGMENT Segment,
                    PVOID* BaseAddress,
                    SIZE_T ViewSize,
@@ -3980,7 +3983,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 #endif
     LARGE_INTEGER Offset;
     SWAPENTRY SavedSwapEntry;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PMMSUPPORT AddressSpace;
     PEPROCESS Process;
@@ -4018,7 +4021,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         if (Page == PFN_FROM_SSE(Entry) && Dirty)
         {
 #ifndef NEWCC
-            FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+            FileObject = FILE_OBJECT_FROM_SECTION(MemoryArea->Data.SectionData.Section);
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
             CcRosMarkDirtyFile(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
@@ -4077,7 +4080,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PLIST_ENTRY CurrentEntry;
     PMM_REGION CurrentRegion;
@@ -4144,7 +4147,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PMMSUPPORT AddressSpace;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PVOID ImageBaseAddress = 0;
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
@@ -4522,7 +4525,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                    IN ULONG AllocationType,
                    IN ULONG Protect)
 {
-    PROS_SECTION_OBJECT Section;
+	PSECTION Section;
     PMMSUPPORT AddressSpace;
     ULONG ViewOffset;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -4553,7 +4556,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     /* FIXME: We should keep this, but it would break code checking equality */
     Protect &= ~PAGE_NOCACHE;
 
-    Section = (PROS_SECTION_OBJECT)SectionObject;
+    Section = SectionObject;
     AddressSpace = &Process->Vm;
 
     if (Section->u.Flags.NoChange)
@@ -4863,7 +4866,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PSIZE_T ViewSize)
 {
-    PROS_SECTION_OBJECT Section;
+	PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;
@@ -4879,7 +4882,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     DPRINT("MmMapViewInSystemSpace() called\n");
 
-    Section = (PROS_SECTION_OBJECT)SectionObject;
+    Section = SectionObject;
     Segment = (PMM_SECTION_SEGMENT)Section->Segment;
     AddressSpace = MmGetKernelAddressSpace();
 
@@ -5000,7 +5003,7 @@ MmCreateSection (OUT PVOID  * Section,
 {
     NTSTATUS Status;
     ULONG Protection;
-    PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
+    PSECTION *SectionObject = (PSECTION*)Section;
 
     /* Check if an ARM3 section is being created instead */
     if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))

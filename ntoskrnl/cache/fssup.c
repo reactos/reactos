@@ -612,7 +612,7 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointer)
                                           NOCC_BCB,
                                           ThisFileList);
 
-        Result = MmGetFileObjectForSection((PROS_SECTION_OBJECT)Bcb->SectionObject);
+        Result = MmGetFileObjectForSection(Bcb->SectionObject);
     }
     CcpUnlock();
     return Result;
@@ -624,7 +624,7 @@ CcGetFileObjectFromBcb(PVOID Bcb)
 {
     PNOCC_BCB RealBcb = (PNOCC_BCB)Bcb;
     DPRINT("BCB #%x\n", RealBcb - CcCacheSections);
-    return MmGetFileObjectForSection((PROS_SECTION_OBJECT)RealBcb->SectionObject);
+    return MmGetFileObjectForSection(RealBcb->SectionObject);
 }
 
 /* EOF */

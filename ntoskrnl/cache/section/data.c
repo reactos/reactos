@@ -305,7 +305,7 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 
 NTSTATUS
 NTAPI
-MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreateCacheSection(PSECTION *SectionObject,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
                      PLARGE_INTEGER UMaximumSize,
@@ -316,7 +316,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
  * Create a section backed by a data file.
  */
 {
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     NTSTATUS Status;
     LARGE_INTEGER MaximumSize;
     PMM_SECTION_SEGMENT Segment;
@@ -333,10 +333,10 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
                             ObjectAttributes,
                             ExGetPreviousMode(),
                             NULL,
-                            sizeof(ROS_SECTION_OBJECT),
+                            sizeof(*Section),
                             0,
                             0,
-                            (PVOID*)(PVOID)&Section);
+                            (PVOID*)&Section);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed: %x\n", Status);
@@ -345,7 +345,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     }
 
     /* Initialize it */
-    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
+    RtlZeroMemory(Section, sizeof(*Section));
     Section->u.Flags.filler0 = 1;
     Section->InitialPageProtection = SectionPageProtection;
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
@@ -752,7 +752,7 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
 
 NTSTATUS
 NTAPI
-MmExtendCacheSection(PROS_SECTION_OBJECT Section,
+MmExtendCacheSection(PSECTION Section,
                      PLARGE_INTEGER NewSize,
                      BOOLEAN ExtendFile)
 {

@@ -140,7 +140,7 @@ NTSTATUS
 CcpAllocateSection(PFILE_OBJECT FileObject,
                    ULONG Length,
                    ULONG Protect,
-                   PROS_SECTION_OBJECT *Result)
+                   PSECTION *Result)
 {
     NTSTATUS Status;
     LARGE_INTEGER MaxSize;
@@ -168,7 +168,7 @@ typedef struct _WORK_QUEUE_WITH_CONTEXT
     PVOID ToUnmap;
     LARGE_INTEGER FileOffset;
     LARGE_INTEGER MapSize;
-    PROS_SECTION_OBJECT ToDeref;
+    PSECTION ToDeref;
     PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
     PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
     PVOID LazyContext;
@@ -245,7 +245,7 @@ CcpDereferenceCache(ULONG Start,
 
     if (Immediate)
     {
-        PROS_SECTION_OBJECT ToDeref = Bcb->SectionObject;
+    	PSECTION ToDeref = Bcb->SectionObject;
         Bcb->Map = NULL;
         Bcb->SectionObject = NULL;
         Bcb->BaseAddress = NULL;
@@ -308,7 +308,7 @@ on failure.
 /* Needs mutex */
 ULONG
 CcpAllocateCacheSections(PFILE_OBJECT FileObject,
-                         PROS_SECTION_OBJECT SectionObject)
+						 PSECTION SectionObject)
 {
     ULONG i = INVALID_CACHE;
     PNOCC_CACHE_MAP Map;
@@ -475,7 +475,7 @@ CcpMapData(IN PFILE_OBJECT FileObject,
     LARGE_INTEGER Target, EndInterval;
     ULONG BcbHead, SectionSize, ViewSize;
     PNOCC_BCB Bcb = NULL;
-    PROS_SECTION_OBJECT SectionObject = NULL;
+    PSECTION SectionObject = NULL;
     NTSTATUS Status;
     PNOCC_CACHE_MAP Map = (PNOCC_CACHE_MAP)FileObject->SectionObjectPointer->SharedCacheMap;
     ViewSize = CACHE_STRIPE;

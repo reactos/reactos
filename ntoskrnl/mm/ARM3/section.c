@@ -1636,14 +1636,14 @@ MiGetFileObjectForSectionAddress(
     if (Vad->u.VadFlags.Spare != 0)
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
-        PROS_SECTION_OBJECT Section;
+        PSECTION Section;
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
             Section = MemoryArea->Data.SectionData.Section;
-            *FileObject = Section->FileObject;
+            *FileObject = FILE_OBJECT_FROM_SECTION(Section);
         }
         else
         {
@@ -1694,7 +1694,7 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     }
 
     /* Return the file object */
-    return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
+    return FILE_OBJECT_FROM_SECTION(SectionObject);
 }
 
 static
@@ -1709,14 +1709,14 @@ MiGetFileObjectForVad(
     if (Vad->u.VadFlags.Spare != 0)
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
-        PROS_SECTION_OBJECT Section;
+        PSECTION Section;
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
             Section = MemoryArea->Data.SectionData.Section;
-            FileObject = Section->FileObject;
+            FileObject = FILE_OBJECT_FROM_SECTION(Section);
         }
         else
         {
