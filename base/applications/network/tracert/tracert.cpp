@@ -252,7 +252,7 @@ PrintHopInfo(_In_ PVOID Buffer)
         }
     }
 
-    WCHAR IpAddress[MAX_IPADDRESS];
+    WCHAR IpAddress[NI_MAXHOST];
     Status = GetNameInfoW(SockAddr,
                           Size,
                           IpAddress,
