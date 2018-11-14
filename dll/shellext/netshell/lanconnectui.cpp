@@ -292,6 +292,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 else
                     dwNotifyDisconnect = 0;
 
+                //NOTE: Windows write these setting with the undocumented INetLanConnection::SetInfo
                 if (StringFromCLSID((CLSID)This->m_pProperties->guidId, &pStr) == ERROR_SUCCESS)
                 {
                     swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
