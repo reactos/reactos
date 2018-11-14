@@ -25,7 +25,7 @@ LanguageNames=(English=0x409:MSG00409
 
 
 ;
-; lmerr message definitions
+; lmerr.h message definitions (2100 - 2999)
 ;
 
 MessageId=2102
@@ -3440,6 +3440,341 @@ This is the last error in NERR range.
 
 
 ;
+; lmerrlog.h messages definitions (3100 - 3299)
+;
+
+MessageId=3100
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Internal_Error
+Language=English
+The operation failed because a network software error occurred.
+.
+Language=Russian
+The operation failed because a network software error occurred.
+.
+
+MessageId=3101
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Resource_Shortage
+Language=English
+The system ran out of a resource controlled by the %1 option.
+.
+Language=Russian
+The system ran out of a resource controlled by the %1 option.
+.
+
+MessageId=3102
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Unable_To_Lock_Segment
+Language=English
+The service failed to obtain a long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+.
+Language=Russian
+The service failed to obtain a long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+.
+
+MessageId=3103
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Unable_To_Unlock_Segment
+Language=English
+The service failed to release the long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+.
+Language=Russian
+The service failed to release the long-term lock on the\nsegment for network control blocks (NCBs). The error code is the data.
+.
+
+MessageId=3104
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Uninstall_Service
+Language=English
+There was an error stopping service %1.\nThe error code from NetServiceControl is the data.
+.
+Language=Russian
+There was an error stopping service %1.\nThe error code from NetServiceControl is the data.
+.
+
+MessageId=3105
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Init_Exec_Fail
+Language=English
+Initialization failed because of a system execution failure on\npath %1. The system error code is the data.
+.
+Language=Russian
+Initialization failed because of a system execution failure on\npath %1. The system error code is the data.
+.
+
+MessageId=3106
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Ncb_Error
+Language=English
+An unexpected network control block (NCB) was received. The NCB is the data.
+.
+Language=Russian
+An unexpected network control block (NCB) was received. The NCB is the data.
+.
+
+MessageId=3107
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Net_Not_Started
+Language=English
+The network is not started.
+.
+Language=Russian
+The network is not started.
+.
+
+MessageId=3108
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Ioctl_Error
+Language=English
+A DosDevIoctl or DosFsCtl to NETWKSTA.SYS failed.\nThe data shown is in this format:\nDWORD  approx CS:IP of call to ioctl or fsctl\nWORD   error code\nWORD   ioctl or fsctl number
+.
+Language=Russian
+A DosDevIoctl or DosFsCtl to NETWKSTA.SYS failed.\nThe data shown is in this format:\nDWORD  approx CS:IP of call to ioctl or fsctl\nWORD   error code\nWORD   ioctl or fsctl number
+.
+
+MessageId=3109
+Severity=Success
+Facility=System
+SymbolicName=NELOG_System_Semaphore
+Language=English
+Unable to create or open system semaphore %1.\nThe error code is the data.
+.
+Language=Russian
+Unable to create or open system semaphore %1.\nThe error code is the data.
+.
+
+MessageId=3110
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Init_OpenCreate_Err
+Language=English
+Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
+.
+Language=Russian
+Initialization failed because of an open/create error on the\nfile %1. The system error code is the data.
+.
+
+MessageId=3111
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetBios
+Language=English
+An unexpected NetBIOS error occurred.\nThe error code is the data.
+.
+Language=Russian
+An unexpected NetBIOS error occurred.\nThe error code is the data.
+.
+
+MessageId=3112
+Severity=Success
+Facility=System
+SymbolicName=NELOG_SMB_Illegal
+Language=English
+An illegal server message block (SMB) was received.\nThe SMB is the data.
+.
+Language=Russian
+An illegal server message block (SMB) was received.\nThe SMB is the data.
+.
+
+MessageId=3113
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Service_Fail
+Language=English
+Initialization failed because the requested service %1\ncould not be started.
+.
+Language=Russian
+Initialization failed because the requested service %1\ncould not be started.
+.
+
+MessageId=3114
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Entries_Lost
+Language=English
+Some entries in the error log were lost because of a buffer\noverflow.
+.
+Language=Russian
+Some entries in the error log were lost because of a buffer\noverflow.
+.
+
+MessageId=3120
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Init_Seg_Overflow
+Language=English
+Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
+.
+Language=Russian
+Initialization parameters controlling resource usage other\nthan net buffers are sized so that too much memory is needed.
+.
+
+MessageId=3121
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Srv_No_Mem_Grow
+Language=English
+The server cannot increase the size of a memory segment.
+.
+Language=Russian
+The server cannot increase the size of a memory segment.
+.
+
+MessageId=3122
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Access_File_Bad
+Language=English
+Initialization failed because account file %1 is either incorrect\nor not present.
+.
+Language=Russian
+Initialization failed because account file %1 is either incorrect\nor not present.
+.
+
+MessageId=3123
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Srvnet_Not_Started
+Language=English
+Initialization failed because network %1 was not started.
+.
+Language=Russian
+Initialization failed because network %1 was not started.
+.
+
+MessageId=3124
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Init_Chardev_Err
+Language=English
+The server failed to start. Either all three chdev\nparameters must be zero or all three must be nonzero.
+.
+Language=Russian
+The server failed to start. Either all three chdev\nparameters must be zero or all three must be nonzero.
+.
+
+MessageId=3125
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Remote_API
+Language=English
+A remote API request was halted due to the following\ninvalid description string: %1.
+.
+Language=Russian
+A remote API request was halted due to the following\ninvalid description string: %1.
+.
+
+MessageId=3126
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Ncb_TooManyErr
+Language=English
+The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
+.
+Language=Russian
+The network %1 ran out of network control blocks (NCBs).  You may need to increase NCBs\nfor this network.  The following information includes the\nnumber of NCBs submitted by the server when this error occurred:
+.
+
+MessageId=3127
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Mailslot_err
+Language=English
+The server cannot create the %1 mailslot needed to send\nthe ReleaseMemory alert message.  The error received is:
+.
+Language=Russian
+The server cannot create the %1 mailslot needed to send\nthe ReleaseMemory alert message.  The error received is:
+.
+
+MessageId=3128
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReleaseMem_Alert
+Language=English
+The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
+.
+Language=Russian
+The server failed to register for the ReleaseMemory alert,\nwith recipient %1. The error code from\nNetAlertStart is the data.
+.
+
+MessageId=3129
+Severity=Success
+Facility=System
+SymbolicName=NELOG_AT_cannot_write
+Language=English
+The server cannot update the AT schedule file. The file\nis corrupted.
+.
+Language=Russian
+The server cannot update the AT schedule file. The file\nis corrupted.
+.
+
+MessageId=3130
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Cant_Make_Msg_File
+Language=English
+The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
+.
+Language=Russian
+The server encountered an error when calling\nNetIMakeLMFileName. The error code is the data.
+.
+
+MessageId=3131
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Exec_Netservr_NoMem
+Language=English
+Initialization failed because of a system execution failure on\npath %1. There is not enough memory to start the process.\nThe system error code is the data.
+.
+Language=Russian
+Initialization failed because of a system execution failure on\npath %1. There is not enough memory to start the process.\nThe system error code is the data.
+.
+
+MessageId=3132
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Server_Lock_Failure
+Language=English
+Longterm lock of the server buffers failed.\nCheck swap disk's free space and restart the system to start the server.
+.
+Language=Russian
+Longterm lock of the server buffers failed.\nCheck swap disk's free space and restart the system to start the server.
+.
+
+MessageId=3140
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Msg_Shutdown
+Language=English
+The service has stopped due to repeated consecutive\noccurrences of a network control block (NCB) error.  The last bad NCB follows\nin raw data.
+.
+Language=Russian
+The service has stopped due to repeated consecutive\noccurrences of a network control block (NCB) error.  The last bad NCB follows\nin raw data.
+.
+
+MessageId=3141
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Msg_Sem_Shutdown
+Language=English
+The Message server has stopped due to a lock on the\nMessage server shared data segment.
+.
+Language=Russian
+The Message server has stopped due to a lock on the\nMessage server shared data segment.
+.
+
+
+;
 ; other message definitions
 ;
 
@@ -3595,4 +3930,125 @@ The command can be used only on a Domain Controller.
 .
 Language=Russian
 The command can be used only on a Domain Controller.
+.
+
+MessageId=3516
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3516
+Language=English
+This command cannot be used on a Domain Controller.
+.
+Language=Russian
+This command cannot be used on a Domain Controller.
+.
+
+MessageId=3520
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3520
+Language=English
+These services are started:
+.
+Language=Russian
+These services are started:
+.
+
+MessageId=3521
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3521
+Language=English
+The %1 service is not started.
+.
+Language=Russian
+The %1 service is not started.
+.
+
+MessageId=3522
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3522
+Language=English
+The %1 service is starting%0
+.
+Language=Russian
+The %1 service is starting%0
+.
+
+MessageId=3523
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3523
+Language=English
+The %1 service could not be started.
+.
+Language=Russian
+The %1 service could not be started.
+.
+
+MessageId=3524
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3524
+Language=English
+The %1 service was started successfully.
+.
+Language=Russian
+The %1 service was started successfully.
+.
+
+MessageId=3525
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3525
+Language=English
+Stopping the Workstation service also stops the Server service.
+.
+Language=Russian
+Stopping the Workstation service also stops the Server service.
+.
+
+MessageId=3526
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3526
+Language=English
+The workstation has open files.
+.
+Language=Russian
+The workstation has open files.
+.
+
+MessageId=3527
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3527
+Language=English
+The %1 service is stopping%0
+.
+Language=Russian
+The %1 service is stopping%0
+.
+
+MessageId=3528
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3528
+Language=English
+The %1 service could not be stopped.
+.
+Language=Russian
+The %1 service could not be stopped.
+.
+
+MessageId=3529
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3529
+Language=English
+The %1 service was stopped successfully.
+.
+Language=Russian
+The %1 service was stopped successfully.
 .
