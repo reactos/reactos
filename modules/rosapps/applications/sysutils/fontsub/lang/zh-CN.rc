@@ -1,0 +1,108 @@
+/* FontSub by Katayama Hirofumi MZ
+ * 
+ * To the extent possible under law, the person who associated CC0 with
+ * FontSub has waived all copyright and related or neighboring rights
+ * to FontSub.
+ * 
+ * You should have received a copy of the CC0 legalcode along with this
+ * work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+ */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+/* Translated by Luo Yufan (njlyf2011@hotmail.com) on 2018-11-13 */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+1 MENU
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "导入自(&I)...\tCtrl+O", ID_IMPORT
+        MENUITEM "导出到(&E)...\tCtrl+S", ID_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "重新加载注册表(&L)\tCtrl+L", ID_RELOAD
+        MENUITEM "更新注册表(&R)\tCtrl+U", ID_UPDATE_REGISTRY
+        MENUITEM SEPARATOR
+        MENUITEM "在注册表中打开(&E)", ID_OPEN_REGKEY
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)\tAlt+F4", ID_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "新项目(&N)\tCtrl+N", ID_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "编辑项目(&E)\tEnter", ID_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "删除项目(&D)\tDel", ID_DELETE
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于(&A)...", ID_ABOUT
+    END
+END
+
+2 MENU
+BEGIN
+    POPUP "Popup"
+    BEGIN
+        MENUITEM "新项目(&N)\tCtrl+N", ID_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "编辑项目(&E)\tEnter", ID_EDIT
+        MENUITEM SEPARATOR
+        MENUITEM "删除项目(&D)\tDel", ID_DELETE
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE,          "Font Substitutes Editor"
+    IDS_FONTNAME,       "字体名称"
+    IDS_SUBSTITUTE,     "替代"
+    IDS_ENTERNAME,      "(请输入字体名称...)"
+    IDS_IMPORT,         "导入"
+    IDS_EXPORT,         "导出"
+    IDS_CANTIMPORT,     "无法导入。"
+    IDS_CANTEXPORT,     "无法导出。"
+    IDS_INPFILTER,      "注册表文件 (*.reg)|*.reg|所有文件 (*.*)|*.*|"
+    IDS_OUTFILTER,      "注册表文件 (*.reg)|*.reg|"
+    IDS_QUERYUPDATE,    "替代信息已经修改。请问现在需要更新注册表吗？"
+    IDS_ALREADYEXISTS,  "同样的名称已存在。"
+    IDS_ENTERNAME2,     "请输入字体名称。"
+    IDS_QUERYDELETE,    "您确定要删除此项目吗？"
+    IDS_CANTOPENKEY,    "无法打开注册表键值。"
+    IDS_REBOOTNOW,      "注册表已经更新。现在需要重启系统吗？"
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The ReactOS Team\r\n\r\n本软件基于 CC0 1.0 许可证发布。"
+END
+
+IDD_ADD DIALOGEX 0, 0, 315, 65
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "添加替代项目"
+FONT 10, "宋体"
+BEGIN
+    CONTROL "字体名称(&N):", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "", cmb1, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 6, 120, 120
+    CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
+    CONTROL "替代(&S):", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
+    CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
+    CONTROL "确定", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "取消", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+END
+
+IDD_EDIT DIALOGEX 0, 0, 315, 65
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "编辑替代项目"
+FONT 10, "宋体"
+BEGIN
+    CONTROL "字体名称(&N):", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "", edt1, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP, 70, 6, 120, 14
+    CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
+    CONTROL "替代(&S):", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
+    CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
+    CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
+    CONTROL "确定", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "取消", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "删除(&D)", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
+END
