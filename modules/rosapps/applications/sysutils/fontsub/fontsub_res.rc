@@ -47,6 +47,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
+
 1 ACCELERATORS
 BEGIN
     "O",     ID_IMPORT,             CONTROL, VIRTKEY
