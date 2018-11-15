@@ -3773,6 +3773,303 @@ Language=Russian
 The Message server has stopped due to a lock on the\nMessage server shared data segment.
 .
 
+MessageId=3150
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Msg_Log_Err
+Language=English
+A file system error occurred while opening or writing to the\nsystem message log file %1. Message logging has been\nswitched off due to the error. The error code is the data.
+.
+Language=Russian
+A file system error occurred while opening or writing to the\nsystem message log file %1. Message logging has been\nswitched off due to the error. The error code is the data.
+.
+
+MessageId=3151
+Severity=Success
+Facility=System
+SymbolicName=NELOG_VIO_POPUP_ERR
+Language=English
+Unable to display message POPUP due to system VIO call error.\nThe error code is the data.
+.
+Language=Russian
+Unable to display message POPUP due to system VIO call error.\nThe error code is the data.
+.
+
+MessageId=3152
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Msg_Unexpected_SMB_Type
+Language=English
+An illegal server message block (SMB) was received.  The SMB is the data.
+.
+Language=Russian
+An illegal server message block (SMB) was received.  The SMB is the data.
+.
+
+MessageId=3160
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_Infoseg
+Language=English
+The workstation information segment is bigger than 64K.\nThe size follows, in DWORD format:
+.
+Language=Russian
+The workstation information segment is bigger than 64K.\nThe size follows, in DWORD format:
+.
+
+MessageId=3161
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_Compname
+Language=English
+The workstation was unable to get the name-number of the computer.
+.
+Language=Russian
+The workstation was unable to get the name-number of the computer.
+.
+
+MessageId=3162
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_BiosThreadFailure
+Language=English
+The workstation could not initialize the Async NetBIOS Thread.\nThe error code is the data.
+.
+Language=Russian
+The workstation could not initialize the Async NetBIOS Thread.\nThe error code is the data.
+.
+
+MessageId=3163
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_IniSeg
+Language=English
+The workstation could not open the initial shared segment.\nThe error code is the data.
+.
+Language=Russian
+The workstation could not open the initial shared segment.\nThe error code is the data.
+.
+
+MessageId=3164
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_HostTab_Full
+Language=English
+The workstation host table is full.
+.
+Language=Russian
+The workstation host table is full.
+.
+
+MessageId=3165
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_Bad_Mailslot_SMB
+Language=English
+A bad mailslot server message block (SMB) was received.  The SMB is the data.
+.
+Language=Russian
+A bad mailslot server message block (SMB) was received.  The SMB is the data.
+.
+
+MessageId=3166
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_UASInit
+Language=English
+The workstation encountered an error while trying to start the user accounts database.\nThe error code is the data.
+.
+Language=Russian
+The workstation encountered an error while trying to start the user accounts database.\nThe error code is the data.
+.
+
+MessageId=3167
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wksta_SSIRelogon
+Language=English
+The workstation encountered an error while responding to an SSI revalidation request.\nThe function code and the error codes are the data.
+.
+Language=Russian
+The workstation encountered an error while responding to an SSI revalidation request.\nThe function code and the error codes are the data.
+.
+
+MessageId=3170
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Build_Name
+Language=English
+The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
+.
+Language=Russian
+The Alerter service had a problem creating the list of\nalert recipients.  The error code is %1.
+.
+
+MessageId=3171
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Name_Expansion
+Language=English
+There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
+.
+Language=Russian
+There was an error expanding %1 as a group name. Try\nsplitting the group into two or more smaller groups.
+.
+
+MessageId=3172
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Message_Send
+Language=English
+There was an error sending %2 the alert message -\n(\n%3 )\nThe error code is %1.
+.
+Language=Russian
+There was an error sending %2 the alert message -\n(\n%3 )\nThe error code is %1.
+.
+
+MessageId=3173
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Mail_Slt_Err
+Language=English
+There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
+.
+Language=Russian
+There was an error in creating or reading the alerter mailslot.\nThe error code is %1.
+.
+
+MessageId=3174
+Severity=Success
+Facility=System
+SymbolicName=NELOG_AT_cannot_read
+Language=English
+The server could not read the AT schedule file.
+.
+Language=Russian
+The server could not read the AT schedule file.
+.
+
+MessageId=3175
+Severity=Success
+Facility=System
+SymbolicName=NELOG_AT_sched_err
+Language=English
+The server found an invalid AT schedule record.
+.
+Language=Russian
+The server found an invalid AT schedule record.
+.
+
+MessageId=3176
+Severity=Success
+Facility=System
+SymbolicName=NELOG_AT_schedule_file_created
+Language=English
+The server could not find an AT schedule file so it created one.
+.
+Language=Russian
+The server could not find an AT schedule file so it created one.
+.
+
+MessageId=3177
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Srvnet_NB_Open
+Language=English
+The server could not access the %1 network with NetBiosOpen.
+.
+Language=Russian
+The server could not access the %1 network with NetBiosOpen.
+.
+
+MessageId=3178
+Severity=Success
+Facility=System
+SymbolicName=NELOG_AT_Exec_Err
+Language=English
+The AT command processor could not run %1.
+.
+Language=Russian
+The AT command processor could not run %1.
+.
+
+MessageId=3180
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Lazy_Write_Err
+Language=English
+WARNING:  Because of a lazy-write error, drive %1 now\ncontains some corrupted data.  The cache is stopped.
+.
+Language=Russian
+WARNING:  Because of a lazy-write error, drive %1 now\ncontains some corrupted data.  The cache is stopped.
+.
+
+MessageId=3181
+Severity=Success
+Facility=System
+SymbolicName=NELOG_HotFix
+Language=English
+A defective sector on drive %1 has been replaced (hotfixed).\nNo data was lost.  You should run CHKDSK soon to restore full\nperformance and replenish the volume's spare sector pool.\n\nThe hotfix occurred while processing a remote request.
+.
+Language=Russian
+A defective sector on drive %1 has been replaced (hotfixed).\nNo data was lost.  You should run CHKDSK soon to restore full\nperformance and replenish the volume's spare sector pool.\n\nThe hotfix occurred while processing a remote request.
+.
+
+MessageId=3182
+Severity=Success
+Facility=System
+SymbolicName=NELOG_HardErr_From_Server
+Language=English
+A disk error occurred on the HPFS volume in drive %1.\nThe error occurred while processing a remote request.
+.
+Language=Russian
+A disk error occurred on the HPFS volume in drive %1.\nThe error occurred while processing a remote request.
+.
+
+MessageId=3183
+Severity=Success
+Facility=System
+SymbolicName=NELOG_LocalSecFail1
+Language=English
+The user accounts database (NET.ACC) is corrupted.  The local security\nsystem is replacing the corrupted NET.ACC with the backup\nmade at %1.\nAny updates made to the database after this time are lost.\n
+.
+Language=Russian
+The user accounts database (NET.ACC) is corrupted.  The local security\nsystem is replacing the corrupted NET.ACC with the backup\nmade at %1.\nAny updates made to the database after this time are lost.\n
+.
+
+MessageId=3184
+Severity=Success
+Facility=System
+SymbolicName=NELOG_LocalSecFail2
+Language=English
+The user accounts database (NET.ACC) is missing.  The local\nsecurity system is restoring the backup database\nmade at %1.\nAny updates made to the database made after this time are lost.\n
+.
+Language=Russian
+The user accounts database (NET.ACC) is missing.  The local\nsecurity system is restoring the backup database\nmade at %1.\nAny updates made to the database made after this time are lost.\n
+.
+
+MessageId=3185
+Severity=Success
+Facility=System
+SymbolicName=NELOG_LocalSecFail3
+Language=English
+Local security could not be started because the user accounts database\n(NET.ACC) was missing or corrupted, and no usable backup\ndatabase was present.\n\nTHE SYSTEM IS NOT SECURE.
+.
+Language=Russian
+Local security could not be started because the user accounts database\n(NET.ACC) was missing or corrupted, and no usable backup\ndatabase was present.\n\nTHE SYSTEM IS NOT SECURE.
+.
+
+MessageId=3186
+Severity=Success
+Facility=System
+SymbolicName=NELOG_LocalSecGeneralFail
+Language=English
+Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
+.
+Language=Russian
+Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
+.
+
 
 ;
 ; other message definitions
@@ -4051,4 +4348,158 @@ The %1 service was stopped successfully.
 .
 Language=Russian
 The %1 service was stopped successfully.
+.
+
+MessageId=3530
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3530
+Language=English
+The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
+.
+Language=Russian
+The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
+.
+
+MessageId=3533
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3533
+Language=English
+The service is starting or stopping.  Please try again later.
+.
+Language=Russian
+The service is starting or stopping.  Please try again later.
+.
+
+MessageId=3534
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3534
+Language=English
+The service did not report an error.
+.
+Language=Russian
+The service did not report an error.
+.
+
+MessageId=3535
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3535
+Language=English
+An error occurred controlling the device.
+.
+Language=Russian
+An error occurred controlling the device.
+.
+
+MessageId=3536
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3536
+Language=English
+The %1 service was continued successfully.
+.
+Language=Russian
+The %1 service was continued successfully.
+.
+
+MessageId=3537
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3537
+Language=English
+The %1 service was paused successfully.
+.
+Language=Russian
+The %1 service was paused successfully.
+.
+
+MessageId=3538
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3538
+Language=English
+The %1 service failed to resume.
+.
+Language=Russian
+The %1 service failed to resume.
+.
+
+MessageId=3539
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3539
+Language=English
+The %1 service failed to pause.
+.
+Language=Russian
+The %1 service failed to pause.
+.
+
+MessageId=3540
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3540
+Language=English
+The %1 service continue is pending%0
+.
+Language=Russian
+The %1 service continue is pending%0
+.
+
+MessageId=3541
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3541
+Language=English
+The %1 service pause is pending%0
+.
+Language=Russian
+The %1 service pause is pending%0
+.
+
+MessageId=3542
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3542
+Language=English
+%1 was continued successfully.
+.
+Language=Russian
+%1 was continued successfully.
+.
+
+MessageId=3543
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3543
+Language=English
+%1 was paused successfully.
+.
+Language=Russian
+%1 was paused successfully.
+.
+
+MessageId=3544
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3544
+Language=English
+The %1 service has been started by another process and is pending.%0
+.
+Language=Russian
+The %1 service has been started by another process and is pending.%0
+.
+
+MessageId=3547
+Severity=Success
+Facility=System
+SymbolicName=OTHER_3547
+Language=English
+A service specific error occurred: %1.
+.
+Language=Russian
+A service specific error occurred: %1.
 .
