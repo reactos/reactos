@@ -2435,6 +2435,9 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
              (SectionPageProtection & PAGE_GUARD) ||
              (SectionPageProtection & PAGE_NOACCESS)));
 
+    /* Start from scratch */
+    RtlZeroMemory(&Section, sizeof(Section));
+
     /* Convert section flag to page flag */
     if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
 
