@@ -256,7 +256,7 @@ PrintHopInfo(_In_ PVOID Buffer)
     Status = GetNameInfoW(SockAddr,
                           Size,
                           IpAddress,
-                          NI_MAXHOST,
+                          MAX_IPADDRESS,
                           NULL,
                           0,
                           NI_NUMERICHOST);
