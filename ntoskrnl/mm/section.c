@@ -2883,10 +2883,12 @@ MmCreatePageFileSection(PSECTION *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(*Section));
-    /* Mark it as a "ROS" Section */
-    Section->u.Flags.filler0 = 1;
     Section->InitialPageProtection = SectionPageProtection;
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
+
+    /* Mark it as a "ROS" Section */
+    Section->u.Flags.filler0 = 1;
+
     Section->SizeOfSection = MaximumSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                     TAG_MM_SECTION_SEGMENT);
@@ -2953,11 +2955,12 @@ MmCreateDataFileSection(PSECTION *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(*Section));
-    /* Mark it as a ROS Section */
-    Section->u.Flags.filler0 = 1;
 
     Section->InitialPageProtection = SectionPageProtection;
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
+
+    /* Mark it as a ROS Section */
+    Section->u.Flags.filler0 = 1;
 
     /*
      * FIXME: This is propably not entirely correct. We can't look into
@@ -3776,13 +3779,13 @@ MmCreateImageSection(PSECTION *SectionObject,
      * Initialize it
      */
     RtlZeroMemory(Section, sizeof(*Section));
-    /* Mark it as a "ROS" section */
-    Section->u.Flags.filler0 = 1;
-
     Section->InitialPageProtection = SectionPageProtection;
 
     /* Initialize flags */
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
+
+    /* Mark it as a "ROS" section */
+    Section->u.Flags.filler0 = 1;
 
     if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
