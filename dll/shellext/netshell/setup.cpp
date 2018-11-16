@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     ReactOS Networking Configuration
+ * COPYRIGHT:   Copyright 2016 Eric Kohl
+ */
+
 #include "precomp.h"
 
 #include <syssetup/syssetup.h>
