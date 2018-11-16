@@ -40,7 +40,7 @@ IDS_UP_TIME,                 "系统开机时间"
 IDS_UP_TIME_FORMAT,          "%u 日, %u 小时, %u 分钟, %u 秒"
 IDS_SYS_MANUFACTURER,        "系统制造商"
 IDS_SYS_MODEL,               "系统型号"
-IDS_SYS_TYPE,                "系统类型
+IDS_SYS_TYPE,                "系统类型"
 IDS_PROCESSORS,              "处理器"
 IDS_PROCESSORS_FORMAT,       "已安装 %u 个处理器。"
 IDS_BIOS_DATE,               "BIOS 日期"
