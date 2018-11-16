@@ -2706,6 +2706,111 @@ CreateLogicalPartition(
     return TRUE;
 }
 
+static
+NTSTATUS
+DismountVolume(
+    IN PPARTENTRY PartEntry)
+{
+    NTSTATUS Status;
+    NTSTATUS LockStatus;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle;
+    WCHAR Buffer[MAX_PATH];
+
+    /* Check whether the partition is valid and may have been mounted in the system */
+    if (!PartEntry->IsPartitioned ||
+        PartEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
+        IsContainerPartition(PartEntry->PartitionType)     ||
+        !IsRecognizedPartition(PartEntry->PartitionType)   ||
+        PartEntry->FormatState == Unformatted /* || PartEntry->FormatState == UnknownFormat */ ||
+        PartEntry->FileSystem == NULL ||
+        PartEntry->PartitionNumber == 0)
+    {
+        /* The partition is not mounted, so just return success */
+        return STATUS_SUCCESS;
+    }
+
+    /* Open the volume */
+    RtlStringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        PartEntry->DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
+    RtlInitUnicodeString(&Name, Buffer);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Cannot open volume %wZ for dismounting! (Status 0x%lx)\n", &Name, Status);
+        return Status;
+    }
+
+    /* Lock the volume */
+    LockStatus = NtFsControlFile(PartitionHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_LOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("WARNING: Failed to lock volume! Operations may fail! (Status 0x%lx)\n", LockStatus);
+    }
+
+    /* Dismount the volume */
+    Status = NtFsControlFile(PartitionHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             FSCTL_DISMOUNT_VOLUME,
+                             NULL,
+                             0,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to unmount volume (Status 0x%lx)\n", Status);
+    }
+
+    /* Unlock the volume */
+    LockStatus = NtFsControlFile(PartitionHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_UNLOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Failed to unlock volume (Status 0x%lx)\n", LockStatus);
+    }
+
+    /* Close the volume */
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
 VOID
 DeleteCurrentPartition(
     IN PPARTLIST List)
@@ -2734,18 +2839,28 @@ DeleteCurrentPartition(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
-    /* Delete all logical partition entries if an extended partition will be deleted */
+    /* Check which type of partition (primary/logical or extended) is being deleted */
     if (DiskEntry->ExtendedPartition == PartEntry)
     {
+        /* An extended partition is being deleted: delete all logical partition entries */
         while (!IsListEmpty(&DiskEntry->LogicalPartListHead))
         {
             Entry = RemoveHeadList(&DiskEntry->LogicalPartListHead);
             LogicalPartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
+            /* Dismount the logical partition */
+            DismountVolume(LogicalPartEntry);
+
+            /* Delete it */
             RtlFreeHeap(ProcessHeap, 0, LogicalPartEntry);
         }
 
         DiskEntry->ExtendedPartition = NULL;
+    }
+    else
+    {
+        /* A primary partition is being deleted: dismount it */
+        DismountVolume(PartEntry);
     }
 
     /* Adjust unpartitioned disk space entries */
