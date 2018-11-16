@@ -6691,7 +6691,7 @@ CM_Query_Resource_Conflict_List(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    pConflictData = MyMalloc(sizeof(PCONFLICT_DATA));
+    pConflictData = MyMalloc(sizeof(CONFLICT_DATA));
     if (pConflictData == NULL)
     {
         ret = CR_OUT_OF_MEMORY;
