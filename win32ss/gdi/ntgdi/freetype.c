@@ -2605,14 +2605,13 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
                      sizeof(Info->EnumLogFontEx.elfFullName),
                      FullName);
 
-    ExFreePoolWithTag(Otm, GDITAG_TEXT);
-
     RtlInitAnsiString(&StyleA, Face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
     StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
     status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
     if (!NT_SUCCESS(status))
     {
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
     Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
@@ -2623,12 +2622,15 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     if (!pOS2)
     {
         IntUnLockFreeType();
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
 
     Ntm->ntmSizeEM = Otm->otmEMSquare;
     Ntm->ntmCellHeight = pOS2->usWinAscent + pOS2->usWinDescent;
     Ntm->ntmAvgWidth = 0;
+
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     fs.fsCsb[0] = pOS2->ulCodePageRange1;
     fs.fsCsb[1] = pOS2->ulCodePageRange2;
