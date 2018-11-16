@@ -98,6 +98,7 @@ extern "C" {
 #define NELOG_NetlogonPasswdSetFailed (ERRLOG_BASE+124)
 #define NELOG_NetlogonTrackingError (ERRLOG_BASE+125)
 #define NELOG_NetlogonSyncError (ERRLOG_BASE+126)
+#define NELOG_NetlogonRequireSignOrSealError (ERRLOG_BASE + 127)
 #define NELOG_UPS_PowerOut (ERRLOG_BASE+130)
 #define NELOG_UPS_Shutdown (ERRLOG_BASE+131)
 #define NELOG_UPS_CmdFileError (ERRLOG_BASE+132)
@@ -115,6 +116,8 @@ extern "C" {
 #define NELOG_System_Error (ERRLOG_BASE+157)
 #define NELOG_FT_ErrLog_Too_Large (ERRLOG_BASE+158)
 #define NELOG_FT_Update_In_Progress (ERRLOG_BASE+159)
+#define NELOG_Joined_Domain (ERRLOG_BASE + 160)
+#define NELOG_Joined_Workgroup (ERRLOG_BASE + 161)
 #define NELOG_OEM_Code (ERRLOG_BASE+199)
 #define NELOG_NetlogonSSIInitError ERRLOG2_BASE
 #define NELOG_NetlogonFailedToUpdateTrustList (ERRLOG2_BASE+1)
