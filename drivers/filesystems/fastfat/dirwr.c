@@ -280,7 +280,7 @@ vfatFindDirSpace(
     Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pDirFcb);
     if (!NT_SUCCESS(Status))
     {
-        return Status;
+        return FALSE;
     }
 
     count = pDirFcb->RFCB.FileSize.u.LowPart / SizeDirEntry;
