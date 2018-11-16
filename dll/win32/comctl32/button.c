@@ -1841,6 +1841,9 @@ static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, Bu
     {
         DrawThemeText(theme, hDC, BP_PUSHBUTTON, state, text, lstrlenW(text), dtFlags, 0, &textRect);
         heap_free(text);
+#ifdef __REACTOS__
+        text = NULL;
+#endif
     }
 
     if (focused)
@@ -1862,6 +1865,7 @@ static void PB_ThemedPaint(HTHEME theme, const BUTTON_INFO *infoPtr, HDC hDC, Bu
     if (cdrf == CDRF_NOTIFYPOSTPAINT)
         BUTTON_SendCustomDraw(infoPtr, hDC, CDDS_POSTPAINT, &bgRect);
 cleanup:
+    if (text) heap_free(text);
 #endif
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
