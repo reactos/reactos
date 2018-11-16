@@ -4070,6 +4070,609 @@ Language=Russian
 Local security could not be started because an error\noccurred during initialization. The error code returned is %1.\n\nTHE SYSTEM IS NOT SECURE.\n
 .
 
+MessageId=3190
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_Internal_Error
+Language=English
+A NetWksta internal error has occurred:\n%1
+.
+Language=Russian
+A NetWksta internal error has occurred:\n%1
+.
+
+MessageId=3191
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_No_Resource
+Language=English
+The redirector is out of a resource: %1.
+.
+Language=Russian
+The redirector is out of a resource: %1.
+.
+
+MessageId=3192
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_SMB_Err
+Language=English
+A server message block (SMB) error occurred on the connection to %1.\nThe SMB header is the data.
+.
+Language=Russian
+A server message block (SMB) error occurred on the connection to %1.\nThe SMB header is the data.
+.
+
+MessageId=3193
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_VC_Err
+Language=English
+A virtual circuit error occurred on the session to %1.\nThe network control block (NCB) command and return code is the data.
+.
+Language=Russian
+A virtual circuit error occurred on the session to %1.\nThe network control block (NCB) command and return code is the data.
+.
+
+MessageId=3194
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_Stuck_VC_Err
+Language=English
+Hanging up a stuck session to %1.
+.
+Language=Russian
+Hanging up a stuck session to %1.
+.
+
+MessageId=3195
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_NCB_Err
+Language=English
+A network control block (NCB) error occurred (%1).\nThe NCB is the data.
+.
+Language=Russian
+A network control block (NCB) error occurred (%1).\nThe NCB is the data.
+.
+
+MessageId=3196
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_Write_Behind_Err
+Language=English
+A write operation to %1 failed.\nData may have been lost.
+.
+Language=Russian
+A write operation to %1 failed.\nData may have been lost.
+.
+
+MessageId=3197
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_Reset_Err
+Language=English
+Reset of driver %1 failed to complete the network control block (NCB).\nThe NCB is the data.
+.
+Language=Russian
+Reset of driver %1 failed to complete the network control block (NCB).\nThe NCB is the data.
+.
+
+MessageId=3198
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetWkSta_Too_Many
+Language=English
+The amount of resource %1 requested was more\nthan the maximum. The maximum amount was allocated.
+.
+Language=Russian
+The amount of resource %1 requested was more\nthan the maximum. The maximum amount was allocated.
+.
+
+MessageId=3204
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Srv_Thread_Failure
+Language=English
+The server could not create a thread.\nThe THREADS parameter in the CONFIG.SYS file should be increased.
+.
+Language=Russian
+The server could not create a thread.\nThe THREADS parameter in the CONFIG.SYS file should be increased.
+.
+
+MessageId=3205
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Srv_Close_Failure
+Language=English
+The server could not close %1.\nThe file is probably corrupted.
+.
+Language=Russian
+The server could not close %1.\nThe file is probably corrupted.
+.
+
+MessageId=3206
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplUserCurDir
+Language=English
+The replicator cannot update directory %1. It has tree integrity\nand is the current directory for some process.
+.
+Language=Russian
+The replicator cannot update directory %1. It has tree integrity\nand is the current directory for some process.
+.
+
+MessageId=3207
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplCannotMasterDir
+Language=English
+The server cannot export directory %1 to client %2.\nIt is exported from another server.
+.
+Language=Russian
+The server cannot export directory %1 to client %2.\nIt is exported from another server.
+.
+
+MessageId=3208
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplUpdateError
+Language=English
+The replication server could not update directory %2 from the source\non %3 due to error %1.
+.
+Language=Russian
+The replication server could not update directory %2 from the source\non %3 due to error %1.
+.
+
+MessageId=3209
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplLostMaster
+Language=English
+Master %1 did not send an update notice for directory %2 at the expected\ntime.
+.
+Language=Russian
+Master %1 did not send an update notice for directory %2 at the expected\ntime.
+.
+
+MessageId=3210
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthDCFail
+Language=English
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Russian
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+
+MessageId=3211
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplLogonFailed
+Language=English
+The replicator attempted to log on at %2 as %1 and failed.
+.
+Language=Russian
+The replicator attempted to log on at %2 as %1 and failed.
+.
+
+MessageId=3212
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplNetErr
+Language=English
+Network error %1 occurred.
+.
+Language=Russian
+Network error %1 occurred.
+.
+
+MessageId=3213
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplMaxFiles
+Language=English
+Replicator limit for files in a directory has been exceeded.
+.
+Language=Russian
+Replicator limit for files in a directory has been exceeded.
+.
+
+MessageId=3214
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplMaxTreeDepth
+Language=English
+Replicator limit for tree depth has been exceeded.
+.
+Language=Russian
+Replicator limit for tree depth has been exceeded.
+.
+
+MessageId=3215
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplBadMsg
+Language=English
+Unrecognized message received in mailslot.
+.
+Language=Russian
+Unrecognized message received in mailslot.
+.
+
+MessageId=3216
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplSysErr
+Language=English
+System error %1 occurred.
+.
+Language=Russian
+System error %1 occurred.
+.
+
+MessageId=3217
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplUserLoged
+Language=English
+Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
+.
+Language=Russian
+Cannot log on. User is currently logged on and argument TRYUSER\nis set to NO.
+.
+
+MessageId=3218
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplBadImport
+Language=English
+IMPORT path %1 cannot be found.
+.
+Language=Russian
+IMPORT path %1 cannot be found.
+.
+
+MessageId=3219
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplBadExport
+Language=English
+EXPORT path %1 cannot be found.
+.
+Language=Russian
+EXPORT path %1 cannot be found.
+.
+
+MessageId=3220
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplSignalFileErr
+Language=English
+Replicator failed to update signal file in directory %2 due to\n%1 system error.
+.
+Language=Russian
+Replicator failed to update signal file in directory %2 due to\n%1 system error.
+.
+
+MessageId=3221
+Severity=Success
+Facility=System
+SymbolicName=NELOG_DiskFT
+Language=English
+Disk Fault Tolerance Error\n\n%1
+.
+Language=Russian
+Disk Fault Tolerance Error\n\n%1
+.
+
+MessageId=3222
+Severity=Success
+Facility=System
+SymbolicName=NELOG_ReplAccessDenied
+Language=English
+Replicator could not access %2\non %3 due to system error %1.
+.
+Language=Russian
+Replicator could not access %2\non %3 due to system error %1.
+.
+
+MessageId=3223
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedPrimary
+Language=English
+The primary domain controller for domain %1 has apparently failed.
+.
+Language=Russian
+The primary domain controller for domain %1 has apparently failed.
+.
+
+MessageId=3224
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonPasswdSetFailed
+Language=English
+Changing machine account password for account %1 failed with\nthe following error: %n%2
+.
+Language=Russian
+Changing machine account password for account %1 failed with\nthe following error: %n%2
+.
+
+MessageId=3225
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonTrackingError
+Language=English
+An error occurred while updating the logon or logoff information for %1.
+.
+Language=Russian
+An error occurred while updating the logon or logoff information for %1.
+.
+
+MessageId=3226
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSyncError
+Language=English
+An error occurred while synchronizing with primary domain controller %1
+.
+Language=Russian
+An error occurred while synchronizing with primary domain controller %1
+.
+
+MessageId=3227
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonRequireSignOrSealError
+Language=English
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Russian
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+
+MessageId=3230
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_PowerOut
+Language=English
+A power failure was detected at the server.
+.
+Language=Russian
+A power failure was detected at the server.
+.
+
+MessageId=3231
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_Shutdown
+Language=English
+The UPS service performed server shut down.
+.
+Language=Russian
+The UPS service performed server shut down.
+.
+
+MessageId=3232
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_CmdFileError
+Language=English
+The UPS service did not complete execution of the\nuser specified shut down command file.
+.
+Language=Russian
+The UPS service did not complete execution of the\nuser specified shut down command file.
+.
+
+MessageId=3233
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_CannotOpenDriver
+Language=English
+The UPS driver could not be opened.  The error code is\nthe data.
+.
+Language=Russian
+The UPS driver could not be opened.  The error code is\nthe data.
+.
+
+MessageId=3234
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_PowerBack
+Language=English
+Power has been restored.
+.
+Language=Russian
+Power has been restored.
+.
+
+MessageId=3235
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_CmdFileConfig
+Language=English
+There is a problem with a configuration of user specified\nshut down command file.
+.
+Language=Russian
+There is a problem with a configuration of user specified\nshut down command file.
+.
+
+MessageId=3236
+Severity=Success
+Facility=System
+SymbolicName=NELOG_UPS_CmdFileExec
+Language=English
+The UPS service failed to execute a user specified shutdown\ncommand file %1.  The error code is the data.
+.
+Language=Russian
+The UPS service failed to execute a user specified shutdown\ncommand file %1.  The error code is the data.
+.
+
+MessageId=3250
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Missing_Parameter
+Language=English
+Initialization failed because of an invalid or missing\nparameter in the configuration file %1.
+.
+Language=Russian
+Initialization failed because of an invalid or missing\nparameter in the configuration file %1.
+.
+
+MessageId=3251
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Invalid_Config_Line
+Language=English
+Initialization failed because of an invalid line in the\nconfiguration file %1. The invalid line is the data.
+.
+Language=Russian
+Initialization failed because of an invalid line in the\nconfiguration file %1. The invalid line is the data.
+.
+
+MessageId=3252
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Invalid_Config_File
+Language=English
+Initialization failed because of an error in the configuration\nfile %1.
+.
+Language=Russian
+Initialization failed because of an error in the configuration\nfile %1.
+.
+
+MessageId=3253
+Severity=Success
+Facility=System
+SymbolicName=NELOG_File_Changed
+Language=English
+The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
+.
+Language=Russian
+The file %1 has been changed after initialization.\nThe boot-block loading was temporarily terminated.
+.
+
+MessageId=3254
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Files_Dont_Fit
+Language=English
+The files do not fit to the boot-block configuration\nfile %1. Change the BASE and ORG definitions or the order\nof the files.
+.
+Language=Russian
+The files do not fit to the boot-block configuration\nfile %1. Change the BASE and ORG definitions or the order\nof the files.
+.
+
+MessageId=3255
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Wrong_DLL_Version
+Language=English
+Initialization failed because the dynamic-link\nlibrary %1 returned an incorrect version number.
+.
+Language=Russian
+Initialization failed because the dynamic-link\nlibrary %1 returned an incorrect version number.
+.
+
+MessageId=3256
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Error_in_DLL
+Language=English
+There was an unrecoverable error in the dynamic-\nlink library of the service.
+.
+Language=Russian
+There was an unrecoverable error in the dynamic-\nlink library of the service.
+.
+
+MessageId=3257
+Severity=Success
+Facility=System
+SymbolicName=NELOG_System_Error
+Language=English
+The system returned an unexpected error code.\nThe error code is the data.
+.
+Language=Russian
+The system returned an unexpected error code.\nThe error code is the data.
+.
+
+MessageId=3258
+Severity=Success
+Facility=System
+SymbolicName=NELOG_FT_ErrLog_Too_Large
+Language=English
+The fault-tolerance error log file, LANROOT\\LOGS\\FT.LOG,\nis more than 64K.
+.
+Language=Russian
+The fault-tolerance error log file, LANROOT\\LOGS\\FT.LOG,\nis more than 64K.
+.
+
+MessageId=3259
+Severity=Success
+Facility=System
+SymbolicName=NELOG_FT_Update_In_Progress
+Language=English
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Russian
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+
+MessageId=3260
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Joined_Domain
+Language=English
+This computer has been successfully joined to domain '%1'.
+.
+Language=Russian
+This computer has been successfully joined to domain '%1'.
+.
+
+MessageId=3261
+Severity=Success
+Facility=System
+SymbolicName=NELOG_Joined_Workgroup
+Language=English
+This computer has been successfully joined to workgroup '%1'.
+.
+Language=Russian
+This computer has been successfully joined to workgroup '%1'.
+.
+
+MessageId=3299
+Severity=Success
+Facility=System
+SymbolicName=NELOG_OEM_Code
+Language=English
+%1 %2 %3 %4 %5 %6 %7 %8 %9.
+.
+Language=Russian
+%1 %2 %3 %4 %5 %6 %7 %8 %9.
+.
+
 
 ;
 ; other message definitions
