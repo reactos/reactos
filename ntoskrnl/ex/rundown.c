@@ -473,9 +473,9 @@ NTAPI
 ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
                                       IN ULONG Tag)
 {
-    PVOID PoolToFree;
     PEX_RUNDOWN_REF RunRef;
-    ULONG RunRefSize, Count, Offset;
+    PVOID PoolToFree, RunRefs;
+    ULONG RunRefSize, Count, Offset, Align;
     PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware;
 
     PAGED_CODE();
@@ -495,7 +495,8 @@ ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
     }
     else
     {
-        RunRefSize = KeGetRecommendedSharedDataAlignment();
+        Align = KeGetRecommendedSharedDataAlignment();
+        RunRefSize = Align;
         ASSERT((RunRefSize & (RunRefSize - 1)) == 0);
     }
 
@@ -512,13 +513,27 @@ ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
     }
 
     /* On SMP, check for alignment */
-    if (RunRefCacheAware->Number > 1)
+    if (RunRefCacheAware->Number > 1 && (ULONG_PTR)PoolToFree & (Align - 1))
     {
-        /* FIXME: properly align run refs */
-        UNIMPLEMENTED;
+        /* Not properly aligned, do it again! */
+        ExFreePoolWithTag(PoolToFree, Tag);
+
+        /* Allocate a bigger buffer to be able to align properly */
+        PoolToFree = ExAllocatePoolWithTag(PoolType, RunRefSize * (RunRefCacheAware->Number + 1), Tag);
+        if (PoolToFree == NULL)
+        {
+            ExFreePoolWithTag(RunRefCacheAware, Tag);
+            return NULL;
+        }
+
+        RunRefs = (PVOID)ALIGN_UP_BY(PoolToFree, Align);
+    }
+    else
+    {
+        RunRefs = PoolToFree;
     }
 
-    RunRefCacheAware->RunRefs = PoolToFree;
+    RunRefCacheAware->RunRefs = RunRefs;
     RunRefCacheAware->PoolToFree = PoolToFree;
 
     /* And initialize runref */
@@ -528,7 +543,7 @@ ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
         {
             Offset = RunRefCacheAware->RunRefSize * Count;
             RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
-            RunRef->Count = 0;
+            _ExInitializeRundownProtection(RunRef);
         }
     }
 
@@ -605,7 +620,7 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
         {
             Offset = RunRefCacheAware->RunRefSize * Count;
             RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
-            RunRef->Count = 0;
+            _ExInitializeRundownProtection(RunRef);
         }
     }
 }
