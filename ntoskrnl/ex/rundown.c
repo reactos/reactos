@@ -552,16 +552,57 @@ ExFreeCacheAwareRundownProtection(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAwar
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 NTAPI
 ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
-                                        IN SIZE_T Count)
+                                        IN SIZE_T Size)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
+    PVOID Pool;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG Count, RunRefSize, Offset;
+
+    PAGED_CODE();
+
+    /* Get the user allocate pool for runrefs */
+    Pool = (PVOID)((ULONG_PTR)RunRefCacheAware + sizeof(EX_RUNDOWN_REF_CACHE_AWARE));
+
+    /* By default a runref is structure-sized */
+    RunRefSize = sizeof(EX_RUNDOWN_REF);
+
+    /*
+     * If we just have enough room for a single runref, deduce were on a single
+     * processor machine
+     */
+    if (Size == sizeof(EX_RUNDOWN_REF_CACHE_AWARE) + sizeof(EX_RUNDOWN_REF))
+    {
+        Count = 1;
+    }
+    else
+    {
+        /* FIXME: Properly align on SMP */
+        UNIMPLEMENTED;
+    }
+
+    /* Initialize the structure */
+    RunRefCacheAware->RunRefs = Pool;
+    RunRefCacheAware->RunRefSize = RunRefSize;
+    RunRefCacheAware->Number = Count;
+
+    /* There is no allocated pool! */
+    RunRefCacheAware->PoolToFree = (PVOID)0xBADCA11u;
+
+    /* Initialize runref */
+    if (RunRefCacheAware->Number != 0)
+    {
+        for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
+        {
+            Offset = RunRefCacheAware->RunRefSize * Count;
+            RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
+            RunRef->Count = 0;
+        }
+    }
 }
 
 /*
