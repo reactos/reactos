@@ -461,28 +461,94 @@ ExfReInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRef
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 PEX_RUNDOWN_REF_CACHE_AWARE
 NTAPI
 ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
                                       IN ULONG Tag)
 {
-    DBG_UNREFERENCED_PARAMETER(PoolType);
-    DBG_UNREFERENCED_PARAMETER(Tag);
-    UNIMPLEMENTED;
-    return NULL;
+    PVOID PoolToFree;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG RunRefSize, Count, Offset;
+    PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware;
+
+    PAGED_CODE();
+
+    /* Allocate the master structure */
+    RunRefCacheAware = ExAllocatePoolWithTag(PoolType, sizeof(EX_RUNDOWN_REF_CACHE_AWARE), Tag);
+    if (RunRefCacheAware == NULL)
+    {
+        return NULL;
+    }
+
+    /* Compute the size of each runref */
+    RunRefCacheAware->Number = KeNumberProcessors;
+    if (KeNumberProcessors <= 1)
+    {
+        RunRefSize = sizeof(EX_RUNDOWN_REF);
+    }
+    else
+    {
+        RunRefSize = KeGetRecommendedSharedDataAlignment();
+        ASSERT((RunRefSize & (RunRefSize - 1)) == 0);
+    }
+
+    /* It must at least hold a EX_RUNDOWN_REF structure */
+    ASSERT(sizeof(EX_RUNDOWN_REF) <= RunRefSize);
+    RunRefCacheAware->RunRefSize = RunRefSize;
+
+    /* Allocate our runref pool */
+    PoolToFree = ExAllocatePoolWithTag(PoolType, RunRefSize * RunRefCacheAware->Number, Tag);
+    if (PoolToFree == NULL)
+    {
+        ExFreePoolWithTag(RunRefCacheAware, Tag);
+        return NULL;
+    }
+
+    /* On SMP, check for alignment */
+    if (RunRefCacheAware->Number > 1)
+    {
+        /* FIXME: properly align run refs */
+        UNIMPLEMENTED;
+    }
+
+    RunRefCacheAware->RunRefs = PoolToFree;
+    RunRefCacheAware->PoolToFree = PoolToFree;
+
+    /* And initialize runref */
+    if (RunRefCacheAware->Number != 0)
+    {
+        for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
+        {
+            Offset = RunRefCacheAware->RunRefSize * Count;
+            RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
+            RunRef->Count = 0;
+        }
+    }
+
+    return RunRefCacheAware;
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 NTAPI
 ExFreeCacheAwareRundownProtection(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PAGED_CODE();
+
+    /*
+     * This is to be called for RunRefCacheAware that were allocated with
+     * ExAllocateCacheAwareRundownProtection and not for user-allocated
+     * ones
+     */
+    ASSERT(RunRefCacheAware->PoolToFree != (PVOID)0xBADCA11);
+
+    /* We don't know the tag that as used for allocation */
+    ExFreePoolWithTag(RunRefCacheAware->PoolToFree, 0);
+    ExFreePoolWithTag(RunRefCacheAware, 0);
 }
 
 /*
