@@ -3440,7 +3440,510 @@ This is the last error in NERR range.
 
 
 ;
-; lmerrlog.h messages definitions (3100 - 3299)
+; lmsvc.h message definitions (3050 - 3099 SERVICE_BASE)
+;
+
+;MessageId=3050
+;Severity=Success
+;Facility=System
+;SymbolicName=MAX_NERR
+;Language=English
+;Replicator failed to update signal file in directory %2 due to\n
+;%1 system error.
+;.
+;Language=Russian
+;Replicator failed to update signal file in directory %2 due to\n
+;%1 system error.
+;.
+
+MessageId=3051
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_BADPARMVAL
+Language=English
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Russian
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+
+MessageId=3052
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_MISSPARM
+Language=English
+The required parameter was not provided on the command\nline or in the configuration file.
+.
+Language=Russian
+The required parameter was not provided on the command\nline or in the configuration file.
+.
+
+MessageId=3053
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_UNKPARM
+Language=English
+LAN Manager does not recognize \"%1\" as a valid option.
+.
+Language=Russian
+LAN Manager does not recognize \"%1\" as a valid option.
+.
+
+MessageId=3054
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_RESOURCE
+Language=English
+A request for resource could not be satisfied.
+.
+Language=Russian
+A request for resource could not be satisfied.
+.
+
+MessageId=3055
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_CONFIG
+Language=English
+A problem exists with the system configuration.
+.
+Language=Russian
+A problem exists with the system configuration.
+.
+
+MessageId=3056
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_SYSTEM
+Language=English
+A system error has occurred.
+.
+Language=Russian
+A system error has occurred.
+.
+
+MessageId=3057
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_INTERNAL
+Language=English
+An internal consistency error has occurred.
+.
+Language=Russian
+An internal consistency error has occurred.
+.
+
+MessageId=3058
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_AMBIGPARM
+Language=English
+The configuration file or the command line has an ambiguous option.
+.
+Language=Russian
+The configuration file or the command line has an ambiguous option.
+.
+
+MessageId=3059
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_DUPPARM
+Language=English
+The configuration file or the command line has a duplicate parameter.
+.
+Language=Russian
+The configuration file or the command line has a duplicate parameter.
+.
+
+MessageId=3060
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_KILL
+Language=English
+The service did not respond to control and was stopped with\nthe DosKillProc function.
+.
+Language=Russian
+The service did not respond to control and was stopped with\nthe DosKillProc function.
+.
+
+MessageId=3061
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_EXEC
+Language=English
+An error occurred when attempting to run the service program.
+.
+Language=Russian
+An error occurred when attempting to run the service program.
+.
+
+MessageId=3062
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_SUBSERV
+Language=English
+The sub-service failed to start.
+.
+Language=Russian
+The sub-service failed to start.
+.
+
+MessageId=3063
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_CONFLPARM
+Language=English
+There is a conflict in the value or use of these options: %1.
+.
+Language=Russian
+There is a conflict in the value or use of these options: %1.
+.
+
+MessageId=3064
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_FILE
+Language=English
+There is a problem with the file.
+.
+Language=Russian
+There is a problem with the file.
+.
+
+MessageId=3070
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_MEMORY
+Language=English
+memory
+.
+Language=Russian
+memory
+.
+
+MessageId=3071
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_DISK
+Language=English
+disk space
+.
+Language=Russian
+disk space
+.
+
+MessageId=3072
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_THREADS
+Language=English
+thread
+.
+Language=Russian
+thread
+.
+
+MessageId=3073
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_PROCESSES
+Language=English
+process
+.
+Language=Russian
+process
+.
+
+MessageId=3074
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_SECURITY
+Language=English
+Security Failure. %0
+.
+Language=Russian
+Security Failure. %0
+.
+
+MessageId=3075
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_LANROOT
+Language=English
+Bad or missing LAN Manager root directory.
+.
+Language=Russian
+Bad or missing LAN Manager root directory.
+.
+
+MessageId=3076
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_REDIR
+Language=English
+The network software is not installed.
+.
+Language=Russian
+The network software is not installed.
+.
+
+MessageId=3077
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_SERVER
+Language=English
+The server is not started.
+.
+Language=Russian
+The server is not started.
+.
+
+MessageId=3078
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_SEC_FILE_ERR
+Language=English
+The server cannot access the user accounts database (NET.ACC).
+.
+Language=Russian
+The server cannot access the user accounts database (NET.ACC).
+.
+
+MessageId=3079
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_FILES
+Language=English
+Incompatible files are installed in the LANMAN tree.
+.
+Language=Russian
+Incompatible files are installed in the LANMAN tree.
+.
+
+MessageId=3080
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_LOGS
+Language=English
+The LANMAN\\LOGS directory is invalid.
+.
+Language=Russian
+The LANMAN\\LOGS directory is invalid.
+.
+
+MessageId=3081
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_LANGROUP
+Language=English
+The domain specified could not be used.
+.
+Language=Russian
+The domain specified could not be used.
+.
+
+MessageId=3082
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_MSGNAME
+Language=English
+The computer name is being used as a message alias on another computer.
+.
+Language=Russian
+The computer name is being used as a message alias on another computer.
+.
+
+MessageId=3083
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_ANNOUNCE
+Language=English
+The announcement of the server name failed.
+.
+Language=Russian
+The announcement of the server name failed.
+.
+
+MessageId=3084
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS
+Language=English
+The user accounts database is not configured correctly.
+.
+Language=Russian
+The user accounts database is not configured correctly.
+.
+
+MessageId=3085
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_SERVER_SEC_ERR
+Language=English
+The server is not running with user-level security.
+.
+Language=Russian
+The server is not running with user-level security.
+.
+
+MessageId=3087
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_WKSTA
+Language=English
+The workstation is not configured properly.
+.
+Language=Russian
+The workstation is not configured properly.
+.
+
+MessageId=3088
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_ERRLOG
+Language=English
+View your error log for details.
+.
+Language=Russian
+View your error log for details.
+.
+
+MessageId=3089
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_FILE_UW
+Language=English
+Unable to write to this file.
+.
+Language=Russian
+Unable to write to this file.
+.
+
+MessageId=3090
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_ADDPAK
+Language=English
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Russian
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+
+MessageId=3091
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_LAZY
+Language=English
+The LM386 server cannot be started because CACHE.EXE is not running.
+.
+Language=Russian
+The LM386 server cannot be started because CACHE.EXE is not running.
+.
+
+MessageId=3092
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS_MACHINE_ACCT
+Language=English
+There is no account for this computer in the security database.
+.
+Language=Russian
+There is no account for this computer in the security database.
+.
+
+MessageId=3093
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS_SERVERS_NMEMB
+Language=English
+This computer is not a member of the group SERVERS.
+.
+Language=Russian
+This computer is not a member of the group SERVERS.
+.
+
+MessageId=3094
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS_SERVERS_NOGRP
+Language=English
+The group SERVERS is not present in the local security database.
+.
+Language=Russian
+The group SERVERS is not present in the local security database.
+.
+
+MessageId=3095
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS_INVALID_ROLE
+Language=English
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Russian
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+
+MessageId=3096
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_NETLOGON_NO_DC
+Language=English
+The primary Domain Controller for this domain could not be located.
+.
+Language=Russian
+The primary Domain Controller for this domain could not be located.
+.
+
+MessageId=3097
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_NETLOGON_DC_CFLCT
+Language=English
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Russian
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+
+MessageId=3098
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_NETLOGON_AUTH
+Language=English
+The service failed to authenticate with the primary domain controller.
+.
+Language=Russian
+The service failed to authenticate with the primary domain controller.
+.
+
+MessageId=3099
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_UAS_PROLOG
+Language=English
+There is a problem with the security database creation date or serial number.
+.
+Language=Russian
+There is a problem with the security database creation date or serial number.
+.
+
+
+;
+; lmerrlog.h messages definitions (3100 - 3299 ERRLOG_BASE)
 ;
 
 MessageId=3100
@@ -5106,3 +5609,46 @@ A service specific error occurred: %1.
 Language=Russian
 A service specific error occurred: %1.
 .
+
+
+;
+; lmsvc.h message definitions (5600 - 5699 SERVICE2_BASE)
+;
+
+MessageId=5600
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_NETLOGON_MPATH
+Language=English
+Could not share the User or Script path.
+.
+Language=Russian
+Could not share the User or Script path.
+.
+
+MessageId=5601
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_LSA_MACHINE_ACCT
+Language=English
+The password for this computer is not found in the local security\ndatabase.
+.
+Language=Russian
+The password for this computer is not found in the local security\ndatabase.
+.
+
+MessageId=5602
+Severity=Success
+Facility=System
+SymbolicName=SERVICE_UIC_M_DATABASE_ERROR
+Language=English
+An internal error occurred while accessing the computer's\nlocal or network security database.
+.
+Language=Russian
+An internal error occurred while accessing the computer's\nlocal or network security database.
+.
+
+
+;
+; lmerrlog.h messages definitions (5700 - 5899 ERRLOG2_BASE)
+;
