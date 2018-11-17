@@ -413,7 +413,7 @@ ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCache
     PEX_RUNDOWN_REF RunRef;
 
     RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
-    return _ExReleaseRundownProtection(RunRef);
+    _ExReleaseRundownProtection(RunRef);
 }
 
 /*
@@ -427,7 +427,7 @@ ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
     PEX_RUNDOWN_REF RunRef;
 
     RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
-    return ExfReleaseRundownProtectionEx(RunRef, Count);
+    ExfReleaseRundownProtectionEx(RunRef, Count);
 }
 
 /*
