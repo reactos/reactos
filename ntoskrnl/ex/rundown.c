@@ -384,29 +384,10 @@ BOOLEAN
 FASTCALL
 ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    ULONG Value;
-    BOOLEAN Acquired;
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
-                               RunRefCacheAware->RunRefSize *
-                               (KeGetCurrentProcessorNumber() % RunRefCacheAware->Number));
-
-    /* Get current value */
-    Value = RunRef->Count & !EX_RUNDOWN_ACTIVE;
-    /* Try to acquire the quick way if already active */
-    if (ExpChangeRundown(RunRef,
-                         ((RunRef->Count & !EX_RUNDOWN_ACTIVE) + EX_RUNDOWN_COUNT_INC),
-                         Value) == Value)
-    {
-        Acquired = 1;
-    }
-    else
-    {
-        Acquired = ExfAcquireRundownProtection(RunRef);
-    }
-
-    return Acquired;
+    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    return _ExAcquireRundownProtection(RunRef);
 }
 
 /*
@@ -430,27 +411,10 @@ VOID
 FASTCALL
 ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    ULONG Value;
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
-                               RunRefCacheAware->RunRefSize *
-                               (KeGetCurrentProcessorNumber() % RunRefCacheAware->Number));
-
-    /* Get current value */
-    Value = RunRef->Count & !EX_RUNDOWN_ACTIVE;
-    /* Try to release the quick way if multiple actived */
-    if (ExpChangeRundown(RunRef,
-                         ((RunRef->Count & !EX_RUNDOWN_ACTIVE) - EX_RUNDOWN_COUNT_INC),
-                         Value) == Value)
-    {
-        /* Sanity check */
-        ASSERT((Value >= EX_RUNDOWN_COUNT_INC) || (KeNumberProcessors > 1));
-    }
-    else
-    {
-        ExfReleaseRundownProtection(RunRef);
-    }
+    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    return _ExReleaseRundownProtection(RunRef);
 }
 
 /*
