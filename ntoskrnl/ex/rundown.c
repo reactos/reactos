@@ -433,14 +433,74 @@ ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    EX_RUNDOWN_WAIT_BLOCK WaitBlock;
+    PEX_RUNDOWN_WAIT_BLOCK WaitBlockPointer;
+    ULONG ProcCount, Current, Value, OldValue, TotalCount;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    TotalCount = 0;
+    WaitBlock.Count = 0;
+    WaitBlockPointer = (PEX_RUNDOWN_WAIT_BLOCK)((ULONG_PTR)&WaitBlock |
+                                                EX_RUNDOWN_ACTIVE);
+    /* We will check all our runrefs */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
+                                   RunRefCacheAware->RunRefSize *
+                                   (Current % RunRefCacheAware->Number));
+
+        /* Loop for setting the wait block */
+        do
+        {
+            Value = RunRef->Count;
+            ASSERT((Value & EX_RUNDOWN_ACTIVE) == 0);
+
+            /* Remove old value and set our waitblock instead */
+            OldValue = ExpChangeRundown(RunRef, WaitBlockPointer, Value);
+            if (OldValue == Value)
+            {
+                break;
+            }
+
+            Value = OldValue;
+        }
+        while (TRUE);
+
+        /* Count the deleted values */
+        TotalCount += Value;
+    }
+
+    /* Sanity check: we didn't overflow */
+    ASSERT((LONG)TotalCount >= 0);
+    if (TotalCount != 0)
+    {
+        /* Init the waitblock event */
+        KeInitializeEvent(&WaitBlock.WakeEvent,
+                          SynchronizationEvent,
+                          FALSE);
+
+        /* Do we have to wait? If so, go ahead! */
+        if (InterlockedExchangeAddSizeT(&WaitBlock.Count,
+                                        (LONG)TotalCount >> EX_RUNDOWN_COUNT_SHIFT) ==
+                                       -(LONG)(TotalCount >> EX_RUNDOWN_COUNT_SHIFT))
+        {
+            KeWaitForSingleObject(&WaitBlock.WakeEvent, Executive, KernelMode, FALSE, NULL);
+        }
+    }
 }
 
 /*
