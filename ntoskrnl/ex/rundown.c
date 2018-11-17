@@ -387,7 +387,7 @@ ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCache
 {
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
     return _ExAcquireRundownProtection(RunRef);
 }
 
@@ -401,7 +401,7 @@ ExfAcquireRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 {
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
     return ExfAcquireRundownProtectionEx(RunRef, Count);
 }
 
@@ -414,7 +414,7 @@ ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCache
 {
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
     return _ExReleaseRundownProtection(RunRef);
 }
 
@@ -428,7 +428,7 @@ ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 {
     PEX_RUNDOWN_REF RunRef;
 
-    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
     return ExfReleaseRundownProtectionEx(RunRef, Count);
 }
 
@@ -459,10 +459,7 @@ ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunR
     for (Current = 0; Current < ProcCount; ++Current)
     {
         /* Get the runref for the proc */
-        RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
-                                   RunRefCacheAware->RunRefSize *
-                                   (Current % RunRefCacheAware->Number));
-
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
         /* Loop for setting the wait block */
         do
         {
@@ -535,7 +532,7 @@ ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
 {
     PEX_RUNDOWN_REF RunRef;
     PVOID PoolToFree, RunRefs;
-    ULONG RunRefSize, Count, Offset, Align;
+    ULONG RunRefSize, Count, Align;
     PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware;
 
     PAGED_CODE();
@@ -601,8 +598,7 @@ ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
     {
         for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
         {
-            Offset = RunRefCacheAware->RunRefSize * Count;
-            RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
+            RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Count);
             _ExInitializeRundownProtection(RunRef);
         }
     }
@@ -641,7 +637,7 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 {
     PVOID Pool;
     PEX_RUNDOWN_REF RunRef;
-    ULONG Count, RunRefSize, Offset, Align;
+    ULONG Count, RunRefSize, Align;
 
     PAGED_CODE();
 
@@ -683,8 +679,7 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
     {
         for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
         {
-            Offset = RunRefCacheAware->RunRefSize * Count;
-            RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs + Offset);
+            RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Count);
             _ExInitializeRundownProtection(RunRef);
         }
     }
