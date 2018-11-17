@@ -376,8 +376,6 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
     ASSERT(WaitBlock.Count == 0);
 }
 
-/* FIXME: STUBS **************************************************************/
-
 /*
  * @implemented NT5.2
  */
@@ -529,14 +527,31 @@ ExfRundownCompletedCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG ProcCount, Current;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    /* We will mark all our runrefs inactive */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
+        ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
+
+        ExpSetRundown(RunRef, 0);
+    }
 }
 
 /*
