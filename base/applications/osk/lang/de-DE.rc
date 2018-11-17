@@ -126,4 +126,16 @@ BEGIN
     CONTROL         "",IDC_LED_SCROLL,"Static",SS_CENTER|SS_NOTIFY,580,16,4,3
 END
 
+IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "On-Screen Keyboard"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
+END
+
 /* EOF */
