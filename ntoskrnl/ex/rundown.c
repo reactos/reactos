@@ -378,15 +378,35 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
 /* FIXME: STUBS **************************************************************/
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 BOOLEAN
 FASTCALL
 ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
-    return FALSE;
+    ULONG Value;
+    BOOLEAN Acquired;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
+                               RunRefCacheAware->RunRefSize *
+                               (KeGetCurrentProcessorNumber() % RunRefCacheAware->Number));
+
+    /* Get current value */
+    Value = RunRef->Count & !EX_RUNDOWN_ACTIVE;
+    /* Try to acquire the quick way if already active */
+    if (ExpChangeRundown(RunRef,
+                         ((RunRef->Count & !EX_RUNDOWN_ACTIVE) + EX_RUNDOWN_COUNT_INC),
+                         Value) == Value)
+    {
+        Acquired = 1;
+    }
+    else
+    {
+        Acquired = ExfAcquireRundownProtection(RunRef);
+    }
+
+    return Acquired;
 }
 
 /*
@@ -404,14 +424,33 @@ ExfAcquireRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    ULONG Value;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
+                               RunRefCacheAware->RunRefSize *
+                               (KeGetCurrentProcessorNumber() % RunRefCacheAware->Number));
+
+    /* Get current value */
+    Value = RunRef->Count & !EX_RUNDOWN_ACTIVE;
+    /* Try to release the quick way if multiple actived */
+    if (ExpChangeRundown(RunRef,
+                         ((RunRef->Count & !EX_RUNDOWN_ACTIVE) - EX_RUNDOWN_COUNT_INC),
+                         Value) == Value)
+    {
+        /* Sanity check */
+        ASSERT((Value >= EX_RUNDOWN_COUNT_INC) || (KeNumberProcessors > 1));
+    }
+    else
+    {
+        ExfReleaseRundownProtection(RunRef);
+    }
 }
 
 /*
