@@ -509,6 +509,70 @@ Cleanup:
 }
 
 static
+VOID
+RestoreAllConnections(PWLSESSION Session)
+{
+    DWORD dRet;
+    HANDLE hEnum;
+    LPNETRESOURCE lpRes;
+    DWORD dSize = 0x1000;
+    DWORD dCount = -1;
+    LPNETRESOURCE lpCur;
+    BOOL UserProfile;
+
+    UserProfile = (Session && Session->UserToken);
+    if (!UserProfile)
+    {
+        return;
+    }
+
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return;
+    }
+
+    dRet = WNetOpenEnum(RESOURCE_REMEMBERED, RESOURCETYPE_DISK, 0, NULL, &hEnum);
+    if (dRet != WN_SUCCESS)
+    {
+        ERR("Failed to open enumeration: %lu\n", dRet);
+        goto quit;
+    }
+
+    lpRes = HeapAlloc(GetProcessHeap(), 0, dSize);
+    if (!lpRes)
+    {
+        ERR("Failed to allocate memory\n");
+        WNetCloseEnum(hEnum);
+        goto quit;
+    }
+
+    do
+    {
+        dSize = 0x1000;
+        dCount = -1;
+
+        memset(lpRes, 0, dSize);
+        dRet = WNetEnumResource(hEnum, &dCount, lpRes, &dSize);
+        if (dRet == WN_SUCCESS || dRet == WN_MORE_DATA)
+        {
+            lpCur = lpRes;
+            for (; dCount; dCount--)
+            {
+                WNetAddConnection(lpCur->lpRemoteName, NULL, lpCur->lpLocalName);
+                lpCur++;
+            }
+        }
+    } while (dRet != WN_NO_MORE_ENTRIES);
+
+    HeapFree(GetProcessHeap(), 0, lpRes);
+    WNetCloseEnum(hEnum);
+
+quit:
+    RevertToSelf();
+}
+
+static
 BOOL
 HandleLogon(
     IN OUT PWLSESSION Session)
@@ -569,6 +633,9 @@ HandleLogon(
     }
 
     AllowWinstaAccess(Session);
+
+    /* Connect remote resources */
+    RestoreAllConnections(Session);
 
     if (!StartUserShell(Session))
     {
