@@ -5,6 +5,7 @@
  * PURPOSE:         Rundown and Cache-Aware Rundown Protection
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Thomas Weidenmueller
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -391,17 +392,17 @@ ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCache
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 BOOLEAN
 FASTCALL
 ExfAcquireRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
                                         IN ULONG Count)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
-    return FALSE;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    return ExfAcquireRundownProtectionEx(RunRef, Count);
 }
 
 /*
@@ -418,16 +419,17 @@ ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCache
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
                                         IN ULONG Count)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForCurrentProcessor(RunRefCacheAware);
+    return ExfReleaseRundownProtectionEx(RunRef, Count);
 }
 
 /*
