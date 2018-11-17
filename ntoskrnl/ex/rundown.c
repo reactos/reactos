@@ -606,13 +606,28 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 SIZE_T
 NTAPI
 ExSizeOfRundownProtectionCacheAware(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
+    SIZE_T Size;
+
+    PAGED_CODE();
+
+    /* Compute the needed size for runrefs */
+    if (KeNumberProcessors <= 1)
+    {
+        Size = sizeof(EX_RUNDOWN_REF);
+    }
+    else
+    {
+        /* We +1, to have enough room for alignment */
+        Size = (KeNumberProcessors + 1) * KeGetRecommendedSharedDataAlignment();
+    }
+
+    /* Return total size (master structure and runrefs) */
+    return Size + sizeof(EX_RUNDOWN_REF_CACHE_AWARE);
 }
 
