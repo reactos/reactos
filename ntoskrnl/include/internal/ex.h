@@ -546,6 +546,15 @@ ExGetCountFastReference(IN EX_FAST_REF FastRef)
 }
 
 FORCEINLINE
+PEX_RUNDOWN_REF
+ExGetRunRefForCurrentProcessor(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
+{
+    return (PEX_RUNDOWN_REF)((ULONG_PTR)RunRefCacheAware->RunRefs +
+                             RunRefCacheAware->RunRefSize *
+                             (KeGetCurrentProcessorNumber() % RunRefCacheAware->Number));
+}
+
+FORCEINLINE
 VOID
 ExInitializeFastReference(OUT PEX_FAST_REF FastRef,
                           IN OPTIONAL PVOID Object)
