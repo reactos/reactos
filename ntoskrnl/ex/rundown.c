@@ -581,7 +581,7 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
 {
     PVOID Pool;
     PEX_RUNDOWN_REF RunRef;
-    ULONG Count, RunRefSize, Offset;
+    ULONG Count, RunRefSize, Offset, Align;
 
     PAGED_CODE();
 
@@ -601,8 +601,13 @@ ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCac
     }
     else
     {
-        /* FIXME: Properly align on SMP */
-        UNIMPLEMENTED;
+        /* Get alignment constraint */
+        Align = KeGetRecommendedSharedDataAlignment();
+
+        /* How many runrefs given the alignment? */
+        RunRefSize = Align;
+        Count = ((Size - sizeof(EX_RUNDOWN_REF_CACHE_AWARE)) / Align) - 1;
+        Pool = (PVOID)ALIGN_UP_BY(Pool, Align);
     }
 
     /* Initialize the structure */
