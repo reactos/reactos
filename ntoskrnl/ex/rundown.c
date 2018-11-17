@@ -501,14 +501,31 @@ ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunR
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfRundownCompletedCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG ProcCount, Current;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    /* We will mark all our runrefs active */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
+        ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
+
+        ExpSetRundown(RunRef, EX_RUNDOWN_ACTIVE);
+    }
 }
 
 /*
