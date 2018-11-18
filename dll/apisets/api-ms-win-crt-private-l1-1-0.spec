@@ -57,7 +57,7 @@
 @ stdcall -arch=i386 _chkesp() msvcrt._chkesp
 @ stdcall -arch=i386 _except_handler2() msvcrt._except_handler2
 @ stdcall -arch=i386 _except_handler3() msvcrt._except_handler3
-@ stub _except_handler4_common
+@ stdcall -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
 @ stub _get_purecall_handler
 @ stub _get_unexpected
 @ stdcall -arch=i386 _global_unwind2() msvcrt._global_unwind2
