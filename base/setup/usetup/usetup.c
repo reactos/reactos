@@ -1607,12 +1607,26 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             {
                 if (PartitionList->CurrentPartition->LogicalPartition)
                 {
+                    Error = LogicalPartitionCreationChecks(PartitionList);
+                    if (Error != NOT_AN_ERROR)
+                    {
+                        MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                        return SELECT_PARTITION_PAGE;
+                    }
+
                     CreateLogicalPartition(PartitionList,
                                            0ULL,
                                            TRUE);
                 }
                 else
                 {
+                    Error = PrimaryPartitionCreationChecks(PartitionList);
+                    if (Error != NOT_AN_ERROR)
+                    {
+                        MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                        return SELECT_PARTITION_PAGE;
+                    }
+
                     CreatePrimaryPartition(PartitionList,
                                            0ULL,
                                            TRUE);
@@ -2580,7 +2594,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Sets PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType (via UpdatePartitionType)
+ *  Calls UpdatePartitionType()
  *  Calls CheckActiveSystemPartition()
  *
  * RETURNS

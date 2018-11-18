@@ -284,18 +284,18 @@ PPARTENTRY
 GetPrevPartition(
     IN PPARTLIST List);
 
-VOID
+BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
-VOID
+BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount);
 
-VOID
+BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount,
