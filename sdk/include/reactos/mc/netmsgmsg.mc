@@ -25,7 +25,7 @@ LanguageNames=(English=0x409:MSG00409
 
 
 ;
-; lmerr.h message definitions (2100 - 2999)
+; lmerr.h message definitions (2100 - 2999 NERR_BASE)
 ;
 
 MessageId=2102
@@ -3440,21 +3440,515 @@ This is the last error in NERR range.
 
 
 ;
-; lmsvc.h message definitions (3050 - 3099 SERVICE_BASE)
+; alertmsg.h (non-public) message definitions (3000 - 3049 ALERT_BASE)
 ;
 
-;MessageId=3050
-;Severity=Success
-;Facility=System
-;SymbolicName=MAX_NERR
-;Language=English
-;Replicator failed to update signal file in directory %2 due to\n
-;%1 system error.
-;.
-;Language=Russian
-;Replicator failed to update signal file in directory %2 due to\n
-;%1 system error.
-;.
+MessageId=3000
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3000
+Language=English
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Russian
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+
+MessageId=3001
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3001
+Language=English
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Russian
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+
+MessageId=3002
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3002
+Language=English
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Russian
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+
+MessageId=3003
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3003
+Language=English
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Russian
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+
+MessageId=3004
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3004
+Language=English
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Russian
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+
+MessageId=3006
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3006
+Language=English
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Russian
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+
+MessageId=3007
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3007
+Language=English
+The error log is 80%% full.
+.
+Language=Russian
+The error log is 80%% full.
+.
+
+MessageId=3008
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3008
+Language=English
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Russian
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+
+MessageId=3009
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3009
+Language=English
+The audit log is 80%% full.
+.
+Language=Russian
+The audit log is 80%% full.
+.
+
+MessageId=3010
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3010
+Language=English
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Russian
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+
+MessageId=3011
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3011
+Language=English
+The administrator has closed %1.
+.
+Language=Russian
+The administrator has closed %1.
+.
+
+MessageId=3012
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3012
+Language=English
+There were %1 access-denied errors in the last %2 minutes.
+.
+Language=Russian
+There were %1 access-denied errors in the last %2 minutes.
+.
+
+MessageId=3020
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3020
+Language=English
+A power failure was detected at %1.  The server has been paused.
+.
+Language=Russian
+A power failure was detected at %1.  The server has been paused.
+.
+
+MessageId=3021
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3021
+Language=English
+Power has been restored at %1.  The server is no longer paused.
+.
+Language=Russian
+Power has been restored at %1.  The server is no longer paused.
+.
+
+MessageId=3022
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3022
+Language=English
+The UPS service is starting shut down at %1 due to low battery.
+.
+Language=Russian
+The UPS service is starting shut down at %1 due to low battery.
+.
+
+MessageId=3023
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3023
+Language=English
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Russian
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+
+MessageId=3025
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3025
+Language=English
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Russian
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+
+MessageId=3026
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3026
+Language=English
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Russian
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+
+MessageId=3027
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3027
+Language=English
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n"
+.
+Language=Russian
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n"
+.
+
+MessageId=3028
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3028
+Language=English
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n"
+.
+Language=Russian
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n"
+.
+
+MessageId=3029
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3029
+Language=English
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Russian
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+
+MessageId=3030
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3030
+Language=English
+The server cannot export directory %1, to client %2.\n
+It is exported from another server."
+.
+Language=Russian
+The server cannot export directory %1, to client %2.\n
+It is exported from another server."
+.
+
+MessageId=3031
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3031
+Language=English
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Russian
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+
+MessageId=3032
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3032
+Language=English
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Russian
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+
+MessageId=3033
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3033
+Language=English
+User %1 has exceeded account limitation %2 on server %3.
+.
+Language=Russian
+User %1 has exceeded account limitation %2 on server %3.
+.
+
+MessageId=3034
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3034
+Language=English
+The primary domain controller for domain %1 failed.
+.
+Language=Russian
+The primary domain controller for domain %1 failed.
+.
+
+MessageId=3035
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3035
+Language=English
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Russian
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+
+MessageId=3036
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3036
+Language=English
+The replicator attempted to log on at %2 as %1 and failed.
+.
+Language=Russian
+The replicator attempted to log on at %2 as %1 and failed.
+.
+
+MessageId=3037
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3037
+Language=English
+@I *LOGON HOURS %0
+.
+Language=Russian
+@I *LOGON HOURS %0
+.
+
+MessageId=3038
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3038
+Language=English
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Russian
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+
+MessageId=3039
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3039
+Language=English
+Replicator limit for files in a directory has been exceeded.
+.
+Language=Russian
+Replicator limit for files in a directory has been exceeded.
+.
+
+MessageId=3040
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3040
+Language=English
+Replicator limit for tree depth has been exceeded.
+.
+Language=Russian
+Replicator limit for tree depth has been exceeded.
+.
+
+MessageId=3041
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3041
+Language=English
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Russian
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+
+MessageId=3042
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3042
+Language=English
+Network error %1 occurred.
+.
+Language=Russian
+Network error %1 occurred.
+.
+
+MessageId=3045
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3045
+Language=English
+System error %1 occurred.
+.
+Language=Russian
+System error %1 occurred.
+.
+
+MessageId=3046
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3046
+Language=English
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Russian
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+
+MessageId=3047
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3047
+Language=English
+IMPORT path %1 cannot be found.
+.
+Language=Russian
+IMPORT path %1 cannot be found.
+.
+
+MessageId=3048
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3048
+Language=English
+EXPORT path %1 cannot be found.
+.
+Language=Russian
+EXPORT path %1 cannot be found.
+.
+
+MessageId=3049
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3049
+Language=English
+Replicated data has changed in directory %1.
+.
+Language=Russian
+Replicated data has changed in directory %1.
+.
+
+MessageId=3050
+Severity=Success
+Facility=System
+SymbolicName=ALERT_3050
+Language=English
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Russian
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+
+
+;
+; lmsvc.h message definitions (3050 - 3099 SERVICE_BASE)
+;
 
 MessageId=3051
 Severity=Success
@@ -5902,6 +6396,479 @@ A service specific error occurred: %1.
 .
 Language=Russian
 A service specific error occurred: %1.
+.
+
+
+MessageId=3660
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3660
+Language=English
+These workstations have sessions on this server:
+.
+Language=Russian
+These workstations have sessions on this server:
+.
+
+MessageId=3661
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3661
+Language=English
+These workstations have sessions with open files on this server:
+.
+Language=Russian
+These workstations have sessions with open files on this server:
+.
+
+MessageId=3666
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3666
+Language=English
+The message alias is forwarded.
+.
+Language=Russian
+The message alias is forwarded.
+.
+
+MessageId=3670
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3670
+Language=English
+You have these remote connections:
+.
+Language=Russian
+You have these remote connections:
+.
+
+MessageId=3671
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3671
+Language=English
+Continuing will cancel the connections.
+.
+Language=Russian
+Continuing will cancel the connections.
+.
+
+MessageId=3675
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3675
+Language=English
+The session from %1 has open files.
+.
+Language=Russian
+The session from %1 has open files.
+.
+
+MessageId=3676
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3676
+Language=English
+New connections will be remembered.
+.
+Language=Russian
+New connections will be remembered.
+.
+
+MessageId=3677
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3677
+Language=English
+New connections will not be remembered.
+.
+Language=Russian
+New connections will not be remembered.
+.
+
+MessageId=3678
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3678
+Language=English
+An error occurred while saving your profile. The state of your remembered connections has not changed.
+.
+Language=Russian
+An error occurred while saving your profile. The state of your remembered connections has not changed.
+.
+
+MessageId=3679
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3679
+Language=English
+An error occurred while reading your profile.
+.
+Language=Russian
+An error occurred while reading your profile.
+.
+
+MessageId=3680
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3680
+Language=English
+An error occurred while restoring the connection to %1.
+.
+Language=Russian
+An error occurred while restoring the connection to %1.
+.
+
+MessageId=3682
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3682
+Language=English
+No network services are started.
+.
+Language=Russian
+No network services are started.
+.
+
+MessageId=3683
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3683
+Language=English
+There are no entries in the list.
+.
+Language=Russian
+There are no entries in the list.
+.
+
+MessageId=3688
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3688
+Language=English
+Users have open files on %1.  Continuing the operation will force the files closed.
+.
+Language=Russian
+Users have open files on %1.  Continuing the operation will force the files closed.
+.
+
+MessageId=3689
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3689
+Language=English
+The Workstation service is already running. The operating system will ignore command options for the workstation.
+.
+Language=Russian
+The Workstation service is already running. The operating system will ignore command options for the workstation.
+.
+
+MessageId=3691
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3691
+Language=English
+There are open files and/or incomplete directory searches pending on the connection to %1.
+.
+Language=Russian
+There are open files and/or incomplete directory searches pending on the connection to %1.
+.
+
+MessageId=3693
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3693
+Language=English
+The request will be processed at a domain controller for domain %1.
+.
+Language=Russian
+The request will be processed at a domain controller for domain %1.
+.
+
+MessageId=3694
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3694
+Language=English
+The shared queue cannot be deleted while a print job is being spooled to the queue.
+.
+Language=Russian
+The shared queue cannot be deleted while a print job is being spooled to the queue.
+.
+
+MessageId=3695
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3695
+Language=English
+%1 has a remembered connection to %2.
+.
+Language=Russian
+%1 has a remembered connection to %2.
+.
+
+
+;
+; alertmsg.h (non-public) message definitions (5500 - 5549 ALERT2_BASE)
+;
+
+MessageId=5500
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5500
+Language=English
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Russian
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+
+MessageId=5501
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5501
+Language=English
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Russian
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+
+MessageId=5502
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5502
+Language=English
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Russian
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+
+MessageId=5503
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5503
+Language=English
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Russian
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+
+MessageId=5504
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5504
+Language=English
+The %1 log file cannot be opened.
+.
+Language=Russian
+The %1 log file cannot be opened.
+.
+
+MessageId=5505
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5505
+Language=English
+The %1 log file is corrupted and will be cleared.
+.
+Language=Russian
+The %1 log file is corrupted and will be cleared.
+.
+
+MessageId=5506
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5506
+Language=English
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Russian
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+
+MessageId=5507
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5507
+Language=English
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Russian
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+
+MessageId=5508
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5508
+Language=English
+The security database full synchronization has been initiated by the server %1.
+.
+Language=Russian
+The security database full synchronization has been initiated by the server %1.
+.
+
+MessageId=5509
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5509
+Language=English
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Russian
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+
+MessageId=5510
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5510
+Language=English
+The exception 0x%1 occurred in the application %2 at location 0x%3.
+.
+Language=Russian
+The exception 0x%1 occurred in the application %2 at location 0x%3.
+.
+
+MessageId=5511
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5511
+Language=English
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Russian
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+
+MessageId=5512
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5512
+Language=English
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Russian
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+
+MessageId=5513
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5513
+Language=English
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Russian
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+
+MessageId=5514
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5514
+Language=English
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Russian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+
+MessageId=5515
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5515
+Language=English
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Russian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+
+MessageId=5516
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5516
+Language=English
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Russian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+
+MessageId=5517
+Severity=Success
+Facility=System
+SymbolicName=ALERT2_5517
+Language=English
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Russian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
 .
 
 
