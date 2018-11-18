@@ -332,7 +332,7 @@ CreateWaitableTimerW(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
                      IN BOOL bManualReset,
                      IN LPCWSTR lpTimerName OPTIONAL)
 {
-    CreateNtObjectFromWin32Api(WaitableTimer, Timer, TIMER,
+    CreateNtObjectFromWin32Api(WaitableTimer, Timer, TIMER_ALL_ACCESS,
                                lpTimerAttributes,
                                lpTimerName,
                                bManualReset ? NotificationTimer : SynchronizationTimer);
@@ -446,11 +446,65 @@ CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
                  IN LONG lMaximumCount,
                  IN LPCWSTR lpName  OPTIONAL)
 {
-    CreateNtObjectFromWin32Api(Semaphore, Semaphore, SEMAPHORE,
+    CreateNtObjectFromWin32Api(Semaphore, Semaphore, SEMAPHORE_ALL_ACCESS,
                                lpSemaphoreAttributes,
                                lpName,
                                lInitialCount,
                                lMaximumCount);
+}
+
+HANDLE
+WINAPI
+DECLSPEC_HOTPATCH
+CreateSemaphoreExW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
+                   IN LONG lInitialCount,
+                   IN LONG lMaximumCount,
+                   IN LPCWSTR lpName  OPTIONAL,
+                   IN DWORD dwFlags OPTIONAL,
+                   IN DWORD dwDesiredAccess OPTIONAL)
+{
+    CreateNtObjectFromWin32Api(Semaphore, Semaphore, dwDesiredAccess,
+                               lpSemaphoreAttributes,
+                               lpName,
+                               lInitialCount,
+                               lMaximumCount);
+}
+
+HANDLE
+WINAPI
+DECLSPEC_HOTPATCH
+CreateSemaphoreExA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
+                   IN LONG lInitialCount,
+                   IN LONG lMaximumCount,
+                   IN LPCSTR lpName  OPTIONAL,
+                   IN DWORD dwFlags OPTIONAL,
+                   IN DWORD dwDesiredAccess OPTIONAL)
+{
+    ConvertAnsiToUnicodePrologue
+    
+    if (!lpName)
+    {
+        return CreateSemaphoreExW(lpSemaphoreAttributes,
+                                  lInitialCount,
+                                  lMaximumCount,
+                                  NULL,
+                                  dwFlags,
+                                  dwDesiredAccess);
+    }
+
+    ConvertAnsiToUnicodeBody(lpName)
+
+    if (NT_SUCCESS(Status))
+    {
+        return CreateSemaphoreExW(lpSemaphoreAttributes,
+                                  lInitialCount,
+                                  lMaximumCount,
+                                  UnicodeCache->Buffer,
+                                  dwFlags,
+                                  dwDesiredAccess);
+    }
+
+    ConvertAnsiToUnicodeEpilogue
 }
 
 /*
@@ -523,7 +577,7 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
              IN BOOL bInitialOwner,
              IN LPCWSTR lpName  OPTIONAL)
 {
-    CreateNtObjectFromWin32Api(Mutex, Mutant, MUTEX,
+    CreateNtObjectFromWin32Api(Mutex, Mutant, MUTEX_ALL_ACCESS,
                                lpMutexAttributes,
                                lpName,
                                bInitialOwner);
@@ -599,7 +653,7 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
              IN BOOL bInitialState,
              IN LPCWSTR lpName  OPTIONAL)
 {
-    CreateNtObjectFromWin32Api(Event, Event, EVENT,
+    CreateNtObjectFromWin32Api(Event, Event, EVENT_ALL_ACCESS,
                                lpEventAttributes,
                                lpName,
                                bManualReset ? NotificationEvent : SynchronizationEvent,
