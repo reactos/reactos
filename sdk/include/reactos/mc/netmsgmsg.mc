@@ -5178,13 +5178,307 @@ Language=Russian
 
 
 ;
-; other message definitions
+; msgtext.h (non-public) message definitions (3300 - 3499 MTXT_BASE)
+;
+
+MessageId=3301
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3301
+Language=English
+Remote IPC %0
+.
+Language=Russian
+Remote IPC %0
+.
+
+MessageId=3302
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3302
+Language=English
+Remote Admin %0
+.
+Language=Russian
+Remote Admin %0
+.
+
+MessageId=3303
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3303
+Language=English
+Logon server share %0
+.
+Language=Russian
+Logon server share %0
+.
+
+MessageId=3304
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3304
+Language=English
+A network error occurred. %0
+.
+Language=Russian
+A network error occurred. %0
+.
+
+MessageId=3400
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3400
+Language=English
+There is not enough memory to start the Workstation service.
+.
+Language=Russian
+There is not enough memory to start the Workstation service.
+.
+
+MessageId=3401
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3401
+Language=English
+An error occurred when reading the NETWORKS entry in the LANMAN.INI file.
+.
+Language=Russian
+An error occurred when reading the NETWORKS entry in the LANMAN.INI file.
+.
+
+MessageId=3402
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3402
+Language=English
+This is an invalid argument: %1.
+.
+Language=Russian
+This is an invalid argument: %1.
+.
+
+MessageId=3403
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3403
+Language=English
+The %1 NETWORKS entry in the LANMAN.INI file has a\nsyntax error and will be ignored.
+.
+Language=Russian
+The %1 NETWORKS entry in the LANMAN.INI file has a\nsyntax error and will be ignored.
+.
+
+MessageId=3404
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3404
+Language=English
+There are too many NETWORKS entries in the LANMAN.INI file.
+.
+Language=Russian
+There are too many NETWORKS entries in the LANMAN.INI file.
+.
+
+MessageId=3406
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3406
+Language=English
+An error occurred when opening network\ndevice driver %1 = %2.
+.
+Language=Russian
+An error occurred when opening network\ndevice driver %1 = %2.
+.
+
+MessageId=3407
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3407
+Language=English
+Device driver %1 sent a bad BiosLinkage response.
+.
+Language=Russian
+Device driver %1 sent a bad BiosLinkage response.
+.
+
+MessageId=3408
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3408
+Language=English
+The program cannot be used with this operating system.
+.
+Language=Russian
+The program cannot be used with this operating system.
+.
+
+MessageId=3409
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3409
+Language=English
+The redirector is already installed.
+.
+Language=Russian
+The redirector is already installed.
+.
+
+MessageId=3410
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3410
+Language=English
+Installing NETWKSTA.SYS Version %1.%2.%3  (%4)\n
+.
+Language=Russian
+Installing NETWKSTA.SYS Version %1.%2.%3  (%4)\n
+.
+
+MessageId=3411
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3411
+Language=English
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Russian
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+
+MessageId=3412
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3412
+Language=English
+Resolver linkage problem.
+.
+Language=Russian
+Resolver linkage problem.
+.
+
+MessageId=3413
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3413
+Language=English
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Russian
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+
+MessageId=3414
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3414
+Language=English
+You will be automatically disconnected at %1.
+.
+Language=Russian
+You will be automatically disconnected at %1.
+.
+
+MessageId=3415
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3415
+Language=English
+Your logon time at %1 has ended.
+.
+Language=Russian
+Your logon time at %1 has ended.
+.
+
+MessageId=3416
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3416
+Language=English
+Your logon time at %1 ended at %2.
+.
+Language=Russian
+Your logon time at %1 ended at %2.
+.
+
+MessageId=3417
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3417
+Language=English
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data."
+.
+Language=Russian
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data."
+.
+
+MessageId=3418
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3418
+Language=English
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Russian
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+
+MessageId=3419
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3419
+Language=English
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Russian
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+
+MessageId=3420
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3420
+Language=English
+Default Share for Internal Use %0
+.
+Language=Russian
+Default Share for Internal Use %0
+.
+
+MessageId=3421
+Severity=Success
+Facility=System
+SymbolicName=MTXT_3421
+Language=English
+Messenger Service %0
+.
+Language=Russian
+Messenger Service %0
+.
+
+
+;
+; apperr.h (non-public) message definitions (3500 - 3999 APPERR_BASE)
 ;
 
 MessageId=3500
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3500
+SymbolicName=APPERR_3500
 Language=English
 The command completed successfully.
 .
@@ -5195,7 +5489,7 @@ The command completed successfully.
 MessageId=3501
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3501
+SymbolicName=APPERR_3501
 Language=English
 You used an invalid option.
 .
@@ -5206,7 +5500,7 @@ You used an invalid option.
 MessageId=3502
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3502
+SymbolicName=APPERR_3502
 Language=English
 System error %1 has occurred.
 .
@@ -5217,7 +5511,7 @@ System error %1 has occurred.
 MessageId=3503
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3503
+SymbolicName=APPERR_3503
 Language=English
 The command contains an invalid number of arguments.
 .
@@ -5228,7 +5522,7 @@ The command contains an invalid number of arguments.
 MessageId=3504
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3504
+SymbolicName=APPERR_3504
 Language=English
 The command completed with one or more errors.
 .
@@ -5239,7 +5533,7 @@ The command completed with one or more errors.
 MessageId=3505
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3505
+SymbolicName=APPERR_3505
 Language=English
 You used an option with an invalid value.
 .
@@ -5250,7 +5544,7 @@ You used an option with an invalid value.
 MessageId=3506
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3506
+SymbolicName=APPERR_3506
 Language=English
 The option %1 is unknown.
 .
@@ -5261,7 +5555,7 @@ The option %1 is unknown.
 MessageId=3507
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3507
+SymbolicName=APPERR_3507
 Language=English
 Option %1 is ambiguous.
 .
@@ -5272,7 +5566,7 @@ Option %1 is ambiguous.
 MessageId=3510
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3510
+SymbolicName=APPERR_3510
 Language=English
 A command was used with conflicting switches.
 .
@@ -5283,7 +5577,7 @@ A command was used with conflicting switches.
 MessageId=3511
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3511
+SymbolicName=APPERR_3511
 Language=English
 Could not find subprogram %1.
 .
@@ -5294,7 +5588,7 @@ Could not find subprogram %1.
 MessageId=3512
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3512
+SymbolicName=APPERR_3512
 Language=English
 The software requires a newer version of the operating\nsystem.
 .
@@ -5305,7 +5599,7 @@ The software requires a newer version of the operating\nsystem.
 MessageId=3513
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3513
+SymbolicName=APPERR_3513
 Language=English
 More data is available than can be returned by the operating\nsystem.
 .
@@ -5316,7 +5610,7 @@ More data is available than can be returned by the operating\nsystem.
 MessageId=3514
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3514
+SymbolicName=APPERR_3514
 Language=English
 More help is available by typing NET HELPMSG %1.
 .
@@ -5327,7 +5621,7 @@ More help is available by typing NET HELPMSG %1.
 MessageId=3515
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3515
+SymbolicName=APPERR_3515
 Language=English
 The command can be used only on a Domain Controller.
 .
@@ -5338,7 +5632,7 @@ The command can be used only on a Domain Controller.
 MessageId=3516
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3516
+SymbolicName=APPERR_3516
 Language=English
 This command cannot be used on a Domain Controller.
 .
@@ -5349,7 +5643,7 @@ This command cannot be used on a Domain Controller.
 MessageId=3520
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3520
+SymbolicName=APPERR_3520
 Language=English
 These services are started:
 .
@@ -5360,7 +5654,7 @@ These services are started:
 MessageId=3521
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3521
+SymbolicName=APPERR_3521
 Language=English
 The %1 service is not started.
 .
@@ -5371,7 +5665,7 @@ The %1 service is not started.
 MessageId=3522
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3522
+SymbolicName=APPERR_3522
 Language=English
 The %1 service is starting%0
 .
@@ -5382,7 +5676,7 @@ The %1 service is starting%0
 MessageId=3523
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3523
+SymbolicName=APPERR_3523
 Language=English
 The %1 service could not be started.
 .
@@ -5393,7 +5687,7 @@ The %1 service could not be started.
 MessageId=3524
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3524
+SymbolicName=APPERR_3524
 Language=English
 The %1 service was started successfully.
 .
@@ -5404,7 +5698,7 @@ The %1 service was started successfully.
 MessageId=3525
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3525
+SymbolicName=APPERR_3525
 Language=English
 Stopping the Workstation service also stops the Server service.
 .
@@ -5415,7 +5709,7 @@ Stopping the Workstation service also stops the Server service.
 MessageId=3526
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3526
+SymbolicName=APPERR_3526
 Language=English
 The workstation has open files.
 .
@@ -5426,7 +5720,7 @@ The workstation has open files.
 MessageId=3527
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3527
+SymbolicName=APPERR_3527
 Language=English
 The %1 service is stopping%0
 .
@@ -5437,7 +5731,7 @@ The %1 service is stopping%0
 MessageId=3528
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3528
+SymbolicName=APPERR_3528
 Language=English
 The %1 service could not be stopped.
 .
@@ -5448,7 +5742,7 @@ The %1 service could not be stopped.
 MessageId=3529
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3529
+SymbolicName=APPERR_3529
 Language=English
 The %1 service was stopped successfully.
 .
@@ -5459,7 +5753,7 @@ The %1 service was stopped successfully.
 MessageId=3530
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3530
+SymbolicName=APPERR_3530
 Language=English
 The following services are dependent on the %1 service.\nStopping the %1 service will also stop these services.
 .
@@ -5470,7 +5764,7 @@ The following services are dependent on the %1 service.\nStopping the %1 service
 MessageId=3533
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3533
+SymbolicName=APPERR_3533
 Language=English
 The service is starting or stopping.  Please try again later.
 .
@@ -5481,7 +5775,7 @@ The service is starting or stopping.  Please try again later.
 MessageId=3534
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3534
+SymbolicName=APPERR_3534
 Language=English
 The service did not report an error.
 .
@@ -5492,7 +5786,7 @@ The service did not report an error.
 MessageId=3535
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3535
+SymbolicName=APPERR_3535
 Language=English
 An error occurred controlling the device.
 .
@@ -5503,7 +5797,7 @@ An error occurred controlling the device.
 MessageId=3536
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3536
+SymbolicName=APPERR_3536
 Language=English
 The %1 service was continued successfully.
 .
@@ -5514,7 +5808,7 @@ The %1 service was continued successfully.
 MessageId=3537
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3537
+SymbolicName=APPERR_3537
 Language=English
 The %1 service was paused successfully.
 .
@@ -5525,7 +5819,7 @@ The %1 service was paused successfully.
 MessageId=3538
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3538
+SymbolicName=APPERR_3538
 Language=English
 The %1 service failed to resume.
 .
@@ -5536,7 +5830,7 @@ The %1 service failed to resume.
 MessageId=3539
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3539
+SymbolicName=APPERR_3539
 Language=English
 The %1 service failed to pause.
 .
@@ -5547,7 +5841,7 @@ The %1 service failed to pause.
 MessageId=3540
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3540
+SymbolicName=APPERR_3540
 Language=English
 The %1 service continue is pending%0
 .
@@ -5558,7 +5852,7 @@ The %1 service continue is pending%0
 MessageId=3541
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3541
+SymbolicName=APPERR_3541
 Language=English
 The %1 service pause is pending%0
 .
@@ -5569,7 +5863,7 @@ The %1 service pause is pending%0
 MessageId=3542
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3542
+SymbolicName=APPERR_3542
 Language=English
 %1 was continued successfully.
 .
@@ -5580,7 +5874,7 @@ Language=Russian
 MessageId=3543
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3543
+SymbolicName=APPERR_3543
 Language=English
 %1 was paused successfully.
 .
@@ -5591,7 +5885,7 @@ Language=Russian
 MessageId=3544
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3544
+SymbolicName=APPERR_3544
 Language=English
 The %1 service has been started by another process and is pending.%0
 .
@@ -5602,7 +5896,7 @@ The %1 service has been started by another process and is pending.%0
 MessageId=3547
 Severity=Success
 Facility=System
-SymbolicName=OTHER_3547
+SymbolicName=APPERR_3547
 Language=English
 A service specific error occurred: %1.
 .
