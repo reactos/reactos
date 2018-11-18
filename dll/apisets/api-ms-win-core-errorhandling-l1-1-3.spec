@@ -5,7 +5,7 @@
 @ stdcall AddVectoredExceptionHandler() kernel32.AddVectoredExceptionHandler
 @ stdcall FatalAppExitA() kernel32.FatalAppExitA
 @ stdcall FatalAppExitW() kernel32.FatalAppExitW
-@ stub GetErrorMode
+@ stdcall -version=0x600+ GetErrorMode() kernel32.GetErrorMode
 @ stdcall GetLastError() kernel32.GetLastError
 @ stub GetThreadErrorMode
 @ stdcall RaiseException() kernel32.RaiseException

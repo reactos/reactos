@@ -11,5 +11,5 @@
 @ stdcall -arch=i386 InterlockedIncrement() kernel32.InterlockedIncrement
 @ stdcall InterlockedPopEntrySList() kernel32.InterlockedPopEntrySList
 @ stdcall InterlockedPushEntrySList() kernel32.InterlockedPushEntrySList
-@ stub InterlockedPushListSList
+@ stdcall -version=0x600+ InterlockedPushListSList() kernel32.InterlockedPushListSList
 @ stdcall QueryDepthSList() kernel32.QueryDepthSList

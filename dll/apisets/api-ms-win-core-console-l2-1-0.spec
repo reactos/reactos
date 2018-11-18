@@ -11,7 +11,7 @@
 @ stdcall GenerateConsoleCtrlEvent() kernel32.GenerateConsoleCtrlEvent
 @ stdcall GetConsoleCursorInfo() kernel32.GetConsoleCursorInfo
 @ stdcall GetConsoleScreenBufferInfo() kernel32.GetConsoleScreenBufferInfo
-@ stub GetConsoleScreenBufferInfoEx
+@ stdcall -version=0x600+ GetConsoleScreenBufferInfoEx() kernel32.GetConsoleScreenBufferInfoEx
 @ stdcall GetConsoleTitleW() kernel32.GetConsoleTitleW
 @ stdcall GetLargestConsoleWindowSize() kernel32.GetLargestConsoleWindowSize
 @ stdcall PeekConsoleInputW() kernel32.PeekConsoleInputW
@@ -27,7 +27,7 @@
 @ stdcall SetConsoleCursorInfo() kernel32.SetConsoleCursorInfo
 @ stdcall SetConsoleCursorPosition() kernel32.SetConsoleCursorPosition
 @ stdcall SetConsoleOutputCP() kernel32.SetConsoleOutputCP
-@ stub SetConsoleScreenBufferInfoEx
+@ stdcall -version=0x600+ SetConsoleScreenBufferInfoEx() kernel32.SetConsoleScreenBufferInfoEx
 @ stdcall SetConsoleScreenBufferSize() kernel32.SetConsoleScreenBufferSize
 @ stdcall SetConsoleTextAttribute() kernel32.SetConsoleTextAttribute
 @ stdcall SetConsoleTitleW() kernel32.SetConsoleTitleW

@@ -8,7 +8,7 @@
 @ stdcall CopyFileA() kernel32.CopyFileA
 @ stdcall CopyFileW() kernel32.CopyFileW
 @ stdcall CreateFileMappingA() kernel32.CreateFileMappingA
-@ stub CreateFileTransactedW
+@ stdcall -version=0x600+ CreateFileTransactedW() kernel32.CreateFileTransactedW
 @ stdcall CreateMailslotA() kernel32.CreateMailslotA
 @ stdcall CreateNamedPipeA() kernel32.CreateNamedPipeA
 @ stdcall CreateSemaphoreW() kernel32.CreateSemaphoreW
@@ -26,12 +26,12 @@
 @ stdcall GetComputerNameA() kernel32.GetComputerNameA
 @ stdcall GetComputerNameW() kernel32.GetComputerNameW
 @ stdcall GetConsoleWindow() kernel32.GetConsoleWindow
-@ stub GetDurationFormatEx
-@ stub GetFileAttributesTransactedW
+@ stdcall -version=0x600+ GetDurationFormatEx() kernel32.GetDurationFormatEx
+@ stdcall -version=0x600+ GetFileAttributesTransactedW() kernel32.GetFileAttributesTransactedW
 @ stub GetFirmwareType
 @ stub GetMaximumProcessorGroupCount
-@ stub GetNamedPipeClientProcessId
-@ stub GetNamedPipeServerProcessId
+@ stdcall -version=0x600+ GetNamedPipeClientProcessId() kernel32.GetNamedPipeClientProcessId
+@ stdcall -version=0x600+ GetNamedPipeServerProcessId() kernel32.GetNamedPipeServerProcessId
 @ stub GetNumaAvailableMemoryNodeEx
 @ stdcall GetNumaNodeProcessorMask() kernel32.GetNumaNodeProcessorMask
 @ stub GetNumaProcessorNodeEx

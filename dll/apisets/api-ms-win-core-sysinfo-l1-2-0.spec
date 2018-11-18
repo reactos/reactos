@@ -9,7 +9,7 @@
 @ stub GetLogicalProcessorInformationEx
 @ stdcall GetNativeSystemInfo() kernel32.GetNativeSystemInfo
 @ stub GetOsSafeBootMode
-@ stub GetProductInfo
+@ stdcall -version=0x600+ GetProductInfo() kernel32.GetProductInfo
 @ stdcall GetSystemDirectoryA() kernel32.GetSystemDirectoryA
 @ stdcall GetSystemDirectoryW() kernel32.GetSystemDirectoryW
 @ stdcall GetSystemFirmwareTable() kernel32.GetSystemFirmwareTable
@@ -21,7 +21,7 @@
 @ stdcall GetSystemWindowsDirectoryA() kernel32.GetSystemWindowsDirectoryA
 @ stdcall GetSystemWindowsDirectoryW() kernel32.GetSystemWindowsDirectoryW
 @ stdcall GetTickCount() kernel32.GetTickCount
-@ stdcall GetTickCount64() kernel32_vista.GetTickCount64
+@ stdcall -version=0x600+ GetTickCount64() kernel32.GetTickCount64
 @ stdcall GetVersion() kernel32.GetVersion
 @ stdcall GetVersionExA() kernel32.GetVersionExA
 @ stdcall GetVersionExW() kernel32.GetVersionExW

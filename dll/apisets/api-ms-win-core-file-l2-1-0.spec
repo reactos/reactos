@@ -5,8 +5,8 @@
 @ stdcall CopyFileExW() kernel32.CopyFileExW
 @ stdcall CreateDirectoryExW() kernel32.CreateDirectoryExW
 @ stdcall CreateHardLinkW() kernel32.CreateHardLinkW
-@ stub CreateSymbolicLinkW
-@ stdcall GetFileInformationByHandleEx() kernel32_vista.GetFileInformationByHandleEx
+@ stdcall -version=0x600+ CreateSymbolicLinkW() kernel32.CreateSymbolicLinkW
+@ stdcall -version=0x600+ GetFileInformationByHandleEx() kernel32.GetFileInformationByHandleEx
 @ stdcall MoveFileExW() kernel32.MoveFileExW
 @ stdcall MoveFileWithProgressW() kernel32.MoveFileWithProgressW
 @ stdcall ReOpenFile() kernel32.ReOpenFile

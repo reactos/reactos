@@ -6,4 +6,4 @@
 @ stub K32GetDeviceDriverFileNameA
 @ stub K32GetMappedFileNameA
 @ stub K32GetProcessImageFileNameA
-@ stub QueryFullProcessImageNameA
+@ stdcall -version=0x600+ QueryFullProcessImageNameA() kernel32.QueryFullProcessImageNameA

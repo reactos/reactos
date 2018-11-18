@@ -3,7 +3,7 @@
 
 @ stdcall GetComputerNameExA() kernel32.GetComputerNameExA
 @ stdcall GetComputerNameExW() kernel32.GetComputerNameExW
-@ stub GetDynamicTimeZoneInformation
+@ stdcall -version=0x600+ GetDynamicTimeZoneInformation() kernel32.GetDynamicTimeZoneInformation
 @ stdcall GetLocalTime() kernel32.GetLocalTime
 @ stdcall GetLogicalProcessorInformation() kernel32.GetLogicalProcessorInformation
 @ stub GetLogicalProcessorInformationEx
@@ -15,10 +15,10 @@
 @ stdcall GetSystemTimeAsFileTime() kernel32.GetSystemTimeAsFileTime
 @ stdcall GetSystemWindowsDirectoryA() kernel32.GetSystemWindowsDirectoryA
 @ stdcall GetSystemWindowsDirectoryW() kernel32.GetSystemWindowsDirectoryW
-@ stdcall GetTickCount64() kernel32_vista.GetTickCount64
+@ stdcall -version=0x600+ GetTickCount64() kernel32.GetTickCount64
 @ stdcall GetTickCount() kernel32.GetTickCount
 @ stdcall GetTimeZoneInformation() kernel32.GetTimeZoneInformation
-@ stub GetTimeZoneInformationForYear
+@ stdcall -version=0x600+ GetTimeZoneInformationForYear() kernel32.GetTimeZoneInformationForYear
 @ stdcall GetVersion() kernel32.GetVersion
 @ stdcall GetVersionExA() kernel32.GetVersionExA
 @ stdcall GetVersionExW() kernel32.GetVersionExW

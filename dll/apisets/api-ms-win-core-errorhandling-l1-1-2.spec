@@ -3,7 +3,7 @@
 
 @ stdcall AddVectoredContinueHandler() kernel32.AddVectoredContinueHandler
 @ stdcall AddVectoredExceptionHandler() kernel32.AddVectoredExceptionHandler
-@ stub GetErrorMode
+@ stdcall -version=0x600+ GetErrorMode() kernel32.GetErrorMode
 @ stdcall GetLastError() kernel32.GetLastError
 @ stdcall RaiseException() kernel32.RaiseException
 @ stub RaiseFailFastException
