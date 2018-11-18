@@ -177,6 +177,45 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     return Status;
 }
 
+TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
+				    PNDIS_BUFFER Buffer,
+				    PUINT BufferSize)
+{
+    MIB_TCPROW TcpRow;
+    PADDRESS_FILE EndPoint;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    EndPoint = NULL;
+    if (AddrFile->Connection != NULL)
+        EndPoint = AddrFile->Connection->AddressFile;
+    else if (AddrFile->Listener != NULL)
+        EndPoint = AddrFile->Listener->AddressFile;
+
+    TcpRow.State = 0; /* FIXME */
+    TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+    TcpRow.dwLocalPort = AddrFile->Port;
+
+    if (EndPoint != NULL)
+    {
+        TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
+        TcpRow.dwRemotePort = EndPoint->Port;
+    }
+    else
+    {
+        TcpRow.dwRemoteAddr = 0;
+        TcpRow.dwRemotePort = 0;
+    }
+
+    Status = InfoCopyOut( (PCHAR)&TcpRow, sizeof(TcpRow),
+			  Buffer, BufferSize );
+
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+
+    return Status;
+}
+
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
 {
     IP_ADDRESS Address, Netmask, Router;
