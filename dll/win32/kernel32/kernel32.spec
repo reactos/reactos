@@ -225,12 +225,12 @@
 @ stdcall EnterCriticalSection(ptr) ntdll.RtlEnterCriticalSection
 @ stdcall EnumCalendarInfoA(ptr long long long)
 @ stdcall EnumCalendarInfoExA(ptr long long long)
-@ stub -version=0x600+ EnumCalendarInfoExEx
+@ stdcall -version=0x600+ EnumCalendarInfoExEx(ptr wstr long wstr long long)
 @ stdcall EnumCalendarInfoExW(ptr long long long)
 @ stdcall EnumCalendarInfoW(ptr long long long)
 @ stdcall EnumDateFormatsA(ptr long long)
 @ stdcall EnumDateFormatsExA(ptr long long)
-@ stub -version=0x600+ EnumDateFormatsExEx
+@ stdcall -version=0x600+ EnumDateFormatsExEx(ptr wstr long long)
 @ stdcall EnumDateFormatsExW(ptr long long)
 @ stdcall EnumDateFormatsW(ptr long long)
 @ stdcall EnumLanguageGroupLocalesA(ptr long long ptr)
@@ -254,10 +254,10 @@
 @ stdcall EnumSystemLanguageGroupsA(ptr long ptr)
 @ stdcall EnumSystemLanguageGroupsW(ptr long ptr)
 @ stdcall EnumSystemLocalesA(ptr long)
-@ stub -version=0x600+ EnumSystemLocalesEx
+@ stdcall -version=0x600+ EnumSystemLocalesEx(ptr long long ptr)
 @ stdcall EnumSystemLocalesW(ptr long)
 @ stdcall EnumTimeFormatsA(ptr long long)
-@ stub -version=0x600+ EnumTimeFormatsEx
+@ stdcall -version=0x600+ EnumTimeFormatsEx(ptr wstr long long)
 @ stdcall EnumTimeFormatsW(ptr long long)
 @ stdcall EnumUILanguagesA(ptr long long)
 @ stdcall EnumUILanguagesW(ptr long long)
@@ -360,7 +360,7 @@
 @ stub -version=0x600+ GetCalendarDaysInMonth
 @ stub -version=0x600+ GetCalendarDifferenceInDays
 @ stdcall GetCalendarInfoA(long long long ptr long ptr)
-@ stub -version=0x600+ GetCalendarInfoEx
+@ stdcall -version=0x600+ GetCalendarInfoEx(wstr, long, wstr, long, wstr, long, ptr)
 @ stdcall GetCalendarInfoW(long long long ptr long ptr)
 @ stub -version=0x600+ GetCalendarMonthsInYear
 @ stub -version=0x600+ GetCalendarSupportedDateRange
@@ -436,7 +436,7 @@
 @ stdcall -norelay GetCurrentThread()
 @ stdcall -norelay GetCurrentThreadId()
 @ stdcall GetDateFormatA(long long ptr str ptr long)
-@ stub -version=0x600+ GetDateFormatEx
+@ stdcall -version=0x600+ GetDateFormatEx(wstr long ptr wstr wstr long wstr)
 @ stdcall GetDateFormatW(long long ptr wstr ptr long)
 @ stdcall GetDefaultCommConfigA(str ptr long)
 @ stdcall GetDefaultCommConfigW(wstr ptr long)
@@ -496,8 +496,9 @@
 @ stdcall -version=0x500-0x502 GetLinguistLangSize(ptr)
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
-@ stub -version=0x600+ GetLocaleInfoEx
+@ stdcall -version=0x600+ GetLocaleInfoEx(wstr long ptr long)
 @ stdcall GetLocaleInfoW(long long ptr long)
+@ stdcall -version=0x600+ IsValidLocaleName(wstr)
 @ stdcall GetLogicalDriveStringsA(long ptr)
 @ stdcall GetLogicalDriveStringsW(long ptr)
 @ stdcall GetLogicalDrives()
@@ -514,7 +515,7 @@
 @ stdcall GetModuleHandleExW(long ptr ptr)
 @ stdcall GetModuleHandleW(wstr)
 @ stdcall GetNLSVersion(long long ptr)
-@ stub -version=0x600+ GetNLSVersionEx
+@ stdcall GetNLSVersionEx(long wstr ptr)
 @ stub -version=0x600+ GetNamedPipeAttribute
 @ stub -version=0x600+ GetNamedPipeClientComputerNameA
 @ stub -version=0x600+ GetNamedPipeClientComputerNameW
@@ -534,7 +535,7 @@
 @ stdcall GetNumaProcessorNode(long ptr)
 @ stub -version=0x600+ GetNumaProximityNode
 @ stdcall GetNumberFormatA(long long str ptr ptr long)
-@ stub -version=0x600+ GetNumberFormatEx
+@ stdcall -version=0x600+ GetNumberFormatEx(wstr long wstr ptr wstr long)
 @ stdcall GetNumberFormatW(long long wstr ptr ptr long)
 @ stdcall GetNumberOfConsoleFonts()
 @ stdcall GetNumberOfConsoleInputEvents(long ptr)
@@ -628,14 +629,14 @@
 @ stdcall GetTickCount()
 @ stub -version=0x600+ GetTickCount64
 @ stdcall GetTimeFormatA(long long ptr str ptr long)
-@ stub -version=0x600+ GetTimeFormatEx
+@ stdcall -version=0x600+ GetTimeFormatEx(wstr long ptr wstr wstr long)
 @ stdcall GetTimeFormatW(long long ptr wstr ptr long)
 @ stdcall GetTimeZoneInformation(ptr)
 @ stub -version=0x600+ GetTimeZoneInformationForYear
 @ stub -version=0x600+ GetUILanguageInfo
 @ stdcall GetUserDefaultLCID()
 @ stdcall GetUserDefaultLangID()
-@ stub -version=0x600+ GetUserDefaultLocaleName
+@ stdcall -version=0x600+ GetUserDefaultLocaleName(wstr long)
 @ stdcall GetUserDefaultUILanguage()
 @ stdcall GetUserGeoID(long)
 @ stub -version=0x600+ GetUserPreferredUILanguages
@@ -754,7 +755,7 @@
 @ stdcall IsWow64Process(ptr ptr)
 @ stub -version=0x600+ LCIDToLocaleName
 @ stdcall LCMapStringA(long long str long ptr long)
-@ stub -version=0x600+ LCMapStringEx
+@ stdcall -version=0x600+ LCMapStringEx(long long wstr long ptr long ptr ptr long)
 @ stdcall LCMapStringW(long long wstr long ptr long)
 @ stdcall LZClose(long)
 @ stdcall LZCloseFile(long)
