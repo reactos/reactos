@@ -23,6 +23,7 @@
 # CoCreateObjectInContext
 # CoDeactivateObject
 @ stdcall -stub CoDisableCallCancellation(ptr)
+@ stdcall -stub CoDisconnectContext(long)
 @ stdcall CoDisconnectObject(ptr long)
 @ stdcall CoDosDateTimeToFileTime(long long ptr) kernel32.DosDateTimeToFileTime
 @ stdcall -stub CoEnableCallCancellation(ptr)
