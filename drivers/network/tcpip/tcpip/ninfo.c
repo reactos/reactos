@@ -216,6 +216,26 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     return Status;
 }
 
+TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
+				    PNDIS_BUFFER Buffer,
+				    PUINT BufferSize)
+{
+    MIB_UDPROW UdpRow;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+    UdpRow.dwLocalPort = AddrFile->Port;
+
+    Status = InfoCopyOut( (PCHAR)&UdpRow, sizeof(UdpRow),
+			  Buffer, BufferSize );
+
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+
+    return Status;
+}
+
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
 {
     IP_ADDRESS Address, Netmask, Router;
