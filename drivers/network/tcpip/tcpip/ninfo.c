@@ -188,12 +188,16 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     EndPoint = NULL;
-    if (AddrFile->Connection != NULL)
-        EndPoint = AddrFile->Connection->AddressFile;
-    else if (AddrFile->Listener != NULL)
-        EndPoint = AddrFile->Listener->AddressFile;
-
     TcpRow.State = 0; /* FIXME */
+
+    if (AddrFile->Listener != NULL)
+    {
+        EndPoint = AddrFile->Listener->AddressFile;
+        TcpRow.State = MIB_TCP_STATE_LISTEN;
+    }
+    else if (AddrFile->Connection != NULL)
+        EndPoint = AddrFile->Connection->AddressFile;
+
     TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     TcpRow.dwLocalPort = AddrFile->Port;
 
