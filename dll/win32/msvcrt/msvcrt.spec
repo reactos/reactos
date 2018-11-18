@@ -367,6 +367,7 @@
 @ cdecl _errno()
 @ cdecl -i386 _except_handler2(ptr ptr ptr ptr)
 @ cdecl -i386 _except_handler3(ptr ptr ptr ptr)
+@ cdecl -i386 -version=0x600+ _except_handler4_common(ptr ptr ptr ptr ptr ptr)
 @ varargs _execl(str str)
 @ varargs _execle(str str)
 @ varargs _execlp(str str)

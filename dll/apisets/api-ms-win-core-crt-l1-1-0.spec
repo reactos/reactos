@@ -4,7 +4,7 @@
 @ stdcall __isascii() msvcrt.__isascii
 @ stdcall _atoi64() msvcrt._atoi64
 @ stdcall _errno() msvcrt._errno
-@ stub _except_handler4_common
+@ stdcall -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
 @ stdcall -arch=i386,x86_64,arm _fltused() ntdll._fltused
 @ stdcall -arch=i386 _ftol() msvcrt._ftol
 @ stub _ftol2
