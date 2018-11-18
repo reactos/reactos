@@ -651,7 +651,7 @@ PMIB_UDPTABLE getUdpTable(void)
 
     TRACE("called.\n");
 
-    totalNumber = getNumTcpEntries();
+    totalNumber = getNumUdpEntries();
 
     status = openTcpFile( &tcpFile, FILE_READ_DATA );
     if( !NT_SUCCESS(status) ) {
