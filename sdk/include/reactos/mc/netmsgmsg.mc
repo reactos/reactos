@@ -6608,6 +6608,672 @@ Language=Russian
 %1 has a remembered connection to %2.
 .
 
+MessageId=3710
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3710
+Language=English
+An error occurred while opening the Help file.
+.
+Language=Russian
+An error occurred while opening the Help file.
+.
+
+MessageId=3711
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3711
+Language=English
+The Help file is empty.
+.
+Language=Russian
+The Help file is empty.
+.
+
+MessageId=3712
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3712
+Language=English
+The Help file is corrupted.
+.
+Language=Russian
+The Help file is corrupted.
+.
+
+MessageId=3713
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3713
+Language=English
+Could not find a domain controller for domain %1.
+.
+Language=Russian
+Could not find a domain controller for domain %1.
+.
+
+MessageId=3714
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3714
+Language=English
+This operation is privileged on systems with earlier\nversions of the software.
+.
+Language=Russian
+This operation is privileged on systems with earlier\nversions of the software.
+.
+
+MessageId=3716
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3716
+Language=English
+The device type is unknown.
+.
+Language=Russian
+The device type is unknown.
+.
+
+MessageId=3717
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3717
+Language=English
+The log file has been corrupted.
+.
+Language=Russian
+The log file has been corrupted.
+.
+
+MessageId=3718
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3718
+Language=English
+Program filenames must end with .EXE.
+.
+Language=Russian
+Program filenames must end with .EXE.
+.
+
+MessageId=3719
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3719
+Language=English
+A matching share could not be found so nothing was deleted.
+.
+Language=Russian
+A matching share could not be found so nothing was deleted.
+.
+
+MessageId=3720
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3720
+Language=English
+A bad value is in the units-per-week field of the user record.
+.
+Language=Russian
+A bad value is in the units-per-week field of the user record.
+.
+
+MessageId=3721
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3721
+Language=English
+The password is invalid for %1.
+.
+Language=Russian
+The password is invalid for %1.
+.
+
+MessageId=3722
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3722
+Language=English
+An error occurred while sending a message to %1.
+.
+Language=Russian
+An error occurred while sending a message to %1.
+.
+
+MessageId=3723
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3723
+Language=English
+The password or user name is invalid for %1.
+.
+Language=Russian
+The password or user name is invalid for %1.
+.
+
+MessageId=3725
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3725
+Language=English
+An error occurred when the share was deleted.
+.
+Language=Russian
+An error occurred when the share was deleted.
+.
+
+MessageId=3726
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3726
+Language=English
+The user name is invalid.
+.
+Language=Russian
+The user name is invalid.
+.
+
+MessageId=3727
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3727
+Language=English
+The password is invalid.
+.
+Language=Russian
+The password is invalid.
+.
+
+MessageId=3728
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3728
+Language=English
+The passwords do not match.
+.
+Language=Russian
+The passwords do not match.
+.
+
+MessageId=3729
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3729
+Language=English
+Your persistent connections were not all restored.
+.
+Language=Russian
+Your persistent connections were not all restored.
+.
+
+MessageId=3730
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3730
+Language=English
+This is not a valid computer name or domain name.
+.
+Language=Russian
+This is not a valid computer name or domain name.
+.
+
+MessageId=3732
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3732
+Language=English
+Default permissions cannot be set for that resource.
+.
+Language=Russian
+Default permissions cannot be set for that resource.
+.
+
+MessageId=3734
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3734
+Language=English
+A valid password was not entered.
+.
+Language=Russian
+A valid password was not entered.
+.
+
+MessageId=3735
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3735
+Language=English
+A valid name was not entered.
+.
+Language=Russian
+A valid name was not entered.
+.
+
+MessageId=3736
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3736
+Language=English
+The resource named cannot be shared.
+.
+Language=Russian
+The resource named cannot be shared.
+.
+
+MessageId=3737
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3737
+Language=English
+The permissions string contains invalid permissions.
+.
+Language=Russian
+The permissions string contains invalid permissions.
+.
+
+MessageId=3738
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3738
+Language=English
+You can only perform this operation on printers and communication devices.
+.
+Language=Russian
+You can only perform this operation on printers and communication devices.
+.
+
+MessageId=3742
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3742
+Language=English
+%1 is an invalid user or group name.
+.
+Language=Russian
+%1 is an invalid user or group name.
+.
+
+MessageId=3743
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3743
+Language=English
+The server is not configured for remote administration.
+.
+Language=Russian
+The server is not configured for remote administration.
+.
+
+MessageId=3752
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3752
+Language=English
+No users have sessions with this server.
+.
+Language=Russian
+No users have sessions with this server.
+.
+
+MessageId=3753
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3753
+Language=English
+User %1 is not a member of group %2.
+.
+Language=Russian
+User %1 is not a member of group %2.
+.
+
+MessageId=3754
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3754
+Language=English
+User %1 is already a member of group %2.
+.
+Language=Russian
+User %1 is already a member of group %2.
+.
+
+MessageId=3755
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3755
+Language=English
+There is no such user: %1.
+.
+Language=Russian
+There is no such user: %1.
+.
+
+MessageId=3756
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3756
+Language=English
+This is an invalid response.
+.
+Language=Russian
+This is an invalid response.
+.
+
+MessageId=3757
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3757
+Language=English
+No valid response was provided.
+.
+Language=Russian
+No valid response was provided.
+.
+
+MessageId=3758
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3758
+Language=English
+The destination list provided does not match the destination list of the printer queue.
+.
+Language=Russian
+The destination list provided does not match the destination list of the printer queue.
+.
+
+MessageId=3759
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3759
+Language=English
+Your password cannot be changed until %1.
+.
+Language=Russian
+Your password cannot be changed until %1.
+.
+
+MessageId=3760
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3760
+Language=English
+%1 is not a recognized day of the week.
+.
+Language=Russian
+%1 is not a recognized day of the week.
+.
+
+MessageId=3761
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3761
+Language=English
+The time range specified ends before it starts.
+.
+Language=Russian
+The time range specified ends before it starts.
+.
+
+MessageId=3762
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3762
+Language=English
+%1 is not a recognized hour.
+.
+Language=Russian
+%1 is not a recognized hour.
+.
+
+MessageId=3763
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3763
+Language=English
+%1 is not a valid specification for minutes.
+.
+Language=Russian
+%1 is not a valid specification for minutes.
+.
+
+MessageId=3764
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3764
+Language=English
+Time supplied is not exactly on the hour.
+.
+Language=Russian
+Time supplied is not exactly on the hour.
+.
+
+MessageId=3765
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3765
+Language=English
+12 and 24 hour time formats may not be mixed.
+.
+Language=Russian
+12 and 24 hour time formats may not be mixed.
+.
+
+MessageId=3766
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3766
+Language=English
+%1 is not a valid 12-hour suffix.
+.
+Language=Russian
+%1 is not a valid 12-hour suffix.
+.
+
+MessageId=3767
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3767
+Language=English
+An illegal date format has been supplied.
+.
+Language=Russian
+An illegal date format has been supplied.
+.
+
+MessageId=3768
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3768
+Language=English
+An illegal day range has been supplied.
+.
+Language=Russian
+An illegal day range has been supplied.
+.
+
+MessageId=3769
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3769
+Language=English
+An illegal time range has been supplied.
+.
+Language=Russian
+An illegal time range has been supplied.
+.
+
+MessageId=3770
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3770
+Language=English
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Russian
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+
+MessageId=3771
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3771
+Language=English
+The value for ENABLESCRIPT must be YES.
+.
+Language=Russian
+The value for ENABLESCRIPT must be YES.
+.
+
+MessageId=3773
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3773
+Language=English
+An illegal country code has been supplied.
+.
+Language=Russian
+An illegal country code has been supplied.
+.
+
+MessageId=3774
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3774
+Language=English
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Russian
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+
+MessageId=3775
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3775
+Language=English
+The user context supplied is invalid.
+.
+Language=Russian
+The user context supplied is invalid.
+.
+
+MessageId=3776
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3776
+Language=English
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Russian
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+
+MessageId=3777
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3777
+Language=English
+Sending files is no longer supported.
+.
+Language=Russian
+Sending files is no longer supported.
+.
+
+MessageId=3778
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3778
+Language=English
+You may not specify paths for ADMIN$ and IPC$ shares.
+.
+Language=Russian
+You may not specify paths for ADMIN$ and IPC$ shares.
+.
+
+MessageId=3779
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3779
+Language=English
+User or group %1 is already a member of local group %2.
+.
+Language=Russian
+User or group %1 is already a member of local group %2.
+.
+
+MessageId=3780
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3780
+Language=English
+There is no such user or group: %1.
+.
+Language=Russian
+There is no such user or group: %1.
+.
+
+MessageId=3781
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3781
+Language=English
+There is no such computer: %1.
+.
+Language=Russian
+There is no such computer: %1.
+.
+
+MessageId=3782
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3782
+Language=English
+The computer %1 already exists.
+.
+Language=Russian
+The computer %1 already exists.
+.
+
+MessageId=3783
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3783
+Language=English
+There is no such global user or group: %1.
+.
+Language=Russian
+There is no such global user or group: %1.
+.
+
+MessageId=3784
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3784
+Language=English
+Only disk shares can be marked as cacheable
+.
+Language=Russian
+Only disk shares can be marked as cacheable
+.
+
+MessageId=3790
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3790
+Language=English
+The system could not find message: %1.
+.
+Language=Russian
+The system could not find message: %1.
+.
+
 
 ;
 ; alertmsg.h (non-public) message definitions (5500 - 5549 ALERT2_BASE)
