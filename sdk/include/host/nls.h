@@ -407,5 +407,6 @@ typedef DWORD LCID;
 #define SUBLANG_GAELIC                     0x01
 #define SUBLANG_GAELIC_SCOTTISH            0x02
 #define SUBLANG_GAELIC_MANX                0x03
+#define SUBLANG_KARAMANLI                  0x80 /* Karamanlidic Turkish */
 
 #endif
