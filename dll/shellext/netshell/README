@@ -66,5 +66,5 @@ as is and the other is setting is to 0. What this does is that when 0, the conne
 in the shell folder and the tray using the system's INetConnectionManager (which resides in the system's
 netman service and is accessible through the system's netshell.dll). This allows us to implement and
 test our three components against the correct implementation of INetConnectionManager.
-The other option is setting USE_CUSTOM_CONMGR to 0 which will make the shell folder and the tray 
+The other option is setting USE_CUSTOM_CONMGR to 1 which will make the shell folder and the tray
 enumerate connections with our connection manager effectively testing it in windows as well.
