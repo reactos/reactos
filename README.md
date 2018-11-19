@@ -49,9 +49,9 @@ The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/r
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
 
 To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._
-Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: [http://www.reactos.org/wiki/Build_Environment](http://www.reactos.org/wiki/Build_Environment).
+Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: [http://www.reactos.org/wiki/Build_Environment](Build Environment).
 
-Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: [https://www.reactos.org/wiki/Building_with_MSVC](https://www.reactos.org/wiki/Building_with_MSVC).
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: [https://www.reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B](Visual Studio or Microsoft Visual C++).
 
 ### Binaries
 
@@ -103,7 +103,7 @@ It is not another wrapper built on Linux, like WINE. It does not attempt or plan
 
 ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
-More information is available at: [https://www.reactos.org](https://www.reactos.org).
+More information is available at: [https://www.reactos.org](reactos.org).
 
 Also see the [media/doc](/media/doc/) subdirectory for some sparse notes.
 
