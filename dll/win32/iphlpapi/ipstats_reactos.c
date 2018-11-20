@@ -611,7 +611,7 @@ DWORD getNumUdpEntries(void)
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 
     for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
+        if( entitySet[i].tei_entity == CL_TL_ENTITY &&
 	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
@@ -670,7 +670,7 @@ PMIB_UDPTABLE getUdpTable(void)
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 
     for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
+        if( entitySet[i].tei_entity == CL_TL_ENTITY &&
 	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
@@ -721,7 +721,7 @@ DWORD getNumTcpEntries(void)
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 
     for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
+        if( entitySet[i].tei_entity == CO_TL_ENTITY &&
 	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
@@ -780,7 +780,7 @@ PMIB_TCPTABLE getTcpTable(void)
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 
     for( i = 0; i < numEntities; i++ ) {
-        if( isInterface( &entitySet[i] ) &&
+        if( entitySet[i].tei_entity == CO_TL_ENTITY &&
 	    hasArp( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
