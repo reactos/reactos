@@ -27391,9 +27391,10 @@ ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed beca
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
 .
 Language=Polish
-Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
+.
+Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Directory Services Restore Mode. Check the event log for detailed information.
 .
@@ -28023,9 +28024,10 @@ ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
 .
 Language=Polish
-Language=Romanian
 ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
+.
+Language=Romanian
 ERROR_SAM_INIT_FAILURE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Click OK to shut down the system and reboot into Safe Mode. Check the event log for detailed information.
 .
@@ -28366,9 +28368,10 @@ ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of th
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
 Language=Polish
-Language=Romanian
 ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+.
+Language=Romanian
 ERROR_DS_INIT_FAILURE_CONSOLE - Directory Services could not start because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
@@ -28386,9 +28389,10 @@ ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization fai
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
 Language=Polish
-Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
+.
+Language=Romanian
 ERROR_DS_SAM_INIT_FAILURE_CONSOLE - Security Accounts Manager initialization failed because of the following error: %1.
 Error Status: 0x%2. Please click OK to shutdown the system. You can use the recovery console to diagnose the system further.
 .
