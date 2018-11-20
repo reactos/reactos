@@ -458,23 +458,35 @@ def run(wineroot):
     print 'found', total[0], '/', total[1], 'forwarders'
 
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt.in'), 'rb') as template:
-        data = template.read()
-        data = data.replace('%WINE_GIT_VERSION%', version)
+        cmake_template = template.read()
+        cmake_template = cmake_template.replace('%WINE_GIT_VERSION%', version)
         # Detect the checkout newline settings
-        if '\r\n' in data:
+        if '\r\n' in cmake_template:
             NL_CHAR = '\r\n'
 
+    manifest_files = []
     print 'Writing apisets'
     spec_header = [line.replace('\n', NL_CHAR) for line in SPEC_HEADER]
     for apiset in wine_apisets:
         with open(os.path.join(SCRIPT_DIR, apiset.name + '.spec'), 'wb') as out_spec:
             out_spec.writelines(spec_header)
             apiset.write(out_spec)
+        manifest_files.append('  <file name="{}.dll"/>'.format(apiset.name))
+
+    print 'Generating manifest'
+    manifest_name = 'x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest'
+    with open(os.path.join(SCRIPT_DIR, manifest_name + '.in'), 'rb') as template:
+        manifest_template = template.read()
+        manifest_template = manifest_template.replace('%WINE_GIT_VERSION%', version)
+        file_list = '\r\n'.join(manifest_files)
+        manifest_template = manifest_template.replace('%MANIFEST_FILE_LIST%', file_list)
+        with open(os.path.join(SCRIPT_DIR, manifest_name), 'wb') as manifest:
+            manifest.write(manifest_template)
 
     print 'Writing CMakeLists.txt'
     baseaddress = 0x60000000
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt'), 'wb') as cmakelists:
-        cmakelists.write(data)
+        cmakelists.write(cmake_template)
         for apiset in wine_apisets:
             baseaddress += apiset.write_cmake(cmakelists, baseaddress)
             baseaddress += (0x10000 - baseaddress) % 0x10000
