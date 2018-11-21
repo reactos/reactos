@@ -210,9 +210,11 @@ MmInitSystem(IN ULONG Phase,
     InitializeListHead(&MiSegmentList);
     ExInitializeFastMutex(&MiGlobalPageOperation);
     KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+#ifdef NEWCC
     // Until we're fully demand paged, we can do things the old way through
     // the balance manager
     MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+#endif
 
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 

@@ -185,6 +185,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 {
     SECTION_IMAGE_INFORMATION ImageInformation;
     PFILE_OBJECT FileObject;
+    ULONG ReferenceCount;
     PVOID BasedAddress;
     ULONG NrSegments;
     PMM_SECTION_SEGMENT Segments;
@@ -1350,10 +1351,6 @@ MmAccessFaultSectionView(
     MEMORY_AREA* MemoryArea,
     PVOID Address
 );
-
-VOID
-NTAPI
-MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
 /* sysldr.c ******************************************************************/
 

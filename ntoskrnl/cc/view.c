@@ -1316,14 +1316,7 @@ CcRosDereferenceCache (
         SharedCacheMap->OpenCount--;
         if (SharedCacheMap->OpenCount == 0)
         {
-            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-            MmFreeSectionSegments(SharedCacheMap->FileObject);
-
-            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             CcRosDeleteFileCache(FileObject, SharedCacheMap, &OldIrql);
-            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-
-            return;
         }
     }
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
@@ -1378,14 +1371,7 @@ CcRosReleaseFileCache (
                 SharedCacheMap->OpenCount--;
                 if (SharedCacheMap->OpenCount == 0)
                 {
-                    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-                    MmFreeSectionSegments(SharedCacheMap->FileObject);
-
-                    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
                     CcRosDeleteFileCache(FileObject, SharedCacheMap, &OldIrql);
-                    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-
-                    return STATUS_SUCCESS;
                 }
             }
         }

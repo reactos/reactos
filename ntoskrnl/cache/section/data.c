@@ -277,6 +277,10 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
     MmLockSectionSegment(Segment);
     RemoveEntryList(&Segment->ListOfSegments);
     if (Segment->Flags & MM_DATAFILE_SEGMENT) {
+#ifndef NEWCC
+        ASSERT(FALSE);
+#endif
+
         KeAcquireSpinLock(&Segment->FileObject->IrpListLock, &OldIrql);
         if (Segment->Flags & MM_SEGMENT_FINALIZE) {
             KeReleaseSpinLock(&Segment->FileObject->IrpListLock, OldIrql);

@@ -792,57 +792,26 @@ l_Return:
  * ARGUMENTS: PFILE_OBJECT to wait for.
  * RETURNS:   Status of the wait.
  */
-NTSTATUS
+VOID
 MmspWaitForFileLock(PFILE_OBJECT File)
 {
-    return STATUS_SUCCESS;
-    //return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
+    PFSRTL_ADVANCED_FCB_HEADER FcbHeader = File->FsContext;
+
+    if (FcbHeader->Flags & FSRTL_FLAG_ADVANCED_HEADER)
+        ExAcquireFastMutex(FcbHeader->FastMutex);
+    else
+        ExEnterCriticalRegionAndAcquireResourceExclusive(FcbHeader->Resource);
 }
 
 VOID
-NTAPI
-MmFreeSectionSegments(PFILE_OBJECT FileObject)
+MmspReleaseFileLock(PFILE_OBJECT File)
 {
-    if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
-    {
-        PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
-        PMM_SECTION_SEGMENT SectionSegments;
-        ULONG NrSegments;
-        ULONG i;
+    PFSRTL_ADVANCED_FCB_HEADER FcbHeader = File->FsContext;
 
-        ImageSectionObject = (PMM_IMAGE_SECTION_OBJECT)FileObject->SectionObjectPointer->ImageSectionObject;
-        NrSegments = ImageSectionObject->NrSegments;
-        SectionSegments = ImageSectionObject->Segments;
-        for (i = 0; i < NrSegments; i++)
-        {
-            if (SectionSegments[i].ReferenceCount != 0)
-            {
-                DPRINT1("Image segment %lu still referenced (was %lu)\n", i,
-                        SectionSegments[i].ReferenceCount);
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-            MmFreePageTablesSectionSegment(&SectionSegments[i], NULL);
-        }
-        ExFreePool(ImageSectionObject->Segments);
-        ExFreePool(ImageSectionObject);
-        FileObject->SectionObjectPointer->ImageSectionObject = NULL;
-    }
-    if (FileObject->SectionObjectPointer->DataSectionObject != NULL)
-    {
-        PMM_SECTION_SEGMENT Segment;
-
-        Segment = (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
-                  DataSectionObject;
-
-        if (Segment->ReferenceCount != 0)
-        {
-            DPRINT1("Data segment still referenced\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        MmFreePageTablesSectionSegment(Segment, NULL);
-        ExFreePool(Segment);
-        FileObject->SectionObjectPointer->DataSectionObject = NULL;
-    }
+    if (FcbHeader->Flags & FSRTL_FLAG_ADVANCED_HEADER)
+        ExReleaseFastMutex(FcbHeader->FastMutex);
+    else
+        ExReleaseResourceAndLeaveCriticalRegion(FcbHeader->Resource);
 }
 
 VOID
@@ -2642,6 +2611,7 @@ MmpDeleteSection(PVOID ObjectBody)
 {
     PSECTION Section = ObjectBody;
     PFILE_OBJECT FileObject;
+    ULONG RefCount = 1;
 
     /* Check if it's an ARM3, or ReactOS section */
     if (!MiIsRosSectionObject(Section))
@@ -2652,14 +2622,21 @@ MmpDeleteSection(PVOID ObjectBody)
 
     FileObject = FILE_OBJECT_FROM_SECTION(Section);
 
+    if (FileObject)
+    {
+        MmspWaitForFileLock(FileObject);
+    }
+
     DPRINT("MmpDeleteSection(ObjectBody %p)\n", ObjectBody);
     if (Section->u.Flags.Image)
     {
         ULONG i;
         ULONG NrSegments;
-        ULONG RefCount;
         PMM_SECTION_SEGMENT SectionSegments;
         PMM_IMAGE_SECTION_OBJECT ImageSection = (PMM_IMAGE_SECTION_OBJECT)Section->Segment;
+
+        ASSERT((FileObject == NULL)
+                || (ImageSection == FileObject->SectionObjectPointer->ImageSectionObject));
 
         /*
          * NOTE: Section->ImageSection can be NULL for short time
@@ -2668,26 +2645,47 @@ MmpDeleteSection(PVOID ObjectBody)
          * process further here.
          */
         if (ImageSection == NULL)
-            return;
+            goto leave;
+
+        RefCount = InterlockedDecrementUL(&ImageSection->ReferenceCount);
 
         SectionSegments = ImageSection->Segments;
         NrSegments = ImageSection->NrSegments;
 
         for (i = 0; i < NrSegments; i++)
         {
+            ULONG SegmentRefCount;
             if (SectionSegments[i].Image.Characteristics & IMAGE_SCN_MEM_SHARED)
             {
                 MmLockSectionSegment(&SectionSegments[i]);
             }
-            RefCount = InterlockedDecrementUL(&SectionSegments[i].ReferenceCount);
+            SegmentRefCount = InterlockedDecrementUL(&SectionSegments[i].ReferenceCount);
             if (SectionSegments[i].Image.Characteristics & IMAGE_SCN_MEM_SHARED)
             {
                 MmUnlockSectionSegment(&SectionSegments[i]);
-                if (RefCount == 0)
+                if (SegmentRefCount == 0)
                 {
                     MmpFreePageFileSegment(&SectionSegments[i]);
                 }
             }
+
+            if (RefCount == 0)
+            {
+                if (SegmentRefCount != 0)
+                {
+                    DPRINT1("Image segment %lu still referenced (was %lu)\n", i,
+                            SectionSegments[i].ReferenceCount);
+                    KeBugCheck(MEMORY_MANAGEMENT);
+                }
+                MmFreePageTablesSectionSegment(&SectionSegments[i], NULL);
+            }
+        }
+
+        if (RefCount == 0)
+        {
+            ExFreePool(ImageSection->Segments);
+            ExFreePoolWithTag(ImageSection, TAG_MM_SECTION_SEGMENT);
+            FileObject->SectionObjectPointer->ImageSectionObject = NULL;
         }
     }
 #ifdef NEWCC
@@ -2711,14 +2709,17 @@ MmpDeleteSection(PVOID ObjectBody)
 #endif
     else
     {
-    	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+        PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+
+        ASSERT((FileObject == NULL)
+                || (Segment == FileObject->SectionObjectPointer->DataSectionObject));
 
         /*
          * NOTE: Section->Segment can be NULL for short time
          * during the section creating.
          */
         if (Segment == NULL)
-            return;
+            goto leave;
 
         if (Segment->Flags & MM_PAGEFILE_SEGMENT)
         {
@@ -2729,14 +2730,23 @@ MmpDeleteSection(PVOID ObjectBody)
         }
         else
         {
-            (void)InterlockedDecrementUL(&Segment->ReferenceCount);
+            RefCount = InterlockedDecrementUL(&Segment->ReferenceCount);
+            if (RefCount == 0)
+            {
+                MmFreePageTablesSectionSegment(Segment, NULL);
+                ExFreePool(Segment);
+                FileObject->SectionObjectPointer->DataSectionObject = NULL;
+            }
         }
     }
+
+leave:
     if (FileObject != NULL)
     {
 #ifndef NEWCC
         CcRosDereferenceCache(FileObject);
 #endif
+        MmspReleaseFileLock(FileObject);
         ObDereferenceObject(FileObject);
     }
 }
@@ -2959,6 +2969,9 @@ MmCreateDataFileSection(PSECTION *SectionObject,
     Section->InitialPageProtection = SectionPageProtection;
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
 
+    /* We have a file */
+    Section->u.Flags.File = 1;
+
     /* Mark it as a ROS Section */
     Section->u.Flags.filler0 = 1;
 
@@ -3025,13 +3038,7 @@ MmCreateDataFileSection(PSECTION *SectionObject,
     /*
      * Lock the file
      */
-    Status = MmspWaitForFileLock(FileObject);
-    if (Status != STATUS_SUCCESS)
-    {
-        ObDereferenceObject(Section);
-        ObDereferenceObject(FileObject);
-        return(Status);
-    }
+    MmspWaitForFileLock(FileObject);
 
     /*
      * If this file hasn't been mapped as a data file before then allocate a
@@ -3043,7 +3050,7 @@ MmCreateDataFileSection(PSECTION *SectionObject,
                                         TAG_MM_SECTION_SEGMENT);
         if (Segment == NULL)
         {
-            //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+            MmspReleaseFileLock(FileObject);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
             return(STATUS_NO_MEMORY);
@@ -3086,6 +3093,7 @@ MmCreateDataFileSection(PSECTION *SectionObject,
             (PMM_SECTION_SEGMENT)FileObject->SectionObjectPointer->
             DataSectionObject;
         Section->Segment = (PSEGMENT)Segment;
+        ASSERT(Segment->ReferenceCount != 0);
         (void)InterlockedIncrementUL(&Segment->ReferenceCount);
         MmLockSectionSegment(Segment);
 
@@ -3095,8 +3103,21 @@ MmCreateDataFileSection(PSECTION *SectionObject,
             Segment->RawLength.QuadPart = MaximumSize.QuadPart;
             Segment->Length.QuadPart = PAGE_ROUND_UP(Segment->RawLength.QuadPart);
         }
+
+        ASSERT(FileObject->FsContext == Segment->FileObject->FsContext);
+
+        /* Reuse the segment file object */
+        if (FileObject != Segment->FileObject)
+        {
+            ObDereferenceObject(FileObject);
+            FileObject = Segment->FileObject;
+            ObReferenceObject(FileObject);
+        }
     }
+
     MmUnlockSectionSegment(Segment);
+    MmspReleaseFileLock(FileObject);
+
     Section->SizeOfSection = MaximumSize;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
@@ -3784,8 +3805,14 @@ MmCreateImageSection(PSECTION *SectionObject,
     /* Initialize flags */
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
 
+    /* We have a file */
+    Section->u.Flags.File = 1;
+
     /* Mark it as a "ROS" section */
     Section->u.Flags.filler0 = 1;
+
+    /* Lock the file */
+    MmspWaitForFileLock(FileObject);
 
     if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
@@ -3794,6 +3821,7 @@ MmCreateImageSection(PSECTION *SectionObject,
         ImageSectionObject = ExAllocatePoolWithTag(PagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
         if (ImageSectionObject == NULL)
         {
+            MmspReleaseFileLock(FileObject);
             ObDereferenceObject(FileObject);
             ObDereferenceObject(Section);
             return(STATUS_NO_MEMORY);
@@ -3818,6 +3846,7 @@ MmCreateImageSection(PSECTION *SectionObject,
             }
 
             ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
+            MmspReleaseFileLock(FileObject);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
             return(Status);
@@ -3825,55 +3854,15 @@ MmCreateImageSection(PSECTION *SectionObject,
 
         Section->Segment = (PSEGMENT)ImageSectionObject;
         ASSERT(ImageSectionObject->Segments);
-
-        /*
-         * Lock the file
-         */
-        Status = MmspWaitForFileLock(FileObject);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(ImageSectionObject->Segments);
-            ExFreePool(ImageSectionObject);
-            ObDereferenceObject(Section);
-            ObDereferenceObject(FileObject);
-            return(Status);
-        }
-
         ImageSectionObject->FileObject = FileObject;
+        ImageSectionObject->ReferenceCount = 1;
 
-        if (NULL != InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
-                ImageSectionObject, NULL))
-        {
-            /*
-             * An other thread has initialized the same image in the background
-             */
-            ExFreePool(ImageSectionObject->Segments);
-            ExFreePool(ImageSectionObject);
-            ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
-            Section->Segment = (PSEGMENT)ImageSectionObject;
-            SectionSegments = ImageSectionObject->Segments;
-
-            for (i = 0; i < ImageSectionObject->NrSegments; i++)
-            {
-                (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
-            }
-        }
+        FileObject->SectionObjectPointer->ImageSectionObject = ImageSectionObject;
 
         Status = StatusExeFmt;
     }
     else
     {
-        /*
-         * Lock the file
-         */
-        Status = MmspWaitForFileLock(FileObject);
-        if (Status != STATUS_SUCCESS)
-        {
-            ObDereferenceObject(Section);
-            ObDereferenceObject(FileObject);
-            return(Status);
-        }
-
         ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
         Section->Segment = (PSEGMENT)ImageSectionObject;
         SectionSegments = ImageSectionObject->Segments;
@@ -3886,8 +3875,21 @@ MmCreateImageSection(PSECTION *SectionObject,
             (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
         }
 
+        /* Reuse the file object from the shared structure */
+        ASSERT(FileObject->FsContext == ImageSectionObject->FileObject->FsContext);
+        if (FileObject != ImageSectionObject->FileObject)
+        {
+            ObDereferenceObject(FileObject);
+            FileObject = ImageSectionObject->FileObject;
+            ObReferenceObject(FileObject);
+        }
+
+        ImageSectionObject->ReferenceCount++;
+
         Status = STATUS_SUCCESS;
     }
+
+    MmspReleaseFileLock(FileObject);
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
 #endif
@@ -5075,7 +5077,7 @@ MmCreateSection (OUT PVOID  * Section,
 
 #ifndef NEWCC // A hack for initializing caching.
     // This is needed only in the old case.
-    if (FileHandle)
+    if ((FileHandle) && (FileObject->SectionObjectPointer != NULL) && (FileObject->SectionObjectPointer->SharedCacheMap == NULL))
     {
         IO_STATUS_BLOCK Iosb;
         NTSTATUS Status;

@@ -173,7 +173,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* io.c **********************************************************************/
 
-NTSTATUS
+VOID
 MmspWaitForFileLock(PFILE_OBJECT File);
 
 NTSTATUS
@@ -305,10 +305,6 @@ _MiFlushMappedSection(PVOID BaseAddress,
 VOID
 NTAPI
 MmFinalizeSegment(PMM_SECTION_SEGMENT Segment);
-
-VOID
-NTAPI
-MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
 NTSTATUS
 NTAPI
