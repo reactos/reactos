@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <udmihelp.h>
 #include <winreg.h>
 #include <reactos/buildno.h>
 
@@ -70,6 +71,36 @@ void PrintSystemInfo(FILE* output, DumpData& data)
     if (GetUserNameA(Buffer, &count))
         xfprintf(output, "    User Name: %s" NEWLINE, Buffer);
 
+
+    PVOID SMBiosBuf;
+    PCHAR DmiStrings[ID_STRINGS_MAX] = { 0 };
+    SMBiosBuf = LoadSMBiosData(DmiStrings);
+    if (SMBiosBuf)
+    {
+        if (DmiStrings[BIOS_VENDOR])
+            xfprintf(output, "    BIOS Vendor: %s" NEWLINE, DmiStrings[BIOS_VENDOR]);
+        if (DmiStrings[BIOS_VERSION])
+            xfprintf(output, "    BIOS Version: %s" NEWLINE, DmiStrings[BIOS_VERSION]);
+        if (DmiStrings[BIOS_DATE])
+            xfprintf(output, "    BIOS Date: %s" NEWLINE, DmiStrings[BIOS_DATE]);
+        if (DmiStrings[SYS_VENDOR])
+            xfprintf(output, "    System Manufacturer: %s" NEWLINE, DmiStrings[SYS_VENDOR]);
+        if (DmiStrings[SYS_FAMILY])
+            xfprintf(output, "    System Family: %s" NEWLINE, DmiStrings[SYS_FAMILY]);
+        if (DmiStrings[SYS_PRODUCT])
+            xfprintf(output, "    System Model: %s" NEWLINE, DmiStrings[SYS_PRODUCT]);
+        if (DmiStrings[SYS_VERSION])
+            xfprintf(output, "    System Version: %s" NEWLINE, DmiStrings[SYS_VERSION]);
+        if (DmiStrings[SYS_SKU])
+            xfprintf(output, "    System SKU: %s" NEWLINE, DmiStrings[SYS_SKU]);
+        if (DmiStrings[BOARD_VENDOR])
+            xfprintf(output, "    Baseboard Manufacturer: %s" NEWLINE, DmiStrings[BOARD_VENDOR]);
+        if (DmiStrings[BOARD_NAME])
+            xfprintf(output, "    Baseboard Model: %s" NEWLINE, DmiStrings[BOARD_NAME]);
+        if (DmiStrings[BOARD_VERSION])
+            xfprintf(output, "    Baseboard Version: %s" NEWLINE, DmiStrings[BOARD_VERSION]);
+        FreeSMBiosData(SMBiosBuf);
+    }
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);

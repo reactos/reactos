@@ -6,7 +6,8 @@
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#pragma once
+#ifndef DMILIB_H
+#define DMILIB_H
 
 enum _ID_STRINGS
 {
@@ -34,3 +35,5 @@ ParseSMBiosTables(
     _In_reads_bytes_(TableSize) PVOID SMBiosTables,
     _In_ ULONG TableSize,
     _Inout_updates_(ID_STRINGS_MAX) PCHAR * Strings);
+
+#endif /* DMILIB_H */
