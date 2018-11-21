@@ -11,7 +11,6 @@
 
 #include <strsafe.h>
 #include <udmihelp.h>
-#include <dmilib.h>
 
 typedef struct GENERIC_NAME
 {
