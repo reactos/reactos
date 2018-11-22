@@ -664,6 +664,187 @@ EnumerateBiosDiskEntries(
 #undef ROOT_NAME
 }
 
+
+
+/*
+ * Inserts the disk region represented by PartEntry into either the primary
+ * or the logical partition list of the given disk.
+ * The lists are kept sorted by increasing order of start sectors.
+ * Of course no disk region should overlap at all with one another.
+ */
+static
+VOID
+InsertDiskRegion(
+    IN PDISKENTRY DiskEntry,
+    IN PPARTENTRY PartEntry,
+    IN BOOLEAN LogicalPartition)
+{
+    PLIST_ENTRY List;
+    PLIST_ENTRY Entry;
+    PPARTENTRY PartEntry2;
+
+    /* Use the correct partition list */
+    if (LogicalPartition)
+        List = &DiskEntry->LogicalPartListHead;
+    else
+        List = &DiskEntry->PrimaryPartListHead;
+
+    /* Find the first disk region before which we need to insert the new one */
+    for (Entry = List->Flink; Entry != List; Entry = Entry->Flink)
+    {
+        PartEntry2 = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+        /* Ignore any unused empty region */
+        if ((PartEntry2->PartitionType == PARTITION_ENTRY_UNUSED &&
+             PartEntry2->StartSector.QuadPart == 0) || PartEntry2->SectorCount.QuadPart == 0)
+        {
+            continue;
+        }
+
+        /* If the current region ends before the one to be inserted, try again */
+        if (PartEntry2->StartSector.QuadPart + PartEntry2->SectorCount.QuadPart - 1 < PartEntry->StartSector.QuadPart)
+            continue;
+
+        /*
+         * One of the disk region boundaries crosses the desired region
+         * (it starts after the desired region, or ends before the end
+         * of the desired region): this is an impossible situation because
+         * disk regions (partitions) cannot overlap!
+         * Throw an error and bail out.
+         */
+        if (max(PartEntry->StartSector.QuadPart, PartEntry2->StartSector.QuadPart)
+            <=
+            min( PartEntry->StartSector.QuadPart +  PartEntry->SectorCount.QuadPart - 1,
+                PartEntry2->StartSector.QuadPart + PartEntry2->SectorCount.QuadPart - 1))
+        {
+            DPRINT1("Disk region overlap problem, stopping there!\n"
+                    "Partition to be inserted:\n"
+                    "    StartSector = %I64u ; EndSector = %I64u\n"
+                    "Existing disk region:\n"
+                    "    StartSector = %I64u ; EndSector = %I64u\n",
+                     PartEntry->StartSector.QuadPart,
+                     PartEntry->StartSector.QuadPart +  PartEntry->SectorCount.QuadPart - 1,
+                    PartEntry2->StartSector.QuadPart,
+                    PartEntry2->StartSector.QuadPart + PartEntry2->SectorCount.QuadPart - 1);
+            return;
+        }
+
+        /* We have found the first region before which the new one has to be inserted */
+        break;
+    }
+
+    /* Insert the disk region */
+    InsertTailList(Entry, &PartEntry->ListEntry);
+}
+
+static
+PPARTENTRY
+CreateInsertBlankRegion(
+    IN PDISKENTRY DiskEntry,
+    IN OUT PLIST_ENTRY ListHead,
+    IN ULONGLONG StartSector,
+    IN ULONGLONG SectorCount,
+    IN BOOLEAN LogicalSpace)
+{
+    PPARTENTRY NewPartEntry;
+
+    NewPartEntry = RtlAllocateHeap(ProcessHeap,
+                                   HEAP_ZERO_MEMORY,
+                                   sizeof(PARTENTRY));
+    if (NewPartEntry == NULL)
+        return NULL;
+
+    NewPartEntry->DiskEntry = DiskEntry;
+
+    NewPartEntry->IsPartitioned = FALSE;
+    NewPartEntry->FormatState = Unformatted;
+    NewPartEntry->FileSystem  = NULL;
+
+    NewPartEntry->StartSector.QuadPart = StartSector;
+    NewPartEntry->SectorCount.QuadPart = SectorCount;
+
+    DPRINT1("First Sector : %I64u\n", NewPartEntry->StartSector.QuadPart);
+    DPRINT1("Last Sector  : %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+    DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+    /* Insert the table into the list */
+    InsertTailList(ListHead, &NewPartEntry->ListEntry);
+
+    return NewPartEntry;
+}
+
+static
+// BOOLEAN
+PPARTENTRY
+InitializePartitionEntry(
+    IN PDISKENTRY DiskEntry,
+    IN PPARTENTRY PartEntry,
+    IN ULONGLONG SectorCount,
+    IN BOOLEAN AutoCreate)
+{
+    PPARTENTRY NewPartEntry;
+
+    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+
+    if ((AutoCreate != FALSE) ||
+        (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
+                   PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
+    {
+        DPRINT1("Convert existing partition entry\n");
+
+        /* Convert current entry to 'new (unformatted)' */
+        PartEntry->IsPartitioned = TRUE;
+        PartEntry->New = TRUE;
+        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
+        PartEntry->FormatState = Unformatted;
+        PartEntry->FileSystem  = NULL;
+        PartEntry->AutoCreate = AutoCreate;
+        PartEntry->BootIndicator = FALSE;
+        PartEntry->LogicalPartition = FALSE;
+
+        NewPartEntry = PartEntry;
+    }
+    else
+    {
+        DPRINT1("Add new partition entry\n");
+
+        /* Insert and initialize a new partition entry */
+        NewPartEntry = RtlAllocateHeap(ProcessHeap,
+                                       HEAP_ZERO_MEMORY,
+                                       sizeof(PARTENTRY));
+        if (NewPartEntry == NULL)
+            return NULL;
+
+        /* Insert the new entry into the list */
+        InsertTailList(&PartEntry->ListEntry,
+                       &NewPartEntry->ListEntry);
+
+        NewPartEntry->DiskEntry = DiskEntry;
+
+        NewPartEntry->IsPartitioned = TRUE;
+        NewPartEntry->New = TRUE;
+        NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
+        NewPartEntry->FormatState = Unformatted;
+        NewPartEntry->FileSystem  = NULL;
+        NewPartEntry->BootIndicator = FALSE;
+        NewPartEntry->LogicalPartition = FALSE;
+
+        NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
+        NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
+                                             NewPartEntry->StartSector.QuadPart;
+
+        PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
+        PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
+    }
+
+    DPRINT1("First Sector : %I64u\n", NewPartEntry->StartSector.QuadPart);
+    DPRINT1("Last Sector  : %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
+    DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+    return NewPartEntry;
+}
+
+
 static
 VOID
 AddPartitionToDisk(
@@ -708,6 +889,7 @@ AddPartitionToDisk(
 
     PartEntry->LogicalPartition = LogicalPartition;
     PartEntry->IsPartitioned = TRUE;
+    PartEntry->OnDiskPartitionNumber = PartitionInfo->PartitionNumber;
     PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
     PartEntry->PartitionIndex = PartitionIndex;
 
@@ -721,6 +903,8 @@ AddPartitionToDisk(
     }
     else if (IsRecognizedPartition(PartEntry->PartitionType))
     {
+        ASSERT(PartitionInfo->RecognizedPartition);
+
         PartEntry->FileSystem = GetFileSystem(PartEntry);
         if (PartEntry->FileSystem)
             PartEntry->FormatState = Preformatted;
@@ -740,7 +924,8 @@ AddPartitionToDisk(
     /* Open the volume, ignore any errors */
     RtlStringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
                         L"\\Device\\Harddisk%lu\\Partition%lu",
-                        DiskEntry->DiskNumber, PartEntry->PartitionNumber);
+                        DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
     RtlInitUnicodeString(&Name, Buffer);
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -783,12 +968,7 @@ AddPartitionToDisk(
         DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
     }
 
-    if (LogicalPartition)
-        InsertTailList(&DiskEntry->LogicalPartListHead,
-                       &PartEntry->ListEntry);
-    else
-        InsertTailList(&DiskEntry->PrimaryPartListHead,
-                       &PartEntry->ListEntry);
+    InsertDiskRegion(DiskEntry, PartEntry, LogicalPartition);
 }
 
 static
@@ -796,6 +976,8 @@ VOID
 ScanForUnpartitionedDiskSpace(
     IN PDISKENTRY DiskEntry)
 {
+    ULONGLONG StartSector;
+    ULONGLONG SectorCount;
     ULONGLONG LastStartSector;
     ULONGLONG LastSectorCount;
     ULONGLONG LastUnusedSectorCount;
@@ -810,31 +992,20 @@ ScanForUnpartitionedDiskSpace(
         DPRINT1("No primary partition!\n");
 
         /* Create a partition entry that represents the empty disk */
-        NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(PARTENTRY));
-        if (NewPartEntry == NULL)
-            return;
 
-        NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->IsPartitioned = FALSE;
         if (DiskEntry->SectorAlignment < 2048)
-            NewPartEntry->StartSector.QuadPart = 2048ULL;
+            StartSector = 2048ULL;
         else
-            NewPartEntry->StartSector.QuadPart = (ULONGLONG)DiskEntry->SectorAlignment;
-        NewPartEntry->SectorCount.QuadPart = AlignDown(DiskEntry->SectorCount.QuadPart, DiskEntry->SectorAlignment) -
-                                             NewPartEntry->StartSector.QuadPart;
+            StartSector = (ULONGLONG)DiskEntry->SectorAlignment;
+        SectorCount = AlignDown(DiskEntry->SectorCount.QuadPart, DiskEntry->SectorAlignment) - StartSector;
 
-        DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-        NewPartEntry->FormatState = Unformatted;
-        NewPartEntry->FileSystem  = NULL;
-
-        InsertTailList(&DiskEntry->PrimaryPartListHead,
-                       &NewPartEntry->ListEntry);
+        NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                               &DiskEntry->PrimaryPartListHead,
+                                               StartSector,
+                                               SectorCount,
+                                               FALSE);
+        if (NewPartEntry == NULL)
+            DPRINT1("Failed to create a new empty region for full disk space!\n");
 
         return;
     }
@@ -843,7 +1014,7 @@ ScanForUnpartitionedDiskSpace(
     if (DiskEntry->SectorAlignment < 2048)
         LastStartSector = 2048ULL;
     else
-        LastStartSector = DiskEntry->SectorAlignment;
+        LastStartSector = (ULONGLONG)DiskEntry->SectorAlignment;
     LastSectorCount = 0ULL;
     LastUnusedSectorCount = 0ULL;
 
@@ -863,29 +1034,20 @@ ScanForUnpartitionedDiskSpace(
             {
                 DPRINT("Unpartitioned disk space %I64u sectors\n", LastUnusedSectorCount);
 
-                NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                               HEAP_ZERO_MEMORY,
-                                               sizeof(PARTENTRY));
-                if (NewPartEntry == NULL)
-                    return;
-
-                NewPartEntry->DiskEntry = DiskEntry;
-
-                NewPartEntry->IsPartitioned = FALSE;
-                NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
-                NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
-                                                     NewPartEntry->StartSector.QuadPart;
-
-                DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-                DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-                DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-                NewPartEntry->FormatState = Unformatted;
-                NewPartEntry->FileSystem  = NULL;
+                StartSector = LastStartSector + LastSectorCount;
+                SectorCount = AlignDown(StartSector + LastUnusedSectorCount, DiskEntry->SectorAlignment) - StartSector;
 
                 /* Insert the table into the list */
-                InsertTailList(&PartEntry->ListEntry,
-                               &NewPartEntry->ListEntry);
+                NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                                       &PartEntry->ListEntry,
+                                                       StartSector,
+                                                       SectorCount,
+                                                       FALSE);
+                if (NewPartEntry == NULL)
+                {
+                    DPRINT1("Failed to create a new empty region for disk space!\n");
+                    return;
+                }
             }
 
             LastStartSector = PartEntry->StartSector.QuadPart;
@@ -904,29 +1066,20 @@ ScanForUnpartitionedDiskSpace(
         {
             DPRINT("Unpartitioned disk space: %I64u sectors\n", LastUnusedSectorCount);
 
-            NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(PARTENTRY));
-            if (NewPartEntry == NULL)
-                return;
-
-            NewPartEntry->DiskEntry = DiskEntry;
-
-            NewPartEntry->IsPartitioned = FALSE;
-            NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
-            NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
-                                                 NewPartEntry->StartSector.QuadPart;
-
-            DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-            DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-            DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-            NewPartEntry->FormatState = Unformatted;
-            NewPartEntry->FileSystem  = NULL;
+            StartSector = LastStartSector + LastSectorCount;
+            SectorCount = AlignDown(StartSector + LastUnusedSectorCount, DiskEntry->SectorAlignment) - StartSector;
 
             /* Append the table to the list */
-            InsertTailList(&DiskEntry->PrimaryPartListHead,
-                           &NewPartEntry->ListEntry);
+            NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                                   &DiskEntry->PrimaryPartListHead,
+                                                   StartSector,
+                                                   SectorCount,
+                                                   FALSE);
+            if (NewPartEntry == NULL)
+            {
+                DPRINT1("Failed to create a new empty region for trailing disk space!\n");
+                return;
+            }
         }
     }
 
@@ -937,28 +1090,21 @@ ScanForUnpartitionedDiskSpace(
             DPRINT1("No logical partition!\n");
 
             /* Create a partition entry that represents the empty extended partition */
-            NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(PARTENTRY));
+
+            StartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
+            SectorCount = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
+
+            NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                                   &DiskEntry->LogicalPartListHead,
+                                                   StartSector,
+                                                   SectorCount,
+                                                   TRUE);
             if (NewPartEntry == NULL)
+            {
+                DPRINT1("Failed to create a new empty region for full extended partition space!\n");
                 return;
-
-            NewPartEntry->DiskEntry = DiskEntry;
+            }
             NewPartEntry->LogicalPartition = TRUE;
-
-            NewPartEntry->IsPartitioned = FALSE;
-            NewPartEntry->StartSector.QuadPart = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
-            NewPartEntry->SectorCount.QuadPart = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
-
-            DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-            DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-            DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-            NewPartEntry->FormatState = Unformatted;
-            NewPartEntry->FileSystem  = NULL;
-
-            InsertTailList(&DiskEntry->LogicalPartListHead,
-                           &NewPartEntry->ListEntry);
 
             return;
         }
@@ -984,30 +1130,21 @@ ScanForUnpartitionedDiskSpace(
                 {
                     DPRINT("Unpartitioned disk space %I64u sectors\n", LastUnusedSectorCount);
 
-                    NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                                   HEAP_ZERO_MEMORY,
-                                                   sizeof(PARTENTRY));
-                    if (NewPartEntry == NULL)
-                        return;
-
-                    NewPartEntry->DiskEntry = DiskEntry;
-                    NewPartEntry->LogicalPartition = TRUE;
-
-                    NewPartEntry->IsPartitioned = FALSE;
-                    NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
-                    NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
-                                                         NewPartEntry->StartSector.QuadPart;
-
-                    DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-                    DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-                    DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-                    NewPartEntry->FormatState = Unformatted;
-                    NewPartEntry->FileSystem  = NULL;
+                    StartSector = LastStartSector + LastSectorCount;
+                    SectorCount = AlignDown(StartSector + LastUnusedSectorCount, DiskEntry->SectorAlignment) - StartSector;
 
                     /* Insert the table into the list */
-                    InsertTailList(&PartEntry->ListEntry,
-                                   &NewPartEntry->ListEntry);
+                    NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                                           &PartEntry->ListEntry,
+                                                           StartSector,
+                                                           SectorCount,
+                                                           TRUE);
+                    if (NewPartEntry == NULL)
+                    {
+                        DPRINT1("Failed to create a new empty region for extended partition space!\n");
+                        return;
+                    }
+                    NewPartEntry->LogicalPartition = TRUE;
                 }
 
                 LastStartSector = PartEntry->StartSector.QuadPart;
@@ -1020,36 +1157,29 @@ ScanForUnpartitionedDiskSpace(
         /* Check for trailing unpartitioned disk space */
         if ((LastStartSector + LastSectorCount) < DiskEntry->ExtendedPartition->StartSector.QuadPart + DiskEntry->ExtendedPartition->SectorCount.QuadPart)
         {
-            LastUnusedSectorCount = AlignDown(DiskEntry->ExtendedPartition->StartSector.QuadPart + DiskEntry->ExtendedPartition->SectorCount.QuadPart - (LastStartSector + LastSectorCount), DiskEntry->SectorAlignment);
+            LastUnusedSectorCount = AlignDown(DiskEntry->ExtendedPartition->StartSector.QuadPart +
+                                              DiskEntry->ExtendedPartition->SectorCount.QuadPart - (LastStartSector + LastSectorCount),
+                                              DiskEntry->SectorAlignment);
 
             if (LastUnusedSectorCount >= (ULONGLONG)DiskEntry->SectorAlignment)
             {
                 DPRINT("Unpartitioned disk space: %I64u sectors\n", LastUnusedSectorCount);
 
-                NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                               HEAP_ZERO_MEMORY,
-                                               sizeof(PARTENTRY));
-                if (NewPartEntry == NULL)
-                    return;
-
-                NewPartEntry->DiskEntry = DiskEntry;
-                NewPartEntry->LogicalPartition = TRUE;
-
-                NewPartEntry->IsPartitioned = FALSE;
-                NewPartEntry->StartSector.QuadPart = LastStartSector + LastSectorCount;
-                NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + LastUnusedSectorCount, DiskEntry->SectorAlignment) -
-                                                     NewPartEntry->StartSector.QuadPart;
-
-                DPRINT("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-                DPRINT("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-                DPRINT("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-                NewPartEntry->FormatState = Unformatted;
-                NewPartEntry->FileSystem  = NULL;
+                StartSector = LastStartSector + LastSectorCount;
+                SectorCount = AlignDown(StartSector + LastUnusedSectorCount, DiskEntry->SectorAlignment) - StartSector;
 
                 /* Append the table to the list */
-                InsertTailList(&DiskEntry->LogicalPartListHead,
-                               &NewPartEntry->ListEntry);
+                NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                                       &DiskEntry->LogicalPartListHead,
+                                                       StartSector,
+                                                       SectorCount,
+                                                       TRUE);
+                if (NewPartEntry == NULL)
+                {
+                    DPRINT1("Failed to create a new empty region for extended partition space!\n");
+                    return;
+                }
+                NewPartEntry->LogicalPartition = TRUE;
             }
         }
     }
@@ -1433,22 +1563,25 @@ AddDiskToList(
         DPRINT1("No valid partition table found! Use megabyte (%lu Sectors) alignment!\n", (1024 * 1024) / DiskEntry->BytesPerSector);
     }
 
-
     if (DiskEntry->LayoutBuffer->PartitionCount == 0)
     {
         DiskEntry->NewDisk = TRUE;
         DiskEntry->LayoutBuffer->PartitionCount = 4;
 
         for (i = 0; i < 4; i++)
+        {
             DiskEntry->LayoutBuffer->PartitionEntry[i].RewritePartition = TRUE;
+        }
     }
     else
     {
+        /* Enumerate and add the first four primary partitions */
         for (i = 0; i < 4; i++)
         {
             AddPartitionToDisk(DiskNumber, DiskEntry, i, FALSE);
         }
 
+        /* Enumerate and add the remaining partitions as logical ones */
         for (i = 4; i < DiskEntry->LayoutBuffer->PartitionCount; i += 4)
         {
             AddPartitionToDisk(DiskNumber, DiskEntry, i, TRUE);
@@ -1873,7 +2006,7 @@ GetNextPartition(
         {
             /* Primary or extended partition */
 
-            if ((List->CurrentPartition->IsPartitioned != FALSE) &&
+            if (List->CurrentPartition->IsPartitioned &&
                 IsContainerPartition(List->CurrentPartition->PartitionType))
             {
                 /* First logical partition */
@@ -1966,7 +2099,7 @@ GetPrevPartition(
             {
                 PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-                if ((PartEntry->IsPartitioned != FALSE) &&
+                if (PartEntry->IsPartitioned &&
                     IsContainerPartition(PartEntry->PartitionType))
                 {
                     PartListEntry = List->CurrentDisk->LogicalPartListHead.Blink;
@@ -1990,7 +2123,7 @@ GetPrevPartition(
         {
             PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
-            if ((PartEntry->IsPartitioned != FALSE) &&
+            if (PartEntry->IsPartitioned &&
                 IsContainerPartition(PartEntry->PartitionType))
             {
                 PartListEntry = DiskEntry->LogicalPartListHead.Blink;
@@ -2042,7 +2175,6 @@ IsSamePrimaryLayoutEntry(
 {
     if (PartitionInfo->StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector &&
         PartitionInfo->PartitionLength.QuadPart == PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector)
-//        PartitionInfo->PartitionNumber = PartEntry->PartitionNumber &&
 //        PartitionInfo->PartitionType == PartEntry->PartitionType
     {
         return TRUE;
@@ -2113,7 +2245,7 @@ ReAllocateLayoutBuffer(
     if (DiskEntry->LayoutBuffer)
         CurrentPartitionCount = DiskEntry->LayoutBuffer->PartitionCount;
 
-    DPRINT1("CurrentPartitionCount: %lu    NewPartitionCount: %lu\n",
+    DPRINT1("CurrentPartitionCount: %lu ; NewPartitionCount: %lu\n",
             CurrentPartitionCount, NewPartitionCount);
 
     if (CurrentPartitionCount == NewPartitionCount)
@@ -2131,15 +2263,18 @@ ReAllocateLayoutBuffer(
         return FALSE;
     }
 
+    NewLayoutBuffer->PartitionCount = NewPartitionCount;
+
     /* If the layout buffer grows, make sure the new (empty) entries are written to the disk */
     if (NewPartitionCount > CurrentPartitionCount)
     {
         for (i = CurrentPartitionCount; i < NewPartitionCount; i++)
+        {
             NewLayoutBuffer->PartitionEntry[i].RewritePartition = TRUE;
+        }
     }
 
     DiskEntry->LayoutBuffer = NewLayoutBuffer;
-    DiskEntry->LayoutBuffer->PartitionCount = NewPartitionCount;
 
     return TRUE;
 }
@@ -2173,9 +2308,16 @@ UpdateDiskLayout(
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
-        if (PartEntry->IsPartitioned != FALSE)
+        if (PartEntry->IsPartitioned)
         {
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
+            PartEntry->PartitionIndex = Index;
+
+            /* Reset the current partition number only for newly-created partitions */
+            if (PartEntry->New)
+                PartEntry->PartitionNumber = 0;
+
+            PartEntry->OnDiskPartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
 
             if (!IsSamePrimaryLayoutEntry(PartitionInfo, DiskEntry, PartEntry))
             {
@@ -2184,15 +2326,12 @@ UpdateDiskLayout(
                 PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
-                PartitionInfo->PartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
+                PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
                 PartitionInfo->PartitionType = PartEntry->PartitionType;
                 PartitionInfo->BootIndicator = PartEntry->BootIndicator;
-                PartitionInfo->RecognizedPartition = FALSE;
+                PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
                 PartitionInfo->RewritePartition = TRUE;
             }
-
-            PartEntry->PartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
-            PartEntry->PartitionIndex = Index;
 
             if (!IsContainerPartition(PartEntry->PartitionType))
                 PartitionNumber++;
@@ -2215,20 +2354,24 @@ UpdateDiskLayout(
         if (PartEntry->IsPartitioned)
         {
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
+            PartEntry->PartitionIndex = Index;
 
             DPRINT1("Updating logical partition entry %lu\n", Index);
+
+            /* Reset the current partition number only for newly-created partitions */
+            if (PartEntry->New)
+                PartEntry->PartitionNumber = 0;
+
+            PartEntry->OnDiskPartitionNumber = PartitionNumber;
 
             PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
             PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
             PartitionInfo->HiddenSectors = DiskEntry->SectorAlignment;
-            PartitionInfo->PartitionNumber = PartitionNumber;
+            PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
             PartitionInfo->PartitionType = PartEntry->PartitionType;
             PartitionInfo->BootIndicator = FALSE;
-            PartitionInfo->RecognizedPartition = FALSE;
+            PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
             PartitionInfo->RewritePartition = TRUE;
-
-            PartEntry->PartitionNumber = PartitionNumber;
-            PartEntry->PartitionIndex = Index;
 
             /* Fill the link entry of the previous partition entry */
             if (LinkInfo != NULL)
@@ -2301,6 +2444,8 @@ UpdateDiskLayout(
         }
     }
 
+    DiskEntry->Dirty = TRUE;
+
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
 #endif
@@ -2367,7 +2512,6 @@ CreatePrimaryPartition(
     ERROR_NUMBER Error;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PPARTENTRY NewPartEntry;
 
     DPRINT1("CreatePrimaryPartition(%I64u)\n", SectorCount);
 
@@ -2389,65 +2533,12 @@ CreatePrimaryPartition(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
-    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
-
-    if ((AutoCreate != FALSE) ||
-        (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
-    {
-        DPRINT1("Convert existing partition entry\n");
-
-        /* Convert current entry to 'new (unformatted)' */
-        PartEntry->IsPartitioned = TRUE;
-        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-        PartEntry->FormatState = Unformatted;
-        PartEntry->FileSystem  = NULL;
-        PartEntry->AutoCreate = AutoCreate;
-        PartEntry->New = TRUE;
-        PartEntry->BootIndicator = FALSE;
-
-        DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", PartEntry->SectorCount.QuadPart);
-    }
-    else
-    {
-        DPRINT1("Add new partition entry\n");
-
-        /* Insert and initialize a new partition entry */
-        NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(PARTENTRY));
-        if (NewPartEntry == NULL)
-            return FALSE;
-
-        /* Insert the new entry into the list */
-        InsertTailList(&PartEntry->ListEntry,
-                       &NewPartEntry->ListEntry);
-
-        NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->IsPartitioned = TRUE;
-        NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
-        NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
-                                             NewPartEntry->StartSector.QuadPart;
-        NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-
-        DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-        NewPartEntry->New = TRUE;
-        NewPartEntry->FormatState = Unformatted;
-        NewPartEntry->FileSystem  = NULL;
-        NewPartEntry->BootIndicator = FALSE;
-
-        PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
-        PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
-    }
+    /* Convert the current entry, or insert and initialize a new partition entry */
+    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, AutoCreate);
+    if (PartEntry == NULL)
+        return FALSE;
 
     UpdateDiskLayout(DiskEntry);
-
-    DiskEntry->Dirty = TRUE;
 
     AssignDriveLetters(List);
 
@@ -2459,33 +2550,28 @@ VOID
 AddLogicalDiskSpace(
     IN PDISKENTRY DiskEntry)
 {
+    ULONGLONG StartSector;
+    ULONGLONG SectorCount;
     PPARTENTRY NewPartEntry;
 
     DPRINT1("AddLogicalDiskSpace()\n");
 
     /* Create a partition entry that represents the empty space in the container partition */
-    NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                   HEAP_ZERO_MEMORY,
-                                   sizeof(PARTENTRY));
+
+    StartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
+    SectorCount = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
+
+    NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                           &DiskEntry->LogicalPartListHead,
+                                           StartSector,
+                                           SectorCount,
+                                           TRUE);
     if (NewPartEntry == NULL)
+    {
+        DPRINT1("Failed to create a new empty region for extended partition space!\n");
         return;
-
-    NewPartEntry->DiskEntry = DiskEntry;
+    }
     NewPartEntry->LogicalPartition = TRUE;
-
-    NewPartEntry->IsPartitioned = FALSE;
-    NewPartEntry->StartSector.QuadPart = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
-    NewPartEntry->SectorCount.QuadPart = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
-
-    DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-    DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-    DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-    NewPartEntry->FormatState = Unformatted;
-    NewPartEntry->FileSystem  = NULL;
-
-    InsertTailList(&DiskEntry->LogicalPartListHead,
-                   &NewPartEntry->ListEntry);
 }
 
 BOOLEAN
@@ -2496,7 +2582,6 @@ CreateExtendedPartition(
     ERROR_NUMBER Error;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PPARTENTRY NewPartEntry;
 
     DPRINT1("CreateExtendedPartition(%I64u)\n", SectorCount);
 
@@ -2518,90 +2603,31 @@ CreateExtendedPartition(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
-    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+    /* Convert the current entry, or insert and initialize a new partition entry */
+    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, FALSE);
+    if (PartEntry == NULL)
+        return FALSE;
 
-    if (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart)
+    if (PartEntry->StartSector.QuadPart < 1450560)
     {
-        DPRINT1("Convert existing partition entry\n");
-
-        /* Convert current entry to 'new (unformatted)' */
-        PartEntry->IsPartitioned = TRUE;
-        PartEntry->FormatState = Formatted;     // FIXME? Possibly to make GetNextUnformattedPartition work (i.e. skip the extended partition container)
-        PartEntry->FileSystem  = NULL;
-        PartEntry->AutoCreate = FALSE;
-        PartEntry->New = FALSE;
-        PartEntry->BootIndicator = FALSE;
-
-        if (PartEntry->StartSector.QuadPart < 1450560)
-        {
-            /* Partition starts below the 8.4GB boundary ==> CHS partition */
-            PartEntry->PartitionType = PARTITION_EXTENDED;
-        }
-        else
-        {
-            /* Partition starts above the 8.4GB boundary ==> LBA partition */
-            PartEntry->PartitionType = PARTITION_XINT13_EXTENDED;
-        }
-
-        DiskEntry->ExtendedPartition = PartEntry;
-
-        DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", PartEntry->SectorCount.QuadPart);
+        /* Partition starts below the 8.4GB boundary ==> CHS partition */
+        PartEntry->PartitionType = PARTITION_EXTENDED;
     }
     else
     {
-        DPRINT1("Add new partition entry\n");
-
-        /* Insert and initialize a new partition entry */
-        NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(PARTENTRY));
-        if (NewPartEntry == NULL)
-            return FALSE;
-
-        /* Insert the new entry into the list */
-        InsertTailList(&PartEntry->ListEntry,
-                       &NewPartEntry->ListEntry);
-
-        NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->IsPartitioned = TRUE;
-        NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
-        NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
-                                             NewPartEntry->StartSector.QuadPart;
-
-        NewPartEntry->New = FALSE;
-        NewPartEntry->FormatState = Formatted;     // FIXME? Possibly to make GetNextUnformattedPartition work (i.e. skip the extended partition container)
-        NewPartEntry->FileSystem  = NULL;
-        NewPartEntry->BootIndicator = FALSE;
-
-        if (NewPartEntry->StartSector.QuadPart < 1450560)
-        {
-            /* Partition starts below the 8.4GB boundary ==> CHS partition */
-            NewPartEntry->PartitionType = PARTITION_EXTENDED;
-        }
-        else
-        {
-            /* Partition starts above the 8.4GB boundary ==> LBA partition */
-            NewPartEntry->PartitionType = PARTITION_XINT13_EXTENDED;
-        }
-
-        DiskEntry->ExtendedPartition = NewPartEntry;
-
-        PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
-        PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
-
-        DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+        /* Partition starts above the 8.4GB boundary ==> LBA partition */
+        PartEntry->PartitionType = PARTITION_XINT13_EXTENDED;
     }
+
+    // FIXME? Possibly to make GetNextUnformattedPartition work (i.e. skip the extended partition container)
+    PartEntry->New = FALSE;
+    PartEntry->FormatState = Formatted;
+
+    DiskEntry->ExtendedPartition = PartEntry;
 
     AddLogicalDiskSpace(DiskEntry);
 
     UpdateDiskLayout(DiskEntry);
-
-    DiskEntry->Dirty = TRUE;
 
     AssignDriveLetters(List);
 
@@ -2617,7 +2643,6 @@ CreateLogicalPartition(
     ERROR_NUMBER Error;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PPARTENTRY NewPartEntry;
 
     DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
 
@@ -2639,67 +2664,14 @@ CreateLogicalPartition(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
-    DPRINT1("Current partition sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
+    /* Convert the current entry, or insert and initialize a new partition entry */
+    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, AutoCreate);
+    if (PartEntry == NULL)
+        return FALSE;
 
-    if ((AutoCreate != FALSE) ||
-        (AlignDown(PartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) - PartEntry->StartSector.QuadPart == PartEntry->SectorCount.QuadPart))
-    {
-        DPRINT1("Convert existing partition entry\n");
-
-        /* Convert current entry to 'new (unformatted)' */
-        PartEntry->IsPartitioned = TRUE;
-        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-        PartEntry->FormatState = Unformatted;
-        PartEntry->FileSystem  = NULL;
-        PartEntry->AutoCreate = FALSE;
-        PartEntry->New = TRUE;
-        PartEntry->BootIndicator = FALSE;
-        PartEntry->LogicalPartition = TRUE;
-
-        DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", PartEntry->SectorCount.QuadPart);
-    }
-    else
-    {
-        DPRINT1("Add new partition entry\n");
-
-        /* Insert and initialize a new partition entry */
-        NewPartEntry = RtlAllocateHeap(ProcessHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(PARTENTRY));
-        if (NewPartEntry == NULL)
-            return FALSE;
-
-        /* Insert the new entry into the list */
-        InsertTailList(&PartEntry->ListEntry,
-                       &NewPartEntry->ListEntry);
-
-        NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->IsPartitioned = TRUE;
-        NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
-        NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
-                                             NewPartEntry->StartSector.QuadPart;
-        NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-
-        DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
-        DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
-        DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-        NewPartEntry->New = TRUE;
-        NewPartEntry->FormatState = Unformatted;
-        NewPartEntry->FileSystem  = NULL;
-        NewPartEntry->BootIndicator = FALSE;
-        NewPartEntry->LogicalPartition = TRUE;
-
-        PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
-        PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
-    }
+    PartEntry->LogicalPartition = TRUE;
 
     UpdateDiskLayout(DiskEntry);
-
-    DiskEntry->Dirty = TRUE;
 
     AssignDriveLetters(List);
 
@@ -2924,11 +2896,12 @@ DeleteCurrentPartition(
         PartEntry->FormatState = Unformatted;
         PartEntry->FileSystem  = NULL;
         PartEntry->DriveLetter = 0;
+        PartEntry->OnDiskPartitionNumber = 0;
+        PartEntry->PartitionNumber = 0;
+        // PartEntry->PartitionIndex = 0;
     }
 
     UpdateDiskLayout(DiskEntry);
-
-    DiskEntry->Dirty = TRUE;
 
     AssignDriveLetters(List);
 }
@@ -3174,13 +3147,17 @@ WritePartitions(
     IN PPARTLIST List,
     IN PDISKENTRY DiskEntry)
 {
-    WCHAR DstPath[MAX_PATH];
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK Iosb;
-    UNICODE_STRING Name;
-    ULONG BufferSize;
-    HANDLE FileHandle = NULL;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK Iosb;
+    ULONG BufferSize;
+    PPARTITION_INFORMATION PartitionInfo;
+    ULONG PartitionCount;
+    PLIST_ENTRY ListEntry;
+    PPARTENTRY PartEntry;
+    WCHAR DstPath[MAX_PATH];
 
     DPRINT("WritePartitions() Disk: %lu\n", DiskEntry->DiskNumber);
 
@@ -3217,8 +3194,12 @@ WritePartitions(
     // For this we must ask the user which format to use.
     //
 
+    /* Save the original partition count to be restored later (see comment below) */
+    PartitionCount = DiskEntry->LayoutBuffer->PartitionCount;
+
+    /* Set the new disk layout and retrieve its updated version with possibly modified partition numbers */
     BufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                 ((DiskEntry->LayoutBuffer->PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
+                 ((PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
                                    NULL,
@@ -3227,15 +3208,61 @@ WritePartitions(
                                    IOCTL_DISK_SET_DRIVE_LAYOUT,
                                    DiskEntry->LayoutBuffer,
                                    BufferSize,
-                                   NULL,
-                                   0);
+                                   DiskEntry->LayoutBuffer,
+                                   BufferSize);
+    NtClose(FileHandle);
+
+    /*
+     * IOCTL_DISK_SET_DRIVE_LAYOUT calls IoWritePartitionTable(), which converts
+     * DiskEntry->LayoutBuffer->PartitionCount into a partition *table* count,
+     * where such a table is expected to enumerate up to 4 partitions:
+     * partition *table* count == ROUND_UP(PartitionCount, 4) / 4 .
+     * Due to this we need to restore the original PartitionCount number.
+     */
+    DiskEntry->LayoutBuffer->PartitionCount = PartitionCount;
+
+    /* Check whether the IOCTL_DISK_SET_DRIVE_LAYOUT call succeeded */
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IOCTL_DISK_SET_DRIVE_LAYOUT failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
-    if (FileHandle != NULL)
-        NtClose(FileHandle);
+#ifdef DUMP_PARTITION_TABLE
+    DumpPartitionTable(DiskEntry);
+#endif
+
+    /* Update the partition numbers */
+
+    /* Update the primary partition table */
+    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+
+        if (PartEntry->IsPartitioned)
+        {
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
+            PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Update the logical partition table */
+    ListEntry = DiskEntry->LogicalPartListHead.Flink;
+    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+
+        if (PartEntry->IsPartitioned)
+        {
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
+            PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
 
     //
     // NOTE: Originally (see r40437), we used to install here also a new MBR
@@ -3246,6 +3273,8 @@ WritePartitions(
     // was called too, the installation test was modified by checking whether
     // DiskEntry->NoMbr was TRUE (instead of NewDisk).
     //
+
+    // DiskEntry->Dirty = FALSE;
 
     return Status;
 }
@@ -3419,6 +3448,7 @@ SetPartitionType(
 
     DiskEntry->Dirty = TRUE;
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartitionType;
+    DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RecognizedPartition = IsRecognizedPartition(PartitionType);
     DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
 }
 
