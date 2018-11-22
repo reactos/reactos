@@ -125,7 +125,7 @@ BOOL rsym_parse(struct module* module, unsigned long load_offset,
                     if (use_raw_address(SymbolName))
                         Address = Entry->Address;
 
-                    symt_new_public(module, NULL, SymbolName, Address, Size);
+                    symt_new_public(module, NULL, SymbolName, FALSE, Address, Size);
                 }
                 else
                 {

@@ -444,9 +444,9 @@ static BOOL pe_load_coff_symbol_table(struct module* module)
                                                source_new(module, NULL, lastfilename));
 
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
-                symt_new_public(module, compiland, name,
+                symt_new_public(module, compiland, name, FALSE,
                                 module->module.BaseOfImage + sect[isym->SectionNumber - 1].VirtualAddress +
-                                     isym->Value,
+                                    isym->Value,
                                 1);
         }
         naux = isym->NumberOfAuxSymbols + 1;
@@ -674,11 +674,11 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
 #if 0
     /* Add start of DLL (better use the (yet unimplemented) Exe SymTag for this) */
     /* FIXME: module.ModuleName isn't correctly set yet if it's passed in SymLoadModule */
-    symt_new_public(module, NULL, module->module.ModuleName, base, 1);
+    symt_new_public(module, NULL, module->module.ModuleName, FALSE, base, 1);
 #endif
     
     /* Add entry point */
-    symt_new_public(module, NULL, "EntryPoint", 
+    symt_new_public(module, NULL, "EntryPoint", FALSE,
                     base + nth->OptionalHeader.AddressOfEntryPoint, 1);
 #if 0
     /* FIXME: we'd better store addresses linked to sections rather than 
@@ -689,7 +689,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
         ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
     for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
     {
-	symt_new_public(module, NULL, section->Name, 
+	symt_new_public(module, NULL, section->Name, FALSE,
                         RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 1);
     }
 #endif
@@ -715,6 +715,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
                 if (!names[i]) continue;
                 symt_new_public(module, NULL,
                                 RtlImageRvaToVa(nth, mapping, names[i], NULL),
+                                FALSE,
                                 base + functions[ordinals[i]], 1);
             }
 
@@ -726,7 +727,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
                     if ((ordinals[j] == i) && names[j]) break;
                 if (j < exports->NumberOfNames) continue;
                 snprintf(buffer, sizeof(buffer), "%d", i + exports->Base);
-                symt_new_public(module, NULL, buffer, base + (DWORD)functions[i], 1);
+                symt_new_public(module, NULL, buffer, FALSE, base + (DWORD)functions[i], 1);
             }
         }
     }

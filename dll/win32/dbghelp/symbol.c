@@ -226,6 +226,7 @@ struct symt_compiland* symt_new_compiland(struct module* module,
 struct symt_public* symt_new_public(struct module* module, 
                                     struct symt_compiland* compiland,
                                     const char* name,
+                                    BOOL is_function,
                                     unsigned long address, unsigned size)
 {
     struct symt_public* sym;
@@ -241,6 +242,7 @@ struct symt_public* symt_new_public(struct module* module,
         sym->symt.tag      = SymTagPublicSymbol;
         sym->hash_elt.name = pool_strdup(&module->pool, name);
         sym->container     = compiland ? &compiland->symt : NULL;
+        sym->is_function   = is_function;
         sym->address       = address;
         sym->size          = size;
         symt_add_module_ht(module, (struct symt_ht*)sym);
@@ -697,11 +699,16 @@ static void symt_fill_sym_info(struct module_pair* pair,
         }
         break;
     case SymTagPublicSymbol:
-        sym_info->Flags |= SYMFLAG_EXPORT;
-        symt_get_address(sym, &sym_info->Address);
+        {
+            const struct symt_public* pub = (const struct symt_public*)sym;
+            if (pub->is_function)
+                sym_info->Flags |= SYMFLAG_PUBLIC_CODE;
+            else
+                sym_info->Flags |= SYMFLAG_EXPORT;
+            symt_get_address(sym, &sym_info->Address);
+        }
         break;
     case SymTagFunction:
-        sym_info->Flags |= SYMFLAG_FUNCTION;
         symt_get_address(sym, &sym_info->Address);
         break;
     case SymTagThunk:
