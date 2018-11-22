@@ -5143,7 +5143,7 @@ MmCreateSection (OUT PVOID  * Section,
                                       FileObject);
     }
 #ifndef NEWCC
-    else if (FileHandle != NULL)
+    else if ((FileHandle != NULL) || (FileObject != NULL))
     {
         Status =  MmCreateDataFileSection(SectionObject,
                                           DesiredAccess,
