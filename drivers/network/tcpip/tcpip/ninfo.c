@@ -177,34 +177,44 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     return Status;
 }
 
+#define ntohs(n) ((((n) & 0xff) << 8) | (((n) & 0xff00) >> 8))
+
 TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 				    PNDIS_BUFFER Buffer,
 				    PUINT BufferSize)
 {
     MIB_TCPROW TcpRow;
-    PADDRESS_FILE EndPoint;
-    TDI_STATUS Status = TDI_INVALID_REQUEST;
+    TDI_STATUS Status = TDI_SUCCESS;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
-    EndPoint = NULL;
     TcpRow.State = 0; /* FIXME */
-
-    if (AddrFile->Listener != NULL)
-    {
-        EndPoint = AddrFile->Listener->AddressFile;
-        TcpRow.State = MIB_TCP_STATE_LISTEN;
-    }
-    else if (AddrFile->Connection != NULL)
-        EndPoint = AddrFile->Connection->AddressFile;
-
     TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     TcpRow.dwLocalPort = AddrFile->Port;
 
-    if (EndPoint != NULL)
+    if (AddrFile->Listener != NULL)
     {
+        PADDRESS_FILE EndPoint;
+
+        EndPoint = AddrFile->Listener->AddressFile;
+
+        TcpRow.State = MIB_TCP_STATE_LISTEN;
         TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
         TcpRow.dwRemotePort = EndPoint->Port;
+    }
+    else if (AddrFile->Connection != NULL &&
+             AddrFile->Connection->SocketContext != NULL)
+    {
+        TA_IP_ADDRESS EndPoint;
+
+        Status = TCPGetSockAddress(AddrFile->Connection, (PTRANSPORT_ADDRESS)&EndPoint, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            ASSERT(EndPoint.TAAddressCount >= 1);
+            ASSERT(EndPoint.Address[0].AddressLength == TDI_ADDRESS_LENGTH_IP);
+            TcpRow.dwRemoteAddr = EndPoint.Address[0].Address[0].in_addr;
+            TcpRow.dwRemotePort = ntohs(EndPoint.Address[0].Address[0].sin_port);
+        }
     }
     else
     {
@@ -212,8 +222,11 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
         TcpRow.dwRemotePort = 0;
     }
 
-    Status = InfoCopyOut( (PCHAR)&TcpRow, sizeof(TcpRow),
-			  Buffer, BufferSize );
+    if (NT_SUCCESS(Status))
+    {
+        Status = InfoCopyOut( (PCHAR)&TcpRow, sizeof(TcpRow),
+                              Buffer, BufferSize );
+    }
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
