@@ -874,6 +874,33 @@ static void symt_get_length(struct module* module, const struct symt* symt, ULON
     *size = 0x1000; /* arbitrary value */
 }
 
+/* neede by symt_find_nearest */
+int symt_get_best_at(struct module* module, int idx_sorttab)
+{
+    ULONG64 ref_addr;
+    int idx_sorttab_orig = idx_sorttab;
+    if (module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol)
+    {
+        symt_get_address(&module->addr_sorttab[idx_sorttab]->symt, &ref_addr);
+        while (idx_sorttab > 0 &&
+               module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol &&
+               !cmp_sorttab_addr(module, idx_sorttab - 1, ref_addr))
+            idx_sorttab--;
+        if (module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol)
+        {
+            idx_sorttab = idx_sorttab_orig;
+            while (idx_sorttab < module->num_sorttab - 1 &&
+                   module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol &&
+                   !cmp_sorttab_addr(module, idx_sorttab + 1, ref_addr))
+                idx_sorttab++;
+        }
+        /* if no better symbol fond restore original */
+        if (module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol)
+            idx_sorttab = idx_sorttab_orig;
+    }
+    return idx_sorttab;
+}
+
 /* assume addr is in module */
 struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
 {
@@ -892,7 +919,12 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
     high = module->num_sorttab;
 
     symt_get_address(&module->addr_sorttab[0]->symt, &ref_addr);
-    if (addr < ref_addr) return NULL;
+    if (addr <= ref_addr)
+    {
+        low = symt_get_best_at(module, 0);
+        return module->addr_sorttab[low];
+    }
+
     if (high)
     {
         symt_get_address(&module->addr_sorttab[high - 1]->symt, &ref_addr);
@@ -915,23 +947,13 @@ struct symt_ht* symt_find_nearest(struct module* module, DWORD_PTR addr)
     /* If found symbol is a public symbol, check if there are any other entries that
      * might also have the same address, but would get better information
      */
-    if (module->addr_sorttab[low]->symt.tag == SymTagPublicSymbol)
-    {
-        symt_get_address(&module->addr_sorttab[low]->symt, &ref_addr);
-        if (low > 0 &&
-            module->addr_sorttab[low - 1]->symt.tag != SymTagPublicSymbol &&
-            !cmp_sorttab_addr(module, low - 1, ref_addr))
-            low--;
-        else if (low < module->num_sorttab - 1 &&
-                 module->addr_sorttab[low + 1]->symt.tag != SymTagPublicSymbol &&
-                 !cmp_sorttab_addr(module, low + 1, ref_addr))
-            low++;
-    }
+    low = symt_get_best_at(module, low);
+
     /* finally check that we fit into the found symbol */
-    symt_get_address(&module->addr_sorttab[low]->symt, &ref_addr);
-    if (addr < ref_addr) return NULL;
-    symt_get_length(module, &module->addr_sorttab[low]->symt, &ref_size);
-    if (addr >= ref_addr + ref_size) return NULL;
+    //symt_get_address(&module->addr_sorttab[low]->symt, &ref_addr);
+    //if (addr < ref_addr) return NULL;
+    //symt_get_length(module, &module->addr_sorttab[low]->symt, &ref_size);
+    //if (addr >= ref_addr + ref_size) return NULL;
 
     return module->addr_sorttab[low];
 }
@@ -1260,7 +1282,7 @@ BOOL WINAPI SymFromAddr(HANDLE hProcess, DWORD64 Address,
 
     symt_fill_sym_info(&pair, NULL, &sym->symt, Symbol);
     if (Displacement)
-        *Displacement = Address - Symbol->Address;
+        *Displacement = (Address >= Symbol->Address) ? (Address - Symbol->Address) : (DWORD64)-1;
     return TRUE;
 }
 
