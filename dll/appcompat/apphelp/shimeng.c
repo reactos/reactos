@@ -25,6 +25,7 @@ extern HMODULE g_hInstance;
 static UNICODE_STRING g_WindowsDirectory;
 static UNICODE_STRING g_System32Directory;
 static UNICODE_STRING g_SxsDirectory;
+static UNICODE_STRING g_LoadingShimDll;
 ULONG g_ShimEngDebugLevel = 0xffffffff;
 BOOL g_bComPlusImage = FALSE;
 BOOL g_bShimDuringInit = FALSE;
@@ -347,13 +348,15 @@ PHOOKMODULEINFO SeiFindHookModuleInfoForImportDescriptor(PBYTE DllBase, PIMAGE_I
     }
 
     Success = LdrGetDllHandle(NULL, NULL, &DllName, &DllHandle);
-    RtlFreeUnicodeString(&DllName);
 
     if (!NT_SUCCESS(Success))
     {
-        SHIMENG_FAIL("Unable to get module handle for %wZ\n", &DllName);
+        SHIMENG_FAIL("Unable to get module handle for %wZ (%p)\n", &DllName, DllBase);
+        RtlFreeUnicodeString(&DllName);
+
         return NULL;
     }
+    RtlFreeUnicodeString(&DllName);
 
     return SeiFindHookModuleInfo(NULL, DllHandle);
 }
@@ -868,7 +871,8 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
     PBYTE DllBase = LdrEntry->DllBase;
 
-    if (SE_IsShimDll(DllBase) || g_hInstance == LdrEntry->DllBase)
+    if (SE_IsShimDll(DllBase) || g_hInstance == LdrEntry->DllBase ||
+        (g_LoadingShimDll.Buffer && RtlEqualUnicodeString(&g_LoadingShimDll, &LdrEntry->BaseDllName, TRUE)))
     {
         SHIMENG_INFO("Skipping shim module 0x%p \"%wZ\"\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
         return;
@@ -1109,6 +1113,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 continue;
             }
 
+            RtlInitUnicodeString(&g_LoadingShimDll, DllName);
             RtlInitUnicodeString(&UnicodeDllName, FullNameBuffer);
             if (NT_SUCCESS(LdrGetDllHandle(NULL, NULL, &UnicodeDllName, &BaseAddress)))
             {
@@ -1120,6 +1125,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
                 SHIMENG_WARN("Failed to load %wZ for %S\n", &UnicodeDllName, ShimName);
                 continue;
             }
+            RtlInitUnicodeString(&g_LoadingShimDll, NULL);
             /* No shim module found (or we just loaded it) */
             if (!pShimModuleInfo)
             {
