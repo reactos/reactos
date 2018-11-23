@@ -188,7 +188,6 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
-    TcpRow.State = 0; /* FIXME */
     TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     TcpRow.dwLocalPort = AddrFile->Port;
 
@@ -215,9 +214,13 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
             TcpRow.dwRemoteAddr = EndPoint.Address[0].Address[0].in_addr;
             TcpRow.dwRemotePort = ntohs(EndPoint.Address[0].Address[0].sin_port);
         }
+
+        Status = TCPGetSocketStatus(AddrFile->Connection, (PULONG)&TcpRow.State);
+        ASSERT(NT_SUCCESS(Status));
     }
     else
     {
+        TcpRow.State = 0;
         TcpRow.dwRemoteAddr = 0;
         TcpRow.dwRemotePort = 0;
     }
