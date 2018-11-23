@@ -614,6 +614,16 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
             LoadStringW(shell32_hInstance, IDS_EXE_DESCRIPTION, wszBuf, _countof(wszBuf));
             SetDlgItemTextW(hwndDlg, 14006, wszBuf);
             ShowWindow(GetDlgItem(hwndDlg, 14024), SW_HIDE);
+
+            /* hidden button 14024 allows to draw edit 14007 larger than defined in resources , we use edit 14009 as idol */
+            RECT rectIdol, rectToAdjust;
+            GetClientRect(GetDlgItem(hwndDlg, 14009), &rectIdol);
+            GetClientRect(GetDlgItem(hwndDlg, 14007), &rectToAdjust);
+            SetWindowPos(GetDlgItem(hwndDlg, 14007), HWND_TOP, 0, 0,
+                rectIdol.right-rectIdol.left /* make it as wide as its idol */,
+                rectToAdjust.bottom-rectToAdjust.top /* but keep its current height */,
+                SWP_NOMOVE | SWP_NOZORDER );
+
             LPCWSTR pwszDescr = m_VerInfo.GetString(L"FileDescription");
             if (pwszDescr)
                 SetDlgItemTextW(hwndDlg, 14007, pwszDescr);
