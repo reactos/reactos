@@ -840,3 +840,12 @@ LibTCPSetNoDelay(
     else
         pcb->flags &= ~TF_NODELAY;
 }
+
+void
+LibTCPGetSocketStatus(
+    PTCP_PCB pcb,
+    PULONG State)
+{
+    /* Translate state from enum tcp_state -> MIB_TCP_STATE */
+    *State = pcb->state + 1;
+}
