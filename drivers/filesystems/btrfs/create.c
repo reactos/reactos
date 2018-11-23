@@ -3557,6 +3557,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
         release_fcb_lock(Vcb);
 
         Irp->IoStatus.Information = NT_SUCCESS(Status) ? FILE_CREATED : 0;
+        granted_access = IrpSp->Parameters.Create.SecurityContext->DesiredAccess;
     }
 
     if (NT_SUCCESS(Status) && !(options & FILE_NO_INTERMEDIATE_BUFFERING))

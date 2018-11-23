@@ -4,36 +4,36 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Kara"
+1000, "Ater"
 }
 
 STRINGTABLE
 {
-2000, "Zarif Kara"
+2000, "Lautus Ater"
 }
 
 STRINGTABLE
 {
-3000, "Düzgülü"
+3000, "Normal"
 3001, "Büyük Yazı Tipleri"
 3002, "Çok Büyük Yazı Tipleri"
 }
 
 STRINGTABLE
 {
-4000, "Düzgülü"
+4000, "Normal"
 4001, "Büyük Yazı Tipleri"
 4002, "Çok Büyük Yazı Tipleri"
 }
 
 STRINGTABLE
 {
-5000, "Zarif"
-5001, "Görmelik Biçim"
+5000, "Lautus"
+5001, "Görsel Biçim"
 5002, "ReactOS Vakfı"
 5003, "Pisarz, Luna Inspirat tabanlı"
 5004, "GNU/GPL 2.0 altında yayımlanmaktadır, 2011"
 5005, "http://www.reactos.org"
 5006, "1.0"
-5007, "ReactOS İçin Görmelik Biçim"
+5007, "ReactOS İçin Görsel Biçim"
 }

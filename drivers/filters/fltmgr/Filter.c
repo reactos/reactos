@@ -21,6 +21,9 @@
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 #define MAX_KEY_LENGTH  0x200
 
+LIST_ENTRY FilterList;
+ERESOURCE FilterListLock;
+
 NTSTATUS
 FltpStartingToDrainObject(
     _Inout_ PFLT_OBJECT Object
@@ -30,11 +33,25 @@ VOID
 FltpMiniFilterDriverUnload(
 );
 
+NTSTATUS
+FltpAttachFrame(
+    _In_ PUNICODE_STRING Altitude,
+    _Inout_ PFLTP_FRAME *Frame
+);
+
 static
 NTSTATUS
 GetFilterAltitude(
     _In_ PFLT_FILTER Filter,
     _Inout_ PUNICODE_STRING AltitudeString
+);
+
+static
+NTSTATUS
+GetFilterFrame(
+    _In_ PFLT_FILTER Filter,
+    _In_ PUNICODE_STRING Altitude,
+    _Out_ PFLTP_FRAME *Frame
 );
 
 
@@ -98,6 +115,7 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
 {
     PFLT_OPERATION_REGISTRATION Callbacks;
     PFLT_FILTER Filter;
+    PFLTP_FRAME Frame;
     ULONG CallbackBufferSize;
     ULONG FilterBufferSize;
     ULONG Count = 0;
@@ -235,7 +253,23 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
     Filter->Name.Buffer = (PWCH)Ptr;
     RtlCopyUnicodeString(&Filter->Name, &DriverObject->DriverExtension->ServiceKeyName);
 
+    /* Lookup the altitude of the mini-filter */
     Status = GetFilterAltitude(Filter, &Filter->DefaultAltitude);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+    /* Lookup the filter frame */
+    Status = GetFilterFrame(Filter, &Filter->DefaultAltitude, &Frame);
+    if (Status == STATUS_NOT_FOUND)
+    {
+        /* Store the frame this mini-filter's main struct */
+        Filter->Frame = Frame;
+
+        Status = FltpAttachFrame(&Filter->DefaultAltitude, &Frame);
+    }
+
     if (!NT_SUCCESS(Status))
     {
         goto Quit;
@@ -250,7 +284,7 @@ FltRegisterFilter(_In_ PDRIVER_OBJECT DriverObject,
     Filter->OldDriverUnload = (PFLT_FILTER_UNLOAD_CALLBACK)DriverObject->DriverUnload;
 
     /* Check we opted not to have an unload routine, or if we want to stop the driver from being unloaded */
-    if (!FlagOn(Filter->Flags, FLTFL_REGISTRATION_DO_NOT_SUPPORT_SERVICE_STOP))
+    if (Registration->FilterUnloadCallback && !FlagOn(Filter->Flags, FLTFL_REGISTRATION_DO_NOT_SUPPORT_SERVICE_STOP))
     {
         DriverObject->DriverUnload = (PDRIVER_UNLOAD)FltpMiniFilterDriverUnload;
     }
@@ -364,6 +398,17 @@ FltStartFiltering(_In_ PFLT_FILTER Filter)
     return Status;
 }
 
+NTSTATUS
+NTAPI
+FltGetFilterFromName(_In_ PCUNICODE_STRING FilterName,
+                     _Out_ PFLT_FILTER *RetFilter)
+{
+   UNIMPLEMENTED;
+    UNREFERENCED_PARAMETER(FilterName);
+    *RetFilter = NULL;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* INTERNAL FUNCTIONS ******************************************************/
 
@@ -389,13 +434,24 @@ FltpMiniFilterDriverUnload()
     __debugbreak();
 }
 
+
+NTSTATUS
+FltpAttachFrame(
+    _In_ PUNICODE_STRING Altitude,
+    _Inout_ PFLTP_FRAME *Frame)
+{
+    UNIMPLEMENTED;
+    UNREFERENCED_PARAMETER(Altitude);
+    *Frame = NULL;
+    return STATUS_SUCCESS;
+}
+
 /* PRIVATE FUNCTIONS ******************************************************/
 
 static
 NTSTATUS
-GetFilterAltitude(
-    _In_ PFLT_FILTER Filter,
-    _Inout_ PUNICODE_STRING AltitudeString)
+GetFilterAltitude(_In_ PFLT_FILTER Filter,
+                  _Inout_ PUNICODE_STRING AltitudeString)
 {
     UNICODE_STRING InstancesKey = RTL_CONSTANT_STRING(L"Instances");
     UNICODE_STRING DefaultInstance = RTL_CONSTANT_STRING(L"DefaultInstance");
@@ -523,14 +579,21 @@ Quit:
     return Status;
 }
 
-
-
+static
 NTSTATUS
-FltpReadRegistryValue(
-    _In_ HANDLE KeyHandle,
-    _In_ PUNICODE_STRING ValueName,
-    _In_opt_ ULONG Type,
-    _Out_writes_bytes_(BufferSize) PVOID Buffer,
-    _In_ ULONG BufferSize,
-    _Out_opt_ PULONG BytesRequired
-);
+GetFilterFrame(_In_ PFLT_FILTER Filter,
+               _In_ PUNICODE_STRING Altitude,
+               _Out_ PFLTP_FRAME *Frame)
+{
+    UNIMPLEMENTED;
+    UNREFERENCED_PARAMETER(Filter);
+    UNREFERENCED_PARAMETER(Altitude);
+
+    //
+    // Try to find a frame from our existing filter list (see FilterList)
+    // If none exists, create a new frame, add it and return it
+    //
+
+    *Frame = NULL;
+    return STATUS_SUCCESS;
+}

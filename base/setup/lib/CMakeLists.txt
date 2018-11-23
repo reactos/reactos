@@ -1,14 +1,15 @@
 
 add_definitions(${I18N_DEFS})
 
-include_directories(utils)
+include_directories(spapisup utils)
 
 list(APPEND SOURCE
+    spapisup/fileqsup.c
+    spapisup/infsupp.c
     utils/arcname.c
     utils/bldrsup.c
     utils/filesup.c
     utils/genlist.c
-    utils/infsupp.c
     utils/inicache.c
     utils/ntverrsrc.c
     utils/osdetect.c
@@ -16,6 +17,7 @@ list(APPEND SOURCE
     utils/regutil.c
     bootsup.c
     fsutil.c
+    install.c
     mui.c
     registry.c
     settings.c

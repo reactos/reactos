@@ -5,7 +5,7 @@ static MUI_ENTRY etEELanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -17,13 +17,13 @@ static MUI_ENTRY etEELanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Vali keel, mida paigaldamisel kasutada.",
+        "\x07  Vali paigaldamisel kasutatav keel.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Ja vajuta ENTER.",
+        "   SeejÑrel vajuta ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -51,19 +51,19 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Tere tulemast ReactOSi paigaldama",
+        "Tere tulemast ReactOS'i paigaldusse",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Selles paigaldamise osas kopeeritakse ReactOSi failid arvutisse ja",
+        "Selles paigaldamise etapis kopeeritakse ReactOSi failid arvutisse ja",
         TEXT_STYLE_NORMAL
     },
     {
@@ -81,25 +81,25 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Vajuta R, et ReactOSi parandada.",
+        "\x07  Vajuta R, et ReactOS'i parandada.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Vajuta L, et nÑha ReactOSi litsentsi ja kasutamise tingimusi",
+        "\x07  Vajuta L, et nÑha ReactOS'i litsentsi ja kasutamise tingimusi",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Vajuta F3, et vÑljuda ReactOSi paigaldamata.",
+        "\x07  Vajuta F3, et vÑljuda ReactOS'i paigaldamata.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "ReactOSi kohta saab rohkem infot:",
+        "ReactOS'i kohta saab rohkem infot:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -127,61 +127,61 @@ static MUI_ENTRY etEEIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "ReactOS'i versiooni seisund",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS on alfa etapis, mis tÑhendab et see ei ole veel funktsionaalselt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "tÑiuslik ja on t‰sises arenguses. Seda on soovitatud ainult kasutada",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "tutvumise ja proovimise eesmÑrkidel, aga mitte igapÑevalise osÅsteemina.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "Varundage enda andmed v‰i proovi teisejÑrgulisel arvutil kui proovite",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "ReactOS'i pÑris riistvara peal'.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Vajuta ENTER, et siseneda ReactOS'i paigaldusse.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Vajuta F3, et lahkuda ReactOS'i paigaldamata.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = JÑtka   F3 = VÑlju",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -197,7 +197,7 @@ static MUI_ENTRY etEELicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -227,7 +227,7 @@ static MUI_ENTRY etEELicensePageEntries[] =
     {
         8,
         11,
-        "Kogu ReactOSi sÅsteem on seega kaitstud GPL litsentsiga",
+        "Kogu ReactOS'i sÅsteem on seega kaitstud GPL litsentsiga",
         TEXT_STYLE_NORMAL
     },
     {
@@ -321,7 +321,7 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -339,7 +339,7 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     {
         24,
         12,
-        "Monitor:",
+        "Ekraan:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -362,13 +362,13 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     },
     {
         25,
-        16, "Rakenda need seaded",
+        16, "Rakenda need sÑtted",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Riistvara seadeid saab muuta Åles ja alla liikudes.",
+        "Riistvara sÑtteid saab muuta Åles ja alla liikudes.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -386,7 +386,7 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     {
         6,
         23,
-        "Kui seadistus on paigas, vali \"Rakenda need seaded\"",
+        "Kui seadistus on paigas, vali \"Rakenda need sÑtted\"",
         TEXT_STYLE_NORMAL
     },
     {
@@ -414,13 +414,13 @@ static MUI_ENTRY etEERepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOSi paigaldusprogramm on varajases arendusfaasis. Praegu ei ole",
+        "ReactOS'i paigaldusprogramm on varajases arendusfaasis. Praegu ei ole",
         TEXT_STYLE_NORMAL
     },
     {
@@ -548,7 +548,7 @@ static MUI_ENTRY etEEComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -600,7 +600,7 @@ static MUI_ENTRY etEEFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -640,7 +640,7 @@ static MUI_ENTRY etEEQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -686,18 +686,18 @@ static MUI_ENTRY etEEDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Monitori tÅÅbi muutmine.",
+        "Ekraani tÅÅbi muutmine.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Liigu Åles-alla, et monitori tÅÅpi muuta.",
+         "\x07  Liigu Åles-alla, et ekraani tÅÅpi muuta.",
          TEXT_STYLE_NORMAL
     },
     {
@@ -715,7 +715,7 @@ static MUI_ENTRY etEEDisplayPageEntries[] =
     {
         8,
         14,
-        "   ilma monitori tÅÅpi muutmata.",
+        "   ilma ekraani tÅÅpi muutmata.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -737,13 +737,13 @@ static MUI_ENTRY etEESuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOSi p‰hilised komponendid on edukalt paigaldatud.",
+        "ReactOS'i p‰hilised komponendid on edukalt paigaldatud.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -783,7 +783,7 @@ static MUI_ENTRY etEEBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -830,7 +830,7 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -860,26 +860,26 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Vajuta P uue primaarse partitsiooni loomiseks.",
 //        "\x07  Vajuta C, et teha uus partitsioon.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Vajuta E uue laiendatud partitsiooni loomiseks.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  Vajuta L uue loogilise partitsiooni loomiiseks.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Vajuta D, et kustutada olemasolev partitsioon.",
+        "\x07  Vajuta D olemasoleva partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -901,85 +901,85 @@ static MUI_ENTRY etEEConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "Olete valinud sÅsteemi partitsiooni kustutamise.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "SÅsteemi partitsioon v‰ib sisaldada diagnostika programme, riistvara konfiguratsiooni",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "programme, programme millega alustada opsÅsteeme (nagu ReactOS) v‰i muid",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "programme riistvara tootja poolt esitatud.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Kustuta sÅsteemi partitsioon ainult siis kui olete kindel, et seal ei ole Åhtegi",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "sellist programmi partitsioonil v‰i kui olete kindel, et tahate neid kustutada.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "Kui kustutad partitsiooni, v‰ib juhtuda, et Te ei saa kÑivitada",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "arvutit k‰vakettalt kuni l‰petate ReactOS'i paigalduse.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Vajuta ENTER sÅsteemi partitsiooni kustutamiseks. Teilt kÅsitakse",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   hiljem uuesti kinnitust partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Vajuta ESC eelmise lehele tagasipîîrdumiseks. Partitsiooni",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   ei kustutata.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER=JÑtka  ESC=Loobu",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -995,7 +995,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1007,7 +1007,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     {
         6,
         10,
-        "NÅÅd vormindatakse partitsioon. Vajuta ENTER, et jÑtkata.",
+        "NÅÅd vormindatakse partitsioon. Vajuta ENTER jÑtkamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1029,7 +1029,7 @@ static MUI_ENTRY etEEInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1081,7 +1081,7 @@ static MUI_ENTRY etEEFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1121,7 +1121,7 @@ static MUI_ENTRY etEEBootLoaderEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1173,7 +1173,7 @@ static MUI_ENTRY etEEKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1197,7 +1197,7 @@ static MUI_ENTRY etEEKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Vajuta ESC, et minna tagasi eelmisele lehele",
+        "\x07  Vajuta ESC eelmisele lehele tagasi pîîrdumiseks",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1225,7 +1225,7 @@ static MUI_ENTRY etEELayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1249,7 +1249,7 @@ static MUI_ENTRY etEELayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Vajuta ESC, et minna tagasi eelmisele lehele",
+        "\x07  Vajuta ESC eelmisele lehele tagasi pîîrdumiseks",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1278,7 +1278,7 @@ static MUI_ENTRY etEEPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1307,7 +1307,7 @@ static MUI_ENTRY etEESelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1325,13 +1325,13 @@ static MUI_ENTRY etEESelectFSEntries[] =
     {
         8,
         21,
-        "\x07  Vajuta ENTER, et partitsioon vormindada.",
+        "\x07  Vajuta ENTER partitsiooni vormindamiseks.",
         0
     },
     {
         8,
         23,
-        "\x07  Vajuta ESC, et valida muu partitsioon.",
+        "\x07  Vajuta ESC muu partitsiooni valimiseks.",
         0
     },
     {
@@ -1354,7 +1354,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1366,7 +1366,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Vajuta D, et partitsioon kustutada.",
+        "\x07  Vajuta D partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1378,7 +1378,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Vajuta ESC, et katkestada.",
+        "\x07  Vajuta ESC katkestamiseks.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1400,7 +1400,7 @@ static MUI_ENTRY etEERegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldamine ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1428,16 +1428,16 @@ MUI_ERROR etEEErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Ânnestus\n"
     },
     {
         // ERROR_NOT_INSTALLED
         "ReactOS ei ole tÑielikult paigaldatud.\n"
         "Kui paigaldamine praegu katkestada, siis tuleb\n"
-        "ReactOSi paigaldamiseks paigaldusprogramm uuesti kÑivitada.\n"
+        "ReactOS'i paigaldamiseks paigaldusprogramm uuesti kÑivitada.\n"
         "\n"
-        "  \x07  Vajuta ENTER, et paigaldamist jÑtkata.\n"
-        "  \x07  Vajuta F3, et paigaldamie peatada.",
+        "  \x07  Vajuta ENTER paigalduse jÑtmaiseks.\n"
+        "  \x07  Vajuta F3 paigalduse seiskamiseks.",
         "F3 = VÑlju  ENTER = JÑtka"
     },
     {
@@ -1472,7 +1472,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "SÅsteemikettale ei ‰nnestunud kirjutada FAT alglaadimiskoodi.",
+        "SÅsteemikettale ei ‰nnestunud kirjutada %S alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
@@ -1481,8 +1481,8 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_LOAD_DISPLAY,
-        "Monitoride nimekirja ei ‰nnestunud laadida.\n",
+        //ERROR_LOAD_DISPLAY,
+        "Ekraanide nimekirja ei ‰nnestunud laadida.\n",
         "ENTER = TaaskÑivita arvuti"
     },
     {
@@ -1502,8 +1502,8 @@ MUI_ERROR etEEErrorEntries[] =
           "\n"
           "Partitsioonide loomine v‰i kustutamine v‰ib vigastada partitsioonitabelit.\n"
           "\n"
-          "  \x07  Vajuta F3, et vÑljuda paigaldusest..\n"
-          "  \x07  Vajuta ENTER, et jÑtkata.",
+          "  \x07  Vajuta F3 paigaldusest vÑljumiseks..\n"
+          "  \x07  Vajuta ENTER jÑtkamiseks.",
           "F3 = VÑlju  ENTER = JÑtka"
     },
     {
@@ -1511,19 +1511,19 @@ MUI_ERROR etEEErrorEntries[] =
         "Uut partitsioonitabelit ei saa juba olemasoleva\n"
         "partitsiooni sisse tekitada!\n"
         "\n"
-        "  * Vajuta suvalist klahvi, et jÑtkata.",
+        "  * Vajuta mis tahes klahvi, et jÑtkata.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
         "Partitsioneerimata kettaruumi ei saa kustutada!\n"
         "\n"
-        "  * Vajuta suvalist klahvi, et jÑtkata.",
+        "  * Vajuta mis tahes klahvi, et jÑtkata.",
         NULL
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "SÅsteemikettale ei ‰nnestunud paigaldada FAT alglaadimiskoodi.",
+        "SÅsteemikettale ei ‰nnestunud paigaldada %S alglaadimiskoodi.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
@@ -1537,8 +1537,8 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Monitori seadistust registris ei ‰nnestunud uuendada.",
+        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Ekraani seadistust registris ei ‰nnestunud uuendada.",
         "ENTER = TaaskÑivita arvuti"
     },
     {
@@ -1627,17 +1627,17 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = TaaskÑivita arvuti"
     },
     {
-        // ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        //ERROR_DIRECTORY_NAME,
+        "Sobimatu kausta nimi.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Vajuta mis tahes klahvi, et jÑtkata."
     },
     {
-        // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Valitud partitsioon ei ole piisavalt suur ReactOS'i paigaldamiseks.\n"
+        "Paigalduse partitsioon peab vÑheamlt %lu MB suur olema.\n"
         "\n"
-        "  * Vajuta suvalist klahvi, et jÑtkata.",
+        "  * Vajuta mis tahes klahvi, et jÑtkata.",
         NULL
     },
     {
@@ -1645,20 +1645,20 @@ MUI_ERROR etEEErrorEntries[] =
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Vajuta mis tahes klahvi, et jÑtkata."
     },
     {
-        // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        //ERROR_ONLY_ONE_EXTENDED,
+        "Te ei saa luua rohkem kui Åhe laiendatud partitsiooni ketta kohta.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Vajuta mis tahes klahvi, et jÑtkata."
     },
     {
-        // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        //ERROR_FORMATTING_PARTITION,
+        "Viisard ei saanud vormindada partitsiooni:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = TaaskÑivita arvuti"
     },
     {
         NULL,
@@ -1779,14 +1779,13 @@ MUI_STRING etEEStrings[] =
     {STRING_PLEASEWAIT,
      "   Palun oota..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Paigalda  C = Loo partitsioon    F3 = VÑlju"},
+     "   ENTER = Paigalda   P = Loo primaarne   E = Loo laiendatud   F3 = VÑlju"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Paigalda   L = Loo loogiline partitsioon   F3 = VÑlju"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Paigalda  D = Kustuta partitsioon  F3 = VÑlju"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Kustuta partitsioon   F3 = VÑlju"},
     {STRING_PARTITIONSIZE,
      "Uue partitsiooni suurus:"},
     {STRING_CHOOSENEWPARTITION,
@@ -1803,11 +1802,11 @@ MUI_STRING etEEStrings[] =
     {STRING_PARTFORMAT,
     "JÑrgmisena vormindatakse seda partitsiooni."},
     {STRING_NONFORMATTEDPART,
-    "Oled valinud ReactOSi paigaldamise uuele v‰i vormindamata partitsioonile."},
+    "Oled valinud ReactOS'i paigaldamise uuele v‰i vormindamata partitsioonile."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "SÅsteemipartitsioon on veel vormindamata."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "Uus partitsioon on veel vormindamata."},
     {STRING_INSTALLONPART,
     "ReactOS paigaldatakse partitsioonile"},
     {STRING_CHECKINGPART,
@@ -1819,13 +1818,13 @@ MUI_STRING etEEStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = TaaskÑivita arvuti"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Faili kustutamine: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Faili liigutamine: %S asukohta %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Faili Åmbernimetamine: %S %S-ks"},
     {STRING_COPYING,
-     "   Kopeerimine: %S"},
+     "   Faili kopeerimine: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Failide kopeerimine..."},
     {STRING_REGHIVEUPDATE,
@@ -1845,7 +1844,7 @@ MUI_STRING etEEStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = TaaskÑivita arvuti"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " Teie arvuti taaskÑivitub %li sekundi pÑrast... "},
     {STRING_CONSOLEFAIL1,
     "Konsooli ei ‰nnestunud avada\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
@@ -1891,7 +1890,7 @@ MUI_STRING etEEStrings[] =
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Laiendatud partitsioon"},
     {STRING_UNFORMATTED,
     "Uus (Vormindamata)"},
     {STRING_FORMATUNUSED,

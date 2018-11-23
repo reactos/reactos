@@ -1477,7 +1477,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Impossibile installare il bootcode FAT nella partizione di sistema.",
+        "Impossibile installare il bootcode %S nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1528,7 +1528,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Impossibile installare il bootcode FAT nella partizione di sistema.",
+        "Impossibile installare il bootcode %S nella partizione di sistema.",
         "INVIO = Riavviare il computer"
     },
     {

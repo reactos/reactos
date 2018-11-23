@@ -228,7 +228,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
         if (NextEntryOffset == 0)
         {
             /* If we don't overflow! */
-            if (EaLength - ComputedLength < 0)
+            if ((LONG)(EaLength - ComputedLength) < 0)
             {
                 goto FailPath;
             }
@@ -243,7 +243,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
         }
 
         /* Check next entry offset value is positive */
-        if (NextEntryOffset < 0)
+        if ((LONG)NextEntryOffset < 0)
         {
             goto FailPath;
         }

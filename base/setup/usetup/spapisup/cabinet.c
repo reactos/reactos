@@ -16,6 +16,11 @@
 #define NDEBUG
 #include <debug.h>
 
+
+/* DEFINITIONS **************************************************************/
+
+/* File management definitions */
+
 #define SEEK_BEGIN    0
 #define SEEK_CURRENT  1
 #ifndef SEEK_END
@@ -29,7 +34,6 @@ typedef struct _DOSTIME
     WORD Hour:5;
 } DOSTIME, *PDOSTIME;
 
-
 typedef struct _DOSDATE
 {
     WORD Day:5;
@@ -37,37 +41,102 @@ typedef struct _DOSDATE
     WORD Year:5;
 } DOSDATE, *PDOSDATE;
 
-static WCHAR CabinetName[256];          // Filename of current cabinet
-static WCHAR CabinetPrev[256];          // Filename of previous cabinet
-static WCHAR DiskPrev[256];             // Label of cabinet in file CabinetPrev
-static WCHAR CabinetNext[256];          // Filename of next cabinet
-static WCHAR DiskNext[256];             // Label of cabinet in file CabinetNext
-static ULONG FolderUncompSize = 0;      // Uncompressed size of folder
-static ULONG BytesLeftInBlock = 0;      // Number of bytes left in current block
-static WCHAR DestPath[MAX_PATH];
-static HANDLE FileHandle;
-static HANDLE FileSectionHandle;
-static PUCHAR FileBuffer;
-static SIZE_T DestFileSize;
-static SIZE_T FileSize;
-static BOOL FileOpen = FALSE;
-static PCFHEADER PCABHeader;
-static PCFFOLDER CabinetFolders;
-static ULONG CabinetReserved = 0;
-static ULONG FolderReserved = 0;
-static ULONG DataReserved = 0;
-static ULONG CodecId;
-static PCABINET_CODEC_UNCOMPRESS CodecUncompress = NULL;
-static BOOL CodecSelected = FALSE;
-static ULONG LastFileOffset = 0;    // Uncompressed offset of last extracted file
-static PCABINET_OVERWRITE OverwriteHandler = NULL;
-static PCABINET_EXTRACT ExtractHandler = NULL;
-static PCABINET_DISK_CHANGE DiskChangeHandler = NULL;
-static z_stream ZStream;
-static PVOID CabinetReservedArea = NULL;
+
+/* Cabinet constants */
+
+#define CAB_SIGNATURE        0x4643534D // "MSCF"
+#define CAB_VERSION          0x0103
+#define CAB_BLOCKSIZE        32768
+
+#define CAB_COMP_MASK        0x00FF
+#define CAB_COMP_NONE        0x0000
+#define CAB_COMP_MSZIP       0x0001
+#define CAB_COMP_QUANTUM     0x0002
+#define CAB_COMP_LZX         0x0003
+
+#define CAB_FLAG_HASPREV     0x0001
+#define CAB_FLAG_HASNEXT     0x0002
+#define CAB_FLAG_RESERVE     0x0004
+
+#define CAB_ATTRIB_READONLY  0x0001
+#define CAB_ATTRIB_HIDDEN    0x0002
+#define CAB_ATTRIB_SYSTEM    0x0004
+#define CAB_ATTRIB_VOLUME    0x0008
+#define CAB_ATTRIB_DIRECTORY 0x0010
+#define CAB_ATTRIB_ARCHIVE   0x0020
+#define CAB_ATTRIB_EXECUTE   0x0040
+#define CAB_ATTRIB_UTF_NAME  0x0080
+
+#define CAB_FILE_MAX_FOLDER  0xFFFC
+#define CAB_FILE_CONTINUED   0xFFFD
+#define CAB_FILE_SPLIT       0xFFFE
+#define CAB_FILE_PREV_NEXT   0xFFFF
 
 
-/* Needed by zlib, but we don't want the dependency on msvcrt.dll */
+/* Cabinet structures */
+
+typedef struct _CFHEADER
+{
+    ULONG  Signature;       // File signature 'MSCF' (CAB_SIGNATURE)
+    ULONG  Reserved1;       // Reserved field
+    ULONG  CabinetSize;     // Cabinet file size
+    ULONG  Reserved2;       // Reserved field
+    ULONG  FileTableOffset; // Offset of first CFFILE
+    ULONG  Reserved3;       // Reserved field
+    USHORT Version;         // Cabinet version (CAB_VERSION)
+    USHORT FolderCount;     // Number of folders
+    USHORT FileCount;       // Number of files
+    USHORT Flags;           // Cabinet flags (CAB_FLAG_*)
+    USHORT SetID;           // Cabinet set id
+    USHORT CabinetNumber;   // Zero-based cabinet number
+/* Optional fields (depends on Flags)
+    USHORT CabinetResSize   // Per-cabinet reserved area size
+    CHAR  FolderResSize     // Per-folder reserved area size
+    CHAR  FileResSize       // Per-file reserved area size
+    CHAR  CabinetReserved[] // Per-cabinet reserved area
+    CHAR  CabinetPrev[]     // Name of previous cabinet file
+    CHAR  DiskPrev[]        // Name of previous disk
+    CHAR  CabinetNext[]     // Name of next cabinet file
+    CHAR  DiskNext[]        // Name of next disk
+ */
+} CFHEADER, *PCFHEADER;
+
+typedef struct _CFFOLDER
+{
+    ULONG  DataOffset;      // Absolute offset of first CFDATA block in this folder
+    USHORT DataBlockCount;  // Number of CFDATA blocks in this folder in this cabinet
+    USHORT CompressionType; // Type of compression used for all CFDATA blocks in this folder
+/* Optional fields (depends on Flags)
+    CHAR   FolderReserved[] // Per-folder reserved area
+ */
+} CFFOLDER, *PCFFOLDER;
+
+typedef struct _CFFILE
+{
+    ULONG  FileSize;        // Uncompressed file size in bytes
+    ULONG  FileOffset;      // Uncompressed offset of file in the folder
+    USHORT FolderIndex;     // Index number of the folder that contains this file
+    USHORT FileDate;        // File date stamp, as used by DOS
+    USHORT FileTime;        // File time stamp, as used by DOS
+    USHORT Attributes;      // File attributes (CAB_ATTRIB_*)
+    CHAR   FileName[ANYSIZE_ARRAY];
+    /* After this is the NULL terminated filename */
+} CFFILE, *PCFFILE;
+
+typedef struct _CFDATA
+{
+    ULONG  Checksum;        // Checksum of CFDATA entry
+    USHORT CompSize;        // Number of compressed bytes in this block
+    USHORT UncompSize;      // Number of uncompressed bytes in this block
+/* Optional fields (depends on Flags)
+    CHAR   DataReserved[]   // Per-datablock reserved area
+ */
+} CFDATA, *PCFDATA;
+
+
+/* FUNCTIONS ****************************************************************/
+
+/* Needed by zlib, but we don't want the dependency on the CRT */
 void *__cdecl
 malloc(size_t size)
 {
@@ -86,6 +155,25 @@ calloc(size_t nmemb, size_t size)
     return (void *)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nmemb * size);
 }
 
+
+/* Codecs */
+
+/* Uncompresses a data block */
+typedef ULONG (*PCABINET_CODEC_UNCOMPRESS)(
+    IN struct _CAB_CODEC* Codec,
+    OUT PVOID OutputBuffer,
+    IN PVOID InputBuffer,
+    IN OUT PLONG InputLength,
+    IN OUT PLONG OutputLength);
+
+typedef struct _CAB_CODEC
+{
+    PCABINET_CODEC_UNCOMPRESS Uncompress;
+    z_stream ZStream;
+    // Other CODEC-related structures
+} CAB_CODEC, *PCAB_CODEC;
+
+
 /* RAW codec */
 
 /*
@@ -99,10 +187,12 @@ calloc(size_t nmemb, size_t size)
  *                    Negative to indicate that this is not the end of the block
  */
 ULONG
-RawCodecUncompress(PVOID OutputBuffer,
-                   PVOID InputBuffer,
-                   PLONG InputLength,
-                   PLONG OutputLength)
+RawCodecUncompress(
+    IN OUT PCAB_CODEC Codec,
+    OUT PVOID OutputBuffer,
+    IN PVOID InputBuffer,
+    IN OUT PLONG InputLength,
+    IN OUT PLONG OutputLength)
 {
     LONG Len = min(abs(*InputLength), abs(*OutputLength));
 
@@ -112,7 +202,14 @@ RawCodecUncompress(PVOID OutputBuffer,
     return CS_SUCCESS;
 }
 
+static CAB_CODEC RawCodec =
+{
+    RawCodecUncompress, {0}
+};
+
 /* MSZIP codec */
+
+#define MSZIP_MAGIC 0x4B43
 
 /*
  * FUNCTION: Uncompresses data in a buffer
@@ -125,10 +222,12 @@ RawCodecUncompress(PVOID OutputBuffer,
  *                    Negative to indicate that this is not the end of the block
  */
 ULONG
-MSZipCodecUncompress(PVOID OutputBuffer,
-                     PVOID InputBuffer,
-                     PLONG InputLength,
-                     PLONG OutputLength)
+MSZipCodecUncompress(
+    IN OUT PCAB_CODEC Codec,
+    OUT PVOID OutputBuffer,
+    IN PVOID InputBuffer,
+    IN OUT PLONG InputLength,
+    IN OUT PLONG OutputLength)
 {
     USHORT Magic;
     INT Status;
@@ -136,6 +235,7 @@ MSZipCodecUncompress(PVOID OutputBuffer,
     DPRINT("MSZipCodecUncompress(OutputBuffer = %x, InputBuffer = %x, "
            "InputLength = %d, OutputLength = %d)\n", OutputBuffer,
            InputBuffer, *InputLength, *OutputLength);
+
     if (*InputLength > 0)
     {
         Magic = *(PUSHORT)InputBuffer;
@@ -146,38 +246,38 @@ MSZipCodecUncompress(PVOID OutputBuffer,
             return CS_BADSTREAM;
         }
 
-        ZStream.next_in = (PUCHAR)InputBuffer + 2;
-        ZStream.avail_in = *InputLength - 2;
-        ZStream.next_out = (PUCHAR)OutputBuffer;
-        ZStream.avail_out = abs(*OutputLength);
+        Codec->ZStream.next_in = (PUCHAR)InputBuffer + 2;
+        Codec->ZStream.avail_in = *InputLength - 2;
+        Codec->ZStream.next_out = (PUCHAR)OutputBuffer;
+        Codec->ZStream.avail_out = abs(*OutputLength);
 
         /* WindowBits is passed < 0 to tell that there is no zlib header.
          * Note that in this case inflate *requires* an extra "dummy" byte
          * after the compressed stream in order to complete decompression and
          * return Z_STREAM_END.
          */
-        Status = inflateInit2(&ZStream, -MAX_WBITS);
+        Status = inflateInit2(&Codec->ZStream, -MAX_WBITS);
         if (Status != Z_OK)
         {
             DPRINT("inflateInit2() returned (%d)\n", Status);
             return CS_BADSTREAM;
         }
-        ZStream.total_in = 2;
+        Codec->ZStream.total_in = 2;
     }
     else
     {
-        ZStream.avail_in = -*InputLength;
-        ZStream.next_in = (PUCHAR)InputBuffer;
-        ZStream.next_out = (PUCHAR)OutputBuffer;
-        ZStream.avail_out = abs(*OutputLength);
-        ZStream.total_in = 0;
+        Codec->ZStream.avail_in = -*InputLength;
+        Codec->ZStream.next_in = (PUCHAR)InputBuffer;
+        Codec->ZStream.next_out = (PUCHAR)OutputBuffer;
+        Codec->ZStream.avail_out = abs(*OutputLength);
+        Codec->ZStream.total_in = 0;
     }
 
-    ZStream.total_out = 0;
-    Status = inflate(&ZStream, Z_SYNC_FLUSH);
+    Codec->ZStream.total_out = 0;
+    Status = inflate(&Codec->ZStream, Z_SYNC_FLUSH);
     if (Status != Z_OK && Status != Z_STREAM_END)
     {
-        DPRINT("inflate() returned (%d) (%s)\n", Status, ZStream.msg);
+        DPRINT("inflate() returned (%d) (%s)\n", Status, Codec->ZStream.msg);
         if (Status == Z_MEM_ERROR)
             return CS_NOMEMORY;
         return CS_BADSTREAM;
@@ -185,7 +285,7 @@ MSZipCodecUncompress(PVOID OutputBuffer,
 
     if (*OutputLength > 0)
     {
-        Status = inflateEnd(&ZStream);
+        Status = inflateEnd(&Codec->ZStream);
         if (Status != Z_OK)
         {
             DPRINT("inflateEnd() returned (%d)\n", Status);
@@ -193,11 +293,17 @@ MSZipCodecUncompress(PVOID OutputBuffer,
         }
     }
 
-    *OutputLength = ZStream.total_out;
-    *InputLength = ZStream.total_in;
+    *InputLength = Codec->ZStream.total_in;
+    *OutputLength = Codec->ZStream.total_out;
 
     return CS_SUCCESS;
 }
+
+static CAB_CODEC MSZipCodec =
+{
+    MSZipCodecUncompress, {0}
+};
+
 
 /* Memory functions */
 
@@ -374,14 +480,15 @@ SetAttributesOnFile(PCFFILE File,
  *     Status of operation
  */
 static ULONG
-CloseCabinet(VOID)
+CloseCabinet(
+    IN PCABINET_CONTEXT CabinetContext)
 {
-    if (FileBuffer)
+    if (CabinetContext->FileBuffer)
     {
-        NtUnmapViewOfSection(NtCurrentProcess(), FileBuffer);
-        NtClose(FileSectionHandle);
-        NtClose(FileHandle);
-        FileBuffer = NULL;
+        NtUnmapViewOfSection(NtCurrentProcess(), CabinetContext->FileBuffer);
+        NtClose(CabinetContext->FileSectionHandle);
+        NtClose(CabinetContext->FileHandle);
+        CabinetContext->FileBuffer = NULL;
     }
 
     return 0;
@@ -391,34 +498,38 @@ CloseCabinet(VOID)
  * FUNCTION: Initialize archiver
  */
 VOID
-CabinetInitialize(VOID)
+CabinetInitialize(
+    IN OUT PCABINET_CONTEXT CabinetContext)
 {
-    ZStream.zalloc = MSZipAlloc;
-    ZStream.zfree = MSZipFree;
-    ZStream.opaque = (voidpf)0;
+    RtlZeroMemory(CabinetContext, sizeof(*CabinetContext));
 
-    FileOpen = FALSE;
-    wcscpy(DestPath, L"");
+    CabinetContext->FileOpen = FALSE;
+    wcscpy(CabinetContext->DestPath, L"");
 
-    CodecId = CAB_CODEC_RAW;
-    CodecSelected = TRUE;
+    CabinetContext->CodecSelected = FALSE;
+    CabinetSelectCodec(CabinetContext, CAB_CODEC_RAW);
 
-    FolderUncompSize = 0;
-    BytesLeftInBlock = 0;
-    CabinetReserved = 0;
-    FolderReserved = 0;
-    DataReserved = 0;
-    CabinetReservedArea = NULL;
-    LastFileOffset = 0;
+    CabinetContext->OverwriteHandler = NULL;
+    CabinetContext->ExtractHandler = NULL;
+    CabinetContext->DiskChangeHandler = NULL;
+
+    CabinetContext->FolderUncompSize = 0;
+    CabinetContext->BytesLeftInBlock = 0;
+    CabinetContext->CabinetReserved = 0;
+    CabinetContext->FolderReserved = 0;
+    CabinetContext->DataReserved = 0;
+    CabinetContext->CabinetReservedArea = NULL;
+    CabinetContext->LastFileOffset = 0;
 }
 
 /*
  * FUNCTION: Cleanup archiver
  */
 VOID
-CabinetCleanup(VOID)
+CabinetCleanup(
+    IN OUT PCABINET_CONTEXT CabinetContext)
 {
-    CabinetClose();
+    CabinetClose(CabinetContext);
 }
 
 /*
@@ -429,7 +540,7 @@ CabinetCleanup(VOID)
  * RETURNS:
  *     TRUE if there was enough room in Path, or FALSE
  */
-BOOL
+static BOOL
 CabinetNormalizePath(PWCHAR Path,
                      ULONG Length)
 {
@@ -453,10 +564,11 @@ CabinetNormalizePath(PWCHAR Path,
  * RETURNS:
  *     Pointer to string with name of cabinet
  */
-PWCHAR
-CabinetGetCabinetName(VOID)
+PCWSTR
+CabinetGetCabinetName(
+    IN PCABINET_CONTEXT CabinetContext)
 {
-    return CabinetName;
+    return CabinetContext->CabinetName;
 }
 
 /*
@@ -465,9 +577,11 @@ CabinetGetCabinetName(VOID)
  *     FileName = Pointer to string with name of cabinet
  */
 VOID
-CabinetSetCabinetName(PWCHAR FileName)
+CabinetSetCabinetName(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCWSTR FileName)
 {
-    wcscpy(CabinetName, FileName);
+    wcscpy(CabinetContext->CabinetName, FileName);
 }
 
 /*
@@ -476,12 +590,14 @@ CabinetSetCabinetName(PWCHAR FileName)
  *    DestinationPath = Pointer to string with name of destination path
  */
 VOID
-CabinetSetDestinationPath(PWCHAR DestinationPath)
+CabinetSetDestinationPath(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCWSTR DestinationPath)
 {
-    wcscpy(DestPath, DestinationPath);
+    wcscpy(CabinetContext->DestPath, DestinationPath);
 
-    if (wcslen(DestPath) > 0)
-        CabinetNormalizePath(DestPath, MAX_PATH);
+    if (wcslen(CabinetContext->DestPath) > 0)
+        CabinetNormalizePath(CabinetContext->DestPath, MAX_PATH);
 }
 
 /*
@@ -489,10 +605,11 @@ CabinetSetDestinationPath(PWCHAR DestinationPath)
  * RETURNS:
  *    Pointer to string with name of destination path
  */
-PWCHAR
-CabinetGetDestinationPath(VOID)
+PCWSTR
+CabinetGetDestinationPath(
+    IN PCABINET_CONTEXT CabinetContext)
 {
-    return DestPath;
+    return CabinetContext->DestPath;
 }
 
 /*
@@ -501,164 +618,170 @@ CabinetGetDestinationPath(VOID)
  *     Status of operation
  */
 ULONG
-CabinetOpen(VOID)
+CabinetOpen(
+    IN OUT PCABINET_CONTEXT CabinetContext)
 {
     PUCHAR Buffer;
     UNICODE_STRING ustring;
     ANSI_STRING astring;
 
-    if (!FileOpen)
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING FileName;
+    NTSTATUS NtStatus;
+
+    if (CabinetContext->FileOpen)
     {
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        IO_STATUS_BLOCK IoStatusBlock;
-        UNICODE_STRING FileName;
-        NTSTATUS NtStatus;
-
-        RtlInitUnicodeString(&FileName, CabinetName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &FileName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL, NULL);
-
-        NtStatus = NtOpenFile(&FileHandle,
-                              GENERIC_READ | SYNCHRONIZE,
-                              &ObjectAttributes,
-                              &IoStatusBlock,
-                              FILE_SHARE_READ,
-                              FILE_SYNCHRONOUS_IO_NONALERT);
-
-        if (!NT_SUCCESS(NtStatus))
-        {
-            DPRINT1("Cannot open file (%S) (%x)\n", CabinetName, NtStatus);
-            return CAB_STATUS_CANNOT_OPEN;
-        }
-
-        FileOpen = TRUE;
-
-        NtStatus = NtCreateSection(&FileSectionHandle,
-                                   SECTION_ALL_ACCESS,
-                                   0, 0,
-                                   PAGE_READONLY,
-                                   SEC_COMMIT,
-                                   FileHandle);
-
-        if (!NT_SUCCESS(NtStatus))
-        {
-            DPRINT1("NtCreateSection failed for %ls: %x\n", CabinetName, NtStatus);
-            return CAB_STATUS_NOMEMORY;
-        }
-
-        FileBuffer = 0;
-        FileSize = 0;
-
-        NtStatus = NtMapViewOfSection(FileSectionHandle,
-                                      NtCurrentProcess(),
-                                      (PVOID *)&FileBuffer,
-                                      0, 0, 0,
-                                      &FileSize,
-                                      ViewUnmap,
-                                      0,
-                                      PAGE_READONLY);
-
-        if (!NT_SUCCESS(NtStatus))
-        {
-            DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
-            return CAB_STATUS_NOMEMORY;
-        }
-
-        DPRINT("Cabinet file %S opened and mapped to %x\n", CabinetName, FileBuffer);
-        PCABHeader = (PCFHEADER) FileBuffer;
-
-        /* Check header */
-        if (FileSize <= sizeof(CFHEADER) ||
-            PCABHeader->Signature != CAB_SIGNATURE ||
-            PCABHeader->Version != CAB_VERSION ||
-            PCABHeader->FolderCount == 0 ||
-            PCABHeader->FileCount == 0 ||
-            PCABHeader->FileTableOffset < sizeof(CFHEADER))
-        {
-            CloseCabinet();
-            DPRINT1("File has invalid header\n");
-            return CAB_STATUS_INVALID_CAB;
-        }
-
-        Buffer = (PUCHAR)(PCABHeader + 1);
-
-        /* Read/skip any reserved bytes */
-        if (PCABHeader->Flags & CAB_FLAG_RESERVE)
-        {
-            CabinetReserved = *(PUSHORT)Buffer;
-            Buffer += 2;
-            FolderReserved = *Buffer;
-            Buffer++;
-            DataReserved = *Buffer;
-            Buffer++;
-
-            if (CabinetReserved > 0)
-            {
-                CabinetReservedArea = Buffer;
-                Buffer += CabinetReserved;
-            }
-        }
-
-        if (PCABHeader->Flags & CAB_FLAG_HASPREV)
-        {
-            /* The previous cabinet file is in
-               the same directory as the current */
-            wcscpy(CabinetPrev, CabinetName);
-            RemoveFileName(CabinetPrev);
-            CabinetNormalizePath(CabinetPrev, 256);
-            RtlInitAnsiString(&astring, (LPSTR)Buffer);
-            ustring.Length = wcslen(CabinetPrev);
-            ustring.Buffer = CabinetPrev + ustring.Length;
-            ustring.MaximumLength = sizeof(CabinetPrev) - ustring.Length;
-            RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
-            Buffer += astring.Length + 1;
-
-            /* Read label of prev disk */
-            RtlInitAnsiString(&astring, (LPSTR)Buffer);
-            ustring.Length = 0;
-            ustring.Buffer = DiskPrev;
-            ustring.MaximumLength = sizeof(DiskPrev);
-            RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
-            Buffer += astring.Length + 1;
-        }
-        else
-        {
-            wcscpy(CabinetPrev, L"");
-            wcscpy(DiskPrev, L"");
-        }
-
-        if (PCABHeader->Flags & CAB_FLAG_HASNEXT)
-        {
-            /* The next cabinet file is in
-               the same directory as the previous */
-            wcscpy(CabinetNext, CabinetName);
-            RemoveFileName(CabinetNext);
-            CabinetNormalizePath(CabinetNext, 256);
-            RtlInitAnsiString(&astring, (LPSTR)Buffer);
-            ustring.Length = wcslen(CabinetNext);
-            ustring.Buffer = CabinetNext + ustring.Length;
-            ustring.MaximumLength = sizeof(CabinetNext) - ustring.Length;
-            RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
-            Buffer += astring.Length + 1;
-
-            /* Read label of next disk */
-            RtlInitAnsiString(&astring, (LPSTR)Buffer);
-            ustring.Length = 0;
-            ustring.Buffer = DiskNext;
-            ustring.MaximumLength = sizeof(DiskNext);
-            RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
-            Buffer += astring.Length + 1;
-        }
-        else
-        {
-            wcscpy(CabinetNext, L"");
-            wcscpy(DiskNext, L"");
-        }
-        CabinetFolders = (PCFFOLDER)Buffer;
+        /* Cabinet file already opened */
+        DPRINT("CabinetOpen returning SUCCESS\n");
+        return CAB_STATUS_SUCCESS;
     }
+
+    RtlInitUnicodeString(&FileName, CabinetContext->CabinetName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL, NULL);
+
+    NtStatus = NtOpenFile(&CabinetContext->FileHandle,
+                          GENERIC_READ | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          FILE_SHARE_READ,
+                          FILE_SYNCHRONOUS_IO_NONALERT);
+
+    if (!NT_SUCCESS(NtStatus))
+    {
+        DPRINT1("Cannot open file (%S) (%x)\n", CabinetContext->CabinetName, NtStatus);
+        return CAB_STATUS_CANNOT_OPEN;
+    }
+
+    CabinetContext->FileOpen = TRUE;
+
+    NtStatus = NtCreateSection(&CabinetContext->FileSectionHandle,
+                               SECTION_ALL_ACCESS,
+                               0, 0,
+                               PAGE_READONLY,
+                               SEC_COMMIT,
+                               CabinetContext->FileHandle);
+
+    if (!NT_SUCCESS(NtStatus))
+    {
+        DPRINT1("NtCreateSection failed for %ls: %x\n", CabinetContext->CabinetName, NtStatus);
+        return CAB_STATUS_NOMEMORY;
+    }
+
+    CabinetContext->FileBuffer = 0;
+    CabinetContext->FileSize = 0;
+
+    NtStatus = NtMapViewOfSection(CabinetContext->FileSectionHandle,
+                                  NtCurrentProcess(),
+                                  (PVOID*)&CabinetContext->FileBuffer,
+                                  0, 0, 0,
+                                  &CabinetContext->FileSize,
+                                  ViewUnmap,
+                                  0,
+                                  PAGE_READONLY);
+
+    if (!NT_SUCCESS(NtStatus))
+    {
+        DPRINT1("NtMapViewOfSection failed: %x\n", NtStatus);
+        return CAB_STATUS_NOMEMORY;
+    }
+
+    DPRINT("Cabinet file %S opened and mapped to %x\n",
+           CabinetContext->CabinetName, CabinetContext->FileBuffer);
+    CabinetContext->PCABHeader = (PCFHEADER)CabinetContext->FileBuffer;
+
+    /* Check header */
+    if (CabinetContext->FileSize <= sizeof(CFHEADER) ||
+        CabinetContext->PCABHeader->Signature != CAB_SIGNATURE ||
+        CabinetContext->PCABHeader->Version != CAB_VERSION ||
+        CabinetContext->PCABHeader->FolderCount == 0 ||
+        CabinetContext->PCABHeader->FileCount == 0 ||
+        CabinetContext->PCABHeader->FileTableOffset < sizeof(CFHEADER))
+    {
+        CloseCabinet(CabinetContext);
+        DPRINT1("File has invalid header\n");
+        return CAB_STATUS_INVALID_CAB;
+    }
+
+    Buffer = (PUCHAR)(CabinetContext->PCABHeader + 1);
+
+    /* Read/skip any reserved bytes */
+    if (CabinetContext->PCABHeader->Flags & CAB_FLAG_RESERVE)
+    {
+        CabinetContext->CabinetReserved = *(PUSHORT)Buffer;
+        Buffer += 2;
+        CabinetContext->FolderReserved = *Buffer;
+        Buffer++;
+        CabinetContext->DataReserved = *Buffer;
+        Buffer++;
+
+        if (CabinetContext->CabinetReserved > 0)
+        {
+            CabinetContext->CabinetReservedArea = Buffer;
+            Buffer += CabinetContext->CabinetReserved;
+        }
+    }
+
+    if (CabinetContext->PCABHeader->Flags & CAB_FLAG_HASPREV)
+    {
+        /* The previous cabinet file is in
+           the same directory as the current */
+        wcscpy(CabinetContext->CabinetPrev, CabinetContext->CabinetName);
+        RemoveFileName(CabinetContext->CabinetPrev);
+        CabinetNormalizePath(CabinetContext->CabinetPrev, 256);
+        RtlInitAnsiString(&astring, (LPSTR)Buffer);
+        ustring.Length = wcslen(CabinetContext->CabinetPrev);
+        ustring.Buffer = CabinetContext->CabinetPrev + ustring.Length;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetPrev) - ustring.Length;
+        RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
+        Buffer += astring.Length + 1;
+
+        /* Read label of prev disk */
+        RtlInitAnsiString(&astring, (LPSTR)Buffer);
+        ustring.Length = 0;
+        ustring.Buffer = CabinetContext->DiskPrev;
+        ustring.MaximumLength = sizeof(CabinetContext->DiskPrev);
+        RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
+        Buffer += astring.Length + 1;
+    }
+    else
+    {
+        wcscpy(CabinetContext->CabinetPrev, L"");
+        wcscpy(CabinetContext->DiskPrev, L"");
+    }
+
+    if (CabinetContext->PCABHeader->Flags & CAB_FLAG_HASNEXT)
+    {
+        /* The next cabinet file is in
+           the same directory as the previous */
+        wcscpy(CabinetContext->CabinetNext, CabinetContext->CabinetName);
+        RemoveFileName(CabinetContext->CabinetNext);
+        CabinetNormalizePath(CabinetContext->CabinetNext, 256);
+        RtlInitAnsiString(&astring, (LPSTR)Buffer);
+        ustring.Length = wcslen(CabinetContext->CabinetNext);
+        ustring.Buffer = CabinetContext->CabinetNext + ustring.Length;
+        ustring.MaximumLength = sizeof(CabinetContext->CabinetNext) - ustring.Length;
+        RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
+        Buffer += astring.Length + 1;
+
+        /* Read label of next disk */
+        RtlInitAnsiString(&astring, (LPSTR)Buffer);
+        ustring.Length = 0;
+        ustring.Buffer = CabinetContext->DiskNext;
+        ustring.MaximumLength = sizeof(CabinetContext->DiskNext);
+        RtlAnsiStringToUnicodeString(&ustring, &astring, FALSE);
+        Buffer += astring.Length + 1;
+    }
+    else
+    {
+        wcscpy(CabinetContext->CabinetNext, L"");
+        wcscpy(CabinetContext->DiskNext, L"");
+    }
+    CabinetContext->CabinetFolders = (PCFFOLDER)Buffer;
 
     DPRINT("CabinetOpen returning SUCCESS\n");
     return CAB_STATUS_SUCCESS;
@@ -668,13 +791,14 @@ CabinetOpen(VOID)
  * FUNCTION: Closes the cabinet file
  */
 VOID
-CabinetClose(VOID)
+CabinetClose(
+    IN OUT PCABINET_CONTEXT CabinetContext)
 {
-    if (FileOpen)
-    {
-        CloseCabinet();
-        FileOpen = FALSE;
-    }
+    if (!CabinetContext->FileOpen)
+        return;
+
+    CloseCabinet(CabinetContext);
+    CabinetContext->FileOpen = FALSE;
 }
 
 /*
@@ -686,31 +810,16 @@ CabinetClose(VOID)
  *     Status of operation
  */
 ULONG
-CabinetFindFirst(PWCHAR FileName,
-                 PCAB_SEARCH Search)
+CabinetFindFirst(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCWSTR FileName,
+    IN OUT PCAB_SEARCH Search)
 {
-    DPRINT("CabinetFindFirst( FileName = %S )\n", FileName);
+    DPRINT("CabinetFindFirst(FileName = %S)\n", FileName);
     wcsncpy(Search->Search, FileName, MAX_PATH);
-    wcsncpy(Search->Cabinet, CabinetName, MAX_PATH);
+    wcsncpy(Search->Cabinet, CabinetContext->CabinetName, MAX_PATH);
     Search->File = 0;
-    return CabinetFindNext(Search);
-}
-
-/*
- * FUNCTION: Finds the next file in the cabinet that matches a search criteria
- * ARGUMENTS:
- *     FileName = Pointer to search criteria
- *     Search   = Pointer to search structure
- * RETURNS:
- *     Status of operation
- */
-ULONG
-CabinetFindNextFileSequential(PWCHAR FileName,
-                              PCAB_SEARCH Search)
-{
-    DPRINT("CabinetFindNextFileSequential( FileName = %S )\n", FileName);
-    wcsncpy(Search->Search, FileName, MAX_PATH);
-    return CabinetFindNext(Search);
+    return CabinetFindNext(CabinetContext, Search);
 }
 
 /*
@@ -721,14 +830,16 @@ CabinetFindNextFileSequential(PWCHAR FileName,
  *     Status of operation
  */
 ULONG
-CabinetFindNext(PCAB_SEARCH Search)
+CabinetFindNext(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN OUT PCAB_SEARCH Search)
 {
     PCFFILE Prev;
     ANSI_STRING AnsiString;
     UNICODE_STRING UnicodeString;
     WCHAR FileName[MAX_PATH];
 
-    if (wcscmp(Search->Cabinet, CabinetName) != 0)
+    if (wcscmp(Search->Cabinet, CabinetContext->CabinetName) != 0)
     {
         /* restart search of cabinet has changed since last find */
         Search->File = 0;
@@ -737,7 +848,7 @@ CabinetFindNext(PCAB_SEARCH Search)
     if (!Search->File)
     {
         /* starting new search or cabinet */
-        Search->File = (PCFFILE)(FileBuffer + PCABHeader->FileTableOffset);
+        Search->File = (PCFFILE)(CabinetContext->FileBuffer + CabinetContext->PCABHeader->FileTableOffset);
         Search->Index = 0;
         Prev = 0;
     }
@@ -753,7 +864,7 @@ CabinetFindNext(PCAB_SEARCH Search)
             /* skip files continued from previous cab */
             DPRINT("Skipping file (%s): FileOffset (0x%X), "
                    "LastFileOffset (0x%X)\n", (char *)(Search->File + 1),
-                   Search->File->FileOffset, LastFileOffset);
+                   Search->File->FileOffset, CabinetContext->LastFileOffset);
         }
         else
         {
@@ -789,7 +900,7 @@ CabinetFindNext(PCAB_SEARCH Search)
 
         /* if we make it here we found no match, so move to the next file */
         Search->Index++;
-        if (Search->Index >= PCABHeader->FileCount)
+        if (Search->Index >= CabinetContext->PCABHeader->FileCount)
         {
             /* we have reached the end of this cabinet */
             DPRINT("End of cabinet reached\n");
@@ -801,6 +912,25 @@ CabinetFindNext(PCAB_SEARCH Search)
 
     DPRINT("Found file %s\n", Search->File->FileName);
     return CAB_STATUS_SUCCESS;
+}
+
+/*
+ * FUNCTION: Finds the next file in the cabinet that matches a search criteria
+ * ARGUMENTS:
+ *     FileName = Pointer to search criteria
+ *     Search   = Pointer to search structure
+ * RETURNS:
+ *     Status of operation
+ */
+ULONG
+CabinetFindNextFileSequential(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCWSTR FileName,
+    IN OUT PCAB_SEARCH Search)
+{
+    DPRINT("CabinetFindNextFileSequential(FileName = %S)\n", FileName);
+    wcsncpy(Search->Search, FileName, MAX_PATH);
+    return CabinetFindNext(CabinetContext, Search);
 }
 
 #if 0
@@ -819,7 +949,9 @@ Validate(VOID)
  *     Status of operation
  */
 ULONG
-CabinetExtractFile(PCAB_SEARCH Search)
+CabinetExtractFile(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCAB_SEARCH Search)
 {
     ULONG Size;                 // remaining file bytes to decompress
     ULONG CurrentOffset;        // current uncompressed offset within the folder
@@ -842,13 +974,13 @@ CabinetExtractFile(PCAB_SEARCH Search)
     PCFFOLDER CurrentFolder;
     LARGE_INTEGER MaxDestFileSize;
     LONG InputLength, OutputLength;
-    char Junk[512];
+    char Chunk[512];
 
-    if (wcscmp(Search->Cabinet, CabinetName) != 0)
+    if (wcscmp(Search->Cabinet, CabinetContext->CabinetName) != 0)
     {
         /* the file is not in the current cabinet */
         DPRINT("File is not in this cabinet (%S != %S)\n",
-               Search->Cabinet, CabinetName);
+               Search->Cabinet, CabinetContext->CabinetName);
         return CAB_STATUS_NOFILE;
     }
 
@@ -863,21 +995,21 @@ CabinetExtractFile(PCAB_SEARCH Search)
     else if (Search->File->FolderIndex == 0xFFFE)
     {
         /* folder is the last in this cabinet and continues into next */
-        CurrentFolder = &CabinetFolders[PCABHeader->FolderCount - 1];
+        CurrentFolder = &CabinetContext->CabinetFolders[CabinetContext->PCABHeader->FolderCount - 1];
     }
     else
     {
         /* folder is completely contained within this cabinet */
-        CurrentFolder = &CabinetFolders[Search->File->FolderIndex];
+        CurrentFolder = &CabinetContext->CabinetFolders[Search->File->FolderIndex];
     }
 
     switch (CurrentFolder->CompressionType & CAB_COMP_MASK)
     {
         case CAB_COMP_NONE:
-            CabinetSelectCodec(CAB_CODEC_RAW);
+            CabinetSelectCodec(CabinetContext, CAB_CODEC_RAW);
             break;
         case CAB_COMP_MSZIP:
-            CabinetSelectCodec(CAB_CODEC_MSZIP);
+            CabinetSelectCodec(CabinetContext, CAB_CODEC_MSZIP);
             break;
         default:
             return CAB_STATUS_UNSUPPCOMP;
@@ -887,7 +1019,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
            (UINT)Search->File->FileOffset, (UINT)Search->File->FileSize);
 
     RtlInitAnsiString(&AnsiString, Search->File->FileName);
-    wcscpy(DestName, DestPath);
+    wcscpy(DestName, CabinetContext->DestPath);
     UnicodeString.MaximumLength = sizeof(DestName) - wcslen(DestName) * sizeof(WCHAR);
     UnicodeString.Buffer = DestName + wcslen(DestName);
     UnicodeString.Length = 0;
@@ -917,7 +1049,8 @@ CabinetExtractFile(PCAB_SEARCH Search)
         DPRINT("NtCreateFile() failed (%S) (%x)\n", DestName, NtStatus);
 
         /* If file exists, ask to overwrite file */
-        if (OverwriteHandler == NULL || OverwriteHandler(Search->File, DestName))
+        if (CabinetContext->OverwriteHandler == NULL ||
+            CabinetContext->OverwriteHandler(CabinetContext, Search->File, DestName))
         {
             /* Create destination file, overwrite if it already exists */
             NtStatus = NtCreateFile(&DestFile,
@@ -955,18 +1088,18 @@ CabinetExtractFile(PCAB_SEARCH Search)
 
     if (!NT_SUCCESS(NtStatus))
     {
-        DPRINT1("NtCreateSection failed for %ls, %x\n", DestName, NtStatus);
+        DPRINT1("NtCreateSection failed for %ls: %x\n", DestName, NtStatus);
         Status = CAB_STATUS_NOMEMORY;
         goto CloseDestFile;
     }
 
     DestFileBuffer = 0;
-    DestFileSize = 0;
+    CabinetContext->DestFileSize = 0;
     NtStatus = NtMapViewOfSection(DestFileSection,
                                   NtCurrentProcess(),
                                   &DestFileBuffer,
                                   0, 0, 0,
-                                  &DestFileSize,
+                                  &CabinetContext->DestFileSize,
                                   ViewUnmap,
                                   0,
                                   PAGE_READWRITE);
@@ -1015,15 +1148,13 @@ CabinetExtractFile(PCAB_SEARCH Search)
     SetAttributesOnFile(Search->File, DestFile);
 
     /* Call extract event handler */
-    if (ExtractHandler != NULL)
-    {
-        ExtractHandler(Search->File, DestName);
-    }
+    if (CabinetContext->ExtractHandler != NULL)
+        CabinetContext->ExtractHandler(CabinetContext, Search->File, DestName);
 
     if (Search->CFData)
         CFData = Search->CFData;
     else
-        CFData = (PCFDATA)(CabinetFolders[Search->File->FolderIndex].DataOffset + FileBuffer);
+        CFData = (PCFDATA)(CabinetContext->CabinetFolders[Search->File->FolderIndex].DataOffset + CabinetContext->FileBuffer);
 
     CurrentOffset = Search->Offset;
     while (CurrentOffset + CFData->UncompSize <= Search->File->FileOffset)
@@ -1031,7 +1162,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
         /* walk the data blocks until we reach
            the one containing the start of the file */
         CurrentOffset += CFData->UncompSize;
-        CFData = (PCFDATA)((char *)(CFData + 1) + DataReserved + CFData->CompSize);
+        CFData = (PCFDATA)((char *)(CFData + 1) + CabinetContext->DataReserved + CFData->CompSize);
     }
 
     Search->CFData = CFData;
@@ -1041,21 +1172,27 @@ CabinetExtractFile(PCAB_SEARCH Search)
        the block before the start of the file */
 
     /* start of comp data */
-    CurrentBuffer = ((unsigned char *)(CFData + 1)) + DataReserved;
+    CurrentBuffer = ((unsigned char *)(CFData + 1)) + CabinetContext->DataReserved;
     RemainingBlock = CFData->CompSize;
     InputLength = RemainingBlock;
 
     while (CurrentOffset < Search->File->FileOffset)
     {
         /* compute remaining uncomp bytes to start
-           of file, bounded by sizeof junk */
+           of file, bounded by size of chunk */
         OutputLength = Search->File->FileOffset - CurrentOffset;
-        if (OutputLength > (LONG)sizeof(Junk))
-            OutputLength = sizeof (Junk);
+        if (OutputLength > (LONG)sizeof(Chunk))
+            OutputLength = sizeof(Chunk);
 
         /* negate to signal NOT end of block */
         OutputLength = -OutputLength;
-        CodecUncompress(Junk, CurrentBuffer, &InputLength, &OutputLength);
+
+        CabinetContext->Codec->Uncompress(CabinetContext->Codec,
+                                          Chunk,
+                                          CurrentBuffer,
+                                          &InputLength,
+                                          &OutputLength);
+
         /* add the uncomp bytes extracted to current folder offset */
         CurrentOffset += OutputLength;
         /* add comp bytes consumed to CurrentBuffer */
@@ -1077,11 +1214,11 @@ CabinetExtractFile(PCAB_SEARCH Search)
         DPRINT("Decompressing block at %x with RemainingBlock = %d, Size = %d\n",
                CurrentBuffer, RemainingBlock, Size);
 
-        Status = CodecUncompress(CurrentDestBuffer,
-                                 CurrentBuffer,
-                                 &InputLength,
-                                 &OutputLength);
-
+        Status = CabinetContext->Codec->Uncompress(CabinetContext->Codec,
+                                                   CurrentDestBuffer,
+                                                   CurrentBuffer,
+                                                   &InputLength,
+                                                   &OutputLength);
         if (Status != CS_SUCCESS)
         {
             DPRINT("Cannot uncompress block\n");
@@ -1105,7 +1242,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
             DPRINT("Out of block data\n");
             CFData = (PCFDATA)CurrentBuffer;
             RemainingBlock = CFData->CompSize;
-            CurrentBuffer = (unsigned char *)(CFData + 1) + DataReserved;
+            CurrentBuffer = (unsigned char *)(CFData + 1) + CabinetContext->DataReserved;
             InputLength = RemainingBlock;
         }
     }
@@ -1130,30 +1267,41 @@ CloseDestFile:
  *     Id = Codec identifier
  */
 VOID
-CabinetSelectCodec(ULONG Id)
+CabinetSelectCodec(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN ULONG Id)
 {
-    if (CodecSelected)
+    if (CabinetContext->CodecSelected)
     {
-        if (Id == CodecId)
+        if (Id == CabinetContext->CodecId)
             return;
 
-        CodecSelected = FALSE;
+        CabinetContext->CodecSelected = FALSE;
     }
 
     switch (Id)
     {
         case CAB_CODEC_RAW:
-            CodecUncompress = RawCodecUncompress;
+        {
+            CabinetContext->Codec = &RawCodec;
             break;
+        }
+
         case CAB_CODEC_MSZIP:
-            CodecUncompress = MSZipCodecUncompress;
+        {
+            CabinetContext->Codec = &MSZipCodec;
+            CabinetContext->Codec->ZStream.zalloc = MSZipAlloc;
+            CabinetContext->Codec->ZStream.zfree = MSZipFree;
+            CabinetContext->Codec->ZStream.opaque = (voidpf)0;
             break;
+        }
+
         default:
             return;
     }
 
-    CodecId = Id;
-    CodecSelected = TRUE;
+    CabinetContext->CodecId = Id;
+    CabinetContext->CodecSelected = TRUE;
 }
 
 /*
@@ -1164,29 +1312,33 @@ CabinetSelectCodec(ULONG Id)
  *     DiskChange = Handler called when changing the disk
  */
 VOID
-CabinetSetEventHandlers(PCABINET_OVERWRITE Overwrite,
-                        PCABINET_EXTRACT Extract,
-                        PCABINET_DISK_CHANGE DiskChange)
+CabinetSetEventHandlers(
+    IN PCABINET_CONTEXT CabinetContext,
+    IN PCABINET_OVERWRITE Overwrite,
+    IN PCABINET_EXTRACT Extract,
+    IN PCABINET_DISK_CHANGE DiskChange)
 {
-    OverwriteHandler = Overwrite;
-    ExtractHandler = Extract;
-    DiskChangeHandler = DiskChange;
+    CabinetContext->OverwriteHandler = Overwrite;
+    CabinetContext->ExtractHandler = Extract;
+    CabinetContext->DiskChangeHandler = DiskChange;
 }
 
 /*
  * FUNCTION: Get pointer to cabinet reserved area. NULL if none
  */
 PVOID
-CabinetGetCabinetReservedArea(PULONG Size)
+CabinetGetCabinetReservedArea(
+    IN PCABINET_CONTEXT CabinetContext,
+    OUT PULONG Size)
 {
-    if (CabinetReservedArea != NULL)
+    if (CabinetContext->CabinetReservedArea != NULL)
     {
         if (Size != NULL)
         {
-            *Size = CabinetReserved;
+            *Size = CabinetContext->CabinetReserved;
         }
 
-        return CabinetReservedArea;
+        return CabinetContext->CabinetReservedArea;
     }
     else
     {

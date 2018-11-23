@@ -73,12 +73,21 @@ typedef struct _WNetProviderTable
     WNetProvider     table[1];
 } WNetProviderTable, *PWNetProviderTable;
 
+#ifndef __REACTOS__
 #define WNET_ENUMERATOR_TYPE_NULL      0
 #define WNET_ENUMERATOR_TYPE_GLOBAL    1
 #define WNET_ENUMERATOR_TYPE_PROVIDER  2
 #define WNET_ENUMERATOR_TYPE_CONTEXT   3
 #define WNET_ENUMERATOR_TYPE_CONNECTED 4
+#else
+#define WNET_ENUMERATOR_TYPE_GLOBAL     0
+#define WNET_ENUMERATOR_TYPE_PROVIDER   1
+#define WNET_ENUMERATOR_TYPE_CONTEXT    2
+#define WNET_ENUMERATOR_TYPE_CONNECTED  3
+#define WNET_ENUMERATOR_TYPE_REMEMBERED 4
+#endif
 
+#ifndef __REACTOS__
 /* An WNet enumerator.  Note that the type doesn't correspond to the scope of
  * the enumeration; it represents one of the following types:
  * - a 'null' enumeration, one that contains no members
@@ -93,6 +102,23 @@ typedef struct _WNetProviderTable
  *   into a global enumeration (so the enumeration continues across all
  *   providers).
  */
+#else
+/* An WNet enumerator.  Note that the type doesn't correspond to the scope of
+ * the enumeration; it represents one of the following types:
+ * - a global enumeration, one that's executed across all providers
+ * - a provider-specific enumeration, one that's only executed by a single
+ *   provider
+ * - a context enumeration.  I know this contradicts what I just said about
+ *   there being no correspondence between the scope and the type, but it's
+ *   necessary for the special case that a "Entire Network" entry needs to
+ *   be enumerated in an enumeration of the context scope.  Thus an enumeration
+ *   of the context scope results in a context type enumerator, which morphs
+ *   into a global enumeration (so the enumeration continues across all
+ *   providers).
+ * - a remembered enumeration, not related to providers themselves, but it
+ *   is a registry enumeration for saved connections
+ */
+#endif
 typedef struct _WNetEnumerator
 {
     DWORD          enumType;
@@ -106,6 +132,13 @@ typedef struct _WNetEnumerator
     {
         NETRESOURCEW* net;
         HANDLE* handles;
+#ifdef __REACTOS__
+        struct
+        {
+            HKEY registry;
+            DWORD index;
+        } remembered;
+#endif
     } specific;
 } WNetEnumerator, *PWNetEnumerator;
 
@@ -263,85 +296,6 @@ static void _tryLoadProvider(PCWSTR provider)
          debugstr_w(provider));
 }
 
-#ifdef __REACTOS__
-static void _restoreSavedConnection(HKEY connection, WCHAR * local)
-{
-    NETRESOURCEW net;
-    DWORD type, prov, index, size;
-
-    net.lpProvider = NULL;
-    net.lpRemoteName = NULL;
-    net.lpLocalName = NULL;
-
-    TRACE("Restoring: %S\n", local);
-
-    size = sizeof(DWORD);
-    if (RegQueryValueExW(connection, L"ConnectionType", NULL, &type, (BYTE *)&net.dwType, &size) != ERROR_SUCCESS)
-       return;
-
-    if (type != REG_DWORD || size != sizeof(DWORD))
-        return;
-
-    if (RegQueryValueExW(connection, L"ProviderName", NULL, &type, NULL, &size) != ERROR_SUCCESS)
-        return;
-
-    if (type != REG_SZ)
-        return;
-
-    net.lpProvider = HeapAlloc(GetProcessHeap(), 0, size);
-    if (!net.lpProvider)
-        return;
-
-    if (RegQueryValueExW(connection, L"ProviderName", NULL, NULL, (BYTE *)net.lpProvider, &size) != ERROR_SUCCESS)
-        goto cleanup;
-
-    size = sizeof(DWORD);
-    if (RegQueryValueExW(connection, L"ProviderType", NULL, &type, (BYTE *)&prov, &size) != ERROR_SUCCESS)
-        goto cleanup;
-
-    if (type != REG_DWORD || size != sizeof(DWORD))
-        goto cleanup;
-
-    index = _findProviderIndexW(net.lpProvider);
-    if (index == BAD_PROVIDER_INDEX)
-        goto cleanup;
-
-    if (providerTable->table[index].dwNetType != prov)
-        goto cleanup;
-
-    if (RegQueryValueExW(connection, L"RemotePath", NULL, &type, NULL, &size) != ERROR_SUCCESS)
-        goto cleanup;
-
-    if (type != REG_SZ)
-        goto cleanup;
-
-    net.lpRemoteName = HeapAlloc(GetProcessHeap(), 0, size);
-    if (!net.lpRemoteName)
-        goto cleanup;
-
-    if (RegQueryValueExW(connection, L"RemotePath", NULL, NULL, (BYTE *)net.lpRemoteName, &size) != ERROR_SUCCESS)
-        goto cleanup;
-
-    size = strlenW(local);
-    net.lpLocalName = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR) + 2 * sizeof(WCHAR));
-    if (!net.lpLocalName)
-        goto cleanup;
-
-    strcpyW(net.lpLocalName, local);
-    net.lpLocalName[size] = ':';
-    net.lpLocalName[size + 1] = 0;
-
-    TRACE("Attempting connection\n");
-
-    WNetAddConnection2W(&net, NULL, NULL, 0);
-
-cleanup:
-    HeapFree(GetProcessHeap(), 0, net.lpProvider);
-    HeapFree(GetProcessHeap(), 0, net.lpRemoteName);
-    HeapFree(GetProcessHeap(), 0, net.lpLocalName);
-}
-#endif
-
 void wnetInit(HINSTANCE hInstDll)
 {
     static const WCHAR providerOrderKey[] = { 'S','y','s','t','e','m','\\',
@@ -420,64 +374,6 @@ void wnetInit(HINSTANCE hInstDll)
         }
         RegCloseKey(hKey);
     }
-
-#ifdef __REACTOS__
-    if (providerTable)
-    {
-        HKEY user_profile;
-
-        if (RegOpenCurrentUser(KEY_ALL_ACCESS, &user_profile) == ERROR_SUCCESS)
-        {
-            HKEY network;
-            WCHAR subkey[8] = {'N', 'e', 't', 'w', 'o', 'r', 'k', 0};
-
-            if (RegOpenKeyExW(user_profile, subkey, 0, KEY_READ, &network) == ERROR_SUCCESS)
-            {
-                DWORD size, max;
-
-                TRACE("Enumerating remembered connections\n");
-
-                if (RegQueryInfoKey(network, NULL, NULL, NULL, &max, &size, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
-                {
-                    WCHAR *local;
-
-                    TRACE("There are %lu connections\n", max);
-
-                    local = HeapAlloc(GetProcessHeap(), 0, (size + 1) * sizeof(WCHAR));
-                    if (local)
-                    {
-                        DWORD index;
-
-                        for (index = 0; index < max; ++index)
-                        {
-                            DWORD len = size + 1;
-                            HKEY connection;
-
-                            TRACE("Trying connection %lu\n", index);
-
-                            if (RegEnumKeyExW(network, index, local, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-                                continue;
-
-                            TRACE("It is %S\n", local);
-
-                            if (RegOpenKeyExW(network, local, 0, KEY_READ, &connection) != ERROR_SUCCESS)
-                                continue;
-
-                            _restoreSavedConnection(connection, local);
-                            RegCloseKey(connection);
-                        }
-
-                        HeapFree(GetProcessHeap(), 0, local);
-                    }
-                }
-
-                RegCloseKey(network);
-            }
-
-            RegCloseKey(user_profile);
-        }
-    }
-#endif
 }
 
 void wnetFree(void)
@@ -553,6 +449,7 @@ static void _freeEnumNetResource(LPNETRESOURCEW lpNet)
     }
 }
 
+#ifndef __REACTOS__
 static PWNetEnumerator _createNullEnumerator(void)
 {
     PWNetEnumerator ret = HeapAlloc(GetProcessHeap(),
@@ -562,6 +459,7 @@ static PWNetEnumerator _createNullEnumerator(void)
         ret->enumType = WNET_ENUMERATOR_TYPE_NULL;
     return ret;
 }
+#endif
 
 static PWNetEnumerator _createGlobalEnumeratorW(DWORD dwScope, DWORD dwType,
  DWORD dwUsage, LPNETRESOURCEW lpNet)
@@ -638,6 +536,22 @@ static PWNetEnumerator _createConnectedEnumerator(DWORD dwScope, DWORD dwType,
     }
     return ret;
 }
+
+#ifdef __REACTOS__
+static PWNetEnumerator _createRememberedEnumerator(DWORD dwScope, DWORD dwType,
+ HKEY remembered)
+{
+    PWNetEnumerator ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
+    if (ret)
+    {
+        ret->enumType = WNET_ENUMERATOR_TYPE_REMEMBERED;
+        ret->dwScope = dwScope;
+        ret->dwType = dwType;
+        ret->specific.remembered.registry = remembered;
+    }
+    return ret;
+}
+#endif
 
 /* Thunks the array of wide-string LPNETRESOURCEs lpNetArrayIn into buffer
  * lpBuffer, with size *lpBufferSize.  lpNetArrayIn contains *lpcCount entries
@@ -1004,8 +918,28 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                 ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
                 break;
             case RESOURCE_REMEMBERED:
+#ifndef __REACTOS__
                 *lphEnum = _createNullEnumerator();
                 ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
+#else
+                {
+                    HKEY remembered, user_profile;
+
+                    ret = WN_OUT_OF_MEMORY;
+                    if (RegOpenCurrentUser(KEY_READ, &user_profile) == ERROR_SUCCESS)
+                    {
+                        WCHAR subkey[8] = {'N', 'e', 't', 'w', 'o', 'r', 'k', 0};
+
+                        if (RegOpenKeyExW(user_profile, subkey, 0, KEY_READ, &remembered) == ERROR_SUCCESS)
+                        {
+                            *lphEnum = _createRememberedEnumerator(dwScope, dwType, remembered);
+                            ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
+                        }
+
+                        RegCloseKey(user_profile);
+                    }
+                }
+#endif
                 break;
             default:
                 WARN("unknown scope 0x%08x\n", dwScope);
@@ -1512,6 +1446,168 @@ static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
     return ret;
 }
 
+#ifdef __REACTOS__
+static const WCHAR connectionType[] = { 'C','o','n','n','e','c','t',
+ 'i','o','n','T','y','p','e',0 };
+static const WCHAR providerName[] = { 'P','r','o','v','i','d','e','r',
+ 'N','a','m','e',0 };
+static const WCHAR remotePath[] = { 'R','e','m','o','t','e','P',
+ 'a','t','h',0 };
+
+static DWORD _enumeratorRememberedW(PWNetEnumerator enumerator, DWORD* user_count,
+                                    void* user_buffer, DWORD* user_size)
+{
+    HKEY registry, connection;
+    WCHAR buffer[255];
+    DWORD index, ret, type, len, size, provider_size, remote_size, full_size, total_count, size_left = *user_size;
+    NETRESOURCEW * net_buffer = user_buffer;
+    WCHAR * str;
+
+    if (!enumerator)
+        return WN_BAD_POINTER;
+    if (enumerator->enumType != WNET_ENUMERATOR_TYPE_REMEMBERED)
+        return WN_BAD_VALUE;
+    if (!user_count || !user_buffer || !user_size)
+        return WN_BAD_POINTER;
+    if (!providerTable)
+        return WN_NO_NETWORK;
+
+    /* We will do the work in a single loop, so here is some things:
+     * we write netresource at the begin of the user buffer
+     * we write strings at the end of the user buffer
+     */
+    total_count = 0;
+    type = enumerator->dwType;
+    registry = enumerator->specific.remembered.registry;
+    str = (WCHAR *)((ULONG_PTR)user_buffer + *user_size - sizeof(WCHAR));
+    for (index = enumerator->specific.remembered.index; ; ++index)
+    {
+        enumerator->specific.remembered.index = index;
+
+        if (*user_count != -1 && total_count == *user_count)
+        {
+            ret = WN_SUCCESS;
+            break;
+        }
+
+        if (size_left < sizeof(NETRESOURCEW))
+        {
+            ret = WN_MORE_DATA;
+            break;
+        }
+
+        len = ARRAY_SIZE(buffer);
+        ret = RegEnumKeyExW(registry, index, buffer, &len, NULL, NULL, NULL, NULL);
+        if (ret != ERROR_SUCCESS)
+        {
+            /* We're done, that's a success! */
+            if (ret == ERROR_NO_MORE_ITEMS)
+            {
+                ret = WN_SUCCESS;
+                break;
+            }
+
+            continue;
+        }
+
+        if (RegOpenKeyExW(registry, buffer, 0, KEY_READ, &connection) != ERROR_SUCCESS)
+        {
+            continue;
+        }
+
+        size = sizeof(DWORD);
+        RegQueryValueExW(connection, connectionType, NULL, NULL, (BYTE *)&net_buffer->dwType, &size);
+        if (type != RESOURCETYPE_ANY && net_buffer->dwType != type)
+        {
+            RegCloseKey(connection);
+            continue;
+        }
+
+        net_buffer->dwScope = RESOURCE_REMEMBERED;
+        net_buffer->dwDisplayType = RESOURCEDISPLAYTYPE_GENERIC;
+        net_buffer->dwUsage = RESOURCEUSAGE_CONNECTABLE;
+
+        size_left -= sizeof(NETRESOURCEW);
+
+        /* Compute the whole size */
+        full_size = 0;
+        if (RegQueryValueExW(connection, providerName, NULL, NULL, NULL, &provider_size) != ERROR_SUCCESS)
+        {
+            RegCloseKey(connection);
+            continue;
+        }
+        full_size += provider_size;
+
+        if (RegQueryValueExW(connection, remotePath, NULL, NULL, NULL, &remote_size) != ERROR_SUCCESS)
+        {
+            RegCloseKey(connection);
+            continue;
+        }
+        full_size += remote_size;
+
+        /* FIXME: this only supports drive letters */
+        full_size += 3 * sizeof(WCHAR);
+        if (full_size > size_left)
+        {
+            RegCloseKey(connection);
+            ret = WN_MORE_DATA;
+            break;
+        }
+
+        str -= 3;
+        str[0] = buffer[0];
+        str[1] = L':';
+        str[2] = 0;
+        net_buffer->lpLocalName = str;
+        size_left -= 3 * sizeof(WCHAR);
+
+        size = provider_size;
+        str -= (provider_size / sizeof(WCHAR));
+        ret = RegQueryValueExW(connection, providerName, NULL, NULL, (BYTE *)str, &size);
+        if (ret == ERROR_MORE_DATA)
+        {
+            RegCloseKey(connection);
+            ret = WN_MORE_DATA;
+            break;
+        }
+        net_buffer->lpProvider = str;
+        size_left -= size;
+
+        size = remote_size;
+        str -= (remote_size / sizeof(WCHAR));
+        ret = RegQueryValueExW(connection, remotePath, NULL, NULL, (BYTE *)str, &size);
+        if (ret == ERROR_MORE_DATA)
+        {
+            RegCloseKey(connection);
+            ret = WN_MORE_DATA;
+            break;
+        }
+        net_buffer->lpRemoteName = str;
+        size_left -= size;
+
+        RegCloseKey(connection);
+
+        net_buffer->lpComment = NULL;
+
+        ++total_count;
+        ++net_buffer;
+    }
+
+    if (total_count == 0)
+        ret = WN_NO_MORE_ENTRIES;
+
+    *user_count = total_count;
+
+    if (ret != WN_MORE_DATA && ret != WN_NO_MORE_ENTRIES)
+        ret = WN_SUCCESS;
+
+    if (ret == WN_MORE_DATA)
+        *user_size = *user_size + full_size;
+
+    return ret;
+}
+#endif
+
 /*********************************************************************
  * WNetEnumResourceW [MPR.@]
  */
@@ -1541,9 +1637,11 @@ DWORD WINAPI WNetEnumResourceW( HANDLE hEnum, LPDWORD lpcCount,
 
         switch (enumerator->enumType)
         {
+#ifndef __REACTOS__
             case WNET_ENUMERATOR_TYPE_NULL:
                 ret = WN_NO_MORE_ENTRIES;
                 break;
+#endif
             case WNET_ENUMERATOR_TYPE_GLOBAL:
                 ret = _enumerateGlobalW(enumerator, lpcCount, lpBuffer,
                  lpBufferSize);
@@ -1560,6 +1658,12 @@ DWORD WINAPI WNetEnumResourceW( HANDLE hEnum, LPDWORD lpcCount,
                 ret = _enumerateConnectedW(enumerator, lpcCount, lpBuffer,
                  lpBufferSize);
                 break;
+#ifdef __REACTOS__
+            case WNET_ENUMERATOR_TYPE_REMEMBERED:
+                ret = _enumeratorRememberedW(enumerator, lpcCount, lpBuffer,
+                 lpBufferSize);
+                break;
+#endif
             default:
                 WARN("bogus enumerator type!\n");
                 ret = WN_NO_NETWORK;
@@ -1587,9 +1691,11 @@ DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
 
         switch (enumerator->enumType)
         {
+#ifndef __REACTOS__
             case WNET_ENUMERATOR_TYPE_NULL:
                 ret = WN_SUCCESS;
                 break;
+#endif
             case WNET_ENUMERATOR_TYPE_GLOBAL:
                 if (enumerator->specific.net)
                     _freeEnumNetResource(enumerator->specific.net);
@@ -1614,6 +1720,12 @@ DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
                 HeapFree(GetProcessHeap(), 0, handles);
                 ret = WN_SUCCESS;
                 break;
+#ifdef __REACTOS__
+            case WNET_ENUMERATOR_TYPE_REMEMBERED:
+                RegCloseKey(enumerator->specific.remembered.registry);
+                ret = WN_SUCCESS;
+                break;
+#endif
             default:
                 WARN("bogus enumerator type!\n");
                 ret = WN_BAD_HANDLE;

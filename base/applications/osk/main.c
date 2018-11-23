@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "osk.h"
+#include "settings.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -57,6 +58,47 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
     return TRUE;
 }
 
+/***********************************************************************
+ *
+ *          OSK_WarningProc
+ *
+ *  Function handler for the warning dialog box on startup
+ */
+INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch (Msg)
+    {
+        case WM_INITDIALOG:
+        {
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_SHOWWARNINGCHECK:
+                {
+                    Globals.bShowWarning = !IsDlgButtonChecked(hDlg, IDC_SHOWWARNINGCHECK);
+                    return TRUE;
+                }
+
+                case IDOK:
+                case IDCANCEL:
+                {
+                    EndDialog(hDlg, LOWORD(wParam));
+                    return TRUE;
+                }
+            }
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
 
 /***********************************************************************
  *
@@ -73,6 +115,9 @@ int OSK_DlgInitDialog(HWND hDlg)
 
     /* Save handle */
     Globals.hMainWnd = hDlg;
+
+    /* Load the settings from the registry hive */
+    LoadDataFromRegistry();
 
     /* Get screen info */
     memset(&Pt, 0, sizeof(Pt));
@@ -115,6 +160,12 @@ int OSK_DlgInitDialog(HWND hDlg)
     /* Set a timer for periodics tasks */
     Globals.iTimer = SetTimer(hDlg, 0, 200, NULL);
 
+    /* If the member of the struct (bShowWarning) is set then display the dialog box */
+    if (Globals.bShowWarning)
+    {
+        DialogBox(Globals.hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+    }
+
     return TRUE;
 }
 
@@ -138,6 +189,9 @@ int OSK_DlgClose(void)
 
     /* delete GDI objects */
     if (Globals.hBrushGreenLed) DeleteObject(Globals.hBrushGreenLed);
+
+    /* Save the settings to the registry hive */
+    SaveDataToRegistry();
 
     return TRUE;
 }

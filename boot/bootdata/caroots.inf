@@ -5,7 +5,7 @@
 ; Data licensed under MPL 2.0 <https://mozilla.org/MPL/2.0/>
 
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
 
 [AddReg]
 ; "SSL.com EV Root Certification Authority ECC" (664 bytes)

@@ -1489,7 +1489,7 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
+        "Echec de l'installation du code de dÇmarrage %S sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
@@ -1540,7 +1540,7 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
+        "Echec de l'installation du code de dÇmarrage %S sur la partition systäme.",
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {

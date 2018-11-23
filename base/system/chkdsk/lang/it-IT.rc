@@ -1,0 +1,38 @@
+/*
+ * PROJECT:     Check Disk utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+ 
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Uso: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+[drive:]    Specifica un disco per il controllo.\n\
+-F          Risolvi gli errori del disco.\n\
+-V          Visualizza il percorso del file di ogni file del disco.\n\
+-R          Trova i settori danneggiati e recupera le informazioni leggibili.\n\
+-C          Controlla il drive solamente se è sporco.\n\
+\n"
+
+    IDS_PERCENT_COMPL "%d percentuale completato.\r"
+    IDS_FILE_SYSTEM "Il tipo del file di sistema è %s.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 di Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+Adattamento ReactOS nel 1999 di Emanuele Aliberti\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Il volume è in uso e non può essere bloccato\n"
+    IDS_CHKDSK_FAIL "Chkdsk non era in grado di finire con successo.\n\n"
+    IDS_NO_ENTRY_POINT "Impossibile trovare i punti d'ingresso FMIFS.\n\n"
+    IDS_BAD_ARGUMENT "Argomento sconosciuto: %s\n"
+    IDS_NO_CURRENT_DIR "Impossibile ottenre la cartella corrente. Codice errore: "
+    IDS_NO_QUERY_VOL "Impossibile interrogare il volume. Codice errore: "
+    IDS_VOLUME_IN_USE_PROC "Impossibile l'esecuzione del Chkdsk perché il volume è in uso da un altro processo.\n\n"
+END

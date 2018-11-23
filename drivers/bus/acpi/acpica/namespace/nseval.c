@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -199,6 +199,7 @@ AcpiNsEvaluate (
      */
     switch (AcpiNsGetType (Info->Node))
     {
+    case ACPI_TYPE_ANY:
     case ACPI_TYPE_DEVICE:
     case ACPI_TYPE_EVENT:
     case ACPI_TYPE_MUTEX:
@@ -206,13 +207,13 @@ AcpiNsEvaluate (
     case ACPI_TYPE_THERMAL:
     case ACPI_TYPE_LOCAL_SCOPE:
         /*
-         * 1) Disallow evaluation of certain object types. For these,
-         *    object evaluation is undefined and not supported.
+         * 1) Disallow evaluation of these object types. For these,
+         *    object evaluation is undefined.
          */
         ACPI_ERROR ((AE_INFO,
-            "%s: Evaluation of object type [%s] is not supported",
-            Info->FullPathname,
-            AcpiUtGetTypeName (Info->Node->Type)));
+            "%s: This object type [%s] "
+            "never contains data and cannot be evaluated",
+            Info->FullPathname, AcpiUtGetTypeName (Info->Node->Type)));
 
         Status = AE_TYPE;
         goto Cleanup;
@@ -319,6 +320,16 @@ AcpiNsEvaluate (
 
         Status = AE_OK;
     }
+    else if (ACPI_FAILURE(Status))
+    {
+        /* If ReturnObject exists, delete it */
+
+        if (Info->ReturnObject)
+        {
+            AcpiUtRemoveReference (Info->ReturnObject);
+            Info->ReturnObject = NULL;
+        }
+    }
 
     ACPI_DEBUG_PRINT ((ACPI_DB_NAMES,
         "*** Completed evaluation of object %s ***\n",
@@ -347,6 +358,17 @@ Cleanup:
  * DESCRIPTION: Execute all elements of the global module-level code list.
  *              Each element is executed as a single control method.
  *
+ * NOTE: With this option enabled, each block of detected executable AML
+ * code that is outside of any control method is wrapped with a temporary
+ * control method object and placed on a global list. The methods on this
+ * list are executed below.
+ *
+ * This function executes the module-level code for all tables only after
+ * all of the tables have been loaded. It is a legacy option and is
+ * not compatible with other ACPI implementations. See AcpiNsLoadTable.
+ *
+ * This function will be removed when the legacy option is removed.
+ *
  ******************************************************************************/
 
 void
@@ -367,6 +389,9 @@ AcpiNsExecModuleCodeList (
     Next = AcpiGbl_ModuleCodeList;
     if (!Next)
     {
+        ACPI_DEBUG_PRINT ((ACPI_DB_INIT_NAMES,
+            "Legacy MLC block list is empty\n"));
+
         return_VOID;
     }
 

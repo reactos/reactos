@@ -1777,6 +1777,7 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
                     pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(*pStrokes), TAG_PATH);
                     if (!pStrokes)
                     {
+                       ExFreePoolWithTag(pOldStrokes, TAG_PATH);
                        PATH_UnlockPath(flat_path);
                        PATH_Delete(flat_path->BaseObject.hHmgr);
                        return NULL;

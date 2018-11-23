@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,7 @@ AcpiUtDumpBuffer (
     {
         /* Print current offset */
 
-        AcpiOsPrintf ("%6.4X: ", (BaseOffset + i));
+        AcpiOsPrintf ("%8.4X: ", (BaseOffset + i));
 
         /* Print 16 hex chars */
 
@@ -279,7 +279,7 @@ AcpiUtDumpBufferToFile (
     {
         /* Print current offset */
 
-        fprintf (File, "%6.4X: ", (BaseOffset + i));
+        fprintf (File, "%8.4X: ", (BaseOffset + i));
 
         /* Print 16 hex chars */
 

@@ -521,8 +521,15 @@ NtUserCallTwoParam(
                 {
                     UserPostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
                 }
+                /* bring window to top and activate */
+                co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
+                                      SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING |
+                                      SWP_NOOWNERZORDER | SWP_ASYNCWINDOWPOS);
             }
-            UserSetActiveWindow(Window);
+            else
+            {
+                UserSetActiveWindow(Window);
+            }
             break;
         }
 

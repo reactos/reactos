@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -392,7 +392,7 @@ AcpiPsGetNextNamepath (
 
     if (ACPI_FAILURE (Status))
     {
-        ACPI_ERROR_NAMESPACE (Path, Status);
+        ACPI_ERROR_NAMESPACE (WalkState->ScopeInfo, Path, Status);
 
         if ((WalkState->ParseFlags & ACPI_PARSE_MODE_MASK) ==
             ACPI_PARSE_EXECUTE)
@@ -943,6 +943,9 @@ AcpiPsGetNextArg (
 
             if (Arg->Common.AmlOpcode == AML_INT_METHODCALL_OP)
             {
+                /* Free method call op and corresponding namestring sub-ob */
+
+                AcpiPsFreeOp (Arg->Common.Value.Arg);
                 AcpiPsFreeOp (Arg);
                 Arg = NULL;
                 WalkState->ArgCount = 1;
@@ -959,10 +962,9 @@ AcpiPsGetNextArg (
     case ARGP_DATAOBJ:
     case ARGP_TERMARG:
 
-
-    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-        "**** TermArg/DataObj: %s (%2.2X)\n",
-        AcpiUtGetArgumentTypeName (ArgType), ArgType));
+        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+            "**** TermArg/DataObj: %s (%2.2X)\n",
+            AcpiUtGetArgumentTypeName (ArgType), ArgType));
 
         /* Single complex argument, nothing returned */
 

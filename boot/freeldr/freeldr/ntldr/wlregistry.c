@@ -143,7 +143,7 @@ WinLdrInitSystemHive(
         HiveName = "SYSTEM";
     }
 
-    ERR("WinLdrInitSystemHive: try to load hive %s%s\n", SearchPath, HiveName);
+    TRACE("WinLdrInitSystemHive: loading hive %s%s\n", SearchPath, HiveName);
     Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName);
 
     /* Fail if failed... */

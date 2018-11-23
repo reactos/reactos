@@ -38,7 +38,7 @@ char iniFile[_MAX_PATH];
 char logFile[_MAX_PATH];
 char lnkFile[_MAX_PATH];
 char tempbuff[256];
-char extbuff[256];
+char extbuff[_MAX_PATH];
 char logBuff[512];
 char fileSep = '\\';
 char notFileSep = '/';

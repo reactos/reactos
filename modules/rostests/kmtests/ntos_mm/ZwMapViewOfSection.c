@@ -433,8 +433,6 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
         ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     }
 
-/* FIXME: Crash. See ROSTESTS-110 */
-#ifdef ROSTESTS_110_FIXED
     //try to access forbidden memory
     BaseAddress = NULL;
     ViewSize = 0;
@@ -448,7 +446,24 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
 
         ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     }
-#endif /* ROSTESTS_110_FIXED */
+
+    //try to access guarded memory
+    BaseAddress = NULL;
+    ViewSize = 0;
+    SectionOffset.QuadPart = 0;
+    Status = ZwMapViewOfSection(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_GUARD | PAGE_READWRITE);
+    if (!skip(NT_SUCCESS(Status), "Error mapping view with PAGE_GUARD priv. Error = %p\n", Status))
+    {
+        KmtStartSeh()
+            RtlCompareMemory(BaseAddress, TestString, TestStringSize);
+        KmtEndSeh(STATUS_GUARD_PAGE_VIOLATION);
+
+        KmtStartSeh()
+            RtlCompareMemory(BaseAddress, TestString, TestStringSize);
+        KmtEndSeh(STATUS_SUCCESS);
+
+        ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    }
 
     ZwClose(WriteSectionHandle);
 

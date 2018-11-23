@@ -32,7 +32,7 @@ CheckUnattendedSetup(
     HINF UnattendInf;
     UINT ErrorLine;
     INT IntValue;
-    PWCHAR Value;
+    PCWSTR Value;
     WCHAR UnattendInfPath[MAX_PATH];
 
     CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2,
@@ -47,22 +47,21 @@ CheckUnattendedSetup(
     }
 
     /* Load 'unattend.inf' from installation media */
-    UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
-                                      NULL,
-                                      INF_STYLE_OLDNT,
-                                      pSetupData->LanguageId,
-                                      &ErrorLine);
-
+    UnattendInf = SpInfOpenInfFile(UnattendInfPath,
+                                   NULL,
+                                   INF_STYLE_OLDNT,
+                                   pSetupData->LanguageId,
+                                   &ErrorLine);
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
-        DPRINT("SetupOpenInfFileExW() failed\n");
+        DPRINT("SpInfOpenInfFile() failed\n");
         return;
     }
 
     /* Open 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"Signature", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"Signature", &Context))
     {
-        DPRINT("SetupFindFirstLineW() failed for section 'Unattend'\n");
+        DPRINT("SpInfFindFirstLine() failed for section 'Unattend'\n");
         goto Quit;
     }
 
@@ -84,7 +83,7 @@ CheckUnattendedSetup(
     INF_FreeData(Value);
 
     /* Check if Unattend setup is enabled */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
     {
         DPRINT("Can't find key 'UnattendSetupEnabled'\n");
         goto Quit;
@@ -106,37 +105,37 @@ CheckUnattendedSetup(
     INF_FreeData(Value);
 
     /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationDiskNumber'\n");
+        DPRINT("SpInfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
         goto Quit;
     }
 
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
     {
-        DPRINT("SetupGetIntField() failed for key 'DestinationDiskNumber'\n");
+        DPRINT("SpInfGetIntField() failed for key 'DestinationDiskNumber'\n");
         goto Quit;
     }
 
     pSetupData->DestinationDiskNumber = (LONG)IntValue;
 
     /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SpInfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
         goto Quit;
     }
 
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
     {
-        DPRINT("SetupGetIntField() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SpInfGetIntField() failed for key 'DestinationPartitionNumber'\n");
         goto Quit;
     }
 
     pSetupData->DestinationPartitionNumber = (LONG)IntValue;
 
     /* Search for 'InstallationDirectory' in the 'Unattend' section (optional) */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
         /* Get pointer 'InstallationDirectory' key */
         if (!INF_GetData(&Context, NULL, &Value))
@@ -157,9 +156,9 @@ CheckUnattendedSetup(
 
     /* Search for 'MBRInstallType' in the 'Unattend' section */
     pSetupData->MBRInstallType = -1;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->MBRInstallType = IntValue;
         }
@@ -167,25 +166,25 @@ CheckUnattendedSetup(
 
     /* Search for 'FormatPartition' in the 'Unattend' section */
     pSetupData->FormatPartition = 0;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"FormatPartition", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->FormatPartition = IntValue;
         }
     }
 
     pSetupData->AutoPartition = 0;
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"AutoPartition", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"AutoPartition", &Context))
     {
-        if (SetupGetIntField(&Context, 1, &IntValue))
+        if (SpInfGetIntField(&Context, 1, &IntValue))
         {
             pSetupData->AutoPartition = IntValue;
         }
     }
 
     /* Search for LocaleID in the 'Unattend' section */
-    if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"LocaleID", &Context))
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"LocaleID", &Context))
     {
         if (INF_GetData(&Context, NULL, &Value))
         {
@@ -198,7 +197,7 @@ CheckUnattendedSetup(
     }
 
 Quit:
-    SetupCloseInfFile(UnattendInf);
+    SpInfCloseInfFile(UnattendInf);
 }
 
 VOID
@@ -392,7 +391,7 @@ GetSourcePaths(
     OUT PUNICODE_STRING SourceRootDir)
 {
     NTSTATUS Status;
-    HANDLE Handle;
+    HANDLE LinkHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UCHAR ImageFileBuffer[sizeof(UNICODE_STRING) + MAX_PATH * sizeof(WCHAR)];
     PUNICODE_STRING InstallSourcePath = (PUNICODE_STRING)&ImageFileBuffer;
@@ -440,7 +439,7 @@ GetSourcePaths(
                                NULL,
                                NULL);
 
-    Status = NtOpenSymbolicLinkObject(&Handle,
+    Status = NtOpenSymbolicLinkObject(&LinkHandle,
                                       SYMBOLIC_LINK_QUERY,
                                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
@@ -459,10 +458,11 @@ GetSourcePaths(
                               SystemRootBuffer,
                               sizeof(SystemRootBuffer));
 
-    Status = NtQuerySymbolicLinkObject(Handle,
+    /* Resolve the link and close its handle */
+    Status = NtQuerySymbolicLinkObject(LinkHandle,
                                        &SystemRootPath,
                                        &BufferSize);
-    NtClose(Handle);
+    NtClose(LinkHandle);
 
     if (!NT_SUCCESS(Status))
         return Status; // Unexpected error
@@ -500,13 +500,12 @@ InitPaths:
 
 ERROR_NUMBER
 LoadSetupInf(
-    OUT HINF* SetupInf,
     IN OUT PUSETUP_DATA pSetupData)
 {
     INFCONTEXT Context;
     UINT ErrorLine;
     INT IntValue;
-    PWCHAR Value;
+    PCWSTR Value;
     WCHAR FileNameBuffer[MAX_PATH];
 
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
@@ -514,17 +513,17 @@ LoadSetupInf(
 
     DPRINT("SetupInf path: '%S'\n", FileNameBuffer);
 
-    *SetupInf = SetupOpenInfFileExW(FileNameBuffer,
-                                   NULL,
-                                   /* INF_STYLE_WIN4 | */ INF_STYLE_OLDNT,
-                                   pSetupData->LanguageId,
-                                   &ErrorLine);
-
-    if (*SetupInf == INVALID_HANDLE_VALUE)
+    pSetupData->SetupInf =
+        SpInfOpenInfFile(FileNameBuffer,
+                         NULL,
+                         INF_STYLE_WIN4,
+                         pSetupData->LanguageId,
+                         &ErrorLine);
+    if (pSetupData->SetupInf == INVALID_HANDLE_VALUE)
         return ERROR_LOAD_TXTSETUPSIF;
 
     /* Open 'Version' section */
-    if (!SetupFindFirstLineW(*SetupInf, L"Version", L"Signature", &Context))
+    if (!SpInfFindFirstLine(pSetupData->SetupInf, L"Version", L"Signature", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     /* Get pointer 'Signature' key */
@@ -532,7 +531,8 @@ LoadSetupInf(
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     /* Check 'Signature' string */
-    if (_wcsicmp(Value, L"$ReactOS$") != 0)
+    if (_wcsicmp(Value, L"$ReactOS$") != 0 &&
+        _wcsicmp(Value, L"$Windows NT$") != 0)
     {
         INF_FreeData(Value);
         return ERROR_SIGNATURE_TXTSETUPSIF;
@@ -541,24 +541,60 @@ LoadSetupInf(
     INF_FreeData(Value);
 
     /* Open 'DiskSpaceRequirements' section */
-    if (!SetupFindFirstLineW(*SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
+    if (!SpInfFindFirstLine(pSetupData->SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     pSetupData->RequiredPartitionDiskSpace = ~0;
 
     /* Get the 'FreeSysPartDiskSpace' value */
-    if (!SetupGetIntField(&Context, 1, &IntValue))
+    if (!SpInfGetIntField(&Context, 1, &IntValue))
         return ERROR_CORRUPT_TXTSETUPSIF;
 
     pSetupData->RequiredPartitionDiskSpace = (ULONG)IntValue;
 
     //
-    // TODO: Support "SetupSourceDevice" and "SetupSourcePath" in txtsetup.sif
+    // Support "SetupSourceDevice" and "SetupSourcePath" in txtsetup.sif
     // See CORE-9023
+    // Support for that should also be added in setupldr.
     //
 
+    /* Update the Setup Source paths */
+    if (SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"SetupSourceDevice", &Context))
+    {
+        /*
+         * Get optional pointer 'SetupSourceDevice' key, its presence
+         * will dictate whether we also need 'SetupSourcePath'.
+         */
+        if (INF_GetData(&Context, NULL, &Value))
+        {
+            /* Free the old source root path string and create the new one */
+            RtlFreeUnicodeString(&pSetupData->SourceRootPath);
+            RtlCreateUnicodeString(&pSetupData->SourceRootPath, Value);
+            INF_FreeData(Value);
+
+            if (!SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"SetupSourcePath", &Context))
+            {
+                /* The 'SetupSourcePath' value is mandatory! */
+                return ERROR_CORRUPT_TXTSETUPSIF;
+            }
+
+            /* Get pointer 'SetupSourcePath' key */
+            if (!INF_GetData(&Context, NULL, &Value))
+            {
+                /* The 'SetupSourcePath' value is mandatory! */
+                return ERROR_CORRUPT_TXTSETUPSIF;
+            }
+
+            /* Free the old source path string and create the new one */
+            RtlFreeUnicodeString(&pSetupData->SourceRootDir);
+            RtlCreateUnicodeString(&pSetupData->SourceRootDir, Value);
+            INF_FreeData(Value);
+        }
+    }
+
     /* Search for 'DefaultPath' in the 'SetupData' section */
-    if (SetupFindFirstLineW(*SetupInf, L"SetupData", L"DefaultPath", &Context))
+    pSetupData->InstallationDirectory[0] = 0;
+    if (SpInfFindFirstLine(pSetupData->SetupInf, L"SetupData", L"DefaultPath", &Context))
     {
         /* Get pointer 'DefaultPath' key */
         if (!INF_GetData(&Context, NULL, &Value))
@@ -572,6 +608,415 @@ LoadSetupInf(
     }
 
     return ERROR_SUCCESS;
+}
+
+NTSTATUS
+InitDestinationPaths(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN PCWSTR InstallationDir,
+    IN PDISKENTRY DiskEntry,    // FIXME: HACK!
+    IN PPARTENTRY PartEntry)    // FIXME: HACK!
+{
+    WCHAR PathBuffer[MAX_PATH];
+
+    //
+    // TODO: Check return status values of the functions!
+    //
+
+    /* Create 'pSetupData->DestinationRootPath' string */
+    RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu\\",
+            DiskEntry->DiskNumber,
+            PartEntry->PartitionNumber);
+    RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer);
+    DPRINT("DestinationRootPath: %wZ\n", &pSetupData->DestinationRootPath);
+
+    // FIXME! Which variable to choose?
+    if (!InstallationDir)
+        InstallationDir = pSetupData->InstallationDirectory;
+
+/** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
+    /* Create 'pSetupData->DestinationArcPath' */
+    RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+            DiskEntry->BiosDiskNumber,
+            PartEntry->PartitionNumber);
+    ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
+    RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer);
+
+/** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
+    /* Create 'pSetupData->DestinationPath' string */
+    RtlFreeUnicodeString(&pSetupData->DestinationPath);
+    CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                 pSetupData->DestinationRootPath.Buffer, InstallationDir);
+    RtlCreateUnicodeString(&pSetupData->DestinationPath, PathBuffer);
+
+/** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
+    // FIXME: This is only temporary!! Must be removed later!
+    /***/RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir);/***/
+
+    return STATUS_SUCCESS;
+}
+
+// NTSTATUS
+ERROR_NUMBER
+InitializeSetup(
+    IN OUT PUSETUP_DATA pSetupData,
+    IN ULONG InitPhase)
+{
+    if (InitPhase == 0)
+    {
+        RtlZeroMemory(pSetupData, sizeof(*pSetupData));
+
+        // pSetupData->ComputerList = NULL;
+        // pSetupData->DisplayList  = NULL;
+        // pSetupData->KeyboardList = NULL;
+        // pSetupData->LayoutList   = NULL;
+        // pSetupData->LanguageList = NULL;
+
+        /* Initialize error handling */
+        pSetupData->LastErrorNumber = ERROR_SUCCESS;
+        pSetupData->ErrorRoutine = NULL;
+
+        /* Initialize global unicode strings */
+        RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
+        RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
+        RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
+        RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
+        RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
+
+        // FIXME: This is only temporary!! Must be removed later!
+        /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
+
+        //
+        // TODO: Load and start SetupDD, and ask it for the information
+        //
+
+        return ERROR_SUCCESS;
+    }
+    else
+    if (InitPhase == 1)
+    {
+        ERROR_NUMBER Error;
+        NTSTATUS Status;
+
+        /* Get the source path and source root path */
+        //
+        // NOTE: Sometimes the source path may not be in SystemRoot !!
+        // (and this is the case when using the 1st-stage GUI setup!)
+        //
+        Status = GetSourcePaths(&pSetupData->SourcePath,
+                                &pSetupData->SourceRootPath,
+                                &pSetupData->SourceRootDir);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)", Status);
+            return ERROR_NO_SOURCE_DRIVE;
+        }
+        /*
+         * Example of output:
+         *   SourcePath: '\Device\CdRom0\I386'
+         *   SourceRootPath: '\Device\CdRom0'
+         *   SourceRootDir: '\I386'
+         */
+        DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
+        DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
+        DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
+
+        /* Load 'txtsetup.sif' from the installation media */
+        Error = LoadSetupInf(pSetupData);
+        if (Error != ERROR_SUCCESS)
+        {
+            DPRINT1("LoadSetupInf() failed (Error 0x%lx)", Error);
+            return Error;
+        }
+        DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
+        DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
+        DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
+
+        return ERROR_SUCCESS;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+VOID
+FinishSetup(
+    IN OUT PUSETUP_DATA pSetupData)
+{
+    /* Destroy the computer settings list */
+    if (pSetupData->ComputerList != NULL)
+    {
+        DestroyGenericList(pSetupData->ComputerList, TRUE);
+        pSetupData->ComputerList = NULL;
+    }
+
+    /* Destroy the display settings list */
+    if (pSetupData->DisplayList != NULL)
+    {
+        DestroyGenericList(pSetupData->DisplayList, TRUE);
+        pSetupData->DisplayList = NULL;
+    }
+
+    /* Destroy the keyboard settings list */
+    if (pSetupData->KeyboardList != NULL)
+    {
+        DestroyGenericList(pSetupData->KeyboardList, TRUE);
+        pSetupData->KeyboardList = NULL;
+    }
+
+    /* Destroy the keyboard layout list */
+    if (pSetupData->LayoutList != NULL)
+    {
+        DestroyGenericList(pSetupData->LayoutList, TRUE);
+        pSetupData->LayoutList = NULL;
+    }
+
+    /* Destroy the languages list */
+    if (pSetupData->LanguageList != NULL)
+    {
+        DestroyGenericList(pSetupData->LanguageList, FALSE);
+        pSetupData->LanguageList = NULL;
+    }
+
+    /* Close the Setup INF */
+    SpInfCloseInfFile(pSetupData->SetupInf);
+}
+
+/*
+ * SIDEEFFECTS
+ *  Calls RegInitializeRegistry
+ *  Calls ImportRegistryFile
+ *  Calls SetDefaultPagefile
+ *  Calls SetMountedDeviceValues
+ */
+ERROR_NUMBER
+UpdateRegistry(
+    IN OUT PUSETUP_DATA pSetupData,
+    /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
+    /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
+    /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
+    /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
+    IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL)
+{
+    ERROR_NUMBER ErrorNumber;
+    NTSTATUS Status;
+    INFCONTEXT InfContext;
+    PCWSTR Action;
+    PCWSTR File;
+    PCWSTR Section;
+    BOOLEAN Success;
+    BOOLEAN ShouldRepairRegistry = FALSE;
+    BOOLEAN Delete;
+
+    if (RepairUpdateFlag)
+    {
+        DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
+
+        /* Verify the registry hives and check whether we need to update or repair any of them */
+        Status = VerifyRegistryHives(&pSetupData->DestinationPath, &ShouldRepairRegistry);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
+            ShouldRepairRegistry = FALSE;
+        }
+        if (!ShouldRepairRegistry)
+            DPRINT1("No need to repair the registry\n");
+    }
+
+DoUpdate:
+    ErrorNumber = ERROR_SUCCESS;
+
+    /* Update the registry */
+    if (StatusRoutine) StatusRoutine(RegHiveUpdate);
+
+    /* Initialize the registry and setup the registry hives */
+    Status = RegInitializeRegistry(&pSetupData->DestinationPath);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RegInitializeRegistry() failed\n");
+        /********** HACK!!!!!!!!!!! **********/
+        if (Status == STATUS_NOT_IMPLEMENTED)
+        {
+            /* The hack was called, return its corresponding error */
+            return ERROR_INITIALIZE_REGISTRY;
+        }
+        else
+        /*************************************/
+        {
+            /* Something else failed */
+            return ERROR_CREATE_HIVE;
+        }
+    }
+
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
+    {
+        /*
+         * We fully setup the hives, in case we are doing a fresh installation
+         * (RepairUpdateFlag == FALSE), or in case we are doing an update
+         * (RepairUpdateFlag == TRUE) BUT we have some registry hives to
+         * "repair" (aka. recreate: ShouldRepairRegistry == TRUE).
+         */
+
+        Success = SpInfFindFirstLine(pSetupData->SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
+        if (!Success)
+            Success = SpInfFindFirstLine(pSetupData->SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
+
+        if (!Success)
+        {
+            DPRINT1("SpInfFindFirstLine() failed\n");
+            ErrorNumber = ERROR_FIND_REGISTRY;
+            goto Cleanup;
+        }
+    }
+    else // if (RepairUpdateFlag && !ShouldRepairRegistry)
+    {
+        /*
+         * In case we are doing an update (RepairUpdateFlag == TRUE) and
+         * NO registry hives need a repair (ShouldRepairRegistry == FALSE),
+         * we only update the hives.
+         */
+
+        Success = SpInfFindFirstLine(pSetupData->SetupInf, L"HiveInfs.Upgrade", NULL, &InfContext);
+        if (!Success)
+        {
+            /* Nothing to do for update! */
+            DPRINT1("No update needed for the registry!\n");
+            goto Cleanup;
+        }
+    }
+
+    do
+    {
+        INF_GetDataField(&InfContext, 0, &Action);
+        INF_GetDataField(&InfContext, 1, &File);
+        INF_GetDataField(&InfContext, 2, &Section);
+
+        DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
+
+        if (Action == NULL)
+        {
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            break; // Hackfix
+        }
+
+        if (!_wcsicmp(Action, L"AddReg"))
+            Delete = FALSE;
+        else if (!_wcsicmp(Action, L"DelReg"))
+            Delete = TRUE;
+        else
+        {
+            DPRINT1("Unrecognized registry INF action '%S'\n", Action);
+            INF_FreeData(Action);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            continue;
+        }
+
+        INF_FreeData(Action);
+
+        if (StatusRoutine) StatusRoutine(ImportRegHive, File);
+
+        if (!ImportRegistryFile(pSetupData->SourcePath.Buffer,
+                                File, Section,
+                                pSetupData->LanguageId, Delete))
+        {
+            DPRINT1("Importing %S failed\n", File);
+            INF_FreeData(File);
+            INF_FreeData(Section);
+            ErrorNumber = ERROR_IMPORT_HIVE;
+            goto Cleanup;
+        }
+    } while (SpInfFindNextLine(&InfContext, &InfContext));
+
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
+    {
+        /* See the explanation for this test above */
+
+        /* Update display registry settings */
+        if (StatusRoutine) StatusRoutine(DisplaySettingsUpdate);
+        if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayList))
+        {
+            ErrorNumber = ERROR_UPDATE_DISPLAY_SETTINGS;
+            goto Cleanup;
+        }
+
+        /* Set the locale */
+        if (StatusRoutine) StatusRoutine(LocaleSettingsUpdate);
+        if (!ProcessLocaleRegistry(pSetupData->LanguageList))
+        {
+            ErrorNumber = ERROR_UPDATE_LOCALESETTINGS;
+            goto Cleanup;
+        }
+
+        /* Add keyboard layouts */
+        if (StatusRoutine) StatusRoutine(KeybLayouts);
+        if (!AddKeyboardLayouts(SelectedLanguageId))
+        {
+            ErrorNumber = ERROR_ADDING_KBLAYOUTS;
+            goto Cleanup;
+        }
+
+        /* Set GeoID */
+        if (!SetGeoID(MUIGetGeoID(SelectedLanguageId)))
+        {
+            ErrorNumber = ERROR_UPDATE_GEOID;
+            goto Cleanup;
+        }
+
+        if (!IsUnattendedSetup)
+        {
+            /* Update keyboard layout settings */
+            if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
+            if (!ProcessKeyboardLayoutRegistry(pSetupData->LayoutList, SelectedLanguageId))
+            {
+                ErrorNumber = ERROR_UPDATE_KBSETTINGS;
+                goto Cleanup;
+            }
+        }
+
+        /* Add codepage information to registry */
+        if (StatusRoutine) StatusRoutine(CodePageInfoUpdate);
+        if (!AddCodePage(SelectedLanguageId))
+        {
+            ErrorNumber = ERROR_ADDING_CODEPAGE;
+            goto Cleanup;
+        }
+
+        /* Set the default pagefile entry */
+        SetDefaultPagefile(DestinationDriveLetter);
+
+        /* Update the mounted devices list */
+        // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
+        SetMountedDeviceValues(PartitionList);
+    }
+
+Cleanup:
+    //
+    // TODO: Unload all the registry stuff, perform cleanup,
+    // and copy the created hive files into .sav files.
+    //
+    RegCleanupRegistry(&pSetupData->DestinationPath);
+
+    /*
+     * Check whether we were in update/repair mode but we were actually
+     * repairing the registry hives. If so, we have finished repairing them,
+     * and we now reset the flag and run the proper registry update.
+     * Otherwise we have finished the registry update!
+     */
+    if (RepairUpdateFlag && ShouldRepairRegistry)
+    {
+        ShouldRepairRegistry = FALSE;
+        goto DoUpdate;
+    }
+
+    return ErrorNumber;
 }
 
 /* EOF */

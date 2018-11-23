@@ -11,6 +11,8 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <winuser.h>
+#include <undocuser.h>
 
 #include <ndk/rtlfuncs.h>
 
@@ -59,6 +61,9 @@ extern HANDLE Events[2];
 
 DWORD
 GetNextJobTimeout(VOID);
+
+VOID
+RunNextJob(VOID);
 
 LONG
 SaveJob(

@@ -8,6 +8,11 @@
 #pragma once
 
 #include <tcpioctl.h>
+/* FIXME */
+#define DWORD ULONG
+#include <in6addr.h>
+#include <tcpmib.h>
+#include <udpmib.h>
 
 #define MAX_PHYSADDR_LEN 8
 #define MAX_IFDESCR_LEN  256
@@ -108,6 +113,14 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
 TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
                                       PNDIS_BUFFER Buffer,
                                       PUINT BufferSize );
+
+TDI_STATUS InfoTdiQueryGetConnectionTcpTable( PADDRESS_FILE AddrFile,
+                                              PNDIS_BUFFER Buffer,
+                                              PUINT BufferSize);
+
+TDI_STATUS InfoTdiQueryGetConnectionUdpTable( PADDRESS_FILE AddrFile,
+                                              PNDIS_BUFFER Buffer,
+                                              PUINT BufferSize);
 
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF,
                            PVOID Buffer,

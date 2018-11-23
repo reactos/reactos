@@ -85,6 +85,94 @@ GetNextJobTimeout(VOID)
 
 static
 VOID
+ReScheduleJob(
+    PJOB pJob)
+{
+    /* Remove the job from the start list */
+    RemoveEntryList(&pJob->StartEntry);
+
+    /* Non-periodical job, remove it */
+    if ((pJob->Flags & JOB_RUN_PERIODICALLY) == 0)
+    {
+        /* Remove the job from the registry */
+        DeleteJob(pJob);
+
+        /* Remove the job from the job list */
+        RemoveEntryList(&pJob->JobEntry);
+        dwJobCount--;
+
+        /* Free the job object */
+        HeapFree(GetProcessHeap(), 0, pJob);
+        return;
+    }
+
+    /* Calculate the next start time */
+    CalculateNextStartTime(pJob);
+
+    /* Insert the job into the start list again */
+    InsertJobIntoStartList(&StartListHead, pJob);
+#if 0
+    DumpStartList(&StartListHead);
+#endif
+}
+
+
+VOID
+RunNextJob(VOID)
+{
+    PROCESS_INFORMATION ProcessInformation;
+    STARTUPINFOW StartupInfo;
+    BOOL bRet;
+    PJOB pNextJob;
+
+    if (IsListEmpty(&StartListHead))
+    {
+        ERR("No job in list!\n");
+        return;
+    }
+
+    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
+
+    TRACE("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    StartupInfo.lpTitle = pNextJob->Command;
+    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+    StartupInfo.wShowWindow = SW_SHOWDEFAULT;
+
+    if ((pNextJob->Flags & JOB_NONINTERACTIVE) == 0)
+    {
+        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+    }
+
+    bRet = CreateProcessW(NULL,
+                          pNextJob->Command,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          CREATE_NEW_CONSOLE,
+                          NULL,
+                          NULL,
+                          &StartupInfo,
+                          &ProcessInformation);
+    if (bRet == FALSE)
+    {
+        ERR("CreateProcessW() failed (Error %lu)\n", GetLastError());
+    }
+    else
+    {
+        CloseHandle(ProcessInformation.hThread);
+        CloseHandle(ProcessInformation.hProcess);
+    }
+
+    ReScheduleJob(pNextJob);
+}
+
+
+static
+VOID
 GetJobName(
     HKEY hJobsKey,
     PWSTR pszJobName)
@@ -396,26 +484,37 @@ CalculateNextStartTime(
     StartTime.wHour = (WORD)(pJob->JobTime / 3600000);
     StartTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
 
-    /* Start the job tomorrow */
-    if (Now > pJob->JobTime)
+    if (pJob->DaysOfMonth != 0)
     {
-        if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
+         FIXME("Support DaysOfMonth!\n");
+    }
+    else if (pJob->DaysOfWeek != 0)
+    {
+         FIXME("Support DaysOfWeek!\n");
+    }
+    else
+    {
+        /* Start the job tomorrow */
+        if (Now > pJob->JobTime)
         {
-            if (StartTime.wMonth == 12)
+            if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth = 1;
-                StartTime.wYear++;
+                if (StartTime.wMonth == 12)
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth = 1;
+                    StartTime.wYear++;
+                }
+                else
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth++;
+                }
             }
             else
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth++;
+                StartTime.wDay++;
             }
-        }
-        else
-        {
-            StartTime.wDay++;
         }
     }
 

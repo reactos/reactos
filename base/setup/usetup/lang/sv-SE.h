@@ -1478,7 +1478,7 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Setup misslyckades installera FAT bootkod p† systempartitionen.",
+        "Setup misslyckades installera %S bootkod p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {
@@ -1529,7 +1529,7 @@ MUI_ERROR svSEErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Setup misslyckades att installera FAT bootkoden p† systempartitionen.",
+        "Setup misslyckades att installera %S bootkoden p† systempartitionen.",
         "ENTER = Starta om datorn"
     },
     {

@@ -7,6 +7,20 @@
 
 #pragma once
 
+/* HELPERS FOR PARTITION TYPES **********************************************/
+
+typedef struct _PARTITION_TYPE
+{
+    UCHAR Type;
+    PCHAR Description;
+} PARTITION_TYPE, *PPARTITION_TYPE;
+
+#define NUM_PARTITION_TYPE_ENTRIES  143
+extern PARTITION_TYPE PartitionTypes[NUM_PARTITION_TYPE_ENTRIES];
+
+
+/* PARTITION UTILITY FUNCTIONS **********************************************/
+
 typedef enum _FORMATSTATE
 {
     Unformatted,
@@ -35,7 +49,9 @@ typedef struct _PARTENTRY
     ULONG PartitionNumber;  /* Enumerated partition number (primary partitions first -- excluding the extended partition container --, then the logical partitions) */
     ULONG PartitionIndex;   /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
 
-    CHAR DriveLetter;
+    WCHAR DriveLetter;
+    WCHAR VolumeLabel[20];
+    // CHAR FileSystemName[9];  // NOTE: Superseded by the FileSystem member
 
     BOOLEAN LogicalPartition;
 
@@ -268,18 +284,18 @@ PPARTENTRY
 GetPrevPartition(
     IN PPARTLIST List);
 
-VOID
+BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
-VOID
+BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount);
 
-VOID
+BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
     IN ULONGLONG SectorCount,
@@ -299,7 +315,7 @@ WritePartitionsToDisk(
 
 BOOLEAN
 SetMountedDeviceValue(
-    IN CHAR Letter,
+    IN WCHAR Letter,
     IN ULONG Signature,
     IN LARGE_INTEGER StartingOffset);
 

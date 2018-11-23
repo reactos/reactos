@@ -1477,7 +1477,7 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
+        "Nepodaýilo se nainstalovat %S zavadØŸ na syst‚movì odd¡l.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
@@ -1528,7 +1528,7 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
+        "Nepodaýilo se nainstalovat %S zavadØŸ na syst‚movì odd¡l.",
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {

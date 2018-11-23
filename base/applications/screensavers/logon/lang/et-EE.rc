@@ -1,0 +1,7 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_DESCRIPTION "Sisselogimise ekraanisäästja"
+    IDS_TEXT "Suvandeid pole vaja sättida."
+END

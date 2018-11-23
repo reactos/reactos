@@ -337,13 +337,13 @@ AddEntriesFromInfSection(
     IN PVOID Parameter OPTIONAL)
 {
     LONG TotalCount = 0;
-    PWCHAR KeyName;
-    PWCHAR KeyValue;
+    PCWSTR KeyName;
+    PCWSTR KeyValue;
     PVOID UserData;
     BOOLEAN Current;
     UCHAR RetVal;
 
-    if (!SetupFindFirstLineW(InfFile, SectionName, NULL, pContext))
+    if (!SpInfFindFirstLine(InfFile, SectionName, NULL, pContext))
         return -1;
 
     do
@@ -389,7 +389,7 @@ AddEntriesFromInfSection(
         }
         // else if (RetVal == 2), skip the entry.
 
-    } while (SetupFindNextLine(pContext, pContext));
+    } while (SpInfFindNextLine(pContext, pContext));
 
     return TotalCount;
 }
@@ -439,8 +439,8 @@ CreateComputerTypeList(
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyName;
-    PWCHAR KeyValue;
+    PCWSTR KeyName;
+    PCWSTR KeyValue;
     WCHAR ComputerIdentifier[128];
     WCHAR ComputerKey[32];
 
@@ -453,7 +453,7 @@ CreateComputerTypeList(
     DPRINT("Computer identifier: '%S'\n", ComputerIdentifier);
 
     /* Search for matching device identifier */
-    if (!SetupFindFirstLineW(InfFile, L"Map.Computer", NULL, &Context))
+    if (!SpInfFindFirstLine(InfFile, L"Map.Computer", NULL, &Context))
     {
         /* FIXME: error message */
         return NULL;
@@ -487,7 +487,7 @@ CreateComputerTypeList(
         DPRINT("Computer key: %S\n", KeyName);
         RtlStringCchCopyW(ComputerKey, ARRAYSIZE(ComputerKey), KeyName);
         INF_FreeData(KeyName);
-    } while (SetupFindNextLine(&Context, &Context));
+    } while (SpInfFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
     if (List == NULL)
@@ -675,8 +675,8 @@ CreateDisplayDriverList(
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyName;
-    PWCHAR KeyValue;
+    PCWSTR KeyName;
+    PCWSTR KeyValue;
     WCHAR DisplayIdentifier[128];
     WCHAR DisplayKey[32];
 
@@ -689,7 +689,7 @@ CreateDisplayDriverList(
     DPRINT("Display identifier: '%S'\n", DisplayIdentifier);
 
     /* Search for matching device identifier */
-    if (!SetupFindFirstLineW(InfFile, L"Map.Display", NULL, &Context))
+    if (!SpInfFindFirstLine(InfFile, L"Map.Display", NULL, &Context))
     {
         /* FIXME: error message */
         return NULL;
@@ -723,7 +723,7 @@ CreateDisplayDriverList(
         DPRINT("Display key: %S\n", KeyName);
         RtlStringCchCopyW(DisplayKey, ARRAYSIZE(DisplayKey), KeyName);
         INF_FreeData(KeyName);
-    } while (SetupFindNextLine(&Context, &Context));
+    } while (SpInfFindNextLine(&Context, &Context));
 
     List = CreateGenericList();
     if (List == NULL)
@@ -761,10 +761,7 @@ ProcessComputerFiles(
 
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
-    {
-        DPRINT("GetCurrentListEntry() failed\n");
         return FALSE;
-    }
 
     RtlStringCchPrintfW(SectionName, ARRAYSIZE(SectionName),
                         L"Files.%s", ((PGENENTRY)GetListEntryData(Entry))->Id);
@@ -781,8 +778,8 @@ ProcessDisplayRegistry(
     NTSTATUS Status;
     PGENERIC_LIST_ENTRY Entry;
     INFCONTEXT Context;
-    PWCHAR Buffer;
-    PWCHAR ServiceName;
+    PCWSTR Buffer;
+    PCWSTR ServiceName;
     ULONG StartValue;
     ULONG Width, Height, Bpp;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -794,16 +791,13 @@ ProcessDisplayRegistry(
 
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
-    {
-        DPRINT1("GetCurrentListEntry() failed\n");
         return FALSE;
-    }
 
-    if (!SetupFindFirstLineW(InfFile, L"Display",
-                             ((PGENENTRY)GetListEntryData(Entry))->Id,
-                             &Context))
+    if (!SpInfFindFirstLine(InfFile, L"Display",
+                            ((PGENENTRY)GetListEntryData(Entry))->Id,
+                            &Context))
     {
-        DPRINT1("SetupFindFirstLineW() failed\n");
+        DPRINT1("SpInfFindFirstLine() failed\n");
         return FALSE;
     }
 
@@ -1143,7 +1137,7 @@ CreateLanguageList(
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyValue;
+    PCWSTR KeyValue;
 
     LANG_ENTRY_PARAM LangEntryParam;
 
@@ -1151,7 +1145,7 @@ CreateLanguageList(
     LangEntryParam.DefaultLanguage = DefaultLanguage;
 
     /* Get default language id */
-    if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLanguage", &Context))
+    if (!SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLanguage", &Context))
         return NULL;
 
     if (!INF_GetData(&Context, NULL, &KeyValue))
@@ -1194,12 +1188,12 @@ CreateKeyboardLayoutList(
 {
     PGENERIC_LIST List;
     INFCONTEXT Context;
-    PWCHAR KeyValue;
+    PCWSTR KeyValue;
     const MUI_LAYOUTS* LayoutsList;
     ULONG uIndex = 0;
 
     /* Get default layout id */
-    if (!SetupFindFirstLineW(InfFile, L"NLS", L"DefaultLayout", &Context))
+    if (!SpInfFindFirstLine(InfFile, L"NLS", L"DefaultLayout", &Context))
         return NULL;
 
     if (!INF_GetData(&Context, NULL, &KeyValue))

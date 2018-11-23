@@ -1,0 +1,12 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Kuvab draivi või tee visuaalset kaustastruktuuri.\n\n\
+TREE [draiv:][tee] [/F] [/A]\n\n\
+\t/F   Kuvab igas kaustas olevate failide nimed.\n\
+\t/A   Kasuta ASCII-d laiendatut tähemärkide asemel.\n"
+    IDS_NO_SUBDIRECTORIES "Ühtegi alamkausta ei ole olemas"
+    IDS_FOLDER_PATH "Kausta PATH nimekiri\n"
+    IDS_VOL_SERIAL "Draivi seerianumber on %x:%x\n"
+END

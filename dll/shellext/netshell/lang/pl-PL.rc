@@ -80,20 +80,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Wybierz, czy mają zostać użyte ustawienia standardowe czy niestandardowe:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Ustawienia standardowe", IDC_NETWORK_TYPICAL, 53, 27, 253, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 72, 253, 10, WS_TABSTOP
+    AUTORADIOBUTTON "Ustawienia niestandardowe", IDC_NETWORK_CUSTOM, 53, 73, 253, 10, WS_TABSTOP
     LTEXT "Tworzy połączenia sieciowe, używając protokołu Klient sieci ReactOS Networks, Udostępniania plików i drukarek w sieciach ReactOS Networks i protokołu transportowego TCP/IP z automatycznym adresowaniem.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Pozwala na ręczne konfigurowanie składników sieciowych.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dla urządzenia:", IDC_STATIC, 33, 2, 110, 20
@@ -108,7 +108,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator ReactOS"
+CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Czy chcesz, aby ten komputer był członkiem domeny?\n\
@@ -173,6 +173,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Kliknij pole wyboru, aby włączyć składnik sieciowy dla tego komputera. Aby dodać składnik, kliknij przycisk Zainstaluj."
     IDS_NETWORKDOMAINTITLE "Grupa robocza lub domena komputera"
     IDS_NETWORKDOMAINSUBTITLE "Grupa robocza to zbiór komputerów, które mają taką samą nazwę grupy roboczej. Domena to zbiór komputerów zdefiniowany przez administratora sieci."
-    IDS_REACTOS_SETUP "Instalator ReactOS"
+    IDS_REACTOS_SETUP "Instalator systemu ReactOS"
     IDS_WZD_DOMAIN_NAME "Instalacja nie może być kontynuowana dopóki\nnie wpiszesz nazwy domeny\nlub grupy roboczej."
 END

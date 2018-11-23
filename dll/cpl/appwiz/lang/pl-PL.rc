@@ -5,6 +5,7 @@
  *         IRC: irc.freenode.net #reactos-pl;
  *         UTF-8 conversion by Caemyr (May, 2011) 
  *         Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
+ *         Updated by Zcooger - M. St. Ciuńczyk (October, 2018)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -37,7 +38,7 @@ BEGIN
     LTEXT "Wpisz ścieżkę dostępu do obiektu:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "Przeglądaj...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Naciśnij Dalej aby kontynuować.", -1, 120, 97, 162, 10
+    LTEXT "Kliknij Dalej, aby kontynuować.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -47,7 +48,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Wpisz nazwę dla tego skrótu:", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT "Naciśnij Zakończ by utworzyć skrót.", -1, 118, 97, 178, 17
+    LTEXT "Kliknij Zakończ, by utworzyć skrót.", -1, 118, 97, 178, 17
 END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
@@ -67,7 +68,7 @@ STYLE DS_SHELLFONT | DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VI
 CAPTION "Instalator Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS nie mógł znaleźć pakietu Wine Gecko, który jest potrzebny dla aplikacji osadzających kod HTML, aby mogły pracować w pełni. ReactOS może go automatycznie pobrać i zainstalować dla Ciebie.",
+    CONTROL "System ReactOS nie mógł odnaleźć pakietu Wine Gecko, który jest potrzebny dla aplikacji osadzających kod HTML, aby mogły poprawnie działać. System ReactOS może automatycznie pobrać i zainstalować ten pakiet dla Ciebie.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instaluj", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
@@ -77,18 +78,18 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Dodaj lub usuń programy"
-    IDS_CPLSYSTEMDESCRIPTION "Instaluje bądź usuwa programy oraz tworzy skróty."
+    IDS_CPLSYSTEMDESCRIPTION "Instaluje lub usuwa programy oraz tworzy skróty."
     IDS_CREATE_SHORTCUT "Utwórz skrót"
     IDS_ERROR_NOT_FOUND "Plik %s nie został znaleziony."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING "Ściąganie..."
+    IDS_DOWNLOADING "Pobieranie..."
     IDS_INSTALLING "Instalowanie..."
-    IDS_INVALID_SHA "Nieoczekiwana suma kontrolna ściągniętego pliku. Przerwanie instalacji uszkodzonego pliku."
+    IDS_INVALID_SHA "Nieoczekiwana suma kontrolna pobranego pliku. Instalacja uszkodzonego pliku została przerwana."
     IDS_NEW_INTERNET_SHORTCUT "Nowy skrót internetowy"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
+    IDS_DWL_FAILED "Nie udało się pobrać pakietu Gecko. Upewnij się, że masz połączenie z internetem, aby pobrać pakiet. Instalacja będzie kontynuowana bez pakietu Gecko."
     IDS_CANTMAKEINETSHORTCUT "Nie można utworzyć skrótu internetowego."
     IDS_CANTMAKESHORTCUT "Nie można utworzyć skrótu."
 END

@@ -1476,7 +1476,7 @@ MUI_ERROR sqALErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Instalimi deshtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
+        "Instalimi deshtoj n‰ instalimin e %S bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {
@@ -1527,7 +1527,7 @@ MUI_ERROR sqALErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Instalimi d‰shtoj n‰ instalimin e FAT bootcode n‰ particionin e sistemit.",
+        "Instalimi d‰shtoj n‰ instalimin e %S bootcode n‰ particionin e sistemit.",
         "ENTER = Ristarto kompjuterin"
     },
     {

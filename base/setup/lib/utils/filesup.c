@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     File support functions.
- * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
+ * COPYRIGHT:   Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,7 +24,128 @@
 
 /* FUNCTIONS ****************************************************************/
 
-// TODO: Move SetupCreateDirectory later...
+static
+NTSTATUS
+SetupCreateSingleDirectory(
+    IN PCWSTR DirectoryName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING PathName;
+    HANDLE DirectoryHandle;
+    NTSTATUS Status;
+
+    if (!RtlCreateUnicodeString(&PathName, DirectoryName))
+        return STATUS_NO_MEMORY;
+
+    if (PathName.Length > sizeof(WCHAR) &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
+    {
+        PathName.Length -= sizeof(WCHAR);
+        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    if (PathName.Length > sizeof(WCHAR) &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+        PathName.Length -= sizeof(WCHAR);
+        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PathName,
+                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&DirectoryHandle,
+                          FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_DIRECTORY,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN_IF,
+                          FILE_OPEN_FOR_BACKUP_INTENT | FILE_DIRECTORY_FILE,
+                          NULL,
+                          0);
+    if (NT_SUCCESS(Status))
+    {
+        NtClose(DirectoryHandle);
+    }
+
+    RtlFreeUnicodeString(&PathName);
+
+    return Status;
+}
+
+NTSTATUS
+SetupCreateDirectory(
+    IN PCWSTR PathName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PWCHAR PathBuffer = NULL;
+    PWCHAR Ptr, EndPtr;
+    ULONG BackslashCount;
+    ULONG Size;
+
+    Size = (wcslen(PathName) + 1) * sizeof(WCHAR);
+    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    if (PathBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    wcscpy(PathBuffer, PathName);
+    EndPtr = PathBuffer + wcslen(PathName);
+
+    Ptr = PathBuffer;
+
+    /* Skip the '\Device\HarddiskX\PartitionY\ part */
+    BackslashCount = 0;
+    while (Ptr < EndPtr && BackslashCount < 4)
+    {
+        if (*Ptr == L'\\')
+            BackslashCount++;
+
+        Ptr++;
+    }
+
+    while (Ptr < EndPtr)
+    {
+        if (*Ptr == L'\\')
+        {
+            *Ptr = 0;
+
+            DPRINT("PathBuffer: %S\n", PathBuffer);
+            if (!DoesDirExist(NULL, PathBuffer))
+            {
+                DPRINT("Create: %S\n", PathBuffer);
+                Status = SetupCreateSingleDirectory(PathBuffer);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+            }
+
+            *Ptr = L'\\';
+        }
+
+        Ptr++;
+    }
+
+    if (!DoesDirExist(NULL, PathBuffer))
+    {
+        DPRINT("Create: %S\n", PathBuffer);
+        Status = SetupCreateSingleDirectory(PathBuffer);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+done:
+    DPRINT("Done.\n");
+    if (PathBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+
+    return Status;
+}
 
 NTSTATUS
 SetupDeleteFile(
@@ -184,8 +306,8 @@ SetupCopyFile(
                              FileHandleSource);
     if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection failed: %x, %S\n", Status, SourceFileName);
-      goto closesrc;
+        DPRINT1("NtCreateSection failed: %x, %S\n", Status, SourceFileName);
+        goto closesrc;
     }
 
     Status = NtMapViewOfSection(SourceFileSection,

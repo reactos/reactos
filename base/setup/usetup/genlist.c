@@ -356,16 +356,19 @@ DrawGenericListCurrentItem(
     IN SHORT Left,
     IN SHORT Top)
 {
-    //
-    // FIXME: That stuff crashes when the list is empty!!
-    //
     CHAR CurrentItemText[256];
-    if (GetEntryDescriptionProc)
+
+    if (GetEntryDescriptionProc &&
+        GetNumberOfListEntries(List) > 0)
     {
         GetEntryDescriptionProc(GetCurrentListEntry(List),
                                 CurrentItemText,
                                 ARRAYSIZE(CurrentItemText));
         CONSOLE_SetTextXY(Left, Top, CurrentItemText);
+    }
+    else
+    {
+        CONSOLE_SetTextXY(Left, Top, "");
     }
 }
 

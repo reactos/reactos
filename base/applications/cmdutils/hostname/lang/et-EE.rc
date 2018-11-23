@@ -1,0 +1,8 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Trükib praeguse hosti nime.\n\nhostname"
+    IDS_NOSET "hostname -s ei ole toetatud."
+    IDS_ERROR "Win32 tõrge"
+END

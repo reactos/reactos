@@ -97,7 +97,7 @@ static VOID InitIgnoreFreeLibrary(PCSTR CommandLine)
         if (!names[n])
         {
             SHIM_WARN("Unable to allocate %u bytes\n", cur - prev + 2);
-            return;
+            goto fail;
         }
         n++;
         prev = cur + 1;
@@ -106,11 +106,23 @@ static VOID InitIgnoreFreeLibrary(PCSTR CommandLine)
     if (!names[n])
     {
         SHIM_WARN("Unable to allocate last string\n");
-        return;
+        goto fail;
     }
 
     g_Names = names;
     g_NameCount = count;
+    return;
+
+fail:
+    --n;
+    while (n >= 0)
+    {
+        if (names[n])
+            ShimLib_ShimFree((PVOID)names[n]);
+
+        --n;
+    }
+    ShimLib_ShimFree(names);
 }
 
 BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason, PVOID ptr)

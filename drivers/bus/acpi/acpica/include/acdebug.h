@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -342,6 +342,12 @@ AcpiDbExecute (
     char                    **Args,
     ACPI_OBJECT_TYPE        *Types,
     UINT32                  Flags);
+
+void
+AcpiDbCreateExecutionThread (
+    char                    *MethodNameArg,
+    char                    **Arguments,
+    ACPI_OBJECT_TYPE        *Types);
 
 void
 AcpiDbCreateExecutionThreads (

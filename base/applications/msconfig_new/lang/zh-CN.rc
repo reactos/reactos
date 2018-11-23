@@ -15,7 +15,7 @@ BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
     LTEXT           "系统配置实用程序\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
-    LTEXT           "版权所有 (C) ReactOS 团队 2005-2015\n\
+    LTEXT           "版权所有 (C) ReactOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",

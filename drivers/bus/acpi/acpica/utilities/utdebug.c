@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -182,7 +182,9 @@ AcpiDebugPrint (
 {
     ACPI_THREAD_ID          ThreadId;
     va_list                 args;
-
+#ifdef ACPI_APPLICATION
+    int                     FillCount;
+#endif
 
     /* Check if debug output enabled */
 
@@ -226,10 +228,21 @@ AcpiDebugPrint (
         AcpiOsPrintf ("[%u] ", (UINT32) ThreadId);
     }
 
-    AcpiOsPrintf ("[%02ld] ", AcpiGbl_NestingLevel);
-#endif
+    FillCount = 48 - AcpiGbl_NestingLevel -
+        strlen (AcpiUtTrimFunctionName (FunctionName));
+    if (FillCount < 0)
+    {
+        FillCount = 0;
+    }
 
+    AcpiOsPrintf ("[%02ld] %*s",
+        AcpiGbl_NestingLevel, AcpiGbl_NestingLevel + 1, " ");
+    AcpiOsPrintf ("%s%*s: ",
+        AcpiUtTrimFunctionName (FunctionName), FillCount, " ");
+
+#else
     AcpiOsPrintf ("%-22.22s: ", AcpiUtTrimFunctionName (FunctionName));
+#endif
 
     va_start (args, Format);
     AcpiOsVprintf (Format, args);

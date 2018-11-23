@@ -7,8 +7,8 @@
 ---
 
 <p align=center>
-  <a href="https://reactos.org/project-news/reactos-049-released">
-    <img alt="ReactOS 0.4.9 Release" src="https://img.shields.io/badge/release-0.4.9-0688CB.svg">
+  <a href="https://reactos.org/project-news/reactos-0410-released">
+    <img alt="ReactOS 0.4.10 Release" src="https://img.shields.io/badge/release-0.4.10-0688CB.svg">
   </a>
   <a href="https://reactos.org/download">
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
@@ -27,7 +27,7 @@
   </a>
 </p>
 
-## Quick Links 
+## Quick Links
 
 - [Website](https://reactos.org)
 - [Wiki](https://reactos.org/wiki)
@@ -44,14 +44,14 @@ The ReactOS project, although currently focused on Windows Server 2003 compatibi
 
 The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
 
-## Building 
+## Building
 
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
 
-To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._ 
-Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: http://www.reactos.org/wiki/Build_Environment.
+To build the system it is strongly advised to use the _ReactOS Build Environment (RosBE)._
+Up-to-date versions for Windows and for Unix/GNU-Linux are available from our download page at: ["Build Environment"](http://www.reactos.org/wiki/Build_Environment).
 
-Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: https://www.reactos.org/wiki/Building_with_MSVC.
+Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://www.reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
 
 ### Binaries
 
@@ -69,7 +69,7 @@ You can always download fresh binary builds of bootable images from the ["Daily 
 ## Installing
 
 By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition. 
-The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32. 
+The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
 ReactOS Setup can format the partitions if needed.
 
 Starting 0.4.10, ReactOS can be installed using the BtrFS file system. But
@@ -82,7 +82,7 @@ See ["Installing ReactOS"](https://www.reactos.org/wiki/Installing_ReactOS) Wiki
 
 ## Testing
 
-If you discover a bug in ReactOS search on JIRA first - it might be reported already. If not report the bug providing logs and as many information as possible. 
+If you discover a bug in ReactOS search on JIRA first - it might be reported already. If not report the bug providing logs and as much information as possible.
 
 See ["File Bugs"](https://www.reactos.org/wiki/File_Bugs) for a guide.
 
@@ -103,25 +103,25 @@ It is not another wrapper built on Linux, like WINE. It does not attempt or plan
 
 ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
-More information is available at: https://www.reactos.org.
+More information is available at: [reactos.org](https://www.reactos.org).
 
 Also see the [media/doc](/media/doc/) subdirectory for some sparse notes.
 
 ## Who is responsible
 
-Active devs are listed as members of [GitHub organization](https://github.com/orgs/reactos/people). 
+Active devs are listed as members of [GitHub organization](https://github.com/orgs/reactos/people).
 See also the [CREDITS](CREDITS) file for others.
 
 ## Code mirrors
 
-The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/?p=reactos.git) in case GitHub is down. 
+The main development is done on [GitHub](https://github.com/reactos/reactos). We have an [alternative mirror](https://git.reactos.org/?p=reactos.git) in case GitHub is down.
 
-There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/reactos?view=revision) that is kept for historical purposes.
+There is also an obsolete [SVN archive repository](https://svn.reactos.org/reactos/) that is kept for historical purposes.
 
 [travis.badge]:     https://travis-ci.org/reactos/reactos.svg?branch=master
 [appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.6-0688CB.svg   
+[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.6-0688CB.svg
 [rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-0688CB.svg
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
@@ -129,4 +129,4 @@ There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/r
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
 [rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.6/
-[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/  
+[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/

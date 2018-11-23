@@ -1484,7 +1484,7 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
+        "Installationen kunne ikke installere %S-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {
@@ -1535,7 +1535,7 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Installationen kunne ikke installere FAT-startkode p† systempartitionen.",
+        "Installationen kunne ikke installere %S-startkode p† systempartitionen.",
         "ENTER = Genstart"
     },
     {

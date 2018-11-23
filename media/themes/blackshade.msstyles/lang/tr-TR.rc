@@ -1,39 +1,39 @@
-/* TRANSLATOR: 2017 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2017 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Kara Gölge"
+1000, "Black Shade"
 }
 
 STRINGTABLE
 {
-2000, "Kara Gölge"
+2000, "Black Shade"
 }
 
 STRINGTABLE
 {
-3000, "Düzgülü"
+3000, "Normal"
 3001, "Büyük Yazı Tipleri"
 3002, "Çok Büyük Yazı Tipleri"
 }
 
 STRINGTABLE
 {
-4000, "Düzgülü"
+4000, "Normal"
 4001, "Büyük Yazı Tipleri"
 4002, "Çok Büyük Yazı Tipleri"
 }
 
 STRINGTABLE
 {
-5000, "Kara Gölge"
-5001, "Görmelik Biçim"
+5000, "Black Shade"
+5001, "Görsel Biçim"
 5002, "ReactOS Vakfı"
-5003, "David Quintana <gigaherz@gmail.com> eliyle resimler"
+5003, "David Quintana <gigaherz@gmail.com> tarafından resimler"
 5004, "Resimler CC-BY-SA 4.0 altında yayımlanmaktadır"
 5005, "http://www.reactos.org"
 5006, "1.0"
-5007, "ReactOS İçin Görmelik Biçim"
+5007, "ReactOS İçin Görsel Biçim"
 }

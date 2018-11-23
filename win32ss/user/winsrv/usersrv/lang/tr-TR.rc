@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Program sonlandırılıyor... Lütfen bekleyiniz.", IDC_STATIC, 7, 7, 186, 11
     CONTROL "İlerleme", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 7, 20, 186, 13
-    LTEXT "Programı hemen kapatmayı seçerseniz, tüm saklanmamış veriyi yitireceksiniz. Programdan şimdi çıkmak için Şimdi Sonlandır'a tıklayınız.", IDC_STATIC, 7, 40, 186, 26
+    LTEXT "Programı hemen kapatmayı seçerseniz, bütün kaydedilmiş veriyi kaybedeceksiniz. Programdan şimdi çıkmak için ""Şimdi Sonlandır""'a tıklayınız.", IDC_STATIC, 7, 40, 186, 26
     DEFPUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 150, 71, 43, 17
 END
 
@@ -22,22 +22,22 @@ BEGIN
     PUSHBUTTON "&Şimdi Sonlandır", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Bu program yanıt vermiyor.", IDC_STATIC, 7, 7, 178, 8
     LTEXT "ReactOS'a dönmek ve programın durumunu denetlemek için İptal'e tıklayınız.", IDC_STATIC, 7, 26, 178, 16
-    LTEXT "Programı hemen kapatmayı seçerseniz, tüm saklanmamış veriyi yitireceksiniz. Programdan şimdi çıkmak için Şimdi Sonlandır'a tıklayınız.", IDC_STATIC, 7, 53, 178, 26
+    LTEXT "Programı hemen kapatmayı seçerseniz, tüm saklanmamış veriyi yitireceksiniz. Programdan şimdi çıkmak için ""Şimdi Sonlandır""'a tıklayınız.", IDC_STATIC, 7, 53, 178, 26
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_SEVERITY_SUCCESS        "Success"
-    IDS_SEVERITY_INFORMATIONAL  "System Information"
-    IDS_SEVERITY_WARNING        "System Warning"
-    IDS_SEVERITY_ERROR          "System Error"
+    IDS_SEVERITY_SUCCESS        "Başarı"
+    IDS_SEVERITY_INFORMATIONAL  "Sistem Bilgisi"
+    IDS_SEVERITY_WARNING        "Sistem Uyarısı"
+    IDS_SEVERITY_ERROR          "Sistem Hatası"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYSTEM_PROCESS          "System Process"
-    IDS_UNKNOWN_SOFTWARE_EXCEPT "unknown software exception"
-    IDS_OK_TERMINATE_PROGRAM    "Click on OK to terminate the program."
-    IDS_CANCEL_DEBUG_PROGRAM    "Click on CANCEL to debug the program."
+    IDS_SYSTEM_PROCESS          "Sistem İşlemi"
+    IDS_UNKNOWN_SOFTWARE_EXCEPT "bilinmeyen yazılım istisnası"
+    IDS_OK_TERMINATE_PROGRAM    "Programı sonlandırmak için Tamam'a basınız."
+    IDS_CANCEL_DEBUG_PROGRAM    "Programda hata ayıklamak için İptal'e basınız."
 END

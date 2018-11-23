@@ -1,0 +1,33 @@
+/* TRANSLATOR: 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+[drive:]    Specifies the drive to check.\n\
+-F          Disk üzerindeki hataları onarır.\n\
+-V          Disk üzerindeki bütün dosyaların tam yollarını görüntüler.\n\
+-R          Bozuk sektörlerin yerlerini saptar ve okunabilir bilgiyi kurtarır.\n\
+-C          Yalnızca bozuksa diski denetler.\n\
+\n"
+
+    IDS_PERCENT_COMPL "Yüzde %d tamamlandı.\r"
+    IDS_FILE_SYSTEM "Dosya sistemin türü %s'tır.\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS'a uyarlaması 1999 Emanuele Aliberti tarafından\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "Bölüm kullanımda ve kilitlenmiyor.\n"
+    IDS_CHKDSK_FAIL "Chkdsk, başarıyla tamamlanamadı.\n\n"
+    IDS_NO_ENTRY_POINT "FMIFS giriş noktaların yerleri saptanamıyor.\n\n"
+    IDS_BAD_ARGUMENT "Bilinmeyen argüman: %s\n"
+    IDS_NO_CURRENT_DIR "Gerçerli dizin alınamıyor. Hata kodu: "
+    IDS_NO_QUERY_VOL "Bölüm sorgulanamıyor. Hata kodu: "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk çalıştırılamıyor; çünkü, bölüm, bir başka işlem tarafından kullanılıyor.\n\n"
+END

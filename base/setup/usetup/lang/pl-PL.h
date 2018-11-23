@@ -84,19 +84,19 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Naciònij ENTER, aby zainstalowaÜ lub uaktualniÜ system ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciònij R, aby naprawiÜ zainstalowany system ReactOS.",
+        "\x07  Naciònij R, aby naprawiÜ istniej•c• instalacj© systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naciònij L, aby zapoznaÜ si© z licencj• ReactOS",
+        "\x07  Naciònij L, aby zapoznaÜ si© z licencj• systemu ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
@@ -348,7 +348,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     {
         24,
         12,
-        "Ekran:",
+        "Monitor:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -429,7 +429,7 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
+        "Instalator systemu ReactOS wci•æ jest we wczesnej fazie rozwoju. Nadal nie",
         TEXT_STYLE_NORMAL
     },
     {
@@ -465,7 +465,7 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         8,
         21,
-        "\x07  Naciònij ENTER, by zrestartowaÜ komputer.",
+        "\x07  Naciònij ENTER, by uruchomiÜ ponownie komputer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -487,61 +487,61 @@ static MUI_ENTRY plPLUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalator ReactOS " KERNEL_VERSION_STR "  ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "Instalator moæe uaktualniÜ jedn• z poniæszych instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "Jeòli instalacja systemu ReactOS jest uszkodzona, instalator moæe",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "podj•Ü pr¢b© jej naprawy.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "Funkcje naprawcze nie s• jeszcze zaimplementowane.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz instalacj© systemu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  Naciònij U, aby uaktualniÜ wybran• instalacj© systemu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  Naciònij ESC, aby wykonaÜ now• instalacj© systemu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Naciònij F3, aby wyjòÜ bez instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = Uaktualnienie   ESC = Nowa instalacja   F3 = Wyjòcie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -563,13 +563,13 @@ static MUI_ENTRY plPLComputerPageEntries[] =
     {
         6,
         8,
-        "Aby zmieniÜ typ komputera, na kt¢rym chcesz zainstalowaÜ ReactOS",
+        "Aby zmieniÜ typ komputera, na kt¢rym chcesz zainstalowaÜ system ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni typ komputera.",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz odpowiedni typ komputera.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -615,13 +615,13 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         10,
         6,
-        "System obecnie sprawdza czy dane s• poprawnie zapisane na dysku",
+        "System ReactOS sprawdza, czy dane s• poprawnie zapisane na dysku",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "To moæe zaj•Ü minut©.",
+        "To moæe zaj•Ü kilka minut.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,13 +655,13 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS zostaà juæ poprawnie zainstalowany",
+        "System ReactOS nie zostaà zainstalowany na tym komputerze.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Upewnij si© æe w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© æe w nap©dzie A: nie ma dyskietki, a",
         TEXT_STYLE_NORMAL
     },
     {
@@ -673,7 +673,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         11,
-        "Naciònij ENTER, by zrestartowaÜ komputer.",
+        "Naciònij ENTER, by ponownie uruchomiÜ komputer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -701,12 +701,12 @@ static MUI_ENTRY plPLDisplayPageEntries[] =
     {
         6,
         8,
-        "Chcesz zmieniÜ rozdzielczoòÜ ekranu.",
+        "Chcesz zmieniÜ rozdzielczoòÜ monitora.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ rozdzielczoòÜ i liczb©",
+         "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz rozdzielczoòÜ i lloòÜ",
          TEXT_STYLE_NORMAL
     },
     {
@@ -758,7 +758,7 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         10,
         8,
-        "Upewnij si© æe w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© æe w nap©dzie A: nie ma dyskietki, a",
         TEXT_STYLE_NORMAL
     },
     {
@@ -770,13 +770,13 @@ static MUI_ENTRY plPLSuccessPageEntries[] =
     {
         10,
         11,
-        "Naciònij ENTER, by zrestartowaÜ komputer.",
+        "Naciònij ENTER, by ponownie uruchomiÜ komputer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Restart komputera",
+        "ENTER = Ponowne uruchomienie komputera",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -798,25 +798,25 @@ static MUI_ENTRY plPLBootPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS nie moæe zainstalowaÜ menedæera",
+        "Instalator systemu ReactOS nie moæe zainstalowaÜ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "rozruchu na twoim dysku twardym",
+        "menedæera rozruchu na dysku twardym",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Prosz© umieòciÜ sformatowan• dyskietk© w nap©dzie A:",
+        "Wà¢æ sformatowan• dyskietk© do nap©du A:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "i nacisn•Ü klawisz ENTER.",
+        "i nacisnij klawisz ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -845,7 +845,7 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         6,
         8,
-        "Poniæsza lista pokazuje istniej•ce partycje i puste",
+        "Poniæsza lista pokazuje istniej•ce partycje i nieprzydzielone",
         TEXT_STYLE_NORMAL
     },
     {
@@ -857,31 +857,31 @@ static MUI_ENTRY plPLSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Naciònij G‡RA lub D‡ù, by wybraÜ pozycj© z listy.",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz pozycj© z listy.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Naciònij ENTER, by zainstalowaÜ ReactOS na wybranej partycji.",
+        "\x07  Naciònij ENTER, by zainstalowaÜ system ReactOS na wybranej partycji.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Naciònij P, by stworzyÜ partycj© podstawow•.",
+        "\x07  Naciònij P, by utworzyÜ partycj© podstawow•.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naciònij E, by stworzyÜ partycj© rozszerzon•.",
+        "\x07  Naciònij E, by utworzyÜ partycj© rozszerzon•.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naciònij L, by stworzyÜ partycj© logiczn•.",
+        "\x07  Naciònij L, by utworzyÜ partycj© logiczn•.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1095,7 +1095,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         11,
         12,
-        "Prosz© czekaÜ, Instalator ReactOS kopiuje pliki do wybranego",
+        "Prosz© czekaÜ, Instalator systemu ReactOS kopiuje pliki do wybranego",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1193,7 +1193,7 @@ static MUI_ENTRY plPLKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni typ klawiatury.",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz odpowiedni typ klawiatury.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1239,13 +1239,13 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Prosz© wybraÜ domyòlnie instalowany ukàad klawiatury.",
+        "Wybierz domyòlnie instalowany ukàad klawiatury.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Naciònij klawisz G‡RA albo D‡ù, by wybraÜ odpowiedni ukàad",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz odpowiedni ukàad",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1327,7 +1327,7 @@ static MUI_ENTRY plPLSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Naciònij klawisz G‡RA alub D‡ù, by wybraÜ system plik¢w.",
+        "\x07  Uæywaj•c klawiszy G‡RA lub D‡ù, wybierz system plik¢w.",
         0
     },
     {
@@ -1368,7 +1368,7 @@ static MUI_ENTRY plPLDeletePartitionEntries[] =
     {
         6,
         8,
-        "Chcesz usun•Ü wybran• partycj©",
+        "Chcesz usun•Ü wybran• partycj©.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1440,9 +1440,9 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS nie zostaà w peàni zainstalowany na twoim\n"
+        "System ReactOS nie zostaà w peàni zainstalowany na twoim\n"
         "komputerze. Jeòli wyjdziesz teraz, trzeba b©dzie\n"
-        "ponownie uruchomiÜ instalator, by zainstalowaÜ ReactOS.\n"
+        "ponownie uruchomiÜ instalator, by zainstalowaÜ system ReactOS.\n"
         "\n"
         "  \x07  Naciònij ENTER, aby kontynuowaÜ instalacj©.\n"
         "  \x07  Naciònij F3, aby wyjòÜ z instalatora.",
@@ -1450,58 +1450,58 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_NO_HDD
-        "Instalator nie znalazà æadnego dysku twardego.\n",
-        "ENTER = Restart komputera"
+        "Instalator nie wykryà æadnego dysku twardego.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_NO_SOURCE_DRIVE
-        "Instalator nie znalazà nap©du ´r¢dàowego.\n",
-        "ENTER = Restart komputera"
+        "Instalator nie wykryà nap©du ´r¢dàowego.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
         "Instalator nie m¢gà zaàadowaÜ pliku TXTSETUP.SIF.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "Instalator znalazà uszkodzony plik TXTSETUP.SIF.\n",
-        "ENTER = Restart komputera"
+        "Instalator wykryà, æe TXTSETUP.SIF jest uszkodzony.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Instalator znalazà nieprawidàowy wpis w TXTSETUP.SIF.\n",
-        "ENTER = Restart komputera"
+        "Instalator wykryà nieprawidàowy wpis w pliku TXTSETUP.SIF.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_DRIVE_INFORMATION
         "Instalator nie m¢gà odczytaÜ informacji o nap©dzie.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_WRITE_BOOT,
         "Nieudane zapisanie FAT bootcode na partycji systemowej.",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_LOAD_COMPUTER,
         "Instalator nie m¢gà zaàadowaÜ listy typ¢w komputera.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_LOAD_DISPLAY,
-        "Instalator nie m¢gà zaàadowaÜ listy ustawie‰ ekranu.\n",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà zaàadowaÜ listy ustawie‰ monitora.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_LOAD_KEYBOARD,
         "Instalator nie m¢gà zaàadowaÜ listy typ¢w klawiatury.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_LOAD_KBLAYOUT,
         "Instalator nie m¢gà zaàadowaÜ listy ukàad¢w klawiatury.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_WARN_PARTITION,
@@ -1516,7 +1516,7 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_NEW_PARTITION,
-        "Nie moæesz stworzyÜ nowej partycji w miejscu juæ\n"
+        "Nie moæna utworzyÜ nowej partycji w miejscu juæ\n"
         "istniej•cej!\n"
         "\n"
         "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
@@ -1524,15 +1524,15 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_DELETE_SPACE,
-        "Nie moæesz usun•Ü pustej przestrzeni, gdzie nie ma æadnej partycji!\n"
+        "Nie moæna usun•Ü nieprzydzielonego miejsca, gdzie nie ma æadnej partycji!\n"
         "\n"
         "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
         NULL
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Nieudana instalacja FAT bootcode na partycji systemowej.",
-        "ENTER = Restart komputera"
+        "Nieudana instalacja %S bootcode na partycji systemowej.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_NO_FLOPPY,
@@ -1542,99 +1542,99 @@ MUI_ERROR plPLErrorEntries[] =
     {
         // ERROR_UPDATE_KBSETTINGS,
         "Instalator nie m¢gà zmieniÜ ukàadu klawiatury.",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Instalator nie m¢gà zmieniÜ ustawie‰ ekranu w rejestrze.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà zmieniÜ ustawie‰ monitora w rejestrze.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_IMPORT_HIVE,
         "Instalator nie byà w stanie zaimportowaÜ pliku gaà©zi rejestru.",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_FIND_REGISTRY
-        "Instalator nie byà w stanie znale´Ü plik¢w z danymi rejestru.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà odnale´Ü plik¢w z danymi rejestru.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CREATE_HIVE,
-        "Instalator nie m¢gà stworzyÜ gaà©zi rejestru.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà utworzyÜ gaà©zi rejestru.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_INITIALIZE_REGISTRY,
-        "Instalator nie byà w stanie ustawiÜ inicjalizacji rejestru.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà ustawiÜ inicjalizacji rejestru.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "Cabinet nie zawiera prawidàowego pliku inf.\n",
-        "ENTER = Restart komputera"
+        "Plik Cabinet nie zawiera prawidàowego pliku informacji instalatora.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CABINET_MISSING,
-        "Cabinet nie zostaà znaleziony.\n",
-        "ENTER = Restart komputera"
+        "Plik Cabinet nie zostaà odnaleziony.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "Cabinet nie zawiera skryptu instalacji.\n",
-        "ENTER = Restart komputera"
+        "Plik Cabinet nie zawiera skryptu instalacji.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_COPY_QUEUE,
-        "Instalator nie byà w stanie otworzyÜ kolejki kopiowania pliku.\n",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà otworzyÜ kolejki kopiowania pliku.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CREATE_DIR,
-        "Instalator nie m¢gà stworzyÜ katalog¢w.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà utworzyÜ katalog¢w.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_TXTSETUP_SECTION,
-        "Instalator nie byà w stanie znale´Ü sekcji '%S'\n"
+        "Instalator nie m¢gà odnale´Ü sekcji '%S'\n"
         "w pliku TXTSETUP.SIF.\n",
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CABINET_SECTION,
-        "Instalator nie byà w stanie znale´Ü sekcji '%S'\n"
-        "w pliku cabinet.\n",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà odnale´Ü sekcji '%S'\n"
+        "w pliku Cabinet.\n",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "Instalator nie m¢gà stworzyÜ katalogu instalacji.",
-        "ENTER = Restart komputera"
+        "Instalator nie m¢gà utworzyÜ katalogu instalacji.",
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_WRITE_PTABLE,
         "Instalator nie m¢gà zapisaÜ zmian w tablicy partycji.\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_ADDING_CODEPAGE,
         "Instalator nie m¢gà dodaÜ strony kodowania do rejestru.\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
         "Instalator nie m¢gà ustawiÜ wersji j©zykowej.\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
         "Instalator nie m¢gà dodaÜ ukàad¢w klawiatury do rejestru.\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_UPDATE_GEOID,
         "Instalator nie m¢gà ustawiÜ lokalizacji geograficznej.\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         // ERROR_DIRECTORY_NAME,
@@ -1644,22 +1644,22 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Wybrana partycja nie jest wystarczaj•co duæa, aby zainstalowaÜ ReactOS.\n"
-        "Instalacyjna partycja musi mieÜ rozmiar co najmniej %lu MB.\n"
+        "Wybrana partycja nie jest wystarczaj•co duæa, aby zainstalowaÜ system ReactOS.\n"
+        "Partycja instalacyjna musi mieÜ rozmiar co najmniej %lu MB.\n"
         "\n"
         "  * Naciònij dowolny klawisz, aby kontynuowaÜ.",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "Nie moæna utworzyÜ na tym dysku partycji podstawowej lub\n" // FIXME
-        "rozszerzonej, poniewaæ tabela partycji jest pe©na.\n"
+        "Nie moæna utworzyÜ partycji podstawowej lub rozszerzonej, \n" // FIXME
+        "poniewaæ tabela partycji na tym dysku jest peàna.\n"
         "\n"
         "  * Naciònij dowolny klawisz, aby kontynuowaÜ."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "Nie moæesz utworzyÜ wi©cej niæ jednej partycji rozszerzonej na dysku.\n"
+        "Nie moæna utworzyÜ wi©cej niæ jednej partycji rozszerzonej na dysku.\n"
         "\n"
         "  * Naciònij dowolny klawisz, aby kontynuowaÜ."
     },
@@ -1668,7 +1668,7 @@ MUI_ERROR plPLErrorEntries[] =
         "Instalator nie m¢gà sformatowaÜ partycji:\n"
         " %S\n"
         "\n"
-        "ENTER = Restart komputera"
+        "ENTER = Ponowne uruchomienie komputera"
     },
     {
         NULL,
@@ -1789,13 +1789,13 @@ MUI_STRING plPLStrings[] =
     {STRING_PLEASEWAIT,
      "   Prosz© czekaÜ..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  ENTER = Instalacja   P = Partycja Podstawowa   E = Rozszerzona   F3 = Wyjòcie"},
+     "  ENTER = Instalacja   P = Partycja podstawowa   E = Rozszerzona   F3 = Wyjòcie"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalacja   L = Utworzenie Partycji Logicznej   F3 = Wyjòcie"},
+     "   ENTER = Instalacja   L = Utworzenie partycji logicznej   F3 = Wyjòcie"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Instalacja   D = Usuni©cie Partycji   F3 = Wyjòcie"},
+     "   ENTER = Instalacja   D = Usuni©cie partycji   F3 = Wyjòcie"},
     {STRING_DELETEPARTITION,
-     "   D = Usuni©cie Partycji   F3 = Wyjòcie"},
+     "   D = Usuni©cie partycji   F3 = Wyjòcie"},
     {STRING_PARTITIONSIZE,
      "Rozmiar nowej partycji:"},
     {STRING_CHOOSENEWPARTITION,
@@ -1807,11 +1807,11 @@ MUI_STRING plPLStrings[] =
     {STRING_HDDSIZE,
     "Prosz© wprowadziÜ rozmiar nowej partycji w megabajtach."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Utworzenie Partycji   ESC = Anulowanie   F3 = Wyjòcie"},
+     "   ENTER = Utworzenie partycji   ESC = Anulowanie   F3 = Wyjòcie"},
     {STRING_PARTFORMAT,
     "Nast©puj•ca partycja zostanie sformatowana."},
     {STRING_NONFORMATTEDPART,
-    "Moæesz zainstalowaÜ ReactOS na nowej lub niesformatowanej partycji."},
+    "Moæesz zainstalowaÜ system ReactOS na nowej lub niesformatowanej partycji."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "Partycja systemowa nie jest jeszcze sformatowana."},
     {STRING_NONFORMATTEDOTHERPART,
@@ -1825,13 +1825,13 @@ MUI_STRING plPLStrings[] =
     {STRING_QUITCONTINUE,
     "F3 = Wyjòcie  ENTER = Kontynuacja"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Restart komputera"},
+    "ENTER = Ponowne uruchomienie komputera"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Usuwanie pliku: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Przenoszenie pliku z: %S do: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Zmienianie nazwy pliku z: %S na: %S"},
     {STRING_COPYING,
      "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1841,7 +1841,7 @@ MUI_STRING plPLStrings[] =
     {STRING_IMPORTFILE,
     "   Importowanie %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   Zmiana ustawie‰ ekranu w rejestrze..."},
+    "   Zmiana ustawie‰ monitora w rejestrze..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Zmiana wersji j©zykowej..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
@@ -1851,7 +1851,7 @@ MUI_STRING plPLStrings[] =
     {STRING_DONE,
     "   Uko‰czone..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Restart komputera"},
+    "   ENTER = Ponowne uruchomienie komputera"},
     {STRING_REBOOTPROGRESSBAR,
     " Komputer zostanie uruchomiony ponownie za %li sekund(y)... "},
     {STRING_CONSOLEFAIL1,
@@ -1865,33 +1865,33 @@ MUI_STRING plPLStrings[] =
     {STRING_CHECKINGDISK,
     "Instalator sprawdza tw¢j dysk"},
     {STRING_FORMATDISK1,
-    " Sformatuj partycj© z systemem plik¢w %S (szybkie formatowanie) "},
+    " Formatuj partycj© w systemie plik¢w %S (szybkie formatowanie) "},
     {STRING_FORMATDISK2,
-    " Sformatuj partycj© z systemem plik¢w %S "},
+    " Formatuj partycj© w systemie plik¢w %S "},
     {STRING_KEEPFORMAT,
     " Zachowaj obecny system plik¢w (bez zmian) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
+    "%I64u %s  Dysku twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
     {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  Dysk 02 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
+    "%I64u %s  Dysk 02 twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  03Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE_1,
-    "na %I64u %s  Dysku Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
+    "na %I64u %s  Dysku twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]."},
     {STRING_HDINFOPARTDELETE_2,
-    "na %I64u %s  Dysku 05 Twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
+    "na %I64u %s  Dysku 05 twardym %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]."},
     {STRING_HDINFOPARTZEROED_1,
-    "Dysk Twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
+    "Dysk twardy %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  07Typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS_1,
-    "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
+    "na Dysku twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %s09Typ %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
+    "%6lu %s  Dysk twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %wZ [%s]"},
     {STRING_HDINFOPARTSELECT_2,
-    "%6lu %s  Dysk11 Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
+    "%6lu %s  Dysk11 twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Instalator utworzyà now• partycj©"},
     {STRING_UNPSPACE,
@@ -1899,9 +1899,9 @@ MUI_STRING plPLStrings[] =
     {STRING_MAXSIZE,
     "MB (maks. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Partycja Rozszerzona"},
+    "Partycja rozszerzona"},
     {STRING_UNFORMATTED,
-    "Nowa (Niesformatowana)"},
+    "Nowa (niesformatowana)"},
     {STRING_FORMATUNUSED,
     "Nieuæyte"},
     {STRING_FORMATUNKNOWN,

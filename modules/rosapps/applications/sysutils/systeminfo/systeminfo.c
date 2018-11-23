@@ -28,7 +28,6 @@
 #include <iphlpapi.h>
 #include <winsock2.h>
 #include <udmihelp.h>
-#include <dmilib.h>
 
 #include "resource.h"
 

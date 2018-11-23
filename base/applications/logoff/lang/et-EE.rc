@@ -1,0 +1,11 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Lõpetab seansi.\n\n\
+  /v\t\tKuvab informatsiooni sooritavate tegevuste kohta.\n\
+  /?\t\tKuvab seda informatsiooni.\n\n"
+    IDS_LOGOFF_REMOTE "Seansi lõpetamine kaugjuhitaval masinal."
+    IDS_LOGOFF_LOCAL "Lõpeta praegune seanss sellel masinal."
+    IDS_ILLEGAL_PARAM "Sobimatud parameetrid\n"
+END

@@ -1,5 +1,5 @@
 [Version]
-Signature="$ReactOS$"
+Signature = "$Windows NT$"
 
 [AddReg]
 HKLM,"SOFTWARE\Classes",,0x00000010

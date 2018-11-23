@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,8 +63,17 @@
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Load ACPI/AML table by executing the entire table as a
- *              TermList.
+ * DESCRIPTION: Load ACPI/AML table by executing the entire table as a single
+ *              large control method.
+ *
+ * NOTE: The point of this is to execute any module-level code in-place
+ * as the table is parsed. Some AML code depends on this behavior.
+ *
+ * It is a run-time option at this time, but will eventually become
+ * the default.
+ *
+ * Note: This causes the table to only have a single-pass parse.
+ * However, this is compatible with other ACPI implementations.
  *
  ******************************************************************************/
 
@@ -124,8 +133,9 @@ AcpiNsExecuteTable (
         goto Cleanup;
     }
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-        "Create table code block: %p\n", MethodObj));
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_PARSE,
+        "%s: Create table pseudo-method for [%4.4s] @%p, method %p\n",
+        ACPI_GET_FUNCTION_NAME, Table->Signature, Table, MethodObj));
 
     MethodObj->Method.AmlStart = AmlStart;
     MethodObj->Method.AmlLength = AmlLength;
@@ -294,9 +304,21 @@ AcpiNsParseTable (
     ACPI_FUNCTION_TRACE (NsParseTable);
 
 
-    if (AcpiGbl_ParseTableAsTermList)
+    if (AcpiGbl_ExecuteTablesAsMethods)
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE, "**** Start load pass\n"));
+        /*
+         * This case executes the AML table as one large control method.
+         * The point of this is to execute any module-level code in-place
+         * as the table is parsed. Some AML code depends on this behavior.
+         *
+         * It is a run-time option at this time, but will eventually become
+         * the default.
+         *
+         * Note: This causes the table to only have a single-pass parse.
+         * However, this is compatible with other ACPI implementations.
+         */
+        ACPI_DEBUG_PRINT_RAW ((ACPI_DB_PARSE,
+            "%s: **** Start table execution pass\n", ACPI_GET_FUNCTION_NAME));
 
         Status = AcpiNsExecuteTable (TableIndex, StartNode);
         if (ACPI_FAILURE (Status))

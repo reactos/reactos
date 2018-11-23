@@ -372,6 +372,7 @@ FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
                 if (!NtCurrentTeb()->FlsData)
                 {
                     NtCurrentTeb()->FlsData = pFlsData;
+                    InitializeListHead(&Peb->FlsListHead);
                     InsertTailList(&Peb->FlsListHead, &pFlsData->ListEntry);
                 }
 

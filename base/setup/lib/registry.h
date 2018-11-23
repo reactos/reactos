@@ -47,15 +47,15 @@ ImportRegistryFile(
 
 NTSTATUS
 VerifyRegistryHives(
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     OUT PBOOLEAN ShouldRepairRegistry);
 
 NTSTATUS
 RegInitializeRegistry(
-    IN PUNICODE_STRING InstallPath);
+    IN PUNICODE_STRING NtSystemRoot);
 
 VOID
 RegCleanupRegistry(
-    IN PUNICODE_STRING InstallPath);
+    IN PUNICODE_STRING NtSystemRoot);
 
 /* EOF */

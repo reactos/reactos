@@ -67,7 +67,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Üldine", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Salvesta akna asukoht", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Värskenda kättesaadavate programmide nimekirja käivitusel", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "Installeerimiste ja eemalduste &logi", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Allalaadimine", -1, 4, 65, 240, 51
     LTEXT "Allalaadimiste kaust:", -1, 16, 75, 100, 9
@@ -114,8 +114,8 @@ CAPTION "Info"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "ReactOS Rakenduste Haldur\nAutoriõigus (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Close", IDOK, 133, 46, 50, 14
+    LTEXT "ReactOS'i Rakenduste Haldur\nAutoriõigus (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Sule", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -171,7 +171,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAT_AUDIO "Audio"
+    IDS_CAT_AUDIO "Heli"
     IDS_CAT_DEVEL "Arendus"
     IDS_CAT_DRIVERS "Draiverid"
     IDS_CAT_EDU "Hariv meelelahutus"
@@ -190,14 +190,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Rakenduste Haldur"
+    IDS_APPTITLE "ReactOS'i Rakenduste Haldur"
     IDS_SEARCH_TEXT "Otsi…"
     IDS_INSTALL "Installi"
     IDS_UNINSTALL "Desinstalli"
     IDS_MODIFY "Muuda"
     IDS_APPS_COUNT "Rakenduste arv: %d; Valitud: %d"
-    IDS_WELCOME_TITLE "Tere tulemast ReactOSi Rakenduste Haldurisse!\n\n"
-    IDS_WELCOME_TEXT "Vali vasakult teema, siis vali paremalt rakendusi mida soovid installida või desinstallida.\nReactOSi veebileht: "
+    IDS_WELCOME_TITLE "Tere tulemast ReactOS'i Rakenduste Haldurisse!\n\n"
+    IDS_WELCOME_TEXT "Vali vasakult teema, siis vali paremalt rakendusi mida soovid installida või desinstallida.\nReactOS'i veebileht: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Installitud"
     IDS_AVAILABLEFORINST "Installimiseks saadaval"

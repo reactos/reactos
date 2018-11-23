@@ -1,66 +1,16 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     CLanStatus: Lan connection status dialog
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+
 #include "precomp.h"
 
 #include <winsock.h>
 
-/// CLSID
-/// HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{7007ACCF-3202-11D1-AAD2-00805FC1270E}
-// IID B722BCCB-4E68-101B-A2BC-00AA00404770
-
-#define WM_SHOWSTATUSDLG    (WM_USER+10)
-
-typedef struct tagNotificationItem
-{
-    struct tagNotificationItem *pNext;
-    CLSID guidItem;
-    UINT uID;
-    HWND hwndDlg;
-    INetConnection *pNet;
-} NOTIFICATION_ITEM;
-
-typedef struct
-{
-    INetConnection *pNet;
-    HWND hwndStatusDlg;         /* LanStatusDlg window */
-    HWND hwndDlg;               /* status dialog window */
-    DWORD dwAdapterIndex;
-    UINT_PTR nIDEvent;
-    UINT DHCPEnabled;
-    DWORD dwInOctets;
-    DWORD dwOutOctets;
-    DWORD IpAddress;
-    DWORD SubnetMask;
-    DWORD Gateway;
-    UINT uID;
-    UINT Status;
-} LANSTATUSUI_CONTEXT;
-
-class CLanStatus final :
-    public IOleCommandTarget
-{
-    public:
-        CLanStatus();
-
-        // IUnknown
-        virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
-        virtual ULONG WINAPI AddRef();
-        virtual ULONG WINAPI Release();
-        
-        // IOleCommandTarget
-        virtual HRESULT WINAPI QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText);
-        virtual HRESULT WINAPI Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-    
-    private:
-        HRESULT InitializeNetTaskbarNotifications();
-        HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
-        
-        INetConnectionManager *m_lpNetMan;
-        LONG m_ref;
-        NOTIFICATION_ITEM *m_pHead;
-};
-
 CLanStatus::CLanStatus() :
     m_lpNetMan(NULL),
-    m_ref(0),
     m_pHead(NULL)
 {
 }
@@ -594,140 +544,14 @@ LANStatusUiAdvancedDlg(
     return FALSE;
 }
 
-BOOL
-FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
-{
-    DWORD dwIndex, dwSize;
-    HKEY hSubKey;
-    WCHAR szNetCfg[50];
-    WCHAR szDetail[200] = L"SYSTEM\\CurrentControlSet\\Control\\Class\\";
-
-    dwIndex = 0;
-    do
-    {
-
-        ZeroMemory(pDevInfo, sizeof(SP_DEVINFO_DATA));
-        pDevInfo->cbSize = sizeof(SP_DEVINFO_DATA);
-
-        /* get device info */
-        if (!SetupDiEnumDeviceInfo(hInfo, dwIndex++, pDevInfo))
-            break;
-
-        /* get device software registry path */
-        if (!SetupDiGetDeviceRegistryPropertyW(hInfo, pDevInfo, SPDRP_DRIVER, NULL, (LPBYTE)&szDetail[39], sizeof(szDetail)/sizeof(WCHAR) - 40, &dwSize))
-            break;
-
-        /* open device registry key */
-        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szDetail, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
-            break;
-
-        /* query NetCfgInstanceId for current device */
-        dwSize = sizeof(szNetCfg);
-        if (RegQueryValueExW(hSubKey, L"NetCfgInstanceId", NULL, NULL, (LPBYTE)szNetCfg, &dwSize) != ERROR_SUCCESS)
-        {
-            RegCloseKey(hSubKey);
-            break;
-        }
-        RegCloseKey(hSubKey);
-        if (!_wcsicmp(pGuid, szNetCfg))
-        {
-            return TRUE;
-        }
-    } while (TRUE);
-
-    return FALSE;
-}
-
 VOID
 DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWND hwndDlg)
 {
-    HKEY hKey;
-    NETCON_PROPERTIES * pProperties;
-    LPOLESTR pDisplayName;
-    WCHAR szPath[200];
-    DWORD dwSize, dwType;
-    LPWSTR pPnp;
-    HDEVINFO hInfo;
-    SP_DEVINFO_DATA DevInfo;
-    SP_PROPCHANGE_PARAMS PropChangeParams;
-    BOOL bClose = FALSE;
+    HRESULT hr = pNet->Disconnect();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
     NOTIFYICONDATAW nid;
-
-    if (FAILED(pNet->GetProperties(&pProperties)))
-        return;
-
-
-    hInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_NET, NULL, NULL, DIGCF_PRESENT );
-    if (!hInfo)
-    {
-        NcFreeNetconProperties(pProperties);
-        return;
-    }
-
-    if (FAILED(StringFromCLSID((CLSID)pProperties->guidId, &pDisplayName)))
-    {
-        NcFreeNetconProperties(pProperties);
-        SetupDiDestroyDeviceInfoList(hInfo);
-        return;
-    }
-    NcFreeNetconProperties(pProperties);
-
-    if (FindNetworkAdapter(hInfo, &DevInfo, pDisplayName))
-    {
-        PropChangeParams.ClassInstallHeader.cbSize = sizeof(SP_CLASSINSTALL_HEADER);
-        PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE; //;
-        PropChangeParams.StateChange = DICS_DISABLE;
-        PropChangeParams.Scope = DICS_FLAG_CONFIGSPECIFIC;
-        PropChangeParams.HwProfile = 0;
-
-        if (SetupDiSetClassInstallParams(hInfo, &DevInfo, &PropChangeParams.ClassInstallHeader, sizeof(SP_PROPCHANGE_PARAMS)))
-        {
-            if (SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hInfo, &DevInfo))
-                bClose = TRUE;
-        }
-    }
-    SetupDiDestroyDeviceInfoList(hInfo);
-
-    swprintf(szPath, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pDisplayName);
-    CoTaskMemFree(pDisplayName);
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-        return;
-
-    dwSize = 0;
-    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    pPnp = static_cast<PWSTR>(CoTaskMemAlloc(dwSize));
-    if (!pPnp)
-    {
-        RegCloseKey(hKey);
-        return;
-    }
-
-    if (RegQueryValueExW(hKey, L"PnpInstanceID", NULL, &dwType, (LPBYTE)pPnp, &dwSize) != ERROR_SUCCESS)
-    {
-        CoTaskMemFree(pPnp);
-        RegCloseKey(hKey);
-        return;
-    }
-    RegCloseKey(hKey);
-
-    swprintf(szPath, L"System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Enum\\%s", pPnp);
-    CoTaskMemFree(pPnp);
-
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szPath, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-        return;
-
-    dwSize = 1; /* enable = 0, disable = 1 */
-    RegSetValueExW(hKey, L"CSConfigFlags", 0, REG_DWORD, (LPBYTE)&dwSize, sizeof(DWORD));
-    RegCloseKey(hKey);
-
-    if (!bClose)
-       return;
 
     PropSheet_PressButton(GetParent(hwndDlg), PSBTN_CANCEL);
     ZeroMemory(&nid, sizeof(nid));
@@ -953,9 +777,9 @@ CLanStatus::InitializeNetTaskbarNotifications()
 {
     NOTIFYICONDATAW nid;
     HWND hwndDlg;
-    INetConnectionManager *pNetConMan;
-    IEnumNetConnection *pEnumCon;
-    INetConnection *pNetCon;
+    CComPtr<INetConnectionManager> pNetConMan;
+    CComPtr<IEnumNetConnection> pEnumCon;
+    CComPtr<INetConnection> pNetCon;
     NETCON_PROPERTIES* pProps;
     HRESULT hr;
     ULONG Count;
@@ -992,108 +816,100 @@ CLanStatus::InitializeNetTaskbarNotifications()
        return S_OK;
     }
     /* get an instance to of IConnectionManager */
-
-    //hr = CoCreateInstance(&CLSID_ConnectionManager, NULL, CLSCTX_INPROC_SERVER, &IID_INetConnectionManager, (LPVOID*)&pNetConMan);
-
-    hr = INetConnectionManager_Constructor(NULL, IID_INetConnectionManager, (LPVOID*)&pNetConMan);
-    if (FAILED(hr))
-    {
-        ERR("INetConnectionManager_Constructor failed\n");
+    hr = CNetConnectionManager_CreateInstance(IID_PPV_ARG(INetConnectionManager, &pNetConMan));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
-    if (FAILED(hr))
-    {
-        ERR("EnumConnections failed\n");
-        pNetConMan->Release();
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     Index = 1;
-    do
+    while (TRUE)
     {
         hr = pEnumCon->Next(1, &pNetCon, &Count);
-        if (hr == S_OK)
+        if (hr != S_OK)
+            break;
+
+        TRACE("new connection\n");
+        pItem = static_cast<NOTIFICATION_ITEM*>(CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM)));
+        if (!pItem)
+            break;
+
+        pContext = static_cast<LANSTATUSUI_CONTEXT*>(CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT)));
+        if (!pContext)
         {
-            TRACE("new connection\n");
-            pItem = static_cast<NOTIFICATION_ITEM*>(CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM)));
-            if (!pItem)
-                break;
-
-            pContext = static_cast<LANSTATUSUI_CONTEXT*>(CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT)));
-            if (!pContext)
-            {
-                CoTaskMemFree(pItem);
-                break;
-            }
-
-            ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
-            pContext->uID = Index;
-            pContext->pNet = pNetCon;
-            pItem->uID = Index;
-            pItem->pNext = NULL;
-            pItem->pNet = pNetCon;
-            hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
-            if (hwndDlg)
-            {
-                ZeroMemory(&nid, sizeof(nid));
-                nid.cbSize = sizeof(nid);
-                nid.uID = Index++;
-                nid.uFlags = NIF_MESSAGE;
-                nid.uVersion = NOTIFYICON_VERSION;
-                nid.uCallbackMessage = WM_SHOWSTATUSDLG;
-                nid.hWnd = hwndDlg;
-
-                hr = pNetCon->GetProperties(&pProps);
-                if (SUCCEEDED(hr))
-                {
-                    CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
-                    if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
-                    {
-                        nid.dwState = NIS_HIDDEN;
-                        nid.dwStateMask = NIS_HIDDEN;
-                        nid.uFlags |= NIF_STATE;
-                    }
-                    if (pProps->Status == NCS_MEDIA_DISCONNECTED || pProps->Status == NCS_DISCONNECTED || pProps->Status == NCS_HARDWARE_DISABLED)
-                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF));
-                    else if (pProps->Status == NCS_CONNECTED)
-                        nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
-
-                    if (nid.hIcon)
-                        nid.uFlags |= NIF_ICON;
-
-                    wcscpy(nid.szTip, pProps->pszwName);
-                    nid.uFlags |= NIF_TIP;
-                }
-                pContext->hwndStatusDlg = hwndDlg;
-                pItem->hwndDlg = hwndDlg;
-
-                if (Shell_NotifyIconW(NIM_ADD, &nid))
-                {
-                    if (pLast)
-                        pLast->pNext = pItem;
-                    else
-                        m_pHead = pItem;
-
-                    pLast = pItem;
-                    Index++;
-                }
-                else
-                {
-                    ERR("Shell_NotifyIconW failed\n");
-                    CoTaskMemFree(pItem);
-                }
-
-                if (nid.uFlags & NIF_ICON)
-                    DestroyIcon(nid.hIcon);
-            } else
-                ERR("CreateDialogParamW failed\n");
+            CoTaskMemFree(pItem);
+            break;
         }
-    } while (hr == S_OK);
+
+        ZeroMemory(pContext, sizeof(LANSTATUSUI_CONTEXT));
+        pContext->uID = Index;
+        pContext->pNet = pNetCon;
+        pItem->uID = Index;
+        pItem->pNext = NULL;
+        pItem->pNet = pNetCon;
+        pNetCon->AddRef();
+        hwndDlg = CreateDialogParamW(netshell_hInstance, MAKEINTRESOURCEW(IDD_STATUS), NULL, LANStatusDlg, (LPARAM)pContext);
+        if (!hwndDlg)
+        {
+            ERR("CreateDialogParamW failed\n");
+            continue;
+        }
+
+        ZeroMemory(&nid, sizeof(nid));
+        nid.cbSize = sizeof(nid);
+        nid.uID = Index++;
+        nid.uFlags = NIF_MESSAGE;
+        nid.uVersion = NOTIFYICON_VERSION;
+        nid.uCallbackMessage = WM_SHOWSTATUSDLG;
+        nid.hWnd = hwndDlg;
+
+        hr = pNetCon->GetProperties(&pProps);
+        if (SUCCEEDED(hr))
+        {
+            CopyMemory(&pItem->guidItem, &pProps->guidId, sizeof(GUID));
+            if (!(pProps->dwCharacter & NCCF_SHOW_ICON))
+            {
+                nid.dwState = NIS_HIDDEN;
+                nid.dwStateMask = NIS_HIDDEN;
+                nid.uFlags |= NIF_STATE;
+            }
+            if (pProps->Status == NCS_MEDIA_DISCONNECTED || pProps->Status == NCS_DISCONNECTED || pProps->Status == NCS_HARDWARE_DISABLED)
+                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF));
+            else if (pProps->Status == NCS_CONNECTED)
+                nid.hIcon = LoadIcon(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE));
+
+            if (nid.hIcon)
+                nid.uFlags |= NIF_ICON;
+
+            wcscpy(nid.szTip, pProps->pszwName);
+            nid.uFlags |= NIF_TIP;
+        }
+        pContext->hwndStatusDlg = hwndDlg;
+        pItem->hwndDlg = hwndDlg;
+
+        if (Shell_NotifyIconW(NIM_ADD, &nid))
+        {
+            if (pLast)
+                pLast->pNext = pItem;
+            else
+                m_pHead = pItem;
+
+            pLast = pItem;
+            Index++;
+        }
+        else
+        {
+            ERR("Shell_NotifyIconW failed\n");
+            CoTaskMemFree(pItem);
+        }
+
+        if (nid.uFlags & NIF_ICON)
+            DestroyIcon(nid.hIcon);
+    }
 
     m_lpNetMan = pNetConMan;
-    pEnumCon->Release();
     return S_OK;
 }
 
@@ -1115,46 +931,6 @@ CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
 
     ERR("not found\n");
     return E_FAIL;
-}
-
-HRESULT
-WINAPI
-CLanStatus::QueryInterface(
-    REFIID iid,
-    LPVOID *ppvObj)
-{
-    *ppvObj = NULL;
-
-    if (IsEqualIID(iid, IID_IUnknown) ||
-        IsEqualIID(iid, IID_IOleCommandTarget))
-    {
-        *ppvObj = this;
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-ULONG
-WINAPI
-CLanStatus::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
-
-    return refCount;
-}
-
-ULONG
-WINAPI
-CLanStatus::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
 }
 
 HRESULT
@@ -1192,26 +968,3 @@ CLanStatus::Exec(
     }
     return S_OK;
 }
-
-HRESULT WINAPI LanConnectStatusUI_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv)
-{
-    TRACE("LanConnectStatusUI_Constructor\n");
-
-    if (!ppv)
-        return E_POINTER;
-
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
-
-    CLanStatus *pLanStatus = new CLanStatus;
-    if (!pLanStatus)
-        return E_OUTOFMEMORY;
-
-    pLanStatus->AddRef();
-    static volatile CLanStatus *pCachedLanStatus = NULL;
-    if (InterlockedCompareExchangePointer((void **)&pCachedLanStatus, pLanStatus, NULL) != NULL)
-        pLanStatus->Release();
-
-    return ((CLanStatus*)pCachedLanStatus)->QueryInterface(riid, ppv);
-}
-

@@ -34,8 +34,8 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
     TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
     PVOID entitySet = 0;
     NTSTATUS status = STATUS_SUCCESS;
-    DWORD allocationSizeForEntityArray = entrySize * MAX_TDI_ENTITIES,
-        arraySize = entrySize * MAX_TDI_ENTITIES;
+    DWORD allocationSizeForEntityArray = entrySize * MAX_TDI_ENTITIES;
+    IO_STATUS_BLOCK Iosb;
 
     req.ID.toi_class                = toiClass;
     req.ID.toi_type                 = toiType;
@@ -52,50 +52,64 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
      * stabilizes.
      */
     do {
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_QUERY_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  0,
-                                  0,
-                                  &allocationSizeForEntityArray,
-                                  NULL );
-
-        if(!status)
+        status = NtDeviceIoControlFile( tcpFile,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        &Iosb,
+                                        IOCTL_TCP_QUERY_INFORMATION_EX,
+                                        &req,
+                                        sizeof(req),
+                                        NULL,
+                                        0);
+        if (status == STATUS_PENDING)
         {
-            return STATUS_UNSUCCESSFUL;
+            status = NtWaitForSingleObject(tcpFile, FALSE, NULL);
+            if (NT_SUCCESS(status)) status = Iosb.Status;
         }
 
-        arraySize = allocationSizeForEntityArray;
-        entitySet = HeapAlloc( GetProcessHeap(), 0, arraySize );
+        if(!NT_SUCCESS(status))
+        {
+            return status;
+        }
+
+        allocationSizeForEntityArray = Iosb.Information;
+        entitySet = HeapAlloc( GetProcessHeap(), 0, allocationSizeForEntityArray );
 
         if( !entitySet ) {
             status = STATUS_INSUFFICIENT_RESOURCES;
             return status;
         }
 
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_QUERY_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  entitySet,
-                                  arraySize,
-                                  &allocationSizeForEntityArray,
-                                  NULL );
+        status = NtDeviceIoControlFile( tcpFile,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        &Iosb,
+                                        IOCTL_TCP_QUERY_INFORMATION_EX,
+                                        &req,
+                                        sizeof(req),
+                                        entitySet,
+                                        allocationSizeForEntityArray);
+        if (status == STATUS_PENDING)
+        {
+            status = NtWaitForSingleObject(tcpFile, FALSE, NULL);
+            if (NT_SUCCESS(status)) status = Iosb.Status;
+        }
 
         /* This is why we have the loop -- we might have added an adapter */
-        if( arraySize == allocationSizeForEntityArray )
+        if( Iosb.Information == allocationSizeForEntityArray )
             break;
 
         HeapFree( GetProcessHeap(), 0, entitySet );
         entitySet = 0;
 
-        if(!status)
-            return STATUS_UNSUCCESSFUL;
+        if(!NT_SUCCESS(status))
+            return status;
     } while( TRUE ); /* We break if the array we received was the size we
                       * expected.  Therefore, we got here because it wasn't */
 
-    *numEntries = (arraySize - fixedPart) / entrySize;
+    *numEntries = (allocationSizeForEntityArray - fixedPart) / entrySize;
     *tdiEntitySet = entitySet;
 
     return STATUS_SUCCESS;

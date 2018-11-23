@@ -16,8 +16,9 @@ typedef struct _NTOS_INSTALLATION
 {
     LIST_ENTRY ListEntry;
 // BOOLEAN IsDefault;   // TRUE / FALSE whether this installation is marked as "default" in its corresponding loader configuration file.
-    UNICODE_STRING SystemArcPath;   // Normalized ARC path
-    UNICODE_STRING SystemNtPath;    // Corresponding NT path
+    USHORT Machine;                 // Target architecture of the NTOS installation
+    UNICODE_STRING SystemArcPath;   // Normalized ARC path ("ArcSystemRoot")
+    UNICODE_STRING SystemNtPath;    // Corresponding NT path ("NtSystemRoot")
     PCWSTR PathComponent;           // Pointer inside SystemNtPath.Buffer
     ULONG DiskNumber;
     ULONG PartitionNumber;

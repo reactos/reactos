@@ -1,19 +1,20 @@
 /* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan 2018 <njlyf2011@hotmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "ReactOS 磁盘分区"
-    IDS_APP_USAGE "\n磁盘分区口译员。\n\n\
+    IDS_APP_HEADER "ReactOS 磁盘分区工具"
+    IDS_APP_USAGE "\n磁盘分区解释程序。\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S <文件名>\t运行给定的脚本。\n\
 /T <超时>\t超时秒数，防止 DiskPart 使用重叠。\n\
 /?\t\t显示此帮助消息。\n\n"
-    IDS_APP_LICENSE "根据 GNU GPLv2 许可\n"
+    IDS_APP_LICENSE "基于 GNU GPLv2 许可证发行\n"
     IDS_APP_CURR_COMPUTER "在计算机上: %s\n\n"
-    IDS_APP_LEAVING "\n离开 DiskPart 中......\n"
+    IDS_APP_LEAVING "\n正在离开 DiskPart ......\n"
     IDS_APP_PROMPT "DISKPART> "
 END
 
@@ -52,7 +53,7 @@ END
 /* RESCAN command string */
 STRINGTABLE
 BEGIN
-    IDS_RESCAN_START "\nDiskPart 扫描您的配置，请稍候...\n"
+    IDS_RESCAN_START "\nDiskPart 正在扫描您的配置，请稍候...\n"
     IDS_RESCAN_END "\nDiskPart 完成扫描您的配置。\n\n"
 END
 

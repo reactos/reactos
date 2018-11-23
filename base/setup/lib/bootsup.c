@@ -356,10 +356,10 @@ EnumerateReactOSEntries(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
-        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
-                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
-        DPRINT1("    An installation '%S' of unsupported type %lu\n",
-                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
+        // DPRINT("    An installation '%S' of unsupported type '%S'\n",
+               // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT("    An installation '%S' of unsupported type %lu\n",
+               BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
         goto SkipThisEntry;
     }
@@ -388,12 +388,12 @@ EnumerateReactOSEntries(
         }
     }
 
-    DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
-            BootEntry->FriendlyName, Options->OsLoadPath);
-    // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
-            // BootEntry->FriendlyName, Options->OsLoadPath);
+    DPRINT("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
+           BootEntry->FriendlyName, Options->OsLoadPath);
+    // DPRINT("    Found a Win2k3 install '%S' with ARC path '%S'\n",
+           // BootEntry->FriendlyName, Options->OsLoadPath);
 
-    DPRINT1("EnumerateReactOSEntries: OsLoadPath: '%S'\n", Options->OsLoadPath);
+    DPRINT("EnumerateReactOSEntries: OsLoadPath: '%S'\n", Options->OsLoadPath);
 
     Data->UseExistingEntry = TRUE;
     RtlStringCchCopyW(Data->OsName, ARRAYSIZE(Data->OsName), BootEntry->FriendlyName);
@@ -576,7 +576,7 @@ IsThereAValidBootSector(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
         goto Quit;
@@ -644,7 +644,7 @@ SaveBootSector(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -747,7 +747,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -793,7 +793,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -845,7 +845,7 @@ InstallMbrBootCodeToDiskHelper(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
@@ -956,7 +956,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1005,7 +1005,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1054,7 +1054,7 @@ InstallFat12BootCodeToFloppy(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
@@ -1140,7 +1140,7 @@ InstallFat16BootCode(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1225,7 +1225,7 @@ InstallFat16BootCodeToFile(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1296,7 +1296,7 @@ InstallFat16BootCodeToDisk(
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1370,7 +1370,7 @@ InstallFat32BootCode(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1521,7 +1521,7 @@ InstallFat32BootCodeToFile(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1592,7 +1592,7 @@ InstallFat32BootCodeToDisk(
                         GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1613,6 +1613,7 @@ InstallBtrfsBootCodeToDisk(
     IN PCWSTR RootPath)
 {
     NTSTATUS Status;
+    NTSTATUS LockStatus;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -1643,7 +1644,7 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1691,7 +1692,7 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
@@ -1745,13 +1746,37 @@ InstallBtrfsBootCodeToDisk(
                         GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
         RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
+    }
+
+    /*
+     * The BTRFS driver requires the volume to be locked in order to modify
+     * the first sectors of the partition, even though they are outside the
+     * file-system space / in the reserved area (they are situated before
+     * the super-block at 0x1000) and is in principle allowed by the NT
+     * storage stack.
+     * So we lock here in order to write the bootsector at sector 0.
+     * If locking fails, we ignore and continue nonetheless.
+     */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_LOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("WARNING: Failed to lock BTRFS volume for writing bootsector! Operations may fail! (Status 0x%lx)\n", LockStatus);
     }
 
     /* Obtaining partition info and writing it to bootsector */
@@ -1768,9 +1793,7 @@ InstallBtrfsBootCodeToDisk(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
+        goto Quit;
     }
 
     /* Write new bootsector to RootPath */
@@ -1788,15 +1811,13 @@ InstallBtrfsBootCodeToDisk(
                          sizeof(BTRFS_BOOTSECTOR),
                          &FileOffset,
                          NULL);
-#if 0
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
+        goto Quit;
     }
 
+#if 0
     /* Write backup boot sector */
     if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
     {
@@ -1813,9 +1834,7 @@ InstallBtrfsBootCodeToDisk(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-            NtClose(FileHandle);
-            RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-            return Status;
+            goto Quit;
         }
     }
 
@@ -1835,6 +1854,25 @@ InstallBtrfsBootCodeToDisk(
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
     }
 #endif
+
+Quit:
+    /* Unlock the volume */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 FSCTL_UNLOCK_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Failed to unlock BTRFS volume (Status 0x%lx)\n", LockStatus);
+    }
+
+    /* Close the volume */
     NtClose(FileHandle);
 
     /* Free the new boot sector */

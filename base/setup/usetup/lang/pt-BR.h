@@ -1502,7 +1502,7 @@ MUI_ERROR ptBRErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Erro ao escrever o c¢digo de inicializa‡Æo na parti‡Æo do sistema.\n",
+        "Erro ao escrever o c¢digo de inicializa‡Æo %S na parti‡Æo do sistema.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1553,7 +1553,7 @@ MUI_ERROR ptBRErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Erro ao instalar o c¢digo de inicializa‡Æo na parti‡Æo do sistema.",
+        "Erro ao instalar o c¢digo de inicializa‡Æo %S na parti‡Æo do sistema.",
         "ENTER=Reiniciar"
     },
     {

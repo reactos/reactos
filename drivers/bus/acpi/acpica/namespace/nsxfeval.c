@@ -6,7 +6,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,11 +66,11 @@ AcpiNsResolveReferences (
  *
  * PARAMETERS:  Handle              - Object handle (optional)
  *              Pathname            - Object pathname (optional)
- *              ExternalParams      - List of parameters to pass to method,
+ *              ExternalParams      - List of parameters to pass to a method,
  *                                    terminated by NULL. May be NULL
  *                                    if no parameters are being passed.
- *              ReturnBuffer        - Where to put method's return value (if
- *                                    any). If NULL, no value is returned.
+ *              ReturnBuffer        - Where to put the object return value (if
+ *                                    any). Required.
  *              ReturnType          - Expected type of return object
  *
  * RETURN:      Status
@@ -110,10 +110,16 @@ AcpiEvaluateObjectTyped (
         FreeBufferOnError = TRUE;
     }
 
-    Status = AcpiGetHandle (Handle, Pathname, &TargetHandle);
-    if (ACPI_FAILURE (Status))
+    /* Get a handle here, in order to build an error message if needed */
+
+    TargetHandle = Handle;
+    if (Pathname)
     {
-        return_ACPI_STATUS (Status);
+        Status = AcpiGetHandle (Handle, Pathname, &TargetHandle);
+        if (ACPI_FAILURE (Status))
+        {
+            return_ACPI_STATUS (Status);
+        }
     }
 
     FullPathname = AcpiNsGetExternalPathname (TargetHandle);

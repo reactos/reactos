@@ -177,6 +177,82 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
     return Status;
 }
 
+#define ntohs(n) ((((n) & 0xff) << 8) | (((n) & 0xff00) >> 8))
+
+TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
+				    PNDIS_BUFFER Buffer,
+				    PUINT BufferSize)
+{
+    MIB_TCPROW TcpRow;
+    TDI_STATUS Status = TDI_SUCCESS;
+
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    TcpRow.State = 0; /* FIXME */
+    TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+    TcpRow.dwLocalPort = AddrFile->Port;
+
+    if (AddrFile->Listener != NULL)
+    {
+        PADDRESS_FILE EndPoint;
+
+        EndPoint = AddrFile->Listener->AddressFile;
+
+        TcpRow.State = MIB_TCP_STATE_LISTEN;
+        TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
+        TcpRow.dwRemotePort = EndPoint->Port;
+    }
+    else if (AddrFile->Connection != NULL &&
+             AddrFile->Connection->SocketContext != NULL)
+    {
+        TA_IP_ADDRESS EndPoint;
+
+        Status = TCPGetSockAddress(AddrFile->Connection, (PTRANSPORT_ADDRESS)&EndPoint, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            ASSERT(EndPoint.TAAddressCount >= 1);
+            ASSERT(EndPoint.Address[0].AddressLength == TDI_ADDRESS_LENGTH_IP);
+            TcpRow.dwRemoteAddr = EndPoint.Address[0].Address[0].in_addr;
+            TcpRow.dwRemotePort = ntohs(EndPoint.Address[0].Address[0].sin_port);
+        }
+    }
+    else
+    {
+        TcpRow.dwRemoteAddr = 0;
+        TcpRow.dwRemotePort = 0;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        Status = InfoCopyOut( (PCHAR)&TcpRow, sizeof(TcpRow),
+                              Buffer, BufferSize );
+    }
+
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+
+    return Status;
+}
+
+TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
+				    PNDIS_BUFFER Buffer,
+				    PUINT BufferSize)
+{
+    MIB_UDPROW UdpRow;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
+
+    TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
+    UdpRow.dwLocalPort = AddrFile->Port;
+
+    Status = InfoCopyOut( (PCHAR)&UdpRow, sizeof(UdpRow),
+			  Buffer, BufferSize );
+
+    TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
+
+    return Status;
+}
+
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
 {
     IP_ADDRESS Address, Netmask, Router;

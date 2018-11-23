@@ -1471,7 +1471,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Setup failed to install %S bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
@@ -1522,7 +1522,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {

@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -268,7 +268,7 @@ AcpiNsCopyDeviceId (
  *              namespace node and possibly by running several standard
  *              control methods (Such as in the case of a device.)
  *
- * For Device and Processor objects, run the Device _HID, _UID, _CID, _STA,
+ * For Device and Processor objects, run the Device _HID, _UID, _CID,
  * _CLS, _ADR, _SxW, and _SxD methods.
  *
  * Note: Allocates the return buffer, must be freed by the caller.
@@ -277,8 +277,9 @@ AcpiNsCopyDeviceId (
  * discovery namespace traversal. Therefore, no complex methods can be
  * executed, especially those that access operation regions. Therefore, do
  * not add any additional methods that could cause problems in this area.
- * this was the fate of the _SUB method which was found to cause such
- * problems and was removed (11/2015).
+ * Because of this reason support for the following methods has been removed:
+ * 1) _SUB method was removed (11/2015)
+ * 2) _STA method was removed (02/2018)
  *
  ******************************************************************************/
 
@@ -409,25 +410,12 @@ AcpiGetObjectInfo (
     {
         /*
          * Get extra info for ACPI Device/Processor objects only:
-         * Run the _STA, _ADR and, SxW, and _SxD methods.
+         * Run the _ADR and, SxW, and _SxD methods.
          *
          * Notes: none of these methods are required, so they may or may
          * not be present for this device. The Info->Valid bitfield is used
          * to indicate which methods were found and run successfully.
-         *
-         * For _STA, if the method does not exist, then (as per the ACPI
-         * specification), the returned CurrentStatus flags will indicate
-         * that the device is present/functional/enabled. Otherwise, the
-         * CurrentStatus flags reflect the value returned from _STA.
          */
-
-        /* Execute the Device._STA method */
-
-        Status = AcpiUtExecute_STA (Node, &Info->CurrentStatus);
-        if (ACPI_SUCCESS (Status))
-        {
-            Valid |= ACPI_VALID_STA;
-        }
 
         /* Execute the Device._ADR method */
 

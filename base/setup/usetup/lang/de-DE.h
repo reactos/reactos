@@ -1471,7 +1471,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
+        "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
@@ -1522,7 +1522,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
+        "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {

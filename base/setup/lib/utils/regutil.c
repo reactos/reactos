@@ -16,6 +16,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ******************************************************************/
+
+static UNICODE_STRING SymbolicLinkValueName =
+    RTL_CONSTANT_STRING(L"SymbolicLinkValue");
+
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -80,7 +85,7 @@ CreateNestedKey(PHANDLE KeyHandle,
                              &LocalObjectAttributes,
                              0,
                              NULL,
-                             REG_OPTION_NON_VOLATILE,
+                             REG_OPTION_NON_VOLATILE, // FIXME ?
                              &Disposition);
         DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
         if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -133,7 +138,7 @@ CreateNestedKey(PHANDLE KeyHandle,
  */
 NTSTATUS
 CreateRegistryFile(
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey,
     IN BOOLEAN IsHiveNew,
     IN HANDLE ProtoKeyHandle
@@ -156,7 +161,7 @@ CreateRegistryFile(
     WCHAR PathBuffer2[MAX_PATH];
 
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
-                 InstallPath->Buffer, L"System32\\config", RegistryKey);
+                 NtSystemRoot->Buffer, L"System32\\config", RegistryKey);
 
     Extension = Extensions[IsHiveNew ? 0 : 1];
 
@@ -212,7 +217,7 @@ CreateRegistryFile(
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,  // Could have been InstallPath, etc...
+                               NULL,  // Could have been NtSystemRoot, etc...
                                NULL); // Descriptor
 
     Status = NtCreateFile(&FileHandle,
@@ -244,19 +249,17 @@ CreateRegistryFile(
     return Status;
 }
 
-BOOLEAN
-CmpLinkKeyToHive(
-    IN HANDLE RootLinkKeyHandle OPTIONAL,
+/* Adapted from ntoskrnl/config/cmsysini.c:CmpLinkKeyToHive() */
+NTSTATUS
+CreateSymLinkKey(
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR LinkKeyName,
     IN PCWSTR TargetKeyName)
 {
-    static UNICODE_STRING CmSymbolicLinkValueName =
-        RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
-    HANDLE TargetKeyHandle;
+    HANDLE LinkKeyHandle;
     ULONG Disposition;
 
     /* Initialize the object attributes */
@@ -264,11 +267,11 @@ CmpLinkKeyToHive(
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               RootLinkKeyHandle,
+                               RootKey,
                                NULL);
 
     /* Create the link key */
-    Status = NtCreateKey(&TargetKeyHandle,
+    Status = NtCreateKey(&LinkKeyHandle,
                          KEY_SET_VALUE | KEY_CREATE_LINK,
                          &ObjectAttributes,
                          0,
@@ -277,39 +280,108 @@ CmpLinkKeyToHive(
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CmpLinkKeyToHive: couldn't create %S, Status = 0x%08lx\n",
+        DPRINT1("CreateSymLinkKey: couldn't create '%S', Status = 0x%08lx\n",
                 LinkKeyName, Status);
-        return FALSE;
+        return Status;
     }
 
     /* Check if the new key was actually created */
     if (Disposition != REG_CREATED_NEW_KEY)
     {
-        DPRINT1("CmpLinkKeyToHive: %S already exists!\n", LinkKeyName);
-        NtClose(TargetKeyHandle);
-        return FALSE;
+        DPRINT1("CreateSymLinkKey: %S already exists!\n", LinkKeyName);
+        NtClose(LinkKeyHandle);
+        return STATUS_OBJECT_NAME_EXISTS; // STATUS_OBJECT_NAME_COLLISION;
     }
 
     /* Set the target key name as link target */
     RtlInitUnicodeString(&KeyName, TargetKeyName);
-    Status = NtSetValueKey(TargetKeyHandle,
-                           &CmSymbolicLinkValueName,
+    Status = NtSetValueKey(LinkKeyHandle,
+                           &SymbolicLinkValueName,
                            0,
                            REG_LINK,
                            KeyName.Buffer,
                            KeyName.Length);
 
     /* Close the link key handle */
-    NtClose(TargetKeyHandle);
+    NtClose(LinkKeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CmpLinkKeyToHive: couldn't create symbolic link for %S, Status = 0x%08lx\n",
-                TargetKeyName, Status);
-        return FALSE;
+        DPRINT1("CreateSymLinkKey: couldn't create symbolic link '%S' for '%S', Status = 0x%08lx\n",
+                LinkKeyName, TargetKeyName, Status);
     }
 
-    return TRUE;
+    return Status;
+}
+
+NTSTATUS
+DeleteSymLinkKey(
+    IN HANDLE RootKey OPTIONAL,
+    IN PCWSTR LinkKeyName)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE LinkKeyHandle;
+    // ULONG Disposition;
+
+    /* Initialize the object attributes */
+    RtlInitUnicodeString(&KeyName, LinkKeyName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+            /* Open the symlink key itself if it exists, and not its target */
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+                               RootKey,
+                               NULL);
+
+    /*
+     * Note: We could use here NtOpenKey() but it does not allow to pass
+     * opening options. NtOpenKeyEx() could do it but is Windows 7+.
+     * So we use the good old NtCreateKey() that can open the key.
+     */
+#if 0
+    Status = NtCreateKey(&LinkKeyHandle,
+                         DELETE | KEY_SET_VALUE | KEY_CREATE_LINK,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         /*REG_OPTION_VOLATILE |*/ REG_OPTION_OPEN_LINK,
+                         &Disposition);
+#else
+    Status = NtOpenKey(&LinkKeyHandle,
+                       DELETE | KEY_SET_VALUE | KEY_CREATE_LINK,
+                       &ObjectAttributes);
+#endif
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &KeyName, Status);
+        return Status;
+    }
+
+    /*
+     * Delete the special "SymbolicLinkValue" value.
+     * This is technically not needed since we are going to remove
+     * the key anyways, but it is good practice to do it.
+     */
+    Status = NtDeleteValueKey(LinkKeyHandle, &SymbolicLinkValueName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDeleteValueKey(%wZ) failed (Status %lx)\n", &KeyName, Status);
+        NtClose(LinkKeyHandle);
+        return Status;
+    }
+
+    /* Finally delete the key itself and close the link key handle */
+    Status = NtDeleteKey(LinkKeyHandle);
+    NtClose(LinkKeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("DeleteSymLinkKey: couldn't delete symbolic link '%S', Status = 0x%08lx\n",
+                LinkKeyName, Status);
+    }
+
+    return Status;
 }
 
 /*
@@ -317,10 +389,10 @@ CmpLinkKeyToHive(
  */
 NTSTATUS
 ConnectRegistry(
-    IN HKEY RootKey OPTIONAL,
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey
 /*
     IN PUCHAR Descriptor,
@@ -341,7 +413,7 @@ ConnectRegistry(
                                NULL);   // Descriptor
 
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
-                 InstallPath->Buffer, L"System32\\config", RegistryKey);
+                 NtSystemRoot->Buffer, L"System32\\config", RegistryKey);
     RtlInitUnicodeString(&FileName, PathBuffer);
     InitializeObjectAttributes(&FileObjectAttributes,
                                &FileName,
@@ -358,7 +430,7 @@ ConnectRegistry(
  */
 NTSTATUS
 DisconnectRegistry(
-    IN HKEY RootKey OPTIONAL,
+    IN HANDLE RootKey OPTIONAL,
     IN PCWSTR RegMountPoint,
     IN ULONG Flags)
 {
@@ -381,9 +453,9 @@ DisconnectRegistry(
  */
 NTSTATUS
 VerifyRegistryHive(
-    // IN HKEY RootKey OPTIONAL,
+    // IN HANDLE RootKey OPTIONAL,
     // // IN HANDLE RootDirectory OPTIONAL,
-    IN PUNICODE_STRING InstallPath,
+    IN PUNICODE_STRING NtSystemRoot,
     IN PCWSTR RegistryKey /* ,
     IN PCWSTR RegMountPoint */)
 {
@@ -392,7 +464,7 @@ VerifyRegistryHive(
     /* Try to mount the specified registry hive */
     Status = ConnectRegistry(NULL,
                              L"\\Registry\\Machine\\USetup_VerifyHive",
-                             InstallPath,
+                             NtSystemRoot,
                              RegistryKey
                              /* NULL, 0 */);
     if (!NT_SUCCESS(Status))

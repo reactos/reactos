@@ -2213,7 +2213,7 @@ static BOOL HACKISH_PathResolve(
                                _countof(szPath), szPath, NULL) != 0);
         if (!Success)
         {
-            ERR("SearchPathW(pszPath = '%S') failed\n", pszPath);
+            ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
         }
         else
         {
@@ -2224,7 +2224,7 @@ static BOOL HACKISH_PathResolve(
 
     if (!Success)
     {
-        ERR("SearchPathW(pszPath = '%S') failed\n", pszPath);
+        ERR("SearchPathW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
 
         /* We failed, try with PathFindOnPath, as explained by MSDN */
         // Success = PathFindOnPathW(pszPath, dirs);
@@ -2237,13 +2237,13 @@ static BOOL HACKISH_PathResolve(
             /* We failed again, fall back to building a possible non-existing path */
             if (!GetFullPathNameW(pszPath, _countof(szPath), szPath, &fname))
             {
-                ERR("GetFullPathNameW(pszPath = '%S') failed\n", pszPath);
+                ERR("GetFullPathNameW(pszPath = '%S') failed. Error code: %lu\n", pszPath, GetLastError());
                 return FALSE;
             }
 
             Success = PathFileExistsW(szPath);
             if (!Success)
-                ERR("PathFileExistsW(szPath = '%S') failed\n", szPath);
+                ERR("PathFileExistsW(szPath = '%S') failed. Error code: %lu\n", szPath, GetLastError());
 
             /******************************************************/
             /* Question: Why this line is needed only for files?? */

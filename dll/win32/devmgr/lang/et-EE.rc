@@ -49,7 +49,7 @@ BEGIN
     IDS_DEV_DEVLOADER_FAILED2 "%1 seadme laadija(d) selle seadme jaoks ei suutnud laadida draiverid."
     IDS_DEV_OUT_OF_MEMORY "Selle seadme draiver võib halb olla või teie süsteemil hakkab mälu või teise ressurse väheks jääma."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "See seade ei tööta korralikult, sest üks selle draiveritest või register võib halb olla."
-    IDS_DEV_LACKED_ARBITRATOR "Selle seadme draiver küsis ReactOSi käest ressursi millega ei oska toime tulla."
+    IDS_DEV_LACKED_ARBITRATOR "Selle seadme draiver küsis ReactOS'i käest ressursi millega ei oska toime tulla."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Teine seade juba kaustab selle seadme jaoks vajalike ressurse."
     IDS_DEV_FAILED_FILTER "Draiverid selle seadme jaoks tuleb uuesti installida."
     IDS_DEV_DEVLOADER_NOT_FOUND "See seade ei tööta korralikult, sest ReactOS ei saa laadida %1 faili, mis laeb draiverid selle seadme jaoks."
@@ -97,7 +97,7 @@ BEGIN
     IDS_DEV_PHANTOM "See seade ei ole hetkel arvutiga ühendatud."
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS ei saa ligi sellele seadmele, sest operatsiooni süsteem on sulgemas."
     IDS_DEV_HELD_FOR_EJECT "ReactOS ei saa seda riistvaraseadet eemaldada, sest see on valmistatud turvaliseks eemalduseks, kuid pole veel eemaldatud arvutist."
-    IDS_DEV_DRIVER_BLOCKED "Tarkvara selle seadme draiveri jaoks on blokeeritud, sest see on teatud ReactOSiga mitte töötama. Võta ühendust riistvara tootjaga uue draiveri jaoks."
+    IDS_DEV_DRIVER_BLOCKED "Tarkvara selle seadme draiveri jaoks on blokeeritud, sest see on teatud ReactOS'iga mitte töötama. Võta ühendust riistvara tootjaga uue draiveri jaoks."
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS ei saa käivitada uut seadet, sest süsteemi taru on liiga suur (läheb üle registri suuruse limiidi)."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS ei saanud selle seadme sätteid muuta."
 END

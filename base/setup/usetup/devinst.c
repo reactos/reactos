@@ -53,14 +53,15 @@ InstallDriver(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
-    PWSTR Driver, ClassGuid, ImagePath, FullImagePath;
+    PCWSTR Driver, ClassGuid, ImagePath;
+    PWSTR FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
 
     /* Check if we know the hardware */
-    if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
+    if (!SpInfFindFirstLine(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
         return FALSE;
     if (!INF_GetDataField(&Context, 1, &Driver))
         return FALSE;
@@ -71,11 +72,11 @@ InstallDriver(
 
     /* Find associated driver name */
     /* FIXME: check in other sections too! */
-    if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
+    if (!SpInfFindFirstLine(hInf, L"BootBusExtenders.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"BusExtenders.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"SCSI.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"InputDevicesSupport.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"Keyboard.Load", Driver, &Context))
     {
         INF_FreeData(ClassGuid);
         INF_FreeData(Driver);
@@ -151,7 +152,7 @@ InstallDriver(
                   &ImagePathU,
                   0,
                   REG_SZ,
-                  ImagePath,
+                  (PVOID)ImagePath,
                   (wcslen(ImagePath) + 1) * sizeof(WCHAR));
 
     INF_FreeData(ImagePath);
@@ -174,7 +175,7 @@ InstallDriver(
                            &ServiceU,
                            0,
                            REG_SZ,
-                           Driver,
+                           (PVOID)Driver,
                            (wcslen(Driver) + 1) * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {

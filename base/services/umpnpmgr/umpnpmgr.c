@@ -2746,7 +2746,11 @@ PNP_DetectResourceConflict(
     BOOL *pbConflictDetected,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
+    DPRINT("PNP_DetectResourceConflict()\n");
+
+    if (pbConflictDetected != NULL)
+        *pbConflictDetected = FALSE;
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 

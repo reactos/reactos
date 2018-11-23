@@ -88,7 +88,7 @@ SetCurrentListEntry(
     IN PGENERIC_LIST List,
     IN PGENERIC_LIST_ENTRY Entry)
 {
-    if (Entry->List != List)
+    if (!Entry || (Entry->List != List))
         return;
     List->CurrentEntry = Entry;
 }
@@ -141,18 +141,6 @@ GetNumberOfListEntries(
     IN PGENERIC_LIST List)
 {
     return List->NumOfEntries;
-}
-
-BOOLEAN
-GenericListHasSingleEntry(
-    IN PGENERIC_LIST List)
-{
-    /*
-     * If both list head pointers (which normally point to the first and last
-     * list member, respectively) point to the same entry then it means that
-     * there is just a single thing in there, otherwise... false!
-     */
-    return (!IsListEmpty(&List->ListHead) && (List->ListHead.Flink == List->ListHead.Blink));
 }
 
 /* EOF */

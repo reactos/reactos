@@ -1,5 +1,5 @@
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
 
 [AddReg]
 BCD,"BCD00000000\Description\Control","System",0x00010001,1

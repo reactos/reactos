@@ -1371,7 +1371,7 @@ MUI_ERROR msMYErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Persediaan gagal memasang bootcode FAT pada partition sistem.",
+        "Persediaan gagal memasang bootcode %S pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {
@@ -1422,7 +1422,7 @@ MUI_ERROR msMYErrorEntries[] =
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Persediaan gagal memasang bootcode FAT pada partition sistem.",
+        "Persediaan gagal memasang bootcode %S pada partition sistem.",
         "ENTER = Memulakan semula komputer"
     },
     {

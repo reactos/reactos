@@ -49,6 +49,22 @@ The enumeration of network components (protocols, client, transport) is done by 
 function. When a user accepts changes, it calls INetCfg::Apply or when it aborts the changes INetCfg::Cancel.
 
 === Known Issues ===
-* The notification icons are only added once IShellFolder of netshell is created for the first time
 * Status changes of an adapter are not automatically updated because the information is cached
 * There seems to be an icon problem which makes icon blink in the status dialog
+
+=== Testing in windows ===
+
+Unfortunately in windows the CLSID_ConnectionManager class is implemented in the netman 
+service and netshell contains the rpc proxy stubs for it. This means that until we are able to
+reimplement these stubs alongside all its unimplemented interfaces and objects, we can't replace
+the system netshell with ours (INetConnectionManager and IEnumNetConnection are only the tip
+of the iceberg). 
+However it is perfectly fine if one copies our netshell in a different folder and change the 
+registry settings to make it handle CLSID_ConnectionFolder, CLSID_LanConnectionUi and CLSID_ConnectionTray.
+When doing so there are actually two options about how to test. One is leaving #define USE_CUSTOM_CONMGR 1
+as is and the other is setting is to 0. What this does is that when 0, the connections will be enumerated 
+in the shell folder and the tray using the system's INetConnectionManager (which resides in the system's
+netman service and is accessible through the system's netshell.dll). This allows us to implement and
+test our three components against the correct implementation of INetConnectionManager.
+The other option is setting USE_CUSTOM_CONMGR to 1 which will make the shell folder and the tray
+enumerate connections with our connection manager effectively testing it in windows as well.

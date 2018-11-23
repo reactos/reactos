@@ -1,0 +1,23 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Võrdleb kahe või enama faili sisu.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Määrab esimese võrreldava faili asukoha ja nime.\n\
+  data2      Määrab teise võrreldava faili asukoha ja nime.\n\
+  /A         Kuvab erinevusi ASCII tähtedes (vaikimisi: kuueteistkümnendiksüsteemis).\n\
+  /L         Kuvab erinevuste reanumbrid.\n"
+    IDS_INVALIDSWITCH "Sobimatu parameeter - /%c\n"
+    IDS_BADSYNTAX "Halb käsurea süntaks\n"
+    IDS_FILEERROR "Ei leidnud/saanud avada faili: %s\n"
+    IDS_COMPARING "%s ja %s võrdlemine...\n"
+    IDS_FILESIZEERROR "Ei saa määrata suurust failil: %s\n"
+    IDS_SIZEDIFFERS "Failid on erineva suurusega.\n"
+    IDS_READERROR "Failide lugemisetõrge.\n"
+    IDS_MISMATCHLINE "Võrdle tõrget real %d\n"
+    IDS_MISMATCHOFFSET "Võrdle tõrget nihel 0x%X\n"
+    IDS_ASCIIDIFF "fail%d = %c\n"
+    IDS_HEXADECIMALDIFF "fail%d = %X\n"
+    IDS_MATCH "Failide võrdlus OK\n"
+END

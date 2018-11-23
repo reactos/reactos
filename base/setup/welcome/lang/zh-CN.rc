@@ -10,7 +10,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS - 欢迎"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "欢迎使用 ReactOS 操作系统。\n\n 请点击左边的主题。"
+    IDS_DEFAULT_TOPIC_DESC "欢迎使用 ReactOS 操作系统。\n\n 请点击左边的小标题以继续。"
     IDS_FONTNAME "宋体"
     IDS_CHECKTEXT "再次显示此对话框(&S)"
     IDS_CLOSETEXT "退出(&Q)"
@@ -35,7 +35,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "重新安装 ReactOS 或更新你的ReactOS 。"
+    IDS_TOPIC_DESC0 "重新安装 ReactOS 或更新你的 ReactOS。"
     IDS_TOPIC_DESC1 "浏览此 CD 的内容。"
     IDS_TOPIC_DESC2 "点击退出应用程序。"
 END

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -18,38 +18,38 @@ CAPTION "Kullanıcı Arayüzü Yanlışlığı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Oturum Açma Kullanıcı Arayüzü %s DLL'si yüklemede başarısız oldu.", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "DLL'yi yenisiyle değiştirmek veyâ özgün DLL'yi onarmak için dizge yöneticinize başvurunuz.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "DLL'yi yenisiyle değiştirmek ya da özgün DLL'yi onarmak için sistem yöneticinize başvurunuz.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "&Yeniden Başlat", 1, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
-CAPTION "System Shutdown"
+CAPTION "Sistemi Kapatma"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "Bir sistem kapatma başlatıldı. Lütfen bütün işlerinizi kaydediniz ve oturumunuzu sonlandırınız. Bütün kaydedilmemiş işler, sistem kapatılırken kaybedilir.", -1, 38, 7, 135, 40
+    LTEXT "Sistem kapatılıyor:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "İleti:", -1, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PREPARENETWORKCONNECTIONS "Ağ Bağlantıları Anıklanıyor..."
+    IDS_PREPARENETWORKCONNECTIONS "Ağ Bağlantıları Hazırlanıyor..."
     IDS_APPLYINGCOMPUTERSETTINGS "Bilgisayar Ayarları Uygulanıyor..."
     IDS_RUNNINGSTARTUPSCRIPTS "Açılış Betikleri Çalıştırılıyor..."
     IDS_RUNNINGSHUTDOWNSCRIPTS "Kapanış Betikleri Çalıştırılıyor..."
-    IDS_APPLYINGYOURPERSONALSETTINGS "Şahsî Ayarlarınız Uygulanıyor..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Kişisel Ayarlarınız Uygulanıyor..."
     IDS_RUNNINGLOGOFFSCRIPTS "Oturum Kapama Betikleri Çalıştırılıyor..."
     IDS_RUNNINGLOGONSCRIPTS "Oturum Açma Betikleri Çalıştırılıyor..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Şahsî Ayarlarınız Yükleniyor..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Kişisel Ayarlarınız Yükleniyor..."
     IDS_CLOSINGNETWORKCONNECTIONS "Ağ Bağlantıları Kapatılıyor..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS Kapatılıyor..."
-    IDS_PREPARETOSTANDBY "Uykuya Anıklanıyor..."
-    IDS_PREPARETOHIBERNATE "Anıkta Beklemeye Anıklanıyor..."
-    IDS_SAVEYOURSETTINGS "Ayarlarınız Saklanıyor..."
+    IDS_PREPARETOSTANDBY "Uykuya Hazırlanıyor..."
+    IDS_PREPARETOHIBERNATE "Hazırda Beklemeye Hazırlanıyor..."
+    IDS_SAVEYOURSETTINGS "Ayarlarınız Kaydediliyor..."
     IDS_REACTOSISSTARTINGUP "ReactOS Başlatılıyor..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"

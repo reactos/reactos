@@ -741,6 +741,21 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
     return FALSE;
 }
 
+static VOID
+IntUnicodeStringToBuffer(LPWSTR pszBuffer, USHORT cbBuffer, const UNICODE_STRING *pString)
+{
+    USHORT cbLength = pString->Length;
+
+    if (cbBuffer < sizeof(UNICODE_NULL))
+        return;
+
+    if (cbLength > cbBuffer - sizeof(UNICODE_NULL))
+        cbLength = cbBuffer - sizeof(UNICODE_NULL);
+
+    RtlCopyMemory(pszBuffer, pString->Buffer, cbLength);
+    pszBuffer[cbLength / sizeof(WCHAR)] = UNICODE_NULL;
+}
+
 static BOOL
 SubstituteFontRecurse(LOGFONTW* pLogFont)
 {
@@ -763,7 +778,7 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
         if (!Found)
             break;
 
-        RtlStringCchCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
+        IntUnicodeStringToBuffer(pLogFont->lfFaceName, sizeof(pLogFont->lfFaceName), &OutputNameW);
 
         if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
             CharSetMap[FONTSUBST_FROM] == pLogFont->lfCharSet)
@@ -1037,6 +1052,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;   /* failure */
         }
+
         RtlCopyMemory(FontGDI->Filename, pFileName->Buffer, pFileName->Length);
         FontGDI->Filename[pFileName->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
@@ -1721,6 +1737,8 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     FT_Fixed XScale, YScale;
     int Ascent, Descent;
     FT_Face Face = FontGDI->SharedFace->Face;
+
+    ASSERT_FREETYPE_LOCK_HELD();
 
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
@@ -2566,10 +2584,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
     if (0 == Ntm->ntmFlags) Ntm->ntmFlags = NTM_REGULAR;
 
-    Ntm->ntmSizeEM = Otm->otmEMSquare;
-    Ntm->ntmCellHeight = Otm->otmEMSquare;
-    Ntm->ntmAvgWidth = 0;
-
     Info->FontType = (0 != (TM->tmPitchAndFamily & TMPF_TRUETYPE)
                       ? TRUETYPE_FONTTYPE : 0);
 
@@ -2586,12 +2600,10 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     /* full name */
     if (!FullName)
         FullName = (WCHAR*)((ULONG_PTR) Otm + (ULONG_PTR)Otm->otmpFaceName);
-    
+
     RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
                      sizeof(Info->EnumLogFontEx.elfFullName),
                      FullName);
-
-    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     RtlInitAnsiString(&StyleA, Face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
@@ -2599,6 +2611,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
     if (!NT_SUCCESS(status))
     {
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
     Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
@@ -2609,8 +2622,15 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     if (!pOS2)
     {
         IntUnLockFreeType();
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
+
+    Ntm->ntmSizeEM = Otm->otmEMSquare;
+    Ntm->ntmCellHeight = pOS2->usWinAscent + pOS2->usWinDescent;
+    Ntm->ntmAvgWidth = 0;
+
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     fs.fsCsb[0] = pOS2->ulCodePageRange1;
     fs.fsCsb[1] = pOS2->ulCodePageRange2;
@@ -2813,7 +2833,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                 continue;   /* mismatch */
         }
 
-        RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
+        IntUnicodeStringToBuffer(lf.lfFaceName, sizeof(lf.lfFaceName), pFromW);
         SubstituteFontRecurse(&lf);
 
         RtlInitUnicodeString(&NameW, lf.lfFaceName);
@@ -3274,7 +3294,11 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     {
         error = FT_Get_WinFNT_Header(face, &WinFNT);
         if (error)
+        {
+            DPRINT1("%s: Failed to request font size.\n", face->family_name);
+            ASSERT(FALSE);
             return error;
+        }
 
         FontGDI->tmHeight           = WinFNT.pixel_height;
         FontGDI->tmAscent           = WinFNT.ascent;
@@ -4322,8 +4346,6 @@ ftGdiGetTextMetricsW(
 
             Error = FT_Get_WinFNT_Header(Face, &Win);
 
-            IntUnLockFreeType();
-
             if (NT_SUCCESS(Status))
             {
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
@@ -4331,6 +4353,8 @@ ftGdiGetTextMetricsW(
                 /* FIXME: Fill Diff member */
                 RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
+
+            IntUnLockFreeType();
         }
         TEXTOBJ_UnlockText(TextObj);
     }
@@ -4450,10 +4474,11 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     }
 
     Byte = LogFont->lfOutPrecision;
-    if (Byte == OUT_DEFAULT_PRECIS)
-        Byte = OUT_OUTLINE_PRECIS;  /* Is it OK? */
     switch (Byte)
     {
+        case OUT_DEFAULT_PRECIS:
+            /* nothing to do */
+            break;
         case OUT_DEVICE_PRECIS:
             if (!(TM->tmPitchAndFamily & TMPF_DEVICE) ||
                 !(TM->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
@@ -4979,9 +5004,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             if (NT_SUCCESS(Status))
             {
                 /* truncated copy */
-                Name.Length = (USHORT)min(Name.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
-                RtlStringCbCopyNW(TextObj->TextFace, Name.Length + sizeof(WCHAR), Name.Buffer, Name.Length);
-
+                IntUnicodeStringToBuffer(TextObj->TextFace, sizeof(TextObj->TextFace), &Name);
                 RtlFreeUnicodeString(&Name);
             }
         }

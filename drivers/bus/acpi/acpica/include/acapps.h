@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 /* Common info for tool signons */
 
 #define ACPICA_NAME                 "Intel ACPI Component Architecture"
-#define ACPICA_COPYRIGHT            "Copyright (c) 2000 - 2017 Intel Corporation"
+#define ACPICA_COPYRIGHT            "Copyright (c) 2000 - 2018 Intel Corporation"
 
 #if ACPI_MACHINE_WIDTH == 64
 #define ACPI_WIDTH          " (64-bit version)"
@@ -79,6 +79,9 @@
     Prefix, UtilityName, ((UINT32) ACPI_CA_VERSION), ACPI_WIDTH, \
     Prefix, ACPICA_COPYRIGHT, \
     Prefix
+
+#define ACPI_COMMON_BUILD_TIME \
+    "Build date/time: %s %s\n", __DATE__, __TIME__
 
 /* Macros for usage messages */
 
@@ -212,6 +215,10 @@ FlSplitInputPathname (
     char                    *InputPath,
     char                    **OutDirectoryPath,
     char                    **OutFilename);
+
+char *
+FlGetFileBasename (
+    char                    *FilePathname);
 
 char *
 AdGenerateFilename (

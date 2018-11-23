@@ -128,7 +128,7 @@ BEGIN
     RTEXT "Mot de passe :", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Répéter le mot de passe :", -1, 7, 88, 96, 8
-    AUTOCHECKBOX "L'utilisateur doit changer son mot de passe après sa première connexion", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
+    AUTOCHECKBOX "L'utilisateur doit changer son mot de passe après sa première connexion", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 245, 10
     AUTOCHECKBOX "L'utilisateur ne peut pas changer le mot de passe", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Le mot de passe n'expire jamais", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Compte désactivé", IDC_USER_NEW_DISABLED, 7, 151, 200, 10

@@ -1,11 +1,11 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Fâre İmlecini Yakala"
-    IDS_RELEASE_MOUSE, "Fâ&re İmlecini Bırak"
+    IDS_CAPTURE_MOUSE, "&Fare İmlecini Yakala"
+    IDS_RELEASE_MOUSE, "Fa&re İmlecini Bırak"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 

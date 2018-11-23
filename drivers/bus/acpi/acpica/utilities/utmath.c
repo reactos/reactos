@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -152,7 +152,7 @@ AcpiUtShortShiftLeft (
     if ((Count & 63) >= 32)
     {
         OperandOvl.Part.Hi = OperandOvl.Part.Lo;
-        OperandOvl.Part.Lo ^= OperandOvl.Part.Lo;
+        OperandOvl.Part.Lo = 0;
         Count = (Count & 63) - 32;
     }
     ACPI_SHIFT_LEFT_64_BY_32 (OperandOvl.Part.Hi,
@@ -197,7 +197,7 @@ AcpiUtShortShiftRight (
     if ((Count & 63) >= 32)
     {
         OperandOvl.Part.Lo = OperandOvl.Part.Hi;
-        OperandOvl.Part.Hi ^= OperandOvl.Part.Hi;
+        OperandOvl.Part.Hi = 0;
         Count = (Count & 63) - 32;
     }
     ACPI_SHIFT_RIGHT_64_BY_32 (OperandOvl.Part.Hi,

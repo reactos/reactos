@@ -13,7 +13,7 @@ BEGIN
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "版本", IDC_ROSVERSION, 10, 137, 116, 9
     LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "System Uptime:", IDC_STATIC, 4, 158, 86, 9
+    LTEXT "开机时间:", IDC_STATIC, 4, 158, 86, 9
     LTEXT "", IDC_UPTIME, 10, 170, 116, 9
     LTEXT "计算机:", IDC_STATIC, 124, 116, 34, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
@@ -304,9 +304,9 @@ BEGIN
     IDS_WARNINITIALRANGE "分页文件的初始大小不得小于 16 MB，并且不得超过所选磁盘上的可用空间。"
     IDS_WARNMAXIMUMRANGE "分页文件的最大大小不能小于其初始大小和不能超过所选磁盘上的可用空间。"
     IDS_PAGEFILE_NONE "无"
-    IDS_PAGEFILE_SYSTEM "系统已管理"
+    IDS_PAGEFILE_SYSTEM "系统已托管"
     IDS_INFOREBOOT "您必须重新启动计算机，才能应用更改。"
-    IDS_DEVS "\nReactOS 团队\n\n项目协调员\n\nAleksey Bragin\n\n开发团队\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\n网站团队\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\n媒体团队\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
+    IDS_DEVS "\nReactOS Team\n\n项目协调员\n\nAleksey Bragin\n\n开发组\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\n网站团队\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\n媒体团队\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "确认配置文件删除"
     IDS_HWPROFILE_CONFIRM_DELETE "你确定你想要删除的硬件配置文件？ ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "配置式名称已在使用。"

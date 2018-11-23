@@ -463,7 +463,7 @@ ApplyRegistryValues(
                                   1,
                                   (PINT)&dwType))
             {
-                DPRINT1("Failed to create the key %S (Error %lu)\n", szKeyName, dwError);
+                DPRINT1("Failed to get key type (Error %lu)\n", GetLastError());
                 break;
             }
 

@@ -24,7 +24,6 @@
 #include <shobjidl.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <stdio.h>
 
 #include <browseui_undoc.h>
 

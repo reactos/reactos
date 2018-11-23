@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,12 +49,6 @@
 
 #define _COMPONENT          ACPI_EVENTS
         ACPI_MODULE_NAME    ("evrgnini")
-
-/* Local prototypes */
-
-static BOOLEAN
-AcpiEvIsPciRootBridge (
-    ACPI_NAMESPACE_NODE     *Node);
 
 
 /*******************************************************************************
@@ -382,7 +376,7 @@ AcpiEvPciConfigRegionSetup (
  *
  ******************************************************************************/
 
-static BOOLEAN
+BOOLEAN
 AcpiEvIsPciRootBridge (
     ACPI_NAMESPACE_NODE     *Node)
 {
@@ -628,9 +622,12 @@ AcpiEvInitializeRegion (
                  * Node's object was replaced by this Method object and we
                  * saved the handler in the method object.
                  *
+                 * Note: Only used for the legacy MLC support. Will
+                 * be removed in the future.
+                 *
                  * See AcpiNsExecModuleCode
                  */
-                if (!AcpiGbl_ParseTableAsTermList &&
+                if (!AcpiGbl_ExecuteTablesAsMethods &&
                     ObjDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL)
                 {
                     HandlerObj = ObjDesc->Method.Dispatch.Handler;
