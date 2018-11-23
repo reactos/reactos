@@ -237,7 +237,7 @@ public:
     END_COM_MAP()
 };
 
-HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * m_TrayWnd, IN HWND m_Owner, IContextMenu ** ppCtxMenu)
+HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * m_TrayWnd, IN HWND m_Owner, IContextMenu ** ppCtxMenu)
 {
     CStartMenuBtnCtxMenu * mnu = new CComObject<CStartMenuBtnCtxMenu>();
     mnu->Initialize(m_TrayWnd, m_Owner);

@@ -170,12 +170,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
 #endif
 
-BOOL
-RegisterTrayWindowClass(VOID);
-
-VOID
-UnregisterTrayWindowClass(VOID);
-
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);
 
 VOID
@@ -309,7 +303,7 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
  * startmnu.cpp
  */
 
-HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
+HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
@@ -328,7 +322,7 @@ ShowCustomizeClassic(HINSTANCE, HWND);
 */
 
 HRESULT 
-CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
+CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
  * trayntfy.c

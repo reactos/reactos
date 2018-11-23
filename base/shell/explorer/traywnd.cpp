@@ -2668,7 +2668,7 @@ ChangePos:
             if (!(m_StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
             {
                 CComPtr<IContextMenu> ctxMenu;
-                StartMenuBtnCtxMenuCreator(this, m_hWnd, &ctxMenu);
+                CStartMenuBtnCtxMenu_CreateInstance(this, m_hWnd, &ctxMenu);
                 TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
