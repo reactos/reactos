@@ -19,8 +19,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 BEGIN
     POPUP "文件(&F)"
     BEGIN
-        MENUITEM "导入自(&I)...\tCtrl+O", ID_IMPORT
-        MENUITEM "导出到(&E)...\tCtrl+S", ID_EXPORT
+        MENUITEM "导入(&I)...\tCtrl+O", ID_IMPORT
+        MENUITEM "导出(&E)...\tCtrl+S", ID_EXPORT
         MENUITEM SEPARATOR
         MENUITEM "重新加载注册表(&L)\tCtrl+L", ID_RELOAD
         MENUITEM "更新注册表(&R)\tCtrl+U", ID_UPDATE_REGISTRY
@@ -29,9 +29,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", ID_EXIT
     END
-    POPUP "&Edit"
+    POPUP "编辑(&E)"
     BEGIN
-        MENUITEM "新项目(&N)\tCtrl+N", ID_NEW
+        MENUITEM "新建项目(&N)\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
         MENUITEM "编辑项目(&E)\tEnter", ID_EDIT
         MENUITEM SEPARATOR
@@ -47,7 +47,7 @@ END
 BEGIN
     POPUP "Popup"
     BEGIN
-        MENUITEM "新项目(&N)\tCtrl+N", ID_NEW
+        MENUITEM "新建项目(&N)\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
         MENUITEM "编辑项目(&E)\tEnter", ID_EDIT
         MENUITEM SEPARATOR

@@ -157,7 +157,7 @@ BEGIN
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-    LTEXT "已安装的物理内存：", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "已安装的物理内存:", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "确定", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
@@ -167,7 +167,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "宋体"
 BEGIN
-    LTEXT "ReactOS 提供方：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "带给您 ReactOS 的是:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -685,18 +685,18 @@ BEGIN
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "新操作"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "操作(&A):", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "用于执行操作的应用程序(&L):", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
-    DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "浏览(&R)...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "使用 DDE(&U)", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    DEFPUSHBUTTON "确定", IDOK, 160, 20, 60, 14
+    PUSHBUTTON "取消", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
@@ -704,20 +704,20 @@ CAPTION "自定义"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "您想要什么类型的文件夹?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "将此文件夹类型设置成模板(&F):", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    AUTOCHECKBOX "将此模板应用到所有子文件夹(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "文件夹图片", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "对于缩略图视图，您可以在此文件夹上放置图片以提醒您内容。", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "更改图片(&P)...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "恢复默认(&R)", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    LTEXT "预览:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "文件夹图标", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "对于除缩略图以外的所有视图，您可以将标准""文件夹""图标更改为另一个图标。", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "更改图标(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -801,9 +801,9 @@ BEGIN
 
     /* message box strings */
     IDS_RESTART_TITLE "重新启动"
-    IDS_RESTART_PROMPT "是否重新启动系统?"
+    IDS_RESTART_PROMPT "请问需要重启系统吗?"
     IDS_SHUTDOWN_TITLE "关机"
-    IDS_SHUTDOWN_PROMPT "是否关闭系统?"
+    IDS_SHUTDOWN_PROMPT "请问需要关闭系统吗?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
@@ -889,9 +889,9 @@ BEGIN
     IDS_DRV_FILE "设备驱动程序"
     IDS_EFI_FILE "可扩展固件接口(EFI) 可执行文件"
     IDS_EXE_FILE "应用程序"
-    IDS_NLS_FILE "National Language Support File"
-    IDS_OCX_FILE "ActiveX Control"
-    IDS_TLB_FILE "Type Library"
+    IDS_NLS_FILE "国家语言支持文件"
+    IDS_OCX_FILE "ActiveX 控件"
+    IDS_TLB_FILE "类型库"
     IDS_FON_FILE "字体文件"
     IDS_TTF_FILE "TrueType 字体文件"
     IDS_OTF_FILE "OpenType 字体文件"
@@ -904,7 +904,7 @@ BEGIN
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-文件"
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"
@@ -934,7 +934,7 @@ BEGIN
 
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
-    IDS_EXE_DESCRIPTION "描述："
+    IDS_EXE_DESCRIPTION "描述:"
 
     IDS_MENU_EMPTY "(空)"
     IDS_OBJECTS "%d 个对象"
@@ -962,18 +962,18 @@ BEGIN
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 高级(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "高级(&V) >>"
-    IDS_NEWEXT_NEW "<New>"
+    IDS_NEWEXT_NEW "<新建>"
     IDS_NEWEXT_SPECIFY_EXT "您必须指定一个扩展名。"
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
+    IDS_NEWEXT_ALREADY_ASSOC "扩展名 %s 已经与文件类型 %s 关联。 是否要将 %s 与 %s 取消关联并为其创建新的文件类型？"
     IDS_NEWEXT_EXT_IN_USE "扩展名正在被使用"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
+    IDS_REMOVE_EXT "如果删除已注册的文件扩展名，则无法通过双击其图标来打开具有此扩展名的文件。\n\n您确定要删除此扩展名吗？"
     IDS_SPECIFY_ACTION "您必须指定一个操作。"
     IDS_INVALID_PROGRAM "找不到指定的程序。请确保文件名和路径正确无误。"
     IDS_REMOVE_ACTION "您确定要移除此操作吗？"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
+    IDS_ACTION_EXISTS "已为此文件类型注册了操作 '%s' 。请输入其他名称，然后重试。"
+    IDS_EXE_FILTER "程序\0*.exe\0所有文件\0*.*\0"
+    IDS_EDITING_ACTION "编辑操作类型: "
+    IDS_NO_ICONS "文件 '%s' 不包含图标\n\n从列表中选择一个图标或指定其他文件。"
     IDS_FILE_NOT_FOUND "无法找到文件 '%s'。"
 END
