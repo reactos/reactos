@@ -1,0 +1,35 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Cihla"
+    IDS_EGGPLANT "Lilek"
+    IDS_GOLIVE "Zelená oliva" //Spruce
+    IDS_HCONTRAST_1 "Vysoký kontrast 1"
+    IDS_HCONTRAST_2 "Vysoký kontrast 2"
+    IDS_HCONTRAST_BLACK "Vysoký kontrast černá"
+    IDS_HCONTRAST_WHITE "Vysoký kontrast bílá"
+    IDS_LILAC "Šeřík"
+    IDS_MAPLE "Javor"
+    IDS_MARINE "Námořní"
+    IDS_PLUM "Švestka"
+    IDS_PUMPKIN "Dýně"
+    IDS_RAIN "Deštivý den"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS Classic"
+    IDS_STANDARD "ReactOS Standard"
+    IDS_ROSE "Růže"
+    IDS_SAND "Písek" //Desert
+    IDS_SLATE "Břidlice"
+    IDS_SKY "Nebe"
+    IDS_STORM "Bouře"
+    IDS_TEAL "Modrozelená"
+    IDS_WHEAT "Pšenice"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END

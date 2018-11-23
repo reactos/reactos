@@ -1,0 +1,35 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Backstein"
+    IDS_EGGPLANT "Aubergine"
+    IDS_GOLIVE "Olivgrün" //Spruce
+    IDS_HCONTRAST_1 "Hoher Kontrast 1"
+    IDS_HCONTRAST_2 "Hoher Kontrast 2"
+    IDS_HCONTRAST_BLACK "Hoher Kontrast Schwarz"
+    IDS_HCONTRAST_WHITE "Hoher Kontrast Weiß"
+    IDS_LILAC "Flieder"
+    IDS_MAPLE "Ahorn"
+    IDS_MARINE "Ozean"
+    IDS_PLUM "Pflaume"
+    IDS_PUMPKIN "Kürbis"
+    IDS_RAIN "Regentag"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS Klassisch"
+    IDS_STANDARD "ReactOS Standard"
+    IDS_ROSE "Rose"
+    IDS_SAND "Sand" //Desert
+    IDS_SLATE "Schiefer"
+    IDS_SKY "Himmel"
+    IDS_STORM "Sturm"
+    IDS_TEAL "Türkis"
+    IDS_WHEAT "Gelbbraun"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END
