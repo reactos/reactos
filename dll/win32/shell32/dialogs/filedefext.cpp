@@ -272,6 +272,7 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
     DWORD dwSize = sizeof(wszBuf);
     BOOL bUnknownApp = TRUE;
     LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
+    RECT rcDescr, rcButton;
 
     if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) == ERROR_SUCCESS)
     {
@@ -292,7 +293,7 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
                 HWND hIconCtrl = GetDlgItem(hwndDlg, 14025);
                 HWND hDescrCtrl = GetDlgItem(hwndDlg, 14007);
                 ShowWindow(hIconCtrl, SW_SHOW);
-                RECT rcIcon, rcDescr;
+                RECT rcIcon;
                 GetWindowRect(hIconCtrl, &rcIcon);
 
                 rcIcon.right = rcIcon.left + GetSystemMetrics(SM_CXSMICON);
@@ -340,6 +341,16 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
         LoadStringW(shell32_hInstance, IDS_UNKNOWN_APP, wszBuf, _countof(wszBuf));
         SetDlgItemTextW(hwndDlg, 14007, wszBuf);
     }
+
+    GetWindowRect(GetDlgItem(hwndDlg, 14007), &rcDescr);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcDescr, 2);
+    GetWindowRect(GetDlgItem(hwndDlg, 14024), &rcButton);
+    MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcButton, 2);
+    rcDescr.right = rcButton.left - 4;
+    SetWindowPos(GetDlgItem(hwndDlg, 14007), NULL,
+                 rcDescr.left, rcDescr.top,
+                 rcDescr.right - rcDescr.left, rcDescr.bottom - rcDescr.top,
+                 SWP_NOZORDER);
 }
 
 /*************************************************************************
