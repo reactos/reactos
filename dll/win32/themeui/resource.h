@@ -29,4 +29,4 @@
 #define IDS_SIZE_LARGE      2020
 #define IDS_SIZE_XLARGE     2021
 
-#endif /* RESOURCE_H
+#endif /* RESOURCE_H */
