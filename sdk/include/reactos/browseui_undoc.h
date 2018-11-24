@@ -60,7 +60,7 @@ typedef struct ExplorerCommandLineParseResults
     LPWSTR                  strPath;
     LPITEMIDLIST            pidlPath;
     DWORD                   dwFlags;
-    DWORD                           offsetC;
+    int                     nCmdShow;
     DWORD                           offset10;
     DWORD                           offset14;
     DWORD                           offset18;

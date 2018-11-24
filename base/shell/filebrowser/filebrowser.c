@@ -34,6 +34,7 @@ int _tmain(int argc, _TCHAR* argv[])
     if (SHExplorerParseCmdLine(&parseResults))
     {
         parseResults.dwFlags |= SH_EXPLORER_CMDLINE_FLAG_SEPARATE;
+        parseResults.nCmdShow = SW_SHOWNORMAL;
         return SHCreateFromDesktop(&parseResults);
     }
 
