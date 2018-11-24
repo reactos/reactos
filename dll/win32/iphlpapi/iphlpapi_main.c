@@ -794,6 +794,8 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
   return ret;
 }
 
+static int TcpTableSorter(const void *a, const void *b);
+
 /******************************************************************
  *    GetExtendedTcpTable (IPHLPAPI.@)
  *
@@ -816,20 +818,116 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
 
 DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
 {
+    DWORD i, count;
 	DWORD ret = NO_ERROR;
 
-  if (TableClass == TCP_TABLE_OWNER_PID_ALL) {
-    if (*pdwSize == 0) {
-      *pdwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
-      return ERROR_INSUFFICIENT_BUFFER; 
-    } else {
-      ZeroMemory(pTcpTable, sizeof(MIB_TCPTABLE_OWNER_PID));
-      return NO_ERROR;
+    if (!pdwSize)
+    {
+        return ERROR_INVALID_PARAMETER;
     }
-  }
 
+    if (ulAf != AF_INET)
+    {
+        UNIMPLEMENTED;
+        return ERROR_INVALID_PARAMETER;
+    }
 
-    UNIMPLEMENTED;
+    switch (TableClass)
+    {
+        case TCP_TABLE_BASIC_ALL:
+            ret = GetTcpTable(pTcpTable, pdwSize, bOrder);
+            break;
+
+        case TCP_TABLE_BASIC_CONNECTIONS:
+        {
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].State != MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].State != MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW), TcpTableSorter);
+                }
+            }
+        }
+        break;
+
+        case TCP_TABLE_BASIC_LISTENER:
+        {
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].State == MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].State == MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW), TcpTableSorter);
+                }
+            }
+        }
+        break;
+
+        default:
+            UNIMPLEMENTED;
+            ret = ERROR_INVALID_PARAMETER;
+            break;
+    }
+
     return ret;	
 }
 
