@@ -876,6 +876,8 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
                               sizeof(MIB_TCPROW), TcpTableSorter);
                 }
+
+                free(pOurTcpTable);
             }
         }
         break;
@@ -918,6 +920,8 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
                               sizeof(MIB_TCPROW), TcpTableSorter);
                 }
+
+                free(pOurTcpTable);
             }
         }
         break;
@@ -943,6 +947,8 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
+
+                free(pOurTcpTable);
             }
         }
         break;
@@ -986,6 +992,8 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
+
+                free(pOurTcpTable);
             }
         }
         break;
@@ -1029,6 +1037,8 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
                               sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
                 }
+
+                free(pOurTcpTable);
             }
         }
         break;
