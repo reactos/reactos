@@ -7274,6 +7274,570 @@ Language=Russian
 The system could not find message: %1.
 .
 
+MessageId=3802
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3802
+Language=English
+This schedule date is invalid.
+.
+Language=Russian
+This schedule date is invalid.
+.
+
+MessageId=3803
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3803
+Language=English
+The LANMAN root directory is unavailable.
+.
+Language=Russian
+The LANMAN root directory is unavailable.
+.
+
+MessageId=3804
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3804
+Language=English
+The SCHED.LOG file could not be opened.
+.
+Language=Russian
+The SCHED.LOG file could not be opened.
+.
+
+MessageId=3805
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3805
+Language=English
+The Server service has not been started.
+.
+Language=Russian
+The Server service has not been started.
+.
+
+MessageId=3806
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3806
+Language=English
+The AT job ID does not exist.
+.
+Language=Russian
+The AT job ID does not exist.
+.
+
+MessageId=3807
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3807
+Language=English
+The AT schedule file is corrupted.
+.
+Language=Russian
+The AT schedule file is corrupted.
+.
+
+MessageId=3808
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3808
+Language=English
+The delete failed due to a problem with the AT schedule file.
+.
+Language=Russian
+The delete failed due to a problem with the AT schedule file.
+.
+
+MessageId=3809
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3809
+Language=English
+The command line cannot exceed 259 characters.
+.
+Language=Russian
+The command line cannot exceed 259 characters.
+.
+
+MessageId=3810
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3810
+Language=English
+The AT schedule file could not be updated because the disk is full.
+.
+Language=Russian
+The AT schedule file could not be updated because the disk is full.
+.
+
+MessageId=3812
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3812
+Language=English
+The AT schedule file is invalid.  Please delete the file and create a new one.
+.
+Language=Russian
+The AT schedule file is invalid.  Please delete the file and create a new one.
+.
+
+MessageId=3813
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3813
+Language=English
+The AT schedule file was deleted.
+.
+Language=Russian
+The AT schedule file was deleted.
+.
+
+MessageId=3814
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3814
+Language=English
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Russian
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+
+MessageId=3815
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3815
+Language=English
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Russian
+The AT command has timed-out.\n
+Please try again later.
+.
+
+MessageId=3816
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3816
+Language=English
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Russian
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+
+MessageId=3817
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3817
+Language=English
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Russian
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+
+MessageId=3870
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3870
+Language=English
+%1 is not a valid computer name.
+.
+Language=Russian
+%1 is not a valid computer name.
+.
+
+MessageId=3871
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3871
+Language=English
+%1 is not a valid Windows network message number.
+.
+Language=Russian
+%1 is not a valid Windows network message number.
+.
+
+MessageId=3900
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3900
+Language=English
+Message from %1 to %2 on %3
+.
+Language=Russian
+Message from %1 to %2 on %3
+.
+
+MessageId=3901
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3901
+Language=English
+****
+.
+Language=Russian
+****
+.
+
+MessageId=3902
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3902
+Language=English
+**** unexpected end of message ****
+.
+Language=Russian
+**** unexpected end of message ****
+.
+
+MessageId=3905
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3905
+Language=English
+Press ESC to exit
+.
+Language=Russian
+Press ESC to exit
+.
+
+MessageId=3906
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3906
+Language=English
+...
+.
+Language=Russian
+...
+.
+
+MessageId=3910
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3910
+Language=English
+Current time at %1 is %2
+.
+Language=Russian
+Current time at %1 is %2
+.
+
+MessageId=3911
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3911
+Language=English
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Russian
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+
+MessageId=3912
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3912
+Language=English
+Could not locate a time-server.
+.
+Language=Russian
+Could not locate a time-server.
+.
+
+MessageId=3913
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3913
+Language=English
+Could not find the domain controller for domain %1.
+.
+Language=Russian
+Could not find the domain controller for domain %1.
+.
+
+MessageId=3914
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3914
+Language=English
+Local time (GMT%3) at %1 is %2
+.
+Language=Russian
+Local time (GMT%3) at %1 is %2
+.
+
+MessageId=3915
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3915
+Language=English
+The user's home directory could not be determined.
+.
+Language=Russian
+The user's home directory could not be determined.
+.
+
+MessageId=3916
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3916
+Language=English
+The user's home directory has not been specified.
+.
+Language=Russian
+The user's home directory has not been specified.
+.
+
+MessageId=3917
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3917
+Language=English
+The name specified for the user's home directory (%1) is not a universal naming convention (UNC) name.
+.
+Language=Russian
+The name specified for the user's home directory (%1) is not a universal naming convention (UNC) name.
+.
+
+MessageId=3918
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3918
+Language=English
+Drive %1 is now connected to %2. Your home directory is %3\\%4.
+.
+Language=Russian
+Drive %1 is now connected to %2. Your home directory is %3\\%4.
+.
+
+MessageId=3919
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3919
+Language=English
+Drive %1 is now connected to %2.
+.
+Language=Russian
+Drive %1 is now connected to %2.
+.
+
+MessageId=3920
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3920
+Language=English
+There are no available drive letters left.
+.
+Language=Russian
+There are no available drive letters left.
+.
+
+MessageId=3932
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3932
+Language=English
+%1 is not a valid domain or workgroup name.
+.
+Language=Russian
+%1 is not a valid domain or workgroup name.
+.
+
+MessageId=3935
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3935
+Language=English
+The current SNTP value is: %1
+.
+Language=Russian
+The current SNTP value is: %1
+.
+
+MessageId=3936
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3936
+Language=English
+This computer is not currently configured to use a specific SNTP server.
+.
+Language=Russian
+This computer is not currently configured to use a specific SNTP server.
+.
+
+MessageId=3937
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3937
+Language=English
+This current autoconfigured SNTP value is: %1
+.
+Language=Russian
+This current autoconfigured SNTP value is: %1
+.
+
+MessageId=3951
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3951
+Language=English
+You specified too many values for the %1 option.
+.
+Language=Russian
+You specified too many values for the %1 option.
+.
+
+MessageId=3952
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3952
+Language=English
+You entered an invalid value for the %1 option.
+.
+Language=Russian
+You entered an invalid value for the %1 option.
+.
+
+MessageId=3953
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3953
+Language=English
+The syntax is incorrect.
+.
+Language=Russian
+The syntax is incorrect.
+.
+
+MessageId=3960
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3960
+Language=English
+You specified an invalid file number.
+.
+Language=Russian
+You specified an invalid file number.
+.
+
+MessageId=3961
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3961
+Language=English
+You specified an invalid print job number.
+.
+Language=Russian
+You specified an invalid print job number.
+.
+
+MessageId=3963
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3963
+Language=English
+The user or group account specified cannot be found.
+.
+Language=Russian
+The user or group account specified cannot be found.
+.
+
+MessageId=3965
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3965
+Language=English
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Russian
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+
+MessageId=3966
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3966
+Language=English
+File and Print Services for NetWare is not installed.
+.
+Language=Russian
+File and Print Services for NetWare is not installed.
+.
+
+MessageId=3967
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3967
+Language=English
+Cannot set user properties for File and Print Services for NetWare.
+.
+Language=Russian
+Cannot set user properties for File and Print Services for NetWare.
+.
+
+MessageId=3968
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3968
+Language=English
+Password for %1 is: %2
+.
+Language=Russian
+Password for %1 is: %2
+.
+
+MessageId=3969
+Severity=Success
+Facility=System
+SymbolicName=APPERR_3969
+Language=English
+NetWare compatible logon
+.
+Language=Russian
+NetWare compatible logon
+.
+
+;
+; apperr2.h (non-public) message difinitions (4300 - 5299 APPERR2_BASE)
+;
+
+
+;
+; ncberr.h (non-public) nessage definitions (5300 - 5499 NRCERR_BASE)
+;
+
 
 ;
 ; alertmsg.h (non-public) message definitions (5500 - 5549 ALERT2_BASE)
@@ -7579,3 +8143,441 @@ An internal error occurred while accessing the computer's\nlocal or network secu
 ;
 ; lmerrlog.h messages definitions (5700 - 5899 ERRLOG2_BASE)
 ;
+
+MessageId=5700
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSSIInitError
+Language=English
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Russian
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+
+MessageId=5701
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedToUpdateTrustList
+Language=English
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Russian
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+
+MessageId=5702
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedToAddRpcInterface
+Language=English
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Russian
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+
+MessageId=5703
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedToReadMailslot
+Language=English
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Russian
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+
+MessageId=5704
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedToRegisterSC
+Language=English
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Russian
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+
+MessageId=5705
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonChangeLogCorrupt
+Language=English
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Russian
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+
+MessageId=5706
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedToCreateShare
+Language=English
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Russian
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+
+MessageId=5707
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDownLevelLogonFailed
+Language=English
+The down-level logon request for the user %1 from %2 failed.
+.
+Language=Russian
+The down-level logon request for the user %1 from %2 failed.
+.
+
+MessageId=5708
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDownLevelLogoffFailed
+Language=English
+The down-level logoff request for the user %1 from %2 failed.
+.
+Language=Russian
+The down-level logoff request for the user %1 from %2 failed.
+.
+
+MessageId=5709
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNTLogonFailed
+Language=English
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Russian
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+
+MessageId=5710
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNTLogoffFailed
+Language=English
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Russian
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+
+MessageId=5711
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonPartialSyncCallSuccess
+Language=English
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Russian
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+
+MessageId=5712
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonPartialSyncCallFailed
+Language=English
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Russian
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+
+MessageId=5713
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFullSyncCallSuccess
+Language=English
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Russian
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+
+MessageId=5714
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFullSyncCallFailed
+Language=English
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Russian
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+
+MessageId=5715
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonPartialSyncSuccess
+Language=English
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Russian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+
+MessageId=5716
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonPartialSyncFailed
+Language=English
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Russian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+
+MessageId=5717
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFullSyncSuccess
+Language=English
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Russian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+
+MessageId=5718
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFullSyncFailed
+Language=English
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Russian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+
+MessageId=5719
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthNoDomainController
+Language=English
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Russian
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+
+MessageId=5720
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthNoTrustLsaSecret
+Language=English
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Russian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+
+MessageId=5721
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthNoTrustSamAccount
+Language=English
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Russian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+
+MessageId=5722
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonServerAuthFailed
+Language=English
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Russian
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+
+MessageId=5723
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonServerAuthNoTrustSamAccount
+Language=English
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Russian
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+
+MessageId=5724
+Severity=Success
+Facility=System
+SymbolicName=NELOG_FailedToRegisterSC
+Language=English
+Could not register control handler with service controller %1.
+.
+Language=Russian
+Could not register control handler with service controller %1.
+.
+
+MessageId=5725
+Severity=Success
+Facility=System
+SymbolicName=NELOG_FailedToSetServiceStatus
+Language=English
+Could not set service status with service controller %1.
+.
+Language=Russian
+Could not set service status with service controller %1.
+.
+
+MessageId=5726
+Severity=Success
+Facility=System
+SymbolicName=NELOG_FailedToGetComputerName
+Language=English
+Could not find the computer name %1.
+.
+Language=Russian
+Could not find the computer name %1.
+.
+
+MessageId=5727
+Severity=Success
+Facility=System
+SymbolicName=NELOG_DriverNotLoaded
+Language=English
+Could not load %1 device driver.
+.
+Language=Russian
+Could not load %1 device driver.
+.
+
+MessageId=5728
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NoTranportLoaded
+Language=English
+Could not load any transport.
+.
+Language=Russian
+Could not load any transport.
+.
+
+MessageId=5729
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedDomainDelta
+Language=English
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
