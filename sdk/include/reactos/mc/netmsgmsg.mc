@@ -9185,3 +9185,503 @@ Language=Russian
 Replication of the %1 Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+
+MessageId=5730
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedGlobalGroupDelta
+Language=English
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5731
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedLocalGroupDelta
+Language=English
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5732
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedUserDelta
+Language=English
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5733
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedPolicyDelta
+Language=English
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5734
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedTrustedDomainDelta
+Language=English
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5735
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedAccountDelta
+Language=English
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5736
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedSecretDelta
+Language=English
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Russian
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+
+MessageId=5737
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSystemError
+Language=English
+The system returned the following unexpected error code: %n%1
+.
+Language=Russian
+The system returned the following unexpected error code: %n%1
+.
+
+MessageId=5738
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDuplicateMachineAccounts
+Language=English
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Russian
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+
+MessageId=5739
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonTooManyGlobalGroups
+Language=English
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Russian
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+
+MessageId=5740
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonBrowserDriver
+Language=English
+The Browser driver returned the following error to Netlogon: %n%1
+.
+Language=Russian
+The Browser driver returned the following error to Netlogon: %n%1
+.
+
+MessageId=5741
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAddNameFailure
+Language=English
+Netlogon could not register the %1<1B> name for the following reason: %n%2
+.
+Language=Russian
+Netlogon could not register the %1<1B> name for the following reason: %n%2
+.
+
+MessageId=5742
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplMessages
+Language=English
+Service failed to retrieve messages needed to boot remote boot clients.
+.
+Language=Russian
+Service failed to retrieve messages needed to boot remote boot clients.
+.
+
+MessageId=5743
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplXnsBoot
+Language=English
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Russian
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+
+MessageId=5744
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplSystem
+Language=English
+Service experienced a severe system error and will shut itself down.
+.
+Language=Russian
+Service experienced a severe system error and will shut itself down.
+.
+
+MessageId=5745
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaTimeout
+Language=English
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Russian
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+
+MessageId=5746
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaFileOpen
+Language=English
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Russian
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+
+MessageId=5747
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaFileRead
+Language=English
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Russian
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+
+MessageId=5748
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaMemory
+Language=English
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Russian
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+
+MessageId=5749
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaFileChecksum
+Language=English
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Russian
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+
+MessageId=5750
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaFileLineCount
+Language=English
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Russian
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+
+MessageId=5751
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaBbcFile
+Language=English
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Russian
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+
+MessageId=5752
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaFileSize
+Language=English
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Russian
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+
+MessageId=5753
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaInternal
+Language=English
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Russian
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+
+MessageId=5754
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaWrongVersion
+Language=English
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Russian
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+
+MessageId=5755
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplWkstaNetwork
+Language=English
+Client with computer name %1 was not booted due to network error.
+.
+Language=Russian
+Client with computer name %1 was not booted due to network error.
+.
+
+MessageId=5756
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplAdapterResource
+Language=English
+Client with adapter id %1 was not booted due to lack of resources.
+.
+Language=Russian
+Client with adapter id %1 was not booted due to lack of resources.
+.
+
+MessageId=5757
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplFileCopy
+Language=English
+Service experienced error copying file or directory %1.
+.
+Language=Russian
+Service experienced error copying file or directory %1.
+.
+
+MessageId=5758
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplFileDelete
+Language=English
+Service experienced error deleting file or directory %1.
+.
+Language=Russian
+Service experienced error deleting file or directory %1.
+.
+
+MessageId=5759
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplFilePerms
+Language=English
+Service experienced error setting permissions on file or directory %1.
+.
+Language=Russian
+Service experienced error setting permissions on file or directory %1.
+.
+
+MessageId=5760
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplCheckConfigs
+Language=English
+Service experienced error evaluating RPL configurations.
+.
+Language=Russian
+Service experienced error evaluating RPL configurations.
+.
+
+MessageId=5761
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplCreateProfiles
+Language=English
+Service experienced error creating RPL profiles for all configurations.
+.
+Language=Russian
+Service experienced error creating RPL profiles for all configurations.
+.
+
+MessageId=5762
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplRegistry
+Language=English
+Service experienced error accessing registry.
+.
+Language=Russian
+Service experienced error accessing registry.
+.
+
+MessageId=5763
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplReplaceRPLDISK
+Language=English
+Service experienced error replacing possibly outdated RPLDISK.SYS.
+.
+Language=Russian
+Service experienced error replacing possibly outdated RPLDISK.SYS.
+.
+
+MessageId=5764
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplCheckSecurity
+Language=English
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Russian
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+
+MessageId=5765
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplBackupDatabase
+Language=English
+Service failed to back up its database.
+.
+Language=Russian
+Service failed to back up its database.
+.
+
+MessageId=5766
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplInitDatabase
+Language=English
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Russian
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+
+MessageId=5767
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplRestoreDatabaseFailure
+Language=English
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Russian
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+
+MessageId=5768
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplRestoreDatabaseSuccess
+Language=English
+Service successfully restored its database from the backup.
+.
+Language=Russian
+Service successfully restored its database from the backup.
+.
+
+MessageId=5769
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplInitRestoredDatabase
+Language=English
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Russian
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
