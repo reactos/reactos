@@ -323,7 +323,7 @@ public:
 
     CShellBrowser();
     ~CShellBrowser();
-    HRESULT Initialize(LPITEMIDLIST pidl, DWORD dwFlags);
+    HRESULT Initialize();
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
@@ -723,7 +723,7 @@ CShellBrowser::~CShellBrowser()
         DSA_Destroy(menuDsa);
 }
 
-HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, DWORD dwFlags)
+HRESULT CShellBrowser::Initialize()
 {
     CComPtr<IPersistStreamInit>             persistStreamInit;
     HRESULT                                 hResult;
@@ -792,15 +792,8 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, DWORD dwFlags)
     fStatusBarVisible = true;
 
 
-    // browse 
-    hResult = BrowseToPIDL(pidl, BTP_UPDATE_NEXT_HISTORY);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
-    if ((dwFlags & SBSP_EXPLOREMODE) != NULL)
-        ShowBand(CLSID_ExplorerBand, true);
-
     ShowWindow(SW_SHOWNORMAL);
+    UpdateWindow();
 
     return S_OK;
 }
@@ -1008,6 +1001,11 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     if (saveCurrentShellView != NULL)
         saveCurrentShellView->DestroyViewWindow();
     fCurrentShellViewWindow = newShellViewWindow;
+
+    if (previousView == NULL)
+    {
+        RepositionBars();
+    }
 
     // no use
     saveCurrentShellView.Release();
@@ -2252,7 +2250,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT w
     if ((wFlags & SBSP_EXPLOREMODE) != NULL)
         ShowBand(CLSID_ExplorerBand, true);
 
-    return BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
+    long flags = BTP_UPDATE_NEXT_HISTORY;
+    if (fTravelLog)
+        flags |= BTP_UPDATE_CUR_HISTORY;
+    return BrowseToPIDL(pidl, flags);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetViewStateStream(DWORD grfMode, IStream **ppStrm)
@@ -3782,7 +3783,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-HRESULT CShellBrowser_CreateInstance(LPITEMIDLIST pidl, DWORD dwFlags, REFIID riid, void **ppv)
+HRESULT CShellBrowser_CreateInstance(REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CShellBrowser>(pidl, dwFlags, riid, ppv);
+    return ShellObjectCreatorInit<CShellBrowser>(riid, ppv);
 }
