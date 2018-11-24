@@ -181,15 +181,26 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
 
 TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 				    PNDIS_BUFFER Buffer,
-				    PUINT BufferSize)
+				    PUINT BufferSize,
+                    BOOLEAN Extended)
 {
-    MIB_TCPROW TcpRow;
+    SIZE_T Size;
+    MIB_TCPROW_OWNER_PID TcpRow;
     TDI_STATUS Status = TDI_SUCCESS;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     TcpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     TcpRow.dwLocalPort = AddrFile->Port;
+    TcpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
+    if (Extended)
+    {
+        Size = sizeof(MIB_TCPROW_OWNER_PID);
+    }
+    else
+    {
+        Size = sizeof(MIB_TCPROW);
+    }
 
     if (AddrFile->Listener != NULL)
     {
@@ -197,7 +208,7 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 
         EndPoint = AddrFile->Listener->AddressFile;
 
-        TcpRow.State = MIB_TCP_STATE_LISTEN;
+        TcpRow.dwState = MIB_TCP_STATE_LISTEN;
         TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
         TcpRow.dwRemotePort = EndPoint->Port;
     }
@@ -215,19 +226,19 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
             TcpRow.dwRemotePort = ntohs(EndPoint.Address[0].Address[0].sin_port);
         }
 
-        Status = TCPGetSocketStatus(AddrFile->Connection, (PULONG)&TcpRow.State);
+        Status = TCPGetSocketStatus(AddrFile->Connection, &TcpRow.dwState);
         ASSERT(NT_SUCCESS(Status));
     }
     else
     {
-        TcpRow.State = 0;
+        TcpRow.dwState = 0;
         TcpRow.dwRemoteAddr = 0;
         TcpRow.dwRemotePort = 0;
     }
 
     if (NT_SUCCESS(Status))
     {
-        Status = InfoCopyOut( (PCHAR)&TcpRow, sizeof(TcpRow),
+        Status = InfoCopyOut( (PCHAR)&TcpRow, Size,
                               Buffer, BufferSize );
     }
 

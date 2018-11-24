@@ -116,7 +116,8 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
 
 TDI_STATUS InfoTdiQueryGetConnectionTcpTable( PADDRESS_FILE AddrFile,
                                               PNDIS_BUFFER Buffer,
-                                              PUINT BufferSize);
+                                              PUINT BufferSize,
+                                              BOOLEAN Extended);
 
 TDI_STATUS InfoTdiQueryGetConnectionUdpTable( PADDRESS_FILE AddrFile,
                                               PNDIS_BUFFER Buffer,
