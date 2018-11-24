@@ -134,6 +134,9 @@ BOOL ParseCmdline(int argc, char* argv[])
                     case 's' :
                         bDoShowProtoStats = TRUE;
                         break;
+                    case 'o' :
+                        bDoShowProcessId = TRUE;
+                        break;
                     case 'v' :
                         _tprintf(_T("got v\n"));
                         bDoDispSeqComp = TRUE;
@@ -162,13 +165,26 @@ BOOL ParseCmdline(int argc, char* argv[])
 }
 
 /*
+ * Display table header
+ */
+VOID DisplayTableHeader()
+{
+    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State"));
+    if (bDoShowProcessId)
+        _tprintf(_T("       Process\n"));
+    else
+        _tprintf(_T("\n"));
+}
+
+
+/*
  * Simulate Microsofts netstat utility output
  */
 BOOL DisplayOutput()
 {
     if (bNoOptions)
     {
-        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
+        DisplayTableHeader();
         ShowTcpTable();
         return EXIT_SUCCESS;
     }
@@ -212,14 +228,14 @@ BOOL DisplayOutput()
                     if (bDoShowProtoStats)
                         ShowTcpStatistics();
                     _tprintf(_T("\nActive Connections\n"));
-                    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
+                    DisplayTableHeader();
                     ShowTcpTable();
                     break;
                 case UDP :
                     if (bDoShowProtoStats)
                         ShowUdpStatistics();
                     _tprintf(_T("\nActive Connections\n"));
-                    _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
+                    DisplayTableHeader();
                     ShowUdpTable();
                     break;
                 default :
@@ -237,7 +253,7 @@ BOOL DisplayOutput()
     else
     {
         _tprintf(_T("\nActive Connections\n"));
-        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
+        DisplayTableHeader();
         ShowTcpTable();
         if (bDoShowAllCons)
             ShowUdpTable();
@@ -408,22 +424,23 @@ VOID ShowEthernetStatistics()
 
 VOID ShowTcpTable()
 {
-    PMIB_TCPTABLE tcpTable;
+    PMIB_TCPTABLE_OWNER_PID tcpTable;
     DWORD error, dwSize;
     DWORD i;
     CHAR HostIp[HOSTNAMELEN], HostPort[PORTNAMELEN];
     CHAR RemoteIp[HOSTNAMELEN], RemotePort[PORTNAMELEN];
     CHAR Host[ADDRESSLEN];
     CHAR Remote[ADDRESSLEN];
+    CHAR PID[64];
 
     /* Get the table of TCP endpoints */
-    dwSize = sizeof (MIB_TCPTABLE);
+    dwSize = sizeof (MIB_TCPTABLE_OWNER_PID);
     /* Should also work when we get new connections between 2 GetTcpTable()
      * calls: */
     do
     {
-        tcpTable = (PMIB_TCPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
-        error = GetTcpTable(tcpTable, &dwSize, TRUE);
+        tcpTable = (PMIB_TCPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        error = GetExtendedTcpTable(tcpTable, &dwSize, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
         if ( error != NO_ERROR )
             HeapFree(GetProcessHeap(), 0, tcpTable);
     }
@@ -461,8 +478,17 @@ VOID ShowTcpTable()
                 sprintf(Remote, "%s:%s", RemoteIp, RemotePort);
             }
 
-            _tprintf(_T("  %-6s %-22s %-22s %s\n"), _T("TCP"),
-            Host, Remote, TcpState[tcpTable->table[i].dwState]);
+            if (bDoShowProcessId)
+            {
+                sprintf(PID, "%ld", tcpTable->table[i].dwOwningPid);
+            }
+            else
+            {
+                PID[0] = 0;
+            }
+
+            _tprintf(_T("  %-6s %-22s %-22s %-11s %s\n"), _T("TCP"),
+            Host, Remote, TcpState[tcpTable->table[i].dwState], PID);
         }
     }
     HeapFree(GetProcessHeap(), 0, tcpTable);
@@ -600,6 +626,7 @@ VOID Usage()
     "  -s            Displays per-protocol statistics. By default, Statistics are\n"
     "                shown for IP, ICMP, TCP and UDP;\n"
     "                the -p option may be used to specify a subset of the default.\n"
+    " -o             Displays the process ID for each connection.\n"
     "  interval      Redisplays selected statistics every 'interval' seconds.\n"
     "                Press CTRL+C to stop redisplaying. By default netstat will\n"
     "                print the current information only once.\n"));
