@@ -97,6 +97,11 @@ DWORD getNumUdpEntries(void);
  */
 PMIB_UDPTABLE getUdpTable(void);
 
+/* Allocates and returns to you the UDP state table with owner PID,
+ * or NULL if it can't allocate enough memory.  free() the returned table.
+ */
+PMIB_UDPTABLE_OWNER_PID getOwnerUdpTable(void);
+
 /* Returns the number of entries in the TCP state table. */
 DWORD getNumTcpEntries(void);
 

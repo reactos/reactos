@@ -1091,7 +1091,108 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
             break;
     }
 
-    return ret;	
+    return ret;
+}
+
+
+static int UdpTableSorter(const void *a, const void *b);
+
+/******************************************************************
+ *    GetExtendedUdpTable (IPHLPAPI.@)
+ *
+ * Get the table of UDP endpoints available to the application.
+ *
+ * PARAMS
+ *  pUdpTable [Out]    table struct with the filtered UDP endpoints available to application
+ *  pdwSize   [In/Out] estimated size of the structure returned in pUdpTable, in bytes
+ *  bOrder    [In]     whether to order the table
+ *  ulAf	[in]	version of IP used by the UDP endpoints
+ *  TableClass [in]	type of the UDP table structure from UDP_TABLE_CLASS
+ *  Reserved [in]	reserved - this value must be zero
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: either ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER
+ *
+ * NOTES
+ */
+
+DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, UDP_TABLE_CLASS TableClass, ULONG Reserved)
+{
+	DWORD ret = NO_ERROR;
+
+    if (!pdwSize)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if (ulAf != AF_INET)
+    {
+        UNIMPLEMENTED;
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    switch (TableClass)
+    {
+        case UDP_TABLE_BASIC:
+        {
+            PMIB_UDPTABLE pOurUdpTable = getUdpTable();
+            PMIB_UDPTABLE pTheirUdpTable = pUdpTable;
+
+            if (pOurUdpTable)
+            {
+                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW) > *pdwSize || !pTheirUdpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID));
+
+                    if (bOrder)
+                        qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
+                              sizeof(MIB_UDPROW), UdpTableSorter);
+                }
+
+                free(pOurUdpTable);
+            }
+        }
+        break;
+
+        case UDP_TABLE_OWNER_PID:
+        {
+            PMIB_UDPTABLE_OWNER_PID pOurUdpTable = getOwnerUdpTable();
+            PMIB_UDPTABLE_OWNER_PID pTheirUdpTable = pUdpTable;
+
+            if (pOurUdpTable)
+            {
+                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID) > *pdwSize || !pTheirUdpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID));
+
+                    if (bOrder)
+                        qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
+                              sizeof(MIB_UDPROW_OWNER_PID), UdpTableSorter);
+                }
+
+                free(pOurUdpTable);
+            }
+        }
+        break;
+
+        default:
+            UNIMPLEMENTED;
+            ret = ERROR_INVALID_PARAMETER;
+            break;
+    }
+
+    return ret;
 }
 
 
