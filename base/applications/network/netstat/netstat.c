@@ -496,23 +496,24 @@ VOID ShowTcpTable()
 
 VOID ShowUdpTable()
 {
-    PMIB_UDPTABLE udpTable;
+    PMIB_UDPTABLE_OWNER_PID udpTable;
     DWORD error, dwSize;
     DWORD i;
     CHAR HostIp[HOSTNAMELEN], HostPort[PORTNAMELEN];
     CHAR Host[ADDRESSLEN];
+    CHAR PID[64];
 
     /* Get the table of UDP endpoints */
     dwSize = 0;
-    error = GetUdpTable(NULL, &dwSize, TRUE);
+    error = GetExtendedUdpTable(NULL, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error != ERROR_INSUFFICIENT_BUFFER)
     {
         printf("Failed to snapshot UDP endpoints.\n");
         DoFormatMessage(error);
         exit(EXIT_FAILURE);
     }
-    udpTable = (PMIB_UDPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
-    error = GetUdpTable(udpTable, &dwSize, TRUE);
+    udpTable = (PMIB_UDPTABLE_OWNER_PID) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    error = GetExtendedUdpTable(udpTable, &dwSize, TRUE, AF_INET, UDP_TABLE_OWNER_PID, 0);
     if (error)
     {
         printf("Failed to snapshot UDP endpoints table.\n");
@@ -531,7 +532,16 @@ VOID ShowUdpTable()
 
         sprintf(Host, "%s:%s", HostIp, HostPort);
 
-        _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), Host,  _T("*:*"));
+        if (bDoShowProcessId)
+        {
+            sprintf(PID, "%ld", udpTable->table[i].dwOwningPid);
+        }
+        else
+        {
+            PID[0] = 0;
+        }
+
+        _tprintf(_T("  %-6s %-22s %-34s %s\n"), _T("UDP"), Host,  _T("*:*"), PID);
     }
 
     HeapFree(GetProcessHeap(), 0, udpTable);
