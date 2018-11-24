@@ -794,7 +794,27 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
   return ret;
 }
 
-static int TcpTableSorter(const void *a, const void *b);
+static int TcpTableSorter(const void *a, const void *b)
+{
+  int ret;
+
+  if (a && b) {
+    PMIB_TCPROW rowA = (PMIB_TCPROW)a, rowB = (PMIB_TCPROW)b;
+
+    ret = rowA->dwLocalAddr - rowB->dwLocalAddr;
+    if (ret == 0) {
+      ret = rowA->dwLocalPort - rowB->dwLocalPort;
+      if (ret == 0) {
+        ret = rowA->dwRemoteAddr - rowB->dwRemoteAddr;
+        if (ret == 0)
+          ret = rowA->dwRemotePort - rowB->dwRemotePort;
+      }
+    }
+  }
+  else
+    ret = 0;
+  return ret;
+}
 
 /******************************************************************
  *    GetExtendedTcpTable (IPHLPAPI.@)
@@ -835,8 +855,30 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
     switch (TableClass)
     {
         case TCP_TABLE_BASIC_ALL:
-            ret = GetTcpTable(pTcpTable, pdwSize, bOrder);
-            break;
+        {
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW));
+
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW), TcpTableSorter);
+                }
+
+                free(pOurTcpTable);
+            }
+        }
+        break;
 
         case TCP_TABLE_BASIC_CONNECTIONS:
         {
@@ -853,9 +895,9 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW);
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW);
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -897,9 +939,9 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(MIB_TCPTABLE) + count * sizeof(MIB_TCPROW);
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW);
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1989,29 +2031,6 @@ DWORD WINAPI GetTcpStatistics(PMIB_TCPSTATS pStats)
 }
 
 
-static int TcpTableSorter(const void *a, const void *b)
-{
-  int ret;
-
-  if (a && b) {
-    PMIB_TCPROW rowA = (PMIB_TCPROW)a, rowB = (PMIB_TCPROW)b;
-
-    ret = rowA->dwLocalAddr - rowB->dwLocalAddr;
-    if (ret == 0) {
-      ret = rowA->dwLocalPort - rowB->dwLocalPort;
-      if (ret == 0) {
-        ret = rowA->dwRemoteAddr - rowB->dwRemoteAddr;
-        if (ret == 0)
-          ret = rowA->dwRemotePort - rowB->dwRemotePort;
-      }
-    }
-  }
-  else
-    ret = 0;
-  return ret;
-}
-
-
 /******************************************************************
  *    GetTcpTable (IPHLPAPI.@)
  *
@@ -2036,53 +2055,7 @@ static int TcpTableSorter(const void *a, const void *b)
  */
 DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
 {
-  DWORD ret = ERROR_NO_DATA;
-
-  TRACE("pTcpTable %p, pdwSize %p, bOrder %d\n", pTcpTable, pdwSize,
-   (DWORD)bOrder);
-  if (!pdwSize)
-    ret = ERROR_INVALID_PARAMETER;
-  else {
-    DWORD numEntries = getNumTcpEntries();
-    DWORD size = sizeof(MIB_TCPTABLE);
-
-    if (numEntries > 1)
-      size += (numEntries - 1) * sizeof(MIB_TCPROW);
-    if (!pTcpTable || *pdwSize < size) {
-      *pdwSize = size;
-      ret = ERROR_INSUFFICIENT_BUFFER;
-    }
-    else {
-      PMIB_TCPTABLE pOurTcpTable = getTcpTable();
-	  if (pOurTcpTable)
-      {
-        size = sizeof(MIB_TCPTABLE);
-        if (pOurTcpTable->dwNumEntries > 1)
-            size += (pOurTcpTable->dwNumEntries - 1) * sizeof(MIB_TCPROW);
-          
-        if (*pdwSize < size)
-        {
-            *pdwSize = size;
-
-            ret = ERROR_INSUFFICIENT_BUFFER;
-        }
-        else
-        {
-            memcpy(pTcpTable, pOurTcpTable, size);
-            
-            if (bOrder)
-                qsort(pTcpTable->table, pTcpTable->dwNumEntries,
-                      sizeof(MIB_TCPROW), TcpTableSorter);
-            
-            ret = NO_ERROR;
-        }
-          
-        free(pOurTcpTable);
-	  }
-   	}
-  }
-  TRACE("returning %d\n", ret);
-  return ret;
+  return GetExtendedTcpTable(pTcpTable, pdwSize, bOrder, AF_INET, TCP_TABLE_BASIC_ALL, 0);
 }
 
 
