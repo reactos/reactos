@@ -7838,6 +7838,610 @@ NetWare compatible logon
 ; ncberr.h (non-public) nessage definitions (5300 - 5499 NRCERR_BASE)
 ;
 
+MessageId=5300
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5300
+Language=English
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Russian
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+
+MessageId=5301
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5301
+Language=English
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Russian
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+
+MessageId=5302
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5302
+Language=English
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Russian
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+
+MessageId=5303
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5303
+Language=English
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Russian
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+
+MessageId=5304
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5304
+Language=English
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Russian
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+
+MessageId=5305
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5305
+Language=English
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Russian
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+
+MessageId=5306
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5306
+Language=English
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Russian
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+
+MessageId=5307
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5307
+Language=English
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Russian
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+
+MessageId=5308
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5308
+Language=English
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Russian
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+
+MessageId=5309
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5309
+Language=English
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5310
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5310
+Language=English
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Russian
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+
+MessageId=5311
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5311
+Language=English
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Russian
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+
+MessageId=5312
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5312
+Language=English
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Russian
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+
+MessageId=5313
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5313
+Language=English
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5314
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5314
+Language=English
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5315
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5315
+Language=English
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Russian
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+
+MessageId=5316
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5316
+Language=English
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Russian
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+
+MessageId=5317
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5317
+Language=English
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Russian
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+
+MessageId=5318
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5318
+Language=English
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Russian
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+
+MessageId=5319
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5319
+Language=English
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Russian
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+
+MessageId=5320
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5320
+Language=English
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Russian
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+
+MessageId=5321
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5321
+Language=English
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Russian
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+
+MessageId=5322
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5322
+Language=English
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Russian
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+
+MessageId=5323
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5323
+Language=English
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Russian
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+
+MessageId=5324
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5324
+Language=English
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Russian
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+
+MessageId=5325
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5325
+Language=English
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Russian
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+
+MessageId=5326
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5326
+Language=English
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data."
+.
+Language=Russian
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data."
+.
+
+MessageId=5333
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5333
+Language=English
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5334
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5334
+Language=English
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Russian
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+
+MessageId=5335
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5335
+Language=English
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Russian
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+
+MessageId=5336
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5336
+Language=English
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Russian
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+
+MessageId=5337
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5337
+Language=English
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Russian
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+
+MessageId=5338
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5338
+Language=English
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Russian
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+
+MessageId=5351
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5351
+Language=English
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Russian
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+
+MessageId=5352
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5352
+Language=English
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Russian
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+
+MessageId=5354
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5354
+Language=English
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5356
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5356
+Language=English
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5364
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5364
+Language=English
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5365
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5365
+Language=English
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5366
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5366
+Language=English
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5367
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5367
+Language=English
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5368
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5368
+Language=English
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5369
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5369
+Language=English
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5370
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5370
+Language=English
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Russian
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+
+MessageId=5380
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5380
+Language=English
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Russian
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+
+MessageId=5381
+Severity=Success
+Facility=System
+SymbolicName=NRCERR_5381
+Language=English
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Russian
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+
 
 ;
 ; alertmsg.h (non-public) message definitions (5500 - 5549 ALERT2_BASE)
