@@ -249,17 +249,20 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 
 TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
 				    PNDIS_BUFFER Buffer,
-				    PUINT BufferSize)
+				    PUINT BufferSize,
+				    BOOLEAN Extended)
 {
-    MIB_UDPROW UdpRow;
+    MIB_UDPROW_OWNER_PID UdpRow;
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     UdpRow.dwLocalPort = AddrFile->Port;
+    UdpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
 
-    Status = InfoCopyOut( (PCHAR)&UdpRow, sizeof(UdpRow),
+    Status = InfoCopyOut( (PCHAR)&UdpRow,
+			  (Extended ? sizeof(MIB_UDPROW_OWNER_PID) : sizeof(MIB_UDPROW)),
 			  Buffer, BufferSize );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));

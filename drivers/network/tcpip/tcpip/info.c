@@ -271,6 +271,11 @@ TDI_STATUS InfoTdiQueryInformationEx(
                          return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TRUE);
                      else
                          return TDI_INVALID_PARAMETER;
+                else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TRUE);
+                     else
+                         return TDI_INVALID_PARAMETER;
                 else
                     return TDI_INVALID_PARAMETER;
 
@@ -297,7 +302,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
                          return TDI_INVALID_PARAMETER;
                  else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize);
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, FALSE);
                      else
                          return TDI_INVALID_PARAMETER;
                  else
