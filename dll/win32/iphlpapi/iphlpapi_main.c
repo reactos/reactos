@@ -922,6 +922,117 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
         }
         break;
 
+        case TCP_TABLE_OWNER_PID_ALL:
+        {
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID));
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
+                }
+            }
+        }
+        break;
+
+        case TCP_TABLE_OWNER_PID_CONNECTIONS:
+        {
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].dwState != MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].dwState != MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW_OWNER_PID));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
+                }
+            }
+        }
+        break;
+
+        case TCP_TABLE_OWNER_PID_LISTENER:
+        {
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].dwState == MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].dwState == MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW_OWNER_PID));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_PID), TcpTableSorter);
+                }
+            }
+        }
+        break;
+
         default:
             UNIMPLEMENTED;
             ret = ERROR_INVALID_PARAMETER;

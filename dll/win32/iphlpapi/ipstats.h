@@ -105,4 +105,9 @@ DWORD getNumTcpEntries(void);
  */
 PMIB_TCPTABLE getTcpTable(void);
 
+/* Allocates and returns to you the TCP state table with owner PID,
+ * or NULL if it can't allocate enough memory.  free() the returned table.
+ */
+PMIB_TCPTABLE_OWNER_PID getOwnerTcpTable(void);
+
 #endif /* ndef WINE_IPSTATS_H_ */
