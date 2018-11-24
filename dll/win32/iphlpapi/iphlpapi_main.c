@@ -1095,7 +1095,21 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 }
 
 
-static int UdpTableSorter(const void *a, const void *b);
+static int UdpTableSorter(const void *a, const void *b)
+{
+  int ret;
+
+  if (a && b) {
+    PMIB_UDPROW rowA = (PMIB_UDPROW)a, rowB = (PMIB_UDPROW)b;
+
+    ret = rowA->dwLocalAddr - rowB->dwLocalAddr;
+    if (ret == 0)
+      ret = rowA->dwLocalPort - rowB->dwLocalPort;
+  }
+  else
+    ret = 0;
+  return ret;
+}
 
 /******************************************************************
  *    GetExtendedUdpTable (IPHLPAPI.@)
@@ -2203,23 +2217,6 @@ DWORD WINAPI GetUdpStatistics(PMIB_UDPSTATS pStats)
 }
 
 
-static int UdpTableSorter(const void *a, const void *b)
-{
-  int ret;
-
-  if (a && b) {
-    PMIB_UDPROW rowA = (PMIB_UDPROW)a, rowB = (PMIB_UDPROW)b;
-
-    ret = rowA->dwLocalAddr - rowB->dwLocalAddr;
-    if (ret == 0)
-      ret = rowA->dwLocalPort - rowB->dwLocalPort;
-  }
-  else
-    ret = 0;
-  return ret;
-}
-
-
 /******************************************************************
  *    GetUdpTable (IPHLPAPI.@)
  *
@@ -2237,45 +2234,7 @@ static int UdpTableSorter(const void *a, const void *b)
  */
 DWORD WINAPI GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
 {
-  DWORD ret;
-
-  TRACE("pUdpTable %p, pdwSize %p, bOrder %ld\n", pUdpTable, pdwSize,
-   (DWORD)bOrder);
-  if (!pdwSize)
-    ret = ERROR_INVALID_PARAMETER;
-  else {
-    DWORD numEntries = getNumUdpEntries();
-    ULONG size = sizeof(MIB_UDPTABLE) + (numEntries - 1) * sizeof(MIB_UDPROW);
-
-    if (!pUdpTable || *pdwSize < size) {
-      *pdwSize = size;
-      ret = ERROR_INSUFFICIENT_BUFFER;
-    }
-    else {
-      PMIB_UDPTABLE table = getUdpTable();
-
-      if (table) {
-        size = sizeof(MIB_UDPTABLE) + (table->dwNumEntries - 1) *
-         sizeof(MIB_UDPROW);
-        if (*pdwSize < size) {
-          *pdwSize = size;
-          ret = ERROR_INSUFFICIENT_BUFFER;
-        }
-        else {
-          memcpy(pUdpTable, table, size);
-          if (bOrder)
-            qsort(pUdpTable->table, pUdpTable->dwNumEntries,
-             sizeof(MIB_UDPROW), UdpTableSorter);
-          ret = NO_ERROR;
-        }
-        free(table);
-      }
-      else
-        ret = ERROR_OUTOFMEMORY;
-    }
-  }
-  TRACE("returning %ld\n", ret);
-  return ret;
+  return GetExtendedUdpTable(pUdpTable, pdwSize, bOrder, AF_INET, UDP_TABLE_BASIC, 0);
 }
 
 
