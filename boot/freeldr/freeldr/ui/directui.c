@@ -556,6 +556,31 @@ UiDisplayMenu(IN PCSTR MenuHeader,
     ULONG CurrentClockSecond;
     ULONG KeyPress;
 
+    /*
+     * Before taking any default action if there is no timeout,
+     * check whether the supplied key filter callback function
+     * may handle a specific user keypress. If it does, the
+     * timeout is cancelled.
+     */
+    if (!MenuTimeOut && KeyPressFilter && MachConsKbHit())
+    {
+        /* Get the key */
+        KeyPress = MachConsGetCh();
+
+        /* Is it extended? Then get the extended key */
+        if (!KeyPress) KeyPress = MachConsGetCh();
+
+        /*
+         * Call the supplied key filter callback function to see
+         * if it is going to handle this keypress.
+         */
+        if (KeyPressFilter(KeyPress))
+        {
+            /* It processed the key character, cancel the timeout */
+            MenuTimeOut = -1;
+        }
+    }
+
     /* Check if there's no timeout */
     if (!MenuTimeOut)
     {
