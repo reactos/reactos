@@ -169,6 +169,52 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     return FoundProcess;
 }
 
+PEPROCESS
+NTAPI
+PsGetPreviousProcess(IN PEPROCESS OldProcess)
+{
+    PLIST_ENTRY Entry;
+    PEPROCESS FoundProcess = NULL;
+    PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG, "Process: %p\n", OldProcess);
+
+    /* Acquire the Active Process Lock */
+    KeAcquireGuardedMutex(&PspActiveProcessMutex);
+
+    /* Check if we're already starting somewhere */
+    if (OldProcess)
+    {
+        /* Start where we left off */
+        Entry = OldProcess->ActiveProcessLinks.Blink;
+    }
+    else
+    {
+        /* Start at the beginning */
+        Entry = PsActiveProcessHead.Blink;
+    }
+
+    /* Loop the process list */
+    while (Entry != &PsActiveProcessHead)
+    {
+        /* Get the process */
+        FoundProcess = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
+
+        /* Reference the process */
+        if (ObReferenceObjectSafe(FoundProcess)) break;
+
+        /* Nothing found, keep trying */
+        FoundProcess = NULL;
+        Entry = Entry->Blink;
+    }
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&PspActiveProcessMutex);
+
+    /* Dereference the Process we had referenced earlier */
+    if (OldProcess) ObDereferenceObject(OldProcess);
+    return FoundProcess;
+}
+
 KPRIORITY
 NTAPI
 PspComputeQuantumAndPriority(IN PEPROCESS Process,
@@ -829,6 +875,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Process->GrantedAccess |= (PROCESS_VM_OPERATION |
                                    PROCESS_VM_READ |
                                    PROCESS_VM_WRITE |
+                                   PROCESS_QUERY_LIMITED_INFORMATION |
                                    PROCESS_QUERY_INFORMATION |
                                    PROCESS_TERMINATE |
                                    PROCESS_CREATE_THREAD |
@@ -1336,6 +1383,22 @@ PsSetProcessPriorityByClass(IN PEPROCESS Process,
     KeSetPriorityAndQuantumProcess(&Process->Pcb, Priority, Quantum);
 }
 
+NTSTATUS
+NTAPI
+PspOpenProcess(
+    IN OB_OPEN_REASON Reason,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID ObjectBody,
+    IN PACCESS_MASK GrantedAccess,
+    IN ULONG HandleCount
+)
+{
+    if (*GrantedAccess & PROCESS_QUERY_INFORMATION)
+        *GrantedAccess |= PROCESS_QUERY_LIMITED_INFORMATION;
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
@@ -1614,4 +1677,234 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     /* Return status */
     return Status;
 }
+
+PEPROCESS NtpGetAdjacentProcess(const BOOLEAN is_backwards, const PEPROCESS current)
+{
+    return !is_backwards
+               ? PsGetNextProcess(current)
+               : PsGetPreviousProcess(current);
+}
+
+NTSTATUS
+NTAPI
+NtGetNextProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_ ULONG Flags,
+    _Out_ PHANDLE NewProcessHandle
+)
+{
+    const KPROCESSOR_MODE previousMode = KeGetPreviousMode();
+
+    /* Validate user attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, previousMode);
+
+    /* Check if we came from user mode */
+    if (previousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe process handle */
+            ProbeForWriteHandle(NewProcessHandle);
+
+            *NewProcessHandle = NULL;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        *NewProcessHandle = NULL;
+    }
+
+    const BOOLEAN is_backwards = Flags & 1;
+    Flags ^= Flags & 1;
+    if (Flags)
+    {
+        DPRINT1("NtGetNextProcess flags (%#X) unsupported");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PEPROCESS current_process = NULL;
+    if (ProcessHandle)
+    {
+        /* Reference it */
+        const NTSTATUS status = ObReferenceObjectByHandle(ProcessHandle,
+                                                          0,
+                                                          PsProcessType,
+                                                          previousMode,
+                                                          (PVOID*)&current_process,
+                                                          NULL);
+        if (!NT_SUCCESS(status))
+        {
+            DPRINT1("NtGetNextProcess ObReferenceObjectByHandle -> %#X", status);
+            _SEH2_YIELD(return status);
+        }
+    }
+
+    for (PEPROCESS target = NtpGetAdjacentProcess(is_backwards, current_process);
+         target;
+         target = NtpGetAdjacentProcess(is_backwards, target))
+    {
+        current_process = NULL;
+        _SEH2_TRY
+        {
+            ACCESS_STATE accessState;
+            AUX_ACCESS_DATA auxData;
+            {
+                /* Create an access state */
+                const NTSTATUS status = SeCreateAccessState(&accessState,
+                                                            &auxData,
+                                                            DesiredAccess,
+                                                            &PsProcessType->TypeInfo.GenericMapping);
+                if (!NT_SUCCESS(status))
+                    return status;
+
+                /* Check if this is a debugger */
+                if (SeSinglePrivilegeCheck(SeDebugPrivilege, previousMode))
+                {
+                    /* Did he want full access? */
+                    if (accessState.RemainingDesiredAccess & MAXIMUM_ALLOWED)
+                    {
+                        /* Give it to him */
+                        accessState.PreviouslyGrantedAccess |= PROCESS_ALL_ACCESS;
+                    }
+                    else
+                    {
+                        /* Otherwise just give every other access he could want */
+                        accessState.PreviouslyGrantedAccess |=
+                            accessState.RemainingDesiredAccess;
+                    }
+
+                    /* The caller desires nothing else now */
+                    accessState.RemainingDesiredAccess = 0;
+                }
+            }
+
+            {
+                HANDLE hProcess;
+                /* Open the Process Object */
+                const NTSTATUS status = ObOpenObjectByPointer(target,
+                                                              HandleAttributes,
+                                                              &accessState,
+                                                              0,
+                                                              PsProcessType,
+                                                              previousMode,
+                                                              &hProcess);
+
+                /* Delete the access state */
+                SeDeleteAccessState(&accessState);
+
+                if (!NT_SUCCESS(status))
+                {
+                    DPRINT1("NtGetNextProcess ObOpenObjectByPointer -> %#X", status);
+                    _SEH2_YIELD(return status);
+                }
+
+                /* Use SEH for write back */
+                _SEH2_TRY
+                {
+                    /* Write back the handle */
+                    *NewProcessHandle = hProcess;
+                    _SEH2_YIELD(return STATUS_SUCCESS);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    DPRINT1("NtGetNextProcess *NewProcessHandle SEH -> %#X", _SEH2_GetExceptionCode());
+                    /* Return the exception code */
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                }
+                _SEH2_END;
+            }
+        }
+        _SEH2_FINALLY
+        {
+            /* Dereference the Process */
+            ObDereferenceObject(target);
+        }
+        _SEH2_END
+    }
+    _SEH2_YIELD(return STATUS_NO_MORE_ENTRIES);
+}
+
+NTSTATUS
+NTAPI
+NtGetNextThread(
+    _In_ HANDLE ProcessHandle,
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_ ULONG Flags,
+    _Out_ PHANDLE NewThreadHandle
+)
+{
+    const KPROCESSOR_MODE previousMode = KeGetPreviousMode();
+
+    /* Validate user attributes */
+    HandleAttributes = ObpValidateAttributes(HandleAttributes, previousMode);
+
+    /* Check if we came from user mode */
+    if (previousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe process handle */
+            ProbeForWriteHandle(NewThreadHandle);
+
+            *NewThreadHandle = NULL;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        *NewThreadHandle = NULL;
+    }
+
+    if (Flags)
+    {
+        DPRINT1("NtGetNextThread flags (%#X) unsupported");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PEPROCESS current_process = NULL;
+    if (ProcessHandle)
+    {
+        /* Reference it */
+        const NTSTATUS status = ObReferenceObjectByHandle(ProcessHandle,
+                                                          0,
+                                                          PsProcessType,
+                                                          previousMode,
+                                                          (PVOID*)&current_process,
+                                                          NULL);
+        if (!NT_SUCCESS(status))
+            return status;
+    }
+
+    _SEH2_TRY
+    {
+        DPRINT1("NtGetNextThread STUBPLEMENTED");
+
+        _SEH2_YIELD(return STATUS_NO_MORE_ENTRIES);
+    }
+    _SEH2_FINALLY
+    {
+        if (current_process)
+        {
+            /* Dereference the Process */
+            ObDereferenceObject(current_process);
+        }
+    }
+    _SEH2_END
+}
+
 /* EOF */
