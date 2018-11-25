@@ -796,6 +796,8 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
 #endif
     NtTerminateProcess(CsrProcess->ProcessHandle, 0);
 
+    WaitForSingleObject(CsrProcess->ProcessHandle, ShutdownSettings.ProcessTerminateTimeout);
+
     /* We are done */
     CsrDereferenceProcess(CsrProcess);
     return CsrShutdownCsrProcess;
