@@ -247,13 +247,6 @@ NTSTATUS fs_lock(BOOLEAN LockVolume)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtFsControlFile() failed with Status 0x%08x\n", Status);
-#if 1
-        /* FIXME: ReactOS HACK for 1stage due to IopParseDevice() hack */
-        if (Status == STATUS_INVALID_DEVICE_REQUEST)
-        {
-            Status = STATUS_ACCESS_DENIED;
-        }
-#endif
     }
 
     return Status;
