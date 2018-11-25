@@ -8384,6 +8384,560 @@ Language=Russian
 (not found)%0
 .
 
+MessageId=4350
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4350
+Language=English
+(unknown)%0
+.
+Language=Russian
+(unknown)%0
+.
+
+MessageId=4351
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4351
+Language=English
+For help on %1 type NET HELP %1
+.
+Language=Russian
+For help on %1 type NET HELP %1
+.
+
+MessageId=4352
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4352
+Language=English
+Grant%0
+.
+Language=Russian
+Grant%0
+.
+
+MessageId=4353
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4353
+Language=English
+Read%0
+.
+Language=Russian
+Read%0
+.
+
+MessageId=4354
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4354
+Language=English
+Change%0
+.
+Language=Russian
+Change%0
+.
+
+MessageId=4355
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4355
+Language=English
+Full%0
+.
+Language=Russian
+Full%0
+.
+
+MessageId=4356
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4356
+Language=English
+Please type the password: %0
+.
+Language=Russian
+Please type the password: %0
+.
+
+MessageId=4357
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4357
+Language=English
+Type the password for %1: %0
+.
+Language=Russian
+Type the password for %1: %0
+.
+
+MessageId=4358
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4358
+Language=English
+Type a password for the user: %0
+.
+Language=Russian
+Type a password for the user: %0
+.
+
+MessageId=4359
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4359
+Language=English
+Type the password for the shared resource: %0
+.
+Language=Russian
+Type the password for the shared resource: %0
+.
+
+MessageId=4360
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4360
+Language=English
+Type your password: %0
+.
+Language=Russian
+Type your password: %0
+.
+
+MessageId=4361
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4361
+Language=English
+Retype the password to confirm: %0
+.
+Language=Russian
+Retype the password to confirm: %0
+.
+
+MessageId=4362
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4362
+Language=English
+Type the user's old password: %0
+.
+Language=Russian
+Type the user's old password: %0
+.
+
+MessageId=4363
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4363
+Language=English
+Type the user's new password: %0
+.
+Language=Russian
+Type the user's new password: %0
+.
+
+MessageId=4364
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4364
+Language=English
+Type your new password: %0
+.
+Language=Russian
+Type your new password: %0
+.
+
+MessageId=4365
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4365
+Language=English
+Type the Replicator service password: %0
+.
+Language=Russian
+Type the Replicator service password: %0
+.
+
+MessageId=4366
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4366
+Language=English
+Type your user name, or press ENTER if it is %1: %0
+.
+Language=Russian
+Type your user name, or press ENTER if it is %1: %0
+.
+
+MessageId=4367
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4367
+Language=English
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Russian
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+
+MessageId=4368
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4368
+Language=English
+Type your user name: %0
+.
+Language=Russian
+Type your user name: %0
+.
+
+MessageId=4369
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4369
+Language=English
+Network statistics for \\\\%1
+.
+Language=Russian
+Network statistics for \\\\%1
+.
+
+MessageId=4370
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4370
+Language=English
+Printing options for %1
+.
+Language=Russian
+Printing options for %1
+.
+
+MessageId=4371
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4371
+Language=English
+Communication-device queues accessing %1
+.
+Language=Russian
+Communication-device queues accessing %1
+.
+
+MessageId=4372
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4372
+Language=English
+Print job detail
+.
+Language=Russian
+Print job detail
+.
+
+MessageId=4373
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4373
+Language=English
+Communication-device queues at \\\\%1
+.
+Language=Russian
+Communication-device queues at \\\\%1
+.
+
+MessageId=4374
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4374
+Language=English
+Printers at %1
+.
+Language=Russian
+Printers at %1
+.
+
+MessageId=4375
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4375
+Language=English
+Printers accessing %1
+.
+Language=Russian
+Printers accessing %1
+.
+
+MessageId=4376
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4376
+Language=English
+Print jobs at %1:
+.
+Language=Russian
+Print jobs at %1:
+.
+
+MessageId=4377
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4377
+Language=English
+Shared resources at %1
+.
+Language=Russian
+Shared resources at %1
+.
+
+MessageId=4378
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4378
+Language=English
+The following running services can be controlled:
+.
+Language=Russian
+The following running services can be controlled:
+.
+
+MessageId=4379
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4379
+Language=English
+Statistics are available for the following running services:
+.
+Language=Russian
+Statistics are available for the following running services:
+.
+
+MessageId=4380
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4380
+Language=English
+User accounts for \\\\%1
+.
+Language=Russian
+User accounts for \\\\%1
+.
+
+MessageId=4381
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4381
+Language=English
+The syntax of this command is:
+.
+Language=Russian
+The syntax of this command is:
+.
+
+MessageId=4382
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4382
+Language=English
+The options of this command are:
+.
+Language=Russian
+The options of this command are:
+.
+
+MessageId=4383
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4383
+Language=English
+Please enter the name of the Primary Domain Controller: %0
+.
+Language=Russian
+Please enter the name of the Primary Domain Controller: %0
+.
+
+MessageId=4384
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4384
+Language=English
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Russian
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+
+MessageId=4385
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4385
+Language=English
+Sunday%0
+.
+Language=Russian
+Sunday%0
+.
+
+MessageId=4386
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4386
+Language=English
+Monday%0
+.
+Language=Russian
+Monday%0
+.
+
+MessageId=4387
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4387
+Language=English
+Tuesday%0
+.
+Language=Russian
+Tuesday%0
+.
+
+MessageId=4388
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4388
+Language=English
+Wednesday%0
+.
+Language=Russian
+Wednesday%0
+.
+
+MessageId=4389
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4389
+Language=English
+Thursday%0
+.
+Language=Russian
+Thursday%0
+.
+
+MessageId=4390
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4390
+Language=English
+Friday%0
+.
+Language=Russian
+Friday%0
+.
+
+MessageId=4391
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4391
+Language=English
+Saturday%0
+.
+Language=Russian
+Saturday%0
+.
+
+MessageId=4392
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4392
+Language=English
+Su%0
+.
+Language=Russian
+Su%0
+.
+
+MessageId=4393
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4393
+Language=English
+M%0
+.
+Language=Russian
+M%0
+.
+
+MessageId=4394
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4394
+Language=English
+T%0
+.
+Language=Russian
+T%0
+.
+
+MessageId=4395
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4395
+Language=English
+W%0
+.
+Language=Russian
+W%0
+.
+
+MessageId=4396
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4396
+Language=English
+Th%0
+.
+Language=Russian
+Th%0
+.
+
+MessageId=4397
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4397
+Language=English
+F%0
+.
+Language=Russian
+F%0
+.
+
+MessageId=4398
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4398
+Language=English
+S%0
+.
+Language=Russian
+S%0
+.
+
+MessageId=4399
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4399
+Language=English
+Sa%0
+.
+Language=Russian
+Sa%0
+.
+
 
 
 ;
