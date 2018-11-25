@@ -186,7 +186,7 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 {
     SIZE_T Size;
     MIB_TCPROW_OWNER_PID TcpRow;
-    TDI_STATUS Status = TDI_SUCCESS;
+    TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
@@ -211,6 +211,8 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
         TcpRow.dwLocalPort = AddrFile->Port;
         TcpRow.dwRemoteAddr = EndPoint->Address.Address.IPv4Address;
         TcpRow.dwRemotePort = EndPoint->Port;
+
+        Status = TDI_SUCCESS;
     }
     else if (AddrFile->Connection != NULL &&
              AddrFile->Connection->SocketContext != NULL)
@@ -237,12 +239,6 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
                 ASSERT(NT_SUCCESS(Status));
             }
         }
-    }
-    else
-    {
-        TcpRow.dwState = 0;
-        TcpRow.dwRemoteAddr = 0;
-        TcpRow.dwRemotePort = 0;
     }
 
     if (NT_SUCCESS(Status))
