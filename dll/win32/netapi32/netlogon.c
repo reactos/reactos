@@ -17,6 +17,30 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
+DWORD
+WINAPI
+DsGetDcNameWithAccountA(
+    _In_opt_ LPCSTR ComputerName,
+    _In_opt_ LPCSTR AccountName,
+    _In_ ULONG AccountControlBits,
+    _In_ LPCSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOA *DomainControllerInfo);
+
+DWORD
+WINAPI
+DsGetDcNameWithAccountW(
+    _In_ LPCWSTR ComputerName,
+    _In_opt_ LPCWSTR AccountName,
+    _In_ ULONG AccountControlBits,
+    _In_ LPCWSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCWSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo);
+
 /* FUNCTIONS *****************************************************************/
 
 handle_t
@@ -360,15 +384,66 @@ DsEnumerateDomainTrustsW(
 DWORD
 WINAPI
 DsGetDcNameA(
-    _In_ LPCSTR ComputerName,
+    _In_opt_ LPCSTR ComputerName,
     _In_ LPCSTR DomainName,
     _In_ GUID *DomainGuid,
     _In_ LPCSTR SiteName,
     _In_ ULONG Flags,
     _Out_ PDOMAIN_CONTROLLER_INFOA *DomainControllerInfo)
 {
-    FIXME("DsGetDcNameA(%s, %s, %s, %s, %08x, %p): stub\n",
+    TRACE("DsGetDcNameA(%s, %s, %s, %s, %08lx, %p): stub\n",
           debugstr_a(ComputerName), debugstr_a(DomainName), debugstr_guid(DomainGuid),
+          debugstr_a(SiteName), Flags, DomainControllerInfo);
+    return DsGetDcNameWithAccountA(ComputerName,
+                                   NULL,
+                                   0,
+                                   DomainName,
+                                   DomainGuid,
+                                   SiteName,
+                                   Flags,
+                                   DomainControllerInfo);
+}
+
+
+DWORD
+WINAPI
+DsGetDcNameW(
+    _In_opt_ LPCWSTR ComputerName,
+    _In_ LPCWSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCWSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo)
+{
+    TRACE("DsGetDcNameW(%s, %s, %s, %s, %08lx, %p)\n",
+          debugstr_w(ComputerName), debugstr_w(DomainName), debugstr_guid(DomainGuid),
+          debugstr_w(SiteName), Flags, DomainControllerInfo);
+    return DsGetDcNameWithAccountW(ComputerName,
+                                   NULL,
+                                   0,
+                                   DomainName,
+                                   DomainGuid,
+                                   SiteName,
+                                   Flags,
+                                   DomainControllerInfo);
+}
+
+
+DWORD
+WINAPI
+DsGetDcNameWithAccountA(
+    _In_opt_ LPCSTR ComputerName,
+    _In_opt_ LPCSTR AccountName,
+    _In_ ULONG AccountControlBits,
+    _In_ LPCSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOA *DomainControllerInfo)
+{
+    FIXME("DsGetDcNameWithAccountA(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
+          debugstr_a(ComputerName), debugstr_a(AccountName), AccountControlBits,
+          debugstr_a(DomainName), debugstr_guid(DomainGuid),
           debugstr_a(SiteName), Flags, DomainControllerInfo);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -376,18 +451,41 @@ DsGetDcNameA(
 
 DWORD
 WINAPI
-DsGetDcNameW(
-    _In_ LPCWSTR ComputerName,
+DsGetDcNameWithAccountW(
+    _In_opt_ LPCWSTR ComputerName,
+    _In_opt_ LPCWSTR AccountName,
+    _In_ ULONG AccountControlBits,
     _In_ LPCWSTR DomainName,
     _In_ GUID *DomainGuid,
     _In_ LPCWSTR SiteName,
     _In_ ULONG Flags,
     _Out_ PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo)
 {
-    FIXME("DsGetDcNameW(%s, %s, %s, %s, %08x, %p)\n",
-          debugstr_w(ComputerName), debugstr_w(DomainName), debugstr_guid(DomainGuid),
+    NET_API_STATUS status;
+
+    FIXME("DsGetDcNameWithAccountW(%s, %s, %08lx, %s, %s, %s, %08lx, %p): stub\n",
+          debugstr_w(ComputerName), debugstr_w(AccountName), AccountControlBits,
+          debugstr_w(DomainName), debugstr_guid(DomainGuid),
           debugstr_w(SiteName), Flags, DomainControllerInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        status = DsrGetDcNameEx2((PWSTR)ComputerName,
+                                 (PWSTR)AccountName,
+                                 AccountControlBits,
+                                 (PWSTR)DomainName,
+                                 DomainGuid,
+                                 (PWSTR)SiteName,
+                                 Flags,
+                                 DomainControllerInfo);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 

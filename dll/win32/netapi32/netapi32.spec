@@ -10,8 +10,8 @@
 @ stub DsGetDcCloseW
 @ stdcall DsGetDcNameA(str str ptr str long ptr)
 @ stdcall DsGetDcNameW(wstr wstr ptr wstr long ptr)
-@ stub DsGetDcNameWithAccountA
-@ stub DsGetDcNameWithAccountW
+@ stdcall DsGetDcNameWithAccountA(str str long str ptr str long ptr)
+@ stdcall DsGetDcNameWithAccountW(wstr wstr long wstr ptr wstr long ptr)
 @ stub DsGetDcNextA
 @ stub DsGetDcNextW
 @ stub DsGetDcOpenA
