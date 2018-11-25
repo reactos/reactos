@@ -3326,7 +3326,7 @@ NtUserSetWindowPos(
       RETURN(FALSE);
    }
 
-   if ( hWndInsertAfter &&
+   if ( hWndInsertAfter != HWND_TOP &&
         hWndInsertAfter != HWND_BOTTOM &&
         hWndInsertAfter != HWND_TOPMOST &&
         hWndInsertAfter != HWND_NOTOPMOST )
