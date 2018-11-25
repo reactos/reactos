@@ -8,3 +8,4 @@ modules/3rdparty
 .project
 .settings
 build
+.vscode
