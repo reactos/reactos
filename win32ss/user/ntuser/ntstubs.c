@@ -918,9 +918,8 @@ NtUserCtxDisplayIOCtl(
 BOOL APIENTRY
 NtUserLockWindowUpdate(HWND hWnd)
 {
-   STUB
-
-   return 0;
+    STUB;
+    return FALSE;
 }
 
 DWORD APIENTRY
