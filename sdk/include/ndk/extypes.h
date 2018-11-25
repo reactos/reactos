@@ -1511,22 +1511,22 @@ typedef struct _SYSTEM_FIRMWARE_TABLE_INFORMATION
     UCHAR TableBuffer[1];
 } SYSTEM_FIRMWARE_TABLE_INFORMATION, *PSYSTEM_FIRMWARE_TABLE_INFORMATION;
 
+#endif // !NTOS_MODE_USER
+
 //
-// Class 81
+// Class 80
 //
 typedef struct _SYSTEM_MEMORY_LIST_INFORMATION
 {
-   SIZE_T ZeroPageCount;
-   SIZE_T FreePageCount;
-   SIZE_T ModifiedPageCount;
-   SIZE_T ModifiedNoWritePageCount;
-   SIZE_T BadPageCount;
-   SIZE_T PageCountByPriority[8];
-   SIZE_T RepurposedPagesByPriority[8];
-   SIZE_T ModifiedPageCountPageFile;
+    SIZE_T ZeroPageCount;
+    SIZE_T FreePageCount;
+    SIZE_T ModifiedPageCount;
+    SIZE_T ModifiedNoWritePageCount;
+    SIZE_T BadPageCount;
+    SIZE_T PageCountByPriority[8];
+    SIZE_T RepurposedPagesByPriority[8];
+    SIZE_T ModifiedPageCountPageFile;
 } SYSTEM_MEMORY_LIST_INFORMATION, *PSYSTEM_MEMORY_LIST_INFORMATION;
-
-#endif // !NTOS_MODE_USER
 
 #ifdef __cplusplus
 }; // extern "C"
