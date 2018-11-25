@@ -695,7 +695,7 @@ IoRaiseInformationalHardError(IN NTSTATUS ErrorStatus,
                               IN PUNICODE_STRING String,
                               IN PKTHREAD Thread)
 {
-    DPRINT1("IoRaiseInformationalHardError: %lx, %wZ\n", ErrorStatus, String);
+    DPRINT1("IoRaiseInformationalHardError: %lx, '%wZ'\n", ErrorStatus, String);
     return FALSE;
 }
 
