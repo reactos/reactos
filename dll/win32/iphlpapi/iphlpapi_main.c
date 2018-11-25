@@ -305,6 +305,51 @@ DWORD WINAPI AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
 
 
 /******************************************************************
+ *    AllocateAndGetTcpExTableFromStack (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  ppTcpTable [Out]
+ *  bOrder [In] -- passed to GetExtendedTcpTable to order the table
+ *  heap [In] -- heap from which the table is allocated
+ *  flags [In] -- flags to HeapAlloc
+ *  family [In] -- passed to GetExtendedTcpTable to select INET family
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
+DWORD WINAPI AllocateAndGetTcpExTableFromStack(PMIB_TCPTABLE_OWNER_PID *ppTcpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags, DWORD family)
+{
+  DWORD ret;
+
+  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family 0x%08lx\n",
+   ppTcpTable, (DWORD)bOrder, (DWORD)heap, flags, family);
+  if (!ppTcpTable)
+    ret = ERROR_INVALID_PARAMETER;
+  else {
+    DWORD dwSize = 0;
+
+    *ppTcpTable = NULL;
+    ret = GetExtendedTcpTable(*ppTcpTable, &dwSize, bOrder, family, TCP_TABLE_OWNER_PID_ALL, 0);
+    if (ret == ERROR_INSUFFICIENT_BUFFER) {
+      *ppTcpTable = (PMIB_TCPTABLE_OWNER_PID)HeapAlloc(heap, flags, dwSize);
+      ret = GetExtendedTcpTable(*ppTcpTable, &dwSize, bOrder, family, TCP_TABLE_OWNER_PID_ALL, 0);
+      if (ret != NO_ERROR) {
+        HeapFree(heap, flags, *ppTcpTable);
+        *ppTcpTable = NULL;
+      }
+    }
+  }
+  TRACE("returning %ld\n", ret);
+  return ret;
+}
+
+
+/******************************************************************
  *    AllocateAndGetUdpTableFromStack (IPHLPAPI.@)
  *
  *

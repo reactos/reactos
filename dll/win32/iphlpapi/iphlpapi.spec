@@ -5,7 +5,7 @@
 @ stdcall AllocateAndGetIpForwardTableFromStack( ptr long long long )
 @ stdcall AllocateAndGetIpNetTableFromStack( ptr long long long )
 @ stub AllocateAndGetTcpExTable2FromStack
-@ stub AllocateAndGetTcpExTableFromStack
+@ stdcall AllocateAndGetTcpExTableFromStack( ptr long long long long )
 @ stdcall AllocateAndGetTcpTableFromStack( ptr long long long )
 @ stub AllocateAndGetUdpExTable2FromStack
 @ stub AllocateAndGetUdpExTableFromStack
