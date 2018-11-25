@@ -1,15 +1,15 @@
 #
-# Extracted from the pci.ids database at http://pci-ids.ucw.cz/
+# Extracted from the pci.ids database at https://pci-ids.ucw.cz/
 #
 
 #
 #	List of PCI ID's
 #
-#	Version: 2017.05.25
-#	Date:    2017-05-25 03:15:02
+#	Version: 2018.11.21
+#	Date:    2018-11-21 03:15:02
 #
 #	Maintained by Albert Pool, Martin Mares, and other volunteers from
-#	the PCI ID Project at http://pci-ids.ucw.cz/.
+#	the PCI ID Project at https://pci-ids.ucw.cz/.
 #
 #	New data are always welcome, especially if they are accurate. If you have
 #	anything to contribute, please follow the instructions at the web site.
@@ -31,6 +31,14 @@ C 00  Unclassified device
 C 01  Mass storage controller
 	00  SCSI storage controller
 	01  IDE interface
+		00  ISA Compatibility mode-only controller
+		05  PCI native mode-only controller
+		0a  ISA Compatibility mode controller, supports both channels switched to PCI native mode
+		0f  PCI native mode controller, supports both channels switched to ISA compatibility mode
+		80  ISA Compatibility mode-only controller, supports bus mastering
+		85  PCI native mode-only controller, supports bus mastering
+		8a  ISA Compatibility mode controller, supports both channels switched to PCI native mode, supports bus mastering
+		8f  PCI native mode controller, supports both channels switched to ISA compatibility mode, supports bus mastering
 	02  Floppy disk controller
 	03  IPI bus controller
 	04  RAID bus controller
@@ -178,7 +186,10 @@ C 0c  Serial bus controller
 	04  Fibre Channel
 	05  SMBus
 	06  InfiniBand
-	07  IPMI SMIC interface
+	07  IPMI Interface
+		00  SMIC
+		01  KCS
+		02  BT (Block Transfer)
 	08  SERCOS interface
 	09  CANBUS
 C 0d  Wireless controller
