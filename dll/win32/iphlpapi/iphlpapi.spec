@@ -7,7 +7,7 @@
 @ stdcall AllocateAndGetTcpExTable2FromStack( ptr long long long long long )
 @ stdcall AllocateAndGetTcpExTableFromStack( ptr long long long long )
 @ stdcall AllocateAndGetTcpTableFromStack( ptr long long long )
-@ stub AllocateAndGetUdpExTable2FromStack
+@ stdcall AllocateAndGetUdpExTable2FromStack( ptr long long long long long )
 @ stdcall AllocateAndGetUdpExTableFromStack( ptr long long long long )
 @ stdcall AllocateAndGetUdpTableFromStack( ptr long long long )
 @ stdcall CancelIPChangeNotify(ptr)

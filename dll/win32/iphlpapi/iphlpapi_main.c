@@ -485,6 +485,52 @@ DWORD WINAPI AllocateAndGetUdpExTableFromStack(PMIB_UDPTABLE_OWNER_PID *ppUdpTab
 
 
 /******************************************************************
+ *    AllocateAndGetUdpExTable2FromStack (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  ppUdpTable [Out]
+ *  bOrder [In] -- passed to GetExtendedUdpTable to order the table
+ *  heap [In] -- heap from which the table is allocated
+ *  flags [In] -- flags to HeapAlloc
+ *  family [In] -- passed to GetExtendedUdpTable to select INET family
+ *  class [In] -- passed to GetExtendedUdpTable to select information
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
+DWORD WINAPI AllocateAndGetUdpExTable2FromStack(PVOID *ppUdpTable,
+ BOOL bOrder, HANDLE heap, DWORD flags, DWORD family, UDP_TABLE_CLASS class)
+{
+  DWORD ret;
+
+  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family %ld, class %ld\n",
+   ppUdpTable, (DWORD)bOrder, (DWORD)heap, flags, family, class);
+  if (!ppUdpTable)
+    ret = ERROR_INVALID_PARAMETER;
+  else {
+    DWORD dwSize = 0;
+
+    *ppUdpTable = NULL;
+    ret = GetExtendedUdpTable(*ppUdpTable, &dwSize, bOrder, family, class, 0);
+    if (ret == ERROR_INSUFFICIENT_BUFFER) {
+      *ppUdpTable = HeapAlloc(heap, flags, dwSize);
+      ret = GetExtendedUdpTable(*ppUdpTable, &dwSize, bOrder, family, class, 0);
+      if (ret != NO_ERROR) {
+        HeapFree(heap, flags, *ppUdpTable);
+        *ppUdpTable = NULL;
+      }
+    }
+  }
+  TRACE("returning %ld\n", ret);
+  return ret;
+}
+
+
+/******************************************************************
  *    CreateIpForwardEntry (IPHLPAPI.@)
  *
  *
