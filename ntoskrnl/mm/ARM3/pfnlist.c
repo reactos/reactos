@@ -25,8 +25,15 @@ do { \
             (x)->Flink != LIST_HEAD && \
             (x)->Blink != LIST_HEAD)); \
 } while (0)
+#define ASSERT_TRANSITION_LIST_INVARIANT() \
+do { \
+    ASSERT(MmTransitionSharedPages == MmStandbyPageListHead.Total \
+        + MmModifiedPageListHead.Total \
+        + MmModifiedNoWritePageListHead.Total); \
+} while (0)
 #else
 #define ASSERT_LIST_INVARIANT(x)
+#define ASSERT_TRANSITION_LIST_INVARIANT()
 #endif
 
 /* GLOBALS ********************************************************************/
@@ -59,6 +66,8 @@ PMMPFNLIST MmPageLocationList[] =
     NULL,
     NULL
 };
+
+ULONG64 MiStandbyRepurposedByPriority[8];
 
 ULONG MI_PFN_CURRENT_USAGE;
 CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
@@ -281,16 +290,14 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
     {
         /* Should not be a ROM page */
         ASSERT(Pfn->u3.e1.Rom == 0);
+        /* Only supported ARM3 case */
+        ASSERT(Pfn->u3.e1.PrototypePte == 1);
 
         /* Get the exact list */
         ListHead = &MmStandbyPageListByPriority[Pfn->u4.Priority];
 
         /* Decrement number of available pages */
         MiDecrementAvailablePages();
-
-        /* Decrease transition page counter */
-        ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
-        MmTransitionSharedPages--;
     }
     else if (ListHead == &MmModifiedPageListHead)
     {
@@ -303,14 +310,17 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
 
         /* Pick the correct colored list */
         ListHead = &MmModifiedPageListByColor[0];
-
-        /* Decrease transition page counter */
-        MmTransitionSharedPages--;
     }
     else if (ListHead == &MmModifiedNoWritePageListHead)
     {
         /* List not yet supported */
         ASSERT(FALSE);
+    }
+
+    /* Decrease transition page counter */
+    if (ListHead->ListName >= StandbyPageList && ListHead->ListName <= ModifiedNoWritePageList)
+    {
+        MmTransitionSharedPages--;
     }
 
     /* Nothing should be in progress and the list should not be empty */
@@ -356,6 +366,7 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
     ListHead->Total--;
 
     ASSERT_LIST_INVARIANT(ListHead);
+    ASSERT_TRANSITION_LIST_INVARIANT();
 }
 
 PFN_NUMBER
@@ -771,6 +782,8 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
 
     /* Increment number of available pages */
     MiIncrementAvailablePages();
+
+    ASSERT_TRANSITION_LIST_INVARIANT();
 }
 
 VOID
@@ -962,6 +975,8 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
         /* This list is not yet implemented */
         ASSERT(FALSE);
     }
+
+    ASSERT_TRANSITION_LIST_INVARIANT();
 }
 
 VOID
