@@ -265,6 +265,51 @@ EnumerateServerName(
     *Ptr = &ServerAddress->Next;
 }
 
+static
+VOID
+QueryFlags(
+    _In_ PUCHAR Interface,
+    _In_ DWORD InterfaceLength,
+    _Out_ LPDWORD Flags)
+{
+    HKEY InterfaceKey;
+    CHAR KeyName[256];
+    DWORD Type, Size, Data;
+
+    *Flags = 0;
+
+    snprintf(KeyName, 256,
+             "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+             InterfaceLength, Interface);
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+    {
+        Size = sizeof(DWORD);
+        if (RegQueryValueExA(InterfaceKey, "EnableDHCP", NULL, &Type, (LPBYTE)&Data, &Size) == ERROR_SUCCESS &&
+            Type == REG_DWORD && Data == 1)
+        {
+            *Flags |= IP_ADAPTER_DHCP_ENABLED;
+        }
+
+        Size = sizeof(DWORD);
+        if (RegQueryValueExA(InterfaceKey, "RegisterAdapterName", NULL, &Type, (LPBYTE)&Data, &Size) == ERROR_SUCCESS &&
+            Type == REG_DWORD && Data == 1)
+        {
+            *Flags |= IP_ADAPTER_REGISTER_ADAPTER_SUFFIX;
+        }
+
+        Size = 0;
+        if (RegQueryValueExA(InterfaceKey, "NameServer", NULL, &Type, (LPBYTE)&Data, &Size) != ERROR_SUCCESS)
+        {
+            *Flags |= IP_ADAPTER_DDNS_ENABLED;
+        }
+
+        RegCloseKey(InterfaceKey);
+    }
+
+    // FIXME: handle 0x8 -> 0x20
+}
+
 DWORD
 WINAPI
 DECLSPEC_HOTPATCH
@@ -438,7 +483,7 @@ GetAdaptersAddresses(
                 CurrentAA->IfIndex = Entry->if_index;
                 CopyMemory(CurrentAA->PhysicalAddress, Entry->if_physaddr, Entry->if_physaddrlen);
                 CurrentAA->PhysicalAddressLength = Entry->if_physaddrlen;
-                CurrentAA->Flags = 0; // FIXME!
+                QueryFlags(&Entry->if_descr[0], Entry->if_descrlen, &CurrentAA->Flags);
                 CurrentAA->Mtu = Entry->if_mtu;
                 CurrentAA->IfType = Entry->if_type;
                 if(Entry->if_operstatus >= IF_OPER_STATUS_CONNECTING)
