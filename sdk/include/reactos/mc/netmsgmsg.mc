@@ -8938,6 +8938,435 @@ Language=Russian
 Sa%0
 .
 
+MessageId=4400
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4400
+Language=English
+Group Accounts for \\\\%1
+.
+Language=Russian
+Group Accounts for \\\\%1
+.
+
+MessageId=4401
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4401
+Language=English
+Group name%0
+.
+Language=Russian
+Group name%0
+.
+
+MessageId=4402
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4402
+Language=English
+Comment%0
+.
+Language=Russian
+Comment%0
+.
+
+MessageId=4403
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4403
+Language=English
+Members
+.
+Language=Russian
+Members
+.
+
+MessageId=4405
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4405
+Language=English
+Aliases for \\\\%1
+.
+Language=Russian
+Aliases for \\\\%1
+.
+
+MessageId=4406
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4406
+Language=English
+Alias name%0
+.
+Language=Russian
+Alias name%0
+.
+
+MessageId=4407
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4407
+Language=English
+Comment%0
+.
+Language=Russian
+Comment%0
+.
+
+MessageId=4408
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4408
+Language=English
+Members
+.
+Language=Russian
+Members
+.
+
+MessageId=4410
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4410
+Language=English
+User Accounts for \\\\%1
+.
+Language=Russian
+User Accounts for \\\\%1
+.
+
+MessageId=4411
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4411
+Language=English
+User name%0
+.
+Language=Russian
+User name%0
+.
+
+MessageId=4412
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4412
+Language=English
+Full Name%0
+.
+Language=Russian
+Full Name%0
+.
+
+MessageId=4413
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4413
+Language=English
+Comment%0
+.
+Language=Russian
+Comment%0
+.
+
+MessageId=4414
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4414
+Language=English
+User's comment%0
+.
+Language=Russian
+User's comment%0
+.
+
+MessageId=4415
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4415
+Language=English
+Parameters%0
+.
+Language=Russian
+Parameters%0
+.
+
+MessageId=4416
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4416
+Language=English
+Country code%0
+.
+Language=Russian
+Country code%0
+.
+
+MessageId=4417
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4417
+Language=English
+Privilege level%0
+.
+Language=Russian
+Privilege level%0
+.
+
+MessageId=4418
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4418
+Language=English
+Operator privileges%0
+.
+Language=Russian
+Operator privileges%0
+.
+
+MessageId=4419
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4419
+Language=English
+Account active%0
+.
+Language=Russian
+Account active%0
+.
+
+MessageId=4420
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4420
+Language=English
+Account expires%0
+.
+Language=Russian
+Account expires%0
+.
+
+MessageId=4421
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4421
+Language=English
+Password last set%0
+.
+Language=Russian
+Password last set%0
+.
+
+MessageId=4422
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4422
+Language=English
+Password expires%0
+.
+Language=Russian
+Password expires%0
+.
+
+MessageId=4423
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4423
+Language=English
+Password changeable%0
+.
+Language=Russian
+Password changeable%0
+.
+
+MessageId=4424
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4424
+Language=English
+Workstations allowed%0
+.
+Language=Russian
+Workstations allowed%0
+.
+
+MessageId=4425
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4425
+Language=English
+Maximum disk space%0
+.
+Language=Russian
+Maximum disk space%0
+.
+
+MessageId=4426
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4426
+Language=English
+Unlimited%0
+.
+Language=Russian
+Unlimited%0
+.
+
+MessageId=4427
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4427
+Language=English
+Local Group Memberships%0
+.
+Language=Russian
+Local Group Memberships%0
+.
+
+MessageId=4428
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4428
+Language=English
+Domain controller%0
+.
+Language=Russian
+Domain controller%0
+.
+
+MessageId=4429
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4429
+Language=English
+Logon script%0
+.
+Language=Russian
+Logon script%0
+.
+
+MessageId=4430
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4430
+Language=English
+Last logon%0
+.
+Language=Russian
+Last logon%0
+.
+
+MessageId=4431
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4431
+Language=English
+Global Group memberships%0
+.
+Language=Russian
+Global Group memberships%0
+.
+
+MessageId=4432
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4432
+Language=English
+Logon hours allowed%0
+.
+Language=Russian
+Logon hours allowed%0
+.
+
+MessageId=4433
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4433
+Language=English
+All%0
+.
+Language=Russian
+All%0
+.
+
+MessageId=4434
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4434
+Language=English
+None%0
+.
+Language=Russian
+None%0
+.
+
+MessageId=4435
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4435
+Language=English
+Daily %1 - %2%0
+.
+Language=Russian
+Daily %1 - %2%0
+.
+
+MessageId=4436
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4436
+Language=English
+Home directory%0
+.
+Language=Russian
+Home directory%0
+.
+
+MessageId=4437
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4437
+Language=English
+Password required%0
+.
+Language=Russian
+Password required%0
+.
+
+MessageId=4438
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4438
+Language=English
+User may change password%0
+.
+Language=Russian
+User may change password%0
+.
+
+MessageId=4439
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4439
+Language=English
+User profile%0
+.
+Language=Russian
+User profile%0
+.
+
+MessageId=4440
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4440
+Language=English
+Locked%0
+.
+Language=Russian
+Locked%0
+.
+
 
 
 ;
