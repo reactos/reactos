@@ -2981,14 +2981,14 @@ CLEANUP:
  */
 
 HDESK APIENTRY
-NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
+NtUserGetThreadDesktop(DWORD dwThreadId, HDESK hConsoleDesktop)
 {
+    HDESK hDesk;
     NTSTATUS Status;
-    PETHREAD Thread;
+    PTHREADINFO pti;
+    PEPROCESS Process;
     PDESKTOP DesktopObject;
-    HDESK hDesk, hThreadDesktop;
     OBJECT_HANDLE_INFORMATION HandleInformation;
-    DECLARE_RETURN(HDESK);
 
     UserEnterExclusive();
     TRACE("Enter NtUserGetThreadDesktop\n");
@@ -2996,67 +2996,97 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     if (!dwThreadId)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        RETURN(0);
+        hDesk = NULL;
+        goto Quit;
     }
 
-    Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
-    if (!NT_SUCCESS(Status))
+    /* Validate the Win32 thread and retrieve its information */
+    pti = IntTID2PTI(UlongToHandle(dwThreadId));
+    if (pti)
+    {
+        /* Get the desktop handle of the thread */
+        hDesk = pti->hdesk;
+        Process = pti->ppi->peProcess;
+    }
+    else if (hConsoleDesktop)
+    {
+        /*
+         * The thread may belong to a console, so attempt to use the provided
+         * console desktop handle as a fallback. Otherwise this means that the
+         * thread is either not Win32 or invalid.
+         */
+        hDesk = hConsoleDesktop;
+        Process = gpepCSRSS;
+    }
+    else
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        RETURN(0);
+        hDesk = NULL;
+        goto Quit;
     }
 
-    if (Thread->ThreadsProcess == PsGetCurrentProcess())
+    if (!hDesk)
     {
-        /* Just return the handle, we queried the desktop handle of a thread running
-           in the same context */
-        hDesk = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk;
-        ObDereferenceObject(Thread);
-        RETURN(hDesk);
-    }
-
-    /* Get the desktop handle and the desktop of the thread */
-    if (!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk) ||
-        !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk))
-    {
-        ObDereferenceObject(Thread);
         ERR("Desktop information of thread 0x%x broken!?\n", dwThreadId);
-        RETURN(NULL);
+        goto Quit;
     }
 
-    /* We could just use DesktopObject instead of looking up the handle, but latter
-       may be a bit safer (e.g. when the desktop is being destroyed */
-    /* Switch into the context of the thread we're trying to get the desktop from,
-       so we can use the handle */
-    KeAttachProcess(&Thread->ThreadsProcess->Pcb);
-    Status = ObReferenceObjectByHandle(hThreadDesktop,
-                                       GENERIC_ALL,
+    if (Process == PsGetCurrentProcess())
+    {
+        /*
+         * Just return the handle, since we queried the desktop handle
+         * of a thread running in the same context.
+         */
+        goto Quit;
+    }
+
+    /*
+     * We could just use the cached rpdesk instead of looking up the handle,
+     * but it may actually be safer to validate the desktop and get a temporary
+     * reference to it so that it does not disappear under us (e.g. when the
+     * desktop is being destroyed) during the operation.
+     */
+    /*
+     * Switch into the context of the thread we are trying to get
+     * the desktop from, so we can use the handle.
+     */
+    KeAttachProcess(&Process->Pcb);
+    Status = ObReferenceObjectByHandle(hDesk,
+                                       0,
                                        ExDesktopObjectType,
                                        UserMode,
                                        (PVOID*)&DesktopObject,
                                        &HandleInformation);
     KeDetachProcess();
 
-    /* The handle couldn't be found, there's nothing to get... */
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        ObDereferenceObject(Thread);
-        RETURN(NULL);
+        /*
+         * Lookup our handle table if we can find a handle to the desktop object.
+         * If not, create one.
+         * QUESTION: Do we really need to create a handle in case it doesn't exist??
+         */
+        hDesk = IntGetDesktopObjectHandle(DesktopObject);
+
+        /* All done, we got a valid handle to the desktop */
+        ObDereferenceObject(DesktopObject);
+    }
+    else
+    {
+        /* The handle could not be found, there is nothing to get... */
+        hDesk = NULL;
     }
 
-    /* Lookup our handle table if we can find a handle to the desktop object,
-       if not, create one */
-    hDesk = IntGetDesktopObjectHandle(DesktopObject);
+    if (!hDesk)
+    {
+        ERR("Could not retrieve or access desktop for thread 0x%x\n", dwThreadId);
+        EngSetLastError(ERROR_ACCESS_DENIED);
+    }
 
-    /* All done, we got a valid handle to the desktop */
-    ObDereferenceObject(DesktopObject);
-    ObDereferenceObject(Thread);
-    RETURN(hDesk);
-
-CLEANUP:
-    TRACE("Leave NtUserGetThreadDesktop, ret=%p\n",_ret_);
+Quit:
+    TRACE("Leave NtUserGetThreadDesktop, hDesk = 0x%p\n", hDesk);
     UserLeave();
-    END_CLEANUP;
+    return hDesk;
 }
 
 static NTSTATUS

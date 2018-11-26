@@ -2439,7 +2439,7 @@ HDESK
 NTAPI
 NtUserGetThreadDesktop(
     DWORD dwThreadId,
-    DWORD Unknown1);
+    HDESK hConsoleDesktop);
 
 enum ThreadStateRoutines
 {

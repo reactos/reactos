@@ -563,7 +563,7 @@ GetThreadDesktop(
     }
 
     return NtUserGetThreadDesktop(dwThreadId,
-                                  (DWORD_PTR)GetThreadConsoleDesktopRequest->ConsoleDesktop);
+                                  GetThreadConsoleDesktopRequest->ConsoleDesktop);
 }
 
 
