@@ -57,7 +57,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     StackBase = Teb->NtTib.StackBase;
     DeallocationStack = Teb->DeallocationStack;
     GuaranteedSize = Teb->GuaranteedStackBytes;
-    DPRINT("Handling guard page fault with Stacks Addresses 0x%p and 0x%p, guarantee: %lx\n",
+    DPRINT("Handling guard page fault with stack addresses 0x%p and 0x%p, guarantee: %lx\n",
             StackBase, DeallocationStack, GuaranteedSize);
 
     /* Guarantees make this code harder, for now, assume there aren't any */
@@ -78,16 +78,15 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     /* This is where the stack will start now */
     NextStackAddress = (PVOID)((ULONG_PTR)PAGE_ALIGN(Address) - GuaranteedSize);
 
-    /* Do we have at least one page between here and the end of the stack? */
+    /* Do we have enough additional memory between here and the end of the stack? */
     if (((ULONG_PTR)NextStackAddress - PAGE_SIZE) <= (ULONG_PTR)DeallocationStack)
     {
-        /* We don't -- Trying to make this guard page valid now */
-        DPRINT1("Close to our death...\n");
+        /* No, we don't have enough additional memory */
 
         /* Calculate the next memory address */
         NextStackAddress = (PVOID)((ULONG_PTR)PAGE_ALIGN(DeallocationStack) + GuaranteedSize);
 
-        /* Allocate the memory */
+        /* Re-allocate remaining memory, without guard page flag */
         Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                          &NextStackAddress,
                                          0,
@@ -96,12 +95,15 @@ MiCheckForUserStackOverflow(IN PVOID Address,
                                          PAGE_READWRITE);
         if (NT_SUCCESS(Status))
         {
-            /* Success! */
+            /* Success! Yet close to death... */
+            DPRINT1("Warning. Remaining memory allocated successfully for 0x%p, stack end=0x%p\n",
+                    Address, DeallocationStack);
             Teb->NtTib.StackLimit = NextStackAddress;
         }
         else
         {
-            DPRINT1("Failed to allocate memory\n");
+            DPRINT1("ZwAllocateVirtualMemory failed for remaining memory: %lx, stack end=0x%p, guarantee=%lx, next=0x%p\n",
+                    Status, DeallocationStack, GuaranteedSize, NextStackAddress);
         }
 
         return STATUS_STACK_OVERFLOW;
@@ -113,7 +115,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     /* Update the stack limit */
     Teb->NtTib.StackLimit = (PVOID)((ULONG_PTR)NextStackAddress + GuaranteedSize);
 
-    /* Now move the guard page to the next page */
+    /* Allocate additional memory, with guard page flag */
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      &NextStackAddress,
                                      0,
@@ -123,12 +125,13 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     if ((NT_SUCCESS(Status) || (Status == STATUS_ALREADY_COMMITTED)))
     {
         /* We did it! */
-        DPRINT("Guard page handled successfully for %p\n", Address);
+        DPRINT("Stack guard page handled successfully for %p\n", Address);
         return STATUS_PAGE_FAULT_GUARD_PAGE;
     }
 
-    /* Fail, we couldn't move the guard page */
-    DPRINT1("Guard page failure: %lx\n", Status);
+    /* Fail, we couldn't set the guard page */
+    DPRINT1("ZwAllocateVirtualMemory failed for guard page: %lx, stack end=0x%p, guarantee=%lx, next=0x%p\n",
+            Status, DeallocationStack, GuaranteedSize, NextStackAddress);
     ASSERT(FALSE);
     return STATUS_STACK_OVERFLOW;
 }
