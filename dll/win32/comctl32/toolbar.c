@@ -5597,6 +5597,69 @@ TOOLBAR_EraseBackground (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     NMTBCUSTOMDRAW tbcd;
     INT ret = FALSE;
+
+#ifdef __REACTOS__
+    DWORD ntfret = CDRF_DODEFAULT;
+
+    const DWORD resultBits = /* CDRF_SKIPPOSTPAINT = 0x100 */ 0x1FF;
+    const DWORD supportedMaskPre = ~(CDRF_DODEFAULT | CDRF_SKIPDEFAULT | CDRF_NOTIFYPOSTERASE) & resultBits;
+    const DWORD supportedMaskPost = ~(CDRF_DODEFAULT)& resultBits;
+
+    /* the app has told us not to redraw the toolbar */
+    if (!infoPtr->bDoRedraw)
+        return FALSE;
+
+    if (infoPtr->dwStyle & TBSTYLE_CUSTOMERASE)
+    {
+        ZeroMemory (&tbcd, sizeof(NMTBCUSTOMDRAW));
+        tbcd.nmcd.dwDrawStage = CDDS_PREERASE;
+        tbcd.nmcd.hdc = (HDC)wParam;
+        ntfret = TOOLBAR_SendNotify(&tbcd.nmcd.hdr, infoPtr, NM_CUSTOMDRAW);
+        if ((ntfret & supportedMaskPre) != 0)
+        {
+            FIXME("[%p] response %#x not handled to NM_CUSTOMDRAW (CDDS_PREERASE)\n",
+                infoPtr->hwndSelf, ntfret & resultBits);
+        }
+    }
+
+    if ((ntfret & CDRF_SKIPDEFAULT) == 0)
+    {
+
+    HTHEME theme = GetWindowTheme(infoPtr->hwndSelf);
+    /* If the toolbar is "transparent" then pass the WM_ERASEBKGND up
+     * to my parent for processing.
+     */
+    if (theme || (infoPtr->dwStyle & TBSTYLE_TRANSPARENT)) {
+	POINT pt, ptorig;
+	HDC hdc = (HDC)wParam;
+	HWND parent;
+
+	pt.x = 0;
+	pt.y = 0;
+	parent = GetParent(infoPtr->hwndSelf);
+	MapWindowPoints(infoPtr->hwndSelf, parent, &pt, 1);
+	OffsetWindowOrgEx (hdc, pt.x, pt.y, &ptorig);
+	ret = SendMessageW (parent, WM_ERASEBKGND, wParam, lParam);
+	SetWindowOrgEx (hdc, ptorig.x, ptorig.y, 0);
+    }
+    if (!ret)
+	ret = DefWindowProcW (infoPtr->hwndSelf, WM_ERASEBKGND, wParam, lParam);
+
+    }
+
+    if (ntfret & CDRF_NOTIFYPOSTERASE)
+    {
+        ZeroMemory (&tbcd, sizeof(NMTBCUSTOMDRAW));
+        tbcd.nmcd.dwDrawStage = CDDS_POSTERASE;
+        tbcd.nmcd.hdc = (HDC)wParam;
+        ntfret = TOOLBAR_SendNotify(&tbcd.nmcd.hdr, infoPtr, NM_CUSTOMDRAW);
+        if ((ntfret & supportedMaskPost) != 0)
+        {
+            FIXME("[%p] response %#x not handled to NM_CUSTOMDRAW (CDDS_POSTERASE)\n",
+                infoPtr->hwndSelf, ntfret & resultBits);
+        }
+    }
+#else
     DWORD ntfret;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
     DWORD dwEraseCustDraw = 0;
@@ -5661,6 +5724,8 @@ TOOLBAR_EraseBackground (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 		      infoPtr->hwndSelf, ntfret);
 	    }
     }
+#endif
+
     return ret;
 }
 
