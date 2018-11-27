@@ -9367,6 +9367,589 @@ Language=Russian
 Locked%0
 .
 
+MessageId=4450
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4450
+Language=English
+Computer name%0
+.
+Language=Russian
+Computer name%0
+.
+
+MessageId=4451
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4451
+Language=English
+User name%0
+.
+Language=Russian
+User name%0
+.
+
+MessageId=4452
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4452
+Language=English
+Software version%0
+.
+Language=Russian
+Software version%0
+.
+
+MessageId=4453
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4453
+Language=English
+Workstation active on%0
+.
+Language=Russian
+Workstation active on%0
+.
+
+MessageId=4454
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4454
+Language=English
+ReactOS root directory%0
+.
+Language=Russian
+ReactOS root directory%0
+.
+
+MessageId=4455
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4455
+Language=English
+Workstation domain%0
+.
+Language=Russian
+Workstation domain%0
+.
+
+MessageId=4456
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4456
+Language=English
+Logon domain%0
+.
+Language=Russian
+Logon domain%0
+.
+
+MessageId=4457
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4457
+Language=English
+Other domain(s)%0
+.
+Language=Russian
+Other domain(s)%0
+.
+
+MessageId=4458
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4458
+Language=English
+COM Open Timeout (sec)%0
+.
+Language=Russian
+COM Open Timeout (sec)%0
+.
+
+MessageId=4459
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4459
+Language=English
+COM Send Count (byte)%0
+.
+Language=Russian
+COM Send Count (byte)%0
+.
+
+MessageId=4460
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4460
+Language=English
+COM Send Timeout (msec)%0
+.
+Language=Russian
+COM Send Timeout (msec)%0
+.
+
+MessageId=4461
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4461
+Language=English
+DOS session print time-out (sec)%0
+.
+Language=Russian
+DOS session print time-out (sec)%0
+.
+
+MessageId=4462
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4462
+Language=English
+Maximum error log size (K)%0
+.
+Language=Russian
+Maximum error log size (K)%0
+.
+
+MessageId=4463
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4463
+Language=English
+Maximum cache memory (K)%0
+.
+Language=Russian
+Maximum cache memory (K)%0
+.
+
+MessageId=4464
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4464
+Language=English
+Number of network buffers%0
+.
+Language=Russian
+Number of network buffers%0
+.
+
+MessageId=4465
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4465
+Language=English
+Number of character buffers%0
+.
+Language=Russian
+Number of character buffers%0
+.
+
+MessageId=4466
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4466
+Language=English
+Size of network buffers%0
+.
+Language=Russian
+Size of network buffers%0
+.
+
+MessageId=4467
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4467
+Language=English
+Size of character buffers%0
+.
+Language=Russian
+Size of character buffers%0
+.
+
+MessageId=4468
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4468
+Language=English
+Full Computer name%0
+.
+Language=Russian
+Full Computer name%0
+.
+
+MessageId=4469
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4469
+Language=English
+Workstation Domain DNS Name%0
+.
+Language=Russian
+Workstation Domain DNS Name%0
+.
+
+MessageId=4470
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4470
+Language=English
+ReactOS%0
+.
+Language=Russian
+ReactOS%0
+.
+
+MessageId=4481
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4481
+Language=English
+Server Name%0
+.
+Language=Russian
+Server Name%0
+.
+
+MessageId=4482
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4482
+Language=English
+Server Comment%0
+.
+Language=Russian
+Server Comment%0
+.
+
+MessageId=4483
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4483
+Language=English
+Send administrative alerts to%0
+.
+Language=Russian
+Send administrative alerts to%0
+.
+
+MessageId=4484
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4484
+Language=English
+Software version%0
+.
+Language=Russian
+Software version%0
+.
+
+MessageId=4485
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4485
+Language=English
+Peer Server%0
+.
+Language=Russian
+Peer Server%0
+.
+
+MessageId=4486
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4486
+Language=English
+ReactOS%0"
+.
+Language=Russian
+ReactOS%0"
+.
+
+MessageId=4487
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4487
+Language=English
+Server Level%0
+.
+Language=Russian
+Server Level%0
+.
+
+MessageId=4488
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4488
+Language=English
+ReactOS Server%0
+.
+Language=Russian
+ReactOS Server%0
+.
+
+MessageId=4489
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4489
+Language=English
+Server is active on%0
+.
+Language=Russian
+Server is active on%0
+.
+
+MessageId=4492
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4492
+Language=English
+Server hidden%0
+.
+Language=Russian
+Server hidden%0
+.
+
+MessageId=4506
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4506
+Language=English
+Maximum Logged On Users%0
+.
+Language=Russian
+Maximum Logged On Users%0
+.
+
+MessageId=4507
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4507
+Language=English
+Maximum concurrent administrators%0
+.
+Language=Russian
+Maximum concurrent administrators%0
+.
+
+MessageId=4508
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4508
+Language=English
+Maximum resources shared%0
+.
+Language=Russian
+Maximum resources shared%0
+.
+
+MessageId=4509
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4509
+Language=English
+Maximum connections to resources%0
+.
+Language=Russian
+Maximum connections to resources%0
+.
+
+MessageId=4510
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4510
+Language=English
+Maximum open files on server%0
+.
+Language=Russian
+Maximum open files on server%0
+.
+
+MessageId=4511
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4511
+Language=English
+Maximum open files per session%0
+.
+Language=Russian
+Maximum open files per session%0
+.
+
+MessageId=4512
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4512
+Language=English
+Maximum file locks%0
+.
+Language=Russian
+Maximum file locks%0
+.
+
+MessageId=4520
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4520
+Language=English
+Idle session time (min)%0
+.
+Language=Russian
+Idle session time (min)%0
+.
+
+MessageId=4526
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4526
+Language=English
+Share-level%0
+.
+Language=Russian
+Share-level%0
+.
+
+MessageId=4527
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4527
+Language=English
+User-level%0
+.
+Language=Russian
+User-level%0
+.
+
+MessageId=4530
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4530
+Language=English
+Unlimited Server%0
+.
+Language=Russian
+Unlimited Server%0
+.
+
+MessageId=4570
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4570
+Language=English
+Force user logoff how long after time expires?:%0\n
+.
+Language=Russian
+Force user logoff how long after time expires?:%0\n
+.
+
+MessageId=4571
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4571
+Language=English
+Lock out account after how many bad passwords?:%0\n
+.
+Language=Russian
+Lock out account after how many bad passwords?:%0\n
+.
+
+MessageId=4572
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4572
+Language=English
+Minimum password age (days):%0
+.
+Language=Russian
+Minimum password age (days):%0
+.
+
+MessageId=4573
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4573
+Language=English
+Maximum password age (days):%0
+.
+Language=Russian
+Maximum password age (days):%0
+.
+
+MessageId=4574
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4574
+Language=English
+Minimum password length:%0
+.
+Language=Russian
+Minimum password length:%0
+.
+
+MessageId=4575
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4575
+Language=English
+Length of password history maintained:%0
+.
+Language=Russian
+Length of password history maintained:%0
+.
+
+MessageId=4576
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4576
+Language=English
+Computer role:%0
+.
+Language=Russian
+Computer role:%0
+.
+
+MessageId=4577
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4577
+Language=English
+Primary Domain controller for workstation domain:%0.
+.
+Language=Russian
+Primary Domain controller for workstation domain:%0.
+.
+
+MessageId=4578
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4578
+Language=English
+Lockout threshold:%0
+.
+Language=Russian
+Lockout threshold:%0
+.
+
+MessageId=4579
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4579
+Language=English
+Lockout duration (minutes):%0
+.
+Language=Russian
+Lockout duration (minutes):%0
+.
+
+MessageId=4580
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4580
+Language=English
+Lockout observation window (minutes):%0
+.
+Language=Russian
+Lockout observation window (minutes):%0
+.
+
 
 
 ;
