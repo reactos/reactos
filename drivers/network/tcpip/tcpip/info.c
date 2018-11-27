@@ -268,12 +268,12 @@ TDI_STATUS InfoTdiQueryInformationEx(
                     return InfoTdiQueryGetAddrTable(ID->toi_entity, Buffer, BufferSize);
                 else if (ID->toi_entity.tei_entity == CO_TL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TRUE);
+                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassOwnerPid);
                      else
                          return TDI_INVALID_PARAMETER;
                 else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TRUE);
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassOwnerPid);
                      else
                          return TDI_INVALID_PARAMETER;
                 else
@@ -297,12 +297,12 @@ TDI_STATUS InfoTdiQueryInformationEx(
                          return TDI_INVALID_PARAMETER;
                  else if (ID->toi_entity.tei_entity == CO_TL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, FALSE);
+                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassBasic);
                      else
                          return TDI_INVALID_PARAMETER;
                  else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
                      if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, FALSE);
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassBasic);
                      else
                          return TDI_INVALID_PARAMETER;
                  else

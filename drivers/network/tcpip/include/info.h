@@ -80,6 +80,12 @@ typedef union TDI_INFO {
     TDI_PROVIDER_STATISTICS ProviderStats;
 } TDI_INFO, *PTDI_INFO;
 
+typedef enum TDI_TCPUDP_CLASS_INFO {
+    TcpUdpClassBasic,
+    TcpUdpClassOwnerPid,
+    TcpUdpClassOwner
+} TDI_TCPUDP_CLASS_INFO, *PTDI_TCPUDP_CLASS_INFO;
+
 TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize );
 
@@ -117,12 +123,12 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
 TDI_STATUS InfoTdiQueryGetConnectionTcpTable( PADDRESS_FILE AddrFile,
                                               PNDIS_BUFFER Buffer,
                                               PUINT BufferSize,
-                                              BOOLEAN Extended);
+                                              TDI_TCPUDP_CLASS_INFO Class);
 
 TDI_STATUS InfoTdiQueryGetConnectionUdpTable( PADDRESS_FILE AddrFile,
                                               PNDIS_BUFFER Buffer,
                                               PUINT BufferSize,
-                                              BOOLEAN Extended);
+                                              TDI_TCPUDP_CLASS_INFO Class);
 
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF,
                            PVOID Buffer,

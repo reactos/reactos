@@ -182,7 +182,7 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
 TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 				    PNDIS_BUFFER Buffer,
 				    PUINT BufferSize,
-                    BOOLEAN Extended)
+                    TDI_TCPUDP_CLASS_INFO Class)
 {
     SIZE_T Size;
     MIB_TCPROW_OWNER_PID TcpRow;
@@ -191,12 +191,13 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
     TcpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
-    if (Extended)
+    if (Class == TcpUdpClassOwnerPid)
     {
         Size = sizeof(MIB_TCPROW_OWNER_PID);
     }
     else
     {
+        ASSERT(Class != TcpUdpClassOwner);
         Size = sizeof(MIB_TCPROW);
     }
 
@@ -255,20 +256,30 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
 				    PNDIS_BUFFER Buffer,
 				    PUINT BufferSize,
-				    BOOLEAN Extended)
+				    TDI_TCPUDP_CLASS_INFO Class)
 {
+    SIZE_T Size;
     MIB_UDPROW_OWNER_PID UdpRow;
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
+
+    if (Class == TcpUdpClassOwnerPid)
+    {
+        Size = sizeof(MIB_UDPROW_OWNER_PID);
+    }
+    else
+    {
+        ASSERT(Class != TcpUdpClassOwner);
+        Size = sizeof(MIB_UDPROW);
+    }
 
     UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     UdpRow.dwLocalPort = AddrFile->Port;
     UdpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
 
     Status = InfoCopyOut( (PCHAR)&UdpRow,
-			  (Extended ? sizeof(MIB_UDPROW_OWNER_PID) : sizeof(MIB_UDPROW)),
-			  Buffer, BufferSize );
+			  Size, Buffer, BufferSize );
 
     TI_DbgPrint(DEBUG_INFO, ("Returning %08x\n", Status));
 
