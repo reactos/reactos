@@ -1015,7 +1015,7 @@ PMIB_TCPTABLE_OWNER_MODULE getOwnerModTcpTable(void)
 
     IpOwnerModTcpTable = HeapAlloc
 	( GetProcessHeap(), 0,
-	  sizeof(DWORD) + (sizeof(PMIB_TCPROW_OWNER_MODULE) * totalNumber) );
+	  sizeof(DWORD) + (sizeof(MIB_TCPROW_OWNER_MODULE) * totalNumber) );
     if (!IpOwnerModTcpTable) {
         closeTcpFile(tcpFile);
         return NULL;
@@ -1034,7 +1034,7 @@ PMIB_TCPTABLE_OWNER_MODULE getOwnerModTcpTable(void)
 					CO_TL_ENTITY,
 					entitySet[i].tei_instance,
 					0,
-					sizeof(PMIB_TCPROW_OWNER_MODULE),
+					sizeof(MIB_TCPROW_OWNER_MODULE),
 					(PVOID *)&AdapterOwnerModTcpTable,
 					&returnSize );
 
