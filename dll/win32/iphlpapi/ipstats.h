@@ -102,6 +102,11 @@ PMIB_UDPTABLE getUdpTable(void);
  */
 PMIB_UDPTABLE_OWNER_PID getOwnerUdpTable(void);
 
+/* Allocates and returns to you the UDP state table with module info,
+ * or NULL if it can't allocate enough memory.  free() the returned table.
+ */
+PMIB_UDPTABLE_OWNER_MODULE getOwnerModUdpTable(void);
+
 /* Returns the number of entries in the TCP state table. */
 DWORD getNumTcpEntries(void);
 
@@ -114,5 +119,10 @@ PMIB_TCPTABLE getTcpTable(void);
  * or NULL if it can't allocate enough memory.  free() the returned table.
  */
 PMIB_TCPTABLE_OWNER_PID getOwnerTcpTable(void);
+
+/* Allocates and returns to you the TCP state table with module info,
+ * or NULL if it can't allocate enough memory.  free() the returned table.
+ */
+PMIB_TCPTABLE_OWNER_MODULE getOwnerModTcpTable(void);
 
 #endif /* ndef WINE_IPSTATS_H_ */

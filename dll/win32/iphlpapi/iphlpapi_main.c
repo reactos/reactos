@@ -1267,8 +1267,124 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
         }
         break;
 
+        case TCP_TABLE_OWNER_MODULE_ALL:
+        {
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE));
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
+                }
+
+                free(pOurTcpTable);
+            }
+        }
+        break;
+
+        case TCP_TABLE_OWNER_MODULE_CONNECTIONS:
+        {
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].dwState != MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].dwState != MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW_OWNER_MODULE));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
+                }
+
+                free(pOurTcpTable);
+            }
+        }
+        break;
+
+        case TCP_TABLE_OWNER_MODULE_LISTENER:
+        {
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
+
+            if (pOurTcpTable)
+            {
+                for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                {
+                    if (pOurTcpTable->table[i].dwState == MIB_TCP_STATE_LISTEN)
+                    {
+                        ++count;
+                    }
+                }
+
+                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    pTheirTcpTable->dwNumEntries = count;
+
+                    for (i = 0, count = 0; i < pOurTcpTable->dwNumEntries; ++i)
+                    {
+                        if (pOurTcpTable->table[i].dwState == MIB_TCP_STATE_LISTEN)
+                        {
+                            memcpy(&pTheirTcpTable->table[count], &pOurTcpTable->table[i], sizeof(MIB_TCPROW_OWNER_MODULE));
+                            ++count;
+                        }
+                    }
+                    ASSERT(count == pTheirTcpTable->dwNumEntries);
+
+                    /* Don't sort on PID, so use basic helper */
+                    if (bOrder)
+                        qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
+                              sizeof(MIB_TCPROW_OWNER_MODULE), TcpTableSorter);
+                }
+
+                free(pOurTcpTable);
+            }
+        }
+        break;
+
         default:
-            UNIMPLEMENTED;
             ret = ERROR_INVALID_PARAMETER;
             break;
     }
@@ -1382,8 +1498,33 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
         }
         break;
 
+        case UDP_TABLE_OWNER_MODULE:
+        {
+            PMIB_UDPTABLE_OWNER_MODULE pOurUdpTable = getOwnerModUdpTable();
+            PMIB_UDPTABLE_OWNER_MODULE pTheirUdpTable = pUdpTable;
+
+            if (pOurUdpTable)
+            {
+                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE) > *pdwSize || !pTheirUdpTable)
+                {
+                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE);
+                    ret = ERROR_INSUFFICIENT_BUFFER;
+                }
+                else
+                {
+                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE));
+
+                    if (bOrder)
+                        qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
+                              sizeof(MIB_UDPROW_OWNER_MODULE), UdpTableSorter);
+                }
+
+                free(pOurUdpTable);
+            }
+        }
+        break;
+
         default:
-            UNIMPLEMENTED;
             ret = ERROR_INVALID_PARAMETER;
             break;
     }
