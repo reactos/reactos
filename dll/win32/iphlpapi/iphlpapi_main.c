@@ -321,7 +321,7 @@ DWORD WINAPI AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
  *  DWORD
  *
  */
-DWORD WINAPI AllocateAndGetTcpExTableFromStack(PMIB_TCPTABLE_OWNER_PID *ppTcpTable,
+DWORD WINAPI AllocateAndGetTcpExTableFromStack(PVOID *ppTcpTable,
  BOOL bOrder, HANDLE heap, DWORD flags, DWORD family)
 {
   DWORD ret;
@@ -456,7 +456,7 @@ DWORD WINAPI AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
  *  DWORD
  *
  */
-DWORD WINAPI AllocateAndGetUdpExTableFromStack(PMIB_UDPTABLE_OWNER_PID *ppUdpTable,
+DWORD WINAPI AllocateAndGetUdpExTableFromStack(PVOID *ppUdpTable,
  BOOL bOrder, HANDLE heap, DWORD flags, DWORD family)
 {
   DWORD ret;
