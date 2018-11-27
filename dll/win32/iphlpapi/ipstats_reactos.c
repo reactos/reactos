@@ -761,6 +761,67 @@ PMIB_UDPTABLE_OWNER_PID getOwnerUdpTable(void)
     return IpOwnerUdpTable;
 }
 
+PMIB_UDPTABLE_OWNER_MODULE getOwnerModUdpTable(void)
+{
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_UDPTABLE_OWNER_MODULE IpOwnerModUdpTable = NULL;
+    PMIB_UDPROW_OWNER_MODULE AdapterOwnerModUdpTable = NULL;
+
+    TRACE("called.\n");
+
+    totalNumber = getNumUdpEntries();
+
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
+    }
+
+    IpOwnerModUdpTable = HeapAlloc
+	( GetProcessHeap(), 0,
+	  sizeof(DWORD) + (sizeof(MIB_UDPROW_OWNER_MODULE) * totalNumber) );
+    if (!IpOwnerModUdpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CL_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_SPECIFIC_MODULE_ENTRY_ID,
+					CL_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(MIB_UDPROW_OWNER_MODULE),
+					(PVOID *)&AdapterOwnerModUdpTable,
+					&returnSize );
+
+            if( status == STATUS_SUCCESS ) {
+                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+                    IpOwnerModUdpTable->table[CurrIdx] = AdapterOwnerModUdpTable[TmpIdx];
+                tdiFreeThingSet( AdapterOwnerModUdpTable );
+            }
+        }
+    }
+
+    closeTcpFile( tcpFile );
+
+    tdiFreeThingSet( entitySet );
+    IpOwnerModUdpTable->dwNumEntries = CurrIdx;
+
+    return IpOwnerModUdpTable;
+}
+
 DWORD getNumTcpEntries(void)
 {
     DWORD numEntities;
@@ -930,4 +991,65 @@ PMIB_TCPTABLE_OWNER_PID getOwnerTcpTable(void)
     IpOwnerTcpTable->dwNumEntries = CurrIdx;
 
     return IpOwnerTcpTable;
+}
+
+PMIB_TCPTABLE_OWNER_MODULE getOwnerModTcpTable(void)
+{
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_TCPTABLE_OWNER_MODULE IpOwnerModTcpTable = NULL;
+    PMIB_TCPROW_OWNER_MODULE AdapterOwnerModTcpTable = NULL;
+
+    TRACE("called.\n");
+
+    totalNumber = getNumTcpEntries();
+
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
+    }
+
+    IpOwnerModTcpTable = HeapAlloc
+	( GetProcessHeap(), 0,
+	  sizeof(DWORD) + (sizeof(PMIB_TCPROW_OWNER_MODULE) * totalNumber) );
+    if (!IpOwnerModTcpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CO_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_SPECIFIC_MODULE_ENTRY_ID,
+					CO_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(PMIB_TCPROW_OWNER_MODULE),
+					(PVOID *)&AdapterOwnerModTcpTable,
+					&returnSize );
+
+            if( status == STATUS_SUCCESS ) {
+                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+                    IpOwnerModTcpTable->table[CurrIdx] = AdapterOwnerModTcpTable[TmpIdx];
+                tdiFreeThingSet( AdapterOwnerModTcpTable );
+            }
+        }
+    }
+
+    closeTcpFile( tcpFile );
+
+    tdiFreeThingSet( entitySet );
+    IpOwnerModTcpTable->dwNumEntries = CurrIdx;
+
+    return IpOwnerModTcpTable;
 }
