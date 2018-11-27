@@ -425,6 +425,7 @@ NTSTATUS FileOpenAddress(
   AddrFile->BCast = 1;
   AddrFile->HeaderIncl = 1;
   AddrFile->ProcessId = PsGetCurrentProcessId();
+  KeQuerySystemTime(&AddrFile->CreationTime);
 
   /* Make sure address is a local unicast address or 0 */
   /* FIXME: IPv4 only */
