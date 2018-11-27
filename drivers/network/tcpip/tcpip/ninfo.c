@@ -185,21 +185,26 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
                     TDI_TCPUDP_CLASS_INFO Class)
 {
     SIZE_T Size;
-    MIB_TCPROW_OWNER_PID TcpRow;
+    MIB_TCPROW_OWNER_MODULE TcpRow;
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
 
-    TcpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
     if (Class == TcpUdpClassOwnerPid)
     {
         Size = sizeof(MIB_TCPROW_OWNER_PID);
     }
+    else if (Class == TcpUdpClassOwner)
+    {
+        Size = sizeof(MIB_TCPROW_OWNER_MODULE);
+    }
     else
     {
-        ASSERT(Class != TcpUdpClassOwner);
         Size = sizeof(MIB_TCPROW);
     }
+
+    TcpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
+    TcpRow.liCreateTimestamp = AddrFile->CreationTime; /* FIXME: to check */
 
     if (AddrFile->Listener != NULL)
     {
@@ -244,6 +249,12 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
 
     if (NT_SUCCESS(Status))
     {
+        if (Class == TcpUdpClassOwner)
+        {
+            /* FIXME */
+            RtlZeroMemory(&TcpRow.OwningModuleInfo[0], sizeof(TcpRow.OwningModuleInfo));
+        }
+
         Status = InfoCopyOut( (PCHAR)&TcpRow, Size,
                               Buffer, BufferSize );
     }
@@ -259,7 +270,7 @@ TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
 				    TDI_TCPUDP_CLASS_INFO Class)
 {
     SIZE_T Size;
-    MIB_UDPROW_OWNER_PID UdpRow;
+    MIB_UDPROW_OWNER_MODULE UdpRow;
     TDI_STATUS Status = TDI_INVALID_REQUEST;
 
     TI_DbgPrint(DEBUG_INFO, ("Called.\n"));
@@ -268,15 +279,25 @@ TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
     {
         Size = sizeof(MIB_UDPROW_OWNER_PID);
     }
+    else if (Class == TcpUdpClassOwner)
+    {
+        Size = sizeof(MIB_UDPROW_OWNER_MODULE);
+    }
     else
     {
-        ASSERT(Class != TcpUdpClassOwner);
         Size = sizeof(MIB_UDPROW);
     }
 
     UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     UdpRow.dwLocalPort = AddrFile->Port;
     UdpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
+    UdpRow.liCreateTimestamp = AddrFile->CreationTime;  /* FIXME: to check */
+    UdpRow.dwFlags = 0; /* FIXME */
+    if (Class == TcpUdpClassOwner)
+    {
+        /* FIXME */
+        RtlZeroMemory(&UdpRow.OwningModuleInfo[0], sizeof(UdpRow.OwningModuleInfo));
+    }
 
     Status = InfoCopyOut( (PCHAR)&UdpRow,
 			  Size, Buffer, BufferSize );

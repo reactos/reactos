@@ -308,6 +308,23 @@ TDI_STATUS InfoTdiQueryInformationEx(
                  else
                      return TDI_INVALID_PARAMETER;
 
+              case IP_SPECIFIC_MODULE_ENTRY_ID:
+                 if (ID->toi_type != INFO_TYPE_PROVIDER)
+                     return TDI_INVALID_PARAMETER;
+
+                 if (ID->toi_entity.tei_entity == CO_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionTcpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassOwner);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else if (ID->toi_entity.tei_entity == CL_TL_ENTITY)
+                     if ((EntityListContext = GetContext(ID->toi_entity)))
+                         return InfoTdiQueryGetConnectionUdpTable(EntityListContext, Buffer, BufferSize, TcpUdpClassOwner);
+                     else
+                         return TDI_INVALID_PARAMETER;
+                 else
+                     return TDI_INVALID_PARAMETER;
+
 #if 0
               case IP_INTFC_INFO_ID:
                  if (ID->toi_type != INFO_TYPE_PROVIDER)
