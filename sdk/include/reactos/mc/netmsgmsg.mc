@@ -9950,6 +9950,756 @@ Language=Russian
 Lockout observation window (minutes):%0
 .
 
+MessageId=4600
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4600
+Language=English
+Statistics since%0
+.
+Language=Russian
+Statistics since%0
+.
+
+MessageId=4601
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4601
+Language=English
+Sessions accepted%0
+.
+Language=Russian
+Sessions accepted%0
+.
+
+MessageId=4602
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4602
+Language=English
+Sessions timed-out%0
+.
+Language=Russian
+Sessions timed-out%0
+.
+
+MessageId=4603
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4603
+Language=English
+Sessions errored-out%0
+.
+Language=Russian
+Sessions errored-out%0
+.
+
+MessageId=4604
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4604
+Language=English
+Kilobytes sent%0
+.
+Language=Russian
+Kilobytes sent%0
+.
+
+MessageId=4605
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4605
+Language=English
+Kilobytes received%0
+.
+Language=Russian
+Kilobytes received%0
+.
+
+MessageId=4606
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4606
+Language=English
+Mean response time (msec)%0
+.
+Language=Russian
+Mean response time (msec)%0
+.
+
+MessageId=4607
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4607
+Language=English
+Network errors%0
+.
+Language=Russian
+Network errors%0
+.
+
+MessageId=4608
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4608
+Language=English
+Files accessed%0
+.
+Language=Russian
+Files accessed%0
+.
+
+MessageId=4609
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4609
+Language=English
+Print jobs spooled%0
+.
+Language=Russian
+Print jobs spooled%0
+.
+
+MessageId=4610
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4610
+Language=English
+System errors%0
+.
+Language=Russian
+System errors%0
+.
+
+MessageId=4611
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4611
+Language=English
+Password violations%0
+.
+Language=Russian
+Password violations%0
+.
+
+MessageId=4612
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4612
+Language=English
+Permission violations%0
+.
+Language=Russian
+Permission violations%0
+.
+
+MessageId=4613
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4613
+Language=English
+Communication devices accessed%0
+.
+Language=Russian
+Communication devices accessed%0
+.
+
+MessageId=4614
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4614
+Language=English
+Sessions started%0
+.
+Language=Russian
+Sessions started%0
+.
+
+MessageId=4615
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4615
+Language=English
+Sessions reconnected%0
+.
+Language=Russian
+Sessions reconnected%0
+.
+
+MessageId=4616
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4616
+Language=English
+Sessions starts failed%0
+.
+Language=Russian
+Sessions starts failed%0
+.
+
+MessageId=4617
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4617
+Language=English
+Sessions disconnected%0
+.
+Language=Russian
+Sessions disconnected%0
+.
+
+MessageId=4618
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4618
+Language=English
+Network I/O's performed%0
+.
+Language=Russian
+Network I/O's performed%0
+.
+
+MessageId=4619
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4619
+Language=English
+Files and pipes accessed%0
+.
+Language=Russian
+Files and pipes accessed%0
+.
+
+MessageId=4620
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4620
+Language=English
+Times buffers exhausted
+.
+Language=Russian
+Times buffers exhausted
+.
+
+MessageId=4621
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4621
+Language=English
+Big buffers%0
+.
+Language=Russian
+Big buffers%0
+.
+
+MessageId=4622
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4622
+Language=English
+Request buffers%0
+.
+Language=Russian
+Request buffers%0
+.
+
+MessageId=4623
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4623
+Language=English
+Workstation Statistics for \\\\%1
+.
+Language=Russian
+Workstation Statistics for \\\\%1
+.
+
+MessageId=4624
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4624
+Language=English
+Server Statistics for \\\\%1
+.
+Language=Russian
+Server Statistics for \\\\%1
+.
+
+MessageId=4625
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4625
+Language=English
+Statistics since %1
+.
+Language=Russian
+Statistics since %1
+.
+
+MessageId=4626
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4626
+Language=English
+Connections made%0
+.
+Language=Russian
+Connections made%0
+.
+
+MessageId=4627
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4627
+Language=English
+Connections failed%0
+.
+Language=Russian
+Connections failed%0
+.
+
+MessageId=4630
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4630
+Language=English
+Bytes received%0
+.
+Language=Russian
+Bytes received%0
+.
+
+MessageId=4631
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4631
+Language=English
+Server Message Blocks (SMBs) received%0
+.
+Language=Russian
+Server Message Blocks (SMBs) received%0
+.
+
+MessageId=4632
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4632
+Language=English
+Bytes transmitted%0
+.
+Language=Russian
+Bytes transmitted%0
+.
+
+MessageId=4633
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4633
+Language=English
+Server Message Blocks (SMBs) transmitted%0
+.
+Language=Russian
+Server Message Blocks (SMBs) transmitted%0
+.
+
+MessageId=4634
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4634
+Language=English
+Read operations%0
+.
+Language=Russian
+Read operations%0
+.
+
+MessageId=4635
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4635
+Language=English
+Write operations%0
+.
+Language=Russian
+Write operations%0
+.
+
+MessageId=4636
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4636
+Language=English
+Raw reads denied%0
+.
+Language=Russian
+Raw reads denied%0
+.
+
+MessageId=4637
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4637
+Language=English
+Raw writes denied%0
+.
+Language=Russian
+Raw writes denied%0
+.
+
+MessageId=4638
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4638
+Language=English
+Network errors%0
+.
+Language=Russian
+Network errors%0
+.
+
+MessageId=4639
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4639
+Language=English
+Connections made%0
+.
+Language=Russian
+Connections made%0
+.
+
+MessageId=4640
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4640
+Language=English
+Reconnections made%0
+.
+Language=Russian
+Reconnections made%0
+.
+
+MessageId=4641
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4641
+Language=English
+Server disconnects%0
+.
+Language=Russian
+Server disconnects%0
+.
+
+MessageId=4642
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4642
+Language=English
+Sessions started%0
+.
+Language=Russian
+Sessions started%0
+.
+
+MessageId=4643
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4643
+Language=English
+Hung sessions%0
+.
+Language=Russian
+Hung sessions%0
+.
+
+MessageId=4644
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4644
+Language=English
+Failed sessions%0
+.
+Language=Russian
+Failed sessions%0
+.
+
+MessageId=4645
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4645
+Language=English
+Failed operations%0
+.
+Language=Russian
+Failed operations%0
+.
+
+MessageId=4646
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4646
+Language=English
+Use count%0
+.
+Language=Russian
+Use count%0
+.
+
+MessageId=4647
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4647
+Language=English
+Failed use count%0
+.
+Language=Russian
+Failed use count%0
+.
+
+MessageId=4650
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4650
+Language=English
+%1 was deleted successfully.
+.
+Language=Russian
+%1 was deleted successfully.
+.
+
+MessageId=4651
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4651
+Language=English
+%1 was used successfully.
+.
+Language=Russian
+%1 was used successfully.
+.
+
+MessageId=4652
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4652
+Language=English
+The message was successfully sent to %1.
+.
+Language=Russian
+The message was successfully sent to %1.
+.
+
+MessageId=4653
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4653
+Language=English
+The message name %1 was forwarded successfully.
+.
+Language=Russian
+The message name %1 was forwarded successfully.
+.
+
+MessageId=4654
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4654
+Language=English
+The message name %1 was added successfully.
+.
+Language=Russian
+The message name %1 was added successfully.
+.
+
+MessageId=4655
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4655
+Language=English
+The message name forwarding was successfully canceled.
+.
+Language=Russian
+The message name forwarding was successfully canceled.
+.
+
+MessageId=4656
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4656
+Language=English
+%1 was shared successfully.
+.
+Language=Russian
+%1 was shared successfully.
+.
+
+MessageId=4657
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4657
+Language=English
+The server %1 successfully logged you on as %2.
+.
+Language=Russian
+The server %1 successfully logged you on as %2.
+.
+
+MessageId=4658
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4658
+Language=English
+%1 was logged off successfully.
+.
+Language=Russian
+%1 was logged off successfully.
+.
+
+MessageId=4659
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4659
+Language=English
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Russian
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+
+MessageId=4661
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4661
+Language=English
+The password was changed successfully.
+.
+Language=Russian
+The password was changed successfully.
+.
+
+MessageId=4662
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4662
+Language=English
+%1 file(s) copied.
+.
+Language=Russian
+%1 file(s) copied.
+.
+
+MessageId=4663
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4663
+Language=English
+%1 file(s) moved.
+.
+Language=Russian
+%1 file(s) moved.
+.
+
+MessageId=4664
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4664
+Language=English
+The message was successfully sent to all users of the network.
+.
+Language=Russian
+The message was successfully sent to all users of the network.
+.
+
+MessageId=4665
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4665
+Language=English
+The message was successfully sent to domain %1.
+.
+Language=Russian
+The message was successfully sent to domain %1.
+.
+
+MessageId=4666
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4666
+Language=English
+The message was successfully sent to all users of this server.
+.
+Language=Russian
+The message was successfully sent to all users of this server.
+.
+
+MessageId=4667
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4667
+Language=English
+The message was successfully sent to group *%1.
+.
+Language=Russian
+The message was successfully sent to group *%1.
+.
+
+MessageId=4695
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4695
+Language=English
+Microsoft LAN Manager Version %1
+.
+Language=Russian
+Microsoft LAN Manager Version %1
+.
+
+MessageId=4696
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4696
+Language=English
+ReactOS Server
+.
+Language=Russian
+ReactOS Server
+.
+
+MessageId=4697
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4697
+Language=English
+ReactOS Workstation
+.
+Language=Russian
+ReactOS Workstation
+.
+
+MessageId=4698
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4698
+Language=English
+MS-DOS Enhanced Workstation
+.
+Language=Russian
+MS-DOS Enhanced Workstation
+.
+
+MessageId=4699
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4699
+Language=English
+Created at %1
+.
+Language=Russian
+Created at %1
+.
+
 
 
 ;
