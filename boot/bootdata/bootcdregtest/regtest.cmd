@@ -11,4 +11,5 @@ if exist "C:\ReactOS\bin\AHKAppTests.cmd" (
 )
 
 dbgprint --process "ipconfig"
+cd C:\ReactOS\bin
 start rosautotest /r /s /n
