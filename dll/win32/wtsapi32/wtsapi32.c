@@ -285,11 +285,74 @@ BOOL WINAPI WTSQuerySessionInformationA(
     LPSTR* Buffer,
     DWORD* BytesReturned)
 {
+#ifdef __REACTOS__
+    const size_t wcsErrorCode = -1;
+    LPWSTR buffer = NULL;
+    LPSTR ansiBuffer = NULL;
+    DWORD bytesReturned = 0;
+    BOOL result = FALSE;
+    size_t len;
+
+    if (!BytesReturned || !Buffer)
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    if (!WTSQuerySessionInformationW(hServer, SessionId, WTSInfoClass, &buffer, &bytesReturned))
+    {
+        ansiBuffer = (LPSTR)buffer;
+        *Buffer = ansiBuffer;
+        *BytesReturned = bytesReturned;
+        return FALSE;
+    }
+
+    switch (WTSInfoClass)
+    {
+        case WTSInitialProgram:
+        case WTSApplicationName:
+        case WTSWorkingDirectory:
+        case WTSOEMId:
+        case WTSUserName:
+        case WTSWinStationName:
+        case WTSDomainName:
+        case WTSClientName:
+        case WTSClientDirectory:
+        {
+            len = wcstombs(NULL, buffer, 0);
+            if (len != wcsErrorCode)
+            {
+                len++;
+                ansiBuffer = heap_alloc_zero(len);
+                if (ansiBuffer && (wcstombs(ansiBuffer, buffer, len) != wcsErrorCode))
+                {
+                    result = TRUE;
+                    bytesReturned = len;
+                }
+            }
+            WTSFreeMemory(buffer);
+            break;
+        }
+
+        default:
+        {
+            result = TRUE;
+            ansiBuffer = (LPSTR)buffer;
+            break;
+        }
+    }
+
+    *Buffer = ansiBuffer;
+    *BytesReturned = bytesReturned;
+
+    return result;
+#else
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationA */
     FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
         Buffer, BytesReturned);
 
     return FALSE;
+#endif
 }
 
 /************************************************************
@@ -302,6 +365,114 @@ BOOL WINAPI WTSQuerySessionInformationW(
     LPWSTR* Buffer,
     DWORD* BytesReturned)
 {
+#ifdef __REACTOS__
+    if (!BytesReturned || !Buffer)
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    if (WTSInfoClass > WTSIsRemoteSession)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (WTSInfoClass)
+    {
+        case WTSSessionId:
+        {
+            const DWORD size = sizeof(ULONG);
+            ULONG* output = heap_alloc_zero(size);
+            if (!output)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+
+            *output = NtCurrentTeb()->Peb->SessionId;
+            *Buffer = (LPWSTR)output;
+            *BytesReturned = size;
+            return TRUE;
+        }
+
+        case WTSUserName:
+        {
+            WCHAR* username;
+            DWORD count = 0;
+
+            GetUserNameW(NULL, &count);
+            if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                return FALSE;
+            username = heap_alloc(count * sizeof(WCHAR));
+            if (!username)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+
+            GetUserNameW(username, &count);
+            *Buffer = username;
+            *BytesReturned = count * sizeof(WCHAR);
+            return TRUE;
+        }
+
+        case WTSConnectState:
+        {
+            const DWORD size = sizeof(DWORD);
+            WCHAR* output = heap_alloc_zero(size);
+            if (!output)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+
+            *Buffer = output;
+            *BytesReturned = size;
+            return TRUE;
+        }
+
+        case WTSClientProtocolType:
+        {
+            const DWORD size = sizeof(WORD);
+            WCHAR* output = heap_alloc_zero(size);
+            if (!output)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+
+            *Buffer = output;
+            *BytesReturned = size;
+            return TRUE;
+        }
+
+        case WTSIdleTime:
+        case WTSLogonTime:
+        case WTSIncomingBytes:
+        case WTSOutgoingBytes:
+        case WTSIncomingFrames:
+        case WTSOutgoingFrames:
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return FALSE;
+        }
+
+        default:
+        {
+            if (BytesReturned)
+                *BytesReturned = 0;
+
+            break;
+        }
+    }
+
+    /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
+    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
+        Buffer, BytesReturned);
+
+    return FALSE;
+#else
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
     FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
         Buffer, BytesReturned);
@@ -320,6 +491,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
         return TRUE;
     }
     return FALSE;
+#endif
 }
 
 /************************************************************

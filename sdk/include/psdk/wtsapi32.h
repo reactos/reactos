@@ -59,6 +59,19 @@ typedef enum tagWTS_INFO_CLASS
     WTSClientAddress,
     WTSClientDisplay,
     WTSClientProtocolType,
+    WTSIdleTime,
+    WTSLogonTime,
+    WTSIncomingBytes,
+    WTSOutgoingBytes,
+    WTSIncomingFrames,
+    WTSOutgoingFrames,
+    WTSClientInfo,
+    WTSSessionInfo,
+    WTSSessionInfoEx,
+    WTSConfigInfo,
+    WTSValidationInfo,
+    WTSSessionAddressV4,
+    WTSIsRemoteSession
 } WTS_INFO_CLASS;
 
 typedef enum _WTS_CONNECTSTATE_CLASS
