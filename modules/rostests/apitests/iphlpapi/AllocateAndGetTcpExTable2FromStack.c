@@ -24,7 +24,8 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     DWORD i;
     BOOLEAN Found;
     HINSTANCE hIpHlpApi;
-    SYSTEMTIME Creation;
+    FILETIME Creation;
+    LARGE_INTEGER CreationTime;
     DWORD Pid = GetCurrentProcessId();
 
     hIpHlpApi = GetModuleHandleW(L"iphlpapi.dll");
@@ -47,7 +48,9 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
         return;
     }
 
-    GetSystemTime(&Creation);
+    GetSystemTimeAsFileTime(&Creation);
+    CreationTime.LowPart = Creation.dwLowDateTime;
+    CreationTime.HighPart = Creation.dwHighDateTime;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET)
@@ -258,17 +261,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
         }
         else
         {
-            SYSTEMTIME SockTime;
-
             ok(TcpTableOwnerMod->table[i].dwOwningPid == Pid, "Invalid owner\n");
 
-            CopyMemory(&SockTime, &TcpTableOwnerMod->table[i].liCreateTimestamp, sizeof(SYSTEMTIME));
-            ok(Creation.wYear == SockTime.wYear, "Invalid year\n");
-            ok(Creation.wMonth == SockTime.wMonth, "Invalid month\n");
-            ok(Creation.wDayOfWeek == SockTime.wDayOfWeek, "Invalid day of week\n");
-            ok(Creation.wDay == SockTime.wDay, "Invalid day\n");
-            ok(Creation.wHour == SockTime.wHour, "Invalid hour\n");
-            ok(Creation.wMinute == SockTime.wMinute, "Invalid minute\n");
+            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
+            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
         }
 
         HeapFree(GetProcessHeap(), 0, TcpTableOwnerMod);
@@ -324,17 +320,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
         }
         else
         {
-            SYSTEMTIME SockTime;
-
             ok(TcpTableOwnerMod->table[i].dwOwningPid == Pid, "Invalid owner\n");
 
-            CopyMemory(&SockTime, &TcpTableOwnerMod->table[i].liCreateTimestamp, sizeof(SYSTEMTIME));
-            ok(Creation.wYear == SockTime.wYear, "Invalid year\n");
-            ok(Creation.wMonth == SockTime.wMonth, "Invalid month\n");
-            ok(Creation.wDayOfWeek == SockTime.wDayOfWeek, "Invalid day of week\n");
-            ok(Creation.wDay == SockTime.wDay, "Invalid day\n");
-            ok(Creation.wHour == SockTime.wHour, "Invalid hour\n");
-            ok(Creation.wMinute == SockTime.wMinute, "Invalid minute\n");
+            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart >= CreationTime.QuadPart, "Invalid time\n");
+            ok(TcpTableOwnerMod->table[i].liCreateTimestamp.QuadPart <= CreationTime.QuadPart + 60000000000LL, "Invalid time\n");
         }
 
         HeapFree(GetProcessHeap(), 0, TcpTableOwnerMod);

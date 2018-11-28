@@ -204,7 +204,7 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     }
 
     TcpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
-    TcpRow.liCreateTimestamp = AddrFile->CreationTime; /* FIXME: to check */
+    TcpRow.liCreateTimestamp = AddrFile->CreationTime;
 
     if (AddrFile->Listener != NULL)
     {
@@ -291,7 +291,7 @@ TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
     UdpRow.dwLocalAddr = AddrFile->Address.Address.IPv4Address;
     UdpRow.dwLocalPort = AddrFile->Port;
     UdpRow.dwOwningPid = (DWORD)AddrFile->ProcessId;
-    UdpRow.liCreateTimestamp = AddrFile->CreationTime;  /* FIXME: to check */
+    UdpRow.liCreateTimestamp = AddrFile->CreationTime;
     UdpRow.dwFlags = 0; /* FIXME */
     if (Class == TcpUdpClassOwner)
     {
