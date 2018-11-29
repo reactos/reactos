@@ -10700,10 +10700,661 @@ Language=Russian
 Created at %1
 .
 
+MessageId=4700
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4700
+Language=English
+Server Name            Remark
+.
+Language=Russian
+Server Name            Remark
+.
+
+MessageId=4702
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4702
+Language=English
+(UNC)%0
+.
+Language=Russian
+(UNC)%0
+.
+
+MessageId=4703
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4703
+Language=English
+...%0
+.
+Language=Russian
+...%0
+.
+
+MessageId=4704
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4704
+Language=English
+Domain
+.
+Language=Russian
+Domain
+.
+
+MessageId=4705
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4705
+Language=English
+Resources on %1
+.
+Language=Russian
+Resources on %1
+.
+
+MessageId=4706
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4706
+Language=English
+Invalid network provider.  Available networks are:
+.
+Language=Russian
+Invalid network provider.  Available networks are:
+.
+
+MessageId=4710
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4710
+Language=English
+Disk%0
+.
+Language=Russian
+Disk%0
+.
+
+MessageId=4711
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4711
+Language=English
+Print%0
+.
+Language=Russian
+Print%0
+.
+
+MessageId=4712
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4712
+Language=English
+Comm%0
+.
+Language=Russian
+Comm%0
+.
+
+MessageId=4713
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4713
+Language=English
+IPC%0
+.
+Language=Russian
+IPC%0
+.
+
+MessageId=4714
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4714
+Language=English
+Status       Local     Remote                    Network
+.
+Language=Russian
+Status       Local     Remote                    Network
+.
+
+MessageId=4715
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4715
+Language=English
+OK%0
+.
+Language=Russian
+OK%0
+.
+
+MessageId=4716
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4716
+Language=English
+Dormant%0
+.
+Language=Russian
+Dormant%0
+.
+
+MessageId=4717
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4717
+Language=English
+Paused%0
+.
+Language=Russian
+Paused%0
+.
+
+MessageId=4718
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4718
+Language=English
+Disconnected%0
+.
+Language=Russian
+Disconnected%0
+.
+
+MessageId=4719
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4719
+Language=English
+Error%0
+.
+Language=Russian
+Error%0
+.
+
+MessageId=4720
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4720
+Language=English
+Connecting%0
+.
+Language=Russian
+Connecting%0
+.
+
+MessageId=4721
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4721
+Language=English
+Reconnecting%0
+.
+Language=Russian
+Reconnecting%0
+.
+
+MessageId=4722
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4722
+Language=English
+Status%0
+.
+Language=Russian
+Status%0
+.
+
+MessageId=4723
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4723
+Language=English
+Local name%0
+.
+Language=Russian
+Local name%0
+.
+
+MessageId=4724
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4724
+Language=English
+Remote name%0
+.
+Language=Russian
+Remote name%0
+.
+
+MessageId=4725
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4725
+Language=English
+Resource type%0
+.
+Language=Russian
+Resource type%0
+.
+
+MessageId=4726
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4726
+Language=English
+# Opens%0
+.
+Language=Russian
+# Opens%0
+.
+
+MessageId=4727
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4727
+Language=English
+# Connections%0
+.
+Language=Russian
+# Connections%0
+.
+
+MessageId=4728
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4728
+Language=English
+Unavailable%0
+.
+Language=Russian
+Unavailable%0
+.
+
+MessageId=4730
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4730
+Language=English
+Share name   Resource                        Remark
+.
+Language=Russian
+Share name   Resource                        Remark
+.
+
+MessageId=4731
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4731
+Language=English
+Share name%0
+.
+Language=Russian
+Share name%0
+.
+
+MessageId=4732
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4732
+Language=English
+Resource%0
+.
+Language=Russian
+Resource%0
+.
+
+MessageId=4733
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4733
+Language=English
+Spooled%0
+.
+Language=Russian
+Spooled%0
+.
+
+MessageId=4734
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4734
+Language=English
+Permission%0
+.
+Language=Russian
+Permission%0
+.
+
+MessageId=4735
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4735
+Language=English
+Maximum users%0
+.
+Language=Russian
+Maximum users%0
+.
+
+MessageId=4736
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4736
+Language=English
+No limit%0
+.
+Language=Russian
+No limit%0
+.
+
+MessageId=4737
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4737
+Language=English
+Users%0
+.
+Language=Russian
+Users%0
+.
+
+MessageId=4738
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4738
+Language=English
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Russian
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+
+MessageId=4739
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4739
+Language=English
+Caching%0
+.
+Language=Russian
+Caching%0
+.
+
+MessageId=4740
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4740
+Language=English
+ID         Path                                    User name            # Locks
+.
+Language=Russian
+ID         Path                                    User name            # Locks
+.
+
+MessageId=4741
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4741
+Language=English
+File ID%0
+.
+Language=Russian
+File ID%0
+.
+
+MessageId=4742
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4742
+Language=English
+Locks%0
+.
+Language=Russian
+Locks%0
+.
+
+MessageId=4743
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4743
+Language=English
+Permissions%0
+.
+Language=Russian
+Permissions%0
+.
+
+MessageId=4744
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4744
+Language=English
+Share name%0
+.
+Language=Russian
+Share name%0
+.
+
+MessageId=4745
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4745
+Language=English
+Type%0
+.
+Language=Russian
+Type%0
+.
+
+MessageId=4746
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4746
+Language=English
+Used as%0
+.
+Language=Russian
+Used as%0
+.
+
+MessageId=4747
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4747
+Language=English
+Comment%0
+.
+Language=Russian
+Comment%0
+.
+
+MessageId=4750
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4750
+Language=English
+Computer               User name            Client Type       Opens Idle time
+.
+Language=Russian
+Computer               User name            Client Type       Opens Idle time
+.
+
+MessageId=4751
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4751
+Language=English
+Computer%0
+.
+Language=Russian
+Computer%0
+.
+
+MessageId=4752
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4752
+Language=English
+Sess time%0
+.
+Language=Russian
+Sess time%0
+.
+
+MessageId=4753
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4753
+Language=English
+Idle time%0
+.
+Language=Russian
+Idle time%0
+.
+
+MessageId=4754
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4754
+Language=English
+Share name     Type     # Opens
+.
+Language=Russian
+Share name     Type     # Opens
+.
+
+MessageId=4755
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4755
+Language=English
+Client type%0
+.
+Language=Russian
+Client type%0
+.
+
+MessageId=4756
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4756
+Language=English
+Guest logon%0
+.
+Language=Russian
+Guest logon%0
+.
+
+MessageId=4770
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4770
+Language=English
+Manual caching of documents%0
+.
+Language=Russian
+Manual caching of documents%0
+.
+
+MessageId=4771
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4771
+Language=English
+Automatic caching of documents%0
+.
+Language=Russian
+Automatic caching of documents%0
+.
+
+MessageId=4772
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4772
+Language=English
+Automatic caching of programs and documents%0
+.
+Language=Russian
+Automatic caching of programs and documents%0
+.
+
+MessageId=4773
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4773
+Language=English
+Caching disabled%0
+.
+Language=Russian
+Caching disabled%0
+.
+
+MessageId=4774
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4774
+Language=English
+Automatic%0
+.
+Language=Russian
+Automatic%0
+.
+
+MessageId=4775
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4775
+Language=English
+Manual%0
+.
+Language=Russian
+Manual%0
+.
+
+MessageId=4776
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4776
+Language=English
+Documents%0
+.
+Language=Russian
+Documents%0
+.
+
+MessageId=4777
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4777
+Language=English
+Programs%0
+.
+Language=Russian
+Programs%0
+.
+
+MessageId=4778
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4778
+Language=English
+None%0
+.
+Language=Russian
+None%0
+.
+
 
 
 ;
-; ncberr.h (non-public) nessage definitions (5300 - 5499 NRCERR_BASE)
+; ncberr.h (non-public) message definitions (5300 - 5499 NRCERR_BASE)
 ;
 
 MessageId=5300
