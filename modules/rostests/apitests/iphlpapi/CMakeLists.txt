@@ -3,6 +3,7 @@ list(APPEND SOURCE
     GetExtendedTcpTable.c
     GetInterfaceName.c
     GetNetworkParams.c
+    GetOwnerModuleFromTcpEntry.c
     icmp.c
     SendARP.c
     testlist.c)

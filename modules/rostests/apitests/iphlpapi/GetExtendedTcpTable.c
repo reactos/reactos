@@ -11,7 +11,7 @@
 #include <iphlpapi.h>
 #include <winsock2.h>
 
-DWORD GetExtendedTcpTableWithAlloc(PVOID *TcpTable, BOOL Order, DWORD Family, TCP_TABLE_CLASS Class)
+static DWORD GetExtendedTcpTableWithAlloc(PVOID *TcpTable, BOOL Order, DWORD Family, TCP_TABLE_CLASS Class)
 {
     DWORD ret;
     DWORD Size = 0;
