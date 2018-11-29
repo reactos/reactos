@@ -2,6 +2,7 @@
  * iphlpapi dll implementation
  *
  * Copyright (C) 2003 Juan Lang
+ *               2018 Pierre Schweitzer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +24,7 @@
 #include <config.h>
 #include "iphlpapi_private.h"
 #include <strsafe.h>
+#include <psapi.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -2292,9 +2294,63 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
  */
 DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
 {
-	DWORD ret = NO_ERROR;
-	UNIMPLEMENTED;
-	return ret;	
+    HANDLE Process;
+    DWORD FileLen, PathLen;
+    WCHAR File[MAX_PATH], Path[MAX_PATH];
+    PTCPIP_OWNER_MODULE_BASIC_INFO BasicInfo;
+
+    if (pTcpEntry->dwOwningPid == 0)
+    {
+        return ERROR_NOT_FOUND;
+    }
+
+    Process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pTcpEntry->dwOwningPid);
+    if (Process == NULL)
+    {
+        return GetLastError();
+    }
+
+    FileLen = GetModuleBaseNameW(Process, NULL, File, MAX_PATH);
+    if (FileLen != 0)
+    {
+        PathLen = GetModuleFileNameExW(Process, NULL, Path, MAX_PATH);
+        if (PathLen == 0)
+        {
+            CloseHandle(Process);
+            return GetLastError();
+        }
+
+        /* Add NULL char */
+        ++FileLen;
+        ++PathLen;
+        PathLen *= sizeof(WCHAR);
+        FileLen *= sizeof(WCHAR);
+    }
+    else if (GetLastError() == ERROR_PARTIAL_COPY)
+    {
+        wcscpy(File, L"System");
+        wcscpy(Path, L"System");
+
+        PathLen = sizeof(L"System");
+        FileLen = sizeof(L"System");
+    }
+
+    CloseHandle(Process);
+
+    if (*pdwSize < sizeof(TCPIP_OWNER_MODULE_BASIC_INFO) + PathLen + FileLen)
+    {
+        *pdwSize = sizeof(TCPIP_OWNER_MODULE_BASIC_INFO) + PathLen + FileLen;
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    BasicInfo = Buffer;
+    BasicInfo->pModuleName = (PVOID)((ULONG_PTR)BasicInfo + sizeof(TCPIP_OWNER_MODULE_BASIC_INFO));
+    BasicInfo->pModulePath = (PVOID)((ULONG_PTR)BasicInfo->pModuleName + FileLen);
+    wcscpy(BasicInfo->pModuleName, File);
+    wcscpy(BasicInfo->pModulePath, Path);
+    *pdwSize = sizeof(TCPIP_OWNER_MODULE_BASIC_INFO) + PathLen + FileLen;
+
+    return NO_ERROR;
 }
 
 static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, PVOID Data)
