@@ -1,6 +1,6 @@
 
 list(APPEND SOURCE
-    AllocateAndGetTcpExTable2FromStack.c
+    GetExtendedTcpTable.c
     GetInterfaceName.c
     GetNetworkParams.c
     icmp.c

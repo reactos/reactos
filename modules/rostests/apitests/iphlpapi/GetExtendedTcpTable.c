@@ -11,9 +11,34 @@
 #include <iphlpapi.h>
 #include <winsock2.h>
 
-static DWORD (WINAPI * pAllocateAndGetTcpExTable2FromStack)(PVOID*,BOOL,HANDLE,DWORD,DWORD,TCP_TABLE_CLASS);
+DWORD GetExtendedTcpTableWithAlloc(PVOID *TcpTable, BOOL Order, DWORD Family, TCP_TABLE_CLASS Class)
+{
+    DWORD ret;
+    DWORD Size = 0;
 
-START_TEST(AllocateAndGetTcpExTable2FromStack)
+    *TcpTable = NULL;
+
+    ret = GetExtendedTcpTable(*TcpTable, &Size, Order, Family, Class, 0);
+    if (ret == ERROR_INSUFFICIENT_BUFFER)
+    {
+        *TcpTable = HeapAlloc(GetProcessHeap(), 0, Size);
+        if (*TcpTable == NULL)
+        {
+            return ERROR_OUTOFMEMORY;
+        }
+
+        ret = GetExtendedTcpTable(*TcpTable, &Size, Order, Family, Class, 0);
+        if (ret != NO_ERROR)
+        {
+            HeapFree(GetProcessHeap(), 0, *TcpTable);
+            *TcpTable = NULL;
+        }
+    }
+
+    return ret;
+}
+
+START_TEST(GetExtendedTcpTable)
 {
     WSADATA wsaData;
     SOCKET sock;
@@ -23,24 +48,9 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     PMIB_TCPTABLE_OWNER_MODULE TcpTableOwnerMod;
     DWORD i;
     BOOLEAN Found;
-    HINSTANCE hIpHlpApi;
     FILETIME Creation;
     LARGE_INTEGER CreationTime;
     DWORD Pid = GetCurrentProcessId();
-
-    hIpHlpApi = GetModuleHandleW(L"iphlpapi.dll");
-    if (!hIpHlpApi)
-    {
-        skip("Failed to load iphlpapi.dll\n");
-        return;
-    }
-
-    pAllocateAndGetTcpExTable2FromStack = (void *)GetProcAddress(hIpHlpApi, "AllocateAndGetTcpExTable2FromStack");
-    if (pAllocateAndGetTcpExTable2FromStack == NULL)
-    {
-        skip("AllocateAndGetTcpExTable2FromStack not found\n");
-        return;
-    }
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
@@ -76,7 +86,7 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
         goto quit2;
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTable, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_BASIC_ALL) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTable, TRUE, AF_INET, TCP_TABLE_BASIC_ALL) == ERROR_SUCCESS)
     {
         ok(TcpTable->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -98,10 +108,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTable, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_BASIC_CONNECTIONS) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTable, TRUE, AF_INET, TCP_TABLE_BASIC_CONNECTIONS) == ERROR_SUCCESS)
     {
         Found = FALSE;
         for (i = 0; i < TcpTable->dwNumEntries; ++i)
@@ -121,10 +131,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTable, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_BASIC_LISTENER) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTable, TRUE, AF_INET, TCP_TABLE_BASIC_LISTENER) == ERROR_SUCCESS)
     {
         ok(TcpTable->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -146,10 +156,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwner, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_PID_ALL) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwner, TRUE, AF_INET, TCP_TABLE_OWNER_PID_ALL) == ERROR_SUCCESS)
     {
         ok(TcpTableOwner->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -179,10 +189,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwner, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_PID_CONNECTIONS) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwner, TRUE, AF_INET, TCP_TABLE_OWNER_PID_CONNECTIONS) == ERROR_SUCCESS)
     {
         Found = FALSE;
         for (i = 0; i < TcpTableOwner->dwNumEntries; ++i)
@@ -202,10 +212,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwner, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_PID_LISTENER) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwner, TRUE, AF_INET, TCP_TABLE_OWNER_PID_LISTENER) == ERROR_SUCCESS)
     {
         ok(TcpTableOwner->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -235,10 +245,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwnerMod, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_MODULE_ALL) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwnerMod, TRUE, AF_INET, TCP_TABLE_OWNER_MODULE_ALL) == ERROR_SUCCESS)
     {
         ok(TcpTableOwnerMod->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -271,10 +281,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwnerMod, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_MODULE_CONNECTIONS) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwnerMod, TRUE, AF_INET, TCP_TABLE_OWNER_MODULE_CONNECTIONS) == ERROR_SUCCESS)
     {
         Found = FALSE;
         for (i = 0; i < TcpTableOwnerMod->dwNumEntries; ++i)
@@ -294,10 +304,10 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
-    if (pAllocateAndGetTcpExTable2FromStack((PVOID *)&TcpTableOwnerMod, TRUE, GetProcessHeap(), 0, AF_INET, TCP_TABLE_OWNER_MODULE_LISTENER) == ERROR_SUCCESS)
+    if (GetExtendedTcpTableWithAlloc((PVOID *)&TcpTableOwnerMod, TRUE, AF_INET, TCP_TABLE_OWNER_MODULE_LISTENER) == ERROR_SUCCESS)
     {
         ok(TcpTableOwnerMod->dwNumEntries > 0, "No TCP connections?!\n");
 
@@ -330,7 +340,7 @@ START_TEST(AllocateAndGetTcpExTable2FromStack)
     }
     else
     {
-        skip("AllocateAndGetTcpExTable2FromStack failure\n");
+        skip("GetExtendedTcpTableWithAlloc failure\n");
     }
 
 quit2:
