@@ -1022,7 +1022,7 @@ static int TcpTableSorter(const void *a, const void *b)
 
 DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
 {
-    DWORD i, count;
+    DWORD i, count, size;
 	DWORD ret = NO_ERROR;
 
     if (!pdwSize)
@@ -1045,14 +1045,15 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurTcpTable)
             {
-                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE, table) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW));
+                    memcpy(pTheirTcpTable, pOurTcpTable, size);
 
                     if (bOrder)
                         qsort(pTheirTcpTable->table, pTheirTcpTable->dwNumEntries,
@@ -1079,9 +1080,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE, table) + count * sizeof(MIB_TCPROW);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1123,9 +1125,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE, table) + count * sizeof(MIB_TCPROW);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1159,14 +1162,15 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurTcpTable)
             {
-                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_PID, table) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_PID));
+                    memcpy(pTheirTcpTable, pOurTcpTable, size);
 
                     /* Don't sort on PID, so use basic helper */
                     if (bOrder)
@@ -1194,9 +1198,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_PID, table) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1239,9 +1244,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_PID, table) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_PID);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1276,14 +1282,15 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurTcpTable)
             {
-                if (sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_MODULE, table) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirTcpTable, pOurTcpTable, sizeof(DWORD) + pOurTcpTable->dwNumEntries * sizeof(MIB_TCPROW_OWNER_MODULE));
+                    memcpy(pTheirTcpTable, pOurTcpTable, size);
 
                     /* Don't sort on PID, so use basic helper */
                     if (bOrder)
@@ -1311,9 +1318,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_MODULE, table) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1356,9 +1364,10 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
                     }
                 }
 
-                if (sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE) > *pdwSize || !pTheirTcpTable)
+                size = FIELD_OFFSET(MIB_TCPTABLE_OWNER_MODULE, table) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                if (size > *pdwSize || !pTheirTcpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + count * sizeof(MIB_TCPROW_OWNER_MODULE);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
@@ -1433,6 +1442,7 @@ static int UdpTableSorter(const void *a, const void *b)
 
 DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, UDP_TABLE_CLASS TableClass, ULONG Reserved)
 {
+    DWORD size;
 	DWORD ret = NO_ERROR;
 
     if (!pdwSize)
@@ -1455,14 +1465,15 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurUdpTable)
             {
-                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW) > *pdwSize || !pTheirUdpTable)
+                size = FIELD_OFFSET(MIB_UDPTABLE, table) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW);
+                if (size > *pdwSize || !pTheirUdpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID));
+                    memcpy(pTheirUdpTable, pOurUdpTable, size);
 
                     if (bOrder)
                         qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
@@ -1481,14 +1492,15 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurUdpTable)
             {
-                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID) > *pdwSize || !pTheirUdpTable)
+                size = FIELD_OFFSET(MIB_UDPTABLE_OWNER_PID, table) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID);
+                if (size > *pdwSize || !pTheirUdpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_PID));
+                    memcpy(pTheirUdpTable, pOurUdpTable, size);
 
                     if (bOrder)
                         qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
@@ -1507,14 +1519,15 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
 
             if (pOurUdpTable)
             {
-                if (sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE) > *pdwSize || !pTheirUdpTable)
+                size = FIELD_OFFSET(MIB_UDPTABLE_OWNER_MODULE, table) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE);
+                if (size > *pdwSize || !pTheirUdpTable)
                 {
-                    *pdwSize = sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE);
+                    *pdwSize = size;
                     ret = ERROR_INSUFFICIENT_BUFFER;
                 }
                 else
                 {
-                    memcpy(pTheirUdpTable, pOurUdpTable, sizeof(DWORD) + pOurUdpTable->dwNumEntries * sizeof(MIB_UDPROW_OWNER_MODULE));
+                    memcpy(pTheirUdpTable, pOurUdpTable, size);
 
                     if (bOrder)
                         qsort(pTheirUdpTable->table, pTheirUdpTable->dwNumEntries,
