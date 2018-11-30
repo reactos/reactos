@@ -1040,7 +1040,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
     {
         case TCP_TABLE_BASIC_ALL:
         {
-            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable(ClassBasic);
             PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1066,7 +1066,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_BASIC_CONNECTIONS:
         {
-            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable(ClassBasic);
             PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1110,7 +1110,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_BASIC_LISTENER:
         {
-            PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+            PMIB_TCPTABLE pOurTcpTable = getTcpTable(ClassBasic);
             PMIB_TCPTABLE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1154,7 +1154,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_PID_ALL:
         {
-            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getTcpTable(ClassModulePid);
             PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1181,7 +1181,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_PID_CONNECTIONS:
         {
-            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getTcpTable(ClassModulePid);
             PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1226,7 +1226,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_PID_LISTENER:
         {
-            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getOwnerTcpTable();
+            PMIB_TCPTABLE_OWNER_PID pOurTcpTable = getTcpTable(ClassModulePid);
             PMIB_TCPTABLE_OWNER_PID pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1271,7 +1271,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_MODULE_ALL:
         {
-            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getTcpTable(ClassModule);
             PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1298,7 +1298,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_MODULE_CONNECTIONS:
         {
-            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getTcpTable(ClassModule);
             PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1343,7 +1343,7 @@ DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case TCP_TABLE_OWNER_MODULE_LISTENER:
         {
-            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getOwnerModTcpTable();
+            PMIB_TCPTABLE_OWNER_MODULE pOurTcpTable = getTcpTable(ClassModule);
             PMIB_TCPTABLE_OWNER_MODULE pTheirTcpTable = pTcpTable;
 
             if (pOurTcpTable)
@@ -1450,7 +1450,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
     {
         case UDP_TABLE_BASIC:
         {
-            PMIB_UDPTABLE pOurUdpTable = getUdpTable();
+            PMIB_UDPTABLE pOurUdpTable = getUdpTable(ClassBasic);
             PMIB_UDPTABLE pTheirUdpTable = pUdpTable;
 
             if (pOurUdpTable)
@@ -1476,7 +1476,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case UDP_TABLE_OWNER_PID:
         {
-            PMIB_UDPTABLE_OWNER_PID pOurUdpTable = getOwnerUdpTable();
+            PMIB_UDPTABLE_OWNER_PID pOurUdpTable = getUdpTable(ClassModulePid);
             PMIB_UDPTABLE_OWNER_PID pTheirUdpTable = pUdpTable;
 
             if (pOurUdpTable)
@@ -1502,7 +1502,7 @@ DWORD WINAPI GetExtendedUdpTable(PVOID pUdpTable, PDWORD pdwSize, BOOL bOrder, U
 
         case UDP_TABLE_OWNER_MODULE:
         {
-            PMIB_UDPTABLE_OWNER_MODULE pOurUdpTable = getOwnerModUdpTable();
+            PMIB_UDPTABLE_OWNER_MODULE pOurUdpTable = getUdpTable(ClassModule);
             PMIB_UDPTABLE_OWNER_MODULE pTheirUdpTable = pUdpTable;
 
             if (pOurUdpTable)

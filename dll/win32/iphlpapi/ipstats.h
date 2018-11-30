@@ -76,6 +76,12 @@ typedef struct _RouteTable {
   RouteEntry routes[1];
 } RouteTable;
 
+typedef enum _CLASS_TABLE {
+    ClassBasic,
+    ClassModulePid,
+    ClassModule
+} CLASS_TABLE;
+
 /* Allocates and returns to you the route table, or NULL if it can't allocate
  * enough memory.  free() the returned table.
  */
@@ -95,17 +101,7 @@ DWORD getNumUdpEntries(void);
 /* Allocates and returns to you the UDP state table, or NULL if it can't
  * allocate enough memory.  free() the returned table.
  */
-PMIB_UDPTABLE getUdpTable(void);
-
-/* Allocates and returns to you the UDP state table with owner PID,
- * or NULL if it can't allocate enough memory.  free() the returned table.
- */
-PMIB_UDPTABLE_OWNER_PID getOwnerUdpTable(void);
-
-/* Allocates and returns to you the UDP state table with module info,
- * or NULL if it can't allocate enough memory.  free() the returned table.
- */
-PMIB_UDPTABLE_OWNER_MODULE getOwnerModUdpTable(void);
+PVOID getUdpTable(CLASS_TABLE Class);
 
 /* Returns the number of entries in the TCP state table. */
 DWORD getNumTcpEntries(void);
@@ -113,16 +109,6 @@ DWORD getNumTcpEntries(void);
 /* Allocates and returns to you the TCP state table, or NULL if it can't
  * allocate enough memory.  free() the returned table.
  */
-PMIB_TCPTABLE getTcpTable(void);
-
-/* Allocates and returns to you the TCP state table with owner PID,
- * or NULL if it can't allocate enough memory.  free() the returned table.
- */
-PMIB_TCPTABLE_OWNER_PID getOwnerTcpTable(void);
-
-/* Allocates and returns to you the TCP state table with module info,
- * or NULL if it can't allocate enough memory.  free() the returned table.
- */
-PMIB_TCPTABLE_OWNER_MODULE getOwnerModTcpTable(void);
+PVOID getTcpTable(CLASS_TABLE Class);
 
 #endif /* ndef WINE_IPSTATS_H_ */
