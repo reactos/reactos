@@ -11351,6 +11351,545 @@ Language=Russian
 None%0
 .
 
+MessageId=4800
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4800
+Language=English
+Name%0
+.
+Language=Russian
+Name%0
+.
+
+MessageId=4801
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4801
+Language=English
+Forwarded to%0
+.
+Language=Russian
+Forwarded to%0
+.
+
+MessageId=4802
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4802
+Language=English
+Forwarded to you from%0
+.
+Language=Russian
+Forwarded to you from%0
+.
+
+MessageId=4803
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4803
+Language=English
+Users of this server%0
+.
+Language=Russian
+Users of this server%0
+.
+
+MessageId=4804
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4804
+Language=English
+Net Send has been interrupted by a Ctrl+Break from the user.
+.
+Language=Russian
+Net Send has been interrupted by a Ctrl+Break from the user.
+.
+
+MessageId=4810
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4810
+Language=English
+Name                         Job #      Size            Status
+.
+Language=Russian
+Name                         Job #      Size            Status
+.
+
+MessageId=4811
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4811
+Language=English
+jobs%0
+.
+Language=Russian
+jobs%0
+.
+
+MessageId=4812
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4812
+Language=English
+Print%0
+.
+Language=Russian
+Print%0
+.
+
+MessageId=4813
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4813
+Language=English
+Name%0
+.
+Language=Russian
+Name%0
+.
+
+MessageId=4814
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4814
+Language=English
+Job #%0
+.
+Language=Russian
+Job #%0
+.
+
+MessageId=4815
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4815
+Language=English
+Size%0
+.
+Language=Russian
+Size%0
+.
+
+MessageId=4816
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4816
+Language=English
+Status%0
+.
+Language=Russian
+Status%0
+.
+
+MessageId=4817
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4817
+Language=English
+Separator file%0
+.
+Language=Russian
+Separator file%0
+.
+
+MessageId=4818
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4818
+Language=English
+Comment%0
+.
+Language=Russian
+Comment%0
+.
+
+MessageId=4819
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4819
+Language=English
+Priority%0
+.
+Language=Russian
+Priority%0
+.
+
+MessageId=4820
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4820
+Language=English
+Print after%0
+.
+Language=Russian
+Print after%0
+.
+
+MessageId=4821
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4821
+Language=English
+Print until%0
+.
+Language=Russian
+Print until%0
+.
+
+MessageId=4822
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4822
+Language=English
+Print processor%0
+.
+Language=Russian
+Print processor%0
+.
+
+MessageId=4823
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4823
+Language=English
+Additional info%0
+.
+Language=Russian
+Additional info%0
+.
+
+MessageId=4824
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4824
+Language=English
+Parameters%0
+.
+Language=Russian
+Parameters%0
+.
+
+MessageId=4825
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4825
+Language=English
+Print Devices%0
+.
+Language=Russian
+Print Devices%0
+.
+
+MessageId=4826
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4826
+Language=English
+Printer Active%0
+.
+Language=Russian
+Printer Active%0
+.
+
+MessageId=4827
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4827
+Language=English
+Printer held%0
+.
+Language=Russian
+Printer held%0
+.
+
+MessageId=4828
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4828
+Language=English
+Printer error%0
+.
+Language=Russian
+Printer error%0
+.
+
+MessageId=4829
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4829
+Language=English
+Printer being deleted%0
+.
+Language=Russian
+Printer being deleted%0
+.
+
+MessageId=4830
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4830
+Language=English
+Printer status unknown%0
+.
+Language=Russian
+Printer status unknown%0
+.
+
+MessageId=4840
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4840
+Language=English
+Held until %1%0
+.
+Language=Russian
+Held until %1%0
+.
+
+MessageId=4841
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4841
+Language=English
+Job #%0
+.
+Language=Russian
+Job #%0
+.
+
+MessageId=4842
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4842
+Language=English
+Submitting user%0
+.
+Language=Russian
+Submitting user%0
+.
+
+MessageId=4843
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4843
+Language=English
+Notify%0
+.
+Language=Russian
+Notify%0
+.
+
+MessageId=4844
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4844
+Language=English
+Job data type%0
+.
+Language=Russian
+Job data type%0
+.
+
+MessageId=4845
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4845
+Language=English
+Job parameters%0
+.
+Language=Russian
+Job parameters%0
+.
+
+MessageId=4846
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4846
+Language=English
+Waiting%0
+.
+Language=Russian
+Waiting%0
+.
+
+MessageId=4847
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4847
+Language=English
+Held in queue%0
+.
+Language=Russian
+Held in queue%0
+.
+
+MessageId=4848
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4848
+Language=English
+Spooling%0
+.
+Language=Russian
+Spooling%0
+.
+
+MessageId=4849
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4849
+Language=English
+Paused%0
+.
+Language=Russian
+Paused%0
+.
+
+MessageId=4850
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4850
+Language=English
+Offline%0
+.
+Language=Russian
+Offline%0
+.
+
+MessageId=4851
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4851
+Language=English
+Error%0
+.
+Language=Russian
+Error%0
+.
+
+MessageId=4852
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4852
+Language=English
+Out of paper%0
+.
+Language=Russian
+Out of paper%0
+.
+
+MessageId=4853
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4853
+Language=English
+Intervention required%0
+.
+Language=Russian
+Intervention required%0
+.
+
+MessageId=4854
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4854
+Language=English
+Printing%0
+.
+Language=Russian
+Printing%0
+.
+
+MessageId=4855
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4855
+Language=English
+on %0
+.
+Language=Russian
+on %0
+.
+
+MessageId=4856
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4856
+Language=English
+Paused on %1%0
+.
+Language=Russian
+Paused on %1%0
+.
+
+MessageId=4857
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4857
+Language=English
+Offline on %1%0
+.
+Language=Russian
+Offline on %1%0
+.
+
+MessageId=4858
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4858
+Language=English
+Error on%1%0
+.
+Language=Russian
+Error on%1%0
+.
+
+MessageId=4859
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4859
+Language=English
+Out of Paper on %1%0
+.
+Language=Russian
+Out of Paper on %1%0
+.
+
+MessageId=4860
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4860
+Language=English
+Check printer on %1%0
+.
+Language=Russian
+Check printer on %1%0
+.
+
+MessageId=4861
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4861
+Language=English
+Printing on %1%0
+.
+Language=Russian
+Printing on %1%0
+.
+
+MessageId=4862
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4862
+Language=English
+Driver%0
+.
+Language=Russian
+Driver%0
+.
+
 
 
 ;
