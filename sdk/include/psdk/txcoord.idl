@@ -1,0 +1,181 @@
+/*
+ * Copyright (C) 2013 Daniel Jeliński
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "transact.idl";
+import "objidl.idl";
+
+interface ITransactionResourceAsync;
+interface ITransactionLastResourceAsync;
+interface ITransactionResource;
+interface ITransactionEnlistmentAsync;
+interface ITransactionLastEnlistmentAsync;
+interface ITransactionExportFactory;
+interface ITransactionImportWhereabouts;
+interface ITransactionExport;
+interface ITransactionImport;
+interface ITipTransaction;
+interface ITipHelper;
+interface ITipPullSink;
+interface IDtcNetworkAccessConfig;
+interface IDtcNetworkAccessConfig2;
+
+[
+    object,
+    uuid(69e971f0-23ce-11cf-ad60-00aa00a74ccd)
+]
+interface ITransactionResourceAsync : IUnknown {
+    HRESULT PrepareRequest([in]BOOL fRetaining,[in]DWORD grfRM,[in]BOOL fWantMoniker,[in]BOOL fSinglePhase);
+    HRESULT CommitRequest([in]DWORD grfRM,[in]XACTUOW *pNewUOW);
+    HRESULT AbortRequest([in]BOID *pboidReason,[in]BOOL fRetaining,[in]XACTUOW *pNewUOW);
+    HRESULT TMDown(void);
+}
+
+[
+    object,
+    uuid(c82bd532-5b30-11d3-8a91-00c04f79eb6d)
+]
+interface ITransactionLastResourceAsync : IUnknown {
+    HRESULT DelegateCommit([in]DWORD grfRM);
+    HRESULT ForgetRequest([in]XACTUOW *pNewUOW);
+}
+
+[
+    object,
+    uuid(ee5ff7b3-4572-11d0-9452-00a0c905416e)
+]
+interface ITransactionResource : IUnknown {
+    HRESULT PrepareRequest([in]BOOL fRetaining,[in]DWORD grfRM,[in]BOOL fWantMoniker,[in]BOOL fSinglePhase);
+    HRESULT CommitRequest([in]DWORD grfRM,[in]XACTUOW *pNewUOW);
+    HRESULT AbortRequest([in]BOID *pboidReason,[in]BOOL fRetaining,[in]XACTUOW *pNewUOW);
+    HRESULT TMDown(void);
+}
+
+[
+    object,
+    uuid(0fb15081-af41-11ce-bd2b-204c4f4f5020)
+]
+interface ITransactionEnlistmentAsync : IUnknown {
+    HRESULT PrepareRequestDone([in]HRESULT hr,[in]IMoniker *pmk,[in]BOID *pboidReason);
+    HRESULT CommitRequestDone([in]HRESULT hr);
+    HRESULT AbortRequestDone([in]HRESULT hr);
+}
+
+[
+    object,
+    uuid(c82bd533-5b30-11d3-8a91-00c04f79eb6d)
+]
+interface ITransactionLastEnlistmentAsync : IUnknown {
+    HRESULT TransactionOutcome([in]XACTSTAT XactStat,[in]BOID *pboidReason);
+}
+
+[
+    object,
+    uuid(e1cf9b53-8745-11ce-a9ba-00aa006c3706)
+]
+interface ITransactionExportFactory : IUnknown {
+    HRESULT GetRemoteClassId([in]CLSID *pclsid);
+    HRESULT Create([in]ULONG cbWhereabouts,[in]byte *rgbWhereabouts,[out]ITransactionExport **ppExport);
+}
+
+[
+    object,
+    uuid(0141fda4-8fc0-11ce-bd18-204c4f4f5020)
+]
+interface ITransactionImportWhereabouts : IUnknown {
+    HRESULT GetWhereaboutsSize([out]ULONG *pcbWhereabouts);
+    HRESULT GetWhereabouts([in]ULONG cbWhereabouts,[out]byte *rgbWhereabouts,[out]ULONG *pcbUsed);
+}
+
+[
+    object,
+    uuid(0141fda5-8fc0-11ce-bd18-204c4f4f5020)
+]
+interface ITransactionExport : IUnknown {
+    HRESULT Export([in]IUnknown *punkTransaction,[out]ULONG *pcbTransactionCookie);
+    HRESULT GetTransactionCookie([in]IUnknown *punkTransaction,[in]ULONG cbTransactionCookie,[out]byte *rgbTransactionCookie,[out]ULONG *pcbUsed);
+}
+
+[
+    object,
+    uuid(e1cf9b5a-8745-11ce-a9ba-00aa006c3706)
+]
+interface ITransactionImport : IUnknown {
+    HRESULT Import([in]ULONG cbTransactionCookie,[in]byte *rgbTransactionCookie,[in]IID *piid,[out,iid_is(piid)]void **ppvTransaction);
+}
+[
+    object,
+    uuid(17cf72d0-bac5-11d1-b1bf-00c04fc2f3ef)
+]
+interface ITipTransaction : IUnknown {
+    HRESULT Push([in]char *i_pszRemoteTmUrl,[out]char **o_ppszRemoteTxUrl);
+    HRESULT GetTransactionUrl([out]char **o_ppszLocalTxUrl);
+}
+[
+    object,
+    uuid(17cf72d1-bac5-11d1-b1bf-00c04fc2f3ef)
+]
+interface ITipHelper : IUnknown {
+    HRESULT Pull([in]char *i_pszTxUrl,[out]ITransaction **o_ppITransaction);
+    HRESULT PullAsync([in]char *i_pszTxUrl,[in]ITipPullSink *i_pTipPullSink,[out]ITransaction **o_ppITransaction);
+    HRESULT GetLocalTmUrl([out]char **o_ppszLocalTmUrl);
+}
+[
+    object,
+    uuid(17cf72d2-bac5-11d1-b1bf-00c04fc2f3ef)
+]
+interface ITipPullSink : IUnknown {
+    HRESULT PullComplete([in]HRESULT i_hrPull);
+}
+[
+    object,
+    uuid(9797c15d-a428-4291-87b6-0995031a678d)
+]
+interface IDtcNetworkAccessConfig : IUnknown {
+    HRESULT GetAnyNetworkAccess([out]BOOL *pbAnyNetworkAccess);
+    HRESULT SetAnyNetworkAccess([in]BOOL bAnyNetworkAccess);
+    HRESULT GetNetworkAdministrationAccess([out]BOOL *pbNetworkAdministrationAccess);
+    HRESULT SetNetworkAdministrationAccess([in]BOOL bNetworkAdministrationAccess);
+    HRESULT GetNetworkTransactionAccess([out]BOOL *pbNetworkTransactionAccess);
+    HRESULT SetNetworkTransactionAccess([in]BOOL bNetworkTransactionAccess);
+    HRESULT GetNetworkClientAccess([out]BOOL *pbNetworkClientAccess);
+    HRESULT SetNetworkClientAccess([in]BOOL bNetworkClientAccess);
+    HRESULT GetNetworkTIPAccess([out]BOOL *pbNetworkTIPAccess);
+    HRESULT SetNetworkTIPAccess([in]BOOL bNetworkTIPAccess);
+    HRESULT GetXAAccess([out]BOOL *pbXAAccess);
+    HRESULT SetXAAccess([in]BOOL bXAAccess);
+    HRESULT RestartDtcService(void);
+}
+
+typedef enum AUTHENTICATION_LEVEL {
+    NO_AUTHENTICATION_REQUIRED,
+    INCOMING_AUTHENTICATION_REQUIRED,
+    MUTUAL_AUTHENTICATION_REQUIRED
+} AUTHENTICATION_LEVEL;
+
+[
+    object,
+    uuid(a7aa013b-eb7d-4f42-b41c-b2dec09ae034)
+]
+interface IDtcNetworkAccessConfig2 : IDtcNetworkAccessConfig {
+    HRESULT GetNetworkInboundAccess([out]BOOL *pbInbound);
+    HRESULT GetNetworkOutboundAccess([out]BOOL *pbOutbound);
+    HRESULT SetNetworkInboundAccess([in]BOOL bInbound);
+    HRESULT SetNetworkOutboundAccess([in]BOOL bOutbound);
+    HRESULT GetAuthenticationLevel([out]AUTHENTICATION_LEVEL *pAuthLevel);
+    HRESULT SetAuthenticationLevel([in]AUTHENTICATION_LEVEL AuthLevel);
+}
