@@ -105,7 +105,7 @@ BOOL WINAPI ApplyPatchToFileW(LPCWSTR patch_file, LPCWSTR old_file, LPCWSTR new_
  */
 BOOL WINAPI GetFilePatchSignatureA(LPCSTR filename, ULONG flags, PVOID data, ULONG ignore_range_count,
                                    PPATCH_IGNORE_RANGE ignore_range, ULONG retain_range_count,
-                                   PPATCH_RETAIN_RANGE retain_range, ULONG bufsize, LPSTR buffer)
+                                   PPATCH_RETAIN_RANGE retain_range, ULONG bufsize, PVOID buffer)
 {
     FIXME("stub - %s, %x, %p, %u, %p, %u, %p, %u, %p\n", debugstr_a(filename), flags, data,
           ignore_range_count, ignore_range, retain_range_count, retain_range, bufsize, buffer);
@@ -118,7 +118,7 @@ BOOL WINAPI GetFilePatchSignatureA(LPCSTR filename, ULONG flags, PVOID data, ULO
  */
 BOOL WINAPI GetFilePatchSignatureW(LPCWSTR filename, ULONG flags, PVOID data, ULONG ignore_range_count,
                                    PPATCH_IGNORE_RANGE ignore_range, ULONG retain_range_count,
-                                   PPATCH_RETAIN_RANGE retain_range, ULONG bufsize, LPWSTR buffer)
+                                   PPATCH_RETAIN_RANGE retain_range, ULONG bufsize, PVOID buffer)
 {
     FIXME("stub - %s, %x, %p, %u, %p, %u, %p, %u, %p\n", debugstr_w(filename), flags, data,
           ignore_range_count, ignore_range, retain_range_count, retain_range, bufsize, buffer);
