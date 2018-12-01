@@ -15713,3 +15713,782 @@ Language=Russian
 Service failed to initialize from its restored database.  Service\n
 will not start.
 .
+
+MessageId=5770
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSessionTypeWrong
+Language=English
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Russian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+
+MessageId=5771
+Severity=Success
+Facility=System
+SymbolicName=NELOG_RplUpgradeDBTo40
+Language=English
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Russian
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+
+MessageId=5772
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonLanmanBdcsNotAllowed
+Language=English
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Russian
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+
+MessageId=5773
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNoDynamicDns
+Language=English
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Russian
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+
+MessageId=5774
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDynamicDnsRegisterFailure
+Language=English
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Russian
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+
+MessageId=5775
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDynamicDnsDeregisterFailure
+Language=English
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Russian
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+
+MessageId=5776
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedFileCreate
+Language=English
+Failed to create/open file %1 with the following error: %n%2
+.
+Language=Russian
+Failed to create/open file %1 with the following error: %n%2
+.
+
+MessageId=5777
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonGetSubnetToSite
+Language=English
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Russian
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+
+MessageId=5778
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNoSiteForClient
+Language=English
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Russian
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+
+MessageId=5779
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonBadSiteName
+Language=English
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Russian
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+
+MessageId=5780
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonBadSubnetName
+Language=English
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object."
+.
+Language=Russian
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object."
+.
+
+MessageId=5781
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDynamicDnsServerFailure
+Language=English
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Russian
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+
+MessageId=5782
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDynamicDnsFailure
+Language=English
+Dynamic registration or deregistration of one or more DNS records failed with the following error: %n%1
+.
+Language=Russian
+Dynamic registration or deregistration of one or more DNS records failed with the following error: %n%1
+.
+
+MessageId=5783
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonRpcCallCancelled
+Language=English
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Russian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+
+MessageId=5784
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDcSiteCovered
+Language=English
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Russian
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+
+MessageId=5785
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDcSiteNotCovered
+Language=English
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.
+.
+Language=Russian
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.
+.
+
+MessageId=5786
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonGcSiteCovered
+Language=English
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Russian
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+
+MessageId=5787
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonGcSiteNotCovered
+Language=English
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.
+.
+Language=Russian
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.
+.
+
+MessageId=5788
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedSpnUpdate
+Language=English
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Russian
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+
+MessageId=5789
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonFailedDnsHostNameUpdate
+Language=English
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Russian
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+
+MessageId=5790
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthNoUplevelDomainController
+Language=English
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+Language=Russian
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+
+
+MessageId=5791
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonAuthDomainDowngraded
+Language=English
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Russian
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+
+MessageId=5792
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNdncSiteCovered
+Language=English
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Russian
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+
+MessageId=5793
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNdncSiteNotCovered
+Language=English
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.
+.
+Language=Russian
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.
+.
+
+MessageId=5794
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDcOldSiteCovered
+Language=English
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+
+MessageId=5795
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDcSiteNotCoveredAuto
+Language=English
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Russian
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+
+MessageId=5796
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonGcOldSiteCovered
+Language=English
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+
+MessageId=5797
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonGcSiteNotCoveredAuto
+Language=English
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Russian
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+
+MessageId=5798
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNdncOldSiteCovered
+Language=English
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+
+MessageId=5799
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNdncSiteNotCoveredAuto
+Language=English
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Russian
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+
+MessageId=5800
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSpnMultipleSamAccountNames
+Language=English
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Russian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+
+MessageId=5801
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonSpnCrackNamesFailure
+Language=English
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Russian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+
+MessageId=5802
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNoAddressToSiteMapping
+Language=English
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Russian
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+
+MessageId=5803
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonInvalidGenericParameterValue
+Language=English
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Russian
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+
+MessageId=5804
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonInvalidDwordParameterValue
+Language=English
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Russian
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+
+MessageId=5805
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonServerAuthFailedNoAccount
+Language=English
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Russian
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+
+MessageId=5806
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNoDynamicDnsManual
+Language=English
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Russian
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+
+MessageId=5807
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonNoSiteForClients
+Language=English
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Russian
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+
+MessageId=5808
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonDnsDeregAborted
+Language=English
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Russian
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+
+MessageId=5809
+Severity=Success
+Facility=System
+SymbolicName=NELOG_NetlogonRpcPortRequestFailure
+Language=English
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Russian
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
