@@ -6,6 +6,7 @@
  */
 
 #include <user32.h>
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 
@@ -175,13 +176,13 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     {
         style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
         exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
-        GetWindowTextW(hwndTarget, szTextW, ARRAYSIZE(szTextW) - 32);
+        GetWindowTextW(hwndTarget, szTextW, ARRAYSIZE(szTextW));
     }
     else
     {
         style = GetWindowLongPtrA(hwndTarget, GWL_STYLE);
         exstyle = GetWindowLongPtrA(hwndTarget, GWL_EXSTYLE);
-        GetWindowTextA(hwndTarget, szTextA, ARRAYSIZE(szTextW) - 32);
+        GetWindowTextA(hwndTarget, szTextA, ARRAYSIZE(szTextA));
     }
 
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
@@ -192,7 +193,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         SetWindowLongPtrW(hwnd, GWL_STYLE, style);
         SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
 
-        lstrcatW(szTextW, L" (Not Responding)");
+        StringCbCatW(szTextW, sizeof(szTextW), L" (Not Responding)");
         SetWindowTextW(hwnd, szTextW);
     }
     else
@@ -200,7 +201,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         SetWindowLongPtrA(hwnd, GWL_STYLE, style);
         SetWindowLongPtrA(hwnd, GWL_EXSTYLE, exstyle);
 
-        lstrcatA(szTextA, " (Not Responding)");
+        StringCbCatA(szTextA, sizeof(szTextA), " (Not Responding)");
         SetWindowTextA(hwnd, szTextA);
     }
 
