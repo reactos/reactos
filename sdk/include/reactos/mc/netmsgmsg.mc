@@ -11890,6 +11890,776 @@ Language=Russian
 Driver%0
 .
 
+MessageId=4930
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4930
+Language=English
+User name              Type                 Date%0
+.
+Language=Russian
+User name              Type                 Date%0
+.
+
+MessageId=4931
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4931
+Language=English
+Lockout%0
+.
+Language=Russian
+Lockout%0
+.
+
+MessageId=4932
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4932
+Language=English
+Service%0
+.
+Language=Russian
+Service%0
+.
+
+MessageId=4933
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4933
+Language=English
+Server%0
+.
+Language=Russian
+Server%0
+.
+
+MessageId=4934
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4934
+Language=English
+Server started%0
+.
+Language=Russian
+Server started%0
+.
+
+MessageId=4935
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4935
+Language=English
+Server paused%0
+.
+Language=Russian
+Server paused%0
+.
+
+MessageId=4936
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4936
+Language=English
+Server continued%0
+.
+Language=Russian
+Server continued%0
+.
+
+MessageId=4937
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4937
+Language=English
+Server stopped%0
+.
+Language=Russian
+Server stopped%0
+.
+
+MessageId=4938
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4938
+Language=English
+Session%0
+.
+Language=Russian
+Session%0
+.
+
+MessageId=4939
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4939
+Language=English
+Logon Guest%0
+.
+Language=Russian
+Logon Guest%0
+.
+
+MessageId=4940
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4940
+Language=English
+Logon User%0
+.
+Language=Russian
+Logon User%0
+.
+
+MessageId=4941
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4941
+Language=English
+Logon Administrator%0
+.
+Language=Russian
+Logon Administrator%0
+.
+
+MessageId=4942
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4942
+Language=English
+Logoff normal%0
+.
+Language=Russian
+Logoff normal%0
+.
+
+MessageId=4943
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4943
+Language=English
+Logon%0
+.
+Language=Russian
+Logon%0
+.
+
+MessageId=4944
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4944
+Language=English
+Logoff error%0
+.
+Language=Russian
+Logoff error%0
+.
+
+MessageId=4945
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4945
+Language=English
+Logoff auto-disconnect%0
+.
+Language=Russian
+Logoff auto-disconnect%0
+.
+
+MessageId=4946
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4946
+Language=English
+Logoff administrator-disconnect%0
+.
+Language=Russian
+Logoff administrator-disconnect%0
+.
+
+MessageId=4947
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4947
+Language=English
+Logoff forced by logon restrictions%0
+.
+Language=Russian
+Logoff forced by logon restrictions%0
+.
+
+MessageId=4948
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4948
+Language=English
+Service%0
+.
+Language=Russian
+Service%0
+.
+
+MessageId=4949
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4949
+Language=English
+%1 Installed%0
+.
+Language=Russian
+%1 Installed%0
+.
+
+MessageId=4950
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4950
+Language=English
+%1 Install Pending%0
+.
+Language=Russian
+%1 Install Pending%0
+.
+
+MessageId=4951
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4951
+Language=English
+%1 Paused%0
+.
+Language=Russian
+%1 Paused%0
+.
+
+MessageId=4952
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4952
+Language=English
+%1 Pause Pending%0
+.
+Language=Russian
+%1 Pause Pending%0
+.
+
+MessageId=4953
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4953
+Language=English
+%1 Continued%0
+.
+Language=Russian
+%1 Continued%0
+.
+
+MessageId=4954
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4954
+Language=English
+%1 Continue Pending%0
+.
+Language=Russian
+%1 Continue Pending%0
+.
+
+MessageId=4955
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4955
+Language=English
+%1 Stopped%0
+.
+Language=Russian
+%1 Stopped%0
+.
+
+MessageId=4956
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4956
+Language=English
+%1 Stop Pending%0
+.
+Language=Russian
+%1 Stop Pending%0
+.
+
+MessageId=4957
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4957
+Language=English
+Account%0
+.
+Language=Russian
+Account%0
+.
+
+MessageId=4958
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4958
+Language=English
+User account %1 was modified.%0
+.
+Language=Russian
+User account %1 was modified.%0
+.
+
+MessageId=4959
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4959
+Language=English
+Group account %1 was modified.%0
+.
+Language=Russian
+Group account %1 was modified.%0
+.
+
+MessageId=4960
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4960
+Language=English
+User account %1 was deleted%0
+.
+Language=Russian
+User account %1 was deleted%0
+.
+
+MessageId=4961
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4961
+Language=English
+Group account %1 was deleted%0
+.
+Language=Russian
+Group account %1 was deleted%0
+.
+
+MessageId=4962
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4962
+Language=English
+User account %1 was added%0
+.
+Language=Russian
+User account %1 was added%0
+.
+
+MessageId=4963
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4963
+Language=English
+Group account %1 was added%0
+.
+Language=Russian
+Group account %1 was added%0
+.
+
+MessageId=4964
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4964
+Language=English
+Account system settings were modified%0
+.
+Language=Russian
+Account system settings were modified%0
+.
+
+MessageId=4965
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4965
+Language=English
+Logon restriction%0
+.
+Language=Russian
+Logon restriction%0
+.
+
+MessageId=4966
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4966
+Language=English
+Limit exceeded:  UNKNOWN%0
+.
+Language=Russian
+Limit exceeded:  UNKNOWN%0
+.
+
+MessageId=4967
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4967
+Language=English
+Limit exceeded:  Logon hours%0
+.
+Language=Russian
+Limit exceeded:  Logon hours%0
+.
+
+MessageId=4968
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4968
+Language=English
+Limit exceeded:  Account expired%0
+.
+Language=Russian
+Limit exceeded:  Account expired%0
+.
+
+MessageId=4969
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4969
+Language=English
+Limit exceeded:  Workstation ID invalid%0
+.
+Language=Russian
+Limit exceeded:  Workstation ID invalid%0
+.
+
+MessageId=4970
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4970
+Language=English
+Limit exceeded:  Account disabled%0
+.
+Language=Russian
+Limit exceeded:  Account disabled%0
+.
+
+MessageId=4971
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4971
+Language=English
+Limit exceeded:  Account deleted%0
+.
+Language=Russian
+Limit exceeded:  Account deleted%0
+.
+
+MessageId=4972
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4972
+Language=English
+Share%0
+.
+Language=Russian
+Share%0
+.
+
+MessageId=4973
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4973
+Language=English
+Use %1%0
+.
+Language=Russian
+Use %1%0
+.
+
+MessageId=4974
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4974
+Language=English
+Unuse %1%0
+.
+Language=Russian
+Unuse %1%0
+.
+
+MessageId=4975
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4975
+Language=English
+User's session disconnected %1%0
+.
+Language=Russian
+User's session disconnected %1%0
+.
+
+MessageId=4976
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4976
+Language=English
+Administrator stopped sharing resource %1%0
+.
+Language=Russian
+Administrator stopped sharing resource %1%0
+.
+
+MessageId=4977
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4977
+Language=English
+User reached limit for %1%0
+.
+Language=Russian
+User reached limit for %1%0
+.
+
+MessageId=4978
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4978
+Language=English
+Bad password%0
+.
+Language=Russian
+Bad password%0
+.
+
+MessageId=4979
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4979
+Language=English
+Administrator privilege required%0
+.
+Language=Russian
+Administrator privilege required%0
+.
+
+MessageId=4980
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4980
+Language=English
+Access%0
+.
+Language=Russian
+Access%0
+.
+
+MessageId=4981
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4981
+Language=English
+%1 permissions added%0
+.
+Language=Russian
+%1 permissions added%0
+.
+
+MessageId=4982
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4982
+Language=English
+%1 permissions modified%0
+.
+Language=Russian
+%1 permissions modified%0
+.
+
+MessageId=4983
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4983
+Language=English
+%1 permissions deleted%0
+.
+Language=Russian
+%1 permissions deleted%0
+.
+
+MessageId=4984
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4984
+Language=English
+Access denied%0
+.
+Language=Russian
+Access denied%0
+.
+
+MessageId=4985
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4985
+Language=English
+Unknown%0
+.
+Language=Russian
+Unknown%0
+.
+
+MessageId=4986
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4986
+Language=English
+Other%0
+.
+Language=Russian
+Other%0
+.
+
+MessageId=4987
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4987
+Language=English
+Duration:%0
+.
+Language=Russian
+Duration:%0
+.
+
+MessageId=4988
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4988
+Language=English
+Duration: Not available%0
+.
+Language=Russian
+Duration: Not available%0
+.
+
+MessageId=4989
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4989
+Language=English
+Duration: Less than one second%0
+.
+Language=Russian
+Duration: Less than one second%0
+.
+
+MessageId=4990
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4990
+Language=English
+(none)%0
+.
+Language=Russian
+(none)%0
+.
+
+MessageId=4991
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4991
+Language=English
+Closed %1%0
+.
+Language=Russian
+Closed %1%0
+.
+
+MessageId=4992
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4992
+Language=English
+Closed %1 (disconnected)%0
+.
+Language=Russian
+Closed %1 (disconnected)%0
+.
+
+MessageId=4993
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4993
+Language=English
+Administrator closed %1%0
+.
+Language=Russian
+Administrator closed %1%0
+.
+
+MessageId=4994
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4994
+Language=English
+Access ended%0
+.
+Language=Russian
+Access ended%0
+.
+
+MessageId=4995
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4995
+Language=English
+Log on to network%0
+.
+Language=Russian
+Log on to network%0
+.
+
+MessageId=4996
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4996
+Language=English
+Logon denied%0
+.
+Language=Russian
+Logon denied%0
+.
+
+MessageId=4997
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4997
+Language=English
+Program             Message             Time%0
+.
+Language=Russian
+Program             Message             Time%0
+.
+
+MessageId=4998
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4998
+Language=English
+Account locked due to %1 bad passwords%0
+.
+Language=Russian
+Account locked due to %1 bad passwords%0
+.
+
+MessageId=4999
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_4999
+Language=English
+Account unlocked by administrator%0
+.
+Language=Russian
+Account unlocked by administrator%0
+.
+
 
 
 ;
