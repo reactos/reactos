@@ -135,7 +135,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     DWORD style, exstyle;
     WCHAR szNotRespondingW[64];
     LPWSTR pszTextW = NULL;
-    INT cchTextW;
+    INT cchTextW, cchNotRespondingMax = 64;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -178,15 +178,15 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
 
-    cchTextW = GetWindowTextLengthW(hwndTarget);
-    pszTextW = HeapAlloc(GetProcessHeap(), 0, (cchTextW + 1) * sizeof(WCHAR));
+    cchTextW = GetWindowTextLengthW(hwndTarget) + cchNotRespondingMax + 1;
+    pszTextW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
     if (!pszTextW)
     {
         DeleteObject(hbm32bpp);
         HeapFree(GetProcessHeap(), 0, pData);
-        return FALSE
+        return FALSE;
     }
-    GetWindowTextW(hwndTarget, pszTextW, cchTextW + 1);
+    GetWindowTextW(hwndTarget, pszTextW, cchTextW);
 
     // don't use scrollbars.
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
@@ -197,8 +197,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     LoadStringW(User32Instance, IDS_NOT_RESPONDING,
                 szNotRespondingW, ARRAYSIZE(szNotRespondingW));
-    StringCbCatW(szTextW, sizeof(szTextW), szNotRespondingW);
-    SetWindowTextW(hwnd, szTextW);
+    StringCbCatW(pszTextW, cchTextW, szNotRespondingW);
+    SetWindowTextW(hwnd, pszTextW);
 
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
 
