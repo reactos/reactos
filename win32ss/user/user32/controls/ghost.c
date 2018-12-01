@@ -13,6 +13,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
 
+extern HINSTANCE User32Instance;
+
 static const WCHAR ghostW[] = L"Ghost";
 const struct builtin_class_descr GHOST_builtin_class =
 {
@@ -131,8 +133,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    CHAR szTextA[128];
-    WCHAR szTextW[128];
+    CHAR szTextA[128], szNotRespondingA[64];
+    WCHAR szTextW[128], szNotRespondingW[64];
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -193,7 +195,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         SetWindowLongPtrW(hwnd, GWL_STYLE, style);
         SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
 
-        StringCbCatW(szTextW, sizeof(szTextW), L" (Not Responding)");
+        LoadStringW(User32Instance, IDS_NOT_RESPONDING,
+                    szNotRespondingW, ARRAYSIZE(szNotRespondingW));
+        StringCbCatW(szTextW, sizeof(szTextW), szNotRespondingW);
         SetWindowTextW(hwnd, szTextW);
     }
     else
@@ -201,7 +205,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         SetWindowLongPtrA(hwnd, GWL_STYLE, style);
         SetWindowLongPtrA(hwnd, GWL_EXSTYLE, exstyle);
 
-        StringCbCatA(szTextA, sizeof(szTextA), " (Not Responding)");
+        LoadStringA(User32Instance, IDS_NOT_RESPONDING,
+                    szNotRespondingA, ARRAYSIZE(szNotRespondingA));
+        StringCbCatA(szTextA, sizeof(szTextA), szNotRespondingA);
         SetWindowTextA(hwnd, szTextA);
     }
 
@@ -385,10 +391,18 @@ static void
 Ghost_OnClose(HWND hwnd)
 {
     INT id;
+    WCHAR szAskTerminate[128];
+    WCHAR szHungUpTitle[128];
+
     // stop timer
     KillTimer(hwnd, GHOST_TIMER_ID);
 
-    id = MessageBoxW(hwnd, L"Terminate app?", L"Not responding",
+    LoadStringW(User32Instance, IDS_ASK_TERMINATE,
+                szAskTerminate, ARRAYSIZE(szAskTerminate));
+    LoadStringW(User32Instance, IDS_HUNG_UP_TITLE,
+                szHungUpTitle, ARRAYSIZE(szHungUpTitle));
+
+    id = MessageBoxW(hwnd, szAskTerminate, szHungUpTitle,
                      MB_ICONINFORMATION | MB_YESNO);
     if (id == IDYES)
     {
