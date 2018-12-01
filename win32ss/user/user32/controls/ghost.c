@@ -88,7 +88,11 @@ IntMakeGhostImage(HBITMAP hbm)
     GetObject(hbm, sizeof(bm), &bm);
 
     if (bm.bmBitsPixel != 32 || !bm.bmBits)
+    {
+        ERR("bm.bmBitsPixel == %d, bm.bmBits == %p\n",
+            bm.bmBitsPixel, bm.bmBits);
         return;
+    }
 
     pdw = bm.bmBits;
     for (i = 0; i < bm.bmWidth * bm.bmHeight; ++i)
