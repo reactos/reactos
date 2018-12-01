@@ -81,7 +81,7 @@ IntGetWindowBitmap(HWND hwnd, INT cx, INT cy)
 }
 
 static VOID
-IntWhiten32BppBitmap(HBITMAP hbm)
+IntMakeGhostImage(HBITMAP hbm)
 {
     BITMAP bm;
     DWORD i, *pdw;
@@ -94,7 +94,7 @@ IntWhiten32BppBitmap(HBITMAP hbm)
     pdw = bm.bmBits;
     for (i = 0; i < bm.bmWidth * bm.bmHeight; ++i)
     {
-        *pdw = *pdw | 0x00C0C0C0;   // ARGB
+        *pdw = *pdw | 0x00C0C0C0;   // bitwise-OR with ARGB #C0C0C0
         ++pdw;
     }
 }
@@ -170,8 +170,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         HeapFree(GetProcessHeap(), 0, pData);
         return FALSE;
     }
-    // whiten
-    IntWhiten32BppBitmap(hbm32bpp);
+    // make a ghost image
+    IntMakeGhostImage(hbm32bpp);
 
     // get style and text
     if (IsWindowUnicode(hwnd))
