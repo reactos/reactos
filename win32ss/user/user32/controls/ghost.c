@@ -385,6 +385,8 @@ Ghost_OnNCDestroy(HWND hwnd)
     HeapFree(GetProcessHeap(), 0, pData);
 
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
+
+    PostQuitMessage(0);
 }
 
 static void
