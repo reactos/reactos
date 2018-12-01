@@ -13,11 +13,12 @@
 
 INT cmdHelpMsg(INT argc, WCHAR **argv)
 {
+    WCHAR szBuffer[MAX_PATH];
+    HMODULE hMsgDll = NULL;
     INT i;
     LONG errNum;
     LPWSTR endptr;
-    // DWORD dwLength = 0;
-    LPWSTR lpBuffer;
+    LPWSTR pBuffer;
 
     if (argc < 3)
     {
@@ -46,23 +47,51 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
         return 1;
     }
 
-    /* Retrieve the message string without appending extra newlines */
-    // dwLength =
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                   FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-                   NULL,
-                   errNum,
-                   LANG_USER_DEFAULT,
-                   (LPWSTR)&lpBuffer,
-                   0, NULL);
-    if (lpBuffer /* && dwLength */)
+    if (errNum >= MIN_LANMAN_MESSAGE_ID && errNum <= MAX_LANMAN_MESSAGE_ID)
     {
-        ConPrintf(StdOut, L"\n%s\n", lpBuffer);
-        LocalFree(lpBuffer);
+        /* Load netmsg.dll */
+        GetSystemDirectoryW(szBuffer, ARRAYSIZE(szBuffer));
+        wcscat(szBuffer, L"\\netmsg.dll");
+
+        hMsgDll = LoadLibrary(szBuffer);
+        if (hMsgDll == NULL)
+        {
+            ConPrintf(StdOut, L"Failed to load netmsg.dll\n");
+            return 0;
+        }
+
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       hMsgDll,
+                       errNum,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       NULL);
+        if (pBuffer)
+        {
+            ConPrintf(StdOut, L"\n%s\n", pBuffer);
+            LocalFree(pBuffer);
+        }
+
+        FreeLibrary(hMsgDll);
     }
     else
     {
-        ConPrintf(StdOut, L"Unrecognized error code: %ld\n", errNum);
+        /* Retrieve the message string without appending extra newlines */
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL,
+                       errNum,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       NULL);
+        if (pBuffer)
+        {
+            ConPrintf(StdOut, L"\n%s\n", pBuffer);
+            LocalFree(pBuffer);
+        }
     }
 
     return 0;
