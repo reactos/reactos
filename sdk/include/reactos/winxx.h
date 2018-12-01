@@ -33,7 +33,7 @@
 /* INT Cls_OnSetHotKey(HWND hwnd, INT nCode, UINT nOptions) */
 #ifndef HANDLE_WM_SETHOTKEY
 #define HANDLE_WM_SETHOTKEY(hwnd, wParam, lParam, fn) \
-    (LRESULT)(INT)(fn)((hwnd), (INT)LOWORD(wParam), (UINT)HIWORD(wParam))
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)LOWORD(wParam), (UINT)HIWORD(wParam))
 #define FORWARD_WM_SETHOTKEY(hwnd, nCode, nOptions, fn) \
     (INT)(fn)((hwnd), WM_SETHOTKEY, MAKEWPARAM((nCode), (nOptions)))
 #endif
@@ -41,7 +41,7 @@
 /* INT Cls_OnGetHotKey(HWND hwnd) */
 #ifndef HANDLE_WM_GETHOTKEY
 #define HANDLE_WM_GETHOTKEY(hwnd, wParam, lParam, fn) \
-    (LRESULT)(INT)(fn)((hwnd))
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
 #define FORWARD_WM_GETHOTKEY(hwnd, fn) \
     (INT)(fn)((hwnd), WM_GETHOTKEY, 0, 0L)
 #endif
@@ -115,7 +115,7 @@
 /* INT Cls_OnNotifyFormat(HWND hwnd, HWND hwndTarget, INT nCommand) */
 #ifndef HANDLE_WM_NOTIFYFORMAT
 #define HANDLE_WM_NOTIFYFORMAT(hwnd, wParam, lParam, fn) \
-    (LRESULT)(INT)(fn)((hwnd), (HWND)(wParam), (INT)(lParam))
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (HWND)(wParam), (INT)(lParam))
 #define FORWARD_WM_NOTIFYFORMAT(hwnd, hwndTarget, nCommand, fn) \
     (INT)(fn)((hwnd), WM_NOTIFYFORMAT, (WPARAM)(HWND)(hwndTarget), \
               (LPARAM)(INT)(nCommand))
@@ -163,8 +163,7 @@
     (void)((fn)((hwnd), WM_SYNCPAINT, 0, 0L), 0L)
 #endif
 
-/* void Cls_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest,
-                            WORD fwButton, INT xPos, INT yPos) */
+/* void Cls_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest, WORD fwButton, INT xPos, INT yPos) */
 #ifndef HANDLE_WM_NCXBUTTONDOWN
 #define HANDLE_WM_NCXBUTTONDOWN(hwnd, wParam, lParam, fn) \
     (LRESULT)((fn)((hwnd), FALSE, GET_NCHITTEST_WPARAM(wParam), GET_XBUTTON_WPARAM(wParam), \
@@ -277,8 +276,7 @@
     (UINT)(fn)((hwnd), WM_QUERYUISTATE, 0, 0L)
 #endif
 
-/* void Cls_OnXButtonDown(HWND hwnd, BOOL fDoubleClick, WORD fwKeys,
-                          WORD fwButton, INT xPos, INT yPos) */
+/* void Cls_OnXButtonDown(HWND hwnd, BOOL fDoubleClick, WORD fwKeys, WORD fwButton, INT xPos, INT yPos) */
 #ifndef HANDLE_WM_XBUTTONDOWN
 #define HANDLE_WM_XBUTTONDOWN(hwnd, wParam, lParam, fn) \
     (LRESULT)((fn)((hwnd), FALSE, GET_KEYSTATE_WPARAM(wParam), GET_XBUTTON_WPARAM(wParam), \
@@ -536,5 +534,514 @@
 #undef FORWARD_WM_NCACTIVATE
 #define FORWARD_WM_NCACTIVATE(hwnd, fActive, hwndActDeact, fMinimized, fn) \
     (BOOL)(DWORD)(fn)((hwnd), WM_NCACTIVATE, (WPARAM)(BOOL)(fActive), 0L)
+
+/* LONG Edit_OnGetSel(HWND hwnd, LPDWORD lpdwStart, LPDWORD lpdwEnd) */
+#define HANDLE_EM_GETSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LONG)(fn)((hwnd), (LPDWORD)(wParam), (LPDWORD)(lParam))
+
+/* void Edit_OnSetSel(HWND hwnd, INT nStart, INT nEnd) */
+#define HANDLE_EM_SETSEL(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (INT)(wParam), (INT)(lParam)), 0L)
+
+/* void Edit_OnGetRect(HWND hwnd, LPRECT prc) */
+#define HANDLE_EM_GETRECT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LPRECT)(lParam)), 0L)
+
+/* void Edit_OnSetRect(HWND hwnd, LPCRECT prc) */
+#define HANDLE_EM_SETRECT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LPCRECT)(lParam)), 0L)
+
+/* void Edit_OnSetRectNP(HWND hwnd, LPCRECT prc) */
+#define HANDLE_EM_SETRECTNP(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LPCRECT)(lParam)), 0L)
+
+/* DWORD Edit_OnScroll(HWND hwnd, INT nScroll) */
+#define HANDLE_EM_SCROLL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (INT)(wParam))
+
+/* BOOL Edit_OnLineScroll(HWND hwnd, INT cxScroll, INT cyScroll) */
+#define HANDLE_EM_LINESCROLL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd), (INT)(wParam), (INT)(lParam))
+
+/* BOOL Edit_OnScrollCaret(HWND hwnd) */
+#define HANDLE_EM_SCROLLCARET(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd))
+
+/* BOOL Edit_OnGetModify(HWND hwnd) */
+#define HANDLE_EM_GETMODIFY(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd))
+
+/* void Edit_OnSetModify(HWND hwnd, BOOL fModified) */
+#define HANDLE_EM_SETMODIFY(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (BOOL)(wParam)), 0L)
+
+/* INT Edit_OnGetLineCount(HWND hwnd) */
+#define HANDLE_EM_GETLINECOUNT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT Edit_OnLineIndex(HWND hwnd, INT line) */
+#define HANDLE_EM_LINEINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* void Edit_OnSetHandle(HWND hwnd, HLOCAL hloc) */
+#define HANDLE_EM_SETHANDLE(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (HLOCAL)(wParam)), 0L)
+
+/* HLOCAL Edit_OnGetHandle(HWND hwnd) */
+#define HANDLE_EM_GETHANDLE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(HLOCAL)(fn)((hwnd))
+
+/* INT Edit_OnGetThumb(HWND hwnd) */
+#define HANDLE_EM_GETTHUMB(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT Edit_OnLineLength(HWND hwnd, INT ich) */
+#define HANDLE_EM_LINELENGTH(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* void Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, LPCTSTR lpszReplace) */
+#define HANDLE_EM_REPLACESEL(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (BOOL)(wParam), (LPCTSTR)(lParam)), 0L)
+
+/* INT Edit_OnGetLine(HWND hwnd, INT line, LPCTSTR lpch) */
+#define HANDLE_EM_GETLINE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* NOTE: EM_LIMITTEXT is same value as EM_SETLIMITTEXT */
+/* void Edit_OnLimitText(HWND hwnd, LONG cchMax) */
+#define HANDLE_EM_LIMITTEXT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LONG)(wParam)), 0L)
+
+/* BOOL Edit_OnCanUndo(HWND hwnd) */
+#define HANDLE_EM_CANUNDO(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd))
+
+/* BOOL Edit_OnUndo(HWND hwnd) */
+#define HANDLE_EM_UNDO(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd))
+
+/* BOOL Edit_OnFmtLines(HWND hwnd, BOOL fAddEOL) */
+#define HANDLE_EM_FMTLINES(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd), (BOOL)(wParam))
+
+/* INT Edit_OnLineFromChar(HWND hwnd, INT ich) */
+#define HANDLE_EM_LINEFROMCHAR(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* BOOL Edit_OnSetTabStops(HWND hwnd, INT cTabs, LPDWORD lpdwTabs) */
+#define HANDLE_EM_SETTABSTOPS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd), (INT)(wParam), (LPDWORD)(lParam))
+
+/* void Edit_OnSetPasswordChar(HWND hwnd, UINT ch) */
+#define HANDLE_EM_SETPASSWORDCHAR(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (UINT)(wParam)), 0L)
+
+/* void Edit_OnEmptyUndoBuffer(HWND hwnd) */
+#define HANDLE_EM_EMPTYUNDOBUFFER(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd)), 0L)
+
+/* INT Edit_OnGetFirstVisibleLine(HWND hwnd) */
+#define HANDLE_EM_GETFIRSTVISIBLELINE(hwnd, wParam, lParam, fn) \
+    (INT)((fn)((hwnd)), 0L)
+
+/* BOOL Edit_OnSetReadOnly(HWND hwnd, BOOL fReadOnly) */
+#define HANDLE_EM_SETREADONLY(hwnd, wParam, lParam, fn) \
+    (BOOL)(fn)((hwnd), (BOOL)(wParam))
+
+/* void Edit_OnSetWordBreakProc(HWND hwnd, EDITWORDBREAKPROC ewbprc) */
+#define HANDLE_EM_SETWORDBREAKPROC(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (EDITWORDBREAKPROC)(lParam)), 0L)
+
+/* EDITWORDBREAKPROC Edit_OnGetWordBreakProc(HWND hwnd) */
+#define HANDLE_EM_GETWORDBREAKPROC(hwnd, wParam, lParam, fn) \
+    (LRESULT)(EDITWORDBREAKPROC)(fn)((hwnd))
+
+/* UINT Edit_OnGetPasswordChar(HWND hwnd) */
+#define HANDLE_EM_GETPASSWORDCHAR(hwnd, wParam, lParam, fn) \
+    (LRESULT)(UINT)(UINT)(fn)((hwnd))
+
+/* void Edit_OnSetMargins(HWND hwnd, UINT fwMargin, WORD wLeft, WORD wRight) */
+#define HANDLE_EM_SETMARGINS(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (UINT)(wParam), LOWORD(lParam), HIWORD(lParam)), 0L)
+
+/* DWORD Edit_OnGetMargins(HWND hwnd) */
+#define HANDLE_EM_GETMARGINS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd))
+
+/* void Edit_OnSetLimitText(HWND hwnd, DWORD cbMax) */
+#define HANDLE_EM_SETLIMITTEXT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (DWORD)(wParam)), 0L)
+
+/* DWORD Edit_OnGetLimitText(HWND hwnd) */
+#define HANDLE_EM_GETLIMITTEXT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd))
+
+/* void Edit_OnPosFromChar(HWND hwnd, LPPOINT lpPoint, UINT wCharIndex) */
+#define HANDLE_EM_POSFROMCHAR(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LPPOINT)(wParam), (UINT)(lParam)), 0L)
+
+/* LONG Edit_OnCharFromPos(HWND hwnd, INT x, INT y) */
+#define HANDLE_EM_CHARFROMPOS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LONG)(fn)((hwnd), (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam))
+
+/* DWORD Edit_OnSetImeStatus(HWND hwnd, UINT uType, DWORD dwFlags) */
+#define HANDLE_EM_SETIMESTATUS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (UINT)(wParam), (DWORD)(lParam))
+
+/* DWORD Edit_OnGetImeStatus(HWND hwnd, UINT uType) */
+#define HANDLE_EM_GETIMESTATUS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (UINT)(wParam))
+
+/* HICON Static_OnSetIcon(HWND hwnd, HICON hIcon) */
+#define HANDLE_STM_SETICON(hwnd, wParam, lParam, fn) \
+    (LRESULT)(HICON)(fn)((hwnd), (HICON)(wParam))
+
+/* HICON Static_OnGetIcon(HWND hwnd) */
+#define HANDLE_STM_GETICON(hwnd, wParam, lParam, fn) \
+    (LRESULT)(HICON)(fn)((hwnd))
+
+/* HANDLE Static_OnSetImage(HWND hwnd, UINT fImageType, HANDLE hImage) */
+#define HANDLE_STM_SETIMAGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(HANDLE)(fn)((hwnd), (UINT)(wParam), (HANDLE)(lParam))
+
+/* HANDLE Static_OnGetImage(HWND hwnd, UINT fImageType) */
+#define HANDLE_STM_GETIMAGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(HANDLE)(fn)((hwnd), (UINT)(wParam))
+
+/* INT ListBox_OnAddString(HWND hwnd, LPCTSTR lpsz) */
+#define HANDLE_LB_ADDSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnInsertString(HWND hwnd, INT index, LPCTSTR lpsz) */
+#define HANDLE_LB_INSERTSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnDeleteString(HWND hwnd, INT index) */
+#define HANDLE_LB_DELETESTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnSelItemRangeEx(HWND hwnd, UINT wFirst, UINT wLast) */
+#define HANDLE_LB_SELITEMRANGEEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (UINT)(wParam), (UINT)(lParam))
+
+/* void ListBox_OnResetContent(HWND hwnd) */
+#define HANDLE_LB_RESETCONTENT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd)), 0L)
+
+/* INT ListBox_OnSetSel(HWND hwnd, BOOL fSelect, UINT index) */
+#define HANDLE_LB_SETSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (BOOL)(wParam), (UINT)(lParam))
+
+/* INT ListBox_OnSetCurSel(HWND hwnd, INT index) */
+#define HANDLE_LB_SETCURSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnGetSel(HWND hwnd, INT index) */
+#define HANDLE_LB_GETSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnGetCurSel(HWND hwnd) */
+#define HANDLE_LB_GETCURSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnGetText(HWND hwnd, INT index, LPTSTR lpszBuffer) */
+#define HANDLE_LB_GETTEXT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPTSTR)(lParam))
+
+/* INT ListBox_OnGetTextLen(HWND hwnd, INT index) */
+#define HANDLE_LB_GETTEXTLEN(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnGetCount(HWND hwnd) */
+#define HANDLE_LB_GETCOUNT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnSelectString(HWND hwnd, INT indexStart, LPCTSTR lpszFind) */
+#define HANDLE_LB_SELECTSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnDir(HWND hwnd, UINT uAttrs, LPCTSTR lpszFileSpec) */
+#define HANDLE_LB_DIR(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (UINT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnGetTopIndex(HWND hwnd) */
+#define HANDLE_LB_GETTOPINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnFindString(HWND hwnd, INT indexStart, LPCTSTR lpszFind) */
+#define HANDLE_LB_FINDSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnGetSelCount(HWND hwnd) */
+#define HANDLE_LB_GETSELCOUNT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnGetSelItems(HWND hwnd, UINT cItems, LPINT lpnItems) */
+#define HANDLE_LB_GETSELITEMS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (UINT)(wParam), (LPINT)(lParam))
+
+/* BOOL ListBox_OnSetTabStops(HWND hwnd, UINT cTabs, LPINT lpnTabs) */
+#define HANDLE_LB_SETTABSTOPS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(BOOL)(fn)((hwnd), (UINT)(wParam), (LPINT)(lParam))
+
+/* INT ListBox_OnGetHorizontalExtent(HWND hwnd) */
+#define HANDLE_LB_GETHORIZONTALEXTENT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* void ListBox_OnSetHorizontalExtent(HWND hwnd, INT cxExtent) */
+#define HANDLE_LB_SETHORIZONTALEXTENT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (INT)(wParam)), 0L)
+
+/* void ListBox_OnSetColumnWidth(HWND hwnd, INT cxColumn) */
+#define HANDLE_LB_SETCOLUMNWIDTH(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (INT)(wParam)), 0L)
+
+/* INT ListBox_OnAddFile(HWND hwnd, LPCTSTR lpszFilename) */
+#define HANDLE_LB_ADDFILE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (LPCTSTR)(lParam))
+
+/* INT ListBox_OnSetTopIndex(HWND hwnd, INT index) */
+#define HANDLE_LB_SETTOPINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnGetItemRect(HWND hwnd, INT index, RECT FAR *lprc) */
+#define HANDLE_LB_GETITEMRECT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (RECT FAR *)(lParam))
+
+/* INT_PTR ListBox_OnGetItemData(HWND hwnd, INT index) */
+#define HANDLE_LB_GETITEMDATA(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(fn)((hwnd), (INT)(wParam))
+
+/* INT_PTR ListBox_OnSetItemData(HWND hwnd, INT index, LPARAM dwData) */
+#define HANDLE_LB_SETITEMDATA(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(fn)((hwnd), (INT)(wParam), (lParam))
+
+/* INT ListBox_OnSelItemRange(HWND hwnd, BOOL fSelect, UINT wFirst, UINT wLast) */
+#define HANDLE_LB_SELITEMRANGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (BOOL)(wParam), LOWORD(lParam), HIWORD(lParam))
+
+/* INT ListBox_OnSetAnchorIndex(HWND hwnd, INT index) */
+#define HANDLE_LB_SETANCHORINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnGetAnchorIndex(HWND hwnd) */
+#define HANDLE_LB_GETANCHORINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnSetCaretIndex(HWND hwnd, INT index, BOOL fScroll) */
+#define HANDLE_LB_SETCARETINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (BOOL)LOWORD(lParam))
+
+/* INT ListBox_OnGetCaretIndex(HWND hwnd) */
+#define HANDLE_LB_GETCARETINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ListBox_OnSetItemHeight(HWND hwnd, INT index, INT cyItem) */
+#define HANDLE_LB_SETITEMHEIGHT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (SHORT)LOWORD(lParam))
+
+/* INT ListBox_OnGetItemHeight(HWND hwnd, INT index) */
+#define HANDLE_LB_GETITEMHEIGHT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ListBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCTSTR lpszFind) */
+#define HANDLE_LB_FINDSTRINGEXACT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* LCID ListBox_OnSetLocale(HWND hwnd, LCID wLocaleID) */
+#define HANDLE_LB_SETLOCALE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LCID)(fn)((hwnd), (LCID)(wParam))
+
+/* LCID ListBox_OnGetLocale(HWND hwnd) */
+#define HANDLE_LB_GETLOCALE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LCID)(fn)((hwnd))
+
+/* INT ListBox_OnSetCount(HWND hwnd, INT cItems) */
+#define HANDLE_LB_SETCOUNT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* DWORD ListBox_OnInitStorage(HWND hwnd, UINT cItems, DWORD cb) */
+#define HANDLE_LB_INITSTORAGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (UINT)(wParam), (DWORD)(lParam))
+
+/* DWORD ListBox_OnItemFromPoint(HWND hwnd, INT xPos, INT yPos) */
+#define HANDLE_LB_ITEMFROMPOINT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam))
+
+// TODO: HANDLE_LB_MULTIPLEADDSTRING and HANDLE_LB_GETLISTBOXINFO.
+
+/* DWORD ComboBox_OnGetEditSel(HWND hwnd, LPDWORD lpdwStart, LPDWORD lpdwEnd) */
+#define HANDLE_CB_GETEDITSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(DWORD)(fn)((hwnd), (LPDWORD)(wParam), (LPDWORD)(lParam))
+
+/* void ComboBox_OnLimitText(HWND hwnd, UINT cchLimit) */
+#define HANDLE_CB_LIMITTEXT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (UINT)(wParam)), TRUE)
+
+/* INT ComboBox_OnSetEditSel(HWND hwnd, INT ichStart, INT ichEnd) */
+#define HANDLE_CB_SETEDITSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (INT)(lParam))
+
+/* INT ComboBox_OnAddString(HWND hwnd, LPCTSTR lpsz) */
+#define HANDLE_CB_ADDSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (LPCTSTR)(lParam))
+
+/* INT ComboBox_OnDeleteString(HWND hwnd, INT index) */
+#define HANDLE_CB_DELETESTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ComboBox_OnDir(HWND hwnd, UINT uAttrs, LPCTSTR lpszFileSpec) */
+#define HANDLE_CB_DIR(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (UINT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ComboBox_OnGetCount(HWND hwnd) */
+#define HANDLE_CB_GETCOUNT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ComboBox_GetCurSel(HWND hwnd) */
+#define HANDLE_CB_GETCURSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ComboBox_GetLBText(HWND hwnd, INT index, LPTSTR lpszBuffer) */
+#define HANDLE_CB_GETLBTEXT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPTSTR)(lParam))
+
+/* INT ComboBox_OnGetLBTextLen(HWND hwnd, INT index) */
+#define HANDLE_CB_GETLBTEXTLEN(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ComboBox_OnInsertString(HWND hwnd, INT index, LPCTSTR lpsz) */
+#define HANDLE_CB_INSERTSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* void ComboBox_OnResetContent(HWND hwnd) */
+#define HANDLE_CB_RESETCONTENT(hwnd, wParam, lParam, fn) \
+    (LRESULT)((fn)((hwnd)), CB_OKAY)
+
+/* INT ComboBox_OnFindString(HWND hwnd, INT indexStart, LPCTSTR lpszFind) */
+#define HANDLE_CB_FINDSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ComboBox_OnSelectString(HWND hwnd, INT indexStart, LPCTSTR lpszSelect) */
+#define HANDLE_CB_SELECTSTRING(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* INT ComboBox_OnSetCurSel(HWND hwnd, INT index) */
+#define HANDLE_CB_SETCURSEL(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* BOOL ComboBox_OnShowDropDown(HWND hwnd, BOOL fShow) */
+#define HANDLE_CB_SHOWDROPDOWN(hwnd, wParam, lParam, fn) \
+    (LRESULT)((fn)((hwnd), (BOOL)(wParam)), TRUE)
+
+/* INT_PTR ComboBox_OnGetItemData(HWND hwnd, INT index) */
+#define HANDLE_CB_GETITEMDATA(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(fn)((hwnd), (INT)(wParam))
+
+/* INT_PTR ComboBox_OnSetItemData(HWND hwnd, INT index, DWORD_PTR dwData) */
+#define HANDLE_CB_SETITEMDATA(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(fn)((hwnd), (INT)(wParam), (DWORD_PTR)(lParam))
+
+/* void ComboBox_OnGetDroppedControlRect(HWND hwnd, RECT FAR *lprc) */
+#define HANDLE_CB_GETDROPPEDCONTROLRECT(hwnd, wParam, lParam, fn) \
+    (LRESULT)((fn)((hwnd), (RECT FAR *)(lParam)), CB_OKAY)
+
+/* INT ComboBox_OnSetItemHeight(HWND hwnd, INT index, INT height) */
+#define HANDLE_CB_SETITEMHEIGHT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (INT)(lParam))
+
+/* INT ComboBox_OnGetItemHeight(HWND hwnd, INT index) */
+#define HANDLE_CB_GETITEMHEIGHT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ComboBox_OnSetExtendedUI(HWND hwnd, BOOL fExtended) */
+#define HANDLE_CB_SETEXTENDEDUI(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (BOOL)(wParam))
+
+/* BOOL ComboBox_OnGetExtendedUI(HWND hwnd) */
+#define HANDLE_CB_GETEXTENDEDUI(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd))
+
+/* BOOL ComboBox_OnGetDroppedState(HWND hwnd) */
+#define HANDLE_CB_GETDROPPEDSTATE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd))
+
+/* INT ComboBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCTSTR lpszFind) */
+#define HANDLE_CB_FINDSTRINGEXACT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (LPCTSTR)(lParam))
+
+/* LCID ComboBox_OnSetLocale(HWND hwnd, LCID wLocaleID) */
+#define HANDLE_CB_SETLOCALE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LCID)(fn)((hwnd), (LCID)(wParam))
+
+/* LCID ComboBox_OnGetLocale(HWND hwnd) */
+#define HANDLE_CB_GETLOCALE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(LCID)(fn)((hwnd))
+
+/* INT ComboBox_OnGetTopIndex(HWND hwnd) */
+#define HANDLE_CB_GETTOPINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ComboBox_OnSetTopIndex(HWND hwnd, INT index) */
+#define HANDLE_CB_SETTOPINDEX(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ComboBox_OnGetHorizontalExtent(HWND hwnd) */
+#define HANDLE_CB_GETHORIZONTALEXTENT(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* void ComboBox_OnSetHorizontalExtent(HWND hwnd, INT cxExtent) */
+#define HANDLE_CB_SETHORIZONTALEXTENT(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (INT)(wParam)), 0L)
+
+/* INT ComboBox_OnGetDroppedWidth(HWND hwnd) */
+#define HANDLE_CB_GETDROPPEDWIDTH(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ComboBox_OnSetDroppedWidth(HWND hwnd, INT wWidth) */
+#define HANDLE_CB_SETDROPPEDWIDTH(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam))
+
+/* INT ComboBox_OnInitStorage(HWND hwnd, INT cItems, DWORD cb) */
+#define HANDLE_CB_INITSTORAGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (DWORD)(lParam))
+
+// TODO: CB_MULTIPLEADDSTRING and CB_GETCOMBOBOXINFO
+
+/* INT ScrollBar_OnSetPos(HWND hwnd, INT nPos, BOOL fRedraw) */
+#define HANDLE_SBM_SETPOS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (BOOL)(lParam))
+
+/* INT ScrollBar_OnGetPos(HWND hwnd) */
+#define HANDLE_SBM_GETPOS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd))
+
+/* INT ScrollBar_OnSetRange(HWND hwnd, INT nMinPos, INT nMaxPos) */
+#define HANDLE_SBM_SETRANGE(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (INT)(lParam))
+
+/* INT ScrollBar_OnSetRangeRedraw(HWND hwnd, INT nMinPos, INT nMaxPos) */
+#define HANDLE_SBM_SETRANGEREDRAW(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (INT)(wParam), (INT)(lParam))
+
+/* void ScrollBar_OnGetRange(HWND hwnd, LPINT lpnMinPos, LPINT lpnMaxPos) */
+#define HANDLE_SBM_GETRANGE(hwnd, wParam, lParam, fn) \
+    ((fn)((hwnd), (LPINT)(wParam), (LPINT)(lParam)), 0L)
+
+/* BOOL ScrollBar_OnEnableArrows(HWND hwnd, UINT fuArrowFlags) */
+#define HANDLE_SBM_ENABLE_ARROWS(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd), (UINT)(wParam))
+
+/* INT ScrollBar_OnSetScrollInfo(HWND hwnd, BOOL fRedraw, LPSCROLLINFO lpsi) */
+#define HANDLE_SBM_SETSCROLLINFO(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(INT)(fn)((hwnd), (BOOL)(wParam), (LPSCROLLINFO)(lParam))
+
+/* BOOL ScrollBar_OnGetScrollInfo(HWND hwnd, LPSCROLLINFO lpsi) */
+#define HANDLE_SBM_GETSCROLLINFO(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd), (LPSCROLLINFO)(lParam))
+
+/* BOOL ScrollBar_OnGetScrollBarInfo(HWND hwnd, LPSCROLLBARINFO lpsbi) */
+#define HANDLE_SBM_GETSCROLLBARINFO(hwnd, wParam, lParam, fn) \
+    (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd), (LPSCROLLBARINFO)(lParam))
 
 #endif
