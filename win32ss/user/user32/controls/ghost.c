@@ -133,7 +133,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    WCHAR szTextW[128], szNotRespondingW[64];
+    WCHAR szNotRespondingW[64];
+    LPWSTR pszTextW = NULL;
+    INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -175,8 +177,18 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // get style and text
     style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
-    GetWindowTextW(hwndTarget, szTextW, ARRAYSIZE(szTextW));
 
+    cchTextW = GetWindowTextLengthW(hwndTarget);
+    pszTextW = HeapAlloc(GetProcessHeap(), 0, (cchTextW + 1) * sizeof(WCHAR));
+    if (!pszTextW)
+    {
+        DeleteObject(hbm32bpp);
+        HeapFree(GetProcessHeap(), 0, pData);
+        return FALSE
+    }
+    GetWindowTextW(hwndTarget, pszTextW, cchTextW + 1);
+
+    // don't use scrollbars.
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
 
     // set style and text
@@ -204,6 +216,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // redraw
     InvalidateRect(hwnd, NULL, TRUE);
+
+    HeapFree(GetProcessHeap(), 0, pszTextW);
 
     // set user data
     pData->hwndTarget = hwndTarget;
