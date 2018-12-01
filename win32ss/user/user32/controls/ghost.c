@@ -132,8 +132,6 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     DWORD style, exstyle;
     CHAR szTextA[128];
     WCHAR szTextW[128];
-
-#ifdef __REACTOS__
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -147,7 +145,6 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
              return 0;
         }
     }
-#endif
 
     // get the target
     hwndTarget = (HWND)lpcs->lpCreateParams;
@@ -380,9 +377,7 @@ Ghost_OnNCDestroy(HWND hwnd)
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
     HeapFree(GetProcessHeap(), 0, pData);
 
-#ifdef __REACTOS__
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
-#endif
 }
 
 static void
