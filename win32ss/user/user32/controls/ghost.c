@@ -185,15 +185,23 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
 
     // get text
-    cchTextW = GetWindowTextLengthW(hwndTarget) + ARRAYSIZE(szNotRespondingW) + 1;
+    cchTextW = 512 + ARRAYSIZE(szNotRespondingW) + 1;
     pszTextW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
-    if (!pszTextW)
+    for (;;)
     {
-        DeleteObject(hbm32bpp);
-        HeapFree(GetProcessHeap(), 0, pData);
-        return FALSE;
+        if (!pszTextW)
+        {
+            DeleteObject(hbm32bpp);
+            HeapFree(GetProcessHeap(), 0, pData);
+            return FALSE;
+        }
+
+        if (InternalGetWindowText(hwndTarget, pszTextW, cchTextW) < cchTextW - 1)
+            break;
+
+        cchTextW *= 2;
+        pszTextW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
     }
-    GetWindowTextW(hwndTarget, pszTextW, cchTextW);
 
     // don't use scrollbars.
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
