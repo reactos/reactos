@@ -301,14 +301,6 @@ Ghost_OnNCPaint(HWND hwnd, HRGN hrgn)
     }
 }
 
-static BOOL
-Ghost_OnEraseBkgnd(HWND hwnd, HDC hdc)
-{
-    // draw the original image
-    Ghost_OnNCPaint(hwnd, NULL);
-    return TRUE;
-}
-
 static void
 Ghost_OnPaint(HWND hwnd)
 {
@@ -459,7 +451,8 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
             return 0;
 
         case WM_ERASEBKGND:
-            return Ghost_OnEraseBkgnd(hwnd, (HDC)wParam);
+            Ghost_OnNCPaint(hwnd, NULL);
+            return TRUE;
 
         case WM_PAINT:
             Ghost_OnPaint(hwnd);
