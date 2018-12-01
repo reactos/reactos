@@ -133,7 +133,6 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    CHAR szTextA[128], szNotRespondingA[64];
     WCHAR szTextW[128], szNotRespondingW[64];
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
