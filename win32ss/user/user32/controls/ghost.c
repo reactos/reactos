@@ -424,18 +424,15 @@ Ghost_OnTimer(HWND hwnd, UINT id)
         return;
     }
 
-    if (1)
+    // resume if responding
+    dwTimeout = 200;
+    dwTick1 = GetTickCount();
+    SendMessageTimeout(hwndTarget, WM_NULL, 0, 0, 0, dwTimeout, &dwResult);
+    dwTick2 = GetTickCount();
+    if (dwTick2 - dwTick1 < dwTimeout)
     {
-        // resume if responding
-        dwTimeout = 200;
-        dwTick1 = GetTickCount();
-        SendMessageTimeout(hwndTarget, WM_NULL, 0, 0, 0, dwTimeout, &dwResult);
-        dwTick2 = GetTickCount();
-        if (dwTick2 - dwTick1 < dwTimeout)
-        {
-            Ghost_Unenchant(hwnd, FALSE);
-            return;
-        }
+        Ghost_Unenchant(hwnd, FALSE);
+        return;
     }
 
     // restart the timer
