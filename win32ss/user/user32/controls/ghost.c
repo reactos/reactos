@@ -134,7 +134,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     RECT rc;
     DWORD style, exstyle;
     WCHAR szNotRespondingW[64];
-    LPWSTR pszTextW = NULL;
+    LPWSTR pszTextW = NULL, pszTextNewW;
     INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
@@ -186,21 +186,24 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get text
     cchTextW = 512 + ARRAYSIZE(szNotRespondingW) + 1;
-    pszTextW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
+    pszTextNewW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
     for (;;)
     {
-        if (!pszTextW)
+        if (!pszTextNewW)
         {
+            if (pszTextW)
+                HeapFree(GetProcessHeap(), 0, pszTextW);
             DeleteObject(hbm32bpp);
             HeapFree(GetProcessHeap(), 0, pData);
             return FALSE;
         }
+        pszTextW = pszTextNewW;
 
         if (InternalGetWindowText(hwndTarget, pszTextW, cchTextW) < cchTextW - 1)
             break;
 
         cchTextW *= 2;
-        pszTextW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
+        pszTextNewW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
     }
 
     // don't use scrollbars.
