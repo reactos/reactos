@@ -135,7 +135,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     DWORD style, exstyle;
     WCHAR szNotRespondingW[64];
     LPWSTR pszTextW = NULL;
-    INT cchTextW, cchNotRespondingMax = 64;
+    INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -158,7 +158,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         return FALSE;
     }
 
-    // create data
+    // create user data
     pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
     if (!pData)
         return FALSE;
@@ -174,11 +174,18 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // make a ghost image
     IntMakeGhostImage(hbm32bpp);
 
-    // get style and text
+    // set user data and prop
+    pData->hwndTarget = hwndTarget;
+    pData->hbm32bpp = hbm32bpp;
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
+    SetPropW(hwndTarget, L"GhostProp", hwnd);
+
+    // get style
     style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
 
-    cchTextW = GetWindowTextLengthW(hwndTarget) + cchNotRespondingMax + 1;
+    // get text
+    cchTextW = GetWindowTextLengthW(hwndTarget) + ARRAYSIZE(szNotRespondingW) + 1;
     pszTextW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
     if (!pszTextW)
     {
@@ -191,22 +198,29 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // don't use scrollbars.
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
 
-    // set style and text
+    // set style
     SetWindowLongPtrW(hwnd, GWL_STYLE, style);
     SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
 
+    // set text with " (Not Responding)"
     LoadStringW(User32Instance, IDS_NOT_RESPONDING,
                 szNotRespondingW, ARRAYSIZE(szNotRespondingW));
     StringCbCatW(pszTextW, cchTextW, szNotRespondingW);
     SetWindowTextW(hwnd, pszTextW);
 
+    // free the text buffer
+    HeapFree(GetProcessHeap(), 0, pszTextW);
+
+    // get previous window of target
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
 
     // hide target
     ShowWindowAsync(hwndTarget, SW_HIDE);
 
-    // shrink the ghost to zero size and insert
-    SetWindowPos(hwnd, hwndPrev, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_DRAWFRAME);
+    // shrink the ghost to zero size and insert.
+    // this will avoid effects.
+    SetWindowPos(hwnd, hwndPrev, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_DRAWFRAME);
 
     // resume the position and size of ghost
     MoveWindow(hwnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
@@ -217,15 +231,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // redraw
     InvalidateRect(hwnd, NULL, TRUE);
 
-    HeapFree(GetProcessHeap(), 0, pszTextW);
-
-    // set user data
-    pData->hwndTarget = hwndTarget;
-    pData->hbm32bpp = hbm32bpp;
-    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
-
-    SetPropW(hwndTarget, L"GhostProp", hwnd);
-
+    // start timer
     SetTimer(hwnd, GHOST_TIMER_ID, GHOST_INTERVAL, NULL);
 
     return TRUE;
