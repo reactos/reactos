@@ -125,6 +125,36 @@ Ghost_GetTarget(HWND hwnd)
     return pData->hwndTarget;
 }
 
+static LPWSTR
+Ghost_GetText(HWND hwndTarget, INT *pcchTextW)
+{
+    LPWSTR pszTextW = NULL, pszTextNewW;
+    INT cchTextW = *pcchTextW;
+
+    pszTextNewW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
+    for (;;)
+    {
+        if (!pszTextNewW)
+        {
+            if (pszTextW)
+                HeapFree(GetProcessHeap(), 0, pszTextW);
+            return NULL;
+        }
+        pszTextW = pszTextNewW;
+
+        if (InternalGetWindowText(hwndTarget, pszTextW, cchTextW) < cchTextW - 1)
+        {
+            break;
+        }
+
+        cchTextW *= 2;
+        pszTextNewW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
+    }
+
+    *pcchTextW = cchTextW;
+    return pszTextW;
+}
+
 static BOOL
 Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 {
@@ -134,7 +164,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     RECT rc;
     DWORD style, exstyle;
     WCHAR szNotRespondingW[64];
-    LPWSTR pszTextW = NULL, pszTextNewW;
+    LPWSTR pszTextW;
     INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
@@ -186,24 +216,12 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get text
     cchTextW = 512 + ARRAYSIZE(szNotRespondingW) + 1;
-    pszTextNewW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
-    for (;;)
+    pszTextW = Ghost_GetText(hwndTarget, &cchTextW);
+    if (!pszTextW)
     {
-        if (!pszTextNewW)
-        {
-            if (pszTextW)
-                HeapFree(GetProcessHeap(), 0, pszTextW);
-            DeleteObject(hbm32bpp);
-            HeapFree(GetProcessHeap(), 0, pData);
-            return FALSE;
-        }
-        pszTextW = pszTextNewW;
-
-        if (InternalGetWindowText(hwndTarget, pszTextW, cchTextW) < cchTextW - 1)
-            break;
-
-        cchTextW *= 2;
-        pszTextNewW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
+        DeleteObject(hbm32bpp);
+        HeapFree(GetProcessHeap(), 0, pData);
+        return FALSE;
     }
 
     // don't use scrollbars.
