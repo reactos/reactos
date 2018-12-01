@@ -38,6 +38,7 @@ extern const struct builtin_class_descr MDICLIENT_builtin_class;
 extern const struct builtin_class_descr MENU_builtin_class;
 extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
+extern const struct builtin_class_descr GHOST_builtin_class;
 
 ATOM WINAPI RegisterClassExWOWW(WNDCLASSEXW *,LPDWORD,WORD,DWORD,BOOL);
 BOOL FASTCALL VersionRegisterClass(PCWSTR,LPCWSTR,HANDLE,HMODULE *);
