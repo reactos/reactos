@@ -673,7 +673,7 @@ xmlListSort(xmlListPtr l)
  * apply the walker function to it
  */
 void
-xmlListWalk(xmlListPtr l, xmlListWalker walker, const void *user) {
+xmlListWalk(xmlListPtr l, xmlListWalker walker, void *user) {
     xmlLinkPtr lk;
 
     if ((l == NULL) || (walker == NULL))
@@ -694,7 +694,7 @@ xmlListWalk(xmlListPtr l, xmlListWalker walker, const void *user) {
  * apply the walker function to it
  */
 void
-xmlListReverseWalk(xmlListPtr l, xmlListWalker walker, const void *user) {
+xmlListReverseWalk(xmlListPtr l, xmlListWalker walker, void *user) {
     xmlLinkPtr lk;
 
     if ((l == NULL) || (walker == NULL))

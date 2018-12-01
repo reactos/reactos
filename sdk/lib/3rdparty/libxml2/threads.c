@@ -47,10 +47,13 @@
 
 #ifdef HAVE_PTHREAD_H
 
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 303) && \
+    defined(__GLIBC__) && defined(__linux__)
+
 static int libxml_is_threaded = -1;
-#if defined(__GNUC__) && defined(__GLIBC__)
-#ifdef __linux__
-#if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
+
+#define XML_PTHREAD_WEAK
+
 #pragma weak pthread_once
 #pragma weak pthread_getspecific
 #pragma weak pthread_setspecific
@@ -68,9 +71,13 @@ static int libxml_is_threaded = -1;
 #pragma weak pthread_key_create
 #pragma weak pthread_key_delete
 #pragma weak pthread_cond_signal
-#endif
-#endif /* __linux__ */
-#endif /* defined(__GNUC__) && defined(__GLIBC__) */
+
+#else /* __GNUC__, __GLIBC__, __linux__ */
+
+static int libxml_is_threaded = 1;
+
+#endif /* __GNUC__, __GLIBC__, __linux__ */
+
 #endif /* HAVE_PTHREAD_H */
 
 /*
@@ -422,8 +429,11 @@ __xmlGlobalInitMutexLock(void)
     /* Make sure the global init lock is initialized and then lock it. */
 #ifdef HAVE_PTHREAD_H
     /* The mutex is statically initialized, so we just lock it. */
-    if (pthread_mutex_lock != NULL)
-        pthread_mutex_lock(&global_init_lock);
+#ifdef XML_PTHREAD_WEAK
+    if (pthread_mutex_lock == NULL)
+        return;
+#endif /* XML_PTHREAD_WEAK */
+    pthread_mutex_lock(&global_init_lock);
 #elif defined HAVE_WIN32_THREADS
     LPCRITICAL_SECTION cs;
 
@@ -492,8 +502,11 @@ void
 __xmlGlobalInitMutexUnlock(void)
 {
 #ifdef HAVE_PTHREAD_H
-    if (pthread_mutex_unlock != NULL)
-        pthread_mutex_unlock(&global_init_lock);
+#ifdef XML_PTHREAD_WEAK
+    if (pthread_mutex_unlock == NULL)
+        return;
+#endif /* XML_PTHREAD_WEAK */
+    pthread_mutex_unlock(&global_init_lock);
 #elif defined HAVE_WIN32_THREADS
     if (global_init_lock != NULL) {
 	LeaveCriticalSection(global_init_lock);
@@ -845,6 +858,7 @@ void
 xmlInitThreads(void)
 {
 #ifdef HAVE_PTHREAD_H
+#ifdef XML_PTHREAD_WEAK
     if (libxml_is_threaded == -1) {
         if ((pthread_once != NULL) &&
             (pthread_getspecific != NULL) &&
@@ -870,6 +884,7 @@ xmlInitThreads(void)
             libxml_is_threaded = 0;
         }
     }
+#endif /* XML_PTHREAD_WEAK */
 #elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
     InitializeCriticalSection(&cleanup_helpers_cs);
 #endif
@@ -896,7 +911,7 @@ xmlCleanupThreads(void)
     xmlGenericError(xmlGenericErrorContext, "xmlCleanupThreads()\n");
 #endif
 #ifdef HAVE_PTHREAD_H
-    if ((libxml_is_threaded)  && (pthread_key_delete != NULL))
+    if (libxml_is_threaded != 0)
         pthread_key_delete(globalkey);
     once_control = once_control_init;
 #elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))

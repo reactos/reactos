@@ -49,7 +49,7 @@ typedef int  (*xmlListDataCompare) (const void *data0, const void *data1);
  *
  * Returns 0 to stop walking the list, 1 otherwise.
  */
-typedef int (*xmlListWalker) (const void *data, const void *user);
+typedef int (*xmlListWalker) (const void *data, void *user);
 
 /* Creation/Deletion */
 XMLPUBFUN xmlListPtr XMLCALL
@@ -110,11 +110,11 @@ XMLPUBFUN void XMLCALL
 XMLPUBFUN void XMLCALL
 		xmlListWalk		(xmlListPtr l,
 					 xmlListWalker walker,
-					 const void *user);
+					 void *user);
 XMLPUBFUN void XMLCALL
 		xmlListReverseWalk	(xmlListPtr l,
 					 xmlListWalker walker,
-					 const void *user);
+					 void *user);
 XMLPUBFUN void XMLCALL
 		xmlListMerge		(xmlListPtr l1,
 					 xmlListPtr l2);

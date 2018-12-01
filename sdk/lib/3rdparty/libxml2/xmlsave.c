@@ -1595,31 +1595,31 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
     if (cur->properties != NULL)
         xhtmlAttrListDumpOutput(ctxt, cur->properties);
 
-	if ((cur->type == XML_ELEMENT_NODE) &&
-		(cur->parent != NULL) &&
-		(cur->parent->parent == (xmlNodePtr) cur->doc) &&
-		xmlStrEqual(cur->name, BAD_CAST"head") &&
-		xmlStrEqual(cur->parent->name, BAD_CAST"html")) {
+    if ((cur->type == XML_ELEMENT_NODE) &&
+        (cur->parent != NULL) &&
+        (cur->parent->parent == (xmlNodePtr) cur->doc) &&
+        xmlStrEqual(cur->name, BAD_CAST"head") &&
+        xmlStrEqual(cur->parent->name, BAD_CAST"html")) {
 
-		tmp = cur->children;
-		while (tmp != NULL) {
-			if (xmlStrEqual(tmp->name, BAD_CAST"meta")) {
-				xmlChar *httpequiv;
+        tmp = cur->children;
+        while (tmp != NULL) {
+            if (xmlStrEqual(tmp->name, BAD_CAST"meta")) {
+                xmlChar *httpequiv;
 
-				httpequiv = xmlGetProp(tmp, BAD_CAST"http-equiv");
-				if (httpequiv != NULL) {
-					if (xmlStrcasecmp(httpequiv, BAD_CAST"Content-Type") == 0) {
-						xmlFree(httpequiv);
-						break;
-					}
-					xmlFree(httpequiv);
-				}
-			}
-			tmp = tmp->next;
-		}
-		if (tmp == NULL)
-			addmeta = 1;
-	}
+                httpequiv = xmlGetProp(tmp, BAD_CAST"http-equiv");
+                if (httpequiv != NULL) {
+                    if (xmlStrcasecmp(httpequiv, BAD_CAST"Content-Type") == 0) {
+                        xmlFree(httpequiv);
+                        break;
+                    }
+                    xmlFree(httpequiv);
+                }
+            }
+            tmp = tmp->next;
+        }
+        if (tmp == NULL)
+            addmeta = 1;
+    }
 
     if ((cur->type == XML_ELEMENT_NODE) && (cur->children == NULL)) {
 	if (((cur->ns == NULL) || (cur->ns->prefix == NULL)) &&
@@ -2704,7 +2704,7 @@ xmlSaveFormatFileEnc( const char * filename, xmlDocPtr cur,
 		return(-1);
     }
 
-#ifdef HAVE_ZLIB_H
+#ifdef LIBXML_ZLIB_ENABLED
     if (cur->compression < 0) cur->compression = xmlGetCompressMode();
 #endif
     /*

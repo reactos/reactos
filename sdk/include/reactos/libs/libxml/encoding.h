@@ -129,9 +129,14 @@ typedef int (* xmlCharEncodingOutputFunc)(unsigned char *out, int *outlen,
  * If iconv is supported, there are two extra fields.
  */
 #ifdef LIBXML_ICU_ENABLED
+/* Size of pivot buffer, same as icu/source/common/ucnv.cpp CHUNK_SIZE */
+#define ICU_PIVOT_BUF_SIZE 1024
 struct _uconv_t {
   UConverter *uconv; /* for conversion between an encoding and UTF-16 */
   UConverter *utf8; /* for conversion between UTF-8 and UTF-16 */
+  UChar      pivot_buf[ICU_PIVOT_BUF_SIZE];
+  UChar      *pivot_source;
+  UChar      *pivot_target;
 };
 typedef struct _uconv_t uconv_t;
 #endif

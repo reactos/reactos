@@ -110,6 +110,9 @@ openIcuConverter(const char* name, int toUnicode)
   if (conv == NULL)
     return NULL;
 
+  conv->pivot_source = conv->pivot_buf;
+  conv->pivot_target = conv->pivot_buf;
+
   conv->uconv = ucnv_open(name, &status);
   if (U_FAILURE(status))
     goto error;
@@ -1850,6 +1853,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
  * @outlen:  the length of @out
  * @in:  a pointer to an array of ISO Latin 1 chars
  * @inlen:  the length of @in
+ * @flush: if true, indicates end of input
  *
  * Returns 0 if success, or
  *     -1 by lack of space, or
@@ -1863,7 +1867,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
  */
 static int
 xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
-                const unsigned char *in, int *inlen) {
+                const unsigned char *in, int *inlen, int flush) {
     const char *ucv_in = (const char *) in;
     char *ucv_out = (char *) out;
     UErrorCode err = U_ZERO_ERROR;
@@ -1873,33 +1877,31 @@ xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
         return(-1);
     }
 
-    /*
-     * TODO(jungshik)
-     * 1. is ucnv_convert(To|From)Algorithmic better?
-     * 2. had we better use an explicit pivot buffer?
-     * 3. error returned comes from 'fromUnicode' only even
-     *    when toUnicode is true !
-     */
     if (toUnicode) {
         /* encoding => UTF-16 => UTF-8 */
         ucnv_convertEx(cd->utf8, cd->uconv, &ucv_out, ucv_out + *outlen,
-                       &ucv_in, ucv_in + *inlen, NULL, NULL, NULL, NULL,
-                       0, TRUE, &err);
+                       &ucv_in, ucv_in + *inlen, cd->pivot_buf,
+                       &cd->pivot_source, &cd->pivot_target,
+                       cd->pivot_buf + ICU_PIVOT_BUF_SIZE, 0, flush, &err);
     } else {
         /* UTF-8 => UTF-16 => encoding */
         ucnv_convertEx(cd->uconv, cd->utf8, &ucv_out, ucv_out + *outlen,
-                       &ucv_in, ucv_in + *inlen, NULL, NULL, NULL, NULL,
-                       0, TRUE, &err);
+                       &ucv_in, ucv_in + *inlen, cd->pivot_buf,
+                       &cd->pivot_source, &cd->pivot_target,
+                       cd->pivot_buf + ICU_PIVOT_BUF_SIZE, 0, flush, &err);
     }
     *inlen = ucv_in - (const char*) in;
     *outlen = ucv_out - (char *) out;
-    if (U_SUCCESS(err))
+    if (U_SUCCESS(err)) {
+        /* reset pivot buf if this is the last call for input (flush==TRUE) */
+        if (flush)
+            cd->pivot_source = cd->pivot_target = cd->pivot_buf;
         return 0;
+    }
     if (err == U_BUFFER_OVERFLOW_ERROR)
         return -1;
     if (err == U_INVALID_CHAR_FOUND || err == U_ILLEGAL_CHAR_FOUND)
         return -2;
-    /* if (err == U_TRUNCATED_CHAR_FOUND) */
     return -3;
 }
 #endif /* LIBXML_ICU_ENABLED */
@@ -1912,8 +1914,9 @@ xmlUconvWrapper(uconv_t *cd, int toUnicode, unsigned char *out, int *outlen,
 
 static int
 xmlEncInputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
-                 int *outlen, const unsigned char *in, int *inlen) {
+                 int *outlen, const unsigned char *in, int *inlen, int flush) {
     int ret;
+    (void)flush;
 
     if (handler->input != NULL) {
         ret = handler->input(out, outlen, in, inlen);
@@ -1925,7 +1928,8 @@ xmlEncInputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 #endif /* LIBXML_ICONV_ENABLED */
 #ifdef LIBXML_ICU_ENABLED
     else if (handler->uconv_in != NULL) {
-        ret = xmlUconvWrapper(handler->uconv_in, 1, out, outlen, in, inlen);
+        ret = xmlUconvWrapper(handler->uconv_in, 1, out, outlen, in, inlen,
+                              flush);
     }
 #endif /* LIBXML_ICU_ENABLED */
     else {
@@ -1953,7 +1957,8 @@ xmlEncOutputChunk(xmlCharEncodingHandler *handler, unsigned char *out,
 #endif /* LIBXML_ICONV_ENABLED */
 #ifdef LIBXML_ICU_ENABLED
     else if (handler->uconv_out != NULL) {
-        ret = xmlUconvWrapper(handler->uconv_out, 0, out, outlen, in, inlen);
+        ret = xmlUconvWrapper(handler->uconv_out, 0, out, outlen, in, inlen,
+                              TRUE);
     }
 #endif /* LIBXML_ICU_ENABLED */
     else {
@@ -2015,7 +2020,7 @@ xmlCharEncFirstLineInt(xmlCharEncodingHandler *handler, xmlBufferPtr out,
     }
 
     ret = xmlEncInputChunk(handler, &out->content[out->use], &written,
-                           in->content, &toconv);
+                           in->content, &toconv, 0);
     xmlBufferShrink(in, toconv);
     out->use += written;
     out->content[out->use] = 0;
@@ -2133,7 +2138,7 @@ xmlCharEncFirstLineInput(xmlParserInputBufferPtr input, int len)
     c_in = toconv;
     c_out = written;
     ret = xmlEncInputChunk(input->encoder, xmlBufEnd(out), &c_out,
-                           xmlBufContent(in), &c_in);
+                           xmlBufContent(in), &c_in, 0);
     xmlBufShrink(in, c_in);
     xmlBufAddLen(out, c_out);
     if (ret == -1)
@@ -2231,7 +2236,7 @@ xmlCharEncInput(xmlParserInputBufferPtr input, int flush)
     c_in = toconv;
     c_out = written;
     ret = xmlEncInputChunk(input->encoder, xmlBufEnd(out), &c_out,
-                           xmlBufContent(in), &c_in);
+                           xmlBufContent(in), &c_in, flush);
     xmlBufShrink(in, c_in);
     xmlBufAddLen(out, c_out);
     if (ret == -1)
@@ -2317,7 +2322,7 @@ xmlCharEncInFunc(xmlCharEncodingHandler * handler, xmlBufferPtr out,
         written = out->size - out->use - 1;
     }
     ret = xmlEncInputChunk(handler, &out->content[out->use], &written,
-                           in->content, &toconv);
+                           in->content, &toconv, 1);
     xmlBufferShrink(in, toconv);
     out->use += written;
     out->content[out->use] = 0;

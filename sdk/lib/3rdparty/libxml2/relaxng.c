@@ -2729,9 +2729,10 @@ static xmlHashTablePtr xmlRelaxNGRegisteredTypes = NULL;
  * Free the structure associated to the type library
  */
 static void
-xmlRelaxNGFreeTypeLibrary(xmlRelaxNGTypeLibraryPtr lib,
+xmlRelaxNGFreeTypeLibrary(void *payload,
                           const xmlChar * namespace ATTRIBUTE_UNUSED)
 {
+    xmlRelaxNGTypeLibraryPtr lib = (xmlRelaxNGTypeLibraryPtr) payload;
     if (lib == NULL)
         return;
     if (lib->namespace != NULL)
@@ -2842,8 +2843,7 @@ xmlRelaxNGCleanupTypes(void)
     xmlSchemaCleanupTypes();
     if (xmlRelaxNGTypeInitialized == 0)
         return;
-    xmlHashFree(xmlRelaxNGRegisteredTypes, (xmlHashDeallocator)
-                xmlRelaxNGFreeTypeLibrary);
+    xmlHashFree(xmlRelaxNGRegisteredTypes, xmlRelaxNGFreeTypeLibrary);
     xmlRelaxNGTypeInitialized = 0;
 }
 
@@ -4311,10 +4311,11 @@ xmlRelaxNGCheckGroupAttrs(xmlRelaxNGParserCtxtPtr ctxt,
  *     algorithm
  */
 static void
-xmlRelaxNGComputeInterleaves(xmlRelaxNGDefinePtr def,
-                             xmlRelaxNGParserCtxtPtr ctxt,
-                             xmlChar * name ATTRIBUTE_UNUSED)
+xmlRelaxNGComputeInterleaves(void *payload, void *data,
+                             const xmlChar * name ATTRIBUTE_UNUSED)
 {
+    xmlRelaxNGDefinePtr def = (xmlRelaxNGDefinePtr) payload;
+    xmlRelaxNGParserCtxtPtr ctxt = (xmlRelaxNGParserCtxtPtr) data;
     xmlRelaxNGDefinePtr cur, *tmp;
 
     xmlRelaxNGPartitionPtr partitions = NULL;
@@ -4663,7 +4664,7 @@ xmlRelaxNGParseDefine(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
  * Import import one references into the current grammar
  */
 static void
-xmlRelaxNGParseImportRef(void *payload, void *data, xmlChar *name) {
+xmlRelaxNGParseImportRef(void *payload, void *data, const xmlChar *name) {
     xmlRelaxNGParserCtxtPtr ctxt = (xmlRelaxNGParserCtxtPtr) data;
     xmlRelaxNGDefinePtr def = (xmlRelaxNGDefinePtr) payload;
     int tmp;
@@ -5670,10 +5671,10 @@ xmlRelaxNGParseGrammarContent(xmlRelaxNGParserCtxtPtr ctxt,
  * element of a given grammar using the same name.
  */
 static void
-xmlRelaxNGCheckReference(xmlRelaxNGDefinePtr ref,
-                         xmlRelaxNGParserCtxtPtr ctxt,
-                         const xmlChar * name)
+xmlRelaxNGCheckReference(void *payload, void *data, const xmlChar * name)
 {
+    xmlRelaxNGDefinePtr ref = (xmlRelaxNGDefinePtr) payload;
+    xmlRelaxNGParserCtxtPtr ctxt = (xmlRelaxNGParserCtxtPtr) data;
     xmlRelaxNGGrammarPtr grammar;
     xmlRelaxNGDefinePtr def, cur;
 
@@ -5726,9 +5727,10 @@ xmlRelaxNGCheckReference(xmlRelaxNGDefinePtr ref,
  * element of a given grammar using the same name.
  */
 static void
-xmlRelaxNGCheckCombine(xmlRelaxNGDefinePtr define,
-                       xmlRelaxNGParserCtxtPtr ctxt, const xmlChar * name)
+xmlRelaxNGCheckCombine(void *payload, void *data, const xmlChar * name)
 {
+    xmlRelaxNGDefinePtr define = (xmlRelaxNGDefinePtr) payload;
+    xmlRelaxNGParserCtxtPtr ctxt = (xmlRelaxNGParserCtxtPtr) data;
     xmlChar *combine;
     int choiceOrInterleave = -1;
     int missing = 0;
@@ -6611,16 +6613,14 @@ xmlRelaxNGParseGrammar(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr nodes)
      */
     xmlRelaxNGCombineStart(ctxt, ret);
     if (ret->defs != NULL) {
-        xmlHashScan(ret->defs, (xmlHashScanner) xmlRelaxNGCheckCombine,
-                    ctxt);
+        xmlHashScan(ret->defs, xmlRelaxNGCheckCombine, ctxt);
     }
 
     /*
      * link together defines and refs in this grammar
      */
     if (ret->refs != NULL) {
-        xmlHashScan(ret->refs, (xmlHashScanner) xmlRelaxNGCheckReference,
-                    ctxt);
+        xmlHashScan(ret->refs, xmlRelaxNGCheckReference, ctxt);
     }
 
 
@@ -7551,8 +7551,7 @@ xmlRelaxNGParse(xmlRelaxNGParserCtxtPtr ctxt)
      * try to preprocess interleaves
      */
     if (ctxt->interleaves != NULL) {
-        xmlHashScan(ctxt->interleaves,
-                    (xmlHashScanner) xmlRelaxNGComputeInterleaves, ctxt);
+        xmlHashScan(ctxt->interleaves, xmlRelaxNGComputeInterleaves, ctxt);
     }
 
     /*

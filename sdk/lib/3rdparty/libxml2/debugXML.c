@@ -1229,8 +1229,11 @@ xmlCtxtDumpDocument(xmlDebugCtxtPtr ctxt, xmlDocPtr doc)
 }
 
 static void
-xmlCtxtDumpEntityCallback(xmlEntityPtr cur, xmlDebugCtxtPtr ctxt)
+xmlCtxtDumpEntityCallback(void *payload, void *data,
+                          const xmlChar *name ATTRIBUTE_UNUSED)
 {
+    xmlEntityPtr cur = (xmlEntityPtr) payload;
+    xmlDebugCtxtPtr ctxt = (xmlDebugCtxtPtr) data;
     if (cur == NULL) {
         if (!ctxt->check)
             fprintf(ctxt->output, "Entity is NULL");
@@ -1289,8 +1292,7 @@ xmlCtxtDumpEntities(xmlDebugCtxtPtr ctxt, xmlDocPtr doc)
 
         if (!ctxt->check)
             fprintf(ctxt->output, "Entities in internal subset\n");
-        xmlHashScan(table, (xmlHashScanner) xmlCtxtDumpEntityCallback,
-                    ctxt);
+        xmlHashScan(table, xmlCtxtDumpEntityCallback, ctxt);
     } else
         fprintf(ctxt->output, "No entities in internal subset\n");
     if ((doc->extSubset != NULL) && (doc->extSubset->entities != NULL)) {
@@ -1299,8 +1301,7 @@ xmlCtxtDumpEntities(xmlDebugCtxtPtr ctxt, xmlDocPtr doc)
 
         if (!ctxt->check)
             fprintf(ctxt->output, "Entities in external subset\n");
-        xmlHashScan(table, (xmlHashScanner) xmlCtxtDumpEntityCallback,
-                    ctxt);
+        xmlHashScan(table, xmlCtxtDumpEntityCallback, ctxt);
     } else if (!ctxt->check)
         fprintf(ctxt->output, "No entities in external subset\n");
 }
