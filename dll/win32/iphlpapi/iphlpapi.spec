@@ -61,7 +61,7 @@
 @ stub GetOwnerModuleFromTcp6Entry
 @ stdcall GetOwnerModuleFromTcpEntry ( ptr long ptr ptr )
 @ stub GetOwnerModuleFromUdp6Entry
-@ stub GetOwnerModuleFromUdpEntry
+@ stdcall GetOwnerModuleFromUdpEntry ( ptr long ptr ptr )
 @ stdcall GetPerAdapterInfo( long ptr ptr )
 @ stdcall GetRTTAndHopCount( long ptr long ptr )
 @ stub GetTcpExTable2FromStack

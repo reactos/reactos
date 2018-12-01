@@ -2286,38 +2286,19 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
 }
 
 
-/******************************************************************
- *    GetOwnerModuleFromTcpEntry (IPHLPAPI.@)
- *
- * Get data about the module that issued the context bind for a specific IPv4 TCP endpoint in a MIB table row
- *
- * PARAMS
- *  pTcpEntry [in]    pointer to a MIB_TCPROW_OWNER_MODULE structure
- *  Class [in]    	TCPIP_OWNER_MODULE_INFO_CLASS enumeration value
- *  Buffer [out]     	pointer a buffer containing a TCPIP_OWNER_MODULE_BASIC_INFO structure with the owner module data. 
- *  pdwSize [in, out]	estimated size of the structure returned in Buffer, in bytes
- *
- * RETURNS
- *  Success: NO_ERROR
- *  Failure: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, ERROR_NOT_ENOUGH_MEMORY
- * 	       ERROR_NOT_FOUND or ERROR_PARTIAL_COPY
- *
- * NOTES
- * The type of data returned in Buffer is indicated by the value of the Class parameter.
- */
-DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
+static DWORD GetOwnerModuleFromPidEntry(DWORD OwningPid, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
 {
     HANDLE Process;
     DWORD FileLen, PathLen;
     WCHAR File[MAX_PATH], Path[MAX_PATH];
     PTCPIP_OWNER_MODULE_BASIC_INFO BasicInfo;
 
-    if (pTcpEntry->dwOwningPid == 0)
+    if (OwningPid == 0)
     {
         return ERROR_NOT_FOUND;
     }
 
-    Process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pTcpEntry->dwOwningPid);
+    Process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, OwningPid);
     if (Process == NULL)
     {
         return GetLastError();
@@ -2364,6 +2345,54 @@ DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCP
     *pdwSize = sizeof(TCPIP_OWNER_MODULE_BASIC_INFO) + PathLen + FileLen;
 
     return NO_ERROR;
+}
+
+/******************************************************************
+ *    GetOwnerModuleFromTcpEntry (IPHLPAPI.@)
+ *
+ * Get data about the module that issued the context bind for a specific IPv4 TCP endpoint in a MIB table row
+ *
+ * PARAMS
+ *  pTcpEntry [in]    pointer to a MIB_TCPROW_OWNER_MODULE structure
+ *  Class [in]    	TCPIP_OWNER_MODULE_INFO_CLASS enumeration value
+ *  Buffer [out]     	pointer a buffer containing a TCPIP_OWNER_MODULE_BASIC_INFO structure with the owner module data. 
+ *  pdwSize [in, out]	estimated size of the structure returned in Buffer, in bytes
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, ERROR_NOT_ENOUGH_MEMORY
+ * 	       ERROR_NOT_FOUND or ERROR_PARTIAL_COPY
+ *
+ * NOTES
+ * The type of data returned in Buffer is indicated by the value of the Class parameter.
+ */
+DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
+{
+    return GetOwnerModuleFromPidEntry(pTcpEntry->dwOwningPid, Class, Buffer, pdwSize);
+}
+
+/******************************************************************
+ *    GetOwnerModuleFromUdpEntry (IPHLPAPI.@)
+ *
+ * Get data about the module that issued the context bind for a specific IPv4 UDP endpoint in a MIB table row
+ *
+ * PARAMS
+ *  pUdpEntry [in]    pointer to a MIB_UDPROW_OWNER_MODULE structure
+ *  Class [in]    	TCPIP_OWNER_MODULE_INFO_CLASS enumeration value
+ *  Buffer [out]     	pointer a buffer containing a TCPIP_OWNER_MODULE_BASIC_INFO structure with the owner module data. 
+ *  pdwSize [in, out]	estimated size of the structure returned in Buffer, in bytes
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, ERROR_NOT_ENOUGH_MEMORY
+ * 	       ERROR_NOT_FOUND or ERROR_PARTIAL_COPY
+ *
+ * NOTES
+ * The type of data returned in Buffer is indicated by the value of the Class parameter.
+ */
+DWORD WINAPI GetOwnerModuleFromUdpEntry( PMIB_UDPROW_OWNER_MODULE pUdpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
+{
+    return GetOwnerModuleFromPidEntry(pUdpEntry->dwOwningPid, Class, Buffer, pdwSize);
 }
 
 static void CreateNameServerListEnumNamesFunc( PWCHAR Interface, PWCHAR Server, PVOID Data)
