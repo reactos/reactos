@@ -1,0 +1,1 @@
+BOOL FASTCALL IntGoGhost(PWND Window, BOOL bGo);

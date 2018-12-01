@@ -1433,11 +1433,17 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(ptiSendTo))
+    if (MsqIsHung(ptiSendTo))
     {
-        // FIXME: Set window hung and add to a list.
-        /* FIXME: Set a LastError? */
-        RETURN( FALSE);
+        if (uFlags & SMTO_ABORTIFHUNG)
+        {
+            // FIXME: Set window hung and add to a list.
+            /* FIXME: Set a LastError? */
+            RETURN( FALSE);
+        }
+
+        TRACE("Let's go Ghost!\n");
+        IntGoGhost(Window, TRUE);
     }
 
     if (Window->state & WNDS_DESTROYED)
