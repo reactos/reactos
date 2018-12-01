@@ -88,7 +88,7 @@ IntWhiten32BppBitmap(HBITMAP hbm)
     if (bm.bmBitsPixel != 32 || !bm.bmBits)
         return;
 
-    pdw = (DWORD *)bm.bmBits;
+    pdw = bm.bmBits;
     for (i = 0; i < bm.bmWidth * bm.bmHeight; ++i)
     {
         *pdw = *pdw | 0x00C0C0C0;   // ARGB
@@ -155,7 +155,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     }
 
     // create data
-    pData = (GHOST_DATA *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
+    pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
     if (!pData)
         return FALSE;
 
