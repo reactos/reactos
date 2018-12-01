@@ -13599,6 +13599,267 @@ Language=Russian
 Hebrew%0
 .
 
+MessageId=5150
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5150
+Language=English
+A power failure has occurred at %1.  Please terminate all activity with this server.
+.
+Language=Russian
+A power failure has occurred at %1.  Please terminate all activity with this server.
+.
+
+MessageId=5151
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5151
+Language=English
+Power has been restored at %1.  Normal operations have resumed.
+.
+Language=Russian
+Power has been restored at %1.  Normal operations have resumed.
+.
+
+MessageId=5152
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5152
+Language=English
+The UPS service is starting shut down at %1.
+.
+Language=Russian
+The UPS service is starting shut down at %1.
+.
+
+MessageId=5153
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5153
+Language=English
+The UPS service is about to perform final shut down.
+.
+Language=Russian
+The UPS service is about to perform final shut down.
+.
+
+MessageId=5170
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5170
+Language=English
+The Workstation must be started with the NET START command.
+.
+Language=Russian
+The Workstation must be started with the NET START command.
+.
+
+MessageId=5175
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5175
+Language=English
+Remote IPC%0
+.
+Language=Russian
+Remote IPC%0
+.
+
+MessageId=5176
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5176
+Language=English
+Remote Admin%0
+.
+Language=Russian
+Remote Admin%0
+.
+
+MessageId=5177
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5177
+Language=English
+Default share%0
+.
+Language=Russian
+Default share%0
+.
+
+MessageId=5280
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5280
+Language=English
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Russian
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+
+MessageId=5281
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5281
+Language=English
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Russian
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+
+MessageId=5282
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5282
+Language=English
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Russian
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+
+MessageId=5284
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5284
+Language=English
+Do you want to continue this operation? %1: %0
+.
+Language=Russian
+Do you want to continue this operation? %1: %0
+.
+
+MessageId=5285
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5285
+Language=English
+Do you want to add this? %1: %0
+.
+Language=Russian
+Do you want to add this? %1: %0
+.
+
+MessageId=5286
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5286
+Language=English
+Do you want to continue this operation? %1: %0
+.
+Language=Russian
+Do you want to continue this operation? %1: %0
+.
+
+MessageId=5287
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5287
+Language=English
+Is it OK to start it? %1: %0
+.
+Language=Russian
+Is it OK to start it? %1: %0
+.
+
+MessageId=5288
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5288
+Language=English
+Do you want to start the Workstation service? %1: %0
+.
+Language=Russian
+Do you want to start the Workstation service? %1: %0
+.
+
+MessageId=5289
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5289
+Language=English
+Is it OK to continue disconnecting and force them closed? %1: %0
+.
+Language=Russian
+Is it OK to continue disconnecting and force them closed? %1: %0
+.
+
+
+MessageId=5290
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5290
+Language=English
+The printer does not exist.  Do you want to create it? %1: %0
+.
+Language=Russian
+The printer does not exist.  Do you want to create it? %1: %0
+.
+
+MessageId=5291
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5291
+Language=English
+Never%0
+.
+Language=Russian
+Never%0
+.
+
+MessageId=5292
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5292
+Language=English
+Never%0
+.
+Language=Russian
+Never%0
+.
+
+MessageId=5293
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5293
+Language=English
+Never%0
+.
+Language=Russian
+Never%0
+.
+
+MessageId=5295
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5295
+Language=English
+NET.HLP%0
+.
+Language=Russian
+NET.HLP%0
+.
+
+MessageId=5296
+Severity=Success
+Facility=System
+SymbolicName=APPERR2_5296
+Language=English
+NET.HLP%0
+.
+Language=Russian
+NET.HLP%0
+.
 
 
 ;
