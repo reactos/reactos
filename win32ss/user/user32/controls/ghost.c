@@ -384,16 +384,20 @@ Ghost_OnNCDestroy(HWND hwnd)
 static void
 Ghost_OnClose(HWND hwnd)
 {
+    INT id;
+    // stop timer
     KillTimer(hwnd, GHOST_TIMER_ID);
 
-    if (IDYES == MessageBoxW(hwnd, L"Terminate app?", L"Not responding",
-                             MB_ICONINFORMATION | MB_YESNO))
+    id = MessageBoxW(hwnd, L"Terminate app?", L"Not responding",
+                     MB_ICONINFORMATION | MB_YESNO);
+    if (id == IDYES)
     {
         // destroy the target
         Ghost_Unenchant(hwnd, TRUE);
         return;
     }
 
+    // restart timer
     SetTimer(hwnd, GHOST_TIMER_ID, 1000, NULL);
 }
 
