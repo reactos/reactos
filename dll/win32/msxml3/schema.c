@@ -52,6 +52,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
+#if LIBXML_VERSION >= 20908
+#define XMLHASH_CONST const
+#else
+#define XMLHASH_CONST
+#endif
+
 /* We use a chained hashtable, which can hold any number of schemas
  * TODO: grow/shrink hashtable depending on load factor
  * TODO: implement read-only where appropriate
@@ -980,7 +986,7 @@ static cache_entry* cache_entry_from_url(VARIANT url, xmlChar const* nsURI, MSXM
     return entry;
 }
 
-static void cache_free(void* data, xmlChar* name /* ignored */)
+static void cache_free(void* data, XMLHASH_CONST xmlChar* name /* ignored */)
 {
     cache_entry_release((cache_entry*)data);
 }
@@ -1397,7 +1403,7 @@ static HRESULT WINAPI schema_cache_get_namespaceURI(IXMLDOMSchemaCollection2* if
     return S_OK;
 }
 
-static void cache_copy(void* data, void* dest, xmlChar* name)
+static void cache_copy(void* data, void* dest, XMLHASH_CONST xmlChar* name)
 {
     schema_cache* This = (schema_cache*) dest;
     cache_entry* entry = (cache_entry*) data;
