@@ -113,10 +113,7 @@ typedef struct GHOST_DATA
 static GHOST_DATA *
 Ghost_GetData(HWND hwnd)
 {
-    if (IsWindowUnicode(hwnd))
-        return (GHOST_DATA *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    else
-        return (GHOST_DATA *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    return (GHOST_DATA *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 }
 
 static HWND
@@ -177,42 +174,20 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     IntMakeGhostImage(hbm32bpp);
 
     // get style and text
-    if (IsWindowUnicode(hwnd))
-    {
-        style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
-        exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
-        GetWindowTextW(hwndTarget, szTextW, ARRAYSIZE(szTextW));
-    }
-    else
-    {
-        style = GetWindowLongPtrA(hwndTarget, GWL_STYLE);
-        exstyle = GetWindowLongPtrA(hwndTarget, GWL_EXSTYLE);
-        GetWindowTextA(hwndTarget, szTextA, ARRAYSIZE(szTextA));
-    }
+    style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
+    exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
+    GetWindowTextW(hwndTarget, szTextW, ARRAYSIZE(szTextW));
 
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
 
     // set style and text
-    if (IsWindowUnicode(hwnd))
-    {
-        SetWindowLongPtrW(hwnd, GWL_STYLE, style);
-        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
+    SetWindowLongPtrW(hwnd, GWL_STYLE, style);
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
 
-        LoadStringW(User32Instance, IDS_NOT_RESPONDING,
-                    szNotRespondingW, ARRAYSIZE(szNotRespondingW));
-        StringCbCatW(szTextW, sizeof(szTextW), szNotRespondingW);
-        SetWindowTextW(hwnd, szTextW);
-    }
-    else
-    {
-        SetWindowLongPtrA(hwnd, GWL_STYLE, style);
-        SetWindowLongPtrA(hwnd, GWL_EXSTYLE, exstyle);
-
-        LoadStringA(User32Instance, IDS_NOT_RESPONDING,
-                    szNotRespondingA, ARRAYSIZE(szNotRespondingA));
-        StringCbCatA(szTextA, sizeof(szTextA), szNotRespondingA);
-        SetWindowTextA(hwnd, szTextA);
-    }
+    LoadStringW(User32Instance, IDS_NOT_RESPONDING,
+                szNotRespondingW, ARRAYSIZE(szNotRespondingW));
+    StringCbCatW(szTextW, sizeof(szTextW), szNotRespondingW);
+    SetWindowTextW(hwnd, szTextW);
 
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
 
@@ -226,10 +201,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     MoveWindow(hwnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
 
     // make ghost visible
-    if (IsWindowUnicode(hwnd))
-        SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_VISIBLE);
-    else
-        SetWindowLongPtrA(hwnd, GWL_STYLE, style | WS_VISIBLE);
+    SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_VISIBLE);
 
     // redraw
     InvalidateRect(hwnd, NULL, TRUE);
@@ -237,10 +209,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // set user data
     pData->hwndTarget = hwndTarget;
     pData->hbm32bpp = hbm32bpp;
-    if (IsWindowUnicode(hwnd))
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
-    else
-        SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
     SetPropW(hwndTarget, L"GhostProp", hwnd);
 
@@ -321,10 +290,7 @@ Ghost_OnNCPaint(HWND hwnd, HRGN hrgn)
     HDC hdc;
 
     // do the default behaivour
-    if (IsWindowUnicode(hwnd))
-        DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
-    else
-        DefWindowProcA(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
+    DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
 
     // draw the original image
     hdc = GetWindowDC(hwnd);
@@ -381,10 +347,7 @@ Ghost_OnNCDestroy(HWND hwnd)
 {
     // delete the user data
     GHOST_DATA *pData = Ghost_GetData(hwnd);
-    if (IsWindowUnicode(hwnd))
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-    else
-        SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
     HeapFree(GetProcessHeap(), 0, pData);
 
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
@@ -471,16 +434,10 @@ Ghost_GetIcon(HWND hwnd, INT fType)
     switch (fType)
     {
     case ICON_BIG:
-        if (IsWindowUnicode(hwnd))
-            hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICON);
-        else
-            hIcon = (HICON)GetClassLongPtrA(pData->hwndTarget, GCLP_HICON);
+        hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICON);
         break;
     case ICON_SMALL:
-        if (IsWindowUnicode(hwnd))
-            hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICONSM);
-        else
-            hIcon = (HICON)GetClassLongPtrA(pData->hwndTarget, GCLP_HICONSM);
+        hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICONSM);
         break;
     }
 
@@ -527,10 +484,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
                     // sizing-related
                     return 0;
             }
-            if (unicode)
-                return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-            else
-                return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 
         case WM_CLOSE:
             Ghost_OnClose(hwnd);
@@ -541,10 +495,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
             break;
 
         case WM_NCMOUSEMOVE:
-            if (unicode)
-                DefWindowProcW(hwnd, uMsg, wParam, lParam);
-            else
-                DefWindowProcA(hwnd, uMsg, wParam, lParam);
+            DefWindowProcW(hwnd, uMsg, wParam, lParam);
             SetCursor(LoadCursor(NULL, IDC_WAIT));
             return 0;
 
