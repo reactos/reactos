@@ -15,10 +15,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 
 extern HINSTANCE User32Instance;
 
-static const WCHAR ghostW[] = L"Ghost";
 const struct builtin_class_descr GHOST_builtin_class =
 {
-    ghostW,                     /* name */
+    L"Ghost",                   /* name */
     0,                          /* style  */
     GhostWndProcA,              /* procA */
     GhostWndProcW,              /* procW */
