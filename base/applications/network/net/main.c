@@ -77,6 +77,89 @@ PrintPadding(
 
 
 VOID
+PrintErrorMessage(
+    DWORD dwError)
+{
+    WCHAR szDllBuffer[MAX_PATH];
+    WCHAR szErrorBuffer[16];
+    HMODULE hMsgDll = NULL;
+    PWSTR pBuffer;
+    PWSTR pErrorInserts[2] = {NULL, NULL};
+
+    /* Load netmsg.dll */
+    GetSystemDirectoryW(szDllBuffer, ARRAYSIZE(szDllBuffer));
+    wcscat(szDllBuffer, L"\\netmsg.dll");
+
+    hMsgDll = LoadLibrary(szDllBuffer);
+    if (hMsgDll == NULL)
+    {
+        ConPrintf(StdErr, L"Failed to load netmsg.dll\n");
+        return;
+    }
+
+    if (dwError >= MIN_LANMAN_MESSAGE_ID && dwError <= MAX_LANMAN_MESSAGE_ID)
+    {
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       hMsgDll,
+                       dwError,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       NULL);
+        if (pBuffer)
+        {
+            ConPrintf(StdErr, L"%s\n", pBuffer);
+            LocalFree(pBuffer);
+            pBuffer = NULL;
+        }
+    }
+    else
+    {
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL,
+                       dwError,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       NULL);
+        if (pBuffer)
+        {
+            ConPrintf(StdErr, L"%s\n", pBuffer);
+            LocalFree(pBuffer);
+            pBuffer = NULL;
+        }
+    }
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* Format insert for the 3514 message */
+        swprintf(szErrorBuffer, L"%lu", dwError);
+        pErrorInserts[0] = szErrorBuffer;
+
+        /* Format and print the 3514 message */
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       hMsgDll,
+                       3514,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       (va_list *)pErrorInserts);
+        if (pBuffer)
+        {
+            ConPrintf(StdErr, L"%s\n", pBuffer);
+            LocalFree(pBuffer);
+            pBuffer = NULL;
+        }
+    }
+
+    FreeLibrary(hMsgDll);
+}
+
+
+VOID
 ReadFromConsole(
     LPWSTR lpInput,
     DWORD dwLength,

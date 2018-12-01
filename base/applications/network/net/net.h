@@ -37,6 +37,10 @@ PrintPadding(
     INT nPaddedLength);
 
 VOID
+PrintErrorMessage(
+    DWORD dwError);
+
+VOID
 ReadFromConsole(
     LPWSTR lpInput,
     DWORD dwLength,

@@ -17,8 +17,11 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     HMODULE hMsgDll = NULL;
     INT i;
     LONG errNum;
-    LPWSTR endptr;
-    LPWSTR pBuffer;
+    PWSTR endptr;
+    PWSTR pBuffer;
+    PWSTR pInserts[10] = {L"***", L"***", L"***", L"***",
+                          L"***", L"***", L"***", L"***",
+                          L"***", NULL};
 
     if (argc < 3)
     {
@@ -61,17 +64,21 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
         }
 
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
-                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
                        hMsgDll,
                        errNum,
                        LANG_USER_DEFAULT,
                        (LPWSTR)&pBuffer,
                        0,
-                       NULL);
+                       (va_list *)pInserts);
         if (pBuffer)
         {
             ConPrintf(StdOut, L"\n%s\n", pBuffer);
             LocalFree(pBuffer);
+        }
+        else
+        {
+            PrintErrorMessage(3871);
         }
 
         FreeLibrary(hMsgDll);
@@ -80,17 +87,21 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     {
         /* Retrieve the message string without appending extra newlines */
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
                        NULL,
                        errNum,
                        LANG_USER_DEFAULT,
                        (LPWSTR)&pBuffer,
                        0,
-                       NULL);
+                       (va_list *)pInserts);
         if (pBuffer)
         {
             ConPrintf(StdOut, L"\n%s\n", pBuffer);
             LocalFree(pBuffer);
+        }
+        else
+        {
+            PrintErrorMessage(3871);
         }
     }
 
