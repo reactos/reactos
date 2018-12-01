@@ -234,7 +234,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // set text with " (Not Responding)"
     LoadStringW(User32Instance, IDS_NOT_RESPONDING,
                 szNotRespondingW, ARRAYSIZE(szNotRespondingW));
-    StringCbCatW(pszTextW, cchTextW, szNotRespondingW);
+    StringCchCatW(pszTextW, cchTextW, szNotRespondingW);
     SetWindowTextW(hwnd, pszTextW);
 
     // free the text buffer
