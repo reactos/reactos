@@ -337,8 +337,6 @@ Ghost_OnMove(HWND hwnd, int x, int y)
 {
     RECT rc;
     HWND hwndTarget = Ghost_GetTarget(hwnd);
-    if (!IsWindowVisible(hwndTarget))
-        return;
 
     GetWindowRect(hwnd, &rc);
 
