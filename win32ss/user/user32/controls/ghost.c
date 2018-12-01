@@ -23,7 +23,7 @@ const struct builtin_class_descr GHOST_builtin_class =
     GhostWndProcW,              /* procW */
     0,                          /* extra */
     IDC_WAIT,                   /* cursor */
-    (HBRUSH)(COLOR_3DFACE + 1)  /* brush */
+    NULL                        /* brush */
 };
 
 static HBITMAP
