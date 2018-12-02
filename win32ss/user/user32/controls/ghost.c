@@ -13,6 +13,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
 #define GHOST_TIMEOUT   200         // 0.2 sec
+#define GHOST_PROP      L"GhostProp"
 
 extern HINSTANCE User32Instance;
 
@@ -191,6 +192,13 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         return FALSE;
     }
 
+    // check prop
+    if (GetPropW(hwndTarget, GHOST_PROP))
+        return FALSE;
+
+    // set prop
+    SetPropW(hwndTarget, GHOST_PROP, hwnd);
+
     // create user data
     pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
     if (!pData)
@@ -207,11 +215,10 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // make a ghost image
     IntMakeGhostImage(hbm32bpp);
 
-    // set user data and prop
+    // set user data
     pData->hwndTarget = hwndTarget;
     pData->hbm32bpp = hbm32bpp;
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
-    SetPropW(hwndTarget, L"GhostProp", hwnd);
 
     // get style
     style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
@@ -384,7 +391,7 @@ Ghost_OnNCDestroy(HWND hwnd)
         pData->hbm32bpp = NULL;
 
         // remove prop
-        RemovePropW(pData->hwndTarget, L"GhostProp");
+        RemovePropW(pData->hwndTarget, GHOST_PROP);
 
         // show target
         ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
