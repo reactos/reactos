@@ -138,6 +138,7 @@ Ghost_GetText(HWND hwndTarget, INT *pcchTextW, INT cchExtra)
     {
         if (!pszTextNewW)
         {
+            ERR("HeapAlloc failed\n");
             if (pszTextW)
                 HeapFree(GetProcessHeap(), 0, pszTextW);
             return NULL;
@@ -202,7 +203,10 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // create user data
     pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
     if (!pData)
+    {
+        ERR("HeapAlloc failed\n");
         return FALSE;
+    }
 
     // get window image
     GetWindowRect(hwndTarget, &rc);
