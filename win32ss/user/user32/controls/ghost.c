@@ -59,24 +59,28 @@ IntGetWindowBitmap(HWND hwnd, INT cx, INT cy)
     HGDIOBJ hbmOld;
 
     hdc = GetWindowDC(hwnd);
-    if (hdc)
+    if (!hdc)
+        return NULL;
+
+    hdcMem = CreateCompatibleDC(hdc);
+    if (!hdcMem)
+        goto earth;
+
+    hbm = IntCreate32BppBitmap(cx, cy);
+    if (hbm)
     {
-        hdcMem = CreateCompatibleDC(hdc);
-        if (hdcMem)
-        {
-            hbm = IntCreate32BppBitmap(cx, cy);
-            if (hbm)
-            {
-                hbmOld = SelectObject(hdcMem, hbm);
-                {
-                    BitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY | CAPTUREBLT);
-                }
-                SelectObject(hdcMem, hbmOld);
-            }
-            DeleteDC(hdcMem);
-        }
-        ReleaseDC(hwnd, hdc);
+        hbmOld = SelectObject(hdcMem, hbm);
+        BitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY | CAPTUREBLT);
+        SelectObject(hdcMem, hbmOld);
     }
+
+earth:
+    if (hdcMem)
+    {
+        DeleteDC(hdcMem);
+    }
+    ReleaseDC(hwnd, hdc);
+
     return hbm;
 }
 
