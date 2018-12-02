@@ -12,6 +12,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
+#define GHOST_TIMEOUT   200         // 0.2 sec
 
 extern HINSTANCE User32Instance;
 
@@ -454,7 +455,7 @@ Ghost_OnTimer(HWND hwnd, UINT id)
     }
 
     // resume if responding
-    dwTimeout = 200;
+    dwTimeout = GHOST_TIMEOUT;
     dwTick1 = GetTickCount();
     SendMessageTimeout(hwndTarget, WM_NULL, 0, 0, 0, dwTimeout, &dwResult);
     dwTick2 = GetTickCount();
