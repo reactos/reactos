@@ -126,7 +126,7 @@ Ghost_GetTarget(HWND hwnd)
 }
 
 static LPWSTR
-Ghost_GetText(HWND hwndTarget, INT *pcchTextW)
+Ghost_GetText(HWND hwndTarget, INT *pcchTextW, INT cchExtra)
 {
     LPWSTR pszTextW = NULL, pszTextNewW;
     INT cchTextW = *pcchTextW;
@@ -142,7 +142,8 @@ Ghost_GetText(HWND hwndTarget, INT *pcchTextW)
         }
         pszTextW = pszTextNewW;
 
-        if (InternalGetWindowText(hwndTarget, pszTextW, cchTextW) < cchTextW - 1)
+        if (InternalGetWindowText(hwndTarget, pszTextW,
+                                  cchTextW - cchExtra) < cchTextW - cchExtra - 1)
         {
             break;
         }
@@ -216,7 +217,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get text
     cchTextW = 512 + ARRAYSIZE(szNotRespondingW) + 1;
-    pszTextW = Ghost_GetText(hwndTarget, &cchTextW);
+    pszTextW = Ghost_GetText(hwndTarget, &cchTextW, ARRAYSIZE(szNotRespondingW));
     if (!pszTextW)
     {
         DeleteObject(hbm32bpp);
