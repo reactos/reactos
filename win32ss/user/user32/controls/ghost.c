@@ -279,11 +279,6 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
     if (!pData)
         return;
 
-    RemovePropW(pData->hwndTarget, L"GhostProp");
-
-    DeleteObject(pData->hbm32bpp);
-    pData->hbm32bpp = NULL;
-
     if (bDestroyTarget)
     {
         GetWindowThreadProcessId(pData->hwndTarget, &pid);
@@ -386,8 +381,14 @@ Ghost_OnNCDestroy(HWND hwnd)
 {
     // delete the user data
     GHOST_DATA *pData = Ghost_GetData(hwnd);
-    SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
-    HeapFree(GetProcessHeap(), 0, pData);
+    if (pData)
+    {
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        DeleteObject(pData->hbm32bpp);
+        HeapFree(GetProcessHeap(), 0, pData);
+    }
+
+    RemovePropW(pData->hwndTarget, L"GhostProp");
 
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 
