@@ -506,7 +506,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
             return 0;
 
         case WM_ERASEBKGND:
-            Ghost_OnNCPaint(hwnd, NULL);
+            Ghost_OnDraw(hwnd, (HDC)wParam);
             return TRUE;
 
         case WM_PAINT:
