@@ -12,7 +12,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
-#define GHOST_TIMEOUT   200         // 0.2 sec
 #define GHOST_PROP      L"GhostProp"
 
 extern HINSTANCE User32Instance;
@@ -186,8 +185,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get the target
     hwndTarget = (HWND)lpcs->lpCreateParams;
-    if (!hwndTarget || !IsWindowVisible(hwndTarget) || IsIconic(hwndTarget) ||
-        GetParent(hwndTarget))
+    if (!IsWindowVisible(hwndTarget) ||     // invisible?
+        GetParent(hwndTarget) ||            // child?
+        !IsHungAppWindow(hwndTarget))       // not hung?
     {
         return FALSE;
     }
@@ -454,20 +454,9 @@ Ghost_OnTimer(HWND hwnd, UINT id)
     KillTimer(hwnd, id);
 
     hwndTarget = pData->hwndTarget;
-    if (!IsWindow(hwndTarget) || IsIconic(hwnd) || IsIconic(hwndTarget))
+    if (!IsWindow(hwndTarget) || !IsHungAppWindow(hwndTarget))
     {
-        // resume if window is destroyed
-        Ghost_Unenchant(hwnd, FALSE);
-        return;
-    }
-
-    // resume if responding
-    dwTimeout = GHOST_TIMEOUT;
-    dwTick1 = GetTickCount();
-    SendMessageTimeout(hwndTarget, WM_NULL, 0, 0, 0, dwTimeout, &dwResult);
-    dwTick2 = GetTickCount();
-    if (dwTick2 - dwTick1 < dwTimeout)
-    {
+        // resume if window is destroyed or responding
         Ghost_Unenchant(hwnd, FALSE);
         return;
     }
