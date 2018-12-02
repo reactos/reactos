@@ -121,7 +121,7 @@ SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CH
     if (!stub.Create(NULL, NULL, NULL, style, exstyle))
     {
         ERR("StubWindow32 creation failed\n");
-        return E_FAIL;
+        return FALSE;
     }
 
     /* Handle files and folders */
