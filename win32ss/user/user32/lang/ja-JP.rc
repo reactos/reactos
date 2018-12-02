@@ -58,6 +58,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "エラー"
+    IDS_NOT_RESPONDING " (Not Responding)"
+    IDS_ASK_TERMINATE "This application is hung up. May I terminate this app?"
+    IDS_HUNG_UP_TITLE "Hung up!"
     IDS_OK "OK"
     IDS_CANCEL "キャンセル"
     IDS_ABORT "中止(&A)"

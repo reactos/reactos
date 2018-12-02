@@ -8,6 +8,9 @@
 #pragma once
 
 #define IDS_ERROR    (2)
+#define IDS_NOT_RESPONDING  (3)
+#define IDS_ASK_TERMINATE   (4)
+#define IDS_HUNG_UP_TITLE   (5)
 
 /*
  * Button names IDs.
@@ -26,3 +29,4 @@
 #define IDS_HELP     (808)
 #define IDS_TRYAGAIN (809)
 #define IDS_CONTINUE (810)
+

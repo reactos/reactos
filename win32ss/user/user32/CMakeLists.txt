@@ -11,6 +11,7 @@ list(APPEND SOURCE
     controls/button.c
     controls/combo.c
     controls/edit.c
+    controls/ghost.c
     controls/icontitle.c
     controls/listbox.c
     controls/regcontrol.c

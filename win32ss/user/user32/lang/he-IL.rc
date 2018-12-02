@@ -59,6 +59,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "שגיאה"
+    IDS_NOT_RESPONDING " (Not Responding)"
+    IDS_ASK_TERMINATE "This application is hung up. May I terminate this app?"
+    IDS_HUNG_UP_TITLE "Hung up!"
     IDS_OK "אישור"
     IDS_CANCEL "ביטול"
     IDS_ABORT "&בטל"
