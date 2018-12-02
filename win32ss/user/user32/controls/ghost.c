@@ -167,7 +167,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    WCHAR szNotRespondingW[32];
+    WCHAR szTextW[320], szNotRespondingW[32];
     LPWSTR pszTextW;
     INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
@@ -229,13 +229,21 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
 
     // get text
-    cchTextW = 512 + ARRAYSIZE(szNotRespondingW) + 1;
-    pszTextW = Ghost_GetText(hwndTarget, &cchTextW, ARRAYSIZE(szNotRespondingW));
-    if (!pszTextW)
+    cchTextW = ARRAYSIZE(szTextW);
+    if (InternalGetWindowText(hwndTarget, szTextW, cchTextW) < cchTextW - 1)
     {
-        DeleteObject(hbm32bpp);
-        HeapFree(GetProcessHeap(), 0, pData);
-        return FALSE;
+        pszTextW = szTextW;
+    }
+    else
+    {
+        cchTextW *= 2;
+        pszTextW = Ghost_GetText(hwndTarget, &cchTextW, ARRAYSIZE(szNotRespondingW));
+        if (!pszTextW)
+        {
+            DeleteObject(hbm32bpp);
+            HeapFree(GetProcessHeap(), 0, pData);
+            return FALSE;
+        }
     }
 
     // don't use scrollbars.
@@ -252,7 +260,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     SetWindowTextW(hwnd, pszTextW);
 
     // free the text buffer
-    HeapFree(GetProcessHeap(), 0, pszTextW);
+    if (szTextW != pszTextW)
+        HeapFree(GetProcessHeap(), 0, pszTextW);
 
     // get previous window of target
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
