@@ -180,7 +180,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         else if (pWnd->fnid != FNID_GHOST)
         {
              ERR("Wrong window class for Ghost! fnId 0x%x\n", pWnd->fnid);
-             return 0;
+             return FALSE;
         }
     }
 
