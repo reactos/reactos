@@ -503,12 +503,16 @@ Ghost_GetIcon(HWND hwnd, INT fType)
     switch (fType)
     {
         case ICON_BIG:
+        {
             hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICON);
             break;
+        }
 
         case ICON_SMALL:
+        {
             hIcon = (HICON)GetClassLongPtrW(pData->hwndTarget, GCLP_HICONSM);
             break;
+        }
     }
 
     return hIcon;
