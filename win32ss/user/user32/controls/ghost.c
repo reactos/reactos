@@ -382,6 +382,9 @@ Ghost_OnNCDestroy(HWND hwnd)
         DeleteObject(pData->hbm32bpp);
         pData->hbm32bpp = NULL;
 
+        // remove prop
+        RemovePropW(pData->hwndTarget, L"GhostProp");
+
         // show target
         ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
 
@@ -393,8 +396,6 @@ Ghost_OnNCDestroy(HWND hwnd)
 
         HeapFree(GetProcessHeap(), 0, pData);
     }
-
-    RemovePropW(pData->hwndTarget, L"GhostProp");
 
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 
