@@ -150,13 +150,15 @@ Ghost_GetText(HWND hwndTarget, INT *pcchTextW, INT cchExtra)
         pszTextW = pszTextNewW;
 
         cchNonExtra = cchTextW - cchExtra;
-        if (InternalGetWindowText(hwndTarget, pszTextW, cchNonExtra) < cchNonExtra - 1)
+        if (InternalGetWindowText(hwndTarget, pszTextW,
+                                  cchNonExtra) < cchNonExtra - 1)
         {
             break;
         }
 
         cchTextW *= 2;
-        pszTextNewW = HeapReAlloc(GetProcessHeap(), 0, pszTextW, cchTextW * sizeof(WCHAR));
+        pszTextNewW = HeapReAlloc(GetProcessHeap(), 0, pszTextW,
+                                  cchTextW * sizeof(WCHAR));
     }
 
     *pcchTextW = cchTextW;
@@ -214,7 +216,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get window image
     GetWindowRect(hwndTarget, &rc);
-    hbm32bpp = IntGetWindowBitmap(hwndTarget, rc.right - rc.left, rc.bottom - rc.top);
+    hbm32bpp = IntGetWindowBitmap(hwndTarget,
+                                  rc.right - rc.left,
+                                  rc.bottom - rc.top);
     if (!hbm32bpp)
     {
         ERR("hbm32bpp was NULL\n");
@@ -238,7 +242,8 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     cchTextW = ARRAYSIZE(szTextW);
     cchExtraW = ARRAYSIZE(szNotRespondingW);
     cchNonExtraW = cchTextW - cchExtraW;
-    if (InternalGetWindowText(hwndTarget, szTextW, cchNonExtraW) < cchNonExtraW - 1)
+    if (InternalGetWindowText(hwndTarget, szTextW,
+                              cchNonExtraW) < cchNonExtraW - 1)
     {
         pszTextW = szTextW;
     }
@@ -281,10 +286,12 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // shrink the ghost to zero size and insert.
     // this will avoid effects.
     SetWindowPos(hwnd, hwndPrev, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_DRAWFRAME);
+                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER |
+                 SWP_DRAWFRAME);
 
     // resume the position and size of ghost
-    MoveWindow(hwnd, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    MoveWindow(hwnd, rc.left, rc.top,
+               rc.right - rc.left, rc.bottom - rc.top, TRUE);
 
     // make ghost visible
     SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_VISIBLE);
@@ -323,9 +330,8 @@ Ghost_OnDraw(HWND hwnd, HDC hdc)
     if (hdcMem)
     {
         HGDIOBJ hbmOld = SelectObject(hdcMem, pData->hbm32bpp);
-        {
-            BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY | CAPTUREBLT);
-        }
+        BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight,
+               hdcMem, 0, 0, SRCCOPY | CAPTUREBLT);
         SelectObject(hdcMem, hbmOld);
         DeleteDC(hdcMem);
     }
@@ -373,7 +379,8 @@ Ghost_OnMove(HWND hwnd, int x, int y)
 
     // move the target
     SetWindowPos(hwndTarget, NULL, rc.left, rc.top, 0, 0,
-        SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                 SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOACTIVATE |
+                 SWP_NOSENDCHANGING);
 }
 
 static void
@@ -512,7 +519,8 @@ Ghost_GetIcon(HWND hwnd, INT fType)
 }
 
 LRESULT WINAPI
-GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode)
+GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                    BOOL unicode)
 {
     switch (uMsg)
     {
@@ -600,12 +608,14 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
     return 0;
 }
 
-LRESULT CALLBACK GhostWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+GhostWndProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return GhostWndProc_common(hwnd, uMsg, wParam, lParam, FALSE);
 }
 
-LRESULT CALLBACK GhostWndProcW(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+GhostWndProcW(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return GhostWndProc_common(hwnd, uMsg, wParam, lParam, TRUE);
 }
