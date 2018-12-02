@@ -272,8 +272,7 @@ static void
 Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
     GHOST_DATA *pData = Ghost_GetData(hwnd);
-
-    if (!pData || !pData->hwndTarget)
+    if (!pData)
         return;
 
     pData->bDestroyTarget = bDestroyTarget;
