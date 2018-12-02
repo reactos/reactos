@@ -272,16 +272,16 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
     DWORD pid;
     HANDLE hProcess;
-    GHOST_DATA *pData;
+    HWND hwndTarget;
     RECT rc;
 
-    pData = Ghost_GetData(hwnd);
-    if (!pData)
+    hwndTarget = Ghost_GetTarget(hwnd);
+    if (!hwndTarget)
         return;
 
     if (bDestroyTarget)
     {
-        GetWindowThreadProcessId(pData->hwndTarget, &pid);
+        GetWindowThreadProcessId(hwndTarget, &pid);
         hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
         if (hProcess)
         {
@@ -290,18 +290,17 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
         }
 
         DestroyWindow(hwnd);
-        ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
+        ShowWindowAsync(hwndTarget, SW_SHOWNOACTIVATE);
 
-        DestroyWindow(pData->hwndTarget);
-        pData->hwndTarget = NULL;
+        DestroyWindow(hwndTarget);
     }
     else
     {
         GetWindowRect(hwnd, &rc);
-        SetWindowPos(pData->hwndTarget, NULL, rc.left, rc.top, 0, 0,
+        SetWindowPos(hwndTarget, NULL, rc.left, rc.top, 0, 0,
             SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-        ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
+        ShowWindowAsync(hwndTarget, SW_SHOWNOACTIVATE);
         DestroyWindow(hwnd);
     }
 }
