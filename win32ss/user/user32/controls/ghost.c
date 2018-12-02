@@ -108,6 +108,7 @@ typedef struct GHOST_DATA
 {
     HWND hwndTarget;
     HBITMAP hbm32bpp;
+    BOOL bDestroyTarget;
 } GHOST_DATA;
 
 static GHOST_DATA *
@@ -272,37 +273,14 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
     DWORD pid;
     HANDLE hProcess;
-    HWND hwndTarget;
     RECT rc;
+    GHOST_DATA *pData = Ghost_GetData(hwnd);
 
-    hwndTarget = Ghost_GetTarget(hwnd);
-    if (!hwndTarget)
+    if (!pData || !pData->hwndTarget)
         return;
 
-    if (bDestroyTarget)
-    {
-        GetWindowThreadProcessId(hwndTarget, &pid);
-        hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-        if (hProcess)
-        {
-            TerminateProcess(hProcess, -1);
-            CloseHandle(hProcess);
-        }
-
-        DestroyWindow(hwnd);
-        ShowWindowAsync(hwndTarget, SW_SHOWNOACTIVATE);
-
-        DestroyWindow(hwndTarget);
-    }
-    else
-    {
-        GetWindowRect(hwnd, &rc);
-        SetWindowPos(hwndTarget, NULL, rc.left, rc.top, 0, 0,
-            SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-
-        ShowWindowAsync(hwndTarget, SW_SHOWNOACTIVATE);
-        DestroyWindow(hwnd);
-    }
+    pData->bDestroyTarget = bDestroyTarget;
+    DestroyWindow(hwnd);
 }
 
 static void
@@ -383,7 +361,21 @@ Ghost_OnNCDestroy(HWND hwnd)
     if (pData)
     {
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+
+        // delete image
         DeleteObject(pData->hbm32bpp);
+        pData->hbm32bpp = NULL;
+
+        // show target
+        ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
+
+        // destroy target if necessary
+        if (pData->bDestroyTarget)
+        {
+            DestroyWindow(pData->hwndTarget);
+            pData->hwndTarget = NULL;
+        }
+
         HeapFree(GetProcessHeap(), 0, pData);
     }
 
