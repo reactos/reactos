@@ -426,7 +426,7 @@ Ghost_OnClose(HWND hwnd)
     }
 
     // restart timer
-    SetTimer(hwnd, GHOST_TIMER_ID, 1000, NULL);
+    SetTimer(hwnd, GHOST_TIMER_ID, GHOST_INTERVAL, NULL);
 }
 
 static void
@@ -464,7 +464,7 @@ Ghost_OnTimer(HWND hwnd, UINT id)
     }
 
     // restart the timer
-    SetTimer(hwnd, GHOST_TIMER_ID, 1000, NULL);
+    SetTimer(hwnd, GHOST_TIMER_ID, GHOST_INTERVAL, NULL);
 }
 
 static HICON
