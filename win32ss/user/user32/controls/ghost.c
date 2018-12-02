@@ -14,8 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 #define GHOST_INTERVAL  1000        // one second
 #define GHOST_PROP      L"GhostProp"
 
-extern HINSTANCE User32Instance;
-
 const struct builtin_class_descr GHOST_builtin_class =
 {
     L"Ghost",                   /* name */
