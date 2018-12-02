@@ -423,7 +423,7 @@
 @ stdcall SetupGetLineTextW(ptr long wstr wstr ptr long ptr)
 @ stdcall SetupGetMultiSzFieldA(ptr long ptr long ptr)
 @ stdcall SetupGetMultiSzFieldW(ptr long ptr long ptr)
-@ stub SetupGetNonInteractiveMode
+@ stdcall SetupGetNonInteractiveMode()
 @ stdcall SetupGetSourceFileLocationA(ptr ptr str ptr ptr long ptr)
 @ stdcall SetupGetSourceFileLocationW(ptr ptr wstr ptr ptr long ptr)
 @ stub SetupGetSourceFileSizeA
