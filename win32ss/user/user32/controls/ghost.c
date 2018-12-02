@@ -201,7 +201,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     SetPropW(hwndTarget, GHOST_PROP, hwnd);
 
     // create user data
-    pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GHOST_DATA));
+    pData = HeapAlloc(GetProcessHeap(), 0, sizeof(GHOST_DATA));
     if (!pData)
     {
         ERR("HeapAlloc failed\n");
@@ -223,6 +223,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // set user data
     pData->hwndTarget = hwndTarget;
     pData->hbm32bpp = hbm32bpp;
+    pData->bDestroyTarget = FALSE;
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
     // get style
