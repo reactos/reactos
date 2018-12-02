@@ -213,6 +213,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     hbm32bpp = IntGetWindowBitmap(hwndTarget, rc.right - rc.left, rc.bottom - rc.top);
     if (!hbm32bpp)
     {
+        ERR("hbm32bpp was NULL\n");
         HeapFree(GetProcessHeap(), 0, pData);
         return FALSE;
     }
@@ -240,6 +241,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         pszTextW = Ghost_GetText(hwndTarget, &cchTextW, ARRAYSIZE(szNotRespondingW));
         if (!pszTextW)
         {
+            ERR("Ghost_GetText failed\n");
             DeleteObject(hbm32bpp);
             HeapFree(GetProcessHeap(), 0, pData);
             return FALSE;
