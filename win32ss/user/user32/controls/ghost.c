@@ -164,7 +164,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    WCHAR szNotRespondingW[64];
+    WCHAR szNotRespondingW[32];
     LPWSTR pszTextW;
     INT cchTextW;
     PWND pWnd = ValidateHwnd(hwnd);
