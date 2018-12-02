@@ -271,9 +271,6 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 static void
 Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
-    DWORD pid;
-    HANDLE hProcess;
-    RECT rc;
     GHOST_DATA *pData = Ghost_GetData(hwnd);
 
     if (!pData || !pData->hwndTarget)
@@ -354,6 +351,26 @@ Ghost_OnDestroy(HWND hwnd)
 }
 
 static void
+Ghost_DestroyTarget(GHOST_DATA *pData)
+{
+    HWND hwndTarget = pData->hwndTarget;
+    DWORD pid;
+    HANDLE hProcess;
+
+    pData->hwndTarget = NULL;
+    GetWindowThreadProcessId(hwndTarget, &pid);
+
+    hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (hProcess)
+    {
+        TerminateProcess(hProcess, -1);
+        CloseHandle(hProcess);
+    }
+
+    DestroyWindow(hwndTarget);
+}
+
+static void
 Ghost_OnNCDestroy(HWND hwnd)
 {
     // delete the user data
@@ -372,8 +389,7 @@ Ghost_OnNCDestroy(HWND hwnd)
         // destroy target if necessary
         if (pData->bDestroyTarget)
         {
-            DestroyWindow(pData->hwndTarget);
-            pData->hwndTarget = NULL;
+            Ghost_DestroyTarget(pData);
         }
 
         HeapFree(GetProcessHeap(), 0, pData);
