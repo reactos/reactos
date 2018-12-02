@@ -236,57 +236,6 @@ GetDeviceInstanceKeyPath(
     {
         /* Software Key Path */
 
-        if (ulFlags & CM_REGISTRY_CONFIG)
-        {
-            SplitDeviceInstanceId(pszDeviceInst,
-                                  pszBuffer,
-                                  pszInstancePath);
-
-            if (ulHardwareProfile == 0)
-            {
-                wsprintfW(pszKeyPath,
-                          L"%s\\%s\\%s\\%s",
-                          L"System\\CurrentControlSet\\Hardware Profiles",
-                          L"Current",
-                          L"System\\CurrentControlSet\\Enum",
-                          pszBuffer);
-            }
-            else
-            {
-                wsprintfW(pszKeyPath,
-                          L"%s\\%04lu\\%s\\%s",
-                          L"System\\CurrentControlSet\\Hardware Profiles",
-                          ulHardwareProfile,
-                          L"System\\CurrentControlSet\\Enum",
-                          pszBuffer);
-            }
-        }
-        else if (ulFlags & CM_REGISTRY_USER)
-        {
-            wsprintfW(pszKeyPath,
-                      L"%s\\%s",
-                      L"System\\CurrentControlSet\\Enum",
-                      pszDeviceInst);
-
-            wcscpy(pszInstancePath,
-                   L"Device Parameters");
-        }
-        else
-        {
-            SplitDeviceInstanceId(pszDeviceInst,
-                                  pszBuffer,
-                                  pszInstancePath);
-
-            wsprintfW(pszKeyPath,
-                      L"%s\\%s",
-                      L"System\\CurrentControlSet\\Enum",
-                      pszBuffer);
-        }
-    }
-    else
-    {
-        /* Hardware Key Path */
-
         ulTransferLength = 300 * sizeof(WCHAR);
         ulLength = 300 * sizeof(WCHAR);
         ret = PNP_GetDeviceRegProp(BindingHandle,
@@ -337,6 +286,57 @@ GetDeviceInstanceKeyPath(
             wsprintfW(pszKeyPath,
                       L"%s\\%s",
                       L"System\\CurrentControlSet\\Control\\Class",
+                      pszBuffer);
+        }
+    }
+    else
+    {
+        /* Hardware Key Path */
+
+        if (ulFlags & CM_REGISTRY_CONFIG)
+        {
+            SplitDeviceInstanceId(pszDeviceInst,
+                                  pszBuffer,
+                                  pszInstancePath);
+
+            if (ulHardwareProfile == 0)
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%s\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          L"Current",
+                          L"System\\CurrentControlSet\\Enum",
+                          pszBuffer);
+            }
+            else
+            {
+                wsprintfW(pszKeyPath,
+                          L"%s\\%04lu\\%s\\%s",
+                          L"System\\CurrentControlSet\\Hardware Profiles",
+                          ulHardwareProfile,
+                          L"System\\CurrentControlSet\\Enum",
+                          pszBuffer);
+            }
+        }
+        else if (ulFlags & CM_REGISTRY_USER)
+        {
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Enum",
+                      pszDeviceInst);
+
+            wcscpy(pszInstancePath,
+                   L"Device Parameters");
+        }
+        else
+        {
+            SplitDeviceInstanceId(pszDeviceInst,
+                                  pszBuffer,
+                                  pszInstancePath);
+
+            wsprintfW(pszKeyPath,
+                      L"%s\\%s",
+                      L"System\\CurrentControlSet\\Enum",
                       pszBuffer);
         }
     }
