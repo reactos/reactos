@@ -165,13 +165,15 @@ void CompleteSwitch(BOOL doSwitch)
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
    HICON hIcon;
+   HWND hwndOwner;
 
    UNREFERENCED_PARAMETER(lParam);
 
    if (!IsWindowVisible(window))
             return TRUE;
 
-   if (GetWindow(window, GW_OWNER) != NULL)
+   hwndOwner = GetWindow(window, GW_OWNER);
+   if (hwndOwner && IsWindowVisible(hwndOwner))
        return TRUE;
 
    GetClassNameW(window, windowText, _countof(windowText));
@@ -216,16 +218,23 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    return TRUE;
 }
 
-// Function mostly compatible with the normal EnumWindows,
+// Function mostly compatible with the normal EnumChildWindows,
 // except it lists in Z-Order and it doesn't ensure consistency
 // if a window is removed while enumerating
-void EnumWindowsZOrder(WNDENUMPROC callback, LPARAM lParam)
+void EnumChildWindowsZOrder(HWND hwnd, WNDENUMPROC callback, LPARAM lParam)
 {
-    HWND next = GetTopWindow(NULL);
+    HWND next = GetTopWindow(hwnd);
     while (next != NULL)
     {
-        if(!callback(next, lParam))
-         break;
+        if (!hwnd && !IsWindowVisible(next))
+        {
+            // UPDATE: Seek also the owned windows of the hidden top-level window.
+            EnumChildWindowsZOrder(next, callback, lParam);
+        }
+
+        if (!callback(next, lParam))
+            break;
+
         next = GetWindow(next, GW_HWNDNEXT);
     }
 }
@@ -413,7 +422,7 @@ BOOL ProcessHotKey(VOID)
    if (!isOpen)
    {
       windowCount=0;
-      EnumWindowsZOrder(EnumerateCallback, 0);
+      EnumChildWindowsZOrder(NULL, EnumerateCallback, 0);
 
       if (windowCount < 2)
          return FALSE;
@@ -507,7 +516,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
       Esc = TRUE;
 
       windowCount = 0;
-      EnumWindowsZOrder(EnumerateCallback, 0);
+      EnumChildWindowsZOrder(NULL, EnumerateCallback, 0);
 
       if (windowCount < 2)
           return 0;
