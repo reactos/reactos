@@ -341,7 +341,7 @@ Ghost_OnNCPaint(HWND hwnd, HRGN hrgn)
     // do the default behaivour
     DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
 
-    // draw the original image
+    // draw the ghost image
     hdc = GetWindowDC(hwnd);
     if (hdc)
     {
