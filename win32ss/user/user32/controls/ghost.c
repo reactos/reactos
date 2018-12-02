@@ -555,7 +555,6 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             switch ((UINT)wParam)
             {
                 case SC_MAXIMIZE:
-                case SC_MINIMIZE:
                 case SC_SIZE:
                     // sizing-related
                     return 0;
