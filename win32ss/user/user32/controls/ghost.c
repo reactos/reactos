@@ -442,9 +442,6 @@ static void
 Ghost_OnTimer(HWND hwnd, UINT id)
 {
     HWND hwndTarget;
-    DWORD_PTR dwResult;
-    DWORD dwTimeout;
-    DWORD dwTick1, dwTick2;
     GHOST_DATA *pData = Ghost_GetData(hwnd);
 
     if (id != GHOST_TIMER_ID || !pData)
