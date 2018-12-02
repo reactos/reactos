@@ -169,7 +169,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     DWORD style, exstyle;
     WCHAR szTextW[320], szNotRespondingW[32];
     LPWSTR pszTextW;
-    INT cchTextW;
+    INT cchTextW, cchExtraW, cchNonExtraW;
     PWND pWnd = ValidateHwnd(hwnd);
     if (pWnd)
     {
@@ -232,14 +232,16 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get text
     cchTextW = ARRAYSIZE(szTextW);
-    if (InternalGetWindowText(hwndTarget, szTextW, cchTextW) < cchTextW - 1)
+    cchExtraW = ARRAYSIZE(szNotRespondingW);
+    cchNonExtraW = cchTextW - cchExtraW;
+    if (InternalGetWindowText(hwndTarget, szTextW, cchNonExtraW) < cchNonExtraW - 1)
     {
         pszTextW = szTextW;
     }
     else
     {
         cchTextW *= 2;
-        pszTextW = Ghost_GetText(hwndTarget, &cchTextW, ARRAYSIZE(szNotRespondingW));
+        pszTextW = Ghost_GetText(hwndTarget, &cchTextW, cchExtraW);
         if (!pszTextW)
         {
             ERR("Ghost_GetText failed\n");
