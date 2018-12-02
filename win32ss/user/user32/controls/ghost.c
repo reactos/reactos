@@ -275,7 +275,7 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
     if (!pData)
         return;
 
-    pData->bDestroyTarget = bDestroyTarget;
+    pData->bDestroyTarget |= bDestroyTarget;
     DestroyWindow(hwnd);
 }
 
