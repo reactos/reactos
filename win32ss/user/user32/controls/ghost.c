@@ -314,12 +314,15 @@ Ghost_OnDraw(HWND hwnd, HDC hdc)
 }
 
 static void
-Ghost_OnNCPaint(HWND hwnd, HRGN hrgn)
+Ghost_OnNCPaint(HWND hwnd, HRGN hrgn, BOOL bUnicode)
 {
     HDC hdc;
 
     // do the default behaivour
-    DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
+    if (bUnicode)
+        DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
+    else
+        DefWindowProcA(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
 
     // draw the ghost image
     hdc = GetWindowDC(hwnd);
@@ -501,7 +504,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
             break;
 
         case WM_NCPAINT:
-            Ghost_OnNCPaint(hwnd, (HRGN)wParam);
+            Ghost_OnNCPaint(hwnd, (HRGN)wParam, unicode);
             return 0;
 
         case WM_ERASEBKGND:
@@ -531,7 +534,10 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
                     // sizing-related
                     return 0;
             }
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            if (unicode)
+                return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            else
+                return DefWindowProcA(hwnd, uMsg, wParam, lParam);
 
         case WM_CLOSE:
             Ghost_OnClose(hwnd);
@@ -542,7 +548,10 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL uni
             break;
 
         case WM_NCMOUSEMOVE:
-            DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            if (unicode)
+                DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            else
+                DefWindowProcA(hwnd, uMsg, wParam, lParam);
             SetCursor(LoadCursor(NULL, IDC_WAIT));
             return 0;
 
