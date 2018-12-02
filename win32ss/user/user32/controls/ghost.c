@@ -129,7 +129,7 @@ static LPWSTR
 Ghost_GetText(HWND hwndTarget, INT *pcchTextW, INT cchExtra)
 {
     LPWSTR pszTextW = NULL, pszTextNewW;
-    INT cchTextW = *pcchTextW;
+    INT cchNonExtra, cchTextW = *pcchTextW;
 
     pszTextNewW = HeapAlloc(GetProcessHeap(), 0, cchTextW * sizeof(WCHAR));
     for (;;)
@@ -142,8 +142,8 @@ Ghost_GetText(HWND hwndTarget, INT *pcchTextW, INT cchExtra)
         }
         pszTextW = pszTextNewW;
 
-        if (InternalGetWindowText(hwndTarget, pszTextW,
-                                  cchTextW - cchExtra) < cchTextW - cchExtra - 1)
+        cchNonExtra = cchTextW - cchExtra;
+        if (InternalGetWindowText(hwndTarget, pszTextW, cchNonExtra) < cchNonExtra - 1)
         {
             break;
         }
