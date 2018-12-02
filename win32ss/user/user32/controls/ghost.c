@@ -74,11 +74,9 @@ IntGetWindowBitmap(HWND hwnd, INT cx, INT cy)
         SelectObject(hdcMem, hbmOld);
     }
 
+    DeleteDC(hdcMem);
+
 earth:
-    if (hdcMem)
-    {
-        DeleteDC(hdcMem);
-    }
     ReleaseDC(hwnd, hdc);
 
     return hbm;
