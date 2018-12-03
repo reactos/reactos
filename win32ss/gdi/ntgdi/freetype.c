@@ -3318,11 +3318,12 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     }
 
     /* See also: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fsselection */
+#define FM_SEL_USE_TYPO_METRICS 0x80
     if (lfHeight > 0)
     {
         /* case (A): lfHeight is positive */
         Sum = pOS2->usWinAscent + pOS2->usWinDescent;
-        if (Sum == 0 || (pOS2->fsSelection & 0x80))
+        if (Sum == 0 || (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS))
         {
             Ascent = pHori->Ascender;
             Descent = -pHori->Descender;
@@ -3342,7 +3343,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     else if (lfHeight < 0)
     {
         /* case (B): lfHeight is negative */
-        if (pOS2->fsSelection & 0x80)
+        if (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS)
         {
             FontGDI->tmAscent = FT_MulDiv(-lfHeight, pHori->Ascender, face->units_per_EM);
             FontGDI->tmDescent = FT_MulDiv(-lfHeight, -pHori->Descender, face->units_per_EM);
@@ -3355,6 +3356,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
     }
+#undef FM_SEL_USE_TYPO_METRICS
 
     FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
