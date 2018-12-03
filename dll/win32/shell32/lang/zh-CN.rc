@@ -5,7 +5,7 @@
  * PURPOSE:     Chinese (Simplified) Language Resources
  * TRANSLATORS: 2008 zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
                 2011 Elton Chung aka MfldElton <elton328@gmail.com>
-                2017 Luo Yufan <njlyf2011@hotmail.com>
+                2018 Luo Yufan <njlyf2011@hotmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -177,7 +177,7 @@ CAPTION "运行"
 FONT 9, "宋体"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "输入程序，目录，文件或者 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
+    LTEXT "请输入程序、目录、文件或 Internet 资源名，ReactOS 将为您打开它。", 12289, 36, 11, 182, 18
     LTEXT "打开(&O):", 12305, 7, 39, 32, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 42, 37, 178, 100
     DEFPUSHBUTTON "确定", IDOK, 62, 70, 50, 14, WS_TABSTOP
@@ -221,7 +221,7 @@ BEGIN
     ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "为这个快捷方式选择您想要的高级属性。", -1, 5, 30, 210, 10
     CHECKBOX "以其他用户身份运行", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
-    LTEXT "此选项允许您以另一用户身份运行此快捷方式，或继续以您自己的身份运行以保护您的计算机和数据不受未授权程序的破坏。", -1, 50, 60, 175, 40
+    LTEXT "此选项允许您以其他用户身份运行此快捷方式，或者在保护计算机和数据免受未经授权的程序活动的同时继续自行运行。", -1, 50, 60, 175, 40
     CHECKBOX "在单独的内存空间中运行", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "确定", 1, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
@@ -352,7 +352,7 @@ BEGIN
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "该选项将检查卷\n中的错误。", -1, 40, 25, 160, 20
     PUSHBUTTON "开始检查...", 14000, 130, 45, 90, 15, WS_TABSTOP
-    GROUPBOX "碎片整理", -1, 5, 65, 230, 60
+    GROUPBOX "磁盘碎片整理", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "该选项将整理卷中的文件。", -1, 40, 85, 160, 20
     PUSHBUTTON "开始整理...", 14001, 130, 105, 90, 15, WS_TABSTOP
@@ -377,7 +377,7 @@ BEGIN
     LTEXT "您想使用哪个用户帐户运行这个程序?", -1, 10, 20, 220, 20
     CHECKBOX "当前用户 %s", 14000, 10, 45, 150, 10
     LTEXT "保护我的计算机和数据不受未授权程序的活动影响", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "这个选项可以保护您的计算机或个人数据不受病毒损害，但是选择这项可能会引起程序工作不正确。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "这个选项可以保护您的计算机或个人数据不受病毒损害，但选择该选项可能会导致程序工作不正确。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "下列用户:", 14002, 10, 100, 90, 10
     LTEXT "用户名：", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -399,8 +399,8 @@ BEGIN
     RADIOBUTTON "自定义大小(&C):", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大值(MB)(&A):", -1, 20, 105, 70, 10
-    RADIOBUTTON "不将文件移入回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "显示删除确认对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
+    RADIOBUTTON "不将文件移动到回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "显示确认删除对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -512,7 +512,7 @@ CAPTION "断开 ReactOS"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "确实要断开连接吗?", -1, 49, 15, 131, 8
+    LTEXT "确定要断开连接吗?", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "断开(&D)", IDOK, 47, 38, 47, 14
     PUSHBUTTON "取消", IDCANCEL, 99, 38, 47, 14
 END
