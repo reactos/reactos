@@ -105,7 +105,7 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "将方案存为"
+CAPTION "将方案另存为"
 FONT 9, "宋体"
 BEGIN
     LTEXT "将此声音方案存为(&S):", -1, 7, 7, 212, 9
@@ -173,13 +173,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "安装"
 FONT 9, "宋体"
 BEGIN
-    GROUPBOX "ReactOS 音频", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOS 声音", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "因为 ReactOS 音频服务无效因此这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "启用ReactOS 音频(&E)", 10253, 60, 68, 150, 9
+    LTEXT "因为 ReactOS 声音服务无效因此这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "启用 ReactOS 声音(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必须是管理员才能启用此服务。如果您没有以管理员身份登录，您将提示输入管理员名称和密码。", 10247, 60, 100, 150, 40
-    LTEXT "2. 您启用ReactOS音频后，必须重新启动计算机。", 10248, 60, 140, 150, 40
+    LTEXT "2. 您启用 ReactOS 声音后，必须重新启动计算机。", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -229,7 +229,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "安装"
 FONT 9, "宋体"
 BEGIN
-    GROUPBOX "ReactOS 音频", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOS 声音", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "驱动程序设置已经更改。必须退出 ReactOS 后重新启动，新的设置才会生效。", 10261, 60, 25, 150, 50
     LTEXT "点击这里重新启动 ReactOS", 10262, 60, 75, 150, 20
@@ -239,7 +239,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "声音和音频设备"
-    IDS_CPLDESCRIPTION "更改计算机的声音方案，或者配置扬声器和录音设备的设置"
+    IDS_CPLDESCRIPTION "更改计算机的声音方案，或配置扬声器和录音设备的设置。"
     IDS_NO_SOUND "(无)"
     IDS_NO_DEVICES "没有设备"
     5825 "程序出错"
