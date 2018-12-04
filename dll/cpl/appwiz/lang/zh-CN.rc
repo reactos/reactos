@@ -4,7 +4,7 @@
  * TRANSLATOR:  Jingjing Fu (jingjingf AT 188.com)
  *              Luo Yufan (njlyf2011@hotmail.com)
  * CREATED:     2009-04-25
- * UPDATED:     2018-01-05
+ * UPDATED:     2018-12-03
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -33,7 +33,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "创建快捷方式"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "此向导帮助您创建本地或网络程序、文件、目录、计算机或 Internet 地址的快捷方式。", -1, 120, 15, 200, 30
+    LTEXT "此向导可帮助您创建本地或网络程序、文件、文件夹、计算机或 Internet 地址的快捷方式。", -1, 120, 15, 200, 30
     LTEXT "请输入项目位置：", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "浏览...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -55,7 +55,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "删除快捷方式/文件夹"
 FONT 8, "宋体"
 BEGIN
-    LTEXT "从「 开始 」菜单中删除项目，选择项目并单击删除。(&T)", -1, 10, 10, 192, 16
+    LTEXT "从「开始」菜单中删除项目，选择项目并单击删除。(&T)", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
     PUSHBUTTON "删除(&R)", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
@@ -87,8 +87,8 @@ BEGIN
     IDS_DOWNLOADING "正在下载..."
     IDS_INSTALLING "正在安装..."
     IDS_INVALID_SHA "下载的文件校验和错误。中止安装已损坏的文件。"
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_NEW_INTERNET_SHORTCUT "新建 Internet 快捷方式"
+    IDS_DWL_FAILED "无法下载 Gecko 安装包。请确保您有互联网连接才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
+    IDS_CANTMAKEINETSHORTCUT "无法创建 Internet 快捷方式"
+    IDS_CANTMAKESHORTCUT "无法创建快捷方式。"
 END

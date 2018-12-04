@@ -26,8 +26,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "互联网设置"
-    IDS_CPL_INFO        "配置 WINE Internet Explorer 和相关设置"
+    IDS_CPL_NAME        "Internet 设置"
+    IDS_CPL_INFO        "配置 WINE Internet Explorer 以及相关设置"
     IDS_SEC_SETTINGS    "区域的安全设置: "
     IDS_SEC_LEVEL0      "自定义"
     IDS_SEC_LEVEL1      "非常低"
@@ -74,7 +74,7 @@ BEGIN
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "表单数据\n您已进入形式的用户名和其他信息。",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "密码\n保存在窗体中输入的密码。",
+    AUTOCHECKBOX   "密码\n保存在窗口中输入的密码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15, WS_GROUP
