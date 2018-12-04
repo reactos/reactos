@@ -1045,6 +1045,8 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     ULONG AlignedDeviceExtensionSize;
     ULONG TotalSize;
     HANDLE TempHandle;
+    PACL Dacl;
+    SECURITY_DESCRIPTOR SecurityDescriptor, *ReturnedSD;
     PAGED_CODE();
 
     /* Check if we have to generate a name */
@@ -1060,12 +1062,20 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         DeviceName = &AutoName;
     }
 
+    /* Get the security descriptor */
+    ReturnedSD = IopCreateDefaultDeviceSecurityDescriptor(DeviceType,
+                                                          DeviceCharacteristics,
+                                                          DeviceName != NULL,
+                                                          &SecurityDescriptor,
+                                                          &Dacl,
+                                                          NULL);
+
     /* Initialize the Object Attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                DeviceName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
-                               SePublicOpenUnrestrictedSd);
+                               ReturnedSD);
 
     /* Honor exclusive flag */
     if (Exclusive) ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
@@ -1092,7 +1102,12 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
                             0,
                             0,
                             (PVOID*)&CreatedDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        if (Dacl != NULL) ExFreePoolWithTag(Dacl, 'eSoI');
+
+        return Status;
+    }
 
     /* Clear the whole Object and extension so we don't null stuff manually */
     RtlZeroMemory(CreatedDeviceObject, TotalSize);
@@ -1144,6 +1159,8 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         Status = IopCreateVpb(CreatedDeviceObject);
         if (!NT_SUCCESS(Status))
         {
+            if (Dacl != NULL) ExFreePoolWithTag(Dacl, 'eSoI');
+
             /* Dereference the device object and fail */
             ObDereferenceObject(CreatedDeviceObject);
             return Status;
@@ -1197,7 +1214,12 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
                             1,
                             (PVOID*)&CreatedDeviceObject,
                             &TempHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        if (Dacl != NULL) ExFreePoolWithTag(Dacl, 'eSoI');
+
+        return Status;
+    }
 
     /* Now do the final linking */
     ObReferenceObject(DriverObject);
@@ -1211,6 +1233,9 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     /* Close the temporary handle and return to caller */
     ObCloseHandle(TempHandle, KernelMode);
     *DeviceObject = CreatedDeviceObject;
+
+    if (Dacl != NULL) ExFreePoolWithTag(Dacl, 'eSoI');
+
     return STATUS_SUCCESS;
 }
 
