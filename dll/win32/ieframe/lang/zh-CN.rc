@@ -1,5 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -60,7 +60,7 @@ STRINGTABLE
 {
     IDS_FINDINGRESOURCE     "正在搜索 %s"
     IDS_BEGINDOWNLOADDATA   "开始下载 %s"
-    IDS_ENDDOWNLOADDATA     "正在 %s "
+    IDS_ENDDOWNLOADDATA     "正在下载 %s "
     IDS_SENDINGREQUEST      "需要 %s"
 }
 
