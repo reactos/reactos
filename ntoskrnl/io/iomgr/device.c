@@ -727,7 +727,7 @@ IopVerifyDeviceObjectOnStack(IN PDEVICE_OBJECT BaseDeviceObject,
 NTSTATUS
 NTAPI
 IopCreateSecurityDescriptorPerType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                   IN ULONG Type,
+                                   IN SECURITY_DESCRIPTOR_TYPE Type,
                                    OUT PULONG OutputFlags)
 {
     PACL Dacl;

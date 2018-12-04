@@ -527,7 +527,7 @@ typedef struct _RESERVE_IRP_ALLOCATOR
 } RESERVE_IRP_ALLOCATOR, *PRESERVE_IRP_ALLOCATOR;
 
 //
-//
+// Type selection for IopCreateSecurityDescriptorPerType()
 //
 typedef enum _SECURITY_DESCRIPTOR_TYPE
 {
