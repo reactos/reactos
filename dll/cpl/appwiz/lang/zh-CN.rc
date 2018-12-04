@@ -88,7 +88,7 @@ BEGIN
     IDS_INSTALLING "正在安装..."
     IDS_INVALID_SHA "下载的文件校验和错误。中止安装已损坏的文件。"
     IDS_NEW_INTERNET_SHORTCUT "新建 Internet 快捷方式"
-    IDS_DWL_FAILED 无法下载 Gecko 安装包。请确保您有互联网连接才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
+    IDS_DWL_FAILED "无法下载 Gecko 安装包。请确保您有互联网连接才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
     IDS_CANTMAKEINETSHORTCUT "无法创建 Internet 快捷方式"
     IDS_CANTMAKESHORTCUT "无法创建快捷方式。"
 END
