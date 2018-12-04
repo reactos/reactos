@@ -25,6 +25,8 @@ extern LIST_ENTRY IopCdRomFileSystemQueueHead;
 extern LIST_ENTRY IopTapeFileSystemQueueHead;
 extern ERESOURCE IopDatabaseResource;
 
+#define DACL_SET 4
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -720,6 +722,170 @@ IopVerifyDeviceObjectOnStack(IN PDEVICE_OBJECT BaseDeviceObject,
     KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
 
     return Result;
+}
+
+NTSTATUS
+NTAPI
+IopCreateSecurityDescriptorPerType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                   IN ULONG Type,
+                                   OUT PULONG OutputFlags)
+{
+    PACL Dacl;
+    NTSTATUS Status;
+
+    /* Select the DACL the caller wants */
+    switch (Type)
+    {
+        case RestrictedPublic:
+            Dacl = SePublicDefaultDacl;
+            break;
+
+        case UnrestrictedPublic:
+            Dacl = SePublicDefaultUnrestrictedDacl;
+            break;
+
+        case RestrictedPublicOpen:
+            Dacl = SePublicOpenDacl;
+            break;
+
+        case UnrestrictedPublicOpen:
+            Dacl = SePublicOpenUnrestrictedDacl;
+            break;
+
+        case SystemDefault:
+            Dacl = SeSystemDefaultDacl;
+            break;
+
+        default:
+            ASSERT(FALSE);
+            return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Create the SD and set the DACL caller wanted */
+    Status = RtlCreateSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+    ASSERT(NT_SUCCESS(Status));
+    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Dacl, FALSE);
+
+    /* We've set DACL */
+    if (OutputFlags) *OutputFlags |= DACL_SET;
+
+    /* Done */
+    return Status;
+}
+
+PSECURITY_DESCRIPTOR
+NTAPI
+IopCreateDefaultDeviceSecurityDescriptor(IN DEVICE_TYPE DeviceType,
+                                         IN ULONG DeviceCharacteristics,
+                                         IN BOOLEAN HasDeviceName,
+                                         IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                         OUT PACL * OutputDacl,
+                                         OUT PULONG OutputFlags)
+{
+    PACL Dacl;
+    ULONG AceId;
+    NTSTATUS Status;
+    PACCESS_ALLOWED_ACE Ace;
+    BOOLEAN AdminsSet, WorldSet;
+
+    PAGED_CODE();
+
+    /* Zero our output vars */
+    if (OutputFlags) *OutputFlags = 0;
+
+    *OutputDacl = NULL;
+
+    /* For FSD, easy use SePublicDefaultUnrestrictedDacl */
+    if (DeviceType == FILE_DEVICE_TAPE_FILE_SYSTEM ||
+        DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM ||
+        DeviceType == FILE_DEVICE_DISK_FILE_SYSTEM ||
+        DeviceType == FILE_DEVICE_FILE_SYSTEM)
+    {
+        Status = IopCreateSecurityDescriptorPerType(SecurityDescriptor,
+                                                    UnrestrictedPublic,
+                                                    OutputFlags);
+        goto Quit;
+    }
+    /* For storage devices with a name and floppy attribute,
+     * use SePublicOpenUnrestrictedDacl
+     */
+    else if ((DeviceType != FILE_DEVICE_VIRTUAL_DISK &&
+              DeviceType != FILE_DEVICE_MASS_STORAGE &&
+              DeviceType != FILE_DEVICE_CD_ROM &&
+              DeviceType != FILE_DEVICE_DISK &&
+              DeviceType != FILE_DEVICE_DFS_FILE_SYSTEM &&
+              DeviceType != FILE_DEVICE_NETWORK &&
+              DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM) ||
+              (HasDeviceName && BooleanFlagOn(DeviceCharacteristics, FILE_FLOPPY_DISKETTE)))
+    {
+        Status = IopCreateSecurityDescriptorPerType(SecurityDescriptor,
+                                                    UnrestrictedPublicOpen,
+                                                    OutputFlags);
+        goto Quit;
+    }
+
+    /* The rest...
+     * We will rely on SePublicDefaultUnrestrictedDacl as well
+     */
+    Dacl = ExAllocatePoolWithTag(PagedPool, SePublicDefaultUnrestrictedDacl->AclSize, 'eSoI');
+    if (Dacl == NULL)
+    {
+        return NULL;
+    }
+
+    /* Copy our DACL */
+    RtlCopyMemory(Dacl, SePublicDefaultUnrestrictedDacl, SePublicDefaultUnrestrictedDacl->AclSize);
+
+    /* Now, browse the DACL to make sure we have everything we want in them,
+     * including permissions
+     */
+    AceId = 0;
+    AdminsSet = FALSE;
+    WorldSet = FALSE;
+    while (NT_SUCCESS(RtlGetAce(Dacl, AceId, (PVOID *)&Ace)))
+    {
+        /* Admins must acess and in RWX, set it */
+        if (RtlEqualSid(SeAliasAdminsSid, &Ace->SidStart))
+        {
+            SetFlag(Ace->Mask, (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE));
+            AdminsSet = TRUE;
+        }
+
+        /* World can read a CD_ROM device */
+        if (DeviceType == FILE_DEVICE_CD_ROM && RtlEqualSid(SeWorldSid, &Ace->SidStart))
+        {
+            SetFlag(Ace->Mask, GENERIC_READ);
+            WorldSet = TRUE;
+        }
+
+        ++AceId;
+    }
+
+    /* AdminSid was present and set (otherwise, we have big trouble) */
+    ASSERT(AdminsSet);
+
+    /* If CD_ROM device, we've set world permissions */
+    if (DeviceType == FILE_DEVICE_CD_ROM) ASSERT(WorldSet);
+
+    /* Now our DACL is correct, setup the security descriptor */
+    RtlCreateSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+    RtlSetDaclSecurityDescriptor(SecurityDescriptor, TRUE, Dacl, FALSE);
+
+    /* We've set DACL */
+    if (OutputFlags) *OutputFlags |= DACL_SET;
+
+    /* Return DACL to allow later freeing */
+    *OutputDacl = Dacl;
+    Status = STATUS_SUCCESS;
+
+Quit:
+    /* Only return SD if we succeed */
+    if (!NT_SUCCESS(Status))
+    {
+        return NULL;
+    }
+
+    return SecurityDescriptor;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
