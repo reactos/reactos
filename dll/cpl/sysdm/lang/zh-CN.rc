@@ -1,5 +1,5 @@
 /* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) 2009-05-02 */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -33,7 +33,7 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "设备管理器", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "设备管理器列出所有安装在计算机上的硬件设备。请使用设备管理器来更改设备的属性。", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "设备管理器列出了计算机上安装的所有硬件设备。使用“设备管理器”可以更改任何设备的属性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "设备管理器(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "添加硬件向导", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
@@ -41,7 +41,7 @@ BEGIN
     PUSHBUTTON "添加硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬件配置文件", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "硬件配置文件向您提供建立和保存不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "硬件配置文件为您提供了一种设置和存储不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "硬件配置文件(&W)...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -50,12 +50,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "高级"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "要进行大多数改动，您必须作为管理员登录。", IDC_STATIC, 12, 5, 236, 8
+    LTEXT "大多数这些设置都需要管理员权限。", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "性能", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "性能选项控制应用程序如何使用内存。这将会影响到计算机运行速度。", IDC_STATIC, 16, 29, 228, 17
+    LTEXT "性能选项控制应用程序如何使用内存，这会影响计算机的运行速度。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON "设置", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "用户配置文件", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "与您登录相关的桌面设置", IDC_STATIC, 16, 88, 228, 20
+    LTEXT "与登录有关的桌面设置", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "设置", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "启动和故障恢复", IDC_STATIC, 6, 131, 244, 52
     LTEXT "启动和故障恢复选项指定计算机如何启动并设定系统失败时所需要采取的动作。", IDC_STATIC, 16, 144, 228, 19
@@ -71,7 +71,7 @@ CAPTION "系统设置"
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS 作为服务器操作系统而被构建，并如此被报告。选中此框可更改（仅对于应用程序有效）。", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS 作为服务器操作系统被构建，并如此被报告。选中此框可更改（仅对于应用程序有效）。", IDC_STATIC, 15, 15, 183, 41
     CONTROL "报告为工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "确定", IDOK, 166, 83, 50, 14
 END

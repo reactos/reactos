@@ -1,3 +1,5 @@
+/* Translation has been changed by Luo Yufan on 2018-12-05 (njlyf2011@hotmail.com) */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 ID_ACCEL ACCELERATORS
@@ -63,7 +65,7 @@ BEGIN
         MENUITEM "内容(&C)", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "关于(&A)", CMD_ABOUT
-        MENUITEM "信息(&O)...", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "系统信息(&O)...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -133,7 +135,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "关于 ReactOS 记事本"
 FONT 9, "宋体"
 BEGIN
-    CONTROL "ReactOS 记事本 v1.0\r\n版权 1997,98 Marcel Baur\r\n版权 2000 Mike McCormack\r\n版权 2002 Sylvain Petreolle\r\n版权 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL "ReactOS 记事本 v1.0\r\n版权所有 1997,98 Marcel Baur\r\n版权所有 2000 Mike McCormack\r\n版权所有 2002 Sylvain Petreolle\r\n版权所有 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "关闭", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
@@ -142,7 +144,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_LICENSE "此程序是免费软件;您可以依据由自由软件基金会发布的 GNU 通用公共许可的条款将它重新分发和/或修改;许可协议的版本 2，或 (以您的选择) 任何后续的版本。\r\n\r\n此程序因为希望有所用途而被分发，但没有任何担保。没有甚至对适销性或特定用途的默示保证。请参阅 GNU 通用公共许可证有关更多详细信息。\r\n\r\n您应该已经收到一份 GNU 通用公共许可证以及这一计划; 如果没有，请写信给自由软件基金会, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    STRING_LICENSE "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
 END
 
 STRINGTABLE

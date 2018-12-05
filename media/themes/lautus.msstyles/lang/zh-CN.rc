@@ -5,12 +5,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-1000, "亚特"
+1000, "Ater"
 }
 
 STRINGTABLE
 {
-2000, "磊灿亚特"
+2000, "Lautus Ater"
 }
 
 STRINGTABLE
@@ -29,12 +29,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "磊灿"
+5000, "Lautus"
 5001, "视觉样式"
 5002, "ReactOS 基金会"
 5003, "Pisarz, 基于 Luna Inspirat 项目"
 5004, "基于 GNU/GPL 2.0，于 2011 年发行"
 5005, "http://www.reactos.org"
 5006, "版本 1.0"
-5007, "ReactOS 的视觉样式"
+5007, "ReactOS 视觉样式"
 }

@@ -1,18 +1,18 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-1000, "亚白"
-1001, "黑暗"
+1000, "亮色"
+1001, "深色"
 }
 
 STRINGTABLE
 {
-2000, "???"
-2001, "???"
+2000, "Modern（亮色）"
+2001, "Modern（深色）"
 }
 
 STRINGTABLE
@@ -31,12 +31,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "现在"
+5000, "Modern"
 5001, "视觉样式"
 5002, "ReactOS 基金会"
-5003, "Polar, 基于 Win10 项目"
+5003, "Polar, 基于 Win10 的项目"
 5004, "基于 GNU/GPL 3.0，于 2018 年发行"
 5005, "http://www.reactos.org"
 5006, "版本 1.0"
-5007, "ReactOS 的视觉样式"
+5007, "ReactOS 视觉样式"
 }
