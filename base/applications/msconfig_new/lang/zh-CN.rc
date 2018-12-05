@@ -9,11 +9,11 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "关于系统配置实用程序"
+CAPTION "关于系统配置程序"
 FONT 9, "宋体"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
-    LTEXT           "系统配置实用程序\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+    LTEXT           "系统配置程序\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
     LTEXT           "版权所有 (C) ReactOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
@@ -40,7 +40,7 @@ BEGIN
     PUSHBUTTON      "展开文件(&E)...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
     GROUPBOX        "启动选择", IDC_STATIC, 5, 5, 356, 145
     LTEXT           "加载所有设备驱动程序和服务", IDC_STATIC, 25, 30, 322, 10
-    LTEXT           "仅加载基本设备驱动程序和服务", IDC_STATIC, 25, 58, 322, 10
+    LTEXT           "仅加载基本的设备驱动程序和服务", IDC_STATIC, 25, 58, 322, 10
 END
 
 IDD_SYSTEM_PAGE DIALOGEX 0, 0, 366, 175

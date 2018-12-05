@@ -112,7 +112,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "自定义通知"
 FONT 9, "宋体"
 BEGIN
-    LTEXT            "ReactOS 显示图标为活跃和紧急通知，并隐藏不活动的。您可以更改此行为下面列表中的项目。", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS 显示活动和紧急通知的图标，并隐藏不活动的通知。 您可以更改以下列表中的项目的此行为。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "选择一个项目，然后选择它的通知行为:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
@@ -128,7 +128,7 @@ FONT 9, "宋体"
 BEGIN
     GROUPBOX         "开始菜单", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "你可以通过添加或移除项自定义开始菜单。", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "您可以通过添加或删除项目来自定义开始菜单。", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "添加...(&D)", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "删除...(&R)", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "高级(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
@@ -144,13 +144,13 @@ END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "文件名称警告"
+CAPTION "文件名警告"
 FONT 9, "宋体"
 BEGIN
     DEFPUSHBUTTON    "忽略(&I)", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "重命名(&R)", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
-    AUTOCHECKBOX     "不执行此检查启动时(&D)", IDC_NOTCHECK, 7, 62, 139, 10
+    AUTOCHECKBOX     "不要在启动时执行此检查(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "有是一个文件或文件夹在您的计算机被称为 %s 这可能会导致某些应用程序不能够正确。重命名为 %s 将解决这个问题。您想现在重命名它?", IDC_STATIC, 34, 7, 224, 37
 END
@@ -161,7 +161,7 @@ CAPTION "高级"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX         "开始菜单设置 ", IDC_STATIC, 7, 7, 238, 42
-    AUTOCHECKBOX     "与我的鼠标上他们暂停时打开子菜单(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
+    AUTOCHECKBOX     "当我用鼠标暂停它们时打开子菜单(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "突出显示新安装的程序(&N)", IDC_HIGHLIGHT, 14, 35, 224, 10
     LTEXT            "开始菜单项:(&M)", IDC_STATIC, 7, 53, 238, 8
     CONTROL          "开始菜单设置(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
@@ -206,5 +206,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "任务栏和开始菜单属性"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "显示打开的窗口(&S)"
 END

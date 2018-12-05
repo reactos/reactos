@@ -15,10 +15,10 @@ END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "用户界面失败"
+CAPTION "用户界面加载失败"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "加载登录用户界面的 DLL 文件 %s 失败。", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "加载登录用户界面的 DLL 文件 %s 启动失败。", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "请与系统管理员联系，以替换 DLL 文件，或还原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "重新启动(&R)", 1, 80, 91, 68, 14
 END
@@ -29,7 +29,7 @@ CAPTION "关机"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "系统关机指令已经下达。请保存您的工作内容并注销此次会话。系统关机时，一切未保存的工作内容将会丢失。", -1, 38, 7, 135, 40
+    LTEXT "已启动系统关闭。请保存所有工作并终止会话。 系统关闭时，所有未保存的工作都将丢失。", -1, 38, 7, 135, 40
     LTEXT "系统将在以下时间内关机：", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
     LTEXT "附加信息：", -1, 38, 65, 135, 8
