@@ -1578,7 +1578,7 @@ SERVER_BASED_SEARCH    = YES
 # The default value is: NO.
 # This tag requires that the tag SEARCHENGINE is set to YES.
 
-EXTERNAL_SEARCH        = NO
+EXTERNAL_SEARCH        = YES
 
 # The SEARCHENGINE_URL should point to a search engine hosted by a web server
 # which will return the search results when EXTERNAL_SEARCH is enabled.
@@ -1589,7 +1589,7 @@ EXTERNAL_SEARCH        = NO
 # Searching" for details.
 # This tag requires that the tag SEARCHENGINE is set to YES.
 
-SEARCHENGINE_URL       =
+SEARCHENGINE_URL       = https://doxygen.reactos.org/doxysearch.cgi
 
 # When SERVER_BASED_SEARCH and EXTERNAL_SEARCH are both enabled the unindexed
 # search data is written to a file for indexing by an external tool. With the
