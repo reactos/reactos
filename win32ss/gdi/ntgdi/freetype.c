@@ -4581,12 +4581,13 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* Requested a family, but the candidate's family is different. */
             GOT_PENALTY("Family", 9000);
         }
-        if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
-        {
-            /* FamilyUnknown Penalty 8000 */
-            /* Requested a family, but the candidate has no family. */
-            GOT_PENALTY("FamilyUnknown", 8000);
-        }
+    }
+
+    if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
+    {
+        /* FamilyUnknown Penalty 8000 */
+        /* Requested a family, but the candidate has no family. */
+        GOT_PENALTY("FamilyUnknown", 8000);
     }
 
     /* Is the candidate a non-vector font? */
