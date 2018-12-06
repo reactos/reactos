@@ -1631,6 +1631,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     PLFONT plfont;
     LOGFONTW *plf;
 
+    ASSERT(lf);
     plfont = LFONT_AllocFontWithHandle();
     if (!plfont)
     {

@@ -293,7 +293,10 @@ FASTCALL
 FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
 {
     ULONG cjMaxSize;
-    ENUMLOGFONTEXDVW *plf = &plfont->logfont;
+    ENUMLOGFONTEXDVW *plf;
+
+    ASSERT(plfont);
+    plf = &plfont->logfont;
 
     if (!(plfont->fl & TEXTOBJECT_INIT))
     {
@@ -1081,6 +1084,7 @@ NtGdiGetRealizationInfo(
   }
   pdcattr = pDc->pdcattr;
   pTextObj = RealizeFontInit(pdcattr->hlfntNew);
+  ASSERT(pTextObj != NULL);
   pFontGdi = ObjToGDI(pTextObj->Font, FONT);
   TEXTOBJ_UnlockText(pTextObj);
   DC_UnlockDc(pDc);
