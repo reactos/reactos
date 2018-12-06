@@ -20,7 +20,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -52,7 +52,7 @@ BEGIN
     PUSHBUTTON  "默认页(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "空白页(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "浏览历史记录", IDC_STATIC, 4, 66, 312, 42
-    LTEXT       "您可以删除缓存的页面、 小型文字檔案和其他数据。",
+    LTEXT       "您可以删除缓存的页面、 Cookie 和其他数据。",
                 IDC_STATIC, 10, 76, 300, 10
     PUSHBUTTON  "删除文件...(&F)", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "设置...(&S)", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
