@@ -32,7 +32,7 @@
 @ stdcall DhcpRenewIpAddressLease(long)
 @ stub DhcpRenewIpAddressLeaseEx
 @ stub DhcpRequestOptions
-@ stub DhcpRequestParams
+@ stdcall DhcpRequestParams(long ptr ptr ptr long ptr long ptr ptr ptr ptr)
 @ stdcall DhcpStaticRefreshParams(long long long)
 @ stub DhcpUndoRequestParams
 @ stub McastApiCleanup

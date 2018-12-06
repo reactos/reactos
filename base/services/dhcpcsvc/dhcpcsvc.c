@@ -255,6 +255,21 @@ DhcpNotifyConfigChange(LPWSTR ServerName,
     return 0;
 }
 
+DWORD APIENTRY
+DhcpRequestParams(DWORD Flags,
+                  PVOID Reserved,
+                  LPWSTR AdapterName,
+                  LPDHCPCAPI_CLASSID ClassId,
+                  DHCPCAPI_PARAMS_ARRAY SendParams,
+                  DHCPCAPI_PARAMS_ARRAY RecdParams,
+                  LPBYTE Buffer,
+                  LPDWORD pSize,
+                  LPWSTR RequestIdStr)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /*!
  * Get DHCP info for an adapter
  *
