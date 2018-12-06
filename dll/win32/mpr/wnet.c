@@ -2012,6 +2012,9 @@ static DWORD wnet_use_provider( struct use_connection_context *ctxt, NETRESOURCE
     return ret;
 }
 
+static const WCHAR providerType[] = { 'P','r','o','v','i','d','e','r','T','y','p','e',0 };
+static const WCHAR userName[] = { 'U','s','e','r','N','a','m','e',0 };
+
 static DWORD wnet_use_connection( struct use_connection_context *ctxt )
 {
     WNetProvider *provider;
@@ -2068,7 +2071,6 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         }
     }
 
-#ifdef __REACTOS__
     if (ret == WN_SUCCESS && ctxt->flags & CONNECT_UPDATE_PROFILE)
     {
         HKEY user_profile;
@@ -2084,26 +2086,26 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
             HKEY network;
             WCHAR subkey[10] = {'N', 'e', 't', 'w', 'o', 'r', 'k', '\\', netres.lpLocalName[0], 0};
 
-            if (RegCreateKeyExW(user_profile, subkey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &network, NULL) == ERROR_SUCCESS)
+            if (RegCreateKeyExW(user_profile, subkey, 0, NULL, REG_OPTION_NON_VOLATILE,
+                                KEY_ALL_ACCESS, NULL, &network, NULL) == ERROR_SUCCESS)
             {
                 DWORD dword_arg = RESOURCETYPE_DISK;
                 DWORD len = (strlenW(provider->name) + 1) * sizeof(WCHAR);
+                static const WCHAR empty[1] = {0};
 
-                RegSetValueExW(network, L"ConnectionType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
-                RegSetValueExW(network, L"ProviderName", 0, REG_SZ, (const BYTE *)provider->name, len);
-                dword_arg = provider->dwNetType;
-                RegSetValueExW(network, L"ProviderType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
+                RegSetValueExW(network, connectionType, 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
+                RegSetValueExW(network, providerName, 0, REG_SZ, (const BYTE *)provider->name, len);
+                RegSetValueExW(network, providerType, 0, REG_DWORD, (const BYTE *)&provider->dwNetType, sizeof(DWORD));
                 len = (strlenW(netres.lpRemoteName) + 1) * sizeof(WCHAR);
-                RegSetValueExW(network, L"RemotePath", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
-                len = 0;
-                RegSetValueExW(network, L"UserName", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
+                RegSetValueExW(network, remotePath, 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
+                len = sizeof(empty);
+                RegSetValueExW(network, userName, 0, REG_SZ, (const BYTE *)empty, len);
                 RegCloseKey(network);
             }
 
             RegCloseKey(user_profile);
         }
     }
-#endif
 
     return ret;
 }
