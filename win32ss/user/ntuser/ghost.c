@@ -30,7 +30,7 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     RTL_ATOM Atom = 0;
 
     if (!Window)
-        return FALSE;   // not a window
+        return FALSE;
 
     if (Window->fnid && !(Window->fnid & FNID_DESTROY))
     {
@@ -77,6 +77,7 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
 
     _SEH2_TRY
     {
+        ProbeForRead(Prop, sizeof(PROPERTY), 1);
         hwndGhost = (HWND)(Prop ? Prop->Data : NULL);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -99,7 +100,7 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
 
 HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
 {
-    GHOST_DATA *UserData;
+    const GHOST_DATA *UserData;
     PWND pGhostWnd;
     HWND hwndTarget;
 
@@ -116,11 +117,13 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
         return NULL;
     }
 
-    UserData = (GHOST_DATA *)pGhostWnd->dwUserData;
+    UserData = (const GHOST_DATA *)pGhostWnd->dwUserData;
     if (UserData)
     {
+        ProbeForRead
         _SEH2_TRY
         {
+            ProbeForRead(UserData, sizeof(GHOST_DATA), 1);
             hwndTarget = UserData->hwndTarget;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
