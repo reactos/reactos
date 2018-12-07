@@ -305,7 +305,7 @@ _getopt_internal(
 
         if (ambig && !exact) {
             if (o->opterr) {
-                UDFPrint(("%ws: option `%s' is ambiguous\n",
+                UDFPrintErr(("%ws: option `%s' is ambiguous\n",
                      argv[0], argv[o->optind]));
             }
             o->nextchar += my_strlen (o->nextchar);
@@ -326,12 +326,12 @@ _getopt_internal(
                     if (o->opterr) {
                         if (argv[o->optind - 1][1] == '-') {
                             /* --option */
-                            UDFPrint((
+                            UDFPrintErr((
                                  "%ws: option `--%ws' doesn't allow an argument\n",
                                  argv[0], pfound->name));
                         } else {
                             /* +option or -option */
-                            UDFPrint((
+                            UDFPrintErr((
                                  "%ws: option `%c%ws' doesn't allow an argument\n",
                                  argv[0], argv[o->optind - 1][0], pfound->name));
                         }
@@ -346,7 +346,7 @@ _getopt_internal(
                     o->optarg = argv[(o->optind)++];
                 } else {
                     if (o->opterr)
-                        UDFPrint(("%ws: option `%ws' requires an argument\n",
+                        UDFPrintErr(("%ws: option `%ws' requires an argument\n",
                            argv[0], argv[o->optind - 1]));
                     o->nextchar += my_strlen (o->nextchar);
                     return optstring[0] == ':' ? ':' : BAD_OPTION;
@@ -372,11 +372,11 @@ _getopt_internal(
             {
                 if (argv[o->optind][1] == '-') {
                     /* --option */
-                    UDFPrint(("%ws: unrecognized option `--%ws'\n",
+                    UDFPrintErr(("%ws: unrecognized option `--%ws'\n",
                          argv[0], o->nextchar));
                 } else {
                     /* +option or -option */
-                    UDFPrint(("%ws: unrecognized option `%c%ws'\n",
+                    UDFPrintErr(("%ws: unrecognized option `%c%ws'\n",
                          argv[0], argv[o->optind][0], o->nextchar));
                 }
             }
@@ -400,7 +400,7 @@ _getopt_internal(
         {
             if (o->opterr)
             {
-                UDFPrint(("%ws: illegal option -- %c\n", argv[0], c));
+                UDFPrintErr(("%ws: illegal option -- %c\n", argv[0], c));
             }
             o->optopt = c;
             return BAD_OPTION;
@@ -432,7 +432,7 @@ _getopt_internal(
                 {
                     if (o->opterr)
                     {
-                        UDFPrint(("%ws: option requires an argument -- %c\n",
+                        UDFPrintErr(("%ws: option requires an argument -- %c\n",
                              argv[0], c));
                     }
                     o->optopt = c;
