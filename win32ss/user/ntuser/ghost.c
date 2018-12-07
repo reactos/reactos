@@ -115,12 +115,6 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
     HWND hwndTarget;
 
     pGhostWnd = ValidateHwndNoErr(hwndGhost);
-    if (!pGhostWnd)
-    {
-        DPRINT("Not a window\n");
-        return NULL;
-    }
-
     if (!IntIsGhostWindow(pGhostWnd))
     {
         DPRINT("Not a ghost window\n");
