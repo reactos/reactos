@@ -29,7 +29,7 @@ BOOL FASTCALL IntIsGhostWindow(HWND hWnd)
     }
     else
     {
-        DPRINT("Unable to get class name\n");
+        DPRINT1("Unable to get class name\n");
     }
     RtlFreeUnicodeString(&ClassName);
 
@@ -41,6 +41,7 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
     RTL_ATOM Atom;
     PWND pHungWnd;
     PPROPERTY Prop;
+    HWND hwndGhost;
 
     pHungWnd = ValidateHwndNoErr(hwndHung);
     if (!pHungWnd)
@@ -52,8 +53,20 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
     IntGetAtomFromStringOrAtom(&GhostProp, &Atom);
 
     Prop = UserGetProp(pHungWnd, Atom, TRUE);
-    if (Prop && ValidateHwndNoErr((HWND)Prop->Data))
-        return (HWND)Prop->Data;
+
+    _SEH2_TRY
+    {
+        hwndGhost = (HWND)(Prop ? Prop->Data : NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception!\n");
+        hwndGhost = NULL;
+    }
+    _SEH2_END;
+
+    if (hwndGhost && ValidateHwndNoErr(hwndGhost))
+        return hwndGhost;
 
     DPRINT("No prop\n");
     return NULL;
@@ -63,17 +76,48 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
 {
     GHOST_DATA *UserData;
     PWND pGhostWnd;
+    HWND hwndTarget;
 
     if (!IntIsGhostWindow(hwndGhost))
+    {
+        DPRINT("Not a ghost window");
         return NULL;
+    }
 
     pGhostWnd = ValidateHwndNoErr(hwndGhost);
     if (!pGhostWnd)
+    {
+        DPRINT("Not a window");
         return NULL;
+    }
 
     UserData = (GHOST_DATA *)pGhostWnd->dwUserData;
-    if (UserData && ValidateHwndNoErr(UserData->hwndTarget))
-        return UserData->hwndTarget;
+    if (UserData)
+    {
+        _SEH2_TRY
+        {
+            hwndTarget = UserData->hwndTarget;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DPRINT1("Exception!\n");
+            hwndTarget = NULL;
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        DPRINT("No user data");
+        hwndTarget = NULL;
+    }
+
+    if (hwndTarget)
+    {
+        if (ValidateHwndNoErr(hwndTarget))
+            return hwndTarget;
+
+        DPRINT1("Not a window\n");
+    }
 
     return NULL;
 }
@@ -83,33 +127,27 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
     PWND pHungWnd = ValidateHwndNoErr(hwndHung);
     if (!pHungWnd)
     {
-        DPRINT("Not a window\n");
+        DPRINT1("Not a window\n");
         return FALSE;   // not a window
     }
 
     if (IntIsGhostWindow(hwndHung))
     {
-        DPRINT("IntIsGhostWindow\n");
+        DPRINT1("IntIsGhostWindow\n");
         return FALSE;   // ghost window cannot be being ghosted
     }
 
     if (!MsqIsHung(pHungWnd->head.pti))
     {
-        DPRINT("Not hung window\n");
+        DPRINT1("Not hung window\n");
         return FALSE;   // not hung window
     }
 
     if (!(pHungWnd->style & WS_VISIBLE))
-    {
-        DPRINT("Not visible\n");
         return FALSE;   // invisible
-    }
 
     if (pHungWnd->style & WS_CHILD)
-    {
-        DPRINT("Child\n");
         return FALSE;   // child
-    }
 
     if (NtUserGhostWindowFromHungWindow(hwndHung))
     {
