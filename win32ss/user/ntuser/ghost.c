@@ -41,16 +41,26 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     }
 
     // check class name
-    RtlInitUnicodeString(&ClassName, NULL);
-    Len = UserGetClassName(Window->pcls, &ClassName, Atom, FALSE);
-    if (Len)
+    _SEH2_TRY
     {
-        Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
+        RtlInitUnicodeString(&ClassName, NULL);
+        Len = UserGetClassName(Window->pcls, &ClassName, Atom, FALSE);
+        if (Len > 0)
+        {
+            Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
+        }
+        else
+        {
+            DPRINT1("Unable to get class name\n");
+        }
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("Unable to get class name\n");
+        DPRINT1("Exception!\n");
+        Ret = FALSE;
     }
+    _SEH2_END;
+
     RtlFreeUnicodeString(&ClassName);
 
     return Ret;
@@ -120,7 +130,6 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
     UserData = (const GHOST_DATA *)pGhostWnd->dwUserData;
     if (UserData)
     {
-        ProbeForRead
         _SEH2_TRY
         {
             ProbeForRead(UserData, sizeof(GHOST_DATA), 1);
