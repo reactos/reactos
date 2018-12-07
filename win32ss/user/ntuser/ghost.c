@@ -27,6 +27,10 @@ BOOL FASTCALL IntIsGhostWindow(HWND hWnd)
     {
         Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
     }
+    else
+    {
+        DPRINT("Unable to get class name\n");
+    }
     RtlFreeUnicodeString(&ClassName);
 
     return Ret;
@@ -40,7 +44,10 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
 
     pHungWnd = ValidateHwndNoErr(hwndHung);
     if (!pHungWnd)
+    {
+        DPRINT("Not a window\n");
         return NULL;
+    }
 
     IntGetAtomFromStringOrAtom(&GhostProp, &Atom);
 
@@ -48,6 +55,7 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
     if (Prop && ValidateHwndNoErr((HWND)Prop->Data))
         return (HWND)Prop->Data;
 
+    DPRINT("No prop\n");
     return NULL;
 }
 
@@ -74,22 +82,40 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
 {
     PWND pHungWnd = ValidateHwndNoErr(hwndHung);
     if (!pHungWnd)
+    {
+        DPRINT("Not a window\n");
         return FALSE;   // not a window
+    }
 
     if (IntIsGhostWindow(hwndHung))
+    {
+        DPRINT("IntIsGhostWindow\n");
         return FALSE;   // ghost window cannot be being ghosted
+    }
 
     if (!MsqIsHung(pHungWnd->head.pti))
+    {
+        DPRINT("Not hung window\n");
         return FALSE;   // not hung window
+    }
 
     if (!(pHungWnd->style & WS_VISIBLE))
+    {
+        DPRINT("Not visible\n");
         return FALSE;   // invisible
+    }
 
     if (pHungWnd->style & WS_CHILD)
+    {
+        DPRINT("Child\n");
         return FALSE;   // child
+    }
 
     if (NtUserGhostWindowFromHungWindow(hwndHung))
+    {
+        DPRINT("Already ghosting\n");
         return FALSE;   // already ghosting
+    }
 
     // TODO:
     // 1. Create a thread.
