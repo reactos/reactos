@@ -22,13 +22,13 @@ UserGetClassName(IN PCLS Class,
 static UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(GHOSTCLASSNAME);
 static UNICODE_STRING GhostProp = RTL_CONSTANT_STRING(GHOST_PROP);
 
-BOOL FASTCALL IntIsGhostWindow(HWND hWnd)
+BOOL FASTCALL IntIsGhostWindow(PWND Window)
 {
     BOOLEAN Ret = FALSE;
     UNICODE_STRING ClassName;
     INT iCls, Len;
     RTL_ATOM Atom = 0;
-    PWND Window = UserGetWindowObject(hWnd);
+
     if (!Window)
         return FALSE;   // not a window
 
@@ -103,16 +103,16 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
     PWND pGhostWnd;
     HWND hwndTarget;
 
-    if (!IntIsGhostWindow(hwndGhost))
-    {
-        DPRINT("Not a ghost window\n");
-        return NULL;
-    }
-
     pGhostWnd = ValidateHwndNoErr(hwndGhost);
     if (!pGhostWnd)
     {
         DPRINT("Not a window\n");
+        return NULL;
+    }
+
+    if (!IntIsGhostWindow(pGhostWnd))
+    {
+        DPRINT("Not a ghost window\n");
         return NULL;
     }
 
@@ -156,10 +156,10 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         return FALSE;   // not a window
     }
 
-    if (IntIsGhostWindow(hwndHung))
+    if (IntIsGhostWindow(pHungWnd))
     {
         DPRINT1("IntIsGhostWindow\n");
-        return FALSE;   // ghost window cannot be being ghosted
+        return FALSE;   // ghost window cannot be ghosted
     }
 
     if (!MsqIsHung(pHungWnd->head.pti))
