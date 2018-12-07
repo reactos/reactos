@@ -65,10 +65,18 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
     }
     _SEH2_END;
 
-    if (hwndGhost && ValidateHwndNoErr(hwndGhost))
-        return hwndGhost;
+    if (hwndGhost)
+    {
+        if (ValidateHwndNoErr(hwndGhost))
+            return hwndGhost;
 
-    DPRINT("No prop\n");
+        DPRINT("Not a window\n");
+    }
+    else
+    {
+        DPRINT("No prop\n");
+    }
+
     return NULL;
 }
 
