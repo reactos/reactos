@@ -84,21 +84,9 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
         ASSERT(FALSE);
 
     Prop = UserGetProp(pHungWnd, Atom, TRUE);
-
-    _SEH2_TRY
+    if (Prop)
     {
-        ProbeForRead(Prop, sizeof(PROPERTY), 1);
-        hwndGhost = (HWND)(Prop ? Prop->Data : NULL);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        DPRINT1("Exception!\n");
-        hwndGhost = NULL;
-    }
-    _SEH2_END;
-
-    if (hwndGhost)
-    {
+        hwndGhost = (HWND)Prop->Data;
         if (ValidateHwndNoErr(hwndGhost))
             return hwndGhost;
 
