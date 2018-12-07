@@ -70,7 +70,8 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
         return NULL;
     }
 
-    IntGetAtomFromStringOrAtom(&GhostProp, &Atom);
+    if (!IntGetAtomFromStringOrAtom(&GhostProp, &Atom))
+        ASSERT(FALSE);
 
     Prop = UserGetProp(pHungWnd, Atom, TRUE);
 
