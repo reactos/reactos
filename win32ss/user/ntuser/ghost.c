@@ -64,7 +64,7 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
         return NULL;
 
     UserData = (GHOST_DATA *)pGhostWnd->dwUserData;
-    if (UserData)
+    if (UserData && ValidateHwndNoErr(UserData->hwndTarget))
         return UserData->hwndTarget;
 
     return NULL;
