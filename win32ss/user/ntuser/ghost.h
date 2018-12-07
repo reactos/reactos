@@ -1,1 +1,1 @@
-BOOL FASTCALL IntGoGhost(PWND Window, BOOL bGo);
+BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung);

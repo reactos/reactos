@@ -1443,7 +1443,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         }
 
         TRACE("Let's go Ghost!\n");
-        IntGoGhost(Window, TRUE);
+        IntMakeHungWindowGhosted(hWnd);
     }
 
     if (Window->state & WNDS_DESTROYED)
