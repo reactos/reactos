@@ -11,14 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL FASTCALL LookupFnIdToiCls(int FnId, int *iCls);
-
-INT
-UserGetClassName(IN PCLS Class,
-                 IN OUT PUNICODE_STRING ClassName,
-                 IN RTL_ATOM Atom,
-                 IN BOOL Ansi);
-
 static UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(GHOSTCLASSNAME);
 static UNICODE_STRING GhostProp = RTL_CONSTANT_STRING(GHOST_PROP);
 
