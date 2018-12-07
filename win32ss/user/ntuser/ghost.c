@@ -72,10 +72,6 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
 
         DPRINT("Not a window\n");
     }
-    else
-    {
-        DPRINT("No prop\n");
-    }
 
     return NULL;
 }
