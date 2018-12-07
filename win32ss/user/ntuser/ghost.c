@@ -88,14 +88,14 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
 
     if (!IntIsGhostWindow(hwndGhost))
     {
-        DPRINT("Not a ghost window");
+        DPRINT("Not a ghost window\n");
         return NULL;
     }
 
     pGhostWnd = ValidateHwndNoErr(hwndGhost);
     if (!pGhostWnd)
     {
-        DPRINT("Not a window");
+        DPRINT("Not a window\n");
         return NULL;
     }
 
@@ -115,7 +115,7 @@ HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
     }
     else
     {
-        DPRINT("No user data");
+        DPRINT("No user data\n");
         hwndTarget = NULL;
     }
 
