@@ -11,6 +11,14 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL FASTCALL LookupFnIdToiCls(int FnId, int *iCls);
+
+INT
+UserGetClassName(IN PCLS Class,
+                 IN OUT PUNICODE_STRING ClassName,
+                 IN RTL_ATOM Atom,
+                 IN BOOL Ansi);
+
 static UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(GHOSTCLASSNAME);
 static UNICODE_STRING GhostProp = RTL_CONSTANT_STRING(GHOST_PROP);
 
@@ -18,11 +26,23 @@ BOOL FASTCALL IntIsGhostWindow(HWND hWnd)
 {
     BOOLEAN Ret = FALSE;
     UNICODE_STRING ClassName;
-    INT Len;
+    INT iCls, Len;
+    RTL_ATOM Atom = 0;
+    PWND Window = UserGetWindowObject(hWnd);
+    if (!Window)
+        return FALSE;   // not a window
+
+    if (Window->fnid && !(Window->fnid & FNID_DESTROY))
+    {
+        if (LookupFnIdToiCls(Window->fnid, &iCls))
+        {
+            Atom = gpsi->atomSysClass[iCls];
+        }
+    }
 
     // check class name
     RtlInitUnicodeString(&ClassName, NULL);
-    Len = NtUserGetClassName(hWnd, TRUE, &ClassName);
+    Len = UserGetClassName(Window->pcls, &ClassName, Atom, FALSE);
     if (Len)
     {
         Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
