@@ -324,13 +324,15 @@ AssignDriveLetters(
     Letter = L'C';
 
     /* Assign drive letters to primary partitions */
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
+    for (Entry1 = List->DiskListHead.Flink;
+         Entry1 != &List->DiskListHead;
+         Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
 
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
 
@@ -350,21 +352,19 @@ AssignDriveLetters(
                     }
                 }
             }
-
-            Entry2 = Entry2->Flink;
         }
-
-        Entry1 = Entry1->Flink;
     }
 
     /* Assign drive letters to logical drives */
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
+    for (Entry1 = List->DiskListHead.Flink;
+         Entry1 != &List->DiskListHead;
+         Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
 
-        Entry2 = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
 
@@ -383,11 +383,7 @@ AssignDriveLetters(
                     }
                 }
             }
-
-            Entry2 = Entry2->Flink;
         }
-
-        Entry1 = Entry1->Flink;
     }
 }
 
@@ -1018,8 +1014,9 @@ ScanForUnpartitionedDiskSpace(
     LastSectorCount = 0ULL;
     LastUnusedSectorCount = 0ULL;
 
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
+    for (Entry = DiskEntry->PrimaryPartListHead.Flink;
+         Entry != &DiskEntry->PrimaryPartListHead;
+         Entry = Entry->Flink)
     {
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
@@ -1053,8 +1050,6 @@ ScanForUnpartitionedDiskSpace(
             LastStartSector = PartEntry->StartSector.QuadPart;
             LastSectorCount = PartEntry->SectorCount.QuadPart;
         }
-
-        Entry = Entry->Flink;
     }
 
     /* Check for trailing unpartitioned disk space */
@@ -1114,8 +1109,9 @@ ScanForUnpartitionedDiskSpace(
         LastSectorCount = 0ULL;
         LastUnusedSectorCount = 0ULL;
 
-        Entry = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry != &DiskEntry->LogicalPartListHead)
+        for (Entry = DiskEntry->LogicalPartListHead.Flink;
+             Entry != &DiskEntry->LogicalPartListHead;
+             Entry = Entry->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
@@ -1150,8 +1146,6 @@ ScanForUnpartitionedDiskSpace(
                 LastStartSector = PartEntry->StartSector.QuadPart;
                 LastSectorCount = PartEntry->SectorCount.QuadPart;
             }
-
-            Entry = Entry->Flink;
         }
 
         /* Check for trailing unpartitioned disk space */
@@ -1221,16 +1215,15 @@ SetDiskSignature(
          *   Check also signatures from disks, which are
          *   not visible (bootable) by the bios.
          */
-        Entry2 = List->DiskListHead.Flink;
-        while (Entry2 != &List->DiskListHead)
+        for (Entry2 = List->DiskListHead.Flink;
+             Entry2 != &List->DiskListHead;
+             Entry2 = Entry2->Flink)
         {
             DiskEntry2 = CONTAINING_RECORD(Entry2, DISKENTRY, ListEntry);
 
             if (DiskEntry != DiskEntry2 &&
                 DiskEntry->LayoutBuffer->Signature == DiskEntry2->LayoutBuffer->Signature)
                 break;
-
-            Entry2 = Entry2->Flink;
         }
 
         if (Entry2 == &List->DiskListHead)
@@ -1247,8 +1240,9 @@ UpdateDiskSignatures(
     PDISKENTRY DiskEntry;
 
     /* Print partition lines */
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
@@ -1258,8 +1252,6 @@ UpdateDiskSignatures(
             SetDiskSignature(List, DiskEntry);
             DiskEntry->LayoutBuffer->PartitionEntry[0].RewritePartition = TRUE;
         }
-
-        Entry = Entry->Flink;
     }
 }
 
@@ -1395,8 +1387,9 @@ AddDiskToList(
     RtlFreeHeap(ProcessHeap, 0, Mbr);
 
 
-    ListEntry = List->BiosDiskListHead.Flink;
-    while (ListEntry != &List->BiosDiskListHead)
+    for (ListEntry = List->BiosDiskListHead.Flink;
+         ListEntry != &List->BiosDiskListHead;
+         ListEntry = ListEntry->Flink)
     {
         BiosDiskEntry = CONTAINING_RECORD(ListEntry, BIOSDISKENTRY, ListEntry);
         /* FIXME:
@@ -1420,7 +1413,6 @@ AddDiskToList(
                 // FIXME: What to do?
             }
         }
-        ListEntry = ListEntry->Flink;
     }
 
     if (!DiskEntry->BiosFound)
@@ -1761,11 +1753,11 @@ GetDiskByBiosNumber(
     PLIST_ENTRY Entry;
 
     /* Loop over the disks and find the correct one */
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (DiskEntry->BiosDiskNumber == BiosDiskNumber)
         {
@@ -1787,11 +1779,11 @@ GetDiskByNumber(
     PLIST_ENTRY Entry;
 
     /* Loop over the disks and find the correct one */
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (DiskEntry->DiskNumber == DiskNumber)
         {
@@ -1815,11 +1807,11 @@ GetDiskBySCSI(
     PLIST_ENTRY Entry;
 
     /* Loop over the disks and find the correct one */
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (DiskEntry->Port == Port &&
             DiskEntry->Bus  == Bus  &&
@@ -1843,11 +1835,11 @@ GetDiskBySignature(
     PLIST_ENTRY Entry;
 
     /* Loop over the disks and find the correct one */
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (DiskEntry->LayoutBuffer->Signature == Signature)
         {
@@ -1870,11 +1862,11 @@ GetPartition(
     PLIST_ENTRY Entry;
 
     /* Disk found, loop over the primary partitions first... */
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
+    for (Entry = DiskEntry->PrimaryPartListHead.Flink;
+         Entry != &DiskEntry->PrimaryPartListHead;
+         Entry = Entry->Flink)
     {
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (PartEntry->PartitionNumber == PartitionNumber)
         {
@@ -1884,11 +1876,11 @@ GetPartition(
     }
 
     /* ... then over the logical partitions if needed */
-    Entry = DiskEntry->LogicalPartListHead.Flink;
-    while (Entry != &DiskEntry->LogicalPartListHead)
+    for (Entry = DiskEntry->LogicalPartListHead.Flink;
+         Entry != &DiskEntry->LogicalPartListHead;
+         Entry = Entry->Flink)
     {
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         if (PartEntry->PartitionNumber == PartitionNumber)
         {
@@ -2035,8 +2027,9 @@ GetNextPartition(
     }
 
     /* Search for the first partition entry on the next disk */
-    DiskListEntry = List->CurrentDisk->ListEntry.Flink;
-    while (DiskListEntry != &List->DiskListHead)
+    for (DiskListEntry = List->CurrentDisk->ListEntry.Flink;
+         DiskListEntry != &List->DiskListHead;
+         DiskListEntry = DiskListEntry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
 
@@ -2049,8 +2042,6 @@ GetNextPartition(
             List->CurrentPartition = PartEntry;
             return List->CurrentPartition;
         }
-
-        DiskListEntry = DiskListEntry->Flink;
     }
 
     return NULL;
@@ -2113,8 +2104,9 @@ GetPrevPartition(
     }
 
     /* Search for the last partition entry on the previous disk */
-    DiskListEntry = List->CurrentDisk->ListEntry.Blink;
-    while (DiskListEntry != &List->DiskListHead)
+    for (DiskListEntry = List->CurrentDisk->ListEntry.Blink;
+         DiskListEntry != &List->DiskListHead;
+         DiskListEntry = DiskListEntry->Blink)
     {
         DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
 
@@ -2143,8 +2135,6 @@ GetPrevPartition(
                 return List->CurrentPartition;
             }
         }
-
-        DiskListEntry = DiskListEntry->Blink;
     }
 
     return NULL;
@@ -2192,14 +2182,13 @@ GetPrimaryPartitionCount(
     PPARTENTRY PartEntry;
     ULONG Count = 0;
 
-    Entry = DiskEntry->PrimaryPartListHead.Flink;
-    while (Entry != &DiskEntry->PrimaryPartListHead)
+    for (Entry = DiskEntry->PrimaryPartListHead.Flink;
+         Entry != &DiskEntry->PrimaryPartListHead;
+         Entry = Entry->Flink)
     {
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
         if (PartEntry->IsPartitioned)
             Count++;
-
-        Entry = Entry->Flink;
     }
 
     return Count;
@@ -2214,14 +2203,13 @@ GetLogicalPartitionCount(
     PPARTENTRY PartEntry;
     ULONG Count = 0;
 
-    ListEntry = DiskEntry->LogicalPartListHead.Flink;
-    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
+         ListEntry != &DiskEntry->LogicalPartListHead;
+         ListEntry = ListEntry->Flink)
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
         if (PartEntry->IsPartitioned)
             Count++;
-
-        ListEntry = ListEntry->Flink;
     }
 
     return Count;
@@ -2303,8 +2291,9 @@ UpdateDiskLayout(
 
     /* Update the primary partition table */
     Index = 0;
-    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
-    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+         ListEntry != &DiskEntry->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
@@ -2338,16 +2327,15 @@ UpdateDiskLayout(
 
             Index++;
         }
-
-        ListEntry = ListEntry->Flink;
     }
 
     ASSERT(Index <= 4);
 
     /* Update the logical partition table */
     Index = 4;
-    ListEntry = DiskEntry->LogicalPartListHead.Flink;
-    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
+         ListEntry != &DiskEntry->LogicalPartListHead;
+         ListEntry = ListEntry->Flink)
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
@@ -2393,8 +2381,6 @@ UpdateDiskLayout(
             PartitionNumber++;
             Index += 4;
         }
-
-        ListEntry = ListEntry->Flink;
     }
 
     /* Wipe unused primary partition entries */
@@ -2989,10 +2975,11 @@ CheckActiveSystemPartition(
      * The disk is not new, check if any partition is initialized;
      * if not, the first one becomes the system partition.
      */
-    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
-    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+         ListEntry != &DiskEntry->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
     {
-        /* Retrieve the partition and go to the next one */
+        /* Retrieve the partition */
         PartEntry = CONTAINING_RECORD(ListEntry,
                                       PARTENTRY,
                                       ListEntry);
@@ -3002,9 +2989,6 @@ CheckActiveSystemPartition(
         {
             break;
         }
-
-        /* Go to the next one */
-        ListEntry = ListEntry->Flink;
     }
     if (ListEntry == &DiskEntry->PrimaryPartListHead)
     {
@@ -3029,14 +3013,14 @@ CheckActiveSystemPartition(
     DPRINT1("We are here (3)!\n");
 
     /* The disk is not new, scan all partitions to find the (active) system partition */
-    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
-    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+         ListEntry != &DiskEntry->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
     {
-        /* Retrieve the partition and go to the next one */
+        /* Retrieve the partition */
         PartEntry = CONTAINING_RECORD(ListEntry,
                                       PARTENTRY,
                                       ListEntry);
-        ListEntry = ListEntry->Flink;
 
         /* Check if the partition is partitioned and used */
         if (PartEntry->IsPartitioned &&
@@ -3235,8 +3219,9 @@ WritePartitions(
     /* Update the partition numbers */
 
     /* Update the primary partition table */
-    ListEntry = DiskEntry->PrimaryPartListHead.Flink;
-    while (ListEntry != &DiskEntry->PrimaryPartListHead)
+    for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
+         ListEntry != &DiskEntry->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
@@ -3245,13 +3230,12 @@ WritePartitions(
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
             PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
         }
-
-        ListEntry = ListEntry->Flink;
     }
 
     /* Update the logical partition table */
-    ListEntry = DiskEntry->LogicalPartListHead.Flink;
-    while (ListEntry != &DiskEntry->LogicalPartListHead)
+    for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
+         ListEntry != &DiskEntry->LogicalPartListHead;
+         ListEntry = ListEntry->Flink)
     {
         PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
 
@@ -3260,8 +3244,6 @@ WritePartitions(
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
             PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
         }
-
-        ListEntry = ListEntry->Flink;
     }
 
     //
@@ -3289,8 +3271,9 @@ WritePartitionsToDisk(
     if (List == NULL)
         return TRUE;
 
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
@@ -3299,8 +3282,6 @@ WritePartitionsToDisk(
             WritePartitions(List, DiskEntry);
             DiskEntry->Dirty = FALSE;
         }
-
-        Entry = Entry->Flink;
     }
 
     return TRUE;
@@ -3380,15 +3361,17 @@ SetMountedDeviceValues(
     if (List == NULL)
         return FALSE;
 
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
+    for (Entry1 = List->DiskListHead.Flink;
+         Entry1 != &List->DiskListHead;
+         Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1,
                                       DISKENTRY,
                                       ListEntry);
 
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->IsPartitioned)
@@ -3405,12 +3388,11 @@ SetMountedDeviceValues(
                     }
                 }
             }
-
-            Entry2 = Entry2->Flink;
         }
 
-        Entry2 = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->IsPartitioned)
@@ -3427,11 +3409,7 @@ SetMountedDeviceValues(
                     }
                 }
             }
-
-            Entry2 = Entry2->Flink;
         }
-
-        Entry1 = Entry1->Flink;
     }
 
     return TRUE;
@@ -3525,15 +3503,17 @@ GetNextUnformattedPartition(
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
+    for (Entry1 = List->DiskListHead.Flink;
+         Entry1 != &List->DiskListHead;
+         Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1,
                                       DISKENTRY,
                                       ListEntry);
 
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->IsPartitioned && PartEntry->New)
@@ -3543,12 +3523,11 @@ GetNextUnformattedPartition(
                 *pPartEntry = PartEntry;
                 return TRUE;
             }
-
-            Entry2 = Entry2->Flink;
         }
 
-        Entry2 = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->IsPartitioned && PartEntry->New)
@@ -3558,11 +3537,7 @@ GetNextUnformattedPartition(
                 *pPartEntry = PartEntry;
                 return TRUE;
             }
-
-            Entry2 = Entry2->Flink;
         }
-
-        Entry1 = Entry1->Flink;
     }
 
     if (pDiskEntry) *pDiskEntry = NULL;
@@ -3581,15 +3556,17 @@ GetNextUncheckedPartition(
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
-    Entry1 = List->DiskListHead.Flink;
-    while (Entry1 != &List->DiskListHead)
+    for (Entry1 = List->DiskListHead.Flink;
+         Entry1 != &List->DiskListHead;
+         Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1,
                                       DISKENTRY,
                                       ListEntry);
 
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->NeedsCheck == TRUE)
@@ -3599,12 +3576,11 @@ GetNextUncheckedPartition(
                 *pPartEntry = PartEntry;
                 return TRUE;
             }
-
-            Entry2 = Entry2->Flink;
         }
 
-        Entry2 = DiskEntry->LogicalPartListHead.Flink;
-        while (Entry2 != &DiskEntry->LogicalPartListHead)
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry->NeedsCheck == TRUE)
@@ -3614,11 +3590,7 @@ GetNextUncheckedPartition(
                 *pPartEntry = PartEntry;
                 return TRUE;
             }
-
-            Entry2 = Entry2->Flink;
         }
-
-        Entry1 = Entry1->Flink;
     }
 
     if (pDiskEntry) *pDiskEntry = NULL;
