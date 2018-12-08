@@ -64,7 +64,7 @@
 @ stub _is_exception_typeof
 @ stdcall -arch=x86_64 _local_unwind() kernel32._local_unwind
 @ stdcall -arch=i386 _local_unwind2() msvcrt._local_unwind2
-@ stub _local_unwind4
+@ stdcall -version=0x600+ _local_unwind4() msvcrt._local_unwind4
 @ stdcall -arch=i386 _longjmpex() msvcrt._longjmpex
 @ stub _o__CIacos
 @ stub _o__CIasin

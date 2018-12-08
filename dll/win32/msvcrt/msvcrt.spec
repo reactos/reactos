@@ -492,6 +492,7 @@
 @ cdecl _lfind(ptr ptr ptr long ptr)
 @ cdecl _loaddll(str)
 @ cdecl -i386 _local_unwind2(ptr long)
+@ cdecl -i386 -version=0x600+ _local_unwind4(ptr ptr long)
 @ cdecl _localtime64(ptr)
 @ cdecl _lock(long)
 @ cdecl _locking(long long long)

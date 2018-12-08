@@ -11,7 +11,7 @@
 @ stub _ftol2_sse
 @ stub _i64tow_s
 @ stub _itow_s
-@ stub _local_unwind4
+@ stdcall -version=0x600+ _local_unwind4() msvcrt._local_unwind4
 @ stub _ltow_s
 @ stub _snprintf_s
 @ stub _snwprintf_s
