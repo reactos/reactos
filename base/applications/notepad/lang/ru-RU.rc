@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Содержание", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&О программе Блокнот", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
