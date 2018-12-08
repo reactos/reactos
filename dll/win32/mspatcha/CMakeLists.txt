@@ -5,6 +5,8 @@ spec2def(mspatcha.dll mspatcha.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     mspatcha_main.c
+    lzx.c
+    lzx.h
     ${CMAKE_CURRENT_BINARY_DIR}/mspatcha_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mspatcha.def)
 
