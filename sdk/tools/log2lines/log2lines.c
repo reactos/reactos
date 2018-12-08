@@ -420,120 +420,120 @@ translate_files(FILE *inFile, FILE *outFile)
     const char *p     = kdbg_prompt;
     const char *p_eos = p + sizeof(KDBG_PROMPT) - 1; //end of string pos
 
-        memset(Line, '\0', LINESIZE + 1);
-        if (opt_console)
+    memset(Line, '\0', LINESIZE + 1);
+    if (opt_console)
+    {
+        while ((c = fgetc(inFile)) != EOF)
         {
-            while ((c = fgetc(inFile)) != EOF)
+            if (opt_quit)break;
+
+            ch = (unsigned char)c;
+            if (!opt_raw)
             {
-                if (opt_quit)break;
-
-                ch = (unsigned char)c;
-                if (!opt_raw)
+                switch (ch)
                 {
-                    switch (ch)
+                case '\n':
+                    if ( strncmp(Line, KDBG_DISCARD, sizeof(KDBG_DISCARD)-1) == 0 )
                     {
-                    case '\n':
-                        if ( strncmp(Line, KDBG_DISCARD, sizeof(KDBG_DISCARD)-1) == 0 )
+                        memset(Line, '\0', LINESIZE);  // flushed
+                    }
+                    else
+                    {
+                        Line[1] = handle_escape_cmd(outFile, Line, path, LineOut);
+                        if (Line[1] != KDBG_ESC_CHAR)
                         {
-                            memset(Line, '\0', LINESIZE);  // flushed
-                        }
-                        else
-                        {
-                            Line[1] = handle_escape_cmd(outFile, Line, path, LineOut);
-                            if (Line[1] != KDBG_ESC_CHAR)
+                            if (p == p_eos)
                             {
-                                if (p == p_eos)
-                                {
-                                    // kdbg prompt, so already echoed char by char
-                                    memset(Line, '\0', LINESIZE);
-                                    translate_char(c, outFile);
-                                }
-                                else
-                                {
-                                    if (match_line(outFile, Line))
-                                    {
-                                        translate_line(outFile, Line, path, LineOut);
-                                        translate_char(c, outFile);
-                                        report(outFile);
-                                    }
-                                }
-                            }
-                        }
-                        i = 0;
-                        p  = kdbg_prompt;
-                        pc = kdbg_cont;
-                        break;
-                    case '<':
-                        i = 0;
-                        Line[i++] = ch;
-                        break;
-                    case '>':
-                        if (ch == *p)
-                        {
-                            p = p_eos;
-                            translate_line(outFile, Line, path, LineOut);
-                        }
-
-                        if (p != p_eos)
-                        {
-                            if (i < LINESIZE)
-                            {
-                                Line[i++] = ch;
-                                translate_line(outFile, Line, path, LineOut);
+                                // kdbg prompt, so already echoed char by char
+                                memset(Line, '\0', LINESIZE);
+                                translate_char(c, outFile);
                             }
                             else
                             {
-                                translate_line(outFile, Line, path, LineOut);
-                                translate_char(c, outFile);
+                                if (match_line(outFile, Line))
+                                {
+                                    translate_line(outFile, Line, path, LineOut);
+                                    translate_char(c, outFile);
+                                    report(outFile);
+                                }
                             }
                         }
-                        else
-                            translate_char(c, outFile);
-                        i = 0;
-                        break;
-                    default:
-                        if (ch == *p)p++;
-                        if (ch == *pc)pc++;
+                    }
+                    i = 0;
+                    p  = kdbg_prompt;
+                    pc = kdbg_cont;
+                    break;
+                case '<':
+                    i = 0;
+                    Line[i++] = ch;
+                    break;
+                case '>':
+                    if (ch == *p)
+                    {
+                        p = p_eos;
+                        translate_line(outFile, Line, path, LineOut);
+                    }
+
+                    if (p != p_eos)
+                    {
                         if (i < LINESIZE)
                         {
                             Line[i++] = ch;
-                            if (p == p_eos)
-                            {
-                                translate_char(c, outFile);
-                            }
-                            else if (!*pc)
-                            {
-                                translate_line(outFile, Line, path, LineOut);
-                                i = 0;
-                            }
+                            translate_line(outFile, Line, path, LineOut);
                         }
                         else
                         {
                             translate_line(outFile, Line, path, LineOut);
                             translate_char(c, outFile);
+                        }
+                    }
+                    else
+                        translate_char(c, outFile);
+                    i = 0;
+                    break;
+                default:
+                    if (ch == *p)p++;
+                    if (ch == *pc)pc++;
+                    if (i < LINESIZE)
+                    {
+                        Line[i++] = ch;
+                        if (p == p_eos)
+                        {
+                            translate_char(c, outFile);
+                        }
+                        else if (!*pc)
+                        {
+                            translate_line(outFile, Line, path, LineOut);
                             i = 0;
                         }
                     }
+                    else
+                    {
+                        translate_line(outFile, Line, path, LineOut);
+                        translate_char(c, outFile);
+                        i = 0;
+                    }
                 }
-                else
-                    translate_char(c, outFile);
             }
+            else
+                translate_char(c, outFile);
         }
-        else
-        {   // Line by line, slightly faster but less interactive
-            while (fgets(Line, LINESIZE, inFile) != NULL)
-            {
-                if (opt_quit)break;
+    }
+    else
+    {   // Line by line, slightly faster but less interactive
+        while (fgets(Line, LINESIZE, inFile) != NULL)
+        {
+            if (opt_quit)break;
 
-                if (!opt_raw)
-                {
-                    translate_line(outFile, Line, path, LineOut);
-                    report(outFile);
-                }
-                else
-                    log(outFile, "%s", Line);
+            if (!opt_raw)
+            {
+                translate_line(outFile, Line, path, LineOut);
+                report(outFile);
             }
+            else
+                log(outFile, "%s", Line);
         }
+    }
 
     if (opt_Revision && (strstr(opt_Revision, "regscan") == opt_Revision))
     {
