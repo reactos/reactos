@@ -79,7 +79,7 @@ HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
     return NULL;
 }
 
-HWND APIENTRY NtUserHungWindowFromGhostWindow(HWND hwndGhost)
+HWND APIENTRY UserHungWindowFromGhostWindow(HWND hwndGhost)
 {
     const GHOST_DATA *UserData;
     PWND pGhostWnd;
