@@ -202,4 +202,76 @@ ULONG WINAPI EtwQueryAllTracesA( PEVENT_TRACE_PROPERTIES * parray, ULONG arrayco
     return ERROR_SUCCESS;
 }
 
+/******************************************************************************
+ * EtwFlushTraceA [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwFlushTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceA( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_FLUSH );
+}
+
+/******************************************************************************
+ * EtwFlushTraceW [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwFlushTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceW( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_FLUSH );
+}
+
+/******************************************************************************
+ * EtwQueryTraceA [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwQueryTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceA( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_QUERY );
+}
+
+/******************************************************************************
+ * EtwQueryTraceW [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwQueryTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceW( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_QUERY );
+}
+
+/******************************************************************************
+ * EtwStopTraceA [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwStopTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceA( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_STOP );
+}
+
+/******************************************************************************
+ * EtwStopTraceW [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwStopTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceW( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_STOP );
+}
+
+/******************************************************************************
+ * EtwUpdateTraceA [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwUpdateTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceA( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_UPDATE );
+}
+
+/******************************************************************************
+ * EtwUpdateTraceW [NTDLL.@]
+ *
+ */
+ULONG WINAPI EtwUpdateTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    return EtwControlTraceW( hSession, SessionName, Properties, EVENT_TRACE_CONTROL_UPDATE );
+}
+
 /* EOF */
