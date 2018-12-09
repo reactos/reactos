@@ -49,7 +49,7 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     return Ret;
 }
 
-HWND APIENTRY NtUserGhostWindowFromHungWindow(HWND hwndHung)
+HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
 {
     RTL_ATOM Atom;
     PWND pHungWnd;
@@ -151,7 +151,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
     if (pHungWnd->style & WS_CHILD)
         return FALSE;   // child
 
-    if (NtUserGhostWindowFromHungWindow(hwndHung))
+    if (UserGhostWindowFromHungWindow(hwndHung))
     {
         DPRINT("Already ghosting\n");
         return FALSE;   // already ghosting
