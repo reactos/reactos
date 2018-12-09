@@ -60,32 +60,6 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
 
 /***********************************************************************
  *
- *           OSK_SetAppIcon
- *
- *  Set the application's icon
- */
-BOOL OSK_SetAppIcon()
-{
-    HICON hIconSmall;
-
-    /* Load the icon */
-    hIconSmall = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
-
-    /* Send a message window indicating that the icon has to be set */
-    SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
-
-    if (!hIconSmall)
-    {
-        /* If we fail then return FALSE and bail out */
-        DestroyIcon(hIconSmall);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-/***********************************************************************
- *
  *          OSK_WarningProc
  *
  *  Function handler for the warning dialog box on startup
@@ -134,7 +108,8 @@ INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPar
  */
 int OSK_DlgInitDialog(HWND hDlg)
 {
-    HMONITOR  monitor;
+    HICON hIcon, hIconSm;
+    HMONITOR monitor;
     MONITORINFO info;
     POINT Pt;
     RECT rcWindow;
@@ -146,11 +121,18 @@ int OSK_DlgInitDialog(HWND hDlg)
     LoadDataFromRegistry();
 
     /* Set the application's icon */
-    OSK_SetAppIcon();
+    hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
+    hIconSm = CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
+    if (hIcon || hIconSm)
+    {
+        /* Set the window icons (they are deleted when the process terminates) */
+        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
+    }
 
     /* Get screen info */
     memset(&Pt, 0, sizeof(Pt));
-    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY );
+    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
     info.cbSize = sizeof(info);
     GetMonitorInfoW(monitor, &info);
 
