@@ -49,18 +49,10 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     return Ret;
 }
 
-HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
+HWND APIENTRY IntGhostWindowFromHungWindow(PWND pHungWnd)
 {
     RTL_ATOM Atom;
-    PWND pHungWnd;
     HWND hwndGhost;
-
-    pHungWnd = ValidateHwndNoErr(hwndHung);
-    if (!pHungWnd)
-    {
-        DPRINT("Not a window\n");
-        return NULL;
-    }
 
     if (!IntGetAtomFromStringOrAtom(&GhostProp, &Atom))
         ASSERT(FALSE);
@@ -77,13 +69,22 @@ HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
     return NULL;
 }
 
-HWND APIENTRY UserHungWindowFromGhostWindow(HWND hwndGhost)
+HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
+{
+    PWND pHungWnd = ValidateHwndNoErr(hwndHung);
+    if (!pHungWnd)
+    {
+        DPRINT("Not a window\n");
+        return NULL;
+    }
+    return IntGhostWindowFromHungWindow(pHungWnd);
+}
+
+HWND APIENTRY IntHungWindowFromGhostWindow(PWND pGhostWnd)
 {
     const GHOST_DATA *UserData;
-    PWND pGhostWnd;
     HWND hwndTarget;
 
-    pGhostWnd = ValidateHwndNoErr(hwndGhost);
     if (!IntIsGhostWindow(pGhostWnd))
     {
         DPRINT("Not a ghost window\n");
@@ -122,6 +123,12 @@ HWND APIENTRY UserHungWindowFromGhostWindow(HWND hwndGhost)
     return NULL;
 }
 
+HWND APIENTRY UserHungWindowFromGhostWindow(HWND hwndGhost)
+{
+    PWND pGhostWnd = ValidateHwndNoErr(hwndGhost);
+    return IntHungWindowFromGhostWindow(pGhostWnd);
+}
+
 BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
 {
     PWND pHungWnd = ValidateHwndNoErr(hwndHung);
@@ -149,7 +156,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
     if (pHungWnd->style & WS_CHILD)
         return FALSE;   // child
 
-    if (UserGhostWindowFromHungWindow(hwndHung))
+    if (IntGhostWindowFromHungWindow(pHungWnd))
     {
         DPRINT("Already ghosting\n");
         return FALSE;   // already ghosting
