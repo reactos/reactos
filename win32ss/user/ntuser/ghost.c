@@ -53,7 +53,6 @@ HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
 {
     RTL_ATOM Atom;
     PWND pHungWnd;
-    PPROPERTY Prop;
     HWND hwndGhost;
 
     pHungWnd = ValidateHwndNoErr(hwndHung);
@@ -66,10 +65,9 @@ HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
     if (!IntGetAtomFromStringOrAtom(&GhostProp, &Atom))
         ASSERT(FALSE);
 
-    Prop = UserGetProp(pHungWnd, Atom, TRUE);
-    if (Prop)
+    hwndGhost = (HWND)UserGetProp(pHungWnd, Atom, TRUE);
+    if (hwndGhost)
     {
-        hwndGhost = (HWND)Prop->Data;
         if (ValidateHwndNoErr(hwndGhost))
             return hwndGhost;
 
