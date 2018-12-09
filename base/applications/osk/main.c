@@ -60,6 +60,32 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
 
 /***********************************************************************
  *
+ *           OSK_SetAppIcon
+ *
+ *  Set the application's icon
+ */
+BOOL OSK_SetAppIcon()
+{
+    HICON hIconSmall;
+
+    /* Load the icon */
+    hIconSmall = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+
+    /* Send a message window indicating that the icon has to be set */
+    SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSmall);
+
+    if (!hIconSmall)
+    {
+        /* If we fail then return FALSE and bail out */
+        DestroyIcon(hIconSmall);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *
  *          OSK_WarningProc
  *
  *  Function handler for the warning dialog box on startup
@@ -118,6 +144,9 @@ int OSK_DlgInitDialog(HWND hDlg)
 
     /* Load the settings from the registry hive */
     LoadDataFromRegistry();
+
+    /* Set the application's icon */
+    OSK_SetAppIcon();
 
     /* Get screen info */
     memset(&Pt, 0, sizeof(Pt));
