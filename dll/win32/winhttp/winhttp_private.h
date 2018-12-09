@@ -19,15 +19,27 @@
 #ifndef _WINE_WINHTTP_PRIVATE_H_
 #define _WINE_WINHTTP_PRIVATE_H_
 
-#ifndef __WINE_CONFIG_H
-# error You must include config.h to use this header
-#endif
+#include <wine/config.h>
 
-#include "wine/heap.h"
-#include "wine/list.h"
-#include "wine/unicode.h"
+#include <stdarg.h>
 
-#include <sys/types.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <winsock2.h>
+#include <winhttp.h>
+
+#include <wine/list.h>
+#include <wine/unicode.h>
+
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -44,8 +56,10 @@
 # define ioctlsocket ioctl
 #endif
 
-#include "ole2.h"
-#include "sspi.h"
+#include <sspi.h>
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
 static const WCHAR getW[]    = {'G','E','T',0};
 static const WCHAR postW[]   = {'P','O','S','T',0};
@@ -97,15 +111,6 @@ typedef struct
     WCHAR *path;
 } cookie_t;
 
-typedef struct {
-    struct list entry;
-    LONG ref;
-    WCHAR *hostname;
-    INTERNET_PORT port;
-    BOOL secure;
-    struct list connections;
-} hostdata_t;
-
 typedef struct
 {
     object_header_t hdr;
@@ -121,9 +126,6 @@ typedef struct
     LPWSTR proxy_password;
     struct list cookie_cache;
     HANDLE unload_event;
-    CredHandle cred_handle;
-    BOOL cred_handle_initialized;
-    DWORD secure_protocols;
 } session_t;
 
 typedef struct
@@ -142,12 +144,8 @@ typedef struct
 
 typedef struct
 {
-    struct list entry;
     int socket;
-    struct sockaddr_storage sockaddr;
     BOOL secure; /* SSL active on connection? */
-    hostdata_t *host;
-    ULONGLONG keep_until;
     CtxtHandle ssl_ctx;
     SecPkgContext_StreamSizes ssl_sizes;
     char *ssl_buf;
@@ -156,6 +154,7 @@ typedef struct
     char *peek_msg;
     char *peek_msg_mem;
     size_t peek_len;
+    DWORD security_flags;
 } netconn_t;
 
 typedef struct
@@ -207,8 +206,7 @@ typedef struct
     LPWSTR raw_headers;
     void *optional;
     DWORD optional_len;
-    netconn_t *netconn;
-    DWORD security_flags;
+    netconn_t netconn;
     int resolve_timeout;
     int connect_timeout;
     int send_timeout;
@@ -297,15 +295,17 @@ void send_callback( object_header_t *, DWORD, LPVOID, DWORD ) DECLSPEC_HIDDEN;
 void close_connection( request_t * ) DECLSPEC_HIDDEN;
 
 BOOL netconn_close( netconn_t * ) DECLSPEC_HIDDEN;
-netconn_t *netconn_create( hostdata_t *, const struct sockaddr_storage *, int ) DECLSPEC_HIDDEN;
+BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int ) DECLSPEC_HIDDEN;
+BOOL netconn_connected( netconn_t * ) DECLSPEC_HIDDEN;
+BOOL netconn_create( netconn_t *, int, int, int ) DECLSPEC_HIDDEN;
+BOOL netconn_init( netconn_t * ) DECLSPEC_HIDDEN;
 void netconn_unload( void ) DECLSPEC_HIDDEN;
 ULONG netconn_query_data_available( netconn_t * ) DECLSPEC_HIDDEN;
 BOOL netconn_recv( netconn_t *, void *, size_t, int, int * ) DECLSPEC_HIDDEN;
-BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr_storage *, int ) DECLSPEC_HIDDEN;
-BOOL netconn_secure_connect( netconn_t *, WCHAR *, DWORD, CredHandle * ) DECLSPEC_HIDDEN;
+BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int ) DECLSPEC_HIDDEN;
+BOOL netconn_secure_connect( netconn_t *, WCHAR * ) DECLSPEC_HIDDEN;
 BOOL netconn_send( netconn_t *, const void *, size_t, int * ) DECLSPEC_HIDDEN;
 DWORD netconn_set_timeout( netconn_t *, BOOL, int ) DECLSPEC_HIDDEN;
-BOOL netconn_is_alive( netconn_t * ) DECLSPEC_HIDDEN;
 const void *netconn_get_certificate( netconn_t * ) DECLSPEC_HIDDEN;
 int netconn_get_cipher_strength( netconn_t * ) DECLSPEC_HIDDEN;
 
@@ -316,16 +316,34 @@ void delete_domain( domain_t * ) DECLSPEC_HIDDEN;
 BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HIDDEN;
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
-void release_host( hostdata_t *host ) DECLSPEC_HIDDEN;
-
 BOOL process_header( request_t *request, LPCWSTR field, LPCWSTR value, DWORD flags, BOOL request_only ) DECLSPEC_HIDDEN;
 
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
 void release_typelib( void ) DECLSPEC_HIDDEN;
 
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc( SIZE_T size )
+{
+    return HeapAlloc( GetProcessHeap(), 0, size );
+}
+
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero( SIZE_T size )
+{
+    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size );
+}
+
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc( LPVOID mem, SIZE_T size )
+{
+    return HeapReAlloc( GetProcessHeap(), 0, mem, size );
+}
+
 static inline void* __WINE_ALLOC_SIZE(2) heap_realloc_zero( LPVOID mem, SIZE_T size )
 {
     return HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mem, size );
+}
+
+static inline BOOL heap_free( LPVOID mem )
+{
+    return HeapFree( GetProcessHeap(), 0, mem );
 }
 
 static inline WCHAR *strdupW( const WCHAR *src )
@@ -376,7 +394,5 @@ static inline char *strdupWA_sized( const WCHAR *src, DWORD size )
     }
     return dst;
 }
-
-extern HINSTANCE winhttp_instance DECLSPEC_HIDDEN;
 
 #endif /* _WINE_WINHTTP_PRIVATE_H_ */

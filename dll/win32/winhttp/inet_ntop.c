@@ -51,18 +51,16 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
  * author:
  *	Paul Vixie, 1996.
  */
-
-PCSTR
-WSAAPI
-inet_ntop(INT Family, PVOID pAddr, PSTR pStringBuf, size_t StringBufSize)
+const char *
+inet_ntop(int af, const void *src, char *dst, size_t size)
 {
 
-	switch (Family) {
+	switch (af) {
 	case AF_INET:
-		return (inet_ntop4(pAddr, pStringBuf, StringBufSize));
+		return (inet_ntop4(src, dst, size));
 #ifdef INET6
 	case AF_INET6:
-		return (inet_ntop6(pAddr, pStringBuf, StringBufSize));
+		return (inet_ntop6(src, dst, size));
 #endif
 	default:
 		WSASetLastError(WSAEAFNOSUPPORT);
