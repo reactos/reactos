@@ -13,6 +13,11 @@ BOOL FASTCALL IntGoGhost(PWND Window, BOOL bGo)
     // 1. Create a thread.
     // 2. Create a ghost window in the thread.
     // 3. Do message loop in the thread
-    STUB;
+    static int bWarnedOnce = 0;
+    if (!bWarnedOnce)
+    {
+        bWarnedOnce++;
+        STUB;
+    }
     return FALSE;
 }
