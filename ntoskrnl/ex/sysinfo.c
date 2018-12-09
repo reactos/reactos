@@ -695,6 +695,19 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->IoReadOperationCount = IoReadOperationCount;
     Spi->IoWriteOperationCount = IoWriteOperationCount;
     Spi->IoOtherOperationCount = IoOtherOperationCount;
+    for (i = 0; i < KeNumberProcessors; i ++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            Spi->IoReadTransferCount.QuadPart += Prcb->IoReadTransferCount.QuadPart;
+            Spi->IoWriteTransferCount.QuadPart += Prcb->IoWriteTransferCount.QuadPart;
+            Spi->IoOtherTransferCount.QuadPart += Prcb->IoOtherTransferCount.QuadPart;
+            Spi->IoReadOperationCount += Prcb->IoReadOperationCount;
+            Spi->IoWriteOperationCount += Prcb->IoWriteOperationCount;
+            Spi->IoOtherOperationCount += Prcb->IoOtherOperationCount;
+        }
+    }
 
     Spi->AvailablePages = (ULONG)MmAvailablePages;
     /*
@@ -804,7 +817,6 @@ QSI_DEF(SystemPerformanceInformation)
             Spi->SystemCalls += Prcb->KeSystemCalls;
         }
     }
-
 
     return STATUS_SUCCESS;
 }
