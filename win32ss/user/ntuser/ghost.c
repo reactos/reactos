@@ -43,7 +43,6 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     {
         DPRINT1("Unable to get class name\n");
     }
-
     RtlFreeUnicodeString(&ClassName);
 
     return Ret;
