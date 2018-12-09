@@ -53,4 +53,3 @@ endif()
 
 configure_file(sdk/include/reactos/version.h.cmake ${REACTOS_BINARY_DIR}/sdk/include/reactos/version.h)
 configure_file(sdk/include/reactos/buildno.h.cmake ${REACTOS_BINARY_DIR}/sdk/include/reactos/buildno.h)
-configure_file(sdk/include/reactos/builddir.h.cmake ${REACTOS_BINARY_DIR}/sdk/include/reactos/builddir.h)
