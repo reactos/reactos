@@ -57,9 +57,14 @@ endif()
 include(sdk/cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
-add_definitions(-DREACTOS_SOURCE_DIR="\\"${REACTOS_SOURCE_DIR}\\"")
-add_definitions(-DREACTOS_BINARY_DIR="\\"${REACTOS_BINARY_DIR}\\"")
-add_compile_flags(-D__RELFILE__="&__FILE__[sizeof REACTOS_SOURCE_DIR]")
+
+# Double escape, since CMake unescapes before putting it on the command-line, where it's unescaped again by GCC/CL.
+add_definitions(-DREACTOS_SOURCE_DIR="\\\"${REACTOS_SOURCE_DIR}\\\"")
+add_definitions(-DREACTOS_BINARY_DIR="\\\"${REACTOS_BINARY_DIR}\\\"")
+
+# There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
+file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
+add_compile_flags(-D__RELFILE__="&__FILE__[__FILE__[0] == '.' ? sizeof \\\"${_PATH_PREFIX}\\\" - 1 : sizeof REACTOS_SOURCE_DIR]")
 
 if(MSVC_IDE)
     add_compile_flags("/MP")
