@@ -669,7 +669,9 @@ QSI_DEF(SystemProcessorInformation)
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
+    LONG i;
     ULONG IdleUser, IdleKernel;
+    PKPRCB Prcb;
     PSYSTEM_PERFORMANCE_INFORMATION Spi
         = (PSYSTEM_PERFORMANCE_INFORMATION) Buffer;
 
@@ -786,10 +788,23 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->CcLazyWritePages = CcLazyWritePages;
     Spi->CcDataFlushes = CcDataFlushes;
     Spi->CcDataPages = CcDataPages;
-    Spi->ContextSwitches = 0; /* FIXME */
-    Spi->FirstLevelTbFills = 0; /* FIXME */
-    Spi->SecondLevelTbFills = 0; /* FIXME */
-    Spi->SystemCalls = 0; /* FIXME */
+
+    Spi->ContextSwitches = 0;
+    Spi->FirstLevelTbFills = 0;
+    Spi->SecondLevelTbFills = 0;
+    Spi->SystemCalls = 0;
+    for (i = 0; i < KeNumberProcessors; i ++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            Spi->ContextSwitches += KeGetContextSwitches(Prcb);
+            Spi->FirstLevelTbFills += Prcb->KeFirstLevelTbFills;
+            Spi->SecondLevelTbFills += Prcb->KeSecondLevelTbFills;
+            Spi->SystemCalls += Prcb->KeSystemCalls;
+        }
+    }
+
 
     return STATUS_SUCCESS;
 }
