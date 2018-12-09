@@ -1539,9 +1539,19 @@ QSI_DEF(SystemInterruptInformation)
 /* Class 24 - DPC Behaviour Information */
 QSI_DEF(SystemDpcBehaviourInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemDpcBehaviourInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PSYSTEM_DPC_BEHAVIOR_INFORMATION sdbi = (PSYSTEM_DPC_BEHAVIOR_INFORMATION)Buffer;
+
+    if (Size < sizeof(SYSTEM_DPC_BEHAVIOR_INFORMATION))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    sdbi->DpcQueueDepth = KiMaximumDpcQueueDepth;
+    sdbi->MinimumDpcRate = KiMinimumDpcRate;
+    sdbi->AdjustDpcThreshold = KiAdjustDpcThreshold;
+    sdbi->IdealDpcRate = KiIdealDpcRate;
+
+    return STATUS_SUCCESS;
 }
 
 SSI_DEF(SystemDpcBehaviourInformation)
