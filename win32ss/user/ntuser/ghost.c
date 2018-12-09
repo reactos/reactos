@@ -33,25 +33,16 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     }
 
     // check class name
-    _SEH2_TRY
+    RtlInitUnicodeString(&ClassName, NULL);
+    Len = UserGetClassName(Window->pcls, &ClassName, Atom, FALSE);
+    if (Len > 0)
     {
-        RtlInitUnicodeString(&ClassName, NULL);
-        Len = UserGetClassName(Window->pcls, &ClassName, Atom, FALSE);
-        if (Len > 0)
-        {
-            Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
-        }
-        else
-        {
-            DPRINT1("Unable to get class name\n");
-        }
+        Ret = RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        DPRINT1("Exception!\n");
-        Ret = FALSE;
+        DPRINT1("Unable to get class name\n");
     }
-    _SEH2_END;
 
     RtlFreeUnicodeString(&ClassName);
 
