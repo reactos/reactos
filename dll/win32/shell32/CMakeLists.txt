@@ -25,6 +25,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR})
 
 list(APPEND SOURCE
+    CActiveDesktop.cpp
+    CActiveDesktop.h
     CIDLDataObj.cpp
     CQueryAssociations.cpp
     debughlp.cpp

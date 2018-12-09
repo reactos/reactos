@@ -271,6 +271,7 @@ public:
 
 
 BEGIN_OBJECT_MAP(ObjectMap)
+    OBJECT_ENTRY(CLSID_ActiveDesktop, CActiveDesktop)
     OBJECT_ENTRY(CLSID_ShellFSFolder, CFSFolder)
     OBJECT_ENTRY(CLSID_MyComputer, CDrivesFolder)
     OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder)
