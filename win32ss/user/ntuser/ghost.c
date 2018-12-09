@@ -49,7 +49,7 @@ BOOL FASTCALL IntIsGhostWindow(PWND Window)
     return Ret;
 }
 
-HWND APIENTRY IntGhostWindowFromHungWindow(PWND pHungWnd)
+HWND FASTCALL IntGhostWindowFromHungWindow(PWND pHungWnd)
 {
     RTL_ATOM Atom;
     HWND hwndGhost;
@@ -69,7 +69,7 @@ HWND APIENTRY IntGhostWindowFromHungWindow(PWND pHungWnd)
     return NULL;
 }
 
-HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
+HWND FASTCALL UserGhostWindowFromHungWindow(HWND hwndHung)
 {
     PWND pHungWnd = ValidateHwndNoErr(hwndHung);
     if (!pHungWnd)
@@ -80,7 +80,7 @@ HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
     return IntGhostWindowFromHungWindow(pHungWnd);
 }
 
-HWND APIENTRY IntHungWindowFromGhostWindow(PWND pGhostWnd)
+HWND FASTCALL IntHungWindowFromGhostWindow(PWND pGhostWnd)
 {
     const GHOST_DATA *UserData;
     HWND hwndTarget;
@@ -123,7 +123,7 @@ HWND APIENTRY IntHungWindowFromGhostWindow(PWND pGhostWnd)
     return NULL;
 }
 
-HWND APIENTRY UserHungWindowFromGhostWindow(HWND hwndGhost)
+HWND FASTCALL UserHungWindowFromGhostWindow(HWND hwndGhost)
 {
     PWND pGhostWnd = ValidateHwndNoErr(hwndGhost);
     return IntHungWindowFromGhostWindow(pGhostWnd);
