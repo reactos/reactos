@@ -65,7 +65,7 @@ HWND APIENTRY UserGhostWindowFromHungWindow(HWND hwndHung)
     if (!IntGetAtomFromStringOrAtom(&GhostProp, &Atom))
         ASSERT(FALSE);
 
-    hwndGhost = (HWND)UserGetProp(pHungWnd, Atom, TRUE);
+    hwndGhost = UserGetProp(pHungWnd, Atom, TRUE);
     if (hwndGhost)
     {
         if (ValidateHwndNoErr(hwndGhost))
