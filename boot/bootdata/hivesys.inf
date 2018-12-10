@@ -617,8 +617,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000816","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000816","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5019"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000418","Layout File",0x00000000,"kbdro.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000418","Layout Text",0x00000000,%ROMANIAN%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000418","Layout Text",0x00000000,%ROMANIAN_LEGACY%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000418","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5037"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010418","Layout File",0x00000000,"kbdrost.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010418","Layout Text",0x00000000,%ROMANIAN_STANDARD%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010418","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5175"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000419","Layout File",0x00000000,"kbdru.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000419","Layout Text",0x00000000,%RUSSIAN%
@@ -2275,7 +2279,8 @@ POLISH_214 = "Polish (214)"
 POLISH_PROGRAMMERS = "Polish (Programmers)"
 PORTUGESE = "Portuguese (Portugal)"
 PORTUGESE_BRAZILIAN% = "Portuguese (Brazilian ABNT2)"
-ROMANIAN = "Romanian"
+ROMANIAN_LEGACY = "Romanian (Legacy)"
+ROMANIAN_STANDARD = "Romanian (Standard)"
 RUSSIAN = "Russian"
 RUSSIAN_TYPEWRITER = "Russian (Typewriter)"
 SERBIAN_CYRILLIC = "Serbian (Cyrillic)"
@@ -2413,7 +2418,8 @@ POLISH_214 = "Polski (214)"
 POLISH_PROGRAMMERS = "Polski (Programisty)"
 PORTUGESE = "Portugalski"
 PORTUGESE_BRAZILIAN% = "Portugalski (Brazylijski ABNT2)"
-ROMANIAN = "Rumuński"
+ROMANIAN_LEGACY = "Rumuński (Legacy)"
+ROMANIAN_STANDARD = "Rumuński (Standard)"
 RUSSIAN = "Rosyjski"
 RUSSIAN_TYPEWRITER = "Rosyjski (Maszynisty)"
 SERBIAN_CYRILLIC = "Serbski (Cyrylica)"
@@ -2551,7 +2557,8 @@ POLISH_214 = "Poloneză (214)"
 POLISH_PROGRAMMERS = "Poloneză (programatori)"
 PORTUGESE = "Portugheză (Portugalia)"
 PORTUGESE_BRAZILIAN% = "Portugheză (Braziliană ABNT2)"
-ROMANIAN = "Română"
+ROMANIAN_LEGACY = "Română (moștenire)"
+ROMANIAN_STANDARD = "Română (standard)"
 RUSSIAN = "Rusă"
 RUSSIAN_TYPEWRITER = "Rusă (dactilografiere)"
 SERBIAN_CYRILLIC = "Sârbă (alfabet chirilic)"

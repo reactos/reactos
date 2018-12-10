@@ -62,8 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Daftar Isi", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang", CMD_ABOUT
-        MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -128,23 +127,6 @@ BEGIN
     PUSHBUTTON "Batal", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Tentang ReactOS Notepad"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS Notepad v1.0\r\nHak Cipta 1997,98 Marcel Baur\r\nHak Cipta 2000 Mike McCormack\r\nHak Cipta 2002 Sylvain Petreolle\r\nHak Cipta 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Close", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -184,4 +166,5 @@ bebas."
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
 
     STRING_TEXT_DOCUMENT "Text Document"
+    STRING_NOTEPAD_AUTHORS "Hak Cipta 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

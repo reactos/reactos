@@ -139,9 +139,8 @@ static void _tryLoadProvider(PCWSTR provider)
     HKEY hKey;
 
     TRACE("%s\n", debugstr_w(provider));
-    snprintfW(serviceName, sizeof(serviceName) / sizeof(WCHAR), serviceFmt,
-     servicePrefix, provider);
-    serviceName[sizeof(serviceName) / sizeof(WCHAR) - 1] = '\0';
+    snprintfW(serviceName, ARRAY_SIZE(serviceName), serviceFmt, servicePrefix, provider);
+    serviceName[ARRAY_SIZE(serviceName) - 1] = '\0';
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, serviceName, 0, KEY_READ, &hKey) ==
      ERROR_SUCCESS)
     {
@@ -2373,7 +2372,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
             if (wideLocalName)
             {
                 WCHAR wideRemoteStatic[MAX_PATH];
-                DWORD wideRemoteSize = sizeof(wideRemoteStatic) / sizeof(WCHAR);
+                DWORD wideRemoteSize = ARRAY_SIZE(wideRemoteStatic);
 
                 MultiByteToWideChar(CP_ACP, 0, lpLocalName, -1, wideLocalName, len);
 
@@ -2659,6 +2658,7 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
         size = sizeof(*info) + (lstrlenW(lpLocalPath) + 1) * sizeof(WCHAR);
         if (*lpBufferSize < size)
         {
+            *lpBufferSize = size;
             err = WN_MORE_DATA;
             break;
         }

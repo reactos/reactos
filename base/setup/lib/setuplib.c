@@ -642,7 +642,7 @@ InitDestinationPaths(
     RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
             DiskEntry->BiosDiskNumber,
-            PartEntry->PartitionNumber);
+            PartEntry->OnDiskPartitionNumber);
     ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
     RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer);
 

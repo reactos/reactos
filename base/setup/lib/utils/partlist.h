@@ -46,8 +46,9 @@ typedef struct _PARTENTRY
     BOOLEAN BootIndicator;
     UCHAR PartitionType;
     ULONG HiddenSectors;
-    ULONG PartitionNumber;  /* Enumerated partition number (primary partitions first -- excluding the extended partition container --, then the logical partitions) */
-    ULONG PartitionIndex;   /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
+    ULONG OnDiskPartitionNumber; /* Enumerated partition number (primary partitions first, excluding the extended partition container, then the logical partitions) */
+    ULONG PartitionNumber;       /* Current partition number, only valid for the currently running NTOS instance */
+    ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
 
     WCHAR DriveLetter;
     WCHAR VolumeLabel[20];
@@ -116,8 +117,8 @@ typedef struct _DISKENTRY
     /* Has the partition list been modified? */
     BOOLEAN Dirty;
 
-    BOOLEAN NewDisk;
-    BOOLEAN NoMbr; /* MBR is absent */  // See r40437
+    BOOLEAN NewDisk; /* If TRUE, the disk is uninitialized */
+    BOOLEAN NoMbr;   /* If TRUE, the MBR is absent */  // See r40437
 
     UNICODE_STRING DriverName;
 
@@ -127,11 +128,11 @@ typedef struct _DISKENTRY
     // the disk is MBR, GPT, or unknown (uninitialized).
     // Depending on the style, either use the MBR or GPT partition info.
 
-    /* Pointer to the unique extended partition on this disk */
-    PPARTENTRY ExtendedPartition;
+    LIST_ENTRY PrimaryPartListHead; /* List of primary partitions */
+    LIST_ENTRY LogicalPartListHead; /* List of logical partitions (Valid only for MBR-partitioned disks) */
 
-    LIST_ENTRY PrimaryPartListHead;
-    LIST_ENTRY LogicalPartListHead;
+    /* Pointer to the unique extended partition on this disk (Valid only for MBR-partitioned disks) */
+    PPARTENTRY ExtendedPartition;
 
 } DISKENTRY, *PDISKENTRY;
 

@@ -64,8 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "内容(&C)", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "关于(&A)", CMD_ABOUT
-        MENUITEM "系统信息(&O)...", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "About Notepad (&A)", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -130,23 +129,6 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "关于 ReactOS 记事本"
-FONT 9, "宋体"
-BEGIN
-    CONTROL "ReactOS 记事本 v1.0\r\n版权所有 1997,98 Marcel Baur\r\n版权所有 2000 Mike McCormack\r\n版权所有 2002 Sylvain Petreolle\r\n版权所有 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "关闭", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -185,4 +167,5 @@ BEGIN
     STRING_PRINTERROR "无法打印文件 '%s'。\n\n请确保打印机已打开，并且已正确配置。"
 
     STRING_TEXT_DOCUMENT "文本文档"
+    STRING_NOTEPAD_AUTHORS "版权所有 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

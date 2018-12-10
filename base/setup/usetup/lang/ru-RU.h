@@ -75,7 +75,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Нажмите ENTER для установки или обновления ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -127,61 +127,79 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "Состояние версии ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "Данная версия ReactOS находится в альфа-стадии разработки,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "множество функций и возможностей ещё не доведены до готовности,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "и разработка идёт полным ходом. Рекомендуется использовать эту копию",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        14,
+        "только в целях ознакомления и тестирования, и ни в коем случае как",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "ОС для повседневного использования.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
-        16,
-        "to run ReactOS on real hardware.",
+        17,
+        "Если вы собираетесь устанавливать ReactOS на физический компьютер,",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
+        18,
+        "обязательно сделайте резервную копию всех ваших данных, либо",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "используйте отдельный ПК, выделенный для тестирования.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        22,
+        "\x07  Нажмите ENTER для продолжения установки.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        24,
+        "\x07  Нажмите F3 выхода из установки.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Продолжить  F3 = Выход",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -432,7 +450,7 @@ static MUI_ENTRY ruRURepairPageEntries[] =
     {
         6,
         12,
-        "Функция восстановления в данным момент отсутствует.",
+        "Функция восстановления в данный момент отсутствует.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -478,61 +496,61 @@ static MUI_ENTRY ruRUUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Установка ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "Установщик ReactOS может обновить одну из ранее установленных копий ОС,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "перечисленных ниже, либо если установка ReactOS повреждена, установщик",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "может попытаться восстановить её.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "Функция восстановления в данный момент отсутствует.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора прежней установки ОС.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  Нажмите U для обновления выбранной установки ОС.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  Нажмите ESC для чистой установки системы.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Нажмите F3 выхода из установки.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = Обновление   ESC = Пропустить   F3 = Выход",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1818,11 +1836,11 @@ MUI_STRING ruRUStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезагрузка"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Удаление файла: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Перемещение файла: %S в: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Переименование файла: %S в: %S"},
     {STRING_COPYING,
      "   Копирование файла: %S"},
     {STRING_SETUPCOPYINGFILES,

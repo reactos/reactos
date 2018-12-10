@@ -108,7 +108,8 @@ INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPar
  */
 int OSK_DlgInitDialog(HWND hDlg)
 {
-    HMONITOR  monitor;
+    HICON hIcon, hIconSm;
+    HMONITOR monitor;
     MONITORINFO info;
     POINT Pt;
     RECT rcWindow;
@@ -119,9 +120,19 @@ int OSK_DlgInitDialog(HWND hDlg)
     /* Load the settings from the registry hive */
     LoadDataFromRegistry();
 
+    /* Set the application's icon */
+    hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
+    hIconSm = CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
+    if (hIcon || hIconSm)
+    {
+        /* Set the window icons (they are deleted when the process terminates) */
+        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+        SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
+    }
+
     /* Get screen info */
     memset(&Pt, 0, sizeof(Pt));
-    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY );
+    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
     info.cbSize = sizeof(info);
     GetMonitorInfoW(monitor, &info);
 

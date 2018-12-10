@@ -833,7 +833,6 @@ Retry:
             goto Retry;
         }
 
-        CcRosVacbDecRefCount(current);
         ExFreeToNPagedLookasideList(&VacbLookasideList, current);
         return Status;
     }

@@ -1,5 +1,5 @@
 /*
- * ReactOS Romanian Keyboard layout
+ * ReactOS Romanian (Legacy) Keyboard layout
  * Copyright (C) 2008 ReactOS
  * Author: Dmitry Chapyshev
  * License: LGPL, see: LGPL.txt
