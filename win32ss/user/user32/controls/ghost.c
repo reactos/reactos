@@ -7,12 +7,12 @@
 
 #include <user32.h>
 #include <strsafe.h>
+#include "ghostwnd.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ghost);
 
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
-#define GHOST_PROP      L"GhostProp"
 
 const struct builtin_class_descr GHOST_builtin_class =
 {
@@ -105,13 +105,6 @@ IntMakeGhostImage(HBITMAP hbm)
 
 /****************************************************************************/
 
-typedef struct GHOST_DATA
-{
-    HWND hwndTarget;
-    HBITMAP hbm32bpp;
-    BOOL bDestroyTarget;
-} GHOST_DATA;
-
 static GHOST_DATA *
 Ghost_GetData(HWND hwnd)
 {
@@ -188,9 +181,9 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // get the target
     hwndTarget = (HWND)lpcs->lpCreateParams;
-    if (!IsWindowVisible(hwndTarget) ||     // invisible?
-        GetParent(hwndTarget) ||            // child?
-        !IsHungAppWindow(hwndTarget))       // not hung?
+    if (!IsWindowVisible(hwndTarget) ||                             // invisible?
+        (GetWindowLongPtrW(hwndTarget, GWL_STYLE) & WS_CHILD) ||    // child?
+        !IsHungAppWindow(hwndTarget))                               // not hung?
     {
         return FALSE;
     }

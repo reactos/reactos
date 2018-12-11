@@ -66,4 +66,12 @@ ProbeAndCaptureUnicodeStringOrAtom(
     _Out_ _When_(return>=0, _At_(pustrOut->Buffer, _Post_ _Notnull_)) PUNICODE_STRING pustrOut,
     __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe);
 
+BOOL FASTCALL LookupFnIdToiCls(int FnId, int *iCls);
+
+INT
+UserGetClassName(IN PCLS Class,
+                 IN OUT PUNICODE_STRING ClassName,
+                 IN RTL_ATOM Atom,
+                 IN BOOL Ansi);
+
 /* EOF */
