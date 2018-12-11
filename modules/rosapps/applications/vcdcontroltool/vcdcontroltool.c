@@ -182,6 +182,20 @@ RefreshDevicesList(WCHAR Letter)
     }
 }
 
+VOID
+SetServiceState(BOOLEAN Started)
+{
+    HWND hControl;
+
+    /* If started, disable start button */
+    hControl = GetDlgItem(hDriverWnd, IDC_DRIVERSTART);
+    EnableWindow(hControl, !Started);
+
+    /* If started, enable stop button */
+    hControl = GetDlgItem(hDriverWnd, IDC_DRIVERSTOP);
+    EnableWindow(hControl, Started);
+}
+
 INT_PTR
 QueryDriverInfo(HWND hDlg)
 {
@@ -190,6 +204,7 @@ QueryDriverInfo(HWND hDlg)
     LPQUERY_SERVICE_CONFIGW pConfig;
     WCHAR szText[2 * MAX_PATH];
     HWND hControl;
+    SERVICE_STATUS Status;
 
     hDriverWnd = hDlg;
 
@@ -198,7 +213,7 @@ QueryDriverInfo(HWND hDlg)
     if (hMgr != NULL)
     {
         /* Open our service */
-        hSvc = OpenService(hMgr, L"Vcdrom", SERVICE_QUERY_CONFIG);
+        hSvc = OpenService(hMgr, L"Vcdrom", SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS);
         if (hSvc != NULL)
         {
             /* Probe its config size */
@@ -217,6 +232,20 @@ QueryDriverInfo(HWND hDlg)
                 }
 
                 HeapFree(GetProcessHeap(), 0, pConfig);
+            }
+
+            /* Get its status */
+            if (QueryServiceStatus(hSvc, &Status))
+            {
+                if (Status.dwCurrentState != SERVICE_RUNNING &&
+                    Status.dwCurrentState != SERVICE_START_PENDING)
+                {
+                    SetServiceState(FALSE);
+                }
+                else
+                {
+                    SetServiceState(TRUE);
+                }
             }
 
             CloseServiceHandle(hSvc);
@@ -261,6 +290,9 @@ StartDriver(VOID)
 
             /* Refresh the list in case there were persistent mounts */
             RefreshDevicesList(0);
+
+            /* Update buttons */
+            SetServiceState(TRUE);
         }
 
         CloseServiceHandle(hMgr);
@@ -290,6 +322,9 @@ StopDriver(VOID)
 
             /* Refresh the list to clear it */
             RefreshDevicesList(0);
+
+            /* Update buttons */
+            SetServiceState(FALSE);
         }
 
         CloseServiceHandle(hMgr);
