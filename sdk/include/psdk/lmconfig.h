@@ -12,6 +12,17 @@ typedef struct _CONFIG_INFO_0 {
 NET_API_STATUS WINAPI NetConfigGet(LPCWSTR,LPCWSTR,LPCWSTR,PBYTE*);
 NET_API_STATUS WINAPI NetConfigGetAll(LPCWSTR,LPCWSTR,PBYTE*);
 NET_API_STATUS WINAPI NetConfigSet(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD,PBYTE,DWORD);
+
+NET_API_STATUS
+WINAPI
+NetRegisterDomainNameChangeNotification(
+    _Out_ PHANDLE NotificationEventHandle);
+
+NET_API_STATUS
+WINAPI
+NetUnregisterDomainNameChangeNotification(
+    _In_ HANDLE NotificationEventHandle);
+
 #ifdef __cplusplus
 }
 #endif
