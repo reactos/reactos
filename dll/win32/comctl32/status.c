@@ -298,7 +298,8 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 
     SelectObject (hdc, hOldFont);
 
-    if (GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP)
+    if ((GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP)
+            && !(GetWindowLongW (infoPtr->Notify, GWL_STYLE) & WS_MAXIMIZE))
 	    STATUSBAR_DrawSizeGrip (theme, hdc, &rect);
 
     return 0;
@@ -1011,7 +1012,8 @@ STATUSBAR_WMGetText (const STATUS_INFO *infoPtr, INT size, LPWSTR buf)
 static BOOL
 STATUSBAR_WMNCHitTest (const STATUS_INFO *infoPtr, INT x, INT y)
 {
-    if (GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP) {
+    if ((GetWindowLongW (infoPtr->Self, GWL_STYLE) & SBARS_SIZEGRIP)
+            && !(GetWindowLongW (infoPtr->Notify, GWL_STYLE) & WS_MAXIMIZE)) {
 	RECT  rect;
 	POINT pt;
 
