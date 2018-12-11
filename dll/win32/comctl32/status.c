@@ -1018,10 +1018,7 @@ STATUSBAR_WMNCHitTest (const STATUS_INFO *infoPtr, INT x, INT y)
 	pt.y = y;
 	ScreenToClient (infoPtr->Self, &pt);
 
-	rect.left = rect.right - 13;
-	rect.top += 2;
-
-	if (PtInRect (&rect, pt))
+	if (pt.x >= rect.right - GetSystemMetrics(SM_CXVSCROLL))
         {
             if (GetWindowLongW( infoPtr->Self, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) return HTBOTTOMLEFT;
 	    else return HTBOTTOMRIGHT;
