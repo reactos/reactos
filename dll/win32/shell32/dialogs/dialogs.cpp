@@ -551,7 +551,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     LRESULT lRet;
                     HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
                     INT ic;
-                    WCHAR *psz, *parent = NULL;
+                    WCHAR *psz, *pszExpanded, *parent = NULL;
+                    DWORD cchExpand;
                     NMRUNFILEDLGW nmrfd;
 
                     ic = GetWindowTextLengthW(htxt);
@@ -574,6 +575,24 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     GetWindowTextW(htxt, psz, ic + 1);
                     StrTrimW(psz, L" \t");
+
+                    if (wcschr(psz, L'%') != NULL)
+                    {
+                        cchExpand = ExpandEnvironmentStringsW(psz, NULL, 0);
+                        pszExpanded = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchExpand * sizeof(WCHAR));
+                        if (!pszExpanded)
+                        {
+                            HeapFree(GetProcessHeap(), 0, psz);
+                            EndDialog(hwnd, IDCANCEL);
+                            return TRUE;
+                        }
+                        ExpandEnvironmentStringsW(psz, pszExpanded, cchExpand);
+                        StrTrimW(pszExpanded, L" \t");
+                    }
+                    else
+                    {
+                        pszExpanded = psz;
+                    }
 
                     /*
                      * The precedence is the following: first the user-given
@@ -604,7 +623,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     nmrfd.hdr.code = RFN_VALIDATE;
                     nmrfd.hdr.hwndFrom = hwnd;
                     nmrfd.hdr.idFrom = 0;
-                    nmrfd.lpFile = psz;
+                    nmrfd.lpFile = pszExpanded;
                     nmrfd.lpDirectory = pszStartDir;
                     nmrfd.nShow = SW_SHOWNORMAL;
 
@@ -617,12 +636,12 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             break;
 
                         case RF_OK:
-                            if (SUCCEEDED(ShellExecCmdLine(hwnd, psz, pszStartDir, SW_SHOWNORMAL, NULL,
+                            if (SUCCEEDED(ShellExecCmdLine(hwnd, pszExpanded, pszStartDir, SW_SHOWNORMAL, NULL,
                                                            SECL_ALLOW_NONEXE)))
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
-                                GetWindowTextW(htxt, psz, ic + 1);
-                                FillList(htxt, psz, ic + 2 + 1, FALSE);
+                                GetWindowTextW(htxt, pszExpanded, ic + 1);
+                                FillList(htxt, pszExpanded, ic + 2 + 1, FALSE);
                                 EndDialog(hwnd, IDOK);
                                 break;
                             }
@@ -638,6 +657,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     HeapFree(GetProcessHeap(), 0, parent);
                     HeapFree(GetProcessHeap(), 0, psz);
+                    if (psz != pszExpanded)
+                        HeapFree(GetProcessHeap(), 0, pszExpanded);
                     return TRUE;
                 }
 
