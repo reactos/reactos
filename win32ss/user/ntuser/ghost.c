@@ -54,7 +54,7 @@ HWND FASTCALL IntGhostWindowFromHungWindow(PWND pHungWnd)
     HWND hwndGhost;
 
     if (!IntGetAtomFromStringOrAtom(&GhostProp, &Atom))
-        ASSERT(FALSE);
+        return NULL;
 
     hwndGhost = UserGetProp(pHungWnd, Atom, TRUE);
     if (hwndGhost)
