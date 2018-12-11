@@ -14,6 +14,7 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winsvc.h>
+#include <winreg.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <wchar.h>
@@ -371,12 +372,6 @@ SetMountFileName(HWND hDlg,
     hEditText = GetDlgItem(hMountWnd, IDC_MOUNTIMAGE);
     SendMessage(hEditText, WM_SETTEXT, 0, lParam);
 
-    /* FIXME: we don't support persistent mounts yet*/
-    {
-        hEditText = GetDlgItem(hMountWnd, IDC_MOUNTPERSIST);
-        EnableWindow(hEditText, FALSE);
-    }
-
     /* Show our window */
     ShowWindow(hDlg, SW_SHOW);
 
@@ -400,6 +395,9 @@ PerformMount(VOID)
     UNICODE_STRING NtPathName;
     HANDLE hLet;
     DWORD BytesRead;
+    BOOLEAN bPersist, Res;
+    WCHAR szKeyName[256];
+    HKEY hKey;
 
     /* Zero our input structure */
     ZeroMemory(&MountParams, sizeof(MOUNT_PARAMETERS));
@@ -418,6 +416,10 @@ PerformMount(VOID)
         MountParams.Flags |= MOUNT_FLAG_SUPP_JOLIET;
     }
 
+    /* Should the mount be persistent? */
+    hControl = GetDlgItem(hMountWnd, IDC_MOUNTPERSIST);
+    bPersist = (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED);
+
     /* Get the file name */
     hControl = GetDlgItem(hMountWnd, IDC_MOUNTIMAGE);
     GetWindowText(hControl, szFileName, sizeof(szFileName) / sizeof(WCHAR));
@@ -435,12 +437,31 @@ PerformMount(VOID)
         if (hLet != INVALID_HANDLE_VALUE)
         {
             /* And issue the mount IOCTL */
-            DeviceIoControl(hLet, IOCTL_VCDROM_MOUNT_IMAGE, &MountParams, sizeof(MountParams), NULL, 0, &BytesRead, NULL);
+            Res = DeviceIoControl(hLet, IOCTL_VCDROM_MOUNT_IMAGE, &MountParams, sizeof(MountParams), NULL, 0, &BytesRead, NULL);
 
             CloseHandle(hLet);
 
             /* Refresh the list so that our mount appears */
             RefreshDevicesList(0);
+
+            /* If mount succeed and has to persistent, write it to registry */
+            if (Res && bPersist)
+            {
+                wsprintf(szKeyName, L"SYSTEM\\CurrentControlSet\\Services\\Vcdrom\\Parameters\\Device%c", wMountLetter);
+                if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+                {
+                    wcsncpy(szKeyName, MountParams.Path, MountParams.Length);
+                    szKeyName[MountParams.Length / sizeof(WCHAR)] = 0;
+                    RegSetValueExW(hKey, L"IMAGE", 0, REG_SZ, (BYTE *)szKeyName, MountParams.Length);
+
+                    szKeyName[0] = wMountLetter;
+                    szKeyName[1] = L':';
+                    szKeyName[2] = 0;
+                    RegSetValueExW(hKey, L"DRIVE", 0, REG_SZ, (BYTE *)szKeyName, 3 * sizeof(WCHAR));
+
+                    RegCloseKey(hKey);
+                }
+            }
         }
     }
 
