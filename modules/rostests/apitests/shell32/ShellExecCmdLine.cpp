@@ -12,6 +12,8 @@
 #include <debug.h>
 #include <stdio.h>
 
+// NOTE: ShellExecCmdLine (Ordinal 265) is not available on Win2k3.
+// TODO: Define ShellExecCmdLine macro here if you wanna use ShellExecCmdLine of below:
 //#define ShellExecCmdLine ShellExecCmdLine
 
 #ifndef SECL_NO_UI
@@ -371,6 +373,19 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", L"C:\\Program Files" },
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL },
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", L"." },
+    // %WINDIR%\\system32\\Notepad.exe
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", NULL },
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"." },
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"system32" },
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"C:\\Program Files" },
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, E_ACCESSDENIED, FALSE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe \"Test File.txt\"", L"." },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", NULL },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"." },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"system32" },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe", L"C:\\Program Files" },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe \"Test File.txt\"", NULL },
+    { __LINE__, S_OK, TRUE, L"Notepad", L"%WINDIR%\\system32\\Notepad.exe \"Test File.txt\"", L"." },
 };
 
 static void DoEntry(const TEST_ENTRY *pEntry)
