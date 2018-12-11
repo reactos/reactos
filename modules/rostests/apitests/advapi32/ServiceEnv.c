@@ -70,6 +70,7 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
     // SERVICE_STATUS_HANDLE status_handle;
     LPWSTR lpEnvironment, lpEnvStr;
     DWORD dwSize;
+    PTEB Teb;
 
     UNREFERENCED_PARAMETER(dwArgc);
     UNREFERENCED_PARAMETER(lpszArgv);
@@ -102,6 +103,9 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
     dwSize = GetEnvironmentVariableW(L"USERNAME", NULL, 0);
     service_ok(dwSize != 0, "USERNAME envvar not found, or GetEnvironmentVariableW failed: %lu\n", GetLastError());
 #endif
+
+    Teb = NtCurrentTeb();
+    service_ok(Teb->SubProcessTag != 0, "SubProcessTag is not defined!\n");
 
     /* Work is done */
     report_service_status(SERVICE_STOPPED, NO_ERROR, 0);
@@ -244,6 +248,7 @@ START_TEST(ServiceEnv)
 {
     int argc;
     char** argv;
+    PTEB Teb;
 
     /* Check whether this test is started as a separated service process */
     argc = winetest_get_mainargs(&argv);
@@ -252,6 +257,9 @@ START_TEST(ServiceEnv)
         service_process(start_service, argc, argv);
         return;
     }
+
+    Teb = NtCurrentTeb();
+    ok(Teb->SubProcessTag == 0, "SubProcessTag is defined: %p\n", Teb->SubProcessTag);
 
     /* We are started as the real test */
     test_runner(my_test_server, NULL);
