@@ -578,7 +578,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     if (wcschr(psz, L'%') != NULL)
                     {
-                        cchExpand = ExpandEnvironmentStringsW(psz, NULL, 0);
+                        cchExpand = ExpandEnvironmentStringsW(psz, NULL, 0) + 1;
                         pszExpanded = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchExpand * sizeof(WCHAR));
                         if (!pszExpanded)
                         {
@@ -604,7 +604,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     if (prfdp->lpstrDirectory)
                         pszStartDir = prfdp->lpstrDirectory;
                     else if (prfdp->uFlags & RFF_CALCDIRECTORY)
-                        pszStartDir = parent = RunDlg_GetParentDir(psz);
+                        pszStartDir = parent = RunDlg_GetParentDir(pszExpanded);
                     else
                         pszStartDir = NULL;
 
@@ -640,8 +640,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                                                            SECL_ALLOW_NONEXE)))
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
-                                GetWindowTextW(htxt, pszExpanded, ic + 1);
-                                FillList(htxt, pszExpanded, ic + 2 + 1, FALSE);
+                                GetWindowTextW(htxt, psz, ic + 1);
+                                FillList(htxt, psz, ic + 2 + 1, FALSE);
                                 EndDialog(hwnd, IDOK);
                                 break;
                             }
