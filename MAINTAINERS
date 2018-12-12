@@ -208,6 +208,7 @@ Virtual CD-ROM
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
 	F: modules/rosapps/applications/cmdutils/vcdcli/
+	F: modules/rosapps/applications/vcdcontroltool/
 	F: modules/rosapps/drivers/vcdrom/
 
 Virtual Floppy Disk
