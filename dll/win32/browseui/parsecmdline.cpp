@@ -164,6 +164,10 @@ static BOOL _ReadNextArg(PCWSTR * pstrFieldSource, PWSTR strField, size_t cchFie
     // Copy and unquote text
     _CopyAndUnquoteText(*pstrFieldSource, strField, cchField);
 
+    // "C:" --> "C:\\"
+    if (strField[1] == L':' && strField[2] == UNICODE_NULL)
+        StringCchCatW(strField, cchField, L"\\");
+
     return _FindNextArg(pstrFieldSource);
 }
 

@@ -2422,6 +2422,14 @@ HRESULT WINAPI ShellExecCmdLine(
     else
     {
         pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+
+        // "C:" --> "C:\\"
+        if (szFile[1] == L':' && szFile[2] == UNICODE_NULL)
+        {
+            szFile[2] = L'\\';
+            szFile[3] = UNICODE_NULL;
+        }
+
         if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
