@@ -91,13 +91,13 @@ START_TEST(WSAAsync)
     server_addr_in.sin_port   = htons(SVR_PORT);
     memcpy(&server_addr_in.sin_addr.S_un.S_addr, ent->h_addr_list[0], 4);
 
-    // server inialialization
+    // Server initialization.
     trace("Initializing server and client connections ...\n");
     ok(bind(ServerSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in)) == 0, "ERROR: server bind failed\n");
     ok(ioctlsocket(ServerSocket, FIONBIO, &ulValue) == 0, "ERROR: server ioctlsocket FIONBIO failed\n");
     ok(WSAEventSelect(ServerSocket, ServerEvent, FD_ACCEPT | FD_CLOSE) == 0, "ERROR: server accept EventSelect failed\n");
 
-    // client inialialization
+    // Client initialization.
     ok(WSAEventSelect(ClientSocket, ClientEvent, FD_CONNECT | FD_CLOSE) == 0, "ERROR: client EventSelect failed\n");
     ok(ioctlsocket(ClientSocket, FIONBIO, &ulValue) == 0, "ERROR: client ioctlsocket FIONBIO failed\n");
 
@@ -193,12 +193,12 @@ START_TEST(WSAAsync)
     server_addr_in.sin_port = htons(SVR_PORT);
     memcpy(&server_addr_in.sin_addr.S_un.S_addr, ent->h_addr_list[0], 4);
 
-    // server inialialization
+    // Server initialization.
     trace("Initializing server and client connections ...\n");
     ok(bind(ServerSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in)) == 0, "ERROR: server bind failed\n");
     ok(ioctlsocket(ServerSocket, FIONBIO, &ulValue) == 0, "ERROR: server ioctlsocket FIONBIO failed\n");
 
-    // client inialialization
+    // Client initialization.
     ok(ioctlsocket(ClientSocket, FIONBIO, &ulValue) == 0, "ERROR: client ioctlsocket FIONBIO failed\n");
 
     // listen
