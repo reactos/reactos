@@ -82,6 +82,10 @@ typedef struct _USER_REGISTER_LOGON_PROCESS
     BOOL Register;
 } USER_REGISTER_LOGON_PROCESS, *PUSER_REGISTER_LOGON_PROCESS;
 
+typedef struct _USER_CREATE_SYSTEM_THREAD
+{
+    BOOL bRemote;
+} USER_CREATE_SYSTEM_THREAD, *PUSER_CREATE_SYSTEM_THREAD;
 
 typedef struct _USER_API_MESSAGE
 {
@@ -99,6 +103,7 @@ typedef struct _USER_API_MESSAGE
         USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
+        USER_CREATE_SYSTEM_THREAD CreateSystemThreadRequest;
     } Data;
 } USER_API_MESSAGE, *PUSER_API_MESSAGE;
 
