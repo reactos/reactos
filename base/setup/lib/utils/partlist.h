@@ -118,7 +118,7 @@ typedef struct _DISKENTRY
     BOOLEAN Dirty;
 
     BOOLEAN NewDisk; /* If TRUE, the disk is uninitialized */
-    BOOLEAN NoMbr;   /* If TRUE, the MBR is absent */  // See r40437
+    PARTITION_STYLE DiskStyle;  /* MBR/GPT-partitioned disk, or uninitialized disk (RAW) */
 
     UNICODE_STRING DriverName;
 
@@ -173,6 +173,11 @@ typedef struct _PARTLIST
 } PARTLIST, *PPARTLIST;
 
 #define  PARTITION_TBL_SIZE 4
+
+#define PARTITION_MAGIC     0xAA55
+
+/* Defines system type for MBR showing that a GPT is following */
+#define EFI_PMBR_OSTYPE_EFI 0xEE
 
 #include <pshpack1.h>
 

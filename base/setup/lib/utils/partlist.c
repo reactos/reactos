@@ -1193,6 +1193,12 @@ SetDiskSignature(
     PDISKENTRY DiskEntry2;
     PUCHAR Buffer;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return;
+    }
+
     Buffer = (PUCHAR)&DiskEntry->LayoutBuffer->Signature;
 
     while (TRUE)
@@ -1221,6 +1227,12 @@ SetDiskSignature(
         {
             DiskEntry2 = CONTAINING_RECORD(Entry2, DISKENTRY, ListEntry);
 
+            if (DiskEntry2->DiskStyle == PARTITION_STYLE_GPT)
+            {
+                DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+                continue;
+            }
+
             if (DiskEntry != DiskEntry2 &&
                 DiskEntry->LayoutBuffer->Signature == DiskEntry2->LayoutBuffer->Signature)
                 break;
@@ -1239,12 +1251,18 @@ UpdateDiskSignatures(
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
 
-    /* Print partition lines */
+    /* Update each disk */
     for (Entry = List->DiskListHead.Flink;
          Entry != &List->DiskListHead;
          Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
 
         if (DiskEntry->LayoutBuffer &&
             DiskEntry->LayoutBuffer->Signature == 0)
@@ -1377,11 +1395,30 @@ AddDiskToList(
      * Check if this disk has a valid MBR: verify its signature,
      * and whether its two first bytes are a valid instruction
      * (related to this, see IsThereAValidBootSector() in partlist.c).
+     *
+     * See also ntoskrnl/fstub/fstubex.c!FstubDetectPartitionStyle().
      */
-    if (Mbr->Magic != 0xaa55 || (*(PUSHORT)Mbr->BootCode) == 0x0000)
-        DiskEntry->NoMbr = TRUE;
+
+    // DiskEntry->NoMbr = (Mbr->Magic != PARTITION_MAGIC || (*(PUSHORT)Mbr->BootCode) == 0x0000);
+
+    /* If we have not the 0xAA55 then it's raw partition */
+    if (Mbr->Magic != PARTITION_MAGIC)
+    {
+        DiskEntry->DiskStyle = PARTITION_STYLE_RAW;
+    }
+    /* Check partitions types: if first is 0xEE and all the others 0, we have GPT */
+    else if (Mbr->Partition[0].PartitionType == EFI_PMBR_OSTYPE_EFI &&
+             Mbr->Partition[1].PartitionType == 0 &&
+             Mbr->Partition[2].PartitionType == 0 &&
+             Mbr->Partition[3].PartitionType == 0)
+    {
+        DiskEntry->DiskStyle = PARTITION_STYLE_GPT;
+    }
+    /* Otherwise, partition table is in MBR */
     else
-        DiskEntry->NoMbr = FALSE;
+    {
+        DiskEntry->DiskStyle = PARTITION_STYLE_MBR;
+    }
 
     /* Free the MBR sector buffer */
     RtlFreeHeap(ProcessHeap, 0, Mbr);
@@ -1477,6 +1514,16 @@ AddDiskToList(
     /*
      * We now retrieve the disk partition layout
      */
+
+    /*
+     * Stop there now if the disk is GPT-partitioned,
+     * since we currently do not support such disks.
+     */
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return;
+    }
 
     /* Allocate a layout buffer with 4 partition entries first */
     LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
@@ -1861,6 +1908,12 @@ GetPartition(
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return NULL;
+    }
+
     /* Disk found, loop over the primary partitions first... */
     for (Entry = DiskEntry->PrimaryPartListHead.Flink;
          Entry != &DiskEntry->PrimaryPartListHead;
@@ -1912,6 +1965,12 @@ GetDiskOrPartition(
     /* If we have a partition (PartitionNumber != 0), find it */
     if (PartitionNumber != 0)
     {
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            return FALSE;
+        }
+
         PartEntry = GetPartition(/*List,*/ DiskEntry, PartitionNumber);
         if (!PartEntry)
             return FALSE;
@@ -2033,6 +2092,12 @@ GetNextPartition(
     {
         DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
 
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
+
         PartListEntry = DiskEntry->PrimaryPartListHead.Flink;
         if (PartListEntry != &DiskEntry->PrimaryPartListHead)
         {
@@ -2110,6 +2175,12 @@ GetPrevPartition(
     {
         DiskEntry = CONTAINING_RECORD(DiskListEntry, DISKENTRY, ListEntry);
 
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
+
         PartListEntry = DiskEntry->PrimaryPartListHead.Blink;
         if (PartListEntry != &DiskEntry->PrimaryPartListHead)
         {
@@ -2182,6 +2253,12 @@ GetPrimaryPartitionCount(
     PPARTENTRY PartEntry;
     ULONG Count = 0;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return 0;
+    }
+
     for (Entry = DiskEntry->PrimaryPartListHead.Flink;
          Entry != &DiskEntry->PrimaryPartListHead;
          Entry = Entry->Flink)
@@ -2202,6 +2279,12 @@ GetLogicalPartitionCount(
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
     ULONG Count = 0;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return 0;
+    }
 
     for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
          ListEntry != &DiskEntry->LogicalPartListHead;
@@ -2281,6 +2364,12 @@ UpdateDiskLayout(
     ULONG PartitionNumber = 1;
 
     DPRINT1("UpdateDiskLayout()\n");
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return;
+    }
 
     /* Resize the layout buffer if necessary */
     if (ReAllocateLayoutBuffer(DiskEntry) == FALSE)
@@ -2446,6 +2535,12 @@ GetPrevUnpartitionedEntry(
     PPARTENTRY PrevPartEntry;
     PLIST_ENTRY ListHead;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return NULL;
+    }
+
     if (PartEntry->LogicalPartition)
         ListHead = &DiskEntry->LogicalPartListHead;
     else
@@ -2471,6 +2566,12 @@ GetNextUnpartitionedEntry(
 {
     PPARTENTRY NextPartEntry;
     PLIST_ENTRY ListHead;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return NULL;
+    }
 
     if (PartEntry->LogicalPartition)
         ListHead = &DiskEntry->LogicalPartListHead;
@@ -3277,6 +3378,12 @@ WritePartitionsToDisk(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
+
         if (DiskEntry->Dirty != FALSE)
         {
             WritePartitions(List, DiskEntry);
@@ -3369,6 +3476,12 @@ SetMountedDeviceValues(
                                       DISKENTRY,
                                       ListEntry);
 
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
+
         for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
              Entry2 != &DiskEntry->PrimaryPartListHead;
              Entry2 = Entry2->Flink)
@@ -3440,6 +3553,12 @@ PrimaryPartitionCreationChecks(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
+
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
@@ -3461,6 +3580,12 @@ ExtendedPartitionCreationChecks(
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
+
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
@@ -3480,11 +3605,17 @@ ERROR_NUMBER
 LogicalPartitionCreationChecks(
     IN PPARTLIST List)
 {
-//    PDISKENTRY DiskEntry;
+    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
-//    DiskEntry = List->CurrentDisk;
+    DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
 
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
@@ -3510,6 +3641,12 @@ GetNextUnformattedPartition(
         DiskEntry = CONTAINING_RECORD(Entry1,
                                       DISKENTRY,
                                       ListEntry);
+
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
 
         for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
              Entry2 != &DiskEntry->PrimaryPartListHead;
@@ -3563,6 +3700,12 @@ GetNextUncheckedPartition(
         DiskEntry = CONTAINING_RECORD(Entry1,
                                       DISKENTRY,
                                       ListEntry);
+
+        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+            continue;
+        }
 
         for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
              Entry2 != &DiskEntry->PrimaryPartListHead;

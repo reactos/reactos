@@ -500,8 +500,11 @@ PrintDiskData(
                               0, 0,
                               (LPARAM)DiskEntry);
 
-    /* Disk type (MBR or GPT) */
-    TreeList_SetItemText(hWndList, htiDisk, 1, DiskEntry->NoMbr ? L"GPT" : L"MBR");
+    /* Disk type: MBR, GPT or RAW (Uninitialized) */
+    TreeList_SetItemText(hWndList, htiDisk, 1,
+                         DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                         DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                       L"RAW");
 
     /* Format the disk size in KBs, MBs, etc... */
     DiskSize.QuadPart = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;

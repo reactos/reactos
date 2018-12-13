@@ -1983,7 +1983,9 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
     else
     {
@@ -1995,7 +1997,9 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Port,
                             DiskEntry->Bus,
                             DiskEntry->Id,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
@@ -2142,7 +2146,9 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
     else
     {
@@ -2154,7 +2160,9 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Port,
                             DiskEntry->Bus,
                             DiskEntry->Id,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
@@ -2300,7 +2308,9 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
     else
     {
@@ -2312,7 +2322,9 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Port,
                             DiskEntry->Bus,
                             DiskEntry->Id,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
@@ -2539,7 +2551,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
     else
     {
@@ -2551,7 +2565,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                             DiskEntry->Port,
                             DiskEntry->Bus,
                             DiskEntry->Id,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
 
     while (TRUE)
@@ -2773,7 +2789,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
 
@@ -2834,7 +2852,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             DiskEntry->Bus,
                             DiskEntry->Id,
                             &DiskEntry->DriverName,
-                            DiskEntry->NoMbr ? "GPT" : "MBR");
+                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                                          L"RAW");
     }
 
     if (FileSystemList == NULL)

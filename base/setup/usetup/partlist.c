@@ -313,7 +313,9 @@ PrintDiskData(
                 DiskEntry->Bus,
                 DiskEntry->Id,
                 &DiskEntry->DriverName,
-                DiskEntry->NoMbr ? "GPT" : "MBR");
+                DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                              L"RAW");
     }
     else
     {
@@ -325,7 +327,9 @@ PrintDiskData(
                 DiskEntry->Port,
                 DiskEntry->Bus,
                 DiskEntry->Id,
-                DiskEntry->NoMbr ? "GPT" : "MBR");
+                DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? L"MBR" :
+                DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? L"GPT" :
+                                                              L"RAW");
     }
 
     if (ListUi->Line >= 0 && ListUi->Line <= Height)
