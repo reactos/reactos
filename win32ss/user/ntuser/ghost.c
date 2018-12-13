@@ -32,7 +32,7 @@ static GHOST_INFO *gGhostInfo = NULL;
 //   lParam: VOID. Ignored.
 #define PM_CREATE_GHOST     (WM_APP + 1)
 
-BOOL IntCreateGhost(HWND hwndTarget)
+BOOL IntCreateGhostWindow(HWND hwndTarget)
 {
     RTL_ATOM Atom;
     DWORD style, exstyle;
@@ -219,7 +219,7 @@ HWND FASTCALL UserHungWindowFromGhostWindow(HWND hwndGhost)
     return IntHungWindowFromGhostWindow(pGhostWnd);
 }
 
-BOOL IntHaveToQuitGhosting(void)
+static BOOL IntHaveToQuitGhosting(void)
 {
     return !!NtUserFindWindowEx(NULL, NULL, &GhostClass, NULL, 0);
 }
@@ -230,21 +230,21 @@ GhostThreadProc(PVOID Param)
     HWND hwndTarget = (HWND)Param;
     MSG msg;
 
-    if (!IntCreateGhost(hwndTarget))
+    if (!IntCreateGhostWindow(hwndTarget))
     {
         DPRINT1("Unable to create ghost\n");
         goto Quit;
     }
 
     // thread message loop
-    while (GetMessageW(&msg, NULL, 0, 0))
+    while (NtUserGetMessage(&msg, NULL, 0, 0))
     {
         switch (msg.message)
         {
             case PM_CREATE_GHOST:
             {
                 hwndTarget = (HWND)msg.wParam;
-                if (!IntCreateGhost(hwndTarget))
+                if (!IntCreateGhostWindow(hwndTarget))
                 {
                     DPRINT1("Unable to create ghost\n");
                 }
@@ -273,14 +273,17 @@ Quit:
     return 0;
 }
 
-BOOL IntInitGhostFeature(HWND hwndTarget)
+BOOL IntAddGhost(HWND hwndTarget)
 {
     NTSTATUS Status;
     CLIENT_ID ClientId;
     HANDLE GhostThreadHandle;
 
     if (gGhostInfo)
-        return FALSE;
+    {
+        return NtUserPostThreadMessage(gGhostInfo->ThreadId, PM_CREATE_GHOST,
+                                       (WPARAM)hwndTarget, 0);
+    }
 
     gGhostInfo = RtlAllocateHeap(GlobalUserHeap, HEAP_ZERO_MEMORY, sizeof(GHOST_INFO));
     if (!gGhostInfo)
@@ -294,6 +297,7 @@ BOOL IntInitGhostFeature(HWND hwndTarget)
     Status = NtCreateEvent(&gGhostInfo->GhostQuitEvent, EVENT_ALL_ACCESS,
                            NULL, SynchronizationEvent, FALSE);
 
+    // create thread
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
                                  FALSE,
@@ -307,10 +311,12 @@ BOOL IntInitGhostFeature(HWND hwndTarget)
     DPRINT("Thread creation GhostThreadHandle = 0x%p, GhostThreadId = 0x%p, Status = 0x%08lx\n",
            GhostThreadHandle, ClientId.UniqueThread, Status);
 
+    // wait for start up
     NtWaitForSingleObject(gGhostInfo->GhostStartupEvent, FALSE, NULL);
     NtClose(gGhostInfo->GhostStartupEvent);
     gGhostInfo->GhostStartupEvent = NULL;
 
+    // set the thread ID
     gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);
 
     return TRUE;
@@ -349,11 +355,5 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         return FALSE;   // already ghosting
     }
 
-    if (gGhostInfo == NULL)
-    {
-        return IntInitGhostFeature(hwndHung);
-    }
-
-    return NtUserPostThreadMessage(gGhostInfo->ThreadId, PM_CREATE_GHOST,
-                                   (WPARAM)hwndHung, 0);
+    return IntAddGhost(hwndHung);
 }
