@@ -83,6 +83,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT));
     wcChild.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wcChild.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wcChild.lpszClassName = szChildClass;
     wcChild.hIconSm = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT),
                                         IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
