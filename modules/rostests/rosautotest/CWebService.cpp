@@ -69,7 +69,7 @@ CWebService::DoRequest(const string& InputData)
     DWORD DataLength;
 
     /* Post our test results to the web service */
-    m_hHTTPRequest = HttpOpenRequestW(m_hHTTP, L"POST", szServerFile, NULL, NULL, NULL, INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    m_hHTTPRequest = HttpOpenRequestW(m_hHTTP, L"POST", szServerFile, NULL, NULL, NULL, INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
 
     if(!m_hHTTPRequest)
         FATAL("HttpOpenRequestW failed\n");
