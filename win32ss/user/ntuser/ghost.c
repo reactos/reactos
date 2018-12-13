@@ -8,6 +8,9 @@
 #include <win32k.h>
 #include "ghostwnd.h"
 
+#define NTOS_MODE_USER
+#include <ndk/mmfuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -19,7 +22,7 @@ typedef struct GHOST_INFO
     HWND hwndTarget;
     HANDLE GhostStartupEvent;
     HANDLE GhostQuitEvent;
-    ULONG_PTR InputThreadId;
+    UINT_PTR ThreadId;
 } GHOST_INFO;
 
 static GHOST_INFO *gGhostInfo = NULL;
@@ -29,17 +32,11 @@ static GHOST_INFO *gGhostInfo = NULL;
 //   lParam: VOID. Ignored.
 #define PM_CREATE_GHOST     (WM_APP + 1)
 
-// Private message PM_DESTROY_GHOST:
-//   wParam: HWND. The target window.
-//   lParam: BOOL. Whether the target is to be destroyed.
-#define PM_DESTROY_GHOST    (WM_APP + 2)
-
 BOOL IntCreateGhost(HWND hwndTarget)
 {
     RTL_ATOM Atom;
     DWORD style, exstyle;
     RECT rc;
-    HWND hwndGhost;
     PWND pTargetWnd, pGhostWnd;
     CREATESTRUCTW Cs;
     LARGE_STRING WindowName;
@@ -57,7 +54,7 @@ BOOL IntCreateGhost(HWND hwndTarget)
     // get target info
     style = pTargetWnd->style;
     exstyle = pTargetWnd->ExStyle;
-    GetWindowRect(hwndTarget, &rc);
+    IntGetWindowRect(pTargetWnd, &rc);
 
     // initialize CREATESTRUCT
     RtlZeroMemory(&Cs, sizeof(Cs));
@@ -78,18 +75,18 @@ BOOL IntCreateGhost(HWND hwndTarget)
     RtlZeroMemory(&WindowName, sizeof(WindowName));
 
     // get the class and reference it
-    Class = IntGetAndReferenceClass(&GhostClass, Cs->hInstance, FALSE);
+    Class = IntGetAndReferenceClass(&GhostClass, Cs.hInstance, FALSE);
     if (!Class)
     {
-        ERR("Failed to find class %wZ\n", ClassName);
-        goto cleanup;
+        DPRINT1("Failed to find class %wZ\n", &GhostClass);
+        return FALSE;
     }
 
     // create the ghost
     pGhostWnd = IntCreateWindow(&Cs, &WindowName, Class, NULL, NULL, NULL, NULL);
     if (!pGhostWnd)
     {
-        ERR("Failed to create ghost\n");
+        DPRINT1("Failed to create ghost\n");
         return FALSE;
     }
 
@@ -170,7 +167,7 @@ BOOL IntResumeGhostedWindow(HWND hwndTarget, BOOL bDestroyTarget)
 {
     HWND hwndGhost = UserGhostWindowFromHungWindow(hwndTarget);
 
-    return SendMessageW(hwndGhost, GWM_UNGHOST, hwndTarget, bDestroyTarget);
+    return co_IntSendMessage(hwndGhost, GWM_UNGHOST, bDestroyTarget, 0);
 }
 
 HWND FASTCALL IntHungWindowFromGhostWindow(PWND pGhostWnd)
@@ -224,29 +221,14 @@ HWND FASTCALL UserHungWindowFromGhostWindow(HWND hwndGhost)
 
 BOOL IntHaveToQuitGhosting(void)
 {
-    RTL_ATOM ClassAtom;
-    UNICODE_STRING WindowName;
-
-    RtlInitUnicodeString(&WindowName, NULL);
-    if (!IntGetAtomFromStringOrAtom(&GhostClass, &ClassAtom))
-        return FALSE;
-
-    return !IntFindWindow(IntGetDesktopWindow(), NULL, ClassAtom, &WindowName);
+    return !!NtUserFindWindowEx(NULL, NULL, &GhostClass, NULL, 0);
 }
 
 static ULONG NTAPI
 GhostThreadProc(PVOID Param)
 {
-    HWND hwndTarget = (GHOST_INFO *)Param;
-    PCSR_THREAD pcsrt;
-    HANDLE hThread;
+    HWND hwndTarget = (HWND)Param;
     MSG msg;
-
-    pcsrt = CsrConnectToUser();
-    if (!pcsrt)
-        goto Quit;
-
-    hThread = pcsrt->ThreadHandle;
 
     if (!IntCreateGhost(hwndTarget))
     {
@@ -269,31 +251,24 @@ GhostThreadProc(PVOID Param)
                 break;
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
+        NtUserTranslateMessage(&msg, 0);
+        NtUserDispatchMessage(&msg);
 
         if (IntHaveToQuitGhosting())
         {
-            DPRINT("Have to quit ghost thread\n");
+            DPRINT1("Have to quit ghost thread\n");
             break;
         }
     }
 
 Quit:
-    if (pcsrt)
-    {
-        if (hThread != pcsrt->ThreadHandle)
-            DPRINT1("WARNING!! hThread (0x%p) != pcsrt->ThreadHandle (0x%p), you may expect crashes soon!!\n", hThread, pcsrt->ThreadHandle)
-        CsrDereferenceThread(pcsrt);
-    }
-
-    RtlFreeHeap(CsrHeap, 0, gGhostInfo);
+    RtlFreeHeap(GlobalUserHeap, 0, gGhostInfo);
 
     NtSetEvent(gGhostInfo->GhostQuitEvent, NULL);
 
     gGhostInfo = NULL;
 
-    RtlExitUserThread(Status);
+    RtlExitUserThread(0);
 
     return 0;
 }
@@ -307,7 +282,7 @@ BOOL IntInitGhostFeature(HWND hwndTarget)
     if (gGhostInfo)
         return FALSE;
 
-    gGhostInfo = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, sizeof(GHOST_INFO));
+    gGhostInfo = RtlAllocateHeap(GlobalUserHeap, HEAP_ZERO_MEMORY, sizeof(GHOST_INFO));
     if (!gGhostInfo)
         return FALSE;
 
@@ -321,7 +296,7 @@ BOOL IntInitGhostFeature(HWND hwndTarget)
 
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
-                                 TRUE, // Start the thread in suspended state
+                                 FALSE,
                                  0,
                                  0,
                                  0,
@@ -329,20 +304,14 @@ BOOL IntInitGhostFeature(HWND hwndTarget)
                                  hwndTarget,
                                  &GhostThreadHandle,
                                  &ClientId);
-    if (NT_SUCCESS(Status))
-    {
-        /* Add it as a static server thread and resume it */
-        CsrAddStaticServerThread(hGhostThread, &ClientId, 0);
-        Status = NtResumeThread(hGhostThread, NULL);
-    }
-    DPRINT("Thread creation hGhostThread = 0x%p, GhostThreadId = 0x%p, Status = 0x%08lx\n",
-           hGhostThread, ClientId.UniqueThread, Status);
-
-    gGhostInfo->InputThreadId = (ULONG_PTR)ClientId.UniqueThread;
+    DPRINT("Thread creation GhostThreadHandle = 0x%p, GhostThreadId = 0x%p, Status = 0x%08lx\n",
+           GhostThreadHandle, ClientId.UniqueThread, Status);
 
     NtWaitForSingleObject(gGhostInfo->GhostStartupEvent, FALSE, NULL);
     NtClose(gGhostInfo->GhostStartupEvent);
     gGhostInfo->GhostStartupEvent = NULL;
+
+    gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);
 
     return TRUE;
 }
@@ -384,9 +353,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
     {
         return IntInitGhostFeature(hwndHung);
     }
-    else
-    {
-        return NtUserPostThreadMessage(gGhostInfo->InputThreadId,
-                                       PM_CREATE_GHOST, (WPARAM)hwndTarget, 0);
-    }
+
+    return NtUserPostThreadMessage(gGhostInfo->ThreadId, PM_CREATE_GHOST,
+                                   (WPARAM)hwndHung, 0);
 }

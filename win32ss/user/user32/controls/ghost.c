@@ -294,15 +294,15 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     return TRUE;
 }
 
-static void
+static BOOL
 Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
     GHOST_DATA *pData = Ghost_GetData(hwnd);
     if (!pData)
-        return;
+        return FALSE;
 
     pData->bDestroyTarget |= bDestroyTarget;
-    DestroyWindow(hwnd);
+    return DestroyWindow(hwnd);
 }
 
 static void
@@ -577,8 +577,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             return (LRESULT)Ghost_GetIcon(hwnd, (INT)wParam);
 
         case GWM_UNGHOST:
-            Ghost_Unenchant(hwnd, (BOOL)wParam);
-            break;
+            return Ghost_Unenchant(hwnd, (BOOL)wParam);
 
         case WM_DESTROY:
             Ghost_OnDestroy(hwnd);
