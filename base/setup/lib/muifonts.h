@@ -140,6 +140,7 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { CSF_LocalName0,            L"Droid Sans Fallback" },
     { CSF_LocalName1,            L"Droid Sans Fallback" },
@@ -181,6 +182,7 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { CTF_LocalName0,     L"Droid Sans Fallback" },
     { CTF_LocalName1,     L"Droid Sans Fallback" },
@@ -220,6 +222,7 @@ MUI_SUBFONT JapaneseFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { JF_LocalName0,      L"Droid Sans Fallback" },
     { JF_LocalName1,      L"Droid Sans Fallback" },
@@ -263,6 +266,7 @@ MUI_SUBFONT KoreanFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Droid Sans Fallback" },
     /* localized names */
     { KF_LocalName0,      L"Droid Sans Fallback" },
     { KF_LocalName1,      L"Droid Sans Fallback" },
