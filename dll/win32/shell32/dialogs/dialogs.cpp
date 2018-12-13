@@ -578,7 +578,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     if (wcschr(psz, L'%') != NULL)
                     {
-                        cchExpand = ExpandEnvironmentStringsW(psz, NULL, 0) + 1;
+                        cchExpand = ExpandEnvironmentStringsW(psz, NULL, 0);
                         pszExpanded = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchExpand * sizeof(WCHAR));
                         if (!pszExpanded)
                         {
