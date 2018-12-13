@@ -20,8 +20,8 @@ static UNICODE_STRING GhostProp = RTL_CONSTANT_STRING(GHOST_PROP);
 typedef struct GHOST_INFO
 {
     HWND hwndTarget;
-    HANDLE GhostStartupEvent;
-    HANDLE GhostQuitEvent;
+    KEVENT GhostStartupEvent;
+    KEVENT GhostQuitEvent;
     UINT_PTR ThreadId;
 } GHOST_INFO;
 
@@ -237,8 +237,13 @@ GhostThreadProc(PVOID Param)
     }
 
     // thread message loop
-    while (NtUserGetMessage(&msg, NULL, 0, 0))
+    for (;;)
     {
+        RtlZeroMemory(&msg, sizeof(MSG));
+
+        if (!co_IntGetPeekMessage(&msg, NULL, 0, 0, PM_REMOVE, TRUE))
+            break;
+
         switch (msg.message)
         {
             case PM_CREATE_GHOST:
@@ -251,8 +256,9 @@ GhostThreadProc(PVOID Param)
                 break;
             }
         }
-        NtUserTranslateMessage(&msg, 0);
-        NtUserDispatchMessage(&msg);
+
+        IntTranslateKbdMessage(&msg, 0);
+        IntDispatchMessage(&msg);
 
         if (IntHaveToQuitGhosting())
         {
@@ -264,11 +270,9 @@ GhostThreadProc(PVOID Param)
 Quit:
     RtlFreeHeap(GlobalUserHeap, 0, gGhostInfo);
 
-    NtSetEvent(gGhostInfo->GhostQuitEvent, NULL);
+    KeSetEvent(gGhostInfo->GhostQuitEvent, 1, TRUE);
 
     gGhostInfo = NULL;
-
-    RtlExitUserThread(0);
 
     return 0;
 }
@@ -292,29 +296,22 @@ BOOL IntAddGhost(HWND hwndTarget)
     gGhostInfo->hwndTarget = hwndTarget;
 
     // create events
-    Status = NtCreateEvent(&gGhostInfo->GhostStartupEvent, EVENT_ALL_ACCESS,
-                           NULL, SynchronizationEvent, FALSE);
-    Status = NtCreateEvent(&gGhostInfo->GhostQuitEvent, EVENT_ALL_ACCESS,
-                           NULL, SynchronizationEvent, FALSE);
+    Status = KeInitializeEvent(&gGhostInfo->GhostStartupEvent, SynchronizationEvent, FALSE);
+    Status = KeInitializeEvent(&gGhostInfo->GhostQuitEvent, SynchronizationEvent, FALSE);
 
     // create thread
-    Status = RtlCreateUserThread(NtCurrentProcess(),
-                                 NULL,
-                                 FALSE,
-                                 0,
-                                 0,
-                                 0,
-                                 GhostThreadProc,
-                                 hwndTarget,
-                                 &GhostThreadHandle,
-                                 &ClientId);
+    Status = PsCreateSystemThread(&GhostThreadHandle,
+                                  STANDARD_RIGHTS_ALL,
+                                  ???ObjectAttributes???,
+                                  NULL,
+                                  &ClientId,
+                                  GhostThreadProc,
+                                  ???StartContext???);
     DPRINT("Thread creation GhostThreadHandle = 0x%p, GhostThreadId = 0x%p, Status = 0x%08lx\n",
            GhostThreadHandle, ClientId.UniqueThread, Status);
 
     // wait for start up
     NtWaitForSingleObject(gGhostInfo->GhostStartupEvent, FALSE, NULL);
-    NtClose(gGhostInfo->GhostStartupEvent);
-    gGhostInfo->GhostStartupEvent = NULL;
 
     // set the thread ID
     gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);
