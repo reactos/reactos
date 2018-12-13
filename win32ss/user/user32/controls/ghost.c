@@ -576,9 +576,8 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
         case WM_GETICON:
             return (LRESULT)Ghost_GetIcon(hwnd, (INT)wParam);
 
-        case WM_COMMAND:
-            if (LOWORD(wParam) == 3333)
-                Ghost_Unenchant(hwnd, FALSE);
+        case GWM_UNGHOST:
+            Ghost_Unenchant(hwnd, (BOOL)wParam);
             break;
 
         case WM_DESTROY:

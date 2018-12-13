@@ -17,4 +17,9 @@ typedef struct GHOST_DATA
     BOOL bDestroyTarget;
 } GHOST_DATA;
 
+// GWM_UNGHOST message:
+//   wParam: BOOL bDestroyTarget.
+//   lParam: VOID Unused.
+#define GWM_UNGHOST     (WM_USER + 1)
+
 #endif
