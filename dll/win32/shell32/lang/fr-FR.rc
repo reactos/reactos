@@ -441,7 +441,7 @@ BEGIN
     LTEXT "Vous pouvez appliquer l'affichage (tel que Détails ou Miniatures) que vous utilisez pour ce dossier à tous les dossiers.", -1, 40, 20, 213, 26
     PUSHBUTTON "Appliquer à tous les dossiers", IDC_VIEW_APPLY_TO_ALL, 15, 50, 116, 14, WS_TABSTOP
     PUSHBUTTON "&Réinitialiser tous les dossiers", IDC_VIEW_RESET_ALL, 135, 50, 114, 14, WS_TABSTOP
-    LTEXT "Paramètres avancés:", -1, 7, 80, 100, 10
+    LTEXT "Paramètres avancés :", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
     PUSHBUTTON "Paramètres par &défaut", IDC_VIEW_RESTORE_DEFAULTS, 175, 215, 82, 14, WS_TABSTOP
 END
