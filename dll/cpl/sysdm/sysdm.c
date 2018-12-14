@@ -121,6 +121,22 @@ Fail:
     return hMod;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 /* First Applet */
 LONG CALLBACK
 SystemApplet(VOID)
@@ -137,7 +153,7 @@ SystemApplet(VOID)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID;
+    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
@@ -145,7 +161,7 @@ SystemApplet(VOID)
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
-    psh.pfnCallback = NULL;
+    psh.pfnCallback = PropSheetProc;
 
     InitPropSheetPage(&psh, IDD_PROPPAGEGENERAL, GeneralPageProc);
     hNetIdDll = AddNetIdPage(&psh);

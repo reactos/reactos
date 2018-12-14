@@ -381,6 +381,22 @@ FinishDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_APPINETICO));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 LONG CALLBACK
 ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
 {
@@ -447,7 +463,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_USEICONID;
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_USEICONID | PSH_USECALLBACK;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_APPINETICO);
     psh.hwndParent = NULL;
@@ -455,6 +471,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
     psh.pszbmWatermark = MAKEINTRESOURCEW(IDB_SHORTCUT);
+    psh.pfnCallback = PropSheetProc;
 
     /* Display the wizard */
     PropertySheet(&psh);

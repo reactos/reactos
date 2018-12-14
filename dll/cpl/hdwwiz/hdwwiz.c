@@ -776,6 +776,22 @@ ProgressPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_CPLICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 static VOID
 HardwareWizardInit(HWND hwnd)
 {
@@ -888,7 +904,7 @@ HardwareWizardInit(HWND hwnd)
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER | PSH_USEICONID;
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER | PSH_USEICONID | PSH_USECALLBACK;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
     psh.hwndParent = hwnd;
@@ -897,6 +913,7 @@ HardwareWizardInit(HWND hwnd)
     psh.phpage = ahpsp;
     psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
     psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+    psh.pfnCallback = PropSheetProc;
 
     /* Create title font */
     hTitleFont = CreateTitleFont();

@@ -38,6 +38,21 @@ InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
     page->pfnDlgProc  = DlgProc;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
 
 /* First Applet */
 static LONG CALLBACK
@@ -52,7 +67,7 @@ SystemApplet(VOID)
     ZeroMemory(&header, sizeof(header));
 
     header.dwSize      = sizeof(header);
-    header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID;
+    header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
     header.pszIcon     = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
@@ -60,7 +75,7 @@ SystemApplet(VOID)
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
     header.ppsp        = page;
-    header.pfnCallback = NULL;
+    header.pfnCallback = PropSheetProc;
 
     /* Settings */
     InitPropSheetPage(&page[0], IDD_PROPPAGESETTINGS, SettingsPageProc);

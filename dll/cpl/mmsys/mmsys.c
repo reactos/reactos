@@ -689,6 +689,22 @@ HardwareDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_CPLICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 LONG APIENTRY
 MmSysApplet(HWND hwnd,
             UINT uMsg,
@@ -706,7 +722,7 @@ MmSysApplet(HWND hwnd,
     LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
@@ -714,6 +730,7 @@ MmSysApplet(HWND hwnd,
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
+    psh.pfnCallback = PropSheetProc;
 
     InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
     InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);

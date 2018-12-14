@@ -118,6 +118,22 @@ static const struct
     { IDD_SETTINGS, SettingsPageProc, SettingsPageCallbackProc, L"Settings" },
 };
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDC_DESK_ICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 /* Display Applet */
 static LONG APIENTRY
 DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
@@ -188,6 +204,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
+    psh.pfnCallback = PropSheetProc;
 
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);

@@ -67,6 +67,21 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
     return FALSE;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDC_CPLICON_1));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
 
 /* First Applet */
 static LONG APIENTRY
@@ -88,7 +103,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID;
+  psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
   psh.hwndParent = hwnd;
   psh.hInstance = hApplet;
   psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON_1);
@@ -96,6 +111,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   psh.nPages = 0;
   psh.nStartPage = 0;
   psh.phpage = hpsp;
+  psh.pfnCallback = PropSheetProc;
 
   InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSCHEMES, PowerSchemesDlgProc);
   if (GetPwrCapabilities(&spc))

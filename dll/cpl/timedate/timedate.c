@@ -67,6 +67,21 @@ InitPropSheetPage(PROPSHEETPAGEW *psp, WORD idDlg, DLGPROC DlgProc)
     psp->pfnDlgProc = DlgProc;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDC_CPLICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
 
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
@@ -87,7 +102,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
         ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
         psh.dwSize = sizeof(PROPSHEETHEADERW);
-        psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID;
+        psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
         psh.hwndParent = hwnd;
         psh.hInstance = hApplet;
         psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
@@ -95,6 +110,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGEW);
         psh.nStartPage = 0;
         psh.ppsp = psp;
+        psh.pfnCallback = PropSheetProc;
 
         InitPropSheetPage(&psp[0], IDD_DATETIMEPAGE, DateTimePageProc);
         InitPropSheetPage(&psp[1], IDD_TIMEZONEPAGE, TimeZonePageProc);
