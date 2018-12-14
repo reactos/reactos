@@ -70,6 +70,7 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
+    // NOTE: This callback is needed to set large icon correctly.
     HICON hIcon;
     switch (uMsg)
     {

@@ -285,6 +285,7 @@ KeybHardwareProc(IN HWND hwndDlg,
 static int CALLBACK
 PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 {
+    // NOTE: This callback is needed to set large icon correctly.
     HICON hIcon;
     switch (uMsg)
     {
