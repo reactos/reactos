@@ -270,7 +270,7 @@ GhostThreadProc(PVOID Param)
 Quit:
     RtlFreeHeap(GlobalUserHeap, 0, gGhostInfo);
 
-    KeSetEvent(gGhostInfo->GhostQuitEvent, 1, TRUE);
+    KeSetEvent(gGhostInfo->GhostQuitEvent, IO_NO_INCREMENT, TRUE);
 
     gGhostInfo = NULL;
 
