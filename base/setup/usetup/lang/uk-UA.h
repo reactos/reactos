@@ -2,8 +2,6 @@
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
  *      http://www.reactos.org/uk/
  */
- 
-// слава українi (dz3n)
 
 #pragma once
 
