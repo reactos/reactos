@@ -133,6 +133,23 @@ Done:
     return;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDC_CPLICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
+
 /* First Applet */
 static LONG
 APIENTRY
@@ -218,7 +235,7 @@ InitApplet(HANDLE hSectionOrWnd)
     /* Initialize the property sheet structure */
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
-    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | /* PSH_USEHICON */ PSH_USEICONID | PSH_NOAPPLYNOW;
+    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_PROPTITLE | /* PSH_USEHICON */ PSH_USEICONID | PSH_NOAPPLYNOW | PSH_USECALLBACK;
 
     if (ConInfo->ConsoleTitle[0] != UNICODE_NULL)
     {
@@ -249,6 +266,7 @@ InitApplet(HANDLE hSectionOrWnd)
     psh.nPages = ARRAYSIZE(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
+    psh.pfnCallback = PropSheetProc;
 
     InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, OptionsProc);
     InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT   , FontProc   );

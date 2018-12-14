@@ -77,13 +77,17 @@ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
  */
 static int CALLBACK propsheet_callback(HWND hwnd, UINT msg, LPARAM lparam)
 {
-
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
     TRACE("(%p, 0x%08x/%d, 0x%lx)\n", hwnd, msg, msg, lparam);
     switch (msg)
     {
         case PSCB_INITIALIZED:
-            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM) LoadIconW(hcpl, MAKEINTRESOURCEW(ICO_MAIN)));
+        {
+            hIcon = LoadIconW(hcpl, MAKEINTRESOURCEW(ICO_MAIN));
+            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
+        }
     }
     return 0;
 }

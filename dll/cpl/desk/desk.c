@@ -118,6 +118,23 @@ static const struct
     { IDD_SETTINGS, SettingsPageProc, SettingsPageCallbackProc, L"Settings" },
 };
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDC_DESK_ICON));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
+
 /* Display Applet */
 static LONG APIENTRY
 DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
@@ -180,14 +197,15 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
+    psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_DESK_ICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_DESK_ICON);
     psh.pszCaption = Caption;
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
+    psh.pfnCallback = PropSheetProc;
 
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
