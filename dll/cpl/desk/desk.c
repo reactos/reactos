@@ -180,10 +180,10 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
+    psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_DESK_ICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_DESK_ICON);
     psh.pszCaption = Caption;
     psh.nPages = 0;
     psh.nStartPage = 0;

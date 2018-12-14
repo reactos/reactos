@@ -137,10 +137,10 @@ SystemApplet(VOID)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
     psh.pszCaption = MAKEINTRESOURCE(IDS_CPLSYSTEMNAME);
     psh.nPages = 0;
     psh.nStartPage = 0;

@@ -447,8 +447,9 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK;
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_USEICONID;
     psh.hInstance = hApplet;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_APPINETICO);
     psh.hwndParent = NULL;
     psh.nPages = nPages;
     psh.nStartPage = 0;

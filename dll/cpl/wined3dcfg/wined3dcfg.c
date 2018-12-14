@@ -21,10 +21,10 @@ LONG CALLBACK AppletInit(HWND hWnd)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USEICONID;
     psh.hwndParent = hWnd;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
     psh.pszCaption = szCaption;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;

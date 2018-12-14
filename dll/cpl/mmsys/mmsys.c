@@ -706,11 +706,10 @@ MmSysApplet(HWND hwnd,
     LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet,
-                         MAKEINTRESOURCE(IDI_CPLICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
     psh.pszCaption = Caption;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;

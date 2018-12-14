@@ -1827,10 +1827,10 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON_1);
     psh.pszCaption = Caption;
     psh.nStartPage = 0;
     psh.phpage = hpsp;

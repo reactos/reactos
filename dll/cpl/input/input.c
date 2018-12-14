@@ -52,10 +52,10 @@ SystemApplet(VOID)
     ZeroMemory(&header, sizeof(header));
 
     header.dwSize      = sizeof(header);
-    header.dwFlags     = PSH_PROPSHEETPAGE;
+    header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
-    header.hIcon       = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+    header.pszIcon     = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
     header.pszCaption  = szCaption;
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;

@@ -174,10 +174,10 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
     psh.pszCaption = Caption;
     psh.nPages = 0; //sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;

@@ -888,8 +888,9 @@ HardwareWizardInit(HWND hwnd)
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER | PSH_USEICONID;
     psh.hInstance = hApplet;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_CPLICON);
     psh.hwndParent = hwnd;
     psh.nPages = nPages;
     psh.nStartPage = 0;
