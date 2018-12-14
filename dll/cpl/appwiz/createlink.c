@@ -391,10 +391,10 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
         {
             hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_APPINETICO));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-            return TRUE;
+            break;
         }
     }
-    return TRUE;
+    return 0;
 }
 
 LONG CALLBACK
