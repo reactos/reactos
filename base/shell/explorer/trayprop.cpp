@@ -261,10 +261,10 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
-    psh.hIcon = NULL;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_STARTMENU);
     psh.pszCaption = caption.GetString();
     psh.nPages = _countof(hpsp);
     psh.nStartPage = 0;
