@@ -93,11 +93,11 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Тема ""Lautus""", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Класична тема", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -161,18 +161,18 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Подяки"
     IDS_ACKSUBTITLE "Інформація про розробників ReactOS і лізензійна угода"
-    IDS_OWNERTITLE "Налаштування ваших програм"
-    IDS_OWNERSUBTITLE "Ці особисті відомості будуть використані для налаштування ReactOS."
+    IDS_OWNERTITLE "Персональні дані"
+    IDS_OWNERSUBTITLE "Встановлення інформації про користувачів ReactOS."
     IDS_COMPUTERTITLE "Ім'я комп'ютера та пароль адміністратора"
     IDS_COMPUTERSUBTITLE "Ви маєте вказати ім'я та пароль адміністратора Вашого комп'ютера."
-    IDS_LOCALETITLE "Мова і стандарти"
+    IDS_LOCALETITLE "Регіональні налаштування"
     IDS_LOCALESUBTITLE "Ви можете налаштувати ReactOS для різних регіонів і мов."
     IDS_DATETIMETITLE "Дата та час"
-    IDS_DATETIMESUBTITLE "Встановити правильні дату і час для Вашого комп'ютера."
+    IDS_DATETIMESUBTITLE "Встановіть правильні дату і час для Вашого комп'ютера."
     IDS_PROCESSTITLE "Реєстрація компонентів"
     IDS_PROCESSSUBTITLE "Зачекайте, будь ласка..."
-    IDS_THEMESELECTIONTITLE "Appearance"
-    IDS_THEMESELECTIONSUBTITLE "Select the theme you prefer."
+    IDS_THEMESELECTIONTITLE "Зовнішній вигляд"
+    IDS_THEMESELECTIONSUBTITLE "Виберіть тему, яку ви вважаєте за краще"
 END
 
 STRINGTABLE
