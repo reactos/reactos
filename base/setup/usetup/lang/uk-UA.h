@@ -2,6 +2,8 @@
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
  *      http://www.reactos.org/uk/
  */
+ 
+// слава українi (dz3n)
 
 #pragma once
 
@@ -22,19 +24,19 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Будь-ласка, виберiть мову, яка буде використана пiд час встановлення.",
+        "\x07  Будь-ласка, виберiть мову, яка буде використана при встановленнi.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   Потiм натиснiть ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Ця мова буде використовуватись по замовчуванню у встановленiй системi.",
+        "\x07  Ця мова буде використовуватись у встановленiй системi.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -80,7 +82,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Натиснiть ENTER для встановлення або оновлення ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
@@ -92,7 +94,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Натиснiть L для перегляду лiцензiйних умов ReactOS",
+        "\x07  Натиснiть L для перегляду лiцензiйних умов ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -132,61 +134,61 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "Стан версiї ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS знаходиться в стадiї альфа-тестування, бiльшiсть функцiй ще не ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "доведенi до готовностi, але їх розробка йде повним ходом.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "Не рекомендується використовувати цю копiю для повсякденного користування.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "Якщо ви хочете встановити ОС на робочому обладнаннi,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "не забудьте зберегти резервну копiю всiх ваших даних.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Натиснiть ENTER для продовження встановлення ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Натиснiть F3 щоб вийти не встановлюючи ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Продовждити   F3 = Вийти",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -250,7 +252,7 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         15,
-        "Дане програмне забезпечення поставляється БЕЗ ГАРАНТIЇ i без обмежень",
+        "Дане програмне забезпечення поставляється БЕЗ ГАРАНТIї i без обмежень",
         TEXT_STYLE_NORMAL
     },
     {
@@ -483,61 +485,61 @@ static MUI_ENTRY ukUAUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "Програма встановлення може оновити одну iз встановлених копiй ReactOS,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "перерахованих нижче, або якщо встановка ReactOS пошкоджена, можна",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "спробувати вiдновити її.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "Функцiя вiдновлення в даний момент вiдсутня.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  Натиснiть ВВЕРХ або ВНИЗ щоб обрати колишню встановку.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  Натиснiть U для оновлення обраної встановки.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  Натиснiть ESC для чистої встановки ОС.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Натиснiть F3 щоб вийти не встановлюючи ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = Оновити   ESC = Пропустити   F3 = Вийти",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -865,20 +867,20 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Натиснiть P щоб створити первинний роздiл.",
 //        "\x07  Натиснiть C щоб створити новий роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Натиснiть E щоб стоврити розширений роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  Натиснiть L щоб створити логiчний роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -890,7 +892,7 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         0,
         0,
-        "Please wait...",
+        "Будь-ласка, зачекайте...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -912,79 +914,79 @@ static MUI_ENTRY ukUAConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "Ви вирiшили видалити системний роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "Системнi роздiли можуть мiстити дiагностичнi програми, програми налаштування",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "апаратних засобiв, програми для запуску ОС (як ReactOS)",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "або iнше ПЗ, надане виробником обладнання.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Видаляйте системний роздiл, коли впевненi, що на ньому немає важливих програм",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "або коли ви впевненi, що вони не потрiбнi.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "Коли ви видалите системний роздiл, ви не зможете завантажити",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "комп'ютер з жорсткого диска, поки не закiнчите встановлення ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Натиснiть ENTER щоб видалити системний роздiл. Пiзнiше Ви повиннi",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   будете пiдтвердити видалння знову.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Натиснiть ESC щоб повернутись до попередньої сторiнки. Роздiл",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   не буде видалено.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "ENTER=Продовжити  ESC=Скасувати",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1636,37 +1638,37 @@ MUI_ERROR ukUAErrorEntries[] =
     },
     {
         // ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Неправильна назва директорiї.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Натиснiть будь-яку клавiшу для продовження."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "Обраний роздiл занадто малий для встановлення ReactOS.\n"
+        "Встановочний роздiл повинен мати принаймнi %lu MB простору.\n"
         "\n"
         "  * Натиснiть будь-яку клавiшу для продовження.",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Ви не можете створити первинний або додатковий роздiл в таблицi\n"
+        "роздiлiв диску, тому що вона заповнена.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Натиснiть будь-яку клавiшу для продовження.",
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "Ви не можете створити бiльше одного розширеного роздiлу на диск.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Натиснiть будь-яку клавiшу для продовження.",
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "Неможливо вiдформатувати роздiл:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = Перезавантажити комп'ютер"
     },
     {
         NULL,
@@ -1787,35 +1789,35 @@ MUI_STRING ukUAStrings[] =
     {STRING_PLEASEWAIT,
      "   Будь-ласка, зачекайте..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Встановити   P = Первинний роздiл   E = Розширений   F3 = Вийти"},
 //     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Встановити   L = Створити логiчний роздiл   F3 = Вийти"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Встановити   D = Видалити Роздiл   F3 = Вийти"},
+     "   ENTER = Встановити   D = Видалити роздiл   F3 = Вийти"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Видалити роздiл   F3 = Вийти"},
     {STRING_PARTITIONSIZE,
      "Розмiр нового роздiлу:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
+     "Ви хочете створити первинний роздiл на"},
 //     "Ви хочете створити новий роздiл на"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Ви хочете створити розширений роздiл на"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Ви хочете створити логiчний роздiл на"},
     {STRING_HDDSIZE,
     "Будь-ласка, введiть розмiр нового роздiлу в мегабайтах."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Створити Роздiл   ESC = Скасувати   F3 = Вийти"},
+     "   ENTER = Створити роздiл   ESC = Скасувати   F3 = Вийти"},
     {STRING_PARTFORMAT,
     "Цей роздiл буде вiдформатовано."},
     {STRING_NONFORMATTEDPART,
     "Ви вибрали встановлення ReactOS на новий або неформатований роздiл."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    "Системний роздiл не вiдформатовано."},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    "Новий роздiл не вiдформатовано."},
     {STRING_INSTALLONPART,
     "ReactOS встановлюється на роздiл"},
     {STRING_CHECKINGPART,
@@ -1827,11 +1829,11 @@ MUI_STRING ukUAStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Перезавантажити комп'ютер"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Видалення файлу: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Перемiщення файлу: %S в: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Перейменування файлу: %S в: %S"},
     {STRING_COPYING,
      "   Копiювання: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1853,7 +1855,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Перезавантажити комп'ютер"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " Ваш комп'ютер буде перезавантажено через %li секунд... "},
     {STRING_CONSOLEFAIL1,
     "Не вдалось вiдкрити консоль\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
@@ -1899,9 +1901,9 @@ MUI_STRING ukUAStrings[] =
     {STRING_MAXSIZE,
     "MB (макс. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Розширений роздiл"},
     {STRING_UNFORMATTED,
-    "Новий (Неформатований)"},
+    "Новий (неформатований)"},
     {STRING_FORMATUNUSED,
     "Не використано"},
     {STRING_FORMATUNKNOWN,
