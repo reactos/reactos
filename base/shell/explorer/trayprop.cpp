@@ -245,6 +245,22 @@ public:
     }
 };
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hExplorerInstance, MAKEINTRESOURCEW(IDI_STARTMENU));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            return TRUE;
+        }
+    }
+    return TRUE;
+}
+
 VOID
 DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 {
@@ -261,7 +277,7 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
-    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID;
+    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
     psh.pszIcon = MAKEINTRESOURCEW(IDI_STARTMENU);
@@ -269,6 +285,7 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
     psh.nPages = _countof(hpsp);
     psh.nStartPage = 0;
     psh.phpage = hpsp;
+    psh.pfnCallback = PropSheetProc;
 
     PropertySheet(&psh);
 }
