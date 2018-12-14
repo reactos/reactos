@@ -306,6 +306,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "返回到 %s"
     IDS_FORWARD "前進到 %s"
+    IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 STRINGTABLE

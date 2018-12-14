@@ -1361,11 +1361,12 @@ HRESULT CShellBrowser::DoFolderOptions()
 #endif
 
     // show sheet
+    CStringW strFolderOptions(MAKEINTRESOURCEW(IDS_FOLDER_OPTIONS));
     m_PropSheet.dwSize = sizeof(PROPSHEETHEADER);
     m_PropSheet.dwFlags = 0;
     m_PropSheet.hwndParent = m_hWnd;
     m_PropSheet.hInstance = _AtlBaseModule.GetResourceInstance();
-    m_PropSheet.pszCaption = _T("Folder Options");
+    m_PropSheet.pszCaption = strFolderOptions;
     m_PropSheet.nStartPage = 0;
     PropertySheet(&m_PropSheet);
     return S_OK;

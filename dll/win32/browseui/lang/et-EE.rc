@@ -293,6 +293,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Tagasi lehele %s"
     IDS_FORWARD "Edasi lehele %s"
+    IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 STRINGTABLE
