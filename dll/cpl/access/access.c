@@ -173,7 +173,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_CPLACCESS));
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLACCESS));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             return TRUE;
         }
