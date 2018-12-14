@@ -8,9 +8,6 @@
 #include <win32k.h>
 #include "ghostwnd.h"
 
-#define NTOS_MODE_USER
-#include <ndk/mmfuncs.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -219,15 +216,30 @@ HWND FASTCALL UserHungWindowFromGhostWindow(HWND hwndGhost)
     return IntHungWindowFromGhostWindow(pGhostWnd);
 }
 
-static BOOL IntHaveToQuitGhosting(void)
+BOOL IntHaveToQuitGhosting(void)
 {
-    return !!NtUserFindWindowEx(NULL, NULL, &GhostClass, NULL, 0);
+    RTL_ATOM ClassAtom;
+    HWND hwndDesktop;
+    PWND pDesktopWnd;
+    UNICODE_STRING WindowName;
+
+    if (!IntGetAtomFromStringOrAtom(&GhostClass, &ClassAtom))
+        return FALSE;
+
+    hwndDesktop = IntGetCurrentThreadDesktopWindow();
+    pDesktopWnd = ValidateHwndNoErr(hwndDesktop);
+    if (!pDesktopWnd)
+        return FALSE;
+
+    RtlInitUnicodeString(&WindowName, NULL);
+
+    return IntFindWindow(pDesktopWnd, NULL, ClassAtom, &WindowName) != NULL;
 }
 
-static ULONG NTAPI
-GhostThreadProc(PVOID Param)
+VOID NTAPI
+GhostThreadProc(_In_ PVOID StartContext)
 {
-    HWND hwndTarget = (HWND)Param;
+    HWND hwndTarget = (HWND)StartContext;
     MSG msg;
 
     if (!IntCreateGhostWindow(hwndTarget))
@@ -270,11 +282,9 @@ GhostThreadProc(PVOID Param)
 Quit:
     RtlFreeHeap(GlobalUserHeap, 0, gGhostInfo);
 
-    KeSetEvent(gGhostInfo->GhostQuitEvent, IO_NO_INCREMENT, TRUE);
+    KeSetEvent(&gGhostInfo->GhostQuitEvent, IO_NO_INCREMENT, TRUE);
 
     gGhostInfo = NULL;
-
-    return 0;
 }
 
 BOOL IntAddGhost(HWND hwndTarget)
@@ -296,22 +306,22 @@ BOOL IntAddGhost(HWND hwndTarget)
     gGhostInfo->hwndTarget = hwndTarget;
 
     // create events
-    Status = KeInitializeEvent(&gGhostInfo->GhostStartupEvent, SynchronizationEvent, FALSE);
-    Status = KeInitializeEvent(&gGhostInfo->GhostQuitEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&gGhostInfo->GhostStartupEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&gGhostInfo->GhostQuitEvent, SynchronizationEvent, FALSE);
 
     // create thread
     Status = PsCreateSystemThread(&GhostThreadHandle,
                                   STANDARD_RIGHTS_ALL,
-                                  ???ObjectAttributes???,
+                                  ___ObjectAttributes___,
                                   NULL,
                                   &ClientId,
                                   GhostThreadProc,
-                                  ???StartContext???);
+                                  hwndTarget);
     DPRINT("Thread creation GhostThreadHandle = 0x%p, GhostThreadId = 0x%p, Status = 0x%08lx\n",
            GhostThreadHandle, ClientId.UniqueThread, Status);
 
     // wait for start up
-    NtWaitForSingleObject(gGhostInfo->GhostStartupEvent, FALSE, NULL);
+    NtWaitForSingleObject(&gGhostInfo->GhostStartupEvent, FALSE, NULL);
 
     // set the thread ID
     gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);

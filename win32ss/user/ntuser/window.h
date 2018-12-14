@@ -73,5 +73,7 @@ LONG FASTCALL co_UserSetWindowLong(HWND,DWORD,LONG,BOOL);
 LONG_PTR FASTCALL co_UserSetWindowLongPtr(HWND, DWORD, LONG_PTR, BOOL);
 HWND FASTCALL IntGetWindow(HWND,UINT);
 LRESULT co_UserFreeWindow(PWND,PPROCESSINFO,PTHREADINFO,BOOLEAN);
+HWND FASTCALL IntFindWindow(PWND Parent, PWND ChildAfter, RTL_ATOM ClassAtom,
+                            PUNICODE_STRING WindowName);
 
 /* EOF */
