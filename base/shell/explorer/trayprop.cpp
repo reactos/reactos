@@ -255,7 +255,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
         {
             hIcon = LoadIconW(hExplorerInstance, MAKEINTRESOURCEW(IDI_STARTMENU));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-            return 0;
+            break;
         }
     }
     return 0;
