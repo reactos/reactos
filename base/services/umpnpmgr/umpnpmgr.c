@@ -3554,7 +3554,7 @@ PnpEventThread(LPVOID lpParameter)
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
             {
-                /* Queue device install (will be dequeued by DeviceInstallThread */
+                /* Queue device install (will be dequeued by DeviceInstallThread) */
                 len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
                 Params = HeapAlloc(GetProcessHeap(), 0, len);
                 if (Params)
