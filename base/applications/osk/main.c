@@ -109,10 +109,8 @@ INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPar
 int OSK_DlgInitDialog(HWND hDlg)
 {
     HICON hIcon, hIconSm;
-    HMONITOR monitor;
-    MONITORINFO info;
-    POINT Pt;
     RECT rcWindow;
+    INT xPos, yPos;
 
     /* Save handle */
     Globals.hMainWnd = hDlg;
@@ -130,22 +128,15 @@ int OSK_DlgInitDialog(HWND hDlg)
         SendMessageW(Globals.hMainWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
     }
 
-    /* Get screen info */
-    memset(&Pt, 0, sizeof(Pt));
-    monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
-    info.cbSize = sizeof(info);
-    GetMonitorInfoW(monitor, &info);
-
-    /* Move the dialog on the bottom of main screen */
+    /* Retrieve the dimensions of the window */
     GetWindowRect(hDlg, &rcWindow);
-    MoveWindow(hDlg,
-               (info.rcMonitor.left + info.rcMonitor.right) / 2 - // Center of screen
-                   (rcWindow.right - rcWindow.left) / 2,          // - half size of dialog
-               info.rcMonitor.bottom -               // Bottom of screen
-                   (rcWindow.bottom - rcWindow.top), // - size of window
-               rcWindow.right - rcWindow.left,     // Width
-               rcWindow.bottom - rcWindow.top,     // Height
-               TRUE);
+
+    /* Set the coordinations  */
+    xPos = (GetSystemMetrics(SM_CXSCREEN) - rcWindow.right) / 2;
+    yPos = (GetSystemMetrics(SM_CYSCREEN) - rcWindow.bottom) / 2;
+
+    /* Set the window's position at the center of the screen */
+    SetWindowPos(hDlg, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
     /* Set icon on visual buttons */
     OSK_SetImage(SCAN_CODE_15, IDI_BACK);
