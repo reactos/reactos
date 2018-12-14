@@ -37,7 +37,8 @@ START_TEST(WSAAsync)
     struct fd_set select_efds;
     struct timeval timeval;
     BOOL ConnectSent = FALSE;
-    unsigned int Addr_con_locLoopCount = 0;
+    unsigned int Addr_con_locLoopCount = 0,
+                 ServerSocketLoopCount = 0;
 
     if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
     {
@@ -297,6 +298,20 @@ START_TEST(WSAAsync)
                     sockaccept = accept(ServerSocket, (struct sockaddr*)&addr_remote, &addrsize);
                     ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %d\n", WSAGetLastError());
                     dwFlags |= FD_ACCEPT;
+                }
+                else
+                {
+                    if (++ServerSocketLoopCount >= MAX_LOOPCOUNT)
+                    {
+                        ok(FALSE, "Giving up, on select() (%u/%u), as ServerSocket is not readable yet\n",
+                           ServerSocketLoopCount, MAX_LOOPCOUNT);
+                        goto done;
+                    }
+
+                    trace("Looping, for select() (%u/%u), as ServerSocket is not readable yet\n",
+                          ServerSocketLoopCount, MAX_LOOPCOUNT);
+                    Sleep(1);
+                    continue;
                 }
             }
         }
