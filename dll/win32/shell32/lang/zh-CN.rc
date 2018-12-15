@@ -501,7 +501,7 @@ CAPTION "注销 ReactOS"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "确实要注销吗?", -1, 35, 16, 146, 8
+    LTEXT "您确定要注销 ReactOS 吗?", -1, 35, 16, 146, 8
     DEFPUSHBUTTON "注销(&L)", IDOK, 41, 39, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 95, 39, 50, 14
 END
