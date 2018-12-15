@@ -20,6 +20,38 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 NET_API_STATUS
 WINAPI
+NetRegisterDomainNameChangeNotification(
+    _Out_ PHANDLE NotificationEventHandle)
+{
+    HANDLE EventHandle;
+    NTSTATUS Status;
+
+    TRACE("NetRegisterDomainNameChangeNotification(%p)\n",
+          NotificationEventHandle);
+
+    if (NotificationEventHandle == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    EventHandle = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (EventHandle == NULL)
+        return GetLastError();
+
+    Status = LsaRegisterPolicyChangeNotification(PolicyNotifyDnsDomainInformation,
+                                                 NotificationEventHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        CloseHandle(EventHandle);
+        return NetpNtStatusToApiStatus(Status);
+    }
+
+    *NotificationEventHandle = EventHandle;
+
+    return NERR_Success;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetStatisticsGet(
     _In_ LPWSTR server,
     _In_ LPWSTR service,
@@ -80,6 +112,26 @@ NetStatisticsGet(
     }
 
     return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUnregisterDomainNameChangeNotification(
+    _In_ HANDLE NotificationEventHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("NetUnregisterDomainNameChangeNotification(%p)\n",
+          NotificationEventHandle);
+
+    if (NotificationEventHandle == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    Status = LsaUnregisterPolicyChangeNotification(PolicyNotifyDnsDomainInformation,
+                                                   NotificationEventHandle);
+
+    return NetpNtStatusToApiStatus(Status);
 }
 
 

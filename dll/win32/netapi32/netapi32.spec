@@ -181,7 +181,7 @@
 @ stdcall NetMessageNameEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetMessageNameGetInfo(wstr wstr long ptr)
 @ stdcall NetQueryDisplayInformation(wstr long long long long ptr ptr)
-@ stub NetRegisterDomainNameChangeNotification
+@ stdcall NetRegisterDomainNameChangeNotification(ptr)
 @ stub NetRemoteComputerSupports
 @ stdcall NetRemoteTOD(wstr ptr)
 @ stdcall NetRemoveAlternateComputerName(wstr wstr wstr wstr long)
@@ -234,7 +234,7 @@
 @ stdcall NetShareSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetStatisticsGet(wstr wstr long long ptr)
 @ stdcall NetUnjoinDomain(wstr wstr wstr long)
-@ stub NetUnregisterDomainNameChangeNotification
+@ stdcall NetUnregisterDomainNameChangeNotification(ptr)
 @ stdcall NetUseAdd(wstr long ptr ptr)
 @ stdcall NetUseDel(wstr wstr long)
 @ stdcall NetUseEnum(wstr long ptr long ptr ptr ptr)
