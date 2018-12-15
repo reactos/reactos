@@ -28,7 +28,6 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -69,20 +68,12 @@ static HANDLE hUserToken = NULL;
 static HANDLE hInstallEvent = NULL;
 static HANDLE hNoPendingInstalls = NULL;
 
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
 static SLIST_HEADER DeviceInstallListHead;
-#else
-static LIST_ENTRY DeviceInstallListHead;
-#endif
 static HANDLE hDeviceInstallListNotEmpty;
 
 typedef struct
 {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     SLIST_ENTRY ListEntry;
-#else
-    LIST_ENTRY ListEntry;
-#endif
     WCHAR DeviceIds[1];
 } DeviceInstallParams;
 
@@ -3461,11 +3452,7 @@ cleanup:
 static DWORD WINAPI
 DeviceInstallThread(LPVOID lpParameter)
 {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     PSLIST_ENTRY ListEntry;
-#else
-    PLIST_ENTRY ListEntry;
-#endif
     DeviceInstallParams* Params;
     BOOL showWizard;
 
@@ -3477,14 +3464,8 @@ DeviceInstallThread(LPVOID lpParameter)
 
     while (TRUE)
     {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
         ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
-#else
-        if ((BOOL)IsListEmpty(&DeviceInstallListHead))
-            ListEntry = NULL;
-        else
-            ListEntry = RemoveHeadList(&DeviceInstallListHead);
-#endif
+
         if (ListEntry == NULL)
         {
             SetEvent(hNoPendingInstalls);
@@ -3560,11 +3541,7 @@ PnpEventThread(LPVOID lpParameter)
                 if (Params)
                 {
                     wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
                     InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
-#else
-                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
-#endif
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
@@ -3808,11 +3785,7 @@ InitializePnPManager(VOID)
         return dwError;
     }
 
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     InitializeSListHead(&DeviceInstallListHead);
-#else
-    InitializeListHead(&DeviceInstallListHead);
-#endif
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",
