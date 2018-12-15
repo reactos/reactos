@@ -407,6 +407,22 @@ HardwareProfilePropertiesDlgProc(
     return FALSE;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_HARDPROF));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
 
 static
 VOID
@@ -433,15 +449,15 @@ HardwareProfileProperties(
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags = PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
-    psh.hIcon = NULL;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_HARDPROF);
     psh.pszCaption = pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex].szFriendlyName;
     psh.nPages = 1;
     psh.nStartPage = 0;
     psh.phpage = &hpsp;
-    psh.pfnCallback = NULL;
+    psh.pfnCallback = PropSheetProc;
 
     PropertySheet(&psh);
 }

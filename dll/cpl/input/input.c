@@ -47,7 +47,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
         }
@@ -71,7 +71,7 @@ SystemApplet(VOID)
     header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
-    header.pszIcon     = MAKEINTRESOURCEW(IDI_CPLSYSTEM);
+    header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
     header.pszCaption  = szCaption;
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
