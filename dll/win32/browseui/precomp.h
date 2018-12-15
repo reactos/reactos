@@ -51,6 +51,7 @@
 #include "commonbrowser.h"
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
+#include "CTaskbarList.h"
 #include "explorerband.h"
 #include "CProgressDialog.h"
 #include "browseui.h"
