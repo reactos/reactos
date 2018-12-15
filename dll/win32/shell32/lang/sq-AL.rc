@@ -800,6 +800,11 @@ BEGIN
     IDS_RESTART_PROMPT "Doni të rifilloni sistemin?"
     IDS_SHUTDOWN_TITLE "Fike"
     IDS_SHUTDOWN_PROMPT "Doni ta filkni sistemin?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Në pamundësi për të shfaqur kutinë dialogut ekzekuto (gabim i brendshëm)"

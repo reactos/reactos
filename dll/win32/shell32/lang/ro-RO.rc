@@ -798,6 +798,11 @@ BEGIN
     IDS_RESTART_PROMPT "Doriți să reporniți sistemul?"
     IDS_SHUTDOWN_TITLE "Închidere"
     IDS_SHUTDOWN_PROMPT "Doriți să închideți calculatorul?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "„Executare fișier” nu a putut fi deschis (eroare internă)"
