@@ -184,6 +184,11 @@
 #define IDS_RUNDLG_BROWSE_CAPTION 182
 #define IDS_RUNDLG_BROWSE_FILTER  183
 
+/* Format Dialog strings */
+#define IDS_FORMAT_TITLE          184
+#define IDS_FORMAT_WARNING        185
+#define IDS_FORMAT_COMPLETE       186
+
 #define IDS_UNKNOWN_APP     190
 #define IDS_EXE_DESCRIPTION 191
 

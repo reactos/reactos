@@ -804,6 +804,11 @@ BEGIN
     IDS_RESTART_PROMPT "请问需要重启系统吗?"
     IDS_SHUTDOWN_TITLE "关机"
     IDS_SHUTDOWN_PROMPT "请问需要关闭系统吗?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
