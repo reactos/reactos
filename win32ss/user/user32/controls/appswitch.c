@@ -480,6 +480,50 @@ void RotateTasks(BOOL bShift)
     }
 }
 
+static void MoveLeft(void)
+{
+    selectedWindow = selectedWindow - 1;
+    if (selectedWindow < 0)
+        selectedWindow = windowCount - 1;
+    InvalidateRect(switchdialog, NULL, TRUE);
+}
+
+static void MoveRight(void)
+{
+    selectedWindow = (selectedWindow + 1) % windowCount;
+    InvalidateRect(switchdialog, NULL, TRUE);
+}
+
+static void MoveUp(void)
+{
+    INT iRow = selectedWindow / nCols;
+    INT iCol = selectedWindow % nCols;
+
+    --iRow;
+    if (iRow < 0)
+        iRow = nRows - 1;
+
+    selectedWindow = iRow * nCols + iCol;
+    if (selectedWindow >= windowCount)
+        selectedWindow = windowCount - 1;
+    InvalidateRect(switchdialog, NULL, TRUE);
+}
+
+static void MoveDown(void)
+{
+    INT iRow = selectedWindow / nCols;
+    INT iCol = selectedWindow % nCols;
+
+    ++iRow;
+    if (iRow >= nRows)
+        iRow = 0;
+
+    selectedWindow = iRow * nCols + iCol;
+    if (selectedWindow >= windowCount)
+        selectedWindow = windowCount - 1;
+    InvalidateRect(switchdialog, NULL, TRUE);
+}
+
 VOID
 DestroyAppWindows(VOID)
 {
@@ -595,20 +639,33 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
                 if (Esc) break;
                 if (GetKeyState(VK_SHIFT) < 0)
                 {
-                   selectedWindow = selectedWindow - 1;
-                   if (selectedWindow < 0)
-                      selectedWindow = windowCount - 1;
+                    MoveLeft();
                 }
                 else
                 {
-                   selectedWindow = (selectedWindow + 1)%windowCount;
+                    MoveRight();
                 }
-                InvalidateRect(switchdialog, NULL, TRUE);
              }
              else if ( msg.wParam == VK_ESCAPE )
              {
                 if (!Esc) break;
                 RotateTasks(GetKeyState(VK_SHIFT) < 0);
+             }
+             else if ( msg.wParam == VK_LEFT )
+             {
+                MoveLeft();
+             }
+             else if ( msg.wParam == VK_RIGHT )
+             {
+                MoveRight();
+             }
+             else if ( msg.wParam == VK_UP )
+             {
+                MoveUp();
+             }
+             else if ( msg.wParam == VK_DOWN )
+             {
+                MoveDown();
              }
           }
           break;
