@@ -55,4 +55,12 @@ __INTRIN_INLINE void _mm_setcsr(unsigned int val)
 #define _mm_cvtss_si32 _mm_cvt_ss2si
 
 
+/* _mm_prefetch constants */
+#define _MM_HINT_T0 1
+#define _MM_HINT_T1 2
+#define _MM_HINT_T2 3
+#define _MM_HINT_NTA 0
+#define _MM_HINT_ET1 6
+
+
 #endif /* _INCLUDED_MM2 */

@@ -11,6 +11,7 @@
 #if defined(_M_IX86) || defined(_M_X64)
 //#include <immintrin.h>
 //#include <ammintrin.h>
+#include <xmmintrin.h>
 #endif /* _M_IX86 || _M_X64 */
 
 #if defined(_M_IX86)
