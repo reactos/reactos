@@ -56,7 +56,7 @@ STRINGTABLE
 BEGIN
     IDS_DRIVE       "Диск"
     IDS_MAPPEDIMAGE "Сопоставленный образ"
-    IDS_NOMOUNTED   "Нет подключённых образов. Последний был - %s"
+    IDS_NOMOUNTED   "Нет примонтированного образа. Последний был - %s"
     IDS_NONE        "Нет"
     IDS_FILTER      "Все поддерживаемые образы (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
 END
