@@ -81,7 +81,7 @@ NTAPI
 CcReadVirtualAddress (
     PROS_VACB Vacb)
 {
-    ULONG Size;
+    ULONG Size, Pages;
     PMDL Mdl;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
@@ -95,11 +95,10 @@ CcReadVirtualAddress (
     }
     Size = LargeSize.LowPart;
 
-    Size = ROUND_TO_PAGES(Size);
-    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
-    ASSERT(Size > 0);
+    Pages = BYTES_TO_PAGES(Size);
+    ASSERT(Pages * PAGE_SIZE <= VACB_MAPPING_GRANULARITY);
 
-    Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
+    Mdl = IoAllocateMdl(Vacb->BaseAddress, Pages * PAGE_SIZE, FALSE, FALSE, NULL);
     if (!Mdl)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -177,10 +176,6 @@ CcWriteVirtualAddress (
             MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)Vacb->BaseAddress + (i << PAGE_SHIFT)));
         } while (++i < (Size >> PAGE_SHIFT));
     }
-
-    Size = ROUND_TO_PAGES(Size);
-    ASSERT(Size <= VACB_MAPPING_GRANULARITY);
-    ASSERT(Size > 0);
 
     Mdl = IoAllocateMdl(Vacb->BaseAddress, Size, FALSE, FALSE, NULL);
     if (!Mdl)
