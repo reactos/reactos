@@ -633,9 +633,8 @@ static HRESULT ddraw_create_swapchain(struct ddraw *ddraw, HWND window, BOOL win
     swapchain_desc.backbuffer_width = mode.width;
     swapchain_desc.backbuffer_height = mode.height;
     swapchain_desc.backbuffer_format = mode.format_id;
-    swapchain_desc.backbuffer_usage = 0;
-    swapchain_desc.backbuffer_count = 1;
-    swapchain_desc.swap_effect = WINED3D_SWAP_EFFECT_DISCARD;
+    swapchain_desc.backbuffer_usage = WINED3DUSAGE_RENDERTARGET;
+    swapchain_desc.swap_effect = WINED3D_SWAP_EFFECT_COPY;
     swapchain_desc.device_window = window;
     swapchain_desc.windowed = windowed;
     swapchain_desc.flags = WINED3D_SWAPCHAIN_ALLOW_MODE_SWITCH;
@@ -2100,7 +2099,7 @@ static HRESULT WINAPI ddraw7_FlipToGDISurface(IDirectDraw7 *iface)
     ddraw->flags |= DDRAW_GDI_FLIP;
 
     if (ddraw->primary)
-        ddraw_surface_update_frontbuffer(ddraw->primary, NULL, FALSE, 0);
+        ddraw_surface_update_frontbuffer(ddraw->primary, NULL, FALSE);
 
     return DD_OK;
 }
@@ -4910,19 +4909,18 @@ void ddraw_update_lost_surfaces(struct ddraw *ddraw)
     ddraw->device_state = DDRAW_DEVICE_STATE_OK;
 }
 
-static HRESULT CDECL device_parent_texture_sub_resource_created(struct wined3d_device_parent *device_parent,
-        enum wined3d_resource_type type, struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
+static HRESULT CDECL device_parent_surface_created(struct wined3d_device_parent *device_parent,
+        struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         void **parent, const struct wined3d_parent_ops **parent_ops)
 {
     struct ddraw *ddraw = ddraw_from_device_parent(device_parent);
     struct ddraw_surface *ddraw_surface;
 
-    TRACE("device_parent %p, type %#x, wined3d_texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
-            device_parent, type, wined3d_texture, sub_resource_idx, parent, parent_ops);
+    TRACE("device_parent %p, wined3d_texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
+            device_parent, wined3d_texture, sub_resource_idx, parent, parent_ops);
 
     /* We have a swapchain or wined3d internal texture. */
-    if (type != WINED3D_RTYPE_TEXTURE_2D || !wined3d_texture_get_parent(wined3d_texture)
-            || wined3d_texture_get_parent(wined3d_texture) == ddraw)
+    if (!wined3d_texture_get_parent(wined3d_texture) || wined3d_texture_get_parent(wined3d_texture) == ddraw)
     {
         *parent = NULL;
         *parent_ops = &ddraw_null_wined3d_parent_ops;
@@ -4947,6 +4945,19 @@ static HRESULT CDECL device_parent_texture_sub_resource_created(struct wined3d_d
     return DD_OK;
 }
 
+static HRESULT CDECL device_parent_volume_created(struct wined3d_device_parent *device_parent,
+        struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
+        void **parent, const struct wined3d_parent_ops **parent_ops)
+{
+    TRACE("device_parent %p, texture %p, sub_resource_idx %u, parent %p, parent_ops %p.\n",
+            device_parent, wined3d_texture, sub_resource_idx, parent, parent_ops);
+
+    *parent = NULL;
+    *parent_ops = &ddraw_null_wined3d_parent_ops;
+
+    return DD_OK;
+}
+
 static void STDMETHODCALLTYPE ddraw_frontbuffer_destroyed(void *parent)
 {
     struct ddraw *ddraw = parent;
@@ -4963,26 +4974,25 @@ static HRESULT CDECL device_parent_create_swapchain_texture(struct wined3d_devic
         struct wined3d_texture **texture)
 {
     struct ddraw *ddraw = ddraw_from_device_parent(device_parent);
-    const struct wined3d_parent_ops *parent_ops;
     HRESULT hr;
 
     TRACE("device_parent %p, container_parent %p, desc %p, texture flags %#x, texture %p.\n",
             device_parent, container_parent, desc, texture_flags, texture);
 
-    if (!ddraw->wined3d_frontbuffer)
-        parent_ops = &ddraw_frontbuffer_parent_ops;
-    else
-        parent_ops = &ddraw_null_wined3d_parent_ops;
+    if (ddraw->wined3d_frontbuffer)
+    {
+        ERR("Frontbuffer already created.\n");
+        return E_FAIL;
+    }
 
     if (FAILED(hr = wined3d_texture_create(ddraw->wined3d_device, desc, 1, 1,
-            texture_flags | WINED3D_TEXTURE_CREATE_MAPPABLE, NULL, ddraw, parent_ops, texture)))
+            texture_flags | WINED3D_TEXTURE_CREATE_MAPPABLE, NULL, ddraw, &ddraw_frontbuffer_parent_ops, texture)))
     {
         WARN("Failed to create texture, hr %#x.\n", hr);
         return hr;
     }
 
-    if (!ddraw->wined3d_frontbuffer)
-        ddraw->wined3d_frontbuffer = *texture;
+    ddraw->wined3d_frontbuffer = *texture;
 
     return hr;
 }
@@ -5013,7 +5023,8 @@ static const struct wined3d_device_parent_ops ddraw_wined3d_device_parent_ops =
     device_parent_wined3d_device_created,
     device_parent_mode_changed,
     device_parent_activate,
-    device_parent_texture_sub_resource_created,
+    device_parent_surface_created,
+    device_parent_volume_created,
     device_parent_create_swapchain_texture,
     device_parent_create_swapchain,
 };
