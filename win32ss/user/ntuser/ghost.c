@@ -291,6 +291,8 @@ BOOL IntAddGhost(HWND hwndTarget)
     NTSTATUS Status;
     CLIENT_ID ClientId;
     HANDLE GhostThreadHandle;
+    static OBJECT_ATTRIBUTES ObjectAttributes =
+        RTL_CONSTANT_OBJECT_ATTRIBUTES(NULL, OBJ_KERNEL_HANDLE);
 
     if (gGhostInfo)
     {
@@ -312,7 +314,7 @@ BOOL IntAddGhost(HWND hwndTarget)
     // create thread
     Status = PsCreateSystemThread(&GhostThreadHandle,
                                   STANDARD_RIGHTS_ALL,
-                                  ___ObjectAttributes___,
+                                  &ObjectAttributes,
                                   NULL,
                                   &ClientId,
                                   GhostThreadProc,
