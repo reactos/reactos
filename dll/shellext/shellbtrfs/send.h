@@ -19,6 +19,7 @@
 
 #ifdef __REACTOS__
 #include "btrfs.h"
+#include <stdlib.h>
 #else
 #include "../btrfs.h"
 #endif
