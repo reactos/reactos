@@ -34,6 +34,16 @@ unsigned int _mm_getcsr(void);
 void _mm_setcsr(unsigned int);
 #pragma intrinsic(_mm_setcsr)
 #else
+
+#ifndef __INTRIN_INLINE
+#ifdef __clang__
+#define __INTRIN_INLINE __forceinline
+#else
+#define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
+#define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
+#endif
+#endif
+
 /* 
  * We can't use __builtin_ia32_* functions,
  * are they are only available with the -msse2 compiler switch
