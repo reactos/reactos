@@ -3268,6 +3268,7 @@ HRESULT CDefView::_MergeToolbar()
 HRESULT CDefView::DefMessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // TODO: SFVM_GET_CUSTOMVIEWINFO, SFVM_WINDOWCREATED
+    TRACE("CDefView::DefMessageSFVCB uMsg=%u\n", uMsg);
     return E_NOTIMPL;
 }
 
