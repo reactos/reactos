@@ -56,29 +56,29 @@ PCONTROLLER_OBJECT
 NTAPI
 IoCreateController(IN ULONG Size)
 {
-   PCONTROLLER_OBJECT Controller;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE Handle;
-   NTSTATUS Status;
-   PAGED_CODE();
+    PCONTROLLER_OBJECT Controller;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-   /* Initialize an empty OBA */
-   InitializeObjectAttributes(&ObjectAttributes,
-                              NULL,
-                              OBJ_KERNEL_HANDLE,
-                              NULL,
-                              NULL);
+    /* Initialize an empty OBA */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
 
-   /* Create the Object */
-   Status = ObCreateObject(KernelMode,
-                           IoControllerObjectType,
-                           &ObjectAttributes,
-                           KernelMode,
-                           NULL,
-                           sizeof(CONTROLLER_OBJECT) + Size,
-                           0,
-                           0,
-                           (PVOID*)&Controller);
+    /* Create the Object */
+    Status = ObCreateObject(KernelMode,
+                            IoControllerObjectType,
+                            &ObjectAttributes,
+                            KernelMode,
+                            NULL,
+                            sizeof(CONTROLLER_OBJECT) + Size,
+                            0,
+                            0,
+                            (PVOID*)&Controller);
     if (!NT_SUCCESS(Status)) return NULL;
 
     /* Insert it */
@@ -88,7 +88,7 @@ IoCreateController(IN ULONG Size)
                             1,
                             (PVOID*)&Controller,
                             &Handle);
-   if (!NT_SUCCESS(Status)) return NULL;
+    if (!NT_SUCCESS(Status)) return NULL;
 
     /* Close the dummy handle */
     ObCloseHandle(Handle, KernelMode);
