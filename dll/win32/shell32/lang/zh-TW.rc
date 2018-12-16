@@ -336,9 +336,9 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
     LTEXT "磁碟機 %c", 14009, 100, 150, 70, 10
-    PUSHBUTTON "&Disk Cleanup", 14010, 160, 154, 70, 15, WS_TABSTOP
+    PUSHBUTTON "磁碟清理(&D)", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    CHECKBOX "Compress drive to save disk space", 14011, 8, 191, 222, 10, WS_DISABLED
+    CHECKBOX "壓縮磁碟機來節省磁碟空間", 14011, 8, 191, 222, 10, WS_DISABLED
     CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
@@ -355,10 +355,10 @@ BEGIN
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "這個選項將會重組磁碟上的檔案。", -1, 40, 85, 160, 20
     PUSHBUTTON "現在重組...", 14001, 130, 105, 90, 15, WS_TABSTOP
-    GROUPBOX "Backup", -1, 5, 130, 230, 60
+    GROUPBOX "備份", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+    PUSHBUTTON "現在備份...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 230
@@ -819,7 +819,7 @@ BEGIN
 
     /* shell folder path default values */
     IDS_PROGRAMS "Start Menu\\Programs"
-    IDS_PERSONAL "我的文稿"
+    IDS_PERSONAL "我的文件"
     IDS_FAVORITES "我的最愛"
     IDS_STARTUP "Start Menu\\Programs\\StartUp"
     IDS_RECENT "Recent"
@@ -854,13 +854,13 @@ BEGIN
     IDS_DRIVE_NETWORK "網路磁碟"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
     IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_FS_UNKNOWN "未知"
 
     /* Open With */
-    IDS_OPEN_WITH "Open With"
-    IDS_OPEN_WITH_CHOOSE "Choose Program..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH "開啟檔案"
+    IDS_OPEN_WITH_CHOOSE "選擇程式..."
+    IDS_OPEN_WITH_RECOMMENDED "推薦的程式:"
+    IDS_OPEN_WITH_OTHER "其它程式:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Authors"
     IDS_SHELL_ABOUT_BACK "< &Back"
@@ -868,10 +868,10 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "新增資料夾(&F)"
     FCIDM_SHVIEW_NEWLINK "新增捷徑(&L)"
     IDS_FOLDER_OPTIONS "資料夾選項"
-    IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
-    IDS_RECYCLEBIN_DISKSPACE "Space Available"
-    IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
-    IDS_PICK_ICON_TITLE "Choose Icon"
+    IDS_RECYCLEBIN_LOCATION "資源回收筒位置"
+    IDS_RECYCLEBIN_DISKSPACE "可用空間"
+    IDS_EMPTY_BITBUCKET "清空資源回收筒"
+    IDS_PICK_ICON_TITLE "選擇圖示"
     IDS_PICK_ICON_FILTER "Icon Files (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
@@ -910,14 +910,14 @@ BEGIN
     IDS_VXD_FILE "虛擬裝置驅動程式"
     IDS_ANY_FILE "%s-檔案"
 
-    IDS_OPEN_VERB "Open"
-    IDS_EXPLORE_VERB "Explore"
-    IDS_RUNAS_VERB "Run as..."
+    IDS_OPEN_VERB "開啟"
+    IDS_EXPLORE_VERB "檔案總管"
+    IDS_RUNAS_VERB "執行身分..."
     IDS_EDIT_VERB "編輯"
-    IDS_FIND_VERB "Find"
+    IDS_FIND_VERB "搜索"
     IDS_PRINT_VERB "列印"
 
-    IDS_FILE_FOLDER "%u 檔案, %u 檔案夾"
+    IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
     IDS_PRINTERS "印表機"
     IDS_FONTS "字型"
     IDS_INSTALLNEWFONT "安裝新字型..."
@@ -937,7 +937,7 @@ BEGIN
     IDS_FILE_EXT_TYPE "%s File"
 
     IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
+    IDS_UNKNOWN_APP "未知應用程式"
     IDS_EXE_DESCRIPTION "Description:"
 
     IDS_MENU_EMPTY "(Empty)"
