@@ -2036,11 +2036,29 @@ unsigned char * __RPC_USER STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char 
  *  which the first parameter is a ULONG.
  *  This function is only intended to be called by the RPC runtime.
  */
-void __RPC_USER STGMEDIUM_UserFree(ULONG *pFlags, STGMEDIUM *pStgMedium)
+void __RPC_USER STGMEDIUM_UserFree(ULONG *flags, STGMEDIUM *med)
 {
-    TRACE("(%s, %p\n", debugstr_user_flags(pFlags), pStgMedium);
+    TRACE("(%s, %p)\n", debugstr_user_flags(flags), med);
 
-    ReleaseStgMedium(pStgMedium);
+    switch (med->tymed)
+    {
+    case TYMED_NULL:
+    case TYMED_FILE:
+    case TYMED_ISTREAM:
+    case TYMED_ISTORAGE:
+        ReleaseStgMedium(med);
+        break;
+    case TYMED_HGLOBAL:
+    case TYMED_GDI:
+    case TYMED_MFPICT:
+    case TYMED_ENHMF:
+        if (LOWORD(*flags) == MSHCTX_INPROC)
+            med->tymed = TYMED_NULL;
+        ReleaseStgMedium(med);
+        break;
+    default:
+        RaiseException(DV_E_TYMED, 0, 0, NULL);
+    }
 }
 
 ULONG __RPC_USER ASYNC_STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, ASYNC_STGMEDIUM *pStgMedium)
