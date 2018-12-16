@@ -797,8 +797,8 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             HANDLE CsrPortHandle;
 
-            ERR("Set CSR API Port for Win32k\n");
 
+            TRACE("Set CSR API Port for Win32k\n");
             if (ThreadInformationLength != sizeof(CsrPortHandle))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
