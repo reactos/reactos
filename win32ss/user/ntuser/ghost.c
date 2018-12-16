@@ -239,7 +239,7 @@ BOOL IntHaveToQuitGhosting(void)
 VOID NTAPI
 GhostThreadProc(_In_ PVOID StartContext)
 {
-    HWND hwndTarget = (HWND)StartContext;
+    HWND hwndTarget = StartContext;
     MSG msg;
 
     if (!IntCreateGhostWindow(hwndTarget))
