@@ -1012,33 +1012,15 @@ UserpMessageBox(
     IN ULONG Timeout)
 {
     ULONG MessageBoxResponse;
-    HDESK hDesk, hOldDesk;
 
     DPRINT("Text = '%S', Caption = '%S', Type = 0x%lx\n",
            TextStringU->Buffer, CaptionStringU->Buffer, Type);
-
-    // TEMPORARY HACK to fix desktop assignment for harderror message boxes.
-    hDesk = OpenInputDesktop(0, FALSE, GENERIC_WRITE);
-    if (!hDesk)
-        return ResponseNotHandled;
-
-    /* Assign the desktop to this thread */
-    hOldDesk = GetThreadDesktop(GetCurrentThreadId());
-    if (!SetThreadDesktop(hDesk))
-    {
-        CloseDesktop(hDesk);
-        return ResponseNotHandled;
-    }
 
     /* Display a message box */
     MessageBoxResponse = MessageBoxTimeoutW(NULL,
                                             TextStringU->Buffer,
                                             CaptionStringU->Buffer,
                                             Type, 0, Timeout);
-
-    /* Restore the original desktop */
-    SetThreadDesktop(hOldDesk);
-    CloseDesktop(hDesk);
 
     /* Return response value */
     switch (MessageBoxResponse)
@@ -1107,6 +1089,7 @@ UserServerHardError(
     UNICODE_STRING TextU, CaptionU;
     WCHAR LocalTextBuffer[256];
     WCHAR LocalCaptionBuffer[256];
+    NTSTATUS Status;
 
     ASSERT(ThreadData->Process != NULL);
 
@@ -1134,6 +1117,16 @@ UserServerHardError(
             return; // STATUS_INVALID_PARAMETER;
         }
         // (Message->UnicodeStringParameterMask & 0x3)
+    }
+
+    Status = NtUserSetInformationThread(NtCurrentThread(),
+                                        UserThreadUseActiveDesktop,
+                                        NULL,
+                                        0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to set thread desktop!\n");
+        return;
     }
 
     /* Re-initialize the hard errors cache */
@@ -1186,6 +1179,8 @@ Quit:
         RtlFreeUnicodeString(&TextU);
     if (CaptionU.Buffer != LocalCaptionBuffer)
         RtlFreeUnicodeString(&CaptionU);
+
+    NtUserSetInformationThread(NtCurrentThread(), UserThreadRestoreDesktop, NULL, 0);
 
     return;
 }

@@ -691,6 +691,9 @@ NtUserSetInformationProcess(
     return 0;
 }
 
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
+
 NTSTATUS
 APIENTRY
 NtUserSetInformationThread(IN HANDLE ThreadHandle,
@@ -820,6 +823,32 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             break;
         }
 
+        case UserThreadUseActiveDesktop:
+        {
+            HDESK hdesk;
+
+            if (Thread != PsGetCurrentThread())
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
+            IntSetThreadDesktop(hdesk, FALSE);
+
+            break;
+        }
+        case UserThreadRestoreDesktop:
+        {
+            if (Thread != PsGetCurrentThread())
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            IntSetThreadDesktop(NULL, FALSE);
+            break;
+        }
         default:
         {
             STUB;

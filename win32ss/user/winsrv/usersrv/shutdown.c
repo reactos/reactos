@@ -191,8 +191,17 @@ EndNowThreadProc(LPVOID Parameter)
     PNOTIFY_CONTEXT NotifyContext = (PNOTIFY_CONTEXT)Parameter;
     MSG Msg;
 
-    // SetThreadDesktop(NotifyContext->Desktop);
-    // SwitchDesktop(NotifyContext->Desktop);
+#if 0
+    SetThreadDesktop(NotifyContext->Desktop);
+    SwitchDesktop(NotifyContext->Desktop);
+#else
+    /* For now show the end task dialog in the active desktop */
+    NtUserSetInformationThread(NtCurrentThread(),
+                               UserThreadUseActiveDesktop,
+                               NULL,
+                               0);
+#endif
+
     CallInitCommonControls();
     NotifyContext->Dlg = CreateDialogParam(UserServerDllInstance,
                                            MAKEINTRESOURCE(IDD_END_NOW), NULL,
@@ -811,9 +820,21 @@ CSR_API(SrvExitWindowsEx)
     NTSTATUS Status;
     PUSER_EXIT_REACTOS ExitReactOSRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactOSRequest;
 
+    Status = NtUserSetInformationThread(NtCurrentThread(),
+                                        UserThreadUseActiveDesktop,
+                                        NULL,
+                                        0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to set thread desktop!\n");
+        return Status;
+    }
+
     Status = UserExitReactOS(CsrGetClientThread(), ExitReactOSRequest->Flags);
     ExitReactOSRequest->Success   = NT_SUCCESS(Status);
     ExitReactOSRequest->LastError = GetLastError();
+
+    NtUserSetInformationThread(NtCurrentThread(), UserThreadRestoreDesktop, NULL, 0);
 
     return Status;
 }
@@ -821,9 +842,20 @@ CSR_API(SrvExitWindowsEx)
 CSR_API(SrvEndTask)
 {
     PUSER_END_TASK EndTaskRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.EndTaskRequest;
+    NTSTATUS Status;
 
     // FIXME: This is HACK-plemented!!
     DPRINT1("SrvEndTask is HACKPLEMENTED!!\n");
+
+    Status = NtUserSetInformationThread(NtCurrentThread(),
+                                        UserThreadUseActiveDesktop,
+                                        NULL,
+                                        0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to set thread desktop!\n");
+        return Status;
+    }
 
     SendMessageW(EndTaskRequest->WndHandle, WM_CLOSE, 0, 0);
     // PostMessageW(EndTaskRequest->WndHandle, WM_CLOSE, 0, 0);
@@ -845,6 +877,8 @@ CSR_API(SrvEndTask)
         EndTaskRequest->Success   = TRUE;
         EndTaskRequest->LastError = ERROR_SUCCESS;
     }
+
+    NtUserSetInformationThread(NtCurrentThread(), UserThreadRestoreDesktop, NULL, 0);
 
     return STATUS_SUCCESS;
 }
