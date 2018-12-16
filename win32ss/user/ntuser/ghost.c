@@ -280,7 +280,7 @@ GhostThreadProc(_In_ PVOID StartContext)
     }
 
 Quit:
-    RtlFreeHeap(GlobalUserHeap, 0, gGhostInfo);
+    ExFreePoolWithTag(gGhostInfo, USERTAG_GHOST);
 
     KeSetEvent(&gGhostInfo->GhostQuitEvent, IO_NO_INCREMENT, TRUE);
 
@@ -299,10 +299,11 @@ BOOL IntAddGhost(HWND hwndTarget)
                                        (WPARAM)hwndTarget, 0);
     }
 
-    gGhostInfo = RtlAllocateHeap(GlobalUserHeap, HEAP_ZERO_MEMORY, sizeof(GHOST_INFO));
+    gGhostInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(GHOST_INFO), USERTAG_GHOST);
     if (!gGhostInfo)
         return FALSE;
 
+    RtlZeroMemory(gGhostInfo, sizeof(*gGhostInfo));
     gGhostInfo->hwndTarget = hwndTarget;
 
     // create events
