@@ -121,8 +121,13 @@ CreateSystemThreads(PVOID pParam)
 
 CSR_API(SrvCreateSystemThreads)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = CsrExecServerThread(CreateSystemThreads, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Cannot start system thread!\n");
+    }
+
+    return Status;
 }
 
 CSR_API(SrvActivateDebugger)
@@ -281,38 +286,6 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
         DPRINT1("NtUserInitialize failed with Status 0x%08x\n", Status);
         return Status;
     }
-
-/*** From win32csr... See r54125 ***/
-    {
-        HANDLE ServerThread;
-        CLIENT_ID ClientId;
-        UINT i;
-
-        /* Start the Raw Input Thread and the Desktop Thread */
-        for (i = 0; i < 2; ++i)
-        {
-            Status = RtlCreateUserThread(NtCurrentProcess(),
-                                         NULL,
-                                         TRUE,
-                                         0,
-                                         0,
-                                         0,
-                                         CreateSystemThreads,
-                                         UlongToPtr(i),
-                                         &ServerThread,
-                                         &ClientId);
-            if (NT_SUCCESS(Status))
-            {
-                NtResumeThread(ServerThread, NULL);
-                NtClose(ServerThread);
-            }
-            else
-            {
-                DPRINT1("Cannot start Raw Input Thread!\n");
-            }
-        }
-    }
-/*** END - From win32csr... ***/
 
     /* All done */
     return STATUS_SUCCESS;

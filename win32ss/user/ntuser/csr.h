@@ -32,4 +32,11 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN CSR_API_NUMBER ApiNumber,
                     IN ULONG DataLength);
 
+#define ST_RIT              (1<<0)
+#define ST_DESKTOP_THREAD   (1<<1)
+#define ST_GHOST_THREAD     (1<<2)
+
+DWORD UserSystemThreadProc(BOOL bRemoteProcess);
+BOOL UserCreateSystemThread(DWORD Type);
+
 /* EOF */

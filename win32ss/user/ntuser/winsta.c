@@ -497,7 +497,20 @@ IntCreateWindowStation(
 
         InputWindowStation = WindowStation;
         WindowStation->Flags &= ~WSS_NOIO;
+
         InitCursorImpl();
+
+        UserCreateSystemThread(ST_DESKTOP_THREAD);
+        UserCreateSystemThread(ST_RIT);
+
+        /* Desktop functions require the desktop thread running so wait for it to initialize */
+        UserLeaveCo();
+        KeWaitForSingleObject(gpDesktopThreadStartedEvent,
+                              UserRequest,
+                              UserMode,
+                              FALSE,
+                              NULL);
+        UserEnterCo();
     }
     else
     {
@@ -742,6 +755,8 @@ NtUserCreateWindowStation(
         return NULL;
     }
 
+    UserEnterExclusive();
+
     /* Create the window station */
     Status = IntCreateWindowStation(&hWinSta,
                                     ObjectAttributes,
@@ -753,6 +768,8 @@ NtUserCreateWindowStation(
                                     Unknown4,
                                     Unknown5,
                                     Unknown6);
+    UserLeave();
+
     if (NT_SUCCESS(Status))
     {
         TRACE("NtUserCreateWindowStation created window station '%wZ' with handle 0x%p\n",
