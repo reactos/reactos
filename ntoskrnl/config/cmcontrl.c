@@ -262,3 +262,11 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
     PsDefaultThreadLocaleId = PsDefaultSystemLocaleId;
     PsDefaultUILanguageId = PsInstallUILanguageId;
 }
+
+NTSTATUS
+NTAPI
+CmpSaveBootControlSet(IN USHORT ControlSet)
+{
+    DPRINT1("CmpSaveBootControlSet(%lu)\n", ControlSet);
+    return STATUS_SUCCESS;
+}

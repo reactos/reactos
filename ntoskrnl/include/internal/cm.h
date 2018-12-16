@@ -1177,6 +1177,12 @@ CmGetSystemControlValues(
     IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
 );
 
+NTSTATUS
+NTAPI
+CmpSaveBootControlSet(
+    IN USHORT ControlSet
+);
+
 //
 // Hardware Configuration Routines
 //

@@ -1322,8 +1322,8 @@ NtInitializeRegistry(IN USHORT Flag)
         Flag -= CM_BOOT_FLAG_ACCEPTED;
         if (Flag)
         {
-            /* FIXME: Save the last known good boot */
-            //Status = CmpSaveBootControlSet(Flag);
+            /* Save the last known good boot */
+            Status = CmpSaveBootControlSet(Flag);
 
             /* Notify HAL */
             HalEndOfBoot();
