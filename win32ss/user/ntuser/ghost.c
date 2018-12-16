@@ -323,7 +323,8 @@ BOOL IntAddGhost(HWND hwndTarget)
            GhostThreadHandle, ClientId.UniqueThread, Status);
 
     // wait for start up
-    NtWaitForSingleObject(&gGhostInfo->GhostStartupEvent, FALSE, NULL);
+    KeWaitForSingleObject(&gGhostInfo->GhostStartupEvent,
+                          UserRequest, UserMode, FALSE, NULL);
 
     // set the thread ID
     gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);
