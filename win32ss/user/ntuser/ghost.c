@@ -280,10 +280,9 @@ GhostThreadProc(_In_ PVOID StartContext)
     }
 
 Quit:
-    ExFreePoolWithTag(gGhostInfo, USERTAG_GHOST);
-
     KeSetEvent(&gGhostInfo->GhostQuitEvent, IO_NO_INCREMENT, FALSE);
 
+    ExFreePoolWithTag(gGhostInfo, USERTAG_GHOST);
     gGhostInfo = NULL;
 }
 
