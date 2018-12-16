@@ -327,6 +327,9 @@ BOOL IntAddGhost(HWND hwndTarget)
     // set the thread ID
     gGhostInfo->ThreadId = PtrToUint(ClientId.UniqueThread);
 
+    // close thread handle
+    ZwClose(GhostThreadHandle);
+
     return TRUE;
 }
 
