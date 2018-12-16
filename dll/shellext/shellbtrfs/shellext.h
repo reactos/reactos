@@ -17,6 +17,13 @@
 
 #pragma once
 
+/* C++ backwards-compatibility */
+#ifdef __REACTOS__
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#define noexcept
+#endif
+#endif
+
 #define ISOLATION_AWARE_ENABLED 1
 #define STRSAFE_NO_DEPRECATE
 
@@ -195,6 +202,9 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 class win_handle {
 public:
     win_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
     }
 
     win_handle(HANDLE nh) {
@@ -224,12 +234,19 @@ public:
     }
 
 private:
+#ifndef __REACTOS__
     HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
 };
 
 class fff_handle {
 public:
     fff_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
     }
 
     fff_handle(HANDLE nh) {
@@ -259,12 +276,19 @@ public:
     }
 
 private:
+#ifndef __REACTOS__
     HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
 };
 
 class nt_handle {
 public:
     nt_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
     }
 
     nt_handle(HANDLE nh) {
@@ -294,7 +318,11 @@ public:
     }
 
 private:
+#ifndef __REACTOS__
     HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
 };
 
 class string_error : public exception {
