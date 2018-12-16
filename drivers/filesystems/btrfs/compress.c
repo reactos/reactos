@@ -94,7 +94,11 @@ typedef struct {
 static void* zstd_malloc(void* opaque, size_t size);
 static void zstd_free(void* opaque, void* address);
 
+#ifndef __REACTOS__
 ZSTD_customMem zstd_mem = { .customAlloc = zstd_malloc, .customFree = zstd_free, .opaque = NULL };
+#else
+ZSTD_customMem zstd_mem = { zstd_malloc, zstd_free, NULL };
+#endif
 
 static UINT8 lzo_nextbyte(lzo_stream* stream) {
     UINT8 c;
