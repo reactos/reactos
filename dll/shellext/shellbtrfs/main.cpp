@@ -836,7 +836,6 @@ NTSTATUS NTAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
         }
 
         /* encode ch as UTF-8 */
-        ASSERT(ch <= 0x10ffff);
         if (ch < 0x80)
         {
             utf8_ch[0] = ch & 0x7f;
