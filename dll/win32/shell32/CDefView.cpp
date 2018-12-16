@@ -115,6 +115,7 @@ class CDefView :
         HRESULT _MergeToolbar();
         BOOL _Sort();
         HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        IShellFolderViewCB *_GetDefViewCB(CDefView *pView);
 
     public:
         CDefView();
@@ -388,6 +389,12 @@ CDefView::CDefView() :
 CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
+
+    if (m_pShellFolderViewCB)
+    {
+        m_pShellFolderViewCB->Release();
+        m_pShellFolderViewCB = NULL;
+    }
 
     if (m_hWnd)
     {
@@ -3265,11 +3272,16 @@ HRESULT CDefView::_MergeToolbar()
 
 HRESULT CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (m_pShellFolderViewCB)
+    if (!m_pShellFolderViewCB)
     {
-        return m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
+        m_pShellFolderViewCB = _GetDefViewCB(this);
+        m_pShellFolderViewCB->AddRef();
     }
-    return E_NOINTERFACE;
+
+    if (!m_pShellFolderViewCB)
+        return E_NOINTERFACE;
+
+    return m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
 }
 
 HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
@@ -3325,4 +3337,72 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 
     *ppsv = psv.Detach();
     return hRes;
+}
+
+/* CDefView callback interface */
+class CDefViewCB : public IShellFolderViewCB
+{
+public:
+    CDefViewCB(CDefView *pView) : m_cRefs(1), m_pView(pView)
+    {
+        m_pView->AddRef();
+    }
+
+    virtual ~CDefViewCB()
+    {
+        m_pView->Release();
+    }
+
+    virtual ULONG STDMETHODCALLTYPE AddRef()
+    {
+        return ++m_cRefs;
+    }
+    virtual ULONG STDMETHODCALLTYPE Release()
+    {
+        --m_cRefs;
+        if (m_cRefs)
+            return m_cRefs;
+
+        delete this;
+        return 0;
+    }
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void **ppvObj)
+    {
+        if (!ppvObj)
+            return E_POINTER;
+
+        if (IsEqualIID(iid, IID_IShellFolderViewCB) ||
+            IsEqualIID(iid, IID_IUnknown))
+        {
+            AddRef();
+            *ppvObj = this;
+            return S_OK;
+        }
+
+        return E_NOINTERFACE;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(
+        UINT   uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+
+protected:
+    LONG m_cRefs;
+    CDefView *m_pView;
+};
+
+HRESULT STDMETHODCALLTYPE
+CDefViewCB::MessageSFVCB(UINT   uMsg,
+                         WPARAM wParam,
+                         LPARAM lParam)
+{
+    // TODO:
+    TRACE("IShellFolderViewCB::MessageSFVCB uMsg=%u\n", uMsg);
+    return 0;
+}
+
+IShellFolderViewCB *CDefView::_GetDefViewCB(CDefView *pView)
+{
+    return new CDefViewCB(pView);
 }
