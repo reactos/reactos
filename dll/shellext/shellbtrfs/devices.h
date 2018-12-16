@@ -28,8 +28,6 @@
 #include <ndk/iotypes.h>
 #endif
 #include <shlobj.h>
-#include <vector>
-#include <string>
 #ifndef __REACTOS__
 #include "../btrfsioctl.h"
 #else
@@ -37,27 +35,27 @@
 #endif
 
 typedef struct {
-    std::wstring pnp_name;
-    std::wstring friendly_name;
-    std::wstring drive;
-    std::wstring fstype;
+    wstring pnp_name;
+    wstring friendly_name;
+    wstring drive;
+    wstring fstype;
     ULONG disk_num;
     ULONG part_num;
-    UINT64 size;
-    BOOL has_parts;
+    uint64_t size;
+    bool has_parts;
     BTRFS_UUID fs_uuid;
     BTRFS_UUID dev_uuid;
-    BOOL ignore;
-    BOOL multi_device;
-    BOOL is_disk;
+    bool ignore;
+    bool multi_device;
+    bool is_disk;
 } device;
 
 typedef struct {
     const WCHAR* name;
     const char* magic;
     ULONG magiclen;
-    UINT32 sboff;
-    UINT32 kboff;
+    uint32_t sboff;
+    uint32_t kboff;
 } fs_identifier;
 
 // This list is compiled from information in libblkid, part of util-linux
@@ -135,7 +133,7 @@ const static fs_identifier fs_ident[] = {
     { L"FAT", "\353",     1, 0, 0 },
     { L"FAT", "\351",     1, 0, 0},
     { L"FAT", "\125\252", 2, 0x1fe, 0 },
-    { NULL, 0, 0, 0 }
+    { nullptr, 0, 0, 0 }
 };
 
 class BtrfsDeviceAdd {
@@ -152,18 +150,19 @@ private:
     HWND hwnd;
     WCHAR* cmdline;
     device* sel;
-    std::vector<device> device_list;
+    vector<device> device_list;
 };
 
 class BtrfsDeviceResize {
 public:
     INT_PTR CALLBACK DeviceResizeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    void ShowDialog(HWND hwnd, WCHAR* fn, UINT64 dev_id);
+    void ShowDialog(HWND hwnd, const wstring& fn, uint64_t dev_id);
 
 private:
     void do_resize(HWND hwndDlg);
 
-    UINT64 dev_id, new_size;
-    WCHAR fn[MAX_PATH], new_size_text[255];
+    uint64_t dev_id, new_size;
+    wstring fn;
+    WCHAR new_size_text[255];
     btrfs_device dev_info;
 };

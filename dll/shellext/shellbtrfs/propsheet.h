@@ -19,7 +19,6 @@
 
 #include <shlobj.h>
 #include <deque>
-#include <string>
 #ifndef __REACTOS__
 #include "../btrfsioctl.h"
 #else
@@ -93,25 +92,27 @@ class BtrfsPropSheet : public IShellExtInit, IShellPropSheetExt {
 public:
     BtrfsPropSheet() {
         refcount = 0;
-        ignore = TRUE;
-        stgm_set = FALSE;
-        readonly = FALSE;
-        flags_changed = FALSE;
-        perms_changed = FALSE;
-        uid_changed = FALSE;
-        gid_changed = FALSE;
-        compress_type_changed = FALSE;
-        ro_changed = FALSE;
-        can_change_perms = FALSE;
-        show_admin_button = FALSE;
-        thread = NULL;
+        ignore = true;
+        stgm_set = false;
+        readonly = false;
+        flags_changed = false;
+        perms_changed = false;
+        uid_changed = false;
+        gid_changed = false;
+        compress_type_changed = false;
+        ro_changed = false;
+        can_change_perms = false;
+        show_admin_button = false;
+        thread = nullptr;
         mode = mode_set = 0;
         flags = flags_set = 0;
-        has_subvols = FALSE;
+        has_subvols = false;
         filename = L"";
 
-        sizes[0] = sizes[1] = sizes[2] = sizes[3] = 0;
-        totalsize = 0;
+        sizes[0] = sizes[1] = sizes[2] = sizes[3] = sizes[4] = 0;
+        totalsize = allocsize = sparsesize = 0;
+        size_format[0] = 0;
+        cr_format[0] = 0;
 
         InterlockedIncrement(&objs_loaded);
     }
@@ -152,43 +153,42 @@ public:
     virtual HRESULT __stdcall ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
 
     void init_propsheet(HWND hwndDlg);
-    void change_inode_flag(HWND hDlg, UINT64 flag, UINT state);
+    void change_inode_flag(HWND hDlg, uint64_t flag, UINT state);
     void change_perm_flag(HWND hDlg, ULONG perm, UINT state);
-    void change_uid(HWND hDlg, UINT32 uid);
-    void change_gid(HWND hDlg, UINT32 gid);
+    void change_uid(HWND hDlg, uint32_t uid);
+    void change_gid(HWND hDlg, uint32_t gid);
     void apply_changes(HWND hDlg);
     void set_size_on_disk(HWND hwndDlg);
-    void add_to_search_list(WCHAR* fn);
     DWORD search_list_thread();
-    void do_search(WCHAR* fn);
+    void do_search(const wstring& fn);
     void update_size_details_dialog(HWND hDlg);
     void open_as_admin(HWND hwndDlg);
-    void set_cmdline(std::wstring cmdline);
+    void set_cmdline(const wstring& cmdline);
 
-    BOOL readonly;
-    BOOL can_change_perms;
-    BOOL can_change_nocow;
-    WCHAR size_format[255];
+    bool readonly;
+    bool can_change_perms;
+    bool can_change_nocow;
+    WCHAR size_format[255], cr_format[255];
     HANDLE thread;
-    UINT32 min_mode, max_mode, mode, mode_set;
-    UINT64 min_flags, max_flags, flags, flags_set;
-    UINT64 subvol, inode, rdev;
-    UINT8 type, min_compression_type, max_compression_type, compress_type;
-    UINT32 uid, gid;
-    BOOL various_subvols, various_inodes, various_types, various_uids, various_gids, compress_type_changed, has_subvols,
+    uint32_t min_mode, max_mode, mode, mode_set;
+    uint64_t min_flags, max_flags, flags, flags_set;
+    uint64_t subvol, inode, rdev;
+    uint8_t type, min_compression_type, max_compression_type, compress_type;
+    uint32_t uid, gid;
+    bool various_subvols, various_inodes, various_types, various_uids, various_gids, compress_type_changed, has_subvols,
          ro_subvol, various_ro, ro_changed, show_admin_button;
 
 private:
     LONG refcount;
-    BOOL ignore;
+    bool ignore;
     STGMEDIUM stgm;
-    BOOL stgm_set;
-    BOOL flags_changed, perms_changed, uid_changed, gid_changed;
-    UINT64 sizes[4], totalsize;
-    std::deque<WCHAR*> search_list;
-    std::wstring filename;
+    bool stgm_set;
+    bool flags_changed, perms_changed, uid_changed, gid_changed;
+    uint64_t sizes[5], totalsize, allocsize, sparsesize;
+    deque<wstring> search_list;
+    wstring filename;
 
-    void apply_changes_file(HWND hDlg, std::wstring fn);
-    HRESULT check_file(std::wstring fn, UINT i, UINT num_files, UINT* sv);
+    void apply_changes_file(HWND hDlg, const wstring& fn);
+    HRESULT check_file(const wstring& fn, UINT i, UINT num_files, UINT* sv);
     HRESULT load_file_list();
 };
