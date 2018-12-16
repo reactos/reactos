@@ -1,5 +1,9 @@
 #pragma once
 
+/* icons */
+#define IDI_NETWORK     100
+#define IDI_INTERNET    101
+
 /* dialogs */
 #define IDD_TCPIP_BASIC_DLG  100
 #define IDD_TCPIP_ALTCF_DLG  101

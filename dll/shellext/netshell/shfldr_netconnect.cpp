@@ -549,6 +549,23 @@ ShowNetConnectionStatus(
     return lpOleCmd->Exec(&pdata->guidId, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(netshell_hInstance, MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
+
 HRESULT
 ShowNetConnectionProperties(
     INetConnection *pNetConnect,
@@ -584,9 +601,13 @@ ShowNetConnectionProperties(
         ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
         ZeroMemory(hppages, sizeof(hppages));
         pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-        pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
+        pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW |
+                        PSH_USEICONID | PSH_USECALLBACK;
+        pinfo.hInstance = netshell_hInstance;
+        pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER);
         pinfo.phpage = hppages;
         pinfo.hwndParent = hwnd;
+        pinfo.pfnCallback = PropSheetProc;
 
         pinfo.pszCaption = pProperties->pszwName;
         hr = pNCP->AddPages(hwnd, PropSheetExCallback, (LPARAM)&pinfo);
