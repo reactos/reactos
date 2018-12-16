@@ -36,6 +36,7 @@ PDESKTOP gpdeskInputDesktop = NULL;
 HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread = NULL;
 HCURSOR gDesktopCursor = NULL;
+PKEVENT gpDesktopThreadStartedEvent = NULL;
 
 /* OBJECT CALLBACKS **********************************************************/
 
@@ -243,6 +244,22 @@ InitDesktopImpl(VOID)
     ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP);
     ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
     ExDesktopObjectType->TypeInfo.ValidAccessMask = DESKTOP_ALL_ACCESS;
+
+    /* Allocate memory for the event structure */
+    gpDesktopThreadStartedEvent = ExAllocatePoolWithTag(NonPagedPool,
+                                                        sizeof(KEVENT),
+                                                        USERTAG_EVENT);
+    if (!gpDesktopThreadStartedEvent)
+    {
+        ERR("Failed to allocate event!\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize the kernel event */
+    KeInitializeEvent(gpDesktopThreadStartedEvent,
+                      SynchronizationEvent,
+                      FALSE);
+
     return STATUS_SUCCESS;
 }
 
@@ -1500,6 +1517,8 @@ VOID NTAPI DesktopThreadMain(VOID)
     /* Register system classes. This thread does not belong to any desktop so the
        classes will be allocated from the shared heap */
     UserRegisterSystemClasses();
+
+    KeSetEvent(gpDesktopThreadStartedEvent, IO_NO_INCREMENT, FALSE);
 
     while (TRUE)
     {

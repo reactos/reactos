@@ -138,6 +138,7 @@ RawInputThreadMain(VOID)
     MOUSE_INPUT_DATA MouseInput;
     KEYBOARD_INPUT_DATA KeyInput;
     PVOID ShutdownEvent;
+    HWINSTA hWinSta;
 
     ByteOffset.QuadPart = (LONGLONG)0;
     //WaitTimeout.QuadPart = (LONGLONG)(-10000000);
@@ -150,6 +151,23 @@ RawInputThreadMain(VOID)
 
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
+
+    Status = ObOpenObjectByPointer(InputWindowStation,
+                                   0,
+                                   NULL,
+                                   MAXIMUM_ALLOWED,
+                                   ExWindowStationObjectType,
+                                   UserMode,
+                                   (PHANDLE)&hWinSta);
+    if (NT_SUCCESS(Status))
+    {
+        UserSetProcessWindowStation(hWinSta);
+    }
+    else
+    {
+        ASSERT(FALSE);
+        /* Failed to open the interactive winsta! What now? */
+    }
 
     UserEnterExclusive();
     StartTheTimers();
@@ -328,29 +346,6 @@ RawInputThreadMain(VOID)
     }
 
     ERR("Raw Input Thread Exit!\n");
-}
-
-/*
- * CreateSystemThreads
- *
- * Called form dedicated thread in CSRSS. RIT is started in context of this
- * thread because it needs valid Win32 process with TEB initialized.
- */
-DWORD NTAPI
-CreateSystemThreads(UINT Type)
-{
-    UserLeave();
-
-    switch (Type)
-    {
-        case 0: RawInputThreadMain(); break;
-        case 1: DesktopThreadMain(); break;
-        default: ERR("Wrong type: %x\n", Type);
-    }
-
-    UserEnterShared();
-
-    return 0;
 }
 
 /*

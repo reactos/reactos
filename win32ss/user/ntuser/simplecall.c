@@ -392,7 +392,7 @@ NtUserCallOneParam(
            break;
 
         case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
-            Result = CreateSystemThreads(Param);
+            Result = UserSystemThreadProc(Param);
             break;
 
         case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:

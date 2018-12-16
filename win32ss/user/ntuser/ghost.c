@@ -11,8 +11,33 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(UserInput);
+
 static UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(GHOSTCLASSNAME);
 static UNICODE_STRING GhostProp = RTL_CONSTANT_STRING(GHOST_PROP);
+
+PTHREADINFO gptiGhostThread = NULL;
+
+/*
+ * GhostThreadMain
+ *
+ * Creates ghost windows and exits when no non-responsive window remains.
+ */
+VOID NTAPI
+UserGhostThreadEntry(VOID)
+{
+    TRACE("Ghost thread started\n");
+
+    UserEnterExclusive();
+
+    gptiGhostThread = PsGetCurrentThreadWin32Thread();
+
+    //TODO: Implement. This thread should handle all ghost windows and exit when no ghost window is needed.
+
+    gptiGhostThread = NULL;
+
+    UserLeave();
+}
 
 BOOL FASTCALL IntIsGhostWindow(PWND Window)
 {
@@ -161,18 +186,10 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         return FALSE;   // already ghosting
     }
 
-    // TODO:
-    // 1. Create a thread.
-    // 2. Create a ghost window in the thread.
-    // 3. Do message loop in the thread
-    {
-        static int bWarnedOnce = 0;
-        if (!bWarnedOnce)
-        {
-            bWarnedOnce++;
-            STUB;
-        }
-    }
+    // TODO: Find a way to pass the hwnd of pHungWnd to the ghost thread as we can't pass parameters directly
 
-    return FALSE;
+    if (!gptiGhostThread)
+        UserCreateSystemThread(ST_GHOST_THREAD);
+
+    return TRUE;
 }
