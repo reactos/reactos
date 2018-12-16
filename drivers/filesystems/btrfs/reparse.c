@@ -169,7 +169,7 @@ end:
     return Status;
 }
 
-static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, BOOL write, LIST_ENTRY* rollback) {
+static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, fcb* fcb, ccb* ccb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, BOOL write, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     ULONG minlen;
     ULONG tlength;
@@ -197,15 +197,15 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, ccb* ccb, REPARSE_DATA_
         TRACE("substitute name = %.*S\n", subname.Length / sizeof(WCHAR), subname.Buffer);
     }
 
-    fileref->fcb->type = BTRFS_TYPE_SYMLINK;
-    fileref->fcb->inode_item.st_mode |= __S_IFLNK;
-    fileref->fcb->inode_item.generation = fileref->fcb->Vcb->superblock.generation; // so we don't confuse btrfs send on Linux
+    fcb->type = BTRFS_TYPE_SYMLINK;
+    fcb->inode_item.st_mode |= __S_IFLNK;
+    fcb->inode_item.generation = fcb->Vcb->superblock.generation; // so we don't confuse btrfs send on Linux
 
-    if (fileref->dc)
-        fileref->dc->type = fileref->fcb->type;
+    if (fileref && fileref->dc)
+        fileref->dc->type = fcb->type;
 
     if (write) {
-        Status = truncate_file(fileref->fcb, 0, Irp, rollback);
+        Status = truncate_file(fcb, 0, Irp, rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("truncate_file returned %08x\n", Status);
             return Status;
@@ -238,7 +238,7 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, ccb* ccb, REPARSE_DATA_
 
         offset.QuadPart = 0;
         tlength = target.Length;
-        Status = write_file2(fileref->fcb->Vcb, Irp, offset, target.Buffer, &tlength, FALSE, TRUE,
+        Status = write_file2(fcb->Vcb, Irp, offset, target.Buffer, &tlength, FALSE, TRUE,
                              TRUE, FALSE, FALSE, rollback);
         ExFreePool(target.Buffer);
     } else
@@ -247,24 +247,119 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, ccb* ccb, REPARSE_DATA_
     KeQuerySystemTime(&time);
     win_time_to_unix(time, &now);
 
-    fileref->fcb->inode_item.transid = fileref->fcb->Vcb->superblock.generation;
-    fileref->fcb->inode_item.sequence++;
+    fcb->inode_item.transid = fcb->Vcb->superblock.generation;
+    fcb->inode_item.sequence++;
 
-    if (!ccb->user_set_change_time)
-        fileref->fcb->inode_item.st_ctime = now;
+    if (!ccb || !ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
 
-    if (!ccb->user_set_write_time)
-        fileref->fcb->inode_item.st_mtime = now;
+    if (!ccb || !ccb->user_set_write_time)
+        fcb->inode_item.st_mtime = now;
 
-    fileref->fcb->subvol->root_item.ctransid = fileref->fcb->Vcb->superblock.generation;
-    fileref->fcb->subvol->root_item.ctime = now;
+    fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
+    fcb->subvol->root_item.ctime = now;
 
-    fileref->fcb->inode_item_changed = TRUE;
-    mark_fcb_dirty(fileref->fcb);
+    fcb->inode_item_changed = TRUE;
+    mark_fcb_dirty(fcb);
 
-    mark_fileref_dirty(fileref);
+    if (fileref)
+        mark_fileref_dirty(fileref);
 
     return Status;
+}
+
+NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, ccb* ccb, file_ref* fileref, PIRP Irp, LIST_ENTRY* rollback) {
+    NTSTATUS Status;
+    ULONG tag;
+
+    if (fcb->type == BTRFS_TYPE_SYMLINK) {
+        WARN("tried to set a reparse point on an existing symlink\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    // FIXME - fail if we already have the attribute FILE_ATTRIBUTE_REPARSE_POINT
+
+    // FIXME - die if not file or directory
+
+    if (buflen < sizeof(ULONG)) {
+        WARN("buffer was not long enough to hold tag\n");
+        return STATUS_INVALID_BUFFER_SIZE;
+    }
+
+    Status = FsRtlValidateReparsePointBuffer(buflen, rdb);
+    if (!NT_SUCCESS(Status)) {
+        ERR("FsRtlValidateReparsePointBuffer returned %08x\n", Status);
+        return Status;
+    }
+
+    RtlCopyMemory(&tag, rdb, sizeof(ULONG));
+
+    if (fcb->type == BTRFS_TYPE_FILE &&
+        ((tag == IO_REPARSE_TAG_SYMLINK && rdb->SymbolicLinkReparseBuffer.Flags & SYMLINK_FLAG_RELATIVE) || tag == IO_REPARSE_TAG_LXSS_SYMLINK)) {
+        Status = set_symlink(Irp, fileref, fcb, ccb, rdb, buflen, tag == IO_REPARSE_TAG_SYMLINK, rollback);
+        fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
+    } else {
+        LARGE_INTEGER offset, time;
+        BTRFS_TIME now;
+
+        if (fcb->type == BTRFS_TYPE_DIRECTORY || fcb->type == BTRFS_TYPE_CHARDEV || fcb->type == BTRFS_TYPE_BLOCKDEV) { // store as xattr
+            ANSI_STRING buf;
+
+            buf.Buffer = ExAllocatePoolWithTag(PagedPool, buflen, ALLOC_TAG);
+            if (!buf.Buffer) {
+                ERR("out of memory\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+            buf.Length = buf.MaximumLength = (UINT16)buflen;
+
+            if (fcb->reparse_xattr.Buffer)
+                ExFreePool(fcb->reparse_xattr.Buffer);
+
+            fcb->reparse_xattr = buf;
+            RtlCopyMemory(buf.Buffer, rdb, buflen);
+
+            fcb->reparse_xattr_changed = TRUE;
+
+            Status = STATUS_SUCCESS;
+        } else { // otherwise, store as file data
+            Status = truncate_file(fcb, 0, Irp, rollback);
+            if (!NT_SUCCESS(Status)) {
+                ERR("truncate_file returned %08x\n", Status);
+                return Status;
+            }
+
+            offset.QuadPart = 0;
+
+            Status = write_file2(fcb->Vcb, Irp, offset, rdb, &buflen, FALSE, TRUE, TRUE, FALSE, FALSE, rollback);
+            if (!NT_SUCCESS(Status)) {
+                ERR("write_file2 returned %08x\n", Status);
+                return Status;
+            }
+        }
+
+        KeQuerySystemTime(&time);
+        win_time_to_unix(time, &now);
+
+        fcb->inode_item.transid = fcb->Vcb->superblock.generation;
+        fcb->inode_item.sequence++;
+
+        if (!ccb || !ccb->user_set_change_time)
+            fcb->inode_item.st_ctime = now;
+
+        if (!ccb || !ccb->user_set_write_time)
+            fcb->inode_item.st_mtime = now;
+
+        fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
+        fcb->atts_changed = TRUE;
+
+        fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
+        fcb->subvol->root_item.ctime = now;
+
+        fcb->inode_item_changed = TRUE;
+        mark_fcb_dirty(fcb);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
@@ -277,7 +372,6 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     fcb* fcb;
     ccb* ccb;
     file_ref* fileref;
-    ULONG tag;
     LIST_ENTRY rollback;
 
     TRACE("(%p, %p)\n", DeviceObject, Irp);
@@ -323,94 +417,10 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
 
-    if (fcb->type == BTRFS_TYPE_SYMLINK) {
-        WARN("tried to set a reparse point on an existing symlink\n");
-        Status = STATUS_INVALID_PARAMETER;
-        goto end;
-    }
-
-    // FIXME - fail if we already have the attribute FILE_ATTRIBUTE_REPARSE_POINT
-
-    // FIXME - die if not file or directory
-
-    if (buflen < sizeof(ULONG)) {
-        WARN("buffer was not long enough to hold tag\n");
-        Status = STATUS_INVALID_BUFFER_SIZE;
-        goto end;
-    }
-
-    Status = FsRtlValidateReparsePointBuffer(buflen, rdb);
+    Status = set_reparse_point2(fcb, rdb, buflen, ccb, fileref, Irp, &rollback);
     if (!NT_SUCCESS(Status)) {
-        ERR("FsRtlValidateReparsePointBuffer returned %08x\n", Status);
+        ERR("set_reparse_point2 returned %08x\n", Status);
         goto end;
-    }
-
-    RtlCopyMemory(&tag, buffer, sizeof(ULONG));
-
-    if (fcb->type == BTRFS_TYPE_FILE &&
-        ((tag == IO_REPARSE_TAG_SYMLINK && rdb->SymbolicLinkReparseBuffer.Flags & SYMLINK_FLAG_RELATIVE) || tag == IO_REPARSE_TAG_LXSS_SYMLINK)) {
-        Status = set_symlink(Irp, fileref, ccb, rdb, buflen, tag == IO_REPARSE_TAG_SYMLINK, &rollback);
-        fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
-    } else {
-        LARGE_INTEGER offset, time;
-        BTRFS_TIME now;
-
-        if (fcb->type == BTRFS_TYPE_DIRECTORY) { // for directories, store as xattr
-            ANSI_STRING buf;
-
-            buf.Buffer = ExAllocatePoolWithTag(PagedPool, buflen, ALLOC_TAG);
-            if (!buf.Buffer) {
-                ERR("out of memory\n");
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto end;
-            }
-            buf.Length = buf.MaximumLength = (UINT16)buflen;
-
-            if (fcb->reparse_xattr.Buffer)
-                ExFreePool(fcb->reparse_xattr.Buffer);
-
-            fcb->reparse_xattr = buf;
-            RtlCopyMemory(buf.Buffer, buffer, buflen);
-
-            fcb->reparse_xattr_changed = TRUE;
-
-            Status = STATUS_SUCCESS;
-        } else { // otherwise, store as file data
-            Status = truncate_file(fcb, 0, Irp, &rollback);
-            if (!NT_SUCCESS(Status)) {
-                ERR("truncate_file returned %08x\n", Status);
-                goto end;
-            }
-
-            offset.QuadPart = 0;
-
-            Status = write_file2(fcb->Vcb, Irp, offset, buffer, &buflen, FALSE, TRUE, TRUE, FALSE, FALSE, &rollback);
-            if (!NT_SUCCESS(Status)) {
-                ERR("write_file2 returned %08x\n", Status);
-                goto end;
-            }
-        }
-
-        KeQuerySystemTime(&time);
-        win_time_to_unix(time, &now);
-
-        fcb->inode_item.transid = fcb->Vcb->superblock.generation;
-        fcb->inode_item.sequence++;
-
-        if (!ccb->user_set_change_time)
-            fcb->inode_item.st_ctime = now;
-
-        if (!ccb->user_set_write_time)
-            fcb->inode_item.st_mtime = now;
-
-        fcb->atts |= FILE_ATTRIBUTE_REPARSE_POINT;
-        fcb->atts_changed = TRUE;
-
-        fcb->subvol->root_item.ctransid = fcb->Vcb->superblock.generation;
-        fcb->subvol->root_item.ctime = now;
-
-        fcb->inode_item_changed = TRUE;
-        mark_fcb_dirty(fcb);
     }
 
     send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_ACTION_MODIFIED, NULL);

@@ -21,6 +21,34 @@
 // not currently in mingw - introduced with Windows 10
 #ifndef FileIdInformation
 #define FileIdInformation (enum _FILE_INFORMATION_CLASS)59
+#define FileStatLxInformation (enum _FILE_INFORMATION_CLASS)70
+
+typedef struct _FILE_STAT_LX_INFORMATION {
+    LARGE_INTEGER FileId;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER EndOfFile;
+    ULONG         FileAttributes;
+    ULONG         ReparseTag;
+    ULONG         NumberOfLinks;
+    ACCESS_MASK   EffectiveAccess;
+    ULONG         LxFlags;
+    ULONG         LxUid;
+    ULONG         LxGid;
+    ULONG         LxMode;
+    ULONG         LxDeviceIdMajor;
+    ULONG         LxDeviceIdMinor;
+} FILE_STAT_LX_INFORMATION, *PFILE_STAT_LX_INFORMATION;
+
+#define LX_FILE_METADATA_HAS_UID        0x01
+#define LX_FILE_METADATA_HAS_GID        0x02
+#define LX_FILE_METADATA_HAS_MODE       0x04
+#define LX_FILE_METADATA_HAS_DEVICE_ID  0x08
+#define LX_FILE_CASE_SENSITIVE_DIR      0x10
+
 #endif
 #endif
 
@@ -69,6 +97,20 @@ static NTSTATUS set_basic_information(device_extension* Vcb, PIRP Irp, PFILE_OBJ
         Status = STATUS_DEVICE_NOT_READY;
         goto end;
     }
+
+    // times of -2 are some sort of undocumented behaviour to do with LXSS
+
+    if (fbi->CreationTime.QuadPart == -2)
+        fbi->CreationTime.QuadPart = 0;
+
+    if (fbi->LastAccessTime.QuadPart == -2)
+        fbi->LastAccessTime.QuadPart = 0;
+
+    if (fbi->LastWriteTime.QuadPart == -2)
+        fbi->LastWriteTime.QuadPart = 0;
+
+    if (fbi->ChangeTime.QuadPart == -2)
+        fbi->ChangeTime.QuadPart = 0;
 
     if (fbi->CreationTime.QuadPart == -1)
         ccb->user_set_creation_time = TRUE;
@@ -2946,8 +2988,8 @@ static NTSTATUS fill_in_file_name_information(FILE_NAME_INFORMATION* fni, fcb* f
     ULONG reqlen;
     UNICODE_STRING fn;
     NTSTATUS Status;
-    static WCHAR datasuf[] = {':','$','D','A','T','A',0};
-    UINT16 datasuflen = (UINT16)wcslen(datasuf) * sizeof(WCHAR);
+    static const WCHAR datasuf[] = {':','$','D','A','T','A',0};
+    UINT16 datasuflen = sizeof(datasuf) - sizeof(WCHAR);
 
     if (!fileref) {
         ERR("called without fileref\n");
@@ -2999,7 +3041,7 @@ static NTSTATUS fill_in_file_name_information(FILE_NAME_INFORMATION* fni, fcb* f
     return Status;
 }
 
-static NTSTATUS fill_in_file_attribute_information(FILE_ATTRIBUTE_TAG_INFORMATION* ati, fcb* fcb, ccb* ccb, PIRP Irp, LONG* length) {
+static NTSTATUS fill_in_file_attribute_information(FILE_ATTRIBUTE_TAG_INFORMATION* ati, fcb* fcb, ccb* ccb, LONG* length) {
     *length -= sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
 
     if (fcb->ads) {
@@ -3015,7 +3057,7 @@ static NTSTATUS fill_in_file_attribute_information(FILE_ATTRIBUTE_TAG_INFORMATIO
     if (!(ati->FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
         ati->ReparseTag = 0;
     else
-        ati->ReparseTag = get_reparse_tag(fcb->Vcb, fcb->subvol, fcb->inode, fcb->type, fcb->atts, ccb->lxss, Irp);
+        ati->ReparseTag = get_reparse_tag_fcb(fcb);
 
     return STATUS_SUCCESS;
 }
@@ -3026,7 +3068,7 @@ static NTSTATUS fill_in_file_stream_information(FILE_STREAM_INFORMATION* fsi, fi
     FILE_STREAM_INFORMATION *entry, *lastentry;
     NTSTATUS Status;
 
-    static WCHAR datasuf[] = L":$DATA";
+    static const WCHAR datasuf[] = L":$DATA";
     UNICODE_STRING suf;
 
     if (!fileref) {
@@ -3034,8 +3076,8 @@ static NTSTATUS fill_in_file_stream_information(FILE_STREAM_INFORMATION* fsi, fi
         return STATUS_INVALID_PARAMETER;
     }
 
-    suf.Buffer = datasuf;
-    suf.Length = suf.MaximumLength = (UINT16)wcslen(datasuf) * sizeof(WCHAR);
+    suf.Buffer = (WCHAR*)datasuf;
+    suf.Length = suf.MaximumLength = sizeof(datasuf) - sizeof(WCHAR);
 
     if (fileref->fcb->type != BTRFS_TYPE_DIRECTORY)
         reqsize = sizeof(FILE_STREAM_INFORMATION) - sizeof(WCHAR) + suf.Length + sizeof(WCHAR);
@@ -3606,6 +3648,80 @@ static NTSTATUS fill_in_file_id_information(FILE_ID_INFORMATION* fii, fcb* fcb, 
 }
 #endif
 
+#ifndef __REACTOS__
+static NTSTATUS fill_in_file_stat_lx_information(FILE_STAT_LX_INFORMATION* fsli, fcb* fcb, ccb* ccb, LONG* length) {
+    INODE_ITEM* ii;
+
+    fsli->FileId.LowPart = (UINT32)fcb->inode;
+    fsli->FileId.HighPart = (UINT32)fcb->subvol->id;
+
+    if (fcb->ads)
+        ii = &ccb->fileref->parent->fcb->inode_item;
+    else
+        ii = &fcb->inode_item;
+
+    if (fcb == fcb->Vcb->dummy_fcb) {
+        LARGE_INTEGER time;
+
+        KeQuerySystemTime(&time);
+        fsli->CreationTime = fsli->LastAccessTime = fsli->LastWriteTime = fsli->ChangeTime = time;
+    } else {
+        fsli->CreationTime.QuadPart = unix_time_to_win(&ii->otime);
+        fsli->LastAccessTime.QuadPart = unix_time_to_win(&ii->st_atime);
+        fsli->LastWriteTime.QuadPart = unix_time_to_win(&ii->st_mtime);
+        fsli->ChangeTime.QuadPart = unix_time_to_win(&ii->st_ctime);
+    }
+
+    if (fcb->ads) {
+        fsli->AllocationSize.QuadPart = fsli->EndOfFile.QuadPart = fcb->adsdata.Length;
+        fsli->FileAttributes = ccb->fileref->parent->fcb->atts == 0 ? FILE_ATTRIBUTE_NORMAL : ccb->fileref->parent->fcb->atts;
+    } else {
+        fsli->AllocationSize.QuadPart = fcb_alloc_size(fcb);
+        fsli->EndOfFile.QuadPart = S_ISDIR(fcb->inode_item.st_mode) ? 0 : fcb->inode_item.st_size;
+        fsli->FileAttributes = fcb->atts == 0 ? FILE_ATTRIBUTE_NORMAL : fcb->atts;
+    }
+
+    if (fcb->type == BTRFS_TYPE_SOCKET)
+        fsli->ReparseTag = IO_REPARSE_TAG_LXSS_SOCKET;
+    else if (fcb->type == BTRFS_TYPE_FIFO)
+        fsli->ReparseTag = IO_REPARSE_TAG_LXSS_FIFO;
+    else if (fcb->type == BTRFS_TYPE_CHARDEV)
+        fsli->ReparseTag = IO_REPARSE_TAG_LXSS_CHARDEV;
+    else if (fcb->type == BTRFS_TYPE_BLOCKDEV)
+        fsli->ReparseTag = IO_REPARSE_TAG_LXSS_BLOCKDEV;
+    else if (!(fsli->FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+        fsli->ReparseTag = 0;
+    else
+        fsli->ReparseTag = get_reparse_tag_fcb(fcb);
+
+    if (fcb->type == BTRFS_TYPE_SOCKET || fcb->type == BTRFS_TYPE_FIFO || fcb->type == BTRFS_TYPE_CHARDEV || fcb->type == BTRFS_TYPE_BLOCKDEV)
+        fsli->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+
+    if (fcb->ads)
+        fsli->NumberOfLinks = ccb->fileref->parent->fcb->inode_item.st_nlink;
+    else
+        fsli->NumberOfLinks = fcb->inode_item.st_nlink;
+
+    fsli->EffectiveAccess = ccb->access;
+    fsli->LxFlags = LX_FILE_METADATA_HAS_UID | LX_FILE_METADATA_HAS_GID | LX_FILE_METADATA_HAS_MODE | LX_FILE_METADATA_HAS_DEVICE_ID; // FIXME - LX_FILE_CASE_SENSITIVE_DIR
+    fsli->LxUid = ii->st_uid;
+    fsli->LxGid = ii->st_gid;
+    fsli->LxMode = ii->st_mode;
+
+    if (ii->st_mode & __S_IFBLK || ii->st_mode & __S_IFCHR) {
+        fsli->LxDeviceIdMajor = (ii->st_rdev & 0xFFFFFFFFFFF00000) >> 20;
+        fsli->LxDeviceIdMinor = (ii->st_rdev & 0xFFFFF);
+    } else {
+        fsli->LxDeviceIdMajor = 0;
+        fsli->LxDeviceIdMinor = 0;
+    }
+
+    *length -= sizeof(FILE_STAT_LX_INFORMATION);
+
+    return STATUS_SUCCESS;
+}
+#endif
+
 static NTSTATUS query_info(device_extension* Vcb, PFILE_OBJECT FileObject, PIRP Irp) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     LONG length = IrpSp->Parameters.QueryFile.Length;
@@ -3694,7 +3810,7 @@ static NTSTATUS query_info(device_extension* Vcb, PFILE_OBJECT FileObject, PIRP 
             }
 
             ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
-            Status = fill_in_file_attribute_information(ati, fcb, ccb, Irp, &length);
+            Status = fill_in_file_attribute_information(ati, fcb, ccb, &length);
             ExReleaseResourceLite(&Vcb->tree_lock);
 
             break;
@@ -3890,6 +4006,23 @@ static NTSTATUS query_info(device_extension* Vcb, PFILE_OBJECT FileObject, PIRP 
             TRACE("FileIdInformation\n");
 
             Status = fill_in_file_id_information(fii, fcb, &length);
+
+            break;
+        }
+
+        case FileStatLxInformation:
+        {
+            FILE_STAT_LX_INFORMATION* fsli = Irp->AssociatedIrp.SystemBuffer;
+
+            if (IrpSp->Parameters.QueryFile.Length < sizeof(FILE_STAT_LX_INFORMATION)) {
+                WARN("overflow\n");
+                Status = STATUS_BUFFER_OVERFLOW;
+                goto exit;
+            }
+
+            TRACE("FileStatLxInformation\n");
+
+            Status = fill_in_file_stat_lx_information(fsli, fcb, ccb, &length);
 
             break;
         }
@@ -4194,13 +4327,6 @@ end:
     return Status;
 }
 
-typedef struct {
-    ANSI_STRING name;
-    ANSI_STRING value;
-    UCHAR flags;
-    LIST_ENTRY list_entry;
-} ea_item;
-
 _Dispatch_type_(IRP_MJ_SET_EA)
 _Function_class_(DRIVER_DISPATCH)
 NTSTATUS NTAPI drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
@@ -4379,6 +4505,64 @@ NTSTATUS NTAPI drv_set_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
         item = CONTAINING_RECORD(le, ea_item, list_entry);
 
         if (item->value.Length == 0) {
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        }
+
+        le = le2;
+    }
+
+    // handle LXSS values
+    le = ealist.Flink;
+    while (le != &ealist) {
+        LIST_ENTRY* le2 = le->Flink;
+
+        item = CONTAINING_RECORD(le, ea_item, list_entry);
+
+        if (item->name.Length == sizeof(lxuid) - 1 && RtlCompareMemory(item->name.Buffer, lxuid, item->name.Length) == item->name.Length) {
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("uid value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end2;
+            }
+
+            if (Irp->RequestorMode == KernelMode) {
+                RtlCopyMemory(&fcb->inode_item.st_uid, item->value.Buffer, sizeof(UINT32));
+                fcb->sd_dirty = TRUE;
+                fcb->sd_deleted = FALSE;
+            }
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        } else if (item->name.Length == sizeof(lxgid) - 1 && RtlCompareMemory(item->name.Buffer, lxgid, item->name.Length) == item->name.Length) {
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("gid value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end2;
+            }
+
+            if (Irp->RequestorMode == KernelMode)
+                RtlCopyMemory(&fcb->inode_item.st_gid, item->value.Buffer, sizeof(UINT32));
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        } else if (item->name.Length == sizeof(lxmod) - 1 && RtlCompareMemory(item->name.Buffer, lxmod, item->name.Length) == item->name.Length) {
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("mode value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end2;
+            }
+
+            if (Irp->RequestorMode == KernelMode) {
+                UINT32 allowed = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH | S_ISGID | S_ISVTX | S_ISUID;
+                UINT32 val;
+
+                RtlCopyMemory(&val, item->value.Buffer, sizeof(UINT32));
+
+                fcb->inode_item.st_mode &= ~allowed;
+                fcb->inode_item.st_mode |= val & allowed;
+            }
+
             RemoveEntryList(&item->list_entry);
             ExFreePool(item);
         }

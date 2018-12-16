@@ -72,6 +72,7 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
 
         if ((t->header.num_items * sizeof(leaf_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
             ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
+            ExFreePool(t);
             ExFreePool(buf);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -80,6 +81,7 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
             td = ExAllocateFromPagedLookasideList(&Vcb->tree_data_lookaside);
             if (!td) {
                 ERR("out of memory\n");
+                ExFreePool(t);
                 ExFreePool(buf);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
@@ -93,6 +95,8 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
 
             if (ln[i].size + sizeof(tree_header) + sizeof(leaf_node) > Vcb->superblock.node_size) {
                 ERR("overlarge item in tree %llx: %u > %u\n", addr, ln[i].size, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node));
+                ExFreeToPagedLookasideList(&t->Vcb->tree_data_lookaside, td);
+                ExFreePool(t);
                 ExFreePool(buf);
                 return STATUS_INTERNAL_ERROR;
             }
@@ -114,6 +118,7 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
 
         if ((t->header.num_items * sizeof(internal_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
             ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
+            ExFreePool(t);
             ExFreePool(buf);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -122,6 +127,7 @@ NTSTATUS load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, UINT6
             td = ExAllocateFromPagedLookasideList(&Vcb->tree_data_lookaside);
             if (!td) {
                 ERR("out of memory\n");
+                ExFreePool(t);
                 ExFreePool(buf);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
@@ -1096,7 +1102,7 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
                 rollback_space* rs = ri->ptr;
 
                 if (rs->chunk)
-                    ExAcquireResourceExclusiveLite(&rs->chunk->lock, TRUE);
+                    acquire_chunk_lock(rs->chunk, Vcb);
 
                 if (ri->type == ROLLBACK_ADD_SPACE)
                     space_list_subtract2(rs->list, rs->list_size, rs->address, rs->length, NULL, NULL);
@@ -1138,7 +1144,7 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
                         le2 = le3;
                     }
 
-                    ExReleaseResourceLite(&rs->chunk->lock);
+                    release_chunk_lock(rs->chunk, Vcb);
                 }
 
                 ExFreePool(rs);
@@ -1509,6 +1515,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
                                 td2 = ExAllocateFromPagedLookasideList(&Vcb->tree_data_lookaside);
                                 if (!td2) {
                                     ERR("out of memory\n");
+                                    ExFreePool(newdi);
                                     return STATUS_INSUFFICIENT_RESOURCES;
                                 }
 
@@ -1595,6 +1602,7 @@ static NTSTATUS handle_batch_collision(device_extension* Vcb, batch_item* bi, tr
                                 td2 = ExAllocateFromPagedLookasideList(&Vcb->tree_data_lookaside);
                                 if (!td2) {
                                     ERR("out of memory\n");
+                                    ExFreePool(newir);
                                     return STATUS_INSUFFICIENT_RESOURCES;
                                 }
 

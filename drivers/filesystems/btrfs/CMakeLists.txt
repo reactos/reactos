@@ -33,6 +33,22 @@ list(APPEND SOURCE
     volume.c
     worker-thread.c
     write.c
+    zstd/entropy_common.c
+    zstd/fse_compress.c
+    zstd/hist.c
+    zstd/huf_decompress.c
+    zstd/zstd_common.c
+    zstd/zstd_decompress.c
+    zstd/zstd_fast.c
+    zstd/zstd_ldm.c
+    zstd/error_private.c
+    zstd/fse_decompress.c
+    zstd/huf_compress.c
+    zstd/xxhash.c
+    zstd/zstd_compress.c
+    zstd/zstd_double_fast.c
+    zstd/zstd_lazy.c
+    zstd/zstd_opt.c
     btrfs_drv.h)
 
 add_library(btrfs SHARED ${SOURCE} btrfs.rc)
