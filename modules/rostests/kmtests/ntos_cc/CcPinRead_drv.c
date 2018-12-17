@@ -32,6 +32,7 @@ static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static KMT_MESSAGE_HANDLER TestMessageHandler;
+static BOOLEAN TestWriteCalled = FALSE;
 
 NTSTATUS
 TestEntry(
@@ -52,6 +53,7 @@ TestEntry(
              TESTENTRY_NO_READONLY_DEVICE;
 
     KmtRegisterIrpHandler(IRP_MJ_READ, NULL, TestIrpHandler);
+    KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
     KmtRegisterMessageHandler(0, NULL, TestMessageHandler);
 
 
@@ -110,6 +112,12 @@ static CC_FILE_SIZES FileSizes = {
     RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000), // .AllocationSize
     RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000), // .FileSize
     RTL_CONSTANT_LARGE_INTEGER((LONGLONG)0x4000)  // .ValidDataLength
+};
+
+static CC_FILE_SIZES SmallFileSizes = {
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)512), // .AllocationSize
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)496), // .FileSize
+    RTL_CONSTANT_LARGE_INTEGER((LONGLONG)496)  // .ValidDataLength
 };
 
 static
@@ -387,7 +395,14 @@ PerformTest(
             TestFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
             KmtStartSeh();
-            CcInitializeCacheMap(TestFileObject, &FileSizes, PinAccess, &Callbacks, NULL);
+            if (TestId < 6)
+            {
+                CcInitializeCacheMap(TestFileObject, &FileSizes, PinAccess, &Callbacks, NULL);
+            }
+            else
+            {
+                CcInitializeCacheMap(TestFileObject, &SmallFileSizes, PinAccess, &Callbacks, NULL);
+            }
             KmtEndSeh(STATUS_SUCCESS);
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
@@ -541,6 +556,24 @@ PerformTest(
                         CcUnpinData(Bcb);
                     }
                 }
+                else if (TestId == 6)
+                {
+                    Ret = FALSE;
+                    Offset.QuadPart = 0;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        ok_bcb(Bcb, PAGE_SIZE * 4, Offset.QuadPart);
+                        RtlFillMemory(Buffer, 0xbd, FileSizes.FileSize.LowPart);
+                        CcSetDirtyPinnedData(Bcb, NULL);
+
+                        CcUnpinData(Bcb);
+                    }
+                }
             }
         }
     }
@@ -575,12 +608,22 @@ CleanupTest(
             TestFileObject->SectionObjectPointer = NULL;
         }
 
+        if (TestTestId == 6)
+        {
+            ok_bool_true(TestWriteCalled, "Write was not called!\n");
+        }
+        else
+        {
+            ok_bool_false(TestWriteCalled, "Write was unexpectedly called\n");
+        }
+
         ObDereferenceObject(TestFileObject);
     }
 
     TestFileObject = NULL;
     TestDeviceObject = NULL;
     TestTestId = -1;
+    TestWriteCalled = FALSE;
 }
 
 
@@ -631,7 +674,8 @@ TestIrpHandler(
     PAGED_CODE();
 
     DPRINT("IRP %x/%x\n", IoStack->MajorFunction, IoStack->MinorFunction);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_READ ||
+           IoStack->MajorFunction == IRP_MJ_WRITE);
 
     FsRtlEnterFileSystem();
 
@@ -675,6 +719,42 @@ TestIrpHandler(
         ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Non paging IO\n");
         ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
 
+        Irp->IoStatus.Information = Length;
+    }
+    else if (IoStack->MajorFunction == IRP_MJ_WRITE)
+    {
+        PMDL Mdl;
+        ULONG Length;
+        PVOID Buffer;
+        LARGE_INTEGER Offset;
+
+        Offset = IoStack->Parameters.Write.ByteOffset;
+        Length = IoStack->Parameters.Write.Length;
+
+        ok(TestTestId == 6, "Unexpected test id: %d\n", TestTestId);
+        ok_eq_pointer(DeviceObject, TestDeviceObject);
+        ok_eq_pointer(IoStack->FileObject, TestFileObject);
+
+        ok(FlagOn(Irp->Flags, IRP_NOCACHE), "Not coming from Cc\n");
+
+        ok_irql(PASSIVE_LEVEL);
+        ok(Offset.QuadPart == 0, "Offset is not null: %I64i\n", Offset.QuadPart);
+        ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
+        ok(Length == PAGE_SIZE * 4, "Length is not MappedLength-sized: %I64i\n", Length);
+
+        Buffer = MapAndLockUserBuffer(Irp, Length);
+        ok(Buffer != NULL, "Null pointer!\n");
+
+        Mdl = Irp->MdlAddress;
+        ok(Mdl != NULL, "Null pointer for MDL!\n");
+        ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
+        ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+        ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
+
+        ok_bool_false(TestWriteCalled, "Write has been unexpectedly called twice!\n");
+        TestWriteCalled = TRUE;
+
+        Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = Length;
     }
 
