@@ -76,13 +76,13 @@ IoAllocateMdl(IN PVOID VirtualAddress,
             p = Irp->MdlAddress;
             while (p->Next) p = p->Next;
             p->Next = Mdl;
-      }
-      else
-      {
+        }
+        else
+        {
             /* Otherwise, insert it directly */
             Irp->MdlAddress = Mdl;
-      }
-   }
+        }
+    }
 
     /* Return the allocated mdl */
     return Mdl;
