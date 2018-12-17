@@ -2528,9 +2528,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Beep(800, 200);
             break;
 
-        // case PM_CONSOLE_SET_TITLE:
-            // SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
-            // break;
+         case PM_CONSOLE_SET_TITLE:
+            SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
+            break;
 
         default: Default:
             Result = DefWindowProcW(hWnd, msg, wParam, lParam);
