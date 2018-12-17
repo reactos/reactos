@@ -1005,6 +1005,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     if (previousView == NULL)
     {
         RepositionBars();
+        RepositionBars();
     }
 
     // no use
