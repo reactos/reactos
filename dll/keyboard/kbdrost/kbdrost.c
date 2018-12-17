@@ -1,4 +1,4 @@
-﻿/*
+/*
  * ReactOS Romanian (Standard) Keyboard layout
  * Copyright (C) 2018 ReactOS
  * Author: Ștefan Fulea (stefan dot fulea at mail dot com)
