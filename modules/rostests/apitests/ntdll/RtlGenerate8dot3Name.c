@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
@@ -19,7 +22,7 @@ RtlGenerate8dot3Name(
 #define NAMES_COUNT 14
 #define LOCALES_COUNT 3
 
-PWSTR Names[NAMES_COUNT] = { L"Menu Démarrer", L"Sélecteur de configuration clavier.lnk", L"éèàùç.txt", L"çùàèé.txt", L"éèàù.txt", L"çùàè.txt", L"éèàùçeeauc.txt", L"éeèéçcùu.txt", L"test.éxè", L"t£$t¤.txt", L"Long file name.txt", L"Long file name", L"Longfilename.txt", L"Longfilename" };
+PWSTR Names[NAMES_COUNT] = { L"Menu D\u00E9marrer", L"S\u00E9lecteur de configuration clavier.lnk", L"\u00E9\u00E8\u00E0\u00F9\u00E7.txt", L"\u00E7\u00F9\u00E0\u00E8\u00E9.txt", L"\u00E9\u00E8\u00E0\u00F9.txt", L"\u00E7\u00F9\u00E0\u00E8.txt", L"\u00E9\u00E8\u00E0\u00F9\u00E7eeauc.txt", L"\u00E9e\u00E8\u00E9\u00E7c\u00F9u.txt", L"test.\u00E9x\u00E8", L"t\u00A3$t\u00A4.txt", L"Long file name.txt", L"Long file name", L"Longfilename.txt", L"Longfilename" };
 PWSTR ShortNames1[LOCALES_COUNT][NAMES_COUNT] =
 {
     { L"MENUDM~1", L"SLECTE~1.LNK", L"5C2D~1.TXT", L"423C~1.TXT", L"925E~1.TXT", L"7E4C~1.TXT", L"EEAUC~1.TXT", L"ECU~1.TXT", L"TEST~1.X", L"T$T~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
@@ -34,15 +37,15 @@ PWSTR ShortNames2[LOCALES_COUNT][NAMES_COUNT] =
 };
 PWSTR ExShortNames1[LOCALES_COUNT][NAMES_COUNT] =
 {
-    { L"MENUDÉ~1", L"SÉLECT~1.LNK", L"ÉÈÀÙÇ~1.TXT", L"ÇÙÀÈÉ~1.TXT", L"ÉÈÀÙ~1.TXT", L"ÇÙÀÈ~1.TXT", L"ÉÈÀÙÇE~1.TXT", L"ÉEÈÉÇC~1.TXT", L"TEST~1.ÉXÈ", L"T£$T¤~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
-    { L"MENUDÉ~1", L"SÉLECT~1.LNK", L"ÉÈÀÙÇ~1.TXT", L"ÇÙÀÈÉ~1.TXT", L"ÉÈÀÙ~1.TXT", L"ÇÙÀÈ~1.TXT", L"ÉÈÀÙÇE~1.TXT", L"ÉEÈÉÇC~1.TXT", L"TEST~1.ÉXÈ", L"T£$T_~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
-    { L"MENUDÉ~1", L"SÉLECT~1.LNK", L"ÉCAU~1.TXT", L"UACÉ~1.TXT", L"ÉCAU~1.TXT", L"UAC~1.TXT", L"ÉCAUEE~1.TXT", L"ÉECÉCU~1.TXT", L"TEST~1.ÉXC", L"T£$T¤~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
+    { L"MENUD\u00C9~1", L"S\u00C9LECT~1.LNK", L"\u00C9\u00C8\u00C0\u00D9\u00C7~1.TXT", L"\u00C7\u00D9\u00C0\u00C8\u00C9~1.TXT", L"\u00C9\u00C8\u00C0\u00D9~1.TXT", L"\u00C7\u00D9\u00C0\u00C8~1.TXT", L"\u00C9\u00C8\u00C0\u00D9\u00C7E~1.TXT", L"\u00C9E\u00C8\u00C9\u00C7C~1.TXT", L"TEST~1.\u00C9X\u00C8", L"T\u00A3$T\u00A4~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
+    { L"MENUD\u00C9~1", L"S\u00C9LECT~1.LNK", L"\u00C9\u00C8\u00C0\u00D9\u00C7~1.TXT", L"\u00C7\u00D9\u00C0\u00C8\u00C9~1.TXT", L"\u00C9\u00C8\u00C0\u00D9~1.TXT", L"\u00C7\u00D9\u00C0\u00C8~1.TXT", L"\u00C9\u00C8\u00C0\u00D9\u00C7E~1.TXT", L"\u00C9E\u00C8\u00C9\u00C7C~1.TXT", L"TEST~1.\u00C9X\u00C8", L"T\u00A3$T_~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
+    { L"MENUD\u00C9~1", L"S\u00C9LECT~1.LNK", L"\u00C9CAU~1.TXT", L"UAC\u00C9~1.TXT", L"\u00C9CAU~1.TXT", L"UAC~1.TXT", L"\u00C9CAUEE~1.TXT", L"\u00C9EC\u00C9CU~1.TXT", L"TEST~1.\u00C9XC", L"T\u00A3$T\u00A4~1.TXT", L"LONGFI~1.TXT", L"LONGFI~1", L"LONGFI~1.TXT", L"LONGFI~1" },
 };
 PWSTR ExShortNames2[LOCALES_COUNT][NAMES_COUNT] =
 {
-    { L"MENUDÉ~2", L"SÉLECT~2.LNK", L"ÉÈÀÙÇ~2.TXT", L"ÇÙÀÈÉ~2.TXT", L"ÉÈÀÙ~2.TXT", L"ÇÙÀÈ~2.TXT", L"ÉÈÀÙÇE~2.TXT", L"ÉEÈÉÇC~2.TXT", L"TEST~2.ÉXÈ", L"T£$T¤~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
-    { L"MENUDÉ~2", L"SÉLECT~2.LNK", L"ÉÈÀÙÇ~2.TXT", L"ÇÙÀÈÉ~2.TXT", L"ÉÈÀÙ~2.TXT", L"ÇÙÀÈ~2.TXT", L"ÉÈÀÙÇE~2.TXT", L"ÉEÈÉÇC~2.TXT", L"TEST~2.ÉXÈ", L"T£$T_~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
-    { L"MENUDÉ~2", L"SÉLECT~2.LNK", L"ÉCAU~2.TXT", L"UACÉ~2.TXT", L"ÉCAU~2.TXT", L"UAC~2.TXT", L"ÉCAUEE~2.TXT", L"ÉECÉCU~2.TXT", L"TEST~2.ÉXC", L"T£$T¤~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
+    { L"MENUD\u00C9~2", L"S\u00C9LECT~2.LNK", L"\u00C9\u00C8\u00C0\u00D9\u00C7~2.TXT", L"\u00C7\u00D9\u00C0\u00C8\u00C9~2.TXT", L"\u00C9\u00C8\u00C0\u00D9~2.TXT", L"\u00C7\u00D9\u00C0\u00C8~2.TXT", L"\u00C9\u00C8\u00C0\u00D9\u00C7E~2.TXT", L"\u00C9E\u00C8\u00C9\u00C7C~2.TXT", L"TEST~2.\u00C9X\u00C8", L"T\u00A3$T\u00A4~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
+    { L"MENUD\u00C9~2", L"S\u00C9LECT~2.LNK", L"\u00C9\u00C8\u00C0\u00D9\u00C7~2.TXT", L"\u00C7\u00D9\u00C0\u00C8\u00C9~2.TXT", L"\u00C9\u00C8\u00C0\u00D9~2.TXT", L"\u00C7\u00D9\u00C0\u00C8~2.TXT", L"\u00C9\u00C8\u00C0\u00D9\u00C7E~2.TXT", L"\u00C9E\u00C8\u00C9\u00C7C~2.TXT", L"TEST~2.\u00C9X\u00C8", L"T\u00A3$T_~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
+    { L"MENUD\u00C9~2", L"S\u00C9LECT~2.LNK", L"\u00C9CAU~2.TXT", L"UAC\u00C9~2.TXT", L"\u00C9CAU~2.TXT", L"UAC~2.TXT", L"\u00C9CAUEE~2.TXT", L"\u00C9EC\u00C9CU~2.TXT", L"TEST~2.\u00C9XC", L"T\u00A3$T\u00A4~2.TXT", L"LONGFI~2.TXT", L"LONGFI~2", L"LONGFI~2.TXT", L"LONGFI~2" },
 };
 
 ULONG Locales[LOCALES_COUNT][2] =

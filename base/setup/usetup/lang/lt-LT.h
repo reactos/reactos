@@ -1,9 +1,12 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /*
  * PROJECT:     ReactOS Setup
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/setup/usetup/lang/lt-LT.h
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdÿijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" Gird\330ijauskas (cman@cman.us)
  * DATE:        2008-01-06
  */
 
@@ -26,7 +29,7 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Pasirinkite kalb–, kuri bus naudojama diegimo proceso metu.",
+        "\x07  Pasirinkite kalb\320, kuri bus naudojama diegimo proceso metu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -38,13 +41,13 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  æi kalba bus nustatyta standartine ‘diegtoje sistemoje.",
+        "\x07  \276i kalba bus nustatyta standartine \324diegtoje sistemoje.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = T“sti  F3 = Baigti",
+        "ENTER = T\322sti  F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -72,13 +75,13 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         6,
         11,
-        "æi diegimo dalis nukopijuos ReactOS operacin”s sistemos bylas ‘ j◊s÷",
+        "\276i diegimo dalis nukopijuos ReactOS operacin\323s sistemos bylas \324 j\327s\326",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "kompiuter‘ ir paruo’ antr–j– diegimo dal‘.",
+        "kompiuter\324 ir paruo\325 antr\320j\320 diegimo dal\324.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -96,19 +99,19 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Spauskite L, jei norite pamatyti ReactOS licencijos s–lygas.",
+        "\x07  Spauskite L, jei norite pamatyti ReactOS licencijos s\320lygas.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Spauskite F3, jei norite uÿdaryti ReactOS diegimo program–.",
+        "\x07  Spauskite F3, jei norite u\330daryti ReactOS diegimo program\320.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Nor”dami gauti daugiau informacijos apie ReactOS, aplankykite:",
+        "Nor\323dami gauti daugiau informacijos apie ReactOS, aplankykite:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -120,7 +123,7 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti  R = Taisyti F3 = Baigti",
+        "ENTER = T\322sti  R = Taisyti F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -314,7 +317,7 @@ static MUI_ENTRY ltLTLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = Gr‘ÿti",
+        "ENTER = Gr\324\330ti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -336,7 +339,7 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         6,
         8,
-        "œemiau esantis s–ra’as rodo dabartinius ‘rengini÷ nustatymus.",
+        "\317emiau esantis s\320ra\325as rodo dabartinius \324rengini\326 nustatymus.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -354,13 +357,13 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         24,
         13,
-        "Klaviat◊ra:",
+        "Klaviat\327ra:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Klav i’d”stymas:",
+        "Klav i\325d\323stymas:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -371,43 +374,43 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     },
     {
         25,
-        16, "Naudoti ’iuos ‘rengini÷ nustatymus",
+        16, "Naudoti \325iuos \324rengini\326 nustatymus",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "J◊s galite pakeisti ‘rengini÷ nustatymus. Spausdami klavi’us AUKæTYN",
+        "J\327s galite pakeisti \324rengini\326 nustatymus. Spausdami klavi\325us AUK\276TYN",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "arba œEMYN, pasirinkite punkt–, kur‘ norite pakeisti. Paspaud“ ENTER",
+        "arba \317EMYN, pasirinkite punkt\320, kur\324 norite pakeisti. Paspaud\322 ENTER",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "gal”site pasirinkti alternatyv–.",
+        "gal\323site pasirinkti alternatyv\320.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Kai visi nustatymai bus teisingi, pasirinkite \"Naudoti ’iuos ‘rengi-",
+        "Kai visi nustatymai bus teisingi, pasirinkite \"Naudoti \325iuos \324rengi-",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "ni÷ nustatymus\" ir paspauskite ENTER.",
+        "ni\326 nustatymus\" ir paspauskite ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -593,7 +596,7 @@ static MUI_ENTRY ltLTComputerPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -679,7 +682,7 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         0,
         0,
-        "Pra’ome palaukti...",
+        "Pra\325ome palaukti...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -730,7 +733,7 @@ static MUI_ENTRY ltLTDisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -822,7 +825,7 @@ static MUI_ENTRY ltLTBootPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -893,7 +896,7 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     {
         0,
         0,
-        "Pra’ome palaukti...",
+        "Pra\325ome palaukti...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1021,7 +1024,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1073,7 +1076,7 @@ static MUI_ENTRY ltLTInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1165,7 +1168,7 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1217,7 +1220,7 @@ static MUI_ENTRY ltLTKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1269,7 +1272,7 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1345,7 +1348,7 @@ static MUI_ENTRY ltLTSelectFSEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1392,7 +1395,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Delete Partition   ESC = At’aukti   F3 = Baigti",
+        "D = Delete Partition   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS
     },
     {

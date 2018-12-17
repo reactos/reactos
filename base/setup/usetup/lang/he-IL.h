@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
 static MUI_ENTRY heILLanguagePageEntries[] =
@@ -5,37 +8,37 @@ static MUI_ENTRY heILLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " öêóöÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ñîô öòâáÅ",
+        "\204\224\231 \232\230\211\207\201",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  ÑêóöÑÑ äåÑéÅ ÑÅ ôéöôöô ÑîôÑ öÄ ÑôóÅÅ òáÅ Äê.",
+        "\x07  \204\220\227\232\204\204 \212\214\204\216\201 \204\201 \231\216\232\231\232\231 \204\224\231\204 \232\200 \204\231\227\201\201 \230\207\201 \200\220.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   .ENTER ôóÑ äã òáÄ",
+        "   .ENTER \231\227\204 \212\213 \230\207\200",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  .öâîÖëÑ öãòíéÅ åÉáéÑ öòâòÅ öîô ÑâÑö ÖÜÑ ÑîôÑ",
+        "\x07  .\232\211\224\205\221\204 \232\213\230\222\216\201 \214\203\207\216\204 \232\230\211\230\201 \232\224\231 \204\211\204\232 \205\206\204 \204\224\231\204",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "åàÅ = F3  äôéÑ = ENTER",
+        "\214\210\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -51,25 +54,25 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " ÑêóöÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \204\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS åô ÑêóöÑÑ öâêãöå ÄÅÑ äÖòÅ",
+        "ReactOS \214\231 \204\220\227\232\204\204 \232\211\220\213\232\214 \200\201\204 \212\205\230\201",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ÑåíîÑÑ öãòíé öÄ öÄ óâöíé ÑêóöÑÑ åô ÑÜÑ óåáÑ",
+        "\204\214\222\224\204\204 \232\213\230\222\216 \232\200 \232\200 \227\211\232\222\216 \204\220\227\232\204\204 \214\231 \204\206\204 \227\214\207\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ÑêóöÑÑ åô âêôÑ óåáå èêÖãöéÖ äÅôáéå.",
+        "\204\220\227\232\204\204 \214\231 \211\220\231\204 \227\214\207\214 \217\220\205\213\232\216\205 \212\201\231\207\216\214.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -81,25 +84,25 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  .ReactOS öÄ èãÉíå ÖÄ èóöå âÉã R ôóÑ",
+        "\x07  .ReactOS \232\200 \217\213\203\222\214 \205\200 \217\227\232\214 \211\203\213 R \231\227\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  .ReactOS åô çÖôâòÑ âÄêöÖ âÇôÖé öÄ öÖÄòå âÉã L ôóÑ",
+        "\x07  .ReactOS \214\231 \215\205\231\211\230\204 \211\200\220\232\205 \211\202\231\205\216 \232\200 \232\205\200\230\214 \211\203\213 L \231\227\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  .ReactOS öÄ èâóöÑå âåÅ åàÅå âÉã F3 ôóÑ",
+        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201 \214\210\201\214 \211\203\213 F3 \231\227\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        ":Å òóÅ Äê ,ReactOS âÅÇå íÉâé ÉÖíå",
+        ":\201 \230\227\201 \200\220 ,ReactOS \211\201\202\214 \222\203\211\216 \203\205\222\214",
         TEXT_STYLE_NORMAL
     },
     {
@@ -111,7 +114,7 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         0,
         0,
-        "åàÅ = F3  èÖâôò = L  èóö = R  äôéÑ = ENTER",
+        "\214\210\201 = F3  \217\205\211\231\230 = L  \217\227\232 = R  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -305,7 +308,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = áÜÖò",
+        "ENTER = \207\206\205\230",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -321,7 +324,7 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -333,31 +336,31 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         24,
         11,
-        "éáôÅ:",
+        "\216\207\231\201:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         12,
-        "öñÖÇÑ:",
+        "\232\226\205\202\204:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         13,
-        "éóåÉö:",
+        "\216\227\214\203\232:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "öñÖòö éóåÉö:",
+        "\232\226\205\230\232 \216\227\214\203\232:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "óÅå:",
+        "\227\201\214:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -380,7 +383,7 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         6,
         21,
-        "ÑÇÉòÖö.",
+        "\204\202\203\230\205\232.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -392,13 +395,13 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         6,
         24,
-        "ÖÄáò ãä Ñóô ENTER",
+        "\205\200\207\230 \213\212 \204\227\231 ENTER",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå",
+        "ENTER = \204\216\231\212   F3 = \201\210\214",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -414,7 +417,7 @@ static MUI_ENTRY heILRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -462,7 +465,7 @@ static MUI_ENTRY heILRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = íéÖÉ òÄôâ  U = íÉãè  R = ôáÜÖò  ENTER = ÄöáÖå",
+        "ESC = \222\216\205\203 \230\200\231\211  U = \222\203\213\217  R = \231\207\206\205\230  ENTER = \200\232\207\205\214",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -548,7 +551,7 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -566,7 +569,7 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         8,
         11,
-        "   ÖÄáò ãä Ñóô ENTER.",
+        "   \205\200\207\230 \213\212 \204\227\231 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -584,7 +587,7 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = Åàå   F3 = îòÖô",
+        "ENTER = \204\216\231\212   ESC = \201\210\214   F3 = \224\230\205\231",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -600,7 +603,7 @@ static MUI_ENTRY heILFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -640,7 +643,7 @@ static MUI_ENTRY heILQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -686,7 +689,7 @@ static MUI_ENTRY heILDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -743,7 +746,7 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     {
         10,
         6,
-        "ÑòãâÅâç ÑÅëâëââç ôå ReactOS ÑÖöóêÖ ÅÑñåáÑ.",
+        "\204\230\213\211\201\211\215 \204\201\221\211\221\211\211\215 \231\214 ReactOS \204\205\232\227\220\205 \201\204\226\214\207\204.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -761,13 +764,13 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     {
         10,
         11,
-        "Ñóô ENTER ãÉâ åÑîíâå éáÉô Äö éáôÅä",
+        "\204\227\231 ENTER \213\203\211 \214\204\224\222\211\214 \216\207\203\231 \200\232 \216\207\231\201\212",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñîíå éáÉô",
+        "ENTER = \204\224\222\214 \216\207\203\231",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -783,7 +786,7 @@ static MUI_ENTRY heILBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -813,7 +816,7 @@ static MUI_ENTRY heILBootPageEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -830,7 +833,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " ÑöóêÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -884,7 +887,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         0,
         0,
-        "êÄ åáãÖö...",
+        "\220\200 \214\207\213\205\232...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1000,7 +1003,7 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         6,
         8,
-        "ÄöáÖå éáâñÑ",
+        "\200\232\207\205\214 \216\207\211\226\204",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1012,7 +1015,7 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1064,7 +1067,7 @@ static MUI_ENTRY heILInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1080,7 +1083,7 @@ static MUI_ENTRY heILFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \204\232\227\220\232 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1104,7 +1107,7 @@ static MUI_ENTRY heILFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 êÄ åáãÖö...    ",
+        "\xB3 \220\200 \214\207\213\205\232...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1156,7 +1159,7 @@ static MUI_ENTRY heILBootLoaderEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1208,7 +1211,7 @@ static MUI_ENTRY heILKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   ESC = \201\211\210\205\214   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1260,7 +1263,7 @@ static MUI_ENTRY heILLayoutSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ",
+        "ENTER = \204\216\231\212   ESC = \201\211\210\205\214   F3 = \201\210\214 \204\232\227\220\204",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1778,18 +1781,18 @@ MUI_PAGE heILPages[] =
 MUI_STRING heILStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   êÄ åáãÖö..."},
+     "   \220\200 \214\207\213\205\232..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Ñöóè   C = ñÖò éáâñÑ   F3 = Åàå ÑöóêÑ"},
+//     "   ENTER = \204\232\227\217   C = \226\205\230 \216\207\211\226\204   F3 = \201\210\214 \204\232\227\220\204"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Ñöóè   D = éáó éáâñÑ   F3 = Åàå ÑöóêÑ"},
+     "   ENTER = \204\232\227\217   D = \216\207\227 \216\207\211\226\204   F3 = \201\210\214 \204\232\227\220\204"},
     {STRING_DELETEPARTITION,
      "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
-     "ÇÖÉå ÑéáâñÑ ÑáÉôÑ:"},
+     "\202\205\203\214 \204\216\207\211\226\204 \204\207\203\231\204:"},
     {STRING_CHOOSENEWPARTITION,
      "You have chosen to create a primary partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
@@ -1799,7 +1802,7 @@ MUI_STRING heILStrings[] =
     {STRING_HDDSIZE,
     "Please enter the size of the new partition in megabytes."},
     {STRING_CREATEPARTITION,
-     "   ENTER = ñÖò éáâñÑ   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ"},
+     "   ENTER = \226\205\230 \216\207\211\226\204   ESC = \201\211\210\205\214   F3 = \201\210\214 \204\232\227\220\204"},
     {STRING_PARTFORMAT,
     "This Partition will be formatted next."},
     {STRING_NONFORMATTEDPART,
@@ -1813,11 +1816,11 @@ MUI_STRING heILStrings[] =
     {STRING_CHECKINGPART,
     "Setup is now checking the selected partition."},
     {STRING_CONTINUE,
-    "ENTER = Ñéôä"},
+    "ENTER = \204\216\231\212"},
     {STRING_QUITCONTINUE,
-    "F3 = Åàå ÑöóêÑ  ENTER = Ñéôä"},
+    "F3 = \201\210\214 \204\232\227\220\204  ENTER = \204\216\231\212"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Ñîíå éáÉô Äö ÑéáôÅ"},
+    "ENTER = \204\224\222\214 \216\207\203\231 \200\232 \204\216\207\231\201"},
     {STRING_DELETING,
      "   Deleting file: %S"},
     {STRING_MOVING,
@@ -1825,13 +1828,13 @@ MUI_STRING heILStrings[] =
     {STRING_RENAMING,
      "   Renaming file: %S to: %S"},
     {STRING_COPYING,
-     "   éíöâó óÖÅï: %S"},
+     "   \216\222\232\211\227 \227\205\201\225: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "öãêâö ÑÑöóêÑ éíöâóÑ óÅñâç..."},
+     "\232\213\220\211\232 \204\204\232\227\220\204 \216\222\232\211\227\204 \227\201\226\211\215..."},
     {STRING_REGHIVEUPDATE,
     "   Updating registry hives..."},
     {STRING_IMPORTFILE,
-    "   éââÅÄ %S..."},
+    "   \216\211\211\201\200 %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
     "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
@@ -1841,9 +1844,9 @@ MUI_STRING heILStrings[] =
     {STRING_CODEPAGEINFOUPDATE,
     "   Adding codepage information to registry..."},
     {STRING_DONE,
-    "   ëâÖç..."},
+    "   \221\211\205\215..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Ñîíå éáÉô Äö ÑéôÅ"},
+    "   ENTER = \204\224\222\214 \216\207\203\231 \200\232 \204\216\231\201"},
     {STRING_REBOOTPROGRESSBAR,
     " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
@@ -1899,11 +1902,11 @@ MUI_STRING heILStrings[] =
     {STRING_FORMATUNKNOWN,
     "Unknown"},
     {STRING_KB,
-    "óâåÖÅââà"},
+    "\227\211\214\205\201\211\211\210"},
     {STRING_MB,
-    "éÇÑÅââà"},
+    "\216\202\204\201\211\211\210"},
     {STRING_GB,
-    "ÇâÇÑÅââà"},
+    "\202\211\202\204\201\211\211\210"},
     {STRING_ADDKBLAYOUTS,
     "Adding keyboard layouts"},
     {0, 0}
