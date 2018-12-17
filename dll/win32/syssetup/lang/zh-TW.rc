@@ -29,7 +29,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "安裝程式將在電腦上安裝 ReactOS。它需要收集有關電腦和您的信息以便正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按下一步繼續按照程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "按下一步繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
@@ -41,7 +41,7 @@ BEGIN
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT "ReactOS 基於 GPL 許可證發佈，因此如果您需要二次開發或重新發表 ReactOS 的部分或全部，必須遵循 GPL 許可。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "檢視 GPL(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "按下一步繼續按照程式。", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "按下一步繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -63,7 +63,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Type a name for your computer that is 15 characters or less. If you are on a network, your computer name must be unique.", IDC_STATIC, 54, 7, 250, 24
+    LTEXT "請輸入不超過 15 個字符的電腦名稱。每一個在您網路上的電腦都必須有一個唯一的名稱。", IDC_STATIC, 54, 7, 250, 24
     LTEXT "電腦名稱(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
@@ -81,13 +81,13 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "The system locale should match the language of the applications you want to use. The user locale controls how numbers, currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "系統區域設置應與您要使用的應用程序的語言相匹配。使用者區域設置控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "若要變更系統和使用者的地區設定, 點選自訂。", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "The keyboard layout controls the characters that appear when you type.", IDC_STATIC, 53, 86, 253, 8
+    LTEXT "鍵盤配置控制鍵入時出現的字符。", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "To change the keyboard layout, click Customize.", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "要查看或變更當前配置，請單擊“自訂”。", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
@@ -132,12 +132,12 @@ BEGIN
     LTEXT "已經完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS 安裝程序已順利完成。\n\n要重新啓動計算機，請單擊“完成”。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裏有光碟，請將其取出要重新啓動計算機，請按“完成”。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GNU 通用公共許可證"
+CAPTION "GNU 通用公共授權"
 FONT 9, "新細明體"
 BEGIN
     EDITTEXT IDC_GPL_TEXT, 7, 7, 319, 190, ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
@@ -180,7 +180,7 @@ BEGIN
     IDS_COMPUTERTITLE "電腦名稱和系統管理員密碼"
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
-    IDS_LOCALESUBTITLE "您可以爲不同的區域和語言自訂 ReactOS。"
+    IDS_LOCALESUBTITLE "您可以爲不同的地區和語言自訂 ReactOS。"
     IDS_DATETIMETITLE "日期和時間"
     IDS_DATETIMESUBTITLE "爲您的電腦配置正確的日期和時間。"
     IDS_PROCESSTITLE "正在註冊元件"
@@ -195,11 +195,11 @@ BEGIN
     IDS_REACTOS_SETUP "ReactOS 安裝程式"
     IDS_UNKNOWN_ERROR "未知的錯誤"
     IDS_REGISTERING_COMPONENTS "正在註冊元件..."
-    IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
-    IDS_REGSVR_FAILED "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED "DllInstall failed: "
-    IDS_TIMEOUT "Timeout during registration"
+    IDS_LOADLIBRARY_FAILED "LoadLibrary 失敗: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr 失敗: "
+    IDS_REGSVR_FAILED "DllRegisterServer 失敗: "
+    IDS_DLLINSTALL_FAILED "DllInstall 失敗: "
+    IDS_TIMEOUT "註冊超時"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION:
@@ -224,7 +224,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "正在安裝驅動程式..."
+    IDS_STATUS_INSTALL_DEV "正在安裝裝置驅動程式..."
 END
 
 /* ATTENTION: Synchronize the translation of these strings with shell32 */
