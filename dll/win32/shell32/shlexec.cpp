@@ -2414,7 +2414,7 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    if (UrlIsFileUrlW(lpCommand))
+    if (PathIsURLW(lpCommand) || UrlIsW(lpCommand, URLIS_APPLIABLE))
     {
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
         pchParams = NULL;
