@@ -122,4 +122,13 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+LONG
+RegLoadMUIStringW(IN HKEY hKey,
+                  IN LPCWSTR pszValue  OPTIONAL,
+                  OUT LPWSTR pszOutBuf,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
+                  IN LPCWSTR pszDirectory  OPTIONAL);
+
 #endif /* _DESK_H */
