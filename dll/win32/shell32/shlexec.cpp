@@ -2422,6 +2422,11 @@ HRESULT WINAPI ShellExecCmdLine(
     else
     {
         pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+        if (szFile[0] != UNICODE_NULL && szFile[1] == L':' &&
+            szFile[2] == UNICODE_NULL)
+        {
+            PathAddBackslashW(szFile);
+        }
         if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
