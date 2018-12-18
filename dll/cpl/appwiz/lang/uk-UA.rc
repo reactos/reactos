@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/appwiz/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for appwiz
- * PROGRAMMERS: Artem Reznikov
+ * PROGRAMMERS: Artem Reznikov, Yaroslav Kibysh
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -51,31 +51,31 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Shortcuts/Folders"
+CAPTION "Видалення ярликів/папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    LTEXT "&Для видалення пункту в меню Пуск, виберіть його і натисніть ""Видалити"".", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Видалити", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Закрити", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Wine Gecko Installer"
+CAPTION "Встановка Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS could not find a Wine Gecko package which is needed for applications embedding HTML to work correctly. ReactOS can automatically download and install it for you.",
+    CONTROL "ReactOS не може знайти Wine Gecko пакет, який необхідний для додатків з підтримкою HTML, щоб вони працювали правильно. ReactOS може автоматично завантажити та встановити його для вас.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Install", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Встановити", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Скасувати", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Установка й видалення програм"
+    IDS_CPLSYSTEMNAME "Встановка й видалення програм"
     IDS_CPLSYSTEMDESCRIPTION "Встановлення програм і створення ярликів."
     IDS_CREATE_SHORTCUT "Створити ярлик"
     IDS_ERROR_NOT_FOUND "Файл %s не знайдений."
@@ -83,11 +83,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING "Downloading..."
-    IDS_INSTALLING "Installing..."
-    IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_DOWNLOADING "Завантаження..."
+    IDS_INSTALLING "Встановлення..."
+    IDS_INVALID_SHA "Помилка контрольної суми завантаженого файлу. Скасування встановки пошкодженого файлу."
+    IDS_NEW_INTERNET_SHORTCUT "Новий ярлик інтернету"
+    IDS_DWL_FAILED "Не вдалося завантажити пакет встановки Gecko. Перевірте ваше підключення до мережі інтернет. Встановка буде продовжена без включення пакета Gecko."
+    IDS_CANTMAKEINETSHORTCUT "Не вдалося створити ярлик інтернету."
+    IDS_CANTMAKESHORTCUT "Не вдалося створити ярлик."
 END
