@@ -1,0 +1,39 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+{
+1000, 	"Olive Modern"
+1001, 	"Olive Classic"
+}
+
+STRINGTABLE
+{
+2000,	"Watercolor Emico: Olive Visual Style"
+2001, 	"Watercolor Emico: Olive Visual Style"
+}
+
+STRINGTABLE
+{
+3000, 	"Full Startpanel"
+3001, 	"Compact Startpanel"
+3002, 	"Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+4000, 	"Normal"
+4001, 	"Large Fonts"
+4002, 	"Extra Large Fonts"
+}
+
+STRINGTABLE
+{
+5000, "Watercolor Emico: Olive"
+5001, "Visual Style"
+5002, "Jamush"
+5003, ""
+5004, ""
+5005, "https://deviantart.com/jamush"
+5006, "1.0"
+5007, "Visual Style for ReactOS"
+}
