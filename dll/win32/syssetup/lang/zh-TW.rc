@@ -29,7 +29,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式。", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "安裝程式將在電腦上安裝 ReactOS。它需要收集有關電腦和您的信息以便正確安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按下一步繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
@@ -37,11 +37,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS 的開發人員就以下的自由軟件項目表示感謝。在建立 ReactOS 時使用了其中的代碼：", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS 的開發人員就以下的自由軟件項目表示感謝。在建立 ReactOS 時使用了其中的程式碼：", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS 基於 GPL 許可證發佈，因此如果您需要二次開發或重新發表 ReactOS 的部分或全部，必須遵循 GPL 許可。", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS 基於 GPL 許可證發表，因此如果您需要二次開發或重新發表 ReactOS 的部分或全部，必須遵循 GPL 許可。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "檢視 GPL(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
-    LTEXT "按下一步繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
+    LTEXT "按 [下一步] 繼續安裝程式。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
@@ -87,7 +87,7 @@ BEGIN
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "鍵盤配置控制鍵入時出現的字符。", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "要查看或變更當前配置，請單擊“自訂”。", IDC_STATIC, 53, 126, 184, 8
+    LTEXT "要查看或變更當前配置，請點選「自訂」。", IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "自訂(&U)...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
@@ -110,8 +110,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    PUSHBUTTON "Lautus theme", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
-    PUSHBUTTON "Classic theme", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "Lautus 主題", IDC_THEMEDSTYLE, 18,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
+    PUSHBUTTON "傳統主題", IDC_CLASSICSTYLE, 175,7,130,130, BS_AUTORADIOBUTTON|BS_PUSHLIKE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -130,9 +130,9 @@ CAPTION "ReactOS 安裝程式已完成"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "已經完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程序已順利完成。\n\n要重新啓動計算機，請單擊“完成”。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS 安裝程序已順利完成。\n\n要重新啓動計算機，請點選 [完成]。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裏有光碟，請將其取出要重新啓動計算機，請按“完成”。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裏有光碟，請將其取出要重新啓動計算機，請按 [完成]。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -176,7 +176,7 @@ BEGIN
     IDS_ACKTITLE "致謝"
     IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證信息"
     IDS_OWNERTITLE "自訂您的軟體"
-    IDS_OWNERSUBTITLE "安裝程序將使用您提供的個人信息，自定義您的 ReactOS 軟體。"
+    IDS_OWNERSUBTITLE "安裝程序將使用您提供的個人信息，自訂您的 ReactOS 軟體。"
     IDS_COMPUTERTITLE "電腦名稱和系統管理員密碼"
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
@@ -216,10 +216,10 @@ BEGIN
     IDS_WZD_NAME "安裝程式無法繼續直到您輸入姓名。"
     IDS_WZD_SETCOMPUTERNAME "安裝程式無法設定電腦名稱。"
     IDS_WZD_COMPUTERNAME "安裝程式無法繼續直到您輸入電腦名稱。"
-    IDS_WZD_PASSWORDEMPTY "您必須輸入密碼 !"
+    IDS_WZD_PASSWORDEMPTY "您必須輸入密碼!"
     IDS_WZD_PASSWORDMATCH "您輸入的密碼不匹配。 請再次輸入所需的密碼。"
     IDS_WZD_PASSWORDCHAR "您輸入的密碼包含無效字符。請輸入清潔的密碼。"
-    IDS_WZD_LOCALTIME "安裝程式無法設定時間。"
+    IDS_WZD_LOCALTIME "安裝程式無法設定本地時間。"
 END
 
 STRINGTABLE
@@ -228,6 +228,10 @@ BEGIN
 END
 
 /* ATTENTION: Synchronize the translation of these strings with shell32 */
+
+/* ATTENTION: If there is no special situation, please DO NOT change 
+English folder names into Chinese, or it may cause problems in the system. */
+
 STRINGTABLE
 BEGIN
     IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
