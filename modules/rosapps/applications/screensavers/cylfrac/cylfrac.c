@@ -157,7 +157,7 @@ LRESULT WINAPI ScreenSaverProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             GetCursorPos(&initpoint);
             InitGL(hwnd);
             oldticks = GetTickCount();
-            TimerID = timeSetEvent (timerdelay, 0, TimeProc, (DWORD)hwnd, TIME_PERIODIC);
+            TimerID = timeSetEvent(timerdelay, 0, TimeProc, (DWORD_PTR)hwnd, TIME_PERIODIC);
         }
         break;
         case WM_PAINT:
