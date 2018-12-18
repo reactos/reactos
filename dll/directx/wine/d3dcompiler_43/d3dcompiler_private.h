@@ -1214,7 +1214,7 @@ HRESULT dxbc_write_blob(struct dxbc *dxbc, ID3DBlob **blob) DECLSPEC_HIDDEN;
 void dxbc_destroy(struct dxbc *dxbc) DECLSPEC_HIDDEN;
 HRESULT dxbc_parse(const char *data, SIZE_T data_size, struct dxbc *dxbc) DECLSPEC_HIDDEN;
 HRESULT dxbc_add_section(struct dxbc *dxbc, DWORD tag, const char *data, DWORD data_size) DECLSPEC_HIDDEN;
-HRESULT dxbc_init(struct dxbc *dxbc, DWORD count) DECLSPEC_HIDDEN;
+HRESULT dxbc_init(struct dxbc *dxbc, unsigned int size) DECLSPEC_HIDDEN;
 
 static inline void read_dword(const char **ptr, DWORD *d)
 {
