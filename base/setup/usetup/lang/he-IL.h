@@ -1,4 +1,5 @@
 #pragma once
+/* Hebrew text is in visual order */
 
 static MUI_ENTRY heILLanguagePageEntries[] =
 {
@@ -17,25 +18,25 @@ static MUI_ENTRY heILLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  „—š„„ ŠŒ„ „ ™š™š™ „”™„ š€ „™— ˜‡ €.",
+        "\x07  .„—š„„ Š‰Œ„š ˜…’ „”™„ š€ ˜‡ €€",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   .ENTER ™—„ Š‹ ˜‡€",
+        "   .ENTER ™—„ †€…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  .š‰”…‘„ š‹˜’ Œƒ‡„ š˜‰˜ š”™ „‰„š …†„ „”™„",
+        "\x07  .š‰”…‘„ š‹˜’ Œƒ‡„ š˜‰˜ š”™ „‰„š š€† „”™",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Œˆ = F3  Š™„ = ENTER",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -51,55 +52,56 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „—š„ ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Œ™ „—š„„ š‰‹šŒ €„ Š…˜",
+        "ReactOS š—š„Œ ‰€„ ‰‹…˜",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "„Œ’”„„ š‹˜’ š€ š€ —‰š’ „—š„„ Œ™ „†„ —Œ‡„",
+        "ReactOS „Œ’”„„ š‹˜’ š€ —‰š’‰ „—š„„ Œ™ „†„ Œ™„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "„—š„„ Œ™ ‰™„ —Œ‡Œ …‹š… Š™‡Œ.",
+        ".„—š„„ Œ™ ‰™„ Œ™„ š€ ‰‹š… Š™‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  .ReactOS š€ ‚˜ƒ™Œ …€ ‰—š„Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  .ReactOS š€ ‹ƒ’Œ …€ —šŒ ‰ƒ‹ R ™—„",
+     // "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
+        "\x07  .ReactOS š—š„ —šŒ ‰ƒ‹ R •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  .ReactOS Œ™ …™‰˜„ ‰€š… ‰‚™… š€ š…€˜Œ ‰ƒ‹ L ™—„",
+        "\x07  .ReactOS Œ™ ‰…™‰˜„ ‰€š š…€˜Œ ‰ƒ‹ L •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  .ReactOS š€ ‰—š„Œ ‰Œ ŒˆŒ ‰ƒ‹ F3 ™—„",
+        "\x07  .ReactOS š€ ‰—š„Œ ‰Œ š€–Œ ‰ƒ‹ F3 •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        ": ˜— € ,ReactOS ‰‚Œ ’ƒ‰ ƒ…’Œ",
+        ":˜š€ ˜—Œ š‰ ,ReactOS ‰‚Œ ’ƒ‰ ˜š…‰Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -111,7 +113,7 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         0,
         0,
-        "Œˆ = F3  …‰™˜ = L  —š = R  Š™„ = ENTER",
+        "„—š„ Œ…ˆ‰ = F3  …‰™˜ = L  „—š„ …—‰š = R  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -127,61 +129,61 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "ReactOS š‘˜‚ –",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "š…‡‹… š……‹š„ Œ‹ €Œ™ š…’™ ,€”Œ€ Œ™ š€– ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "˜…’ —˜ š‹˜’ ™š™„Œ •Œ… .‡…š‰” š‡š…",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        ".…‰ …‰ ™…‰™ ˜…’ š‹˜’ Š…š €Œ… š…‘š„… „—‰ƒ š…˜ˆŒ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "‰™ ™‡ ™š™„Œ …€ ŠŒ™ ’ƒ‰„ š€ š…‚Œ •Œ…",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        ".š‰†‰” „˜…‡ Œ’ ReactOS š€ •‰˜„Œ š Œ’",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  .ReactOS š—š„ š€ Š‰™„Œ ‰ƒ‹ ENTER ™—„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  .ReactOS š€ ‰—š„Œ ‰Œ š€–Œ ‰ƒ‹ F3 •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -197,13 +199,13 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
-        "Licensing:",
+        ":‰…™‰˜",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -281,7 +283,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         22,
-        "Warranty:",
+        ":š…‰˜‡€",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -305,7 +307,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = ‡†…˜",
+        "ƒ…— “ƒ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -321,84 +323,84 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows the current device settings.",
+        ".‰‰‡‹…„ ‰—š„„ š…˜ƒ‚„ š€ „€˜ „ˆŒ „‰™˜„",
         TEXT_STYLE_NORMAL
     },
     {
         24,
         11,
-        "‡™:",
+        ":™‡",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         12,
-        "š–…‚„:",
+        ":„‚…–š",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         13,
-        "—Œƒš:",
+        ":šƒŒ—",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "š–…˜š —Œƒš:",
+        ":šƒŒ— š˜…–š",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "—Œ:",
+        ":˜…™‰€",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "Accept these device settings",
+        16, "‰—š„„ š…˜ƒ‚„ ˜…™‰€",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "You can change the hardware settings by pressing the UP or DOWN keys",
+        """„ˆŒ""… ""„Œ’Œ""„ ‰™— š–‰‡Œ ‰—š„„ š…˜ƒ‚„ š€ š…™Œ š‰",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "to select an entry. Then press the ENTER key to select alternative",
+        ".„…™ „˜ƒ‚„ ˜…‡Œ ‰ƒ‹ ENTER •‡Œ †€ .—š„ ˜…‡Œ ‰ƒ‹",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "„‚ƒ˜…š.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "When all settings are correct, select \"Accept these device settings\"",
+        """‰—š„„ š…˜ƒ‚„ ˜…™‰€"" ˜‡ ,š……‹ š…˜ƒ‚„„ Œ‹™ ‰š",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "…€‡˜ ‹Š „—™ ENTER",
+        ".ENTER •‡Œ…",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   F3 = ˆŒ",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -414,55 +416,55 @@ static MUI_ENTRY heILRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        ".ƒ—… ‡…š‰” – š€– ReactOS š—š„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        ".š‰—š „—š„ š‰‹š Œ™ š……‹š„ Œ‹ š€ š˜™”€ „‰€…",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not implemented yet.",
+        ".š…™…‰ ‰‰ƒ’ ‰€ …—‰š„ š……‹š",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press U for Updating OS.",
+        "\x07  .š‹˜’„ š€ ‹ƒ’Œ ‰ƒ‹ U •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R for the Recovery Console.",
+        "\x07  .˜…†‡™„ “…‘ š€ ‡…š”Œ ‰ƒ‹ R •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to return to the main page.",
+        "\x07  .‰™€˜„ ƒ…’Œ ˜…†‡Œ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ENTER to reboot your computer.",
+        "\x07  .™‡„ š€ ™ƒ‡ Œ‰’”„Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = ’…ƒ ˜€™‰  U = ’ƒ‹  R = ™‡†…˜  ENTER = €š‡…Œ",
+        "™ƒ‡ „Œ’”„ = ENTER  ˜…†‡™ = R  …‹ƒ’ = U  ‰™€˜ ƒ…’ = ESC",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -478,61 +480,61 @@ static MUI_ENTRY heILUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "ReactOS š…—š„ š‡€ š€ ‚˜ƒ™Œ „Œ…‹‰ ReactOS š—š„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "„—š„„ š‰‹š ,„…‚” š…—š„„ š‡€ € …€ ,„ˆŒ š……™˜„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        ".„—šŒ š…‘Œ „Œ…‹‰",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        ".„€…Œ š™…‰ „‰€ …—‰š„ š‹˜’",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  .„—š„ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  .š˜‡„ š‹˜’„ š—š„ š€ ‚˜ƒ™Œ ‰ƒ‹ U •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  .„™ƒ‡ š‹˜’ š—š„ ’ Š‰™„Œ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  .ReactOS š€ ‰—š„Œ ‰Œ š€–Œ ‰ƒ‹ F3 •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "„—š„ Œ…ˆ‰ = F3  ‚˜ƒ™Œ €Œ = ESC  ‚…˜ƒ™ = ESC",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -548,43 +550,43 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of computer to be installed.",
+        ".—š…„ ™‡„ ‚…‘ š€ š…™Œ „–…˜ „š€",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired computer type.",
+        "\x07  .‰…–˜„ ™‡„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   …€‡˜ ‹Š „—™ ENTER.",
+        "   .ENTER •‡Œ †€…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .™‡„ ‚…‘ š€ š…™Œ ‰Œ ƒ…—„ ƒ…’Œ ˜…†‡Œ ‰ƒ‹ ESC Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the computer type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   ESC = ˆŒ   F3 = ”˜…™",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -600,31 +602,31 @@ static MUI_ENTRY heILFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "ŠŒ™ …‹„ Œ’ ˜…™ ’ƒ‰„ Œ‹™ €ƒ……š …‰™‹’ š‹˜’„",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "š…—ƒ „‹ š‡—Œ Œ…‹‰ „†",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "‰ˆ…ˆ…€ ”…€ ™ƒ‡ Œ’”…‰ ™‡„ ,…‰‘",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Flushing cache",
+        "…ˆ„ š€ “ˆ…™",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -640,37 +642,37 @@ static MUI_ENTRY heILQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "€Œ ”…€ š—š… €Œ ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        " :A …‹ …ˆ‰Œ—š„ š€ €‰–…„Œ €",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drives.",
+        ".‰…‹„ ‰˜…ˆ‰Œ—š„ Œ‹ š€…",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Press ENTER to reboot your computer.",
+        ".™‡„ š€ ™ƒ‡ Œ‰’”„Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Please wait ...",
+        "...‰š„Œ €",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -686,42 +688,42 @@ static MUI_ENTRY heILDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of display to be installed.",
+        ".—š…„ „‚…–š„ ‚…‘ š€ š…™Œ Š…–˜",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Press the UP or DOWN key to select the desired display type.",
+         "\x07  .‰…–˜„ „‚…–š„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŒ""Œ ""„Œ’Œ"" Œ’ •‡Œ",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   .ENTER •‡Œ †€…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .„‚…–š„ ‚…‘ š€ š…™Œ ‰Œ ˜…†‡Œ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the display type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -737,37 +739,37 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "„˜‹‰‰ „‘‰‘‰‰ ™Œ ReactOS „…š—… „–Œ‡„.",
+        ".„‡Œ–„ …—š…„ ReactOS Œ™ ‰‰‘‰‘„ ‰‰‹˜„",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        " :A …‹ …ˆ‰Œ—š„ š€ €‰–…„Œ €",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drive.",
+        ".‰…‹„ ‰˜…ˆ‰Œ—š„ Œ‹ š€…",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "„—™ ENTER ‹ƒ‰ Œ„”’‰Œ ‡ƒ™ €š ‡™Š",
+        ".™‡„ š€ ™ƒ‡ Œ‰’”„Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „”’Œ ‡ƒ™",
+        "™ƒ‡ „Œ’”„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -783,37 +785,37 @@ static MUI_ENTRY heILBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup cannot install the bootloader on your computers",
+        "‡‰™—„ …‹„ Œ’ Œ…‡š€„ Œ„ š€ ‰—š„Œ „Œ…‹‰ „‰€ „—š„„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "hardisk",
+        "Š™‡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Please insert a formatted floppy disk in drive A: and",
+        ".ENTER •‡Œ… :A …‹Œ Œ‡š…€ …ˆ‰Œ—š ‘‹„ „™—",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "press ENTER.",
+        "",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = „™Š   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -830,61 +832,61 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—„ ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "Œ–… €Œ —‘‰ƒ ‡ˆ™… š…–‰‡ ‰‚–… „ˆŒ „‰™˜",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        ".š…™ƒ‡ š…–‰‡ ˜…’",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  .„…™˜ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  .š˜‡„ „–‰‡„ Œ’ ReactOS š€ ‰—š„Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  .š‰™€˜ „–‰‡ ˜…–‰Œ ‰ƒ‹ P •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  .š‡˜… „–‰‡ ˜…–‰Œ ‰ƒ‹ E •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  .š‰‚…Œ „–‰‡ ˜…–‰Œ ‰ƒ‹ L •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  .š‰‰— „–‰‡ —…‡Œ ‰ƒ‹ D •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "€ Œ‡‹…š...",
+        "...‰š„Œ €",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -900,85 +902,85 @@ static MUI_ENTRY heILConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        ".š‹˜’ š–‰‡ —…‡Œ š˜‡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        ",„˜…‡ š˜ƒ‚„ š…‰‹…š ,…‡€ š…‰‹…š Œ‰‹„Œ š…Œ…‹‰ š‹˜’ š…–‰‡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        ")ReactOS …‹( „Œ’”„ š…‹˜’ šŒ’”„Œ š…‰‹š",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        ".„˜…‡„ ˜–‰ ‰ƒ‰ Œ’ š…—”…‘™ š…˜‡€ š…‰‹š …€",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "…Œ€‹ š…‰‹š ‰€™ ‡…ˆ „š€ € —˜ š‹˜’ š–‰‡ —‡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        ".š…€ —…‡Œ ‡…ˆ „š€™ …€ ,„–‰‡„ Œ’",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "‡‰™—„ …‹„ š…Œ’Œ €Œ Œ…Œ’ ™‡„ ,„–‰‡„ —‡š™ ‰š",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        ".ReactOS š—š„ …‰‘Œ ƒ’",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  „—‰‡Œ ‰…ƒ‰… ™—š‰ .š‹˜’„ š–‰‡ š€ —…‡Œ ‰ƒ‹ ENTER •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   .„—š„ ˜š…‰ ˜‡…€ ƒ’…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  .—‡‰š €Œ „–‰‡„ ,ƒ…—„ ƒ…’Œ ˜…†‡Œ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -994,25 +996,25 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "€š‡…Œ ‡‰–„",
+        "„–‰‡ Œ…‡š€",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        ".Š‰™„Œ ‰ƒ‹ ENTER •‡Œ .„–‰‡„ š€ Œ‡š€š …‰™‹’ „—š„„",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1028,43 +1030,43 @@ static MUI_ENTRY heILInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        ".š˜‡„ „–‰‡„ Œ’ ReactOS š€ ‰—šš „—š„„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        ":ReactOS š€ ‰—š„Œ Š…–˜ „ „‰‰—‰š ˜‡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "—…‡Œ ‰ƒ‹ BACKSPACE •‡Œ ,š’–…„ „‰‰—‰š„ š€ š…™Œ ‰ƒ‹",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        ".ReactOS š€ ‰—š„Œ Š…–˜ „ „‰‰—‰š„ š€ …™˜š †€… ‰……š",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1080,31 +1082,31 @@ static MUI_ENTRY heILFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         0,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "‰–— „—‰š’ ReactOS š—š„™ † ‰š„Œ €",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         13,
-        "installation folder.",
+        ".š˜‡™ „—š„„ š‰‰—‰šŒ",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "This may take several minutes to complete.",
+        ".š…—ƒ ˜”‘ Š™„Œ „Œ…‹‰ …† „Œ…’”",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
         0,
-        "\xB3 € Œ‡‹…š...    ",
+        "\xB3 ...‰š„Œ €    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1120,43 +1122,43 @@ static MUI_ENTRY heILBootLoaderEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Œ…‡š€„ Œ„ š€ š’‹ „‰—š „—š„„ š‰‹š",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        ".(VBR-… MBR) ‡‰™—„ —‘‰ƒ Œ’ Œ…‡š€ Œ„ —š„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        ".(ƒŒ VBR) ‡‰™—„ —‘‰ƒ Œ’ Œ…‡š€ Œ„ —š„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Install bootloader on a floppy disk.",
+        ".…ˆ‰Œ—š Œ’ Œ…‡š€ Œ„ —š„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Skip install bootloader.",
+        ".Œ…‡š€„ Œ„ š—š„ Œ’ ‚…Œ‰ƒ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1172,43 +1174,43 @@ static MUI_ENTRY heILKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        ".š—š…„ šƒŒ—„ ‚…‘ š…™Œ Š…–˜",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  .‰…–˜„ šƒŒ—„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   .ENTER •‡Œ †€…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .šƒŒ—„ ‚…‘ š€ š…™Œ ‰Œ ƒ…—„ ƒ…’Œ ˜…†‡Œ ‰ƒ‹ ESC Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   ESC = ‰ˆ…Œ   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1224,43 +1226,43 @@ static MUI_ENTRY heILLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        ".Œƒ‡ š˜‰˜ š—š…„ šƒŒ—„ š˜…–š š€ ˜…‡Œ €",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  .„‰…–˜„ „˜…–š„ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    .ENTER •‡Œ †€…",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .šƒŒ—„ š˜…–š š€ š…™Œ ‰Œ ƒ…—„ ƒ…’Œ ˜…†‡Œ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š   ESC = ‰ˆ…Œ   F3 = ˆŒ „š—„",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1277,19 +1279,19 @@ static MUI_ENTRY heILPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        ".ReactOS ‰–— š—š’„Œ Š™‡ š€ „‰‹ „—š„„ š‰‹š ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Building the file copy list...",
+        "...‰–— š—š’„ š‰™˜ „…",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1306,37 +1308,37 @@ static MUI_ENTRY heILSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         17,
-        "Select a file system from the list below.",
+        ".„ˆŒ „‰™˜„ ‰–— š‹˜’ ˜‡",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  .‰–— š‹˜’ ˜…‡Œ ‰ƒ‹ ""„ˆŒ"" …€ ""„Œ’Œ"" Œ’ •‡Œ",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  .„–‰‡„ š€ Œ‡š€Œ ‰ƒ‹ ENTER •‡Œ",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  .š˜‡€ „–‰‡ ˜…‡Œ ‰ƒ‹ ESC •‡Œ",
         0
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1353,37 +1355,37 @@ static MUI_ENTRY heILDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "„–‰‡„ š€ —…‡Œ š˜‡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  .„–‰‡„ š€ —…‡Œ ‰ƒ‹ D •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "!ƒ€‰ „–‰‡ ’ƒ‰„ Œ‹ :„˜„†€",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  .ŒˆŒ ‰ƒ‹ ESC •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "„—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  „–‰‡ —‡ = D",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1399,19 +1401,19 @@ static MUI_ENTRY heILRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        " .š‹˜’„ š˜…–š š€ š‹ƒ’ „—š„„ š‰‹š",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Creating registry hives...",
+        "...š…™‰˜ š…˜……‹ ˜–…‰",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1427,239 +1429,237 @@ MUI_ERROR heILErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "„‡Œ–„\n"
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-        "computer. If you quit Setup now, you will need to\n"
-        "run Setup again to install ReactOS.\n"
+        ".Š™‡ Œ’ €Œ ”…€ š—š… €Œ ReactOS\n"
+        "…™ „—š„„ š€ Œ‰’”„Œ Š˜ˆ–š ,š’‹ „—š„„ €–š €\n"
+        ".ReactOS š€ ‰—š„Œ ‰ƒ‹\n"
         "\n"
-        "  \x07  Press ENTER to continue Setup.\n"
-        "  \x07  Press F3 to quit Setup.",
-        "F3 = Quit  ENTER = Continue"
+        "  \x07  .„—š„„ Š‰™„Œ ‰ƒ‹ ENTER •‡Œ\n"
+        "  \x07  .„—š„„ š€–Œ ‰ƒ‹ F3 •‡Œ",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER"
     },
     {
         // ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        ".‡‰™— …‹ „€– €Œ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        ".„Œ™ ˜…—„ …‹ š€ „€– €Œ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        ".TXTSETUP.SIF •…— š€ „€– €Œ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        ".…‚” TXTSETUP.SIF •…—„ š€ „€– „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        ".TXTSETUP.SIF- „‰…‚™ šš…‡ „€– „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        ".š‹˜’„ Œ™ ‰…‹„ ’ƒ‰ š€ ‚‰™„Œ „Œ‹‰ €Œ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_WRITE_BOOT,
-        "Setup failed to install %S bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        ".š‹˜’„ š–‰‡ Œ’ %S Œ™ Œ…‡š€„ ƒ…— š€ ‰—š„Œ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        ".‰™‡„ ‰‚…‘ š‰™˜ š‰’ˆ „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        ".„‚…–š„ š…˜ƒ‚„ ‰‚…‘ š‰™˜ š‰’ˆ „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        ".š…ƒŒ—„ ‰‚…‘ š‰™˜ š‰’ˆ „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        ".šƒŒ—„ š…˜…–š š‰™˜ š‰’ˆ „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
-          "\n"
-          "Creating or deleting partitions can destroy the partition table.\n"
-          "\n"
-          "  \x07  Press F3 to quit Setup.\n"
-          "  \x07  Press ENTER to continue.",
-          "F3 = Quit  ENTER = Continue"
+        "ƒ‡€ ‡‰™— —‘‰ƒ š…‡”Œ „€– „—š„„ š‰‹š\n"
+        "!… š…–‰‡„ šŒˆ Š‰˜–™ …‹ ™š™„Œ š‰ €Œ™\n"
+        "\n"
+        ".š…–‰‡„ šŒˆ š€ ƒ‰™„Œ „Œ…Œ’ „–‰‡ š—‰‡ …€ š˜‰–‰\n"
+        "\n"
+        "  \x07  .„—š„„ Œ…ˆ‰Œ F3 •‡Œ\n"
+        "  \x07  .Š‰™„Œ ‰ƒ‹ ENTER •‡Œ",
+        "„—š„ Œ…ˆ‰ = F3  Š™„ = ENTER"
     },
     {
         // ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "!š‰‰— „–‰‡ Š…š „–‰‡ ˜…–‰Œ š‰ €Œ\n"
         "\n"
-        "  * Press any key to continue.",
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  ",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "!„–—… €Œ™ —‘‰ƒ ‡ˆ™ —…‡Œ š‰ €Œ\n"
         "\n"
-        "  * Press any key to continue.",
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  ",
         NULL
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the %S bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        ".š‹˜’„ š–‰‡ Œ’ %S ˜…’ Œ…‡š€ ƒ…— š—š„ „™Œ‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        ".:A …‹ …ˆ‰Œ—š ‰€",
+        "Š™„ = ENTER"
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        ".šƒŒ—„ š˜…–š š…˜ƒ‚„ š€ ‹ƒ’Œ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        ".„‚…–š„ …™˜ š…˜ƒ‚„ š€ ‹ƒ’Œ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        ".…™‰˜ š˜……‹ •…— €…‰‰ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "š‹‰š „„š—„ ‹™Œ„ Œ–…€ €š —–‰ ‰ƒ’ „˜‰™….",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        ".…™‰˜„ š…˜……‹ š˜‰–‰ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to initialize the registry.",
-        "ENTER = Reboot computer"
+        ".…™‰˜„ Œ…‡š€ „Œ™‹ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        ".inf •…— ‰€ Cabinet •…—Œ\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        ".€– €Œ Cabinet •…—\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Œ—…• Cabinet €‰ š‘˜‰ˆ „š—„.\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        ".‰–— š—š’„ ˜…š š‡‰š” „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CREATE_DIR,
-        "Setup could not create the installation directories.",
-        "ENTER = Reboot computer"
+        ".„—š„„ š…‰—‰š š€ ˜…–‰Œ „Œ‹‰ €Œ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the '%S' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        ".TXTSETUP.SIF '%S' —Œ‡ š€ €…–Œ „Œ™‹ „—š„„ š‰‹š\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CABINET_SECTION,
-        "Setup failed to find the '%S' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "'%S' —Œ‡ š€ €…–Œ „Œ™‹ „—š„„ š‰‹š\n"
+        ".Cabinet •…—\n",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the installation directory.",
-        "ENTER = Reboot computer"
+        ".„—š„„ „‰‰—‰š š€ š€ ˜…–‰Œ „Œ‹‰ €Œ „—š„„ š‰‹š",
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        ".š…–‰‡„ šŒˆ š‰š‹ „Œ™‹ „—š„„ š‰‹š\n"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        ".…™‰˜Œ codepage š”‘…„ „Œ™‹ „—š„„ š‰‹š\n"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        ".š‹˜’„ ˜…†€ š€ ’…—Œ „Œ‹‰ €Œ „—š„„ š‰‹šn"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        ".…™‰˜Œ šƒŒ— š…˜…–š š”‘…„ „Œ™‹ „—š„„ š‰‹š\n"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        ".geo id „ š€ ’…—Œ „Œ‹‰ €Œ „—š„„ š‰‹š\n"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         // ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        ".‰—…‡ €Œ „‰‰—‰š ™\n"
         "\n"
-        "  * Press any key to continue."
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  "
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        ".ReactOS š€ ‰—š„Œ ‰ƒ‹ —‰”‘ „Œ…ƒ‚ €Œ „˜‡™ „–‰‡„\n"
+        "."" %lu Œ™ Œƒ…‚ š…‰„Œ š…‡”Œ š‰‰‡ „—š„„ •–‰‡\n"
         "\n"
-        "  * Press any key to continue.",
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  ",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "Œ€ ‰š Œ‰–…˜ ‡‰–„ ‡ƒ™„ €… ‡‰–„ …˜‡š ‡ƒ™„\n"
+        ".š…”‘… š…–‰‡Œ …— €ŒŒ „‰„ „Œˆ„ ‰‹ š…–‰‡„ šŒˆ Œ’\n"
         "\n"
-        "  * Press any key to continue."
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  "
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        ".‡‰™— …‹ Œ‹Œ š‡€ š‡˜… „–‰‡ ˜š…‰ ˜…–‰Œ š‰ €Œ\n"
         "\n"
-        "  * Press any key to continue."
+        ".Š‰™„Œ ‰ƒ‹ ™— Œ’ •‡Œ *  "
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        ":„–‰‡„ š€ Œ‡š€Œ „Œ‹‰ €Œ „—š„„ š‰‹š\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"
     },
     {
         NULL,
@@ -1778,90 +1778,89 @@ MUI_PAGE heILPages[] =
 MUI_STRING heILStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   € Œ‡‹…š..."},
+     "   ...‰š„Œ €"},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = „š—   C = –…˜ ‡‰–„   F3 = ˆŒ „š—„"},
+     "   „—š„ Œ…ˆ‰ = F3  š‡˜… ˜…– = E  š‰™€˜ ˜…– = P  —š„ = ENTER"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   „—š„ Œ…ˆ‰ = F3  š‰‚…Œ „–‰‡ ˜…– = L  —š„ = ENTER"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = „š—   D = ‡— ‡‰–„   F3 = ˆŒ „š—„"},
+     "   „—š„ Œ…ˆ‰ = F3  „–‰‡ —‡ = D  —š„ = ENTER"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   „—š„ Œ…ˆ‰ = F3  „–‰‡ —‡ = D"},
     {STRING_PARTITIONSIZE,
-     "‚…ƒŒ „‡‰–„ „‡ƒ™„:"},
+     ":„™ƒ‡ „–‰‡ Œ™ Œƒ…‚"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
+     "Œ’ š‰˜—‰’ „–‰‡ ˜…–‰Œ š˜‡"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Œ’ š‡˜… „–‰‡ ˜…–‰Œ š˜‡"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Œ’ š‰‚…Œ „–‰‡ ˜…–‰Œ š˜‡"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    ".‰š-„‚ „™ƒ‡„ „–‰‡„ Œ™ Œƒ…‚„ š€ ƒŒ—„ „™—"},
     {STRING_CREATEPARTITION,
-     "   ENTER = –…˜ ‡‰–„   ESC = ‰ˆ…Œ   F3 = ˆŒ „š—„"},
+     "   „—š„ Œ…ˆ‰ = F3  Œ…ˆ‰ = ESC  „–‰‡ ˜…– = ENTER"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    ".Š™„ Œ‡š…€š š€†„ „–‰‡„"},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    ".šŒ‡š…€ €Œ/„™ƒ‡ „–‰‡ Œ’ ReactOS š€ ‰—š„Œ š˜‡"},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    ".šŒ‡š…€ €Œ ‰‰ƒ’ š‹˜’„ š–‰‡"},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    ".šŒ‡š…€ €Œ ‰‰ƒ’ „™ƒ‡„ „–‰‡„"},
     {STRING_INSTALLONPART,
-    "Setup installs ReactOS onto Partition"},
+    "„–‰‡ Œ’ ReactOS š€ „‰—š „—š„„ š‰‹š"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    ".„˜‡™ „–‰‡„ š€ š—ƒ… …‰™‹’ „—š„„ š‰‹š"},
     {STRING_CONTINUE,
-    "ENTER = „™Š"},
+    "Š™„ = ENTER"},
     {STRING_QUITCONTINUE,
-    "F3 = ˆŒ „š—„  ENTER = „™Š"},
+    "Š™„ = ENTER  „—š„ Œ…ˆ‰ = F3"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = „”’Œ ‡ƒ™ €š „‡™"},
+    "™ƒ‡ „Œ’”„ = ENTER"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   •…— —‡…: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   •…— ˜‰’: %S Œ: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   •…— ™ „™: %S Œ: %S"},
     {STRING_COPYING,
-     "   ’š‰— —…•: %S"},
+     "   •…— —‰š’: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "š‹‰š „„š—„ ’š‰—„ —–‰..."},
+     "...‰–— „—‰š’ „—š„„ š‰‹š"},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   ...…™‰˜„ š…˜……‹ š€ ‹ƒ’"},
     {STRING_IMPORTFILE,
-    "   ‰‰€ %S..."},
+    "   €‰‰ %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   ...„‚…–š„ Œ™ …™‰˜ š…˜ƒ‚„ ‹ƒ’"},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   ...˜…†€ š…˜ƒ‚„ ‹ƒ’"},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   ...šƒŒ—„ š˜…–š š…˜ƒ‚„ š€ ‹ƒ’"},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   ...…™‰˜Œ codepage ’ƒ‰ “‰‘…"},
     {STRING_DONE,
-    "   ‘‰…..."},
+    "   ...‰‰‘"},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = „”’Œ ‡ƒ™ €š „™"},
+    "   ™‡„ š€ ™ƒ‡ Œ’”„ = ENTER"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " ...š…‰™ %li ƒ…’ ™ƒ‡ Œ’”…‰ Š™‡ "},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\r\n\r\n"},
+    "“…‘„ š€ ‡…š”Œ š‰ €Œ\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\r\n"},
+    "USB šƒŒ— ™…‰™ €…„ „† Œ™ „–…” ‰‹„ „‰‘„\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\r\n"},
+    "€Œ ”…€ š…‹š €Œ ‰‰ƒ’ USB š…ƒŒ—\r\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "…‹„ š€ šŒ‡š€ „—š„„ š‰‹š"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "…‹„ š€ š—ƒ… „—š„„ š‰‹š"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " (˜‰„ Œ…‡š€) %S ‰–— š‹˜’ ’ „–‰‡ Œ…‡š€ "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " %S ‰–— š‹˜’ ’ „–‰‡ Œ…‡š€ "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " (‰…‰™ €ŒŒ( š‰‡‹… ‰–— š‹˜’ š˜€™„ "},
     {STRING_HDINFOPARTCREATE_1,
     "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
     {STRING_HDINFOPARTCREATE_2,
@@ -1874,10 +1873,14 @@ MUI_STRING heILStrings[] =
     "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDINFOPARTZEROED_1,
     "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTZEROED_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS_1,
     "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTEXISTS_2,
+    // "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT_1,
@@ -1885,26 +1888,26 @@ MUI_STRING heILStrings[] =
     {STRING_HDINFOPARTSELECT_2,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "Œ’ „™ƒ‡ „–‰‡ „˜–‰ „—š„„ š‰‹š"},
     {STRING_UNPSPACE,
     "    %sUnpartitioned space%s            %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    ")"" %ul .‘—( """},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "š‡˜… „–‰‡"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    ")Œ‡š…€ €Œ( ™ƒ‡"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "™…‰™ €Œ"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "’…ƒ‰ €Œ"},
     {STRING_KB,
-    "—‰Œ…‰‰ˆ"},
+    """—"},
     {STRING_MB,
-    "‚„‰‰ˆ"},
+    """"},
     {STRING_GB,
-    "‚‰‚„‰‰ˆ"},
+    """‚"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "...šƒŒ— š…˜…–š “‰‘…"},
     {0, 0}
 };
