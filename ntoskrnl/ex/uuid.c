@@ -377,12 +377,58 @@ NTSTATUS
 NTAPI
 NtSetUuidSeed(IN PUCHAR Seed)
 {
+    NTSTATUS Status;
+    BOOLEAN GotContext;
+    PACCESS_TOKEN Token;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    LUID CallerLuid, SystemLuid = SYSTEM_LUID;
+
     PAGED_CODE();
 
-    RtlCopyMemory(UuidSeed,
-                  Seed,
-                  SEED_BUFFER_SIZE);
-    return STATUS_SUCCESS;
+    /* Should only be done by umode */
+    ASSERT(KeGetPreviousMode() != KernelMode);
+
+    /* No context to release */
+    GotContext = FALSE;
+    _SEH2_TRY
+    {
+        /* Get our caller context and remember to release it */
+        SeCaptureSubjectContext(&SubjectContext);
+        GotContext = TRUE;
+
+        /* Get caller access token and its associated ID */
+        Token = SeQuerySubjectContextToken(&SubjectContext);
+        Status = SeQueryAuthenticationIdToken(Token, &CallerLuid);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlRaiseStatus(Status);
+        }
+
+        /* This call is only allowed for SYSTEM */
+        if (!RtlEqualLuid(&CallerLuid, &SystemLuid))
+        {
+            RtlRaiseStatus(STATUS_ACCESS_DENIED);
+        }
+
+        /* Check for buffer validity and then copy it to our seed */
+        ProbeForRead(Seed, SEED_BUFFER_SIZE, 1);
+        RtlCopyMemory(UuidSeed, Seed, SEED_BUFFER_SIZE);
+
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Release context if required */
+    if (GotContext)
+    {
+        SeReleaseSubjectContext(&SubjectContext);
+    }
+
+    return Status;
 }
 
 /* EOF */
