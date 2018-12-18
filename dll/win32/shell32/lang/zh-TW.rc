@@ -582,7 +582,7 @@ BEGIN
     LTEXT "您希望電腦做什麼?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "維持工作階段，电脑數據仍然保持在 RAM 中。當你按下一個鍵或移動鼠標將喚醒這台電腦。", 8225, 39, 40, 167, 37
-    DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "確定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
     PUSHBUTTON "幫助(&H)", IDHELP, 144, 82, 60, 14
 END
@@ -617,7 +617,7 @@ BEGIN
     GROUPBOX "檢查磁碟選項", -1, 7, 6, 179, 40
     PUSHBUTTON "取消", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "自動修復檔案系統錯誤", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "嘗試掃描和修復壞磁區(&S), 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "嘗試掃描和修復壞磁區(&S)", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
