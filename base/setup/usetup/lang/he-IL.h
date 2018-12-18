@@ -370,7 +370,7 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         6,
         19,
-        """„ˆŽŒ""… ""„Œ’ŽŒ""„ ‰™—Ž š–‰‡Œ ‰—š„„ š…˜ƒ‚„ š€ š…™Œ š‰",
+        "‰š Œ™…š €š „‚ƒ˜…š „„š—‰ Œ‡‰–š Ž—™‰ „ŒŽ’Œ„ …ŒŽˆ„",
         TEXT_STYLE_NORMAL
     },
     {
@@ -388,7 +388,7 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         6,
         23,
-        """‰—š„„ š…˜ƒ‚„ ˜…™‰€"" ˜‡ ,š……‹ š…˜ƒ‚„„ Œ‹™ ‰šŽ",
+        "\"‰—š„„ š…˜ƒ‚„ ˜…™‰€\" ˜‡ ,š……‹ š…˜ƒ‚„„ Œ‹™ ‰šŽ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -510,7 +510,7 @@ static MUI_ENTRY heILUpgradePageEntries[] =
     {
         8,
         15,
-        "\x07  .„—š„ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .„—š„ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -562,7 +562,7 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  .‰…–˜„ ™‡Ž„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .‰…–˜„ ™‡Ž„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -699,7 +699,7 @@ static MUI_ENTRY heILDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  .‰…–˜„ „‚…–š„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ""Œ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+         "\x07  .‰…–˜„ „‚…–š„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
          TEXT_STYLE_NORMAL
     },
     {
@@ -850,7 +850,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  .„Ž…™˜ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .„Ž…™˜ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1186,7 +1186,7 @@ static MUI_ENTRY heILKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  .‰…–˜„ šƒŒ—Ž„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .‰…–˜„ šƒŒ—Ž„ ‚…‘ š€ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1238,7 +1238,7 @@ static MUI_ENTRY heILLayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  .„‰…–˜„ „˜…–š„ š€ ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .„‰…–˜„ „˜…–š„ š€ ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1320,7 +1320,7 @@ static MUI_ENTRY heILSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  .‰–— š‹˜’Ž ˜…‡Œ ‰ƒ‹ ""„ˆŽŒ"" …€ ""„Œ’ŽŒ"" Œ’ •‡Œ",
+        "\x07  .‰–— š‹˜’Ž ˜…‡Œ ‰ƒ‹ „ˆŽŒ …€ „Œ’ŽŒ Œ’ •‡Œ",
         0
     },
     {
@@ -1636,7 +1636,7 @@ MUI_ERROR heILErrorEntries[] =
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
         ".ReactOS š€ ‰—š„Œ ‰ƒ‹ —‰”‘Ž „Œ…ƒ‚ €Œ „˜‡™ „–‰‡Ž„\n"
-        ".""Ž %lu Œ™ Œƒ…‚ š…‰„Œ š…‡”Œ š‰‰‡ „—š„„ •–‰‡Ž\n"
+        ".\"Ž %lu Œ™ Œƒ…‚ š…‰„Œ š…‡”Œ š‰‰‡ „—š„„ •–‰‡Ž\n"
         "\n"
         ".Š‰™Ž„Œ ‰ƒ‹ ™—Ž Œ’ •‡Œ *  ",
         NULL
@@ -1892,7 +1892,7 @@ MUI_STRING heILStrings[] =
     {STRING_UNPSPACE,
     "    %sUnpartitioned space%s            %6lu %s"},
     {STRING_MAXSIZE,
-    ")""Ž %ul .‘—Ž( ""Ž"},
+    "Ž\" (Ž—‘. ul% Ž\")"},
     {STRING_EXTENDED_PARTITION,
     "š‡˜…Ž „–‰‡Ž"},
     {STRING_UNFORMATTED,
@@ -1902,11 +1902,11 @@ MUI_STRING heILStrings[] =
     {STRING_FORMATUNKNOWN,
     "’…ƒ‰ €Œ"},
     {STRING_KB,
-    """—"},
+    "\"—"},
     {STRING_MB,
-    """Ž"},
+    "\"Ž"},
     {STRING_GB,
-    """‚"},
+    "\"‚"},
     {STRING_ADDKBLAYOUTS,
     "...šƒŒ—Ž š…˜…–š “‰‘…Ž"},
     {0, 0}
