@@ -112,7 +112,7 @@ void DrawScene(HWND hwnd, HDC dc, int ticks)
     EndPaint(hwnd, &ps);
 }
 
-void CALLBACK TimeProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2)
+void CALLBACK TimeProc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
     InvalidateRect((HWND)dwUser, NULL, 0);
 }
