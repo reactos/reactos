@@ -399,7 +399,7 @@ BEGIN
     RADIOBUTTON "自定义大小(&C):", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大值(MB)(&A):", -1, 20, 105, 70, 10
-    RADIOBUTTON "不将文件移动到回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "不要将文件移动到回收站，而是彻底删除。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "显示确认删除对话框(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
@@ -427,17 +427,17 @@ BEGIN
     GROUPBOX "任务", -1, 7, 10, 249, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "在文件夹中显示常见任务(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "使用 ReactOS 经典风格的文件夹(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
+    AUTORADIOBUTTON "使用 ReactOS 经典文件夹(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "浏览文件夹", -1, 7, 60, 249, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
-    AUTORADIOBUTTON "在同一窗口中打开每个文件夹(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "在不同窗口中打开不同的文件夹(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
-    GROUPBOX "打开项目的方式", -1, 7, 110, 249, 60
+    AUTORADIOBUTTON "在相同窗口中打开每一个文件夹(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "在相同窗口中打开自己的文件夹(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
+    GROUPBOX "点击项目的方式", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "通过单击打开项目(指向时选定)(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "双击要打开的项目(单击时选定)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    AUTORADIOBUTTON "根据浏览器设置给图标标题加下划线(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "仅当指向图标标题时加下划线(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    AUTORADIOBUTTON "通过单击来打开项目(指向时选择)(&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "通过双击来打开项目(单击时选择)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
+    AUTORADIOBUTTON "在图标标题下添加下划线，和浏览器设置相同(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "仅当我指向图标标题时才添加下划线(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     PUSHBUTTON "还原为默认值(&R)", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
@@ -448,7 +448,7 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "视图", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "您可以应用您正在使用此文件夹的\n所有文件夹的视图(如详细信息或平铺)。", -1, 60, 20, 180, 20
+    LTEXT "您可以将用于此文件夹的视图（例如“详细信息”或“平铺”）应用于所有文件夹。", -1, 60, 20, 180, 20
     PUSHBUTTON "应用到所有文件夹(&L)", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "重置所有文件夹(&R)", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "高级设置：", -1, 7, 80, 100, 10
@@ -487,7 +487,7 @@ BEGIN
     LTEXT "此文件夹已包含名为 '%2' 的文件。", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "此文件夹已包含一个名为 '%2' 的只读文件。", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "此文件夹已包含一个名为 '%2' 的系统文件。", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "你想要替换现有文件吗", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "您想要替换现有文件吗", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(未知的日期和大小)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "用这个吗？", -1, 44, 75, 228, 10, SS_NOPREFIX
@@ -533,12 +533,12 @@ END
 
 IDD_MIXED_CONTENT1 DIALOGEX 0, 0, 227, 207
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "混合的内容"
+CAPTION "混合内容"
 FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "此磁盘或设备包含多个类型的内容。", 1001, 32, 7, 191, 20
-    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 31, 188, 8
+    LTEXT "您想要 ReactOS 做什么？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "确定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -546,14 +546,14 @@ END
 
 IDD_MIXED_CONTENT2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "混合的内容"
+CAPTION "混合内容"
 FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "每次您插入盘或连接的设备与此类型的文件，ReactOS 可以执行相同的操作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "你想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
+    LTEXT "您想要 ReactOS 做什么？", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "始终执行选择的操作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "确定", IDOK, 96, 185, 60, 14
@@ -567,7 +567,7 @@ FONT 9, "宋体"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "每次您连接此设备，ReactOS 可以执行相同的操作。", 1001, 32, 7, 190, 22
-    LTEXT "你想要 ReactOS 做什么？(&W)", 1002, 32, 31, 190, 8
+    LTEXT "您想要 ReactOS 做什么？(&W)", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "总是执行选定的操作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "确定", IDOK, 94, 160, 60, 14
@@ -580,7 +580,7 @@ CAPTION "关闭 ReactOS"
 FONT 9, "宋体"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "你想让计算机做什么？", -1, 39, 7, 167, 10
+    LTEXT "您你想让计算机做什么？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
@@ -644,7 +644,7 @@ FONT 9, "宋体"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
     LTEXT "由操作系统或另一个应用程序，也可以使用此文件。\n修改此文件可能会损坏您的系统，\n或者使它的功能变弱。\n\n\
-你确定你想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
+你确定您想要打开此文件？", IDC_STATIC, 35, 5, 230, 60
     DEFPUSHBUTTON "是", IDYES, 125, 55, 50, 14
     PUSHBUTTON "否", IDNO, 180, 55, 50, 14
 END
@@ -685,7 +685,7 @@ BEGIN
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "新操作"
+CAPTION "新建操作"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
@@ -781,14 +781,14 @@ BEGIN
     IDS_CREATEFOLDER_CAPTION "无法创建文件夹"
     IDS_DELETEITEM_CAPTION "确认文件删除"
     IDS_DELETEFOLDER_CAPTION "确认文件夹删除"
-    IDS_DELETEITEM_TEXT "确实要删除 '%1'?"
-    IDS_DELETEMULTIPLE_TEXT "确实要删除这 '%1' 项?"
-    IDS_DELETESELECTED_TEXT "确实要删除所选的项目吗?"
-    IDS_TRASHITEM_TEXT "你确定你想要移动 '%1' 到回收站？"
-    IDS_TRASHFOLDER_TEXT "确定你想要将 '%1' 和它的所有内容发送到回收站吗?"
-    IDS_TRASHMULTIPLE_TEXT "确实要将这 '%1' 项发送到回收站吗?"
-    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。你想要彻底删除它吗？"
-    IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为 '%1' 的文件。\n\n你想要替换它吗？"
+    IDS_DELETEITEM_TEXT "您确定要删除 '%1'?"
+    IDS_DELETEMULTIPLE_TEXT "您确定要删除这 '%1' 项吗?"
+    IDS_DELETESELECTED_TEXT "您確定要删除所选的项目吗?"
+    IDS_TRASHITEM_TEXT "您确定想移动 '%1' 到回收站？"
+    IDS_TRASHFOLDER_TEXT "您确定想要将 '%1' 和它的所有内容发送到回收站吗?"
+    IDS_TRASHMULTIPLE_TEXT "您确定要将这 '%1' 项发送到回收站吗?"
+    IDS_CANTTRASH_TEXT "项目 '%1' 不能发送到回收站。您想要彻底删除它吗？"
+    IDS_OVERWRITEFILE_TEXT "此文件夹已包含名为 '%1' 的文件。\n\n您想要替换它吗？"
     IDS_OVERWRITEFILE_CAPTION "确认文件覆盖"
     IDS_OVERWRITEFOLDER_TEXT "此文件夹已包含一个名为 '%1' 文件夹。\n\n如果目标文件夹中的文件具有相同的名称作为\n所选文件夹中的文件，他们将被替换。 你仍然想要移动或\n复制该文件夹吗？"
 
@@ -801,14 +801,14 @@ BEGIN
 
     /* message box strings */
     IDS_RESTART_TITLE "重新启动"
-    IDS_RESTART_PROMPT "请问需要重启系统吗?"
+    IDS_RESTART_PROMPT "您确定要重启系统吗?"
     IDS_SHUTDOWN_TITLE "关机"
-    IDS_SHUTDOWN_PROMPT "请问需要关闭系统吗?"
+    IDS_SHUTDOWN_PROMPT "您确定要关机吗"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "格式化本地磁盘"
+    IDS_FORMAT_WARNING "警告: 格式化将会擦除磁盘上的所有数据。\n想要格式化这个磁盘, 请点击确定。若想退出，请点击返回。"
+    IDS_FORMAT_COMPLETE "格式化完成"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "无法显示运行文件对话框 (内部错误)"
@@ -918,7 +918,7 @@ BEGIN
     IDS_FIND_VERB "查找"
     IDS_PRINT_VERB "打印"
 
-    IDS_FILE_FOLDER "%u 文件，%u 个文件夹"
+    IDS_FILE_FOLDER "%u 个文件，%u 个文件夹"
     IDS_PRINTERS "打印机"
     IDS_FONTS "字体"
     IDS_INSTALLNEWFONT "安装新字体..."
