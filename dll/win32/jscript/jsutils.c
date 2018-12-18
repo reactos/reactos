@@ -675,7 +675,7 @@ HRESULT to_int32(script_ctx_t *ctx, jsval_t v, INT *ret)
 }
 
 /* ECMA-262 3rd Edition    9.6 */
-HRESULT to_uint32(script_ctx_t *ctx, jsval_t val, DWORD *ret)
+HRESULT to_uint32(script_ctx_t *ctx, jsval_t val, UINT32 *ret)
 {
     INT32 n;
     HRESULT hres;
