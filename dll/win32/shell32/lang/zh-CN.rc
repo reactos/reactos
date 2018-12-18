@@ -580,7 +580,7 @@ CAPTION "关闭 ReactOS"
 FONT 9, "宋体"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "您你想让计算机做什么？", -1, 39, 7, 167, 10
+    LTEXT "您想让计算机做什么？", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "维护会话，计算机数据仍然保持在内存中。当你按下一个键或移动鼠标将唤醒这台计算机。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "确定", 1, 7, 82, 60, 14, WS_GROUP
