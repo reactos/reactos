@@ -676,6 +676,23 @@ InitializePropertyDialog(
     pContext->dwAdapterIndex = dwAdapterIndex;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(netshell_hInstance, MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
+
 VOID
 ShowStatusPropertyDialog(
     LANSTATUSUI_CONTEXT *pContext,
@@ -688,9 +705,13 @@ ShowStatusPropertyDialog(
     ZeroMemory(&pinfo, sizeof(PROPSHEETHEADERW));
     ZeroMemory(hppages, sizeof(hppages));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
+    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW |
+                    PSH_USEICONID | PSH_USECALLBACK;
     pinfo.phpage = hppages;
     pinfo.hwndParent = hwndDlg;
+    pinfo.hInstance = netshell_hInstance;
+    pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER);
+    pinfo.pfnCallback = PropSheetProc;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
     {
