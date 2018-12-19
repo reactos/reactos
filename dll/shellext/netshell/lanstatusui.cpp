@@ -685,7 +685,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(netshell_hInstance, MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER));
+            hIcon = LoadIconW(netshell_hInstance, MAKEINTRESOURCEW(IDI_NET_IDLE));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
         }
@@ -710,7 +710,7 @@ ShowStatusPropertyDialog(
     pinfo.phpage = hppages;
     pinfo.hwndParent = hwndDlg;
     pinfo.hInstance = netshell_hInstance;
-    pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_NETWORK_FOLDER);
+    pinfo.pszIcon = MAKEINTRESOURCEW(IDI_NET_IDLE);
     pinfo.pfnCallback = PropSheetProc;
 
     if (pContext->pNet->GetProperties(&pProperties) == S_OK)
