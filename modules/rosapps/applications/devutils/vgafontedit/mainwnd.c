@@ -238,17 +238,13 @@ MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
 static VOID
 MainWndDropFiles(IN PMAIN_WND_INFO Info, HDROP hDrop)
 {
-    PFONT_OPEN_INFO OpenInfo;
+    WCHAR Path[MAX_PATH];
     INT i, Count = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
 
     for (i = 0; i < Count; ++i)
     {
-        OpenInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO));
-        OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
-        DragQueryFileW(hDrop, i, OpenInfo->pszFileName, MAX_PATH);
-
-        OpenInfo->bCreateNew = FALSE;
-        CreateFontWindow(Info, OpenInfo);
+        DragQueryFileW(hDrop, i, Path, MAX_PATH);
+        MainWndOpenFile(Info, Path);
     }
 
     DragFinish(hDrop);
