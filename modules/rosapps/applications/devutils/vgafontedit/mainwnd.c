@@ -227,7 +227,7 @@ MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
 {
     PFONT_OPEN_INFO OpenInfo;
 
-    OpenInfo = (PFONT_OPEN_INFO) HeapAlloc( hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO) );
+    OpenInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO));
     OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
     lstrcpynW(OpenInfo->pszFileName, File, MAX_PATH);
 
@@ -236,15 +236,17 @@ MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
 }
 
 static VOID
-MainWndDrop(IN PMAIN_WND_INFO Info, HDROP hDrop)
+MainWndDropFiles(IN PMAIN_WND_INFO Info, HDROP hDrop)
 {
     PFONT_OPEN_INFO OpenInfo;
+    INT i, Count = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
 
-    OpenInfo = (PFONT_OPEN_INFO) HeapAlloc( hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO) );
-    OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
-
-    if (DragQueryFileW(hDrop, 0, OpenInfo->pszFileName, MAX_PATH))
+    for (i = 0; i < Count; ++i)
     {
+        OpenInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO));
+        OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
+        DragQueryFileW(hDrop, i, OpenInfo->pszFileName, MAX_PATH);
+
         OpenInfo->bCreateNew = FALSE;
         CreateFontWindow(Info, OpenInfo);
     }
@@ -560,7 +562,7 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return 0;
 
             case WM_DROPFILES:
-                MainWndDrop(Info, (HDROP)wParam);
+                MainWndDropFiles(Info, (HDROP)wParam);
                 return 0;
         }
     }
