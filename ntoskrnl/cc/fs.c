@@ -15,8 +15,6 @@
 
 /* GLOBALS   *****************************************************************/
 
-extern KGUARDED_MUTEX ViewLock;
-
 NTSTATUS CcRosInternalFreeVacb(PROS_VACB Vacb);
 
 /* FUNCTIONS *****************************************************************/
@@ -115,12 +113,13 @@ CcIsThereDirtyData (
 {
     PROS_VACB Vacb;
     PLIST_ENTRY Entry;
+    KIRQL oldIrql;
     /* Assume no dirty data */
     BOOLEAN Dirty = FALSE;
 
     CCTRACE(CC_API_DEBUG, "Vpb=%p\n", Vpb);
 
-    KeAcquireGuardedMutex(&ViewLock);
+    oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
     /* Browse dirty VACBs */
     for (Entry = DirtyVacbListHead.Flink; Entry != &DirtyVacbListHead; Entry = Entry->Flink)
@@ -148,7 +147,7 @@ CcIsThereDirtyData (
         }
     }
 
-    KeReleaseGuardedMutex(&ViewLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
     return Dirty;
 }
@@ -202,8 +201,8 @@ CcPurgeCacheSection (
     /* Assume success */
     Success = TRUE;
 
-    KeAcquireGuardedMutex(&ViewLock);
-    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
     ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
     while (ListEntry != &SharedCacheMap->CacheMapVacbListHead)
     {
@@ -246,8 +245,8 @@ CcPurgeCacheSection (
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
     }
-    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
-    KeReleaseGuardedMutex(&ViewLock);
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
     while (!IsListEmpty(&FreeList))
     {
