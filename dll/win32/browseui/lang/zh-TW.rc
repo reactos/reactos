@@ -30,8 +30,8 @@ BEGIN
         MENUITEM "位址列(&A)", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "連結(&L)", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "鎖定工具欄(&B)", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
-        MENUITEM "自定義...(&C)", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "鎖定工具列(&B)", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "自訂...(&C)", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "文字標籤(&T)", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
         MENUITEM "轉到按鈕(&G)", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
@@ -98,32 +98,32 @@ END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-    POPUP "工具欄(&T)", -1, MFT_STRING, MFS_ENABLED, 0
+    POPUP "工具列(&T)", -1, MFT_STRING, MFS_ENABLED, 0
     BEGIN
         MENUITEM "桌面(&D)", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING
         MENUITEM "快速啟動(&Q)", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING
         MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "新的工具欄...(&N)", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
+        MENUITEM "新的工具列...(&N)", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING
     END
 END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-    MENUITEM "Sho&w Title", IDM_BAND_TITLE
-    MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
+    MENUITEM "顯示標題(&W)", IDM_BAND_TITLE
+    MENUITEM "選擇工具列(&C)", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "檢視(&V)", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "大圖示(&L)", IDM_LARGE_ICONS
+            MENUITEM "小圖示(&S)", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "開啟資料夾(&O)", IDM_OPEN_FOLDER
+        MENUITEM "顯示文字(&S)", IDM_SHOW_TEXT
     END    
 END
 
@@ -219,7 +219,7 @@ END
 
 STRINGTABLE
 BEGIN
-    9250 "顯示程式資訊、 版本號和版權資訊。"
+    9250 "顯示程式資訊、版本號和版權資訊。"
     9252 "顯示偵錯資訊。"
 END
 
@@ -239,26 +239,26 @@ END
 
 STRINGTABLE
 BEGIN
-    9505 "顯示或隱藏工具欄。"
+    9505 "顯示或隱藏工具列。"
     9506 "顯示或隱藏狀態列。"
-    9508 "顯示標準按鈕工具欄。"
+    9508 "顯示標準按鈕工具列。"
     9509 "顯示位址列。"
-    9510 "顯示快速連結欄。"
-    9516 "鎖定的大小和位置的工具欄。"
+    9510 "顯示快速連結列。"
+    9516 "鎖定的大小和位置的工具列。"
 END
 
 STRINGTABLE
 BEGIN
-    9533 "自定義工具欄。"
+    9533 "自訂工具列。"
 END
 
 STRINGTABLE
 BEGIN
-    9552 "顯示或隱藏一個瀏覽器欄。"
+    9552 "顯示或隱藏一個瀏覽器列。"
     9553 "顯示搜索欄。"
-    9554 "顯示收藏夾欄。"
-    9555 "顯示歷史記錄欄。"
-    9557 "顯示資料夾欄。"
+    9554 "顯示收藏夾列。"
+    9555 "顯示歷史記錄列。"
+    9557 "顯示資料夾列。"
     9559 "顯示媒體欄。"
 END
 
@@ -277,7 +277,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GOBUTTONLABEL "|去||"
+    IDS_GOBUTTONLABEL "|移至||"
     IDS_GOBUTTONTIPTEMPLATE "轉到 ""%s"""
 END
 
@@ -306,7 +306,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "返回到 %s"
     IDS_FORWARD "前進到 %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_FOLDER_OPTIONS "資料夾選項"
 END
 
 STRINGTABLE
@@ -316,7 +316,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "選擇一個資料夾"
+    IDS_TOOLBAR_ERR_TITLE "工具列"
+    IDS_TOOLBAR_ERR_TEXT "無法建立工具列"
 END
