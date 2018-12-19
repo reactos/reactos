@@ -57,7 +57,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DRIVE       "磁碟機"
-    IDS_MAPPEDIMAGE "映像已映射"
+    IDS_MAPPEDIMAGE "已映射的映像"
     IDS_NOMOUNTED   "沒有映像被掛接。最後一個是 - %s"
     IDS_NONE        "無"
     IDS_FILTER      "所有被支持的映像 (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
