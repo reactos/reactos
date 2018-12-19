@@ -25,6 +25,10 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
 } __m128;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern __m128 _mm_load_ss(float const*);
 extern int _mm_cvt_ss2si(__m128);
 
@@ -64,6 +68,9 @@ __INTRIN_INLINE void _mm_setcsr(unsigned int val)
 /* Alternate names */
 #define _mm_cvtss_si32 _mm_cvt_ss2si
 
+#ifdef __cplusplus
+}
+#endif
 
 /* _mm_prefetch constants */
 #define _MM_HINT_T0 1
