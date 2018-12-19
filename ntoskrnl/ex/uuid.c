@@ -319,8 +319,38 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
     ULARGE_INTEGER IntTime;
     ULONG IntRange;
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
 
     PAGED_CODE();
+
+    /* Probe if user mode */
+    PreviousMode = ExGetPreviousMode();
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(Time,
+                          sizeof(ULARGE_INTEGER),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Range,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Sequence,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Seed,
+                          SEED_BUFFER_SIZE,
+                          sizeof(UCHAR));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     ExAcquireFastMutex(&UuidMutex);
 
@@ -358,13 +388,22 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
 
     ExReleaseFastMutex(&UuidMutex);
 
-    Time->QuadPart = IntTime.QuadPart;
-    *Range = IntRange;
-    *Sequence = UuidSequence;
+    /* Write back LUID to caller */
+    _SEH2_TRY
+    {
+        Time->QuadPart = IntTime.QuadPart;
+        *Range = IntRange;
+        *Sequence = UuidSequence;
 
-    RtlCopyMemory(Seed,
-                  UuidSeed,
-                  SEED_BUFFER_SIZE);
+        RtlCopyMemory(Seed,
+                      UuidSeed,
+                      SEED_BUFFER_SIZE);
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }
