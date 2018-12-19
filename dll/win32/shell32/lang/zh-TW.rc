@@ -943,7 +943,7 @@ BEGIN
     IDS_EXE_DESCRIPTION "描述:"
 
     IDS_MENU_EMPTY "(Empty)"
-    IDS_OBJECTS "%d 物件"
+    IDS_OBJECTS "%d 個物件"
     IDS_OBJECTS_SELECTED "已選擇 %d 個物件"
 
     IDS_ADVANCED_FOLDER "Files and Folders"
