@@ -57,7 +57,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DRIVE       "驱动器"
-    IDS_MAPPEDIMAGE "镜像已映射"
+    IDS_MAPPEDIMAGE "已映射的镜像"
     IDS_NOMOUNTED   "没有镜像被挂载。 最后挂载的是 - %s"
     IDS_NONE        "无"
     IDS_FILTER      "所有被支持的镜像 (*.udf; *.cdfs; *.jo; *.iso; *.rock)\0*.udf;*.cdfs;*.jo;*.iso;*.rock\0"
