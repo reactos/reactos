@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implements the main window of the application
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
+ *              Copyright 2018 Katayama Hirofui MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -219,6 +220,34 @@ DoFileOpen(IN PMAIN_WND_INFO Info)
         OpenInfo->bCreateNew = FALSE;
         CreateFontWindow(Info, OpenInfo);
     }
+}
+
+static VOID
+MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
+{
+    PFONT_OPEN_INFO OpenInfo;
+
+    OpenInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO));
+    OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
+    lstrcpynW(OpenInfo->pszFileName, File, MAX_PATH);
+
+    OpenInfo->bCreateNew = FALSE;
+    CreateFontWindow(Info, OpenInfo);
+}
+
+static VOID
+MainWndDropFiles(IN PMAIN_WND_INFO Info, HDROP hDrop)
+{
+    WCHAR Path[MAX_PATH];
+    INT i, Count = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+
+    for (i = 0; i < Count; ++i)
+    {
+        DragQueryFileW(hDrop, i, Path, MAX_PATH);
+        MainWndOpenFile(Info, Path);
+    }
+
+    DragFinish(hDrop);
 }
 
 VOID
@@ -439,7 +468,7 @@ static LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HWND hNextClipboardViewer;
-
+    INT i;
     PMAIN_WND_INFO Info;
 
     Info = (PMAIN_WND_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -497,6 +526,12 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 InitResources(Info);
 
                 ShowWindow(hwnd, Info->nCmdShow);
+
+                for (i = 1; i < __argc; ++i)
+                {
+                    MainWndOpenFile(Info, __wargv[i]);
+                }
+                DragAcceptFiles(hwnd, TRUE);
                 return 0;
 
             case WM_DESTROY:
@@ -520,6 +555,10 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             case WM_SIZE:
                 MainWndSize( Info, LOWORD(lParam), HIWORD(lParam) );
+                return 0;
+
+            case WM_DROPFILES:
+                MainWndDropFiles(Info, (HDROP)wParam);
                 return 0;
         }
     }
