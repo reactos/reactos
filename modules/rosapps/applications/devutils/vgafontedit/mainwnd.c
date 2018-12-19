@@ -223,7 +223,7 @@ DoFileOpen(IN PMAIN_WND_INFO Info)
 }
 
 static VOID
-MainWndOpen(IN PMAIN_WND_INFO Info, LPCWSTR File)
+MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
 {
     PFONT_OPEN_INFO OpenInfo;
 
@@ -470,7 +470,7 @@ static LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static HWND hNextClipboardViewer;
-
+    INT i;
     PMAIN_WND_INFO Info;
 
     Info = (PMAIN_WND_INFO) GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -529,9 +529,9 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 ShowWindow(hwnd, Info->nCmdShow);
 
-                if (__argc >= 2)
+                for (i = 1; i < __argc; ++i)
                 {
-                    MainWndOpen(Info, __wargv[1]);
+                    MainWndOpenFile(Info, __wargv[i]);
                 }
                 DragAcceptFiles(hwnd, TRUE);
                 return 0;
