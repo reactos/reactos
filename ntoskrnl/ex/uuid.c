@@ -388,7 +388,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
 
     ExReleaseFastMutex(&UuidMutex);
 
-    /* Write back LUID to caller */
+    /* Write back UUIDs to caller */
     _SEH2_TRY
     {
         Time->QuadPart = IntTime.QuadPart;
