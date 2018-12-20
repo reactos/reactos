@@ -22,7 +22,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "請訪問<A HREF=""http://www.reactos.org/"">ReactOS 主頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "請訪問<A HREF=""http://www.reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "查看著作權信息(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -55,7 +55,7 @@ BEGIN
     LTEXT "性能選項控制應用程序如何使用內存。這將會影響到電腦運行速度。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON "設定", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "使用者設定檔", IDC_STATIC, 6, 75, 244, 48
-    LTEXT "與您登陸相關的桌面設定", IDC_STATIC, 16, 88, 228, 20
+    LTEXT "與您登入時相關的桌面設定", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "設定", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "啓動和故障恢復", IDC_STATIC, 6, 131, 244, 52
     LTEXT "啓動和故障恢複選項指定電腦如何啓動並設定系統失敗時所需要採取的動作。", IDC_STATIC, 16, 144, 228, 19
@@ -70,8 +70,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "系統設定"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
-    GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS 建作伺服器作業系統並這樣被報告。選中此框可變更(僅對應用程式有效)。", IDC_STATIC, 15, 15, 183, 41
+    GROUPBOX "版本資訊", IDC_STATIC, 6, 3, 210, 73
+    LTEXT "ReactOS 作為伺服器作業系統建立並這樣被報告。選中此框可變更(僅對應用程式有效)。", IDC_STATIC, 15, 15, 183, 41
     CONTROL "作爲工作站報告", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "確定", IDOK, 166, 83, 50, 14
 END
@@ -115,7 +115,7 @@ BEGIN
     LTEXT "序列號：", IDC_STATIC, 10, 55, 52, 8
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 55, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
-    AUTOCHECKBOX "這是一臺便攜式電腦(&P)", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
+    AUTOCHECKBOX "這是一台便攜式電腦(&P)", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "插接狀態未知(&S)", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "電腦被插接(&D)", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "電腦未插接(&U)", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
@@ -155,7 +155,7 @@ CAPTION "使用者設定"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "用戶設定檔保存桌面設定和其他與您的用戶帳戶有關的信息。可在您使用的每臺電腦上創建不同的設定檔，或選定一個漫遊設定檔用在您使用的每臺電腦上。", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "使用者設定檔保存桌面設定和其他與您的使用者帳戶有關的信息。可在您使用的每臺電腦上創建不同的設定檔，或選定一個漫遊設定檔用在您使用的每臺電腦上。", IDC_STATIC, 40, 11, 211, 35
     LTEXT "儲存在本機上的設定檔:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -176,7 +176,7 @@ BEGIN
     GROUPBOX "系統啓動", IDC_STATIC, 7, 12, 238, 95
     LTEXT "默認操作系統(&S):", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX "顯示操作系統列表的時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
+    AUTOCHECKBOX "顯示作業系統清單的時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
@@ -186,7 +186,7 @@ BEGIN
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "秒", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "要手動編輯啓動選項，請單擊“編輯”。", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "要手動編輯啓動選項，請選擇 [編輯]。", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "秒", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "系統失敗", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "將事件寫入系統日誌(&W)", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
@@ -196,7 +196,7 @@ BEGIN
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "轉儲文件(&F):", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "覆蓋任何現有文件(&O)", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "覆寫任何現有文件(&O)", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "確定", IDOK, 141, 258, 50, 15
     PUSHBUTTON "取消", IDCANCEL, 195, 258, 50, 15
 END
@@ -305,7 +305,7 @@ BEGIN
     IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁盤上的可用空間。"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "系統已管理"
-    IDS_INFOREBOOT "您必須重新啓動電腦，才能應用更改。"
+    IDS_INFOREBOOT "您必須重新啓動電腦，才能套用更改。"
     IDS_DEVS "\nReactOS 團隊\n\n項目協調員\n\nAleksey Bragin\n\n開發團隊\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\n網站團隊\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\n媒體團隊\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "確認設定檔刪除"
     IDS_HWPROFILE_CONFIRM_DELETE "你確定你想要刪除的硬件設定檔？ ""%s""?"
