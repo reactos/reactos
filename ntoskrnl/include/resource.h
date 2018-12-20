@@ -6,7 +6,7 @@
 #define IDB_DEFAULT_LOGO    5
 #define IDB_WKSTA_HEADER    6
 #define IDB_WKSTA_FOOTER    7
-#define IDB_ERROR_IMAGE      20
+#define IDB_ERROR_IMAGE     20
 
 #define IDB_BAR_SERVER      4
 #define IDB_BAR_WKSTA       8

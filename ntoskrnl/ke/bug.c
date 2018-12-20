@@ -216,7 +216,7 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
         Addr = Frames[i];
         if (!Addr)
         {
-        	break;
+            break;
         }
 
         /* Get the base for this file */
@@ -461,36 +461,23 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             else
             {
                 /* Direct Output to Screen */
-				
-				// I'm temporary usign this method to show "edited" bugcodes, because it takes a lot of time to compile new bugcodes.
-				// I will remove this code and edit "bugcodes.mc" when all will be finished.
-				
-				//\r\n\r\nYou can use Safe Mode to remove/disable components.\r\nRestart your PC, press F8 and select Safe Mode.
-				/*if (BugCheckCode == BUGCHECK_MESSAGE_INTRO)
-				{
-					BugCode = "Your PC ran into a problem and needs to restart.";
-				}
-				if (BugCheckCode == BUGCODE_ID_DRIVER)
-				{
-					BugCode = "What failed: ";
-				}*/
-				/*else if (BugCheckCode == KMODE_EXCEPTION_NOT_HANDLED)
-				{
-					BugCode = "Check to be sure you have adequate disk space.\r\nTry to disable/update drivers.\r\n\r\nYou can use Safe Mode to remove/disable components.\r\nRestart your PC, press F8 and select Safe Mode.";
-				}
-				else if (BugCheckCode == FAT_FILE_SYSTEM)
-				{
-					BugCode = "Check your hard disk configuration.\r\nDisable any anti-virus or disk defragmentation utilities.\r\nRun CHKDSK /F to check for hard drive corruption.";
-				}
-				else if (BugCheckCode == INACCESSIBLE_BOOT_DEVICE)
-				{
-					BugCode = "Boot device is inaccessible.\r\nRemove any newly installed hard drives or hard drive controllers.\r\nCheck for driver or ReactOS updates. Run CHKDSK /F to check hard drive for corruption.";
-				}
-				else if (BugCheckCode == CRITICAL_PROCESS_DIED || BugCheckCode == CRITICAL_OBJECT_TERMINATION)
-				{
-					BugCode = "A system process was terminated.";
-				}*/
-				
+                
+                //
+                // I'm temporary usign this method to show "edited" bugcodes, because it takes a lot of time to compile new bugcodes.
+                // I will remove this code and edit "bugcodes.mc" when all will be finished.
+                //
+                /*
+                if (BugCheckCode == KMODE_EXCEPTION_NOT_HANDLED)
+                    BugCode = "Check to be sure you have adequate disk space.\r\nTry to disable/update drivers.\r\n\r\nYou can use Safe Mode to remove/disable components.\r\nRestart your PC, press F8 and select Safe Mode.";
+                else if (BugCheckCode == FAT_FILE_SYSTEM)
+                    BugCode = "Check your hard disk configuration.\r\nDisable any anti-virus or disk defragmentation utilities.\r\nRun CHKDSK /F to check for hard drive corruption.";
+                else if (BugCheckCode == INACCESSIBLE_BOOT_DEVICE)
+                    BugCode = "Boot device is inaccessible.\r\nRemove any newly installed hard drives or hard drive controllers.\r\nCheck for driver or ReactOS updates. Run CHKDSK /F to check hard drive for corruption.";
+                else if (BugCheckCode == CRITICAL_PROCESS_DIED || BugCheckCode == CRITICAL_OBJECT_TERMINATION)
+                    BugCode = "A system process was terminated.";
+                }
+                */
+                
                 InbvDisplayString(BugCode);
                 InbvDisplayString("\r");
             }
@@ -675,31 +662,33 @@ NTAPI
 SetUpBlueScreen()
 {
     PVOID EmojiResource = NULL;
-	
+    
     /* Acquire ownership and reset the display */
     InbvAcquireDisplayOwnership();
-	InbvResetDisplay();
-	
-	/* Fill screen with 0 color which is black in default palette. 
-	   When we put emoji bitmap on the screen, it's background color will become 0 color.
-	   So black color will be changed to blue. */
+    InbvResetDisplay();
+    
+    //
+    // Fill screen with 0 color which is black in default palette. 
+    // When we put emoji bitmap on the screen, it's background color will become 0 color.
+    // So black color will be changed to blue. 
+    //
     InbvSolidColorFill(0, 0, 639, 479, 0);
-	
+    
     /* Get resources */
     EmojiResource = InbvGetResourceAddress(IDB_ERROR_IMAGE);
-	
-	/* If :( is ok */
-	if (EmojiResource)
+    
+    /* If :( is ok */
+    if (EmojiResource)
     {
         /* BitBlt Emoji on the screen */
-		InbvBitBlt(EmojiResource, 28, 109);
-	}
-	
-	/* Remove filters and allow print text */
-	InbvInstallDisplayStringFilter(NULL);
+        InbvBitBlt(EmojiResource, 28, 109);
+    }
+    
+    /* Remove filters and allow print text */
+    InbvInstallDisplayStringFilter(NULL);
     InbvEnableDisplayString(TRUE);
-	
-	/* Set the scrolling region */
+    
+    /* Set the scrolling region */
     InbvSetScrollRegion(32, 225, 607, 479);
 }
 
@@ -718,15 +707,15 @@ VOID
 NTAPI
 DisplayQRCode()
 {
-	/* TODO */
-	#if QRCODE_IMPLEMENTED
-	ULONG X = 502;
-	ULONG Y = 0;
-	ULONG MaxX = 639;
-	ULONG MaxY = 136;
-	
-	InbvSolidColorFill(X, Y, MaxX, MaxY, 15);
-	#endif
+    /* TODO */
+    #if QRCODE_IMPLEMENTED
+    ULONG X = 502;
+    ULONG Y = 0;
+    ULONG MaxX = 639;
+    ULONG MaxY = 136;
+    
+    InbvSolidColorFill(X, Y, MaxX, MaxY, 15);
+    #endif
 }
 
 VOID
@@ -742,39 +731,39 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
     {
-		/* Set up display for blur screen */
-		SetUpBlueScreen();
-		
-		/* TODO: Change background color. We can change the color by creating gradient in palette from X color to "White" color. */
-		
-		/* Generate & print QR-code (todo) */
-		DisplayQRCode();
+        /* Set up display for blur screen */
+        SetUpBlueScreen();
+        
+        /* TODO: Change background color. We can change the color by creating gradient in palette from X color to "White" color. */
+        
+        /* Generate & print QR-code (todo) */
+        DisplayQRCode();
     }
 
     /* Change text color to White to attract the user's attention. */
-	InbvSetTextColor(15);
-	
+    InbvSetTextColor(15);
+    
     /* Print out initial message */
     KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
-	InbvDisplayString("\r\n");
-	
+    InbvDisplayString("\r\n");
+    
     /* Check if this is a hard error */
     if (IsHardError)
     {
         /* Display caption and message */
         if (HardErrCaption)
-		{
-			InbvDisplayString(HardErrCaption);
-			InbvDisplayString("\r\n");
-		}
+        {
+            InbvDisplayString(HardErrCaption);
+            InbvDisplayString("\r\n");
+        }
         if (HardErrMessage) 
-		{
-			InbvDisplayString(HardErrMessage);
-			InbvDisplayString("\r\n");
-		}
+        {
+            InbvDisplayString(HardErrMessage);
+            InbvDisplayString("\r\n");
+        }
     }
-	
-	InbvDisplayString("\r\n");
+    
+    InbvDisplayString("\r\n");
 
     /* Check if we have a driver */
     if (KiBugCheckDriver)
@@ -787,27 +776,27 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvDisplayString(AnsiName);
         InbvDisplayString("\r\n");
     }
-	
+    
     /* Check if this is the generic message */
     if (MessageId == BUGCODE_PSS_MESSAGE)
     {
         /* It is, so get the bug code string as well */
         KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
-		InbvDisplayString("\r\n\r\n");
+        InbvDisplayString("\r\n\r\n");
     }
 
-	/* Get the bug code string */
-	KeGetBugMessageText(MessageId, NULL);
-	InbvDisplayString("\r\n\r\n");
-	
-	/* After main messages make the text's color less distracting. */
-	InbvSetTextColor(9);
+    /* Get the bug code string */
+    KeGetBugMessageText(MessageId, NULL);
+    InbvDisplayString("\r\n\r\n");
+    
+    /* After main messages make the text's color less distracting. */
+    InbvSetTextColor(9);
 
-	/* Show bug code id (todo: use symbolic name instead)*/
-	sprintf(AnsiName,
-			"Code: 0x%08X\r\n",
-			(int)MessageId);
-	InbvDisplayString(AnsiName);
+    /* Show bug code id (todo: use symbolic name instead)*/
+    sprintf(AnsiName,
+            "Code: 0x%08X\r\n",
+            (int)MessageId);
+    InbvDisplayString(AnsiName);
 
     /* Format & show the technical Data */
     sprintf(AnsiName,
@@ -833,7 +822,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
-	
+    
 }
 
 VOID
