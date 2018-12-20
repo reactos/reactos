@@ -222,6 +222,10 @@ DoFileOpen(IN PMAIN_WND_INFO Info)
             OpenInfo->bCreateNew = FALSE;
             CreateFontWindow(Info, OpenInfo);
         }
+        else
+        {
+            HeapFree(hProcessHeap, 0, OpenInfo->pszFileName);
+        }
     }
     else
     {
@@ -246,6 +250,7 @@ MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
         else
         {
             MessageBoxW(Info->hMainWnd, L"Pathname is too long!", NULL, MB_ICONERROR);
+            HeapFree(hProcessHeap, 0, OpenInfo->pszFileName);
         }
     }
     else
