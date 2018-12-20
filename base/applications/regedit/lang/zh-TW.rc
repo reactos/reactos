@@ -1,4 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -20,9 +21,9 @@ BEGIN
     BEGIN
         MENUITEM "退出(&X)", ID_REGISTRY_EXIT
     END
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於註冊表編輯器(&A)", ID_HELP_ABOUT
+        MENUITEM "關於登錄編輯程式(&A)", ID_HELP_ABOUT
     END
 END
 
@@ -33,11 +34,11 @@ BEGIN
         MENUITEM "匯入(&I)...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "匯出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "載入配置單元...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "解除安裝配置單元...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "載入 Hive 控制檔...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "解除載入 Hive 控制檔...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "連線網路註冊表(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "斷開網路註冊表(&C)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "連線網路登錄(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "中斷網路登錄連線(&C)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "列印(&P)...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -76,16 +77,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重新整理(&R)\tF5", ID_VIEW_REFRESH
     END
-    POPUP "收藏夾(&F)"
+    POPUP "我的最愛(&F)"
     BEGIN
-        MENUITEM "添加到收藏夾(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "刪除收藏夾(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
+        MENUITEM "添加到我的最愛(&A)", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "刪除我的最愛(&R)", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "幫助(&H)"
     BEGIN
         MENUITEM "幫助主題(&H)\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "關於註冊表編輯器(&A)", ID_HELP_ABOUT
+        MENUITEM "關於登錄編輯程式(&A)", ID_HELP_ABOUT
     END
 END
 
@@ -101,7 +102,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        POPUP "新建(&N)"
+        POPUP "新增(&N)"
         BEGIN
             MENUITEM "項(&K)", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
@@ -263,18 +264,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "註冊表編輯器"
+    IDS_APP_TITLE "登錄編輯程式"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含與整個註冊表工作相關的命令。"
+    ID_REGISTRY_MENU "包含與整個登錄工作相關的命令。"
     ID_EDIT_MENU "包含編輯值或項的命令。"
-    ID_VIEW_MENU "包含自定義註冊表視窗的命令。"
+    ID_VIEW_MENU "包含自訂登錄視窗的命令。"
     ID_FAVOURITES_MENU "包含訪問常用項時所用的命令。"
-    ID_HELP_MENU "包含顯示幫助以及註冊表編輯器有關資訊的命令。"
+    ID_HELP_MENU "包含顯示幫助以及登錄編輯程式有關資訊的命令。"
     ID_EDIT_NEW_MENU "包含創建新項或值的命令。"
 END
 
@@ -285,22 +286,22 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "添加新字元串值。"
     ID_EDIT_NEW_BINARYVALUE "添加新二進位制值。"
     ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到註冊表中。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "將註冊表全部或部分匯出到檔案中。"
-    ID_REGISTRY_LOADHIVE "載入配置單元到註冊表中。"
-    ID_REGISTRY_UNLOADHIVE "從註冊表中解除安裝配置單元。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端計算機的註冊表。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端計算機註冊表的連線。"
-    ID_REGISTRY_PRINT "列印所有或部分註冊表。"
-/*    ID_HELP_HELPTOPICS "開啟註冊表編輯器幫助。" */
-    ID_HELP_ABOUT "顯示程式資訊、版本號和版權。"
+    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中。"
+    ID_REGISTRY_EXPORTREGISTRYFILE "將登錄全部或部分匯出到檔案中。"
+    ID_REGISTRY_LOADHIVE "載入 Hive 控制檔到登錄中。"
+    ID_REGISTRY_UNLOADHIVE "從註冊表中解除載入 Hive 控制檔。"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄。"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線。"
+    ID_REGISTRY_PRINT "列印所有或部分登錄。"
+/*    ID_HELP_HELPTOPICS "開啟登錄編輯程式幫助。" */
+    ID_HELP_ABOUT "顯示程式資訊、版本號和著作權。"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "退出註冊表編輯器。"
-    ID_FAVOURITES_ADDTOFAVOURITES "將項添加到收藏夾列表中。"
-    ID_FAVOURITES_REMOVEFAVOURITE "將項從收藏夾列表中刪除。"
+    ID_REGISTRY_EXIT "退出登錄編輯程式。"
+    ID_FAVOURITES_ADDTOFAVOURITES "將項添加到我的最愛列表中。"
+    ID_FAVOURITES_REMOVEFAVOURITE "將項從我的最愛列表中刪除。"
     ID_VIEW_STATUSBAR "顯示或隱藏狀態列。"
     ID_VIEW_SPLIT "改變兩窗格的拆分位置。"
     ID_VIEW_REFRESH "重新整理視窗。"
@@ -329,7 +330,7 @@ BEGIN
     IDS_ERR_DELVAL_CAPTION "刪除值時出錯。"
     IDS_ERR_DELETEVALUE "無法刪除所有指定的值!"
     IDS_ERR_RENVAL_CAPTION "重新命名值時產生錯誤"
-    IDS_ERR_RENVAL_TOEMPTY "註冊表編輯器無法重新命名 %s。指定的值名為空。請鍵入其他名稱，再試一次。"
+    IDS_ERR_RENVAL_TOEMPTY "登錄編輯程式無法重新命名 %s。指定的值名為空。請鍵入其他名稱，再試一次。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "確認項的恢復"
     IDS_QUERY_IMPORT_HIVE_MSG "一個項將恢覆在當前選定的項。\n所有值和子項此項將被都刪除。\n您想繼續該操作嗎？"
     IDS_NEW_KEY "新項 #%d"
@@ -342,9 +343,9 @@ BEGIN
     IDS_DEFAULT_VALUE_NAME "(默認)"
     IDS_VALUE_NOT_SET "(數值未設定)"
     IDS_UNKNOWN_TYPE "未知類型: (0x%lx)"
-    IDS_MY_COMPUTER "我的計算機"
-    IDS_IMPORT_REG_FILE "匯入註冊表檔案"
-    IDS_EXPORT_REG_FILE "匯出註冊表檔案"
+    IDS_MY_COMPUTER "我的電腦"
+    IDS_IMPORT_REG_FILE "載入 Hive 控制檔"
+    IDS_EXPORT_REG_FILE "解除載入 Hive 控制檔"
     IDS_LOAD_HIVE "載入配置單元"
     IDS_UNLOAD_HIVE "解除安裝配置單元"
     IDS_INVALID_DWORD "(不正確的 DWORD 值)"
@@ -352,12 +353,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "註冊檔案"
-    IDS_FLT_REGFILES "註冊檔案 (*.reg)"
+    IDS_FLT_REGFILE "登錄檔案"
+    IDS_FLT_REGFILES "登錄檔案 (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "註冊表配置單元檔案 (*.*)"
+    IDS_FLT_HIVFILES "登錄 Hive 檔案 (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Win9x/NT4 註冊檔案 (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Win9x/NT4 登錄檔案 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "所有檔案 (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
@@ -391,13 +392,13 @@ BEGIN
     IDS_EXPAND "展開"
     IDS_COLLAPSE "摺疊"
     IDS_GOTO_SUGGESTED_KEY "轉到(&G)'%s'"
-    IDS_FINISHEDFIND "註冊表搜索完畢。"
+    IDS_FINISHEDFIND "登錄搜索完畢。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此 '%s' 中的資訊的來源，並不將其添加到註冊表。\n\n是否確實要繼續?"
-    IDS_IMPORT_OK "'%s' 中包含的值和項已成功添加到註冊表。"
+    IDS_IMPORT_PROMPT "添加資訊可無意中更改或刪除值並導致元件停止正常工作。\n如果您不信任此 '%s' 中的資訊的來源，並不將其添加到登錄。\n\n是否確實要繼續?"
+    IDS_IMPORT_OK "'%s' 中包含的值和項已成功添加到登錄。"
     IDS_IMPORT_ERROR "無法將 '%s' 匯入： 開啟該檔案時出錯。可能有磁碟或檔案系統錯誤或檔案可能不存在。"
     IDS_EXPORT_ERROR "無法匯出 '%s' ： 創建或寫入檔案時出錯。可能有磁碟或檔案系統錯誤。"
 END
@@ -472,8 +473,8 @@ END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "載入配置單元"
-FONT 9, "Ms Shell Dlg"
+CAPTION "載入 Hive 控制檔"
+FONT 9, "新細明體"
 BEGIN
     LTEXT "項(&K):", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -483,18 +484,18 @@ END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "添加到收藏夾"
+CAPTION "添加到我的最愛"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 129, 7, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 129, 24, 50, 14
-    LTEXT "收藏夾名(&F):", IDC_STATIC, 7, 7, 70, 10
+    LTEXT "我的最愛名稱(&F):", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
 
 IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "刪除收藏夾"
+CAPTION "刪除我的最愛"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 107, 114, 50, 14
@@ -533,14 +534,14 @@ FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
     DEFPUSHBUTTON "取消(&C)", IDCANCEL, 93, 29, 45, 14
-    LTEXT "正在搜索註冊表...", IDC_STATIC, 33, 12, 83, 8
+    LTEXT "正在搜索登錄...", IDC_STATIC, 33, 12, 83, 8
 END
 
 /* String Table */
 /*
  *STRINGTABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
+ *    ID_HELP_HELPTOPICS "開啟登錄編輯程式說明。"
+ *    ID_HELP_ABOUT "顯示程式資訊、版本號碼和著作權。"
  *END
  */
