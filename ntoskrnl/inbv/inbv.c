@@ -778,6 +778,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
     NTSTATUS Status;
     UNICODE_STRING CapturedString;
     OEM_STRING OemString;
+    ULONG OemLength;
     KPROCESSOR_MODE PreviousMode;
 
     PAGED_CODE();
@@ -806,11 +807,14 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
      * We cannot perform the allocation using RtlUnicodeStringToOemString()
      * since its allocator uses PagedPool.
      */
-    RtlInitEmptyAnsiString((PANSI_STRING)&OemString, NULL,
-                           RtlUnicodeStringToOemSize(&CapturedString));
-    OemString.Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                             OemString.MaximumLength,
-                                             TAG_OSTR);
+    OemLength = RtlUnicodeStringToOemSize(&CapturedString);
+    if (OemLength > MAXUSHORT)
+    {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto Quit;
+    }
+    RtlInitEmptyAnsiString((PANSI_STRING)&OemString, NULL, (USHORT)OemLength);
+    OemString.Buffer = ExAllocatePoolWithTag(NonPagedPool, OemLength, TAG_OSTR);
     if (OemString.Buffer == NULL)
     {
         Status = STATUS_NO_MEMORY;
