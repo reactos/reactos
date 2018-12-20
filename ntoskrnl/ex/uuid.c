@@ -3,9 +3,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/uuid.c
  * PURPOSE:         UUID generator
- *
  * PROGRAMMERS:     Eric Kohl
-                    Thomas Weidenmueller
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -452,7 +451,7 @@ NtSetUuidSeed(IN PUCHAR Seed)
         }
 
         /* Check for buffer validity and then copy it to our seed */
-        ProbeForRead(Seed, SEED_BUFFER_SIZE, 1);
+        ProbeForRead(Seed, SEED_BUFFER_SIZE, sizeof(UCHAR));
         RtlCopyMemory(UuidSeed, Seed, SEED_BUFFER_SIZE);
 
         Status = STATUS_SUCCESS;
