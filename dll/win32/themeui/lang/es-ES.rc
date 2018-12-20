@@ -1,0 +1,35 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Ladrillo"
+    IDS_EGGPLANT "Berenjena"
+    IDS_GOLIVE "Verde oliva" //Spruce
+    IDS_HCONTRAST_1 "Alto contraste 1"
+    IDS_HCONTRAST_2 "Alto contraste 2"
+    IDS_HCONTRAST_BLACK "Alto contraste oscuro"
+    IDS_HCONTRAST_WHITE "Alto contraste claro"
+    IDS_LILAC "Lila"
+    IDS_MAPLE "Arce"
+    IDS_MARINE "Marino"
+    IDS_PLUM "Ciruela"
+    IDS_PUMPKIN "Calabaza"
+    IDS_RAIN "Días de lluvia"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS clásico"
+    IDS_STANDARD "ReactOS estándar"
+    IDS_ROSE "Rosa"
+    IDS_SAND "Arenisca" //Desert
+    IDS_SLATE "Pizarra"
+    IDS_SKY "Cielo"
+    IDS_STORM "Tormenta"
+    IDS_TEAL "Verde turquesa"
+    IDS_WHEAT "Trigo"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END

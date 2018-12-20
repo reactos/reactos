@@ -1,0 +1,35 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Brick"
+    IDS_EGGPLANT "Eggplant"
+    IDS_GOLIVE "Green Olive" //Spruce
+    IDS_HCONTRAST_1 "High Contrast 1"
+    IDS_HCONTRAST_2 "High Contrast 2"
+    IDS_HCONTRAST_BLACK "High Contrast Black"
+    IDS_HCONTRAST_WHITE "High Contrast White"
+    IDS_LILAC "Lilac"
+    IDS_MAPLE "Maple"
+    IDS_MARINE "Marine"
+    IDS_PLUM "Plum"
+    IDS_PUMPKIN "Pumpkin"
+    IDS_RAIN "Rainy Day"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS Classic"
+    IDS_STANDARD "ReactOS Standard"
+    IDS_ROSE "Rose"
+    IDS_SAND "Sand" //Desert
+    IDS_SLATE "Slate"
+    IDS_SKY "Sky"
+    IDS_STORM "Storm"
+    IDS_TEAL "Teal"
+    IDS_WHEAT "Wheat"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END

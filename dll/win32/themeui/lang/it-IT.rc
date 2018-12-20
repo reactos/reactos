@@ -1,0 +1,35 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Rosso mattone"
+    IDS_EGGPLANT "Melanzana"
+    IDS_GOLIVE "Verde Oliva" //Spruce
+    IDS_HCONTRAST_1 "Contrasto elevato 1"
+    IDS_HCONTRAST_2 "Contrasto elevato 2"
+    IDS_HCONTRAST_BLACK "Nero a contrasto elevato"
+    IDS_HCONTRAST_WHITE "Bianco a contrasto elevato"
+    IDS_LILAC "Lilla"
+    IDS_MAPLE "Giallo cromo chiaro"
+    IDS_MARINE "Verde mare"
+    IDS_PLUM "Prugna"
+    IDS_PUMPKIN "Giallo cromo scuro"
+    IDS_RAIN "Grigio antracite"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS classico"
+    IDS_STANDARD "ReactOS Standard"
+    IDS_ROSE "Rosa"
+    IDS_SAND "Sabbia" //Desert
+    IDS_SLATE "Lavagna"
+    IDS_SKY "Sky"
+    IDS_STORM "Tempesta"
+    IDS_TEAL "Verde acqua"
+    IDS_WHEAT "Tabacco"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END
