@@ -659,7 +659,7 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-SetUpBlueScreen()
+SetUpBlueScreen(VOID)
 {
     PVOID EmojiResource = NULL;
     
@@ -667,11 +667,7 @@ SetUpBlueScreen()
     InbvAcquireDisplayOwnership();
     InbvResetDisplay();
     
-    //
-    // Fill screen with 0 color which is black in default palette. 
-    // When we put emoji bitmap on the screen, it's background color will become 0 color.
-    // So black color will be changed to blue. 
-    //
+    /* Fill the screen with 0 color */
     InbvSolidColorFill(0, 0, 639, 479, 0);
     
     /* Get resources */
@@ -705,7 +701,7 @@ SetUpBlueScreen()
                    IN ULONG Color)*/
 VOID
 NTAPI
-DisplayQRCode()
+DisplayQRCode(VOID)
 {
     /* TODO */
     #if QRCODE_IMPLEMENTED
