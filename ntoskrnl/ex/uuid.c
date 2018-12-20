@@ -398,6 +398,8 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
         RtlCopyMemory(Seed,
                       UuidSeed,
                       SEED_BUFFER_SIZE);
+
+        Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
@@ -405,7 +407,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
     }
     _SEH2_END;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
