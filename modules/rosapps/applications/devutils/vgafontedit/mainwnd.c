@@ -213,12 +213,19 @@ DoFileOpen(IN PMAIN_WND_INFO Info)
 
     OpenInfo = (PFONT_OPEN_INFO) HeapAlloc( hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO) );
     OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
-    OpenInfo->pszFileName[0] = 0;
-
-    if( DoOpenFile(OpenInfo->pszFileName) )
+    if (OpenInfo->pszFileName)
     {
-        OpenInfo->bCreateNew = FALSE;
-        CreateFontWindow(Info, OpenInfo);
+        OpenInfo->pszFileName[0] = 0;
+
+        if (DoOpenFile(OpenInfo->pszFileName))
+        {
+            OpenInfo->bCreateNew = FALSE;
+            CreateFontWindow(Info, OpenInfo);
+        }
+    }
+    else
+    {
+        MessageBoxW(Info->hMainWnd, L"Out of memory!", NULL, MB_ICONERROR);
     }
 }
 
@@ -229,10 +236,22 @@ MainWndOpenFile(IN PMAIN_WND_INFO Info, LPCWSTR File)
 
     OpenInfo = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, sizeof(FONT_OPEN_INFO));
     OpenInfo->pszFileName = HeapAlloc(hProcessHeap, 0, MAX_PATH);
-    lstrcpynW(OpenInfo->pszFileName, File, MAX_PATH);
-
-    OpenInfo->bCreateNew = FALSE;
-    CreateFontWindow(Info, OpenInfo);
+    if (OpenInfo->pszFileName)
+    {
+        if (StringCchCopyW(OpenInfo->pszFileName, MAX_PATH, File) == S_OK)
+        {
+            OpenInfo->bCreateNew = FALSE;
+            CreateFontWindow(Info, OpenInfo);
+        }
+        else
+        {
+            MessageBoxW(Info->hMainWnd, L"Pathname is too long!", NULL, MB_ICONERROR);
+        }
+    }
+    else
+    {
+        MessageBoxW(Info->hMainWnd, L"Out of memory!", NULL, MB_ICONERROR);
+    }
 }
 
 static VOID
