@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
 static MUI_ENTRY daDKLanguagePageEntries[] =
@@ -17,25 +20,25 @@ static MUI_ENTRY daDKLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  V‘lg det sprog du ›nsker der skal bruges under installationen.",
+        "\x07  V\221lg det sprog du \233nsker der skal bruges under installationen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Og tryk derefter p† ENTER.",
+        "   Og tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Dette vil ogs† blive standardsproget p† det endelige system.",
+        "\x07  Dette vil ogs\206 blive standardsproget p\206 det endelige system.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t  F3 = Afslut",
+        "ENTER = Forts\221t  F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -69,7 +72,7 @@ static MUI_ENTRY daDKWelcomePageEntries[] =
     {
         6,
         12,
-        "til din computer og klarg›re den til anden del af installationsprocessen.",
+        "til din computer og klarg\233re den til anden del af installationsprocessen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -81,25 +84,25 @@ static MUI_ENTRY daDKWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Tryk p† R reparere ReactOS.",
+        "\x07  Tryk p\206 R reparere ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryk p† L for at f† vist ReactOS licensbetingelser og vilk†r.",
+        "\x07  Tryk p\206 L for at f\206 vist ReactOS licensbetingelser og vilk\206r.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryk p† F3 for at afslutte uden at installere ReactOS.",
+        "\x07  Tryk p\206 F3 for at afslutte uden at installere ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "For at f† mere infomation om ReactOS, g† ind p†:",
+        "For at f\206 mere infomation om ReactOS, g\206 ind p\206:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -111,7 +114,7 @@ static MUI_ENTRY daDKWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Forts‘t  R = Reparer  L = Licens  F3 = Afslut",
+        "ENTER = Forts\221t  R = Reparer  L = Licens  F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -221,7 +224,7 @@ static MUI_ENTRY daDKLicensePageEntries[] =
     {
         8,
         10,
-        "s† som X11 eller BSD og GNU GPL licenserne.",
+        "s\206 som X11 eller BSD og GNU GPL licenserne.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -245,19 +248,19 @@ static MUI_ENTRY daDKLicensePageEntries[] =
     {
         8,
         15,
-        "Denne software bliver IKKE leveret med garanti eller begr‘ndsninger af",
+        "Denne software bliver IKKE leveret med garanti eller begr\221ndsninger af",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "brugen heraf. Dog kun i det udstr‘k international og lokal lov tillader.",
+        "brugen heraf. Dog kun i det udstr\221k international og lokal lov tillader.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "ReactOS d‘kker kun distribution til tredjeparter",
+        "ReactOS d\221kker kun distribution til tredjeparter",
         TEXT_STYLE_NORMAL
     },
     {
@@ -269,7 +272,7 @@ static MUI_ENTRY daDKLicensePageEntries[] =
     {
         8,
         19,
-        "af GNU General Public Licensen sammen med ReactOS, bes›g siden",
+        "af GNU General Public Licensen sammen med ReactOS, bes\233g siden",
         TEXT_STYLE_NORMAL
     },
     {
@@ -327,7 +330,7 @@ static MUI_ENTRY daDKDevicePageEntries[] =
     {
         6,
         8,
-        "Listen her under viser de nuv‘rende enhedsindstillinger.",
+        "Listen her under viser de nuv\221rende enhedsindstillinger.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -339,7 +342,7 @@ static MUI_ENTRY daDKDevicePageEntries[] =
     {
         24,
         12,
-        "Sk‘rm:",
+        "Sk\221rm:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -368,37 +371,37 @@ static MUI_ENTRY daDKDevicePageEntries[] =
     {
         6,
         19,
-        "Du kan ‘ndre i hardwareindstillingerne ved at trykke p† OP",
+        "Du kan \221ndre i hardwareindstillingerne ved at trykke p\206 OP",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "eller NED for at v‘lge et element. Derefer tryk p† ENTER",
+        "eller NED for at v\221lge et element. Derefer tryk p\206 ENTER",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "for at v‘lge andre indstillinger.",
+        "for at v\221lge andre indstillinger.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "N†r alle indstillingerne er korrekte, v‘lg",
+        "N\206r alle indstillingerne er korrekte, v\221lg",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "\"Accepter disse enhedsindstillinger\" og tryk derefter p† ENTER.",
+        "\"Accepter disse enhedsindstillinger\" og tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
+        "ENTER = Forts\221t   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -426,7 +429,7 @@ static MUI_ENTRY daDKRepairPageEntries[] =
     {
         6,
         9,
-        "underst›tter den ikke alle funtionerne i et fult brugbart",
+        "underst\233tter den ikke alle funtionerne i et fult brugbart",
         TEXT_STYLE_NORMAL
     },
 	{
@@ -444,31 +447,31 @@ static MUI_ENTRY daDKRepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Tryk p† U for opdatere OS'et.",
+        "\x07  Tryk p\206 U for opdatere OS'et.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryk p† R for at starte gendannelskonsollen.",
+        "\x07  Tryk p\206 R for at starte gendannelskonsollen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryk p† ESC for at vende tilbage til hovedsk‘rmen.",
+        "\x07  Tryk p\206 ESC for at vende tilbage til hovedsk\221rmen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryk p† ENTER for at genstart din computer.",
+        "\x07  Tryk p\206 ENTER for at genstart din computer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hovedsk‘rm  U = Opdater  R = Gendan  ENTER = Genstart",
+        "ESC = Hovedsk\221rm  U = Opdater  R = Gendan  ENTER = Genstart",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -560,37 +563,37 @@ static MUI_ENTRY daDKComputerPageEntries[] =
     {
         6,
         8,
-        "Du vil ‘ndre hvilken type computer der skal installeres.",
+        "Du vil \221ndre hvilken type computer der skal installeres.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryk p† OP eller NED for at v‘lge den ›nskede type computer.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge den \233nskede type computer.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryk derefter p† ENTER.",
+        "   Tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryk p† ESC for at vende tilbage til det forrige sk‘rmbillede",
+        "\x07  Tryk p\206 ESC for at vende tilbage til det forrige sk\221rmbillede",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   uden at ‘ndre computertypen.",
+        "   uden at \221ndre computertypen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   ESC = Annuller   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -612,19 +615,19 @@ static MUI_ENTRY daDKFlushPageEntries[] =
     {
         10,
         6,
-        "Systemet tjekker i ›jeblikket om alt er blevet kopieret til din disk",
+        "Systemet tjekker i \233jeblikket om alt er blevet kopieret til din disk",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Dette tager et ›jeblik",
+        "Dette tager et \233jeblik",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "N†r det er udf›rt genstarter din computer automatisk.",
+        "N\206r det er udf\233rt genstarter din computer automatisk.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -670,7 +673,7 @@ static MUI_ENTRY daDKQuitPageEntries[] =
     {
         10,
         11,
-        "Tryk p† ENTER for at genstarte din computer.",
+        "Tryk p\206 ENTER for at genstarte din computer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -698,37 +701,37 @@ static MUI_ENTRY daDKDisplayPageEntries[] =
     {
         6,
         8,
-        "Du vil ‘ndre hvilken sk‘rm der skal installeres.",
+        "Du vil \221ndre hvilken sk\221rm der skal installeres.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryk p† OP eller NED for at v‘lge den ›nskede sk‘rm.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge den \233nskede sk\221rm.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryk derefter p† ENTER.",
+        "   Tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryk p† ESC for at vende tilbage til det forrige sk‘rmbillede",
+        "\x07  Tryk p\206 ESC for at vende tilbage til det forrige sk\221rmbillede",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   uden at ‘ndre sk‘rmen.",
+        "   uden at \221ndre sk\221rmen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   ESC = Annuller   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -750,7 +753,7 @@ static MUI_ENTRY daDKSuccessPageEntries[] =
     {
         10,
         6,
-        "De grundl‘ggende komponenter i ReactOS blev installeret med success.",
+        "De grundl\221ggende komponenter i ReactOS blev installeret med success.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -768,13 +771,13 @@ static MUI_ENTRY daDKSuccessPageEntries[] =
     {
         10,
         11,
-        "Tryk p† ENTER for at genstarte din computer.",
+        "Tryk p\206 ENTER for at genstarte din computer.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Tryk p† ENTER for at genstarte din comouter.",
+        "Tryk p\206 ENTER for at genstarte din comouter.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -802,7 +805,7 @@ static MUI_ENTRY daDKBootPageEntries[] =
     {
         6,
         8,
-        "Installationen kan ikke installere opstartsl‘seren p†",
+        "Installationen kan ikke installere opstartsl\221seren p\206",
         TEXT_STYLE_NORMAL
     },
     {
@@ -814,19 +817,19 @@ static MUI_ENTRY daDKBootPageEntries[] =
     {
         6,
         13,
-        "S‘t en formateret diskette i drev A: og",
+        "S\221t en formateret diskette i drev A: og",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "tryk p† ENTER.",
+        "tryk p\206 ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
+        "ENTER = Forts\221t   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -861,37 +864,37 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Tryk p† OP eller NED for at v‘lge et element i listen.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge et element i listen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryk p† ENTER for at installere ReactOS til den valgte patition.",
+        "\x07  Tryk p\206 ENTER for at installere ReactOS til den valgte patition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tryk p† P for at lave en ny prim‘r partition.",
+        "\x07  Tryk p\206 P for at lave en ny prim\221r partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tryk p† E for at lave en ny udviddet partition.",
+        "\x07  Tryk p\206 E for at lave en ny udviddet partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tryk p† L for at lave en ny logisk partition.",
+        "\x07  Tryk p\206 L for at lave en ny logisk partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryk p† D for at slette en eksisterende partition.",
+        "\x07  Tryk p\206 D for at slette en eksisterende partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -931,49 +934,49 @@ static MUI_ENTRY daDKConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "oprativsystem (s† som ReactOS) eller styreprogrammer til hardware.",
+        "oprativsystem (s\206 som ReactOS) eller styreprogrammer til hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Slet kun systempartitioner hvis du er sikker p† at der ikke er s†danne",
+        "Slet kun systempartitioner hvis du er sikker p\206 at der ikke er s\206danne",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "progammer p† partitionen, hvis du er sikker p† at du vil slette dem.",
+        "progammer p\206 partitionen, hvis du er sikker p\206 at du vil slette dem.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "Hvis du sletter partitionen, kan du m†ske ikke starte din computer",
+        "Hvis du sletter partitionen, kan du m\206ske ikke starte din computer",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "fra din harddisk f›r at du har gennemf›rt installatonen af ReactOS.",
+        "fra din harddisk f\233r at du har gennemf\233rt installatonen af ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Tryk p† ENTER for at slette systempartitionen. Du vil blive bedt",
+        "\x07  Tryk p\206 ENTER for at slette systempartitionen. Du vil blive bedt",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   om at bekr‘fte sletningen af partitionen.",
+        "   om at bekr\221fte sletningen af partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Tryk p† ESC for at vende tilbage til forrige sk‘rmbillede.",
+        "\x07  Tryk p\206 ESC for at vende tilbage til forrige sk\221rmbillede.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -985,7 +988,7 @@ static MUI_ENTRY daDKConfirmDeleteSystemPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = Forts‘t  ESC = Annuller",
+        "ENTER = Forts\221t  ESC = Annuller",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1019,13 +1022,13 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     {
         6,
         11,
-        "Tryk p† ENTER for at forts‘tte.",
+        "Tryk p\206 ENTER for at forts\221tte.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
+        "ENTER = Forts\221t   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1047,25 +1050,25 @@ static MUI_ENTRY daDKInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Installationen vil installere filer p† den valgte partition.",
+        "Installationen vil installere filer p\206 den valgte partition.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "V‘lg den mappe hvor du ›nsker ReactOS skal installeres:",
+        "V\221lg den mappe hvor du \233nsker ReactOS skal installeres:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "For at ‘ndre den forsl†ede mappe, tryk p† TILABE for at slette",
+        "For at \221ndre den forsl\206ede mappe, tryk p\206 TILABE for at slette",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "det der st†r og derefter skriv den mappe du ›nsker",
+        "det der st\206r og derefter skriv den mappe du \233nsker",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1077,7 +1080,7 @@ static MUI_ENTRY daDKInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
+        "ENTER = Forts\221t   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1111,7 +1114,7 @@ static MUI_ENTRY daDKFileCopyEntries[] =
     {
         0,
         14,
-        "Dette kan tage flerere minutter at udf›re.",
+        "Dette kan tage flerere minutter at udf\233re.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1139,37 +1142,37 @@ static MUI_ENTRY daDKBootLoaderEntries[] =
     {
         6,
         8,
-        "Installatione af opstartsl‘ser",
+        "Installatione af opstartsl\221ser",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Installer opstartsl‘seren p† harddisken (MBR og VBR).",
+        "Installer opstartsl\221seren p\206 harddisken (MBR og VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Installer opstarsl‘steren p† harddisken (kun VBR).",
+        "Installer opstarsl\221steren p\206 harddisken (kun VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Installer opstartl‘seren p† en diskette.",
+        "Installer opstartl\221seren p\206 en diskette.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Spring installation af opstartl‘seren over.",
+        "Spring installation af opstartl\221seren over.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
+        "ENTER = Forts\221t   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1191,37 +1194,37 @@ static MUI_ENTRY daDKKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Du vil ‘ndre hvilken type tastatur der skal installeres.",
+        "Du vil \221ndre hvilken type tastatur der skal installeres.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryk p† OP eller NED for at v‘lge den ›nskede type tastatur.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge den \233nskede type tastatur.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryk derefter p† ENTER.",
+        "   Tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryk p† ESC for at vende tilbage til det forrige sk‘rmbillede",
+        "\x07  Tryk p\206 ESC for at vende tilbage til det forrige sk\221rmbillede",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   uden at ‘ndre tastaturtypen.",
+        "   uden at \221ndre tastaturtypen.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   ESC = Annuller   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1243,37 +1246,37 @@ static MUI_ENTRY daDKLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Du vil ‘ndre hvilket tastaturlayout der skal bruges som standard.",
+        "Du vil \221ndre hvilket tastaturlayout der skal bruges som standard.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Tryk p† OP eller NED for at v‘lge det ›nskede tastaturlayout.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge det \233nskede tastaturlayout.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Tryk derefter p† ENTER.",
+        "   Tryk derefter p\206 ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tryk p† ESC for at vende tilbage til det forrige sk‘rmbillede",
+        "\x07  Tryk p\206 ESC for at vende tilbage til det forrige sk\221rmbillede",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   uden at ‘ndre tastaturlayoutet.",
+        "   uden at \221ndre tastaturlayoutet.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   ESC = Annuller   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1296,7 +1299,7 @@ static MUI_ENTRY daDKPrepareCopyEntries[] =
     {
         6,
         8,
-        "Installationen g›r din computer klar til at kopiere ReactOS filerne. ",
+        "Installationen g\233r din computer klar til at kopiere ReactOS filerne. ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1325,31 +1328,31 @@ static MUI_ENTRY daDKSelectFSEntries[] =
     {
         6,
         17,
-        "V‘lg et filsystem fra listen her under:",
+        "V\221lg et filsystem fra listen her under:",
         0
     },
     {
         8,
         19,
-        "\x07  Tryk p† OP eller NED for at v‘lge et filsystem.",
+        "\x07  Tryk p\206 OP eller NED for at v\221lge et filsystem.",
         0
     },
     {
         8,
         21,
-        "\x07  Tryk p† ENTER for at formatere partitionen som valgte filsystem.",
+        "\x07  Tryk p\206 ENTER for at formatere partitionen som valgte filsystem.",
         0
     },
     {
         8,
         23,
-        "\x07  Tryk p† ESC for at v‘lge en anden partition.",
+        "\x07  Tryk p\206 ESC for at v\221lge en anden partition.",
         0
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   ESC = Annuller   F3 = Afslut",
+        "ENTER = Forts\221t   ESC = Annuller   F3 = Afslut",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1378,19 +1381,19 @@ static MUI_ENTRY daDKDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Tryk p† D for at slette partitionen.",
+        "\x07  Tryk p\206 D for at slette partitionen.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "ADVARSELL Alle data p† partitionen vil g† tabt!",
+        "ADVARSELL Alle data p\206 partitionen vil g\206 tabt!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tryk p† ESC for at annulere.",
+        "\x07  Tryk p\206 ESC for at annulere.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1444,13 +1447,13 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS er endnu ikke f‘rdiginstalleret p†\n"
+        "ReactOS er endnu ikke f\221rdiginstalleret p\206\n"
         "din computer. Hvis du afslutter installationen nu skal\n"
-        "du k›rer installationen igen for at installere ReactOS.\n"
+        "du k\233rer installationen igen for at installere ReactOS.\n"
         "\n"
-        "  \x07  Tryk p† ENTER for at forts‘tte installationen.\n"
-        "  \x07  Tryk p† F3 afslutte installationen.",
-        "F3 = Afslut  ENTER = Forts‘t"
+        "  \x07  Tryk p\206 ENTER for at forts\221tte installationen.\n"
+        "  \x07  Tryk p\206 F3 afslutte installationen.",
+        "F3 = Afslut  ENTER = Forts\221t"
     },
     {
         // ERROR_NO_HDD
@@ -1464,12 +1467,12 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
-        "Installationen kunne ikke indl‘st TXTSETUP.SIF.\n",
+        "Installationen kunne ikke indl\221st TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "Installationen fasdt en ›delagt TXTSETUP.SIF.\n",
+        "Installationen fasdt en \233delagt TXTSETUP.SIF.\n",
         "ENTER = Genstart"
     },
     {
@@ -1484,64 +1487,64 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_WRITE_BOOT,
-        "Installationen kunne ikke installere %S-startkode p† systempartitionen.",
+        "Installationen kunne ikke installere %S-startkode p\206 systempartitionen.",
         "ENTER = Genstart"
     },
     {
         // ERROR_LOAD_COMPUTER,
-        "Installationen kunne ikke indl‘se listen over computertyper.\n",
+        "Installationen kunne ikke indl\221se listen over computertyper.\n",
         "ENTER = Genstart"
     },
     {
         // ERROR_LOAD_DISPLAY,
-        "Installationen kunne ikke indl‘ste listen over sk‘rmindstillinger.\n",
+        "Installationen kunne ikke indl\221ste listen over sk\221rmindstillinger.\n",
         "ENTER = Genstart"
     },
     {
         // ERROR_LOAD_KEYBOARD,
-        "Installationen kunne ikke indl‘se listen over tastaturtyper.\n",
+        "Installationen kunne ikke indl\221se listen over tastaturtyper.\n",
         "ENTER = Genstart"
     },
     {
         // ERROR_LOAD_KBLAYOUT,
-        "Installationen kunne ikke indl‘se listen over tastaturlayouts.\n",
+        "Installationen kunne ikke indl\221se listen over tastaturlayouts.\n",
         "ENTER = Genstart"
     },
     {
         // ERROR_WARN_PARTITION,
         "Installationen fandt ud af at midst en harddisk indeholder en\n"
-        "indkompatibel partitionstabel og kan ikke h†ndteeres korrekt!\n"
+        "indkompatibel partitionstabel og kan ikke h\206ndteeres korrekt!\n"
         "\n"
-        "Oprettelse eller sletning af partitionen kan ›del‘gge partiotnstabellen.\n"
+        "Oprettelse eller sletning af partitionen kan \233del\221gge partiotnstabellen.\n"
         "\n"
-        "  \x07  Tryk p† F3 for at afslutte installationen.\n"
-        "  \x07  Tryk p† ENTER for at forts‘tte.",
-        "F3 = Afslut  ENTER = Forts‘t"
+        "  \x07  Tryk p\206 F3 for at afslutte installationen.\n"
+        "  \x07  Tryk p\206 ENTER for at forts\221tte.",
+        "F3 = Afslut  ENTER = Forts\221t"
     },
     {
         // ERROR_NEW_PARTITION,
         "Du kan ikke lave en partitionstabel\n"
         "inde i en allerede eksisterende partition!\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte.",
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
         "Du kan ikke slette upartitionernet diskplads!\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte.",
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte.",
         NULL
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Installationen kunne ikke installere %S-startkode p† systempartitionen.",
+        "Installationen kunne ikke installere %S-startkode p\206 systempartitionen.",
         "ENTER = Genstart"
     },
     {
         // ERROR_NO_FLOPPY,
         "Der er ingen diskette i drev A:.",
-        "ENTER = Forts‘t"
+        "ENTER = Forts\221t"
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
@@ -1550,7 +1553,7 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Installationen kunne ikke opdatere indstillingerne for sk‘rmregistrereing",
+        "Installationen kunne ikke opdatere indstillingerne for sk\221rmregistrereing",
         "ENTER = Genstart"
     },
     {
@@ -1570,7 +1573,7 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_INITIALIZE_REGISTRY,
-        "Installationen kunne ikke indl‘e registreringsdatabasen.",
+        "Installationen kunne ikke indl\221e registreringsdatabasen.",
         "ENTER = Genstart"
     },
     {
@@ -1590,7 +1593,7 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_COPY_QUEUE,
-        "Installationen kunne ikke †bne filkopieringsk›en.\n",
+        "Installationen kunne ikke \206bne filkopieringsk\233en.\n",
         "ENTER = Genstart"
     },
     {
@@ -1622,29 +1625,29 @@ MUI_ERROR daDKErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Installationen kunne ikke tilf›je en tegntabel til registreringsdatabasen.\n"
+        "Installationen kunne ikke tilf\233je en tegntabel til registreringsdatabasen.\n"
         "ENTER = Genstart"
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
-        "Installationen kunne ikke s‘tte systemsproget.\n"
+        "Installationen kunne ikke s\221tte systemsproget.\n"
         "ENTER = Genstart"
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
-        "Installationen kunne ikke tilf›je tastaturlayouts til registrereingsdatabasen.\n"
+        "Installationen kunne ikke tilf\233je tastaturlayouts til registrereingsdatabasen.\n"
         "ENTER = Genstart"
     },
     {
         // ERROR_UPDATE_GEOID,
-        "Installationen kunne ikke s‘tte geo id'et.\n"
+        "Installationen kunne ikke s\221tte geo id'et.\n"
         "ENTER = Genstart"
     },
     {
         // ERROR_DIRECTORY_NAME,
         "Ubrugligt mappenavn.\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte."
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
@@ -1652,21 +1655,21 @@ MUI_ERROR daDKErrorEntries[] =
         "The install partition must have a size of at least %lu MB.\n"
         "installationspartitionen skal mindst have %lu MB ledig.\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte.",
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte.",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "Du kan ikke lave en ny prim‘r eller udviddet partition i\n"
-        "partitionstabellen p† denne disk da den er fuld..\n"
+        "Du kan ikke lave en ny prim\221r eller udviddet partition i\n"
+        "partitionstabellen p\206 denne disk da den er fuld..\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte."
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
         "Du kan ikke lave mere end en udviddet partition per disk.\n"
         "\n"
-        "  * Tryk p† en vilk†rligtast for at forts‘tte."
+        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte."
     },
     {
         // ERROR_FORMATTING_PARTITION,
@@ -1794,7 +1797,7 @@ MUI_STRING daDKStrings[] =
     {STRING_PLEASEWAIT,
      "   Vent..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = installer   P = Lav prim‘r   E = Lav udviddet   F3 = Afslut"},
+     "   ENTER = installer   P = Lav prim\221r   E = Lav udviddet   F3 = Afslut"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = installer   L = Lav logisk partition   F3 = Afslut"},
     {STRING_INSTALLDELETEPARTITION,
@@ -1802,19 +1805,19 @@ MUI_STRING daDKStrings[] =
     {STRING_DELETEPARTITION,
      "   D = Slet partition   F3 = Afslut"},
     {STRING_PARTITIONSIZE,
-     "St›rrelse p† den nye partition:"},
+     "St\233rrelse p\206 den nye partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Du har valge at lave en ny prim‘r partition p†"},
+     "Du har valge at lave en ny prim\221r partition p\206"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Du har valgt at lave en ny udviddet partition p†"},
+     "Du har valgt at lave en ny udviddet partition p\206"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Du har valge at lave en ny logisk partition p†"},
+     "Du har valge at lave en ny logisk partition p\206"},
     {STRING_HDDSIZE,
-    "Indtast st›rrelsen p† den nye partition i megabytes."},
+    "Indtast st\233rrelsen p\206 den nye partition i megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Lav partition   ESC = Annuller   F3 = Afslut"},
     {STRING_PARTFORMAT,
-    "Denne partition vil blive formateret som det n‘ste."},
+    "Denne partition vil blive formateret som det n\221ste."},
     {STRING_NONFORMATTEDPART,
     "Du har valgt at installere ReactOS til en ny eller uformateret partition."},
     {STRING_NONFORMATTEDSYSTEMPART,
@@ -1822,13 +1825,13 @@ MUI_STRING daDKStrings[] =
     {STRING_NONFORMATTEDOTHERPART,
     "Den nye partition er endnu ikke blevet formateret."},
     {STRING_INSTALLONPART,
-    "Installationen installere ReactOS p† partitionen"},
+    "Installationen installere ReactOS p\206 partitionen"},
     {STRING_CHECKINGPART,
     "Installationen tjekker den valgte partition."},
     {STRING_CONTINUE,
-    "ENTER = Forts‘t"},
+    "ENTER = Forts\221t"},
     {STRING_QUITCONTINUE,
-    "F3 = Afslut  ENTER = Forts‘t"},
+    "F3 = Afslut  ENTER = Forts\221t"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Genstart"},
     {STRING_DELETING,
@@ -1846,25 +1849,25 @@ MUI_STRING daDKStrings[] =
     {STRING_IMPORTFILE,
     "   Importere %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   Opdatere indstillinger for registrering af sk‘rm..."},
+    "   Opdatere indstillinger for registrering af sk\221rm..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Opdatere indstillinger for sprog..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Opdatere indstillinger for tastaturlauout..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Tilf›jrer tegntabelsinfomation til registrerinsdatabasen..."},
+    "   Tilf\233jrer tegntabelsinfomation til registrerinsdatabasen..."},
     {STRING_DONE,
-    "   Udf›rt..."},
+    "   Udf\233rt..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Genstart"},
     {STRING_REBOOTPROGRESSBAR,
     " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
-    "Kunne ikke †bne konsollen\r\n\r\n"},
+    "Kunne ikke \206bne konsollen\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "Dette skykdes ofte at du bruger et USB-tastatur\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB-tastatuere er endnu ikke fuldt underst›ttet\r\n"},
+    "USB-tastatuere er endnu ikke fuldt underst\233ttet\r\n"},
     {STRING_FORMATTINGDISK,
     "Installationen formatere din disk"},
     {STRING_CHECKINGDISK,
@@ -1874,31 +1877,31 @@ MUI_STRING daDKStrings[] =
     {STRING_FORMATDISK2,
     " Formater partitionen som %S-filesystemet "},
     {STRING_KEEPFORMAT,
-    " Behold nuv‘rende filsystem (ingen ‘ndringer) "},
+    " Behold nuv\221rende filsystem (ingen \221ndringer) "},
     {STRING_HDINFOPARTCREATE_1,
-    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
     {STRING_HDINFOPARTCREATE_2,
     "%I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE_1,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]."},
+    "p\206 %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]."},
     {STRING_HDINFOPARTDELETE_2,
-    "p† %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    "p\206 %I64u %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDINFOPARTZEROED_1,
     "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  type 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS_1,
-    "p† harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    "p\206 harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %stype %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p† %wZ [%s]"},
+    "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
     {STRING_HDINFOPARTSELECT_2,
     "%6lu %s  harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Installationen har lavet en ny partition p†"},
+    "Installationen har lavet en ny partition p\206"},
     {STRING_UNPSPACE,
     "    %sUpartitioneret plads%s           %6lu %s"},
     {STRING_MAXSIZE,
@@ -1918,6 +1921,6 @@ MUI_STRING daDKStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Tilf›jer tastaturlayouts"},
+    "Tilf\233jer tastaturlayouts"},
     {0, 0}
 };

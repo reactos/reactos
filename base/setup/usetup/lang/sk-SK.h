@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
@@ -11,37 +14,37 @@ static MUI_ENTRY skSKLanguagePageEntries[] =
     {
         4,
         3,
-         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+         " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Vìber jazyka.",
+        "V\354ber jazyka.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Zvo–te si jazyk, ktorì sa pou§ije poŸas inçtal cie.",
+        "\x07  Zvo\226te si jazyk, ktor\354 sa pou\247ije po\237as in\347tal\240cie.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaŸte ENTER.",
+        "   Potom stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tento jazyk bude predvolenìm jazykom nainçtalovan‚ho syst‚mu.",
+        "\x07  Tento jazyk bude predvolen\354m jazykom nain\347talovan\202ho syst\202mu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -57,25 +60,25 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         4,
         3,
-         " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+         " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "V¡ta V s Inçtal tor syst‚mu ReactOS",
+        "V\241ta V\240s In\347tal\240tor syst\202mu ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Tento stupeå Inçtal tora skop¡ruje operaŸnì syst‚m ReactOS na V ç",
+        "Tento stupe\345 In\347tal\240tora skop\241ruje opera\237n\354 syst\202m ReactOS na V\240\347",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "poŸ¡taŸ a priprav¡ druhì stupeå Inçtal tora.",
+        "po\237\241ta\237 a priprav\241 druh\354 stupe\345 In\347tal\240tora.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -87,25 +90,25 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  StlaŸte R pre opravu ciu syst‚mu ReactOS.",
+        "\x07  Stla\237te R pre opravu ciu syst\202mu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  StlaŸte L, ak chcete zobraziœ licenŸn‚ podmienky syst‚mu ReactOS.",
+        "\x07  Stla\237te L, ak chcete zobrazi\234 licen\237n\202 podmienky syst\202mu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
+        "\x07  Stla\237te F3 pre skon\237enie in\347tal\240cie, syst\202m ReactOS sa nenain\347taluje.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Pre viac inform ci¡ o syst‚me ReactOS, navçt¡vte pros¡m:",
+        "Pre viac inform\240ci\241 o syst\202me ReactOS, nav\347t\241vte pros\241m:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -117,7 +120,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = PokraŸovaœ  R = Opraviœ  L = Licencia  F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234  R = Opravi\234  L = Licencia  F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -203,7 +206,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -215,67 +218,67 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         8,
-        "Syst‚m ReactOS je vydanì za podmienok licencie",
+        "Syst\202m ReactOS je vydan\354 za podmienok licencie",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU GPL s Ÿasœami obsahuj£cimi k¢d z inìch kompatibilnìch",
+        "GNU GPL s \237as\234ami obsahuj\243cimi k\242d z in\354ch kompatibiln\354ch",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "licenci¡ ako s£ X11 alebo BSD a licencie GNU LGPL.",
+        "licenci\241 ako s\243 X11 alebo BSD a licencie GNU LGPL.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "Preto vçetok softv‚r, ktorì je s£Ÿasœou syst‚mu ReactOS,",
+        "Preto v\347etok softv\202r, ktor\354 je s\243\237as\234ou syst\202mu ReactOS,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "je vydanì pod licenciou GNU GPL, a rovnako s£ zachovan‚",
+        "je vydan\354 pod licenciou GNU GPL, a rovnako s\243 zachovan\202",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "aj p“vodn‚ licencie.",
+        "aj p\223vodn\202 licencie.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Tento softv‚r prich dza BEZ ZµRUKY alebo obmedzen¡ pou§¡vania",
+        "Tento softv\202r prich\240dza BEZ Z\265RUKY alebo obmedzen\241 pou\247\241vania",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "s vìnimkou platn‚ho miestneho a medzin rodn‚ho pr va. Licencia",
+        "s v\354nimkou platn\202ho miestneho a medzin\240rodn\202ho pr\240va. Licencia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "syst‚mu ReactOS pokrìva iba distrib£ciu k tren¡m stran m.",
+        "syst\202mu ReactOS pokr\354va iba distrib\243ciu k tren\241m stran\240m.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "Ak z nejak‚ho d“vodu neobdr§¡te k¢piu licencie GNU GPL",
+        "Ak z nejak\202ho d\223vodu neobdr\247\241te k\242piu licencie GNU GPL",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "spolu so syst‚mom ReactOS, navçt¡vte, pros¡m, str nku:",
+        "spolu so syst\202mom ReactOS, nav\347t\241vte, pros\241m, str\240nku:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -287,13 +290,13 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         8,
         22,
-        "Z ruka:",
+        "Z\240ruka:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
-        "Toto je slobodnì softv‚r; see the source for copying conditions.",
+        "Toto je slobodn\354 softv\202r; see the source for copying conditions.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -311,7 +314,7 @@ static MUI_ENTRY skSKLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = N vrat",
+        "ENTER = N\240vrat",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -327,19 +330,19 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Zoznam ni§çie, zobrazuje s£Ÿasn‚ nastavenia zariaden¡.",
+        "Zoznam ni\247\347ie, zobrazuje s\243\237asn\202 nastavenia zariaden\241.",
         TEXT_STYLE_NORMAL
     },
     {
         24,
         11,
-        "PoŸ¡taŸ:",
+        "Po\237\241ta\237:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -351,60 +354,60 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         24,
         13,
-        "Kl vesnica:",
+        "Kl\240vesnica:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Rozlo§enie kl.:",
+        "Rozlo\247enie kl.:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "Akceptovaœ:",
+        "Akceptova\234:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "Akceptovaœ tieto nastavenia zariaden¡",
+        16, "Akceptova\234 tieto nastavenia zariaden\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "M“§ete zmeniœ hardv‚rov‚ nastavenia stlaŸen¡m kl vesov HORE alebo DOLE",
+        "M\223\247ete zmeni\234 hardv\202rov\202 nastavenia stla\237en\241m kl\240vesov HORE alebo DOLE",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "pre vìber polo§ky. Potom stlaŸte kl ves ENTER pre vìber alternat¡vnych",
+        "pre v\354ber polo\247ky. Potom stla\237te kl\240ves ENTER pre v\354ber alternat\241vnych",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "nastaven¡.",
+        "nastaven\241.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Ak s£ vçetky nastavenia spr vne, vyberte polo§ku",
+        "Ak s\243 v\347etky nastavenia spr\240vne, vyberte polo\247ku",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "\"Akceptovaœ tieto nastavenia zariaden¡\" a stlaŸte ENTER.",
+        "\"Akceptova\234 tieto nastavenia zariaden\241\" a stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -420,55 +423,55 @@ static MUI_ENTRY skSKRepairPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor syst‚mu ReactOS je v zaŸiatoŸnom çt diu vìvoja. Zatia–",
+        "In\347tal\240tor syst\202mu ReactOS je v za\237iato\237nom \347t\240diu v\354voja. Zatia\226",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "nepodporuje vçetky funkcie plne vyu§¡vaj£ce program Inçtal tor.",
+        "nepodporuje v\347etky funkcie plne vyu\247\241vaj\243ce program In\347tal\240tor.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funkcie na opravu syst‚mu zatia– nie s£ implementovan‚.",
+        "Funkcie na opravu syst\202mu zatia\226 nie s\243 implementovan\202.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  StlaŸte U pre aktualiz ciu OS.",
+        "\x07  Stla\237te U pre aktualiz\240ciu OS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  StlaŸte R pre z chrann£ konzolu.",
+        "\x07  Stla\237te R pre z\240chrann\243 konzolu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  StlaŸte ESC pre n vrat na hlavn£ str nku.",
+        "\x07  Stla\237te ESC pre n\240vrat na hlavn\243 str\240nku.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaŸte ENTER pre reçtart poŸ¡taŸa.",
+        "\x07  Stla\237te ENTER pre re\347tart po\237\241ta\237a.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hlavn  str nka  U = Aktualizovaœ  R = Z chrana  ENTER = Reçtart",
+        "ESC = Hlavn\240 str\240nka  U = Aktualizova\234  R = Z\240chrana  ENTER = Re\347tart",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -554,43 +557,43 @@ static MUI_ENTRY skSKComputerPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniœ typ poŸ¡taŸa, ktorì m  byœ nainçtalovanì.",
+        "Chcete zmeni\234 typ po\237\241ta\237a, ktor\354 m\240 by\234 nain\347talovan\354.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho typu poŸ¡taŸa.",
+        "\x07  Stla\237te kl\240ves HORE alebo DOLE pre v\354ber po\247adovan\202ho typu po\237\241ta\237a.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaŸte ENTER.",
+        "   Potom stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
+        "\x07  Stla\237te kl\240ves ESC pre n\240vrat na predch\240dzaj\243cu str\240nku bez zmeny",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   typu poŸ¡taŸa.",
+        "   typu po\237\241ta\237a.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -606,31 +609,31 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Syst‚m pr ve overuje vçetky ulo§en‚ £daje na Vaçom disku",
+        "Syst\202m pr\240ve overuje v\347etky ulo\247en\202 \243daje na Va\347om disku",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "To m“§e trvaœ nieko–ko min£t",
+        "To m\223\247e trva\234 nieko\226ko min\243t",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "KeÔ skonŸ¡, poŸ¡taŸ sa automaticky reçtartuje",
+        "Ke\324 skon\237\241, po\237\241ta\237 sa automaticky re\347tartuje",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Vypr zdåujem cache", //Flushing cache (zapisuje sa na disk obsah cache, doslovne "Preplachovanie cashe")
+        "Vypr\240zd\345ujem cache", //Flushing cache (zapisuje sa na disk obsah cache, doslovne "Preplachovanie cashe")
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -646,13 +649,13 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Syst‚m ReactOS nie je nainçtalovanì kompletne",
+        "Syst\202m ReactOS nie je nain\347talovan\354 kompletne",
         TEXT_STYLE_NORMAL
     },
     {
@@ -664,19 +667,19 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         10,
         9,
-        "vçetky m‚di  CD-ROM z CD mechan¡k.",
+        "v\347etky m\202di\240 CD-ROM z CD mechan\241k.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "StlaŸte ENTER pre reçtart poŸ¡taŸa.",
+        "Stla\237te ENTER pre re\347tart po\237\241ta\237a.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "PoŸkajte, pros¡m ...",
+        "Po\237kajte, pros\241m ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -692,30 +695,30 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniœ typ monitora, ktorì m  byœ nainçtalovanì.",
+        "Chcete zmeni\234 typ monitora, ktor\354 m\240 by\234 nain\347talovan\354.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho typu monitora.",
+         "\x07  Stla\237te kl\240ves HORE alebo DOLE pre v\354ber po\247adovan\202ho typu monitora.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaŸte ENTER.",
+        "   Potom stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
+        "\x07  Stla\237te kl\240ves ESC pre n\240vrat na predch\240dzaj\243cu str\240nku bez zmeny",
         TEXT_STYLE_NORMAL
     },
     {
@@ -727,7 +730,7 @@ static MUI_ENTRY skSKDisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -743,13 +746,13 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Z kladn‚ s£Ÿast¡ syst‚mu ReactOS boli £speçne nainçtalovan‚.",
+        "Z\240kladn\202 s\243\237ast\241 syst\202mu ReactOS boli \243spe\347ne nain\347talovan\202.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -761,19 +764,19 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     {
         10,
         9,
-        "vçetky m‚di  CD-ROM z CD mechan¡k.",
+        "v\347etky m\202di\240 CD-ROM z CD mechan\241k.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "StlaŸte ENTER pre reçtart poŸ¡taŸa.",
+        "Stla\237te ENTER pre re\347tart po\237\241ta\237a.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Reçtart poŸ¡taŸa",
+        "ENTER = Re\347tart po\237\241ta\237a",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -789,37 +792,37 @@ static MUI_ENTRY skSKBootPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor nem“§e nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk V çho", //bootloader = zav dzaŸ syst‚mu
+        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dzaŸ syst‚mu
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "poŸ¡taŸa",
+        "po\237\241ta\237a",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Vlo§te pros¡m, naform tovan£ disketu do mechaniky A:",
+        "Vlo\247te pros\241m, naform\240tovan\243 disketu do mechaniky A:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "a stlaŸte ENTER.",
+        "a stla\237te ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -836,31 +839,31 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Zoznam ni§çie, zobrazuje existuj£ce oblasti a nevyu§it‚ miesto",
+        "Zoznam ni\247\347ie, zobrazuje existuj\243ce oblasti a nevyu\247it\202 miesto",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "na disku vhodn‚ pre nov‚ oblasti.",
+        "na disku vhodn\202 pre nov\202 oblasti.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  StlaŸte HORE alebo DOLE pre vìber zo zoznamu polo§iek.",
+        "\x07  Stla\237te HORE alebo DOLE pre v\354ber zo zoznamu polo\247iek.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaŸte ENTER pre inçtal ciu syst‚mu ReactOS na vybran£ oblasœ.",
+        "\x07  Stla\237te ENTER pre in\347tal\240ciu syst\202mu ReactOS na vybran\243 oblas\234.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -885,13 +888,13 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         21,
-        "\x07  StlaŸte D pre vymazanie existuj£cej oblasti.",
+        "\x07  Stla\237te D pre vymazanie existuj\243cej oblasti.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "PoŸkajte, pros¡m ...",
+        "Po\237kajte, pros\241m ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -907,7 +910,7 @@ static MUI_ENTRY skSKConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1001,25 +1004,25 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Form tovanie oblasti",
+        "Form\240tovanie oblasti",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Inçtal tor teraz naform tuje oblasœ. StlaŸte ENTER pre pokraŸovanie.",
+        "In\347tal\240tor teraz naform\240tuje oblas\234. Stla\237te ENTER pre pokra\237ovanie.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1035,43 +1038,43 @@ static MUI_ENTRY skSKInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor nainçtaluje s£bory syst‚mu ReactOS na zvolen£ oblasœ.",
+        "In\347tal\240tor nain\347taluje s\243bory syst\202mu ReactOS na zvolen\243 oblas\234.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Vyberte adres r kam chcete nainçtalovaœ syst‚m ReactOS:",
+        "Vyberte adres\240r kam chcete nain\347talova\234 syst\202m ReactOS:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Ak chcete zmeniœ odpor£Ÿanì adres r, stlaŸte BACKSPACE a vyma§te",
+        "Ak chcete zmeni\234 odpor\243\237an\354 adres\240r, stla\237te BACKSPACE a vyma\247te",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "znaky. Potom nap¡çte n zov adres ra, v ktorom chcete aby bol",
+        "znaky. Potom nap\241\347te n\240zov adres\240ra, v ktorom chcete aby bol",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "syst‚m ReactOS nainçtalovanì.",
+        "syst\202m ReactOS nain\347talovan\354.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1087,31 +1090,31 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         11,
         12,
-        "PoŸkajte, pros¡m, kìm Inçtal tor skop¡ruje s£bory do inçtalaŸn‚ho",
+        "Po\237kajte, pros\241m, k\354m In\347tal\240tor skop\241ruje s\243bory do in\347tala\237n\202ho",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         30,
         13,
-        "prieŸinka pre ReactOS.",
+        "prie\237inka pre ReactOS.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         20,
         14,
-        "DokonŸenie m“§e trvaœ nieko–ko min£t.",
+        "Dokon\237enie m\223\247e trva\234 nieko\226ko min\243t.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
         0,
-        "\xB3 PoŸkajte, pros¡m ...    ",
+        "\xB3 Po\237kajte, pros\241m ...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1127,43 +1130,43 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor je pripravenì nainçtalovaœ zav dzaŸ operaŸn‚ho syst‚mu",
+        "In\347tal\240tor je pripraven\354 nain\347talova\234 zav\240dza\237 opera\237n\202ho syst\202mu",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (MBR a VBR).",
+        "Nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk (MBR a VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (iba VBR).",
+        "Nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk (iba VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na disketu.",
+        "Nain\347talova\234 zav\240dza\237 syst\202mu na disketu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "PreskoŸiœ inçtal ciu zav dzaŸa syst‚mu.",
+        "Presko\237i\234 in\347tal\240ciu zav\240dza\237a syst\202mu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1179,43 +1182,43 @@ static MUI_ENTRY skSKKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Chcete zmeniœ typ kl vesnice, ktorì m  byœ nainçtalovanì.",
+        "Chcete zmeni\234 typ kl\240vesnice, ktor\354 m\240 by\234 nain\347talovan\354.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaŸte kl ves HORE alebo DOLE a vyberte po§adovanì typ kl vesnice.",
+        "\x07  Stla\237te kl\240ves HORE alebo DOLE a vyberte po\247adovan\354 typ kl\240vesnice.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Potom stlaŸte ENTER.",
+        "   Potom stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
+        "\x07  Stla\237te kl\240ves ESC pre n\240vrat na predch\240dzaj\243cu str\240nku bez zmeny",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   typu kl vesnice.",
+        "   typu kl\240vesnice.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1231,43 +1234,43 @@ static MUI_ENTRY skSKLayoutSettingsEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Pros¡m, vyberte rozlo§enie, ktor‚ sa nainçtaluje ako predvolen‚.",
+        "Pros\241m, vyberte rozlo\247enie, ktor\202 sa nain\347taluje ako predvolen\202.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  StlaŸte kl ves HORE alebo DOLE pre vìber po§adovan‚ho rozlo§enia",
+        "\x07  Stla\237te kl\240ves HORE alebo DOLE pre v\354ber po\247adovan\202ho rozlo\247enia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   kl vesnice. Potom stlaŸte ENTER.",
+        "   kl\240vesnice. Potom stla\237te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  StlaŸte kl ves ESC pre n vrat na predch dzaj£cu str nku bez zmeny",
+        "\x07  Stla\237te kl\240ves ESC pre n\240vrat na predch\240dzaj\243cu str\240nku bez zmeny",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   rozlo§enia kl vesnice.",
+        "   rozlo\247enia kl\240vesnice.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1284,19 +1287,19 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Pripravuje sa kop¡rovanie s£borov syst‚mu ReactOS. ",
+        "Pripravuje sa kop\241rovanie s\243borov syst\202mu ReactOS. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Vytv ra sa zoznam potrebnìch s£borov ...",
+        "Vytv\240ra sa zoznam potrebn\354ch s\243borov ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1313,37 +1316,37 @@ static MUI_ENTRY skSKSelectFSEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         17,
-        "Vyberte syst‚m s£borov zo zoznamu uveden‚ho ni§çie.",
+        "Vyberte syst\202m s\243borov zo zoznamu uveden\202ho ni\247\347ie.",
         0
     },
     {
         8,
         19,
-        "\x07  StlaŸte HORE alebo DOLE pre vìber syst‚mu s£borov.",
+        "\x07  Stla\237te HORE alebo DOLE pre v\354ber syst\202mu s\243borov.",
         0
     },
     {
         8,
         21,
-        "\x07  StlaŸte ENTER pre form tovanie oblasti.",
+        "\x07  Stla\237te ENTER pre form\240tovanie oblasti.",
         0
     },
     {
         8,
         23,
-        "\x07  StlaŸte ESC pre vìber inej oblasti.",
+        "\x07  Stla\237te ESC pre v\354ber inej oblasti.",
         0
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "ENTER = Pokra\237ova\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1360,37 +1363,37 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Vybrali ste si odstr nenie oblasti",
+        "Vybrali ste si odstr\240nenie oblasti",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  StlaŸte D pre odstr nenie oblasti.",
+        "\x07  Stla\237te D pre odstr\240nenie oblasti.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "UPOZORNENIE: Vçetky £daje na tejto oblasti sa nen vratne stratia!",
+        "UPOZORNENIE: V\347etky \243daje na tejto oblasti sa nen\240vratne stratia!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  StlaŸte ESC pre zruçenie.",
+        "\x07  Stla\237te ESC pre zru\347enie.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = Odstr niœ oblasœ   ESC = Zruçiœ   F3 = SkonŸiœ",
+        "D = Odstr\240ni\234 oblas\234   ESC = Zru\347i\234   F3 = Skon\237i\234",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1406,19 +1409,19 @@ static MUI_ENTRY skSKRegistryEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Aktualizuj£ sa syst‚mov‚ nastavenia.",
+        "Aktualizuj\243 sa syst\202mov\202 nastavenia.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Vytv raj£ sa polo§ky registrov ...", //registry hives
+        "Vytv\240raj\243 sa polo\247ky registrov ...", //registry hives
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1438,204 +1441,204 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "Syst‚m ReactOS nie je kompletne nainçtalovanì na Vaçom\n"
-        "poŸ¡taŸi. Ak teraz preruç¡te inçtal ciu, budete musieœ\n"
-        "spustiœ Inçtal tor znova, aby sa syst‚m ReactOS nainçtaloval.\n"
+        "Syst\202m ReactOS nie je kompletne nain\347talovan\354 na Va\347om\n"
+        "po\237\241ta\237i. Ak teraz preru\347\241te in\347tal\240ciu, budete musie\234\n"
+        "spusti\234 In\347tal\240tor znova, aby sa syst\202m ReactOS nain\347taloval.\n"
         "\n"
-        "  \x07  StlaŸte ENTER pre pokraŸovanie v inçtal cii.\n"
-        "  \x07  StlaŸte F3 pre skonŸenie inçtal cie.",
-        "F3 = SkonŸiœ  ENTER = PokraŸovaœ"
+        "  \x07  Stla\237te ENTER pre pokra\237ovanie v in\347tal\240cii.\n"
+        "  \x07  Stla\237te F3 pre skon\237enie in\347tal\240cie.",
+        "F3 = Skon\237i\234  ENTER = Pokra\237ova\234"
     },
     {
         // ERROR_NO_HDD
-        "Inçtal toru sa nepodarilo n jsœ pevnì disk.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240toru sa nepodarilo n\240js\234 pevn\354 disk.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_NO_SOURCE_DRIVE
-        "Inçtal toru sa nepodarilo n jsœ jej zdrojov£ mechaniku.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240toru sa nepodarilo n\240js\234 jej zdrojov\243 mechaniku.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_LOAD_TXTSETUPSIF
-        "Inçtal tor zlyhal pri nahr van¡ s£boru TXTSETUP.SIF.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri nahr\240van\241 s\243boru TXTSETUP.SIF.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CORRUPT_TXTSETUPSIF
-        "Inçtal tor naçiel poçkodenì s£bor TXTSETUP.SIF.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor na\347iel po\347koden\354 s\243bor TXTSETUP.SIF.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, znaŸka, çifra)
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_DRIVE_INFORMATION
-        "Inçtal tor nemohol z¡skaœ inform cie o syst‚movìch diskoch.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor nemohol z\241ska\234 inform\240cie o syst\202mov\354ch diskoch.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_WRITE_BOOT,
-        "Inçtal toru sa nepodarilo nainçtalovaœ %S zav dzac¡ k¢d s£borov‚ho\n"
-        "syst‚mu FAT na syst‚mov£ part¡ciu.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240toru sa nepodarilo nain\347talova\234 %S zav\240dzac\241 k\242d s\243borov\202ho\n"
+        "syst\202mu FAT na syst\202mov\243 part\241ciu.",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_LOAD_COMPUTER,
-        "Inçtal tor zlyhal pri nahr van¡ zoznamu typov poŸ¡taŸov.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri nahr\240van\241 zoznamu typov po\237\241ta\237ov.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_LOAD_DISPLAY,
-        "Inçtal tor zlyhal pri nahr van¡ zoznamu nastaven¡ monitora.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri nahr\240van\241 zoznamu nastaven\241 monitora.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_LOAD_KEYBOARD,
-        "Inçtal tor zlyhal pri nahr van¡ zoznamu typov kl vesn¡c.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri nahr\240van\241 zoznamu typov kl\240vesn\241c.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_LOAD_KBLAYOUT,
-        "Inçtal tor zlyhal pri nahr van¡ zoznamu rozlo§enia kl vesn¡c.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri nahr\240van\241 zoznamu rozlo\247enia kl\240vesn\241c.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_WARN_PARTITION,
 //          "Inçtal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
-          "Inçtal tor naçiel najmenej na jednom pevnom disku nekompatibiln£\n"
-          "tabu–ku oblast¡, s ktorou sa ned  spr vne zaobch dzaœ!\n"
+          "In\347tal\240tor na\347iel najmenej na jednom pevnom disku nekompatibiln\243\n"
+          "tabu\226ku oblast\241, s ktorou sa ned\240 spr\240vne zaobch\240dza\234!\n"
           "\n"
-          "Vytvorenie alebo odstr nenie oblast¡ m“§e zniŸiœ tabu–ku oblast¡.\n"
+          "Vytvorenie alebo odstr\240nenie oblast\241 m\223\247e zni\237i\234 tabu\226ku oblast\241.\n"
           "\n"
-          "  \x07  StlaŸte F3 pre skonŸenie inçtal cie.\n"
-          "  \x07  StlaŸte ENTER pre pokraŸovanie.",
-          "F3 = SkonŸiœ  ENTER = PokraŸovaœ"
+          "  \x07  Stla\237te F3 pre skon\237enie in\347tal\240cie.\n"
+          "  \x07  Stla\237te ENTER pre pokra\237ovanie.",
+          "F3 = Skon\237i\234  ENTER = Pokra\237ova\234"
     },
     {
         // ERROR_NEW_PARTITION,
-        "Nem“§ete vytvoriœ nov£ oblasœ\n"
-        "vo vn£tri u§ existuj£cej oblasti!\n"
+        "Nem\223\247ete vytvori\234 nov\243 oblas\234\n"
+        "vo vn\243tri u\247 existuj\243cej oblasti!\n"
         "\n"
-        "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
+        "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
         NULL
     },
     {
         // ERROR_DELETE_SPACE,
-        "Nem“§ete odstr niœ miesto na disku, ktor‚ nie je oblasœou!\n"
+        "Nem\223\247ete odstr\240ni\234 miesto na disku, ktor\202 nie je oblas\234ou!\n"
         "\n"
-        "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
+        "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
         NULL
     },
     {
         // ERROR_INSTALL_BOOTCODE,
-        "Inçtal toru sa nepodarilo nainçtalovaœ %S zav dzac¡ k¢d s£borov‚ho\n"
-        "syst‚mu FAT na syst‚mov£ part¡ciu.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240toru sa nepodarilo nain\347talova\234 %S zav\240dzac\241 k\242d s\243borov\202ho\n"
+        "syst\202mu FAT na syst\202mov\243 part\241ciu.",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_NO_FLOPPY,
         "V mechanike A: nie je disketa.",
-        "ENTER = PokraŸovaœ"
+        "ENTER = Pokra\237ova\234"
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
-        "Inçtal tor zlyhal pri aktualiz cii nastaven¡ rozlo§enia kl vesnice.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri aktualiz\240cii nastaven\241 rozlo\247enia kl\240vesnice.",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_INITIALIZE_REGISTRY,
         "Setup failed to set the initialize the registry.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CABINET_MISSING,
         "Cabinet not found.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CABINET_SCRIPT,
         "Cabinet has no setup script.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CREATE_DIR,
-        "Inçtal tor nemohol vytvoriœ inçtalaŸn‚ adres re.",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor nemohol vytvori\234 in\347tala\237n\202 adres\240re.",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_TXTSETUP_SECTION,
-        "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\n"
-        "v s£bore TXTSETUP.SIF.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri h\226adan\241 sekcie '%S'\n"
+        "v s\243bore TXTSETUP.SIF.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CABINET_SECTION,
-        "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\n"
-        "v s£bore cabinet.\n",
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri h\226adan\241 sekcie '%S'\n"
+        "v s\243bore cabinet.\n",
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "Inçtal tor nemohol vytvoriœ inçtalaŸnì adres r.", //could not = nemohol
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor nemohol vytvori\234 in\347tala\237n\354 adres\240r.", //could not = nemohol
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_WRITE_PTABLE,
-        "Inçtal tor zlyhal pri z pise do tabuliek oblast¡.\n"
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri z\240pise do tabuliek oblast\241.\n"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Inçtal tor zlyhal pri prid van¡ k¢dovej str nky do registrov.\n"
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri prid\240van\241 k\242dovej str\240nky do registrov.\n"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
-        "ENTER = Reçtart poŸ¡taŸa"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
-        "Inçtal tor zlyhal pri prid van¡ rozlo§en¡ kl vesnice do registrov.\n"
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor zlyhal pri prid\240van\241 rozlo\247en\241 kl\240vesnice do registrov.\n"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_UPDATE_GEOID,
-        "Inçtal tor nemohol nastaviœ geo id.\n"
-        "ENTER = Reçtart poŸ¡taŸa"
+        "In\347tal\240tor nemohol nastavi\234 geo id.\n"
+        "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
         // ERROR_DIRECTORY_NAME,
@@ -1648,7 +1651,7 @@ MUI_ERROR skSKErrorEntries[] =
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
-        "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
+        "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
         NULL
     },
     {
@@ -1788,18 +1791,18 @@ MUI_PAGE skSKPages[] =
 MUI_STRING skSKStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   PoŸkajte, pros¡m ..."},
+     "   Po\237kajte, pros\241m ..."},
     {STRING_INSTALLCREATEPARTITION,
      "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
 //     "   ENTER = Inçtalovaœ   C = Vytvoriœ oblasœ   F3 = SkonŸiœ"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Inçtalovaœ   D = Odstr niœ oblasœ   F3 = SkonŸiœ"},
+     "   ENTER = In\347talova\234   D = Odstr\240ni\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_DELETEPARTITION,
      "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
-     "Ve–kosœ novej oblasti:"},
+     "Ve\226kos\234 novej oblasti:"},
     {STRING_CHOOSENEWPARTITION,
      "You have chosen to create a primary partition on"},
 //     "Zvolili ste vytvorenie novej oblasti na"},
@@ -1808,27 +1811,27 @@ MUI_STRING skSKStrings[] =
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
     {STRING_HDDSIZE,
-    "Zadajte, pros¡m, ve–kosœ novej oblasti v megabajtoch."},
+    "Zadajte, pros\241m, ve\226kos\234 novej oblasti v megabajtoch."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Vytvoriœ oblasœ   ESC = Zruçiœ   F3 = SkonŸiœ"},
+     "   ENTER = Vytvori\234 oblas\234   ESC = Zru\347i\234   F3 = Skon\237i\234"},
     {STRING_PARTFORMAT,
-    "T to oblasœ sa bude form tovaœ ako Ôalçia."},
+    "T\240to oblas\234 sa bude form\240tova\234 ako \324al\347ia."},
     {STRING_NONFORMATTEDPART,
-    "Zvolili ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
+    "Zvolili ste in\347tal\240ciu syst\202mu ReactOS na nov\243 alebo nenaform\240tovan\243 oblas\234."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "The system partition is not formatted yet."},
     {STRING_NONFORMATTEDOTHERPART,
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
-    "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
+    "In\347tal\240tor nain\347taluje syst\202m ReactOS na oblas\234"},
     {STRING_CHECKINGPART,
-    "Inçtal tor teraz skontroluje vybran£ oblasœ."},
+    "In\347tal\240tor teraz skontroluje vybran\243 oblas\234."},
     {STRING_CONTINUE,
-    "ENTER = PokraŸovaœ"},
+    "ENTER = Pokra\237ova\234"},
     {STRING_QUITCONTINUE,
-    "F3 = SkonŸiœ  ENTER = PokraŸovaœ"},
+    "F3 = Skon\237i\234  ENTER = Pokra\237ova\234"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reçtart poŸ¡taŸa"},
+    "ENTER = Re\347tart po\237\241ta\237a"},
     {STRING_DELETING,
      "   Deleting file: %S"},
     {STRING_MOVING,
@@ -1836,11 +1839,11 @@ MUI_STRING skSKStrings[] =
     {STRING_RENAMING,
      "   Renaming file: %S to: %S"},
     {STRING_COPYING,
-     "   Kop¡ruje sa s£bor: %S"},
+     "   Kop\241ruje sa s\243bor: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Inçtal tor kop¡ruje s£bory..."},
+     "In\347tal\240tor kop\241ruje s\243bory..."},
     {STRING_REGHIVEUPDATE,
-    "   Aktualizujem polo§ky registrov..."},
+    "   Aktualizujem polo\247ky registrov..."},
     {STRING_IMPORTFILE,
     "   Importujem %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
@@ -1848,35 +1851,35 @@ MUI_STRING skSKStrings[] =
     {STRING_LOCALESETTINGSUPDATE,
     "   Aktualizujem miestne nastavenia..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Aktualizujem nastavenia rozlo§enia kl vesnice..."},
+    "   Aktualizujem nastavenia rozlo\247enia kl\240vesnice..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Prid vam do registrov inform cie o k¢dovej str nke..."},
+    "   Prid\240vam do registrov inform\240cie o k\242dovej str\240nke..."},
     {STRING_DONE,
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reçtart poŸ¡taŸa"},
+    "   ENTER = Re\347tart po\237\241ta\237a"},
     {STRING_REBOOTPROGRESSBAR,
     " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
-    "Nemo§no otvoriœ konzolu\r\n\r\n"},
+    "Nemo\247no otvori\234 konzolu\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Najbe§nejçou pr¡Ÿinou tohto je pou§itie USB kl vesnice\r\n"},
+    "Najbe\247nej\347ou pr\241\237inou tohto je pou\247itie USB kl\240vesnice\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB kl vesnica eçte nie je plne podporovan \r\n"},
+    "USB kl\240vesnica e\347te nie je plne podporovan\240\r\n"},
     {STRING_FORMATTINGDISK,
-    "Inçtal tor form tuje V ç disk"},
+    "In\347tal\240tor form\240tuje V\240\347 disk"},
     {STRING_CHECKINGDISK,
-    "Inçtal tor kontroluje V ç disk"},
+    "In\347tal\240tor kontroluje V\240\347 disk"},
     {STRING_FORMATDISK1,
-    " Naform tovaœ oblasœ ako syst‚m s£borov %S (rìchly form t) "},
+    " Naform\240tova\234 oblas\234 ako syst\202m s\243borov %S (r\354chly form\240t) "},
     {STRING_FORMATDISK2,
-    " Naform tovaœ oblasœ ako syst‚m s£borov %S "},
+    " Naform\240tova\234 oblas\234 ako syst\202m s\243borov %S "},
     {STRING_KEEPFORMAT,
-    " Ponechaœ s£Ÿasnì syst‚m s£borov (bez zmeny) "},
+    " Ponecha\234 s\243\237asn\354 syst\202m s\243borov (bez zmeny) "},
     {STRING_HDINFOPARTCREATE_1,
     "%I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
     {STRING_HDINFOPARTCREATE_2,
-    "%I64u %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    "%I64u %s  pevn\354 disk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTDELETE_1,
@@ -1884,7 +1887,7 @@ MUI_STRING skSKStrings[] =
     {STRING_HDINFOPARTDELETE_2,
     "na %I64u %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDINFOPARTZEROED_1,
-    "pevnì disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    "pevn\354 disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  typ 0x%02X    %I64u %s"},
     {STRING_HDINFOPARTEXISTS_1,
@@ -1892,23 +1895,23 @@ MUI_STRING skSKStrings[] =
     {STRING_HDDINFOUNK5,
     "%c%c %c %styp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT_1,
-    "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    "%6lu %s  pevn\354 disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
     {STRING_HDINFOPARTSELECT_2,
     "%6lu %s  pevnom disku %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Inçtal tor vytvoril nov£ oblasœ na"},
+    "In\347tal\240tor vytvoril nov\243 oblas\234 na"},
     {STRING_UNPSPACE,
-    "    %sMiesto bez oblast¡%s             %6lu %s"},
+    "    %sMiesto bez oblast\241%s             %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
     "Extended Partition"},
     {STRING_UNFORMATTED,
-    "Nov  (Nenaform tovan )"},
+    "Nov\240 (Nenaform\240tovan\240)"},
     {STRING_FORMATUNUSED,
-    "Nepou§it‚"},
+    "Nepou\247it\202"},
     {STRING_FORMATUNKNOWN,
-    "Nezn me"},
+    "Nezn\240me"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1916,6 +1919,6 @@ MUI_STRING skSKStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Prid vam rozlo§enia kl vesnice"},
+    "Prid\240vam rozlo\247enia kl\240vesnice"},
     {0, 0}
 };
