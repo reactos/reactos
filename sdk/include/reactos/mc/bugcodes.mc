@@ -79,8 +79,7 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCHECK_MESSAGE_INTRO
 Language=English
-A problem has been detected and ReactOS has been shut down to prevent damage
-to your computer.
+Your PC ran into a problem and needs to restart.
 .
 
 MessageId=0x80
@@ -88,8 +87,7 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCODE_ID_DRIVER
 Language=English
-The problem seems to be caused by the following file:
-
+What failed: 
 .
 
 MessageId=0x81
@@ -109,14 +107,8 @@ Facility=System
 SymbolicName=BUGCODE_PSS_MESSAGE
 Language=English
 Check to make sure any new hardware or software is properly installed.
-If this is a new installation, ask your hardware or software manufacturer
-for any ReactOS updates you might need.
-
-If problems continue, disable or remove any newly installed hardware
-or software. Disable BIOS memory options such as caching or shadowing.
-If you need to use Safe Mode to remove or disable components, restart
-your computer, press F8 to select Advanced Startup Options, and then
-select Safe Mode.
+If this is a new installation, ask your hardware or software
+manufacturer for any ReactOS updates you might need.
 .
 
 MessageId=0x83
@@ -1127,8 +1119,8 @@ memory. Try changing video adapters.
 
 Disable or remove any newly installed hardware and drivers. Disable or
 remove any newly installed software. If you need to use Safe Mode to
-remove or disable components, restart your computer, press F8 to select
-Advanced Startup Options, and then select Safe Mode.
+remove or disable components, restart your computer, press F8 to
+select Advanced Startup Options, and then select Safe Mode.
 .
 
 MessageId=0x80

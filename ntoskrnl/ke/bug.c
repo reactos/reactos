@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/bug.c
  * PURPOSE:         Bugcheck Support
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org), Yaroslav Kibysh
  */
 
 /* INCLUDES ******************************************************************/
@@ -461,10 +461,39 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             else
             {
                 /* Direct Output to Screen */
+				
+				// I'm temporary usign this method to show "edited" bugcodes, because it takes a lot of time to compile new bugcodes.
+				// I will remove this code and edit "bugcodes.mc" when all will be finished.
+				
+				//\r\n\r\nYou can use Safe Mode to remove/disable components.\r\nRestart your PC, press F8 and select Safe Mode.
+				/*if (BugCheckCode == BUGCHECK_MESSAGE_INTRO)
+				{
+					BugCode = "Your PC ran into a problem and needs to restart.";
+				}
+				if (BugCheckCode == BUGCODE_ID_DRIVER)
+				{
+					BugCode = "What failed: ";
+				}*/
+				/*else if (BugCheckCode == KMODE_EXCEPTION_NOT_HANDLED)
+				{
+					BugCode = "Check to be sure you have adequate disk space.\r\nTry to disable/update drivers.\r\n\r\nYou can use Safe Mode to remove/disable components.\r\nRestart your PC, press F8 and select Safe Mode.";
+				}
+				else if (BugCheckCode == FAT_FILE_SYSTEM)
+				{
+					BugCode = "Check your hard disk configuration.\r\nDisable any anti-virus or disk defragmentation utilities.\r\nRun CHKDSK /F to check for hard drive corruption.";
+				}
+				else if (BugCheckCode == INACCESSIBLE_BOOT_DEVICE)
+				{
+					BugCode = "Boot device is inaccessible.\r\nRemove any newly installed hard drives or hard drive controllers.\r\nCheck for driver or ReactOS updates. Run CHKDSK /F to check hard drive for corruption.";
+				}
+				else if (BugCheckCode == CRITICAL_PROCESS_DIED || BugCheckCode == CRITICAL_OBJECT_TERMINATION)
+				{
+					BugCode = "A system process was terminated.";
+				}*/
+				
                 InbvDisplayString(BugCode);
                 InbvDisplayString("\r");
             }
-
             /* We're done */
             Result = TRUE;
             break;
@@ -617,7 +646,7 @@ KiDumpParameterImages(IN PCHAR Message,
 
         /* Format driver name */
         sprintf(Message,
-                "%s**  %12s - Address %p base at %p, DateStamp %08lx\r\n",
+                "%s**  %12s Address %p base at %p DateStamp %08lx\r\n",
                 FirstRun ? "\r\n*":"*",
                 AnsiName,
                 (PVOID)Parameters[i],
@@ -643,6 +672,65 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
+SetUpBlueScreen()
+{
+    PVOID EmojiResource = NULL;
+	
+    /* Acquire ownership and reset the display */
+    InbvAcquireDisplayOwnership();
+	InbvResetDisplay();
+	
+	/* Fill screen with 0 color which is black in default palette. 
+	   When we put emoji bitmap on the screen, it's background color will become 0 color.
+	   So black color will be changed to blue. */
+    InbvSolidColorFill(0, 0, 639, 479, 0);
+	
+    /* Get resources */
+    EmojiResource = InbvGetResourceAddress(IDB_ERROR_IMAGE);
+	
+	/* If :( is ok */
+	if (EmojiResource)
+    {
+        /* BitBlt Emoji on the screen */
+		InbvBitBlt(EmojiResource, 28, 109);
+	}
+	
+	/* Remove filters and allow print text */
+	InbvInstallDisplayStringFilter(NULL);
+    InbvEnableDisplayString(TRUE);
+	
+	/* Set the scrolling region */
+    InbvSetScrollRegion(32, 225, 607, 479);
+}
+
+
+/*InbvSetScrollRegion(IN ULONG Left, for me
+                    IN ULONG Top,
+                    IN ULONG Right,
+                    IN ULONG Bottom)
+*/
+/* InbvSolidColorFill(IN ULONG Left,
+                   IN ULONG Top,
+                   IN ULONG Right,
+                   IN ULONG Bottom,
+                   IN ULONG Color)*/
+VOID
+NTAPI
+DisplayQRCode()
+{
+	/* TODO */
+	#if QRCODE_IMPLEMENTED
+	ULONG X = 502;
+	ULONG Y = 0;
+	ULONG MaxX = 639;
+	ULONG MaxY = 136;
+	
+	InbvSolidColorFill(X, Y, MaxX, MaxY, 15);
+	#endif
+}
+
+VOID
+NTAPI
 KiDisplayBlueScreen(IN ULONG MessageId,
                     IN BOOLEAN IsHardError,
                     IN PCHAR HardErrCaption OPTIONAL,
@@ -654,68 +742,76 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
     {
-        /* Acquire ownership and reset the display */
-        InbvAcquireDisplayOwnership();
-        InbvResetDisplay();
-
-        /* Display blue screen */
-        InbvSolidColorFill(0, 0, 639, 479, 4);
-        InbvSetTextColor(15);
-        InbvInstallDisplayStringFilter(NULL);
-        InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+		/* Set up display for blur screen */
+		SetUpBlueScreen();
+		
+		/* TODO: Change background color. We can change the color by creating gradient in palette from X color to "White" color. */
+		
+		/* Generate & print QR-code (todo) */
+		DisplayQRCode();
     }
 
+    /* Change text color to White to attract the user's attention. */
+	InbvSetTextColor(15);
+	
+    /* Print out initial message */
+    KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
+	InbvDisplayString("\r\n");
+	
     /* Check if this is a hard error */
     if (IsHardError)
     {
         /* Display caption and message */
-        if (HardErrCaption) InbvDisplayString(HardErrCaption);
-        if (HardErrMessage) InbvDisplayString(HardErrMessage);
+        if (HardErrCaption)
+		{
+			InbvDisplayString(HardErrCaption);
+			InbvDisplayString("\r\n");
+		}
+        if (HardErrMessage) 
+		{
+			InbvDisplayString(HardErrMessage);
+			InbvDisplayString("\r\n");
+		}
     }
-
-    /* Begin the display */
-    InbvDisplayString("\r\n");
-
-    /* Print out initial message */
-    KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
-    InbvDisplayString("\r\n\r\n");
+	
+	InbvDisplayString("\r\n");
 
     /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
-        /* Print out into to driver name */
+        /* Print text about driver problem */
         KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
 
         /* Convert and print out driver name */
         KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiName, sizeof(AnsiName));
-        InbvDisplayString(" ");
         InbvDisplayString(AnsiName);
-        InbvDisplayString("\r\n\r\n");
+        InbvDisplayString("\r\n");
     }
-
+	
     /* Check if this is the generic message */
     if (MessageId == BUGCODE_PSS_MESSAGE)
     {
         /* It is, so get the bug code string as well */
         KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
-        InbvDisplayString("\r\n\r\n");
+		InbvDisplayString("\r\n\r\n");
     }
 
-    /* Print second introduction message */
-    KeGetBugMessageText(PSS_MESSAGE_INTRO, NULL);
-    InbvDisplayString("\r\n\r\n");
+	/* Get the bug code string */
+	KeGetBugMessageText(MessageId, NULL);
+	InbvDisplayString("\r\n\r\n");
+	
+	/* After main messages make the text's color less distracting. */
+	InbvSetTextColor(9);
 
-    /* Get the bug code string */
-    KeGetBugMessageText(MessageId, NULL);
-    InbvDisplayString("\r\n\r\n");
+	/* Show bug code id (todo: use symbolic name instead)*/
+	sprintf(AnsiName,
+			"Code: 0x%08X\r\n",
+			(int)MessageId);
+	InbvDisplayString(AnsiName);
 
-    /* Print message for technical information */
-    KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
-
-    /* Show the technical Data */
+    /* Format & show the technical Data */
     sprintf(AnsiName,
-            "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
+            "*** STOP: 0x%08lX (0x%p, 0x%p, 0x%p, 0x%p)",
             (ULONG)KiBugCheckData[0],
             (PVOID)KiBugCheckData[1],
             (PVOID)KiBugCheckData[2],
@@ -737,6 +833,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
+	
 }
 
 VOID
