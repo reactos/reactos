@@ -28,6 +28,7 @@ ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
+CHAR* AdditionalInformation;
 
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
@@ -587,6 +588,19 @@ KeBugCheckUnicodeToAnsi(IN PUNICODE_STRING Unicode,
     return Ansi;
 }
 
+
+VOID
+NTAPI
+AppendAdditionalData(IN CHAR* NewData,
+                     IN BOOLEAN DisplayIt)
+{
+    /* Add new info to AdditionalInformation */
+    sprintf(AdditionalInformation, NewData);
+    //strcat(AdditionalInformation, NewData); // why strcat is broken?
+    if (DisplayIt) 
+        InbvDisplayString(NewData);
+}
+
 VOID
 NTAPI
 KiDumpParameterImages(IN PCHAR Message,
@@ -650,6 +664,7 @@ KiDumpParameterImages(IN PCHAR Message,
         {
             /* Otherwise, display the message */
             InbvDisplayString(Message);
+            AppendAdditionalData(Message, FALSE);
         }
 
         /* Loop again */
@@ -659,34 +674,50 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-SetUpBlueScreen(VOID)
+SetUpBlueScreen(IN BOOLEAN IsFlatStyle)
 {
     PVOID EmojiResource = NULL;
+    ULONG PositionY = 75; // 109 default
     
     /* Acquire ownership and reset the display */
     InbvAcquireDisplayOwnership();
     InbvResetDisplay();
     
-    /* Fill the screen with 0 color */
-    InbvSolidColorFill(0, 0, 639, 479, 0);
+    if (IsFlatStyle)
+    {        
+        /* Fill the screen with 0 color */
+        InbvSolidColorFill(0, 0, 639, 479, 0);
     
-    /* Get resources */
-    EmojiResource = InbvGetResourceAddress(IDB_ERROR_IMAGE);
-    
-    /* If :( is ok */
-    if (EmojiResource)
-    {
-        /* BitBlt Emoji on the screen */
-        InbvBitBlt(EmojiResource, 28, 109);
+        /* Get resources */
+        EmojiResource = InbvGetResourceAddress(IDB_ERROR_IMAGE);
+            
+        /* If :( is ok */
+        if (EmojiResource)
+        {
+            /* BitBlt Emoji on the screen */
+            InbvBitBlt(EmojiResource, 28, PositionY);
+        }
     }
+    else
+        InbvSolidColorFill(0, 0, 639, 479, 4); // If it's not, fill the screen with oldskool blue color
     
     /* Remove filters and allow print text */
     InbvInstallDisplayStringFilter(NULL);
     InbvEnableDisplayString(TRUE);
     
     /* Set the scrolling region */
-    InbvSetScrollRegion(32, 225, 607, 479);
+    if (IsFlatStyle)
+        InbvSetScrollRegion(32, PositionY + 116 /*225*/, 607, 479);
+    else
+    {
+        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvDisplayString("\r\n");
+    }
+    
+    /* Change text color to White to attract the user's attention. */
+    InbvSetTextColor(15);
 }
+
 
 
 /*InbvSetScrollRegion(IN ULONG Left, for me
@@ -704,14 +735,16 @@ NTAPI
 DisplayQRCode(VOID)
 {
     /* TODO */
-    #if QRCODE_IMPLEMENTED
+    //#if QRCODE_IMPLEMENTED
     ULONG X = 502;
     ULONG Y = 0;
     ULONG MaxX = 639;
     ULONG MaxY = 136;
     
+    /* The information is in AdditionalInformation variable */
+    
     InbvSolidColorFill(X, Y, MaxX, MaxY, 15);
-    #endif
+    //#endif
 }
 
 VOID
@@ -723,21 +756,29 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                     IN PCHAR Message)
 {
     CHAR AnsiName[75];
+    ULONG ErrorScreenStyle = 2; 
+    /* TODO: Implement registry loading?
+       0 - Bitmap Palette  & Short Text + QR-code
+       1 - Bitmap Palette  & Short Text
+       2 - Default Palette  & Expanded Text
+    */
+    BOOLEAN IsTextLarge = FALSE;
+    BOOLEAN DisplayBacktrace = FALSE;
+
+    if (ErrorScreenStyle >= 2)
+    {
+        IsTextLarge = TRUE;
+        DisplayBacktrace = TRUE;
+    }
 
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
     {
         /* Set up display for blur screen */
-        SetUpBlueScreen();
+        SetUpBlueScreen(!IsTextLarge);
         
         /* TODO: Change background color. We can change the color by creating gradient in palette from X color to "White" color. */
-        
-        /* Generate & print QR-code (todo) */
-        DisplayQRCode();
     }
-
-    /* Change text color to White to attract the user's attention. */
-    InbvSetTextColor(15);
     
     /* Print out initial message */
     KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
@@ -760,7 +801,65 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
     
     InbvDisplayString("\r\n");
+    
+    /* Check if this is the generic message and it's friendly bsod style */
+    if (MessageId == BUGCODE_PSS_MESSAGE && ErrorScreenStyle < 2)
+    {
+        /* It is, so get the bug code string as well */
+        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
+        InbvDisplayString("\r\n\r\n");
+    }
 
+    /* Get the bug code string */
+    KeGetBugMessageText(MessageId, NULL);
+    InbvDisplayString("\r\n\r\n\r\n");
+    
+    
+    /* After main messages make the text's color less distracting. */
+    InbvSetTextColor(7);
+    
+    sprintf(AnsiName, "%s\r\n", NtBuildLab);
+    AppendAdditionalData(AnsiName, TRUE);
+    
+    /* ThFabba's code, why not to add this information? */
+    AppendAdditionalData("\r\n\r\n---stack backtrace---\r\n", DisplayBacktrace);
+    {
+        CHAR Buffer[64];
+        PVOID *Frame;
+        PVOID *FramePc, *NextFrame;
+        PLDR_DATA_TABLE_ENTRY LdrEntry;
+        BOOLEAN InSystem;
+        CHAR AnsiName[64];
+ 
+        NextFrame = _AddressOfReturnAddress();
+        NextFrame--;
+        do
+        {
+            Frame = NextFrame;
+            FramePc = Frame[1];
+            NextFrame = Frame[0];
+ 
+            if ((ULONG_PTR)FramePc > (ULONG_PTR)MmHighestUserAddress &&
+            KiPcToFileHeader(FramePc, &LdrEntry, FALSE, &InSystem))
+            {
+                KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
+                                        AnsiName,
+                                        sizeof(AnsiName));
+                FramePc = (PVOID)((ULONG_PTR)FramePc - (ULONG_PTR)LdrEntry->DllBase);
+                sprintf(Buffer, "%p <%s:%p>\r\n", Frame, AnsiName, FramePc);
+            }
+            else
+            {
+                sprintf(Buffer, "%p <%p>\r\n", Frame, FramePc);
+            }
+            AppendAdditionalData(Buffer, DisplayBacktrace);
+        } while ((ULONG_PTR)NextFrame > (ULONG_PTR)Frame &&
+                 (ULONG_PTR)NextFrame < (ULONG_PTR)Frame + 4 * PAGE_SIZE);
+        sprintf(Buffer, "%p\r\n", NextFrame);
+        AppendAdditionalData(Buffer, DisplayBacktrace);
+    }
+    AppendAdditionalData("---end of backtrace---\r\n\r\n", DisplayBacktrace);
+    
     /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
@@ -771,28 +870,17 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiName, sizeof(AnsiName));
         InbvDisplayString(AnsiName);
         InbvDisplayString("\r\n");
-    }
-    
-    /* Check if this is the generic message */
-    if (MessageId == BUGCODE_PSS_MESSAGE)
-    {
-        /* It is, so get the bug code string as well */
-        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
-        InbvDisplayString("\r\n\r\n");
+        
+        sprintf(AnsiName, "What failed: %s\r\n", AnsiName);
+        AppendAdditionalData(AnsiName, FALSE);
     }
 
-    /* Get the bug code string */
-    KeGetBugMessageText(MessageId, NULL);
-    InbvDisplayString("\r\n\r\n");
-    
-    /* After main messages make the text's color less distracting. */
-    InbvSetTextColor(9);
-
-    /* Show bug code id (todo: use symbolic name instead)*/
+    /* Show bug code ID (todo: use symbolic name instead, like INACCESSIBLE BOOT DEVICE)*/
     sprintf(AnsiName,
-            "Code: 0x%08X\r\n",
+            "Stop code: 0x%08X\r\n",
             (int)MessageId);
     InbvDisplayString(AnsiName);
+    AppendAdditionalData(AnsiName, FALSE);
 
     /* Format & show the technical Data */
     sprintf(AnsiName,
@@ -803,12 +891,14 @@ KiDisplayBlueScreen(IN ULONG MessageId,
             (PVOID)KiBugCheckData[3],
             (PVOID)KiBugCheckData[4]);
     InbvDisplayString(AnsiName);
+    AppendAdditionalData(AnsiName, FALSE);
 
     /* Check if we have a driver*/
     if (KiBugCheckDriver)
     {
         /* Display technical driver data */
         InbvDisplayString(Message);
+        AppendAdditionalData(Message, FALSE);
     }
     else
     {
@@ -819,6 +909,10 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               KeBugCheckUnicodeToAnsi);
     }
     
+    
+    /* If Style is 0 (Bitmap + Text + QR) generate and display QR-Code */
+    if (ErrorScreenStyle == 0) 
+        DisplayQRCode();
 }
 
 VOID
