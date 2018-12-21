@@ -557,7 +557,7 @@ HRESULT dxbc_add_section(struct dxbc *dxbc, DWORD tag, const char *data, DWORD d
     return S_OK;
 }
 
-HRESULT dxbc_init(struct dxbc *dxbc, UINT size)
+HRESULT dxbc_init(struct dxbc *dxbc, unsigned int size)
 {
     TRACE("dxbc %p, size %u.\n", dxbc, size);
 
