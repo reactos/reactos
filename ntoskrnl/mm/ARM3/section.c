@@ -1336,7 +1336,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
 
     /* The offset must be in this segment's PTE chunk and it must be valid. Windows ASSERTs */
     ASSERT(PteOffset < Segment->TotalNumberOfPtes);
-    ASSERT(((SectionOffset->QuadPart + *ViewSize + PAGE_SIZE - 1) >> PAGE_SHIFT) >= PteOffset);
+    ASSERT(BYTES_TO_PAGES(SectionOffset->QuadPart + *ViewSize) >= PteOffset);
 
     /* In ARM3, only one subsection is used for now. It must contain these PTEs */
     ASSERT(PteOffset < Subsection->PtesInSubsection);
@@ -1537,7 +1537,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     if (*MaximumSize > SizeLimit) return STATUS_SECTION_TOO_BIG;
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (PFN_COUNT)((*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    PteCount = (PFN_COUNT)BYTES_TO_PAGES(*MaximumSize);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
