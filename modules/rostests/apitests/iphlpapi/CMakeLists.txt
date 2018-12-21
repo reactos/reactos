@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     GetExtendedTcpTable.c
+    GetExtendedUdpTable.c
     GetInterfaceName.c
     GetNetworkParams.c
     GetOwnerModuleFromTcpEntry.c
