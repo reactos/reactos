@@ -222,17 +222,18 @@ CcRosFlushDirtyPages (
             continue;
         }
 
+        ASSERT(current->Dirty);
+
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
         Locked = current->SharedCacheMap->Callbacks->AcquireForLazyWrite(
                      current->SharedCacheMap->LazyWriteContext, Wait);
         if (!Locked)
         {
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             CcRosVacbDecRefCount(current);
             continue;
         }
-
-        ASSERT(current->Dirty);
-
-        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
         Status = CcRosFlushVacb(current);
 
