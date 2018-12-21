@@ -29,6 +29,7 @@ ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
 CHAR* AdditionalInformation;
+ULONG ErrorScreenStyle = 0; 
 
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
@@ -674,19 +675,22 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-SetUpBlueScreen(IN BOOLEAN IsFlatStyle)
+SetUpBlueScreen(IN ULONG BackgroundColor)
 {
     PVOID EmojiResource = NULL;
     ULONG PositionY = 75; // 109 default
     
+	if (ErrorScreenStyle >= 1) 
+		PositionY = 0;
+	
     /* Acquire ownership and reset the display */
     InbvAcquireDisplayOwnership();
     InbvResetDisplay();
     
-    if (IsFlatStyle)
+    if (ErrorScreenStyle <= 1)
     {        
-        /* Fill the screen with 0 color */
-        InbvSolidColorFill(0, 0, 639, 479, 0);
+        /* Fill the screen */
+        InbvSolidColorFill(0, 0, 639, 479, 1);
     
         /* Get resources */
         EmojiResource = InbvGetResourceAddress(IDB_ERROR_IMAGE);
@@ -695,27 +699,40 @@ SetUpBlueScreen(IN BOOLEAN IsFlatStyle)
         if (EmojiResource)
         {
             /* BitBlt Emoji on the screen */
-            InbvBitBlt(EmojiResource, 28, PositionY);
+			if (ErrorScreenStyle == 0)
+				InbvBitBlt(EmojiResource, 30, PositionY);
+			else if (ErrorScreenStyle == 1)
+				InbvBitBlt(EmojiResource, 278, 184); 
         }
     }
     else
+	{
         InbvSolidColorFill(0, 0, 639, 479, 4); // If it's not, fill the screen with oldskool blue color
+	}
     
+    /* Change text color to White to attract the user's attention. */
+    InbvSetTextColor(15);
+	
     /* Remove filters and allow print text */
     InbvInstallDisplayStringFilter(NULL);
     InbvEnableDisplayString(TRUE);
     
     /* Set the scrolling region */
-    if (IsFlatStyle)
-        InbvSetScrollRegion(32, PositionY + 116 /*225*/, 607, 479);
-    else
+    if (ErrorScreenStyle == 0)
+	{
+        InbvSetScrollRegion(32, PositionY + 119, 607, 479);
+	}
+    else if (ErrorScreenStyle == 1)
+	{
+		InbvSolidColorFill(0, 0, 639, 479, 1);
+		InbvSetScrollRegion(8, 8, 639, 479);
+	}
+	else
     {
         InbvSetScrollRegion(0, 0, 639, 479);
         InbvDisplayString("\r\n");
     }
     
-    /* Change text color to White to attract the user's attention. */
-    InbvSetTextColor(15);
 }
 
 
@@ -736,14 +753,15 @@ DisplayQRCode(VOID)
 {
     /* TODO */
     //#if QRCODE_IMPLEMENTED
-    ULONG X = 502;
-    ULONG Y = 0;
-    ULONG MaxX = 639;
-    ULONG MaxY = 136;
+    ULONG X = 498;
+    ULONG Y = 4;
+    ULONG MaxX = 635;
+    ULONG MaxY = 132;
     
     /* The information is in AdditionalInformation variable */
     
     InbvSolidColorFill(X, Y, MaxX, MaxY, 15);
+	InbvSolidColorFill(X + 2, Y + 2, MaxX - 2, MaxY - 2, 0);
     //#endif
 }
 
@@ -756,18 +774,16 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                     IN PCHAR Message)
 {
     CHAR AnsiName[75];
-    ULONG ErrorScreenStyle = 2; 
+	BOOLEAN DisplayBacktrace = FALSE;
+	ULONG BackgroundColor = 0xFF1070AA; // Blue
     /* TODO: Implement registry loading?
-       0 - Bitmap Palette  & Short Text + QR-code
-       1 - Bitmap Palette  & Short Text
-       2 - Default Palette  & Expanded Text
-    */
-    BOOLEAN IsTextLarge = FALSE;
-    BOOLEAN DisplayBacktrace = FALSE;
+	
+       0 - Modern BSOD  + QR-CODE
+       1 - Modern BSOD  + Additional Info
+       2 - Classic BSOD + Additional Info */
 
-    if (ErrorScreenStyle >= 2)
+    if (ErrorScreenStyle >= 1)
     {
-        IsTextLarge = TRUE;
         DisplayBacktrace = TRUE;
     }
 
@@ -775,7 +791,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     if (InbvIsBootDriverInstalled())
     {
         /* Set up display for blur screen */
-        SetUpBlueScreen(!IsTextLarge);
+        SetUpBlueScreen(BackgroundColor);
         
         /* TODO: Change background color. We can change the color by creating gradient in palette from X color to "White" color. */
     }
@@ -913,6 +929,11 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* If Style is 0 (Bitmap + Text + QR) generate and display QR-Code */
     if (ErrorScreenStyle == 0) 
         DisplayQRCode();
+	
+	//ErrorScreenStyle++;
+	//if (ErrorScreenStyle >= 3) ErrorScreenStyle = 0;
+	
+	//KiDisplayBlueScreen(MessageId, IsHardError, HardErrCaption, HardErrMessage, Message);
 }
 
 VOID
