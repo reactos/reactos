@@ -75,8 +75,8 @@ PVOID MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType)
     TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
     // Update LoaderPagesSpanned count
-    if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
-        LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    if (BYTES_TO_PAGES((ULONG_PTR)MemPointer + MemorySize) > LoaderPagesSpanned)
+        LoaderPagesSpanned = BYTES_TO_PAGES((ULONG_PTR)MemPointer + MemorySize);
 
     // Now return the pointer
     return MemPointer;
@@ -134,8 +134,8 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
     TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
     // Update LoaderPagesSpanned count
-    if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
-        LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    if (BYTES_TO_PAGES((ULONG_PTR)MemPointer + MemorySize) > LoaderPagesSpanned)
+        LoaderPagesSpanned = BYTES_TO_PAGES((ULONG_PTR)MemPointer + MemorySize);
 
     // Now return the pointer
     return MemPointer;
