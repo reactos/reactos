@@ -1458,11 +1458,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
-        if (0 && MsqIsHung(ptiSendTo))
-        {
-            TRACE("Let's go Ghost!\n");
-            IntMakeHungWindowGhosted(hWnd);
-        }
 /*
  *  MSDN says:
  *  Microsoft Windows 2000: If GetLastError returns zero, then the function

@@ -247,6 +247,7 @@ DWORD UserSystemThreadProc(BOOL bRemoteProcess)
 BOOL UserCreateSystemThread(DWORD Type)
 {
     USER_API_MESSAGE ApiMessage;
+    NTSTATUS Status;
     PUSER_CREATE_SYSTEM_THREAD pCreateThreadRequest = &ApiMessage.Data.CreateSystemThreadRequest;
 
     TRACE("UserCreateSystemThread: %d\n", Type);
@@ -264,13 +265,15 @@ BOOL UserCreateSystemThread(DWORD Type)
 
     /* Ask winsrv to create a new system thread. This new thread will enter win32k again calling UserSystemThreadProc */
     pCreateThreadRequest->bRemote = FALSE;
-    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                        NULL,
-                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpCreateSystemThreads),
-                        sizeof(USER_CREATE_SYSTEM_THREAD));
-    if (!NT_SUCCESS(ApiMessage.Status))
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX,
+                                                       UserpCreateSystemThreads),
+                                 sizeof(USER_CREATE_SYSTEM_THREAD));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
-        ERR("Csr call failed!\n");
+        ERR("Csr call failed! Status:0x%08lx, ApiMessage.Status:0x%08lx\n",
+            Status, ApiMessage.Status);
         return FALSE;
     }
 

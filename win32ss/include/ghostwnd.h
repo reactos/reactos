@@ -14,7 +14,30 @@ typedef struct GHOST_DATA
 {
     HWND hwndTarget;
     HBITMAP hbm32bpp;
-    BOOL bDestroyTarget;
+    DWORD style;
+    DWORD exstyle;
+    RECT rcWindow;
 } GHOST_DATA;
+
+/*-------------------------------------------------------------------------*/
+/* Ghost window messages (GWM_*): */
+
+// GWM_UNGHOST message:
+//   wParam: BOOL bDestroyTarget: Whether the target is to be destroyed.
+//   lParam: Ignored.
+#define GWM_UNGHOST             (WM_USER + 100)
+
+/*-------------------------------------------------------------------------*/
+/* Ghost thread messages (GTM_*): */
+
+// GTM_CREATE_GHOST message:
+//   wParam: HWND hwndTarget: The target window.
+//   lParam: HWND hwndGhost: The ghost window.
+#define GTM_CREATE_GHOST        (WM_USER + 1)
+
+// GTM_GHOST_DESTROYED message:
+//   wParam: HWND hwndTarget: The target window.
+//   lParam: HWND hwndGhost: The ghost window.
+#define GTM_GHOST_DESTROYED     (WM_USER + 2)
 
 #endif

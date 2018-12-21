@@ -2642,6 +2642,12 @@ NtUserOpenInputDesktop(
     HDESK hdesk;
 
     UserEnterExclusive();
+    if (gpdeskInputDesktop == NULL)
+    {
+        UserLeave();
+        return NULL;
+    }
+
     TRACE("Enter NtUserOpenInputDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
 
     hdesk = UserOpenInputDesktop(dwFlags, fInherit, dwDesiredAccess);

@@ -162,6 +162,9 @@ IntHideDesktop(PDESKTOP Desktop);
 BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
+
 NTSTATUS
 FASTCALL
 IntResolveDesktop(

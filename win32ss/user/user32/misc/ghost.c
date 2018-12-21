@@ -7,9 +7,10 @@
 
 #include <user32.h>
 #include <strsafe.h>
+#include <undocuser.h>
 #include "ghostwnd.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ghost);
+WINE_DEFAULT_DEBUG_CHANNEL(UserInput);
 
 #define GHOST_TIMER_ID  0xFACEDEAD
 #define GHOST_INTERVAL  1000        // one second
@@ -56,7 +57,7 @@ IntGetWindowBitmap(HWND hwnd, INT cx, INT cy)
     HDC hdc, hdcMem;
     HGDIOBJ hbmOld;
 
-    hdc = GetWindowDC(hwnd);
+    hdc = GetDC(hwnd);
     if (!hdc)
         return NULL;
 
@@ -98,7 +99,7 @@ IntMakeGhostImage(HBITMAP hbm)
     pdw = bm.bmBits;
     for (i = 0; i < bm.bmWidth * bm.bmHeight; ++i)
     {
-        *pdw = *pdw | 0x00C0C0C0;   // bitwise-OR with ARGB #C0C0C0
+        *pdw = *pdw | 0x00A0A0A0;   // bitwise-OR with ARGB #A0A0A0
         ++pdw;
     }
 }
@@ -162,7 +163,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     GHOST_DATA *pData;
     RECT rc;
     DWORD style, exstyle;
-    WCHAR szTextW[320], szNotRespondingW[32];
+    WCHAR szClassW[64], szTextW[320], szNotRespondingW[32];
     LPWSTR pszTextW;
     INT cchTextW, cchExtraW, cchNonExtraW;
     PWND pWnd = ValidateHwnd(hwnd);
@@ -185,15 +186,39 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         (GetWindowLongPtrW(hwndTarget, GWL_STYLE) & WS_CHILD) ||    // child?
         !IsHungAppWindow(hwndTarget))                               // not hung?
     {
+        ERR("Ghost: invalid target\n");
         return FALSE;
     }
 
-    // check prop
-    if (GetPropW(hwndTarget, GHOST_PROP))
+    // get class name
+    if (!GetClassNameW(hwndTarget, szClassW, ARRAYSIZE(szClassW)))
+    {
+        ERR("GetClassNameW(hwndTarget: %p)\n", (void *)hwndTarget);
         return FALSE;
+    }
 
-    // set prop
-    SetPropW(hwndTarget, GHOST_PROP, hwnd);
+    TRACE("Ghost_OnCreate: hwndTarget(%p), szClassW(%S)\n", (void *)hwndTarget,
+          szClassW);
+
+    if (lstrcmpiW(szClassW, L"Ghost") == 0)
+    {
+        ERR("hwndTarget:%p was ghost window\n", (void *)hwndTarget);
+        return FALSE;
+    }
+
+    if (lstrcmpiW(szClassW, L"Progman") == 0 ||
+        lstrcmpiW(szClassW, L"Shell_TrayWnd") == 0)
+    {
+        ERR("hwndTarget:%p was special window\n", (void *)hwndTarget);
+        return FALSE;
+    }
+
+    GetWindowRect(hwndTarget, &rc);
+    if (IsRectEmpty(&rc))
+    {
+        ERR("IsRectEmpty: %p\n", (void *)hwndTarget);
+        return FALSE;
+    }
 
     // create user data
     pData = HeapAlloc(GetProcessHeap(), 0, sizeof(GHOST_DATA));
@@ -203,8 +228,10 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
         return FALSE;
     }
 
+    pData->rcWindow = rc;
+
     // get window image
-    GetWindowRect(hwndTarget, &rc);
+    GetClientRect(hwndTarget, &rc);
     hbm32bpp = IntGetWindowBitmap(hwndTarget,
                                   rc.right - rc.left,
                                   rc.bottom - rc.top);
@@ -220,12 +247,13 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // set user data
     pData->hwndTarget = hwndTarget;
     pData->hbm32bpp = hbm32bpp;
-    pData->bDestroyTarget = FALSE;
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
     // get style
     style = GetWindowLongPtrW(hwndTarget, GWL_STYLE);
     exstyle = GetWindowLongPtrW(hwndTarget, GWL_EXSTYLE);
+    pData->style = style;
+    pData->exstyle = exstyle;
 
     // get text
     cchTextW = ARRAYSIZE(szTextW);
@@ -254,7 +282,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 
     // set style
     SetWindowLongPtrW(hwnd, GWL_STYLE, style);
-    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle | WS_EX_MAKEVISIBLEWHENUNGHOSTED);
 
     // set text with " (Not Responding)"
     LoadStringW(User32Instance, IDS_NOT_RESPONDING,
@@ -269,21 +297,19 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // get previous window of target
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
 
-    // hide target
-    ShowWindowAsync(hwndTarget, SW_HIDE);
+    // hide target by setting zero size
+    SetWindowPos(hwndTarget, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
+                 SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOZORDER);
+    // hide from taskbar
+    SetWindowLongPtrW(hwndTarget, GWL_EXSTYLE, pData->exstyle | WS_EX_TOOLWINDOW);
 
-    // shrink the ghost to zero size and insert.
-    // this will avoid effects.
-    SetWindowPos(hwnd, hwndPrev, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOOWNERZORDER |
-                 SWP_DRAWFRAME);
-
-    // resume the position and size of ghost
-    MoveWindow(hwnd, rc.left, rc.top,
-               rc.right - rc.left, rc.bottom - rc.top, TRUE);
-
-    // make ghost visible
-    SetWindowLongPtrW(hwnd, GWL_STYLE, style | WS_VISIBLE);
+    // insert the ghost
+    GetWindowRect(hwndTarget, &rc);
+    SetWindowPos(hwnd, hwndPrev,
+                 rc.left, rc.top,
+                 rc.right - rc.left, rc.bottom - rc.top,
+                 SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_DRAWFRAME);
 
     // redraw
     InvalidateRect(hwnd, NULL, TRUE);
@@ -294,15 +320,22 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     return TRUE;
 }
 
-static void
+static BOOL
 Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
 {
+    DWORD exstyle;
     GHOST_DATA *pData = Ghost_GetData(hwnd);
     if (!pData)
-        return;
+        return FALSE;
 
-    pData->bDestroyTarget |= bDestroyTarget;
-    DestroyWindow(hwnd);
+    exstyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    if (bDestroyTarget)
+    {
+        exstyle &= ~WS_EX_MAKEVISIBLEWHENUNGHOSTED;
+    }
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
+
+    return DestroyWindow(hwnd);
 }
 
 static void
@@ -323,26 +356,6 @@ Ghost_OnDraw(HWND hwnd, HDC hdc)
                hdcMem, 0, 0, SRCCOPY | CAPTUREBLT);
         SelectObject(hdcMem, hbmOld);
         DeleteDC(hdcMem);
-    }
-}
-
-static void
-Ghost_OnNCPaint(HWND hwnd, HRGN hrgn, BOOL bUnicode)
-{
-    HDC hdc;
-
-    // do the default behaivour
-    if (bUnicode)
-        DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
-    else
-        DefWindowProcA(hwnd, WM_NCPAINT, (WPARAM)hrgn, 0);
-
-    // draw the ghost image
-    hdc = GetWindowDC(hwnd);
-    if (hdc)
-    {
-        Ghost_OnDraw(hwnd, hdc);
-        ReleaseDC(hwnd, hdc);
     }
 }
 
@@ -401,24 +414,35 @@ Ghost_DestroyTarget(GHOST_DATA *pData)
 static void
 Ghost_OnNCDestroy(HWND hwnd)
 {
+    DWORD dwThreadID = GetWindowThreadProcessId(hwnd, NULL);
+    HWND hwndTarget = NULL;
+    DWORD exstyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+
     // delete the user data
     GHOST_DATA *pData = Ghost_GetData(hwnd);
     if (pData)
     {
+        hwndTarget = pData->hwndTarget;
+
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
 
         // delete image
         DeleteObject(pData->hbm32bpp);
         pData->hbm32bpp = NULL;
 
-        // remove prop
-        RemovePropW(pData->hwndTarget, GHOST_PROP);
-
         // show target
-        ShowWindowAsync(pData->hwndTarget, SW_SHOWNOACTIVATE);
+        SetWindowPos(pData->hwndTarget, NULL,
+                     pData->rcWindow.left,
+                     pData->rcWindow.top,
+                     pData->rcWindow.right - pData->rcWindow.left,
+                     pData->rcWindow.bottom - pData->rcWindow.top,
+                     SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
+                     SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
+        SetWindowLongPtr(pData->hwndTarget, GWL_STYLE, pData->style);
+        SetWindowLongPtr(pData->hwndTarget, GWL_EXSTYLE, pData->exstyle);
 
         // destroy target if necessary
-        if (pData->bDestroyTarget)
+        if (!(exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED))
         {
             Ghost_DestroyTarget(pData);
         }
@@ -428,7 +452,8 @@ Ghost_OnNCDestroy(HWND hwnd)
 
     NtUserSetWindowFNID(hwnd, FNID_DESTROY);
 
-    PostQuitMessage(0);
+    PostThreadMessage(dwThreadID, GTM_GHOST_DESTROYED,
+                      (WPARAM)hwndTarget, (LPARAM)hwnd);
 }
 
 static void
@@ -522,10 +547,6 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
                 return -1;
             break;
 
-        case WM_NCPAINT:
-            Ghost_OnNCPaint(hwnd, (HRGN)wParam, unicode);
-            return 0;
-
         case WM_ERASEBKGND:
             Ghost_OnDraw(hwnd, (HDC)wParam);
             return TRUE;
@@ -576,10 +597,8 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
         case WM_GETICON:
             return (LRESULT)Ghost_GetIcon(hwnd, (INT)wParam);
 
-        case WM_COMMAND:
-            if (LOWORD(wParam) == 3333)
-                Ghost_Unenchant(hwnd, FALSE);
-            break;
+        case GWM_UNGHOST:
+            return Ghost_Unenchant(hwnd, (BOOL)wParam);
 
         case WM_DESTROY:
             Ghost_OnDestroy(hwnd);

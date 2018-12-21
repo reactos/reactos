@@ -11,7 +11,6 @@ list(APPEND SOURCE
     controls/button.c
     controls/combo.c
     controls/edit.c
-    controls/ghost.c
     controls/icontitle.c
     controls/listbox.c
     controls/regcontrol.c
@@ -26,6 +25,7 @@ list(APPEND SOURCE
     misc/dllmain.c
     misc/exit.c
     misc/exticon.c
+    misc/ghost.c
     misc/imm.c
     misc/logon.c
     misc/misc.c

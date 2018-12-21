@@ -717,6 +717,12 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 
            TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0, dwExtraInfo);
+
+           if (MsqIsHung(pti))
+           {
+               TRACE("Let's go Ghost!\n");
+               IntMakeHungWindowGhosted(UserHMGetHandle(pwnd));
+           }
        }
    }
    else if (hdcScreen)

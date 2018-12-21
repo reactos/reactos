@@ -114,6 +114,40 @@ ULONG
 NTAPI
 CreateSystemThreads(PVOID pParam)
 {
+#if 1
+    // WARNING: Here we have a very ugly hack in order for ghost windows to work.
+    // In windows the ghost class is implemented in win32k but in reactos
+    // it is implemented in user32. At first I thought that there would be no problem 
+    // for win32k to use a class registered in user32. However it turns out that
+    // most of the time the user mode classes are not registered at all by winsrv as
+    // they are not needed. This makes it impossible however for win32k to create 
+    // the ghost window whenever it likes as the ghost class may not be registered yet.
+    // This means that at some point csrss needs to register the classes of user32
+    // before win32k tries to create the ghost window. 
+    // To make matters worse our user32 has no clue if it is running in the context of
+    // csrss or in a client process so as long as we have the ghost class in user32 and
+    // user32 has no clue if it is in csrss or not, the hack to register the ghost class
+    // needs to be in winsrv.
+    // To avoid complicating the situation even more by registering all classes on boot 
+    // before any desktop is created, the following hack checks if the input desktop is
+    // already created and if it is, it will force user32 to register its classes.
+    // Keep in mind that the desktop check means that this hack will only trigger when 
+    // we first try to create the ghost thread and hence there are no bad consequences because of it.
+    // If the ghost class is ever moved to win32k from user32, this hack can be removed.
+    HDESK hDeskInput = OpenInputDesktop(0, FALSE, /*DESKTOP_ALL_ACCESS*/0x01ff);
+    if (hDeskInput)
+    {
+        /* This clause will only run when we are creating the ghost thread */
+        WNDCLASSEXW wcx;
+
+        /* Use a desktop before registering the system classes */
+        SetThreadDesktop(hDeskInput);
+
+        /* Querying the class info we force user32 to register the class if it was not registered yet. */
+        GetClassInfoExW(NULL, L"Ghost", &wcx);
+    }
+#endif
+
     NtUserCallOneParam((DWORD_PTR)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
     RtlExitUserThread(0);
     return 0;
