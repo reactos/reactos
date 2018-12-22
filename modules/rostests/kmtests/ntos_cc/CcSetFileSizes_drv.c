@@ -182,6 +182,8 @@ PerformTest(
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
             {
+                trace("Starting test: %d\n", TestId);
+
                 if (TestId == 0 || TestId == 2)
                 {
                     Offset.QuadPart = 0;
