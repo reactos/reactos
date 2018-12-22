@@ -171,13 +171,18 @@ PerformTest(
             Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
             Fcb->Header.ValidDataLength.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
 
+            if (TestId > 1 && TestId < 4)
+            {
+                Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
+            }
+
             KmtStartSeh();
             CcInitializeCacheMap(TestFileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize, TRUE, &Callbacks, NULL);
             KmtEndSeh(STATUS_SUCCESS);
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
             {
-                if (TestId == 0)
+                if (TestId == 0 || TestId == 2)
                 {
                     Offset.QuadPart = 0;
                     KmtStartSeh();
@@ -194,6 +199,7 @@ PerformTest(
                     CcSetFileSizes(TestFileObject, &NewFileSizes);
                     KmtEndSeh(STATUS_SUCCESS);
 
+                    Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY;
                     Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY;
 
                     Offset.QuadPart = 0;
@@ -208,7 +214,7 @@ PerformTest(
                         CcUnpinData(Bcb);
                     }
                 }
-                else if (TestId == 1)
+                else if (TestId == 1 || TestId == 3)
                 {
                     Buffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
                     if (!skip(Buffer != NULL, "ExAllocatePool failed\n"))
@@ -226,6 +232,7 @@ PerformTest(
                         CcSetFileSizes(TestFileObject, &NewFileSizes);
                         KmtEndSeh(STATUS_SUCCESS);
 
+                        Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY;
                         Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY;
                         RtlZeroMemory(Buffer, PAGE_SIZE);
 
