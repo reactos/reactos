@@ -60,3 +60,18 @@ add_importlibs(ccpinread_drv ntoskrnl hal)
 add_target_compile_definitions(ccpinread_drv KMT_STANDALONE_DRIVER)
 #add_pch(ccmapdata_drv ../include/kmt_test.h)
 add_rostests_file(TARGET ccpinread_drv)
+
+#
+# CcSetFileSizes
+#
+list(APPEND CCSETFILESIZES_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    CcSetFileSizes_drv.c)
+
+add_library(ccsetfilesizes_drv SHARED ${CCSETFILESIZES_DRV_SOURCE})
+set_module_type(ccsetfilesizes_drv kernelmodedriver)
+target_link_libraries(ccsetfilesizes_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(ccsetfilesizes_drv ntoskrnl hal)
+add_target_compile_definitions(ccsetfilesizes_drv KMT_STANDALONE_DRIVER)
+#add_pch(ccsetfilesizes_drv ../include/kmt_test.h)
+add_rostests_file(TARGET ccsetfilesizes_drv)
