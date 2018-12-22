@@ -634,22 +634,20 @@ main(int argc, const char **argv)
         const char *exefile = NULL;
         const char *offset = NULL;
         char Line[LINESIZE + 1];
+        char PathBuffer[LINESIZE + 1];
+        char LineOutBuffer[LINESIZE + 1];
 
         while (i < argc)
         {
-            Line[0] = '\0';
             offset = argv[optCount + i++];
             if (isOffset(offset))
             {
                 if (exefile)
                 {
                     l2l_dbg(2, "translating %s %s\n", exefile, offset);
-                    printf("<%s:%s", exefile, offset);
-                    if (!translate_file(exefile, my_atoi(offset), Line))
-                    {
-                        printf(" (%s)", Line);
-                    }
-                    printf(">\n");
+
+                    sprintf(Line, "<%s:%s>\n", exefile, offset);
+                    translate_line(conOut, Line, PathBuffer, LineOutBuffer);
                     report(conOut);
                 }
                 else
