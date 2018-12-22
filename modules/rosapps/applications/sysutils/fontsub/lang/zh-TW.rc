@@ -25,7 +25,7 @@ BEGIN
         MENUITEM "重新加載登錄(&L)\tCtrl+L", ID_RELOAD
         MENUITEM "更新登錄(&R)\tCtrl+U", ID_UPDATE_REGISTRY
         MENUITEM SEPARATOR
-        MENUITEM "在登錄中開啟(&E)”, ID_OPEN_REGKEY
+        MENUITEM "在登錄中開啟(&E)", ID_OPEN_REGKEY
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)\tAlt+F4", ID_EXIT
     END
