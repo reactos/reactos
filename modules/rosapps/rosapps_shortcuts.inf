@@ -372,7 +372,7 @@ SCREENSHOT_DESC=Зробити знімок екрана
 VCD_TITLE=Virtual CDRom Control Panel
 VCD_DESC=Manage virtual CDRom drives
 
-; Chinese
+; Simplified Chinese
 [Strings.0804]
 ACCESSORIES=附件
 SYSTOOLS=系统工具
@@ -385,5 +385,21 @@ FONTSUB_TITLE=FontSub
 FONTSUB_DESC=Font Substitutes Editor
 SCREENSHOT_TITLE=屏幕截图
 SCREENSHOT_DESC=屏幕截图
-VCD_TITLE=Virtual CDRom Control Panel
-VCD_DESC=Manage virtual CDRom drives
+VCD_TITLE=虚拟光驱控制面板
+VCD_DESC=管理虚拟光盘驱动器
+
+; Traditional Chinese
+[Strings.0404]
+ACCESSORIES=附屬應用程式
+SYSTOOLS=系統管理工具
+ACCESSIBILITY=協助工具
+ENTERTAINMENT=娛樂
+COMMUNICATIONS=通訊
+GAMES=遊樂場
+
+FONTSUB_TITLE=FontSub
+FONTSUB_DESC=Font Substitutes Editor
+SCREENSHOT_TITLE=螢幕擷取
+SCREENSHOT_DESC=螢幕擷取
+VCD_TITLE=虛擬光碟機控制台
+VCD_DESC=管理虛擬光碟機
