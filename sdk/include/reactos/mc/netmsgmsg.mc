@@ -3677,13 +3677,13 @@ Language=English
 The user accounts database (NET.ACC) is corrupted.  The local security\n
 system is replacing the corrupted NET.ACC with the backup\n
 made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n"
+Any updates made to the database after this time are lost.\n
 .
 Language=Russian
 The user accounts database (NET.ACC) is corrupted.  The local security\n
 system is replacing the corrupted NET.ACC with the backup\n
 made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n"
+Any updates made to the database after this time are lost.\n
 .
 
 MessageId=3028
@@ -3694,13 +3694,13 @@ Language=English
 The user accounts database (NET.ACC) is missing. The local\n
 security system is restoring the backup database\n
 made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n"
+Any updates made to the database after this time are lost.\n
 .
 Language=Russian
 The user accounts database (NET.ACC) is missing. The local\n
 security system is restoring the backup database\n
 made on %1 at %2.\n
-Any updates made to the database after this time are lost.\n"
+Any updates made to the database after this time are lost.\n
 .
 
 MessageId=3029
@@ -3726,11 +3726,11 @@ Facility=System
 SymbolicName=ALERT_3030
 Language=English
 The server cannot export directory %1, to client %2.\n
-It is exported from another server."
+It is exported from another server.
 .
 Language=Russian
 The server cannot export directory %1, to client %2.\n
-It is exported from another server."
+It is exported from another server.
 .
 
 MessageId=3031
@@ -5907,13 +5907,13 @@ Language=English
 WARNING: You have until %1 to logoff. If you\n
 have not logged off at this time, your session will be\n
 disconnected, and any open files or devices you\n
-have open may lose data."
+have open may lose data.
 .
 Language=Russian
 WARNING: You have until %1 to logoff. If you\n
 have not logged off at this time, your session will be\n
 disconnected, and any open files or devices you\n
-have open may lose data."
+have open may lose data.
 .
 
 MessageId=3418
@@ -9658,10 +9658,10 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4486
 Language=English
-ReactOS%0"
+ReactOS%0
 .
 Language=Russian
-ReactOS%0"
+ReactOS%0
 .
 
 MessageId=4487
@@ -12951,12 +12951,12 @@ SymbolicName=APPERR2_5034
 Language=English
 Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
-For more help use the print troubleshooter."
+For more help use the print troubleshooter.
 .
 Language=Russian
 Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
-For more help use the print troubleshooter."
+For more help use the print troubleshooter.
 .
 
 MessageId=5035
@@ -14214,11 +14214,11 @@ Facility=System
 SymbolicName=NRCERR_5326
 Language=English
 An unexpected protocol packet was received.  There may be an\n
-incompatible remote device.  The network control block (NCB) is the data."
+incompatible remote device.  The network control block (NCB) is the data.
 .
 Language=Russian
 An unexpected protocol packet was received.  There may be an\n
-incompatible remote device.  The network control block (NCB) is the data."
+incompatible remote device.  The network control block (NCB) is the data.
 .
 
 MessageId=5333
@@ -15923,14 +15923,14 @@ The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
 container in the DS.  The name is not syntactically valid.  The valid\n
 syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
 and yy is the number of bits in the subnet mask.\n\n
-Correct the name of the subnet object."
+Correct the name of the subnet object.
 .
 Language=Russian
 The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
 container in the DS.  The name is not syntactically valid.  The valid\n
 syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
 and yy is the number of bits in the subnet mask.\n\n
-Correct the name of the subnet object."
+Correct the name of the subnet object.
 .
 
 MessageId=5781
