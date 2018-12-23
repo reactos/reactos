@@ -43,6 +43,8 @@ WINAPI
 SetupCloseInfFile(
     IN HINF InfHandle)
 {
+    if (InfHandle == INVALID_HANDLE_VALUE)
+        return;
     InfCloseFile(InfHandle);
 }
 
@@ -57,6 +59,9 @@ SetupFindFirstLineW(
 {
     PINFCONTEXT pContext;
     BOOL ret;
+
+    if (InfHandle == INVALID_HANDLE_VALUE)
+        return FALSE;
 
     ret = InfFindFirstLine(InfHandle, Section, Key, &pContext);
     if (!ret)
