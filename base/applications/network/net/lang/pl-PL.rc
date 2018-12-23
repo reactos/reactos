@@ -1,40 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_HELPMSG_SYNTAX "NET HELPMSG komunikat#\n\n"
-    IDS_HELPMSG_HELP_1 "NET HELPMSG wyświetla informacje o komunikatach sieci (takich\n\
-jak błąd, ostrzeżenie lub alarm). Gdy wpiszesz NET HELPMSG i błąd numeryczny\n\
-(na przykład ""net helpmsg 2182""), system\n\
-objaśni komunikat i zasugeruje rozwiązanie problemu.\n\n"
-    IDS_HELPMSG_HELP_2 "komunikat#   Numeryczny błąd systemu, o którym chcesz uzyskać informacje.\n\n"
-    IDS_LOCALGROUP_SYNTAX "NET LOCALGROUP [nazwa_grupy [/COMMENT:""tekst""]] [/DOMAIN]\n\
-               nazwa_grupy {/ADD [/COMMENT:""tekst""] | /DELETE} [/DOMAIN]\n\
-               nazwa_grupy nazwa [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
-    IDS_LOCALGROUP_HELP_1 "NET LOCALGROUP dodaje, wyświetla, lub modyfikuje grupy lokalne na komputerach\n\
-Polecenie użyte bez parametrów wyświetla grupy lokalne na komputerze.\n\n"
-    IDS_LOCALGROUP_HELP_2 "nazwa_grupy       Nazwa grupy dodawanej, rozszerzanej lub usuwanej.\n\
-                 Aby zobaczyć listę użytkowników lub grup globalnych\n\
-                 w grupie lokalnej, podaj tylko nazwę grupy.\n"
-    IDS_LOCALGROUP_HELP_3 "/COMMENT:""tekst""  Dodaje komentarz dla nowej lub istniejącej grupy.\n\
-                 Tekst musi być ujęty w cudzysłów.\n"
-    IDS_LOCALGROUP_HELP_4 "/DOMAIN          Wykonuje operację na kontrolerze bieżącej domeny.\n\
-                 Bez tego przełącznika operacje są wykonywane na\n\
-                 komputerze lokalnym.\n"
-    IDS_LOCALGROUP_HELP_5 "nazwa[ ...]      Lista zawierająca nazwy jednego lub kilku użytkowników\n\
-                 lub grup, dodawanych lub usuwanych z grupy lokalnej.\n\
-                 Rozdziel kolejne wpisy znakiem spacji. Lista może zawierać\n\
-                 nazwy użytkowników lub grup globalnych, lecz nie może\n\
-                 zawierać nazw innych grup lokalnych. Podając nazwę\n\
-				 użytkownika z innej domeny poprzedź ją nazwą domeny\n\
-                 (na przykład: WARSZAWA\\PIOTRS).\n"
-    IDS_LOCALGROUP_HELP_6 "/ADD             Dodaje nazwę grupy lub użytkownika do grupy lokalnej.\n\
-                 Dla użytkowników lub grup globalnych dodawanych tym\n\
-                 poleceniem do grupy lokalnej należy wcześniej utworzyć\n\
-				 odpowiednie konto.\n"
-    IDS_LOCALGROUP_HELP_7 "/DELETE          Usuwa nazwę grupy lub użytkownika z grupy lokalnej.\n\n"
-
-    IDS_NAME_SYNTAX "NET NAME ...\n\n"
-    IDS_NAME_HELP "NAME\n...\n\n"
     IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
     IDS_PRINT_HELP "PRINT\n...\n\n"
     IDS_PAUSE_SYNTAX "NET PAUSE usługa\n\n"

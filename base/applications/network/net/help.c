@@ -77,30 +77,23 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"HELPMSG") == 0)
     {
-        ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
-        ConResPuts(StdOut, IDS_HELPMSG_HELP_1);
-        ConResPuts(StdOut, IDS_HELPMSG_HELP_2);
+        PrintNetMessage(MSG_HELPMSG_SYNTAX);
+        PrintNetMessage(MSG_HELPMSG_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"LOCALGROUP") == 0)
     {
-        ConResPuts(StdOut, IDS_LOCALGROUP_SYNTAX);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_1);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_2);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_3);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_4);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_5);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_6);
-        ConResPuts(StdOut, IDS_LOCALGROUP_HELP_7);
+        PrintNetMessage(MSG_LOCALGROUP_SYNTAX);
+        PrintNetMessage(MSG_LOCALGROUP_HELP);
         ConResPuts(StdOut, IDS_GENERIC_PAGE);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"NAME") == 0)
     {
-        ConResPuts(StdOut, IDS_NAME_SYNTAX);
-        ConResPuts(StdOut, IDS_NAME_HELP);
+        PrintNetMessage(MSG_NAME_SYNTAX);
+        PrintNetMessage(MSG_NAME_HELP);
         return 0;
     }
 

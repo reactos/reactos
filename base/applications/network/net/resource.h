@@ -1,18 +1,5 @@
 #pragma once
 
-#define IDS_HELPMSG_SYNTAX       139
-#define IDS_HELPMSG_HELP_1       140
-#define IDS_HELPMSG_HELP_2       141
-#define IDS_LOCALGROUP_SYNTAX    142
-#define IDS_LOCALGROUP_HELP_1    143
-#define IDS_LOCALGROUP_HELP_2    144
-#define IDS_LOCALGROUP_HELP_3    145
-#define IDS_LOCALGROUP_HELP_4    146
-#define IDS_LOCALGROUP_HELP_5    147
-#define IDS_LOCALGROUP_HELP_6    148
-#define IDS_LOCALGROUP_HELP_7    149
-#define IDS_NAME_SYNTAX          150
-#define IDS_NAME_HELP            151
 #define IDS_PAUSE_SYNTAX         152
 #define IDS_PAUSE_HELP_1         153
 #define IDS_PAUSE_HELP_2         154

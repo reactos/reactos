@@ -1367,3 +1367,408 @@ Language=Taiwanese
    ...
 .
 
+
+MessageId=10016
+SymbolicName=MSG_HELPMSG_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET HELPMSG message#
+.
+Language=Polish
+NET HELPMSG komunikat#
+.
+Language=Romanian
+NET HELPMSG <Error Code>
+.
+Language=Russian
+NET HELPMSG <Код ошибки>
+.
+Language=Spanish
+NET HELPMSG <código de error>
+.
+Language=Turkish
+NET HELPMSG <Yanlışlık Kodu>
+.
+Language=Chinese
+NET HELPMSG message#
+.
+Language=Taiwanese
+NET HELPMSG <錯誤程式碼>
+.
+
+
+MessageId=10017
+SymbolicName=MSG_HELPMSG_HELP
+Severity=Success
+Facility=System
+Language=English
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Polish
+NET HELPMSG wyświetla informacje o komunikatach sieci (takich
+jak błąd, ostrzeżenie lub alarm). Gdy wpiszesz NET HELPMSG i błąd numeryczny
+(na przykład "net helpmsg 2182"), system
+objaśni komunikat i zasugeruje rozwiązanie problemu.
+
+komunikat#   Numeryczny błąd systemu, o którym chcesz uzyskać informacje.
+.
+Language=Romanian
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Russian
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Spanish
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Turkish
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Chinese
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+Language=Taiwanese
+NET HELPMSG displays information about network messages (such as
+error, warning and alert messages). When you type NET HELPMSG and the numeric
+error (for example, "net helpmsg 2182"), you will get information about the
+message and suggested actions you can take to solve the problem.
+
+message#   Is the numerical error with which you need help.
+.
+
+
+MessageId=10018
+SymbolicName=MSG_LOCALGROUP_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET LOCALGROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+               groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+               groupname name [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Polish
+NET LOCALGROUP [nazwa_grupy [/COMMENT:"tekst"]] [/DOMAIN]
+               nazwa_grupy {/ADD [/COMMENT:"tekst"] | /DELETE} [/DOMAIN]
+               nazwa_grupy nazwa [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Romanian
+NET LOCALGROUP [nume-de-grup [/COMMENT:"text"]] [/DOMAIN]
+               nume-de-grup {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+               nume-de-grup nume [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Russian
+NET LOCALGROUP [имя_группы [/COMMENT:"текст"]] [/DOMAIN]
+               имя_группы {/ADD [/COMMENT:"текст"] | /DELETE}  [/DOMAIN]
+               имя_группы имя [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Spanish
+NET LOCALGROUP [grupo [/COMMENT:"texto"]] [/DOMAIN]
+               grupo {/ADD [/COMMENT:"texto"] | /DELETE} [/DOMAIN]
+               grupo nombre [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Turkish
+NET LOCALGROUP [takım adı [/COMMENT:"metin"]] [/DOMAIN]
+               takım adı {/ADD [/COMMENT:"metin"] | /DELETE} [/DOMAIN]
+               takım adı ad [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Chinese
+NET LOCALGROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+               groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+               groupname name [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Taiwanese
+NET LOCALGROUP [組名 [/COMMENT:"文字"]] [/DOMAIN]
+               組名 {/ADD [/COMMENT:"文字"] | /DELETE} [/DOMAIN]
+               組名稱 [...] {/ADD | /DELETE} [/DOMAIN]
+.
+
+
+MessageId=10019
+SymbolicName=MSG_LOCALGROUP_HELP
+Severity=Success
+Facility=System
+Language=English
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Polish
+NET LOCALGROUP dodaje, wyświetla, lub modyfikuje grupy lokalne na komputerach
+Polecenie użyte bez parametrów wyświetla grupy lokalne na komputerze.
+
+nazwa_grupy       Nazwa grupy dodawanej, rozszerzanej lub usuwanej.
+                  Aby zobaczyć listę użytkowników lub grup globalnych
+                  w grupie lokalnej, podaj tylko nazwę grupy.
+/COMMENT:"tekst"  Dodaje komentarz dla nowej lub istniejącej grupy.
+                  Tekst musi być ujęty w cudzysłów.
+/DOMAIN           Wykonuje operację na kontrolerze bieżącej domeny.
+                  Bez tego przełącznika operacje są wykonywane na
+                  komputerze lokalnym.
+nazwa[ ...]       Lista zawierająca nazwy jednego lub kilku użytkowników
+                  lub grup, dodawanych lub usuwanych z grupy lokalnej.
+                  Rozdziel kolejne wpisy znakiem spacji. Lista może zawierać
+                  nazwy użytkowników lub grup globalnych, lecz nie może
+                  zawierać nazw innych grup lokalnych. Podając nazwę
+                  użytkownika z innej domeny poprzedź ją nazwą domeny
+                  (na przykład: WARSZAWA\PIOTRS).
+/ADD              Dodaje nazwę grupy lub użytkownika do grupy lokalnej.
+                  Dla użytkowników lub grup globalnych dodawanych tym
+                  poleceniem do grupy lokalnej należy wcześniej utworzyć
+                  odpowiednie konto.
+/DELETE           Usuwa nazwę grupy lub użytkownika z grupy lokalnej.
+.
+Language=Romanian
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is 
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Russian
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Spanish
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name [ ...]      List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Turkish
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Chinese
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+Language=Taiwanese
+NET LOCALGROUP adds, displays or modifies local groups on computers. When
+used without parameters, it displays the local groups on the computer.
+
+groupname        Is the name of the local group to add, expand, or
+                 delete. Supply only a groupname to view a list of
+                 users or global groups in a local group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+name[ ...]       List one or more usernames or groupnams to add to or
+                 remove from a local group. Separate multiple entries with
+                 a space. Names may be users or global groups, but not
+                 other local groups. If a user is from another doamin,
+                 preface the username with the domain name (for
+                 example, SALES\RALPHR).
+/ADD             Adds a groupname or username to a local group. An account
+                 must be established for users or global groups added to a
+                 local group with this command.
+/DELETE          Removes a groupname or username from a local group.
+.
+
+
+MessageId=10020
+SymbolicName=MSG_NAME_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET NAME ...
+.
+Language=Polish
+NET NAME ...
+.
+Language=Romanian
+NET NAME ...
+.
+Language=Russian
+NET NAME ...
+.
+Language=Spanish
+NET NAME ...
+.
+Language=Turkish
+NET NAME ...
+.
+Language=Chinese
+NET NAME ...
+.
+Language=Taiwanese
+NET NAME ...
+.
+
+
+MessageId=10021
+SymbolicName=MSG_NAME_HELP
+Severity=Success
+Facility=System
+Language=English
+NAME
+...
+.
+Language=Polish
+NAME
+...
+.
+Language=Romanian
+NAME
+...
+.
+Language=Russian
+NAME
+...
+.
+Language=Spanish
+NAME
+...
+.
+Language=Turkish
+NAME
+...
+.
+Language=Chinese
+NAME
+...
+.
+Language=Taiwanese
+NAME
+...
+.
