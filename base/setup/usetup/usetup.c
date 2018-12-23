@@ -4690,8 +4690,10 @@ RunUSetup(VOID)
                 Page = QuitPage(&Ir);
                 break;
 
-            case RECOVERY_PAGE:
+            /* Virtual pages */
+            case SETUP_INIT_PAGE:
             case REBOOT_PAGE:
+            case RECOVERY_PAGE:
                 break;
         }
     }
