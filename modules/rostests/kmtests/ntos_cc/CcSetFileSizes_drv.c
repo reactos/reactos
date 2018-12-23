@@ -25,6 +25,11 @@ static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static KMT_MESSAGE_HANDLER TestMessageHandler;
+static BOOLEAN TestUnpin = FALSE;
+static BOOLEAN TestSizing = FALSE;
+static BOOLEAN TestDirtying = FALSE;
+static BOOLEAN TestUncaching = FALSE;
+static BOOLEAN TestWritten = FALSE;
 
 NTSTATUS
 TestEntry(
@@ -45,6 +50,7 @@ TestEntry(
              TESTENTRY_NO_READONLY_DEVICE;
 
     KmtRegisterIrpHandler(IRP_MJ_READ, NULL, TestIrpHandler);
+    KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
     KmtRegisterMessageHandler(0, NULL, TestMessageHandler);
 
     return Status;
@@ -153,6 +159,7 @@ PerformTest(
     ok_eq_pointer(TestDeviceObject, NULL);
     ok_eq_ulong(TestTestId, -1);
 
+    TestWritten = FALSE;
     TestDeviceObject = DeviceObject;
     TestTestId = TestId;
     TestFileObject = IoCreateStreamFileObject(NULL, DeviceObject);
@@ -171,7 +178,7 @@ PerformTest(
             Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
             Fcb->Header.ValidDataLength.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
 
-            if (TestId > 1 && TestId < 4)
+            if ((TestId > 1 && TestId < 4) || TestId == 5)
             {
                 Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
             }
@@ -249,6 +256,65 @@ PerformTest(
                         ExFreePool(Buffer);
                     }
                 }
+                else if (TestId == 4 || TestId == 5)
+                {
+                    /* Kill lazy writer */
+                    CcSetAdditionalCacheAttributes(TestFileObject, FALSE, TRUE);
+
+                    Offset.QuadPart = 0;
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, VACB_MAPPING_GRANULARITY - PAGE_SIZE, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        LARGE_INTEGER Flushed;
+
+                        ok_eq_ulong(Buffer[(VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG)) / sizeof(ULONG)], 0xBABABABA);
+                        Buffer[(VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG)) / sizeof(ULONG)] = 0xDADADADA;
+
+                        TestDirtying = TRUE;
+                        CcSetDirtyPinnedData(Bcb, NULL);
+                        TestDirtying = FALSE;
+
+                        ok_bool_false(TestWritten, "Dirty VACB has been unexpectedly written!\n");
+
+                        TestSizing = TRUE;
+                        KmtStartSeh();
+                        CcSetFileSizes(TestFileObject, &NewFileSizes);
+                        KmtEndSeh(STATUS_SUCCESS);
+                        TestSizing = FALSE;
+
+                        ok_bool_false(TestWritten, "Dirty VACB has been unexpectedly written!\n");
+
+                        Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY;
+                        Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY;
+
+                        Flushed = CcGetFlushedValidData(TestFileObject->SectionObjectPointer, FALSE);
+                        ok(Flushed.QuadPart == 0, "Flushed: %I64d\n", Flushed.QuadPart);
+
+                        TestUnpin = TRUE;
+                        CcUnpinData(Bcb);
+                        TestUnpin = FALSE;
+
+                        ok_bool_false(TestWritten, "Dirty VACB has been unexpectedly written!\n");
+
+                        Offset.QuadPart = 0;
+                        KmtStartSeh();
+                        Ret = CcMapData(TestFileObject, &Offset, VACB_MAPPING_GRANULARITY, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                        {
+                            ok_eq_ulong(Buffer[(VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG)) / sizeof(ULONG)], 0xDADADADA);
+                            ok_eq_ulong(Buffer[(VACB_MAPPING_GRANULARITY  - sizeof(ULONG)) / sizeof(ULONG)], 0xBABABABA);
+
+                            CcUnpinData(Bcb);
+
+                            ok_bool_false(TestWritten, "Dirty VACB has been unexpectedly written!\n");
+                        }
+                    }
+                }
             }
         }
     }
@@ -271,9 +337,11 @@ CleanupTest(
     {
         if (CcIsFileCached(TestFileObject))
         {
+            TestUncaching = TRUE;
             KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
             CcUninitializeCacheMap(TestFileObject, &Zero, &CacheUninitEvent);
             KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
+            TestUncaching = FALSE;
         }
 
         if (TestFileObject->FsContext != NULL)
@@ -339,7 +407,8 @@ TestIrpHandler(
     PAGED_CODE();
 
     DPRINT("IRP %x/%x\n", IoStack->MajorFunction, IoStack->MinorFunction);
-    ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
+    ASSERT(IoStack->MajorFunction == IRP_MJ_READ ||
+           IoStack->MajorFunction == IRP_MJ_WRITE);
 
     FsRtlEnterFileSystem();
 
@@ -350,9 +419,9 @@ TestIrpHandler(
     {
         PMDL Mdl;
         ULONG Length;
-        PVOID Buffer;
         PTEST_FCB Fcb;
         LARGE_INTEGER Offset;
+        PVOID Buffer, OrigBuffer;
 
         Offset = IoStack->Parameters.Read.ByteOffset;
         Length = IoStack->Parameters.Read.Length;
@@ -369,7 +438,7 @@ TestIrpHandler(
         ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
         ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
-        Buffer = MapAndLockUserBuffer(Irp, Length);
+        OrigBuffer = Buffer = MapAndLockUserBuffer(Irp, Length);
         ok(Buffer != NULL, "Null pointer!\n");
 
         if (Offset.QuadPart < Fcb->Header.FileSize.QuadPart)
@@ -387,6 +456,14 @@ TestIrpHandler(
             RtlFillMemory(Buffer, Length, 0xBD);
         }
 
+        if (TestTestId == 4 && TestWritten &&
+            Offset.QuadPart <= VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG) &&
+            Offset.QuadPart + Length >= VACB_MAPPING_GRANULARITY - PAGE_SIZE)
+        {
+            Buffer = (PVOID)((ULONG_PTR)OrigBuffer + (VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG)));
+            RtlFillMemory(Buffer, sizeof(ULONG), 0xDA);
+        }
+
         Status = STATUS_SUCCESS;
 
         Mdl = Irp->MdlAddress;
@@ -396,6 +473,44 @@ TestIrpHandler(
         ok((Mdl->MdlFlags & MDL_IO_PAGE_READ) != 0, "Non paging IO\n");
         ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
 
+        Irp->IoStatus.Information = Length;
+    }
+    else if (IoStack->MajorFunction == IRP_MJ_WRITE)
+    {
+        PMDL Mdl;
+        ULONG Length;
+        PVOID Buffer;
+        LARGE_INTEGER Offset;
+
+        Offset = IoStack->Parameters.Write.ByteOffset;
+        Length = IoStack->Parameters.Write.Length;
+
+        ok((TestTestId == 4 || TestTestId == 5), "Unexpected test id: %d\n", TestTestId);
+        ok_eq_pointer(DeviceObject, TestDeviceObject);
+        ok_eq_pointer(IoStack->FileObject, TestFileObject);
+
+        ok_bool_false(TestUnpin, "Write triggered while unpinning!\n");
+        ok_bool_false(TestSizing, "Write triggered while sizing!\n");
+        ok_bool_false(TestDirtying, "Write triggered while dirtying!\n");
+        ok_bool_true(TestUncaching, "Write not triggered while uncaching!\n");
+
+        ok(FlagOn(Irp->Flags, IRP_NOCACHE), "Not coming from Cc\n");
+
+        ok_irql(PASSIVE_LEVEL);
+        ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
+        ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
+
+        Buffer = MapAndLockUserBuffer(Irp, Length);
+        ok(Buffer != NULL, "Null pointer!\n");
+
+        Mdl = Irp->MdlAddress;
+        ok(Mdl != NULL, "Null pointer for MDL!\n");
+        ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) != 0, "MDL not locked\n");
+        ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
+        ok((Irp->Flags & IRP_PAGING_IO) != 0, "Non paging IO\n");
+
+        TestWritten = TRUE;
+        Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = Length;
     }
 
