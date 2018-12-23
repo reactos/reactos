@@ -1,5 +1,39 @@
 #pragma once
 
+static MUI_ENTRY msMYSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY msMYLanguagePageEntries[] =
 {
     {
@@ -127,7 +161,7 @@ static MUI_ENTRY msMYIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -478,7 +512,7 @@ static MUI_ENTRY msMYUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Persediaan ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -606,19 +640,19 @@ static MUI_ENTRY msMYFlushPageEntries[] =
     {
         10,
         6,
-        "Sistem sekarang memastikan semua data yang disimpan pada cakera anda",
+        "Sistem sekarang memastikan semua data yang disimpan pada cakera anda.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Ini mungkin mengambil beberapa minit",
+        "Ini mungkin mengambil beberapa minit.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Apabila selesai, komputer akan but semula secara automatik",
+        "Apabila selesai, komputer akan but semula secara automatik.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -646,7 +680,7 @@ static MUI_ENTRY msMYQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS tidak dipasang sepenuhnya",
+        "ReactOS tidak dipasang sepenuhnya.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1183,7 +1217,7 @@ static MUI_ENTRY msMYPrepareCopyEntries[] =
     {
         6,
         8,
-        "Persediaan menyediakan komputer awda untuk menyalin fail-fail ReactOS. ",
+        "Persediaan menyediakan komputer awda untuk menyalin fail-fail ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1305,7 +1339,7 @@ static MUI_ENTRY msMYRegistryEntries[] =
     {
         6,
         8,
-        "Persediaan sedang mengemaskini konfigurasi sistem. ",
+        "Persediaan sedang mengemaskini konfigurasi sistem.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1562,6 +1596,10 @@ MUI_ERROR msMYErrorEntries[] =
 
 MUI_PAGE msMYPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        msMYSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         msMYLanguagePageEntries

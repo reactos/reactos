@@ -12,6 +12,40 @@
 
 #pragma once
 
+static MUI_ENTRY ltLTSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ltLTLanguagePageEntries[] =
 {
     {
@@ -139,7 +173,7 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -490,7 +524,7 @@ static MUI_ENTRY ltLTUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -618,19 +652,19 @@ static MUI_ENTRY ltLTFlushPageEntries[] =
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "The system is now making sure all data is stored on your disk.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "This may take a minute.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "When finished, your computer will reboot automatically.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -658,7 +692,7 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "ReactOS is not completely installed.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1295,7 +1329,7 @@ static MUI_ENTRY ltLTPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup prepares your computer for copying the ReactOS files.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1417,7 +1451,7 @@ static MUI_ENTRY ltLTRegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup is updating the system configuration.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1681,6 +1715,10 @@ MUI_ERROR ltLTErrorEntries[] =
 
 MUI_PAGE ltLTPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        ltLTSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         ltLTLanguagePageEntries

@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY elGRSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY elGRLanguagePageEntries[] =
 {
     {
@@ -130,7 +164,7 @@ static MUI_ENTRY elGRIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -481,7 +515,7 @@ static MUI_ENTRY elGRUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY elGRQuitPageEntries[] =
     {
         10,
         6,
-        "\222\246 ReactOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252",
+        "\222\246 ReactOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -679,7 +713,7 @@ static MUI_ENTRY elGRQuitPageEntries[] =
     {
         0,
         0,
-        "   \217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234 ...",
+        "   \217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234...",
         TEXT_TYPE_STATUS,
     },
     {
@@ -1310,7 +1344,7 @@ static MUI_ENTRY elGRPrepareCopyEntries[] =
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \247\250\246\234\253\246\240\243\341\235\234\240 \253\246\244 \254\247\246\242\246\232\240\251\253\343 \251\230\252 \232\240\230 \253\236\244 \230\244\253\240\232\250\230\255\343 \253\340\244 \230\250\256\234\345\340\244 \253\246\254 ReactOS. ",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \247\250\246\234\253\246\240\243\341\235\234\240 \253\246\244 \254\247\246\242\246\232\240\251\253\343 \251\230\252 \232\240\230 \253\236\244 \230\244\253\240\232\250\230\255\343 \253\340\244 \230\250\256\234\345\340\244 \253\246\254 ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1432,7 +1466,7 @@ static MUI_ENTRY elGRRegistryEntries[] =
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \230\244\230\244\234\351\244\234\240 \253\236 \233\246\243\343 \253\246\254 \251\254\251\253\343\243\230\253\246\252. ",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \230\244\230\244\234\351\244\234\240 \253\236 \233\246\243\343 \253\246\254 \251\254\251\253\343\243\230\253\246\252.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1688,6 +1722,10 @@ MUI_ERROR elGRErrorEntries[] =
 
 MUI_PAGE elGRPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        elGRSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         elGRLanguagePageEntries

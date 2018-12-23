@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY ruRUSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \223\341\342\240\255\256\242\252\240 ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ruRULanguagePageEntries[] =
 {
     {
@@ -1304,7 +1338,7 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
     {
         6,
         8,
-        "\217\256\244\243\256\342\256\242\252\240 \242\240\350\245\243\256 \252\256\254\257\354\356\342\245\340\240 \252 \252\256\257\250\340\256\242\240\255\250\356 \344\240\251\253\256\242 ReactOS. ",
+        "\217\256\244\243\256\342\256\242\252\240 \242\240\350\245\243\256 \252\256\254\257\354\356\342\245\340\240 \252 \252\256\257\250\340\256\242\240\255\250\356 \344\240\251\253\256\242 ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1426,7 +1460,7 @@ static MUI_ENTRY ruRURegistryEntries[] =
     {
         6,
         8,
-        "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \256\241\255\256\242\253\357\245\342 \252\256\255\344\250\243\343\340\240\346\250\356 \341\250\341\342\245\254\353. ",
+        "\217\340\256\243\340\240\254\254\240 \343\341\342\240\255\256\242\252\250 \256\241\255\256\242\253\357\245\342 \252\256\255\344\250\243\343\340\240\346\250\356 \341\250\341\342\245\254\353.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1690,6 +1724,10 @@ MUI_ERROR ruRUErrorEntries[] =
 
 MUI_PAGE ruRUPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        ruRUSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         ruRULanguagePageEntries

@@ -5,6 +5,40 @@
 
 #pragma once
 
+static MUI_ENTRY esESSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY esESLanguagePageEntries[] =
 {
     {
@@ -132,7 +166,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -483,7 +517,7 @@ static MUI_ENTRY esESUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -611,19 +645,19 @@ static MUI_ENTRY esESFlushPageEntries[] =
     {
         10,
         6,
-        "El sistema se est\240 asegurando que todos los datos sean salvados",
+        "El sistema se est\240 asegurando que todos los datos sean salvados.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Esta operaci\242n puede durar varios minutos",
+        "Esta operaci\242n puede durar varios minutos.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Cuando haya terminado, su equipo se reiniciar\240 autom\240ticamente",
+        "Cuando haya terminado, su equipo se reiniciar\240 autom\240ticamente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -651,7 +685,7 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS no ha sido instalado completamente",
+        "ReactOS no ha sido instalado completamente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1040,7 +1074,7 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         6,
         8,
-        "El programa instalar\240 los archivos en la partici\242n seleccionada. ",
+        "El programa instalar\240 los archivos en la partici\242n seleccionada.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1289,7 +1323,7 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         6,
         8,
-        "El programa prepara su equipo para copiar los archivos de ReactOS. ",
+        "El programa prepara su equipo para copiar los archivos de ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1411,7 +1445,7 @@ static MUI_ENTRY esESRegistryEntries[] =
     {
         6,
         8,
-        "El instalador est\240 actualizando la configuraci\242n del sistema. ",
+        "El instalador est\240 actualizando la configuraci\242n del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1675,6 +1709,10 @@ MUI_ERROR esESErrorEntries[] =
 
 MUI_PAGE esESPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        esESSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         esESLanguagePageEntries

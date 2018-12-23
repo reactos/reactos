@@ -8,6 +8,40 @@
 
 #pragma once
 
+static MUI_ENTRY ukUASetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \202\341\342\240\255\256\242\253\245\255\255\357 ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ukUALanguagePageEntries[] =
 {
     {
@@ -963,7 +997,7 @@ static MUI_ENTRY ukUAConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         20,
-        "\x07  \215\240\342\250\341\255i\342\354 ENTER \351\256\241 \242\250\244\240\253\250\342\250 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253. ",
+        "\x07  \215\240\342\250\341\255i\342\354 ENTER \351\256\241 \242\250\244\240\253\250\342\250 \341\250\341\342\245\254\255\250\251 \340\256\247\244i\253.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1292,7 +1326,7 @@ static MUI_ENTRY ukUAPrepareCopyEntries[] =
     {
         6,
         8,
-        "\202\341\342\240\255\256\242\253\356\242\240\347 \243\256\342\343\363 \202\240\350 \252\256\254\257'\356\342\245\340 \244\253\357 \252\256\257i\356\242\240\255\255\357 \344\240\251\253i\242 ReactOS. ",
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \243\256\342\343\363 \202\240\350 \252\256\254\257'\356\342\245\340 \244\253\357 \252\256\257i\356\242\240\255\255\357 \344\240\251\253i\242 ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1414,7 +1448,7 @@ static MUI_ENTRY ukUARegistryEntries[] =
     {
         6,
         8,
-        "\202\341\342\240\255\256\242\253\356\242\240\347 \256\255\256\242\253\356\363 \252\256\255\344i\243\343\340\240\346i\356 \341\250\341\342\245\254\250. ",
+        "\202\341\342\240\255\256\242\253\356\242\240\347 \256\255\256\242\253\356\363 \252\256\255\344i\243\343\340\240\346i\356 \341\250\341\342\245\254\250.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1679,6 +1713,10 @@ MUI_ERROR ukUAErrorEntries[] =
 
 MUI_PAGE ukUAPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        ukUASetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         ukUALanguagePageEntries

@@ -4,6 +4,40 @@
 /* ªtefan Fulea (stefan dot fulea at mail dot com) */
 #pragma once
 
+static MUI_ENTRY roROSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY roROLanguagePageEntries[] =
 {
     {
@@ -513,7 +547,7 @@ static MUI_ENTRY roROUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalare ReactOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1719,6 +1753,10 @@ MUI_ERROR roROErrorEntries[] =
 
 MUI_PAGE roROPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        roROSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         roROLanguagePageEntries

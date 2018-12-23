@@ -9,6 +9,40 @@
  */
 #pragma once
 
+static MUI_ENTRY svSESetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY svSELanguagePageEntries[] =
 {
     {
@@ -679,7 +713,7 @@ static MUI_ENTRY svSEQuitPageEntries[] =
     {
         0,
         0,
-        "   Var god v\204nta ...",
+        "   Var god v\204nta...",
         TEXT_TYPE_STATUS,
     },
     {
@@ -1293,7 +1327,7 @@ static MUI_ENTRY svSEPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup f\224rbereder din dator f\224r kopiering av ReactOS filer. ",
+        "Setup f\224rbereder din dator f\224r kopiering av ReactOS filer.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1415,7 +1449,7 @@ static MUI_ENTRY svSERegistryEntries[] =
     {
         6,
         8,
-        "Setup uppdaterar systemkonfigurationen. ",
+        "Setup uppdaterar systemkonfigurationen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1679,6 +1713,10 @@ MUI_ERROR svSEErrorEntries[] =
 
 MUI_PAGE svSEPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        svSESetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         svSELanguagePageEntries

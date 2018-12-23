@@ -9,12 +9,46 @@
 
 #pragma once
 
+static MUI_ENTRY skSKSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY skSKLanguagePageEntries[] =
 {
     {
         4,
         3,
-         " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -60,7 +94,7 @@ static MUI_ENTRY skSKWelcomePageEntries[] =
     {
         4,
         3,
-         " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -136,7 +170,7 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -487,7 +521,7 @@ static MUI_ENTRY skSKUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -615,19 +649,19 @@ static MUI_ENTRY skSKFlushPageEntries[] =
     {
         10,
         6,
-        "Syst\202m pr\240ve overuje v\347etky ulo\247en\202 \243daje na Va\347om disku",
+        "Syst\202m pr\240ve overuje v\347etky ulo\247en\202 \243daje na Va\347om disku.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "To m\223\247e trva\234 nieko\226ko min\243t",
+        "To m\223\247e trva\234 nieko\226ko min\243t.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Ke\324 skon\237\241, po\237\241ta\237 sa automaticky re\347tartuje",
+        "Ke\324 skon\237\241, po\237\241ta\237 sa automaticky re\347tartuje.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         10,
         6,
-        "Syst\202m ReactOS nie je nain\347talovan\354 kompletne",
+        "Syst\202m ReactOS nie je nain\347talovan\354 kompletne.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -679,7 +713,7 @@ static MUI_ENTRY skSKQuitPageEntries[] =
     {
         0,
         0,
-        "Po\237kajte, pros\241m ...",
+        "Po\237kajte, pros\241m...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -894,7 +928,7 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         0,
         0,
-        "Po\237kajte, pros\241m ...",
+        "Po\237kajte, pros\241m...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1293,7 +1327,7 @@ static MUI_ENTRY skSKPrepareCopyEntries[] =
     {
         6,
         8,
-        "Pripravuje sa kop\241rovanie s\243borov syst\202mu ReactOS. ",
+        "Pripravuje sa kop\241rovanie s\243borov syst\202mu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1682,6 +1716,10 @@ MUI_ERROR skSKErrorEntries[] =
 
 MUI_PAGE skSKPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        skSKSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         skSKLanguagePageEntries

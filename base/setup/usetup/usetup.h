@@ -75,6 +75,7 @@ extern PCWSTR SelectedLanguageId;
 
 typedef enum _PAGE_NUMBER
 {
+    SETUP_INIT_PAGE,
     LANGUAGE_PAGE,
     WELCOME_PAGE,
     LICENSE_PAGE,

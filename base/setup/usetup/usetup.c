@@ -31,6 +31,7 @@
 #include "bootsup.h"
 #include "chkdsk.h"
 #include "cmdcons.h"
+#include "devinst.h"
 #include "format.h"
 
 #define NDEBUG
@@ -55,8 +56,6 @@ static WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
 static WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
 
 static BOOLEAN RepairUpdateFlag = FALSE;
-
-static HANDLE hPnpThread = NULL;
 
 static PPARTLIST PartitionList = NULL;
 static PPARTENTRY TempPartition = NULL;
@@ -633,7 +632,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     PGENERIC_LIST_ENTRY ListEntry;
     PCWSTR LocaleId;
 
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+    MUIDisplayPage(SETUP_INIT_PAGE);
 
     /* Initialize Setup, phase 1 */
     Error = InitializeSetup(&USetupData, 1);
@@ -643,12 +642,13 @@ SetupStartPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Start the PnP thread */
-    if (hPnpThread != NULL)
-    {
-        NtResumeThread(hPnpThread, NULL);
-        hPnpThread = NULL;
-    }
+    /* Initialize the user-mode PnP manager */
+    if (!EnableUserModePnpManager())
+        DPRINT1("The user-mode PnP manager could not initialize, expect unavailable devices!\n");
+
+    /* Wait for any immediate pending installations to finish */
+    if (WaitNoPendingInstallEvents(NULL) != STATUS_WAIT_0)
+        DPRINT1("WaitNoPendingInstallEvents() failed to wait!\n");
 
     CheckUnattendedSetup(&USetupData);
 
@@ -4493,10 +4493,6 @@ FlushPage(PINPUT_RECORD Ir)
 }
 
 
-DWORD WINAPI
-PnpEventThread(IN LPVOID lpParameter);
-
-
 /*
  * The start routine and page management
  */
@@ -4515,19 +4511,13 @@ RunUSetup(VOID)
     if (!NT_SUCCESS(Status))
         DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
 
-    /* Create the PnP thread in suspended state */
-    Status = RtlCreateUserThread(NtCurrentProcess(),
-                                 NULL,
-                                 TRUE,
-                                 0,
-                                 0,
-                                 0,
-                                 PnpEventThread,
-                                 &USetupData.SetupInf,
-                                 &hPnpThread,
-                                 NULL);
+    /* Initialize the user-mode PnP manager */
+    Status = InitializeUserModePnpManager(&USetupData.SetupInf);
     if (!NT_SUCCESS(Status))
-        hPnpThread = NULL;
+    {
+        // PrintString(??);
+        DPRINT1("The user-mode PnP manager could not initialize (Status 0x%08lx), expect unavailable devices!\n", Status);
+    }
 
     if (!CONSOLE_Init())
     {
@@ -4543,12 +4533,12 @@ RunUSetup(VOID)
     InitializeSetup(&USetupData, 0);
     USetupData.ErrorRoutine = USetupErrorRoutine;
 
-    /* Hide the cursor */
+    /* Hide the cursor and clear the screen and keyboard buffer */
     CONSOLE_SetCursorType(TRUE, FALSE);
-
-    /* Global Initialization page */
     CONSOLE_ClearScreen();
     CONSOLE_Flush();
+
+    /* Global Initialization page */
     Page = SetupStartPage(&Ir);
 
     while (Page != REBOOT_PAGE && Page != RECOVERY_PAGE)
@@ -4705,6 +4695,9 @@ RunUSetup(VOID)
                 break;
         }
     }
+
+    /* Terminate the user-mode PnP manager */
+    TerminateUserModePnpManager();
 
     /* Setup has finished */
     FinishSetup(&USetupData);

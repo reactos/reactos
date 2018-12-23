@@ -8,6 +8,40 @@
 
 #pragma once
 
+static MUI_ENTRY nlNLSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY nlNLLanguagePageEntries[] =
 {
     {
@@ -1120,7 +1154,7 @@ static MUI_ENTRY nlNLFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 Een ogenblik geduld ...",
+        "\xB3 Een ogenblik geduld...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1695,6 +1729,10 @@ MUI_ERROR nlNLErrorEntries[] =
 
 MUI_PAGE nlNLPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        nlNLSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         nlNLLanguagePageEntries

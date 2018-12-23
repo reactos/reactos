@@ -4,6 +4,40 @@
 #pragma once
 /* Hebrew text is in visual order */
 
+static MUI_ENTRY heILSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY heILLanguagePageEntries[] =
 {
     {
@@ -611,19 +645,19 @@ static MUI_ENTRY heILFlushPageEntries[] =
     {
         10,
         6,
-        "\212\214\231 \217\220\205\213\204 \214\222 \230\205\216\231 \222\203\211\216\204 \214\213\231 \200\203\205\205\232 \205\211\231\213\222 \232\213\230\222\216\204",
+        "\212\214\231 \217\220\205\213\204 \214\222 \230\205\216\231 \222\203\211\216\204 \214\213\231 \200\203\205\205\232 \205\211\231\213\222 \232\213\230\222\216\204.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "\232\205\227\203 \204\216\213 \232\207\227\214 \214\205\213\211 \204\206",
+        "\232\205\227\203 \204\216\213 \232\207\227\214 \214\205\213\211 \204\206.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "\211\210\216\205\210\205\200 \217\224\205\200\201 \231\203\207\216 \214\222\224\205\211 \201\231\207\216\204 ,\215\205\211\221\201",
+        "\211\210\216\205\210\205\200 \217\224\205\200\201 \231\203\207\216 \214\222\224\205\211 \201\231\207\216\204 ,\215\205\211\221\201.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1672,6 +1706,10 @@ MUI_ERROR heILErrorEntries[] =
 
 MUI_PAGE heILPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        heILSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         heILLanguagePageEntries

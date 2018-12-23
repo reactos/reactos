@@ -1,5 +1,39 @@
 #pragma once
 
+static MUI_ENTRY itITSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY itITLanguagePageEntries[] =
 {
     {
@@ -478,7 +512,7 @@ static MUI_ENTRY itITUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -606,19 +640,19 @@ static MUI_ENTRY itITFlushPageEntries[] =
     {
         10,
         6,
-        "Il sistema si sta accertando che tutti i dati vengano salvati",
+        "Il sistema si sta accertando che tutti i dati vengano salvati.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Questo potrebbe impiegare qualche minuto",
+        "Questo potrebbe impiegare qualche minuto.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Al termine, il computer verr\x85 riavviato automaticamente",
+        "Al termine, il computer verr\x85 riavviato automaticamente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -646,7 +680,7 @@ static MUI_ENTRY itITQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS non \x8A stato installato completamente",
+        "ReactOS non \x8A stato installato completamente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1289,7 +1323,7 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup sta preparando il computer per la copia dei file di ReactOS. ",
+        "Setup sta preparando il computer per la copia dei file di ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1411,7 +1445,7 @@ static MUI_ENTRY itITRegistryEntries[] =
     {
         6,
         8,
-        "Setup sta aggiornando la configurazione del sistema. ",
+        "Setup sta aggiornando la configurazione del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1675,6 +1709,10 @@ MUI_ERROR itITErrorEntries[] =
 
 MUI_PAGE itITPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        itITSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         itITLanguagePageEntries
