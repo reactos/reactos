@@ -456,7 +456,7 @@ TestIrpHandler(
             RtlFillMemory(Buffer, Length, 0xBD);
         }
 
-        if (TestTestId == 4 && TestWritten &&
+        if ((TestTestId == 4 || TestTestId == 5) && TestWritten &&
             Offset.QuadPart <= VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG) &&
             Offset.QuadPart + Length >= VACB_MAPPING_GRANULARITY - PAGE_SIZE)
         {
