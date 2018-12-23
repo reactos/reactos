@@ -945,3 +945,425 @@ service             Is the paused service
                     SERVER
                     WORKSTATION
 .
+
+
+MessageId=10010
+SymbolicName=MSG_FILE_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET FILE [id [/CLOSE]]
+.
+Language=Polish
+NET FILE [identyfikator [/CLOSE]]
+.
+Language=Romanian
+NET FILE [id [/CLOSE]]
+.
+Language=Russian
+NET FILE [id [/CLOSE]]
+.
+Language=Spanish
+NET FILE [id [/CLOSE]]
+.
+Language=Turkish
+NET FILE [id [/CLOSE]]
+.
+Language=Chinese
+NET FILE [id [/CLOSE]]
+.
+Language=Taiwanese
+NET FILE [id [/CLOSE]]
+.
+
+
+MessageId=10011
+SymbolicName=MSG_FILE_HELP
+Severity=Success
+Facility=System
+Language=English
+NET FILE
+...
+.
+Language=Polish
+NET FILE
+...
+.
+Language=Romanian
+NET FILE
+...
+.
+Language=Russian
+NET FILE
+...
+.
+Language=Spanish
+NET FILE
+...
+.
+Language=Turkish
+NET FILE
+...
+.
+Language=Chinese
+NET FILE
+...
+.
+Language=Taiwanese
+NET FILE
+...
+.
+
+
+MessageId=10012
+SymbolicName=MSG_GROUP_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Polish
+NET GROUP [nazwa_grupy [/COMMENT:"tekst"]] [/DOMAIN]
+          nazwa_grupy {/ADD [/COMMENT:"tekst"] | /DELETE} [/DOMAIN]
+          nazwa_grupy nazwa_użytkownika [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Romanian
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Russian
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Spanish
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Turkish
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Chinese
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+Language=Taiwanese
+NET GROUP [groupname [/COMMENT:"text"]] [/DOMAIN]
+          groupname {/ADD [/COMMENT:"text"] | /DELETE} [/DOMAIN]
+          groupname username [...] {/ADD | /DELETE} [/DOMAIN]
+.
+
+
+MessageId=10013
+SymbolicName=MSG_GROUP_HELP
+Severity=Success
+Facility=System
+Language=English
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is 
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Polish
+NET GROUP dodaje, wyświetla lub modyfikuje grupy globalne na serwerach.
+Użyte bez parametrów wyświetla nazwy grup na serwerze.
+
+nazwa_grupy              Nazwa grupy dodawanej, rozszerzanej lub usuwanej.
+                         Aby zobaczyć listę użytkowników w grupie, podaj
+                         tylko nazwę grupy.
+/COMMENT:"tekst"         Dodaje komentarz dla nowej lub istniejącej grupy.
+                         Tekst musi być ujęty w cudzysłów.
+/DOMAIN                  Wykonuje operację na kontrolerze domeny.
+                         Bez tego przełącznika operacje są wykonywane na
+                         komputerze lokalnym.
+nazwa_użytkownika[ ...]  Lista zawierająca nazwy jednego lub kilku
+                         użytkowników dodawanych lub usuwanych z grupy.
+                         Rozdziel kolejne nazwy znakiem spacji.
+/ADD                     Dodaje grupę lub dodaje nazwę użytkownika do grupy.
+/DELETE                  Usuwa grupę lub usuwa nazwę użytkownika z grupy.
+.
+Language=Romanian
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Russian
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Spanish
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Turkish
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Chinese
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+Language=Taiwanese
+NET GROUP adds, displays or modifies global groups on servers. When
+used without parameters, it displays the groupnames on the server.
+
+groupname        Is the name of the group to add, expand, or delete.
+                 Supply only a groupname to view a list of users
+                 in a group.
+/COMMENT:"text"  Adds a comment for a new or existing group.
+                 Enclose the text in quotation marks.
+/DOMAIN          Performs the operation on a domain controller
+                 of the current domain. Otherwise, the operation is
+                 performed on the local computer.
+username[ ...]   List one or more usernames to add to or remove from
+                 a group. Separate multiple username entries with a space.
+/ADD             Adds a group, or adds a username to a group.
+/DELETE          Removes a group, or removes a username from a group.
+.
+
+
+MessageId=10014
+SymbolicName=MSG_HELP_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET HELP command
+   - or -
+NET command /HELP
+.
+Language=Polish
+NET HELP polecenie
+   - lub -
+NET polecenie /HELP
+.
+Language=Romanian
+NET HELP <comandă>
+   - sau -
+NET <comandă> /HELP
+.
+Language=Russian
+NET HELP <Команда>
+   - или -
+NET <Команда> /HELP
+.
+Language=Spanish
+NET HELP <comando>
+   - o -
+NET <comando> /HELP
+.
+Language=Turkish
+NET HELP <Komut>
+   - ya da -
+NET <Komut> /HELP
+.
+Language=Chinese
+NET HELP <Command>
+   - or -
+NET <Command> /HELP
+.
+Language=Taiwanese
+NET HELP <命令>
+   - 或 -
+NET <命令> /HELP
+.
+
+
+MessageId=10015
+SymbolicName=MSG_HELP_HELP
+Severity=Success
+Facility=System
+Language=English
+   The following commands are available:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Polish
+   Dostępne polecenia to:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Romanian
+   Sunt disponibile următoarele comenzi:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Russian
+   Доступны следующие команды:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Spanish
+   Éstos son los argumentos de línea de comandos disponibles:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Turkish
+   Aşağıdaki komutlar kullanılabilir:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Chinese
+   以下命令可用:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+Language=Taiwanese
+   以下命令是可用的:
+
+   NET ACCOUNTS             NET HELP                 NET SHARE
+   NET COMPUTER             NET HELPMSG              NET START
+   NET CONFIG               NET LOCALGROUP           NET STATISTICS
+   NET CONFIG SERVER        NET NAME                 NET STOP
+   NET CONFIG WORKSTATION   NET PAUSE                NET TIME
+   NET CONTINUE             NET PRINT                NET USE
+   NET FILE                 NET SEND                 NET USER
+   NET GROUP                NET SESSION              NET VIEW
+
+   ...
+.
+

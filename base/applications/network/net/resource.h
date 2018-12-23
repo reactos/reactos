@@ -1,18 +1,5 @@
 #pragma once
 
-#define IDS_FILE_SYNTAX          126
-#define IDS_FILE_HELP            127
-#define IDS_GROUP_SYNTAX         128
-#define IDS_GROUP_HELP_1         129
-#define IDS_GROUP_HELP_2         130
-#define IDS_GROUP_HELP_3         131
-#define IDS_GROUP_HELP_4         132
-#define IDS_GROUP_HELP_5         133
-#define IDS_GROUP_HELP_6         134
-#define IDS_GROUP_HELP_7         135
-#define IDS_HELP_SYNTAX          136
-#define IDS_HELP_HELP_1          137
-#define IDS_HELP_HELP_2          138
 #define IDS_HELPMSG_SYNTAX       139
 #define IDS_HELPMSG_HELP_1       140
 #define IDS_HELPMSG_HELP_2       141

@@ -1,37 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_FILE_SYNTAX "NET FILE [identyfikator [/CLOSE]]\n\n"
-    IDS_FILE_HELP "FILE\n...\n\n"
-    IDS_GROUP_SYNTAX "NET GROUP [nazwa_grupy [/COMMENT:""tekst""]] [/DOMAIN]\n\
-          nazwa_grupy {/ADD [/COMMENT:""tekst""] | /DELETE} [/DOMAIN]\n\
-          nazwa_grupy nazwa_użytkownika [...] {/ADD | /DELETE} [/DOMAIN]\n\n"
-    IDS_GROUP_HELP_1 "NET GROUP dodaje, wyświetla lub modyfikuje grupy globalne na serwerach.\n\
-Użyte bez parametrów wyświetla nazwy grup na serwerze.\n\n"
-    IDS_GROUP_HELP_2 "nazwa_grupy       Nazwa grupy dodawanej, rozszerzanej lub usuwanej.\n\
-                 Aby zobaczyć listę użytkowników w grupie, podaj tylko\n\
-                  nazwę grupy.\n"
-    IDS_GROUP_HELP_3 "/COMMENT:""tekst""        Dodaje komentarz dla nowej lub istniejącej grupy.\n\
-                 Tekst musi być ujęty w cudzysłów.\n"
-    IDS_GROUP_HELP_4 "/DOMAIN                   Wykonuje operację na kontrolerze domeny.\n\
-                 Bez tego przełącznika operacje są wykonywane na\n\
-                 komputerze lokalnym.\n"
-    IDS_GROUP_HELP_5 "nazwa_użytkownika[ ...]   Lista zawierająca nazwy jednego lub kilku\n\
-                 użytkowników dodawanych lub usuwanych z grupy.\n\
-				 Rozdziel kolejne nazwy znakiem spacji.\n"
-    IDS_GROUP_HELP_6 "/ADD             Dodaje grupę lub dodaje nazwę użytkownika do grupy.\n"
-    IDS_GROUP_HELP_7 "/DELETE          Usuwa grupę lub usuwa nazwę użytkownika z grupy.\n\n"
-    IDS_HELP_SYNTAX "NET HELP polecenie\n   - lub -\nNET polecenie /HELP\n\n"
-    IDS_HELP_HELP_1 "   Dostępne polecenia to:\n\n\
-   NET ACCOUNTS             NET HELP                 NET SHARE\n\
-   NET COMPUTER             NET HELPMSG              NET START\n\
-   NET CONFIG               NET LOCALGROUP           NET STATISTICS\n\
-   NET CONFIG SERVER        NET NAME                 NET STOP\n\
-   NET CONFIG WORKSTATION   NET PAUSE                NET TIME\n\
-   NET CONTINUE             NET PRINT                NET USE\n\
-   NET FILE                 NET SEND                 NET USER\n\
-   NET GROUP                NET SESSION              NET VIEW\n\n"
-    IDS_HELP_HELP_2 "   ...\n\n"
     IDS_HELPMSG_SYNTAX "NET HELPMSG komunikat#\n\n"
     IDS_HELPMSG_HELP_1 "NET HELPMSG wyświetla informacje o komunikatach sieci (takich\n\
 jak błąd, ostrzeżenie lub alarm). Gdy wpiszesz NET HELPMSG i błąd numeryczny\n\
