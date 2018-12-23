@@ -45,6 +45,7 @@ COMMAND cmds[] =
     {NULL,          NULL}
 };
 
+HMODULE hModuleNetMsg = NULL;
 
 
 VOID
@@ -80,28 +81,15 @@ VOID
 PrintErrorMessage(
     DWORD dwError)
 {
-    WCHAR szDllBuffer[MAX_PATH];
     WCHAR szErrorBuffer[16];
-    HMODULE hMsgDll = NULL;
     PWSTR pBuffer;
     PWSTR pErrorInserts[2] = {NULL, NULL};
-
-    /* Load netmsg.dll */
-    GetSystemDirectoryW(szDllBuffer, ARRAYSIZE(szDllBuffer));
-    wcscat(szDllBuffer, L"\\netmsg.dll");
-
-    hMsgDll = LoadLibrary(szDllBuffer);
-    if (hMsgDll == NULL)
-    {
-        ConPrintf(StdErr, L"Failed to load netmsg.dll\n");
-        return;
-    }
 
     if (dwError >= MIN_LANMAN_MESSAGE_ID && dwError <= MAX_LANMAN_MESSAGE_ID)
     {
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                       hMsgDll,
+                       hModuleNetMsg,
                        dwError,
                        LANG_USER_DEFAULT,
                        (LPWSTR)&pBuffer,
@@ -141,7 +129,7 @@ PrintErrorMessage(
         /* Format and print the 3514 message */
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
                        FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                       hMsgDll,
+                       hModuleNetMsg,
                        3514,
                        LANG_USER_DEFAULT,
                        (LPWSTR)&pBuffer,
@@ -154,8 +142,6 @@ PrintErrorMessage(
             pBuffer = NULL;
         }
     }
-
-    FreeLibrary(hMsgDll);
 }
 
 
@@ -198,15 +184,29 @@ ReadFromConsole(
 
 int wmain(int argc, WCHAR **argv)
 {
+    WCHAR szDllBuffer[MAX_PATH];
     PCOMMAND cmdptr;
+    int nResult = 0;
+    BOOL bRun = FALSE;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
+    /* Load netmsg.dll */
+    GetSystemDirectoryW(szDllBuffer, ARRAYSIZE(szDllBuffer));
+    wcscat(szDllBuffer, L"\\netmsg.dll");
+
+    hModuleNetMsg = LoadLibrary(szDllBuffer);
+    if (hModuleNetMsg == NULL)
+    {
+        ConPrintf(StdErr, L"Failed to load netmsg.dll\n");
+        return 1;
+    }
+
     if (argc < 2)
     {
-        ConResPuts(StdOut, IDS_NET_SYNTAX);
-        return 1;
+        nResult = 1;
+        goto done;
     }
 
     /* Scan the command table */
@@ -214,13 +214,20 @@ int wmain(int argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[1], cmdptr->name) == 0)
         {
-            return cmdptr->func(argc, argv);
+            nResult = cmdptr->func(argc, argv);
+            bRun = TRUE;
+            break;
         }
     }
 
-    ConResPuts(StdOut, IDS_NET_SYNTAX);
+done:
+    if (bRun == FALSE)
+        ConResPuts(StdOut, IDS_NET_SYNTAX);
 
-    return 1;
+    if (hModuleNetMsg != NULL)
+        FreeLibrary(hModuleNetMsg);
+
+    return nResult;
 }
 
 INT unimplemented(INT argc, WCHAR **argv)

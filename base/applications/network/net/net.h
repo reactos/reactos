@@ -26,6 +26,8 @@
 
 #include "resource.h"
 
+extern HMODULE hModuleNetMsg;
+
 VOID
 PrintPaddedResourceString(
     UINT uID,

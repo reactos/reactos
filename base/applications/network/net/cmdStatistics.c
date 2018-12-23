@@ -294,7 +294,7 @@ cmdStatistics(
     }
 
     if (result == 0)
-        ConResPuts(StdOut, IDS_ERROR_NO_ERROR);
+        PrintErrorMessage(ERROR_SUCCESS);
 
     return result;
 }

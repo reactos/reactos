@@ -255,6 +255,7 @@ cmdGroup(
         }
         else
         {
+            PrintErrorMessage(3506/*, argv[i]*/);
             result = 1;
             goto done;
         }

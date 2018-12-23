@@ -13,8 +13,6 @@
 
 INT cmdHelpMsg(INT argc, WCHAR **argv)
 {
-    WCHAR szBuffer[MAX_PATH];
-    HMODULE hMsgDll = NULL;
     INT i;
     LONG errNum;
     PWSTR endptr;
@@ -52,20 +50,9 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
 
     if (errNum >= MIN_LANMAN_MESSAGE_ID && errNum <= MAX_LANMAN_MESSAGE_ID)
     {
-        /* Load netmsg.dll */
-        GetSystemDirectoryW(szBuffer, ARRAYSIZE(szBuffer));
-        wcscat(szBuffer, L"\\netmsg.dll");
-
-        hMsgDll = LoadLibrary(szBuffer);
-        if (hMsgDll == NULL)
-        {
-            ConPrintf(StdOut, L"Failed to load netmsg.dll\n");
-            return 0;
-        }
-
         FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
                        FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                       hMsgDll,
+                       hModuleNetMsg,
                        errNum,
                        LANG_USER_DEFAULT,
                        (LPWSTR)&pBuffer,
@@ -80,8 +67,6 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
         {
             PrintErrorMessage(3871);
         }
-
-        FreeLibrary(hMsgDll);
     }
     else
     {
