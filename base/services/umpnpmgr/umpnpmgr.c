@@ -3476,6 +3476,7 @@ DeviceInstallThread(LPVOID lpParameter)
             ResetEvent(hNoPendingInstalls);
             Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
             InstallDevice(Params->DeviceIds, showWizard);
+            HeapFree(GetProcessHeap(), 0, Params);
         }
     }
 
@@ -3486,10 +3487,11 @@ DeviceInstallThread(LPVOID lpParameter)
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
-    ULONG PnpEventSize;
+    DWORD dwRet = ERROR_SUCCESS;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
+    ULONG PnpEventSize;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
@@ -3509,10 +3511,13 @@ PnpEventThread(LPVOID lpParameter)
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            HeapFree(GetProcessHeap(), 0, PnpEvent);
-            PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
-            if (PnpEvent == NULL)
-                return ERROR_OUTOFMEMORY;
+            NewPnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
+            {
+                dwRet = ERROR_OUTOFMEMORY;
+                break;
+            }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
@@ -3619,7 +3624,7 @@ PnpEventThread(LPVOID lpParameter)
 
     HeapFree(GetProcessHeap(), 0, PnpEvent);
 
-    return ERROR_SUCCESS;
+    return dwRet;
 }
 
 
