@@ -301,6 +301,43 @@ CcSetFileSizes (
                             0,
                             FALSE);
     }
+    else
+    {
+        PROS_VACB LastVacb;
+
+        /*
+         * If file (allocation) size has increased, then we need to check whether
+         * it just grows in a single VACB (the last one).
+         * If so, we must mark the VACB as invalid to trigger a read to the
+         * FSD at the next VACB usage, and thus avoid returning garbage
+         */
+
+        /* Check for allocation size and the last VACB */
+        if (SharedCacheMap->SectionSize.QuadPart < FileSizes->AllocationSize.QuadPart &&
+            SharedCacheMap->SectionSize.QuadPart % VACB_MAPPING_GRANULARITY)
+        {
+            LastVacb = CcRosLookupVacb(SharedCacheMap,
+                                       SharedCacheMap->SectionSize.QuadPart);
+            if (LastVacb != NULL)
+            {
+                /* Mark it as invalid */
+                CcRosReleaseVacb(SharedCacheMap, LastVacb, LastVacb->Dirty ? LastVacb->Valid : FALSE, FALSE, FALSE);
+            }
+        }
+
+        /* Check for file size and the last VACB */
+        if (SharedCacheMap->FileSize.QuadPart < FileSizes->FileSize.QuadPart &&
+            SharedCacheMap->FileSize.QuadPart % VACB_MAPPING_GRANULARITY)
+        {
+            LastVacb = CcRosLookupVacb(SharedCacheMap,
+                                       SharedCacheMap->FileSize.QuadPart);
+            if (LastVacb != NULL)
+            {
+                /* Mark it as invalid */
+                CcRosReleaseVacb(SharedCacheMap, LastVacb, LastVacb->Dirty ? LastVacb->Valid : FALSE, FALSE, FALSE);
+            }
+        }
+    }
 
     KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
     SharedCacheMap->SectionSize = FileSizes->AllocationSize;
