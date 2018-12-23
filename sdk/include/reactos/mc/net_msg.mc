@@ -11,9 +11,9 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
 
 LanguageNames=(English=0x409:MSG00409
                Polish=0x415:MSG00415
-               Romanian=0x018:MSG00018
+               Romanian=0x418:MSG00418
                Russian=0x419:MSG00419
-               Spanish=0x00A:MSG0000A
+               Spanish=0x40A:MSG0040A
                Turkish=0x41F:MSG0041F
                Chinese=0x804:MSG00804
                Taiwanese=0x404:MSG00404
