@@ -222,6 +222,14 @@ CcRosFlushDirtyPages (
             continue;
         }
 
+        /* Don't attempt to lazy write the files that asked not to */
+        if (CalledFromLazy &&
+            BooleanFlagOn(current->SharedCacheMap->Flags, WRITEBEHIND_DISABLED))
+        {
+            CcRosVacbDecRefCount(current);
+            continue;
+        }
+
         ASSERT(current->Dirty);
 
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
