@@ -307,7 +307,9 @@ CcWorkerThread(
                 break;
 
             case WriteBehind:
+                PsGetCurrentThread()->MemoryMaker = 1;
                 CcWriteBehind();
+                PsGetCurrentThread()->MemoryMaker = 0;
                 WritePerformed = TRUE;
                 break;
 
