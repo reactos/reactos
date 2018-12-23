@@ -15,7 +15,7 @@
 @ stub CoDecodeProxy
 @ stub CoDecrementMTAUsage
 @ stdcall CoDisableCallCancellation() ole32.CoDisableCallCancellation
-@ stub CoDisconnectContext
+@ stdcall -version=0x600+ CoDisconnectContext() ole32.CoDisconnectContext
 @ stdcall CoDisconnectObject() ole32.CoDisconnectObject
 @ stdcall CoEnableCallCancellation() ole32.CoEnableCallCancellation
 @ stdcall CoFreeUnusedLibraries() ole32.CoFreeUnusedLibraries

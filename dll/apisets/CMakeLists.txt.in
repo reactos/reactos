@@ -30,7 +30,7 @@ function (add_apiset apiset_name baseaddress)
         add_target_compile_flags(${apiset_name} "/wd4026 /wd4273")
     endif()
 
-    add_importlibs(${apiset_name} ${ARGN} kernel32 ntdll)
+    add_importlibs(${apiset_name} ${ARGN} ntdll)
 
     add_cd_file(TARGET ${apiset_name} DESTINATION reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef FOR all)
 endfunction()
