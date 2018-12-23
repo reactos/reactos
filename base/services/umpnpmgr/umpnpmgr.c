@@ -3502,10 +3502,10 @@ PnpEventThread(LPVOID lpParameter)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
@@ -3518,11 +3518,11 @@ PnpEventThread(LPVOID lpParameter)
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtGetPlugPlayEvent() failed (Status %lx)\n", Status);
+            DPRINT1("NtGetPlugPlayEvent() failed (Status 0x%08lx)\n", Status);
             break;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ENUMERATED, &RpcStatus))
         {
@@ -3613,7 +3613,7 @@ PnpEventThread(LPVOID lpParameter)
                 PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
