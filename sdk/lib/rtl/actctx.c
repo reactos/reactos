@@ -5000,7 +5000,7 @@ static NTSTATUS find_guid(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
 }
 
 /* initialize the activation context for the current process */
-void actctx_init(void)
+void actctx_init(PVOID* pOldShimData)
 {
     ACTCTXW ctx;
     HANDLE handle;
@@ -5017,6 +5017,11 @@ void actctx_init(void)
     {
         process_actctx = check_actctx(handle);
     }
+
+    /* ReactOS specific:
+       Now that we have found the process_actctx we can initialize the process compat subsystem */
+    LdrpInitializeProcessCompat(process_actctx, pOldShimData);
+
 
     ctx.dwFlags  = 0;
     ctx.hModule  = NULL;
