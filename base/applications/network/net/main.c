@@ -146,6 +146,30 @@ PrintErrorMessage(
 
 
 VOID
+PrintNetMessage(
+    DWORD dwMessage)
+{
+    PWSTR pBuffer;
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                   FORMAT_MESSAGE_FROM_HMODULE |
+                   FORMAT_MESSAGE_IGNORE_INSERTS,
+                   GetModuleHandleW(NULL),
+                   dwMessage,
+                   LANG_USER_DEFAULT,
+                   (LPWSTR)&pBuffer,
+                   0,
+                   NULL);
+    if (pBuffer)
+    {
+        ConPrintf(StdOut, L"%s\n", pBuffer);
+        LocalFree(pBuffer);
+        pBuffer = NULL;
+    }
+}
+
+
+VOID
 ReadFromConsole(
     LPWSTR lpInput,
     DWORD dwLength,

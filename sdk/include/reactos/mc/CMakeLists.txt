@@ -4,6 +4,7 @@ list(APPEND ANSI_SOURCE
 
 list(APPEND UNICODE_SOURCE
      errcodes.mc
+     net_msg.mc
      neteventmsg.mc
      netmsgmsg.mc
      ntiologc.mc

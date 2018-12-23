@@ -1,16 +1,5 @@
 #pragma once
 
-#define IDS_ACCOUNTS_SYNTAX      100
-#define IDS_ACCOUNTS_HELP_1      101
-#define IDS_ACCOUNTS_HELP_2      102
-#define IDS_ACCOUNTS_HELP_3      103
-#define IDS_ACCOUNTS_HELP_4      104
-#define IDS_ACCOUNTS_HELP_5      105
-#define IDS_ACCOUNTS_HELP_6      106
-#define IDS_ACCOUNTS_HELP_7      107
-#define IDS_ACCOUNTS_HELP_8      108
-#define IDS_ACCOUNTS_HELP_9      109
-#define IDS_ACCOUNTS_HELP_10     110
 #define IDS_COMPUTER_SYNTAX      111
 #define IDS_COMPUTER_HELP_1      112
 #define IDS_COMPUTER_HELP_2      113

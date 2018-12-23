@@ -1,47 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_SYNTAX "NET ACCOUNTS [/FORCELOGOFF:{minuty|NO}] [/MINPWLEN:długość]\n\
-             [/MAXPWAGE:{dni|UNLIMITED}] [/MINPWAGE:dni]\n\
-             [/UNIQUEPW:liczba] [/DOMAIN]\n\n"
-    IDS_ACCOUNTS_HELP_1 "NET ACCOUNTS uaktualnia bazę kont użytkowników i zmienia hasło oraz wymagania\n\
-logowania dla wszystkich kont.\n\
-Użyte bez opcji, NET ACCOUNTS wyświetla bieżące ustawienia\n\
-hasła i ograniczeń logowania oraz informacje o domenie.\n\n"
-    IDS_ACCOUNTS_HELP_2 "Aby opcje użyte z NET ACCOUNTS odniosły skutek, muszą być\n\
-spełnione dwa warunki.\n\n"
-    IDS_ACCOUNTS_HELP_3 "- Wymagania hasła i logowania odnoszą skutek tylko wtedy, gdy\n\
-  zostało utworzone konto użytkownika (w tym celu użyj\n\
-  Menedżera użytkowników lub polecenia NET USER).\n\n"
-    IDS_ACCOUNTS_HELP_4 "- Usługa logowania (Net Logon) musi być uruchomiona na wszystkich\n\
-  serwerach w domenie, które weryfikują logowanie. Usługa logowania\n\
-  jest uruchamiana automatycznie podczas uruchamiania systemu.\n\n"
-    IDS_ACCOUNTS_HELP_5 "/FORECELOGOFF:{minuty | NO}   Ustawia liczbę minut, przez które użytkownik\n\
-                               może być zalogowany przed wymuszeniem wylogowania\n\
-                               wskutek wygaśnięcia lub ważności godzin logowania.\n\
-                               NO, wartość domyślna, zapobiega wymuszaniu\n\
-							   wylogowania.\n"
-    IDS_ACCOUNTS_HELP_6 "/MINPWLEN:długość              Ustawia minimalną liczbę znaków w haśle.\n\
-                               Zakres długości hasła wynosi od 0 do 14 znaków;\n\
-                               wartość domyślna to 6 znaków.\n"
-    IDS_ACCOUNTS_HELP_7 "/MAXPWAGE:{dni | UNLIMITED}   Ustawia maksymalną liczbę dni ważności\n\
-                               hasła. UNLIMITED ustala nieograniczony\n\
-                               czas ważności hasła. Wartość /MAXPWAGE nie\n\
-                               może być mniejsza od /MINPWAGE. Zakres wynosi\n\
-                               od 1 do 999; domyślnie wartość się nie zmienia.\n"
-    IDS_ACCOUNTS_HELP_8 "/MINPWAGE:dni                  Ustawia minimalną liczbę dni, które muszą\n\
-                               minąć, zanim użytkownik może zmienić hasło.\n\
-                               Wartość 0 ustawia brak tego ograniczenia.\n\
-                               Zakres wynosi od 0 do 999; wartość domyślna\n\
-                               to 0 dni. Wartość /MINPWAGE nie może być \n\
-							   większa od wartości /MAXPWAGE."
-    IDS_ACCOUNTS_HELP_9 "/UNIQUEPW:liczba               Wymaga, aby hasło użytkownika było unikatowe,\n\
-                               poprzez określoną liczbę zmian hasła.\n\
-                               Największa wartość to 24.\n"
-    IDS_ACCOUNTS_HELP_10 "/DOMAIN                        Wykonuje operacje na kontrolerze domeny\n\
-                               w bieżącej domenie. W innym wypadku,\n\
-                               operacje te są dokonywane na komputerze\n\
-                               lokalnym.\n\n"
     IDS_COMPUTER_SYNTAX "NET COMPUTER \\nazwa_komputera {/ADD | /DEL}\n\n"
     IDS_COMPUTER_HELP_1 "NET COMPUTER dodaje lub usuwa komputer z bazy danych domeny.\n\
 To polecenie jest dostępne tylko na serwerowych systemach opoeracyjnych.\n\n"

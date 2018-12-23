@@ -5,44 +5,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_ACCOUNTS_SYNTAX "NET ACCOUNTS [/FORCELOGOFF:{minutos | NO}] [/MINPWLEN:longitud]\n\
-             [/MAXPWAGE:{días | UNLIMITED}] [/MINPWAGE:días]\n\
-             [/UNIQUEPW:número] [/DOMAIN]\n\n"
-    IDS_ACCOUNTS_HELP_1 "NET ACCOUNTS updates the user accounts database and modifies password\n\
-and logon requirements for all accounts.\n\
-When used without parameters, NET ACCOUNTS displays the current settings for\n\
-passwords, logon limitations, and domain information.\n\n"
-    IDS_ACCOUNTS_HELP_2 "Two conditions are required in order for options used with\n\
-NET ACCOUNTS to take effect.\n\n"
-    IDS_ACCOUNTS_HELP_3 "- The password and logon requirements are only effective if user\n\
-  accounts havebeen set up (user User Manager or the NET USER command).\n\n"
-    IDS_ACCOUNTS_HELP_4 "- The Net Logon service must be running on all servers in the domain\n\
-  that verify logon. Net Logon is started autmatically when the\n\
-  operating system starts.\n\n"
-    IDS_ACCOUNTS_HELP_5 "/FORECELOGOFF:{minutes | NO}   Sets the number of minutes a user has before\n\
-                               being forced to log off when the\n\
-                               account expires or valid logon hours expire.\n\
-                               NO, the default, prevents forced logoff.\n"
-    IDS_ACCOUNTS_HELP_6 "/MINPWLEN:length               Sets the minimum number of characters for\n\
-                               a password. The range is 0-14 characters;\n\
-                               the default is 6 characters.\n"
-    IDS_ACCOUNTS_HELP_7 "/MAXPWAGE:{days | UNLIMITED}   Sets the maximum numer of days that a\n\
-                               password is valid. No limit is specified\n\
-                               by using UNLIMITED. /MAXPWAGE cannot be less\n\
-                               than /MINPWAGE. The range is 1-999; the\n\
-                               default is to leave the value unchanged.\n"
-    IDS_ACCOUNTS_HELP_8 "/MINPWAGE:days                 Sets the minimum number of days that must\n\
-                               pass before a user can change a password.\n\
-                               A value of 0 sets no minimum time. The range\n\
-                               is 0-999; the default is 0 days. /MINPWAGE\n\
-                               cannot be more than /MAXPWAGE.\n"
-    IDS_ACCOUNTS_HELP_9 "/UNIQUEPW:number               Requires that a users passwords be unique\n\
-                               through the specified number of password\n\
-                               changes. The maximum value is 24.\n"
-    IDS_ACCOUNTS_HELP_10 "/DOMAIN                        Performs the operation on a domain\n\
-                               controller of the current domain. Otherwise,\n\
-                               the operation is performed on the local\n\
-                               computer.\n\n"
     IDS_COMPUTER_SYNTAX "NET COMPUTER \\computername {/ADD | /DEL}\n\n"
     IDS_COMPUTER_HELP_1 "NET COMPUTER adds or deletes computers from a domain database. This\n\
 command is available only on server operating systems.\n\n"

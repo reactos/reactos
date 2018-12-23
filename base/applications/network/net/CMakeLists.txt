@@ -23,6 +23,7 @@ list(APPEND SOURCE
 add_executable(net ${SOURCE} net.rc)
 set_module_type(net win32cui UNICODE)
 target_link_libraries(net conutils ${PSEH_LIB})
+add_dependencies(net net_msg)
 add_importlibs(net advapi32 netapi32 mpr msvcrt kernel32 ntdll)
 add_pch(net net.h SOURCE)
 add_cd_file(TARGET net DESTINATION reactos/system32 FOR all)

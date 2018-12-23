@@ -24,6 +24,7 @@
 
 #include <conutils.h>
 
+#include <net_msg.h>
 #include "resource.h"
 
 extern HMODULE hModuleNetMsg;
@@ -41,6 +42,10 @@ PrintPadding(
 VOID
 PrintErrorMessage(
     DWORD dwError);
+
+VOID
+PrintNetMessage(
+    DWORD dwMessage);
 
 VOID
 ReadFromConsole(
