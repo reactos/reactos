@@ -1,47 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_COMPUTER_SYNTAX "NET COMPUTER \\nazwa_komputera {/ADD | /DEL}\n\n"
-    IDS_COMPUTER_HELP_1 "NET COMPUTER dodaje lub usuwa komputer z bazy danych domeny.\n\
-To polecenie jest dostępne tylko na serwerowych systemach opoeracyjnych.\n\n"
-    IDS_COMPUTER_HELP_2 "\\nazwa_komputera   Określa komputer dodawany lub usuwany\n\
-                z domeny.\n\
-/ADD            Dodaje określony komputer do domeny.\n\
-/DEL            Usuwa określony komputer z domeny.\n\n"
-    IDS_CONFIG_SYNTAX "NET CONFIG [SERVER | WORKSTATION]\n\n"
-    IDS_CONFIG_HELP_1 "NET CONFIG wyświetla informacje o konfiguracji usług Stacja robocza lub\n\
-Serwer. Polecenie użyte bez przełącznika SERVER lub WORKSTATION wyświetla,\n\
-listę usług dostępnych do konfiguracji. Aby uzyskać pomoc na temat\n\
-konfigurowania usługi, wpisz polecenie NET HELP CONFIG usługa.\n\n"
-    IDS_CONFIG_HELP_2 "SERVER        Wyświetla informacje o konfiguracji usługi Serwer\n\
-WORKSTATION   Wyświetla informacje o konfiguracji usługi Stacja robocza.\n\n"
-    IDS_CONFIG_SERVER_SYNTAX "NET CONFIG SERVER [/AUTODISCONNECT:czas] [/SRVCOMMENT:""tekst""]\n\
-                  [/HIDDEN:{YES | NO}]\n\n"
-    IDS_CONFIG_SERVER_HELP_1 "NET CONFIG SERVER wyświetla lub zmienia ustawienia usługi Serwer.\n\n"
-    IDS_CONFIG_SERVER_HELP_2 "/AUTODISCONNECT:czas    Ustawia maksymalną liczbę minut, przez\n\
-                        które sesja użytkownika może być nieaktywna, zanim\n\
-                        nastąpi jej rozłączenie. Użyj wartości -1, aby\n\
-                        zapobiec rozłączaniu. Zakres wynosi od -1 do 65535\n\
-						minut, domyślnie 15.\n"
-    IDS_CONFIG_SERVER_HELP_3 "/SRVCOMMENT:""tekst""    Dodaje komentarz dla serwera wyświetlany na\n\
-                        ekranie komputera i przez polecenie NET VIEW.\n\
-                        Tekst musi być ujęty w cudzysłów.\n"
-    IDS_CONFIG_SERVER_HELP_4 "/HIDDEN:{YES | NO}      Określa, czy nazwa serwera pojawia się\n\
-                        podczas wyświetlania listy serwerów. Należy pamiętać,\n\
-                        że ukrycie serwera nie zmienia uprawnień na tym\n\
-                        serwerze. Wartość domyślna: NO (nie ukrywaj).\n\n"
-    IDS_CONFIG_SERVER_HELP_5 "Aby wyświetlić bieżącą konfigurację usługi Serwer,\n\
-wpisz NET CONFIG SERVER bez parametrów.\n\n"
-    IDS_CONTINUE_SYNTAX "NET CONTINUE usługa\n\n"
-    IDS_CONTINUE_HELP_1 "NET CONTINUE wznawia działanie usługi, która została.\n\
-wstrzymana poleceniem NET PAUSE.\n"
-    IDS_CONTINUE_HELP_2 "usługa             Wstrzymana usługa\n\
-                    Może to być jedna z następujących usług:\n\
-                    NET LOGON\n\
-                    NT LM SECURITY SUPPORT PROVIDER\n\
-                    SCHEDULE\n\
-                    SERVER\n\
-                    WORKSTATION\n\n"
     IDS_FILE_SYNTAX "NET FILE [identyfikator [/CLOSE]]\n\n"
     IDS_FILE_HELP "FILE\n...\n\n"
     IDS_GROUP_SYNTAX "NET GROUP [nazwa_grupy [/COMMENT:""tekst""]] [/DOMAIN]\n\

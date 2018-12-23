@@ -183,12 +183,12 @@ cmdConfig(
             if (bServer == TRUE)
             {
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
+                PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
             }
             else
             {
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SYNTAX);
+                PrintNetMessage(MSG_CONFIG_SYNTAX);
             }
             return 0;
         }
@@ -199,20 +199,15 @@ cmdConfig(
             if (bServer == TRUE)
             {
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_1);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_2);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_3);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_4);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_5);
+                PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
+                PrintNetMessage(MSG_CONFIG_SERVER_HELP);
                 ConResPuts(StdOut, IDS_GENERIC_PAGE);
             }
             else
             {
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_HELP_1);
-                ConResPuts(StdOut, IDS_CONFIG_HELP_2);
+                PrintNetMessage(MSG_CONFIG_SYNTAX);
+                PrintNetMessage(MSG_CONFIG_HELP);
             }
             return 0;
         }
@@ -271,7 +266,7 @@ cmdConfig(
             else
             {
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-                ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
+                PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
                 result = 1;
                 goto done;
             }

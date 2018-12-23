@@ -4,47 +4,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_COMPUTER_SYNTAX "NET COMPUTER \\computername {/ADD | /DEL}\n\n"
-    IDS_COMPUTER_HELP_1 "NET COMPUTER adds or deletes computers from a domain database. This\n\
-command is available only on server operating systems.\n\n"
-    IDS_COMPUTER_HELP_2 "\\computername   Specifies the computer to add or delete from\n\
-                the domain.\n\
-/ADD            Adds the specified computer to the domain.\n\
-/DEL            Removes the specified computer from the domain.\n\n"
-    IDS_CONFIG_SYNTAX "NET CONFIG [SERVER | WORKSTATION]\n\n"
-    IDS_CONFIG_HELP_1 "NET CONFIG displays coniguration information of the Workstation or\n\
-Server service. When used without the WORKSTATION or SERVER switch,\n\
-it displays a list of configurable services. To get help with\n\
-configuring a service, type NET HELP CONFIG service.\n\n"
-    IDS_CONFIG_HELP_2 "SERVER        Displays information about the configuration of the\n\
-              Server service.\n\
-WORKSTATION   Displays information about the configuration of the\n\
-              Workstation service.\n\n"
-    IDS_CONFIG_SERVER_SYNTAX "NET CONFIG SERVER [/AUTODISCONNECT:time] [/SRVCOMMENT:""text""]\n\
-                  [/HIDDEN:{YES | NO}]\n\n"
-    IDS_CONFIG_SERVER_HELP_1 "NET CONFIG SERVER displays or changes settings for the Server service.\n\n"
-    IDS_CONFIG_SERVER_HELP_2 "/AUTODISCONNECT:time    Sets the maximum number of minutes a user's\n\
-                        session can be inactive before it is disconected.\n\
-                        You can specify -1 to never disconnect. The range\n\
-                        is -1-65535 minutes; the default is 15.\n"
-    IDS_CONFIG_SERVER_HELP_3 "/SRVCOMMENT:""text""    Adds a comment for the server that is displayed on\n\
-                        screen and with the NET VIEW command.\n\
-                        Enclose the text in quotation marks.\n"
-    IDS_CONFIG_SERVER_HELP_4 "/HIDDEN:{YES | NO}      Specifies whether the server's computer name\n\
-                        appears on displays listings of servers. Note that\n\
-                        hiding a serverdoes not alter the permissions\n\
-                        on that server. The default is NO.\n\n"
-    IDS_CONFIG_SERVER_HELP_5 "To display the current configuration for the Servr service,\n\
-type NET CONFIG SERVER without parameters.\n\n"
-    IDS_CONTINUE_SYNTAX "NET CONTINUE <服務名稱>\n\n"
-    IDS_CONTINUE_HELP_1 "NET CONTINUE reactivates a service that has been suspended by NET PAUSE.\n\n"
-    IDS_CONTINUE_HELP_2 "service             Is the paused service\n\
-                    For example, one of the following:\n\
-                    NET LOGON\n\
-                    NT LM SECURITY SUPPORT PROVIDER\n\
-                    SCHEDULE\n\
-                    SERVER\n\
-                    WORKSTATION\n\n"
     IDS_FILE_SYNTAX "NET FILE [id [/CLOSE]]\n\n"
     IDS_FILE_HELP "NET FILE\n...\n\n"
     IDS_GROUP_SYNTAX "NET GROUP [groupname [/COMMENT:""text""]] [/DOMAIN]\n\

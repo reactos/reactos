@@ -30,9 +30,8 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"COMPUTER") == 0)
     {
-        ConResPuts(StdOut, IDS_COMPUTER_SYNTAX);
-        ConResPuts(StdOut, IDS_COMPUTER_HELP_1);
-        ConResPuts(StdOut, IDS_COMPUTER_HELP_2);
+        PrintNetMessage(MSG_COMPUTER_SYNTAX);
+        PrintNetMessage(MSG_COMPUTER_HELP);
         return 0;
     }
 
@@ -40,20 +39,15 @@ INT cmdHelp(INT argc, WCHAR **argv)
     {
         if ((argc > 3) && (_wcsicmp(argv[3], L"SERVER") == 0))
         {
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_SYNTAX);
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_1);
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_2);
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_3);
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_4);
-            ConResPuts(StdOut, IDS_CONFIG_SERVER_HELP_5);
+            PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
+            PrintNetMessage(MSG_CONFIG_SERVER_HELP);
             ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 0;
         }
         else
         {
-            ConResPuts(StdOut, IDS_CONFIG_SYNTAX);
-            ConResPuts(StdOut, IDS_CONFIG_HELP_1);
-            ConResPuts(StdOut, IDS_CONFIG_HELP_2);
+            PrintNetMessage(MSG_CONFIG_SYNTAX);
+            PrintNetMessage(MSG_CONFIG_HELP);
             ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 0;
         }
@@ -61,9 +55,8 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"CONTINUE") == 0)
     {
-        ConResPuts(StdOut, IDS_CONTINUE_SYNTAX);
-        ConResPuts(StdOut, IDS_CONTINUE_HELP_1);
-        ConResPuts(StdOut, IDS_CONTINUE_HELP_2);
+        PrintNetMessage(MSG_CONTINUE_SYNTAX);
+        PrintNetMessage(MSG_CONTINUE_HELP);
         return 0;
     }
 
