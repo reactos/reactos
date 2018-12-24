@@ -10,6 +10,7 @@ list(APPEND SOURCE
     cmdConfig.c
     cmdContinue.c
     cmdGroup.c
+    cmdHelp.c
     cmdHelpMsg.c
     cmdLocalGroup.c
     cmdPause.c
@@ -18,7 +19,6 @@ list(APPEND SOURCE
     cmdStop.c
     cmdUse.c
     cmdUser.c
-    help.c
     net.h)
 
 add_executable(net ${SOURCE} net.rc)
