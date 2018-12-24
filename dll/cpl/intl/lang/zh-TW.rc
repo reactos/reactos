@@ -1,14 +1,15 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "區域選項"
+CAPTION "地區選項"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "標準和格式", -1, 5, 5, 234, 162
-    LTEXT "這個選項影響到某些程式如何格式化數字、貨幣、時間和日期。", -1, 14, 17, 220, 25
+    LTEXT "這個選項將會影響一些程式的數字、貨幣、日期和時間格式。", -1, 14, 17, 220, 25
     LTEXT "選擇一個與其首選項匹配的項或單擊“自定義”選擇您自己的格式(&S):", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "自定義(&Z)...", IDC_SETUP_BUTTON, 178, 56, 52, 13
@@ -184,7 +185,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "自定義區域選項"
+    IDS_CUSTOMIZE_TITLE "自定義地區選項"
     IDS_SPAIN "西班牙語 (西班牙)"
     IDS_METRIC "公制"
     IDS_IMPERIAL "帝國"
@@ -192,7 +193,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "區域選項"
+    IDS_CPLNAME "地區選項"
     IDS_CPLDESCRIPTION "選擇語言、數字、貨幣、時間和日期的顯示設定。"
 END
 
