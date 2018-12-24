@@ -1,11 +1,10 @@
-;/*
-; * Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
-; * Russian translation by Kudratov Olimjon (olim98@bk.ru)
-; * Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
-; * Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
-; * Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
-; * Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
-; */
+; Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
+; Russian translation by Kudratov Olimjon (olim98@bk.ru)
+; Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
+; Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+; Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+; Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+
 MessageIdTypedef=DWORD
 
 SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
