@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 list(APPEND SOURCE
     main.c
     cmdAccounts.c
+    cmdComputer.c
     cmdConfig.c
     cmdContinue.c
     cmdGroup.c

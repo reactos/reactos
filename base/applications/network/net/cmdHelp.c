@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
- * FILE:            base/applications/network/net/help.c
+ * FILE:            base/applications/network/net/cmdHelp.c
  * PURPOSE:
  *
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
