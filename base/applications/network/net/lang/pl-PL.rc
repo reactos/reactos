@@ -1,25 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_START_SYNTAX "NET START [usługa]\n\n"
-    IDS_START_HELP_1 "NET START uruchamia usługi lub wyświetla uruchomione usługi.\n\n"
-    IDS_START_HELP_2 "usługa   Nazwa uruchamianej usługi.\n\n"
-    IDS_START_HELP_3 "Nazwy usług mające dwa lub więcej słów wpisywane w.\n\
-wierszu polecenia muszą być ujęte w cudzysłów. Przykładowo,\n\
-NET START ""NET LOGON"" uruchamia usługę logowania w sieci.\n\n"
-    IDS_STATISTICS_SYNTAX "NET STATISTICS [SERVER | WORKSTATION]\n\n"
-    IDS_STATISTICS_HELP_1 "NET STATISTICS wyświetla dziennik statystyki dla lokalnej usługi\n\
-Stacja robocza lub Serwer. Użyte bez parametrów, NET STATISTICS wyświetla\n\
-usługi dla których statystyka jest dostępna.\n\n"
-    IDS_STATISTICS_HELP_2 "SERVER        Wyświetla statystykę usługi Serwer.\n\
-WORKSTATION   Wyświetla statystykę usługi Stacja robocza.\n\n"
-
-    IDS_STOP_SYNTAX "NET STOP usługa\n\n"
-    IDS_STOP_HELP_1 "NET STOP zatrzymuje usługi.\n\n"
-    IDS_STOP_HELP_2 "usługa   Nazwa zatrzymywanej usługi.\n\n"
-    IDS_STOP_HELP_3 "Zatrzymanie usługi rozłącza wszystkie połączenia sieciowe\n\
-używane przez usługę. Niektóre usługi zależą od innych. Zatrzymanie jednej\n\
-może też zatrzymać inne. Niektóre usługi nie mogą być zatrzymane.\n\n"
     IDS_TIME_SYNTAX "NET TIME ...\n\n"
     IDS_TIME_HELP "TIME\n...\n\n"
     IDS_USE_SYNTAX "NET USE ...\n\n"

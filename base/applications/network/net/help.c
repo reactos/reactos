@@ -134,27 +134,22 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"START") == 0)
     {
-        ConResPuts(StdOut, IDS_START_SYNTAX);
-        ConResPuts(StdOut, IDS_START_HELP_1);
-        ConResPuts(StdOut, IDS_START_HELP_2);
-        ConResPuts(StdOut, IDS_START_HELP_3);
+        PrintNetMessage(MSG_START_SYNTAX);
+        PrintNetMessage(MSG_START_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"STATISTICS") == 0)
     {
-        ConResPuts(StdOut, IDS_STATISTICS_SYNTAX);
-        ConResPuts(StdOut, IDS_STATISTICS_HELP_1);
-        ConResPuts(StdOut, IDS_STATISTICS_HELP_2);
+        PrintNetMessage(MSG_STATISTICS_SYNTAX);
+        PrintNetMessage(MSG_STATISTICS_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"STOP") == 0)
     {
-        ConResPuts(StdOut, IDS_STOP_SYNTAX);
-        ConResPuts(StdOut, IDS_STOP_HELP_1);
-        ConResPuts(StdOut, IDS_STOP_HELP_2);
-        ConResPuts(StdOut, IDS_STOP_HELP_3);
+        PrintNetMessage(MSG_STOP_SYNTAX);
+        PrintNetMessage(MSG_STOP_HELP);
         return 0;
     }
 

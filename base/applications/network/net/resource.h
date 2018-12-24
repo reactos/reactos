@@ -1,16 +1,5 @@
 #pragma once
 
-#define IDS_START_SYNTAX         163
-#define IDS_START_HELP_1         164
-#define IDS_START_HELP_2         165
-#define IDS_START_HELP_3         166
-#define IDS_STATISTICS_SYNTAX    167
-#define IDS_STATISTICS_HELP_1    168
-#define IDS_STATISTICS_HELP_2    169
-#define IDS_STOP_SYNTAX          170
-#define IDS_STOP_HELP_1          171
-#define IDS_STOP_HELP_2          172
-#define IDS_STOP_HELP_3          173
 #define IDS_TIME_SYNTAX          174
 #define IDS_TIME_HELP            175
 #define IDS_USE_SYNTAX           176

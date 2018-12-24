@@ -265,7 +265,7 @@ cmdStatistics(
         {
             /* Print short syntax help */
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-            ConResPuts(StdOut, IDS_STATISTICS_SYNTAX);
+            PrintNetMessage(MSG_STATISTICS_SYNTAX);
             return 0;
         }
 
@@ -273,9 +273,8 @@ cmdStatistics(
         {
             /* Print full help text*/
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-            ConResPuts(StdOut, IDS_STATISTICS_SYNTAX);
-            ConResPuts(StdOut, IDS_STATISTICS_HELP_1);
-            ConResPuts(StdOut, IDS_STATISTICS_HELP_2);
+            PrintNetMessage(MSG_STATISTICS_SYNTAX);
+            PrintNetMessage(MSG_STATISTICS_HELP);
             return 0;
         }
     }

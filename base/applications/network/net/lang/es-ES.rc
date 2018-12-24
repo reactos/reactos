@@ -5,24 +5,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_START_SYNTAX "NET START [service]\n\n"
-    IDS_START_HELP_1 "NET START starts services or lists running services.\n\n"
-    IDS_START_HELP_2 "service   The name of the service to be started.\n\n"
-    IDS_START_HELP_3 "When typed at the command prompt, service name of two words or more must\n\
-be enclosed in quotation marks. For example, NET START ""NET LOGON""\n\
-starts the net logon service.\n\n"
-    IDS_STATISTICS_SYNTAX "NET STATISTICS [SERVER | WORKSTATION]\n\n"
-    IDS_STATISTICS_HELP_1 "NET STATISTICS displays the statisticslog for the local Workstation or\n\
-Server service. Used without parameters, NET STATISTICS displays\n\
-the services for which statistics are available.\n\n"
-    IDS_STATISTICS_HELP_2 "SERVER        Displays the Server service statistics.\n\
-WORKSTATION   Displays the Workstation service statistics.\n\n"
-    IDS_STOP_SYNTAX "NET STOP <nombre del servicio>\n\n"
-    IDS_STOP_HELP_1 "NET STOP stops services.\n\n"
-    IDS_STOP_HELP_2 "service   The name of the service to be stopped.\n\n"
-    IDS_STOP_HELP_3 "Stopping a service cancels any network connection the service is\n\
-using. Also, some services are dependent on others. Stopping one\n\
-service can stop others. Some services cannot be stopped.\n\n"
     IDS_TIME_SYNTAX "NET TIME ...\n\n"
     IDS_TIME_HELP "TIME\n...\n\n"
     IDS_USE_SYNTAX "NET USE ...\n\n"

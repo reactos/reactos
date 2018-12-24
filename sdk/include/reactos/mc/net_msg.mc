@@ -2120,3 +2120,319 @@ SHARE
 ...
 .
 
+
+MessageId=10032
+SymbolicName=MSG_START_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET START [service]
+.
+Language=Polish
+NET START [usługa]
+.
+Language=Romanian
+NET START [service]
+.
+Language=Russian
+NET START [service]
+.
+Language=Spanish
+NET START [service]
+.
+Language=Turkish
+NET START [service]
+.
+Language=Chinese
+NET START [service]
+.
+Language=Taiwanese
+NET START [service]
+.
+
+
+MessageId=10033
+SymbolicName=MSG_START_HELP
+Severity=Success
+Facility=System
+Language=English
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Polish
+NET START uruchamia usługi lub wyświetla uruchomione usługi.
+
+usługa   Nazwa uruchamianej usługi.
+
+Nazwy usług mające dwa lub więcej słów wpisywane w.
+wierszu polecenia muszą być ujęte w cudzysłów. Przykładowo,
+NET START "NET LOGON" uruchamia usługę logowania w sieci.
+.
+Language=Romanian
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Russian
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Spanish
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Turkish
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Chinese
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+Language=Taiwanese
+NET START starts services or lists running services.
+
+service   The name of the service to be started.
+
+When typed at the command prompt, service name of two words or more must
+be enclosed in quotation marks. For example, NET START "NET LOGON"
+starts the net logon service.
+.
+
+
+MessageId=10034
+SymbolicName=MSG_STATISTICS_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Polish
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Romanian
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Russian
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Spanish
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Turkish
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Chinese
+NET STATISTICS [SERVER | WORKSTATION]
+.
+Language=Taiwanese
+NET STATISTICS [SERVER | WORKSTATION]
+.
+
+
+MessageId=10035
+SymbolicName=MSG_STATISTICS_HELP
+Severity=Success
+Facility=System
+Language=English
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Polish
+NET STATISTICS wyświetla dziennik statystyki dla lokalnej usługi
+Stacja robocza lub Serwer. Użyte bez parametrów, NET STATISTICS wyświetla
+usługi dla których statystyka jest dostępna.
+
+SERVER        Wyświetla statystykę usługi Serwer.
+WORKSTATION   Wyświetla statystykę usługi Stacja robocza.
+.
+Language=Romanian
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Russian
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Spanish
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Turkish
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Chinese
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+Language=Taiwanese
+NET STATISTICS displays the statisticslog for the local Workstation or
+Server service. Used without parameters, NET STATISTICS displays
+the services for which statistics are available.
+
+SERVER        Displays the Server service statistics.
+WORKSTATION   Displays the Workstation service statistics.
+.
+
+
+MessageId=10036
+SymbolicName=MSG_STOP_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET STOP service
+.
+Language=Polish
+NET STOP usługa
+.
+Language=Romanian
+NET STOP <nume serviciu>
+.
+Language=Russian
+NET STOP <имя_службы>
+.
+Language=Spanish
+NET STOP <nombre del servicio>
+.
+Language=Turkish
+NET STOP <Hizmet Adı>
+.
+Language=Chinese
+NET STOP service
+.
+Language=Taiwanese
+NET STOP <服務名稱>
+.
+
+
+MessageId=10037
+SymbolicName=MSG_STOP_HELP
+Severity=Success
+Facility=System
+Language=English
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Polish
+NET STOP zatrzymuje usługi.
+
+usługa   Nazwa zatrzymywanej usługi.
+
+Zatrzymanie usługi rozłącza wszystkie połączenia sieciowe
+używane przez usługę. Niektóre usługi zależą od innych. Zatrzymanie jednej
+może też zatrzymać inne. Niektóre usługi nie mogą być zatrzymane.
+.
+Language=Romanian
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Russian
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Spanish
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Turkish
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Chinese
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+Language=Taiwanese
+NET STOP stops services.
+
+service   The name of the service to be stopped.
+
+Stopping a service cancels any network connection the service is
+using. Also, some services are dependent on others. Stopping one
+service can stop others. Some services cannot be stopped.
+.
+
