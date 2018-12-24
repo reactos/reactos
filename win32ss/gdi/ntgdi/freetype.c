@@ -5881,6 +5881,7 @@ GreExtTextOutW(
     else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
     {
         RealXStart -= TextWidth;
+        RealXStart += 32;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5909,9 +5910,9 @@ GreExtTextOutW(
         /* Draw background */
         RECTL Rect;
 
-        Rect.left = RealXStart >> 6;
+        Rect.left = (RealXStart + 32) >> 6;
         Rect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-        Rect.right = (RealXStart + TextWidth) >> 6;
+        Rect.right = (RealXStart + TextWidth + 32) >> 6;
         Rect.bottom = Rect.top + ((fixAscender + fixDescender) >> 6);
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
