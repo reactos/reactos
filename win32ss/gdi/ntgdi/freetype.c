@@ -5881,7 +5881,8 @@ GreExtTextOutW(
     else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
     {
         RealXStart -= TextWidth;
-        RealXStart += 32;
+        if (((RealXStart + TextWidth + 32) >> 6) <= Start.x + dc->ptlDCOrig.x)
+            RealXStart += 1 << 6;
     }
 
     psurf = dc->dclevel.pSurface;
