@@ -1,15 +1,5 @@
 #pragma once
 
-#define IDS_TIME_SYNTAX          174
-#define IDS_TIME_HELP            175
-#define IDS_USE_SYNTAX           176
-#define IDS_USE_HELP             177
-#define IDS_USER_SYNTAX          178
-#define IDS_USER_HELP            179
-#define IDS_VIEW_SYNTAX          180
-#define IDS_VIEW_HELP            181
-#define IDS_NET_SYNTAX           182
-
 #define IDS_ACCOUNTS_FORCE_LOGOFF      200
 #define IDS_ACCOUNTS_LOGOFF_SECONDS    201
 #define IDS_ACCOUNTS_MIN_PW_AGE        202

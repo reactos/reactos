@@ -1,3 +1,11 @@
+;/*
+; * Romanian translation by Ștefan Fulea (stefan dot fulea at mail dot com)
+; * Russian translation by Kudratov Olimjon (olim98@bk.ru)
+; * Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
+; * Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+; * Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+; * Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+; */
 MessageIdTypedef=DWORD
 
 SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
@@ -2436,3 +2444,336 @@ using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
 .
 
+
+MessageId=10038
+SymbolicName=MSG_TIME_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET TIME ...
+.
+Language=Polish
+NET TIME ...
+.
+Language=Romanian
+NET TIME ...
+.
+Language=Russian
+NET TIME ...
+.
+Language=Spanish
+NET TIME ...
+.
+Language=Turkish
+NET TIME ...
+.
+Language=Chinese
+NET TIME ...
+.
+Language=Taiwanese
+NET TIME ...
+.
+
+
+MessageId=10039
+SymbolicName=MSG_TIME_HELP
+Severity=Success
+Facility=System
+Language=English
+TIME
+...
+.
+Language=Polish
+TIME
+...
+.
+Language=Romanian
+TIME
+...
+.
+Language=Russian
+TIME
+...
+.
+Language=Spanish
+TIME
+...
+.
+Language=Turkish
+TIME
+...
+.
+Language=Chinese
+TIME
+...
+.
+Language=Taiwanese
+TIME
+...
+.
+
+
+MessageId=10040
+SymbolicName=MSG_USE_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET USE ...
+.
+Language=Polish
+NET USE ...
+.
+Language=Romanian
+NET USE ...
+.
+Language=Russian
+NET USE ...
+.
+Language=Spanish
+NET USE ...
+.
+Language=Turkish
+NET USE ...
+.
+Language=Chinese
+NET USE ...
+.
+Language=Taiwanese
+NET USE ...
+.
+
+
+MessageId=10041
+SymbolicName=MSG_USE_HELP
+Severity=Success
+Facility=System
+Language=English
+USE
+...
+.
+Language=Polish
+USE
+...
+.
+Language=Romanian
+USE
+...
+.
+Language=Russian
+USE
+...
+.
+Language=Spanish
+USE
+...
+.
+Language=Turkish
+USE
+...
+.
+Language=Chinese
+USE
+...
+.
+Language=Taiwanese
+USE
+...
+.
+
+
+MessageId=10042
+SymbolicName=MSG_USER_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET USER [username [password | *] [options]] [/DOMAIN]
+         username {password | *} /ADD [options] [/DOMAIN]
+         username [/DELETE] [/DOMAIN]
+.
+Language=Polish
+NET USER [nazwa_użytkownika [hasło | *] [opcje]] [/DOMAIN]
+         nazwa_użytkownika {hasło | *} /ADD [opcje] [/DOMAIN]
+         nazwa_użytkownika [/DELETE] [/DOMAIN]
+.
+Language=Romanian
+NET USER [nume-utilizator [parolă | *] [opțiuni]] [/DOMAIN]
+         nume-utilizator {parolă | *} /ADD [opțiuni] [/DOMAIN]
+         nume-utilizator [/DELETE] [/DOMAIN]
+.
+Language=Russian
+NET USER [имя_пользователя [пароль | *] [параметры]] [/DOMAIN]
+         имя_пользователя {пароль | *} /ADD [параметры] [/DOMAIN]
+         имя_пользователя [/DELETE] [/DOMAIN]
+.
+Language=Spanish
+NET USER [usuario [contraseña | *] [opciones]] [/DOMAIN]
+         usuario {contraseña | *} /ADD [opciones] [/DOMAIN]
+         usuario [/DELETE] [/DOMAIN]
+.
+Language=Turkish
+NET USER [kullanıcı adı [şifre | *] [seçenekler]] [/DOMAIN]
+         kullanıcı adı {şifre | *} /ADD [seçenekler] [/DOMAIN]
+         kullanıcı adı [/DELETE] [/DOMAIN]
+.
+Language=Chinese
+NET USER [username [password | *] [options]] [/DOMAIN]
+         username {password | *} /ADD [options] [/DOMAIN]
+         username [/DELETE] [/DOMAIN]
+.
+Language=Taiwanese
+NET USER [使用者名 [密碼 | *] [選項]] [/DOMAIN]
+         使用者名 {密碼 | *} /ADD [選項] [/DOMAIN]
+         使用者名 [/DELETE] [/DOMAIN]
+.
+
+
+MessageId=10043
+SymbolicName=MSG_USER_HELP
+Severity=Success
+Facility=System
+Language=English
+USER
+...
+.
+Language=Polish
+USER
+...
+.
+Language=Romanian
+USER
+...
+.
+Language=Russian
+USER
+...
+.
+Language=Spanish
+USER
+...
+.
+Language=Turkish
+USER
+...
+.
+Language=Chinese
+USER
+...
+.
+Language=Taiwanese
+USER
+...
+.
+
+
+MessageId=10044
+SymbolicName=MSG_VIEW_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET VIEW ...
+.
+Language=Polish
+NET VIEW ...
+.
+Language=Romanian
+NET VIEW ...
+.
+Language=Russian
+NET VIEW ...
+.
+Language=Spanish
+NET VIEW ...
+.
+Language=Turkish
+NET VIEW ...
+.
+Language=Chinese
+NET VIEW ...
+.
+Language=Taiwanese
+NET VIEW ...
+.
+
+
+MessageId=10045
+SymbolicName=MSG_VIEW_HELP
+Severity=Success
+Facility=System
+Language=English
+VIEW
+...
+.
+Language=Polish
+VIEW
+...
+.
+Language=Romanian
+VIEW
+...
+.
+Language=Russian
+VIEW
+...
+.
+Language=Spanish
+VIEW
+...
+.
+Language=Turkish
+VIEW
+...
+.
+Language=Chinese
+VIEW
+...
+.
+Language=Taiwanese
+VIEW
+...
+.
+
+
+MessageId=10046
+SymbolicName=MSG_NET_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Polish
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Romanian
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Russian
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Spanish
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Turkish
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Chinese
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+Language=Taiwanese
+NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
+      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
+      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.

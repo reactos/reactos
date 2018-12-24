@@ -155,29 +155,29 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"TIME") == 0)
     {
-        ConResPuts(StdOut, IDS_TIME_SYNTAX);
-        ConResPuts(StdOut, IDS_TIME_HELP);
+        PrintNetMessage(MSG_TIME_SYNTAX);
+        PrintNetMessage(MSG_TIME_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"USE") == 0)
     {
-        ConResPuts(StdOut, IDS_USE_SYNTAX);
-        ConResPuts(StdOut, IDS_USE_HELP);
+        PrintNetMessage(MSG_USE_SYNTAX);
+        PrintNetMessage(MSG_USE_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"USER") == 0)
     {
-        ConResPuts(StdOut, IDS_USER_SYNTAX);
-        ConResPuts(StdOut, IDS_USER_HELP);
+        PrintNetMessage(MSG_USER_SYNTAX);
+        PrintNetMessage(MSG_USER_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"VIEW") == 0)
     {
-        ConResPuts(StdOut, IDS_VIEW_SYNTAX);
-        ConResPuts(StdOut, IDS_VIEW_HELP);
+        PrintNetMessage(MSG_VIEW_SYNTAX);
+        PrintNetMessage(MSG_VIEW_HELP);
         return 0;
     }
 

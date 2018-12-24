@@ -8,20 +8,6 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_TIME_SYNTAX "NET TIME ...\n\n"
-    IDS_TIME_HELP "TIME\n...\n\n"
-    IDS_USE_SYNTAX "NET USE ...\n\n"
-    IDS_USE_HELP "USE\n...\n\n"
-    IDS_USER_SYNTAX "NET USER [nume-utilizator [parolă | *] [opțiuni]] [/DOMAIN]\n\
-         nume-utilizator {parolă | *} /ADD [opțiuni] [/DOMAIN]\n\
-         nume-utilizator [/DELETE] [/DOMAIN]\n\n"
-    IDS_USER_HELP "USER\n...\n\n"
-    IDS_VIEW_SYNTAX "NET VIEW ...\n\n"
-    IDS_VIEW_HELP "VIEW\n...\n\n"
-    IDS_NET_SYNTAX "NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |\n\
-      HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |\n\
-      SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]\n"
-
     IDS_ACCOUNTS_FORCE_LOGOFF "Forțează deautentificarea după"
     IDS_ACCOUNTS_LOGOFF_SECONDS "%lu secunde"
     IDS_ACCOUNTS_MIN_PW_AGE "Vârsta minimă a parolei (în zile)"
