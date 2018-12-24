@@ -1772,3 +1772,351 @@ Language=Taiwanese
 NAME
 ...
 .
+
+
+MessageId=10022
+SymbolicName=MSG_PAUSE_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET PAUSE service
+.
+Language=Polish
+NET PAUSE usługa
+.
+Language=Romanian
+NET PAUSE <nume serviciu>
+.
+Language=Russian
+NET PAUSE <имя_службы>
+.
+Language=Spanish
+NET PAUSE <nombre del servicio>
+.
+Language=Turkish
+NET PAUSE service
+.
+Language=Chinese
+NET PAUSE service
+.
+Language=Taiwanese
+NET PAUSE <服務名稱>
+.
+
+
+MessageId=10023
+SymbolicName=MSG_PAUSE_HELP
+Severity=Success
+Facility=System
+Language=English
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+Language=Polish
+NET PAUSE wstrzymuje usługę.
+
+usługa   Nazwa wstrzymywanej usługi.
+.
+Language=Romanian
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+Language=Russian
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+Language=Spanish
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+service   The name of the service to be paused.
+.
+Language=Turkish
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+Language=Chinese
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+Language=Taiwanese
+NET PAUSE suspends a service. Pausing a service puts it on hold.
+
+service   The name of the service to be paused.
+.
+
+
+MessageId=10024
+SymbolicName=MSG_PRINT_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET PRINT ...
+.
+Language=Polish
+NET PRINT ...
+.
+Language=Romanian
+NET PRINT ...
+.
+Language=Russian
+NET PRINT ...
+.
+Language=Spanish
+NET PRINT ...
+.
+Language=Turkish
+NET PRINT ...
+.
+Language=Chinese
+NET PRINT ...
+.
+Language=Taiwanese
+NET PRINT ...
+.
+
+
+MessageId=10025
+SymbolicName=MSG_PRINT_HELP
+Severity=Success
+Facility=System
+Language=English
+PRINT
+...
+.
+Language=Polish
+PRINT
+...
+.
+Language=Romanian
+PRINT
+...
+.
+Language=Russian
+PRINT
+...
+.
+Language=Spanish
+PRINT
+...
+.
+Language=Turkish
+PRINT
+...
+.
+Language=Chinese
+PRINT
+...
+.
+Language=Taiwanese
+PRINT
+...
+.
+
+
+MessageId=10026
+SymbolicName=MSG_SEND_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET SEND ...
+.
+Language=Polish
+NET SEND ...
+.
+Language=Romanian
+NET SEND ...
+.
+Language=Russian
+NET SEND ...
+.
+Language=Spanish
+NET SEND ...
+.
+Language=Turkish
+NET SEND ...
+.
+Language=Chinese
+NET SEND ...
+.
+Language=Taiwanese
+NET SEND ...
+.
+
+
+MessageId=10027
+SymbolicName=MSG_SEND_HELP
+Severity=Success
+Facility=System
+Language=English
+SEND
+...
+.
+Language=Polish
+SEND
+...
+.
+Language=Romanian
+SEND
+...
+.
+Language=Russian
+SEND
+...
+.
+Language=Spanish
+SEND
+...
+.
+Language=Turkish
+SEND
+...
+.
+Language=Chinese
+SEND
+...
+.
+Language=Taiwanese
+SEND
+...
+.
+
+
+MessageId=10028
+SymbolicName=MSG_SESSION_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET SESSION ...
+.
+Language=Polish
+NET SESSION ...
+.
+Language=Romanian
+NET SESSION ...
+.
+Language=Russian
+NET SESSION ...
+.
+Language=Spanish
+NET SESSION ...
+.
+Language=Turkish
+NET SESSION ...
+.
+Language=Chinese
+NET SESSION ...
+.
+Language=Taiwanese
+NET SESSION ...
+.
+
+
+MessageId=10029
+SymbolicName=MSG_SESSION_HELP
+Severity=Success
+Facility=System
+Language=English
+SESSION
+...
+.
+Language=Polish
+SESSION
+...
+.
+Language=Romanian
+SESSION
+...
+.
+Language=Russian
+SESSION
+...
+.
+Language=Spanish
+SESSION
+...
+.
+Language=Turkish
+SESSION
+...
+.
+Language=Chinese
+SESSION
+...
+.
+Language=Taiwanese
+SESSION
+...
+.
+
+
+MessageId=10030
+SymbolicName=MSG_SHARE_SYNTAX
+Severity=Success
+Facility=System
+Language=English
+NET SHARE ...
+.
+Language=Polish
+NET SHARE ...
+.
+Language=Romanian
+NET SHARE ...
+.
+Language=Russian
+NET SHARE ...
+.
+Language=Spanish
+NET SHARE ...
+.
+Language=Turkish
+NET SHARE ...
+.
+Language=Chinese
+NET SHARE ...
+.
+Language=Taiwanese
+NET SHARE ...
+.
+
+
+MessageId=10031
+SymbolicName=MSG_SHARE_HELP
+Severity=Success
+Facility=System
+Language=English
+SHARE
+...
+.
+Language=Polish
+SHARE
+...
+.
+Language=Romanian
+SHARE
+...
+.
+Language=Russian
+SHARE
+...
+.
+Language=Spanish
+SHARE
+...
+.
+Language=Turkish
+SHARE
+...
+.
+Language=Chinese
+SHARE
+...
+.
+Language=Taiwanese
+SHARE
+...
+.
+

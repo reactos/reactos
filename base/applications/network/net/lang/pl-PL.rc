@@ -1,17 +1,6 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
-    IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
-    IDS_PRINT_HELP "PRINT\n...\n\n"
-    IDS_PAUSE_SYNTAX "NET PAUSE usługa\n\n"
-    IDS_PAUSE_HELP_1 "NET PAUSE wstrzymuje usługę.\n\n"
-    IDS_PAUSE_HELP_2 "usługa   Nazwa wstrzymywanej usługi.\n\n"
-    IDS_SEND_SYNTAX "NET SEND ...\n\n"
-    IDS_SEND_HELP "SEND\n...\n\n"
-    IDS_SESSION_SYNTAX "NET SESSION ...\n\n"
-    IDS_SESSION_HELP "SESSION\n...\n\n"
-    IDS_SHARE_SYNTAX "NET SHARE ...\n\n"
-    IDS_SHARE_HELP "SHARE\n...\n\n"
     IDS_START_SYNTAX "NET START [usługa]\n\n"
     IDS_START_HELP_1 "NET START uruchamia usługi lub wyświetla uruchomione usługi.\n\n"
     IDS_START_HELP_2 "usługa   Nazwa uruchamianej usługi.\n\n"

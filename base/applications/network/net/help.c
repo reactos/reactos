@@ -99,37 +99,36 @@ INT cmdHelp(INT argc, WCHAR **argv)
 
     if (_wcsicmp(argv[2], L"PAUSE") == 0)
     {
-        ConResPuts(StdOut, IDS_PAUSE_SYNTAX);
-        ConResPuts(StdOut, IDS_PAUSE_HELP_1);
-        ConResPuts(StdOut, IDS_PAUSE_HELP_2);
+        PrintNetMessage(MSG_PAUSE_SYNTAX);
+        PrintNetMessage(MSG_PAUSE_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"PRINT") == 0)
     {
-        ConResPuts(StdOut, IDS_PRINT_SYNTAX);
-        ConResPuts(StdOut, IDS_PRINT_HELP);
+        PrintNetMessage(MSG_PRINT_SYNTAX);
+        PrintNetMessage(MSG_PRINT_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"SEND") == 0)
     {
-        ConResPuts(StdOut, IDS_SEND_SYNTAX);
-        ConResPuts(StdOut, IDS_SEND_HELP);
+        PrintNetMessage(MSG_SEND_SYNTAX);
+        PrintNetMessage(MSG_SEND_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"SESSION") == 0)
     {
-        ConResPuts(StdOut, IDS_SESSION_SYNTAX);
-        ConResPuts(StdOut, IDS_SESSION_HELP);
+        PrintNetMessage(MSG_SESSION_SYNTAX);
+        PrintNetMessage(MSG_SESSION_HELP);
         return 0;
     }
 
     if (_wcsicmp(argv[2], L"SHARE") == 0)
     {
-        ConResPuts(StdOut, IDS_SHARE_SYNTAX);
-        ConResPuts(StdOut, IDS_SHARE_HELP);
+        PrintNetMessage(MSG_SHARE_SYNTAX);
+        PrintNetMessage(MSG_SHARE_HELP);
         return 0;
     }
 

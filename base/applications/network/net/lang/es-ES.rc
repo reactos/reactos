@@ -5,17 +5,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_PRINT_SYNTAX  "NET PRINT ...\n\n"
-    IDS_PRINT_HELP "PRINT\n...\n\n"
-    IDS_PAUSE_SYNTAX "NET PAUSE <nombre del servicio>\n\n"
-    IDS_PAUSE_HELP_1 "NET PAUSE suspends a service. Pausing a service puts it on hold.\n\n"
-    IDS_PAUSE_HELP_2 "service   The name of the service to be paused.\n\n"
-    IDS_SEND_SYNTAX "NET SEND ...\n\n"
-    IDS_SEND_HELP "SEND\n...\n\n"
-    IDS_SESSION_SYNTAX "NET SESSION ...\n\n"
-    IDS_SESSION_HELP "SESSION\n...\n\n"
-    IDS_SHARE_SYNTAX "NET SHARE ...\n\n"
-    IDS_SHARE_HELP "SHARE\n...\n\n"
     IDS_START_SYNTAX "NET START [service]\n\n"
     IDS_START_HELP_1 "NET START starts services or lists running services.\n\n"
     IDS_START_HELP_2 "service   The name of the service to be started.\n\n"

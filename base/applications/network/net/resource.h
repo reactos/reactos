@@ -1,16 +1,5 @@
 #pragma once
 
-#define IDS_PAUSE_SYNTAX         152
-#define IDS_PAUSE_HELP_1         153
-#define IDS_PAUSE_HELP_2         154
-#define IDS_PRINT_SYNTAX         155
-#define IDS_PRINT_HELP           156
-#define IDS_SEND_SYNTAX          157
-#define IDS_SEND_HELP            158
-#define IDS_SESSION_SYNTAX       159
-#define IDS_SESSION_HELP         160
-#define IDS_SHARE_SYNTAX         161
-#define IDS_SHARE_HELP           162
 #define IDS_START_SYNTAX         163
 #define IDS_START_HELP_1         164
 #define IDS_START_HELP_2         165
