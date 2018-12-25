@@ -18,7 +18,8 @@ enum Rle_EscapeCodes
     RLE_DELTA = 2  /* Delta */
 };
 
-VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format, ULONG cjSizeImage)
+VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits,
+                      LONG Delta, ULONG Format, ULONG cjSizeImage)
 {
     INT x = 0, y = Size.cy - 1;
     INT i, c, c2, length;
