@@ -646,6 +646,147 @@ IopSendStopDevice(IN PDEVICE_OBJECT DeviceObject)
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
+static
+NTSTATUS
+IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
+{
+    UNICODE_STRING ServicesKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+    UNICODE_STRING ServiceKeyName;
+    UNICODE_STRING EnumKeyName;
+    UNICODE_STRING ValueName;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
+    HANDLE ServiceKey = NULL, ServiceEnumKey;
+    ULONG Disposition;
+    ULONG Count = 0, NextInstance = 0;
+    WCHAR ValueBuffer[6];
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("IopSetServiceEnumData(%p)\n", DeviceNode);
+    DPRINT("Instance: %wZ\n", &DeviceNode->InstancePath);
+    DPRINT("Service: %wZ\n", &DeviceNode->ServiceName);
+
+    if (DeviceNode->ServiceName.Buffer == NULL)
+    {
+        DPRINT1("No service!\n");
+        return STATUS_SUCCESS;
+    }
+
+    ServiceKeyName.MaximumLength = ServicesKeyPath.Length + DeviceNode->ServiceName.Length + sizeof(UNICODE_NULL);
+    ServiceKeyName.Length = 0;
+    ServiceKeyName.Buffer = ExAllocatePool(PagedPool, ServiceKeyName.MaximumLength);
+    if (ServiceKeyName.Buffer == NULL)
+    {
+        DPRINT1("No ServiceKeyName.Buffer!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&ServiceKeyName, &ServicesKeyPath);
+    RtlAppendUnicodeStringToString(&ServiceKeyName, &DeviceNode->ServiceName);
+
+    DPRINT("ServiceKeyName: %wZ\n", &ServiceKeyName);
+
+    Status = IopOpenRegistryKeyEx(&ServiceKey, NULL, &ServiceKeyName, KEY_CREATE_SUB_KEY);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
+    RtlInitUnicodeString(&EnumKeyName, L"Enum");
+    Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
+                                    ServiceKey,
+                                    &EnumKeyName,
+                                    KEY_SET_VALUE,
+                                    REG_OPTION_VOLATILE,
+                                    &Disposition);
+    if (NT_SUCCESS(Status))
+    {
+        if (Disposition == REG_OPENED_EXISTING_KEY)
+        {
+            /* Read the NextInstance value */
+            Status = IopGetRegistryValue(ServiceEnumKey,
+                                         L"Count",
+                                         &KeyValueInformation);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            if ((KeyValueInformation->Type == REG_DWORD) &&
+                (KeyValueInformation->DataLength))
+            {
+                /* Read it */
+                Count = *(PULONG)((ULONG_PTR)KeyValueInformation +
+                                  KeyValueInformation->DataOffset);
+            }
+
+            ExFreePool(KeyValueInformation);
+            KeyValueInformation = NULL;
+
+            /* Read the NextInstance value */
+            Status = IopGetRegistryValue(ServiceEnumKey,
+                                         L"NextInstance",
+                                         &KeyValueInformation);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            if ((KeyValueInformation->Type == REG_DWORD) &&
+                (KeyValueInformation->DataLength))
+            {
+                NextInstance = *(PULONG)((ULONG_PTR)KeyValueInformation +
+                                         KeyValueInformation->DataOffset);
+            }
+
+            ExFreePool(KeyValueInformation);
+            KeyValueInformation = NULL;
+        }
+
+        /* Set the instance path */
+        swprintf(ValueBuffer, L"%lu", NextInstance);
+        RtlInitUnicodeString(&ValueName, ValueBuffer);
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               DeviceNode->InstancePath.Buffer,
+                               DeviceNode->InstancePath.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Increment Count and NextInstance */
+        Count++;
+        NextInstance++;
+
+        /* Set the new Count value */
+        RtlInitUnicodeString(&ValueName, L"Count");
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_DWORD,
+                               &Count,
+                               sizeof(Count));
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Set the new NextInstance value */
+        RtlInitUnicodeString(&ValueName, L"NextInstance");
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_DWORD,
+                               &NextInstance,
+                               sizeof(NextInstance));
+    }
+
+done:
+    if (ServiceEnumKey != NULL)
+        ZwClose(ServiceEnumKey);
+
+    if (ServiceKey != NULL)
+        ZwClose(ServiceKey);
+
+    ExFreePool(ServiceKeyName.Buffer);
+
+    return Status;
+}
+
 VOID
 NTAPI
 IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
@@ -738,6 +879,8 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
         ASSERT(FALSE);
     }
 #endif
+
+    IopSetServiceEnumData(DeviceNode);
 
     /* Make sure we're started, and check if we need enumeration */
     if ((DeviceNode->Flags & DNF_STARTED) &&
