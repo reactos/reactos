@@ -49,7 +49,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "DNS 字尾和 NetBIOS 電腦名"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "此電腦的主 DNS 字尾:(&P)", -1, 7, 5, 253, 8
+    LTEXT "此電腦的主 DNS 字尾(&P):", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "域成員身份變化時，更改主 DNS 字尾(&C)", 115, 11, 39, 250, 10
     LTEXT "電腦的 NetBIOS 名稱:(&N)", -1, 7, 57, 148, 8
