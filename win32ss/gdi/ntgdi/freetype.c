@@ -5813,10 +5813,13 @@ GreExtTextOutW(
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
+            // FIXME: Use FT_LOAD_BITMAP_METRICS_ONLY or cache.
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
             {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+                DPRINT1("Failed to load glyph! [index: %d]\n", glyph_index);
+                IntUnLockFreeType();
+                goto Cleanup;
             }
 
             glyph = face->glyph;
@@ -5828,6 +5831,8 @@ GreExtTextOutW(
             if (!realglyph)
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
+                IntUnLockFreeType();
+                goto Cleanup;
             }
 
             /* retrieve kerning distance and move pen position */
