@@ -93,11 +93,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "文字服務和輸入語言"
-    IDS_CPLSYSTEMDESCRIPTION "自定義語言的文字輸入設定"
+    IDS_CPLSYSTEMDESCRIPTION "自訂語言的文字輸入設定"
     IDS_KEYBOARD "鍵盤"
     IDS_NONE "(無)"
     IDS_UNKNOWN "(未知)"
-    IDS_RESTART "現在就重新啟動計算機嗎?"
+    IDS_RESTART "現在就重新啟動電腦嗎?"
     IDS_WHATS_THIS "這是什麼?"
     IDS_LANGUAGE "語言"
     IDS_LAYOUT "鍵盤佈局"

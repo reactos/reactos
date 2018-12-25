@@ -1,32 +1,33 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Translation has been changed by Luo Yufan (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "歡迎使用 ReactOS 安裝嚮導", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您不能直接從此CD安裝 ReactOS！ 請重新啟動並從CD引導您的電腦以便安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "點選完成退出安裝。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "您不能直接從此 CD 安裝 ReactOS！ 請重新啟動並從 CD 啟動您的電腦以便安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "點選完成退出安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安裝 ReactOS 的新副本。此選項沒有儲存你的檔案、 設定和程式。你可以對磁碟和分區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    LTEXT "安裝 ReactOS 的新副本。此選項沒有儲存你的檔案、 設定和程式。你可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修復 ReactOS 安裝的副本。此選項會儲存您的檔案、 設定和程式。如果 ReactOS 已經安裝在此計算機上, 此選項才能使用的。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "更新或修復 ReactOS 安裝程式的副本。此選項會儲存您的檔案、 設定和程式。如果 ReactOS 已經安裝在此電腦上, 此選項才能使用的。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "點選下一步安裝裝置。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
@@ -37,38 +38,38 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "計算機:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "電腦:", IDC_STATIC, 20, 15, 80, 10
     CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
     LTEXT "顯示:", IDC_STATIC, 20, 35, 80, 10
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
     LTEXT "鍵盤:", IDC_STATIC, 20, 55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
-    LTEXT "點選下一步設定安裝驅動器。", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "點選下一步設定安裝的磁碟機。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "建立(&C)", IDC_PARTCREATE, 7, 122, 50, 15
     PUSHBUTTON "刪除(&D)", IDC_PARTDELETE, 63, 122, 50, 15
     PUSHBUTTON "驅動器(&r)", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "高階選項(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 15
+    PUSHBUTTON "進階選項(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 15
     // LTEXT "點選下一步檢查安裝概要。", IDC_STATIC, 10, 180, 277, 20
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 145, 90
 STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "建立分區"
+CAPTION "建立磁碟區"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "建立並格式化分區", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    CONTROL "建立並格式化磁碟區", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
     LTEXT "大小:", IDC_STATIC, 13, 24, 27, 9
     EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
     LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
@@ -80,7 +81,7 @@ END
 
 IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
 STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "高階分區設定"
+CAPTION "進階磁碟區設定"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "安裝資料夾", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
@@ -95,7 +96,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
@@ -121,7 +122,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "安裝檔案...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -131,7 +132,7 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安裝完成"
+CAPTION "ReactOS 安裝程式完成"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -143,29 +144,29 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "ReactOS 安裝"
+    IDS_TYPETITLE "ReactOS 安裝程式"
     IDS_TYPESUBTITLE "選擇安裝類型。"
     IDS_DEVICETITLE "設定基本裝置。"
     IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
-    IDS_DRIVETITLE "設定安裝分區和系統資料夾"
-    IDS_DRIVESUBTITLE "設定安裝分區，系統資料夾和載入程式。"
-    IDS_PROCESSTITLE "設定分區，複製檔案並安裝系統"
-    IDS_PROCESSSUBTITLE "建立並格式化分區，複製檔案，安裝並設定載入程式"
+    IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"
+    IDS_DRIVESUBTITLE "設定安裝磁碟區，系統資料夾和載入程式。"
+    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
+    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式"
     IDS_RESTARTTITLE "第一階段安裝完成"
     IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查"
-    IDS_ABORTSETUP "ReactOS 未在您的電腦上安裝完成。如果您現在退出安裝程式，您需要在一次運行安裝程式來安裝 ReactOS。 確定退出？"
+    IDS_ABORTSETUP "ReactOS 未在您的電腦上安裝完成。如果您現在退出安裝程式，您需要在一次執行安裝程式來安裝 ReactOS。 確定退出？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到 'txtsetup.sif'。\n安裝程式無法繼續。"
-    IDS_CAPTION "ReactOS 安裝"
+    IDS_CAPTION "ReactOS 安裝程式"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "名稱"
+    IDS_INSTALLATION_PATH "安裝路徑"
+    IDS_INSTALLATION_VENDOR "廠商名稱"
 END
 
 STRINGTABLE
@@ -173,5 +174,5 @@ BEGIN
     IDS_PARTITION_NAME "名稱"
     IDS_PARTITION_TYPE "類型"
     IDS_PARTITION_SIZE "大小"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_STATUS "狀態"
 END

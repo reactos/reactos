@@ -924,12 +924,12 @@ BEGIN
     IDS_FONTS "字型"
     IDS_INSTALLNEWFONT "安裝新字型..."
 
-    IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
-    IDS_COPY_OF "Copy of"
+    IDS_DEFAULT_CLUSTER_SIZE "預設配置大小"
+    IDS_COPY_OF "複製"
 
-    IDS_SHLEXEC_NOASSOC "There is no ReactOS program configured to open this type of file."
+    IDS_SHLEXEC_NOASSOC "沒有為 ReactOS 設定關聯的程式以開啟這種類型的檔案。"
 
-    IDS_FILE_DETAILS "Details for '%s' extension"
+    IDS_FILE_DETAILS "有關副檔名 '%s' 的詳細資料"
     IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
     IDS_FILE_TYPES "檔案類型"
     IDS_COLUMN_EXTENSION "副檔名"
@@ -942,7 +942,7 @@ BEGIN
     IDS_UNKNOWN_APP "未知應用程式"
     IDS_EXE_DESCRIPTION "描述:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(空的)"
     IDS_OBJECTS "%d 個物件"
     IDS_OBJECTS_SELECTED "已選擇 %d 個物件"
 
@@ -966,12 +966,12 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
     IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< 進階(&V)"
+    IDS_NEWEXT_ADVANCED_RIGHT "進階(&V) >>"
+    IDS_NEWEXT_NEW "<新增>"
+    IDS_NEWEXT_SPECIFY_EXT "您必須指定一個副檔名。"
+    IDS_NEWEXT_ALREADY_ASSOC "副檔名 %s 已經與檔案類型 %s 關聯。 是否要將 %s 與 %s 取消關聯並為其建立新的檔案類型？"
+    IDS_NEWEXT_EXT_IN_USE "副檔名正在被使用"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
     IDS_SPECIFY_ACTION "You must specify an action."

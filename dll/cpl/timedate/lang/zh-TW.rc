@@ -48,7 +48,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "日期和時間"
-    IDS_CPLDESCRIPTION "請為您的計算機設置日期、時間和時區信息"
+    IDS_CPLDESCRIPTION "請為您的電腦設置日期、時間和時區信息"
     IDS_TIMEZONETEXT "當前時區: %s"
     IDS_TIMEZONEINVALID "無效的"
     IDS_TIMEZONEUNKNOWN "未知"
