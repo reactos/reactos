@@ -72,13 +72,13 @@
 @ stdcall CloseHandle(long)
 @ stdcall -stub -version=0x600+ ClosePrivateNamespace(ptr long)
 @ stdcall CloseProfileUserMapping()
-@ stdcall -stub -version=0x600+ CloseThreadpool(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolCleanupGroup(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolCleanupGroupMembers(ptr long ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolIo(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolTimer(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolWait(ptr)
-@ stdcall -stub -version=0x600+ CloseThreadpoolWork(ptr)
+@ stdcall -version=0x600+ CloseThreadpool(ptr) ntdll_vista.TpReleasePool
+@ stdcall -version=0x600+ CloseThreadpoolCleanupGroup(ptr) ntdll_vista.TpReleaseCleanupGroup
+@ stdcall -version=0x600+ CloseThreadpoolCleanupGroupMembers(ptr long ptr) ntdll_vista.TpReleaseCleanupGroupMembers
+@ stdcall -version=0x600+ CloseThreadpoolIo(ptr)
+@ stdcall -version=0x600+ CloseThreadpoolTimer(ptr) ntdll_vista.TpReleaseTimer
+@ stdcall -version=0x600+ CloseThreadpoolWait(ptr) ntdll_vista.TpReleaseWait
+@ stdcall -version=0x600+ CloseThreadpoolWork(ptr) ntdll_vista.TpReleaseWork
 @ stdcall CmdBatNotification(long)
 @ stdcall CommConfigDialogA(str long ptr)
 @ stdcall CommConfigDialogW(wstr long ptr)
@@ -168,12 +168,12 @@
 @ stdcall -version=0x600+ CreateSymbolicLinkW(wstr wstr long)
 @ stdcall CreateTapePartition(long long long long)
 @ stdcall CreateThread(ptr long ptr long long ptr)
-@ stub -version=0x600+ CreateThreadpool
-@ stub -version=0x600+ CreateThreadpoolCleanupGroup
-@ stub -version=0x600+ CreateThreadpoolIo
-@ stub -version=0x600+ CreateThreadpoolTimer
-@ stub -version=0x600+ CreateThreadpoolWait
-@ stub -version=0x600+ CreateThreadpoolWork
+@ stdcall -version=0x600+ CreateThreadpool(ptr)
+@ stdcall -version=0x600+ CreateThreadpoolCleanupGroup()
+@ stdcall -version=0x600+ CreateThreadpoolIo(ptr ptr ptr ptr)
+@ stdcall -version=0x600+ CreateThreadpoolTimer(ptr ptr ptr)
+@ stdcall -version=0x600+ CreateThreadpoolWait(ptr ptr ptr)
+@ stdcall -version=0x600+ CreateThreadpoolWork(ptr ptr ptr)
 @ stdcall CreateTimerQueue ()
 @ stdcall CreateTimerQueueTimer(ptr long ptr ptr long long long)
 @ stdcall CreateToolhelp32Snapshot(long long)
@@ -1077,8 +1077,8 @@
 @ stdcall SetThreadUILanguage(long)
 @ stub -version=0x600+ SetThreadpoolThreadMaximum
 @ stub -version=0x600+ SetThreadpoolThreadMinimum
-@ stub -version=0x600+ SetThreadpoolTimer
-@ stub -version=0x600+ SetThreadpoolWait
+@ stdcall -version=0x600+ SetThreadpoolTimer(ptr ptr long long)
+@ stdcall -version=0x600+ SetThreadpoolWait(ptr ptr ptr)
 @ stdcall SetTimeZoneInformation(ptr)
 @ stdcall SetTimerQueueTimer(long ptr ptr long long long)
 @ stdcall SetUnhandledExceptionFilter(ptr)
