@@ -2560,9 +2560,13 @@ typedef struct _RTL_CRITICAL_SECTION_DEBUG {
   LIST_ENTRY ProcessLocksList;
   DWORD EntryCount;
   DWORD ContentionCount;
+#if defined(__WINESRC__) || defined(__HYBRIDSRC__)
+  DWORD_PTR Spare[2]; 
+#else
   DWORD Flags;
   WORD CreatorBackTraceIndexHigh;
   WORD SpareWORD;
+#endif  
 } RTL_CRITICAL_SECTION_DEBUG, *PRTL_CRITICAL_SECTION_DEBUG, RTL_RESOURCE_DEBUG, *PRTL_RESOURCE_DEBUG;
 
 #include "pshpack8.h"
@@ -4227,10 +4231,15 @@ DbgRaiseAssertionFailure(VOID)
 #error Unknown architecture
 #endif
 
+
 typedef struct _TP_POOL TP_POOL, *PTP_POOL;
 typedef struct _TP_WORK TP_WORK, *PTP_WORK;
 typedef struct _TP_CALLBACK_INSTANCE TP_CALLBACK_INSTANCE, *PTP_CALLBACK_INSTANCE;
+typedef struct _TP_TIMER TP_TIMER, *PTP_TIMER;
+typedef struct _TP_WAIT TP_WAIT, *PTP_WAIT;
+typedef struct _TP_IO TP_IO, *PTP_IO;
 
+typedef DWORD TP_WAIT_RESULT;
 typedef DWORD TP_VERSION, *PTP_VERSION;
 
 typedef enum _TP_CALLBACK_PRIORITY {
@@ -4258,6 +4267,9 @@ typedef VOID
 (NTAPI *PTP_CLEANUP_GROUP_CANCEL_CALLBACK)(
   _Inout_opt_ PVOID ObjectContext,
   _Inout_opt_ PVOID CleanupContext);
+  
+typedef VOID (NTAPI *PTP_TIMER_CALLBACK)(PTP_CALLBACK_INSTANCE,PVOID,PTP_TIMER);
+typedef VOID (NTAPI *PTP_WAIT_CALLBACK)(PTP_CALLBACK_INSTANCE,PVOID,PTP_WAIT,TP_WAIT_RESULT);
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
 typedef struct _TP_CALLBACK_ENVIRON_V3 {
