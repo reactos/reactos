@@ -5593,7 +5593,7 @@ GreExtTextOutW(
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart;
-    ULONG TextTop, previous, BackgroundLeft;
+    ULONG TextTop, previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
@@ -5617,6 +5617,7 @@ GreExtTextOutW(
     BOOL EmuBold, EmuItalic;
     int thickness;
     BOOL bResult;
+    ULONGLONG TextWidth;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -5798,107 +5799,90 @@ GreExtTextOutW(
         yoff = fixAscender >> 6;
 #undef VALIGN_MASK
 
+    /*
+     * Calculate width of the text.
+     */
+    TextWidth = 0;
+    DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
-
-    /*
-     * Process the horizontal alignment and modify XStart accordingly.
-     */
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
-    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
     {
-        ULONGLONG TextWidth = 0;
-        LPCWSTR TempText = String;
-        int iStart;
-
-        /*
-         * Calculate width of the text.
-         */
-
-        if (NULL != Dx)
+        TextLeft = RealXStart;
+        TextTop = YStart;
+        for (i = 0; i < Count; ++i)
         {
-            iStart = Count < 2 ? 0 : Count - 2;
-            TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
-        }
-        else
-        {
-            iStart = 0;
-        }
-        TempText = String + iStart;
+            glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
-        for (i = iStart; i < Count; i++)
-        {
-            glyph_index = get_glyph_index_flagged(face, *TempText, ETO_GLYPH_INDEX, fuOptions);
+            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+            if (error)
+            {
+                DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
+            }
 
-            if (EmuBold || EmuItalic)
-                realglyph = NULL;
-            else
-                realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
-                                               RenderMode, pmxWorldToDevice);
+            glyph = face->glyph;
+            if (EmuBold)
+                FT_GlyphSlot_Embolden(glyph);
+            if (EmuItalic)
+                FT_GlyphSlot_Oblique(glyph);
+            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
             if (!realglyph)
             {
-                error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-                if (error)
-                {
-                    DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", glyph_index);
-                }
-
-                glyph = face->glyph;
-                if (EmuBold || EmuItalic)
-                {
-                    if (EmuBold)
-                        FT_GlyphSlot_Embolden(glyph);
-                    if (EmuItalic)
-                        FT_GlyphSlot_Oblique(glyph);
-                    realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-                }
-                else
-                {
-                    realglyph = ftGdiGlyphCacheSet(face,
-                                                   glyph_index,
-                                                   plf->lfHeight,
-                                                   pmxWorldToDevice,
-                                                   glyph,
-                                                   RenderMode);
-                }
-                if (!realglyph)
-                {
-                    DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                    IntUnLockFreeType();
-                    goto Cleanup;
-                }
-
+                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
             }
-            /* Retrieve kerning distance */
-            if (use_kerning && previous && glyph_index)
+
+            /* retrieve kerning distance and move pen position */
+            if (use_kerning && previous && glyph_index && Dx == NULL)
             {
                 FT_Vector delta;
                 FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextWidth += delta.x;
+                TextLeft += delta.x;
             }
 
-            TextWidth += realglyph->root.advance.x >> 10;
+            if (Dx == NULL)
+            {
+                TextLeft += realglyph->root.advance.x >> 10;
+            }
+            else
+            {
+                // FIXME this should probably be a matrix transform with TextTop as well.
+                Scale = pdcattr->mxWorldToDevice.efM11;
+                if (FLOATOBJ_Equal0(&Scale))
+                    FLOATOBJ_Set1(&Scale);
+
+                /* do the shift before multiplying to preserve precision */
+                FLOATOBJ_MulLong(&Scale, Dx[i << DxShift] << 6);
+                TextLeft += FLOATOBJ_GetLong(&Scale);
+            }
+
+            if (DxShift)
+            {
+                TextTop -= Dx[2 * i + 1] << 6;
+            }
+
+            previous = glyph_index;
 
             if (EmuBold || EmuItalic)
             {
                 FT_Done_Glyph((FT_Glyph)realglyph);
                 realglyph = NULL;
             }
-
-            previous = glyph_index;
-            TempText++;
         }
 
-        previous = 0;
+        TextWidth = TextLeft - RealXStart;
+    }
 
-        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
-        {
-            RealXStart -= TextWidth / 2;
-        }
-        else
-        {
-            RealXStart -= TextWidth;
-        }
+    /*
+     * Process the horizontal alignment and modify XStart accordingly.
+     */
+    if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+    {
+        RealXStart -= TextWidth / 2;
+    }
+    else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
+    {
+        RealXStart -= TextWidth;
+        if (((RealXStart + TextWidth + 32) >> 6) <= Start.x + dc->ptlDCOrig.x)
+            RealXStart += 1 << 6;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5922,113 +5906,45 @@ GreExtTextOutW(
             thickness = 1;
     }
 
-    if ((fuOptions & ETO_OPAQUE) && plf->lfItalic)
+    if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
-        TextLeft = RealXStart;
-        TextTop = YStart;
-        BackgroundLeft = (RealXStart + 32) >> 6;
-        for (i = 0; i < Count; ++i)
+        RECTL Rect;
+
+        Rect.left = (RealXStart + 32) >> 6;
+        Rect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
+        Rect.right = (RealXStart + TextWidth + 32) >> 6;
+        Rect.bottom = Rect.top + ((fixAscender + fixDescender) >> 6);
+
+        if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
         {
-            glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
-
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            glyph = face->glyph;
-            if (EmuBold)
-                FT_GlyphSlot_Embolden(glyph);
-            if (EmuItalic)
-                FT_GlyphSlot_Oblique(glyph);
-            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            /* retrieve kerning distance and move pen position */
-            if (use_kerning && previous && glyph_index && NULL == Dx)
-            {
-                FT_Vector delta;
-                FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft += delta.x;
-            }
-            DPRINT("TextLeft: %I64d\n", TextLeft);
-            DPRINT("TextTop: %lu\n", TextTop);
-            DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-            MouseSafetyOnDrawEnd(dc->ppdev);
-            BackgroundLeft = DestRect.right;
-
-            DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
-            DestRect.right = DestRect.left + realglyph->bitmap.width;
-            DestRect.top = TextTop + yoff - realglyph->top;
-            DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
-
-            bitSize.cx = realglyph->bitmap.width;
-            bitSize.cy = realglyph->bitmap.rows;
-            MaskRect.right = realglyph->bitmap.width;
-            MaskRect.bottom = realglyph->bitmap.rows;
-
-            if (NULL == Dx)
-            {
-                TextLeft += realglyph->root.advance.x >> 10;
-                DPRINT("New TextLeft: %I64d\n", TextLeft);
-            }
-            else
-            {
-                // FIXME this should probably be a matrix transform with TextTop as well.
-                Scale = pdcattr->mxWorldToDevice.efM11;
-                if (FLOATOBJ_Equal0(&Scale))
-                    FLOATOBJ_Set1(&Scale);
-
-                /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
-                TextLeft += FLOATOBJ_GetLong(&Scale);
-                DPRINT("New TextLeft2: %I64d\n", TextLeft);
-            }
-
-            if (DxShift)
-            {
-                TextTop -= Dx[2 * i + 1] << 6;
-            }
-
-            previous = glyph_index;
-
-            if (EmuBold || EmuItalic)
-            {
-                FT_Done_Glyph((FT_Glyph)realglyph);
-                realglyph = NULL;
-            }
+            IntUpdateBoundsRect(dc, &Rect);
         }
+
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawStart(dc->ppdev, Rect.left, Rect.top, Rect.right, Rect.bottom);
+
+        SourcePoint.x = SourcePoint.y = 0;
+        BrushOrigin.x = BrushOrigin.y = 0;
+
+        psurf = dc->dclevel.pSurface;
+        IntEngBitBlt(
+            &psurf->SurfObj,
+            NULL,
+            NULL,
+            (CLIPOBJ *)&dc->co,
+            NULL,
+            &Rect,
+            &SourcePoint,
+            &SourcePoint,
+            &dc->eboBackground.BrushObject,
+            &BrushOrigin,
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawEnd(dc->ppdev);
     }
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
@@ -6042,7 +5958,7 @@ GreExtTextOutW(
      */
     TextLeft = RealXStart;
     TextTop = YStart;
-    BackgroundLeft = (RealXStart + 32) >> 6;
+    previous = 0;
     for (i = 0; i < Count; ++i)
     {
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
@@ -6098,39 +6014,6 @@ GreExtTextOutW(
         DPRINT("TextLeft: %I64d\n", TextLeft);
         DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-        if ((fuOptions & ETO_OPAQUE) && !plf->lfItalic)
-        {
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawEnd(dc->ppdev);
-
-            BackgroundLeft = DestRect.right;
-        }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
