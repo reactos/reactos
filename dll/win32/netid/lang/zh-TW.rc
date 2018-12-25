@@ -52,7 +52,7 @@ BEGIN
     LTEXT "此電腦的主 DNS 字尾(&P):", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "域成員身份變化時，更改主 DNS 字尾(&C)", 115, 11, 39, 250, 10
-    LTEXT "電腦的 NetBIOS 名稱:(&N)", -1, 7, 57, 148, 8
+    LTEXT "電腦的 NetBIOS 名稱(&N):", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "確定", 1, 153, 104, 50, 14
     PUSHBUTTON "取消", 2, 209, 104, 50, 14
