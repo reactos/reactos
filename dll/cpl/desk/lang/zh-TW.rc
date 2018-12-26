@@ -207,7 +207,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "顯示"
-    IDS_CPLDESCRIPTION "自定義桌面顯示和螢幕保護程式"
+    IDS_CPLDESCRIPTION "自訂桌面顯示和螢幕保護程式"
     IDS_NONE "(無)"
     IDS_CENTER "居中"
     IDS_STRETCH "拉伸"

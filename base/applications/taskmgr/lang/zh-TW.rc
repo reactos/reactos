@@ -431,7 +431,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "CPU 使用記錄(&C)"
     IDS_MENU_SHOWKERNELTIMES "顯示核心時間(&S)"
     IDS_CREATENEWTASK "新工作"
-    IDS_CREATENEWTASK_DESC "工作管理員將根據您所輸入的名稱，為您打開相應的程式、文件夾、文件或網絡資源。"
+    IDS_CREATENEWTASK_DESC "工作管理員將根據您所輸入的名稱，為您打開相應的程式、資料夾、檔案或網路資源。"
     IDS_MSG_ACCESSPROCESSAFF "無法存取或設定處理器親和性"
     IDS_MSG_PROCESSONEPRO "程序必須連繫至少一個處理器。"
     IDS_MSG_INVALIDOPTION "選項無效"
