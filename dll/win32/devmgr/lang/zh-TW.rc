@@ -61,7 +61,7 @@ BEGIN
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS 無法識別此裝置使用的所有資源。"
     IDS_DEV_UNKNOWN_RESOURCE "驅動程式資訊檔案 %1 告訴子裝置使用一種資源，父裝置不有，也不承認。"
     IDS_DEV_REINSTALL "此裝置的驅動程式需要重新安裝。"
-    IDS_DEV_REGISTRY "您的註冊表可能已損壞。"
+    IDS_DEV_REGISTRY "您的登錄可能已損毀。"
     IDS_DEV_WILL_BE_REMOVED "ReactOS 刪除這個裝置。"
     IDS_DEV_DISABLED "此裝置未啟動。"
     IDS_DEV_DISABLED2 "此裝置已被禁用。"
