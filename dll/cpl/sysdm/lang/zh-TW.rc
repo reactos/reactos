@@ -162,7 +162,7 @@ BEGIN
     PUSHBUTTON "更改類型", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
     PUSHBUTTON "刪除", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
     PUSHBUTTON "複製到", IDC_USERPROFILE_COPY, 200, 155, 50, 15
-    CONTROL "要創建一個新的使用者帳戶，在控制面板中打開<A>使用者帳戶</A> 。",
+    CONTROL "要創建一個新的使用者帳戶，在控制面板中開啟<A>使用者帳戶</A> 。",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
     DEFPUSHBUTTON "確定", IDOK, 134, 198, 54, 15
     PUSHBUTTON "取消", IDCANCEL, 196, 198, 54, 15

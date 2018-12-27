@@ -17,5 +17,5 @@ BEGIN
     /N  顯示的行編號 (由 1 開始)\n\
     /V  輸出不包含該指定字串的行"
     IDS_NO_SUCH_FILE "FINDSTR: %s: 沒有這個檔案\n"
-    IDS_CANNOT_OPEN "FINDSTR: %s: 無法打開檔案\n"
+    IDS_CANNOT_OPEN "FINDSTR: %s: 無法開啟檔案\n"
 END
