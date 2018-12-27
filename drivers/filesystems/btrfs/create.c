@@ -23,7 +23,24 @@
 
 extern PDEVICE_OBJECT master_devobj;
 
-static WCHAR datastring[] = L"::$DATA";
+static const WCHAR datastring[] = L"::$DATA";
+
+// Windows 10
+#define ATOMIC_CREATE_ECP_IN_FLAG_REPARSE_POINT_SPECIFIED   0x0002
+#define ATOMIC_CREATE_ECP_IN_FLAG_BEST_EFFORT               0x0100
+#define ATOMIC_CREATE_ECP_OUT_FLAG_REPARSE_POINT_SET        0x0002
+
+typedef struct _ATOMIC_CREATE_ECP_CONTEXT {
+    USHORT Size;
+    USHORT InFlags;
+    USHORT OutFlags;
+    USHORT ReparseBufferLength;
+    PREPARSE_DATA_BUFFER ReparseBuffer;
+    LONGLONG FileSize;
+    LONGLONG ValidDataLength;
+} ATOMIC_CREATE_ECP_CONTEXT, *PATOMIC_CREATE_ECP_CONTEXT;
+
+static const GUID GUID_ECP_ATOMIC_CREATE = { 0x4720bd83, 0x52ac, 0x4104, { 0xa1, 0x30, 0xd1, 0xec, 0x6a, 0x8c, 0xc8, 0xe5 } };
 
 fcb* create_fcb(device_extension* Vcb, POOL_TYPE pool_type) {
     fcb* fcb;
@@ -308,11 +325,11 @@ static NTSTATUS split_path(device_extension* Vcb, PUNICODE_STRING path, LIST_ENT
     InsertTailList(parts, &nb->list_entry);
 
     if (has_stream) {
-        static WCHAR datasuf[] = {':','$','D','A','T','A',0};
+        static const WCHAR datasuf[] = {':','$','D','A','T','A',0};
         UNICODE_STRING dsus;
 
-        dsus.Buffer = datasuf;
-        dsus.Length = dsus.MaximumLength = (UINT16)wcslen(datasuf) * sizeof(WCHAR);
+        dsus.Buffer = (WCHAR*)datasuf;
+        dsus.Length = dsus.MaximumLength = sizeof(datasuf) - sizeof(WCHAR);
 
         for (i = 0; i < nb->us.Length / sizeof(WCHAR); i++) {
             if (nb->us.Buffer[i] == ':') {
@@ -799,7 +816,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
             ULONG len;
             DIR_ITEM* di;
 
-            static char xapref[] = "user.";
+            static const char xapref[] = "user.";
 
             if (tp.item->size < offsetof(DIR_ITEM, name[0])) {
                 ERR("(%llx,%x,%llx) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, offsetof(DIR_ITEM, name[0]));
@@ -813,7 +830,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                 if (len < offsetof(DIR_ITEM, name[0]) + di->m + di->n)
                     break;
 
-                if (tp.item->key.offset == EA_REPARSE_HASH && di->n == strlen(EA_REPARSE) && RtlCompareMemory(EA_REPARSE, di->name, di->n) == di->n) {
+                if (tp.item->key.offset == EA_REPARSE_HASH && di->n == sizeof(EA_REPARSE) - 1 && RtlCompareMemory(EA_REPARSE, di->name, di->n) == di->n) {
                     if (di->m > 0) {
                         fcb->reparse_xattr.Buffer = ExAllocatePoolWithTag(PagedPool, di->m, ALLOC_TAG);
                         if (!fcb->reparse_xattr.Buffer) {
@@ -827,7 +844,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                         fcb->reparse_xattr.Buffer = NULL;
 
                     fcb->reparse_xattr.Length = fcb->reparse_xattr.MaximumLength = di->m;
-                } else if (tp.item->key.offset == EA_EA_HASH && di->n == strlen(EA_EA) && RtlCompareMemory(EA_EA, di->name, di->n) == di->n) {
+                } else if (tp.item->key.offset == EA_EA_HASH && di->n == sizeof(EA_EA) - 1 && RtlCompareMemory(EA_EA, di->name, di->n) == di->n) {
                     if (di->m > 0) {
                         ULONG offset;
 
@@ -863,7 +880,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                             } while (TRUE);
                         }
                     }
-                } else if (tp.item->key.offset == EA_DOSATTRIB_HASH && di->n == strlen(EA_DOSATTRIB) && RtlCompareMemory(EA_DOSATTRIB, di->name, di->n) == di->n) {
+                } else if (tp.item->key.offset == EA_DOSATTRIB_HASH && di->n == sizeof(EA_DOSATTRIB) - 1 && RtlCompareMemory(EA_DOSATTRIB, di->name, di->n) == di->n) {
                     if (di->m > 0) {
                         if (get_file_attributes_from_xattr(&di->name[di->n], di->m, &fcb->atts)) {
                             atts_set = TRUE;
@@ -884,7 +901,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                             }
                         }
                     }
-                } else if (tp.item->key.offset == EA_NTACL_HASH && di->n == strlen(EA_NTACL) && RtlCompareMemory(EA_NTACL, di->name, di->n) == di->n) {
+                } else if (tp.item->key.offset == EA_NTACL_HASH && di->n == sizeof(EA_NTACL) - 1 && RtlCompareMemory(EA_NTACL, di->name, di->n) == di->n) {
                     if (di->m > 0) {
                         fcb->sd = ExAllocatePoolWithTag(PagedPool, di->m, ALLOC_TAG);
                         if (!fcb->sd) {
@@ -902,23 +919,26 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                         else
                             sd_set = TRUE;
                     }
-                } else if (tp.item->key.offset == EA_PROP_COMPRESSION_HASH && di->n == strlen(EA_PROP_COMPRESSION) && RtlCompareMemory(EA_PROP_COMPRESSION, di->name, di->n) == di->n) {
+                } else if (tp.item->key.offset == EA_PROP_COMPRESSION_HASH && di->n == sizeof(EA_PROP_COMPRESSION) - 1 && RtlCompareMemory(EA_PROP_COMPRESSION, di->name, di->n) == di->n) {
                     if (di->m > 0) {
-                        const char lzo[] = "lzo";
-                        const char zlib[] = "zlib";
+                        static const char lzo[] = "lzo";
+                        static const char zlib[] = "zlib";
+                        static const char zstd[] = "zstd";
 
-                        if (di->m == strlen(lzo) && RtlCompareMemory(&di->name[di->n], lzo, di->m) == di->m)
+                        if (di->m == sizeof(lzo) - 1 && RtlCompareMemory(&di->name[di->n], lzo, di->m) == di->m)
                             fcb->prop_compression = PropCompression_LZO;
-                        else if (di->m == strlen(zlib) && RtlCompareMemory(&di->name[di->n], zlib, di->m) == di->m)
+                        else if (di->m == sizeof(zlib) - 1 && RtlCompareMemory(&di->name[di->n], zlib, di->m) == di->m)
                             fcb->prop_compression = PropCompression_Zlib;
+                        else if (di->m == sizeof(zstd) - 1 && RtlCompareMemory(&di->name[di->n], zstd, di->m) == di->m)
+                            fcb->prop_compression = PropCompression_ZSTD;
                         else
                             fcb->prop_compression = PropCompression_None;
                     }
-                } else if (di->n > strlen(xapref) && RtlCompareMemory(xapref, di->name, strlen(xapref)) == strlen(xapref)) {
+                } else if (di->n > sizeof(xapref) - 1 && RtlCompareMemory(xapref, di->name, sizeof(xapref) - 1) == sizeof(xapref) - 1) {
                     dir_child* dc;
                     ULONG utf16len;
 
-                    Status = RtlUTF8ToUnicodeN(NULL, 0, &utf16len, &di->name[strlen(xapref)], di->n - (ULONG)strlen(xapref));
+                    Status = RtlUTF8ToUnicodeN(NULL, 0, &utf16len, &di->name[sizeof(xapref) - 1], di->n + 1 - sizeof(xapref));
                     if (!NT_SUCCESS(Status)) {
                         ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
                         free_fcb(Vcb, fcb);
@@ -934,7 +954,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
 
                     RtlZeroMemory(dc, sizeof(dir_child));
 
-                    dc->utf8.MaximumLength = dc->utf8.Length = di->n - (UINT16)strlen(xapref);
+                    dc->utf8.MaximumLength = dc->utf8.Length = di->n + 1 - sizeof(xapref);
                     dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, dc->utf8.MaximumLength, ALLOC_TAG);
                     if (!dc->utf8.Buffer) {
                         ERR("out of memory\n");
@@ -943,7 +963,7 @@ NTSTATUS open_fcb(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusive_lo
                         return STATUS_INSUFFICIENT_RESOURCES;
                     }
 
-                    RtlCopyMemory(dc->utf8.Buffer, &di->name[strlen(xapref)], dc->utf8.Length);
+                    RtlCopyMemory(dc->utf8.Buffer, &di->name[sizeof(xapref) - 1], dc->utf8.Length);
 
                     dc->name.MaximumLength = dc->name.Length = (UINT16)utf16len;
                     dc->name.Buffer = ExAllocatePoolWithTag(PagedPool, dc->name.MaximumLength, ALLOC_TAG);
@@ -1113,11 +1133,11 @@ static NTSTATUS open_fcb_stream(_Requires_lock_held_(_Curr_->tree_lock) _Require
     NTSTATUS Status;
     KEY searchkey;
     traverse_ptr tp;
-    static char xapref[] = "user.";
+    static const char xapref[] = "user.";
     ANSI_STRING xattr;
     UINT32 crc32;
 
-    xattr.Length = (UINT16)strlen(xapref) + dc->utf8.Length;
+    xattr.Length = sizeof(xapref) - 1 + dc->utf8.Length;
     xattr.MaximumLength = xattr.Length + 1;
     xattr.Buffer = ExAllocatePoolWithTag(PagedPool, xattr.MaximumLength, ALLOC_TAG);
     if (!xattr.Buffer) {
@@ -1125,8 +1145,8 @@ static NTSTATUS open_fcb_stream(_Requires_lock_held_(_Curr_->tree_lock) _Require
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(xattr.Buffer, xapref, strlen(xapref));
-    RtlCopyMemory(&xattr.Buffer[strlen(xapref)], dc->utf8.Buffer, dc->utf8.Length);
+    RtlCopyMemory(xattr.Buffer, xapref, sizeof(xapref) - 1);
+    RtlCopyMemory(&xattr.Buffer[sizeof(xapref) - 1], dc->utf8.Buffer, dc->utf8.Length);
     xattr.Buffer[xattr.Length] = 0;
 
     fcb = create_fcb(Vcb, PagedPool);
@@ -1454,7 +1474,7 @@ NTSTATUS open_fileref(_Requires_lock_held_(_Curr_->tree_lock) _Requires_exclusiv
     InitializeListHead(&parts);
 
     if (fnus->Length != 0 &&
-        (fnus->Length != wcslen(datastring) * sizeof(WCHAR) || RtlCompareMemory(fnus->Buffer, datastring, wcslen(datastring) * sizeof(WCHAR)) != wcslen(datastring) * sizeof(WCHAR))) {
+        (fnus->Length != sizeof(datastring) - sizeof(WCHAR) || RtlCompareMemory(fnus->Buffer, datastring, sizeof(datastring) - sizeof(WCHAR)) != sizeof(datastring) - sizeof(WCHAR))) {
         Status = split_path(Vcb, &fnus2, &parts, &has_stream);
         if (!NT_SUCCESS(Status)) {
             ERR("split_path returned %08x\n", Status);
@@ -1647,6 +1667,218 @@ UINT32 inherit_mode(fcb* parfcb, BOOL is_dir) {
         mode &= ~S_ISGID; // if not directory, clear setgid bit
 
     return mode;
+}
+
+static NTSTATUS file_create_parse_ea(fcb* fcb, FILE_FULL_EA_INFORMATION* ea) {
+    NTSTATUS Status;
+    LIST_ENTRY ealist, *le;
+    UINT16 size = 0;
+    char* buf;
+
+    InitializeListHead(&ealist);
+
+    do {
+        STRING s;
+        BOOL found = FALSE;
+
+        s.Length = s.MaximumLength = ea->EaNameLength;
+        s.Buffer = ea->EaName;
+
+        RtlUpperString(&s, &s);
+
+        le = ealist.Flink;
+        while (le != &ealist) {
+            ea_item* item = CONTAINING_RECORD(le, ea_item, list_entry);
+
+            if (item->name.Length == s.Length && RtlCompareMemory(item->name.Buffer, s.Buffer, s.Length) == s.Length) {
+                item->flags = ea->Flags;
+                item->value.Length = item->value.MaximumLength = ea->EaValueLength;
+                item->value.Buffer = &ea->EaName[ea->EaNameLength + 1];
+                found = TRUE;
+                break;
+            }
+
+            le = le->Flink;
+        }
+
+        if (!found) {
+            ea_item* item = ExAllocatePoolWithTag(PagedPool, sizeof(ea_item), ALLOC_TAG);
+            if (!item) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto end;
+            }
+
+            item->name.Length = item->name.MaximumLength = ea->EaNameLength;
+            item->name.Buffer = ea->EaName;
+
+            item->value.Length = item->value.MaximumLength = ea->EaValueLength;
+            item->value.Buffer = &ea->EaName[ea->EaNameLength + 1];
+
+            item->flags = ea->Flags;
+
+            InsertTailList(&ealist, &item->list_entry);
+        }
+
+        if (ea->NextEntryOffset == 0)
+            break;
+
+        ea = (FILE_FULL_EA_INFORMATION*)(((UINT8*)ea) + ea->NextEntryOffset);
+    } while (TRUE);
+
+    // handle LXSS values
+    le = ealist.Flink;
+    while (le != &ealist) {
+        LIST_ENTRY* le2 = le->Flink;
+        ea_item* item = CONTAINING_RECORD(le, ea_item, list_entry);
+
+        if (item->name.Length == sizeof(lxuid) - 1 && RtlCompareMemory(item->name.Buffer, lxuid, item->name.Length) == item->name.Length) {
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("uid value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+            }
+
+            RtlCopyMemory(&fcb->inode_item.st_uid, item->value.Buffer, sizeof(UINT32));
+            fcb->sd_dirty = TRUE;
+            fcb->sd_deleted = FALSE;
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        } else if (item->name.Length == sizeof(lxgid) - 1 && RtlCompareMemory(item->name.Buffer, lxgid, item->name.Length) == item->name.Length) {
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("gid value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+            }
+
+            RtlCopyMemory(&fcb->inode_item.st_gid, item->value.Buffer, sizeof(UINT32));
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        } else if (item->name.Length == sizeof(lxmod) - 1 && RtlCompareMemory(item->name.Buffer, lxmod, item->name.Length) == item->name.Length) {
+            UINT32 allowed = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH | S_ISGID | S_ISVTX | S_ISUID;
+            UINT32 val;
+
+            if (item->value.Length < sizeof(UINT32)) {
+                ERR("mode value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+            }
+
+            RtlCopyMemory(&val, item->value.Buffer, sizeof(UINT32));
+
+            if (fcb->type != BTRFS_TYPE_DIRECTORY)
+                allowed |= __S_IFIFO | __S_IFCHR | __S_IFBLK | __S_IFSOCK;
+
+            fcb->inode_item.st_mode &= ~allowed;
+            fcb->inode_item.st_mode |= val & allowed;
+
+            if (fcb->type != BTRFS_TYPE_DIRECTORY) {
+                if ((fcb->inode_item.st_mode & __S_IFCHR) == __S_IFCHR)
+                    fcb->type = BTRFS_TYPE_CHARDEV;
+                else if ((fcb->inode_item.st_mode & __S_IFBLK) == __S_IFBLK)
+                    fcb->type = BTRFS_TYPE_BLOCKDEV;
+                else if ((fcb->inode_item.st_mode & __S_IFIFO) == __S_IFIFO)
+                    fcb->type = BTRFS_TYPE_FIFO;
+                else if ((fcb->inode_item.st_mode & __S_IFSOCK) == __S_IFSOCK)
+                    fcb->type = BTRFS_TYPE_SOCKET;
+            }
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        } else if (item->name.Length == sizeof(lxdev) - 1 && RtlCompareMemory(item->name.Buffer, lxdev, item->name.Length) == item->name.Length) {
+            UINT32 major, minor;
+
+            if (item->value.Length < sizeof(UINT64)) {
+                ERR("dev value was shorter than expected\n");
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+            }
+
+            major = *(UINT32*)item->value.Buffer;
+            minor = *(UINT32*)&item->value.Buffer[sizeof(UINT32)];
+
+            fcb->inode_item.st_rdev = (minor & 0xFFFFF) | ((major & 0xFFFFFFFFFFF) << 20);
+
+            RemoveEntryList(&item->list_entry);
+            ExFreePool(item);
+        }
+
+        le = le2;
+    }
+
+    if (fcb->type != BTRFS_TYPE_CHARDEV && fcb->type != BTRFS_TYPE_BLOCKDEV)
+        fcb->inode_item.st_rdev = 0;
+
+    if (IsListEmpty(&ealist))
+        return STATUS_SUCCESS;
+
+    le = ealist.Flink;
+    while (le != &ealist) {
+        ea_item* item = CONTAINING_RECORD(le, ea_item, list_entry);
+
+        if (size % 4 > 0)
+            size += 4 - (size % 4);
+
+        size += (UINT16)offsetof(FILE_FULL_EA_INFORMATION, EaName[0]) + item->name.Length + 1 + item->value.Length;
+
+        le = le->Flink;
+    }
+
+    buf = ExAllocatePoolWithTag(PagedPool, size, ALLOC_TAG);
+    if (!buf) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+
+    fcb->ea_xattr.Length = fcb->ea_xattr.MaximumLength = size;
+    fcb->ea_xattr.Buffer = buf;
+
+    fcb->ealen = 4;
+    ea = NULL;
+
+    le = ealist.Flink;
+    while (le != &ealist) {
+        ea_item* item = CONTAINING_RECORD(le, ea_item, list_entry);
+
+        if (ea) {
+            ea->NextEntryOffset = (ULONG)offsetof(FILE_FULL_EA_INFORMATION, EaName[0]) + ea->EaNameLength + ea->EaValueLength;
+
+            if (ea->NextEntryOffset % 4 > 0)
+                ea->NextEntryOffset += 4 - (ea->NextEntryOffset % 4);
+
+            ea = (FILE_FULL_EA_INFORMATION*)(((UINT8*)ea) + ea->NextEntryOffset);
+        } else
+            ea = (FILE_FULL_EA_INFORMATION*)fcb->ea_xattr.Buffer;
+
+        ea->NextEntryOffset = 0;
+        ea->Flags = item->flags;
+        ea->EaNameLength = (UCHAR)item->name.Length;
+        ea->EaValueLength = item->value.Length;
+
+        RtlCopyMemory(ea->EaName, item->name.Buffer, item->name.Length);
+        ea->EaName[item->name.Length] = 0;
+        RtlCopyMemory(&ea->EaName[item->name.Length + 1], item->value.Buffer, item->value.Length);
+
+        fcb->ealen += 5 + item->name.Length + item->value.Length;
+
+        le = le->Flink;
+    }
+
+    fcb->ea_changed = TRUE;
+
+    Status = STATUS_SUCCESS;
+
+end:
+    while (!IsListEmpty(&ealist)) {
+        ea_item* item = CONTAINING_RECORD(RemoveHeadList(&ealist), ea_item, list_entry);
+
+        ExFreePool(item);
+    }
+
+    return Status;
 }
 
 static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr_->fcb_lock) _In_ device_extension* Vcb, _In_ PUNICODE_STRING fpus,
@@ -1843,44 +2075,17 @@ static NTSTATUS file_create2(_In_ PIRP Irp, _Requires_exclusive_lock_held_(_Curr
     fcb->sd_dirty = TRUE;
 
     if (ea && ealen > 0) {
-        FILE_FULL_EA_INFORMATION* eainfo;
-
-        fcb->ealen = 4;
-
-        // capitalize EA names
-        eainfo = ea;
-        do {
-            STRING s;
-
-            s.Length = s.MaximumLength = eainfo->EaNameLength;
-            s.Buffer = eainfo->EaName;
-
-            RtlUpperString(&s, &s);
-
-            fcb->ealen += 5 + eainfo->EaNameLength + eainfo->EaValueLength;
-
-            if (eainfo->NextEntryOffset == 0)
-                break;
-
-            eainfo = (FILE_FULL_EA_INFORMATION*)(((UINT8*)eainfo) + eainfo->NextEntryOffset);
-        } while (TRUE);
-
-        fcb->ea_xattr.Buffer = ExAllocatePoolWithTag(pool_type, ealen, ALLOC_TAG);
-        if (!fcb->ea_xattr.Buffer) {
-            ERR("out of memory\n");
+        Status = file_create_parse_ea(fcb, ea);
+        if (!NT_SUCCESS(Status)) {
+            ERR("file_create_parse_ea returned %08x\n", Status);
             free_fcb(Vcb, fcb);
 
             ExAcquireResourceExclusiveLite(parfileref->fcb->Header.Resource, TRUE);
             parfileref->fcb->inode_item.st_size -= utf8len * 2;
             ExReleaseResourceLite(parfileref->fcb->Header.Resource);
 
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return Status;
         }
-
-        fcb->ea_xattr.Length = fcb->ea_xattr.MaximumLength = (UINT16)ealen;
-        RtlCopyMemory(fcb->ea_xattr.Buffer, ea, fcb->ea_xattr.Length);
-
-        fcb->ea_changed = TRUE;
     }
 
     fileref = create_fileref(Vcb);
@@ -1989,11 +2194,10 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     file_ref *fileref, *newpar, *parfileref;
     fcb* fcb;
-    static char xapref[] = "user.";
-    static WCHAR DOSATTRIB[] = L"DOSATTRIB";
-    static WCHAR EA[] = L"EA";
-    static WCHAR reparse[] = L"reparse";
-    UINT16 xapreflen = (UINT16)strlen(xapref);
+    static const char xapref[] = "user.";
+    static const WCHAR DOSATTRIB[] = L"DOSATTRIB";
+    static const WCHAR EA[] = L"EA";
+    static const WCHAR reparse[] = L"reparse";
     LARGE_INTEGER time;
     BTRFS_TIME now;
     ULONG utf8len, overhead;
@@ -2086,9 +2290,9 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
 
     SeUnlockSubjectContext(&IrpSp->Parameters.Create.SecurityContext->AccessState->SubjectSecurityContext);
 
-    if ((stream->Length == wcslen(DOSATTRIB) * sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, DOSATTRIB, stream->Length) == stream->Length) ||
-        (stream->Length == wcslen(EA) * sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, EA, stream->Length) == stream->Length) ||
-        (stream->Length == wcslen(reparse) * sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, reparse, stream->Length) == stream->Length)) {
+    if ((stream->Length == sizeof(DOSATTRIB) - sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, DOSATTRIB, stream->Length) == stream->Length) ||
+        (stream->Length == sizeof(EA) - sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, EA, stream->Length) == stream->Length) ||
+        (stream->Length == sizeof(reparse) - sizeof(WCHAR) && RtlCompareMemory(stream->Buffer, reparse, stream->Length) == stream->Length)) {
         return STATUS_OBJECT_NAME_INVALID;
     }
 
@@ -2124,7 +2328,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
         return Status;
     }
 
-    fcb->adsxattr.Length = (UINT16)utf8len + xapreflen;
+    fcb->adsxattr.Length = (UINT16)utf8len + sizeof(xapref) - 1;
     fcb->adsxattr.MaximumLength = fcb->adsxattr.Length + 1;
     fcb->adsxattr.Buffer = ExAllocatePoolWithTag(pool_type, fcb->adsxattr.MaximumLength, ALLOC_TAG);
     if (!fcb->adsxattr.Buffer) {
@@ -2133,9 +2337,9 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(fcb->adsxattr.Buffer, xapref, xapreflen);
+    RtlCopyMemory(fcb->adsxattr.Buffer, xapref, sizeof(xapref) - 1);
 
-    Status = RtlUnicodeToUTF8N(&fcb->adsxattr.Buffer[xapreflen], utf8len, &utf8len, stream->Buffer, stream->Length);
+    Status = RtlUnicodeToUTF8N(&fcb->adsxattr.Buffer[sizeof(xapref) - 1], utf8len, &utf8len, stream->Buffer, stream->Length);
     if (!NT_SUCCESS(Status)) {
         ERR("RtlUnicodeToUTF8N 2 returned %08x\n", Status);
         free_fcb(Vcb, fcb);
@@ -2167,12 +2371,12 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
 
     fcb->adsmaxlen = Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - (sizeof(DIR_ITEM) - 1);
 
-    if (utf8len + xapreflen + overhead > fcb->adsmaxlen) {
-        WARN("not enough room for new DIR_ITEM (%u + %u > %u)", utf8len + xapreflen, overhead, fcb->adsmaxlen);
+    if (utf8len + sizeof(xapref) - 1 + overhead > fcb->adsmaxlen) {
+        WARN("not enough room for new DIR_ITEM (%u + %u > %u)", utf8len + sizeof(xapref) - 1, overhead, fcb->adsmaxlen);
         free_fcb(Vcb, fcb);
         return STATUS_DISK_FULL;
     } else
-        fcb->adsmaxlen -= overhead + utf8len + xapreflen;
+        fcb->adsmaxlen -= overhead + utf8len + sizeof(xapref) - 1;
 
     fileref = create_fileref(Vcb);
     if (!fileref) {
@@ -2192,7 +2396,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
 
     RtlZeroMemory(dc, sizeof(dir_child));
 
-    dc->utf8.MaximumLength = dc->utf8.Length = fcb->adsxattr.Length - xapreflen;
+    dc->utf8.MaximumLength = dc->utf8.Length = fcb->adsxattr.Length + 1 - sizeof(xapref);
     dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, dc->utf8.MaximumLength, ALLOC_TAG);
     if (!dc->utf8.Buffer) {
         ERR("out of memory\n");
@@ -2201,7 +2405,7 @@ static NTSTATUS create_stream(_Requires_lock_held_(_Curr_->tree_lock) _Requires_
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(dc->utf8.Buffer, &fcb->adsxattr.Buffer[xapreflen], fcb->adsxattr.Length - xapreflen);
+    RtlCopyMemory(dc->utf8.Buffer, &fcb->adsxattr.Buffer[sizeof(xapref) - 1], fcb->adsxattr.Length + 1 - sizeof(xapref));
 
     dc->name.MaximumLength = dc->name.Length = stream->Length;
     dc->name.Buffer = ExAllocatePoolWithTag(pool_type, dc->name.MaximumLength, ALLOC_TAG);
@@ -2302,10 +2506,12 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     file_ref *fileref, *parfileref = NULL;
     ULONG i, j;
     ccb* ccb;
-    static WCHAR datasuf[] = {':','$','D','A','T','A',0};
+    static const WCHAR datasuf[] = {':','$','D','A','T','A',0};
     UNICODE_STRING dsus, fpus, stream;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     POOL_TYPE pool_type = IrpSp->Flags & SL_OPEN_PAGING_FILE ? NonPagedPool : PagedPool;
+    ECP_LIST* ecp_list;
+    ATOMIC_CREATE_ECP_CONTEXT* acec = NULL;
 #ifdef DEBUG_FCB_REFCOUNTS
     LONG oc;
 #endif
@@ -2318,8 +2524,25 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     if (options & FILE_DELETE_ON_CLOSE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
         return STATUS_CANNOT_DELETE;
 
-    dsus.Buffer = datasuf;
-    dsus.Length = dsus.MaximumLength = (USHORT)wcslen(datasuf) * sizeof(WCHAR);
+    if (NT_SUCCESS(FsRtlGetEcpListFromIrp(Irp, &ecp_list)) && ecp_list) {
+        void* ctx = NULL;
+        GUID type;
+        ULONG ctxsize;
+
+        do {
+            Status = FsRtlGetNextExtraCreateParameter(ecp_list, ctx, &type, &ctx, &ctxsize);
+
+            if (NT_SUCCESS(Status)) {
+                if (RtlCompareMemory(&type, &GUID_ECP_ATOMIC_CREATE, sizeof(GUID)) == sizeof(GUID) && ctxsize >= sizeof(ATOMIC_CREATE_ECP_CONTEXT)) {
+                    acec = ctx;
+                    break;
+                }
+            }
+        } while (NT_SUCCESS(Status));
+    }
+
+    dsus.Buffer = (WCHAR*)datasuf;
+    dsus.Length = dsus.MaximumLength = sizeof(datasuf) - sizeof(WCHAR);
     fpus.Buffer = NULL;
 
     if (!loaded_related) {
@@ -2451,6 +2674,15 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     if (!ccb) {
         ERR("out of memory\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
+        fileref->deleted = TRUE;
+        fileref->fcb->deleted = TRUE;
+
+        if (stream.Length == 0) {
+            ExAcquireResourceExclusiveLite(parfileref->fcb->Header.Resource, TRUE);
+            parfileref->fcb->inode_item.st_size -= fileref->dc->utf8.Length * 2;
+            ExReleaseResourceLite(parfileref->fcb->Header.Resource);
+        }
+
         free_fileref(Vcb, fileref);
         goto end;
     }
@@ -2483,6 +2715,39 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     FileObject->FsContext2 = ccb;
 
     FileObject->SectionObjectPointer = &fileref->fcb->nonpaged->segment_object;
+
+    // FIXME - ATOMIC_CREATE_ECP_IN_FLAG_BEST_EFFORT
+    if (acec && acec->InFlags & ATOMIC_CREATE_ECP_IN_FLAG_REPARSE_POINT_SPECIFIED) {
+        if (acec->ReparseBufferLength > sizeof(UINT32) && *(UINT32*)acec->ReparseBuffer == IO_REPARSE_TAG_SYMLINK) {
+            fileref->fcb->inode_item.st_mode &= ~(__S_IFIFO | __S_IFCHR | __S_IFBLK | __S_IFSOCK);
+            fileref->fcb->type = BTRFS_TYPE_FILE;
+        }
+
+        if (fileref->fcb->type == BTRFS_TYPE_SOCKET || fileref->fcb->type == BTRFS_TYPE_FIFO ||
+            fileref->fcb->type == BTRFS_TYPE_CHARDEV || fileref->fcb->type == BTRFS_TYPE_BLOCKDEV) {
+            // NOP. If called from LXSS, humour it - we hardcode the values elsewhere.
+        } else {
+            Status = set_reparse_point2(fileref->fcb, acec->ReparseBuffer, acec->ReparseBufferLength, NULL, NULL, Irp, rollback);
+            if (!NT_SUCCESS(Status)) {
+                ERR("set_reparse_point2 returned %08x\n", Status);
+                fileref->deleted = TRUE;
+                fileref->fcb->deleted = TRUE;
+
+                if (stream.Length == 0) {
+                    ExAcquireResourceExclusiveLite(parfileref->fcb->Header.Resource, TRUE);
+                    parfileref->fcb->inode_item.st_size -= fileref->dc->utf8.Length * 2;
+                    ExReleaseResourceLite(parfileref->fcb->Header.Resource);
+                }
+
+                free_fileref(Vcb, fileref);
+                return Status;
+            }
+        }
+
+        acec->OutFlags |= ATOMIC_CREATE_ECP_OUT_FLAG_REPARSE_POINT_SET;
+    }
+
+    fileref->dc->type = fileref->fcb->type;
 
     goto end2;
 
@@ -2738,7 +3003,8 @@ static NTSTATUS get_reparse_block(fcb* fcb, UINT8** data) {
         }
 
         RtlCopyMemory(*data, fcb->reparse_xattr.Buffer, fcb->reparse_xattr.Length);
-    }
+    } else
+        return STATUS_INVALID_PARAMETER;
 
     return STATUS_SUCCESS;
 }
@@ -3557,6 +3823,7 @@ static NTSTATUS open_file(PDEVICE_OBJECT DeviceObject, _Requires_lock_held_(_Cur
         release_fcb_lock(Vcb);
 
         Irp->IoStatus.Information = NT_SUCCESS(Status) ? FILE_CREATED : 0;
+        granted_access = IrpSp->Parameters.Create.SecurityContext->DesiredAccess;
     }
 
     if (NT_SUCCESS(Status) && !(options & FILE_NO_INTERMEDIATE_BUFFERING))

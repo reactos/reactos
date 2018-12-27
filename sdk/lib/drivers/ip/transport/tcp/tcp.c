@@ -691,5 +691,19 @@ TCPSetNoDelay(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+TCPGetSocketStatus(
+    PCONNECTION_ENDPOINT Connection,
+    PULONG State)
+{
+    if (!Connection)
+        return STATUS_UNSUCCESSFUL;
+
+    if (Connection->SocketContext == NULL)
+        return STATUS_UNSUCCESSFUL;
+
+    LibTCPGetSocketStatus(Connection->SocketContext, State);
+    return STATUS_SUCCESS;
+}
 
 /* EOF */

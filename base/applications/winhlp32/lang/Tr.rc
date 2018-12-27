@@ -1,7 +1,7 @@
 /*
  * Turkish Resources for ReactOS Winhlp32
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&Kütük" {
+ POPUP "&Dosya" {
   MENUITEM "&Aç...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Yazdır...", MNID_FILE_PRINT
@@ -33,7 +33,7 @@ MAIN_MENU MENU
  POPUP "&Düzen" {
    MENUITEM "&Çoğalt", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Hâşiye Ekle...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Not Ekle...", MNID_EDIT_ANNOTATE
  }
  POPUP "Y&er İmleri" {
    MENUITEM "&Belirle...", MNID_BKMK_DEFINE
@@ -44,13 +44,13 @@ MAIN_MENU MENU
   POPUP    "&Yazı Tipi"
   BEGIN
     MENUITEM "&Küçük",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "&Düzgülü",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "&Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "&Büyük",     	MNID_OPTS_FONTS_LARGE
   END
  }
  POPUP "&Yardım" {
    MENUITEM "&Yardım İçin Yardım", MNID_HELP_HELPON
-   MENUITEM "&ReactOS Yardım Üzerine...", MNID_HELP_ABOUT
+   MENUITEM "&ReactOS Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }
 
@@ -58,13 +58,13 @@ CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "&Hâşiye Ekleme...",     MNID_CTXT_ANNOTATE
+		MENUITEM "&Not Ekleme...",     MNID_CTXT_ANNOTATE
 		MENUITEM "&Çoğalt",               MNID_CTXT_COPY
 		MENUITEM "&Yazdır...",            MNID_CTXT_PRINT
 		POPUP    "Y&azı Tipi"
 		BEGIN
 			MENUITEM "&Küçük",        MNID_CTXT_FONTS_SMALL
-			MENUITEM "&Düzgülü",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "&Normal",      MNID_CTXT_FONTS_NORMAL
 			MENUITEM "&Büyük",        MNID_CTXT_FONTS_LARGE
 		END
 	END
@@ -76,13 +76,13 @@ STID_WINE_HELP, 	"ReactOS Yardım"
 STID_WHERROR, 		"YANLIŞLIK"
 STID_WARNING,  		"UYARI"
 STID_INFO,  		"Bilgi"
-STID_NOT_IMPLEMENTED, 	"Daha bitirilmemiştir."
-STID_HLPFILE_ERROR_s, 	"""%s"" kütüğü okunurken bir yanlışlık oldu."
+STID_NOT_IMPLEMENTED, 	"Daha tamamlanmamıştır."
+STID_HLPFILE_ERROR_s, 	"""%s"" dosyayı okunurken bir yanlışlık oldu."
 STID_INDEX, 		"D&izin"
 STID_CONTENTS,		"İ&çindekiler"
 STID_BACK, 		"&Geri"
-STID_ALL_FILES, 	"Tüm Kütükler (*.*)"
-STID_HELP_FILES_HLP, 	"Yardım Kütükleri (*.hlp)"
+STID_ALL_FILES, 	"Tüm Dosyalar (*.*)"
+STID_HELP_FILES_HLP, 	"Yardım Dosyaları (*.hlp)"
 STID_FILE_NOT_FOUND_s	"""%s"" bulunamıyor. Bu kütüğü kendiniz bulmak istiyor musunuz?"
 STID_NO_RICHEDIT	"Zengin metin kitaplığı bulunamıyor. Çıkılacaktır."
 STID_PSH_INDEX,		"Yardım Konuları: "
@@ -101,5 +101,5 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Ara"
 {
-    LTEXT  "Daha bitirilmemiştir.", -1, 10, 10, 180, 150
+    LTEXT  "Daha tamamlanmamıştır.", -1, 10, 10, 180, 150
 }

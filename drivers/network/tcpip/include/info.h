@@ -8,6 +8,11 @@
 #pragma once
 
 #include <tcpioctl.h>
+/* FIXME */
+#define DWORD ULONG
+#include <in6addr.h>
+#include <tcpmib.h>
+#include <udpmib.h>
 
 #define MAX_PHYSADDR_LEN 8
 #define MAX_IFDESCR_LEN  256
@@ -75,6 +80,12 @@ typedef union TDI_INFO {
     TDI_PROVIDER_STATISTICS ProviderStats;
 } TDI_INFO, *PTDI_INFO;
 
+typedef enum TDI_TCPUDP_CLASS_INFO {
+    TcpUdpClassBasic,
+    TcpUdpClassOwnerPid,
+    TcpUdpClassOwner
+} TDI_TCPUDP_CLASS_INFO, *PTDI_TCPUDP_CLASS_INFO;
+
 TDI_STATUS InfoCopyOut( PCHAR DataOut, UINT SizeOut,
 			PNDIS_BUFFER ClientBuf, PUINT ClientBufSize );
 
@@ -108,6 +119,16 @@ TDI_STATUS InfoTdiQueryGetIPSnmpInfo( TDIEntityID ID,
 TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
                                       PNDIS_BUFFER Buffer,
                                       PUINT BufferSize );
+
+TDI_STATUS InfoTdiQueryGetConnectionTcpTable( PADDRESS_FILE AddrFile,
+                                              PNDIS_BUFFER Buffer,
+                                              PUINT BufferSize,
+                                              TDI_TCPUDP_CLASS_INFO Class);
+
+TDI_STATUS InfoTdiQueryGetConnectionUdpTable( PADDRESS_FILE AddrFile,
+                                              PNDIS_BUFFER Buffer,
+                                              PUINT BufferSize,
+                                              TDI_TCPUDP_CLASS_INFO Class);
 
 TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF,
                            PVOID Buffer,

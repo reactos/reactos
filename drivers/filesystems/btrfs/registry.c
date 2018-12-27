@@ -16,6 +16,7 @@
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "btrfs_drv.h"
+#include "zstd/zstd.h"
 
 extern UNICODE_STRING log_device, log_file, registry_path;
 extern LIST_ENTRY uid_map_list, gid_map_list;
@@ -30,13 +31,13 @@ extern PDEVICE_OBJECT comdo;
 
 WORK_QUEUE_ITEM wqi;
 
-static WCHAR option_mounted[] = L"Mounted";
+static const WCHAR option_mounted[] = L"Mounted";
 
 NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     BTRFS_UUID* uuid = &Vcb->superblock.uuid;
     mount_options* options = &Vcb->options;
     UNICODE_STRING path, ignoreus, compressus, compressforceus, compresstypeus, readonlyus, zliblevelus, flushintervalus,
-                   maxinlineus, subvolidus, skipbalanceus, nobarrierus, notrimus, clearcacheus, allowdegradedus;
+                   maxinlineus, subvolidus, skipbalanceus, nobarrierus, notrimus, clearcacheus, allowdegradedus, zstdlevelus;
     OBJECT_ATTRIBUTES oa;
     NTSTATUS Status;
     ULONG i, j, kvfilen, index, retlen;
@@ -45,9 +46,10 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
 
     options->compress = mount_compress;
     options->compress_force = mount_compress_force;
-    options->compress_type = mount_compress_type > BTRFS_COMPRESSION_LZO ? 0 : mount_compress_type;
+    options->compress_type = mount_compress_type > BTRFS_COMPRESSION_ZSTD ? 0 : mount_compress_type;
     options->readonly = mount_readonly;
     options->zlib_level = mount_zlib_level;
+    options->zstd_level = mount_zstd_level;
     options->flush_interval = mount_flush_interval;
     options->max_inline = min(mount_max_inline, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - sizeof(EXTENT_DATA) + 1);
     options->skip_balance = mount_skip_balance;
@@ -118,6 +120,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
     RtlInitUnicodeString(&notrimus, L"NoTrim");
     RtlInitUnicodeString(&clearcacheus, L"ClearCache");
     RtlInitUnicodeString(&allowdegradedus, L"AllowDegraded");
+    RtlInitUnicodeString(&zstdlevelus, L"ZstdLevel");
 
     do {
         Status = ZwEnumerateValueKey(h, index, KeyValueFullInformation, kvfi, kvfilen, &retlen);
@@ -145,7 +148,7 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
             } else if (FsRtlAreNamesEqual(&compresstypeus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
                 DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
 
-                options->compress_type = (UINT8)(*val > BTRFS_COMPRESSION_LZO ? 0 : *val);
+                options->compress_type = (UINT8)(*val > BTRFS_COMPRESSION_ZSTD ? 0 : *val);
             } else if (FsRtlAreNamesEqual(&readonlyus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
                 DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
 
@@ -186,6 +189,10 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
                 DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
 
                 options->allow_degraded = *val;
+            } else if (FsRtlAreNamesEqual(&zstdlevelus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+
+                options->zstd_level = *val;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
             ERR("ZwEnumerateValueKey returned %08x\n", Status);
@@ -198,6 +205,9 @@ NTSTATUS registry_load_volume_options(device_extension* Vcb) {
 
     if (options->zlib_level > 9)
         options->zlib_level = 9;
+
+    if (options->zstd_level > (UINT32)ZSTD_maxCLevel())
+        options->zstd_level = ZSTD_maxCLevel();
 
     if (options->flush_interval == 0)
         options->flush_interval = mount_flush_interval;
@@ -258,8 +268,8 @@ NTSTATUS registry_mark_volume_mounted(BTRFS_UUID* uuid) {
         goto end;
     }
 
-    mountedus.Buffer = option_mounted;
-    mountedus.Length = mountedus.MaximumLength = (USHORT)wcslen(option_mounted) * sizeof(WCHAR);
+    mountedus.Buffer = (WCHAR*)option_mounted;
+    mountedus.Length = mountedus.MaximumLength = sizeof(option_mounted) - sizeof(WCHAR);
 
     data = 1;
 
@@ -308,8 +318,8 @@ static NTSTATUS registry_mark_volume_unmounted_path(PUNICODE_STRING path) {
 
     index = 0;
 
-    mountedus.Buffer = option_mounted;
-    mountedus.Length = mountedus.MaximumLength = (USHORT)wcslen(option_mounted) * sizeof(WCHAR);
+    mountedus.Buffer = (WCHAR*)option_mounted;
+    mountedus.Length = mountedus.MaximumLength = sizeof(option_mounted) - sizeof(WCHAR);
 
     do {
         Status = ZwEnumerateValueKey(h, index, KeyValueBasicInformation, kvbi, kvbilen, &retlen);
@@ -526,7 +536,7 @@ static void read_mappings(PUNICODE_STRING regpath) {
     ULONG dispos;
     NTSTATUS Status;
 
-    const WCHAR mappings[] = L"\\Mappings";
+    static const WCHAR mappings[] = L"\\Mappings";
 
     while (!IsListEmpty(&uid_map_list)) {
         uid_map* um = CONTAINING_RECORD(RemoveHeadList(&uid_map_list), uid_map, listentry);
@@ -535,17 +545,17 @@ static void read_mappings(PUNICODE_STRING regpath) {
         ExFreePool(um);
     }
 
-    path = ExAllocatePoolWithTag(PagedPool, regpath->Length + (wcslen(mappings) * sizeof(WCHAR)), ALLOC_TAG);
+    path = ExAllocatePoolWithTag(PagedPool, regpath->Length + sizeof(mappings) - sizeof(WCHAR), ALLOC_TAG);
     if (!path) {
         ERR("out of memory\n");
         return;
     }
 
     RtlCopyMemory(path, regpath->Buffer, regpath->Length);
-    RtlCopyMemory((UINT8*)path + regpath->Length, mappings, wcslen(mappings) * sizeof(WCHAR));
+    RtlCopyMemory((UINT8*)path + regpath->Length, mappings, sizeof(mappings) - sizeof(WCHAR));
 
     us.Buffer = path;
-    us.Length = us.MaximumLength = regpath->Length + ((USHORT)wcslen(mappings) * sizeof(WCHAR));
+    us.Length = us.MaximumLength = regpath->Length + sizeof(mappings) - sizeof(WCHAR);
 
     InitializeObjectAttributes(&oa, &us, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
@@ -604,7 +614,7 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
     ULONG dispos;
     NTSTATUS Status;
 
-    const WCHAR mappings[] = L"\\GroupMappings";
+    static const WCHAR mappings[] = L"\\GroupMappings";
 
     while (!IsListEmpty(&gid_map_list)) {
         gid_map* gm = CONTAINING_RECORD(RemoveHeadList(&gid_map_list), gid_map, listentry);
@@ -613,17 +623,17 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
         ExFreePool(gm);
     }
 
-    path = ExAllocatePoolWithTag(PagedPool, regpath->Length + (wcslen(mappings) * sizeof(WCHAR)), ALLOC_TAG);
+    path = ExAllocatePoolWithTag(PagedPool, regpath->Length + sizeof(mappings) - sizeof(WCHAR), ALLOC_TAG);
     if (!path) {
         ERR("out of memory\n");
         return;
     }
 
     RtlCopyMemory(path, regpath->Buffer, regpath->Length);
-    RtlCopyMemory((UINT8*)path + regpath->Length, mappings, wcslen(mappings) * sizeof(WCHAR));
+    RtlCopyMemory((UINT8*)path + regpath->Length, mappings, sizeof(mappings) - sizeof(WCHAR));
 
     us.Buffer = path;
-    us.Length = us.MaximumLength = regpath->Length + ((USHORT)wcslen(mappings) * sizeof(WCHAR));
+    us.Length = us.MaximumLength = regpath->Length + sizeof(mappings) - sizeof(WCHAR);
 
     InitializeObjectAttributes(&oa, &us, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
@@ -676,7 +686,7 @@ static void read_group_mappings(PUNICODE_STRING regpath) {
         // If we're creating the key for the first time, we add a default mapping of
         // BUILTIN\Users to gid 100, which ought to correspond to the "users" group on Linux.
 
-        us2.Length = us2.MaximumLength = (USHORT)wcslen(builtin_users) * sizeof(WCHAR);
+        us2.Length = us2.MaximumLength = sizeof(builtin_users) - sizeof(WCHAR);
         us2.Buffer = ExAllocatePoolWithTag(PagedPool, us2.MaximumLength, ALLOC_TAG);
 
         if (us2.Buffer) {
@@ -760,7 +770,7 @@ void read_registry(PUNICODE_STRING regpath, BOOL refresh) {
     ULONG kvfilen, old_debug_log_level = debug_log_level;
     UNICODE_STRING us, old_log_file, old_log_device;
 
-    static WCHAR def_log_file[] = L"\\??\\C:\\btrfs.log";
+    static const WCHAR def_log_file[] = L"\\??\\C:\\btrfs.log";
 #endif
 
     ExAcquireResourceExclusiveLite(&mapping_lock, TRUE);
@@ -794,6 +804,7 @@ void read_registry(PUNICODE_STRING regpath, BOOL refresh) {
     get_registry_value(h, L"ClearCache", REG_DWORD, &mount_clear_cache, sizeof(mount_clear_cache));
     get_registry_value(h, L"AllowDegraded", REG_DWORD, &mount_allow_degraded, sizeof(mount_allow_degraded));
     get_registry_value(h, L"Readonly", REG_DWORD, &mount_readonly, sizeof(mount_readonly));
+    get_registry_value(h, L"ZstdLevel", REG_DWORD, &mount_zstd_level, sizeof(mount_zstd_level));
 
     if (!refresh)
         get_registry_value(h, L"NoPNP", REG_DWORD, &no_pnp, sizeof(no_pnp));
@@ -935,7 +946,7 @@ void read_registry(PUNICODE_STRING regpath, BOOL refresh) {
 
         ExFreePool(kvfi);
     } else if (Status == STATUS_OBJECT_NAME_NOT_FOUND) {
-        Status = ZwSetValueKey(h, &us, 0, REG_SZ, def_log_file, (ULONG)(wcslen(def_log_file) + 1) * sizeof(WCHAR));
+        Status = ZwSetValueKey(h, &us, 0, REG_SZ, (void*)def_log_file, sizeof(def_log_file));
 
         if (!NT_SUCCESS(Status))
             ERR("ZwSetValueKey returned %08x\n", Status);
@@ -947,7 +958,7 @@ void read_registry(PUNICODE_STRING regpath, BOOL refresh) {
     }
 
     if (log_file.Length == 0) {
-        log_file.Length = log_file.MaximumLength = (UINT16)wcslen(def_log_file) * sizeof(WCHAR);
+        log_file.Length = log_file.MaximumLength = sizeof(def_log_file) - sizeof(WCHAR);
         log_file.Buffer = ExAllocatePoolWithTag(PagedPool, log_file.MaximumLength, ALLOC_TAG);
 
         if (!log_file.Buffer) {

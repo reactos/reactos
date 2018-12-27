@@ -28,7 +28,6 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -69,20 +68,12 @@ static HANDLE hUserToken = NULL;
 static HANDLE hInstallEvent = NULL;
 static HANDLE hNoPendingInstalls = NULL;
 
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
 static SLIST_HEADER DeviceInstallListHead;
-#else
-static LIST_ENTRY DeviceInstallListHead;
-#endif
 static HANDLE hDeviceInstallListNotEmpty;
 
 typedef struct
 {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     SLIST_ENTRY ListEntry;
-#else
-    LIST_ENTRY ListEntry;
-#endif
     WCHAR DeviceIds[1];
 } DeviceInstallParams;
 
@@ -2746,7 +2737,11 @@ PNP_DetectResourceConflict(
     BOOL *pbConflictDetected,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
+    DPRINT("PNP_DetectResourceConflict()\n");
+
+    if (pbConflictDetected != NULL)
+        *pbConflictDetected = FALSE;
+
     return CR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -3457,11 +3452,7 @@ cleanup:
 static DWORD WINAPI
 DeviceInstallThread(LPVOID lpParameter)
 {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     PSLIST_ENTRY ListEntry;
-#else
-    PLIST_ENTRY ListEntry;
-#endif
     DeviceInstallParams* Params;
     BOOL showWizard;
 
@@ -3473,14 +3464,8 @@ DeviceInstallThread(LPVOID lpParameter)
 
     while (TRUE)
     {
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
         ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
-#else
-        if ((BOOL)IsListEmpty(&DeviceInstallListHead))
-            ListEntry = NULL;
-        else
-            ListEntry = RemoveHeadList(&DeviceInstallListHead);
-#endif
+
         if (ListEntry == NULL)
         {
             SetEvent(hNoPendingInstalls);
@@ -3491,6 +3476,7 @@ DeviceInstallThread(LPVOID lpParameter)
             ResetEvent(hNoPendingInstalls);
             Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
             InstallDevice(Params->DeviceIds, showWizard);
+            HeapFree(GetProcessHeap(), 0, Params);
         }
     }
 
@@ -3501,10 +3487,11 @@ DeviceInstallThread(LPVOID lpParameter)
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
-    ULONG PnpEventSize;
+    DWORD dwRet = ERROR_SUCCESS;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
+    ULONG PnpEventSize;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
@@ -3517,27 +3504,30 @@ PnpEventThread(LPVOID lpParameter)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            HeapFree(GetProcessHeap(), 0, PnpEvent);
-            PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
-            if (PnpEvent == NULL)
-                return ERROR_OUTOFMEMORY;
+            NewPnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
+            {
+                dwRet = ERROR_OUTOFMEMORY;
+                break;
+            }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtGetPlugPlayEvent() failed (Status %lx)\n", Status);
+            DPRINT1("NtGetPlugPlayEvent() failed (Status 0x%08lx)\n", Status);
             break;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ENUMERATED, &RpcStatus))
         {
@@ -3550,17 +3540,13 @@ PnpEventThread(LPVOID lpParameter)
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
             {
-                /* Queue device install (will be dequeued by DeviceInstallThread */
+                /* Queue device install (will be dequeued by DeviceInstallThread) */
                 len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
                 Params = HeapAlloc(GetProcessHeap(), 0, len);
                 if (Params)
                 {
                     wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
                     InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
-#else
-                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
-#endif
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
@@ -3632,13 +3618,13 @@ PnpEventThread(LPVOID lpParameter)
                 PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
     HeapFree(GetProcessHeap(), 0, PnpEvent);
 
-    return ERROR_SUCCESS;
+    return dwRet;
 }
 
 
@@ -3804,11 +3790,7 @@ InitializePnPManager(VOID)
         return dwError;
     }
 
-#ifdef HAVE_SLIST_ENTRY_IMPLEMENTED
     InitializeSListHead(&DeviceInstallListHead);
-#else
-    InitializeListHead(&DeviceInstallListHead);
-#endif
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",

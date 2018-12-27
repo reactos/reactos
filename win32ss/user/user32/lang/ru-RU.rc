@@ -58,6 +58,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Ошибка"
+    IDS_NOT_RESPONDING " (Не отвечает)"
+    IDS_ASK_TERMINATE "Похоже, это приложение зависло и не отвечает системе. Завершить его сейчас?"
+    IDS_HUNG_UP_TITLE "Приложение не отвечает"
     IDS_OK "OK"
     IDS_CANCEL "Отмена"
     IDS_ABORT "Пр&ервать"

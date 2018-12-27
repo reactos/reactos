@@ -1,11 +1,41 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /* ªtefan Fulea (stefan dot fulea at mail dot com) */
 #pragma once
 
-MUI_LAYOUTS roROLayouts[] =
+static MUI_ENTRY roROSetupInitPageEntries[] =
 {
-    { L"0418", L"00000418" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
 };
 
 static MUI_ENTRY roROLanguagePageEntries[] =
@@ -19,31 +49,31 @@ static MUI_ENTRY roROLanguagePageEntries[] =
     {
         6,
         8,
-        "Selecþie limbã",
+        "Selec\376ie limb\343",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Selectaþi limba pentru procesul de instalare.",
+        "\x07  Selecta\376i limba pentru procesul de instalare.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Apoi apãsaþi ENTER.",
+        "   Apoi ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Aceasta va fi în final limba implicitã pentru tot sistemul.",
+        "\x07  Aceasta va fi \356n final limba implicit\343 pentru tot sistemul.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare  F3 = Ieºire",
+        "ENTER = Continuare  F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -71,55 +101,49 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         6,
         11,
-        "Aceastã primã etapã din instalarea ReactOS va copia fiºierele",
+        "Aceast\343 prim\343 etap\343 din instalarea ReactOS va copia fi\272ierele",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "necesare în calculatorul dumneavoastrã ºi-l va pregãti pentru",
+        "necesare \356n calculatorul dumneavoastr\343 \272i-l va preg\343ti pentru",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "cea de-a doua etapã a instalãrii.",
+        "cea de-a doua etap\343 a instal\343rii.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "\x07  Apãsaþi ENTER pentru a instala ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Tastaþi R pentru a reface un sistem deteriorat sau pentru",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        19,
-        "   a actualiza ReactOS.",
+        "\x07  Tasta\376i R pentru a reface un sistem deteriorat.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tastaþi L pentru Termenii ºi Condiþiile de Licenþiere.",
+        "\x07  Tasta\376i L pentru Termenii \272i Condi\376iile de Licen\376iere.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
-        "\x07  Apãsaþi F3 pentru a ieºi fãrã a instala ReactOS.",
+        "\x07  Ap\343sa\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         26,
-        "Pentru mai multe informaþii despre ReactOS, vizitaþi:",
+        "Pentru mai multe informa\376ii despre ReactOS, vizita\376i:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -131,7 +155,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Continuare  R = Refacere  L = Licenþã  F3 = Ieºire",
+        "ENTER = Continuare  R = Refacere  L = Licen\376\343  F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -159,25 +183,25 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         6,
         11,
-        "ReactOS este în stadiu alfa de dezvoltare, adicã nu are prezintã",
+        "ReactOS este \356n stadiu alfa de dezvoltare, adic\343 nu are prezint\343",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "funcþionalitãþi complete ºi încã nu este recomandatã utilizarea sa",
+        "func\376ionalit\343\376i complete \272i \356nc\343 nu este recomandat\343 utilizarea sa",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "ca sistem de operare de zi cu zi. Asiguraþi-vã copii ale datelor",
+        "ca sistem de operare de zi cu zi. Asigura\376i-v\343 copii ale datelor",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "în cazul în care încercaþi ReactOS în mod neemulat.",
+        "\356n cazul \356n care \356ncerca\376i ReactOS \356n mod neemulat.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -189,19 +213,19 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         8,
         19,
-        "\x07  Apãsaþi ENTER pentru a instala ReactOS.",
+        "\x07  Ap\343sa\376i ENTER pentru a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Apãsaþi F3 pentru a ieºi fãrã a instala ReactOS.",
+        "\x07  Ap\343sa\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -223,25 +247,25 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         6,
         6,
-        "Licenþiere:",
+        "Licen\376iere:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
-        "Sistemul de operare ReactOS este oferit în termenii Licenþei",
+        "Sistemul de operare ReactOS este oferit \356n termenii Licen\376ei",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "Publice Generale GNU, referitã în continuare ca GPL, cu pãrþi",
+        "Publice Generale GNU, referit\343 \356n continuare ca GPL, cu p\343r\376i",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "de cod din alte licenþe compatibile (ca X11, BSD, ºi LGPL).",
+        "de cod din alte licen\376e compatibile (ca X11, BSD, \272i LGPL).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -253,55 +277,55 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         8,
         13,
-        "prin urmare oferite sub licenþa GPL, menþinându-ºi astfel ºi",
+        "prin urmare oferite sub licen\376a GPL, men\376in\342ndu-\272i astfel \272i",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "licenþierea originalã în acelaºi timp.",
+        "licen\376ierea original\343 \356n acela\272i timp.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "Acest sistem vine fãrã vreo restricþie de utilizare, aceasta",
+        "Acest sistem vine f\343r\343 vreo restric\376ie de utilizare, aceasta",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "fiind o condiþie legislativã aplicabilã atât la nivel local",
+        "fiind o condi\376ie legislativ\343 aplicabil\343 at\342t la nivel local",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "cât ºi internaþional. Licenþierea se referã doar la distri-",
+        "c\342t \272i interna\376ional. Licen\376ierea se refer\343 doar la distri-",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "buirea sistemului ReactOS cãtre pãrþi terþe.",
+        "buirea sistemului ReactOS c\343tre p\343r\376i ter\376e.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "Dacã din vreun careva motiv nu deþineþi o copie a licenþei",
+        "Dac\343 din vreun careva motiv nu de\376ine\376i o copie a licen\376ei",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         22,
-        "GPL împreunã cu ReactOS, o puteþi consulta (în englezã)",
+        "GPL \356mpreun\343 cu ReactOS, o pute\376i consulta (\356n englez\343)",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
-        "accesând pagina:",
+        "acces\342nd pagina:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -313,25 +337,25 @@ static MUI_ENTRY roROLicensePageEntries[] =
     {
         6,
         27,
-        "Garanþie:",
+        "Garan\376ie:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         29,
-        "Acest sistem de operare este distribuit doar în speranþa cã",
+        "Acest sistem de operare este distribuit doar \356n speran\376a c\343",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         30,
-        "va fi util, neavând însã ataºatã NICI O GARANÞIE; nici mãcar",
+        "va fi util, neav\342nd \356ns\343 ata\272at\343 NICI O GARAN\336IE; nici m\343car",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         31,
-        "garanþia implicitã a VANDABILITÃÞII sau a UTILITÃÞII ÎNTR-UN",
+        "garan\376ia implicit\343 a VANDABILIT\303\336II sau a UTILIT\303\336II \316NTR-UN",
         TEXT_STYLE_NORMAL
     },
     {
@@ -365,7 +389,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         6,
         8,
-        "Configurare dispozitive de bazã",
+        "Configurare dispozitive de baz\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -383,67 +407,67 @@ static MUI_ENTRY roRODevicePageEntries[] =
     {
         24,
         13,
-        "Model tastaturã:",
+        "Model tastatur\343:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Aranj. tastaturã:",
+        "Aranj. tastatur\343:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "Acceptã:",
+        "Accept\343:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
         16,
-        "Accept configuraþia dispozitivelor",
+        "Accept configura\376ia dispozitivelor",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Puteþi modifica starea curentã. Utilizaþi tastele SUS/JOS pentru",
+        "Pute\376i modifica starea curent\343. Utiliza\376i tastele SUS/JOS pentru",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "alegerea unui dispozitiv, apoi apãsaþi ENTER pentru a-i modifica",
+        "alegerea unui dispozitiv, apoi ap\343sa\376i ENTER pentru a-i modifica",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "configuraþia ataºatã.",
+        "configura\376ia ata\272at\343.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Când configuraþia dispozitivele enumerate este cea corectã,",
+        "C\342nd configura\376ia dispozitivele enumerate este cea corect\343,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "selectaþi \"Accept configuraþia dispozitivelor\", apoi confirmaþi",
+        "selecta\376i \"Accept configura\376ia dispozitivelor\", apoi confirma\376i",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         25,
-        "apãsând ENTER.",
+        "ap\343s\342nd ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -465,49 +489,119 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         6,
         8,
-        "Programul de instalare ReactOS este încã într-o fazã incipientã de",
+        "Programul de instalare ReactOS este \356nc\343 \356ntr-o faz\343 incipient\343 de",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "dezvoltare ºi nu posedã o funcþionalitate completã.",
+        "dezvoltare \272i nu posed\343 o func\376ionalitate complet\343.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funcþionalitatea de refacere încã nu este implementatã.",
+        "Func\376ionalitatea de refacere \356nc\343 nu este implementat\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tastaþi U pentru actualizarea sistemului.",
+        "\x07  Tasta\376i U pentru actualizarea sistemului.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tastaþi R pentru consola de Recuperare.",
+        "\x07  Tasta\376i R pentru consola de Recuperare.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina principalã.",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina principal\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Apãsaþi ENTER pentru a reporni calculatorul.",
+        "\x07  Ap\343sa\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
         "ESC = Revenire  U = Actualizare  R = Recuperare  ENTER = Repornire",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY roROUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR,
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -529,37 +623,37 @@ static MUI_ENTRY roROComputerPageEntries[] =
     {
         6,
         8,
-        "Doriþi specificarea unei alte arhitecturi de calcul?",
+        "Dori\376i specificarea unei alte arhitecturi de calcul?",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta o",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta o",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   arhitecturã de calcul, apoi apãsaþi ENTER.",
+        "   arhitectur\343 de calcul, apoi ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina precedentã",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   fãrã a specifica o altã arhitecturã de calcul.",
+        "   f\343r\343 a specifica o alt\343 arhitectur\343 de calcul.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   ESC = Anulare   F3 = Ieºire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -581,13 +675,13 @@ static MUI_ENTRY roROFlushPageEntries[] =
     {
         10,
         6,
-        "Sistemul verificã integritatea datelor scrise pe disc.",
+        "Sistemul verific\343 integritatea datelor scrise pe disc.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Aceasta poate dura câteva momente.",
+        "Aceasta poate dura c\342teva momente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -621,31 +715,31 @@ static MUI_ENTRY roROQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS nu a fost instalat în întregime.",
+        "ReactOS nu a fost instalat \356n \356ntregime.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Scoateþi discul flexibil din unitatea A:",
+        "Scoate\376i discul flexibil din unitatea A:",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "ºi toate mediile CD-ROM din unitãþile CD.",
+        "\272i toate mediile CD-ROM din unit\343\376ile CD.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Apãsaþi ENTER pentru a reporni calculatorul.",
+        "Ap\343sa\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Aºteptaþi...",
+        "A\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -667,24 +761,24 @@ static MUI_ENTRY roRODisplayPageEntries[] =
     {
         6,
         8,
-        "Doriþi modificarea parametrilor grafici de afiºare?",
+        "Dori\376i modificarea parametrilor grafici de afi\272are?",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   un grup de parametri, apoi apãsaþi ENTER.",
+        "   un grup de parametri, apoi ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina precedentã",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -696,7 +790,7 @@ static MUI_ENTRY roRODisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = Continuare   ESC = Anulare   F3 = Ieºire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -718,25 +812,25 @@ static MUI_ENTRY roROSuccessPageEntries[] =
     {
         10,
         6,
-        "Componentele de bazã ale ReactOS au fost instalate cu succes.",
+        "Componentele de baz\343 ale ReactOS au fost instalate cu succes.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Scoateþi discul flexibil din unitatea A: ºi toate mediile",
+        "Scoate\376i discul flexibil din unitatea A: \272i toate mediile",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "CD-ROM din unitãþile CD.",
+        "CD-ROM din unit\343\376ile CD.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Apãsaþi ENTER pentru a reporni calculatorul.",
+        "Ap\343sa\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -770,25 +864,25 @@ static MUI_ENTRY roROBootPageEntries[] =
     {
         6,
         9,
-        "iniþializare a calculatorului pe discul local.",
+        "ini\376ializare a calculatorului pe discul local.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Introduceþi un disc flexibil formatat în",
+        "Introduce\376i un disc flexibil formatat \356n",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "unitatea A: apoi sã apãsaþi ENTER.",
+        "unitatea A: apoi s\343 ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -811,55 +905,55 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         6,
         8,
-        "Urmãtoarea listã cuprinde partiþiile existente, precum ºi",
+        "Urm\343toarea list\343 cuprinde parti\376iile existente, precum \272i",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "spaþiul liber disponibil pentru crearea de noi partiþii.",
+        "spa\376iul liber disponibil pentru crearea de noi parti\376ii.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta o opþiune.",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta o op\376iune.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Apãsaþi ENTER pentru a instala pe partiþia selectatã.",
+        "\x07  Ap\343sa\376i ENTER pentru a instala pe parti\376ia selectat\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Tastaþi P pentru a crea o partiþie primarã.",
+        "\x07  Tasta\376i P pentru a crea o parti\376ie primar\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tastaþi E pentru a crea o partiþie extinsã.",
+        "\x07  Tasta\376i E pentru a crea o parti\376ie extins\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tastaþi L pentru a crea o partiþie logicã.",
+        "\x07  Tasta\376i L pentru a crea o parti\376ie logic\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tastaþi D pentru a ºterge o partiþie existentã.",
+        "\x07  Tasta\376i D pentru a \272terge o parti\376ie existent\343.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Aºteptaþi...",
+        "A\272tepta\376i...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -881,13 +975,13 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "Aþi solicitat ºtergerea partiþiei de sistem.",
+        "A\376i solicitat \272tergerea parti\376iei de sistem.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Partiþiile de sistem pot conþine programe de diagnozã, programe de con-",
+        "Parti\376iile de sistem pot con\376ine programe de diagnoz\343, programe de con-",
         TEXT_STYLE_NORMAL
     },
     {
@@ -899,55 +993,55 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         12,
-        "(ca ReactOS) ºi alte programe furnizate de producãtorii calculorului.",
+        "(ca ReactOS) \272i alte programe furnizate de produc\343torii calculorului.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "ªtergeþi o partiþie de sistem doar când sunteþi siguri cã nu existã aºa",
+        "\252terge\376i o parti\376ie de sistem doar c\342nd sunte\376i siguri c\343 nu exist\343 a\272a",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programe pe partiþie, sau când sunteþi siguri cã doriþi sã le ºtergeþi.",
+        "programe pe parti\376ie, sau c\342nd sunte\376i siguri c\343 dori\376i s\343 le \272terge\376i.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "ªtergând partiþia apare riscul de a nu mai putea porni calculatorul de",
+        "\252terg\342nd parti\376ia apare riscul de a nu mai putea porni calculatorul de",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "pe discul local decât dupã finalizarea instalãrii ReactOS.",
+        "pe discul local dec\342t dup\343 finalizarea instal\343rii ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Apãsaþi ENTER pentru a ºterge partiþia de sistem. Vi se va",
+        "\x07  Ap\343sa\376i ENTER pentru a \272terge parti\376ia de sistem. Vi se va",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   cere sã confirmaþi din nou aceastã ºtergere a partiþiei.",
+        "   cere s\343 confirma\376i din nou aceast\343 \272tergere a parti\376iei.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina precedentã. Partiþia",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343. Parti\376ia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   nu va fi ºtearsã.",
+        "   nu va fi \272tears\343.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -975,19 +1069,19 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         8,
-        "Urmeazã formatarea partiþiei.",
+        "Urmeaz\343 formatarea parti\376iei.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Apãsaþi ENTER pentru a continua.",
+        "Ap\343sa\376i ENTER pentru a continua.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1009,37 +1103,37 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Alegeþi un director de instalare pe partiþia aleasã.",
+        "Alege\376i un director de instalare pe parti\376ia aleas\343.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Aici vor fi amplasate fiºierele sistemului ReactOS:",
+        "Aici vor fi amplasate fi\272ierele sistemului ReactOS:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Puteþi indica un alt director, apãsând BACKSPACE pentru",
+        "Pute\376i indica un alt director, ap\343s\342nd BACKSPACE pentru",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "a ºterge caractere, apoi scriind calea directorului unde",
+        "a \272terge caractere, apoi scriind calea directorului unde",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "doriþi sã instalaþi ReactOS.",
+        "dori\376i s\343 instala\376i ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1061,19 +1155,19 @@ static MUI_ENTRY roROFileCopyEntries[] =
     {
         0,
         12,
-        "Are loc copierea de fiºiere în directorul ReactOS specificat.",
+        "Are loc copierea de fi\272iere \356n directorul ReactOS specificat.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "(aceasta poate dura câteva momente)",
+        "(aceasta poate dura c\342teva momente)",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
         0,
-        "\xB3 Aºteptaþi...",
+        "\xB3 A\272tepta\376i...",
         TEXT_TYPE_STATUS
     },
     {
@@ -1095,37 +1189,37 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalare modul de iniþializare al calculatorului",
+        "Instalare modul de ini\376ializare al calculatorului",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Instaleazã iniþializatorul pe discul intern (MBR ºi VBR).",
+        "Instaleaz\343 ini\376ializatorul pe discul intern (MBR \272i VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Instaleazã iniþializatorul pe discul intern (doar VBR).",
+        "Instaleaz\343 ini\376ializatorul pe discul intern (doar VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Instaleazã iniþializatorul pe un disc flexibil.",
+        "Instaleaz\343 ini\376ializatorul pe un disc flexibil.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Omite instalarea modulului de iniþializare.",
+        "Omite instalarea modulului de ini\376ializare.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
+        "ENTER = Continuare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1147,25 +1241,25 @@ static MUI_ENTRY roROKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Doriþi specificarea modelului tastaturii instalate?",
+        "Dori\376i specificarea modelului tastaturii instalate?",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta un model",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta un model",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   de tastaturã, apoi apãsaþi ENTER.",
+        "   de tastatur\343, apoi ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina precedentã fãrã",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1177,7 +1271,7 @@ static MUI_ENTRY roROKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = Continuare   ESC = Anulare   F3 = Ieºire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1199,25 +1293,25 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Doriþi specificarea unui aranjament implicit de tastaturã?",
+        "Dori\376i specificarea unui aranjament implicit de tastatur\343?",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta un aranjament",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta un aranjament",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    dorit de tastaturã, apoi apãsaþi ENTER.",
+        "    dorit de tastatur\343, apoi ap\343sa\376i ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina precedentã fãrã",
+        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1229,7 +1323,7 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = Continuare   ESC = Anulare   F3 = Ieºire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1252,13 +1346,13 @@ static MUI_ENTRY roROPrepareCopyEntries[] =
     {
         6,
         8,
-        "Au loc pregãtirile necesare pentru copierea de fiºiere.",
+        "Au loc preg\343tirile necesare pentru copierea de fi\272iere.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Listã de fiºiere în curs de creare...",
+        "List\343 de fi\272iere \356n curs de creare...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1281,37 +1375,37 @@ static MUI_ENTRY roROSelectFSEntries[] =
     {
         6,
         14,
-        "Alegeþi un sistem de fiºiere din lista de mai jos.",
+        "Alege\376i un sistem de fi\272iere din lista de mai jos.",
         0
     },
     {
         8,
         16,
-        "\x07  Utilizaþi tastele SUS/JOS pentru a selecta",
+        "\x07  Utiliza\376i tastele SUS/JOS pentru a selecta",
         0
     },
     {
         8,
         17,
-        "   un sistem de fiºiere.",
+        "   un sistem de fi\272iere.",
         0
     },
     {
         8,
         19,
-        "\x07  Apãsaþi ENTER pentru a formata partiþia.",
+        "\x07  Ap\343sa\376i ENTER pentru a formata parti\376ia.",
         0
     },
     {
         8,
         21,
-        "\x07  Apãsaþi ESC pentru a alege o altã partiþie.",
+        "\x07  Ap\343sa\376i ESC pentru a alege o alt\343 parti\376ie.",
         0
     },
     {
         0,
         0,
-        "ENTER = Continuare   ESC = Anulare   F3 = Ieºire",
+        "ENTER = Continuare   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1334,31 +1428,31 @@ static MUI_ENTRY roRODeletePartitionEntries[] =
     {
         6,
         8,
-        "Aþi ales sã ºtergeþi partiþia",
+        "A\376i ales s\343 \272terge\376i parti\376ia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Tastaþi D pentru a ºterge partiþia.",
+        "\x07  Tasta\376i D pentru a \272terge parti\376ia.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "ATENÞIE: Toate datele de pe aceastã partiþie vor fi pierdute!",
+        "ATEN\336IE: Toate datele de pe aceast\343 parti\376ie vor fi pierdute!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Apãsaþi ESC pentru a anula.",
+        "\x07  Ap\343sa\376i ESC pentru a anula.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = ªtergere partiþie   ESC = Anulare   F3 = Ieºire",
+        "D = \252tergere parti\376ie   ESC = Anulare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1380,13 +1474,13 @@ static MUI_ENTRY roRORegistryEntries[] =
     {
         6,
         8,
-        "Are loc actualizarea configuraþiei sistemului.",
+        "Are loc actualizarea configura\376iei sistemului.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Registru în curs de creare...",
+        "Registru \356n curs de creare...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1405,254 +1499,248 @@ MUI_ERROR roROErrorEntries[] =
         "Succes\n"
     },
     {
-        //ERROR_NOT_INSTALLED
-        "ReactOS nu a fost instalat în totalitate în calculator.\n"
-        "Dacã abandonaþi instalarea acum, altã datã, pentru a\n"
-        "instala ReactOS, va fi nevoie sã repetaþi toþi paºii.\n"
+        // ERROR_NOT_INSTALLED
+        "ReactOS nu a fost instalat \356n totalitate \356n calculator.\n"
+        "Dac\343 abandona\376i instalarea acum, alt\343 dat\343, pentru a\n"
+        "instala ReactOS, va fi nevoie s\343 repeta\376i to\376i pa\272ii.\n"
         "\n"
-        "  \x07  Apãsaþi ENTER pentru a continua instalarea.\n"
-        "  \x07  Apãsaþi F3 pentru a abandona instalarea.",
-        "F3 = Ieºire  ENTER = Continuare"
+        "  \x07  Ap\343sa\376i ENTER pentru a continua instalarea.\n"
+        "  \x07  Ap\343sa\376i F3 pentru a abandona instalarea.",
+        "F3 = Ie\272ire  ENTER = Continuare"
     },
     {
-        //ERROR_NO_HDD
-        "Eºec la identificarea unitãþilor interne de stocare.",
+        // ERROR_NO_HDD
+        "E\272ec la identificarea unit\343\376ilor interne de stocare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
-        "Eºec la accesarea unitatãþii de instalare.",
+        // ERROR_NO_SOURCE_DRIVE
+        "E\272ec la accesarea unitat\343\376ii de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
-        "Eºec la încãrcarea fiºierul TXTSETUP.SIF.",
+        // ERROR_LOAD_TXTSETUPSIF
+        "E\272ec la \356nc\343rcarea fi\272ierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
-        "Fiºieul TXTSETUP.SIF a fos gãsit deteriorat.",
+        // ERROR_CORRUPT_TXTSETUPSIF
+        "Fi\272ieul TXTSETUP.SIF a fos g\343sit deteriorat.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Fiºierul TXTSETUP.SIF conþine o semnãturã nevalidã.",
+        // ERROR_SIGNATURE_TXTSETUPSIF,
+        "Fi\272ierul TXTSETUP.SIF con\376ine o semn\343tur\343 nevalid\343.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_DRIVE_INFORMATION
-        "Eºec la obþinerea de informaþii despre\n"
+        // ERROR_DRIVE_INFORMATION
+        "E\272ec la ob\376inerea de informa\376ii despre\n"
         "dispozitivele din calculator.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_WRITE_BOOT,
-        "Eºec la instalarea codului FAT de iniþializare\n"
-        "pe partiþia de sistem.",
+        // ERROR_WRITE_BOOT,
+        "E\272ec la instalarea codului %S de ini\376ializare\n"
+        "pe parti\376ia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_COMPUTER,
-        "Eºec la încãrcarea listei cu arhitecturi de\n"
+        // ERROR_LOAD_COMPUTER,
+        "E\272ec la \356nc\343rcarea listei cu arhitecturi de\n"
         "calcul disponibile.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_DISPLAY,
-        "Eºec la încãrcarea listei cu parametri de\n"
-        "afiºare pentru ecran.",
+        // ERROR_LOAD_DISPLAY,
+        "E\272ec la \356nc\343rcarea listei cu parametri de\n"
+        "afi\272are pentru ecran.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
-        "Eºec la încãrcarea listei cu tipuri\n"
-        "disponibile de tastaturã.",
+        // ERROR_LOAD_KEYBOARD,
+        "E\272ec la \356nc\343rcarea listei cu tipuri\n"
+        "disponibile de tastatur\343.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
-        "Eºec la încãrcarea listei de configuraþii\n"
+        // ERROR_LOAD_KBLAYOUT,
+        "E\272ec la \356nc\343rcarea listei de configura\376ii\n"
         "ale tastaturii.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_WARN_PARTITION,
-        "A fost gãsitã cel puþin un disc cu tabelã nerecunoscutã\n"
-        "de partiþii, care nu poate fi gestionatã corespunzãtor!\n"
+        // ERROR_WARN_PARTITION,
+        "A fost g\343sit\343 cel pu\376in un disc cu tabel\343 nerecunoscut\343\n"
+        "de parti\376ii, care nu poate fi gestionat\343 corespunz\343tor!\n"
         "\n"
-        "Crearea sau ºtergerea de partiþii poate astfel cauza\n"
-        "distrugerea tabelei de partiþii."
+        "Crearea sau \272tergerea de parti\376ii poate astfel cauza\n"
+        "distrugerea tabelei de parti\376ii."
         "\n"
-        "  \x07  Apãsaþi F3 pentru a abandona instalarea.\n"
-        "  \x07  Apãsaþi ENTER pentru a continua.",
-        "F3 = Ieºire  ENTER = Continuare"
+        "  \x07  Ap\343sa\376i F3 pentru a abandona instalarea.\n"
+        "  \x07  Ap\343sa\376i ENTER pentru a continua.",
+        "F3 = Ie\272ire  ENTER = Continuare"
     },
     {
-        //ERROR_NEW_PARTITION,
-        "O partiþie nouã nu poate fi creatã în interiorul\n"
-        "unei partiþii existente!\n"
+        // ERROR_NEW_PARTITION,
+        "O parti\376ie nou\343 nu poate fi creat\343 \356n interiorul\n"
+        "unei parti\376ii existente!\n"
         "\n"
-        "  * Tastaþi pentru a continua.",
+        "  * Tasta\376i pentru a continua.",
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
-        "Aþi încercat ºtergerea de spaþiu nepartiþionat,\n"
-        "însã doar spaþiul partiþionat poate fi ºters!\n"
+        // ERROR_DELETE_SPACE,
+        "A\376i \356ncercat \272tergerea de spa\376iu neparti\376ionat,\n"
+        "\356ns\343 doar spa\376iul parti\376ionat poate fi \272ters!\n"
         "\n"
-        "  * Tastaþi pentru a continua.",
+        "  * Tasta\376i pentru a continua.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
-        "Eºec la instalarea codului FAT de iniþializare\n"
-        "pe partiþia de sistem.",
+        // ERROR_INSTALL_BOOTCODE,
+        "E\272ec la instalarea codului %S de ini\376ializare\n"
+        "pe parti\376ia de sistem.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_NO_FLOPPY,
-        "Nu existã discuri flexibile în unitatea A:",
+        // ERROR_NO_FLOPPY,
+        "Nu exist\343 discuri flexibile \356n unitatea A:",
         "ENTER = Continuare"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
-        "Eºec la actualizarea configuraþiei de tastaturã.",
+        // ERROR_UPDATE_KBSETTINGS,
+        "E\272ec la actualizarea configura\376iei de tastatur\343.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Eºec la actualizarea registrului cu\n"
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
+        "E\272ec la actualizarea registrului cu\n"
         "parametrii grafici ai ecranului!",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_IMPORT_HIVE,
-        "Eºec la importarea registrului.",
+        // ERROR_IMPORT_HIVE,
+        "E\272ec la importarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_FIND_REGISTRY
-        "Eºec la localizarea fiºierelor\n"
+        // ERROR_FIND_REGISTRY
+        "E\272ec la localizarea fi\272ierelor\n"
         "cu datele registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_HIVE,
-        "Eºec la crearea registrului.",
+        // ERROR_CREATE_HIVE,
+        "E\272ec la crearea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
-        "Eºec la iniþializarea registrului.",
+        // ERROR_INITIALIZE_REGISTRY,
+        "E\272ec la ini\376ializarea registrului.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
-        "Fiºierul cabinet nu conþine nici\n"
-        "un fiºier valid de tip inf.",
+        // ERROR_INVALID_CABINET_INF,
+        "Fi\272ierul cabinet nu con\376ine nici\n"
+        "un fi\272ier valid de tip inf.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_MISSING,
-        "Eºec la localizarea fiºierului cabinet.\n",
+        // ERROR_CABINET_MISSING,
+        "E\272ec la localizarea fi\272ierului cabinet.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_SCRIPT,
-        "Fiºierul cabinet nu conþine nici\n"
+        // ERROR_CABINET_SCRIPT,
+        "Fi\272ierul cabinet nu con\376ine nici\n"
         "un script de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_COPY_QUEUE,
-        "Eºec la accesarea listei cu\n"
-        "fiºiere pentru copiere.",
+        // ERROR_COPY_QUEUE,
+        "E\272ec la accesarea listei cu\n"
+        "fi\272iere pentru copiere.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_DIR,
-        "Eºec la crearea directoarelor de instalare.",
+        // ERROR_CREATE_DIR,
+        "E\272ec la crearea directoarelor de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Eºec la identificarea secþiunii de\n"
-        "directoare în fiºierul TXTSETUP.SIF.",
+        // ERROR_TXTSETUP_SECTION,
+        "E\272ec la identificarea sec\376iunii\n"
+        "'%S' \356n fi\272ierul TXTSETUP.SIF.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Eºec la identificarea secþiunii de\n"
-        "directoare în fiºierul cabinet.",
+        // ERROR_CABINET_SECTION,
+        "E\272ec la identificarea sec\376iunii\n"
+        "'%S' \356n fi\272ierul cabinet.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
-        "Eºec la crearea directorului de instalare.",
+        // ERROR_CREATE_INSTALL_DIR
+        "E\272ec la crearea directorului de instalare.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Eºec la localizarea secþiunii pentru date\n"
-        "de instalare din fiºierul TXTSETUP.SIF.",
+        // ERROR_WRITE_PTABLE,
+        "E\272ec la scrierea tabelelor de parti\376ii.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_WRITE_PTABLE,
-        "Eºec la scrierea tabelelor de partiþii.\n",
+        // ERROR_ADDING_CODEPAGE,
+        "E\272ec la includerea pagin\343rii \356n registru.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
-        "Eºec la includerea paginãrii în registru.\n",
+        // ERROR_UPDATE_LOCALESETTINGS,
+        "E\272ec la instituirea sistemului de localizare.\n",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
-        "Eºec la instituirea sistemului de localizare.\n",
+        // ERROR_ADDING_KBLAYOUTS,
+        "E\272ec la includerea \356n registru a configura\376iei\n"
+        "de tastatur\343.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
-        "Eºec la includerea în registru a configuraþiei\n"
-        "de tastaturã.",
+        // ERROR_UPDATE_GEOID,
+        "E\272ec la instituirea de geo id.",
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_UPDATE_GEOID,
-        "Eºec la instituirea de geo id.",
-        "ENTER = Repornire calculator"
-    },
-    {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Numele de director este nevalid.\n"
         "\n"
-        "  * Tastaþi pentru a continua."
+        "  * Tasta\376i pentru a continua."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Partiþia selectatã este prea micã pentru a instala ReactOS.\n"
-        "Partiþia de instalare trebuie sã aibã cel puþin %lu Mocteþi.\n"
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Parti\376ia selectat\343 este prea mic\343 pentru a instala ReactOS.\n"
+        "Parti\376ia de instalare trebuie s\343 aib\343 cel pu\376in %lu Mocte\376i.\n"
         "\n"
-        "  * Tastaþi pentru a continua.",
+        "  * Tasta\376i pentru a continua.",
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
-        "Nu poate fi creatã o nouã partiþie primarã sau extinsã în tabela\n"
-        "de partiþii a acestui disc deoarece tabela de partiþii e plinã.\n"
+        // ERROR_PARTITION_TABLE_FULL,
+        "Nu poate fi creat\343 o nou\343 parti\376ie primar\343 sau extins\343 \356n tabela\n"
+        "de parti\376ii a acestui disc deoarece tabela de parti\376ii e plin\343.\n"
         "\n"
-        "  * Tastaþi pentru a continua."
+        "  * Tasta\376i pentru a continua."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
-        "Nu poate fi creatã mai mult de o partiþie extinsã pe un disc.\n"
+        // ERROR_ONLY_ONE_EXTENDED,
+        "Nu poate fi creat\343 mai mult de o parti\376ie extins\343 pe un disc.\n"
         "\n"
-        "  * Tastaþi pentru a continua."
+        "  * Tasta\376i pentru a continua."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
-        "Eºec la formatarea partiþiei:\n"
+        // ERROR_FORMATTING_PARTITION,
+        "E\272ec la formatarea parti\376iei:\n"
         " %S\n"
         "\n"
         "ENTER = Repornire calculator"
@@ -1666,11 +1754,15 @@ MUI_ERROR roROErrorEntries[] =
 MUI_PAGE roROPages[] =
 {
     {
+        SETUP_INIT_PAGE,
+        roROSetupInitPageEntries
+    },
+    {
         LANGUAGE_PAGE,
         roROLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         roROWelcomePageEntries
     },
     {
@@ -1688,6 +1780,10 @@ MUI_PAGE roROPages[] =
     {
         REPAIR_INTRO_PAGE,
         roRORepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        roROUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1770,117 +1866,121 @@ MUI_PAGE roROPages[] =
 MUI_STRING roROStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Aºteptaþi..."},
+     "   A\272tepta\376i..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalare   P/E = Creare partiþie Primarã/Extinsã   F3 = Ieºire"},
+     "   ENTER = Instalare   P/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalare   L = Creare partiþie Logicã   F3 = Ieºire"},
+     "   ENTER = Instalare   L = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Instalare   D = ªtergere partiþie   F3 = Ieºire"},
+     "   ENTER = Instalare   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_DELETEPARTITION,
-     "   D = ªtergere partiþie   F3 = Ieºire"},
+     "   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_PARTITIONSIZE,
-     "Mãrimea noii partiþii:"},
+     "M\343rimea noii parti\376ii:"},
     {STRING_CHOOSENEWPARTITION,
-     "Aþi ales crearea unei partiþii primare pe"},
+     "A\376i ales crearea unei parti\376ii primare pe"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Aþi ales crearea unei partiþii extinse pe"},
+     "A\376i ales crearea unei parti\376ii extinse pe"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Aþi ales crearea unei partiþii logice pe"},
+     "A\376i ales crearea unei parti\376ii logice pe"},
     {STRING_HDDSIZE,
-    "Introduceþi mãrimea noii partiþii în megaocteþi."},
+    "Introduce\376i m\343rimea noii parti\376ii \356n megaocte\376i."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Creare partiþie   ESC = Anulare   F3 = Ieºire"},
+     "   ENTER = Creare parti\376ie   ESC = Anulare   F3 = Ie\272ire"},
     {STRING_PARTFORMAT,
-    "Aceastã partiþie urmeazã sã fie formatatã."},
+    "Aceast\343 parti\376ie urmeaz\343 s\343 fie formatat\343."},
     {STRING_NONFORMATTEDPART,
-    "Alegeþi sã instalaþi ReactOS pe partiþie nouã sau neformatatã."},
+    "Alege\376i s\343 instala\376i ReactOS pe parti\376ie nou\343 sau neformatat\343."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "Partiþia de sistem încã nu a fost formatatã."},
+    "Parti\376ia de sistem \356nc\343 nu a fost formatat\343."},
     {STRING_NONFORMATTEDOTHERPART,
-    "Noua partiþie încã nu a fost formatatã."},
+    "Noua parti\376ie \356nc\343 nu a fost formatat\343."},
     {STRING_INSTALLONPART,
-    "ReactOS va fi instalat pe partiþia"},
+    "ReactOS va fi instalat pe parti\376ia"},
     {STRING_CHECKINGPART,
-    "Programul de instalare verificã acum partiþia aleasã."},
+    "Programul de instalare verific\343 acum parti\376ia aleas\343."},
     {STRING_CONTINUE,
     "ENTER = Continuare"},
     {STRING_QUITCONTINUE,
-    "F3 = Ieºire  ENTER = Continuare"},
+    "F3 = Ie\272ire  ENTER = Continuare"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Repornire calculator"},
-    {STRING_TXTSETUPFAILED,
-    "Nu s-a reuºit gãsirea sesiunii\n'%S' în TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
-     "   Fiºierul curent: %S"},
+     "   Fi\272ierul curent: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Fiºiere în curs de copiere..."},
+     "Fi\272iere \356n curs de copiere..."},
     {STRING_REGHIVEUPDATE,
-    "   Registru în curs de actualizare..."},
+    "   Registru \356n curs de actualizare..."},
     {STRING_IMPORTFILE,
-    "   În curs de importare din %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
-    "   Registru de configuraþie graficã în actualizare..."},
+    "   \316n curs de importare din %S..."},
+    {STRING_DISPLAYSETTINGSUPDATE,
+    "   Registru de configura\376ie grafic\343 \356n actualizare..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Particularitãþi locale în actualizare..."},
+    "   Particularit\343\376i locale \356n actualizare..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Configuraþie de tastaturã în actualizare..."},
+    "   Configura\376ie de tastatur\343 \356n actualizare..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Date de paginare în curs de adaugare în registru..."},
+    "   Date de paginare \356n curs de adaugare \356n registru..."},
     {STRING_DONE,
     "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
     {STRING_REBOOTPROGRESSBAR,
-    " Calculatorul va reporni în %li secunde... "},
+    " Calculatorul va reporni \356n %li secunde... "},
     {STRING_CONSOLEFAIL1,
-    "Eºec la deschiderea consolei\r\n\r\n"},
+    "E\272ec la deschiderea consolei\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Cea mai frecventã cauzã pentru asta este utilizarea unei tastaturi USB\r\n"},
+    "Cea mai frecvent\343 cauz\343 pentru asta este utilizarea unei tastaturi USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Tastaturile USB nu sunt încã toate acceptate\r\n"},
+    "Tastaturile USB nu sunt \356nc\343 toate acceptate\r\n"},
     {STRING_FORMATTINGDISK,
-    "Disc în curs de formatare..."},
+    "Disc \356n curs de formatare..."},
     {STRING_CHECKINGDISK,
-    "Disc în curs de verificare..."},
+    "Disc \356n curs de verificare..."},
     {STRING_FORMATDISK1,
-    " Formateazã partiþia ca sistem de fiºiere %S (formatare rapidã) "},
+    " Formateaz\343 parti\376ia ca sistem de fi\272iere %S (formatare rapid\343) "},
     {STRING_FORMATDISK2,
-    " Formateazã partiþia ca sistem de fiºiere %S "},
+    " Formateaz\343 parti\376ia ca sistem de fi\272iere %S "},
     {STRING_KEEPFORMAT,
-    " Pãstreazã sistemul de fiºiere actual (fãrã schimbãri) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)."},
+    " P\343streaz\343 sistemul de fi\272iere actual (f\343r\343 schimb\343ri) "},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Tip 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ."},
-    {STRING_HDDINFOUNK3,
-    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "de pe %I64u %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Tip 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTip %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "O nouã partiþie a fost creatã în"},
+    "O nou\343 parti\376ie a fost creat\343 \356n"},
     {STRING_UNPSPACE,
-    "    %sSpaþiu nepartiþionat%s           %6lu %s"},
+    "    %sSpa\376iu neparti\376ionat%s           %6lu %s"},
     {STRING_MAXSIZE,
     "Mo (max. %lu Mo)"},
     {STRING_EXTENDED_PARTITION,
-    "Partiþie extinsã"},
+    "Parti\376ie extins\343"},
     {STRING_UNFORMATTED,
-    "Part. nouã (neformatatã)"},
+    "Part. nou\343 (neformatat\343)"},
     {STRING_FORMATUNUSED,
     "Nefolosit"},
     {STRING_FORMATUNKNOWN,
@@ -1892,6 +1992,6 @@ MUI_STRING roROStrings[] =
     {STRING_GB,
     "Go"},
     {STRING_ADDKBLAYOUTS,
-    "Adãugare configuraþii de tastaturã"},
+    "Ad\343ugare configura\376ii de tastatur\343"},
     {0, 0}
 };

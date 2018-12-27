@@ -17,6 +17,13 @@
 
 #pragma once
 
+/* C++ backwards-compatibility */
+#ifdef __REACTOS__
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#define noexcept
+#endif
+#endif
+
 #define ISOLATION_AWARE_ENABLED 1
 #define STRSAFE_NO_DEPRECATE
 
@@ -34,8 +41,11 @@
 #include <winbase.h>
 #include <strsafe.h>
 #include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 #endif
 #include <string>
+#include <vector>
+#include <stdint.h>
 #ifndef __REACTOS__
 #include "../btrfs.h"
 #include "../btrfsioctl.h"
@@ -43,6 +53,8 @@
 #include "btrfs.h"
 #include "btrfsioctl.h"
 #endif
+
+using namespace std;
 
 #ifndef __REACTOS__
 #define STATUS_SUCCESS                  (NTSTATUS)0x00000000
@@ -79,6 +91,10 @@
 #define funcname __func__
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4800)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,6 +110,10 @@ NTSTATUS NTAPI NtReadFile(HANDLE FileHandle, HANDLE Event, PIO_APC_ROUTINE ApcRo
 NTSTATUS WINAPI RtlUTF8ToUnicodeN(PWSTR UnicodeStringDestination, ULONG UnicodeStringMaxWCharCount,
                                   PULONG UnicodeStringActualWCharCount, PCCH UTF8StringSource,
                                   ULONG UTF8StringByteCount);
+
+NTSTATUS NTAPI RtlUnicodeToUTF8N(PCHAR UTF8StringDestination, ULONG UTF8StringMaxByteCount,
+                                  PULONG UTF8StringActualByteCount, PCWCH UnicodeStringSource,
+                                  ULONG UnicodeStringByteCount);
 
 #ifndef __REACTOS__
 NTSTATUS WINAPI NtSetEaFile(HANDLE FileHandle, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length);
@@ -179,11 +199,184 @@ typedef struct _FSCTL_SET_INTEGRITY_INFORMATION_BUFFER {
 
 #endif
 
+class win_handle {
+public:
+    win_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
+    }
+
+    win_handle(HANDLE nh) {
+        h = nh;
+    }
+
+    ~win_handle() {
+        if (h != INVALID_HANDLE_VALUE)
+            CloseHandle(h);
+    }
+
+    operator HANDLE() const {
+        return h;
+    }
+
+    win_handle& operator=(const HANDLE nh) {
+        if (h != INVALID_HANDLE_VALUE)
+            CloseHandle(h);
+
+        h = nh;
+
+        return *this;
+    }
+
+    HANDLE* operator&() {
+        return &h;
+    }
+
+private:
+#ifndef __REACTOS__
+    HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
+};
+
+class fff_handle {
+public:
+    fff_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
+    }
+
+    fff_handle(HANDLE nh) {
+        h = nh;
+    }
+
+    ~fff_handle() {
+        if (h != INVALID_HANDLE_VALUE)
+            FindClose(h);
+    }
+
+    operator HANDLE() const {
+        return h;
+    }
+
+    fff_handle& operator=(const HANDLE nh) {
+        if (h != INVALID_HANDLE_VALUE)
+            FindClose(h);
+
+        h = nh;
+
+        return *this;
+    }
+
+    HANDLE* operator&() {
+        return &h;
+    }
+
+private:
+#ifndef __REACTOS__
+    HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
+};
+
+class nt_handle {
+public:
+    nt_handle() {
+#ifdef __REACTOS__
+        h = INVALID_HANDLE_VALUE;
+#endif
+    }
+
+    nt_handle(HANDLE nh) {
+        h = nh;
+    }
+
+    ~nt_handle() {
+        if (h != INVALID_HANDLE_VALUE)
+            NtClose(h);
+    }
+
+    operator HANDLE() const {
+        return h;
+    }
+
+    nt_handle& operator=(const HANDLE nh) {
+        if (h != INVALID_HANDLE_VALUE)
+            NtClose(h);
+
+        h = nh;
+
+        return *this;
+    }
+
+    HANDLE* operator&() {
+        return &h;
+    }
+
+private:
+#ifndef __REACTOS__
+    HANDLE h = INVALID_HANDLE_VALUE;
+#else
+    HANDLE h;
+#endif
+};
+
+class string_error : public exception {
+public:
+    string_error(int resno, ...);
+
+    const char* what() const noexcept {
+        return msg.c_str();
+    }
+
+private:
+    string msg;
+};
+
+
+class last_error : public exception {
+public:
+    last_error(DWORD errnum);
+
+    const char* what() const noexcept {
+        return msg.c_str();
+    }
+
+private:
+    string msg;
+};
+
+class ntstatus_error : public exception {
+public:
+    ntstatus_error(NTSTATUS Status);
+
+    const char* what() const noexcept {
+        return msg.c_str();
+    }
+
+private:
+    string msg;
+};
+
+#ifdef __REACTOS__
+inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); } 
+inline wstring to_wstring(uint16_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
+inline wstring to_wstring(uint32_t a) { WCHAR buffer[32]; swprintf(buffer, L"%ld", a); return wstring(buffer); }
+inline wstring to_wstring(uint64_t a) { WCHAR buffer[64]; swprintf(buffer, L"%I64d", a); return wstring(buffer); }
+#endif
+
 extern HMODULE module;
-void ShowError(HWND hwnd, ULONG err);
-void ShowNtStatusError(HWND hwnd, NTSTATUS Status);
-void ShowStringError(HWND hwndDlg, int num, ...);
-void format_size(UINT64 size, WCHAR* s, ULONG len, BOOL show_bytes);
+void format_size(uint64_t size, wstring& s, bool show_bytes);
 void set_dpi_aware();
-std::wstring format_message(ULONG last_error);
-std::wstring format_ntstatus(NTSTATUS Status);
+wstring format_message(ULONG last_error);
+wstring format_ntstatus(NTSTATUS Status);
+bool load_string(HMODULE module, UINT id, wstring& s);
+void wstring_sprintf(wstring& s, wstring fmt, ...);
+void command_line_to_args(LPWSTR cmdline, vector<wstring> args);
+void utf8_to_utf16(const string& utf8, wstring& utf16);
+void utf16_to_utf8(const wstring& utf16, string& utf8);
+void error_message(HWND hwnd, const char* msg);

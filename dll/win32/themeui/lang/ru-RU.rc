@@ -1,0 +1,35 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Кирпич"
+    IDS_EGGPLANT "Баклажан"
+    IDS_GOLIVE "Зелёная оливка" //Spruce
+    IDS_HCONTRAST_1 "Высокая контрастность–1"
+    IDS_HCONTRAST_2 "Высокая контрастность–2"
+    IDS_HCONTRAST_BLACK "Контрастная чёрная"
+    IDS_HCONTRAST_WHITE "Контрастная белая"
+    IDS_LILAC "Сирень"
+    IDS_MAPLE "Клён"
+    IDS_MARINE "Морская"
+    IDS_PLUM "Слива"
+    IDS_PUMPKIN "Тыква"
+    IDS_RAIN "Дождливый день"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS классическая"
+    IDS_STANDARD "ReactOS стандартная"
+    IDS_ROSE "Роза"
+    IDS_SAND "Песок" //Desert
+    IDS_SLATE "Шифер"
+    IDS_SKY "Небо"
+    IDS_STORM "Шторм"
+    IDS_TEAL "Зеленовато-голубая"
+    IDS_WHEAT "Пшеница"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END

@@ -1,10 +1,40 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
-MUI_LAYOUTS deDELayouts[] =
+static MUI_ENTRY deDESetupInitPageEntries[] =
 {
-    { L"0407", L"00000407" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
 };
 
 static MUI_ENTRY deDELanguagePageEntries[] =
@@ -24,19 +54,19 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Bitte wÑhlen Sie die Sprache, die Sie wÑhrend der Installation",
+        "\x07  Bitte w\204hlen Sie die Sprache, die Sie w\204hrend der Installation",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         11,
-        "verwenden wollen.  BestÑtigen Sie die Auswahl mit der EINGABETASTE.",
+        "verwenden wollen.  Best\204tigen Sie die Auswahl mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Diese Sprache wird spÑter als Standardsprache im System verwendet.",
+        "\x07  Diese Sprache wird sp\204ter als Standardsprache im System verwendet.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -76,31 +106,31 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         6,
         12,
-        "Computer und bereitet die nÑchsten Schritte vor.",
+        "Computer und bereitet die n\204chsten Schritte vor.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  DrÅcken Sie die EINGABETASTE, um ReactOS zu installieren.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  DrÅcken Sie R, um ReactOS zu reparieren oder aktualisieren.",
+        "\x07  Dr\201cken Sie R, um ReactOS zu reparieren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  DrÅcken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
+        "\x07  Dr\201cken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  DrÅcken Sie F3, um die Installation abzubrechen.",
+        "\x07  Dr\201cken Sie F3, um die Installation abzubrechen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -234,25 +264,25 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         11,
-        "SÑmtliche Software in ReactOS daher unter der",
+        "S\204mtliche Software in ReactOS daher unter der",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "GNU GPL verîffentlicht, behalten daneben aber ihre",
+        "GNU GPL ver\224ffentlicht, behalten daneben aber ihre",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "ursprÅnglichen Lizenzen bei.",
+        "urspr\201nglichen Lizenzen bei.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "ReactOS ist freie Software. Die Verîffentlichung dieses Programms",
+        "ReactOS ist freie Software. Die Ver\224ffentlichung dieses Programms",
         TEXT_STYLE_NORMAL
     },
     {
@@ -276,7 +306,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         19,
-        "oder der VERWENDBARKEIT FöR EINEN BESTIMMTEN ZWECK.",
+        "oder der VERWENDBARKEIT F\232R EINEN BESTIMMTEN ZWECK.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -312,7 +342,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         0,
         0,
-        "EINGABETASTE = ZurÅck",
+        "EINGABETASTE = Zur\201ck",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -334,7 +364,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         8,
-        "Die untere Liste zeigt die derzeitigen GerÑteeinstellungen.",
+        "Die untere Liste zeigt die derzeitigen Ger\204teeinstellungen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -369,19 +399,19 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     },*/
     {
         25,
-        16, "Diese GerÑteeinstellungen akzeptieren",
+        16, "Diese Ger\204teeinstellungen akzeptieren",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Sie kînnen die Einstellungen durch die PFEILTASTEN auswÑhlen.",
+        "Sie k\224nnen die Einstellungen durch die PFEILTASTEN ausw\204hlen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "DrÅcken Sie die EINGABETASTE, um eine Einstellung zu Ñndern.",
+        "Dr\201cken Sie die EINGABETASTE, um eine Einstellung zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -393,13 +423,13 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         23,
-        "Wenn alle Einstellungen korrekt sind, wÑhlen Sie \"Diese GerÑte-",
+        "Wenn alle Einstellungen korrekt sind, w\204hlen Sie \"Diese Ger\204te-",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "einstellungen akzeptieren\" und bestÑtigen mit der EINGABETASTE.",
+        "einstellungen akzeptieren\" und best\204tigen mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -433,7 +463,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         6,
         9,
-        "Er unterstÅtzt noch nicht alle Funktionen eines vollstÑndig",
+        "Er unterst\201tzt noch nicht alle Funktionen eines vollst\204ndig",
         TEXT_STYLE_NORMAL
     },
     {
@@ -451,31 +481,101 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         8,
         16,
-        "\x07  DrÅcken Sie U, um ReactOS zu aktualisieren.",
+        "\x07  Dr\201cken Sie U, um ReactOS zu aktualisieren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  DrÅcken Sie R, fÅr die Wiederherstellungskonsole.",
+        "\x07  Dr\201cken Sie R, f\201r die Wiederherstellungskonsole.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  DrÅcken Sie ESC, um zur Hauptseite zurÅckzukehren.",
+        "\x07  Dr\201cken Sie ESC, um zur Hauptseite zur\201ckzukehren.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         22,
-        "\x07  DrÅcken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "\x07  Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = ZurÅck  U = Aktualisieren  R = Wiederherst.  EINGABETASTE = Neustart",
+        "ESC = Zur\201ck  U = Aktualisieren  R = Wiederherst.  EINGABETASTE = Neustart",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -503,31 +603,31 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  DrÅcken Sie die PFEILTASTEN, um den gewÅnschten",
+        "\x07  Dr\201cken Sie die PFEILTASTEN, um den gew\201nschten",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu wÑhlen. BestÑtigen Sie mit der EINGABETASTE.",
+        "   Typ zu w\204hlen. Best\204tigen Sie mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
+        "\x07  Dr\201cken Sie ESC, um zur vorherigen Seite zur\201ckzukehren,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   ohne den Computertyp zu Ñndern.",
+        "   ohne den Computertyp zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortsetzen   ESC = ZurÅck  F3 = Installation abbrechen",
+        "EINGABETASTE = Fortsetzen   ESC = Zur\201ck  F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -549,7 +649,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         6,
-        "Die geschrieben Daten werden ÅberprÅft",
+        "Die geschrieben Daten werden \201berpr\201ft.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -589,25 +689,25 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS wurde nicht vollstÑndig installiert",
+        "ReactOS wurde nicht vollst\204ndig installiert.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Entfernen Sie alle DatentrÑger aus den CD-Laufwerken.",
+        "Entfernen Sie alle Datentr\204ger aus den CD-Laufwerken.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "DrÅcken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Bitte warten ...",
+        "Bitte warten...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -629,36 +729,36 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         6,
         8,
-        "Sie wollen den zu installierenden Bildschirmtyp Ñndern.",
+        "Sie wollen den zu installierenden Bildschirmtyp \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-        "\x07  Benutzen Sie die PFEILTASTEN, um den gewÅnschten",
+        "\x07  Benutzen Sie die PFEILTASTEN, um den gew\201nschten",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Typ zu wÑhlen. BestÑtigen Sie mit der EINGABETASTE.",
+        "   Typ zu w\204hlen. Best\204tigen Sie mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren, ohne",
+        "\x07  Dr\201cken Sie ESC, um zur vorherigen Seite zur\201ckzukehren, ohne",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   den Bildschirmtyp zu Ñndern.",
+        "   den Bildschirmtyp zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "EEINGABETASTE = Fortsetzen   ESC = ZurÅck  F3 = Installation abbrechen",
+        "EEINGABETASTE = Fortsetzen   ESC = Zur\201ck  F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -686,13 +786,13 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     {
         10,
         8,
-        "Entfernen Sie alle DatentrÑger aus den CD-Laufwerken.",
+        "Entfernen Sie alle Datentr\204ger aus den CD-Laufwerken.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "DrÅcken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        "Dr\201cken Sie die EINGABETASTE, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -738,7 +838,7 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         6,
         14,
-        "drÅcken Sie die EINGABETASTE.",
+        "dr\201cken Sie die EINGABETASTE.",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -773,25 +873,25 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         6,
         9,
-        "freien Speicherplatz fÅr neue Partitionen auf der Festplatte an.",
+        "freien Speicherplatz f\201r neue Partitionen auf der Festplatte an.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Benutzen Sie die PFEILTASTEN, um eine Partition auszuwÑhlen.",
+        "\x07  Benutzen Sie die PFEILTASTEN, um eine Partition auszuw\204hlen.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  BestÑtigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "\x07  Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  P erstellt eine primÑre Partition.",
+        "\x07  P erstellt eine prim\204re Partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -809,7 +909,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         21,
-        "\x07  D lîscht eine vorhandene Partition.",
+        "\x07  D l\224scht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -937,13 +1037,13 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         6,
         10,
-        "Die gewÅnschte Partition wird nun formatiert.",
+        "Die gew\201nschte Partition wird nun formatiert.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "DrÅcken Sie die EINGABETASTE, um fortzufahren.",
+        "Dr\201cken Sie die EINGABETASTE, um fortzufahren.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -971,13 +1071,13 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Die Installationsdateien werden auf die ausgewÑhlte Partition kopiert.",
+        "Die Installationsdateien werden auf die ausgew\204hlte Partition kopiert.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "WÑhlen Sie ein Installationsverzeichnis fÅr ReactOS:",
+        "W\204hlen Sie ein Installationsverzeichnis f\201r ReactOS:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -989,13 +1089,13 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         15,
-        "Benutzen Sie die RÅck-TASTE, um Zeichen zu lîschen.",
+        "Benutzen Sie die R\201ck-TASTE, um Zeichen zu l\224schen.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "BestÑtigen Sie die Eingabe mit der EINGABETASTE.",
+        "Best\204tigen Sie die Eingabe mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1023,7 +1123,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     {
         0,
         12,
-        "Die benîtigten Dateien werden in das Installationsverzeichnis kopiert.",
+        "Die ben\224tigten Dateien werden in das Installationsverzeichnis kopiert.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1115,31 +1215,31 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Sie wollen den zu installierenden Tastaturtyp Ñndern.",
+        "Sie wollen den zu installierenden Tastaturtyp \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Benutzen Sie die PFEILTASTEN, um den gewÅnschten Typ",
+        "\x07  Benutzen Sie die PFEILTASTEN, um den gew\201nschten Typ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    zu wÑhlen. BestÑtigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "    zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
+        "\x07  Dr\201cken Sie ESC, um zur vorherigen Seite zur\201ckzukehren,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   ohne den Tastaturtyp zu Ñndern.",
+        "   ohne den Tastaturtyp zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1167,31 +1267,31 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Bitte wÑhlen Sie das Standardtastaturlayout aus.",
+        "Bitte w\204hlen Sie das Standardtastaturlayout aus.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Benutzen Sie die PFEILTASTEN, um den gewÅnschten Typ",
+        "\x07  Benutzen Sie die PFEILTASTEN, um den gew\201nschten Typ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   zu wÑhlen. BestÑtigen Sie Ihre Auswahl mit der EINGABETASTE.",
+        "   zu w\204hlen. Best\204tigen Sie Ihre Auswahl mit der EINGABETASTE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  DrÅcken Sie ESC, um zur vorherigen Seite zurÅckzukehren,",
+        "\x07  Dr\201cken Sie ESC, um zur vorherigen Seite zur\201ckzukehren,",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   ohne das Tastaturlayout zu Ñndern.",
+        "   ohne das Tastaturlayout zu \204ndern.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1220,7 +1320,7 @@ static MUI_ENTRY deDEPrepareCopyEntries[] =
     {
         6,
         8,
-        "Der Computer wird fÅr die Installation vorbereitet.",
+        "Der Computer wird f\201r die Installation vorbereitet.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1249,31 +1349,31 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         6,
         17,
-        "WÑhlen Sie ein Dateisystem aus der folgenden Liste aus.",
+        "W\204hlen Sie ein Dateisystem aus der folgenden Liste aus.",
         0
     },
     {
         8,
         19,
-        "\x07  DrÅcken Sie die PFEILTASTEN, um das Dateisystem zu Ñndern.",
+        "\x07  Dr\201cken Sie die PFEILTASTEN, um das Dateisystem zu \204ndern.",
         0
     },
     {
         8,
         21,
-        "\x07  DrÅcken Sie die EINGABETASTE, um die Partition zu formatieren.",
+        "\x07  Dr\201cken Sie die EINGABETASTE, um die Partition zu formatieren.",
         0
     },
     {
         8,
         23,
-        "\x07  DrÅcken Sie ESC, um eine andere Partition auszuwÑhlen.",
+        "\x07  Dr\201cken Sie ESC, um eine andere Partition auszuw\204hlen.",
         0
     },
     {
         0,
         0,
-        "EINGABETASTE = Fortfahren   ESC = ZurÅck   F3 = Installation abbrechen",
+        "EINGABETASTE = Fortfahren   ESC = Zur\201ck   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1296,19 +1396,19 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         6,
         8,
-        "Sie haben sich entschieden, diese Partition zu lîschen",
+        "Sie haben sich entschieden, diese Partition zu l\224schen",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  DrÅcken Sie D, um die Partition zu lîschen.",
+        "\x07  Dr\201cken Sie D, um die Partition zu l\224schen.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "Warnung: Alle Daten auf dieser Partition werden gelîscht!",
+        "Warnung: Alle Daten auf dieser Partition werden gel\224scht!",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1320,7 +1420,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Lîsche Partition   ESC = Abbrechen   F3 = Installation abbrechen",
+        "D = L\224sche Partition   ESC = Abbrechen   F3 = Installation abbrechen",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1342,13 +1442,13 @@ static MUI_ENTRY deDERegistryEntries[] =
     {
         6,
         8,
-        "Systemkonfiguration wird aktualisiert. ",
+        "Systemkonfiguration wird aktualisiert.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         0,
         0,
-        "RegistrierungseintrÑge erstellen...",
+        "Registrierungseintr\204ge erstellen...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1367,241 +1467,235 @@ MUI_ERROR deDEErrorEntries[] =
         "Erfolg\n"
     },
     {
-        //ERROR_NOT_INSTALLED
-        "ReactOS wurde nicht vollstÑndig auf Ihrem System installiert.\n"
-        "Wenn Sie die Installation jetzt beenden, mÅssen Sie diese\n"
+        // ERROR_NOT_INSTALLED
+        "ReactOS wurde nicht vollst\204ndig auf Ihrem System installiert.\n"
+        "Wenn Sie die Installation jetzt beenden, m\201ssen Sie diese\n"
         "erneut starten, um ReactOS zu installieren.\n"
         "\n"
-        "  \x07  DrÅcken Sie die EINGABETASTE, um die Installation fortzusetzen.\n"
-        "  \x07  DrÅcken Sie F3, um die Installation zu beenden.",
+        "  \x07  Dr\201cken Sie die EINGABETASTE, um die Installation fortzusetzen.\n"
+        "  \x07  Dr\201cken Sie F3, um die Installation zu beenden.",
         "F3 = Beenden  EINGABETASTE = Fortsetzen"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Es konnte keine Festplatte gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Es konnte kein Installationsmedium gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "TXTSETUP.SIF konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
-        "TXTSETUP.SIF scheint beschÑdigt zu sein.\n",
+        // ERROR_CORRUPT_TXTSETUPSIF
+        "TXTSETUP.SIF scheint besch\204digt zu sein.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Es wurde eine ungÅltige Signatur in TXTSETUP.SIF gefunden.\n",
+        // ERROR_SIGNATURE_TXTSETUPSIF,
+        "Es wurde eine ung\201ltige Signatur in TXTSETUP.SIF gefunden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Es konnten keine Laufwerksinformationen abgefragt werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WRITE_BOOT,
-        "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
+        // ERROR_WRITE_BOOT,
+        "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Computertypenliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Displayeinstellungsliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Tastaturtypenliste konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Die Liste der Tastaturlayouts konnte nicht geladen werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
         "Es wurde mindestens eine Festplatte mit einer inkompatiblen\n"
         "Partitionstabelle gefunden, die nicht richtig verwendet werden kann.\n"
         "\n"
-        "énderungen an den Partitionen kînnen die Partitionstabelle zerstîren!\n"
+        "\216nderungen an den Partitionen k\224nnen die Partitionstabelle zerst\224ren!\n"
         "\n"
-        "  \x07  DrÅcken Sie F3, um die Installation zu beenden.\n"
-        "  \x07  DrÅcken Sie die EINGABETASTE, um die Installation fortzusetzen.",
+        "  \x07  Dr\201cken Sie F3, um die Installation zu beenden.\n"
+        "  \x07  Dr\201cken Sie die EINGABETASTE, um die Installation fortzusetzen.",
         "F3 = Beenden  ENTER = EINGABETASTE"
     },
     {
-        //ERROR_NEW_PARTITION,
-        "Sie kînnen keine neue Partition in einer bereits\n"
+        // ERROR_NEW_PARTITION,
+        "Sie k\224nnen keine neue Partition in einer bereits\n"
         "vorhandenen Partition erstellen!\n"
         "\n"
-        "  * * Eine beliebige Taste zum Fortsetzen drÅcken.",
+        "  * * Eine beliebige Taste zum Fortsetzen dr\201cken.",
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
-        "Sie kînnen unpartitionierten Speicher nicht lîschen!\n"
+        // ERROR_DELETE_SPACE,
+        "Sie k\224nnen unpartitionierten Speicher nicht l\224schen!\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
+        "  * Eine beliebige Taste zum Fortsetzen dr\201cken.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
-        "Der FAT-Bootcode konnte nicht auf der Partition installiert werden.",
+        // ERROR_INSTALL_BOOTCODE,
+        "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "Keine Diskette in Laufwerk A: gefunden.",
         "EINGABETASTE = Fortsetzen"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Das Tastaturlayout konnte nicht aktualisiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Die RegistrierungseintrÑge der Anzeigeeinstellungen\n"
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Die Registrierungseintr\204ge der Anzeigeeinstellungen\n"
         "konnten nicht aktualisiert werden.",
         "EINGABETASTER = Computer neu starten"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Es konnte keine Hive-Datei importiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Die Registrierungsdateien konnten nicht gefunden werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Die Zweige in der Registrierung konnten nicht erstellt werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Die Registrierung konnte nicht initialisiert werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
-        "Das CAB-Archiv besitzt keine gÅltige INF-Datei.\n",
+        // ERROR_INVALID_CABINET_INF,
+        "Das CAB-Archiv besitzt keine g\201ltige INF-Datei.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Das CAB-Archiv wurde nicht gefunden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CABINET_SCRIPT,
-        "Das CAB-Archiv enthÑlt kein Setup-Skript.\n",
+        // ERROR_CABINET_SCRIPT,
+        "Das CAB-Archiv enth\204lt kein Setup-Skript.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Die Liste mit den zu kopierenden Dateien\n"
         "konnte nicht gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_CREATE_DIR,
+        // ERROR_CREATE_DIR,
         "Die Installationspfade konnten nicht erstellt werden.",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Der Abschnitt 'Ordner' konnte in\n"
-        "TXTSETUP.SIF nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_CABINET_SECTION,
-        "Der Abschnitt 'Ordner' konnte\n"
-        "im im CAB-Archiv nicht gefunden werden.\n",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_CREATE_INSTALL_DIR
-        "Setup konnte den Installationspfad nicht erstellen.",
-        "EINGABETASTE = Computer neu starten"
-    },
-    {
-        //ERROR_FIND_SETUPDATA,
-        "Setup konnte die 'SetupData'-Sektion in\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup konnte die '%S'-Sektion in\n"
         "TXTSETUP.SIF nicht finden.\n",
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_CABINET_SECTION,
+        "Setup konnte die '%S'-Sektion im\n"
+        "CAB-Archiv nicht finden.\n",
+        "EINGABETASTE = Computer neu starten"
+    },
+    {
+        // ERROR_CREATE_INSTALL_DIR
+        "Setup konnte den Installationspfad nicht erstellen.",
+        "EINGABETASTE = Computer neu starten"
+    },
+    {
+        // ERROR_WRITE_PTABLE,
         "Die Partitionstabellen konnten nicht geschrieben werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
-        "Es konnte kein Codepage-Eintrag hinzugefÅgt werden.\n"
+        // ERROR_ADDING_CODEPAGE,
+        "Es konnte kein Codepage-Eintrag hinzugef\201gt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Die Systemsprache konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Die Tastaturlayouts konnten nicht in die Registrierung\n"
         "eingetragen werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Der geografische Standort konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_DIRECTORY_NAME,
-        "UnzulÑssiger Verzeichnisname.\n"
+        // ERROR_DIRECTORY_NAME,
+        "Unzul\204ssiger Verzeichnisname.\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+        "  * Eine beliebige Taste zum Fortsetzen dr\201cken."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Die gewÑhlten Partition ist nicht gro· genug, um ReactOS zu installieren.\n"
-        "Die Installationspartition muss mindestens %lu MB gro· sein.\n"
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Die gew\204hlten Partition ist nicht gro\341 genug, um ReactOS zu installieren.\n"
+        "Die Installationspartition muss mindestens %lu MB gro\341 sein.\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
+        "  * Eine beliebige Taste zum Fortsetzen dr\201cken.",
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
-        "Sie kînnen keine weitere primÑre oder erweiterte Partition in\n"
+        // ERROR_PARTITION_TABLE_FULL,
+        "Sie k\224nnen keine weitere prim\204re oder erweiterte Partition in\n"
         "der Partitionstabelle erstellen, weil die Tabelle voll ist.\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+        "  * Eine beliebige Taste zum Fortsetzen dr\201cken."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
-        "Sie kînnen nur eine erweiterte Partition auf jeder Festplatte anlegen.\n"
+        // ERROR_ONLY_ONE_EXTENDED,
+        "Sie k\224nnen nur eine erweiterte Partition auf jeder Festplatte anlegen.\n"
         "\n"
-        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
+        "  * Eine beliebige Taste zum Fortsetzen dr\201cken."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1616,11 +1710,15 @@ MUI_ERROR deDEErrorEntries[] =
 MUI_PAGE deDEPages[] =
 {
     {
+        SETUP_INIT_PAGE,
+        deDESetupInitPageEntries
+    },
+    {
         LANGUAGE_PAGE,
         deDELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         deDEWelcomePageEntries
     },
     {
@@ -1638,6 +1736,10 @@ MUI_PAGE deDEPages[] =
     {
         REPAIR_INTRO_PAGE,
         deDERepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        deDEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1722,27 +1824,27 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  EINGABETASTE = Installieren  P = PrimÑre  E = Erweiterte  F3 = Installation abbr."},
+     "  EINGABETASTE = Installieren  P = Prim\204re  E = Erweiterte  F3 = Installation abbr."},
     {STRING_INSTALLCREATELOGICAL,
      "  EINGABETASTE = Installieren  L = Logisches Laufwerk  F3 = Installation abbr."},
     {STRING_INSTALLDELETEPARTITION,
-     "  EINGABETASTE = Installieren  D = Partition lîschen  F3 = Installation abbr."},
+     "  EINGABETASTE = Installieren  D = Partition l\224schen  F3 = Installation abbr."},
     {STRING_DELETEPARTITION,
-     "   D = Partition lîschen  F3 = Installation abbrechen"},
+     "   D = Partition l\224schen  F3 = Installation abbrechen"},
     {STRING_PARTITIONSIZE,
-     "Grî·e der neuen Partition:"},
+     "Gr\224\341e der neuen Partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Eine primÑre Partition soll hier erstellt werden:"},
+     "Eine prim\204re Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Eine erweiterte Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Ein logisches Laufwerk soll hier erstellt werden:"},
     {STRING_HDDSIZE,
-    "Bitte geben Sie die Grî·e der neuen Partition in Megabyte ein."},
+    "Bitte geben Sie die Gr\224\341e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
      "  EINGABETASTE = Partition erstellen  ESC = Abbrechen  F3 = Installation abbr."},
     {STRING_PARTFORMAT,
-    "Diese Partition wird als nÑchstes formatiert."},
+    "Diese Partition wird als n\204chstes formatiert."},
     {STRING_NONFORMATTEDPART,
     "Sie wollen ReactOS auf einer neuen/unformatierten Partition installieren."},
     {STRING_NONFORMATTEDSYSTEMPART,
@@ -1752,31 +1854,35 @@ MUI_STRING deDEStrings[] =
     {STRING_INSTALLONPART,
     "ReactOS wird auf dieser Partition installiert."},
     {STRING_CHECKINGPART,
-    "Die ausgewÑhlte Partition wird ÅberprÅft."},
+    "Die ausgew\204hlte Partition wird \201berpr\201ft."},
     {STRING_CONTINUE,
     "EINGABETASTE = Fortsetzen"},
     {STRING_QUITCONTINUE,
     "F3 = Beenden  EINGABETASTE = Fortsetzen"},
     {STRING_REBOOTCOMPUTER,
     "EINGABETASTE = Computer neu starten"},
-    {STRING_TXTSETUPFAILED,
-    "Der Abschnitt '%S'in TXTSETUP.SIF\nkonnte nicht gefunden werden.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Kopiere Datei: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Dateien werden kopiert..."},
     {STRING_REGHIVEUPDATE,
-    "   RegistrierungseintrÑge werden aktualisiert..."},
+    "   Registrierungseintr\204ge werden aktualisiert..."},
     {STRING_IMPORTFILE,
     "   Importiere %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Anzeigeeinstellungen werden aktualisiert..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokalisierungseinstellungen werden aktualisiert..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Tastaturlayouteinstellungen werden aktualisiert..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Codepage-Informationen werden hinzugefÅgt..."},
+    "   Codepage-Informationen werden hinzugef\201gt..."},
     {STRING_DONE,
     "   Fertig..."},
     {STRING_REBOOTCOMPUTER2,
@@ -1784,43 +1890,43 @@ MUI_STRING deDEStrings[] =
     {STRING_REBOOTPROGRESSBAR,
     " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
-    "Konsole konnte nicht geîffnet werden\r\n\r\n"},
+    "Konsole konnte nicht ge\224ffnet werden\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "Der hÑufigste Grund hierfÅr ist die Verwendung einer USB-Tastatur\r\n"},
+    "Der h\204ufigste Grund hierf\201r ist die Verwendung einer USB-Tastatur\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB-Tastaturen werden noch nicht vollstÑndig unterstÅtzt\r\n"},
+    "USB-Tastaturen werden noch nicht vollst\204ndig unterst\201tzt\r\n"},
     {STRING_FORMATTINGDISK,
     "Ihre Festplatte wird formatiert"},
     {STRING_CHECKINGDISK,
-    "Ihre Festplatte wird ÅberprÅft"},
+    "Ihre Festplatte wird \201berpr\201ft"},
     {STRING_FORMATDISK1,
     " Partition mit dem %S-Dateisystem formatieren (Schnell) "},
     {STRING_FORMATDISK2,
     " Partition mit dem %S-Dateisystem formatieren "},
     {STRING_KEEPFORMAT,
-    " Dateisystem beibehalten (Keine VerÑnderungen) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    " Dateisystem beibehalten (Keine Ver\204nderungen) "},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ."},
-    {STRING_HDDINFOUNK3,
-    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "auf %I64u %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "auf Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Festplatte %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,
@@ -1842,6 +1948,6 @@ MUI_STRING deDEStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Tastaturlayout hinzufÅgen"},
+    "Tastaturlayout hinzuf\201gen"},
     {0, 0}
 };

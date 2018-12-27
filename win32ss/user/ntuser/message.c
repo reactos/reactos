@@ -1433,11 +1433,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(ptiSendTo))
+    if (MsqIsHung(ptiSendTo))
     {
-        // FIXME: Set window hung and add to a list.
-        /* FIXME: Set a LastError? */
-        RETURN( FALSE);
+        if (uFlags & SMTO_ABORTIFHUNG)
+        {
+            // FIXME: Set window hung and add to a list.
+            /* FIXME: Set a LastError? */
+            RETURN( FALSE);
+        }
     }
 
     if (Window->state & WNDS_DESTROYED)
@@ -1465,6 +1468,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
+        if (MsqIsHung(ptiSendTo))
+        {
+            TRACE("Let's go Ghost!\n");
+            IntMakeHungWindowGhosted(hWnd);
+        }
 /*
  *  MSDN says:
  *  Microsoft Windows 2000: If GetLastError returns zero, then the function

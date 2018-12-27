@@ -26,7 +26,7 @@ CWebService::CWebService()
     if(!m_hInet)
         FATAL("InternetOpenW failed\n");
 
-    m_hHTTP = InternetConnectW(m_hInet, szHostname, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    m_hHTTP = InternetConnectW(m_hInet, szHostname, INTERNET_DEFAULT_HTTPS_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
 
     if(!m_hHTTP)
         FATAL("InternetConnectW failed\n");
@@ -69,7 +69,7 @@ CWebService::DoRequest(const string& InputData)
     DWORD DataLength;
 
     /* Post our test results to the web service */
-    m_hHTTPRequest = HttpOpenRequestW(m_hHTTP, L"POST", szServerFile, NULL, NULL, NULL, INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    m_hHTTPRequest = HttpOpenRequestW(m_hHTTP, L"POST", szServerFile, NULL, NULL, NULL, INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
 
     if(!m_hHTTPRequest)
         FATAL("HttpOpenRequestW failed\n");

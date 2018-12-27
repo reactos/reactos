@@ -1,14 +1,27 @@
 
+add_definitions(${I18N_DEFS})
+
+include_directories(spapisup utils)
+
 list(APPEND SOURCE
-    arcname.c
-    bldrsup.c
-    filesup.c
+    spapisup/fileqsup.c
+    spapisup/infsupp.c
+    utils/arcname.c
+    utils/bldrsup.c
+    utils/filesup.c
+    utils/genlist.c
+    utils/inicache.c
+    utils/ntverrsrc.c
+    utils/osdetect.c
+    utils/partlist.c
+    utils/regutil.c
+    bootsup.c
     fsutil.c
-    genlist.c
-    inicache.c
-    ntverrsrc.c
-    osdetect.c
-    partlist.c
+    install.c
+    mui.c
+    registry.c
+    settings.c
+    setuplib.c
     precomp.h)
 
 add_library(setuplib ${SOURCE})

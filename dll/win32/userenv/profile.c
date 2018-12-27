@@ -106,6 +106,45 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 }
 
 
+static
+BOOL
+CheckForLoadedProfile(HANDLE hToken)
+{
+    UNICODE_STRING SidString;
+    HKEY hKey;
+
+    DPRINT("CheckForLoadedProfile() called\n");
+
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
+    {
+        DPRINT1("GetUserSidStringFromToken() failed\n");
+        return FALSE;
+    }
+
+    if (RegOpenKeyExW(HKEY_USERS,
+                      SidString.Buffer,
+                      0,
+                      MAXIMUM_ALLOWED,
+                      &hKey))
+    {
+        DPRINT("Profile not loaded\n");
+        RtlFreeUnicodeString(&SidString);
+        return FALSE;
+    }
+
+    RegCloseKey(hKey);
+
+    RtlFreeUnicodeString(&SidString);
+
+    DPRINT("Profile already loaded\n");
+
+    return TRUE;
+}
+
+
+/* PUBLIC FUNCTIONS ********************************************************/
+
 BOOL
 WINAPI
 CopySystemProfile(
@@ -674,6 +713,62 @@ done:
 
 BOOL
 WINAPI
+DeleteProfileA(
+    _In_ LPCSTR lpSidString,
+    _In_opt_ LPCSTR lpProfilePath,
+    _In_opt_ LPCSTR lpComputerName)
+{
+    BOOL bResult;
+    UNICODE_STRING SidString, ProfilePath, ComputerName;
+
+    DPRINT("DeleteProfileA() called\n");
+
+    /* Conversion to UNICODE */
+    if (lpSidString)
+        RtlCreateUnicodeStringFromAsciiz(&SidString,
+                                         (LPSTR)lpSidString);
+
+    if (lpProfilePath)
+        RtlCreateUnicodeStringFromAsciiz(&ProfilePath,
+                                         (LPSTR)lpProfilePath);
+
+    if (lpComputerName)
+        RtlCreateUnicodeStringFromAsciiz(&ComputerName,
+                                         (LPSTR)lpComputerName);
+
+    /* Call the UNICODE function */
+    bResult = DeleteProfileW(SidString.Buffer,
+                             ProfilePath.Buffer,
+                             ComputerName.Buffer);
+
+    /* Memory cleanup */
+    if (lpSidString)
+        RtlFreeUnicodeString(&SidString);
+
+    if (lpProfilePath)
+        RtlFreeUnicodeString(&ProfilePath);
+
+    if (lpComputerName)
+        RtlFreeUnicodeString(&ComputerName);
+
+    return bResult;
+}
+
+
+BOOL
+WINAPI
+DeleteProfileW(
+    _In_ LPCWSTR lpSidString,
+    _In_opt_ LPCWSTR lpProfilePath,
+    _In_opt_ LPCWSTR lpComputerName)
+{
+    DPRINT1("DeleteProfileW() not implemented!\n");
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
 GetAllUsersProfileDirectoryA(
     _Out_opt_ LPSTR lpProfileDir,
     _Inout_ LPDWORD lpcchSize)
@@ -1053,6 +1148,16 @@ GetProfilesDirectoryW(
 
 BOOL
 WINAPI
+GetProfileType(
+    _Out_ PDWORD pdwFlags)
+{
+    DPRINT1("GetProfileType() not implemented!\n");
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
 GetUserProfileDirectoryA(
     _In_ HANDLE hToken,
     _Out_opt_ LPSTR lpProfileDir,
@@ -1192,43 +1297,6 @@ GetUserProfileDirectoryW(
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
-}
-
-
-static
-BOOL
-CheckForLoadedProfile(HANDLE hToken)
-{
-    UNICODE_STRING SidString;
-    HKEY hKey;
-
-    DPRINT("CheckForLoadedProfile() called\n");
-
-    /* Get the user SID string */
-    if (!GetUserSidStringFromToken(hToken, &SidString))
-    {
-        DPRINT1("GetUserSidStringFromToken() failed\n");
-        return FALSE;
-    }
-
-    if (RegOpenKeyExW(HKEY_USERS,
-                      SidString.Buffer,
-                      0,
-                      MAXIMUM_ALLOWED,
-                      &hKey))
-    {
-        DPRINT("Profile not loaded\n");
-        RtlFreeUnicodeString(&SidString);
-        return FALSE;
-    }
-
-    RegCloseKey(hKey);
-
-    RtlFreeUnicodeString(&SidString);
-
-    DPRINT("Profile already loaded\n");
-
-    return TRUE;
 }
 
 
@@ -1564,71 +1632,6 @@ UnloadUserProfile(
     DPRINT("UnloadUserProfile() done\n");
 
     return TRUE;
-}
-
-
-BOOL
-WINAPI
-DeleteProfileW(
-    _In_ LPCWSTR lpSidString,
-    _In_opt_ LPCWSTR lpProfilePath,
-    _In_opt_ LPCWSTR lpComputerName)
-{
-    DPRINT1("DeleteProfileW() not implemented!\n");
-    return FALSE;
-}
-
-
-BOOL
-WINAPI
-DeleteProfileA(
-    _In_ LPCSTR lpSidString,
-    _In_opt_ LPCSTR lpProfilePath,
-    _In_opt_ LPCSTR lpComputerName)
-{
-    BOOL bResult;
-    UNICODE_STRING SidString, ProfilePath, ComputerName;
-
-    DPRINT("DeleteProfileA() called\n");
-
-    /* Conversion to UNICODE */
-    if (lpSidString)
-        RtlCreateUnicodeStringFromAsciiz(&SidString,
-                                         (LPSTR)lpSidString);
-
-    if (lpProfilePath)
-        RtlCreateUnicodeStringFromAsciiz(&ProfilePath,
-                                         (LPSTR)lpProfilePath);
-
-    if (lpComputerName)
-        RtlCreateUnicodeStringFromAsciiz(&ComputerName,
-                                         (LPSTR)lpComputerName);
-
-    /* Call the UNICODE function */
-    bResult = DeleteProfileW(SidString.Buffer,
-                             ProfilePath.Buffer,
-                             ComputerName.Buffer);
-
-    /* Memory cleanup */
-    if (lpSidString)
-        RtlFreeUnicodeString(&SidString);
-
-    if (lpProfilePath)
-        RtlFreeUnicodeString(&ProfilePath);
-
-    if (lpComputerName)
-        RtlFreeUnicodeString(&ComputerName);
-
-    return bResult;
-}
-
-
-BOOL
-WINAPI
-GetProfileType(_Out_ PDWORD pdwFlags)
-{
-    DPRINT1("GetProfileType() not implemented!\n");
-    return FALSE;
 }
 
 /* EOF */

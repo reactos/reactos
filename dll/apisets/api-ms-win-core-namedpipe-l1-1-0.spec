@@ -5,8 +5,8 @@
 @ stdcall CreateNamedPipeW() kernel32.CreateNamedPipeW
 @ stdcall CreatePipe() kernel32.CreatePipe
 @ stdcall DisconnectNamedPipe() kernel32.DisconnectNamedPipe
-@ stub GetNamedPipeAttribute
-@ stub GetNamedPipeClientComputerNameW
+@ stdcall -version=0x600+ GetNamedPipeAttribute() kernel32.GetNamedPipeAttribute
+@ stdcall -version=0x600+ GetNamedPipeClientComputerNameW() kernel32.GetNamedPipeClientComputerNameW
 @ stdcall ImpersonateNamedPipeClient() advapi32.ImpersonateNamedPipeClient
 @ stdcall PeekNamedPipe() kernel32.PeekNamedPipe
 @ stdcall SetNamedPipeHandleState() kernel32.SetNamedPipeHandleState

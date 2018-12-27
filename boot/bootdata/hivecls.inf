@@ -1,5 +1,5 @@
 [Version]
-Signature="$ReactOS$"
+Signature = "$Windows NT$"
 
 [AddReg]
 HKLM,"SOFTWARE\Classes",,0x00000010
@@ -268,7 +268,7 @@ HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" ""%1"""
+HKCR,"giffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"

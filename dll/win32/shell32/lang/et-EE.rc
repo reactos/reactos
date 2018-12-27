@@ -151,7 +151,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "See ReactOS versioon on registreeritud järgmisele:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "See ReactOS versioon on registreeritud üksusele:", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -165,7 +165,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOSi on teile toonud:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS'i on teile toonud:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -425,7 +425,7 @@ BEGIN
     GROUPBOX "Toimingud", -1, 7, 10, 249, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "Näita kaustades tavalisi &toiminguid", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Kasuta ReactOSi klassikalisi &kaustu", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
+    AUTORADIOBUTTON "Kasuta ReactOS'i klassikalisi &kaustu", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "Kaustade sirvimine", -1, 7, 60, 249, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Ava iga kaust &samas aknas", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
@@ -510,8 +510,8 @@ CAPTION "Ühenda ReactOS lahti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Kas soovid kindlasti lahti ühendada?", -1, 49, 15, 131, 8
-    DEFPUSHBUTTON "&Ühenda lahti", IDOK, 47, 38, 47, 14
+    LTEXT "Kas soovid kindlasti katkesta ühendust?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Katkesta ühendus", IDOK, 47, 38, 47, 14
     PUSHBUTTON "Loobu", IDCANCEL, 99, 38, 47, 14
 END
 
@@ -535,8 +535,8 @@ CAPTION "Segasisu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "See plaat või seaded sisladab rohkem kui üht tüüpi faile.", 1001, 32, 7, 191, 20
-    LTEXT "Mida soovite ReactOSil teha lasta?", 1002, 32, 31, 188, 8
+    LTEXT "See plaat või seade sisladab rohkem kui üht tüüpi faile.", 1001, 32, 7, 191, 20
+    LTEXT "Mida soovite ReactOS'il teha lasta?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Loobu", IDCANCEL, 160, 186, 60, 14
@@ -548,12 +548,12 @@ CAPTION "Segasisu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS saab sooritada sama toinigut, kui selles seadmes kasutatakse seda tüüpi:", 1001, 30, 7, 193, 20
+    LTEXT "ReactOS saab sooritada sama toimigut, kui selles seadmes kasutatakse seda tüüpi:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Mida soovite ReactOSil teha lasta?", 1002, 32, 41, 190, 8
+    LTEXT "Mida soovite ReactOS'il teha lasta?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-    AUTOCHECKBOX "Valige sooritav toiming.", 1004, 32, 171, 190, 10
+    AUTOCHECKBOX "Valige sooritatav toiming.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
     PUSHBUTTON "Loobu", IDCANCEL, 160, 185, 60, 14
 END
@@ -565,7 +565,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "ReactOS saab automaatselt sooritada sama toimingut iga kord kui ühendate seda seadet.", 1001, 32, 7, 190, 22
-    LTEXT "&Mida soovite ReactOSil teha lasta?", 1002, 32, 31, 190, 8
+    LTEXT "&Mida soovite ReactOS'il teha lasta?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Valige toiming", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -650,74 +650,74 @@ Kas oled kindel et soovid seda faili avada?", IDC_STATIC, 35, 5, 230, 60
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Loo uus laiendus"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Faili laiendus:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< T&äpsemalt", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Seotud faili tüüp:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "Muuda faili tüüpi"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Muuda &ikooni...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&Tegevused:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    PUSHBUTTON "&Uus...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Muuda...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Eemalda", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "&Vali vaikimisi", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "Kinnita &avamist peale allalaadimist", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "Ala&ti näita laiendit", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "&Sirvi samas aknas", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "Uus tegevus"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "&Tegevus:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "Rak&endusi selle tegevuse sooritamiseks:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    PUSHBUTTON "S&irvi...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&Kasuta DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "Loobu", IDCANCEL, 160, 40, 60, 14
 END
 
 IDD_FOLDER_CUSTOMIZE DIALOGEX 0, 0, 240, 250
-CAPTION "Customize"
+CAPTION "Kohanda"
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "What kind of folder do you want?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "Use this &folder type as a template:", IDC_STATIC, 15, 20, 210, 12
+    GROUPBOX "Missugust kausta tahate?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
+    LTEXT "Kasuta seda &kausta kui mallina:", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Also apply this template to all &subfolders", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
-    GROUPBOX "Folder pictures", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "For Thumbnails view, you can put a picture on this folder to remind you of the contents.", IDC_STATIC, 15, 87, 115, 33
-    PUSHBUTTON "Choose &Picture...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
-    PUSHBUTTON "&Restore Default", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    AUTOCHECKBOX "Rakenda seda malli ka &alamkaustadele", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    GROUPBOX "Kausta pildid", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
+    LTEXT "Pispildi vaatega saad panna pildi kaustale sisude meeldetuletuseks.,", IDC_STATIC, 15, 87, 115, 33
+    PUSHBUTTON "Vali &pilt...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
+    PUSHBUTTON "&Taasta vaikesätted", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
+    LTEXT "Eelvaade:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
-    GROUPBOX "Folder icons", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
-    LTEXT "For all views except Thumbnails, you can change the standard ""folder"" icon to another icon.", IDC_STATIC, 15, 180, 210, 25
+    GROUPBOX "Kausta ikoonid", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
+    LTEXT "Kõigil v.a. pisipildi vaatel saad muuta standartse ""kausta"" ikooni teiseks ikooniks.", IDC_STATIC, 15, 180, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 209, 32, 30
-    PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
+    PUSHBUTTON "Muuda &ikooni...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
 STRINGTABLE
@@ -775,7 +775,7 @@ BEGIN
     IDS_RENAME "Nimeta ümber"
     IDS_PASTE "Kleebi"
     IDS_EJECT "Väljuta"
-    IDS_DISCONNECT "Ühenda lahti"
+    IDS_DISCONNECT "Katkesta ühendus"
 
     IDS_CREATEFOLDER_DENIED "Ei saa luua kausta '%1'"
     IDS_CREATEFOLDER_CAPTION "Ei saa kausta luua"
@@ -804,6 +804,11 @@ BEGIN
     IDS_RESTART_PROMPT "Kas soovid taaskäivitada süsteemi?"
     IDS_SHUTDOWN_TITLE "Lülita välja"
     IDS_SHUTDOWN_PROMPT "Kas soovid arvuti välja lülitada?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Ei saanud kuvada Run faili dialoogiboksi (sisemine viga)"
@@ -821,7 +826,7 @@ BEGIN
     IDS_STARTMENU "Start Menüü"
     IDS_MYMUSIC "Minu muusika"
     IDS_MYVIDEO "Minu videod"
-    IDS_DESKTOPDIRECTORY "Töölaud"
+    IDS_DESKTOPDIRECTORY "Desktop"
     IDS_NETHOOD "NetHood"
     IDS_TEMPLATES "Mallid"
     IDS_APPDATA "Rakenduste Andmed"
@@ -832,7 +837,7 @@ BEGIN
     IDS_HISTORY "Local Settings\\History"
     IDS_PROGRAM_FILES "Programmifailid"
     IDS_MYPICTURES "Minu pildid"
-    IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
+    IDS_PROGRAM_FILES_COMMON "Programmifailid\\Common Files"
     IDS_COMMON_DOCUMENTS "Documents"
     IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
     IDS_COMMON_MUSIC "Documents\\My Music"
@@ -895,7 +900,7 @@ BEGIN
     IDS_OTF_FILE "OpenType Fondi fail"
     IDS_HLP_FILE "Abifail"
     IDS_ICO_FILE "Ikoon"
-    IDS_INI_FILE "Konfiguratsiooni seaded"
+    IDS_INI_FILE "Konfiguratsiooni sätted"
     IDS_LNK_FILE "Otsetee"
     IDS_NT__FILE "NT DOS32 Configuration File"
     IDS_PIF_FILE "NT VDM programmi informatsiooni fail"
@@ -919,7 +924,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Vaikimisi jaotusühik"
     IDS_COPY_OF "Koopia üksusest"
 
-    IDS_SHLEXEC_NOASSOC "Ühtegi ReactOSi programmi ei ole seadistatud seda tüüpi failide avamiseks."
+    IDS_SHLEXEC_NOASSOC "Ühtegi ReactOS'i programmi ei ole seadistatud seda tüüpi failide avamiseks."
 
     IDS_FILE_DETAILS "Üksikasjad '%s' laienduse kohta"
     IDS_FILE_DETAILSADV "Faili, mille laiend on '%s', on tüübiga '%s'. Kõiki '%s'-tüüpi faile mõjutavate sätete muutmiseks klõpsa nuppu Täpsemalt."
@@ -958,20 +963,20 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Näita krüptitud või tihendatud NTFS-faile värvilisena"
     IDS_ADVANCED_SHOW_INFO_TIP "Näita kausta- ja töölauaüksuste hüpikkirjeldusi"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< T&äpsemalt"
+    IDS_NEWEXT_ADVANCED_RIGHT "Tä&psemalt >>"
+    IDS_NEWEXT_NEW "<Uus>"
+    IDS_NEWEXT_SPECIFY_EXT "Te peate määrama laiendi.."
+    IDS_NEWEXT_ALREADY_ASSOC "Laiend %s  on juba seotud faili tüübi %s-iga. Kas tahate siduda lahti %s %s-ga ja luua uus faili tüüp sellele?"
+    IDS_NEWEXT_EXT_IN_USE "Laiend on kasutusel"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_REMOVE_EXT "Registreeritud faili nime laiendi eemaldamisel, Te ei saa enam avada faile selle laiendiga topelt klikkides nende ikoone.\n\nKas soovite kindlalt kustutada seda laiendit?"
+    IDS_SPECIFY_ACTION "Peate määrama tegevuse."
+    IDS_INVALID_PROGRAM "Määratud programmi ei leitud. Tee kindlaks kas faili nimi või teekond on korrektsed."
+    IDS_REMOVE_ACTION "Kas olete kindel selle tegevuse eemalduses?"
+    IDS_ACTION_EXISTS "Tegevus '%s' on juba registreeritud selle tegevustüübile. Palun sisestage teistsugune nimi ja proovige uuesti."
+    IDS_EXE_FILTER "Programs\0*.exe\0Kõik failid\0*.*\0"
+    IDS_EDITING_ACTION "Tegevuse redigeerimine tüübile: "
+    IDS_NO_ICONS "Fail '%s' ei sisalda ühtegi ikooni.\n\nVali ikoon nimekirjast või määra teine fail."
+    IDS_FILE_NOT_FOUND "Faili '%s' ei leitud."
 END

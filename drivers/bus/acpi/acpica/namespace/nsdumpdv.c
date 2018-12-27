@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,9 +99,8 @@ AcpiNsDumpOneDevice (
         }
 
         ACPI_DEBUG_PRINT_RAW ((ACPI_DB_TABLES,
-            "    HID: %s, ADR: %8.8X%8.8X, Status: %X\n",
-            Info->HardwareId.Value, ACPI_FORMAT_UINT64 (Info->Address),
-            Info->CurrentStatus));
+            "    HID: %s, ADR: %8.8X%8.8X\n",
+            Info->HardwareId.Value, ACPI_FORMAT_UINT64 (Info->Address)));
         ACPI_FREE (Info);
     }
 

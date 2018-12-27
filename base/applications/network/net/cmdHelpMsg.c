@@ -15,14 +15,16 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
 {
     INT i;
     LONG errNum;
-    LPWSTR endptr;
-    // DWORD dwLength = 0;
-    LPWSTR lpBuffer;
+    PWSTR endptr;
+    PWSTR pBuffer;
+    PWSTR pInserts[10] = {L"***", L"***", L"***", L"***",
+                          L"***", L"***", L"***", L"***",
+                          L"***", NULL};
 
     if (argc < 3)
     {
         ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-        ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
+        PrintNetMessage(MSG_HELPMSG_SYNTAX);
         return 1;
     }
 
@@ -31,9 +33,8 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-            ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
-            ConResPuts(StdOut, IDS_HELPMSG_HELP_1);
-            ConResPuts(StdOut, IDS_HELPMSG_HELP_2);
+            PrintNetMessage(MSG_HELPMSG_SYNTAX);
+            PrintNetMessage(MSG_HELPMSG_HELP);
             return 1;
         }
     }
@@ -42,27 +43,50 @@ INT cmdHelpMsg(INT argc, WCHAR **argv)
     if (*endptr != 0)
     {
         ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-        ConResPuts(StdOut, IDS_HELPMSG_SYNTAX);
+        PrintNetMessage(MSG_HELPMSG_SYNTAX);
         return 1;
     }
 
-    /* Retrieve the message string without appending extra newlines */
-    // dwLength =
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                   FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-                   NULL,
-                   errNum,
-                   LANG_USER_DEFAULT,
-                   (LPWSTR)&lpBuffer,
-                   0, NULL);
-    if (lpBuffer /* && dwLength */)
+    if (errNum >= MIN_LANMAN_MESSAGE_ID && errNum <= MAX_LANMAN_MESSAGE_ID)
     {
-        ConPrintf(StdOut, L"\n%s\n", lpBuffer);
-        LocalFree(lpBuffer);
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE |
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       hModuleNetMsg,
+                       errNum,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       (va_list *)pInserts);
+        if (pBuffer)
+        {
+            ConPrintf(StdOut, L"\n%s\n", pBuffer);
+            LocalFree(pBuffer);
+        }
+        else
+        {
+            PrintErrorMessage(3871);
+        }
     }
     else
     {
-        ConPrintf(StdOut, L"Unrecognized error code: %ld\n", errNum);
+        /* Retrieve the message string without appending extra newlines */
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                       NULL,
+                       errNum,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&pBuffer,
+                       0,
+                       (va_list *)pInserts);
+        if (pBuffer)
+        {
+            ConPrintf(StdOut, L"\n%s\n", pBuffer);
+            LocalFree(pBuffer);
+        }
+        else
+        {
+            PrintErrorMessage(3871);
+        }
     }
 
     return 0;

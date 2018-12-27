@@ -54,3 +54,60 @@ FltGetDiskDeviceObject(
     UNREFERENCED_PARAMETER(DiskDeviceObject);
     return 0;
 }
+
+NTSTATUS
+FLTAPI
+FltGetFileNameInformationUnsafe(
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ PFLT_INSTANCE Instance,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *FileNameInformation = NULL;
+    return 0;
+}
+
+NTSTATUS
+FLTAPI
+FltGetFileNameInformation(
+    _In_ PFLT_CALLBACK_DATA CallbackData,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(CallbackData);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *FileNameInformation = NULL;
+    return 0;
+}
+
+NTSTATUS
+FLTAPI
+FltGetDestinationFileNameInformation(
+    _In_ PFLT_INSTANCE Instance,
+    _In_ PFILE_OBJECT FileObject,
+    _In_opt_ HANDLE RootDirectory,
+    _In_reads_bytes_(FileNameLength) PWSTR FileName,
+    _In_ ULONG FileNameLength,
+    _In_ FLT_FILE_NAME_OPTIONS NameOptions,
+    _Outptr_ PFLT_FILE_NAME_INFORMATION *RetFileNameInformation)
+{
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(RootDirectory);
+    UNREFERENCED_PARAMETER(FileName);
+    UNREFERENCED_PARAMETER(FileNameLength);
+    UNREFERENCED_PARAMETER(NameOptions);
+    *RetFileNameInformation = NULL;
+    return 0;
+}
+
+VOID
+FLTAPI
+FltReleaseFileNameInformation(
+    _In_ PFLT_FILE_NAME_INFORMATION FileNameInformation)
+{
+    UNREFERENCED_PARAMETER(FileNameInformation);
+}

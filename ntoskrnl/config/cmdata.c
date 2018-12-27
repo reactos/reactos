@@ -587,6 +587,14 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
 
     {
+        L"Session Manager\\Kernel",
+        L"ObUnsecureGlobalNames",
+        ObpUnsecureGlobalNamesBuffer,
+        &ObpUnsecureGlobalNamesLength,
+        NULL
+    },
+
+    {
         L"Session Manager\\I/O System",
         L"CountOperations",
         &DummyData,

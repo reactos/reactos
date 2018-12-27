@@ -1,0 +1,84 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_MAIN DIALOGEX 0, 0, 375, 103
+STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_METHODS_LIST,159,52,73,111,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_PRIORITY_LIST,241,52,73,111,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Uruchom",IDC_STARTSTOP,322,7,45,15
+    PUSHBUTTON      "Pomoc",ID_MAIN_HELP,322,29,45,15
+    PUSHBUTTON      "Wyjdź",IDC_QUIT,322,51,45,15
+    CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
+                    WS_BORDER,7,7,78,58
+    LTEXT           "Wybierz dysk:",-1,78,40,73,8
+    LTEXT           "Wybierz operację:",-1,159,40,73,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
+                    0x1,7,71,320,10
+    CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
+                    SS_SUNKEN | WS_GROUP,7,86,359,10
+    LTEXT           "Jestem małpą, usłysz mnie eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
+    LTEXT           "Priorytet procesu:",-1,241,40,73,8
+END
+
+IDD_REPORT DIALOGEX  0, 0, 405, 169
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Raport"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Bajty",IDC_BYTES,7,148,50,14
+    DEFPUSHBUTTON   "Kilobajty",IDC_KILOBYTES,61,148,50,14
+    DEFPUSHBUTTON   "Megabajty",IDC_MEGABYTES,115,148,50,14
+    DEFPUSHBUTTON   "Gigabajty",IDC_GIGABYTES,169,148,50,14
+    DEFPUSHBUTTON   "OK",IDC_REPORTOK,348,148,50,14
+    LTEXT           "Wolumin",-1,7,7,75,8
+    LTEXT           "Pojemność",-1,7,51,75,8
+    LTEXT           "(Litera dysku)",IDC_DRIVELETTER,83,7,117,10,SS_SUNKEN
+    LTEXT           "(Pojemność dysku, bajty)",IDC_DISKSIZEBYTES,83,51,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Pojemność dysku, klastry)",IDC_DISKSIZECLUSTERS,83,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Ogółem klastrów",-1,7,73,75,8
+    LTEXT           "(Rozmiar klastra)",IDC_DISKCLUSTERSIZE,83,84,117,10,
+                    SS_SUNKEN
+    LTEXT           "Rozmiar klastra",-1,7,84,75,8
+    LTEXT           "(Liczba plików)",IDC_FILESCOUNT,281,18,117,10,SS_SUNKEN
+    LTEXT           "(Rozmiar, bajty)",IDC_FILESSIZEBYTES,281,29,117,10,
+                    SS_SUNKEN
+    LTEXT           "# plików",-1,205,18,75,8
+    LTEXT           "Rozmiar ogółem",-1,205,29,75,8
+    LTEXT           "Rozmiar dysku",-1,205,40,75,8
+    LTEXT           "(Rozmiar ogółem, bajty)",IDC_FILESSIZEONDISK,281,40,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Ukryte pliki, bajty)",IDC_FILESSLACKBYTES,281,51,117,10,
+                    SS_SUNKEN
+    LTEXT           "Zmarnowany zapas przestrzeni",-1,205,51,75,8
+    LTEXT           "(Wolna przestrzeń, bajty)",IDC_DISKFREEBYTES,83,62,117,10,
+                    SS_SUNKEN
+    LTEXT           "Wolna przestrzeń",-1,7,62,75,8
+    LTEXT           "(Pofragmentowane pliki, liczba)",IDC_FILESFRAGGED,281,62,117,
+                    10,SS_SUNKEN
+    LTEXT           "Pofragmentowane pliki",-1,205,62,75,8
+    LTEXT           "(Liczba ścieżek)",IDC_DIRSCOUNT,281,7,117,10,SS_SUNKEN
+    LTEXT           "# katalogów",-1,205,7,75,8
+    LTEXT           "System plików",-1,7,40,75,8
+    LTEXT           "(Nazwa systemu plików)",IDC_FILESYSTEM,83,40,117,10,
+                    SS_SUNKEN
+    LTEXT           "Etykieta voluminu",-1,7,18,75,8
+    LTEXT           "(Nazwa voluminu)",IDC_VOLUMELABEL,83,18,117,10,SS_SUNKEN
+    LTEXT           "Numer seryjny",-1,7,29,75,8
+    LTEXT           "(Numer seryjny woluminu)",IDC_VOLUMESERIAL,83,29,117,10,
+                    SS_SUNKEN
+    LTEXT           "(Średnia ilość fragmentów na plik)",IDC_AVERAGEFRAGS,281,73,117,
+                    10,SS_SUNKEN
+    LTEXT           "Średnia ilość fragmentów na plik",-1,205,73,75,20
+    LTEXT           "XX.X% plików na tym dysku jest pofragmentowanych. Zalecane jest wykonanie SSSSSSS defragmentacji.",
+                    IDC_RECOMMEND,7,106,391,38,SS_SUNKEN
+    LTEXT           "Zalecenia:",-1,7,96,75,8
+END

@@ -21,7 +21,8 @@ HINSTANCE hInst = 0;
 HWND hMainWnd;                   /* Main Window */
 HWND hTabWnd;                    /* Tab Control Window */
 UINT uXIcon = 0, uYIcon = 0;     /* Icon sizes */
-HICON hDialogIcon = NULL;
+HICON hDialogIconBig = NULL;
+HICON hDialogIconSmall = NULL;
 
 void MsConfig_OnTabWndSelChange(void);
 
@@ -203,18 +204,25 @@ static
 VOID
 SetDialogIcon(HWND hDlg)
 {
-    if (hDialogIcon) DestroyIcon(hDialogIcon);
+    if (hDialogIconBig) DestroyIcon(hDialogIconBig);
+    if (hDialogIconSmall) DestroyIcon(hDialogIconSmall);
 
-    hDialogIcon = LoadImage(GetModuleHandle(NULL),
-                            MAKEINTRESOURCE(IDI_APPICON),
-                            IMAGE_ICON,
-                            uXIcon,
-                            uYIcon,
-                            0);
+    hDialogIconBig = LoadIconW(GetModuleHandle(NULL),
+                               MAKEINTRESOURCE(IDI_APPICON));
+    hDialogIconSmall = LoadImage(GetModuleHandle(NULL),
+                                 MAKEINTRESOURCE(IDI_APPICON),
+                                 IMAGE_ICON,
+                                 uXIcon,
+                                 uYIcon,
+                                 0);
+    SendMessage(hDlg,
+                WM_SETICON,
+                ICON_BIG,
+                (LPARAM)hDialogIconBig);
     SendMessage(hDlg,
                 WM_SETICON,
                 ICON_SMALL,
-                (LPARAM)hDialogIcon);
+                (LPARAM)hDialogIconSmall);
 }
 
 
@@ -292,8 +300,10 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 DestroyWindow(hFreeLdrPage);
             if (hSystemPage)
                 DestroyWindow(hSystemPage);
-            if (hDialogIcon)
-                DestroyIcon(hDialogIcon);
+            if (hDialogIconBig)
+                DestroyIcon(hDialogIconBig);
+            if (hDialogIconSmall)
+                DestroyIcon(hDialogIconSmall);
             return DefWindowProc(hDlg, message, wParam, lParam);
     }
 

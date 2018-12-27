@@ -27,7 +27,7 @@ HRESULT __stdcall Factory::QueryInterface(const IID& iid, void** ppv) {
     if (iid == IID_IUnknown || iid == IID_IClassFactory) {
         *ppv = static_cast<IClassFactory*>(this);
     } else {
-        *ppv = NULL;
+        *ppv = nullptr;
         return E_NOINTERFACE;
     }
 
@@ -89,6 +89,6 @@ HRESULT __stdcall Factory::CreateInstance(IUnknown* pUnknownOuter, const IID& ii
             break;
     }
 
-    *ppv = NULL;
+    *ppv = nullptr;
     return E_NOINTERFACE;
 }

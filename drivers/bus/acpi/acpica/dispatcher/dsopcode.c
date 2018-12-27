@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -644,8 +644,8 @@ AcpiDsEvalDataObjectOperands (
     if (!Op->Common.Value.Arg)
     {
         ACPI_ERROR ((AE_INFO,
-            "Dispatch: Missing child while executing TermArg for %X",
-            Op->Common.AmlOpcode));
+            "Missing child while evaluating opcode %4.4X, Op %p",
+            Op->Common.AmlOpcode, Op));
         return_ACPI_STATUS (AE_OK);
     }
 

@@ -4,11 +4,11 @@
 @ stdcall CompareStringA() kernel32.CompareStringA
 @ stdcall EnumLanguageGroupLocalesW() kernel32.EnumLanguageGroupLocalesW
 @ stdcall EnumSystemLanguageGroupsW() kernel32.EnumSystemLanguageGroupsW
-@ stub EnumSystemLocalesEx
+@ stdcall -version=0x600+ EnumSystemLocalesEx() kernel32.EnumSystemLocalesEx
 @ stdcall EnumUILanguagesW() kernel32.EnumUILanguagesW
 @ stdcall GetNumberFormatW() kernel32.GetNumberFormatW
 @ stdcall GetStringTypeA() kernel32.GetStringTypeA
-@ stub GetSystemDefaultLocaleName
+@ stdcall -version=0x600+ GetSystemDefaultLocaleName() kernel32.GetSystemDefaultLocaleName
 @ stdcall GetSystemDefaultUILanguage() kernel32.GetSystemDefaultUILanguage
 @ stdcall GetUserDefaultUILanguage() kernel32.GetUserDefaultUILanguage
-@ stub LCIDToLocaleName
+@ stdcall -version=0x600+ LCIDToLocaleName() kernel32.LCIDToLocaleName

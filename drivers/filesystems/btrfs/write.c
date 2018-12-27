@@ -404,10 +404,6 @@ NTSTATUS alloc_chunk(device_extension* Vcb, UINT64 flags, chunk** pc, BOOL full_
         return STATUS_INTERNAL_ERROR;
     }
 
-    max_chunk_size = min(max_chunk_size, total_size / 10); // cap at 10%
-
-    TRACE("would allocate a new chunk of %llx bytes and stripe %llx\n", max_chunk_size, max_stripe_size);
-
     if (flags & BLOCK_FLAG_DUPLICATE) {
         min_stripes = 2;
         max_stripes = 2;
@@ -451,6 +447,13 @@ NTSTATUS alloc_chunk(device_extension* Vcb, UINT64 flags, chunk** pc, BOOL full_
         type = 0;
         allowed_missing = 0;
     }
+
+    if (max_chunk_size > total_size / 10) {  // cap at 10%
+        max_chunk_size = total_size / 10;
+        max_stripe_size = max_chunk_size / min_stripes;
+    }
+
+    TRACE("would allocate a new chunk of %llx bytes and stripe %llx\n", max_chunk_size, max_stripe_size);
 
     stripes = ExAllocatePoolWithTag(PagedPool, sizeof(stripe) * max_stripes, ALLOC_TAG);
     if (!stripes) {
@@ -511,6 +514,8 @@ NTSTATUS alloc_chunk(device_extension* Vcb, UINT64 flags, chunk** pc, BOOL full_
         goto end;
     }
 
+    c->devices = NULL;
+
     cisize = sizeof(CHUNK_ITEM) + (num_stripes * sizeof(CHUNK_ITEM_STRIPE));
     c->chunk_item = ExAllocatePoolWithTag(NonPagedPool, cisize, ALLOC_TAG);
     if (!c->chunk_item) {
@@ -549,7 +554,8 @@ NTSTATUS alloc_chunk(device_extension* Vcb, UINT64 flags, chunk** pc, BOOL full_
         stripe_size -= stripe_size % stripe_length;
 
     if (stripe_size == 0) {
-        Status = STATUS_INTERNAL_ERROR;
+        ERR("not enough free space found (stripe_size == 0)\n");
+        Status = STATUS_DISK_FULL;
         goto end;
     }
 
@@ -1287,7 +1293,8 @@ static NTSTATUS prepare_raid5_write(device_extension* Vcb, chunk* c, UINT64 addr
             stripes[i].mdl = IoAllocateMdl((UINT8*)MmGetMdlVirtualAddress(master_mdl) + irp_offset, (ULONG)(stripes[i].end - stripes[i].start), FALSE, FALSE, NULL);
             if (!stripes[i].mdl) {
                 ERR("IoAllocateMdl failed\n");
-                return STATUS_INSUFFICIENT_RESOURCES;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto exit;
             }
         }
     }
@@ -1702,7 +1709,8 @@ static NTSTATUS prepare_raid6_write(device_extension* Vcb, chunk* c, UINT64 addr
             stripes[i].mdl = IoAllocateMdl((UINT8*)MmGetMdlVirtualAddress(master_mdl) + irp_offset, (ULONG)(stripes[i].end - stripes[i].start), FALSE, FALSE, NULL);
             if (!stripes[i].mdl) {
                 ERR("IoAllocateMdl failed\n");
-                return STATUS_INSUFFICIENT_RESOURCES;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto exit;
             }
         }
     }
@@ -1880,7 +1888,6 @@ NTSTATUS write_data(_In_ device_extension* Vcb, _In_ UINT64 address, _In_reads_b
     NTSTATUS Status;
     UINT32 i;
     CHUNK_ITEM_STRIPE* cis;
-    write_data_stripe* stripe;
     write_stripe* stripes = NULL;
     UINT64 total_writing = 0;
     ULONG allowed_missing, missing;
@@ -2001,6 +2008,7 @@ NTSTATUS write_data(_In_ device_extension* Vcb, _In_ UINT64 address, _In_reads_b
     }
 
     for (i = 0; i < c->chunk_item->num_stripes; i++) {
+        write_data_stripe* stripe;
         PIO_STACK_LOCATION IrpSp;
 
         stripe = ExAllocatePoolWithTag(NonPagedPool, sizeof(write_data_stripe), ALLOC_TAG);
@@ -2028,6 +2036,7 @@ NTSTATUS write_data(_In_ device_extension* Vcb, _In_ UINT64 address, _In_reads_b
 
                 if (!stripe->Irp) {
                     ERR("IoAllocateIrp failed\n");
+                    ExFreePool(stripe);
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     goto end;
                 }
@@ -2036,6 +2045,7 @@ NTSTATUS write_data(_In_ device_extension* Vcb, _In_ UINT64 address, _In_reads_b
 
                 if (!stripe->Irp) {
                     ERR("IoMakeAssociatedIrp failed\n");
+                    ExFreePool(stripe);
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     goto end;
                 }
@@ -2333,10 +2343,9 @@ void free_write_data_stripes(write_data_context* wtc) {
 
         last_mdl = stripe->mdl;
 
-#ifdef __REACTOS__
         if (stripe->Irp)
             IoFreeIrp(stripe->Irp);
-#endif
+
         le = le->Flink;
     }
 
@@ -2888,7 +2897,7 @@ BOOL insert_extent_chunk(_In_ device_extension* Vcb, _In_ fcb* fcb, _In_ chunk* 
 
     ExReleaseResourceLite(&c->changed_extents_lock);
 
-    ExReleaseResourceLite(&c->lock);
+    release_chunk_lock(c, Vcb);
 
     if (data) {
         Status = write_data_complete(Vcb, address, data, (UINT32)length, Irp, NULL, file_write, irp_offset,
@@ -2949,10 +2958,10 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
     if (c->reloc || c->readonly || c->chunk_item->type != Vcb->data_flags)
         return FALSE;
 
-    ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+    acquire_chunk_lock(c, Vcb);
 
     if (length > c->chunk_item->size - c->used) {
-        ExReleaseResourceLite(&c->lock);
+        release_chunk_lock(c, Vcb);
         return FALSE;
     }
 
@@ -2961,7 +2970,7 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
 
         if (!NT_SUCCESS(Status)) {
             ERR("load_cache_chunk returned %08x\n", Status);
-            ExReleaseResourceLite(&c->lock);
+            release_chunk_lock(c, Vcb);
             return FALSE;
         }
     }
@@ -2978,7 +2987,7 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
             if (success)
                 *written += newlen;
             else
-                ExReleaseResourceLite(&c->lock);
+                release_chunk_lock(c, Vcb);
 
             return success;
         } else if (s->address > ed2->address + ed2->size)
@@ -2987,7 +2996,7 @@ static BOOL try_extend_data(device_extension* Vcb, fcb* fcb, UINT64 start_data, 
         le = le->Flink;
     }
 
-    ExReleaseResourceLite(&c->lock);
+    release_chunk_lock(c, Vcb);
 
     return FALSE;
 }
@@ -3017,7 +3026,7 @@ static NTSTATUS insert_chunk_fragmented(fcb* fcb, UINT64 start, UINT64 length, U
         c = CONTAINING_RECORD(le, chunk, list_entry);
 
         if (!c->readonly && !c->reloc) {
-            ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+            acquire_chunk_lock(c, fcb->Vcb);
 
             if (c->chunk_item->type == flags) {
                 while (!IsListEmpty(&c->space_size) && length > 0) {
@@ -3029,12 +3038,12 @@ static NTSTATUS insert_chunk_fragmented(fcb* fcb, UINT64 start, UINT64 length, U
                         length -= extlen;
                         if (data) data += extlen;
 
-                        ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+                        acquire_chunk_lock(c, fcb->Vcb);
                     }
                 }
             }
 
-            ExReleaseResourceLite(&c->lock);
+            release_chunk_lock(c, fcb->Vcb);
 
             if (length == 0)
                 break;
@@ -3067,7 +3076,7 @@ static NTSTATUS insert_prealloc_extent(fcb* fcb, UINT64 start, UINT64 length, LI
             c = CONTAINING_RECORD(le, chunk, list_entry);
 
             if (!c->readonly && !c->reloc) {
-                ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+                acquire_chunk_lock(c, fcb->Vcb);
 
                 if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= extlen) {
                     if (insert_extent_chunk(fcb->Vcb, fcb, c, start, extlen, !page_file, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, extlen, FALSE, 0)) {
@@ -3076,7 +3085,7 @@ static NTSTATUS insert_prealloc_extent(fcb* fcb, UINT64 start, UINT64 length, LI
                     }
                 }
 
-                ExReleaseResourceLite(&c->lock);
+                release_chunk_lock(c, fcb->Vcb);
             }
 
             le = le->Flink;
@@ -3095,14 +3104,14 @@ static NTSTATUS insert_prealloc_extent(fcb* fcb, UINT64 start, UINT64 length, LI
             goto end;
         }
 
-        ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+        acquire_chunk_lock(c, fcb->Vcb);
 
         if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= extlen) {
             if (insert_extent_chunk(fcb->Vcb, fcb, c, start, extlen, !page_file, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, extlen, FALSE, 0))
                 goto cont;
         }
 
-        ExReleaseResourceLite(&c->lock);
+        release_chunk_lock(c, fcb->Vcb);
 
         Status = insert_chunk_fragmented(fcb, start, length, NULL, TRUE, rollback);
         if (!NT_SUCCESS(Status))
@@ -3159,7 +3168,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
             c = CONTAINING_RECORD(le, chunk, list_entry);
 
             if (!c->readonly && !c->reloc) {
-                ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+                acquire_chunk_lock(c, Vcb);
 
                 if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= newlen &&
                     insert_extent_chunk(Vcb, fcb, c, start_data, newlen, FALSE, data, Irp, rollback, BTRFS_COMPRESSION_NONE, newlen, file_write, irp_offset)) {
@@ -3177,7 +3186,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
                         break;
                     }
                 } else
-                    ExReleaseResourceLite(&c->lock);
+                    release_chunk_lock(c, Vcb);
             }
 
             le = le->Flink;
@@ -3201,7 +3210,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
         }
 
         if (c) {
-            ExAcquireResourceExclusiveLite(&c->lock, TRUE);
+            acquire_chunk_lock(c, Vcb);
 
             if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= newlen &&
                 insert_extent_chunk(Vcb, fcb, c, start_data, newlen, FALSE, data, Irp, rollback, BTRFS_COMPRESSION_NONE, newlen, file_write, irp_offset)) {
@@ -3217,7 +3226,7 @@ static NTSTATUS insert_extent(device_extension* Vcb, fcb* fcb, UINT64 start_data
                     data = &((UINT8*)data)[newlen];
                 }
             } else
-                ExReleaseResourceLite(&c->lock);
+                release_chunk_lock(c, Vcb);
         }
 
         if (!done) {
@@ -3642,6 +3651,8 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, UINT64 start_data,
                                      Irp, NULL, file_write, irp_offset + ext->offset - start_data, priority);
         if (!NT_SUCCESS(Status)) {
             ERR("write_data_complete returned %08x\n", Status);
+            ExFreePool(newext1);
+            ExFreePool(newext2);
             return Status;
         }
 
@@ -3737,6 +3748,8 @@ static NTSTATUS do_write_file_prealloc(fcb* fcb, extent* ext, UINT64 start_data,
         Status = write_data_complete(fcb->Vcb, ed2->address + ned2->offset, data, (UINT32)ned2->num_bytes, Irp, NULL, file_write, irp_offset, priority);
         if (!NT_SUCCESS(Status)) {
             ERR("write_data_complete returned %08x\n", Status);
+            ExFreePool(newext1);
+            ExFreePool(newext2);
             return Status;
         }
 

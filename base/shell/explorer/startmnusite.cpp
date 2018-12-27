@@ -383,7 +383,7 @@ public:
     END_COM_MAP()
 };
 
-HRESULT CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv)
+HRESULT CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv)
 {
     return ShellObjectCreatorInit<CStartMenuSite>(Tray, riid, ppv);
 }

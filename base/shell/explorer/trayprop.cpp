@@ -245,6 +245,23 @@ public:
     }
 };
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hExplorerInstance, MAKEINTRESOURCEW(IDI_STARTMENU));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
+
 VOID
 DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 {
@@ -261,14 +278,15 @@ DisplayTrayProperties(IN HWND hwndOwner, IN HWND hwndTaskbar)
 
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
-    psh.hIcon = NULL;
+    psh.pszIcon = MAKEINTRESOURCEW(IDI_STARTMENU);
     psh.pszCaption = caption.GetString();
     psh.nPages = _countof(hpsp);
     psh.nStartPage = 0;
     psh.phpage = hpsp;
+    psh.pfnCallback = PropSheetProc;
 
     PropertySheet(&psh);
 }

@@ -419,11 +419,11 @@ BEGIN
     GROUPBOX "Görevler", -1, 7, 10, 249, 45
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
     AUTORADIOBUTTON "&Dizinlerde Ortak Görevleri Göster", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "&ReactOS Kökleşik Dizinleri Kullan", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10 | WS_GROUP
+    AUTORADIOBUTTON "&ReactOS Kökleşik Dizinleri Kullan", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "Dizinlere Göz At", -1, 7, 60, 249, 45, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "&Tüm Dizinleri Aynı Pencerede Aç", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
-    AUTORADIOBUTTON "T&üm Dizinleri Kendi Penceresinde Aç", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10 | WS_GROUP
+    AUTORADIOBUTTON "T&üm Dizinleri Kendi Penceresinde Aç", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "Aşağıdaki Gibi Ögelere Tıkla", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Bir Öge Açmak İçin Tek Tıkla (Seçmek İçin Üzerine Git)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
@@ -798,6 +798,11 @@ BEGIN
     IDS_RESTART_PROMPT "Dizgeyi yeniden başlatmak ister misiniz?"
     IDS_SHUTDOWN_TITLE "Bilgisayarı Kapat"
     IDS_SHUTDOWN_PROMPT "Bilgisayarı kapatmak ister misiniz?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Kütük Çalıştır iletişim kutusu görüntülenemiyor (iç yanlışlık)."

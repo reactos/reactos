@@ -35,6 +35,142 @@ RTL_RESOURCE StartListLock;
 
 /* FUNCTIONS *****************************************************************/
 
+DWORD
+GetNextJobTimeout(VOID)
+{
+    FILETIME FileTime;
+    SYSTEMTIME SystemTime;
+    ULARGE_INTEGER CurrentTime, Timeout;
+    PJOB pNextJob;
+
+    if (IsListEmpty(&StartListHead))
+    {
+        TRACE("No job in list! Wait until next update.\n");
+        return INFINITE;
+    }
+
+    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
+
+    FileTime.dwLowDateTime = pNextJob->StartTime.u.LowPart;
+    FileTime.dwHighDateTime = pNextJob->StartTime.u.HighPart;
+    FileTimeToSystemTime(&FileTime, &SystemTime);
+
+    TRACE("Start next job (%lu) at %02hu:%02hu %02hu.%02hu.%hu\n",
+          pNextJob->JobId, SystemTime.wHour, SystemTime.wMinute,
+          SystemTime.wDay, SystemTime.wMonth, SystemTime.wYear);
+
+    GetLocalTime(&SystemTime);
+    SystemTimeToFileTime(&SystemTime, &FileTime);
+
+    CurrentTime.u.LowPart = FileTime.dwLowDateTime;
+    CurrentTime.u.HighPart = FileTime.dwHighDateTime;
+
+    if (CurrentTime.QuadPart >= pNextJob->StartTime.QuadPart)
+    {
+        TRACE("Next event has already gone by!\n");
+        return 0;
+    }
+
+    Timeout.QuadPart = (pNextJob->StartTime.QuadPart - CurrentTime.QuadPart) / 10000;
+    if (Timeout.u.HighPart != 0)
+    {
+        TRACE("Event happens too far in the future!\n");
+        return INFINITE;
+    }
+
+    TRACE("Timeout: %lu\n", Timeout.u.LowPart);
+    return Timeout.u.LowPart;
+}
+
+
+static
+VOID
+ReScheduleJob(
+    PJOB pJob)
+{
+    /* Remove the job from the start list */
+    RemoveEntryList(&pJob->StartEntry);
+
+    /* Non-periodical job, remove it */
+    if ((pJob->Flags & JOB_RUN_PERIODICALLY) == 0)
+    {
+        /* Remove the job from the registry */
+        DeleteJob(pJob);
+
+        /* Remove the job from the job list */
+        RemoveEntryList(&pJob->JobEntry);
+        dwJobCount--;
+
+        /* Free the job object */
+        HeapFree(GetProcessHeap(), 0, pJob);
+        return;
+    }
+
+    /* Calculate the next start time */
+    CalculateNextStartTime(pJob);
+
+    /* Insert the job into the start list again */
+    InsertJobIntoStartList(&StartListHead, pJob);
+#if 0
+    DumpStartList(&StartListHead);
+#endif
+}
+
+
+VOID
+RunNextJob(VOID)
+{
+    PROCESS_INFORMATION ProcessInformation;
+    STARTUPINFOW StartupInfo;
+    BOOL bRet;
+    PJOB pNextJob;
+
+    if (IsListEmpty(&StartListHead))
+    {
+        ERR("No job in list!\n");
+        return;
+    }
+
+    pNextJob = CONTAINING_RECORD((&StartListHead)->Flink, JOB, StartEntry);
+
+    TRACE("Run job %ld: %S\n", pNextJob->JobId, pNextJob->Command);
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    StartupInfo.lpTitle = pNextJob->Command;
+    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+    StartupInfo.wShowWindow = SW_SHOWDEFAULT;
+
+    if ((pNextJob->Flags & JOB_NONINTERACTIVE) == 0)
+    {
+        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+    }
+
+    bRet = CreateProcessW(NULL,
+                          pNextJob->Command,
+                          NULL,
+                          NULL,
+                          FALSE,
+                          CREATE_NEW_CONSOLE,
+                          NULL,
+                          NULL,
+                          &StartupInfo,
+                          &ProcessInformation);
+    if (bRet == FALSE)
+    {
+        ERR("CreateProcessW() failed (Error %lu)\n", GetLastError());
+    }
+    else
+    {
+        CloseHandle(ProcessInformation.hThread);
+        CloseHandle(ProcessInformation.hProcess);
+    }
+
+    ReScheduleJob(pNextJob);
+}
+
+
 static
 VOID
 GetJobName(
@@ -276,8 +412,6 @@ LoadJobs(VOID)
                 pJob->JobId = dwNextJobId++;
                 dwJobCount++;
 
-                // Cancel the start timer
-
                 /* Append the new job to the job list */
                 InsertTailList(&JobListHead, &pJob->JobEntry);
 
@@ -289,8 +423,6 @@ LoadJobs(VOID)
 #if 0
                 DumpStartList(&StartListHead);
 #endif
-
-                // Update the start timer
 
                 /* Release the job list lock */
                 RtlReleaseResource(&JobListLock);
@@ -333,7 +465,8 @@ DaysOfMonth(
 
 
 VOID
-CalculateNextStartTime(PJOB pJob)
+CalculateNextStartTime(
+    _In_ PJOB pJob)
 {
     SYSTEMTIME StartTime;
     FILETIME FileTime;
@@ -351,26 +484,37 @@ CalculateNextStartTime(PJOB pJob)
     StartTime.wHour = (WORD)(pJob->JobTime / 3600000);
     StartTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
 
-    /* Start the job tomorrow */
-    if (Now > pJob->JobTime)
+    if (pJob->DaysOfMonth != 0)
     {
-        if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
+         FIXME("Support DaysOfMonth!\n");
+    }
+    else if (pJob->DaysOfWeek != 0)
+    {
+         FIXME("Support DaysOfWeek!\n");
+    }
+    else
+    {
+        /* Start the job tomorrow */
+        if (Now > pJob->JobTime)
         {
-            if (StartTime.wMonth == 12)
+            if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth = 1;
-                StartTime.wYear++;
+                if (StartTime.wMonth == 12)
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth = 1;
+                    StartTime.wYear++;
+                }
+                else
+                {
+                    StartTime.wDay = 1;
+                    StartTime.wMonth++;
+                }
             }
             else
             {
-                StartTime.wDay = 1;
-                StartTime.wMonth++;
+                StartTime.wDay++;
             }
-        }
-        else
-        {
-            StartTime.wDay++;
         }
     }
 

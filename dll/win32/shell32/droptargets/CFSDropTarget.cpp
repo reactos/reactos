@@ -206,9 +206,26 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
 
     /* FIXME: We need to support shell extensions here */
 
+    /* We shouldn't use the site window here because the menu should work even when we don't have a site */
+    HWND hwndDummy = CreateWindowEx(0,
+                              WC_STATIC,
+                              NULL,
+                              WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                              pt.x,
+                              pt.y,
+                              1,
+                              1,
+                              NULL,
+                              NULL,
+                              NULL,
+                              NULL);
+
     UINT uCommand = TrackPopupMenu(hpopupmenu,
                                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_NONOTIFY,
-                                   pt.x, pt.y, 0, m_hwndSite, NULL);
+                                   pt.x, pt.y, 0, hwndDummy, NULL);
+
+    DestroyWindow(hwndDummy);
+
     if (uCommand == 0)
         return S_FALSE;
     else if (uCommand == IDM_COPYHERE)

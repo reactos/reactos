@@ -42,22 +42,22 @@
 #include <shlwapi.h>
 #include <uxtheme.h>
 
-static UINT64 convtypes2[] = { BLOCK_FLAG_SINGLE, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1, BLOCK_FLAG_RAID5, BLOCK_FLAG_RAID6, BLOCK_FLAG_RAID10 };
+static uint64_t convtypes2[] = { BLOCK_FLAG_SINGLE, BLOCK_FLAG_DUPLICATE, BLOCK_FLAG_RAID0, BLOCK_FLAG_RAID1, BLOCK_FLAG_RAID5, BLOCK_FLAG_RAID6, BLOCK_FLAG_RAID10 };
 
-static WCHAR hex_digit(UINT8 u) {
+static WCHAR hex_digit(uint8_t u) {
     if (u >= 0xa && u <= 0xf)
-        return u - 0xa + 'a';
+        return (uint8_t)(u - 0xa + 'a');
     else
-        return u + '0';
+        return (uint8_t)(u + '0');
 }
 
 static void serialize(void* data, ULONG len, WCHAR* s) {
-    UINT8* d;
+    uint8_t* d;
 
-    d = (UINT8*)data;
+    d = (uint8_t*)data;
 
-    while (TRUE) {
-        *s = hex_digit(*d >> 4); s++;
+    while (true) {
+        *s = hex_digit((uint8_t)(*d >> 4)); s++;
         *s = hex_digit(*d & 0xf); s++;
 
         d++;
@@ -71,15 +71,18 @@ static void serialize(void* data, ULONG len, WCHAR* s) {
 }
 
 void BtrfsBalance::StartBalance(HWND hwndDlg) {
-    WCHAR t[MAX_PATH + 600], u[600];
+    wstring t;
+    WCHAR modfn[MAX_PATH], u[600];
     SHELLEXECUTEINFOW sei;
     btrfs_start_balance bsb;
 
-    t[0] = '"';
-    GetModuleFileNameW(module, t + 1, (sizeof(t) / sizeof(WCHAR)) - 1);
-    wcscat(t, L"\",StartBalance ");
-    wcscat(t, fn);
-    wcscat(t, L" ");
+    GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
+
+#ifndef __REACTOS__
+    t = L"\""s + modfn + L"\",StartBalance "s + fn + L" "s;
+#else
+    t = wstring(L"\"") + modfn + wstring(L"\",StartBalance ") + fn + wstring(L" ");
+#endif
 
     RtlCopyMemory(&bsb.opts[0], &data_opts, sizeof(btrfs_balance_opts));
     RtlCopyMemory(&bsb.opts[1], &metadata_opts, sizeof(btrfs_balance_opts));
@@ -101,7 +104,8 @@ void BtrfsBalance::StartBalance(HWND hwndDlg) {
         bsb.opts[2].flags &= ~BTRFS_BALANCE_OPTS_ENABLED;
 
     serialize(&bsb, sizeof(btrfs_start_balance), u);
-    wcscat(t, u);
+
+    t += u;
 
     RtlZeroMemory(&sei, sizeof(sei));
 
@@ -109,44 +113,46 @@ void BtrfsBalance::StartBalance(HWND hwndDlg) {
     sei.hwnd = hwndDlg;
     sei.lpVerb = L"runas";
     sei.lpFile = L"rundll32.exe";
-    sei.lpParameters = t;
+    sei.lpParameters = t.c_str();
     sei.nShow = SW_SHOW;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 
-    if (!ShellExecuteExW(&sei)) {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+    if (!ShellExecuteExW(&sei))
+        throw last_error(GetLastError());
 
-    cancelling = FALSE;
-    removing = FALSE;
-    shrinking = FALSE;
+    cancelling = false;
+    removing = false;
+    shrinking = false;
     balance_status = BTRFS_BALANCE_RUNNING;
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), TRUE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), TRUE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), TRUE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), FALSE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), FALSE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), FALSE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), data_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), metadata_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), system_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), data_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), metadata_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), system_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
 
-    EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), false);
 
     WaitForSingleObject(sei.hProcess, INFINITE);
     CloseHandle(sei.hProcess);
 }
 
 void BtrfsBalance::PauseBalance(HWND hwndDlg) {
-    WCHAR t[MAX_PATH + 100];
+    WCHAR modfn[MAX_PATH];
+    wstring t;
     SHELLEXECUTEINFOW sei;
 
-    t[0] = '"';
-    GetModuleFileNameW(module, t + 1, (sizeof(t) / sizeof(WCHAR)) - 1);
-    wcscat(t, L"\",PauseBalance ");
-    wcscat(t, fn);
+    GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
+
+#ifndef __REACTOS__
+    t = L"\""s + modfn + L"\",PauseBalance " + fn;
+#else
+    t = wstring(L"\"") + modfn + wstring(L"\",PauseBalance ") + fn;
+#endif
 
     RtlZeroMemory(&sei, sizeof(sei));
 
@@ -154,27 +160,29 @@ void BtrfsBalance::PauseBalance(HWND hwndDlg) {
     sei.hwnd = hwndDlg;
     sei.lpVerb = L"runas";
     sei.lpFile = L"rundll32.exe";
-    sei.lpParameters = t;
+    sei.lpParameters = t.c_str();
     sei.nShow = SW_SHOW;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 
-    if (!ShellExecuteExW(&sei)) {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+    if (!ShellExecuteExW(&sei))
+        throw last_error(GetLastError());
 
     WaitForSingleObject(sei.hProcess, INFINITE);
     CloseHandle(sei.hProcess);
 }
 
 void BtrfsBalance::StopBalance(HWND hwndDlg) {
-    WCHAR t[MAX_PATH + 100];
+    WCHAR modfn[MAX_PATH];
+    wstring t;
     SHELLEXECUTEINFOW sei;
 
-    t[0] = '"';
-    GetModuleFileNameW(module, t + 1, (sizeof(t) / sizeof(WCHAR)) - 1);
-    wcscat(t, L"\",StopBalance ");
-    wcscat(t, fn);
+    GetModuleFileNameW(module, modfn, sizeof(modfn) / sizeof(WCHAR));
+
+#ifndef __REACTOS__
+    t = L"\""s + modfn + L"\",StopBalance " + fn;
+#else
+    t = wstring(L"\"") + modfn + wstring(L"\",StopBalance ") + fn;
+#endif
 
     RtlZeroMemory(&sei, sizeof(sei));
 
@@ -182,44 +190,37 @@ void BtrfsBalance::StopBalance(HWND hwndDlg) {
     sei.hwnd = hwndDlg;
     sei.lpVerb = L"runas";
     sei.lpFile = L"rundll32.exe";
-    sei.lpParameters = t;
+    sei.lpParameters = t.c_str();
     sei.nShow = SW_SHOW;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 
-    if (!ShellExecuteExW(&sei)) {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+    if (!ShellExecuteExW(&sei))
+        throw last_error(GetLastError());
 
-    cancelling = TRUE;
+    cancelling = true;
 
     WaitForSingleObject(sei.hProcess, INFINITE);
     CloseHandle(sei.hProcess);
 }
 
-void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
-    HANDLE h;
-    BOOL balancing = FALSE;
-    WCHAR s[255], t[255];
+void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, bool first) {
+    bool balancing = false;
+    wstring s, t;
 
-    h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
+    {
+        win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_BALANCE, NULL, 0, &bqb, sizeof(btrfs_query_balance));
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
 
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_BALANCE, nullptr, 0, &bqb, sizeof(btrfs_query_balance));
 
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
     }
 
     if (cancelling)
@@ -231,13 +232,13 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
         if (first || balance_status != BTRFS_BALANCE_STOPPED) {
             int resid;
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), false);
             SendMessageW(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), PBM_SETSTATE, PBST_NORMAL, 0);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), TRUE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), TRUE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), TRUE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), true);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), true);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), true);
 
             if (balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED)) {
                 CheckDlgButton(hwndDlg, IDC_DATA, BST_UNCHECKED);
@@ -247,9 +248,9 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
                 SendMessage(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), PBM_SETPOS, 0, 0);
             }
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED ? TRUE : FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ? true : false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED ? true : false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED ? true : false);
 
             if (bqb.status & BTRFS_BALANCE_ERROR) {
                 if (removing)
@@ -259,15 +260,12 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
                 else
                     resid = IDS_BALANCE_FAILED;
 
-                if (!LoadStringW(module, resid, s, sizeof(s) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    return;
-                }
+                if (!load_string(module, resid, s))
+                    throw last_error(GetLastError());
 
-                if (StringCchPrintfW(t, sizeof(t) / sizeof(WCHAR), s, bqb.error, format_ntstatus(bqb.error).c_str()) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                    return;
+                wstring_sprintf(t, s, bqb.error, format_ntstatus(bqb.error).c_str());
 
-                SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, t);
+                SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, t.c_str());
             } else {
                 if (cancelling)
                     resid = removing ? IDS_BALANCE_CANCELLED_REMOVAL : (shrinking ? IDS_BALANCE_CANCELLED_SHRINK : IDS_BALANCE_CANCELLED);
@@ -276,41 +274,39 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
                 else
                     resid = IDS_NO_BALANCE;
 
-                if (!LoadStringW(module, resid, s, sizeof(s) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    return;
-                }
+                if (!load_string(module, resid, s))
+                    throw last_error(GetLastError());
 
-                SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, s);
+                SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, s.c_str());
             }
 
             EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
-                         IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? TRUE: FALSE);
+                         IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? true: false);
 
             balance_status = bqb.status;
-            cancelling = FALSE;
+            cancelling = false;
         }
 
         return;
     }
 
     if (first || !(balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED))) {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), TRUE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), TRUE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), TRUE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), true);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), true);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), true);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DATA), false);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA), false);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM), false);
 
         CheckDlgButton(hwndDlg, IDC_DATA, bqb.data_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hwndDlg, IDC_METADATA, bqb.metadata_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hwndDlg, IDC_SYSTEM, bqb.system_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? BST_CHECKED : BST_UNCHECKED);
 
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), bqb.data_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), bqb.metadata_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), bqb.system_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? TRUE : FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), bqb.data_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), bqb.metadata_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), bqb.system_opts.flags & BTRFS_BALANCE_OPTS_ENABLED ? true : false);
 
-        EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), false);
     }
 
     SendMessageW(GetDlgItem(hwndDlg, IDC_BALANCE_PROGRESS), PBM_SETRANGE32, 0, (LPARAM)bqb.total_chunks);
@@ -324,44 +320,35 @@ void BtrfsBalance::RefreshBalanceDlg(HWND hwndDlg, BOOL first) {
     balance_status = bqb.status;
 
     if (bqb.status & BTRFS_BALANCE_REMOVAL) {
-        if (!LoadStringW(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED_REMOVAL : IDS_BALANCE_RUNNING_REMOVAL, s, sizeof(s) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            return;
-        }
+        if (!load_string(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED_REMOVAL : IDS_BALANCE_RUNNING_REMOVAL, s))
+            throw last_error(GetLastError());
 
-        if (StringCchPrintfW(t, sizeof(t) / sizeof(WCHAR), s, bqb.data_opts.devid, bqb.total_chunks - bqb.chunks_left,
-            bqb.total_chunks, (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            return;
+        wstring_sprintf(t, s, bqb.data_opts.devid, bqb.total_chunks - bqb.chunks_left, bqb.total_chunks,
+                        (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks);
 
-        removing = TRUE;
-        shrinking = FALSE;
+        removing = true;
+        shrinking = false;
     } else if (bqb.status & BTRFS_BALANCE_SHRINKING) {
-        if (!LoadStringW(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED_SHRINK : IDS_BALANCE_RUNNING_SHRINK, s, sizeof(s) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            return;
-        }
+        if (!load_string(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED_SHRINK : IDS_BALANCE_RUNNING_SHRINK, s))
+            throw last_error(GetLastError());
 
-        if (StringCchPrintfW(t, sizeof(t) / sizeof(WCHAR), s, bqb.data_opts.devid, bqb.total_chunks - bqb.chunks_left,
-            bqb.total_chunks, (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            return;
+        wstring_sprintf(t, s, bqb.data_opts.devid, bqb.total_chunks - bqb.chunks_left, bqb.total_chunks,
+                        (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks);
 
-        removing = FALSE;
-        shrinking = TRUE;
+        removing = false;
+        shrinking = true;
     } else {
-        if (!LoadStringW(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED : IDS_BALANCE_RUNNING, s, sizeof(s) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            return;
-        }
+        if (!load_string(module, balance_status & BTRFS_BALANCE_PAUSED ? IDS_BALANCE_PAUSED : IDS_BALANCE_RUNNING, s))
+            throw last_error(GetLastError());
 
-        if (StringCchPrintfW(t, sizeof(t) / sizeof(WCHAR), s, bqb.total_chunks - bqb.chunks_left,
-            bqb.total_chunks, (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            return;
+        wstring_sprintf(t, s, bqb.total_chunks - bqb.chunks_left, bqb.total_chunks,
+                        (float)(bqb.total_chunks - bqb.chunks_left) * 100.0f / (float)bqb.total_chunks);
 
-        removing = FALSE;
-        shrinking = FALSE;
+        removing = false;
+        shrinking = false;
     }
 
-    SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, t);
+    SetDlgItemTextW(hwndDlg, IDC_BALANCE_STATUS, t.c_str());
 }
 
 void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
@@ -411,7 +398,7 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
             btrfs_device* bd = devices;
             int i = 0;
 
-            while (TRUE) {
+            while (true) {
                 if (i == sel) {
                     opts->devid = bd->dev_id;
                     break;
@@ -420,7 +407,7 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
                 i++;
 
                 if (bd->next_entry > 0)
-                    bd = (btrfs_device*)((UINT8*)bd + bd->next_entry);
+                    bd = (btrfs_device*)((uint8_t*)bd + bd->next_entry);
                 else
                     break;
             }
@@ -441,10 +428,8 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_DRANGE_END), s, sizeof(s) / sizeof(WCHAR));
         opts->drange_end = _wtoi64(s);
 
-        if (opts->drange_end < opts->drange_start) {
-            ShowStringError(hwndDlg, IDS_DRANGE_END_BEFORE_START);
-            return;
-        }
+        if (opts->drange_end < opts->drange_start)
+            throw string_error(IDS_DRANGE_END_BEFORE_START);
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_VRANGE) == BST_CHECKED) {
@@ -458,10 +443,8 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_VRANGE_END), s, sizeof(s) / sizeof(WCHAR));
         opts->vrange_end = _wtoi64(s);
 
-        if (opts->vrange_end < opts->vrange_start) {
-            ShowStringError(hwndDlg, IDS_VRANGE_END_BEFORE_START);
-            return;
-        }
+        if (opts->vrange_end < opts->vrange_start)
+            throw string_error(IDS_VRANGE_END_BEFORE_START);
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_LIMIT) == BST_CHECKED) {
@@ -475,10 +458,8 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_LIMIT_END), s, sizeof(s) / sizeof(WCHAR));
         opts->limit_end = _wtoi64(s);
 
-        if (opts->limit_end < opts->limit_start) {
-            ShowStringError(hwndDlg, IDS_LIMIT_END_BEFORE_START);
-            return;
-        }
+        if (opts->limit_end < opts->limit_start)
+            throw string_error(IDS_LIMIT_END_BEFORE_START);
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_STRIPES) == BST_CHECKED) {
@@ -487,15 +468,13 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         opts->flags |= BTRFS_BALANCE_OPTS_STRIPES;
 
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_STRIPES_START), s, sizeof(s) / sizeof(WCHAR));
-        opts->stripes_start = _wtoi(s);
+        opts->stripes_start = (uint8_t)_wtoi(s);
 
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_STRIPES_END), s, sizeof(s) / sizeof(WCHAR));
-        opts->stripes_end = _wtoi(s);
+        opts->stripes_end = (uint8_t)_wtoi(s);
 
-        if (opts->stripes_end < opts->stripes_start) {
-            ShowStringError(hwndDlg, IDS_STRIPES_END_BEFORE_START);
-            return;
-        }
+        if (opts->stripes_end < opts->stripes_start)
+            throw string_error(IDS_STRIPES_END_BEFORE_START);
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_USAGE) == BST_CHECKED) {
@@ -504,15 +483,13 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
         opts->flags |= BTRFS_BALANCE_OPTS_USAGE;
 
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_USAGE_START), s, sizeof(s) / sizeof(WCHAR));
-        opts->usage_start = _wtoi(s);
+        opts->usage_start = (uint8_t)_wtoi(s);
 
         GetWindowTextW(GetDlgItem(hwndDlg, IDC_USAGE_END), s, sizeof(s) / sizeof(WCHAR));
-        opts->usage_end = _wtoi(s);
+        opts->usage_end = (uint8_t)_wtoi(s);
 
-        if (opts->usage_end < opts->usage_start) {
-            ShowStringError(hwndDlg, IDS_USAGE_END_BEFORE_START);
-            return;
-        }
+        if (opts->usage_end < opts->usage_start)
+            throw string_error(IDS_USAGE_END_BEFORE_START);
     }
 
     if (IsDlgButtonChecked(hwndDlg, IDC_CONVERT) == BST_CHECKED) {
@@ -535,331 +512,323 @@ void BtrfsBalance::SaveBalanceOpts(HWND hwndDlg) {
 }
 
 INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_INITDIALOG:
-        {
-            HWND devcb, convcb;
-            btrfs_device* bd;
-            btrfs_balance_opts* opts;
-            static int convtypes[] = { IDS_SINGLE2, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID5, IDS_RAID6, IDS_RAID10, 0 };
-            int i, num_devices = 0, num_writeable_devices = 0;
-            WCHAR s[255], u[255];
-            BOOL balance_started = balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED);
+    try {
+        switch (uMsg) {
+            case WM_INITDIALOG:
+            {
+                HWND devcb, convcb;
+                btrfs_device* bd;
+                btrfs_balance_opts* opts;
+                static int convtypes[] = { IDS_SINGLE2, IDS_DUP, IDS_RAID0, IDS_RAID1, IDS_RAID5, IDS_RAID6, IDS_RAID10, 0 };
+                int i, num_devices = 0, num_writeable_devices = 0;
+                wstring s, u;
+                bool balance_started = balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED);
 
-            switch (opts_type) {
-                case 1:
-                    opts = balance_started ? &bqb.data_opts : &data_opts;
-                break;
+                switch (opts_type) {
+                    case 1:
+                        opts = balance_started ? &bqb.data_opts : &data_opts;
+                    break;
 
-                case 2:
-                    opts = balance_started ? &bqb.metadata_opts : &metadata_opts;
-                break;
+                    case 2:
+                        opts = balance_started ? &bqb.metadata_opts : &metadata_opts;
+                    break;
 
-                case 3:
-                    opts = balance_started ? &bqb.system_opts : &system_opts;
-                break;
+                    case 3:
+                        opts = balance_started ? &bqb.system_opts : &system_opts;
+                    break;
 
-                default:
-                    return TRUE;
-            }
+                    default:
+                        return true;
+                }
 
-            EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
+                EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
 
-            devcb = GetDlgItem(hwndDlg, IDC_DEVID_COMBO);
+                devcb = GetDlgItem(hwndDlg, IDC_DEVID_COMBO);
 
-            if (!LoadStringW(module, IDS_DEVID_LIST, u, sizeof(u) / sizeof(WCHAR))) {
-                ShowError(hwndDlg, GetLastError());
-                return TRUE;
-            }
+                if (!load_string(module, IDS_DEVID_LIST, u))
+                    throw last_error(GetLastError());
 
-            bd = devices;
-            while (TRUE) {
-                WCHAR t[255], v[255];
+                bd = devices;
+                while (true) {
+                    wstring t, v;
 
-                if (bd->device_number == 0xffffffff) {
-                    memcpy(s, bd->name, bd->namelen);
-                    s[bd->namelen / sizeof(WCHAR)] = 0;
-                } else if (bd->partition_number == 0) {
-                    if (!LoadStringW(module, IDS_DISK_NUM, v, sizeof(v) / sizeof(WCHAR))) {
-                        ShowError(hwndDlg, GetLastError());
-                        return TRUE;
+                    if (bd->device_number == 0xffffffff)
+                        s = wstring(bd->name, bd->namelen);
+                    else if (bd->partition_number == 0) {
+                        if (!load_string(module, IDS_DISK_NUM, v))
+                            throw last_error(GetLastError());
+
+                        wstring_sprintf(s, v, bd->device_number);
+                    } else {
+                        if (!load_string(module, IDS_DISK_PART_NUM, v))
+                            throw last_error(GetLastError());
+
+                        wstring_sprintf(s, v, bd->device_number, bd->partition_number);
                     }
 
-                    if (StringCchPrintfW(s, sizeof(s) / sizeof(WCHAR), v, bd->device_number) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        break;
-                } else {
-                    if (!LoadStringW(module, IDS_DISK_PART_NUM, v, sizeof(v) / sizeof(WCHAR))) {
-                        ShowError(hwndDlg, GetLastError());
-                        return TRUE;
-                    }
+                    wstring_sprintf(t, u, bd->dev_id, s.c_str());
 
-                    if (StringCchPrintfW(s, sizeof(s) / sizeof(WCHAR), v, bd->device_number, bd->partition_number) == STRSAFE_E_INSUFFICIENT_BUFFER)
+                    SendMessage(devcb, CB_ADDSTRING, 0, (LPARAM)t.c_str());
+
+                    if (opts->devid == bd->dev_id)
+                        SendMessage(devcb, CB_SETCURSEL, num_devices, 0);
+
+                    num_devices++;
+
+                    if (!bd->readonly)
+                        num_writeable_devices++;
+
+                    if (bd->next_entry > 0)
+                        bd = (btrfs_device*)((uint8_t*)bd + bd->next_entry);
+                    else
                         break;
                 }
 
-                if (StringCchPrintfW(t, sizeof(t) / sizeof(WCHAR), u, bd->dev_id, s) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                    break;
+                convcb = GetDlgItem(hwndDlg, IDC_CONVERT_COMBO);
 
-                SendMessage(devcb, CB_ADDSTRING, NULL, (LPARAM)t);
+                if (num_writeable_devices == 0)
+                    num_writeable_devices = num_devices;
 
-                if (opts->devid == bd->dev_id)
-                    SendMessage(devcb, CB_SETCURSEL, num_devices, 0);
+                i = 0;
+                while (convtypes[i] != 0) {
+                    if (!load_string(module, convtypes[i], s))
+                        throw last_error(GetLastError());
 
-                num_devices++;
+                    SendMessage(convcb, CB_ADDSTRING, 0, (LPARAM)s.c_str());
 
-                if (!bd->readonly)
-                    num_writeable_devices++;
+                    if (opts->convert == convtypes2[i])
+                        SendMessage(convcb, CB_SETCURSEL, i, 0);
 
-                if (bd->next_entry > 0)
-                    bd = (btrfs_device*)((UINT8*)bd + bd->next_entry);
-                else
-                    break;
-            }
+                    i++;
 
-            convcb = GetDlgItem(hwndDlg, IDC_CONVERT_COMBO);
-
-            if (num_writeable_devices == 0)
-                num_writeable_devices = num_devices;
-
-            i = 0;
-            while (convtypes[i] != 0) {
-                if (!LoadStringW(module, convtypes[i], s, sizeof(s) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    break;
+                    if (num_writeable_devices < 2 && i == 2)
+                        break;
+                    else if (num_writeable_devices < 3 && i == 4)
+                        break;
+                    else if (num_writeable_devices < 4 && i == 5)
+                        break;
                 }
 
-                SendMessage(convcb, CB_ADDSTRING, NULL, (LPARAM)s);
+                // profiles
 
-                if (opts->convert == convtypes2[i])
-                    SendMessage(convcb, CB_SETCURSEL, i, 0);
+                CheckDlgButton(hwndDlg, IDC_PROFILES, opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_SINGLE, opts->profiles & BLOCK_FLAG_SINGLE ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_DUP, opts->profiles & BLOCK_FLAG_DUPLICATE ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID0, opts->profiles & BLOCK_FLAG_RAID0 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID1, opts->profiles & BLOCK_FLAG_RAID1 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID10, opts->profiles & BLOCK_FLAG_RAID10 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID5, opts->profiles & BLOCK_FLAG_RAID5 ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_PROFILES_RAID6, opts->profiles & BLOCK_FLAG_RAID6 ? BST_CHECKED : BST_UNCHECKED);
 
-                i++;
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_SINGLE), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_DUP), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID0), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES), balance_started ? false : true);
 
-                if (num_writeable_devices < 2 && i == 2)
-                    break;
-                else if (num_writeable_devices < 3 && i == 4)
-                    break;
-                else if (num_writeable_devices < 4 && i == 5)
-                    break;
+                // usage
+
+                CheckDlgButton(hwndDlg, IDC_USAGE, opts->flags & BTRFS_BALANCE_OPTS_USAGE ? BST_CHECKED : BST_UNCHECKED);
+
+                s = to_wstring(opts->usage_start);
+                SetDlgItemTextW(hwndDlg, IDC_USAGE_START, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), UDM_SETRANGE32, 0, 100);
+
+                s = to_wstring(opts->usage_end);
+                SetDlgItemTextW(hwndDlg, IDC_USAGE_END, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), UDM_SETRANGE32, 0, 100);
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE), balance_started ? false : true);
+
+                // devid
+
+                if (num_devices < 2 || balance_started)
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_DEVID), false);
+
+                CheckDlgButton(hwndDlg, IDC_DEVID, opts->flags & BTRFS_BALANCE_OPTS_DEVID ? BST_CHECKED : BST_UNCHECKED);
+                EnableWindow(devcb, (opts->flags & BTRFS_BALANCE_OPTS_DEVID && num_devices >= 2 && !balance_started) ? true : false);
+
+                // drange
+
+                CheckDlgButton(hwndDlg, IDC_DRANGE, opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? BST_CHECKED : BST_UNCHECKED);
+
+                s = to_wstring(opts->drange_start);
+                SetDlgItemTextW(hwndDlg, IDC_DRANGE_START, s.c_str());
+
+                s = to_wstring(opts->drange_end);
+                SetDlgItemTextW(hwndDlg, IDC_DRANGE_END, s.c_str());
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE), balance_started ? false : true);
+
+                // vrange
+
+                CheckDlgButton(hwndDlg, IDC_VRANGE, opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? BST_CHECKED : BST_UNCHECKED);
+
+                s = to_wstring(opts->vrange_start);
+                SetDlgItemTextW(hwndDlg, IDC_VRANGE_START, s.c_str());
+
+                s = to_wstring(opts->vrange_end);
+                SetDlgItemTextW(hwndDlg, IDC_VRANGE_END, s.c_str());
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE), balance_started ? false : true);
+
+                // limit
+
+                CheckDlgButton(hwndDlg, IDC_LIMIT, opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? BST_CHECKED : BST_UNCHECKED);
+
+                s = to_wstring(opts->limit_start);
+                SetDlgItemTextW(hwndDlg, IDC_LIMIT_START, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
+
+                s = to_wstring(opts->limit_end);
+                SetDlgItemTextW(hwndDlg, IDC_LIMIT_END, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT), balance_started ? false : true);
+
+                // stripes
+
+                CheckDlgButton(hwndDlg, IDC_STRIPES, opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? BST_CHECKED : BST_UNCHECKED);
+
+                s = to_wstring(opts->stripes_start);
+                SetDlgItemTextW(hwndDlg, IDC_STRIPES_START, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), UDM_SETRANGE32, 0, 0xffff);
+
+                s = to_wstring(opts->stripes_end);
+                SetDlgItemTextW(hwndDlg, IDC_STRIPES_END, s.c_str());
+                SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), UDM_SETRANGE32, 0, 0xffff);
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES), balance_started ? false : true);
+
+                // convert
+
+                CheckDlgButton(hwndDlg, IDC_CONVERT, opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? BST_CHECKED : BST_UNCHECKED);
+                CheckDlgButton(hwndDlg, IDC_SOFT, opts->flags & BTRFS_BALANCE_OPTS_SOFT ? BST_CHECKED : BST_UNCHECKED);
+
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SOFT), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? true : false);
+                EnableWindow(convcb, !balance_started && opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? true : false);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERT), balance_started ? false : true);
+
+                break;
             }
 
-            // profiles
+            case WM_COMMAND:
+                switch (HIWORD(wParam)) {
+                    case BN_CLICKED:
+                        switch (LOWORD(wParam)) {
+                            case IDOK:
+                                if (balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED))
+                                    EndDialog(hwndDlg, 0);
+                                else
+                                    SaveBalanceOpts(hwndDlg);
+                            return true;
 
-            CheckDlgButton(hwndDlg, IDC_PROFILES, opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_SINGLE, opts->profiles & BLOCK_FLAG_SINGLE ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_DUP, opts->profiles & BLOCK_FLAG_DUPLICATE ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_RAID0, opts->profiles & BLOCK_FLAG_RAID0 ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_RAID1, opts->profiles & BLOCK_FLAG_RAID1 ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_RAID10, opts->profiles & BLOCK_FLAG_RAID10 ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_RAID5, opts->profiles & BLOCK_FLAG_RAID5 ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_PROFILES_RAID6, opts->profiles & BLOCK_FLAG_RAID6 ? BST_CHECKED : BST_UNCHECKED);
+                            case IDCANCEL:
+                                EndDialog(hwndDlg, 0);
+                            return true;
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_SINGLE), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_DUP), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID0), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES), balance_started ? FALSE : TRUE);
+                            case IDC_PROFILES: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_PROFILES) == BST_CHECKED ? true : false;
 
-            // usage
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_SINGLE), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_DUP), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID0), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), enabled);
+                                break;
+                            }
 
-            CheckDlgButton(hwndDlg, IDC_USAGE, opts->flags & BTRFS_BALANCE_OPTS_USAGE ? BST_CHECKED : BST_UNCHECKED);
+                            case IDC_USAGE: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_USAGE) == BST_CHECKED ? true : false;
 
-            _itow(opts->usage_start, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_USAGE_START, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), UDM_SETRANGE32, 0, 100);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), enabled);
+                                break;
+                            }
 
-            _itow(opts->usage_end, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_USAGE_END, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), UDM_SETRANGE32, 0, 100);
+                            case IDC_DEVID: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_DEVID) == BST_CHECKED ? true : false;
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_USAGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE), balance_started ? FALSE : TRUE);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_DEVID_COMBO), enabled);
+                                break;
+                            }
 
-            // devid
+                            case IDC_DRANGE: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_DRANGE) == BST_CHECKED ? true : false;
 
-            if (num_devices < 2 || balance_started)
-                EnableWindow(GetDlgItem(hwndDlg, IDC_DEVID), FALSE);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_START), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_END), enabled);
+                                break;
+                            }
 
-            CheckDlgButton(hwndDlg, IDC_DEVID, opts->flags & BTRFS_BALANCE_OPTS_DEVID ? BST_CHECKED : BST_UNCHECKED);
-            EnableWindow(devcb, (opts->flags & BTRFS_BALANCE_OPTS_DEVID && num_devices >= 2 && !balance_started) ? TRUE : FALSE);
+                            case IDC_VRANGE: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_VRANGE) == BST_CHECKED ? true : false;
 
-            // drange
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_START), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_END), enabled);
+                                break;
+                            }
 
-            CheckDlgButton(hwndDlg, IDC_DRANGE, opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? BST_CHECKED : BST_UNCHECKED);
+                            case IDC_LIMIT: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_LIMIT) == BST_CHECKED ? true : false;
 
-            _itow(opts->drange_start, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_DRANGE_START, s);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), enabled);
+                                break;
+                            }
 
-            _itow(opts->drange_end, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_DRANGE_END, s);
+                            case IDC_STRIPES: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_STRIPES) == BST_CHECKED ? true : false;
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE), balance_started ? FALSE : TRUE);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), enabled);
+                                break;
+                            }
 
-            // vrange
+                            case IDC_CONVERT: {
+                                bool enabled = IsDlgButtonChecked(hwndDlg, IDC_CONVERT) == BST_CHECKED ? true : false;
 
-            CheckDlgButton(hwndDlg, IDC_VRANGE, opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? BST_CHECKED : BST_UNCHECKED);
-
-            _itow(opts->vrange_start, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_VRANGE_START, s);
-
-            _itow(opts->vrange_end, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_VRANGE_END, s);
-
-            EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE), balance_started ? FALSE : TRUE);
-
-            // limit
-
-            CheckDlgButton(hwndDlg, IDC_LIMIT, opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? BST_CHECKED : BST_UNCHECKED);
-
-            _itow(opts->limit_start, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_LIMIT_START, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
-
-            _itow(opts->limit_end, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_LIMIT_END, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
-
-            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT), balance_started ? FALSE : TRUE);
-
-            // stripes
-
-            CheckDlgButton(hwndDlg, IDC_STRIPES, opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? BST_CHECKED : BST_UNCHECKED);
-
-            _itow(opts->stripes_start, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_STRIPES_START, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), UDM_SETRANGE32, 0, 0xffff);
-
-            _itow(opts->stripes_end, s, 10);
-            SetDlgItemTextW(hwndDlg, IDC_STRIPES_END, s);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), UDM_SETRANGE32, 0, 0xffff);
-
-            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES), balance_started ? FALSE : TRUE);
-
-            // convert
-
-            CheckDlgButton(hwndDlg, IDC_CONVERT, opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hwndDlg, IDC_SOFT, opts->flags & BTRFS_BALANCE_OPTS_SOFT ? BST_CHECKED : BST_UNCHECKED);
-
-            EnableWindow(GetDlgItem(hwndDlg, IDC_SOFT), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? TRUE : FALSE);
-            EnableWindow(convcb, !balance_started && opts->flags & BTRFS_BALANCE_OPTS_CONVERT ? TRUE : FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERT), balance_started ? FALSE : TRUE);
-
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERT_COMBO), enabled);
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_SOFT), enabled);
+                                break;
+                            }
+                        }
+                    break;
+                }
             break;
         }
-
-        case WM_COMMAND:
-            switch (HIWORD(wParam)) {
-                case BN_CLICKED:
-                    switch (LOWORD(wParam)) {
-                        case IDOK:
-                            if (balance_status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED))
-                                EndDialog(hwndDlg, 0);
-                            else
-                                SaveBalanceOpts(hwndDlg);
-                        return TRUE;
-
-                        case IDCANCEL:
-                            EndDialog(hwndDlg, 0);
-                        return TRUE;
-
-                        case IDC_PROFILES: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_PROFILES) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_SINGLE), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_DUP), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID0), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID10), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID5), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID6), enabled);
-                            break;
-                        }
-
-                        case IDC_USAGE: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_USAGE) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), enabled);
-                            break;
-                        }
-
-                        case IDC_DEVID: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_DEVID) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DEVID_COMBO), enabled);
-                            break;
-                        }
-
-                        case IDC_DRANGE: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_DRANGE) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_START), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_END), enabled);
-                            break;
-                        }
-
-                        case IDC_VRANGE: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_VRANGE) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_START), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_END), enabled);
-                            break;
-                        }
-
-                        case IDC_LIMIT: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_LIMIT) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), enabled);
-                            break;
-                        }
-
-                        case IDC_STRIPES: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_STRIPES) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), enabled);
-                            break;
-                        }
-
-                        case IDC_CONVERT: {
-                            BOOL enabled = IsDlgButtonChecked(hwndDlg, IDC_CONVERT) == BST_CHECKED ? TRUE : FALSE;
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERT_COMBO), enabled);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_SOFT), enabled);
-                            break;
-                        }
-                    }
-                break;
-            }
-        break;
+    } catch (const exception& e) {
+        error_message(hwndDlg, e.what());
     }
 
-    return FALSE;
+    return false;
 }
 
 static INT_PTR CALLBACK stub_BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -875,112 +844,116 @@ static INT_PTR CALLBACK stub_BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM 
     if (bb)
         return bb->BalanceOptsDlgProc(hwndDlg, uMsg, wParam, lParam);
     else
-        return FALSE;
+        return false;
 }
 
-void BtrfsBalance::ShowBalanceOptions(HWND hwndDlg, UINT8 type) {
+void BtrfsBalance::ShowBalanceOptions(HWND hwndDlg, uint8_t type) {
     opts_type = type;
     DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_BALANCE_OPTIONS), hwndDlg, stub_BalanceOptsDlgProc, (LPARAM)this);
 }
 
 INT_PTR CALLBACK BtrfsBalance::BalanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_INITDIALOG:
-        {
-            EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
+    try {
+        switch (uMsg) {
+            case WM_INITDIALOG:
+            {
+                EnableThemeDialogTexture(hwndDlg, ETDT_ENABLETAB);
 
-            RtlZeroMemory(&data_opts, sizeof(btrfs_balance_opts));
-            RtlZeroMemory(&metadata_opts, sizeof(btrfs_balance_opts));
-            RtlZeroMemory(&system_opts, sizeof(btrfs_balance_opts));
+                RtlZeroMemory(&data_opts, sizeof(btrfs_balance_opts));
+                RtlZeroMemory(&metadata_opts, sizeof(btrfs_balance_opts));
+                RtlZeroMemory(&system_opts, sizeof(btrfs_balance_opts));
 
-            removing = called_from_RemoveDevice;
-            shrinking = called_from_ShrinkDevice;
-            balance_status = (removing || shrinking) ? BTRFS_BALANCE_RUNNING : BTRFS_BALANCE_STOPPED;
-            cancelling = FALSE;
-            RefreshBalanceDlg(hwndDlg, TRUE);
+                removing = called_from_RemoveDevice;
+                shrinking = called_from_ShrinkDevice;
+                balance_status = (removing || shrinking) ? BTRFS_BALANCE_RUNNING : BTRFS_BALANCE_STOPPED;
+                cancelling = false;
+                RefreshBalanceDlg(hwndDlg, true);
 
-            if (readonly) {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), FALSE);
-            }
+                if (readonly) {
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), false);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), false);
+                }
 
-            SendMessageW(GetDlgItem(hwndDlg, IDC_START_BALANCE), BCM_SETSHIELD, 0, TRUE);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), BCM_SETSHIELD, 0, TRUE);
-            SendMessageW(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), BCM_SETSHIELD, 0, TRUE);
+                SendMessageW(GetDlgItem(hwndDlg, IDC_START_BALANCE), BCM_SETSHIELD, 0, true);
+                SendMessageW(GetDlgItem(hwndDlg, IDC_PAUSE_BALANCE), BCM_SETSHIELD, 0, true);
+                SendMessageW(GetDlgItem(hwndDlg, IDC_CANCEL_BALANCE), BCM_SETSHIELD, 0, true);
 
-            SetTimer(hwndDlg, 1, 1000, NULL);
+                SetTimer(hwndDlg, 1, 1000, nullptr);
 
-            break;
-        }
-
-        case WM_COMMAND:
-            switch (HIWORD(wParam)) {
-                case BN_CLICKED:
-                    switch (LOWORD(wParam)) {
-                        case IDOK:
-                        case IDCANCEL:
-                            KillTimer(hwndDlg, 1);
-                            EndDialog(hwndDlg, 0);
-                        return TRUE;
-
-                        case IDC_DATA:
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ? TRUE : FALSE);
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
-                            IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? TRUE: FALSE);
-                        return TRUE;
-
-                        case IDC_METADATA:
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED ? TRUE : FALSE);
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
-                            IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? TRUE: FALSE);
-                        return TRUE;
-
-                        case IDC_SYSTEM:
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED ? TRUE : FALSE);
-
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
-                            IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? TRUE: FALSE);
-                        return TRUE;
-
-                        case IDC_DATA_OPTIONS:
-                            ShowBalanceOptions(hwndDlg, 1);
-                        return TRUE;
-
-                        case IDC_METADATA_OPTIONS:
-                            ShowBalanceOptions(hwndDlg, 2);
-                        return TRUE;
-
-                        case IDC_SYSTEM_OPTIONS:
-                            ShowBalanceOptions(hwndDlg, 3);
-                        return TRUE;
-
-                        case IDC_START_BALANCE:
-                            StartBalance(hwndDlg);
-                        return TRUE;
-
-                        case IDC_PAUSE_BALANCE:
-                            PauseBalance(hwndDlg);
-                            RefreshBalanceDlg(hwndDlg, FALSE);
-                        return TRUE;
-
-                        case IDC_CANCEL_BALANCE:
-                            StopBalance(hwndDlg);
-                            RefreshBalanceDlg(hwndDlg, FALSE);
-                        return TRUE;
-                    }
                 break;
             }
-        break;
 
-        case WM_TIMER:
-            RefreshBalanceDlg(hwndDlg, FALSE);
+            case WM_COMMAND:
+                switch (HIWORD(wParam)) {
+                    case BN_CLICKED:
+                        switch (LOWORD(wParam)) {
+                            case IDOK:
+                            case IDCANCEL:
+                                KillTimer(hwndDlg, 1);
+                                EndDialog(hwndDlg, 0);
+                            return true;
+
+                            case IDC_DATA:
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_DATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ? true : false);
+
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
+                                IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? true: false);
+                            return true;
+
+                            case IDC_METADATA:
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_METADATA_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED ? true : false);
+
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
+                                IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? true: false);
+                            return true;
+
+                            case IDC_SYSTEM:
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_SYSTEM_OPTIONS), IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED ? true : false);
+
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_START_BALANCE), !readonly && (IsDlgButtonChecked(hwndDlg, IDC_DATA) == BST_CHECKED ||
+                                IsDlgButtonChecked(hwndDlg, IDC_METADATA) == BST_CHECKED || IsDlgButtonChecked(hwndDlg, IDC_SYSTEM) == BST_CHECKED) ? true: false);
+                            return true;
+
+                            case IDC_DATA_OPTIONS:
+                                ShowBalanceOptions(hwndDlg, 1);
+                            return true;
+
+                            case IDC_METADATA_OPTIONS:
+                                ShowBalanceOptions(hwndDlg, 2);
+                            return true;
+
+                            case IDC_SYSTEM_OPTIONS:
+                                ShowBalanceOptions(hwndDlg, 3);
+                            return true;
+
+                            case IDC_START_BALANCE:
+                                StartBalance(hwndDlg);
+                            return true;
+
+                            case IDC_PAUSE_BALANCE:
+                                PauseBalance(hwndDlg);
+                                RefreshBalanceDlg(hwndDlg, false);
+                            return true;
+
+                            case IDC_CANCEL_BALANCE:
+                                StopBalance(hwndDlg);
+                                RefreshBalanceDlg(hwndDlg, false);
+                            return true;
+                        }
+                    break;
+                }
             break;
+
+            case WM_TIMER:
+                RefreshBalanceDlg(hwndDlg, false);
+                break;
+        }
+    } catch (const exception& e) {
+        error_message(hwndDlg, e.what());
     }
 
-    return FALSE;
+    return false;
 }
 
 static INT_PTR CALLBACK stub_BalanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -996,70 +969,64 @@ static INT_PTR CALLBACK stub_BalanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wPar
     if (bb)
         return bb->BalanceDlgProc(hwndDlg, uMsg, wParam, lParam);
     else
-        return FALSE;
+        return false;
 }
 
 void BtrfsBalance::ShowBalance(HWND hwndDlg) {
-    HANDLE h;
     btrfs_device* bd;
 
     if (devices) {
         free(devices);
-        devices = NULL;
+        devices = nullptr;
     }
 
-    h = CreateFileW(fn, FILE_TRAVERSE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+    {
+        win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
-        ULONG devsize, i;
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
+            ULONG devsize, i;
 
-        i = 0;
-        devsize = 1024;
+            i = 0;
+            devsize = 1024;
 
-        devices = (btrfs_device*)malloc(devsize);
+            devices = (btrfs_device*)malloc(devsize);
 
-        while (TRUE) {
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_GET_DEVICES, NULL, 0, devices, devsize);
-            if (Status == STATUS_BUFFER_OVERFLOW) {
-                if (i < 8) {
-                    devsize += 1024;
+            while (true) {
+                Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_DEVICES, nullptr, 0, devices, devsize);
+                if (Status == STATUS_BUFFER_OVERFLOW) {
+                    if (i < 8) {
+                        devsize += 1024;
 
-                    free(devices);
-                    devices = (btrfs_device*)malloc(devsize);
+                        free(devices);
+                        devices = (btrfs_device*)malloc(devsize);
 
-                    i++;
+                        i++;
+                    } else
+                        return;
                 } else
-                    return;
-            } else
-                break;
-        }
+                    break;
+            }
 
-        if (!NT_SUCCESS(Status)) {
-            CloseHandle(h);
-            ShowNtStatusError(hwndDlg, Status);
-            return;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
     }
 
-    readonly = TRUE;
+    readonly = true;
     bd = devices;
 
-    while (TRUE) {
+    while (true) {
         if (!bd->readonly) {
-            readonly = FALSE;
+            readonly = false;
             break;
         }
 
         if (bd->next_entry > 0)
-            bd = (btrfs_device*)((UINT8*)bd + bd->next_entry);
+            bd = (btrfs_device*)((uint8_t*)bd + bd->next_entry);
         else
             break;
     }
@@ -1067,22 +1034,22 @@ void BtrfsBalance::ShowBalance(HWND hwndDlg) {
     DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_BALANCE), hwndDlg, stub_BalanceDlgProc, (LPARAM)this);
 }
 
-static UINT8 from_hex_digit(WCHAR c) {
+static uint8_t from_hex_digit(WCHAR c) {
     if (c >= 'a' && c <= 'f')
-        return c - 'a' + 0xa;
+        return (uint8_t)(c - 'a' + 0xa);
     else if (c >= 'A' && c <= 'F')
-        return c - 'A' + 0xa;
+        return (uint8_t)(c - 'A' + 0xa);
     else
-        return c - '0';
+        return (uint8_t)(c - '0');
 }
 
 static void unserialize(void* data, ULONG len, WCHAR* s) {
-    UINT8* d;
+    uint8_t* d;
 
-    d = (UINT8*)data;
+    d = (uint8_t*)data;
 
     while (s[0] != 0 && s[1] != 0 && len > 0) {
-        *d = from_hex_digit(s[0]) << 4 | from_hex_digit(s[1]);
+        *d = (uint8_t)(from_hex_digit(s[0]) << 4) | from_hex_digit(s[1]);
 
         s += 2;
         d++;
@@ -1095,205 +1062,156 @@ extern "C" {
 #endif
 
 void CALLBACK StartBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    WCHAR *s, *vol, *block;
-    HANDLE h, token;
-    btrfs_start_balance bsb;
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
+    try {
+        WCHAR *s, *vol, *block;
+        win_handle h, token;
+        btrfs_start_balance bsb;
+        TOKEN_PRIVILEGES tp;
+        LUID luid;
 
-    s = wcsstr(lpszCmdLine, L" ");
-    if (!s)
-        return;
+        s = wcsstr(lpszCmdLine, L" ");
+        if (!s)
+            return;
 
-    s[0] = 0;
+        s[0] = 0;
 
-    vol = lpszCmdLine;
-    block = &s[1];
+        vol = lpszCmdLine;
+        block = &s[1];
 
-    RtlZeroMemory(&bsb, sizeof(btrfs_start_balance));
-    unserialize(&bsb, sizeof(btrfs_start_balance), block);
+        RtlZeroMemory(&bsb, sizeof(btrfs_start_balance));
+        unserialize(&bsb, sizeof(btrfs_start_balance), block);
 
-   if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
-        ShowError(hwnd, GetLastError());
-        return;
-   }
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+            throw last_error(GetLastError());
 
-    if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
+        if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+            throw last_error(GetLastError());
 
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
+        if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+            throw last_error(GetLastError());
 
-    h = CreateFileW(vol, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                         OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+        h = CreateFileW(vol, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_START_BALANCE, &bsb, sizeof(btrfs_start_balance), NULL, 0);
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_START_BALANCE, &bsb, sizeof(btrfs_start_balance), nullptr, 0);
 
-        if (Status == STATUS_DEVICE_NOT_READY) {
-            btrfs_query_scrub bqs;
-            NTSTATUS Status2;
+            if (Status == STATUS_DEVICE_NOT_READY) {
+                btrfs_query_scrub bqs;
+                NTSTATUS Status2;
 
-            Status2 = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_SCRUB, NULL, 0, &bqs, sizeof(btrfs_query_scrub));
+                Status2 = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_SCRUB, nullptr, 0, &bqs, sizeof(btrfs_query_scrub));
 
-            if ((NT_SUCCESS(Status2) || Status2 == STATUS_BUFFER_OVERFLOW) && bqs.status != BTRFS_SCRUB_STOPPED) {
-                ShowStringError(hwnd, IDS_BALANCE_SCRUB_RUNNING);
-                CloseHandle(h);
-                goto end;
+                if ((NT_SUCCESS(Status2) || Status2 == STATUS_BUFFER_OVERFLOW) && bqs.status != BTRFS_SCRUB_STOPPED)
+                    throw string_error(IDS_BALANCE_SCRUB_RUNNING);
             }
-        }
 
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwnd, Status);
-            CloseHandle(h);
-            goto end;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwnd, GetLastError());
-        goto end;
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
-
-end:
-    CloseHandle(token);
 }
 
 void CALLBACK PauseBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    HANDLE h, token;
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
+    try {
+        win_handle h, token;
+        TOKEN_PRIVILEGES tp;
+        LUID luid;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
-        ShowError(hwnd, GetLastError());
-        return;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+            throw last_error(GetLastError());
+
+        if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+            throw last_error(GetLastError());
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+            throw last_error(GetLastError());
+
+        h = CreateFileW(lpszCmdLine, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
+            btrfs_query_balance bqb2;
+
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_BALANCE, nullptr, 0, &bqb2, sizeof(btrfs_query_balance));
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+
+            if (bqb2.status & BTRFS_BALANCE_PAUSED)
+                Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESUME_BALANCE, nullptr, 0, nullptr, 0);
+            else if (bqb2.status & BTRFS_BALANCE_RUNNING)
+                Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_PAUSE_BALANCE, nullptr, 0, nullptr, 0);
+            else
+                return;
+
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
-
-    if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    h = CreateFileW(lpszCmdLine, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
-        btrfs_query_balance bqb2;
-
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_BALANCE, NULL, 0, &bqb2, sizeof(btrfs_query_balance));
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwnd, Status);
-            CloseHandle(h);
-            goto end;
-        }
-
-        if (bqb2.status & BTRFS_BALANCE_PAUSED)
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_RESUME_BALANCE, NULL, 0, NULL, 0);
-        else if (bqb2.status & BTRFS_BALANCE_RUNNING)
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_PAUSE_BALANCE, NULL, 0, NULL, 0);
-        else {
-            CloseHandle(h);
-            goto end;
-        }
-
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwnd, Status);
-            CloseHandle(h);
-            goto end;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-end:
-    CloseHandle(token);
 }
 
 void CALLBACK StopBalanceW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    HANDLE h, token;
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
+    try {
+        win_handle h, token;
+        TOKEN_PRIVILEGES tp;
+        LUID luid;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
-        ShowError(hwnd, GetLastError());
-        return;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+            throw last_error(GetLastError());
+
+        if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+            throw last_error(GetLastError());
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+            throw last_error(GetLastError());
+
+        h = CreateFileW(lpszCmdLine, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
+            btrfs_query_balance bqb2;
+
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_BALANCE, nullptr, 0, &bqb2, sizeof(btrfs_query_balance));
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+
+            if (bqb2.status & BTRFS_BALANCE_PAUSED || bqb2.status & BTRFS_BALANCE_RUNNING)
+                Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_STOP_BALANCE, nullptr, 0, nullptr, 0);
+            else
+                return;
+
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
-
-    if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    h = CreateFileW(lpszCmdLine, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
-        btrfs_query_balance bqb2;
-
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_BALANCE, NULL, 0, &bqb2, sizeof(btrfs_query_balance));
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwnd, Status);
-            CloseHandle(h);
-            goto end;
-        }
-
-        if (bqb2.status & BTRFS_BALANCE_PAUSED || bqb2.status & BTRFS_BALANCE_RUNNING)
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_STOP_BALANCE, NULL, 0, NULL, 0);
-        else {
-            CloseHandle(h);
-            goto end;
-        }
-
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwnd, Status);
-            CloseHandle(h);
-            goto end;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-end:
-    CloseHandle(token);
 }
 
 #ifdef __REACTOS__

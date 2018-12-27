@@ -66,7 +66,7 @@ static CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 // See http://amnesia.gtisc.gatech.edu/~moyix/suzibandit.ltd.uk/MSc/Registry%20Structure%20-%20Appendices%20V4.pdf
 // Appendix 12 "The Registry NT Security Descriptor" for more information.
 //
-// Those SECURITY_DESCRIPTORs were obtained by dumping the security block "sk"
+// These SECURITY_DESCRIPTORs were obtained by dumping the security block "sk"
 // of registry hives created by setting their permissions to be the same as
 // the ones of the BCD, SOFTWARE, or SYSTEM, SAM and .DEFAULT system hives.
 // A cross-check was subsequently done with the system hives to verify that
@@ -1010,10 +1010,10 @@ Quit:
 static BOOL
 ConnectRegistry(
     IN HKEY RootKey,
+    IN PCWSTR Path,
     IN PCMHIVE HiveToConnect,
     IN PUCHAR SecurityDescriptor,
-    IN ULONG SecurityDescriptorLength,
-    IN PCWSTR Path)
+    IN ULONG SecurityDescriptorLength)
 {
     NTSTATUS Status;
     LONG rc;
@@ -1159,10 +1159,10 @@ RegInitializeRegistry(
 
         /* Create the registry key */
         ConnectRegistry(NULL,
+                        RegistryHives[i].HiveRegistryPath,
                         RegistryHives[i].CmHive,
                         RegistryHives[i].SecurityDescriptor,
-                        RegistryHives[i].SecurityDescriptorLength,
-                        RegistryHives[i].HiveRegistryPath);
+                        RegistryHives[i].SecurityDescriptorLength);
 
         /* If we happen to deal with the special setup registry hive, stop there */
         // if (strcmp(RegistryHives[i].HiveName, "SETUPREG") == 0)

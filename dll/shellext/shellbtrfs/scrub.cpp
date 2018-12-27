@@ -37,345 +37,287 @@
 #include <ndk/iofuncs.h>
 #include <ndk/iotypes.h>
 #endif
-#include <string>
 
 #define NO_SHLWAPI_STRFCNS
 #include <shlwapi.h>
 #include <uxtheme.h>
 
 void BtrfsScrub::UpdateTextBox(HWND hwndDlg, btrfs_query_scrub* bqs) {
-    btrfs_query_scrub* bqs2 = NULL;
-    BOOL alloc_bqs2 = FALSE;
+    btrfs_query_scrub* bqs2 = nullptr;
+    bool alloc_bqs2 = false;
     NTSTATUS Status;
-    std::wstring s;
-    WCHAR t[255], u[255], dt[255], tm[255];
+    wstring s, t, u;
+    WCHAR dt[255], tm[255];
     FILETIME filetime;
     SYSTEMTIME systime;
-    UINT64 recoverable_errors = 0, unrecoverable_errors = 0;
+    uint64_t recoverable_errors = 0, unrecoverable_errors = 0;
 
-    if (bqs->num_errors > 0) {
-        HANDLE h;
-        IO_STATUS_BLOCK iosb;
-        ULONG len;
+    try {
+        if (bqs->num_errors > 0) {
+            win_handle h;
+            IO_STATUS_BLOCK iosb;
+            ULONG len;
 
-        h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-        if (h == INVALID_HANDLE_VALUE) {
-            ShowError(hwndDlg, GetLastError());
-            return;
-        }
+            h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+            if (h == INVALID_HANDLE_VALUE)
+                throw last_error(GetLastError());
 
-        len = 0;
+            len = 0;
 
-        do {
-            len += 1024;
+            try {
+                do {
+                    len += 1024;
 
-            if (bqs2)
-                free(bqs2);
+                    if (bqs2) {
+                        free(bqs2);
+                        bqs2 = nullptr;
+                    }
 
-            bqs2 = (btrfs_query_scrub*)malloc(len);
+                    bqs2 = (btrfs_query_scrub*)malloc(len);
 
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_SCRUB, NULL, 0, bqs2, len);
+                    Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_SCRUB, nullptr, 0, bqs2, len);
 
-            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-                ShowNtStatusError(hwndDlg, Status);
-                CloseHandle(h);
-                free(bqs2);
-                return;
+                    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+                        throw ntstatus_error(Status);
+                } while (Status == STATUS_BUFFER_OVERFLOW);
+            } catch (...) {
+                if (bqs2)
+                    free(bqs2);
+
+                throw;
             }
-        } while (Status == STATUS_BUFFER_OVERFLOW);
 
-        alloc_bqs2 = TRUE;
+            alloc_bqs2 = true;
+        } else
+            bqs2 = bqs;
 
-        CloseHandle(h);
-    } else
-        bqs2 = bqs;
+        // "scrub started"
+        if (bqs2->start_time.QuadPart > 0) {
+            filetime.dwLowDateTime = bqs2->start_time.LowPart;
+            filetime.dwHighDateTime = bqs2->start_time.HighPart;
 
-    s[0] = 0;
+            if (!FileTimeToSystemTime(&filetime, &systime))
+                throw last_error(GetLastError());
 
-    // "scrub started"
-    if (bqs2->start_time.QuadPart > 0) {
-        filetime.dwLowDateTime = bqs2->start_time.LowPart;
-        filetime.dwHighDateTime = bqs2->start_time.HighPart;
+            if (!SystemTimeToTzSpecificLocalTime(nullptr, &systime, &systime))
+                throw last_error(GetLastError());
 
-        if (!FileTimeToSystemTime(&filetime, &systime)) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
+            if (!load_string(module, IDS_SCRUB_MSG_STARTED, t))
+                throw last_error(GetLastError());
+
+            if (!GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &systime, nullptr, dt, sizeof(dt) / sizeof(WCHAR)))
+                throw last_error(GetLastError());
+
+            if (!GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &systime, nullptr, tm, sizeof(tm) / sizeof(WCHAR)))
+                throw last_error(GetLastError());
+
+            wstring_sprintf(u, t, dt, tm);
+
+            s += u;
+            s += L"\r\n";
         }
 
-        if (!SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime)) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
+        // errors
+        if (bqs2->num_errors > 0) {
+            btrfs_scrub_error* bse = &bqs2->errors;
 
-        if (!LoadStringW(module, IDS_SCRUB_MSG_STARTED, t, sizeof(t) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &systime, NULL, dt, sizeof(dt) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &systime, NULL, tm, sizeof(tm) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, dt, tm) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            goto end;
-
-        s += u;
-        s += L"\r\n";
-    }
-
-    // errors
-    if (bqs2->num_errors > 0) {
-        btrfs_scrub_error* bse = &bqs2->errors;
-
-        do {
-            if (bse->recovered)
-                recoverable_errors++;
-            else
-                unrecoverable_errors++;
-
-            if (bse->parity) {
-                if (!LoadStringW(module, IDS_SCRUB_MSG_RECOVERABLE_PARITY, t, sizeof(t) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    goto end;
-                }
-
-                if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                    goto end;
-            } else if (bse->is_metadata) {
-                int message;
-
+            do {
                 if (bse->recovered)
-                    message = IDS_SCRUB_MSG_RECOVERABLE_METADATA;
-                else if (bse->metadata.firstitem.obj_id == 0 && bse->metadata.firstitem.obj_type == 0 && bse->metadata.firstitem.offset == 0)
-                    message = IDS_SCRUB_MSG_UNRECOVERABLE_METADATA;
+                    recoverable_errors++;
                 else
-                    message = IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM;
+                    unrecoverable_errors++;
 
-                if (!LoadStringW(module, message, t, sizeof(t) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    goto end;
-                }
+                if (bse->parity) {
+                    if (!load_string(module, IDS_SCRUB_MSG_RECOVERABLE_PARITY, t))
+                        throw last_error(GetLastError());
 
-                if (bse->recovered) {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
-                } else if (bse->metadata.firstitem.obj_id == 0 && bse->metadata.firstitem.obj_type == 0 && bse->metadata.firstitem.offset == 0) {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device,
-                        bse->metadata.root, bse->metadata.level) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
+                    wstring_sprintf(u, t, bse->address, bse->device);
+                } else if (bse->is_metadata) {
+                    int message;
+
+                    if (bse->recovered)
+                        message = IDS_SCRUB_MSG_RECOVERABLE_METADATA;
+                    else if (bse->metadata.firstitem.obj_id == 0 && bse->metadata.firstitem.obj_type == 0 && bse->metadata.firstitem.offset == 0)
+                        message = IDS_SCRUB_MSG_UNRECOVERABLE_METADATA;
+                    else
+                        message = IDS_SCRUB_MSG_UNRECOVERABLE_METADATA_FIRSTITEM;
+
+                    if (!load_string(module, message, t))
+                        throw last_error(GetLastError());
+
+                    if (bse->recovered)
+                        wstring_sprintf(u, t, bse->address, bse->device);
+                    else if (bse->metadata.firstitem.obj_id == 0 && bse->metadata.firstitem.obj_type == 0 && bse->metadata.firstitem.offset == 0)
+                        wstring_sprintf(u, t, bse->address, bse->device, bse->metadata.root, bse->metadata.level);
+                    else
+                        wstring_sprintf(u, t, bse->address, bse->device, bse->metadata.root, bse->metadata.level, bse->metadata.firstitem.obj_id,
+                                        bse->metadata.firstitem.obj_type, bse->metadata.firstitem.offset);
                 } else {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device,
-                        bse->metadata.root, bse->metadata.level, bse->metadata.firstitem.obj_id, bse->metadata.firstitem.obj_type,
-                        bse->metadata.firstitem.offset) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
-                }
-            } else {
-                int message;
+                    int message;
 
-                if (bse->recovered)
-                    message = IDS_SCRUB_MSG_RECOVERABLE_DATA;
-                else if (bse->data.subvol != 0)
-                    message = IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL;
+                    if (bse->recovered)
+                        message = IDS_SCRUB_MSG_RECOVERABLE_DATA;
+                    else if (bse->data.subvol != 0)
+                        message = IDS_SCRUB_MSG_UNRECOVERABLE_DATA_SUBVOL;
+                    else
+                        message = IDS_SCRUB_MSG_UNRECOVERABLE_DATA;
+
+                    if (!load_string(module, message, t))
+                        throw last_error(GetLastError());
+
+                    if (bse->recovered)
+                        wstring_sprintf(u, t, bse->address, bse->device);
+                    else if (bse->data.subvol != 0)
+                        wstring_sprintf(u, t, bse->address, bse->device, bse->data.subvol,
+                            bse->data.filename_length / sizeof(WCHAR), bse->data.filename, bse->data.offset);
+                    else
+                        wstring_sprintf(u, t, bse->address, bse->device, bse->data.filename_length / sizeof(WCHAR),
+                            bse->data.filename, bse->data.offset);
+                }
+
+                s += u;
+                s += L"\r\n";
+
+                if (bse->next_entry == 0)
+                    break;
                 else
-                    message = IDS_SCRUB_MSG_UNRECOVERABLE_DATA;
+                    bse = (btrfs_scrub_error*)((uint8_t*)bse + bse->next_entry);
+            } while (true);
+        }
 
-                if (!LoadStringW(module, message, t, sizeof(t) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    goto end;
-                }
+        if (bqs2->finish_time.QuadPart > 0) {
+            wstring d1, d2;
+            float speed;
 
-                if (bse->recovered) {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
-                } else if (bse->data.subvol != 0) {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device, bse->data.subvol,
-                        bse->data.filename_length / sizeof(WCHAR), bse->data.filename, bse->data.offset) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
-                } else {
-                    if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, bse->address, bse->device, bse->data.filename_length / sizeof(WCHAR),
-                        bse->data.filename, bse->data.offset) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                        goto end;
-                }
-            }
+            // "scrub finished"
+
+            filetime.dwLowDateTime = bqs2->finish_time.LowPart;
+            filetime.dwHighDateTime = bqs2->finish_time.HighPart;
+
+            if (!FileTimeToSystemTime(&filetime, &systime))
+                throw last_error(GetLastError());
+
+            if (!SystemTimeToTzSpecificLocalTime(nullptr, &systime, &systime))
+                throw last_error(GetLastError());
+
+            if (!load_string(module, IDS_SCRUB_MSG_FINISHED, t))
+                throw last_error(GetLastError());
+
+            if (!GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &systime, nullptr, dt, sizeof(dt) / sizeof(WCHAR)))
+                throw last_error(GetLastError());
+
+            if (!GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &systime, nullptr, tm, sizeof(tm) / sizeof(WCHAR)))
+                throw last_error(GetLastError());
+
+            wstring_sprintf(u, t, dt, tm);
 
             s += u;
             s += L"\r\n";
 
-            if (bse->next_entry == 0)
-                break;
-            else
-                bse = (btrfs_scrub_error*)((UINT8*)bse + bse->next_entry);
-        } while (TRUE);
+            // summary
+
+            if (!load_string(module, IDS_SCRUB_MSG_SUMMARY, t))
+                throw last_error(GetLastError());
+
+            format_size(bqs2->data_scrubbed, d1, false);
+
+            speed = (float)bqs2->data_scrubbed / ((float)bqs2->duration / 10000000.0f);
+
+            format_size((uint64_t)speed, d2, false);
+
+            wstring_sprintf(u, t, d1.c_str(), bqs2->duration / 10000000, d2.c_str());
+
+            s += u;
+            s += L"\r\n";
+
+            // recoverable errors
+
+            if (!load_string(module, IDS_SCRUB_MSG_SUMMARY_ERRORS_RECOVERABLE, t))
+                throw last_error(GetLastError());
+
+            wstring_sprintf(u, t, recoverable_errors);
+
+            s += u;
+            s += L"\r\n";
+
+            // unrecoverable errors
+
+            if (!load_string(module, IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE, t))
+                throw last_error(GetLastError());
+
+            wstring_sprintf(u, t, unrecoverable_errors);
+
+            s += u;
+            s += L"\r\n";
+        }
+
+        SetWindowTextW(GetDlgItem(hwndDlg, IDC_SCRUB_INFO), s.c_str());
+    } catch (...) {
+        if (alloc_bqs2)
+            free(bqs2);
+
+        throw;
     }
 
-    if (bqs2->finish_time.QuadPart > 0) {
-        WCHAR d1[255], d2[255];
-        float speed;
-
-        // "scrub finished"
-
-        filetime.dwLowDateTime = bqs2->finish_time.LowPart;
-        filetime.dwHighDateTime = bqs2->finish_time.HighPart;
-
-        if (!FileTimeToSystemTime(&filetime, &systime)) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime)) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!LoadStringW(module, IDS_SCRUB_MSG_FINISHED, t, sizeof(t) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &systime, NULL, dt, sizeof(dt) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (!GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &systime, NULL, tm, sizeof(tm) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, dt, tm) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            goto end;
-
-        s += u;
-        s += L"\r\n";
-
-        // summary
-
-        if (!LoadStringW(module, IDS_SCRUB_MSG_SUMMARY, t, sizeof(t) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        format_size(bqs2->data_scrubbed, d1, sizeof(d1) / sizeof(WCHAR), FALSE);
-
-        speed = (float)bqs2->data_scrubbed / ((float)bqs2->duration / 10000000.0f);
-
-        format_size((UINT64)speed, d2, sizeof(d2) / sizeof(WCHAR), FALSE);
-
-        if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, d1, bqs2->duration / 10000000, d2) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            goto end;
-
-        s += u;
-        s += L"\r\n";
-
-        // recoverable errors
-
-        if (!LoadStringW(module, IDS_SCRUB_MSG_SUMMARY_ERRORS_RECOVERABLE, t, sizeof(t) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, recoverable_errors) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            goto end;
-
-        s += u;
-        s += L"\r\n";
-
-        // unrecoverable errors
-
-        if (!LoadStringW(module, IDS_SCRUB_MSG_SUMMARY_ERRORS_UNRECOVERABLE, t, sizeof(t) / sizeof(WCHAR))) {
-            ShowError(hwndDlg, GetLastError());
-            goto end;
-        }
-
-        if (StringCchPrintfW(u, sizeof(u) / sizeof(WCHAR), t, unrecoverable_errors) == STRSAFE_E_INSUFFICIENT_BUFFER)
-            goto end;
-
-        s += u;
-        s += L"\r\n";
-    }
-
-    SetWindowTextW(GetDlgItem(hwndDlg, IDC_SCRUB_INFO), s.c_str());
-
-end:
     if (alloc_bqs2)
         free(bqs2);
 }
 
-void BtrfsScrub::RefreshScrubDlg(HWND hwndDlg, BOOL first_time) {
-    HANDLE h;
+void BtrfsScrub::RefreshScrubDlg(HWND hwndDlg, bool first_time) {
     btrfs_query_scrub bqs;
 
-    h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-    if (h != INVALID_HANDLE_VALUE) {
-        NTSTATUS Status;
-        IO_STATUS_BLOCK iosb;
+    {
+        win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (h != INVALID_HANDLE_VALUE) {
+            NTSTATUS Status;
+            IO_STATUS_BLOCK iosb;
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_SCRUB, NULL, 0, &bqs, sizeof(btrfs_query_scrub));
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_SCRUB, nullptr, 0, &bqs, sizeof(btrfs_query_scrub));
 
-        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
+            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+                throw ntstatus_error(Status);
+        } else
+            throw last_error(GetLastError());
     }
 
     if (first_time || status != bqs.status || chunks_left != bqs.chunks_left) {
-        WCHAR s[255];
+        wstring s;
 
         if (bqs.status == BTRFS_SCRUB_STOPPED) {
-            EnableWindow(GetDlgItem(hwndDlg, IDC_START_SCRUB), TRUE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_SCRUB), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_SCRUB), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_START_SCRUB), true);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_SCRUB), false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_SCRUB), false);
 
             if (bqs.error != STATUS_SUCCESS) {
-                WCHAR t[255];
+                wstring t;
 
-                if (!LoadStringW(module, IDS_SCRUB_FAILED, t, sizeof(t) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    return;
-                }
+                if (!load_string(module, IDS_SCRUB_FAILED, t))
+                    throw last_error(GetLastError());
 
-                if (StringCchPrintfW(s, sizeof(s) / sizeof(WCHAR), t, bqs.error) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                    return;
+                wstring_sprintf(s, t, bqs.error);
             } else {
-                if (!LoadStringW(module, bqs.total_chunks == 0 ? IDS_NO_SCRUB : IDS_SCRUB_FINISHED, s, sizeof(s) / sizeof(WCHAR))) {
-                    ShowError(hwndDlg, GetLastError());
-                    return;
-                }
+                if (!load_string(module, bqs.total_chunks == 0 ? IDS_NO_SCRUB : IDS_SCRUB_FINISHED, s))
+                    throw last_error(GetLastError());
             }
         } else {
-            WCHAR t[255];
+            wstring t;
             float pc;
 
-            EnableWindow(GetDlgItem(hwndDlg, IDC_START_SCRUB), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_SCRUB), TRUE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_SCRUB), TRUE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_START_SCRUB), false);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_PAUSE_SCRUB), true);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_CANCEL_SCRUB), true);
 
-            if (!LoadStringW(module, bqs.status == BTRFS_SCRUB_PAUSED ? IDS_SCRUB_PAUSED : IDS_SCRUB_RUNNING, t, sizeof(t) / sizeof(WCHAR))) {
-                ShowError(hwndDlg, GetLastError());
-                return;
-            }
+            if (!load_string(module, bqs.status == BTRFS_SCRUB_PAUSED ? IDS_SCRUB_PAUSED : IDS_SCRUB_RUNNING, t))
+                throw last_error(GetLastError());
 
             pc = ((float)(bqs.total_chunks - bqs.chunks_left) / (float)bqs.total_chunks) * 100.0f;
 
-            if (StringCchPrintfW(s, sizeof(s) / sizeof(WCHAR), t, bqs.total_chunks - bqs.chunks_left, bqs.total_chunks, pc) == STRSAFE_E_INSUFFICIENT_BUFFER)
-                return;
+            wstring_sprintf(s, t, bqs.total_chunks - bqs.chunks_left, bqs.total_chunks, pc);
         }
 
-        SetDlgItemTextW(hwndDlg, IDC_SCRUB_STATUS, s);
+        SetDlgItemTextW(hwndDlg, IDC_SCRUB_STATUS, s.c_str());
 
         if (first_time || status != bqs.status) {
             EnableWindow(GetDlgItem(hwndDlg, IDC_SCRUB_PROGRESS), bqs.status != BTRFS_SCRUB_STOPPED);
@@ -412,142 +354,117 @@ void BtrfsScrub::RefreshScrubDlg(HWND hwndDlg, BOOL first_time) {
 }
 
 void BtrfsScrub::StartScrub(HWND hwndDlg) {
-    HANDLE h;
+    win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                               OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
-    h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
     if (h != INVALID_HANDLE_VALUE) {
         NTSTATUS Status;
         IO_STATUS_BLOCK iosb;
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_START_SCRUB, NULL, 0, NULL, 0);
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_START_SCRUB, nullptr, 0, nullptr, 0);
 
         if (Status == STATUS_DEVICE_NOT_READY) {
             btrfs_query_balance bqb;
             NTSTATUS Status2;
 
-            Status2 = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_BALANCE, NULL, 0, &bqb, sizeof(btrfs_query_balance));
+            Status2 = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_BALANCE, nullptr, 0, &bqb, sizeof(btrfs_query_balance));
 
-            if (NT_SUCCESS(Status2) && bqb.status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED)) {
-                ShowStringError(hwndDlg, IDS_SCRUB_BALANCE_RUNNING);
-                CloseHandle(h);
-                return;
-            }
+            if (NT_SUCCESS(Status2) && bqb.status & (BTRFS_BALANCE_RUNNING | BTRFS_BALANCE_PAUSED))
+                throw string_error(IDS_SCRUB_BALANCE_RUNNING);
         }
 
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
+        if (!NT_SUCCESS(Status))
+            throw ntstatus_error(Status);
 
-        RefreshScrubDlg(hwndDlg, TRUE);
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+        RefreshScrubDlg(hwndDlg, true);
+    } else
+        throw last_error(GetLastError());
 }
 
 void BtrfsScrub::PauseScrub(HWND hwndDlg) {
-    HANDLE h;
     btrfs_query_scrub bqs;
 
-    h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+    win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                               OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+
     if (h != INVALID_HANDLE_VALUE) {
         NTSTATUS Status;
         IO_STATUS_BLOCK iosb;
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_QUERY_SCRUB, NULL, 0, &bqs, sizeof(btrfs_query_scrub));
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_QUERY_SCRUB, nullptr, 0, &bqs, sizeof(btrfs_query_scrub));
 
-        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
+        if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+            throw ntstatus_error(Status);
 
         if (bqs.status == BTRFS_SCRUB_PAUSED)
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_RESUME_SCRUB, NULL, 0, NULL, 0);
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_RESUME_SCRUB, nullptr, 0, nullptr, 0);
         else
-            Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_PAUSE_SCRUB, NULL, 0, NULL, 0);
+            Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_PAUSE_SCRUB, nullptr, 0, nullptr, 0);
 
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+        if (!NT_SUCCESS(Status))
+            throw ntstatus_error(Status);
+    } else
+        throw last_error(GetLastError());
 }
 
 void BtrfsScrub::StopScrub(HWND hwndDlg) {
-    HANDLE h;
+    win_handle h = CreateFileW(fn.c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                               OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
 
-    h = CreateFileW(fn, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
     if (h != INVALID_HANDLE_VALUE) {
         NTSTATUS Status;
         IO_STATUS_BLOCK iosb;
 
-        Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_STOP_SCRUB, NULL, 0, NULL, 0);
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_STOP_SCRUB, nullptr, 0, nullptr, 0);
 
-        if (!NT_SUCCESS(Status)) {
-            ShowNtStatusError(hwndDlg, Status);
-            CloseHandle(h);
-            return;
-        }
-
-        CloseHandle(h);
-    } else {
-        ShowError(hwndDlg, GetLastError());
-        return;
-    }
+        if (!NT_SUCCESS(Status))
+            throw ntstatus_error(Status);
+    } else
+        throw last_error(GetLastError());
 }
 
 INT_PTR CALLBACK BtrfsScrub::ScrubDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_INITDIALOG:
-            RefreshScrubDlg(hwndDlg, TRUE);
-            SetTimer(hwndDlg, 1, 1000, NULL);
-        break;
+    try {
+        switch (uMsg) {
+            case WM_INITDIALOG:
+                RefreshScrubDlg(hwndDlg, true);
+                SetTimer(hwndDlg, 1, 1000, nullptr);
+            break;
 
-        case WM_COMMAND:
-            switch (HIWORD(wParam)) {
-                case BN_CLICKED:
-                    switch (LOWORD(wParam)) {
-                        case IDOK:
-                        case IDCANCEL:
-                            EndDialog(hwndDlg, 0);
-                        return TRUE;
+            case WM_COMMAND:
+                switch (HIWORD(wParam)) {
+                    case BN_CLICKED:
+                        switch (LOWORD(wParam)) {
+                            case IDOK:
+                            case IDCANCEL:
+                                EndDialog(hwndDlg, 0);
+                            return true;
 
-                        case IDC_START_SCRUB:
-                            StartScrub(hwndDlg);
-                        return TRUE;
+                            case IDC_START_SCRUB:
+                                StartScrub(hwndDlg);
+                            return true;
 
-                        case IDC_PAUSE_SCRUB:
-                            PauseScrub(hwndDlg);
-                        return TRUE;
+                            case IDC_PAUSE_SCRUB:
+                                PauseScrub(hwndDlg);
+                            return true;
 
-                        case IDC_CANCEL_SCRUB:
-                            StopScrub(hwndDlg);
-                        return TRUE;
-                    }
-                break;
-            }
-        break;
+                            case IDC_CANCEL_SCRUB:
+                                StopScrub(hwndDlg);
+                            return true;
+                        }
+                    break;
+                }
+            break;
 
-        case WM_TIMER:
-            RefreshScrubDlg(hwndDlg, FALSE);
-        break;
+            case WM_TIMER:
+                RefreshScrubDlg(hwndDlg, false);
+            break;
+        }
+    } catch (const exception& e) {
+        error_message(hwndDlg, e.what());
     }
 
-    return FALSE;
+    return false;
 }
 
 static INT_PTR CALLBACK stub_ScrubDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -563,7 +480,7 @@ static INT_PTR CALLBACK stub_ScrubDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
     if (bs)
         return bs->ScrubDlgProc(hwndDlg, uMsg, wParam, lParam);
     else
-        return FALSE;
+        return false;
 }
 
 #ifdef __REACTOS__
@@ -571,132 +488,104 @@ extern "C" {
 #endif
 
 void CALLBACK ShowScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    HANDLE token;
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
-    BtrfsScrub* scrub;
+    try {
+        win_handle token;
+        TOKEN_PRIVILEGES tp;
+        LUID luid;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
-        ShowError(hwnd, GetLastError());
-        return;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+            throw last_error(GetLastError());
+
+        if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+            throw last_error(GetLastError());
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+            throw last_error(GetLastError());
+
+        set_dpi_aware();
+
+        BtrfsScrub scrub(lpszCmdLine);
+
+        DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_SCRUB), hwnd, stub_ScrubDlgProc, (LPARAM)&scrub);
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
-
-    if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-        ShowError(hwnd, GetLastError());
-        goto end;
-    }
-
-    set_dpi_aware();
-
-    scrub = new BtrfsScrub(lpszCmdLine);
-
-    DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_SCRUB), hwnd, stub_ScrubDlgProc, (LPARAM)scrub);
-
-    delete scrub;
-
-end:
-    CloseHandle(token);
 }
 
 void CALLBACK StartScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    LPWSTR* args;
-    int num_args;
+    vector<wstring> args;
 
-    args = CommandLineToArgvW(lpszCmdLine, &num_args);
+    command_line_to_args(lpszCmdLine, args);
 
-    if (!args)
-        return;
-
-    if (num_args >= 1) {
-        HANDLE h, token;
+    if (args.size() >= 1) {
         LUID luid;
         TOKEN_PRIVILEGES tp;
 
-        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
-            goto end;
+        {
+            win_handle token;
 
-        if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-            CloseHandle(token);
-            goto end;
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+                return;
+
+            if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+                return;
+
+            tp.PrivilegeCount = 1;
+            tp.Privileges[0].Luid = luid;
+            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+            if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+                return;
         }
 
-        tp.PrivilegeCount = 1;
-        tp.Privileges[0].Luid = luid;
-        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-        if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-            CloseHandle(token);
-            goto end;
-        }
-
-        CloseHandle(token);
-
-        h = CreateFileW(args[0], FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+        win_handle h = CreateFileW(args[0].c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
         if (h != INVALID_HANDLE_VALUE) {
             IO_STATUS_BLOCK iosb;
 
-            NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_START_SCRUB, NULL, 0, NULL, 0);
-
-            CloseHandle(h);
+            NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_START_SCRUB, nullptr, 0, nullptr, 0);
         }
     }
-
-end:
-    LocalFree(args);
 }
 
 void CALLBACK StopScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    LPWSTR* args;
-    int num_args;
+    vector<wstring> args;
 
-    args = CommandLineToArgvW(lpszCmdLine, &num_args);
+    command_line_to_args(lpszCmdLine, args);
 
-    if (!args)
-        return;
-
-    if (num_args >= 1) {
-        HANDLE h, token;
+    if (args.size() >= 1) {
         LUID luid;
         TOKEN_PRIVILEGES tp;
 
-        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
-            goto end;
+        {
+            win_handle token;
 
-        if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid))
-            goto end;
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+                return;
 
-        tp.PrivilegeCount = 1;
-        tp.Privileges[0].Luid = luid;
-        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+                return;
 
-        if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL))
-            goto end;
+            tp.PrivilegeCount = 1;
+            tp.Privileges[0].Luid = luid;
+            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-        CloseHandle(token);
+            if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+                return;
+        }
 
-        h = CreateFileW(args[0], FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+        win_handle h = CreateFileW(args[0].c_str(), FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                                   OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
         if (h != INVALID_HANDLE_VALUE) {
             IO_STATUS_BLOCK iosb;
 
-            NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_STOP_SCRUB, NULL, 0, NULL, 0);
-
-            CloseHandle(h);
+            NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_STOP_SCRUB, nullptr, 0, nullptr, 0);
         }
     }
-
-end:
-    LocalFree(args);
 }
 
 #ifdef __REACTOS__

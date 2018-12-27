@@ -71,6 +71,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
                                         IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
                                         GetSystemMetrics(SM_CYSMICON), LR_SHARED);
     wcFrame.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wcFrame.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wcFrame.lpszClassName = szFrameClass;
 
     hFrameWndClass = RegisterClassExW(&wcFrame); /* register frame window class */
@@ -82,6 +83,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT));
     wcChild.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wcChild.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wcChild.lpszClassName = szChildClass;
     wcChild.hIconSm = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT),
                                         IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),

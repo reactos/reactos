@@ -55,7 +55,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     CComPtr<IBandSite> pBs;
     DWORD dwBandId = 0;
 
-    hr = CreateStartMenuSite(Tray, IID_PPV_ARG(IUnknown, &pSms));
+    hr = CStartMenuSite_CreateInstance(Tray, IID_PPV_ARG(IUnknown, &pSms));
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 

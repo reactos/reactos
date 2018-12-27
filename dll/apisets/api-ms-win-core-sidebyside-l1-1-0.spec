@@ -8,7 +8,7 @@
 @ stdcall FindActCtxSectionGuid() kernel32.FindActCtxSectionGuid
 @ stdcall FindActCtxSectionStringW() kernel32.FindActCtxSectionStringW
 @ stdcall GetCurrentActCtx() kernel32.GetCurrentActCtx
-@ stub QueryActCtxSettingsW
+@ stdcall -version=0x600+ QueryActCtxSettingsW() kernel32.QueryActCtxSettingsW
 @ stdcall QueryActCtxW() kernel32.QueryActCtxW
 @ stdcall ReleaseActCtx() kernel32.ReleaseActCtx
 @ stdcall ZombifyActCtx() kernel32.ZombifyActCtx

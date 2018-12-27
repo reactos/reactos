@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -660,7 +660,7 @@ AcpiRsDumpByteList (
     UINT16                  Length,
     UINT8                   *Data)
 {
-    UINT8                   i;
+    UINT16                  i;
 
 
     for (i = 0; i < Length; i++)

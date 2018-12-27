@@ -16,4 +16,4 @@
 @ stub K32InitializeProcessForWsWatch
 @ stub K32QueryWorkingSet
 @ stub K32QueryWorkingSetEx
-@ stub QueryFullProcessImageNameW
+@ stdcall -version=0x600+ QueryFullProcessImageNameW() kernel32.QueryFullProcessImageNameW

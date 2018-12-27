@@ -42,7 +42,10 @@ extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb;
-    const int tHeight = 22;
+    const int nButtonWidth = 44;
+    const int nButtonHeight = 22;
+    int cyEdge = GetSystemMetrics(SM_CYEDGE);
+    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE;
     SetRect(&rt, 0, 0, cx, cy);
     cy = 0;
     if (hStatusBar != NULL)
@@ -51,12 +54,33 @@ extern void ResizeWnd(int cx, int cy)
         cy = rs.bottom - rs.top;
     }
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
-    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - 2*tHeight, rt.top, 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    if (hdwp) EndDeferWindowPos(hdwp);
+    cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH / 2;
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, NULL,
+                              rt.left, rt.top,
+                              rt.right - rt.left - nButtonWidth, nButtonHeight,
+                              uFlags);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, NULL,
+                              rt.right - nButtonWidth, rt.top,
+                              nButtonWidth, nButtonHeight,
+                              uFlags);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, NULL,
+                              rt.left,
+                              rt.top + nButtonHeight + cyEdge,
+                              g_pChildWnd->nSplitPos - SPLIT_WIDTH/2 - rt.left,
+                              rt.bottom - rt.top - cy - 2 * cyEdge,
+                              uFlags);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, NULL,
+                              rt.left + cx,
+                              rt.top + nButtonHeight + cyEdge,
+                              rt.right - cx,
+                              rt.bottom - rt.top - cy - 2 * cyEdge,
+                              uFlags);
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
 }
 
 /*******************************************************************************
@@ -85,17 +109,6 @@ static void draw_splitbar(HWND hWnd, int x)
     PatBlt(hdc, rt.left, rt.top, rt.right - rt.left, rt.bottom - rt.top, PATINVERT);
     SelectObject(hdc, OldObj);
     ReleaseDC(hWnd, hdc);
-}
-
-static void OnPaint(HWND hWnd)
-{
-    PAINTSTRUCT ps;
-    RECT rt;
-
-    GetClientRect(hWnd, &rt);
-    BeginPaint(hWnd, &ps);
-    FillRect(ps.hdc, &rt, GetSysColorBrush(COLOR_BTNFACE));
-    EndPaint(hWnd, &ps);
 }
 
 /*******************************************************************************
@@ -143,14 +156,14 @@ static BOOL ChildWnd_CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
         /* TODO */
         break;
     case ID_TREE_EXPANDBRANCH:
-        (void)TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
         break;
     case ID_TREE_COLLAPSEBRANCH:
-        (void)TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_COLLAPSE);
         break;
     case ID_TREE_RENAME:
         SetFocus(g_pChildWnd->hTreeWnd);
-        (void)TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        TreeView_EditLabel(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
     case ID_TREE_DELETE:
         hSelection = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
@@ -312,7 +325,7 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
     /* Wipe the listview, the status bar and the address bar if the root key was selected */
     if (TreeView_GetParent(g_pChildWnd->hTreeWnd, hItem) == NULL)
     {
-        (void)ListView_DeleteAllItems(g_pChildWnd->hListWnd);
+        ListView_DeleteAllItems(g_pChildWnd->hListWnd);
         SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)NULL);
         SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)NULL);
         return;
@@ -366,7 +379,6 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
  *  PURPOSE:  Processes messages for the child windows.
  *
  *  WM_COMMAND  - process the application menu
- *  WM_PAINT    - Paint the main window
  *  WM_DESTROY  - post a quit message and return
  *
  */
@@ -431,9 +443,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             goto def;
         }
         break;
-    case WM_PAINT:
-        OnPaint(hWnd);
-        return 0;
     case WM_SETCURSOR:
         if (LOWORD(lParam) == HTCLIENT)
         {
@@ -610,7 +619,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     {
                         lResult = FALSE;
                         RegCloseKey(hKey);
-                        (void)TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
+                        TreeView_EditLabel(g_pChildWnd->hTreeWnd, ptvdi->item.hItem);
                     }
                     else
                     {
@@ -728,18 +737,18 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 hti.pt.x = pt.x;
                 hti.pt.y = pt.y;
                 ScreenToClient(g_pChildWnd->hTreeWnd, &hti.pt);
-                (void)TreeView_HitTest(g_pChildWnd->hTreeWnd, &hti);
+                TreeView_HitTest(g_pChildWnd->hTreeWnd, &hti);
             }
 
             if (hti.flags & TVHT_ONITEM)
             {
                 hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
-                (void)TreeView_SelectItem(g_pChildWnd->hTreeWnd, hti.hItem);
+                TreeView_SelectItem(g_pChildWnd->hTreeWnd, hti.hItem);
 
                 memset(&item, 0, sizeof(item));
                 item.mask = TVIF_STATE | TVIF_CHILDREN;
                 item.hItem = hti.hItem;
-                (void)TreeView_GetItem(g_pChildWnd->hTreeWnd, &item);
+                TreeView_GetItem(g_pChildWnd->hTreeWnd, &item);
 
                 /* Set the Expand/Collapse menu item appropriately */
                 LoadStringW(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, COUNT_OF(buffer));

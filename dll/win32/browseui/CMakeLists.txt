@@ -23,6 +23,8 @@ list(APPEND SOURCE
     browseui.cpp
     browseuiord.cpp
     CAutoComplete.cpp
+    CTaskbarList.cpp
+    CTaskbarList.h
     commonbrowser.cpp
     desktopipc.cpp
     explorerband.cpp

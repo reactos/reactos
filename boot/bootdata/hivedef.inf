@@ -1,5 +1,5 @@
 [Version]
-Signature="$ReactOS$"
+Signature = "$Windows NT$"
 
 [AddReg]
 
@@ -289,7 +289,7 @@ HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\0\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Brick
-HKCU,"Control Panel\Appearance\New Schemes\1","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\1","DisplayName",0x00020000,"@themeui.dll,-850"
 HKCU,"Control Panel\Appearance\New Schemes\1","LegacyName",0x00020000,"%DESKTOP_SCHEME_1%"
 HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -360,7 +360,7 @@ HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\1\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Eggplant
-HKCU,"Control Panel\Appearance\New Schemes\2","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\2","DisplayName",0x00020000,"@themeui.dll,-852"
 HKCU,"Control Panel\Appearance\New Schemes\2","LegacyName",0x00020000,"%DESKTOP_SCHEME_2%"
 HKCU,"Control Panel\Appearance\New Schemes\2\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\2\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -502,7 +502,7 @@ HKCU,"Control Panel\Appearance\New Schemes\3\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\3\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\3\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; High Contrast 1
-HKCU,"Control Panel\Appearance\New Schemes\4","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\4","DisplayName",0x00020000,"@themeui.dll,-853"
 HKCU,"Control Panel\Appearance\New Schemes\4","LegacyName",0x00020000,"%DESKTOP_SCHEME_4%"
 HKCU,"Control Panel\Appearance\New Schemes\4\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\4\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -573,7 +573,7 @@ HKCU,"Control Panel\Appearance\New Schemes\4\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\4\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\4\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; High Contrast 2
-HKCU,"Control Panel\Appearance\New Schemes\5","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\5","DisplayName",0x00020000,"@themeui.dll,-856"
 HKCU,"Control Panel\Appearance\New Schemes\5","LegacyName",0x00020000,"%DESKTOP_SCHEME_5%"
 HKCU,"Control Panel\Appearance\New Schemes\5\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\5\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -644,7 +644,7 @@ HKCU,"Control Panel\Appearance\New Schemes\5\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\5\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\5\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; High Contrast Black
-HKCU,"Control Panel\Appearance\New Schemes\6","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\6","DisplayName",0x00020000,"@themeui.dll,-859"
 HKCU,"Control Panel\Appearance\New Schemes\6\","LegacyName",0x00020000,"%DESKTOP_SCHEME_6%"
 HKCU,"Control Panel\Appearance\New Schemes\6\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\6\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -715,7 +715,7 @@ HKCU,"Control Panel\Appearance\New Schemes\6\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\6\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\6\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; High Contrast White
-HKCU,"Control Panel\Appearance\New Schemes\7","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\7","DisplayName",0x00020000,"@themeui.dll,-862"
 HKCU,"Control Panel\Appearance\New Schemes\7","LegacyName",0x00020000,"%DESKTOP_SCHEME_7%"
 HKCU,"Control Panel\Appearance\New Schemes\7\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\7\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -786,7 +786,7 @@ HKCU,"Control Panel\Appearance\New Schemes\7\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\7\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\7\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Lilac
-HKCU,"Control Panel\Appearance\New Schemes\8","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\8","DisplayName",0x00020000,"@themeui.dll,-865"
 HKCU,"Control Panel\Appearance\New Schemes\8","LegacyName",0x00020000,"%DESKTOP_SCHEME_8%"
 HKCU,"Control Panel\Appearance\New Schemes\8\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\8\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -857,7 +857,7 @@ HKCU,"Control Panel\Appearance\New Schemes\8\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\8\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\8\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Maple
-HKCU,"Control Panel\Appearance\New Schemes\9","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\9","DisplayName",0x00020000,"@themeui.dll,-867"
 HKCU,"Control Panel\Appearance\New Schemes\9","LegacyName",0x00020000,"%DESKTOP_SCHEME_9%"
 HKCU,"Control Panel\Appearance\New Schemes\9\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\9\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -928,7 +928,7 @@ HKCU,"Control Panel\Appearance\New Schemes\9\Sizes\0","Size #6",0x000b0001,0c,00
 HKCU,"Control Panel\Appearance\New Schemes\9\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\9\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Marine
-HKCU,"Control Panel\Appearance\New Schemes\10","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\10","DisplayName",0x00020000,"@themeui.dll,-868"
 HKCU,"Control Panel\Appearance\New Schemes\10","LegacyName",0x00020000,"%DESKTOP_SCHEME_10%"
 HKCU,"Control Panel\Appearance\New Schemes\10\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\10\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1070,7 +1070,7 @@ HKCU,"Control Panel\Appearance\New Schemes\11\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\11\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\11\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Pumpkin
-HKCU,"Control Panel\Appearance\New Schemes\12","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\12","DisplayName",0x00020000,"@themeui.dll,-870"
 HKCU,"Control Panel\Appearance\New Schemes\12","LegacyName",0x00020000,"%DESKTOP_SCHEME_12%"
 HKCU,"Control Panel\Appearance\New Schemes\12\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\12\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1141,7 +1141,7 @@ HKCU,"Control Panel\Appearance\New Schemes\12\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\12\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\12\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Rainy Day
-HKCU,"Control Panel\Appearance\New Schemes\13","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\13","DisplayName",0x00020000,"@themeui.dll,-872"
 HKCU,"Control Panel\Appearance\New Schemes\13","LegacyName",0x00020000,"%DESKTOP_SCHEME_13%"
 HKCU,"Control Panel\Appearance\New Schemes\13\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\13\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1283,7 +1283,7 @@ HKCU,"Control Panel\Appearance\New Schemes\14\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\14\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\14\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Rose
-HKCU,"Control Panel\Appearance\New Schemes\15","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\15","DisplayName",0x00020000,"@themeui.dll,-874"
 HKCU,"Control Panel\Appearance\New Schemes\15","LegacyName",0x00020000,"%DESKTOP_SCHEME_15%"
 HKCU,"Control Panel\Appearance\New Schemes\15\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\15\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1425,7 +1425,7 @@ HKCU,"Control Panel\Appearance\New Schemes\16\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\16\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\16\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Sky (WinXP-like)
-HKCU,"Control Panel\Appearance\New Schemes\17","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\17","DisplayName",0x00020000,"@themeui.dll,-884"
 HKCU,"Control Panel\Appearance\New Schemes\17","LegacyName",0x00020000,"%DESKTOP_SCHEME_17%"
 HKCU,"Control Panel\Appearance\New Schemes\17\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\17\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1496,7 +1496,7 @@ HKCU,"Control Panel\Appearance\New Schemes\17\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\17\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\17\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Slate
-HKCU,"Control Panel\Appearance\New Schemes\18","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\18","DisplayName",0x00020000,"@themeui.dll,-876"
 HKCU,"Control Panel\Appearance\New Schemes\18","LegacyName",0x00020000,"%DESKTOP_SCHEME_18%"
 HKCU,"Control Panel\Appearance\New Schemes\18\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\18\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1567,7 +1567,7 @@ HKCU,"Control Panel\Appearance\New Schemes\18\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\18\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\18\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Storm
-HKCU,"Control Panel\Appearance\New Schemes\19","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\19","DisplayName",0x00020000,"@themeui.dll,-878"
 HKCU,"Control Panel\Appearance\New Schemes\19","LegacyName",0x00020000,"%DESKTOP_SCHEME_19%"
 HKCU,"Control Panel\Appearance\New Schemes\19\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\19\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1638,7 +1638,7 @@ HKCU,"Control Panel\Appearance\New Schemes\19\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\19\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\19\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Teal
-HKCU,"Control Panel\Appearance\New Schemes\20","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\20","DisplayName",0x00020000,"@themeui.dll,-879"
 HKCU,"Control Panel\Appearance\New Schemes\20","LegacyName",0x00020000,"%DESKTOP_SCHEME_20%"
 HKCU,"Control Panel\Appearance\New Schemes\20\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\20\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1709,7 +1709,7 @@ HKCU,"Control Panel\Appearance\New Schemes\20\Sizes\0","Size #6",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\20\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\20\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 ; Wheat
-HKCU,"Control Panel\Appearance\New Schemes\21","DisplayName",0x00020000,"@themeui.dll,-851"
+HKCU,"Control Panel\Appearance\New Schemes\21","DisplayName",0x00020000,"@themeui.dll,-871"
 HKCU,"Control Panel\Appearance\New Schemes\21","LegacyName",0x00020000,"%DESKTOP_SCHEME_21%"
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
@@ -1779,6 +1779,77 @@ HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Size #5",0x000b0001,0c,0
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Size #6",0x000b0001,0c,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
+; Red, White, and Blue
+HKCU,"Control Panel\Appearance\New Schemes\22","DisplayName",0x00020000,"@themeui.dll,-873"
+HKCU,"Control Panel\Appearance\New Schemes\22","LegacyName",0x00020000,"%DESKTOP_SCHEME_22%"
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","DisplayName",0x00020000,"@themeui.dll,-2019"
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_SIZE_0%"
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Flat Menus",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #0",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #1",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #2",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #3",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #4",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Font #5",0x00000001,f5,ff,ff,ff,00,00,00,\
+00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,00,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #0",0x00010001,0x02c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #1",0x00010001,0x00420000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #2",0x00010001,0x00000080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #3",0x00010001,0x00808080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #4",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #5",0x00010001,0x02ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #6",0x00010001,0x02000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #7",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #8",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #9",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #10",0x00010001,0x02c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #11",0x00010001,0x02c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #12",0x00010001,0x02ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #13",0x00010001,0x00000080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #14",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #15",0x00010001,0x02c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #16",0x00010001,0x02808080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #17",0x00010001,0x02808080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #18",0x00010001,0x02000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #19",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #20",0x00010001,0x02ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #21",0x00010001,0x02000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #22",0x00010001,0x02c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #23",0x00010001,0x00800000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #24",0x00010001,0x00ffffff
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #25",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #26",0x00010001,0x02000080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #27",0x00010001,0x00a81000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #28",0x00010001,0x00c9beba
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #29",0x00010001,0x00000080
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Color #30",0x00010001,0x00c0c0c0
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Contrast",0x00010001,0x00000000
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #0",0x000b0001,01,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #1",0x000b0001,10,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #2",0x000b0001,10,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #3",0x000b0001,12,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #4",0x000b0001,12,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #5",0x000b0001,0c,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #6",0x000b0001,0c,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #7",0x000b0001,12,00,00,00,00,00,00,00
+HKCU,"Control Panel\Appearance\New Schemes\22\Sizes\0","Size #8",0x000b0001,12,00,00,00,00,00,00,00
 HKCU,"Control Panel\Sound","Beep",2,"yes"
 HKCU,"Control Panel\Sound","ExtendedSounds",2,"yes"
 
@@ -2092,6 +2163,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2137,6 +2209,7 @@ DESKTOP_SCHEME_18="Břidlice"
 DESKTOP_SCHEME_19="Bouře"
 DESKTOP_SCHEME_20="Modrozelená"
 DESKTOP_SCHEME_21="Pšenice"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Výchozí velikost"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2177,6 +2250,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale Indstillinger\Temp"
 
@@ -2217,6 +2291,7 @@ DESKTOP_SCHEME_18="Schiefer"
 DESKTOP_SCHEME_19="Sturm"
 DESKTOP_SCHEME_20="Türkis"
 DESKTOP_SCHEME_21="Gelbbraun"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Standardgröße"
 TEMP_DIR="%USERPROFILE%\Lokale Einstellungen\Temp"
 
@@ -2257,6 +2332,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2297,6 +2373,7 @@ DESKTOP_SCHEME_18="Pizarra"
 DESKTOP_SCHEME_19="Tormenta"
 DESKTOP_SCHEME_20="Verde turquesa"
 DESKTOP_SCHEME_21="Trigo"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
 TEMP_DIR="%USERPROFILE%\Configuración local\Temp"
 
@@ -2337,6 +2414,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Paikalliset Asetukset\Temp"
 
@@ -2377,6 +2455,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Taille par défaut"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2417,6 +2496,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2457,6 +2537,7 @@ DESKTOP_SCHEME_18="Lavagna"
 DESKTOP_SCHEME_19="Tempesta"
 DESKTOP_SCHEME_20="Verde acqua"
 DESKTOP_SCHEME_21="Tabacco"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Impostazioni locali\Temp"
 
@@ -2497,6 +2578,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2537,6 +2619,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2577,6 +2660,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokale innstillinger\Midlertidig"
 
@@ -2617,6 +2701,7 @@ DESKTOP_SCHEME_18="Łupek"
 DESKTOP_SCHEME_19="Burza"
 DESKTOP_SCHEME_20="Morska Zieleń"
 DESKTOP_SCHEME_21="Pszenica"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Domyślny rozmiar"
 TEMP_DIR="%USERPROFILE%\Ustawienia lokalne\Temp"
 
@@ -2662,6 +2747,7 @@ DESKTOP_SCHEME_18="Ardezie"
 DESKTOP_SCHEME_19="Furtună"
 DESKTOP_SCHEME_20="Turcoaz"
 DESKTOP_SCHEME_21="Grâu"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Dimensiune implicită"
 TEMP_DIR="%USERPROFILE%\Preferințe locale\Temp"
 
@@ -2702,6 +2788,7 @@ DESKTOP_SCHEME_18="Шифер"
 DESKTOP_SCHEME_19="Шторм"
 DESKTOP_SCHEME_20="Зеленовато-голубая"
 DESKTOP_SCHEME_21="Пшеница"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2742,6 +2829,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2782,6 +2870,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Lokala inställningar\Temp"
 
@@ -2827,6 +2916,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2867,6 +2957,7 @@ DESKTOP_SCHEME_18="Шифер"
 DESKTOP_SCHEME_19="Шторм"
 DESKTOP_SCHEME_20="Зеленовато-блакитна"
 DESKTOP_SCHEME_21="Пшениця"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2907,6 +2998,7 @@ DESKTOP_SCHEME_18="Slate"
 DESKTOP_SCHEME_19="Storm"
 DESKTOP_SCHEME_20="Teal"
 DESKTOP_SCHEME_21="Wheat"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
@@ -2946,7 +3038,48 @@ DESKTOP_SCHEME_18="Kayağan Taş"
 DESKTOP_SCHEME_19="Fırtına"
 DESKTOP_SCHEME_20="Çamurcun"
 DESKTOP_SCHEME_21="Buğday"
+DESKTOP_SCHEME_22="Red, White, and Blue"
 DESKTOP_SCHEME_SIZE_0="Ön Tanımlı Büyüklük"
 TEMP_DIR="%USERPROFILE%\Yerli Ayarlar\Geçici"
+
+; Simplified Chinese
+[Strings.0804]
+POWERCFG_NAME_0="家庭/办公桌"
+POWERCFG_DESC_0="此方案适合大多数一直插电的台式计算机。"
+POWERCFG_NAME_1="便携式/笔记本电脑"
+POWERCFG_DESC_1="此方案旨在延长路上便携式计算机的电池寿命。
+POWERCFG_NAME_2="演示"
+POWERCFG_DESC_2="此方案能使显示器一直开启以进行演示。"
+POWERCFG_NAME_3="总是开启"
+POWERCFG_DESC_3="此方案使计算机保持运行，以便可以从网络访问它。如果您没有网络唤醒硬件，请使用此方案。"
+POWERCFG_NAME_4="最小电源管理"
+POWERCFG_DESC_4="此方案使计算机保持开启并对其进行优化以实现高性能。"
+POWERCFG_NAME_5="最大电池管理"
+POWERCFG_DESC_5="此方案能有效节省电池电力。"
+DESKTOP_SCHEME_0="ReactOS 标准"
+DESKTOP_SCHEME_1="红砖色"
+DESKTOP_SCHEME_2="茄子"
+DESKTOP_SCHEME_3="绿色橄榄"
+DESKTOP_SCHEME_4="高对比度 1"
+DESKTOP_SCHEME_5="高对比度 2"
+DESKTOP_SCHEME_6="高对比度（黑）"
+DESKTOP_SCHEME_7="高对比度（白）"
+DESKTOP_SCHEME_8="丁香"
+DESKTOP_SCHEME_9="枫树"
+DESKTOP_SCHEME_10="海洋"
+DESKTOP_SCHEME_11="梅花"
+DESKTOP_SCHEME_12="南瓜"
+DESKTOP_SCHEME_13="雨天"
+DESKTOP_SCHEME_14="ReactOS 经典"
+DESKTOP_SCHEME_15="玫瑰"
+DESKTOP_SCHEME_16="沙"
+DESKTOP_SCHEME_17="天空"
+DESKTOP_SCHEME_18="石板"
+DESKTOP_SCHEME_19="风暴"
+DESKTOP_SCHEME_20="青色"
+DESKTOP_SCHEME_21="麦色"
+DESKTOP_SCHEME_22="Red, White, and Blue"
+DESKTOP_SCHEME_SIZE_0="默认大小"
+TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 ; EOF

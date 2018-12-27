@@ -14,6 +14,7 @@ DBG_DEFAULT_CHANNEL(UserCsr);
 
 PEPROCESS gpepCSRSS = NULL;
 PVOID CsrApiPort = NULL;
+DWORD gdwPendingSystemThreads = 0;
 
 VOID
 InitCsrProcess(VOID /*IN PEPROCESS CsrProcess*/)
@@ -195,6 +196,85 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     /* Return the CSR Result */
     TRACE("Got back: 0x%lx\n", ApiMessage->Status);
     return ApiMessage->Status;
+}
+
+/*
+ * UserSystemThreadProc
+ *
+ * Called form dedicated thread in CSRSS. RIT is started in context of this
+ * thread because it needs valid Win32 process with TEB initialized.
+ */
+DWORD UserSystemThreadProc(BOOL bRemoteProcess)
+{
+    DWORD Type;
+
+    if (!gdwPendingSystemThreads)
+    {
+        ERR("gdwPendingSystemThreads is 0!\n");
+        return 0;
+    }
+
+    /* Decide which thread this will be */
+    if (gdwPendingSystemThreads & ST_RIT)
+        Type = ST_RIT;
+    else if (gdwPendingSystemThreads & ST_DESKTOP_THREAD)
+        Type = ST_DESKTOP_THREAD;
+    else 
+        Type = ST_GHOST_THREAD;
+
+    ASSERT(Type);
+
+    /* We will handle one of these threads right here so unmark it as pending */
+    gdwPendingSystemThreads &= ~Type;
+
+    UserLeave();
+
+    TRACE("UserSystemThreadProc: %d\n", Type);
+
+    switch (Type)
+    {
+        case ST_RIT: RawInputThreadMain(); break;
+        case ST_DESKTOP_THREAD: DesktopThreadMain(); break;
+        case ST_GHOST_THREAD: UserGhostThreadEntry(); break;
+        default: ERR("Wrong type: %x\n", Type);
+    }
+
+    UserEnterShared();
+
+    return 0;
+}
+
+BOOL UserCreateSystemThread(DWORD Type)
+{
+    USER_API_MESSAGE ApiMessage;
+    PUSER_CREATE_SYSTEM_THREAD pCreateThreadRequest = &ApiMessage.Data.CreateSystemThreadRequest;
+
+    TRACE("UserCreateSystemThread: %d\n", Type);
+
+    ASSERT(UserIsEnteredExclusive());
+
+    if (gdwPendingSystemThreads & Type)
+    {
+        ERR("System thread 0x%x already pending for creation\n", Type);
+        return TRUE;
+    }
+
+    /* We can't pass a parameter to the new thread so mark what the new thread needs to do */
+    gdwPendingSystemThreads |= Type;
+
+    /* Ask winsrv to create a new system thread. This new thread will enter win32k again calling UserSystemThreadProc */
+    pCreateThreadRequest->bRemote = FALSE;
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpCreateSystemThreads),
+                        sizeof(USER_CREATE_SYSTEM_THREAD));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        ERR("Csr call failed!\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */

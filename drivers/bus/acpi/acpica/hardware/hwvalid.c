@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,7 @@ AcpiHwValidateIoRequest (
     const ACPI_PORT_INFO    *PortInfo;
 
 
-    ACPI_FUNCTION_NAME (HwValidateIoRequest);
+    ACPI_FUNCTION_TRACE (HwValidateIoRequest);
 
 
     /* Supported widths are 8/16/32 */
@@ -148,14 +148,15 @@ AcpiHwValidateIoRequest (
     {
         ACPI_ERROR ((AE_INFO,
             "Bad BitWidth parameter: %8.8X", BitWidth));
-        return (AE_BAD_PARAMETER);
+        return_ACPI_STATUS (AE_BAD_PARAMETER);
     }
 
     PortInfo = AcpiProtectedPorts;
     ByteWidth = ACPI_DIV_8 (BitWidth);
     LastAddress = Address + ByteWidth - 1;
 
-    ACPI_DEBUG_PRINT ((ACPI_DB_IO, "Address %8.8X%8.8X LastAddress %8.8X%8.8X Length %X",
+    ACPI_DEBUG_PRINT ((ACPI_DB_IO,
+        "Address %8.8X%8.8X LastAddress %8.8X%8.8X Length %X",
         ACPI_FORMAT_UINT64 (Address), ACPI_FORMAT_UINT64 (LastAddress),
         ByteWidth));
 
@@ -166,14 +167,14 @@ AcpiHwValidateIoRequest (
         ACPI_ERROR ((AE_INFO,
             "Illegal I/O port address/length above 64K: %8.8X%8.8X/0x%X",
             ACPI_FORMAT_UINT64 (Address), ByteWidth));
-        return (AE_LIMIT);
+        return_ACPI_STATUS (AE_LIMIT);
     }
 
     /* Exit if requested address is not within the protected port table */
 
     if (Address > AcpiProtectedPorts[ACPI_PORT_INFO_ENTRIES - 1].End)
     {
-        return (AE_OK);
+        return_ACPI_STATUS (AE_OK);
     }
 
     /* Check request against the list of protected I/O ports */
@@ -195,8 +196,8 @@ AcpiHwValidateIoRequest (
 
             if (AcpiGbl_OsiData >= PortInfo->OsiDependency)
             {
-                ACPI_DEBUG_PRINT ((ACPI_DB_IO,
-                    "Denied AML access to port 0x%8.8X%8.8X/%X (%s 0x%.4X-0x%.4X)",
+                ACPI_DEBUG_PRINT ((ACPI_DB_VALUES,
+                    "Denied AML access to port 0x%8.8X%8.8X/%X (%s 0x%.4X-0x%.4X)\n",
                     ACPI_FORMAT_UINT64 (Address), ByteWidth, PortInfo->Name,
                     PortInfo->Start, PortInfo->End));
 
@@ -212,7 +213,7 @@ AcpiHwValidateIoRequest (
         }
     }
 
-    return (AE_OK);
+    return_ACPI_STATUS (AE_OK);
 }
 
 

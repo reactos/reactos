@@ -1,0 +1,14 @@
+/*
+ * COMBINING RING ABOVE
+ * The dead key transformation set was defined by checking the availability of
+ * the resulting letters in Unicode character table: https://unicode-table.com
+ */
+
+  { DEADTRANS(L'a', 0x030A, 0x00E5, 0x00) },
+  { DEADTRANS(L'A', 0x030A, 0x00C5, 0x00) },
+  { DEADTRANS(L'u', 0x030A, 0x016F, 0x00) },
+  { DEADTRANS(L'U', 0x030A, 0x016E, 0x00) },
+  { DEADTRANS(L'w', 0x030A, 0x1E98, 0x00) },
+  /* no Unicode capital W with ring above */
+  { DEADTRANS(L'y', 0x030A, 0x1E99, 0x00) },
+  /* no Unicode capital Y with ring above */

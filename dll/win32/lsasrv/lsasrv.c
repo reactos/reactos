@@ -10,6 +10,8 @@
 
 #include "lsasrv.h"
 
+NT_PRODUCT_TYPE LsapProductType = NtProductWinNt;
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -268,13 +270,17 @@ LsaIFree_LSAPR_TRANSLATED_SIDS(
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsapInitLsa(VOID)
 {
     NTSTATUS Status;
     BOOLEAN PrivilegeEnabled;
 
-    TRACE("LsapInitLsa() called\n");
+    TRACE("LsapInitLsa()\n");
+
+    /* Get the product type */
+    RtlGetNtProductType(&LsapProductType);
 
     /* Initialize the well known SIDs */
     LsapInitSids();

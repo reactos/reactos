@@ -1,0 +1,27 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "Format wpisu %1 RunEx lub RunOnceEx był nieprawidłowy. Po nazwie funkcji wymagany jest znak pionowej kreski ('|') oraz funkcja musi obsługiwać parametry procedury WinMain()."
+    IDS_LOADERROR "Podczas ładowania %1 wystąpił błąd. Plik może być niezainstalowany lub uszkodzony."
+    IDS_CALLERROR "Wystąpił błąd lub wyjątek podczas wywoływania funkcji %1 w %2."
+    IDS_INCORRECTFORMAT "Format poleceń RunEx lub RunOnceEx jest niepoprawny: %1. Polecenie wykonania musi zaczynać się od ||."
+    IDS_NOEXPORT "Nie można wywołać funkcji %1 w pliku %2, ponieważ ta funkcja nie istnieje lub nie jest eksportowana."
+    IDS_EXECUTEERROR "Podczas wykonywania %1 wystąpił błąd lub wyjątek."
+    IDS_NOFUNCTION "Nie można znaleźć funkcji %1 w pliku %2."
+    IDS_NODEPENDENCY "Nie można załadować pliku zależności %1."
+    IDS_SETUPERROR "Podczas ustawiania %1 wystąpił błąd. Ten błąd został zarejestrowany. Instalacja będzie kontynuowana."
+    IDS_INCOMPLETE "Poprzednia instalacja aplikacji nie została zakończona.\n\nZaloguj się używając konta administratora, aby dokończyć instalację."
+    IDS_SETUP "Instalator systemu ReactOS"
+    IDS_SERVICEERROR "Niektóre usługi nie mogły zostać uruchomione. Instalator musi uruchomić ponownie system, aby uruchomić usługi."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Instalator systemu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "System ReactOS ustawia teraz następujące elementy:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

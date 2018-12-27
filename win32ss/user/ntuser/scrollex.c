@@ -14,20 +14,17 @@ static
 HWND FASTCALL
 co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
 {
-   PDESKTOP Desktop;
    PTHRDCARETINFO CaretInfo;
    PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ActiveMessageQueue;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndCaret;
    PWND WndCaret;
 
    ASSERT_REFS_CO(Window);
 
    pti = PsGetCurrentThreadWin32Thread();
-   Desktop = pti->rpdesk;
-   ActiveMessageQueue = Desktop->ActiveMessageQueue;
-   if (!ActiveMessageQueue) return 0;
-   CaretInfo = &ActiveMessageQueue->CaretInfo;
+   ThreadQueue = pti->MessageQueue;
+   CaretInfo = &ThreadQueue->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 
    WndCaret = ValidateHwndNoErr(hWndCaret);

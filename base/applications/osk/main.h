@@ -23,6 +23,7 @@ typedef struct
     UINT_PTR   iTimer;
     /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     HWND       hActiveWnd;
+    BOOL       bShowWarning;
 } OSK_GLOBALS;
 
 /* DEFINES ********************************************************************/

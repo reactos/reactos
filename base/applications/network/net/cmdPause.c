@@ -20,7 +20,7 @@ INT cmdPause(INT argc, WCHAR **argv)
     if (argc != 3)
     {
         ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-        ConResPuts(StdOut, IDS_PAUSE_SYNTAX);
+        PrintNetMessage(MSG_PAUSE_SYNTAX);
         return 1;
     }
 
@@ -29,9 +29,8 @@ INT cmdPause(INT argc, WCHAR **argv)
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-            ConResPuts(StdOut, IDS_PAUSE_SYNTAX);
-            ConResPuts(StdOut, IDS_PAUSE_HELP_1);
-            ConResPuts(StdOut, IDS_PAUSE_HELP_2);
+            PrintNetMessage(MSG_PAUSE_SYNTAX);
+            PrintNetMessage(MSG_PAUSE_HELP);
             return 1;
         }
     }

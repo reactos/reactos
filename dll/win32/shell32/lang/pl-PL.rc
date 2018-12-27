@@ -457,7 +457,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Typy plików"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Zarejestrowane &typy plików:", -1, 7, 10, 196, 10
+    LTEXT "Zarejestrowane &typy plików:", -1, 7, 10, 216, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Nowy", IDC_FILETYPES_NEW, 120, 110, 60, 14, WS_TABSTOP
     PUSHBUTTON "&Usuń", IDC_FILETYPES_DELETE, 195, 110, 60, 14, WS_TABSTOP
@@ -466,8 +466,8 @@ BEGIN
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 140, 10, 10
     LTEXT "Nazwa Aplikacji", IDC_FILETYPES_APPNAME, 100, 140, 80, 10
     PUSHBUTTON "Z&mień", IDC_FILETYPES_CHANGE, 190, 140, 60, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 160, 30
-    PUSHBUTTON "Zaawa&nsowane", IDC_FILETYPES_ADVANCED, 190, 175, 60, 14, WS_TABSTOP
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 155, 180, 35
+    PUSHBUTTON "Zaawa&nsowane", IDC_FILETYPES_ADVANCED, 190, 179, 60, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -802,6 +802,11 @@ BEGIN
     IDS_RESTART_PROMPT "Czy chcesz zrestartować system?"
     IDS_SHUTDOWN_TITLE "Wyłącz"
     IDS_SHUTDOWN_PROMPT "Czy chcesz wyłączyć system?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie mogę wyświetlić okna Uruchom (błąd wewnętrzny)"
@@ -926,7 +931,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s Plik"
+    IDS_FILE_EXT_TYPE "Plik %s"
 
     IDS_BYTES_FORMAT "bajtów"
     IDS_UNKNOWN_APP "Nieznana aplikacja"

@@ -190,7 +190,37 @@ HBITMAP CreateRadioMask(HDC hDC)
 
 /////////////////////////////////////////////////////////////////////////////
 
+// CMSGlobalFolderOptionsStub --- The owner window of Folder Options.
+// This window hides taskbar button of Folder Options.
+class CMSGlobalFolderOptionsStub : public CWindowImpl<CMSGlobalFolderOptionsStub>
+{
+public:
+    DECLARE_WND_CLASS_EX(_T("MSGlobalFolderOptionsStub"), 0, COLOR_WINDOWTEXT)
+
+    BEGIN_MSG_MAP(CMSGlobalFolderOptionsStub)
+    END_MSG_MAP()
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
 EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
+
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
 
 static VOID
 ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
@@ -217,14 +247,29 @@ ShowFolderOptionsDialog(HWND hWnd, HINSTANCE hInst)
     LoadStringW(shell32_hInstance, IDS_FOLDER_OPTIONS, szOptions, _countof(szOptions));
     szOptions[_countof(szOptions) - 1] = 0;
 
+    // the stub window to hide taskbar button
+    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW;
+    CMSGlobalFolderOptionsStub stub;
+    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
+    {
+        ERR("stub.Create failed\n");
+        return;
+    }
+
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP;
+    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_USEICONID | PSH_USECALLBACK;
+    pinfo.hwndParent = stub;
     pinfo.nPages = num_pages;
     pinfo.phpage = hppages;
+    pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
     pinfo.pszCaption = szOptions;
+    pinfo.pfnCallback = PropSheetProc;
 
     PropertySheetW(&pinfo);
+
+    stub.DestroyWindow();
 }
 
 static VOID

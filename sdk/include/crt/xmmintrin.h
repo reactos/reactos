@@ -25,6 +25,10 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
 } __m128;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern __m128 _mm_load_ss(float const*);
 extern int _mm_cvt_ss2si(__m128);
 
@@ -34,6 +38,16 @@ unsigned int _mm_getcsr(void);
 void _mm_setcsr(unsigned int);
 #pragma intrinsic(_mm_setcsr)
 #else
+
+#ifndef __INTRIN_INLINE
+#ifdef __clang__
+#define __INTRIN_INLINE __forceinline
+#else
+#define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
+#define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
+#endif
+#endif
+
 /* 
  * We can't use __builtin_ia32_* functions,
  * are they are only available with the -msse2 compiler switch
@@ -53,6 +67,17 @@ __INTRIN_INLINE void _mm_setcsr(unsigned int val)
 
 /* Alternate names */
 #define _mm_cvtss_si32 _mm_cvt_ss2si
+
+#ifdef __cplusplus
+}
+#endif
+
+/* _mm_prefetch constants */
+#define _MM_HINT_T0 1
+#define _MM_HINT_T1 2
+#define _MM_HINT_T2 3
+#define _MM_HINT_NTA 0
+#define _MM_HINT_ET1 6
 
 
 #endif /* _INCLUDED_MM2 */

@@ -31,16 +31,46 @@ typedef struct {
     dir_child* dc;
 } dir_entry;
 
+ULONG get_reparse_tag_fcb(fcb* fcb) {
+    ULONG tag;
+
+    if (fcb->type == BTRFS_TYPE_SYMLINK)
+        return IO_REPARSE_TAG_SYMLINK;
+    else if (fcb->type == BTRFS_TYPE_DIRECTORY) {
+        if (!fcb->reparse_xattr.Buffer || fcb->reparse_xattr.Length < sizeof(ULONG))
+            return 0;
+
+        RtlCopyMemory(&tag, fcb->reparse_xattr.Buffer, sizeof(ULONG));
+    } else {
+        NTSTATUS Status;
+        ULONG br;
+
+        Status = read_file(fcb, (UINT8*)&tag, 0, sizeof(ULONG), &br, NULL);
+        if (!NT_SUCCESS(Status)) {
+            ERR("read_file returned %08x\n", Status);
+            return 0;
+        }
+    }
+
+    return tag;
+}
+
 ULONG get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 type, ULONG atts, BOOL lxss, PIRP Irp) {
     fcb* fcb;
-    ULONG tag = 0, br;
+    ULONG tag = 0;
     NTSTATUS Status;
 
-    if (type == BTRFS_TYPE_SYMLINK) {
-        if (lxss)
-            return IO_REPARSE_TAG_LXSS_SYMLINK;
-        else
-            return IO_REPARSE_TAG_SYMLINK;
+    if (type == BTRFS_TYPE_SYMLINK)
+        return IO_REPARSE_TAG_SYMLINK;
+    else if (lxss) {
+        if (type == BTRFS_TYPE_SOCKET)
+            return IO_REPARSE_TAG_LXSS_SOCKET;
+        else if (type == BTRFS_TYPE_FIFO)
+            return IO_REPARSE_TAG_LXSS_FIFO;
+        else if (type == BTRFS_TYPE_CHARDEV)
+            return IO_REPARSE_TAG_LXSS_CHARDEV;
+        else if (type == BTRFS_TYPE_BLOCKDEV)
+            return IO_REPARSE_TAG_LXSS_BLOCKDEV;
     }
 
     if (type != BTRFS_TYPE_FILE && type != BTRFS_TYPE_DIRECTORY)
@@ -57,23 +87,8 @@ ULONG get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 t
 
     ExAcquireResourceSharedLite(fcb->Header.Resource, TRUE);
 
-    if (type == BTRFS_TYPE_DIRECTORY) {
-        if (!fcb->reparse_xattr.Buffer || fcb->reparse_xattr.Length < sizeof(ULONG))
-            goto end;
+    tag = get_reparse_tag_fcb(fcb);
 
-        RtlCopyMemory(&tag, fcb->reparse_xattr.Buffer, sizeof(ULONG));
-    } else {
-        Status = read_file(fcb, (UINT8*)&tag, 0, sizeof(ULONG), &br, NULL);
-        if (!NT_SUCCESS(Status)) {
-            ERR("read_file returned %08x\n", Status);
-            goto end;
-        }
-
-        if (br < sizeof(ULONG))
-            goto end;
-    }
-
-end:
     ExReleaseResourceLite(fcb->Header.Resource);
 
     free_fcb(Vcb, fcb);
@@ -675,11 +690,7 @@ static NTSTATUS query_directory(PIRP Irp) {
     if (IrpSp->Parameters.QueryDirectory.FileName && IrpSp->Parameters.QueryDirectory.FileName->Length > 1) {
         TRACE("QD filename: %.*S\n", IrpSp->Parameters.QueryDirectory.FileName->Length / sizeof(WCHAR), IrpSp->Parameters.QueryDirectory.FileName->Buffer);
 
-#ifndef __REACTOS__
-        if (IrpSp->Parameters.QueryDirectory.FileName->Buffer[0] != '*') {
-#else
         if (IrpSp->Parameters.QueryDirectory.FileName->Length > sizeof(WCHAR) || IrpSp->Parameters.QueryDirectory.FileName->Buffer[0] != L'*') {
-#endif
             specific_file = TRUE;
 
             if (FsRtlDoesNameContainWildCards(IrpSp->Parameters.QueryDirectory.FileName)) {

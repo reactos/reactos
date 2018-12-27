@@ -48,11 +48,12 @@
 
 #define INCOMPAT_SUPPORTED (BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF | BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL | BTRFS_INCOMPAT_FLAGS_MIXED_GROUPS | \
                             BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_RAID56 | \
-                            BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES)
+                            BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES | \
+                            BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD)
 #define COMPAT_RO_SUPPORTED (BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE | BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID)
 
-static WCHAR device_name[] = {'\\','B','t','r','f','s',0};
-static WCHAR dosdevice_name[] = {'\\','D','o','s','D','e','v','i','c','e','s','\\','B','t','r','f','s',0};
+static const WCHAR device_name[] = {'\\','B','t','r','f','s',0};
+static const WCHAR dosdevice_name[] = {'\\','D','o','s','D','e','v','i','c','e','s','\\','B','t','r','f','s',0};
 
 DEFINE_GUID(BtrfsBusInterface, 0x4d414874, 0x6865, 0x6761, 0x6d, 0x65, 0x83, 0x69, 0x17, 0x9a, 0x7d, 0x1d);
 
@@ -70,6 +71,7 @@ UINT32 mount_compress = 0;
 UINT32 mount_compress_force = 0;
 UINT32 mount_compress_type = 0;
 UINT32 mount_zlib_level = 3;
+UINT32 mount_zstd_level = 3;
 UINT32 mount_flush_interval = 30;
 UINT32 mount_max_inline = 2048;
 UINT32 mount_skip_balance = 0;
@@ -268,7 +270,7 @@ static void DriverUnload(_In_ PDRIVER_OBJECT DriverObject) {
 #endif
     UNICODE_STRING dosdevice_nameW;
 
-    ERR("DriverUnload\n");
+    TRACE("(%p)\n");
 
     free_cache();
 
@@ -295,8 +297,8 @@ static void DriverUnload(_In_ PDRIVER_OBJECT DriverObject) {
         IoUnregisterPlugPlayNotificationEx(notification_entry);
 #endif
 
-    dosdevice_nameW.Buffer = dosdevice_name;
-    dosdevice_nameW.Length = dosdevice_nameW.MaximumLength = (USHORT)wcslen(dosdevice_name) * sizeof(WCHAR);
+    dosdevice_nameW.Buffer = (WCHAR*)dosdevice_name;
+    dosdevice_nameW.Length = dosdevice_nameW.MaximumLength = sizeof(dosdevice_name) - sizeof(WCHAR);
 
     IoDeleteSymbolicLink(&dosdevice_nameW);
     IoDeleteDevice(DriverObject->DeviceObject);
@@ -621,21 +623,31 @@ static BOOL lie_about_fs_type() {
     PPEB peb;
     LIST_ENTRY* le;
     ULONG retlen;
+#ifdef _AMD64_
+    ULONG_PTR wow64info;
+#endif
 
-    static WCHAR mpr[] = L"MPR.DLL";
-    static WCHAR cmd[] = L"CMD.EXE";
-    static WCHAR fsutil[] = L"FSUTIL.EXE";
+    static const WCHAR mpr[] = L"MPR.DLL";
+    static const WCHAR cmd[] = L"CMD.EXE";
+    static const WCHAR fsutil[] = L"FSUTIL.EXE";
     UNICODE_STRING mprus, cmdus, fsutilus;
 
-    mprus.Buffer = mpr;
-    mprus.Length = mprus.MaximumLength = (USHORT)(wcslen(mpr) * sizeof(WCHAR));
-    cmdus.Buffer = cmd;
-    cmdus.Length = cmdus.MaximumLength = (USHORT)(wcslen(cmd) * sizeof(WCHAR));
-    fsutilus.Buffer = fsutil;
-    fsutilus.Length = fsutilus.MaximumLength = (USHORT)(wcslen(fsutil) * sizeof(WCHAR));
+    mprus.Buffer = (WCHAR*)mpr;
+    mprus.Length = mprus.MaximumLength = sizeof(mpr) - sizeof(WCHAR);
+    cmdus.Buffer = (WCHAR*)cmd;
+    cmdus.Length = cmdus.MaximumLength = sizeof(cmd) - sizeof(WCHAR);
+    fsutilus.Buffer = (WCHAR*)fsutil;
+    fsutilus.Length = fsutilus.MaximumLength = sizeof(fsutil) - sizeof(WCHAR);
 
     if (!PsGetCurrentProcess())
         return FALSE;
+
+#ifdef _AMD64_
+    Status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessWow64Information, &wow64info, sizeof(wow64info), NULL);
+
+    if (NT_SUCCESS(Status) && wow64info != 0)
+        return TRUE;
+#endif
 
     Status = ZwQueryInformationProcess(NtCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), &retlen);
 
@@ -750,13 +762,24 @@ static NTSTATUS drv_query_volume_information(_In_ PDEVICE_OBJECT DeviceObject, _
             FILE_FS_ATTRIBUTE_INFORMATION* data = Irp->AssociatedIrp.SystemBuffer;
             BOOL overflow = FALSE;
 #ifndef __REACTOS__
-            WCHAR* fs_name = (Irp->RequestorMode == UserMode && lie_about_fs_type()) ? L"NTFS" : L"Btrfs";
-            ULONG fs_name_len = (ULONG)wcslen(fs_name) * sizeof(WCHAR);
-#else
-            WCHAR* fs_name = L"Btrfs";
-            ULONG fs_name_len = 5 * sizeof(WCHAR);
+            static const WCHAR ntfs[] = L"NTFS";
 #endif
-            ULONG orig_fs_name_len = fs_name_len;
+            static const WCHAR btrfs[] = L"Btrfs";
+            const WCHAR* fs_name;
+            ULONG fs_name_len, orig_fs_name_len;
+
+#ifndef __REACTOS__
+            if (Irp->RequestorMode == UserMode && lie_about_fs_type()) {
+                fs_name = ntfs;
+                orig_fs_name_len = fs_name_len = sizeof(ntfs) - sizeof(WCHAR);
+            } else {
+                fs_name = btrfs;
+                orig_fs_name_len = fs_name_len = sizeof(btrfs) - sizeof(WCHAR);
+            }
+#else
+            fs_name = btrfs;
+            orig_fs_name_len = fs_name_len = sizeof(btrfs) - sizeof(WCHAR);
+#endif
 
             TRACE("FileFsAttributeInformation\n");
 
@@ -1705,7 +1728,7 @@ static NTSTATUS close_file(_In_ PFILE_OBJECT FileObject, _In_ PIRP Irp) {
     CcUninitializeCacheMap(FileObject, NULL, NULL);
 
     if (open_files == 0 && fcb->Vcb->removing) {
-        uninit(fcb->Vcb, FALSE);
+        uninit(fcb->Vcb);
         return STATUS_SUCCESS;
     }
 
@@ -1726,8 +1749,9 @@ static NTSTATUS close_file(_In_ PFILE_OBJECT FileObject, _In_ PIRP Irp) {
     return STATUS_SUCCESS;
 }
 
-void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
+void uninit(_In_ device_extension* Vcb) {
     UINT64 i;
+    KIRQL irql;
     NTSTATUS Status;
     LIST_ENTRY* le;
     LARGE_INTEGER time;
@@ -1737,6 +1761,11 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
         Vcb->removing = TRUE;
         ExReleaseResourceLite(&Vcb->tree_lock);
     }
+
+    IoAcquireVpbSpinLock(&irql);
+    Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+    Vcb->Vpb->Flags |= VPB_DIRECT_WRITES_ALLOWED;
+    IoReleaseVpbSpinLock(irql);
 
     RemoveEntryList(&Vcb->list_entry);
 
@@ -1786,20 +1815,6 @@ void uninit(_In_ device_extension* Vcb, _In_ BOOL flush) {
     Status = registry_mark_volume_unmounted(&Vcb->superblock.uuid);
     if (!NT_SUCCESS(Status) && Status != STATUS_TOO_LATE)
         WARN("registry_mark_volume_unmounted returned %08x\n", Status);
-
-    if (flush) {
-        ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
-
-        if (Vcb->need_write && !Vcb->readonly) {
-            Status = do_write(Vcb, NULL);
-            if (!NT_SUCCESS(Status))
-                ERR("do_write returned %08x\n", Status);
-        }
-
-        free_trees(Vcb);
-
-        ExReleaseResourceLite(&Vcb->tree_lock);
-    }
 
     for (i = 0; i < Vcb->calcthreads.num_threads; i++) {
         Vcb->calcthreads.threads[i].quit = TRUE;
@@ -3599,7 +3614,7 @@ _Ret_maybenull_
 static root* find_default_subvol(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_opt_ PIRP Irp) {
     LIST_ENTRY* le;
 
-    static char fn[] = "default";
+    static const char fn[] = "default";
     static UINT32 crc32 = 0x8dbfc2d2;
 
     if (Vcb->options.subvol_id != 0) {
@@ -3764,8 +3779,8 @@ static BOOL is_btrfs_volume(_In_ PDEVICE_OBJECT DeviceObject) {
         return FALSE;
     }
 
-    if (mdn2->NameLength > wcslen(BTRFS_VOLUME_PREFIX) * sizeof(WCHAR) &&
-        RtlCompareMemory(mdn2->Name, BTRFS_VOLUME_PREFIX, wcslen(BTRFS_VOLUME_PREFIX) * sizeof(WCHAR)) == wcslen(BTRFS_VOLUME_PREFIX) * sizeof(WCHAR)) {
+    if (mdn2->NameLength > (sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR)) &&
+        RtlCompareMemory(mdn2->Name, BTRFS_VOLUME_PREFIX, sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR)) == sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR)) {
         ExFreePool(mdn2);
         return TRUE;
     }
@@ -4773,7 +4788,7 @@ static NTSTATUS verify_volume(_In_ PDEVICE_OBJECT devobj) {
         ExReleaseResourceLite(&Vcb->tree_lock);
 
     if (remove) {
-        uninit(Vcb, FALSE);
+        uninit(Vcb);
         return Status;
     }
 
@@ -4924,9 +4939,7 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     NTSTATUS Status;
     BOOL top_level;
     device_extension* Vcb = DeviceObject->DeviceExtension;
-#ifdef __REACTOS__
-    LIST_ENTRY *Vcble, *le;
-#endif
+    LIST_ENTRY* le;
 
     FsRtlEnterFileSystem();
 
@@ -4944,79 +4957,34 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     shutting_down = TRUE;
     KeSetEvent(&mountmgr_thread_event, 0, FALSE);
 
-#ifndef __REACTOS__
-    while (!IsListEmpty(&VcbList)) {
-        Vcb = CONTAINING_RECORD(VcbList.Flink, device_extension, list_entry);
+    le = VcbList.Flink;
+    while (le != &VcbList) {
+        BOOL open_files;
+        LIST_ENTRY* le2 = le->Flink;
+
+        Vcb = CONTAINING_RECORD(le, device_extension, list_entry);
 
         TRACE("shutting down Vcb %p\n", Vcb);
-
-        uninit(Vcb, TRUE);
-    }
-#else
-    Vcble = VcbList.Flink;
-    while (Vcble != &VcbList) {
-        Vcb = CONTAINING_RECORD(Vcble, device_extension, list_entry);
-
-        TRACE("shutting down Vcb %p\n", Vcb);
-
-        if (Vcb->balance.thread) {
-            Vcb->balance.paused = FALSE;
-            Vcb->balance.stopping = TRUE;
-            KeSetEvent(&Vcb->balance.event, 0, FALSE);
-            KeWaitForSingleObject(&Vcb->balance.finished, Executive, KernelMode, FALSE, NULL);
-        }
-
-        if (Vcb->scrub.thread) {
-            Vcb->scrub.paused = FALSE;
-            Vcb->scrub.stopping = TRUE;
-            KeSetEvent(&Vcb->scrub.event, 0, FALSE);
-            KeWaitForSingleObject(&Vcb->scrub.finished, Executive, KernelMode, FALSE, NULL);
-        }
-
-        if (Vcb->running_sends != 0) {
-            BOOL send_cancelled = FALSE;
-
-            ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
-
-            le = Vcb->send_ops.Flink;
-            while (le != &Vcb->send_ops) {
-                send_info* send = CONTAINING_RECORD(le, send_info, list_entry);
-
-                if (!send->cancelling) {
-                    send->cancelling = TRUE;
-                    send_cancelled = TRUE;
-                    send->ccb = NULL;
-                    KeSetEvent(&send->cleared_event, 0, FALSE);
-                }
-
-                le = le->Flink;
-            }
-
-            ExReleaseResourceLite(&Vcb->send_load_lock);
-
-            if (send_cancelled) {
-                while (Vcb->running_sends != 0) {
-                    ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
-                    ExReleaseResourceLite(&Vcb->send_load_lock);
-                }
-            }
-        }
 
         ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+        Vcb->removing = TRUE;
+        open_files = Vcb->open_files > 0;
 
         if (Vcb->need_write && !Vcb->readonly) {
             Status = do_write(Vcb, Irp);
-
             if (!NT_SUCCESS(Status))
                 ERR("do_write returned %08x\n", Status);
         }
 
-        Vcb->removing = TRUE;
+        free_trees(Vcb);
 
         ExReleaseResourceLite(&Vcb->tree_lock);
-        Vcble = Vcble->Flink;
+
+        if (!open_files)
+            uninit(Vcb);
+
+        le = le2;
     }
-#endif
 
 #ifdef _DEBUG
     if (comfo) {
@@ -5333,7 +5301,7 @@ static void init_logging() {
             FILE_STANDARD_INFORMATION fsi;
             FILE_POSITION_INFORMATION fpi;
 
-            static char delim[] = "\n---\n";
+            static const char delim[] = "\n---\n";
 
             // move to end of file
 
@@ -5353,7 +5321,7 @@ static void init_logging() {
                 goto end;
             }
 
-            Status = ZwWriteFile(log_handle, NULL, NULL, NULL, &iosb, delim, (ULONG)strlen(delim), NULL, NULL);
+            Status = ZwWriteFile(log_handle, NULL, NULL, NULL, &iosb, (void*)delim, sizeof(delim) - 1, NULL, NULL);
 
             if (!NT_SUCCESS(Status)) {
                 ERR("ZwWriteFile returned %08x\n", Status);
@@ -5453,7 +5421,7 @@ NTSTATUS AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT PhysicalDeviceObj
 
     ExAcquireResourceSharedLite(&pdode->child_lock, TRUE);
 
-    volname.Length = volname.MaximumLength = (USHORT)((wcslen(BTRFS_VOLUME_PREFIX) + 36 + 1) * sizeof(WCHAR));
+    volname.Length = volname.MaximumLength = (sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR)) + ((36 + 1) * sizeof(WCHAR));
     volname.Buffer = ExAllocatePoolWithTag(PagedPool, volname.MaximumLength, ALLOC_TAG); // FIXME - when do we free this?
 
     if (!volname.Buffer) {
@@ -5462,9 +5430,9 @@ NTSTATUS AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT PhysicalDeviceObj
         goto end2;
     }
 
-    RtlCopyMemory(volname.Buffer, BTRFS_VOLUME_PREFIX, wcslen(BTRFS_VOLUME_PREFIX) * sizeof(WCHAR));
+    RtlCopyMemory(volname.Buffer, BTRFS_VOLUME_PREFIX, sizeof(BTRFS_VOLUME_PREFIX) - sizeof(WCHAR));
 
-    j = (ULONG)wcslen(BTRFS_VOLUME_PREFIX);
+    j = (sizeof(BTRFS_VOLUME_PREFIX) / sizeof(WCHAR)) - 1;
     for (i = 0; i < 16; i++) {
         volname.Buffer[j] = hex_digit(pdode->uuid.uuid[i] >> 4); j++;
         volname.Buffer[j] = hex_digit(pdode->uuid.uuid[i] & 0xf); j++;
@@ -5670,10 +5638,10 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 
     init_fast_io_dispatch(&DriverObject->FastIoDispatch);
 
-    device_nameW.Buffer = device_name;
-    device_nameW.Length = device_nameW.MaximumLength = (USHORT)wcslen(device_name) * sizeof(WCHAR);
-    dosdevice_nameW.Buffer = dosdevice_name;
-    dosdevice_nameW.Length = dosdevice_nameW.MaximumLength = (USHORT)wcslen(dosdevice_name) * sizeof(WCHAR);
+    device_nameW.Buffer = (WCHAR*)device_name;
+    device_nameW.Length = device_nameW.MaximumLength = sizeof(device_name) - sizeof(WCHAR);
+    dosdevice_nameW.Buffer = (WCHAR*)dosdevice_name;
+    dosdevice_nameW.Length = dosdevice_nameW.MaximumLength = sizeof(dosdevice_name) - sizeof(WCHAR);
 
     Status = IoCreateDevice(DriverObject, sizeof(control_device_extension), &device_nameW, FILE_DEVICE_DISK_FILE_SYSTEM,
                             FILE_DEVICE_SECURE_OPEN, FALSE, &DeviceObject);

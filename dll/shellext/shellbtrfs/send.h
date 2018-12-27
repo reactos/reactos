@@ -23,19 +23,17 @@
 #else
 #include "../btrfs.h"
 #endif
-#include <string>
-#include <vector>
 
 class BtrfsSend {
 public:
     BtrfsSend() {
-        started = FALSE;
+        started = false;
         file[0] = 0;
         dirh = INVALID_HANDLE_VALUE;
         stream = INVALID_HANDLE_VALUE;
         subvol = L"";
-        buf = NULL;
-        incremental = FALSE;
+        buf = nullptr;
+        incremental = false;
     }
 
     ~BtrfsSend() {
@@ -53,14 +51,13 @@ private:
     void BrowseParent(HWND hwnd);
     void AddClone(HWND hwnd);
     void RemoveClone(HWND hwnd);
-    void ShowSendError(UINT msg, ...);
 
-    BOOL started;
-    BOOL incremental;
+    bool started;
+    bool incremental;
     WCHAR file[MAX_PATH], closetext[255];
     HANDLE thread, dirh, stream;
     HWND hwnd;
-    std::wstring subvol;
+    wstring subvol;
     char* buf;
-    std::vector <std::wstring> clones;
+    vector <wstring> clones;
 };

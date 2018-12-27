@@ -21,8 +21,8 @@
 @ stdcall RegGetValueW() advapi32.RegGetValueW
 @ stdcall RegLoadKeyA() advapi32.RegLoadKeyA
 @ stdcall RegLoadKeyW() advapi32.RegLoadKeyW
-@ stub RegLoadMUIStringA
-@ stub RegLoadMUIStringW
+@ stdcall -version=0x600+ RegLoadMUIStringA() advapi32.RegLoadMUIStringA
+@ stdcall -version=0x600+ RegLoadMUIStringW() advapi32.RegLoadMUIStringW
 @ stdcall RegNotifyChangeKeyValue() advapi32.RegNotifyChangeKeyValue
 @ stdcall RegOpenCurrentUser() advapi32.RegOpenCurrentUser
 @ stdcall RegOpenKeyExA() advapi32.RegOpenKeyExA

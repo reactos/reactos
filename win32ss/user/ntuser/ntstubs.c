@@ -691,6 +691,9 @@ NtUserSetInformationProcess(
     return 0;
 }
 
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP DesktopObject);
+
 NTSTATUS
 APIENTRY
 NtUserSetInformationThread(IN HANDLE ThreadHandle,
@@ -794,8 +797,8 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             HANDLE CsrPortHandle;
 
-            ERR("Set CSR API Port for Win32k\n");
 
+            TRACE("Set CSR API Port for Win32k\n");
             if (ThreadInformationLength != sizeof(CsrPortHandle))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -820,6 +823,32 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             break;
         }
 
+        case UserThreadUseActiveDesktop:
+        {
+            HDESK hdesk;
+
+            if (Thread != PsGetCurrentThread())
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
+            IntSetThreadDesktop(hdesk, FALSE);
+
+            break;
+        }
+        case UserThreadRestoreDesktop:
+        {
+            if (Thread != PsGetCurrentThread())
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+            }
+
+            IntSetThreadDesktop(NULL, FALSE);
+            break;
+        }
         default:
         {
             STUB;
@@ -918,9 +947,8 @@ NtUserCtxDisplayIOCtl(
 BOOL APIENTRY
 NtUserLockWindowUpdate(HWND hWnd)
 {
-   STUB
-
-   return 0;
+    STUB;
+    return FALSE;
 }
 
 DWORD APIENTRY

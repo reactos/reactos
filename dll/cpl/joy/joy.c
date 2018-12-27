@@ -198,12 +198,20 @@ AddPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 INT_PTR CALLBACK
 MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    static HICON s_hIcon = NULL, s_hIconSm = NULL;
     UNREFERENCED_PARAMETER(lParam);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             AddColumns(GetDlgItem(hwndDlg,IDC_CONTROLLER_LIST));
+            s_hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+            s_hIconSm = (HICON)LoadImageW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM),
+                                          IMAGE_ICON,
+                                          GetSystemMetrics(SM_CXSMICON),
+                                          GetSystemMetrics(SM_CYSMICON), 0);
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)s_hIcon);
+            SendMessageW(hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM)s_hIconSm);
             break;
 
         case WM_COMMAND:
@@ -224,6 +232,8 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDOK:
+                    DestroyIcon(s_hIcon);
+                    DestroyIcon(s_hIconSm);
                     EndDialog(hwndDlg,LOWORD(wParam));
                     break;
             }
@@ -236,6 +246,8 @@ MainPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case SC_CLOSE:
+                    DestroyIcon(s_hIcon);
+                    DestroyIcon(s_hIconSm);
                     EndDialog(hwndDlg,LOWORD(wParam));
                     break;
 

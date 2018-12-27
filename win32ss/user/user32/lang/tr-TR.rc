@@ -39,7 +39,7 @@ BEGIN
     MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
     MENUITEM "&Ekranı Kaplat", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Kapat\tSeçenek+F4", SC_CLOSE
+    MENUITEM "&Kapat\tAlt+F4", SC_CLOSE
 END
 
 SYSMENUMDI MENU
@@ -50,9 +50,9 @@ BEGIN
     MENUITEM "&Simge Durumuna Küçült", SC_MINIMIZE
     MENUITEM "&Ekranı Kaplat", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "&Kapat\tDenetim+F4", SC_CLOSE
+    MENUITEM "&Kapat\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "&İleri\tDenetim+F6", SC_NEXTWINDOW
+    MENUITEM "&İleri\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -60,6 +60,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Yanlışlık"
+    IDS_NOT_RESPONDING " (Not Responding)"
+    IDS_ASK_TERMINATE "This application is hung up. May I terminate this app?"
+    IDS_HUNG_UP_TITLE "Hung up!"
     IDS_OK "Tamam"
     IDS_CANCEL "İptal"
     IDS_ABORT "&Durdur"

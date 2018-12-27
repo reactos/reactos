@@ -322,6 +322,7 @@ IopLoadServiceModule(
     if (ExpInTextModeSetup)
     {
         /* We have no registry, but luckily we know where all the drivers are */
+        DPRINT1("IopLoadServiceModule(%wZ, 0x%p) called in ExpInTextModeSetup mode...\n", ServiceName, ModuleObject);
 
         /* ServiceStart < 4 is all that matters */
         ServiceStart = 0;
@@ -1044,8 +1045,13 @@ IopInitializeBootDrivers(VOID)
                                           NULL,
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
+            DPRINT("IopOpenRegistryKeyEx(%wZ) returned 0x%08lx\n", &BootEntry->RegistryPath, Status);
+#if 0
+            if (NT_SUCCESS(Status))
+#else // Hack still needed...
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
                 ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1)))) // yes, it's an assignment!
+#endif
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
@@ -1122,7 +1128,7 @@ IopInitializeSystemDrivers(VOID)
     PUNICODE_STRING *DriverList, *SavedList;
 
     /* No system drivers on the boot cd */
-    if (KeLoaderBlock->SetupLdrBlock) return;
+    if (KeLoaderBlock->SetupLdrBlock) return; // ExpInTextModeSetup
 
     /* Get the driver list */
     SavedList = DriverList = CmGetSystemDriverList();
@@ -1181,17 +1187,43 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     NTSTATUS Status;
     PWSTR Start;
     BOOLEAN SafeToUnload = TRUE;
-
-    DPRINT("IopUnloadDriver('%wZ', %u)\n", DriverServiceName, UnloadPnpDrivers);
+    KPROCESSOR_MODE PreviousMode;
+    UNICODE_STRING CapturedServiceName;
 
     PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Need the appropriate priviliege */
+    if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+    {
+        DPRINT1("No unload privilege!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Capture the service name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedServiceName, PreviousMode, DriverServiceName);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("IopUnloadDriver('%wZ', %u)\n", &CapturedServiceName, UnloadPnpDrivers);
+
+
+    /* We need a service name */
+    if (CapturedServiceName.Length == 0)
+    {
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /*
      * Get the service name from the registry key name
      */
-    Start = wcsrchr(DriverServiceName->Buffer, L'\\');
+    Start = wcsrchr(CapturedServiceName.Buffer, L'\\');
     if (Start == NULL)
-        Start = DriverServiceName->Buffer;
+        Start = CapturedServiceName.Buffer;
     else
         Start++;
 
@@ -1205,7 +1237,11 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                               ObjectName.MaximumLength,
                                               TAG_IO);
-    if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!ObjectName.Buffer)
+    {
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
     memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
     ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = UNICODE_NULL;
@@ -1226,6 +1262,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     {
         DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
         ExFreePoolWithTag(ObjectName.Buffer, TAG_IO);
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
         return Status;
     }
 
@@ -1237,6 +1274,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     {
         DPRINT1("Driver deletion pending\n");
         ObDereferenceObject(DriverObject);
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
         return STATUS_DELETE_PENDING;
     }
 
@@ -1252,10 +1290,13 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     QueryTable[0].EntryContext = &ImagePath;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                    DriverServiceName->Buffer,
+                                    CapturedServiceName.Buffer,
                                     QueryTable,
                                     NULL,
                                     NULL);
+
+    /* We no longer need service name */
+    ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
 
     if (!NT_SUCCESS(Status))
     {

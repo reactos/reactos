@@ -3883,11 +3883,41 @@ InitOnceExecuteOnce(
   _Inout_opt_ PVOID Parameter,
   _Outptr_opt_result_maybenull_ LPVOID *Context);
 
+
+#if defined(_SLIST_HEADER_) && !defined(_NTOS_) && !defined(_NTOSP_)
+
 WINBASEAPI
 VOID
 WINAPI
 InitializeSListHead(
-    _Out_ PSLIST_HEADER ListHead);
+  _Out_ PSLIST_HEADER ListHead);
+
+WINBASEAPI
+PSLIST_ENTRY
+WINAPI
+InterlockedPopEntrySList(
+  _Inout_ PSLIST_HEADER ListHead);
+
+WINBASEAPI
+PSLIST_ENTRY
+WINAPI
+InterlockedPushEntrySList(
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ PSLIST_ENTRY ListEntry);
+
+WINBASEAPI
+PSLIST_ENTRY
+WINAPI
+InterlockedFlushSList(
+  _Inout_ PSLIST_HEADER ListHead);
+
+WINBASEAPI
+USHORT
+WINAPI
+QueryDepthSList(
+  _In_ PSLIST_HEADER ListHead);
+
+#endif /* _SLIST_HEADER_ */
 
 #ifdef _MSC_VER
 #pragma warning(pop)

@@ -64,6 +64,7 @@ static const struct
     { &EDIT_builtin_class,      FNID_EDIT,      ICLS_EDIT},
 /*    { &ICONTITLE_builtin_class, FNID_ICONTITLE, ICLS_ICONTITLE}, // moved to win32k */
     { &STATIC_builtin_class,    FNID_STATIC,    ICLS_STATIC},
+    { &GHOST_builtin_class,     FNID_GHOST,     ICLS_GHOST},
 };
 
 BOOL WINAPI RegisterSystemControls(VOID)
@@ -175,8 +176,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnStaticWndProc         = StaticWndProcW;
   pfnClientA.pfnImeWndProc            = ImeWndProcA;
   pfnClientW.pfnImeWndProc            = ImeWndProcW;
-  pfnClientA.pfnGhostWndProc          = DefWindowProcA;
-  pfnClientW.pfnGhostWndProc          = DefWindowProcW;
+  pfnClientA.pfnGhostWndProc          = GhostWndProcA;
+  pfnClientW.pfnGhostWndProc          = GhostWndProcW;
   pfnClientA.pfnHkINLPCWPSTRUCT       = DefWindowProcA;
   pfnClientW.pfnHkINLPCWPSTRUCT       = DefWindowProcW;
   pfnClientA.pfnHkINLPCWPRETSTRUCT    = DefWindowProcA;
@@ -199,7 +200,7 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientWorker.pfnMDIClientWndProc = MDIClientWndProc_common;
   pfnClientWorker.pfnStaticWndProc    = StaticWndProc_common;
   pfnClientWorker.pfnImeWndProc       = ImeWndProc_common;
-  pfnClientWorker.pfnGhostWndProc     = User32DefWindowProc;
+  pfnClientWorker.pfnGhostWndProc     = GhostWndProc_common;
   pfnClientWorker.pfnCtfHookProc      = User32DefWindowProc;
 
   Status = NtUserInitializeClientPfnArrays( &pfnClientA,

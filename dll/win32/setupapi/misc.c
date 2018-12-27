@@ -869,6 +869,27 @@ void WINAPI pSetupSetGlobalFlags( DWORD flags )
     pSetupModifyGlobalFlags(0xFFFFFFFF, flags);
 }
 
+/***********************************************************************
+ *		SetupGetNonInteractiveMode  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupGetNonInteractiveMode(VOID)
+{
+    return (GlobalSetupFlags & PSPGF_NONINTERACTIVE);
+}
+
+/***********************************************************************
+ *		SetupSetNonInteractiveMode  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetNonInteractiveMode(BOOL NonInteractiveFlag)
+{
+    BOOL OldValue;
+
+    OldValue = (GlobalSetupFlags & PSPGF_NONINTERACTIVE);
+    pSetupModifyGlobalFlags(PSPGF_NONINTERACTIVE,
+                            NonInteractiveFlag ? PSPGF_NONINTERACTIVE : 0);
+
+    return OldValue;
+}
 
 /***********************************************************************
  *              AssertFail  (SETUPAPI.@)

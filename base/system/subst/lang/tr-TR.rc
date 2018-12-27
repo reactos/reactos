@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2015-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -14,8 +14,8 @@ BEGIN
     IDS_USAGE "Bir sürücü harfiyle bir yolu ilişkilendirir.\n\n\
 SUBST [sürücü1: [sürücü2:]yol]\n\
 SUBST sürücü1: /D\n\n\
-  sürücü:        Bir yol atamak için istediğiniz bir farazî sürücüyü belirtir.\n\
-  [sürücü2:]yol  Bir farazî sürücüye atamak için istediğiniz bir fizîkî sürücüyü ve yolu belirtir.\n\
-  /D             Bir yerine koyulmuş (farazî) sürücüyü siler.\n\n\
-Şimdiki farazî sürücülerin bir dizelgesini görüntülemek için değişkensiz olarak SUBST yazınız.\n"
+  sürücü:        Bir yol atamak için istediğiniz bir sanal sürücüyü belirtir.\n\
+  [sürücü2:]yol  Bir sanal sürücüye atamak için istediğiniz bir fiziki sürücüyü ve yolu belirtir.\n\
+  /D             Bir yerine koyulmuş (sanal) sürücüyü siler.\n\n\
+Güncel sanal sürücülerin bir listesini görüntülemek için değişkensiz olarak SUBST yazınız.\n"
 END

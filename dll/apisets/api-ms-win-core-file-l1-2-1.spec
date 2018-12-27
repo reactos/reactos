@@ -44,8 +44,8 @@
 @ stdcall GetFileSizeEx() kernel32.GetFileSizeEx
 @ stdcall GetFileTime() kernel32.GetFileTime
 @ stdcall GetFileType() kernel32.GetFileType
-@ stub GetFinalPathNameByHandleA
-@ stub GetFinalPathNameByHandleW
+@ stdcall -version=0x600+ GetFinalPathNameByHandleA() kernel32.GetFinalPathNameByHandleA
+@ stdcall -version=0x600+ GetFinalPathNameByHandleW() kernel32.GetFinalPathNameByHandleW
 @ stdcall GetFullPathNameA() kernel32.GetFullPathNameA
 @ stdcall GetFullPathNameW() kernel32.GetFullPathNameW
 @ stdcall GetLogicalDriveStringsW() kernel32.GetLogicalDriveStringsW
@@ -55,7 +55,7 @@
 @ stdcall GetShortPathNameW() kernel32.GetShortPathNameW
 @ stdcall GetTempFileNameW() kernel32.GetTempFileNameW
 @ stdcall GetTempPathW() kernel32.GetTempPathW
-@ stub GetVolumeInformationByHandleW
+@ stdcall -version=0x600+ GetVolumeInformationByHandleW() kernel32.GetVolumeInformationByHandleW
 @ stdcall GetVolumeInformationW() kernel32.GetVolumeInformationW
 @ stdcall GetVolumeNameForVolumeMountPointW() kernel32.GetVolumeNameForVolumeMountPointW
 @ stdcall GetVolumePathNameW() kernel32.GetVolumePathNameW
@@ -72,8 +72,8 @@
 @ stdcall SetEndOfFile() kernel32.SetEndOfFile
 @ stdcall SetFileAttributesA() kernel32.SetFileAttributesA
 @ stdcall SetFileAttributesW() kernel32.SetFileAttributesW
-@ stub SetFileInformationByHandle
-@ stub SetFileIoOverlappedRange
+@ stdcall -version=0x600+ SetFileInformationByHandle() kernel32.SetFileInformationByHandle
+@ stdcall -version=0x600+ SetFileIoOverlappedRange() kernel32.SetFileIoOverlappedRange
 @ stdcall SetFilePointer() kernel32.SetFilePointer
 @ stdcall SetFilePointerEx() kernel32.SetFilePointerEx
 @ stdcall SetFileTime() kernel32.SetFileTime

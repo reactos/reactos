@@ -1024,7 +1024,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
 
     // add INODE_REF
 
-    irsize = (UINT16)(offsetof(INODE_REF, name[0]) + strlen(DOTDOT));
+    irsize = (UINT16)(offsetof(INODE_REF, name[0]) + sizeof(DOTDOT) - 1);
     ir = ExAllocatePoolWithTag(PagedPool, irsize, ALLOC_TAG);
     if (!ir) {
         ERR("out of memory\n");
@@ -1033,7 +1033,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     }
 
     ir->index = 0;
-    ir->n = (USHORT)strlen(DOTDOT);
+    ir->n = sizeof(DOTDOT) - 1;
     RtlCopyMemory(ir->name, DOTDOT, ir->n);
 
     Status = insert_tree_item(Vcb, r, r->root_item.objid, TYPE_INODE_REF, r->root_item.objid, ir, irsize, NULL, Irp);
@@ -1164,9 +1164,10 @@ end2:
 }
 
 static NTSTATUS get_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length) {
-    btrfs_inode_info* bii = data;
+    btrfs_inode_info2* bii = data;
     fcb* fcb;
     ccb* ccb;
+    BOOL old_style;
 
     if (length < sizeof(btrfs_inode_info))
         return STATUS_BUFFER_OVERFLOW;
@@ -1192,6 +1193,8 @@ static NTSTATUS get_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
     if (fcb->ads)
         fcb = ccb->fileref->parent->fcb;
 
+    old_style = length < sizeof(btrfs_inode_info2);
+
     ExAcquireResourceSharedLite(fcb->Header.Resource, TRUE);
 
     bii->subvol = fcb->subvol->id;
@@ -1210,52 +1213,84 @@ static NTSTATUS get_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
     bii->flags = fcb->inode_item.flags;
 
     bii->inline_length = 0;
-    bii->disk_size[0] = 0;
-    bii->disk_size[1] = 0;
-    bii->disk_size[2] = 0;
+    bii->disk_size_uncompressed = 0;
+    bii->disk_size_zlib = 0;
+    bii->disk_size_lzo = 0;
+
+    if (!old_style) {
+        bii->disk_size_zstd = 0;
+        bii->sparse_size = 0;
+    }
 
     if (fcb->type != BTRFS_TYPE_DIRECTORY) {
+        UINT64 last_end = 0;
         LIST_ENTRY* le;
+        BOOL extents_inline = FALSE;
 
         le = fcb->extents.Flink;
         while (le != &fcb->extents) {
             extent* ext = CONTAINING_RECORD(le, extent, list_entry);
 
             if (!ext->ignore) {
+                if (!old_style && ext->offset > last_end)
+                    bii->sparse_size += ext->offset - last_end;
+
                 if (ext->extent_data.type == EXTENT_TYPE_INLINE) {
                     bii->inline_length += ext->datalen - (UINT16)offsetof(EXTENT_DATA, data[0]);
+                    last_end = ext->offset + ext->extent_data.decoded_size;
+                    extents_inline = TRUE;
                 } else {
                     EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ext->extent_data.data;
 
                     // FIXME - compressed extents with a hole in them are counted more than once
                     if (ed2->size != 0) {
-                        if (ext->extent_data.compression == BTRFS_COMPRESSION_NONE) {
-                            bii->disk_size[0] += ed2->num_bytes;
-                        } else if (ext->extent_data.compression == BTRFS_COMPRESSION_ZLIB) {
-                            bii->disk_size[1] += ed2->size;
-                        } else if (ext->extent_data.compression == BTRFS_COMPRESSION_LZO) {
-                            bii->disk_size[2] += ed2->size;
+                        switch (ext->extent_data.compression) {
+                            case BTRFS_COMPRESSION_NONE:
+                                bii->disk_size_uncompressed += ed2->num_bytes;
+                                break;
+
+                            case BTRFS_COMPRESSION_ZLIB:
+                                bii->disk_size_zlib += ed2->size;
+                                break;
+
+                            case BTRFS_COMPRESSION_LZO:
+                                bii->disk_size_lzo += ed2->size;
+                                break;
+
+                            case BTRFS_COMPRESSION_ZSTD:
+                                if (!old_style)
+                                    bii->disk_size_zstd += ed2->size;
+                                break;
                         }
                     }
+
+                    last_end = ext->offset + ed2->num_bytes;
                 }
             }
 
             le = le->Flink;
         }
+
+        if (!extents_inline && !old_style && sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size) > last_end)
+            bii->sparse_size += sector_align(fcb->inode_item.st_size, fcb->Vcb->superblock.sector_size) - last_end;
     }
 
     switch (fcb->prop_compression) {
         case PropCompression_Zlib:
             bii->compression_type = BTRFS_COMPRESSION_ZLIB;
-        break;
+            break;
 
         case PropCompression_LZO:
             bii->compression_type = BTRFS_COMPRESSION_LZO;
-        break;
+            break;
+
+        case PropCompression_ZSTD:
+            bii->compression_type = BTRFS_COMPRESSION_ZSTD;
+            break;
 
         default:
             bii->compression_type = BTRFS_COMPRESSION_ANY;
-        break;
+            break;
     }
 
     ExReleaseResourceLite(fcb->Header.Resource);
@@ -1295,7 +1330,7 @@ static NTSTATUS set_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
         return STATUS_ACCESS_DENIED;
     }
 
-    if (bsii->compression_type_changed && bsii->compression_type > BTRFS_COMPRESSION_LZO)
+    if (bsii->compression_type_changed && bsii->compression_type > BTRFS_COMPRESSION_ZSTD)
         return STATUS_INVALID_PARAMETER;
 
     if (fcb->ads)
@@ -1357,6 +1392,10 @@ static NTSTATUS set_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
 
             case BTRFS_COMPRESSION_LZO:
                 fcb->prop_compression = PropCompression_LZO;
+            break;
+
+            case BTRFS_COMPRESSION_ZSTD:
+                fcb->prop_compression = PropCompression_ZSTD;
             break;
         }
 
@@ -2351,10 +2390,6 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
 
                 RtlZeroMemory(newvpb, sizeof(VPB));
 
-                IoAcquireVpbSpinLock(&irql);
-                devobj->Vpb->Flags &= ~VPB_MOUNTED;
-                IoReleaseVpbSpinLock(irql);
-
                 ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
 
                 Vcb->removing = TRUE;
@@ -2403,7 +2438,7 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
                     ExFreePool(newvpb);
 
                 if (Vcb->open_files == 0)
-                    uninit(Vcb, FALSE);
+                    uninit(Vcb);
             }
 
             break;
@@ -2517,7 +2552,6 @@ static void update_volumes(device_extension* Vcb) {
 
 static NTSTATUS dismount_volume(device_extension* Vcb, PIRP Irp) {
     NTSTATUS Status;
-    KIRQL irql;
 
     TRACE("FSCTL_DISMOUNT_VOLUME\n");
 
@@ -2557,11 +2591,6 @@ static NTSTATUS dismount_volume(device_extension* Vcb, PIRP Irp) {
     }
 
     ExReleaseResourceLite(&Vcb->tree_lock);
-
-    IoAcquireVpbSpinLock(&irql);
-    Vcb->Vpb->Flags &= ~VPB_MOUNTED;
-    Vcb->Vpb->Flags |= VPB_DIRECT_WRITES_ALLOWED;
-    IoReleaseVpbSpinLock(irql);
 
     return STATUS_SUCCESS;
 }
@@ -3631,10 +3660,6 @@ end:
     return Status;
 }
 
-// based on functions in sys/sysmacros.h
-#define major(rdev) ((((rdev) >> 8) & 0xFFF) | ((UINT32)((rdev) >> 32) & ~0xFFF))
-#define minor(rdev) (((rdev) & 0xFF) | ((UINT32)((rdev) >> 12) & ~0xFF))
-
 static NTSTATUS mknod(device_extension* Vcb, PFILE_OBJECT FileObject, void* data, ULONG datalen, PIRP Irp) {
     NTSTATUS Status;
     btrfs_mknod* bmn;
@@ -4161,7 +4186,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
 
-    if (bsxa->namelen == strlen(EA_NTACL) && RtlCompareMemory(bsxa->data, EA_NTACL, strlen(EA_NTACL)) == strlen(EA_NTACL)) {
+    if (bsxa->namelen == sizeof(EA_NTACL) - 1 && RtlCompareMemory(bsxa->data, EA_NTACL, sizeof(EA_NTACL) - 1) == sizeof(EA_NTACL) - 1) {
         if ((!(ccb->access & WRITE_DAC) || !(ccb->access & WRITE_OWNER)) && Irp->RequestorMode == UserMode) {
             WARN("insufficient privileges\n");
             Status = STATUS_ACCESS_DENIED;
@@ -4199,7 +4224,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         Status = STATUS_SUCCESS;
         goto end;
-    } else if (bsxa->namelen == strlen(EA_DOSATTRIB) && RtlCompareMemory(bsxa->data, EA_DOSATTRIB, strlen(EA_DOSATTRIB)) == strlen(EA_DOSATTRIB)) {
+    } else if (bsxa->namelen == sizeof(EA_DOSATTRIB) - 1 && RtlCompareMemory(bsxa->data, EA_DOSATTRIB, sizeof(EA_DOSATTRIB) - 1) == sizeof(EA_DOSATTRIB) - 1) {
         ULONG atts;
 
         if (bsxa->valuelen > 0 && get_file_attributes_from_xattr(bsxa->data + bsxa->namelen, bsxa->valuelen, &atts)) {
@@ -4230,7 +4255,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         Status = STATUS_SUCCESS;
         goto end;
-    } else if (bsxa->namelen == strlen(EA_REPARSE) && RtlCompareMemory(bsxa->data, EA_REPARSE, strlen(EA_REPARSE)) == strlen(EA_REPARSE)) {
+    } else if (bsxa->namelen == sizeof(EA_REPARSE) - 1 && RtlCompareMemory(bsxa->data, EA_REPARSE, sizeof(EA_REPARSE) - 1) == sizeof(EA_REPARSE) - 1) {
         if (fcb->reparse_xattr.Buffer) {
             ExFreePool(fcb->reparse_xattr.Buffer);
             fcb->reparse_xattr.Buffer = NULL;
@@ -4254,7 +4279,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         Status = STATUS_SUCCESS;
         goto end;
-    } else if (bsxa->namelen == strlen(EA_EA) && RtlCompareMemory(bsxa->data, EA_EA, strlen(EA_EA)) == strlen(EA_EA)) {
+    } else if (bsxa->namelen == sizeof(EA_EA) - 1 && RtlCompareMemory(bsxa->data, EA_EA, sizeof(EA_EA) - 1) == sizeof(EA_EA) - 1) {
         if (!(ccb->access & FILE_WRITE_EA) && Irp->RequestorMode == UserMode) {
             WARN("insufficient privileges\n");
             Status = STATUS_ACCESS_DENIED;
@@ -4310,13 +4335,16 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         Status = STATUS_SUCCESS;
         goto end;
-    } else if (bsxa->namelen == strlen(EA_PROP_COMPRESSION) && RtlCompareMemory(bsxa->data, EA_PROP_COMPRESSION, strlen(EA_PROP_COMPRESSION)) == strlen(EA_PROP_COMPRESSION)) {
-        const char lzo[] = "lzo";
-        const char zlib[] = "zlib";
+    } else if (bsxa->namelen == sizeof(EA_PROP_COMPRESSION) - 1 && RtlCompareMemory(bsxa->data, EA_PROP_COMPRESSION, sizeof(EA_PROP_COMPRESSION) - 1) == sizeof(EA_PROP_COMPRESSION) - 1) {
+        static const char lzo[] = "lzo";
+        static const char zlib[] = "zlib";
+        static const char zstd[] = "zstd";
 
-        if (bsxa->valuelen == strlen(lzo) && RtlCompareMemory(bsxa->data + bsxa->namelen, lzo, bsxa->valuelen) == bsxa->valuelen)
+        if (bsxa->valuelen == sizeof(zstd) - 1 && RtlCompareMemory(bsxa->data + bsxa->namelen, zstd, bsxa->valuelen) == bsxa->valuelen)
+            fcb->prop_compression = PropCompression_ZSTD;
+        else if (bsxa->valuelen == sizeof(lzo) - 1 && RtlCompareMemory(bsxa->data + bsxa->namelen, lzo, bsxa->valuelen) == bsxa->valuelen)
             fcb->prop_compression = PropCompression_LZO;
-        else if (bsxa->valuelen == strlen(zlib) && RtlCompareMemory(bsxa->data + bsxa->namelen, zlib, bsxa->valuelen) == bsxa->valuelen)
+        else if (bsxa->valuelen == sizeof(zlib) - 1 && RtlCompareMemory(bsxa->data + bsxa->namelen, zlib, bsxa->valuelen) == bsxa->valuelen)
             fcb->prop_compression = PropCompression_Zlib;
         else
             fcb->prop_compression = PropCompression_None;
@@ -4331,7 +4359,7 @@ static NTSTATUS fsctl_set_xattr(device_extension* Vcb, PFILE_OBJECT FileObject, 
 
         Status = STATUS_SUCCESS;
         goto end;
-    } else if (bsxa->namelen >= strlen(stream_pref) && RtlCompareMemory(bsxa->data, stream_pref, strlen(stream_pref)) == strlen(stream_pref)) {
+    } else if (bsxa->namelen >= (sizeof(stream_pref) - 1) && RtlCompareMemory(bsxa->data, stream_pref, sizeof(stream_pref) - 1) == sizeof(stream_pref) - 1) {
         // don't allow xattrs beginning with user., as these appear as streams instead
         Status = STATUS_OBJECT_NAME_INVALID;
         goto end;

@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/devinst.c
  * PURPOSE:         Device installation
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
+ *                  Hermes Belusca-Maito
  */
 
 #include <usetup.h>
@@ -15,7 +15,28 @@
 #include <guiddef.h>
 #include <libs/umpnpmgr/sysguid.h>
 
-BOOLEAN
+/* LOCALS *******************************************************************/
+
+static HANDLE hEnumKey = NULL;
+static HANDLE hServicesKey = NULL;
+
+static HANDLE hNoPendingInstalls = NULL;
+
+static HANDLE hPnpThread = NULL;
+static HANDLE hDeviceInstallThread = NULL;
+
+static SLIST_HEADER DeviceInstallListHead;
+static HANDLE hDeviceInstallListNotEmpty = NULL;
+
+typedef struct
+{
+    SLIST_ENTRY ListEntry;
+    WCHAR DeviceIds[ANYSIZE_ARRAY];
+} DeviceInstallParams;
+
+/* FUNCTIONS ****************************************************************/
+
+static BOOLEAN
 ResetDevice(
     IN LPCWSTR DeviceId)
 {
@@ -32,7 +53,7 @@ ResetDevice(
     return TRUE;
 }
 
-BOOLEAN
+static BOOLEAN
 InstallDriver(
     IN HINF hInf,
     IN HANDLE hServices,
@@ -46,20 +67,22 @@ InstallDriver(
     UNICODE_STRING ImagePathU = RTL_CONSTANT_STRING(L"ImagePath");
     UNICODE_STRING StartU = RTL_CONSTANT_STRING(L"Start");
     UNICODE_STRING TypeU = RTL_CONSTANT_STRING(L"Type");
+    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
+    PWSTR keyboardClass = L"kbdclass\0";
+
     UNICODE_STRING StringU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
-    PWSTR Driver, ClassGuid, ImagePath, FullImagePath;
+    PCWSTR Driver, ClassGuid, ImagePath;
+    PWSTR FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
     BOOLEAN deviceInstalled = FALSE;
-    UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
-    PWSTR keyboardClass = L"kbdclass\0";
 
     /* Check if we know the hardware */
-    if (!SetupFindFirstLineW(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
+    if (!SpInfFindFirstLine(hInf, L"HardwareIdsDatabase", HardwareId, &Context))
         return FALSE;
     if (!INF_GetDataField(&Context, 1, &Driver))
         return FALSE;
@@ -70,17 +93,23 @@ InstallDriver(
 
     /* Find associated driver name */
     /* FIXME: check in other sections too! */
-    if (!SetupFindFirstLineW(hInf, L"BootBusExtenders.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"BusExtenders.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"SCSI.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"InputDevicesSupport.Load", Driver, &Context)
-     && !SetupFindFirstLineW(hInf, L"Keyboard.Load", Driver, &Context))
+    if (!SpInfFindFirstLine(hInf, L"BootBusExtenders.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"BusExtenders.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"SCSI.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"InputDevicesSupport.Load", Driver, &Context)
+     && !SpInfFindFirstLine(hInf, L"Keyboard.Load", Driver, &Context))
     {
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 1, &ImagePath))
+    {
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
+    }
 
     /* Prepare full driver path */
     dwValue = PathPrefix.MaximumLength + wcslen(ImagePath) * sizeof(WCHAR);
@@ -88,6 +117,9 @@ InstallDriver(
     if (!FullImagePath)
     {
         DPRINT1("RtlAllocateHeap() failed\n");
+        INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
     RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
@@ -97,12 +129,15 @@ InstallDriver(
 
     /* Create service key */
     RtlInitUnicodeString(&StringU, Driver);
-    InitializeObjectAttributes(&ObjectAttributes, &StringU, 0, hServices, NULL);
-    Status = NtCreateKey(&hService, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, &Disposition);
+    InitializeObjectAttributes(&ObjectAttributes, &StringU, OBJ_CASE_INSENSITIVE, hServices, NULL);
+    Status = NtCreateKey(&hService, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, &Disposition);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08x\n", &StringU, Status);
         RtlFreeHeap(ProcessHeap, 0, FullImagePath);
+        INF_FreeData(ImagePath);
+        INF_FreeData(ClassGuid);
+        INF_FreeData(Driver);
         return FALSE;
     }
 
@@ -110,38 +145,38 @@ InstallDriver(
     if (Disposition == REG_CREATED_NEW_KEY)
     {
         dwValue = 0;
-        NtSetValueKey(
-            hService,
-            &ErrorControlU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &ErrorControlU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
+
         dwValue = 0;
-        NtSetValueKey(
-            hService,
-            &StartU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &StartU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
+
         dwValue = SERVICE_KERNEL_DRIVER;
-        NtSetValueKey(
-            hService,
-            &TypeU,
-            0,
-            REG_DWORD,
-            &dwValue,
-            sizeof(dwValue));
+        NtSetValueKey(hService,
+                      &TypeU,
+                      0,
+                      REG_DWORD,
+                      &dwValue,
+                      sizeof(dwValue));
     }
     /* HACK: don't put any path in registry */
-    NtSetValueKey(
-        hService,
-        &ImagePathU,
-        0,
-        REG_SZ,
-        ImagePath,
-        (wcslen(ImagePath) + 1) * sizeof(WCHAR));
+    NtSetValueKey(hService,
+                  &ImagePathU,
+                  0,
+                  REG_SZ,
+                  (PVOID)ImagePath,
+                  (wcslen(ImagePath) + 1) * sizeof(WCHAR));
+
+    INF_FreeData(ImagePath);
 
     if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
@@ -154,35 +189,38 @@ InstallDriver(
                       (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
     }
 
+    INF_FreeData(ClassGuid);
+
     /* Associate device with the service we just filled */
-    Status = NtSetValueKey(
-        hDeviceKey,
-        &ServiceU,
-        0,
-        REG_SZ,
-        Driver,
-        (wcslen(Driver) + 1) * sizeof(WCHAR));
+    Status = NtSetValueKey(hDeviceKey,
+                           &ServiceU,
+                           0,
+                           REG_SZ,
+                           (PVOID)Driver,
+                           (wcslen(Driver) + 1) * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
         /* Restart the device, so it will use the driver we registered */
         deviceInstalled = ResetDevice(DeviceId);
     }
 
+    INF_FreeData(Driver);
+
     /* HACK: Update driver path */
-    NtSetValueKey(
-        hService,
-        &ImagePathU,
-        0,
-        REG_SZ,
-        FullImagePath,
-        (wcslen(FullImagePath) + 1) * sizeof(WCHAR));
+    NtSetValueKey(hService,
+                  &ImagePathU,
+                  0,
+                  REG_SZ,
+                  FullImagePath,
+                  (wcslen(FullImagePath) + 1) * sizeof(WCHAR));
     RtlFreeHeap(ProcessHeap, 0, FullImagePath);
+
     NtClose(hService);
 
     return deviceInstalled;
 }
 
-VOID
+static VOID
 InstallDevice(
     IN HINF hInf,
     IN HANDLE hEnum,
@@ -191,6 +229,7 @@ InstallDevice(
 {
     UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
     UNICODE_STRING CompatibleIDsU = RTL_CONSTANT_STRING(L"CompatibleIDs");
+
     UNICODE_STRING DeviceIdU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     LPCWSTR HardwareID;
@@ -201,7 +240,7 @@ InstallDevice(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
-    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, 0, hEnum, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &DeviceIdU, OBJ_CASE_INSENSITIVE, hEnum, NULL);
     Status = NtOpenKey(&hDeviceKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -319,102 +358,342 @@ InstallDevice(
     NtClose(hDeviceKey);
 }
 
-NTSTATUS
-EventThread(IN LPVOID lpParameter)
+/* Loop to install all queued devices installations */
+static ULONG NTAPI
+DeviceInstallThread(IN PVOID Parameter)
 {
-    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
-    UNICODE_STRING ServicesU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG PnpEventSize;
-    HINF hInf;
-    HANDLE hEnum, hServices;
+    HINF hSetupInf = *(HINF*)Parameter;
+    PSLIST_ENTRY ListEntry;
+    DeviceInstallParams* Params;
+    LARGE_INTEGER Timeout;
+
+    for (;;)
+    {
+        ListEntry = RtlInterlockedPopEntrySList(&DeviceInstallListHead);
+
+        if (ListEntry == NULL)
+        {
+            /*
+             * The list is now empty, but there may be a new enumerated device
+             * that is going to be added to the list soon. In order to avoid
+             * setting the hNoPendingInstalls event to release it soon after,
+             * we wait for maximum 1 second for no PnP enumeration event being
+             * received before declaring that no pending installations are
+             * taking place and setting the corresponding event.
+             */
+            Timeout.QuadPart = -10000000LL; /* Wait for 1 second */
+            if (NtWaitForSingleObject(hDeviceInstallListNotEmpty, FALSE, &Timeout) == STATUS_TIMEOUT)
+            {
+                /* We timed out: set the event and do the actual wait */
+                NtSetEvent(hNoPendingInstalls, NULL);
+                NtWaitForSingleObject(hDeviceInstallListNotEmpty, FALSE, NULL);
+            }
+        }
+        else
+        {
+            NtResetEvent(hNoPendingInstalls, NULL);
+            Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
+            InstallDevice(hSetupInf, hEnumKey, hServicesKey, Params->DeviceIds);
+            RtlFreeHeap(ProcessHeap, 0, Params);
+        }
+    }
+
+    return 0;
+}
+
+static ULONG NTAPI
+PnpEventThread(IN PVOID Parameter)
+{
     NTSTATUS Status;
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
+    ULONG PnpEventSize;
 
-    hInf = *(HINF *)lpParameter;
-
-    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtOpenKey(&hEnum, KEY_QUERY_VALUE, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenKey('%wZ') failed with status 0x%08lx\n", &EnumU, Status);
-        return Status;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes, &ServicesU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtCreateKey(&hServices, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, 0, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateKey('%wZ') failed with status 0x%08lx\n", &ServicesU, Status);
-        NtClose(hEnum);
-        return Status;
-    }
+    UNREFERENCED_PARAMETER(Parameter);
 
     PnpEventSize = 0x1000;
-    PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
+    PnpEvent = RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
     if (PnpEvent == NULL)
     {
-        NtClose(hEnum);
-        NtClose(hServices);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
     }
 
     for (;;)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-            PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
-            if (PnpEvent == NULL)
+            NewPnpEvent = RtlReAllocateHeap(ProcessHeap, 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
             {
-                NtClose(hEnum);
-                NtClose(hServices);
-                return STATUS_NO_MEMORY;
+                Status = STATUS_NO_MEMORY;
+                goto Quit;
             }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtPlugPlayEvent() failed (Status %lx)\n", Status);
-            break;
+            DPRINT1("NtGetPlugPlayEvent() failed (Status 0x%08lx)\n", Status);
+            goto Quit;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
-        if (IsEqualIID(&PnpEvent->EventGuid, (REFGUID)&GUID_DEVICE_ENUMERATED))
+        if (IsEqualGUID(&PnpEvent->EventGuid, &GUID_DEVICE_ENUMERATED))
         {
-            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            InstallDevice(hInf, hEnum, hServices, PnpEvent->TargetDevice.DeviceIds);
+            DeviceInstallParams* Params;
+            ULONG len;
+            ULONG DeviceIdLength;
+
+            DPRINT("Device enumerated event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+
+            DeviceIdLength = wcslen(PnpEvent->TargetDevice.DeviceIds);
+            if (DeviceIdLength)
+            {
+                /* Queue device install (will be dequeued by DeviceInstallThread) */
+                len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
+                Params = RtlAllocateHeap(ProcessHeap, 0, len);
+                if (Params)
+                {
+                    wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
+                    RtlInterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+                    NtSetEvent(hDeviceInstallListNotEmpty, NULL);
+                }
+                else
+                {
+                    DPRINT1("Not enough memory (size %lu)\n", len);
+                }
+            }
         }
         else
         {
-            DPRINT("Unknown event\n");
+            DPRINT("Unknown event, GUID {%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}\n",
+                PnpEvent->EventGuid.Data1, PnpEvent->EventGuid.Data2, PnpEvent->EventGuid.Data3,
+                PnpEvent->EventGuid.Data4[0], PnpEvent->EventGuid.Data4[1], PnpEvent->EventGuid.Data4[2],
+                PnpEvent->EventGuid.Data4[3], PnpEvent->EventGuid.Data4[4], PnpEvent->EventGuid.Data4[5],
+                PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
-    RtlFreeHeap(ProcessHeap, 0, PnpEvent);
-    NtClose(hEnum);
-    NtClose(hServices);
+    Status = STATUS_SUCCESS;
 
-    return STATUS_SUCCESS;
+Quit:
+    if (PnpEvent)
+        RtlFreeHeap(ProcessHeap, 0, PnpEvent);
+
+    NtTerminateThread(NtCurrentThread(), Status);
+    return Status;
 }
 
-DWORD WINAPI
-PnpEventThread(IN LPVOID lpParameter)
+NTSTATUS
+WaitNoPendingInstallEvents(
+    IN PLARGE_INTEGER Timeout OPTIONAL)
+{
+    return NtWaitForSingleObject(hNoPendingInstalls, FALSE, Timeout);
+}
+
+BOOLEAN
+EnableUserModePnpManager(VOID)
+{
+    LARGE_INTEGER Timeout;
+
+    /* Start the PnP thread */
+    if (hPnpThread != NULL)
+        NtResumeThread(hPnpThread, NULL);
+
+    /*
+     * Wait a little bit so that we get a chance to have some events being
+     * queued by the time the device-installation thread becomes resumed.
+     */
+    Timeout.QuadPart = -10000000LL; /* Wait for 1 second */
+    NtWaitForSingleObject(hDeviceInstallListNotEmpty, FALSE, &Timeout);
+
+    /* Start the device installation thread */
+    if (hDeviceInstallThread != NULL)
+        NtResumeThread(hDeviceInstallThread, NULL);
+
+    return TRUE;
+}
+
+BOOLEAN
+DisableUserModePnpManager(VOID)
+{
+    /* Wait until all pending installations are done, then freeze the threads */
+    if (WaitNoPendingInstallEvents(NULL) != STATUS_WAIT_0)
+        DPRINT1("WaitNoPendingInstallEvents() failed to wait!\n");
+
+    // TODO: use signalling events
+
+    NtSuspendThread(hPnpThread, NULL);
+    NtSuspendThread(hDeviceInstallThread, NULL);
+
+    return TRUE;
+}
+
+NTSTATUS
+InitializeUserModePnpManager(
+    IN HINF* phSetupInf)
 {
     NTSTATUS Status;
-    Status = EventThread(lpParameter);
-    NtTerminateThread(NtCurrentThread(), Status);
-    return 0;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
+    UNICODE_STRING ServicesU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+
+    Status = NtCreateEvent(&hDeviceInstallListNotEmpty,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not create the event! (Status 0x%08lx)\n", Status);
+        goto Failure;
+    }
+
+    Status = NtCreateEvent(&hNoPendingInstalls,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not create the event! (Status 0x%08lx)\n", Status);
+        goto Failure;
+    }
+
+    RtlInitializeSListHead(&DeviceInstallListHead);
+
+    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenKey(&hEnumKey, KEY_QUERY_VALUE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey('%wZ') failed (Status 0x%08lx)\n", &EnumU, Status);
+        goto Failure;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes, &ServicesU, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtCreateKey(&hServicesKey, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey('%wZ') failed (Status 0x%08lx)\n", &ServicesU, Status);
+        goto Failure;
+    }
+
+    /* Create the PnP event thread in suspended state */
+    Status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 TRUE,
+                                 0,
+                                 0,
+                                 0,
+                                 PnpEventThread,
+                                 NULL,
+                                 &hPnpThread,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the PnP event thread (Status 0x%08lx)\n", Status);
+        hPnpThread = NULL;
+        goto Failure;
+    }
+
+    /* Create the device installation thread in suspended state */
+    Status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 TRUE,
+                                 0,
+                                 0,
+                                 0,
+                                 DeviceInstallThread,
+                                 phSetupInf,
+                                 &hDeviceInstallThread,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the device installation thread (Status 0x%08lx)\n", Status);
+        hDeviceInstallThread = NULL;
+        goto Failure;
+    }
+
+    return STATUS_SUCCESS;
+
+Failure:
+    if (hPnpThread)
+    {
+        NtTerminateThread(hPnpThread, STATUS_SUCCESS);
+        NtClose(hPnpThread);
+    }
+    hPnpThread = NULL;
+
+    if (hServicesKey)
+        NtClose(hServicesKey);
+    hServicesKey = NULL;
+
+    if (hEnumKey)
+        NtClose(hEnumKey);
+    hEnumKey = NULL;
+
+    if (hNoPendingInstalls)
+        NtClose(hNoPendingInstalls);
+    hNoPendingInstalls = NULL;
+
+    if (hDeviceInstallListNotEmpty)
+        NtClose(hDeviceInstallListNotEmpty);
+    hDeviceInstallListNotEmpty = NULL;
+
+    return Status;
+}
+
+VOID
+TerminateUserModePnpManager(VOID)
+{
+    DisableUserModePnpManager();
+
+    // TODO: use signalling events
+
+    /* Kill the PnP thread as it blocks inside the NtGetPlugPlayEvent() call */
+    if (hPnpThread)
+    {
+        NtTerminateThread(hPnpThread, STATUS_SUCCESS);
+        NtClose(hPnpThread);
+    }
+    hPnpThread = NULL;
+
+    /* Kill the device installation thread */
+    if (hDeviceInstallThread)
+    {
+        NtTerminateThread(hDeviceInstallThread, STATUS_SUCCESS);
+        NtClose(hDeviceInstallThread);
+    }
+    hDeviceInstallThread = NULL;
+
+    /* Close the opened handles */
+
+    if (hServicesKey)
+        NtClose(hServicesKey);
+    hServicesKey = NULL;
+
+    if (hEnumKey)
+        NtClose(hEnumKey);
+    hEnumKey = NULL;
+
+    if (hNoPendingInstalls)
+        NtClose(hNoPendingInstalls);
+    hNoPendingInstalls = NULL;
+
+    if (hDeviceInstallListNotEmpty)
+        NtClose(hDeviceInstallListNotEmpty);
+    hDeviceInstallListNotEmpty = NULL;
 }

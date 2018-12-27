@@ -17,7 +17,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -220,7 +220,7 @@ END
 
 STRINGTABLE
 BEGIN
-    9250 "显示程序信息、 版本号和版权信息。"
+    9250 "显示程序信息、版本号和版权信息。"
     9252 "显示调试信息。"
 END
 
@@ -273,7 +273,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NOTEXTLABELS "没有文本标签"
-    IDS_SELECTIVETEXTONRIGHT "右侧选择性文本"
+    IDS_SELECTIVETEXTONRIGHT "右边的选择性文字"
 END
 
 STRINGTABLE
@@ -307,11 +307,12 @@ STRINGTABLE
 BEGIN
     IDS_BACK "返回到 %s"
     IDS_FORWARD "前进到 %s"
+    IDS_FOLDER_OPTIONS "文件夹选项"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪下|复制|贴下|文件夹选项||"
+    IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪切|复制|粘贴|文件夹选项||"
 END
 
 STRINGTABLE

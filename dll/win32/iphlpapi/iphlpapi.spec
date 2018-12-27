@@ -4,11 +4,11 @@
 @ stdcall AllocateAndGetIpAddrTableFromStack( ptr long long long )
 @ stdcall AllocateAndGetIpForwardTableFromStack( ptr long long long )
 @ stdcall AllocateAndGetIpNetTableFromStack( ptr long long long )
-@ stub AllocateAndGetTcpExTable2FromStack
-@ stub AllocateAndGetTcpExTableFromStack
+@ stdcall AllocateAndGetTcpExTable2FromStack( ptr long long long long long )
+@ stdcall AllocateAndGetTcpExTableFromStack( ptr long long long long )
 @ stdcall AllocateAndGetTcpTableFromStack( ptr long long long )
-@ stub AllocateAndGetUdpExTable2FromStack
-@ stub AllocateAndGetUdpExTableFromStack
+@ stdcall AllocateAndGetUdpExTable2FromStack( ptr long long long long long )
+@ stdcall AllocateAndGetUdpExTableFromStack( ptr long long long long )
 @ stdcall AllocateAndGetUdpTableFromStack( ptr long long long )
 @ stdcall CancelIPChangeNotify(ptr)
 @ stub CancelSecurityHealthChangeNotify
@@ -33,7 +33,7 @@
 @ stdcall GetBestRoute( long long long )
 @ stub GetBestRouteFromStack
 @ stdcall GetExtendedTcpTable( ptr ptr long long long long )
-@ stdcall -stub GetExtendedUdpTable( ptr ptr long long long long )
+@ stdcall GetExtendedUdpTable( ptr ptr long long long long )
 @ stdcall GetFriendlyIfIndex( long )
 @ stdcall GetIcmpStatistics( ptr )
 @ stdcall GetIcmpStatisticsEx(ptr long)
@@ -61,7 +61,7 @@
 @ stub GetOwnerModuleFromTcp6Entry
 @ stdcall GetOwnerModuleFromTcpEntry ( ptr long ptr ptr )
 @ stub GetOwnerModuleFromUdp6Entry
-@ stub GetOwnerModuleFromUdpEntry
+@ stdcall GetOwnerModuleFromUdpEntry ( ptr long ptr ptr )
 @ stdcall GetPerAdapterInfo( long ptr ptr )
 @ stdcall GetRTTAndHopCount( long ptr long ptr )
 @ stub GetTcpExTable2FromStack

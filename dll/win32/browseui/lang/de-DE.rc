@@ -304,6 +304,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Zurück zu %s"
     IDS_FORWARD "Vorwärts zu %s"
+    IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 

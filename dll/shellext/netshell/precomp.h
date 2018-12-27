@@ -16,21 +16,27 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlcoll.h>
+#include <atlstr.h>
 #include <iphlpapi.h>
 #include <setupapi.h>
 #include <devguid.h>
 #include <netcon.h>
 #include <shlguid_undoc.h>
 #include <prsht.h>
+#include <undocshell.h>
+#include <shellutils.h>
+
+#include <netcfgx.h>
+#include <netcfgn.h>
+#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #include "resource.h"
-
-#if defined(_MSC_VER) && _MSC_VER < 1700
-#define final sealed
-#endif
 
 #define NCF_VIRTUAL                     0x1
 #define NCF_SOFTWARE_ENUMERATED         0x2
@@ -43,48 +49,38 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define NCF_FILTER                      0x400
 #define NCF_NDIS_PROTOCOL               0x4000
 
-typedef struct {
-    int colnameid;
-    int pcsFlags;
-    int fmt;
-    int cxChar;
-} shvheader;
-
-typedef struct tagVALUEStruct
-{
-    BYTE dummy;
-    INetConnection * pItem;
-} VALUEStruct;
+#define USE_CUSTOM_CONMGR 1
 
 /* globals */
 extern HINSTANCE netshell_hInstance;
 
-/* shfldr_netconnect.c */
-HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);
-HRESULT WINAPI ISF_NetConnect_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
-
 /* enumlist.c */
-PITEMID_CHILD _ILCreateNetConnect(void);
-PITEMID_CHILD ILCreateNetConnectItem(INetConnection *pItem);
-BOOL _ILIsNetConnect(LPCITEMIDLIST pidl);
-const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl);
+typedef struct tagNETCONIDSTRUCT
+{
+    BYTE             type;
+    GUID             guidId;
+    NETCON_STATUS    Status;
+    NETCON_MEDIATYPE MediaType;
+    DWORD            dwCharacter;
+    ULONG_PTR        uNameOffset;
+    ULONG_PTR        uDeviceNameOffset;
+} NETCONIDSTRUCT, *PNETCONIDSTRUCT;
 
-/* classfactory.c */
-HRESULT IClassFactory_fnConstructor(REFCLSID rclsid, REFIID riid, LPVOID *ppvOut);
-
-/* connectmanager.c */
-HRESULT WINAPI INetConnectionManager_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
-BOOL GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetCfg, PDWORD pIndex);
-
-/* lanconnectui.c */
-HPROPSHEETPAGE InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
-HRESULT WINAPI LanConnectUI_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
-
-/* lanstatusui.c */
-HRESULT WINAPI LanConnectStatusUI_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
+PNETCONIDSTRUCT ILGetConnData(PCITEMID_CHILD pidl);
+PWCHAR ILGetConnName(PCITEMID_CHILD pidl);
+PWCHAR ILGetDeviceName(PCITEMID_CHILD pidl);
+PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem);
+HRESULT ILGetConnection(PCITEMID_CHILD pidl, INetConnection ** pItem);
+HRESULT CEnumIDList_CreateInstance(HWND hwndOwner, DWORD dwFlags, REFIID riid, LPVOID * ppv);
 
 #define NCCF_NOTIFY_DISCONNECTED 0x100000
 
-#include "enumlist.h"
+HPROPSHEETPAGE InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
+
+#include "connectmanager.h"
+#include "lanconnectui.h"
+#include "lanstatusui.h"
+#include "shfldr_netconnect.h"
+
 
 #endif /* _PRECOMP_H__ */

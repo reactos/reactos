@@ -5,6 +5,7 @@
  * PURPOSE:         Rundown and Cache-Aware Rundown Protection
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Thomas Weidenmueller
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -375,137 +376,370 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
     ASSERT(WaitBlock.Count == 0);
 }
 
-/* FIXME: STUBS **************************************************************/
-
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 BOOLEAN
 FASTCALL
 ExfAcquireRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
-    return FALSE;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
+    return _ExAcquireRundownProtection(RunRef);
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 BOOLEAN
 FASTCALL
 ExfAcquireRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
                                         IN ULONG Count)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
-    return FALSE;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
+    return ExfAcquireRundownProtectionEx(RunRef, Count);
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReleaseRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
+    _ExReleaseRundownProtection(RunRef);
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReleaseRundownProtectionCacheAwareEx(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
                                         IN ULONG Count)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+
+    RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, KeGetCurrentProcessorNumber());
+    ExfReleaseRundownProtectionEx(RunRef, Count);
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    EX_RUNDOWN_WAIT_BLOCK WaitBlock;
+    PEX_RUNDOWN_WAIT_BLOCK WaitBlockPointer;
+    ULONG ProcCount, Current, Value, OldValue, TotalCount;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    TotalCount = 0;
+    WaitBlock.Count = 0;
+    WaitBlockPointer = (PEX_RUNDOWN_WAIT_BLOCK)((ULONG_PTR)&WaitBlock |
+                                                EX_RUNDOWN_ACTIVE);
+    /* We will check all our runrefs */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
+        /* Loop for setting the wait block */
+        do
+        {
+            Value = RunRef->Count;
+            ASSERT((Value & EX_RUNDOWN_ACTIVE) == 0);
+
+            /* Remove old value and set our waitblock instead */
+            OldValue = ExpChangeRundown(RunRef, WaitBlockPointer, Value);
+            if (OldValue == Value)
+            {
+                break;
+            }
+
+            Value = OldValue;
+        }
+        while (TRUE);
+
+        /* Count the deleted values */
+        TotalCount += Value;
+    }
+
+    /* Sanity check: we didn't overflow */
+    ASSERT((LONG)TotalCount >= 0);
+    if (TotalCount != 0)
+    {
+        /* Init the waitblock event */
+        KeInitializeEvent(&WaitBlock.WakeEvent,
+                          SynchronizationEvent,
+                          FALSE);
+
+        /* Do we have to wait? If so, go ahead! */
+        if (InterlockedExchangeAddSizeT(&WaitBlock.Count,
+                                        (LONG)TotalCount >> EX_RUNDOWN_COUNT_SHIFT) ==
+                                       -(LONG)(TotalCount >> EX_RUNDOWN_COUNT_SHIFT))
+        {
+            KeWaitForSingleObject(&WaitBlock.WakeEvent, Executive, KernelMode, FALSE, NULL);
+        }
+    }
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfRundownCompletedCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG ProcCount, Current;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    /* We will mark all our runrefs active */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
+        ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
+
+        ExpSetRundown(RunRef, EX_RUNDOWN_ACTIVE);
+    }
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 FASTCALL
 ExfReInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG ProcCount, Current;
+
+    ProcCount = RunRefCacheAware->Number;
+    /* No proc, nothing to do */
+    if (ProcCount == 0)
+    {
+        return;
+    }
+
+    /* We will mark all our runrefs inactive */
+    for (Current = 0; Current < ProcCount; ++Current)
+    {
+        /* Get the runref for the proc */
+        RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Current);
+        ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
+
+        ExpSetRundown(RunRef, 0);
+    }
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 PEX_RUNDOWN_REF_CACHE_AWARE
 NTAPI
 ExAllocateCacheAwareRundownProtection(IN POOL_TYPE PoolType,
                                       IN ULONG Tag)
 {
-    DBG_UNREFERENCED_PARAMETER(PoolType);
-    DBG_UNREFERENCED_PARAMETER(Tag);
-    UNIMPLEMENTED;
-    return NULL;
+    PEX_RUNDOWN_REF RunRef;
+    PVOID PoolToFree, RunRefs;
+    ULONG RunRefSize, Count, Align;
+    PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware;
+
+    PAGED_CODE();
+
+    /* Allocate the master structure */
+    RunRefCacheAware = ExAllocatePoolWithTag(PoolType, sizeof(EX_RUNDOWN_REF_CACHE_AWARE), Tag);
+    if (RunRefCacheAware == NULL)
+    {
+        return NULL;
+    }
+
+    /* Compute the size of each runref */
+    RunRefCacheAware->Number = KeNumberProcessors;
+    if (KeNumberProcessors <= 1)
+    {
+        RunRefSize = sizeof(EX_RUNDOWN_REF);
+    }
+    else
+    {
+        Align = KeGetRecommendedSharedDataAlignment();
+        RunRefSize = Align;
+        ASSERT((RunRefSize & (RunRefSize - 1)) == 0);
+    }
+
+    /* It must at least hold a EX_RUNDOWN_REF structure */
+    ASSERT(sizeof(EX_RUNDOWN_REF) <= RunRefSize);
+    RunRefCacheAware->RunRefSize = RunRefSize;
+
+    /* Allocate our runref pool */
+    PoolToFree = ExAllocatePoolWithTag(PoolType, RunRefSize * RunRefCacheAware->Number, Tag);
+    if (PoolToFree == NULL)
+    {
+        ExFreePoolWithTag(RunRefCacheAware, Tag);
+        return NULL;
+    }
+
+    /* On SMP, check for alignment */
+    if (RunRefCacheAware->Number > 1 && (ULONG_PTR)PoolToFree & (Align - 1))
+    {
+        /* Not properly aligned, do it again! */
+        ExFreePoolWithTag(PoolToFree, Tag);
+
+        /* Allocate a bigger buffer to be able to align properly */
+        PoolToFree = ExAllocatePoolWithTag(PoolType, RunRefSize * (RunRefCacheAware->Number + 1), Tag);
+        if (PoolToFree == NULL)
+        {
+            ExFreePoolWithTag(RunRefCacheAware, Tag);
+            return NULL;
+        }
+
+        RunRefs = (PVOID)ALIGN_UP_BY(PoolToFree, Align);
+    }
+    else
+    {
+        RunRefs = PoolToFree;
+    }
+
+    RunRefCacheAware->RunRefs = RunRefs;
+    RunRefCacheAware->PoolToFree = PoolToFree;
+
+    /* And initialize runref */
+    if (RunRefCacheAware->Number != 0)
+    {
+        for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
+        {
+            RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Count);
+            _ExInitializeRundownProtection(RunRef);
+        }
+    }
+
+    return RunRefCacheAware;
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 NTAPI
 ExFreeCacheAwareRundownProtection(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    UNIMPLEMENTED;
+    PAGED_CODE();
+
+    /*
+     * This is to be called for RunRefCacheAware that were allocated with
+     * ExAllocateCacheAwareRundownProtection and not for user-allocated
+     * ones
+     */
+    ASSERT(RunRefCacheAware->PoolToFree != (PVOID)0xBADCA11);
+
+    /* We don't know the tag that as used for allocation */
+    ExFreePoolWithTag(RunRefCacheAware->PoolToFree, 0);
+    ExFreePoolWithTag(RunRefCacheAware, 0);
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 VOID
 NTAPI
 ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
-                                        IN SIZE_T Count)
+                                        IN SIZE_T Size)
 {
-    DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
-    DBG_UNREFERENCED_PARAMETER(Count);
-    UNIMPLEMENTED;
+    PVOID Pool;
+    PEX_RUNDOWN_REF RunRef;
+    ULONG Count, RunRefSize, Align;
+
+    PAGED_CODE();
+
+    /* Get the user allocate pool for runrefs */
+    Pool = (PVOID)((ULONG_PTR)RunRefCacheAware + sizeof(EX_RUNDOWN_REF_CACHE_AWARE));
+
+    /* By default a runref is structure-sized */
+    RunRefSize = sizeof(EX_RUNDOWN_REF);
+
+    /*
+     * If we just have enough room for a single runref, deduce were on a single
+     * processor machine
+     */
+    if (Size == sizeof(EX_RUNDOWN_REF_CACHE_AWARE) + sizeof(EX_RUNDOWN_REF))
+    {
+        Count = 1;
+    }
+    else
+    {
+        /* Get alignment constraint */
+        Align = KeGetRecommendedSharedDataAlignment();
+
+        /* How many runrefs given the alignment? */
+        RunRefSize = Align;
+        Count = ((Size - sizeof(EX_RUNDOWN_REF_CACHE_AWARE)) / Align) - 1;
+        Pool = (PVOID)ALIGN_UP_BY(Pool, Align);
+    }
+
+    /* Initialize the structure */
+    RunRefCacheAware->RunRefs = Pool;
+    RunRefCacheAware->RunRefSize = RunRefSize;
+    RunRefCacheAware->Number = Count;
+
+    /* There is no allocated pool! */
+    RunRefCacheAware->PoolToFree = (PVOID)0xBADCA11u;
+
+    /* Initialize runref */
+    if (RunRefCacheAware->Number != 0)
+    {
+        for (Count = 0; Count < RunRefCacheAware->Number; ++Count)
+        {
+            RunRef = ExGetRunRefForGivenProcessor(RunRefCacheAware, Count);
+            _ExInitializeRundownProtection(RunRef);
+        }
+    }
 }
 
 /*
- * @unimplemented NT5.2
+ * @implemented NT5.2
  */
 SIZE_T
 NTAPI
 ExSizeOfRundownProtectionCacheAware(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
+    SIZE_T Size;
+
+    PAGED_CODE();
+
+    /* Compute the needed size for runrefs */
+    if (KeNumberProcessors <= 1)
+    {
+        Size = sizeof(EX_RUNDOWN_REF);
+    }
+    else
+    {
+        /* We +1, to have enough room for alignment */
+        Size = (KeNumberProcessors + 1) * KeGetRecommendedSharedDataAlignment();
+    }
+
+    /* Return total size (master structure and runrefs) */
+    return Size + sizeof(EX_RUNDOWN_REF_CACHE_AWARE);
 }
 

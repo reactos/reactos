@@ -1,10 +1,10 @@
-/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Kütük"
+    POPUP "&Dosya"
     BEGIN
         MENUITEM "&Ayarlar…", ID_SETTINGS
         MENUITEM SEPARATOR
@@ -12,20 +12,20 @@ BEGIN
     END
     POPUP "Y&azılım"
     BEGIN
-        MENUITEM "&Kur\tDenetim+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tDenetim+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
+        MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+F5", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım\tF1", ID_HELP, GRAYED
-        MENUITEM "&Üzerine", ID_ABOUT
+        MENUITEM "&Hakkında", ID_ABOUT
     END
 END
 
@@ -34,7 +34,7 @@ BEGIN
     POPUP "popup"
     BEGIN
         MENUITEM "&Bağlantıyı Tarayıcıda Aç", ID_OPEN_LINK
-        MENUITEM "&Bağlantıyı Panoya Çoğalt", ID_COPY_LINK
+        MENUITEM "&Bağlantıyı Panoya Kopyala", ID_COPY_LINK
     END
 END
 
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur\tDenetim+Giriş", ID_INSTALL
-        MENUITEM "K&aldır\tDenetim+Sil", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Giriş", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Sil", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
+        MENUITEM "&Girişi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile\tDenetim+F5", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -59,17 +59,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Umûmî", -1, 4, 2, 240, 61
+    GROUPBOX "Genel", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Sakla", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Başlangıçta Erişilebilir İzlencelerin Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&İzlencelerin Kuruluşlarını ve Kaldırılışlarını Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Programların Kuruluşlarını ve Kaldırılışlarını Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "&Kurulumdan Sonra İzlencenin Kurulum Kütüğünü Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    AUTOCHECKBOX "&Kurulumdan Sonra Programın Kurulum Dosyasını Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Vekil Sunucu", -1, 4, 116, 240, 76
-    CONTROL "Dizge Vekil Sunucu Ayarları", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Sistem Vekil Sunucu Ayarları", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
     CONTROL "Doğrudan (Vekil sunucu yok.)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
     CONTROL "Vekil Sunucu", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
@@ -82,11 +82,11 @@ END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "İzlence Kurulumu"
+CAPTION "Program Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "&Bir Diskten (CD'den veyâ DVD'den) Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Bir Diskten (CD'den veya DVD'den) Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 150, 78, 60, 14
@@ -104,7 +104,7 @@ END
 
 IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Üzerine"
+CAPTION "Hakkında"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
@@ -137,30 +137,30 @@ BEGIN
     IDS_INFO_PUBLISHER "\nYayımcısı: "
     IDS_INFO_HELPLINK "\nYardım Bağlantısı: "
     IDS_INFO_HELPPHONE "\nYardım Telefonu: "
-    IDS_INFO_README "\nBenioku Kütüğü: "
+    IDS_INFO_README "\nBenioku Dosyası: "
     IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
     IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
     IDS_INFO_CONTACT "\nİletişim: "
     IDS_INFO_UPDATEINFO "\nYenileme Bilgisi: "
-    IDS_INFO_INFOABOUT "\nÜzerine Bilgisi: "
+    IDS_INFO_INFOABOUT "\nHakkında Bilgisi: "
     IDS_INFO_COMMENTS "\nYorumlar: "
     IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
     IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
-    IDS_INFO_UNINSTALLSTR "\nKaldırma Dizgisi: "
+    IDS_INFO_UNINSTALLSTR "\nKaldırma Sözcesi: "
     IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
-    IDS_INFO_INSTALLDATE "\nKurulum Zamânı: "
+    IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
 END
 
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nSürümü: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nMevcut Sürüm: "
     IDS_AINFO_DESCRIPTION "\nAçıklaması: "
     IDS_AINFO_SIZE "\nBüyüklüğü: "
     IDS_AINFO_URLSITE "\nAna Sayfası: "
-    IDS_AINFO_LICENSE "\nRuhsatı: "
+    IDS_AINFO_LICENSE "\nLisansı: "
     IDS_AINFO_URLDOWNLOAD "\nİndir: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nDiller: "
 END
 
 STRINGTABLE
@@ -170,16 +170,16 @@ BEGIN
     IDS_CAT_DRIVERS "Sürücüler"
     IDS_CAT_EDU "Eğitim"
     IDS_CAT_ENGINEER "Mühendislik"
-    IDS_CAT_FINANCE "Mâlî"
+    IDS_CAT_FINANCE "Mali"
     IDS_CAT_GAMES "Oyun ve Eğlence"
-    IDS_CAT_GRAPHICS "Çizge"
+    IDS_CAT_GRAPHICS "Grafik"
     IDS_CAT_INTERNET "Ağ"
     IDS_CAT_LIBS "Kitaplıklar"
     IDS_CAT_OFFICE "Büro"
-    IDS_CAT_OTHER "Başka"
+    IDS_CAT_OTHER "Diğer"
     IDS_CAT_SCIENCE "Bilim"
     IDS_CAT_TOOLS "Araçlar"
-    IDS_CAT_VIDEO "Vidyo"
+    IDS_CAT_VIDEO "Video"
 END
 
 STRINGTABLE
@@ -189,64 +189,64 @@ BEGIN
     IDS_INSTALL "Kur"
     IDS_UNINSTALL "Kaldır"
     IDS_MODIFY "Değiştir"
-    IDS_APPS_COUNT "Uygulama Sayısı: %d; Selected: %d"
+    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
-    IDS_WELCOME_TEXT "Solda bir ulam seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un Umûmî Ağ sitesi: "
+    IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulum İçin Bulunanlar"
-    IDS_UPDATES "Şimdikileştirmeler"
+    IDS_UPDATES "Güncelleştirmeler"
     IDS_APPLICATIONS "Uygulamalar"
     IDS_CHOOSE_FOLDER_TEXT "İndirilenlerin saklanacağı bir dizin seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
-    IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istediğinizden emin misiniz?"
+    IDS_APP_REG_REMOVE "Kurulan programın girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! Umûmî Ağ bağlantınızı yoklayınız!"
-    IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
+    IDS_UNABLE_TO_REMOVE "Programın girişi kayıt defterinden silinemiyor."
+    IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
+    IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de sürdürülsün mü?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
-    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veyâ indirme esnâsında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
-    IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. Umûmî Ağ bağlantınızı denetleyiniz."
+    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
+    IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
-    IDS_SELECT_ALL "Select/Deselect All"
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_SELECT_ALL "Tümünü Seç/Seçileni Kaldır"
+    IDS_INSTALL_SELECTED "Seçileni Kur"
+    IDS_SELECTEDFORINST "Kurulum için seçildi"
+    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "Kuruldu"
+    IDS_STATUS_NOTINSTALLED "Kurulmadı"
+    IDS_STATUS_DOWNLOADED "İndirilmiş"
+    IDS_STATUS_UPDATE_AVAILABLE "Güncelleme mevcut"
+    IDS_STATUS_DOWNLOADING "İndiriliyor…"
+    IDS_STATUS_INSTALLING "Kuruluyor…"
+    IDS_STATUS_WAITING "Yükleme için bekliyor…"
+    IDS_STATUS_FINISHED "Tamamlandı"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
-    IDS_LICENSE_FREEWARE "Freeware"
-    IDS_LICENSE_TRIAL "Trial/Demo"
+    IDS_LICENSE_OPENSOURCE "Açık Kaynak"
+    IDS_LICENSE_FREEWARE "Ücretsiz"
+    IDS_LICENSE_TRIAL "Sınama/Tanıtım"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Dilinizi destekliyor"
+    IDS_LANGUAGE_NO_TRANSLATION "Diğer dilleri destekliyor"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "İngilizce destekliyor"
+    IDS_LANGUAGE_SINGLE "Tek dil"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d daha fazla)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d mevcut)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
+    IDS_DL_DIALOG_DB_DISP "Uygulamalar Veri Tabanı"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Veri Tabanı güncelleniyor…"
 END

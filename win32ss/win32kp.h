@@ -99,6 +99,7 @@ typedef struct _DC *PDC;
 #include "user/ntuser/winpos.h"
 #include "user/ntuser/callback.h"
 #include "user/ntuser/mmcopy.h"
+#include "user/ntuser/ghost.h"
 
 /* CSRSS Interface */
 #include "user/ntuser/csr.h"

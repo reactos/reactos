@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
+#include <winreg.h>
 #include <ndk/rtltypes.h>
 #include <ndk/rtlfuncs.h>
 #include <tchar.h>
@@ -37,11 +38,12 @@ PrintUsage(int type)
     else if (type == 1)
     {
         _ftprintf(stdout, _T("mount usage:\n"));
-        _ftprintf(stdout, _T("\tmount <drive letter> <path.iso> [/u] [/j]\n"));
+        _ftprintf(stdout, _T("\tmount <drive letter> <path.iso> [/u] [/j] [/p]\n"));
         _ftprintf(stdout, _T("\tMount the ISO image given in <path.iso> on the previously created virtual drive <drive letter>\n"));
         _ftprintf(stdout, _T("\t\tDo not use colon for drive letter\n"));
         _ftprintf(stdout, _T("\t\tUse /u to make UDF volumes not appear as such\n"));
         _ftprintf(stdout, _T("\t\tUse /j to make Joliet volumes not appear as such\n"));
+        _ftprintf(stdout, _T("\t\tUse /p to make the mounting persistent\n"));
     }
     else if (type == 2)
     {
@@ -334,8 +336,11 @@ _tmain(int argc, const TCHAR *argv[])
     else if (_tcscmp(argv[1], _T("mount")) == 0)
     {
         DWORD i;
+        HKEY hKey;
         HANDLE hFile;
         WCHAR Letter;
+        BOOLEAN bPersist;
+        TCHAR szBuffer[260];
         UNICODE_STRING NtPathName;
         MOUNT_PARAMETERS MountParams;
 
@@ -383,6 +388,7 @@ _tmain(int argc, const TCHAR *argv[])
         MountParams.Flags = 0;
 
         /* Do we have to suppress anything? */
+        bPersist = FALSE;
         for (i = 4; i < argc; ++i)
         {
             /* Make UDF uneffective */
@@ -394,6 +400,11 @@ _tmain(int argc, const TCHAR *argv[])
             else if (_tcscmp(argv[i], _T("/j")) == 0)
             {
                 MountParams.Flags |= MOUNT_FLAG_SUPP_JOLIET;
+            }
+            /* Should it be persistent? */
+            else if (_tcscmp(argv[i], _T("/p")) == 0)
+            {
+                bPersist = TRUE;
             }
         }
 
@@ -425,6 +436,32 @@ _tmain(int argc, const TCHAR *argv[])
         _ftprintf(stdout, _T("%s mounted on %c\n"), argv[3], Letter);
 
         CloseHandle(hDev);
+
+        /* Should it persistent? */
+        if (bPersist)
+        {
+            /* Create the registry key Device<Letter> */
+            _stprintf(szBuffer, _T("SYSTEM\\CurrentControlSet\\Services\\Vcdrom\\Parameters\\Device%c"), Letter);
+            if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szBuffer, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY | KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+            {
+                /* Set the image path */
+                _tcsncpy(szBuffer, MountParams.Path, MountParams.Length);
+                szBuffer[MountParams.Length / sizeof(TCHAR)] = 0;
+                RegSetValueExW(hKey, _T("IMAGE"), 0, REG_SZ, (BYTE *)szBuffer, MountParams.Length);
+
+                /* Set the drive letter */
+                szBuffer[0] = Letter;
+                szBuffer[1] = _T(':');
+                szBuffer[2] = 0;
+                RegSetValueExW(hKey, _T("DRIVE"), 0, REG_SZ, (BYTE *)szBuffer, 3 * sizeof(TCHAR));
+
+                RegCloseKey(hKey);
+            }
+            else
+            {
+                _ftprintf(stderr, _T("Failed to make mounting persistent: %x\n"), GetLastError());
+            }
+        }
     }
     else if (_tcscmp(argv[1], _T("remount")) == 0)
     {

@@ -1,4 +1,162 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     CNetworkConnections Shell Folder items enumerator
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+
 #include "precomp.h"
+
+PNETCONIDSTRUCT ILGetConnData(PCITEMID_CHILD pidl)
+{
+    if (!pidl || !pidl->mkid.cb || pidl->mkid.abID[0] != 0x99)
+        return NULL;
+    return (PNETCONIDSTRUCT)(&pidl->mkid.abID[0]);
+}
+
+PWCHAR ILGetConnName(PCITEMID_CHILD pidl)
+{
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
+        return NULL;
+    return (PWCHAR)&pidl->mkid.abID[pdata->uNameOffset];
+}
+
+PWCHAR ILGetDeviceName(PCITEMID_CHILD pidl)
+{
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
+        return NULL;
+    return (PWCHAR)&pidl->mkid.abID[pdata->uDeviceNameOffset];
+}
+
+PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
+{
+    PITEMID_CHILD pidl;
+    ULONG_PTR size;
+    NETCON_PROPERTIES * pProperties;
+    PNETCONIDSTRUCT pnetid;
+    PWCHAR pwchName;
+
+    if (pItem->GetProperties(&pProperties) != S_OK)
+        return NULL;
+
+    size = sizeof(WORD); /* nr of bytes in this item */
+    size += sizeof(NETCONIDSTRUCT);
+    size += (wcslen(pProperties->pszwName) + 1) * sizeof(WCHAR);
+    size += (wcslen(pProperties->pszwDeviceName) + 1) * sizeof(WCHAR);
+
+    /* Allocate enough memory for the trailing id which will indicate that this is a simple id */
+    pidl = static_cast<LPITEMIDLIST>(SHAlloc(size + sizeof(SHITEMID)));
+    pidl->mkid.cb = (WORD)size;
+    pidl->mkid.abID[0] = 0x99;
+
+    /* Copy the connection properties */
+    pnetid = ILGetConnData(pidl);
+    pnetid->guidId = pProperties->guidId;
+    pnetid->Status = pProperties->Status;
+    pnetid->MediaType = pProperties->MediaType;
+    pnetid->dwCharacter = pProperties->dwCharacter;
+    pnetid->uNameOffset = sizeof(NETCONIDSTRUCT);
+    pnetid->uDeviceNameOffset = pnetid->uNameOffset + (wcslen(pProperties->pszwName) + 1) * sizeof(WCHAR);
+
+    pwchName = ILGetConnName(pidl);
+    wcscpy(pwchName, pProperties->pszwName);
+
+    pwchName = ILGetDeviceName(pidl);
+    wcscpy(pwchName, pProperties->pszwDeviceName);
+
+    /* Set the trailing id to null */
+    memset((void*)((ULONG_PTR)pidl + size), 0, sizeof(SHITEMID));
+
+    NcFreeNetconProperties(pProperties);
+
+    return pidl;
+}
+
+HRESULT ILGetConnection(PCITEMID_CHILD pidl, INetConnection ** pItem)
+{
+    HRESULT hr;
+    CComPtr<INetConnectionManager> pNetConMan;
+    CComPtr<IEnumNetConnection> pEnumCon;
+    CComPtr<INetConnection> INetCon;
+    ULONG Count;
+    NETCON_PROPERTIES * pProperties;
+
+    PNETCONIDSTRUCT pdata = ILGetConnData(pidl);
+    if (!pdata)
+        return E_FAIL;
+
+    /* get an instance to of IConnectionManager */
+    hr = CNetConnectionManager_CreateInstance(IID_PPV_ARG(INetConnectionManager, &pNetConMan));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    while (TRUE)
+    {
+        hr = pEnumCon->Next(1, &INetCon, &Count);
+        if (hr != S_OK)
+            return E_FAIL;
+
+        hr = INetCon->GetProperties(&pProperties);
+        if (FAILED_UNEXPECTEDLY(hr))
+            continue;
+
+        BOOL bSame = !memcmp(&pProperties->guidId, &pdata->guidId, sizeof(GUID));
+
+        NcFreeNetconProperties(pProperties);
+
+        if (bSame)
+        {
+            *pItem = INetCon.Detach();
+            return S_OK;
+        }
+    }
+
+    return E_FAIL;
+}
+
+typedef struct tagENUMLIST
+{
+    struct tagENUMLIST *pNext;
+    PITEMID_CHILD pidl;
+} ENUMLIST, *LPENUMLIST;
+
+class CEnumIDList:
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IEnumIDList
+{
+    public:
+        CEnumIDList();
+        ~CEnumIDList();
+
+        HRESULT Initialize();
+
+        // IEnumIDList
+        virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, PITEMID_CHILD *rgelt, ULONG *pceltFetched);
+        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
+        virtual HRESULT STDMETHODCALLTYPE Reset();
+        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
+
+    private:
+        BOOL AddToEnumList(PITEMID_CHILD pidl);
+
+        LPENUMLIST  m_pFirst;
+        LPENUMLIST  m_pLast;
+        LPENUMLIST  m_pCurrent;
+
+    public:
+        DECLARE_NOT_AGGREGATABLE(CEnumIDList)
+        DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+        BEGIN_COM_MAP(CEnumIDList)
+            COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
+        END_COM_MAP()
+};
 
 /**************************************************************************
  *  AddToEnumList()
@@ -37,7 +195,6 @@ CEnumIDList::AddToEnumList(PITEMID_CHILD pidl)
 }
 
 CEnumIDList::CEnumIDList() :
-    m_ref(0),
     m_pFirst(NULL),
     m_pLast(NULL),
     m_pCurrent(NULL)
@@ -58,41 +215,39 @@ CEnumIDList::~CEnumIDList()
 }
 
 HRESULT
-WINAPI
-CEnumIDList::QueryInterface(
-    REFIID riid,
-    LPVOID *ppvObj)
+CEnumIDList::Initialize()
 {
-    *ppvObj = NULL;
+    HRESULT hr;
+    CComPtr<INetConnectionManager> pNetConMan;
+    CComPtr<IEnumNetConnection> pEnumCon;
+    ULONG Count;
+    PITEMID_CHILD pidl;
 
-    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IEnumIDList))
-    {
-        *ppvObj = static_cast<IEnumIDList*>(this);
-        AddRef();
+    /* get an instance to of IConnectionManager */
+    hr = CNetConnectionManager_CreateInstance(IID_PPV_ARG(INetConnectionManager, &pNetConMan));
+    if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
+
+    hr = pNetConMan->EnumConnections(NCME_DEFAULT, &pEnumCon);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return S_OK;
+
+    while (TRUE)
+    {
+        CComPtr<INetConnection> INetCon;
+
+        hr = pEnumCon->Next(1, &INetCon, &Count);
+        if (hr != S_OK)
+            break;
+
+        pidl = ILCreateNetConnectItem(INetCon);
+        if (pidl)
+        {
+            AddToEnumList(pidl);
+        }
     }
 
-    return E_NOINTERFACE;
-}
-
-ULONG
-WINAPI
-CEnumIDList::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
-
-    return refCount;
-}
-
-ULONG
-WINAPI CEnumIDList::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
+    return S_OK;
 }
 
 HRESULT
@@ -171,89 +326,7 @@ CEnumIDList::Clone(
     return E_NOTIMPL;
 }
 
-LPPIDLDATA _ILGetDataPointer(LPITEMIDLIST pidl)
+HRESULT CEnumIDList_CreateInstance(HWND hwndOwner, DWORD dwFlags, REFIID riid, LPVOID * ppv)
 {
-    if (pidl && pidl->mkid.cb != 0x00)
-        return reinterpret_cast<LPPIDLDATA>(&pidl->mkid.abID);
-    return NULL;
-}
-
-LPITEMIDLIST _ILAlloc(BYTE type, unsigned int size)
-{
-    LPITEMIDLIST pidlOut = NULL;
-
-    pidlOut = static_cast<LPITEMIDLIST>(SHAlloc(size + 5));
-    if (pidlOut)
-    {
-        LPPIDLDATA pData;
-
-        ZeroMemory(pidlOut, size + 5);
-        pidlOut->mkid.cb = size + 3;
-        pData = _ILGetDataPointer(pidlOut);
-        if (pData)
-            pData->type = type;
-
-    }
-
-    return pidlOut;
-}
-
-PITEMID_CHILD _ILCreateNetConnect()
-{
-    PITEMID_CHILD pidlOut;
-
-    pidlOut = _ILAlloc(PT_GUID, sizeof(PIDLDATA));
-    if (pidlOut)
-    {
-        LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
-
-        memcpy(&(pData->u.guid.guid), &CLSID_ConnectionFolder, sizeof(GUID));
-    }
-    return pidlOut;
-}
-
-GUID* _ILGetGUIDPointer(LPITEMIDLIST pidl)
-{
-    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
-
-    if (!pdata)
-        return NULL;
-
-    if (pdata->type != PT_GUID)
-        return NULL;
-    else
-        return &(pdata->u.guid.guid);
-
-}
-
-BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
-{
-    const IID *piid = _ILGetGUIDPointer(const_cast<LPITEMIDLIST>(pidl));
-
-    if (piid)
-        return IsEqualIID(*piid, CLSID_ConnectionFolder);
-
-    return FALSE;
-}
-
-PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
-{
-    PITEMID_CHILD pidl;
-    LPPIDLDATA pdata;
-
-    pidl = _ILAlloc(0x99, sizeof(PIDLDATA));
-    pdata = _ILGetDataPointer(pidl);
-    pdata->u.value.pItem = pItem;
-
-    return pidl;
-}
-
-const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl)
-{
-    LPPIDLDATA pdata = _ILGetDataPointer(const_cast<LPITEMIDLIST>(pidl));
-
-    if (pdata && pdata->type==0x99)
-        return reinterpret_cast<const VALUEStruct*>(&pdata->u.value);
-
-    return NULL;
+    return ShellObjectCreatorInit<CEnumIDList>(riid, ppv);
 }

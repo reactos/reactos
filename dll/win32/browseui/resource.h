@@ -104,6 +104,7 @@
 #define IDR_ACLISTISF            142
 #define IDR_ISFBAND              143
 #define IDR_ACLCUSTOMMRU         144
+#define IDR_TASKBARLIST          145
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
@@ -123,6 +124,7 @@
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690
+#define IDS_FOLDER_OPTIONS       58691
 
 #define IDS_CANCELLING           16
 #define IDS_REMAINING            17

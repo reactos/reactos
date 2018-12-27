@@ -33,7 +33,7 @@
 }
 
 /* We have to define it there, because it is not in the MS DDK */
-#define PARTITION_EXT2 0x83
+#define PARTITION_LINUX 0x83
 
 #define PARTITION_TBL_SIZE 4
 
@@ -451,7 +451,7 @@ AddPartitionToDisk(
 #endif
         PartEntry->FormatState = Preformatted;
     }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    else if (PartEntry->PartitionType == PARTITION_LINUX)
     {
 #if 0
         if (CheckExt2Format())

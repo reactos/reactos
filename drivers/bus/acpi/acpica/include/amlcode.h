@@ -7,7 +7,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -278,24 +278,9 @@
 #define ARGI_DEVICE_REF             0x0D
 #define ARGI_REFERENCE              0x0E
 #define ARGI_TARGETREF              0x0F    /* Target, subject to implicit conversion */
-#define ARGI_SIMPLE_TARGET          0x10    /* Name, Local, Arg -- no implicit conversion */
-#define ARGI_STORE_TARGET           0x11    /* Target for store is TARGETREF + package objects */
-/*
- * #define ARGI_FIXED_TARGET           0x10     Target, no implicit conversion
- *
- * Removed 10/2016. ARGI_FIXED_TARGET was used for these operators:
- *      FromBCD
- *      ToBCD
- *      ToDecimalString
- *      ToHexString
- *      ToInteger
- *      ToBuffer
- * The purpose of this type was to disable "implicit result conversion",
- * but this was incorrect per the ACPI spec and other ACPI implementations.
- * These operators now have the target operand defined as a normal
- * ARGI_TARGETREF.
- */
-
+#define ARGI_FIXED_TARGET           0x10    /* Target, no implicit conversion */
+#define ARGI_SIMPLE_TARGET          0x11    /* Name, Local, Arg -- no implicit conversion */
+#define ARGI_STORE_TARGET           0x12    /* Target for store is TARGETREF + package objects */
 
 /* Multiple/complex types */
 
@@ -501,16 +486,16 @@ typedef enum
  */
 typedef enum
 {
-    AML_FIELD_ATTRIB_QUICK          = 0x02,
-    AML_FIELD_ATTRIB_SEND_RCV       = 0x04,
-    AML_FIELD_ATTRIB_BYTE           = 0x06,
-    AML_FIELD_ATTRIB_WORD           = 0x08,
-    AML_FIELD_ATTRIB_BLOCK          = 0x0A,
-    AML_FIELD_ATTRIB_MULTIBYTE      = 0x0B,
-    AML_FIELD_ATTRIB_WORD_CALL      = 0x0C,
-    AML_FIELD_ATTRIB_BLOCK_CALL     = 0x0D,
-    AML_FIELD_ATTRIB_RAW_BYTES      = 0x0E,
-    AML_FIELD_ATTRIB_RAW_PROCESS    = 0x0F
+    AML_FIELD_ATTRIB_QUICK              = 0x02,
+    AML_FIELD_ATTRIB_SEND_RECEIVE       = 0x04,
+    AML_FIELD_ATTRIB_BYTE               = 0x06,
+    AML_FIELD_ATTRIB_WORD               = 0x08,
+    AML_FIELD_ATTRIB_BLOCK              = 0x0A,
+    AML_FIELD_ATTRIB_BYTES              = 0x0B,
+    AML_FIELD_ATTRIB_PROCESS_CALL       = 0x0C,
+    AML_FIELD_ATTRIB_BLOCK_PROCESS_CALL = 0x0D,
+    AML_FIELD_ATTRIB_RAW_BYTES          = 0x0E,
+    AML_FIELD_ATTRIB_RAW_PROCESS_BYTES  = 0x0F
 
 } AML_ACCESS_ATTRIBUTE;
 

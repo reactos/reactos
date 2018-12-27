@@ -277,6 +277,7 @@ vfatDestroyFCB(
 #endif
 
     FsRtlUninitializeFileLock(&pFCB->FileLock);
+
     if (!vfatFCBIsRoot(pFCB) &&
         !BooleanFlagOn(pFCB->Flags, FCB_IS_FAT) && !BooleanFlagOn(pFCB->Flags, FCB_IS_VOLUME))
     {
@@ -317,11 +318,15 @@ _vfatGrabFCB(
     {
         DPRINT1("Inc ref count (%d, oc: %d) for: %p (%wZ) at: %s(%d) %s\n", pFCB->RefCount, pFCB->OpenHandleCount, pFCB, &pFCB->PathNameU, File, Line, Func);
     }
+#else
+    DPRINT("Grabbing FCB at %p: %wZ, refCount:%d\n",
+           pFCB, &pFCB->PathNameU, pFCB->RefCount);
 #endif
 
     ASSERT(ExIsResourceAcquiredExclusive(&pVCB->DirResource));
 
-    ASSERT(pFCB != pVCB->VolumeFcb);
+    ASSERT(!BooleanFlagOn(pFCB->Flags, FCB_IS_FAT));
+    ASSERT(pFCB != pVCB->VolumeFcb && !BooleanFlagOn(pFCB->Flags, FCB_IS_VOLUME));
     ASSERT(pFCB->RefCount > 0);
     ++pFCB->RefCount;
 }
@@ -350,7 +355,7 @@ _vfatReleaseFCB(
         DPRINT1("Dec ref count (%d, oc: %d) for: %p (%wZ) at: %s(%d) %s\n", pFCB->RefCount, pFCB->OpenHandleCount, pFCB, &pFCB->PathNameU, File, Line, Func);
     }
 #else
-    DPRINT("releasing FCB at %p: %wZ, refCount:%d\n",
+    DPRINT("Releasing FCB at %p: %wZ, refCount:%d\n",
            pFCB, &pFCB->PathNameU, pFCB->RefCount);
 #endif
 
@@ -360,7 +365,8 @@ _vfatReleaseFCB(
     {
         ULONG RefCount;
 
-        ASSERT(pFCB != pVCB->VolumeFcb);
+        ASSERT(!BooleanFlagOn(pFCB->Flags, FCB_IS_FAT));
+        ASSERT(pFCB != pVCB->VolumeFcb && !BooleanFlagOn(pFCB->Flags, FCB_IS_VOLUME));
         ASSERT(pFCB->RefCount > 0);
         RefCount = --pFCB->RefCount;
 
@@ -647,6 +653,8 @@ vfatMakeRootFCB(
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\");
 
+    ASSERT(pVCB->RootFcb == NULL);
+
     FCB = vfatNewFCB(pVCB, &NameU);
     if (vfatVolumeIsFatX(pVCB))
     {
@@ -690,6 +698,9 @@ vfatMakeRootFCB(
     vfatFCBInitializeCacheFromVolume(pVCB, FCB);
     vfatAddFCBToTable(pVCB, FCB);
 
+    /* Cache it */
+    pVCB->RootFcb = FCB;
+
     return FCB;
 }
 
@@ -705,6 +716,7 @@ vfatOpenRootFCB(
     {
         FCB = vfatMakeRootFCB(pVCB);
     }
+    ASSERT(FCB == pVCB->RootFcb);
 
     return FCB;
 }
@@ -746,8 +758,6 @@ vfatAttachFCBToFileObject(
     PFILE_OBJECT fileObject)
 {
     PVFATCCB newCCB;
-
-    UNREFERENCED_PARAMETER(vcb);
 
 #ifdef KDBG
     if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))

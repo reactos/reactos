@@ -58,6 +58,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Помилка"
+    IDS_NOT_RESPONDING " (Not Responding)"
+    IDS_ASK_TERMINATE "This application is hung up. May I terminate this app?"
+    IDS_HUNG_UP_TITLE "Hung up!"
     IDS_OK "OK"
     IDS_CANCEL "Скасувати"
     IDS_ABORT "П&ерервати"

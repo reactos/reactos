@@ -1669,10 +1669,30 @@ ExQueryPoolUsage(OUT PULONG PagedPoolPages,
 #endif
 
     //
-    // FIXME: Not yet supported
+    // Get the amount of hits in the system lookaside lists
     //
-    *NonPagedPoolLookasideHits += 0;
-    *PagedPoolLookasideHits += 0;
+    if (!IsListEmpty(&ExPoolLookasideListHead))
+    {
+        PLIST_ENTRY ListEntry;
+
+        for (ListEntry = ExPoolLookasideListHead.Flink;
+             ListEntry != &ExPoolLookasideListHead;
+             ListEntry = ListEntry->Flink)
+        {
+            PGENERAL_LOOKASIDE Lookaside;
+
+            Lookaside = CONTAINING_RECORD(ListEntry, GENERAL_LOOKASIDE, ListEntry);
+
+            if (Lookaside->Type == NonPagedPool)
+            {
+                *NonPagedPoolLookasideHits += Lookaside->AllocateHits;
+            }
+            else
+            {
+                *PagedPoolLookasideHits += Lookaside->AllocateHits;
+            }
+        }
+    }
 }
 
 VOID

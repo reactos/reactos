@@ -12,10 +12,10 @@ BEGIN
 用法: ping [-t] [-a] [-n count] [-l size] [-f] [-i TTL] [-v TOS]\n\
             [-w timeout] [-4] [-6] target\n\
 \n\
-Options:\n\
-    -t          Ping 指定的主机，直到停止。\n\
-                若要查看统计信息并继续操作，请键入 Control-Break；\n\
-                若要停止，请键入 Control-C。\n\
+选项:\n\
+    -t          Ping 指定的主机直到停止为止。\n\
+                若要查看统计信息并继续操作，请按 Control-Break；\n\
+                若要停止，请按 Control-C。\n\
     -a          将地址解析为主机名。\n\
     -n count    要发送的回显请求数。\n\
     -l size     发送缓冲区大小。\n\
@@ -38,7 +38,7 @@ Options:\n\
     IDS_BAD_PARAMETER "错误的参数 %s。\n"
     IDS_BAD_VALUE "选项 %s 的值有误，有效范围从 %u 到 %u。\n"
     IDS_WRONG_FAMILY "选项 %s 只支持 %s。\n"
-    IDS_UNKNOWN_HOST "Ping 请求找不到主机 %s. 请检查该名称，然后重试。\n"
+    IDS_UNKNOWN_HOST "Ping 无法找到主机 %s. 请检查该名称，然后重试。\n"
     IDS_PINGING_ADDRESS "\nPinging %s "
     IDS_PINGING_HOSTNAME "\nPinging %s [%s] "
     IDS_SOURCE_ADDRESS "从 %s %s"
@@ -48,11 +48,11 @@ Options:\n\
     IDS_REPLY_TIME_MS "时间=%lums "
     IDS_REPLY_TIME_0MS "时间<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "回显返回 %lu。\n"
+    IDS_REPLY_STATUS "回显已返回 %lu。\n"
     IDS_DEST_HOST_UNREACHABLE "目标主机不可达。\n"
     IDS_DEST_NET_UNREACHABLE "目标网络不可达。\n"
-    IDS_REQUEST_TIMED_OUT "请求超时。\n"
-    IDS_TTL_EXPIRED "TTL 再传输中过期。\n"
+    IDS_REQUEST_TIMED_OUT "请求已过期。\n"
+    IDS_TTL_EXPIRED "TTL 在传输途中过期。\n"
     IDS_TRANSMIT_FAILED "PING: 传输失败。(Error %u)\n"
 
     IDS_STATISTICS "\n\

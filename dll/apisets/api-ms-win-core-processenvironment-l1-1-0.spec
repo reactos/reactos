@@ -22,4 +22,4 @@
 @ stdcall SetEnvironmentVariableA() kernel32.SetEnvironmentVariableA
 @ stdcall SetEnvironmentVariableW() kernel32.SetEnvironmentVariableW
 @ stdcall SetStdHandle() kernel32.SetStdHandle
-@ stub SetStdHandleEx
+@ stdcall -version=0x600+ SetStdHandleEx() kernel32.SetStdHandleEx

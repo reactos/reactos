@@ -11,6 +11,8 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <winuser.h>
+#include <undocuser.h>
 
 #include <ndk/rtlfuncs.h>
 
@@ -52,8 +54,16 @@ extern RTL_RESOURCE JobListLock;
 extern LIST_ENTRY StartListHead;
 extern RTL_RESOURCE StartListLock;
 
+extern HANDLE Events[2];
+
 
 /* job.c */
+
+DWORD
+GetNextJobTimeout(VOID);
+
+VOID
+RunNextJob(VOID);
 
 LONG
 SaveJob(

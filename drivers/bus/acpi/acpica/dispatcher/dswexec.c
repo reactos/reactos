@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,7 +145,7 @@ AcpiDsGetPredicateValue (
      * object. Implicitly convert the argument if necessary.
      */
     Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc,
-        ACPI_STRTOUL_BASE16);
+        ACPI_IMPLICIT_CONVERSION);
     if (ACPI_FAILURE (Status))
     {
         goto Cleanup;
@@ -615,8 +615,8 @@ AcpiDsExecEndOp (
         case AML_TYPE_CREATE_OBJECT:
 
             ACPI_DEBUG_PRINT ((ACPI_DB_EXEC,
-                "Executing CreateObject (Buffer/Package) Op=%p AMLPtr=%p\n",
-                Op, Op->Named.Data));
+                "Executing CreateObject (Buffer/Package) Op=%p Child=%p ParentOpcode=%4.4X\n",
+                Op, Op->Named.Value.Arg, Op->Common.Parent->Common.AmlOpcode));
 
             switch (Op->Common.Parent->Common.AmlOpcode)
             {

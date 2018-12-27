@@ -428,6 +428,9 @@ BOOL WINAPI LoadLPK(INT LpkFunctionID)
     {
         switch (LpkFunctionID)
         {
+            case LPK_INIT:
+                return TRUE;
+                
             case LPK_ETO:
                 if (!LpkExtTextOut) // Check if the function is already loaded
                     LpkExtTextOut = (LPKETO) GetProcAddress(hLpk, "LpkExtTextOut");

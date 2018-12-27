@@ -535,7 +535,7 @@ InitThreadCallback(PETHREAD Thread)
     // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
 
     /* CSRSS threads have some special features */
-    if (Process == gpepCSRSS)
+    if (Process == gpepCSRSS || !gpepCSRSS)
         ptiCurrent->TIF_flags = TIF_CSRSSTHREAD | TIF_DONTATTACHQUEUE;
 
     ptiCurrent->pcti = &ptiCurrent->cti;
@@ -575,11 +575,8 @@ InitThreadCallback(PETHREAD Thread)
      * Do not try to open a desktop or window station before the very first
      * (interactive) window station has been created by Winlogon.
      */
-    // if (ptiCurrent->ppi->hdeskStartup == NULL && InputWindowStation != NULL)
-    /* Last things to do only if we are not a SYSTEM or CSRSS thread */
-    // HACK Part #1: Temporarily disabled to have our current USERSRV running, but normally this is its duty to connect itself to the required desktop!
-    if (// !(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
-        /**/ptiCurrent->ppi->hdeskStartup == NULL &&/**/
+    if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
+        ptiCurrent->ppi->hdeskStartup == NULL &&
         InputWindowStation != NULL)
     {
         HWINSTA hWinSta = NULL;
@@ -587,15 +584,10 @@ InitThreadCallback(PETHREAD Thread)
         UNICODE_STRING DesktopPath;
         PDESKTOP pdesk;
 
-        // HACK Part #2: We force USERSRV to connect to WinSta0 by setting the STARTF_INHERITDESKTOP flag.
-        if (ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD))
-            ProcessParams->WindowFlags |= STARTF_INHERITDESKTOP;
-
         /*
          * Inherit the thread desktop and process window station (if not yet inherited)
          * from the process startup info structure. See documentation of CreateProcess().
          */
-
         Status = STATUS_UNSUCCESSFUL;
         if (ProcessParams && ProcessParams->DesktopInfo.Length > 0)
         {

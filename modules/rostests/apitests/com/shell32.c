@@ -13,6 +13,16 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_ActiveDesktop),
+        {
+            {    0x0,   &IID_IActiveDesktop },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IActiveDesktopP },
+            {    0x8,   &IID_IADesktopP2 },
+            {    0xc,   &IID_IPropertyBag },
+        }
+    },
+    {
         ID_NAME(CLSID_CDBurn),
         {
             {    0x0,   &IID_IObjectWithSite },

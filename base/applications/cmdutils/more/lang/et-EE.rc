@@ -1,0 +1,15 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Kuvab andmeid lehekülje kaupa ekraanil.\n\n\
+  MORE < [Draiv:][Tee]Faili nimi\n\
+  Käsk | MORE \n\
+  MORE [Draiv:][Tee]Faili nimi\n\n\
+  [Draiv:][Tee]Faili nimi    Fail mille sisu kuvatakse.\n\
+  Käsk\t\t\t     Käsk mille sisu kuvatakse.\n\n\
+  Küsimusel ""-- Jätka --"" võib vajutada mis tahes klahvi järgmise lehe näitamiseks.\n"
+    IDS_CONTINUE "-- Jätka --"
+    IDS_CONTINUE_PROGRESS "-- Jätka (%d%%) --"
+    IDS_FILE_ACCESS "Ei saa ligi failile %s.\n"
+END

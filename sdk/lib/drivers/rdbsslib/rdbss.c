@@ -8445,7 +8445,7 @@ RxRemoveOverflowEntry(
         /* Return head */
         Entry = RemoveHeadList(&DeviceObject->OverflowQueue[Queue]);
         Context = CONTAINING_RECORD(Entry, RX_CONTEXT, OverflowListEntry);
-        ClearFlag(Context->Flags, ~(RX_CONTEXT_FLAG_FSP_DELAYED_OVERFLOW_QUEUE | RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE));
+        ClearFlag(Context->Flags, (RX_CONTEXT_FLAG_FSP_DELAYED_OVERFLOW_QUEUE | RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE));
         Context->OverflowListEntry.Flink = NULL;
     }
     KeReleaseSpinLock(&DeviceObject->OverflowQueueSpinLock, OldIrql);

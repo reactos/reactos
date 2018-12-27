@@ -16,11 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Translation has been changed by Luo Yufan on 2018-12-03 (njlyf2011@hotmail.com) */
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-    IDS_MESSAGE_BOX_TITLE, "Wine 互联网浏览器"
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
 STRINGTABLE
@@ -33,10 +34,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "向后(&B)", IDM_GOBACKWARD
-        MENUITEM "向前(&O)", IDM_GOFORWARD
+        MENUITEM "后退(&B)", IDM_GOBACKWARD
+        MENUITEM "前进(&O)", IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "将背景存为(&S)...", IDM_SAVEBACKGROUND
+        MENUITEM "将背景另存为(&S)...", IDM_SAVEBACKGROUND
         MENUITEM "设为背景(&G)", IDM_SETWALLPAPER
         MENUITEM "复制背景(&C)", IDM_COPYBACKGROUND
         MENUITEM "设置到桌面(&D)", IDM_SETDESKTOPITEM
@@ -44,7 +45,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "全选(&A)", IDM_SELECTALL
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "创建捷径(&T)", IDM_CREATESHORTCUT
+        MENUITEM "创建快捷方式(&T)", IDM_CREATESHORTCUT
         MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
         MENUITEM "查看源代码(&V)", IDM_VIEWSOURCE
         MENUITEM SEPARATOR
@@ -76,7 +77,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "添加到我的收藏夹(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }

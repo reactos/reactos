@@ -296,10 +296,20 @@ static NTSTATUS fast_io_acquire_for_mod_write(PFILE_OBJECT FileObject, PLARGE_IN
     if (!fcb)
         return STATUS_INVALID_PARAMETER;
 
-    *ResourceToRelease = fcb->Header.PagingIoResource;
+    // Make sure we don't get interrupted by the flush thread, which can cause a deadlock
 
-    if (!ExAcquireResourceSharedLite(*ResourceToRelease, FALSE))
+    if (!ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, FALSE))
         return STATUS_CANT_WAIT;
+
+    // Ideally this would be PagingIoResource, but that doesn't play well with copy-on-write,
+    // as we can't guarantee that we won't need to do any reallocations.
+
+    *ResourceToRelease = fcb->Header.Resource;
+
+    if (!ExAcquireResourceExclusiveLite(*ResourceToRelease, FALSE)) {
+        ExReleaseResourceLite(&fcb->Vcb->tree_lock);
+        return STATUS_CANT_WAIT;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -310,10 +320,15 @@ static NTSTATUS NTAPI fast_io_release_for_mod_write(PFILE_OBJECT FileObject, str
 #else
 static NTSTATUS fast_io_release_for_mod_write(PFILE_OBJECT FileObject, struct _ERESOURCE *ResourceToRelease, PDEVICE_OBJECT DeviceObject) {
 #endif
-    UNUSED(FileObject);
+    fcb* fcb;
+
     UNUSED(DeviceObject);
 
+    fcb = FileObject->FsContext;
+
     ExReleaseResourceLite(ResourceToRelease);
+
+    ExReleaseResourceLite(&fcb->Vcb->tree_lock);
 
     return STATUS_SUCCESS;
 }

@@ -859,7 +859,7 @@ CmpInitHiveFromFile(
 VOID
 NTAPI
 CmpInitializeHiveList(
-    IN USHORT Flag
+    VOID
 );
 
 //
@@ -1177,6 +1177,12 @@ CmGetSystemControlValues(
     IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
 );
 
+NTSTATUS
+NTAPI
+CmpSaveBootControlSet(
+    IN USHORT ControlSet
+);
+
 //
 // Hardware Configuration Routines
 //
@@ -1357,9 +1363,10 @@ CmUnloadKey(
 
 ULONG
 NTAPI
-CmCountOpenSubKeys(
+CmpEnumerateOpenSubKeys(
     IN PCM_KEY_CONTROL_BLOCK RootKcb,
-    IN BOOLEAN RemoveEmptyCacheEntries
+    IN BOOLEAN RemoveEmptyCacheEntries,
+    IN BOOLEAN DereferenceOpenedEntries
 );
 
 HCELL_INDEX

@@ -72,7 +72,7 @@ BEGIN
     IDS_ERROR_MAX_COMMENT_LENGTH "错误: 注释长度超过由系统设置的最大限制。\n"
     IDS_ERROR_HIBERNATE "错误: 无法使系统进入休眠模式。\n"
     IDS_ERROR_HIBERNATE_LOCAL "错误: 无法远程启动休眠模式。\n"
-    IDS_ERROR_HIBERNATE_ENABLED "错误: 未启用休眠模式。\n"
+    IDS_ERROR_HIBERNATE_ENABLED "错误: 没有启用休眠模式。\n"
     IDS_ERROR_DIALOG_CAPTION "远程关机"
     IDS_ERROR_DIALOG_INIT "无法显示图形用户界面。"
 END
@@ -82,7 +82,7 @@ STRINGTABLE
 BEGIN
     IDS_ACTION_SHUTDOWN "关闭系统"
     IDS_ACTION_RESTART "重新启动系统"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "注释意外的关闭"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "备注意外的关机事件"
 END
 
 /* Remote shutdown reason strings */

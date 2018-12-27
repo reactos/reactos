@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     AttachThreadInput.c
     ../include/msgtrace.c
+    CloseWindow.c
     CreateDialog.c
     CreateIconFromResourceEx.c
     CreateWindowEx.c
@@ -36,6 +37,7 @@ list(APPEND SOURCE
     SetProp.c
     SetScrollInfo.c
     SetScrollRange.c
+    SwitchToThisWindow.c
     SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c

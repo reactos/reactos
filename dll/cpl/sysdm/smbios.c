@@ -11,7 +11,6 @@
 
 #include <strsafe.h>
 #include <udmihelp.h>
-#include <dmilib.h>
 
 typedef struct GENERIC_NAME
 {
@@ -332,6 +331,7 @@ void AppendSystemFamily(PWSTR pBuf, SIZE_T cchBuf, PCHAR * DmiStrings, PWSTR dev
 
         if (wcsistr(dev, wideStr) == NULL &&
             (!Aliases[i] || wcsistr(dev, Aliases[i]) == NULL) &&
+            DmiStrings[SYS_FAMILY] != NULL &&
             !stricmp(DmiStrings[SYS_FAMILY], KnownFamilies[i]))
         {
             if (wcslen(pBuf) > 0 && wcslen(dev) > 0)
@@ -515,7 +515,8 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
     {
         StringCchCopyW(ven, _countof(ven), L"Lenovo");
 
-        if (stricmp(DmiStrings[SYS_VERSION], "Lenovo") &&
+        if (DmiStrings[SYS_VERSION] != NULL &&
+            stricmp(DmiStrings[SYS_VERSION], "Lenovo") &&
             stricmp(DmiStrings[SYS_VERSION], "Lenovo Product") &&
             stricmp(DmiStrings[SYS_VERSION], " ") &&
             _strnicmp(DmiStrings[SYS_VERSION], "   ", 3) &&
@@ -546,8 +547,9 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
     // workaround for DEXP
     if (!wcscmp(ven, L"DEXP"))
     {
-        if (!stricmp(DmiStrings[SYS_PRODUCT], "Tablet PC")
-            && DmiStrings[SYS_VERSION] != NULL)
+        if (DmiStrings[SYS_PRODUCT] != NULL &&
+            !stricmp(DmiStrings[SYS_PRODUCT], "Tablet PC") &&
+            DmiStrings[SYS_VERSION] != NULL)
         {
             GetSMBiosStringW(DmiStrings[SYS_VERSION], dev, _countof(dev), TRUE);
         }

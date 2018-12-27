@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <strsafe.h>
 #include "resource.h"
 #include "customwndclasses.h"
 

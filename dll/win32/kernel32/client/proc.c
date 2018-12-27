@@ -445,33 +445,6 @@ BasepSxsCloseHandles(IN PBASE_MSG_SXS_HANDLES Handles)
     }
 }
 
-static
-LONG BaseExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
-{
-    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
-    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
-    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
-
-    if (RealFilter != NULL)
-    {
-        _SEH2_TRY
-        {
-            ExceptionDisposition = RealFilter(ExceptionInfo);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-        }
-        _SEH2_END;
-    }
-    if ((ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH || ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER) &&
-        RealFilter != UnhandledExceptionFilter)
-    {
-       ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
-    }
-
-    return ExceptionDisposition;
-}
-
 VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
@@ -489,7 +462,7 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
         /* Call the Start Routine */
         ExitThread(lpStartAddress());
     }
-    _SEH2_EXCEPT(BaseExceptionFilter(_SEH2_GetExceptionInformation()))
+    _SEH2_EXCEPT(UnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
     {
         /* Get the Exit code from the SEH Handler */
         if (!BaseRunningInServerProcess)

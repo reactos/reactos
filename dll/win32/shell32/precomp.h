@@ -20,6 +20,7 @@
 #include <userenv.h>
 
 #include <shlwapi.h>
+#include <wininet.h>
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <ndk/rtlfuncs.h>
@@ -54,6 +55,7 @@
 #include "wine/shell32_main.h"
 #include "shresdef.h"
 #include "wine/cpanel.h"
+#include "CActiveDesktop.h"
 #include "CEnumIDListBase.h"
 #include "shfldr.h"
 #include "CShellItem.h"

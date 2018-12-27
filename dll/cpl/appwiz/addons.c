@@ -362,10 +362,15 @@ static DWORD WINAPI download_proc(PVOID arg)
 
     hres = URLDownloadToFileW(NULL, GeckoUrl, tmp_file, 0, &InstallCallback);
     if(FAILED(hres)) {
-        ERR("URLDownloadToFile failed: %08x\n", hres);
         if (LoadStringW(hApplet, IDS_DWL_FAILED, message, sizeof(message) / sizeof(WCHAR))) {
-            MessageBoxW(NULL, message, NULL, MB_ICONERROR);
+            /* If the user aborted the download, DO NOT display the message box */
+            if (hres == E_ABORT) {
+                TRACE("Downloading of Gecko package aborted!\n");
+            } else {
+                MessageBoxW(NULL, message, NULL, MB_ICONERROR);
+            }
         }
+        ERR("URLDownloadToFile failed: %08x\n", hres);
     } else {
         if(sha_check(tmp_file)) {
             install_file(tmp_file);

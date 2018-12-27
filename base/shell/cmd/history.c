@@ -309,7 +309,7 @@ LPCTSTR PeekHistory(INT dir)
     else
     {
         /* key down */
-        if (entry->next == Bottom || entry == Bottom)
+        if (entry->prev == Bottom || entry == Bottom)
         {
 #ifdef WRAP_HISTORY
             entry = Top;

@@ -33,6 +33,9 @@ IDI_ICON ICON "res/charmap.ico"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ET_EE
+    #include "lang/et-EE.rc"
+#endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif

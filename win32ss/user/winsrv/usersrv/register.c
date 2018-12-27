@@ -20,6 +20,10 @@ static BOOLEAN ServicesProcessIdValid = FALSE;
 ULONG_PTR ServicesProcessId = 0;
 ULONG_PTR LogonProcessId = 0;
 
+#if 1 //HACK! See use below
+extern HANDLE CsrApiPort;
+#endif
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvRegisterLogonProcess)
@@ -44,6 +48,30 @@ CSR_API(SrvRegisterLogonProcess)
 
         LogonProcessId = 0;
     }
+
+#if 1 //HAAAACK. This should be done in UserClientConnect which is never called!
+
+    /* Check if we don't have an API port yet */
+    if (CsrApiPort == NULL)
+    {
+        NTSTATUS Status;
+
+        /* Query the API port and save it globally */
+        CsrApiPort = CsrQueryApiPort();
+
+        DPRINT("Giving win32k our api port\n");
+
+        /* Inform win32k about the API port */
+        Status = NtUserSetInformationThread(NtCurrentThread(),
+                                            UserThreadCsrApiPort,
+                                            &CsrApiPort,
+                                            sizeof(CsrApiPort));
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+#endif
 
     return STATUS_SUCCESS;
 }

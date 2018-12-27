@@ -1,11 +1,37 @@
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
+;Signature = "$ReactOS$"
 
-; Directories relative to the installation directory.
+;
+; The [SourceDisksNames] section lists all the available installation media
+; where the installation files can be found. It can specifies media common
+; to all architectures, or media specific to a given architecture (x86, amd64,
+; and so on...) within [SourceDisksNames.x86] (etc...) sections.
+;
+; The format of each line is as follows:
+; <disk_id> = <description>,<tagfile>,<unused>,<subdirectory>,<flags>,<tagfile>
+;
+[SourceDisksNames]
+_1 = %cdname%,%cdtagfile%,,""
+
+[SourceDisksNames.x86]
+;1 = %cdname%,%cdtagfilei%,,\i386
+1 = %cdname%,%cdtagfilei%,,\reactos
+
+[SourceDisksNames.amd64]
+1 = %cdname%,%cdtagfilea%,,\amd64
+
+;
+; The directories listed in the [Directories] or [WinntDirectories] sections
+; are relative to the installation source or destination directories.
+;
+; The format of each line is as follows:
+; <directory_id> = <path>
+;
 ; For specifying absolute directories, use the SystemPartitionFiles section,
 ; or use names starting with \.
+;
 [Directories]
-; <directory_id> = <path>
 1 = "\"
 2 = system32
 3 = system32\config
@@ -18,57 +44,106 @@ Signature = "$ReactOS$"
 ; Required free system partition disk space in MB
 FreeSysPartDiskSpace=450
 
+;
+; The [SourceDisksFiles] section lists all the files available to the
+; installer. It can specifies files common to all architectures, or files
+; specific to a given architecture (x86, amd64, and so on...) within
+; [SourceDisksFiles.x86] (etc...) sections.
+;
+; Each line provides the location of a file in the installation media
+; and its destination when being installed on a target architecture.
+; The format of each line is as follows:
+;
+; <source_filename> =
+;     <disk_id>,<subdirectory>,<file_size>,<checksum>,<unused>,<unused>,
+; NT-specific fields:
+;     <boot_media_id>,<destination_dir_id>,<upgrade_dispo>,<install_dispo>,
+;     <destination_filename>,
+; WinPE(MiniNT)-specific optional fields:
+;     <WinPE_disk_id>,<WinPE_directory_id>
+;
+; The 'disk_id', 'boot_media_id' and 'WinPE_disk_id' media IDs refer to
+; source media listed in the [SourceDisksNames] section. The 'boot_media_id'
+; value specifies any additional boot/installation media.
+;
+; The values for the disposition flags 'upgrade_dispo' (used when upgrading)
+; or 'install_dispo' (used when installing, usually by the text-mode installer)
+; are:
+;   0: always copy (default);
+;   1: copy if present;
+;   2: copy if not present;
+;   3: never copy.
+;
+; The 'destination_dir_id' and 'WinPE_directory_id' directory IDs refer to
+; the directories listed in the [Directories] section.
+;
+; ReactOS-specific: we don't use 'boot_media_id' yet and instead, we use
+; an identifier 'x' to signal the SetupLdr that it has to load the file.
+; This must be replaced by handling the "DiskDrivers.Load", "FileSystems.Load",
+; ("Hal.Load", "Display.Load"), "SCSI.Load", "BootBusExtenders.Load",
+; "BusExtenders.Load", "InputDevicesSupport.Load", "Keyboard.Load",
+; "ScsiClass.Load", "FloppyDrivers.Load", "CdRomDrivers.Load", and
+; "MouseDrivers.Load" sections.
+;
 [SourceDisksFiles]
-acpi.sys=,,,,,,,,,,,,4
-nmidebug.sys=,,,,,,x,,,,,,4
-sacdrv.sys=,,,,,,x,,,,,,4
-uniata.sys=,,,,,,x,,,,,,4
-buslogic.sys=,,,,,,x,,,,,,4
-storahci.sys=,,,,,,x,,,,,,4
-blue.sys=,,,,,,x,,,,,,4
-vgafonts.cab=,,,,,,,,,,,,1
-bootvid.dll=,,,,,,,,,,,,2
-c_437.nls=,,,,,,,,,,,,2
-c_1252.nls=,,,,,,,,,,,,2
-cdfs.sys=,,,,,,x,,,,,,4
-cdrom.sys=,,,,,,x,,,,,,4
-class2.sys=,,,,,,x,,,,,,4
-isapnp.sys=,,,,,,,,,,,,4
-kdcom.dll=,,,,,,,,,,,,2
-kdvbox.dll=,,,,,,,,,,,,2
-disk.sys=,,,,,,x,,,,,,4
-floppy.sys=,,,,,,x,,,,,,4
-i8042prt.sys=,,,,,,,,,,,,4
-hidclass.sys=,,,,,,,,,,,,4
-hidparse.sys=,,,,,,,,,,,,4
-hidusb.sys=,,,,,,,,,,,,4
-usbccgp.sys=,,,,,,x,,,,,,4
-usbd.sys=,,,,,,x,,,,,,4
-usbhub.sys=,,,,,,x,,,,,,4
-usbuhci.sys=,,,,,,x,,,,,,4
-usbohci.sys=,,,,,,x,,,,,,4
-usbehci.sys=,,,,,,x,,,,,,4
-usbstor.sys=,,,,,,x,,,,,,4
-kbdhid.sys=,,,,,,,,,,,,4
-kbdclass.sys=,,,,,,x,,,,,,4
-l_intl.nls=,,,,,,,,,,,,2
-pci.sys=,,,,,,,,,,,,4
-scsiport.sys=,,,,,,x,,,,,,4
-storport.sys=,,,,,,x,,,,,,4
-fastfat.sys=,,,,,,x,,,,,,4
-btrfs.sys=,,,,,,x,,,,,,4
-ramdisk.sys=,,,,,,x,,,,,,4
-classpnp.sys=,,,,,,,,,,,,4
-pciide.sys=,,,,,,,,,,,,4
-pciidex.sys=,,,,,,,,,,,,4
-pcix.sys=,,,,,,,,,,,,4
-pcmcia.sys=,,,,,,,,,,,,4
-swenum.sys=,,,,,,,,,,,,4
-ntdll.dll=,,,,,,,,,,,,2
-wmilib.sys=,,,,,,,,,,,,4
-ksecdd.sys=,,,,,,,,,,,,4
-mountmgr.sys=,,,,,,x,,,,,,4
+acpi.sys     = 1,,,,,,,4,1,,,1,4
+nmidebug.sys = 1,,,,,,x,4,,,,1,4
+sacdrv.sys   = 1,,,,,,x,4,,,,1,4
+uniata.sys   = 1,,,,,,x,4,,,,1,4
+buslogic.sys = 1,,,,,,x,4,,,,1,4
+storahci.sys = 1,,,,,,x,4,,,,1,4
+blue.sys     = 1,,,,,,x,4,,,,1,4
+vgafonts.cab = 1,,,,,,,1,,,,1,1
+bootvid.dll  = 1,,,,,,,2,,,,1,2
+c_437.nls    = 1,,,,,,,2,,,,1,2
+c_1252.nls   = 1,,,,,,,2,,,,1,2
+cdfs.sys     = 1,,,,,,x,4,,,,1,4
+cdrom.sys    = 1,,,,,,x,4,,,,1,4
+class2.sys   = 1,,,,,,x,4,,,,1,4
+isapnp.sys   = 1,,,,,,,4,,,,1,4
+kdcom.dll    = 1,,,,,,,2,,,,1,2
+kdvbox.dll   = 1,,,,,,,2,,,,1,2
+disk.sys     = 1,,,,,,x,4,,,,1,4
+floppy.sys   = 1,,,,,,x,4,,,,1,4
+i8042prt.sys = 1,,,,,,,4,,,,1,4
+hidclass.sys = 1,,,,,,,4,,,,1,4
+hidparse.sys = 1,,,,,,,4,,,,1,4
+hidusb.sys   = 1,,,,,,,4,,,,1,4
+usbccgp.sys  = 1,,,,,,x,4,,,,1,4
+usbd.sys     = 1,,,,,,x,4,,,,1,4
+usbhub.sys   = 1,,,,,,x,4,,,,1,4
+usbuhci.sys  = 1,,,,,,x,4,,,,1,4
+usbohci.sys  = 1,,,,,,x,4,,,,1,4
+usbehci.sys  = 1,,,,,,x,4,,,,1,4
+usbstor.sys  = 1,,,,,,x,4,,,,1,4
+kbdhid.sys   = 1,,,,,,,4,,,,1,4
+kbdclass.sys = 1,,,,,,x,4,,,,1,4
+l_intl.nls   = 1,,,,,,,2,,,,1,2
+pci.sys      = 1,,,,,,,4,,,,1,4
+scsiport.sys = 1,,,,,,x,4,,,,1,4
+storport.sys = 1,,,,,,x,4,,,,1,4
+fastfat.sys  = 1,,,,,,x,4,,,,1,4
+btrfs.sys    = 1,,,,,,x,4,,,,1,4
+ramdisk.sys  = 1,,,,,,x,4,,,,1,4
+classpnp.sys = 1,,,,,,,4,,,,1,4
+pciide.sys   = 1,,,,,,,4,,,,1,4
+pciidex.sys  = 1,,,,,,,4,,,,1,4
+pcix.sys     = 1,,,,,,,4,,,,1,4
+pcmcia.sys   = 1,,,,,,,4,,,,1,4
+swenum.sys   = 1,,,,,,,4,,,,1,4
+ntdll.dll    = 1,,,,,,,2,,,,1,2
+wmilib.sys   = 1,,,,,,,4,,,,1,4
+ksecdd.sys   = 1,,,,,,,4,,,,1,4
+mountmgr.sys = 1,,,,,,x,4,,,,1,4
 
+[SourceDisksFiles.x86]
+
+[SourceDisksFiles.amd64]
+
+;
+; The [SystemPartitionFiles] section lists all the files
+; that should be installed in the System Partition.
+;
 [SystemPartitionFiles]
 
 [HardwareIdsDatabase]
@@ -158,20 +233,20 @@ acpi_up = "ACPI UP"
 ;acpi_mp = "ACPI MP"
 
 [Files.pci_up]
-ntoskrnl.exe=,,,,,,,,,,,,2
-hal.dll=,,,,,,,,,,,,2
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+hal.dll      = 1,,,,,,,2,,,,1,2
 
 ;[Files.pci_mp]
-;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-;halmps.dll=,,,,,,,,,,hal.dll,,2
+;ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+;halmps.dll   = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.acpi_up]
-ntoskrnl.exe=,,,,,,,,,,,,2
-halacpi.dll=,,,,,,,,,,hal.dll,,2
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 ;[Files.acpi_mp]
-;ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-;halacpi.dll=,,,,,,,,,,hal.dll,,2
+;ntkrnlmp.exe = 1,,,,,,,2,,,ntoskrnl.exe,1,2
+;halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<height>,<width>,<bpp>
@@ -414,7 +489,8 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010415 = "Polish (214)"
 00010416 = "Portuguese (Brazilian ABNT2)"
 00000816 = "Portuguese (Portugal)"
-00000418 = "Romanian"
+00000418 = "Romanian (Legacy)"
+00010418 = "Romanian (Standard)"
 00000419 = "Russian"
 00010419 = "Russian (Typewriter)"
 00000C1A = "Serbian (Cyrillic)"
@@ -484,6 +560,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000816 = kbdpo.dll
 00010416 = kbdbr.dll
 00000418 = kbdro.dll
+00010418 = kbdrost.dll
 00000419 = kbdru.dll
 00010419 = kbdru1.dll
 0000041A = kbdcr.dll
@@ -524,7 +601,12 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000048F = kbdeo.dll
 
 [HiveInfs.Install]
-AddReg=caroots.inf,AddReg
-AddReg=registry.inf,AddReg
+; Called "HiveInfs.Fresh" on Windows
+AddReg = caroots.inf,AddReg
+AddReg = registry.inf,AddReg
+
+[HiveInfs.Upgrade]
+DelReg = registry.inf,DelReg
+AddReg = registry.inf,AddReg
 
 ; EOF

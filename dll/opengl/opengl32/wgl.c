@@ -19,7 +19,7 @@ LIST_ENTRY ContextListHead;
 /* FIXME: suboptimal */
 static
 struct wgl_dc_data*
-get_dc_data(HDC hdc)
+get_dc_data_ex(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR *descr)
 {
     HWND hwnd = NULL;
     struct wgl_dc_data* data;
@@ -76,7 +76,7 @@ get_dc_data(HDC hdc)
     data->icd_data = IntGetIcdData(hdc);
     /* Get the number of available formats for this DC once and for all */
     if(data->icd_data)
-        data->nb_icd_formats = data->icd_data->DrvDescribePixelFormat(hdc, 0, 0, NULL);
+        data->nb_icd_formats = data->icd_data->DrvDescribePixelFormat(hdc, format, size, descr);
     else
         data->nb_icd_formats = 0;
     TRACE("ICD %S has %u formats for HDC %x.\n", data->icd_data ? data->icd_data->DriverName : NULL, data->nb_icd_formats, hdc);
@@ -85,6 +85,13 @@ get_dc_data(HDC hdc)
     dc_data_list = data;
     LeaveCriticalSection(&dc_data_cs);
     return data;
+}
+
+static
+struct wgl_dc_data*
+get_dc_data(HDC hdc)
+{
+    return get_dc_data_ex(hdc, 0, 0, NULL);
 }
 
 void release_dc_data(struct wgl_dc_data* dc_data)
@@ -115,7 +122,7 @@ struct wgl_context* get_context(HGLRC hglrc)
 
 INT WINAPI wglDescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDESCRIPTOR *descr )
 {
-    struct wgl_dc_data* dc_data = get_dc_data(hdc);
+    struct wgl_dc_data* dc_data = get_dc_data_ex(hdc, format, size, descr);
     INT ret;
     
     if(!dc_data)
@@ -131,7 +138,7 @@ INT WINAPI wglDescribePixelFormat(HDC hdc, INT format, UINT size, PIXELFORMATDES
         release_dc_data(dc_data);
         return ret;
     }
-    if((format == 0) || (format > ret) || (size != sizeof(*descr)))
+    if((format <= 0) || (format > ret) || (size < sizeof(*descr)))
     {
         release_dc_data(dc_data);
         SetLastError(ERROR_INVALID_PARAMETER);

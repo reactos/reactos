@@ -31,7 +31,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建快捷方式"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    LTEXT "此嚮導幫助您創建本地或網路程式、檔案、目錄、計算機或Internet地址的快捷方式。", -1, 120, 15, 200, 30
+    LTEXT "此精靈幫助您創建本地或網路程式、檔案、目錄、計算機或Internet地址的快捷方式。", -1, 120, 15, 200, 30
     LTEXT "輸入項目位置：", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "瀏覽...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT

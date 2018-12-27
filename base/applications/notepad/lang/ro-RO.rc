@@ -67,8 +67,7 @@ BEGIN
     BEGIN
         MENUITEM "&Manual…", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", CMD_ABOUT
-        MENUITEM "I&nfo…", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -133,23 +132,6 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 294, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre Carnețelul ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "Carnețelul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur\r\nDrept de autor 2000 Mike McCormack\r\nDrept de autor 2002 Sylvain Petreolle\r\nDrept de autor 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 242, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Î&nchide", IDOK, 119, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 282, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Tradus în limba română de Petru Dimitriu.\r\nAceastă aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -188,4 +170,5 @@ Păstrați modificările aduse?"
     STRING_PRINTERROR "Fișierul „%s” nu a putut fi imprimat.\n\nAsigurați-vă că imprimanta este pornită și configurată corespunzător."
 
     STRING_TEXT_DOCUMENT "Document text"
+    STRING_NOTEPAD_AUTHORS "Drept de autor 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

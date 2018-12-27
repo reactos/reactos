@@ -5,6 +5,10 @@
 #include <debug.h>
 #include "bootvid/bootvid.h"
 
+#ifndef TAG_OSTR
+#define TAG_OSTR    'RTSO'
+#endif
+
 /* GLOBALS *******************************************************************/
 
 /*
@@ -771,15 +775,66 @@ NTSTATUS
 NTAPI
 NtDisplayString(IN PUNICODE_STRING DisplayString)
 {
+    NTSTATUS Status;
+    UNICODE_STRING CapturedString;
     OEM_STRING OemString;
+    ULONG OemLength;
+    KPROCESSOR_MODE PreviousMode;
 
-    /* Convert the string to OEM and display it */
-    RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* We require the TCB privilege */
+    if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+        return STATUS_PRIVILEGE_NOT_HELD;
+
+    /* Capture the string */
+    Status = ProbeAndCaptureUnicodeString(&CapturedString, PreviousMode, DisplayString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Do not display the string if it is empty */
+    if (CapturedString.Length == 0 || CapturedString.Buffer == NULL)
+    {
+        Status = STATUS_SUCCESS;
+        goto Quit;
+    }
+
+    /*
+     * Convert the string since INBV understands only ANSI/OEM. Allocate the
+     * string buffer in non-paged pool because INBV passes it down to BOOTVID.
+     * We cannot perform the allocation using RtlUnicodeStringToOemString()
+     * since its allocator uses PagedPool.
+     */
+    OemLength = RtlUnicodeStringToOemSize(&CapturedString);
+    if (OemLength > MAXUSHORT)
+    {
+        Status = STATUS_BUFFER_OVERFLOW;
+        goto Quit;
+    }
+    RtlInitEmptyAnsiString((PANSI_STRING)&OemString, NULL, (USHORT)OemLength);
+    OemString.Buffer = ExAllocatePoolWithTag(NonPagedPool, OemLength, TAG_OSTR);
+    if (OemString.Buffer == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+    RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
+
+    /* Display the string */
     InbvDisplayString(OemString.Buffer);
-    RtlFreeOemString(&OemString);
 
-    /* Return success */
-    return STATUS_SUCCESS;
+    /* Free the string buffer */
+    ExFreePoolWithTag(OemString.Buffer, TAG_OSTR);
+
+    Status = STATUS_SUCCESS;
+
+Quit:
+    /* Free the captured string */
+    ReleaseCapturedUnicodeString(&CapturedString, PreviousMode);
+
+    return Status;
 }
 
 #ifdef INBV_ROTBAR_IMPLEMENTED

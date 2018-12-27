@@ -288,6 +288,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Geri (%s Adresine)"
     IDS_FORWARD "İleri (%s Adresine)"
+    IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 STRINGTABLE

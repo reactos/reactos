@@ -1,0 +1,65 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Fail"
+    BEGIN
+        MENUITEM "&Ava...", CMD_OPEN
+        MENUITEM "Salvesta &nimega...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "V&älju", CMD_EXIT
+    END
+    POPUP "&Redigeeri"
+    BEGIN
+        MENUITEM "&Kustuta\tDel", CMD_DELETE
+    END
+    POPUP "&Kuva"
+    BEGIN
+        MENUITEM "&Automaatne", CMD_AUTOMATIC
+    END
+    POPUP "&Spikker"
+    BEGIN
+        MENUITEM "&Spikriteemad", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Teave", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Lõikelaua vaatur"
+    STRING_CLIPFILE  "Lõikelaua element"
+    STRING_DELETE_MSG "Puhastada lõikelaua sisu?"
+    STRING_DELETE_TITLE "Puhasta lõikelauda"
+    STRING_FORMAT_NT "Lõikelaua failid ReactOS'i jaoks (*.clp)"
+    STRING_FORMAT_GEN "Lõikelaua failid (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Tundmatu vorming"
+    STRING_CF_TEXT "Tekst"
+    STRING_CF_BITMAP "Bittraster"
+    STRING_CF_OEMTEXT "OEM tekst"
+    STRING_CF_UNICODETEXT "Unicode tekst"
+    STRING_CF_DIB "DIB bittraster"
+    STRING_CF_LOCALE "Lokaadi andmed"
+    STRING_CF_ENHMETAFILE "Täiustatud metafail"
+    STRING_CF_METAFILEPICT "Metafail"
+    STRING_CF_PALETTE "Värvipalett"
+    STRING_CF_DIBV5 "DIB bittraster (Versioon 5)"
+    STRING_CF_SYLK "Sümboolse lingi vorming"
+    STRING_CF_DIF "Andmevahetuse vorming"
+    STRING_CF_HDROP "Pukseeritud andmed"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Lõikelaud sisaldab kuvamatut andmevormingut."
+    ERROR_INVALID_FILE_FORMAT "Valitud fail ei ole sobiv lõikelaua fail."
+END

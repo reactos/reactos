@@ -1,115 +1,24 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     CNetConnectionPropertyUi: Network connection configuration dialog
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+
 #include "precomp.h"
 
-#include <netcfgx.h>
-#include <netcfgn.h>
-#include <strsafe.h>
-
-/// CLASSID
-/// {7007ACC5-3202-11D1-AAD2-00805FC1270E}
-/// open network properties and wlan properties
-
-typedef enum
-{
-    NET_TYPE_CLIENT = 1,
-    NET_TYPE_SERVICE = 2,
-    NET_TYPE_PROTOCOL = 3
-} NET_TYPE;
-
-typedef struct
-{
-    NET_TYPE Type;
-    DWORD dwCharacteristics;
-    LPWSTR szHelp;
-    INetCfgComponent  *pNCfgComp;
-    UINT NumPropDialogOpen;
-} NET_ITEM, *PNET_ITEM;
-
-class CNetConnectionPropertyUi final :
-    public INetConnectionConnectUi,
-    public INetConnectionPropertyUi2,
-    public INetLanConnectionUiInfo
-{
-    public:
-        CNetConnectionPropertyUi();
-
-        // IUnknown
-        virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
-        virtual ULONG WINAPI AddRef();
-        virtual ULONG WINAPI Release();
-
-        // INetConnectionPropertyUi2
-        virtual HRESULT WINAPI AddPages(HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-        virtual HRESULT WINAPI GetIcon(DWORD dwSize, HICON *phIcon);
-
-        // INetLanConnectionUiInfo
-        virtual HRESULT WINAPI GetDeviceGuid(GUID *pGuid);
-
-        // INetConnectionConnectUi
-        virtual HRESULT WINAPI SetConnection(INetConnection* pCon);
-        virtual HRESULT WINAPI Connect(HWND hwndParent, DWORD dwFlags);
-        virtual HRESULT WINAPI Disconnect(HWND hwndParent, DWORD dwFlags);
-
-    private:
-        ~CNetConnectionPropertyUi();
-
-        BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
-        VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
-        VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
-        VOID ShowNetworkComponentProperties(HWND hwndDlg);
-        BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
-        static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-        INetConnection * m_pCon;
-        INetCfgLock *m_NCfgLock;
-        INetCfg * m_pNCfg;
-        NETCON_PROPERTIES * m_pProperties;
-        LONG m_ref;
-};
-
 CNetConnectionPropertyUi::CNetConnectionPropertyUi() :
-    m_pCon(NULL),
-    m_NCfgLock(NULL),
-    m_pNCfg(NULL),
-    m_pProperties(NULL),
-    m_ref(0)
+    m_pProperties(NULL)
 {
 }
 
 CNetConnectionPropertyUi::~CNetConnectionPropertyUi()
 {
     if (m_pNCfg)
-    {
         m_pNCfg->Uninitialize();
-        m_pNCfg->Release();
-    }
-    if (m_NCfgLock)
-    {
-        m_NCfgLock->Release();
-    }
+
     if (m_pProperties)
-    {
         NcFreeNetconProperties(m_pProperties);
-    }
-}
-
-HPROPSHEETPAGE
-InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
-{
-    PROPSHEETPAGEW ppage;
-
-    memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
-    ppage.dwSize = sizeof(PROPSHEETPAGEW);
-    ppage.dwFlags = PSP_DEFAULT;
-    ppage.pszTemplate = resname;
-    ppage.pfnDlgProc = dlgproc;
-    ppage.lParam = lParam;
-    ppage.hInstance = netshell_hInstance;
-    if (szTitle)
-    {
-        ppage.dwFlags |= PSP_USETITLE;
-        ppage.pszTitle = szTitle;
-    }
-    return CreatePropertySheetPageW(&ppage);
 }
 
 VOID
@@ -131,32 +40,31 @@ CNetConnectionPropertyUi::GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent *
 {
     LPWSTR pName;
     HRESULT hr;
-    INetCfgComponent * pNCg;
     ULONG Fetched;
-    IEnumNetCfgComponent * pEnumCfg;
+    CComPtr<IEnumNetCfgComponent> pEnumCfg;
 
     hr = pNCfg->EnumComponents(&GUID_DEVCLASS_NET, &pEnumCfg);
-    if (FAILED(hr))
-    {
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
-    }
 
-    while (pEnumCfg->Next(1, &pNCg, &Fetched) == S_OK)
+    while (TRUE)
     {
+        CComPtr<INetCfgComponent> pNCg;
+        hr = pEnumCfg->Next(1, &pNCg, &Fetched);
+        if (hr != S_OK)
+            break;
+
         hr = pNCg->GetDisplayName(&pName);
         if (SUCCEEDED(hr))
         {
             if (!_wcsicmp(pName, m_pProperties->pszwDeviceName))
             {
-                *pOut = pNCg;
-                pEnumCfg->Release();
+                *pOut = pNCg.Detach();
                 return TRUE;
             }
             CoTaskMemFree(pName);
         }
-        pNCg->Release();
     }
-    pEnumCfg->Release();
     return FALSE;
 }
 
@@ -164,9 +72,7 @@ VOID
 CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type)
 {
     HRESULT hr;
-    IEnumNetCfgComponent * pENetCfg;
-    INetCfgComponent  *pNCfgComp, *pAdapterCfgComp;
-    INetCfgComponentBindings * pCompBind;
+    CComPtr<IEnumNetCfgComponent> pENetCfg;
     ULONG Num;
     DWORD dwCharacteristics;
     LPOLESTR pDisplayName, pHelpText;
@@ -174,25 +80,29 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
     BOOL bChecked;
 
     hr = pNCfg->EnumComponents(CompGuid, &pENetCfg);
-    if (FAILED(hr))
-    {
-        pNCfg->Release();
+    if (FAILED_UNEXPECTEDLY(hr))
         return;
-    }
-    while (pENetCfg->Next(1, &pNCfgComp, &Num) == S_OK)
+
+    while (TRUE)
     {
+        CComPtr<INetCfgComponent> pNCfgComp;
+        CComPtr<INetCfgComponentBindings> pCompBind;
+        CComPtr<INetCfgComponent> pAdapterCfgComp;
+
+        hr = pENetCfg->Next(1, &pNCfgComp, &Num);
+        if (hr != S_OK)
+            break;
+
         hr = pNCfgComp->GetCharacteristics(&dwCharacteristics);
         if (SUCCEEDED(hr) && (dwCharacteristics & NCF_HIDDEN))
-        {
-            pNCfgComp->Release();
             continue;
-        }
+
         pDisplayName = NULL;
         pHelpText = NULL;
         hr = pNCfgComp->GetDisplayName(&pDisplayName);
         hr = pNCfgComp->GetHelpText(&pHelpText);
         bChecked = TRUE; //ReactOS hack
-        hr = pNCfgComp->QueryInterface(IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
+        hr = pNCfgComp->QueryInterface(IID_PPV_ARG(INetCfgComponentBindings, &pCompBind));
         if (SUCCEEDED(hr))
         {
             if (GetINetCfgComponent(pNCfg, &pAdapterCfgComp))
@@ -202,8 +112,6 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
                     bChecked = TRUE;
                 else
                     bChecked = FALSE;
-                pAdapterCfgComp->Release();
-                pCompBind->Release();
             }
         }
 
@@ -214,21 +122,20 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
         pItem->dwCharacteristics = dwCharacteristics;
         pItem->szHelp = pHelpText;
         pItem->Type = (NET_TYPE)Type;
-        pItem->pNCfgComp = pNCfgComp;
+        pItem->pNCfgComp = pNCfgComp.Detach();
         pItem->NumPropDialogOpen = 0;
 
         AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked);
         CoTaskMemFree(pDisplayName);
     }
-    pENetCfg->Release();
 }
 
 VOID
 CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
 {
     HRESULT hr;
-    INetCfg *pNCfg;
-    INetCfgLock *pNCfgLock;
+    CComPtr<INetCfg> pNCfg;
+    CComPtr<INetCfgLock> pNCfgLock;
     HWND hDlgCtrl = GetDlgItem(hwndDlg, IDC_COMPONENTSLIST);
     LVCOLUMNW lc;
     RECT rc;
@@ -262,11 +169,11 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
     dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
     SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 
-    hr = CoCreateInstance(CLSID_CNetCfg, NULL, CLSCTX_INPROC_SERVER, IID_INetCfg, (LPVOID*)&pNCfg);
+    hr = CoCreateInstance(CLSID_CNetCfg, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(INetCfg, &pNCfg));
     if (FAILED(hr))
         return;
 
-    hr = pNCfg->QueryInterface(IID_INetCfgLock, (LPVOID*)&pNCfgLock);
+    hr = pNCfg->QueryInterface(IID_PPV_ARG(INetCfgLock, &pNCfgLock));
     hr = pNCfgLock->AcquireWriteLock(100, L"", &pDisplayName);
     if (hr == S_FALSE)
     {
@@ -274,18 +181,16 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
         return;
     }
 
-    m_NCfgLock = pNCfgLock;
     hr = pNCfg->Initialize(NULL);
-    if (FAILED(hr))
-    {
-        pNCfg->Release();
+    if (FAILED_UNEXPECTEDLY(hr))
         return;
-    }
+
+    m_pNCfg = pNCfg;
+    m_NCfgLock = pNCfgLock;
 
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
-    m_pNCfg = pNCfg;
 
     ZeroMemory(&li, sizeof(li));
     li.mask = LVIF_STATE;
@@ -387,6 +292,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 else
                     dwNotifyDisconnect = 0;
 
+                //NOTE: Windows write these setting with the undocumented INetLanConnection::SetInfo
                 if (StringFromCLSID((CLSID)This->m_pProperties->guidId, &pStr) == ERROR_SUCCESS)
                 {
                     swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
@@ -523,59 +429,6 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
 
 HRESULT
 WINAPI
-CNetConnectionPropertyUi::QueryInterface(
-    REFIID iid,
-    LPVOID *ppvObj)
-{
-    *ppvObj = NULL;
-
-    if (IsEqualIID (iid, IID_IUnknown) ||
-        IsEqualIID (iid, IID_INetConnectionPropertyUi) ||
-        IsEqualIID (iid, IID_INetConnectionPropertyUi2))
-    {
-        *ppvObj = (INetConnectionPropertyUi2*)this;
-        AddRef();
-        return S_OK;
-    }
-    else if (IsEqualIID(iid, IID_INetLanConnectionUiInfo))
-    {
-        *ppvObj = (INetLanConnectionUiInfo*)this;
-        AddRef();
-        return S_OK;
-    }
-    else if (IsEqualIID(iid, IID_INetConnectionConnectUi))
-    {
-        *ppvObj = (INetConnectionConnectUi*)this;
-        AddRef();
-        return S_OK;
-    }
-
-    return E_NOINTERFACE;
-}
-
-ULONG
-WINAPI
-CNetConnectionPropertyUi::AddRef()
-{
-    ULONG refCount = InterlockedIncrement(&m_ref);
-
-    return refCount;
-}
-
-ULONG
-WINAPI
-CNetConnectionPropertyUi::Release()
-{
-    ULONG refCount = InterlockedDecrement(&m_ref);
-
-    if (!refCount)
-        delete this;
-
-    return refCount;
-}
-
-HRESULT
-WINAPI
 CNetConnectionPropertyUi::AddPages(
     HWND hwndParent,
     LPFNADDPROPSHEETPAGE pfnAddPage,
@@ -592,7 +445,7 @@ CNetConnectionPropertyUi::AddPages(
         return E_FAIL;
 
     hr = m_pCon->GetProperties(&m_pProperties);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, reinterpret_cast<LPARAM>(this), NULL);
@@ -632,15 +485,10 @@ HRESULT
 WINAPI
 CNetConnectionPropertyUi::SetConnection(INetConnection* pCon)
 {
-    if (m_pCon)
-        m_pCon->Release();
-
     if (!pCon)
         return E_POINTER;
 
     m_pCon = pCon;
-
-    pCon->AddRef();
     return S_OK;
 }
 
@@ -652,7 +500,6 @@ CNetConnectionPropertyUi::Connect(
 {
     if (!m_pCon)
         return E_POINTER; //FIXME
-
 
     if (dwFlags & NCUC_NO_UI)
         return m_pCon->Connect();
@@ -671,25 +518,4 @@ CNetConnectionPropertyUi::Disconnect(
     MessageBoxW(NULL, szBuffer, NULL, MB_OK);
 
     return S_OK;
-}
-
-HRESULT WINAPI LanConnectUI_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
-{
-    TRACE("LanConnectUI_Constructor\n");
-
-    if (!ppv)
-        return E_POINTER;
-
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
-
-    CNetConnectionPropertyUi *pConPropUi = new CNetConnectionPropertyUi;
-    if (!pConPropUi)
-        return E_OUTOFMEMORY;
-
-    pConPropUi->AddRef();
-    HRESULT hr = pConPropUi->QueryInterface(riid, ppv);
-    pConPropUi->Release();
-
-    return hr;
 }

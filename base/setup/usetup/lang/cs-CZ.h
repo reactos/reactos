@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /* FILE:        base/setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston for bugfix advice at line 848
@@ -6,12 +9,38 @@
 
 #pragma once
 
-MUI_LAYOUTS csCZLayouts[] =
+static MUI_ENTRY csCZSetupInitPageEntries[] =
 {
-    { L"0405", L"00000405" },
-    { L"0405", L"00010405" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
 };
 
 static MUI_ENTRY csCZLanguagePageEntries[] =
@@ -25,31 +54,31 @@ static MUI_ENTRY csCZLanguagePageEntries[] =
     {
         6,
         8,
-        "VìbØr jazyka",
+        "V\354b\330r jazyka",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Pros¡m zvolte jazyk, kterì bude bØhem instalace pou§it.",
+        "\x07  Pros\241m zvolte jazyk, kter\354 bude b\330hem instalace pou\247it.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Pot‚ stisknØte ENTER.",
+        "   Pot\202 stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Tento jazyk bude vìchoz¡m jazykem v nainstalovan‚m syst‚mu.",
+        "\x07  Tento jazyk bude v\354choz\241m jazykem v nainstalovan\202m syst\202mu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat  F3 = UkonŸit",
+        "ENTER = Pokra\237ovat  F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -71,49 +100,49 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         6,
         8,
-        "V¡tejte v instalaci ReactOS",
+        "V\241tejte v instalaci ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Tato Ÿ st instalace nakop¡ruje operaŸn¡ syst‚m ReactOS do vaçeho",
+        "Tato \237\240st instalace nakop\241ruje opera\237n\241 syst\202m ReactOS do va\347eho",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "poŸ¡taŸe a pýiprav¡ druhou Ÿ st instalace.",
+        "po\237\241ta\237e a p\375iprav\241 druhou \237\240st instalace.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Stisknut¡m kl vesy ENTER zah j¡te instalaci ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknut¡m R zah j¡te opravu nebo aktualizaci ReactOS.",
+        "\x07  Stisknut\241m R zah\240j\241te opravu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Stiskut¡m L zobraz¡te LicenŸn¡ podm¡nky ReactOS.",
+        "\x07  Stiskut\241m L zobraz\241te Licen\237n\241 podm\241nky ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisknut¡m F3 ukonŸ¡te instalaci ReactOS.",
+        "\x07  Stisknut\241m F3 ukon\237\241te instalaci ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "V¡ce informac¡ o ReactOS naleznete na adrese:",
+        "V\241ce informac\241 o ReactOS naleznete na adrese:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -125,7 +154,7 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = PokraŸovat  R = Opravit  L = Licence  F3 = UkonŸit",
+        "ENTER = Pokra\237ovat  R = Opravit  L = Licence  F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -141,7 +170,7 @@ static MUI_ENTRY csCZIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -295,7 +324,7 @@ static MUI_ENTRY csCZLicensePageEntries[] =
     {
         8,
         22,
-        "Z ruka:",
+        "Z\240ruka:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -319,7 +348,7 @@ static MUI_ENTRY csCZLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = ZpØt",
+        "ENTER = Zp\330t",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -341,13 +370,13 @@ static MUI_ENTRY csCZDevicePageEntries[] =
     {
         6,
         8,
-        "N sleduj¡c¡ seznam zobrazuje souŸasn‚ nastaven¡ zaý¡zen¡.",
+        "N\240sleduj\241c\241 seznam zobrazuje sou\237asn\202 nastaven\241 za\375\241zen\241.",
         TEXT_STYLE_NORMAL
     },
     {
         24,
         11,
-        "PoŸ¡taŸ:",
+        "Po\237\241ta\237:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -359,36 +388,36 @@ static MUI_ENTRY csCZDevicePageEntries[] =
     {
         24,
         13,
-        "Kl vesnice:",
+        "Kl\240vesnice:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Rozlo§en¡ kl ves:",
+        "Rozlo\247en\241 kl\240ves:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "Pýijmout:",
+        "P\375ijmout:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "Pýijmout toto nastaven¡ zaý¡zen¡",
+        16, "P\375ijmout toto nastaven\241 za\375\241zen\241",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Nastaven¡ hardwaru lze zmØnit stiskem kl vesy ENTER na ý dku",
+        "Nastaven\241 hardwaru lze zm\330nit stiskem kl\240vesy ENTER na \375\240dku",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "zvolen‚m çipkami nahoru a dol…. Pot‚ lze zvolit jin‚ nastaven¡.",
+        "zvolen\202m \347ipkami nahoru a dol\205. Pot\202 lze zvolit jin\202 nastaven\241.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -400,19 +429,19 @@ static MUI_ENTRY csCZDevicePageEntries[] =
     {
         6,
         23,
-        "Jakmile budou vçechna nastaven¡ v poý dku, oznaŸte \"Pýijmout toto",
+        "Jakmile budou v\347echna nastaven\241 v po\375\240dku, ozna\237te \"P\375ijmout toto",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "nastaven¡ zaý¡zen¡\" a stisknØte ENTER.",
+        "nastaven\241 za\375\241zen\241\" a stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -434,49 +463,119 @@ static MUI_ENTRY csCZRepairPageEntries[] =
     {
         6,
         8,
-        "Instalace ReactOS je v ran‚ vìvojov‚ f zi. Zat¡m nejsou",
+        "Instalace ReactOS je v ran\202 v\354vojov\202 f\240zi. Zat\241m nejsou",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "podporov ny vçechny funkce plnØ pou§iteln‚ instalaŸn¡ aplikace.",
+        "podporov\240ny v\347echny funkce pln\330 pou\247iteln\202 instala\237n\241 aplikace.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Opravn‚ funkce zat¡m nejsou implementov ny.",
+        "Opravn\202 funkce zat\241m nejsou implementov\240ny.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Stisknut¡m U zah j¡te Update syst‚mu.",
+        "\x07  Stisknut\241m U zah\240j\241te Update syst\202mu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknut¡m R spust¡te Konzoli obnoven¡.",
+        "\x07  Stisknut\241m R spust\241te Konzoli obnoven\241.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Stisknut¡m ESC se vr t¡te na hlavn¡ str nku.",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na hlavn\241 str\240nku.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisknut¡m kl vesy ENTER restartujete poŸ¡taŸ.",
+        "\x07  Stisknut\241m kl\240vesy ENTER restartujete po\237\241ta\237.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hlavn¡ str nka  U = Aktualizovat  R = Z chrana  ENTER = Restartovat",
+        "ESC = Hlavn\241 str\240nka  U = Aktualizovat  R = Z\240chrana  ENTER = Restartovat",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY csCZUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -498,37 +597,37 @@ static MUI_ENTRY csCZComputerPageEntries[] =
     {
         6,
         8,
-        "Chcete zmØnit typ poŸ¡taŸe, kterì bude nainstalov n.",
+        "Chcete zm\330nit typ po\237\241ta\237e, kter\354 bude nainstalov\240n.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Po§adovanì typ poŸ¡taŸe zvolte pomoc¡ çipek nahoru a dol….",
+        "\x07  Po\247adovan\354 typ po\237\241ta\237e zvolte pomoc\241 \347ipek nahoru a dol\205.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Pot‚ stisknØte ENTER.",
+        "   Pot\202 stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknut¡m ESC se vr t¡te na pýedchoz¡ str nku bez zmØny typu",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na p\375edchoz\241 str\240nku bez zm\330ny typu",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   poŸ¡taŸe.",
+        "   po\237\241ta\237e.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -550,25 +649,25 @@ static MUI_ENTRY csCZFlushPageEntries[] =
     {
         10,
         6,
-        "Syst‚m se nyn¡ ujiçœuje, §e vçechna data budou ulo§ena na disk.",
+        "Syst\202m se nyn\241 uji\347\234uje, \247e v\347echna data budou ulo\247ena na disk.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Toto m…§e trvat nØkolik minut.",
+        "Toto m\205\247e trvat n\330kolik minut.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Po dokonŸen¡ bude poŸ¡taŸ automaticky zrestartov n.",
+        "Po dokon\237en\241 bude po\237\241ta\237 automaticky zrestartov\240n.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Uvolåuji cache",
+        "Uvol\345uji cache",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -590,31 +689,31 @@ static MUI_ENTRY csCZQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS nen¡ kompletnØ nainstalov n",
+        "ReactOS nen\241 kompletn\330 nainstalov\240n.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "VyjmØte disketu z jednotky A:",
+        "Vyjm\330te disketu z jednotky A:",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "a vçechny CD-ROM z CD mechanik.",
+        "a v\347echny CD-ROM z CD mechanik.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Stisknut¡m kl vesy ENTER restartujete poŸ¡taŸ.",
+        "Stisknut\241m kl\240vesy ENTER restartujete po\237\241ta\237.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ¬ekejte, pros¡m...",
+        "   \254ekejte, pros\241m...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -636,24 +735,24 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
     {
         6,
         8,
-        "Chcete zmØnit typ obrazovky, kter  bude nainstalov na.",
+        "Chcete zm\330nit typ obrazovky, kter\240 bude nainstalov\240na.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Po§adovanì typ obrazovky zvolte pomoc¡ çipek nahoru a dol….",
+         "\x07  Po\247adovan\354 typ obrazovky zvolte pomoc\241 \347ipek nahoru a dol\205.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Pot‚ stisknØte ENTER.",
+        "   Pot\202 stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknut¡m ESC se vr t¡te na pýedchoz¡ str nku bez zmØny typu",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na p\375edchoz\241 str\240nku bez zm\330ny typu",
         TEXT_STYLE_NORMAL
     },
     {
@@ -665,7 +764,7 @@ static MUI_ENTRY csCZDisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -687,31 +786,31 @@ static MUI_ENTRY csCZSuccessPageEntries[] =
     {
         10,
         6,
-        "Z kladn¡ souŸ sti ReactOS byly £spØçnØ nainstalov ny.",
+        "Z\240kladn\241 sou\237\240sti ReactOS byly \243sp\330\347n\330 nainstalov\240ny.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "VyjmØte disketu z jednotky A:",
+        "Vyjm\330te disketu z jednotky A:",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "a vçechny CD-ROM z CD mechanik.",
+        "a v\347echny CD-ROM z CD mechanik.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Stisknut¡m kl vesy ENTER restartujete poŸ¡taŸ.",
+        "Stisknut\241m kl\240vesy ENTER restartujete po\237\241ta\237.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Restartovat poŸ¡taŸ",
+        "ENTER = Restartovat po\237\241ta\237",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -733,7 +832,7 @@ static MUI_ENTRY csCZBootPageEntries[] =
     {
         6,
         8,
-        "InstalaŸn¡ aplikace nedok §e nainstalovat zavadØŸ na tento",
+        "Instala\237n\241 aplikace nedok\240\247e nainstalovat zavad\330\237 na tento",
         TEXT_STYLE_NORMAL
     },
     {
@@ -745,19 +844,19 @@ static MUI_ENTRY csCZBootPageEntries[] =
     {
         6,
         13,
-        "Vlo§te naform tovanou disketu do jednotky A:",
+        "Vlo\247te naform\240tovanou disketu do jednotky A:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "a stisknØte ENTER.",
+        "a stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -780,37 +879,37 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         6,
         8,
-        "Na n sleduj¡c¡m seznamu jsou existuj¡c¡ odd¡ly a nevyu§it‚",
+        "Na n\240sleduj\241c\241m seznamu jsou existuj\241c\241 odd\241ly a nevyu\247it\202",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "m¡sto pro nov‚ odd¡ly.",
+        "m\241sto pro nov\202 odd\241ly.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Vyberte polo§ku v seznamu pomoc¡ çipek nahoru a dol….",
+        "\x07  Vyberte polo\247ku v seznamu pomoc\241 \347ipek nahoru a dol\205.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknut¡m kl vesy ENTER nainstalujete ReactOS na zvolenì odd¡l.",
+        "\x07  Stisknut\241m kl\240vesy ENTER nainstalujete ReactOS na zvolen\354 odd\241l.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Stistknut¡m P vytvoý¡te prim rn¡ odd¡l.",
+        "\x07  Stistknut\241m P vytvo\375\241te prim\240rn\241 odd\241l.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stistknut¡m E vytvoý¡te rozç¡ýenì odd¡l.",
+        "\x07  Stistknut\241m E vytvo\375\241te roz\347\241\375en\354 odd\241l.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -822,7 +921,7 @@ static MUI_ENTRY csCZSelectPartitionEntries[] =
     {
         8,
         21,
-        "\x07  Stisknut¡m D umo§n¡te smaz n¡ existuj¡c¡ho odd¡lu.",
+        "\x07  Stisknut\241m D umo\247n\241te smaz\240n\241 existuj\241c\241ho odd\241lu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -944,19 +1043,19 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     {
         6,
         8,
-        "Form tov n¡ odd¡lu",
+        "Form\240tov\240n\241 odd\241lu",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Tento odd¡l bude nyn¡ zform tov n. Stisknut¡m kl vesy ENTER zaŸnete.",
+        "Tento odd\241l bude nyn\241 zform\240tov\240n. Stisknut\241m kl\240vesy ENTER za\237nete.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -978,25 +1077,25 @@ static MUI_ENTRY csCZInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Instalace nyn¡ na zvolenì odd¡l nakop¡ruje soubory ReactOS.",
+        "Instalace nyn\241 na zvolen\354 odd\241l nakop\241ruje soubory ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Zvolte adres ý, kam bude ReactOS nainstalov n:",
+        "Zvolte adres\240\375, kam bude ReactOS nainstalov\240n:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Chcete-li zmØnit navrhnutì adres ý, stisknut¡m kl vesy BACKSPACE",
+        "Chcete-li zm\330nit navrhnut\354 adres\240\375, stisknut\241m kl\240vesy BACKSPACE",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "vyma§te text cesty a pot‚ zapiçte cestu, do kter‚ chcete ReactOS",
+        "vyma\247te text cesty a pot\202 zapi\347te cestu, do kter\202 chcete ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1008,7 +1107,7 @@ static MUI_ENTRY csCZInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = PokraŸovat   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1030,7 +1129,7 @@ static MUI_ENTRY csCZFileCopyEntries[] =
     {
         0,
         12,
-        "¬ekejte, pros¡m, instalace nyn¡ kop¡ruje soubory do zvolen‚ho adres ýe.",
+        "\254ekejte, pros\241m, instalace nyn\241 kop\241ruje soubory do zvolen\202ho adres\240\375e.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1042,13 +1141,13 @@ static MUI_ENTRY csCZFileCopyEntries[] =
     {
         0,
         14,
-        "Toto m…§e trvat nØkolik minut.",
+        "Toto m\205\247e trvat n\330kolik minut.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         49,
         0,
-        "\xB3 ¬ekejte, pros¡m...    ",
+        "\xB3 \254ekejte, pros\241m...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1070,37 +1169,37 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalace nyn¡ nainstaluje zavadØŸ.",
+        "Instalace nyn\241 nainstaluje zavad\330\237.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Nainstalovat zavadØŸ na pevnì disk (MBR a VBR).",
+        "Nainstalovat zavad\330\237 na pevn\354 disk (MBR a VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Nainstalovat zavadØŸ na pevnì disk (pouze VBR).",
+        "Nainstalovat zavad\330\237 na pevn\354 disk (pouze VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Nainstalovat zavadØŸ na disketu.",
+        "Nainstalovat zavad\330\237 na disketu.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "PýeskoŸit instalaci zavadØŸe.",
+        "P\375esko\237it instalaci zavad\330\237e.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1122,37 +1221,37 @@ static MUI_ENTRY csCZKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Chcete zmØnit typ kl vesnice, kter  bude nainstalov na.",
+        "Chcete zm\330nit typ kl\240vesnice, kter\240 bude nainstalov\240na.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Po§adovanì typ kl vesnice zvolte pomoc¡ çipek nahoru a dol….",
+        "\x07  Po\247adovan\354 typ kl\240vesnice zvolte pomoc\241 \347ipek nahoru a dol\205.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Pot‚ stisknØte ENTER.",
+        "   Pot\202 stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknut¡m ESC se vr t¡te na pýedchoz¡ str nku bez zmØny typu",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na p\375edchoz\241 str\240nku bez zm\330ny typu",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   kl vesnice.",
+        "   kl\240vesnice.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1174,37 +1273,37 @@ static MUI_ENTRY csCZLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Pros¡m zvolte rozlo§en¡, kter‚ bude implicitnØ nainstalov no.",
+        "Pros\241m zvolte rozlo\247en\241, kter\202 bude implicitn\330 nainstalov\240no.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Po§adovan‚ rozlo§en¡ kl ves zvolte pomoc¡ çipek nahoru a dol….",
+        "\x07  Po\247adovan\202 rozlo\247en\241 kl\240ves zvolte pomoc\241 \347ipek nahoru a dol\205.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    Pot‚ stisknØte ENTER.",
+        "    Pot\202 stiskn\330te ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Stisknut¡m ESC se vr t¡te na pýedchoz¡ str nku bez zmØny rozlo§en¡",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na p\375edchoz\241 str\240nku bez zm\330ny rozlo\247en\241",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   kl ves.",
+        "   kl\240ves.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1227,13 +1326,13 @@ static MUI_ENTRY csCZPrepareCopyEntries[] =
     {
         6,
         8,
-        "Instalace pýiprav¡ poŸ¡taŸ na kop¡rov n¡ soubor… ReactOS.",
+        "Instalace p\375iprav\241 po\237\241ta\237 na kop\241rov\240n\241 soubor\205 ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Sestavuji seznam soubor… ke zkop¡rov n¡...",
+        "Sestavuji seznam soubor\205 ke zkop\241rov\240n\241...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1256,31 +1355,31 @@ static MUI_ENTRY csCZSelectFSEntries[] =
     {
         6,
         17,
-        "Zvolte souborovì syst‚m z n sleduj¡c¡ho seznamu.",
+        "Zvolte souborov\354 syst\202m z n\240sleduj\241c\241ho seznamu.",
         0
     },
     {
         8,
         19,
-        "\x07  Souborovì syst‚m zvol¡te çipkami nahoru a dol….",
+        "\x07  Souborov\354 syst\202m zvol\241te \347ipkami nahoru a dol\205.",
         0
     },
     {
         8,
         21,
-        "\x07  Stisknut¡m kl vesy ENTER zform tujete odd¡l.",
+        "\x07  Stisknut\241m kl\240vesy ENTER zform\240tujete odd\241l.",
         0
     },
     {
         8,
         23,
-        "\x07  Stisknut¡m ESC se vr t¡te na vìbØr odd¡lu.",
+        "\x07  Stisknut\241m ESC se vr\240t\241te na v\354b\330r odd\241lu.",
         0
     },
     {
         0,
         0,
-        "ENTER = PokraŸovat   ESC = Zruçit   F3 = UkonŸit",
+        "ENTER = Pokra\237ovat   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1303,31 +1402,31 @@ static MUI_ENTRY csCZDeletePartitionEntries[] =
     {
         6,
         8,
-        "Zvolili jste odstranØn¡ odd¡lu",
+        "Zvolili jste odstran\330n\241 odd\241lu",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Stisknut¡m D odstran¡te odd¡l.",
+        "\x07  Stisknut\241m D odstran\241te odd\241l.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "POZOR: Vçechna data na tomto odd¡lu budou ztracena!",
+        "POZOR: V\347echna data na tomto odd\241lu budou ztracena!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisknut¡m ESC zruç¡te akci.",
+        "\x07  Stisknut\241m ESC zru\347\241te akci.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = Odstranit odd¡l   ESC = Zruçit   F3 = UkonŸit",
+        "D = Odstranit odd\241l   ESC = Zru\347it   F3 = Ukon\237it",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1349,13 +1448,13 @@ static MUI_ENTRY csCZRegistryEntries[] =
     {
         6,
         8,
-        "Instalace aktualizuje nastaven¡ syst‚mu.",
+        "Instalace aktualizuje nastaven\241 syst\202mu.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Vytv ý¡m registry...",
+        "Vytv\240\375\241m registry...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1374,238 +1473,232 @@ MUI_ERROR csCZErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
-        "ReactOS nen¡ ve vaçem poŸ¡taŸi kompletnØ nainstalov n.\n"
-        "Pokud nyn¡ instalaci ukonŸ¡te, budete ji muset pro\n"
-        "nainstalov n¡ ReactOS spustit znovu.\n"
+        // ERROR_NOT_INSTALLED
+        "ReactOS nen\241 ve va\347em po\237\241ta\237i kompletn\330 nainstalov\240n.\n"
+        "Pokud nyn\241 instalaci ukon\237\241te, budete ji muset pro\n"
+        "nainstalov\240n\241 ReactOS spustit znovu.\n"
         "\n"
-        "  \x07  Stisknut¡m kl vesy ENTER budete pokraŸovat v instalaci.\n"
-        "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci.",
-        "F3 = UkonŸit  ENTER = PokraŸovat"
+        "  \x07  Stisknut\241m kl\240vesy ENTER budete pokra\237ovat v instalaci.\n"
+        "  \x07  Stisknut\241m F3 ukon\237\241te instalaci.",
+        "F3 = Ukon\237it  ENTER = Pokra\237ovat"
     },
     {
-        //ERROR_NO_HDD
-        "Instalace nedok zala naj¡t harddisk.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_NO_HDD
+        "Instalace nedok\240zala naj\241t harddisk.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
-        "Instalace nedok zala naj¡t svou zdrojovou mechaniku.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_NO_SOURCE_DRIVE
+        "Instalace nedok\240zala naj\241t svou zdrojovou mechaniku.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
-        "Nepodaýilo se naŸ¡st soubor TXTSETUP.SIF.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_LOAD_TXTSETUPSIF
+        "Nepoda\375ilo se na\237\241st soubor TXTSETUP.SIF.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
-        "Soubor TXTSETUP.SIF je poçkozen.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_CORRUPT_TXTSETUPSIF
+        "Soubor TXTSETUP.SIF je po\347kozen.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Soubor TXTSETUP.SIF je neplatnØ podepsanì.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_SIGNATURE_TXTSETUPSIF,
+        "Soubor TXTSETUP.SIF je neplatn\330 podepsan\354.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_DRIVE_INFORMATION
-        "Instalace nedok zala z¡skat informace o syst‚movìch disc¡ch.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_DRIVE_INFORMATION
+        "Instalace nedok\240zala z\241skat informace o syst\202mov\354ch disc\241ch.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_WRITE_BOOT,
-        "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_WRITE_BOOT,
+        "Nepoda\375ilo se nainstalovat %S zavad\330\237 na syst\202mov\354 odd\241l.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_LOAD_COMPUTER,
-        "Nepodaýilo se naŸ¡st seznam typ… poŸ¡taŸe.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_LOAD_COMPUTER,
+        "Nepoda\375ilo se na\237\241st seznam typ\205 po\237\241ta\237e.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_LOAD_DISPLAY,
-        "Nepodaýilo se naŸ¡st seznam nastaven¡ obrazovek.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_LOAD_DISPLAY,
+        "Nepoda\375ilo se na\237\241st seznam nastaven\241 obrazovek.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
-        "Nepodaýilo se naŸ¡st seznam typ… kl vesnic.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_LOAD_KEYBOARD,
+        "Nepoda\375ilo se na\237\241st seznam typ\205 kl\240vesnic.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
-        "Nepodaýilo se naŸ¡st seznam rozlo§en¡ kl ves.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_LOAD_KBLAYOUT,
+        "Nepoda\375ilo se na\237\241st seznam rozlo\247en\241 kl\240ves.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_WARN_PARTITION,
-          "Instalace zjistila, §e alespoå jeden pevnì disk obsahuje\n"
-          "nekompatibiln¡ tabulku odd¡l…, kter  nem…§e bìt spr vnØ zpracov na!\n"
+        // ERROR_WARN_PARTITION,
+          "Instalace zjistila, \247e alespo\345 jeden pevn\354 disk obsahuje\n"
+          "nekompatibiln\241 tabulku odd\241l\205, kter\240 nem\205\247e b\354t spr\240vn\330 zpracov\240na!\n"
           "\n"
-          "Vytv ýen¡ nebo odstraåov n¡ odd¡l… m…§e tuto tabulku odd¡l… zniŸit.\n"
+          "Vytv\240\375en\241 nebo odstra\345ov\240n\241 odd\241l\205 m\205\247e tuto tabulku odd\241l\205 zni\237it.\n"
           "\n"
-          "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci.\n"
-          "  \x07  Stisknut¡m ENTER budete pokraŸovat v instalaci.",
-          "F3 = UkonŸit  ENTER = PokraŸovat"
+          "  \x07  Stisknut\241m F3 ukon\237\241te instalaci.\n"
+          "  \x07  Stisknut\241m ENTER budete pokra\237ovat v instalaci.",
+          "F3 = Ukon\237it  ENTER = Pokra\237ovat"
     },
     {
-        //ERROR_NEW_PARTITION,
-        "Nelze vytvoýit novì odd¡l uvnitý ji§\n"
-        "existuj¡c¡ho odd¡lu!\n"
+        // ERROR_NEW_PARTITION,
+        "Nelze vytvo\375it nov\354 odd\241l uvnit\375 ji\247\n"
+        "existuj\241c\241ho odd\241lu!\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy.",
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
-        "Nelze vymazat m¡sto na disku, kter‚ nepatý¡ § dn‚mu odd¡lu!\n"
+        // ERROR_DELETE_SPACE,
+        "Nelze vymazat m\241sto na disku, kter\202 nepat\375\241 \247\240dn\202mu odd\241lu!\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
-        "Nepodaýilo se nainstalovat FAT zavadØŸ na syst‚movì odd¡l.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_INSTALL_BOOTCODE,
+        "Nepoda\375ilo se nainstalovat %S zavad\330\237 na syst\202mov\354 odd\241l.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_NO_FLOPPY,
-        "V jednotce A: nen¡ disketa.",
-        "ENTER = PokraŸovat"
+        // ERROR_NO_FLOPPY,
+        "V jednotce A: nen\241 disketa.",
+        "ENTER = Pokra\237ovat"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
-        "Nepodaýilo se aktualizovat nastaven¡ rozlo§en¡ kl ves.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_UPDATE_KBSETTINGS,
+        "Nepoda\375ilo se aktualizovat nastaven\241 rozlo\247en\241 kl\240ves.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Nepodaýilo se aktualizovat nastaven¡ zobrazen¡ registru.", //display registry settings
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Nepoda\375ilo se aktualizovat nastaven\241 zobrazen\241 registru.", //display registry settings
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_IMPORT_HIVE,
-        "Nepodaýilo se naimportovat soubor registru.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_IMPORT_HIVE,
+        "Nepoda\375ilo se naimportovat soubor registru.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_FIND_REGISTRY
-        "Nepodaýilo se nal‚zt datov‚ soubory registru.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_FIND_REGISTRY
+        "Nepoda\375ilo se nal\202zt datov\202 soubory registru.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CREATE_HIVE,
-        "Nepodaýilo se zalo§it registr.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_CREATE_HIVE,
+        "Nepoda\375ilo se zalo\247it registr.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
-        "Nepodaýilo se inicializovat registry.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_INITIALIZE_REGISTRY,
+        "Nepoda\375ilo se inicializovat registry.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
-        "V archivu nen¡ platnì soubor inf.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_INVALID_CABINET_INF,
+        "V archivu nen\241 platn\354 soubor inf.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Archiv nebyl nalezen.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CABINET_SCRIPT,
-        "Archiv neobsahuje instalaŸn¡ skript.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_CABINET_SCRIPT,
+        "Archiv neobsahuje instala\237n\241 skript.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_COPY_QUEUE,
-        "Nepodaýilo se otevý¡t frontu kop¡rov n¡.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_COPY_QUEUE,
+        "Nepoda\375ilo se otev\375\241t frontu kop\241rov\240n\241.\n",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CREATE_DIR,
-        "Nepodaýilo se vytvoýit instalaŸn¡ adres ýe.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_CREATE_DIR,
+        "Nepoda\375ilo se vytvo\375it instala\237n\241 adres\240\375e.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Nepodaýilo se nal‚zt sekci 'Directories' v souboru\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Nepoda\375ilo se nal\202zt sekci '%S' v souboru\n"
         "TXTSETUP.SIF.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Nepodaýilo se nal‚zt sekci 'Directories' v archivu.\n"
+        // ERROR_CABINET_SECTION,
+        "Nepoda\375ilo se nal\202zt sekci '%S' v archivu.\n"
         "\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
-        "Nepodaýilo se vytvoýit instalaŸn¡ adres ý.",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_CREATE_INSTALL_DIR
+        "Nepoda\375ilo se vytvo\375it instala\237n\241 adres\240\375.",
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Nepodaýilo se nal‚zt sekci 'SetupData' v souboru\n"
-        "TXTSETUP.SIF.\n",
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_WRITE_PTABLE,
+        "Nepoda\375ilo se zapsat tabulky odd\241l\205.\n"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_WRITE_PTABLE,
-        "Nepodaýilo se zapsat tabulky odd¡l….\n"
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_ADDING_CODEPAGE,
+        "Nepoda\375ilo se p\375idat k\242dovou str\240nku do registru.\n"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
-        "Nepodaýilo se pýidat k¢dovou str nku do registru.\n"
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_UPDATE_LOCALESETTINGS,
+        "Nepoda\375ilo se nastavit m\241stn\241 nastaven\241.\n"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
-        "Nepodaýilo se nastavit m¡stn¡ nastaven¡.\n"
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_ADDING_KBLAYOUTS,
+        "Nepoda\375ilo se p\375idat rozlo\247en\241 kl\240vesnice do registru.\n"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
-        "Nepodaýilo se pýidat rozlo§en¡ kl vesnice do registru.\n"
-        "ENTER = Restartovat poŸ¡taŸ"
+        // ERROR_UPDATE_GEOID,
+        "Nepoda\375ilo se nastavit geo id.\n"
+        "ENTER = Restartovat po\237\241ta\237"
     },
     {
-        //ERROR_UPDATE_GEOID,
-        "Nepodaýilo se nastavit geo id.\n"
-        "ENTER = Restartovat poŸ¡taŸ"
-    },
-    {
-        //ERROR_DIRECTORY_NAME,
-        "Neplatnì n zev adres ýe.\n"
+        // ERROR_DIRECTORY_NAME,
+        "Neplatn\354 n\240zev adres\240\375e.\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Zvolenì odd¡l nen¡ pro instalaci ReactOS dostateŸnØ velkì.\n"
-        "InstalaŸn¡ odd¡l mus¡ m¡t velikost alespoå %lu MB.\n"
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Zvolen\354 odd\241l nen\241 pro instalaci ReactOS dostate\237n\330 velk\354.\n"
+        "Instala\237n\241 odd\241l mus\241 m\241t velikost alespo\345 %lu MB.\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy.",
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
-        "Nepodaýilo se vytvoýit novì prim rn¡ nebo rozç¡ýenì odd¡l\n"
-        "v tabulce odd¡l… na zvolen‚m disku, proto§e tabulka odd¡l… je pln .\n"
+        // ERROR_PARTITION_TABLE_FULL,
+        "Nepoda\375ilo se vytvo\375it nov\354 prim\240rn\241 nebo roz\347\241\375en\354 odd\241l\n"
+        "v tabulce odd\241l\205 na zvolen\202m disku, proto\247e tabulka odd\241l\205 je pln\240.\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
-        "Nen¡ mo§n‚ vytvoýit v¡ce ne§ jeden rozç¡ýenì odd¡l na disk.\n"
+        // ERROR_ONLY_ONE_EXTENDED,
+        "Nen\241 mo\247n\202 vytvo\375it v\241ce ne\247 jeden roz\347\241\375en\354 odd\241l na disk.\n"
         "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
+        "  * Pokra\237ujte stisknut\241m libovoln\202 kl\240vesy."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1620,11 +1713,15 @@ MUI_ERROR csCZErrorEntries[] =
 MUI_PAGE csCZPages[] =
 {
     {
+        SETUP_INIT_PAGE,
+        csCZSetupInitPageEntries
+    },
+    {
         LANGUAGE_PAGE,
         csCZLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         csCZWelcomePageEntries
     },
     {
@@ -1642,6 +1739,10 @@ MUI_PAGE csCZPages[] =
     {
         REPAIR_INTRO_PAGE,
         csCZRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        csCZUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1724,121 +1825,125 @@ MUI_PAGE csCZPages[] =
 MUI_STRING csCZStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   ¬ekejte, pros¡m..."},
+     "   \254ekejte, pros\241m..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalovat   P = Novì prim rn¡   E = Novì rozç¡ýenì   F3 = UkonŸit"},
+     "   ENTER = Instalovat   P = Nov\354 prim\240rn\241   E = Nov\354 roz\347\241\375en\354   F3 = Ukon\237it"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalovat   L = Vytvoýit logickì odd¡l   F3 = UkonŸit"},
+     "   ENTER = Instalovat   L = Vytvo\375it logick\354 odd\241l   F3 = Ukon\237it"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Instalovat   D = Odstranit odd¡l   F3 = UkonŸit"},
+     "   ENTER = Instalovat   D = Odstranit odd\241l   F3 = Ukon\237it"},
     {STRING_DELETEPARTITION,
-     "   D = Odstranit odd¡l   F3 = UkonŸit"},
+     "   D = Odstranit odd\241l   F3 = Ukon\237it"},
     {STRING_PARTITIONSIZE,
-     "Velikost nov‚ho odd¡lu:"},
+     "Velikost nov\202ho odd\241lu:"},
     {STRING_CHOOSENEWPARTITION,
-     "Zvolili jste vytvoýen¡ nov‚ho prim rn¡ho odd¡lu na"},
+     "Zvolili jste vytvo\375en\241 nov\202ho prim\240rn\241ho odd\241lu na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Zvolili jste vytvoýen¡ nov‚ho rozç¡ýen‚ho odd¡lu na"},
+     "Zvolili jste vytvo\375en\241 nov\202ho roz\347\241\375en\202ho odd\241lu na"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Zvolili jste vytvoýen¡ nov‚ho logick‚ho odd¡lu na"},
+     "Zvolili jste vytvo\375en\241 nov\202ho logick\202ho odd\241lu na"},
     {STRING_HDDSIZE,
-    "Zadejte velikost nov‚ho odd¡lu v megabajtech."},
+    "Zadejte velikost nov\202ho odd\241lu v megabajtech."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Vytvoýit odd¡l   ESC = Zruçit   F3 = UkonŸit"},
+     "   ENTER = Vytvo\375it odd\241l   ESC = Zru\347it   F3 = Ukon\237it"},
     {STRING_PARTFORMAT,
-    "Tento odd¡l bude zform tov n."},
+    "Tento odd\241l bude zform\240tov\240n."},
     {STRING_NONFORMATTEDPART,
-    "Zvolili jste instalaci ReactOS na novì nebo nezform tovanì odd¡l."},
+    "Zvolili jste instalaci ReactOS na nov\354 nebo nezform\240tovan\354 odd\241l."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "The system partition is not formatted yet."},
     {STRING_NONFORMATTEDOTHERPART,
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
-    "Instalace nakop¡ruje ReactOS na odd¡l"},
+    "Instalace nakop\241ruje ReactOS na odd\241l"},
     {STRING_CHECKINGPART,
-    "Instalace nyn¡ kontroluje zvolenì odd¡l."},
+    "Instalace nyn\241 kontroluje zvolen\354 odd\241l."},
     {STRING_CONTINUE,
-    "ENTER = PokraŸovat"},
+    "ENTER = Pokra\237ovat"},
     {STRING_QUITCONTINUE,
-    "F3 = UkonŸit  ENTER = PokraŸovat"},
+    "F3 = Ukon\237it  ENTER = Pokra\237ovat"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Restartovat poŸ¡taŸ"},
-    {STRING_TXTSETUPFAILED,
-    "Nepodaýilo se naj¡t sekci '%S' v souboru\n TXTSETUP.SIF.\n"},
+    "ENTER = Restartovat po\237\241ta\237"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
-     "   Kop¡ruji soubor: %S"},
+     "   Kop\241ruji soubor: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Instalace kop¡ruje soubory..."},
+     "Instalace kop\241ruje soubory..."},
     {STRING_REGHIVEUPDATE,
     "   Aktualizuji registr..."},
     {STRING_IMPORTFILE,
     "   Importuji %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
-    "   Aktualizuji nastaven¡ zobrazen¡ registru..."}, //display registry settings
+    {STRING_DISPLAYSETTINGSUPDATE,
+    "   Aktualizuji nastaven\241 zobrazen\241 registru..."}, //display registry settings
     {STRING_LOCALESETTINGSUPDATE,
-    "   Aktualizuji m¡stn¡ nastaven¡..."},
+    "   Aktualizuji m\241stn\241 nastaven\241..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Aktualizuji nastaven¡ rozlo§en¡ kl ves..."},
+    "   Aktualizuji nastaven\241 rozlo\247en\241 kl\240ves..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Pýid v m do registru informaci o znakov‚ str nce..."},
+    "   P\375id\240v\240m do registru informaci o znakov\202 str\240nce..."},
     {STRING_DONE,
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Restartovat poŸ¡taŸ"},
+    "   ENTER = Restartovat po\237\241ta\237"},
     {STRING_REBOOTPROGRESSBAR,
     " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
-    "Nelze otevý¡t konzoli\r\n\r\n"},
+    "Nelze otev\375\241t konzoli\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "NejbØ§nØjç¡ pý¡Ÿinou je pou§¡v n¡ USB kl vesnice\r\n"},
+    "Nejb\330\247n\330j\347\241 p\375\241\237inou je pou\247\241v\240n\241 USB kl\240vesnice\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB kl vesnice zat¡m nejsou plnØ podporov ny\r\n"},
+    "USB kl\240vesnice zat\241m nejsou pln\330 podporov\240ny\r\n"},
     {STRING_FORMATTINGDISK,
-    "Instalace form tuje disk"},
+    "Instalace form\240tuje disk"},
     {STRING_CHECKINGDISK,
     "Instalace kontroluje disk"},
     {STRING_FORMATDISK1,
-    " Zform tovat odd¡l na souborovì syst‚m %S (rychle) "},
+    " Zform\240tovat odd\241l na souborov\354 syst\202m %S (rychle) "},
     {STRING_FORMATDISK2,
-    " Zform tovat odd¡l na souborovì syst‚m %S "},
+    " Zform\240tovat odd\241l na souborov\354 syst\202m %S "},
     {STRING_KEEPFORMAT,
-    " Ponechat souŸasnì souborovì syst‚m (bez zmØny) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    " Ponechat sou\237asn\354 souborov\354 syst\202m (bez zm\330ny) "},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
-    {STRING_HDDINFOUNK3,
-    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Typ 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sTyp %-3u%s                     %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Instalace vytvoýila novì odd¡l na"},
+    "Instalace vytvo\375ila nov\354 odd\241l na"},
     {STRING_UNPSPACE,
-    "    %sM¡sto bez odd¡l…%s               %6lu %s"},
+    "    %sM\241sto bez odd\241l\205%s               %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Rozç¡ýenì odd¡l"},
+    "Roz\347\241\375en\354 odd\241l"},
     {STRING_UNFORMATTED,
-    "Novì (Nenaform tovanì)"},
+    "Nov\354 (Nenaform\240tovan\354)"},
     {STRING_FORMATUNUSED,
-    "Nepou§itì"},
+    "Nepou\247it\354"},
     {STRING_FORMATUNKNOWN,
-    "Nezn mì"},
+    "Nezn\240m\354"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1846,6 +1951,6 @@ MUI_STRING csCZStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Pýid v m rozlo§en¡ kl ves"},
+    "P\375id\240v\240m rozlo\247en\241 kl\240ves"},
     {0, 0}
 };

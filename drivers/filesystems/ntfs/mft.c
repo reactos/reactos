@@ -2823,12 +2823,9 @@ BrowseSubNodeIndexEntries(PNTFS_VCB Vcb,
     // Is the bit for this node clear in the bitmap?
     if (!RtlCheckBit(Bitmap, NodeNumber))
     {
-        DPRINT1("File system corruption detected, node with VCN %I64u is being reused or is marked as deleted.\n", VCN);
+        DPRINT1("File system corruption detected, node with VCN %I64u is marked as deleted.\n", VCN);
         return STATUS_DATA_ERROR;
     }
-
-    // Clear the bit for this node so it can't be recursively referenced
-    RtlClearBits(Bitmap, NodeNumber, 1);
 
     // Allocate memory for the index record
     IndexRecord = ExAllocatePoolWithTag(NonPagedPool, IndexBlockSize, TAG_NTFS);

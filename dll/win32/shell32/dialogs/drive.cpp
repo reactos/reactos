@@ -411,8 +411,6 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     SendMessageW(hwndFileSystems, CB_SETCURSEL, dwDefault, 0);
     /* setup cluster combo */
     InsertDefaultClusterSizeForFs(hwndDlg, pContext);
-    /* hide progress control */
-    ShowWindow(GetDlgItem(hwndDlg, 28678), SW_HIDE);
 }
 
 static HWND FormatDrvDialog = NULL;
@@ -435,6 +433,8 @@ FormatExCB(
         case DONE:
             pSuccess = (PBOOLEAN)ActionInfo;
             bSuccess = (*pSuccess);
+            ShellMessageBoxW(shell32_hInstance, FormatDrvDialog, MAKEINTRESOURCEW(IDS_FORMAT_COMPLETE), MAKEINTRESOURCEW(IDS_FORMAT_TITLE), MB_OK | MB_ICONINFORMATION);
+            SendDlgItemMessageW(FormatDrvDialog, 28678, PBM_SETPOS, 0, 0);
             break;
 
         case VOLUMEINUSE:
@@ -521,7 +521,6 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
 
     hDlgCtrl = GetDlgItem(hwndDlg, 28680);
-    ShowWindow(hDlgCtrl, SW_SHOW);
     SendMessageW(hDlgCtrl, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
     bSuccess = FALSE;
 
@@ -563,7 +562,6 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
              ClusterSize,
              FormatExCB);
 
-    ShowWindow(hDlgCtrl, SW_HIDE);
     FormatDrvDialog = NULL;
     if (!bSuccess)
     {
@@ -594,8 +592,11 @@ FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch(LOWORD(wParam))
             {
                 case IDOK:
-                    pContext = (PFORMAT_DRIVE_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                    FormatDrive(hwndDlg, pContext);
+                    if (ShellMessageBoxW(shell32_hInstance, hwndDlg, MAKEINTRESOURCEW(IDS_FORMAT_WARNING), MAKEINTRESOURCEW(IDS_FORMAT_TITLE), MB_OKCANCEL | MB_ICONWARNING) == IDOK)
+                    {
+                        pContext = (PFORMAT_DRIVE_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
+                        FormatDrive(hwndDlg, pContext);
+                    }
                     break;
                 case IDCANCEL:
                     pContext = (PFORMAT_DRIVE_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);

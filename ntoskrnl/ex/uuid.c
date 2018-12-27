@@ -3,9 +3,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/uuid.c
  * PURPOSE:         UUID generator
- *
  * PROGRAMMERS:     Eric Kohl
-                    Thomas Weidenmueller
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -319,8 +318,38 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
     ULARGE_INTEGER IntTime;
     ULONG IntRange;
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode;
 
     PAGED_CODE();
+
+    /* Probe if user mode */
+    PreviousMode = ExGetPreviousMode();
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(Time,
+                          sizeof(ULARGE_INTEGER),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Range,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Sequence,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+
+            ProbeForWrite(Seed,
+                          SEED_BUFFER_SIZE,
+                          sizeof(UCHAR));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     ExAcquireFastMutex(&UuidMutex);
 
@@ -358,15 +387,26 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
 
     ExReleaseFastMutex(&UuidMutex);
 
-    Time->QuadPart = IntTime.QuadPart;
-    *Range = IntRange;
-    *Sequence = UuidSequence;
+    /* Write back UUIDs to caller */
+    _SEH2_TRY
+    {
+        Time->QuadPart = IntTime.QuadPart;
+        *Range = IntRange;
+        *Sequence = UuidSequence;
 
-    RtlCopyMemory(Seed,
-                  UuidSeed,
-                  SEED_BUFFER_SIZE);
+        RtlCopyMemory(Seed,
+                      UuidSeed,
+                      SEED_BUFFER_SIZE);
 
-    return STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
 
@@ -377,12 +417,58 @@ NTSTATUS
 NTAPI
 NtSetUuidSeed(IN PUCHAR Seed)
 {
+    NTSTATUS Status;
+    BOOLEAN GotContext;
+    PACCESS_TOKEN Token;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    LUID CallerLuid, SystemLuid = SYSTEM_LUID;
+
     PAGED_CODE();
 
-    RtlCopyMemory(UuidSeed,
-                  Seed,
-                  SEED_BUFFER_SIZE);
-    return STATUS_SUCCESS;
+    /* Should only be done by umode */
+    ASSERT(KeGetPreviousMode() != KernelMode);
+
+    /* No context to release */
+    GotContext = FALSE;
+    _SEH2_TRY
+    {
+        /* Get our caller context and remember to release it */
+        SeCaptureSubjectContext(&SubjectContext);
+        GotContext = TRUE;
+
+        /* Get caller access token and its associated ID */
+        Token = SeQuerySubjectContextToken(&SubjectContext);
+        Status = SeQueryAuthenticationIdToken(Token, &CallerLuid);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlRaiseStatus(Status);
+        }
+
+        /* This call is only allowed for SYSTEM */
+        if (!RtlEqualLuid(&CallerLuid, &SystemLuid))
+        {
+            RtlRaiseStatus(STATUS_ACCESS_DENIED);
+        }
+
+        /* Check for buffer validity and then copy it to our seed */
+        ProbeForRead(Seed, SEED_BUFFER_SIZE, sizeof(UCHAR));
+        RtlCopyMemory(UuidSeed, Seed, SEED_BUFFER_SIZE);
+
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Release context if required */
+    if (GotContext)
+    {
+        SeReleaseSubjectContext(&SubjectContext);
+    }
+
+    return Status;
 }
 
 /* EOF */

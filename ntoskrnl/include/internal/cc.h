@@ -278,7 +278,7 @@ typedef enum _WORK_QUEUE_FUNCTIONS
 {
     ReadAhead = 1,
     WriteBehind = 2,
-    LazyWrite = 3,
+    LazyScan = 3,
     SetDone = 4,
 } WORK_QUEUE_FUNCTIONS, *PWORK_QUEUE_FUNCTIONS;
 

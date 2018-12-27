@@ -134,6 +134,9 @@ SepInitializationPhase1(VOID)
     HANDLE SecurityHandle;
     HANDLE EventHandle;
     NTSTATUS Status;
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+    PACL Dacl;
+    ULONG DaclLength;
 
     PAGED_CODE();
 
@@ -147,7 +150,47 @@ SepInitializationPhase1(VOID)
                             NULL);
     ASSERT(NT_SUCCESS(Status));
 
-    /* TODO: Create a security desscriptor for the directory */
+    /* Create a security descriptor for the directory */
+    RtlCreateSecurityDescriptor(&SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+
+    /* Setup the ACL */
+    DaclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) +
+                 RtlLengthSid(SeLocalSystemSid) +
+                 RtlLengthSid(SeAliasAdminsSid) +
+                 RtlLengthSid(SeWorldSid);
+    Dacl = ExAllocatePoolWithTag(NonPagedPool, DaclLength, TAG_SE);
+    if (Dacl == NULL)
+    {
+        return FALSE;
+    }
+
+    Status = RtlCreateAcl(Dacl, DaclLength, ACL_REVISION);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Grant full access to SYSTEM */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    DIRECTORY_ALL_ACCESS,
+                                    SeLocalSystemSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Allow admins to traverse and query */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    READ_CONTROL | DIRECTORY_TRAVERSE | DIRECTORY_QUERY,
+                                    SeAliasAdminsSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Allow anyone to traverse */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    DIRECTORY_TRAVERSE,
+                                    SeWorldSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* And link ACL and SD */
+    Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl, FALSE);
+    ASSERT(NT_SUCCESS(Status));
 
     /* Create '\Security' directory */
     RtlInitUnicodeString(&Name, L"\\Security");
@@ -155,12 +198,15 @@ SepInitializationPhase1(VOID)
                                &Name,
                                OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
                                0,
-                               NULL);
+                               &SecurityDescriptor);
 
     Status = ZwCreateDirectoryObject(&SecurityHandle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
     ASSERT(NT_SUCCESS(Status));
+
+    /* Free the DACL */
+    ExFreePoolWithTag(Dacl, TAG_SE);
 
     /* Create 'LSA_AUTHENTICATION_INITIALIZED' event */
     RtlInitUnicodeString(&Name, L"LSA_AUTHENTICATION_INITIALIZED");

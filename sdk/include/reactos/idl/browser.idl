@@ -161,9 +161,9 @@ interface browser
     NET_API_STATUS
     __stdcall
     I_BrowserrQueryOtherDomains(
-         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
-         [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
-         [out] LPDWORD TotalEntries);
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
+        [out] LPDWORD TotalEntries);
 
     /* Function 3 */
     NET_API_STATUS
@@ -189,7 +189,7 @@ interface browser
     NET_API_STATUS
     __stdcall
     I_BrowserrResetStatistics(
-         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
 
     /* Function 7 (NetrBrowserStatisticsClear) */
     NET_API_STATUS

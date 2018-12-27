@@ -7,10 +7,6 @@
  */
 
 //
-// This is basically the code for listing available FileSystem providers
-// (currently hardcoded in a list), and for performing a basic FileSystem
-// recognition for a given disk partition.
-//
 // See also: https://git.reactos.org/?p=reactos.git;a=blob;f=reactos/dll/win32/fmifs/init.c;h=e895f5ef9cae4806123f6bbdd3dfed37ec1c8d33;hb=b9db9a4e377a2055f635b2fb69fef4e1750d219c
 // for how to get FS providers in a dynamic way. In the (near) future we may
 // consider merging some of this code with us into a fmifs / fsutil / fslib library...
@@ -32,20 +28,24 @@
 #include <debug.h>
 
 
+/* GLOBALS ******************************************************************/
+
+/* The list of file systems on which we can install ReactOS */
 FILE_SYSTEM RegisteredFileSystems[] =
 {
+    /* NOTE: The FAT formatter automatically determines
+     * whether it will use FAT-16 or FAT-32. */
     { L"FAT"  , VfatFormat, VfatChkdsk },
-//  { L"FAT32", VfatFormat, VfatChkdsk },
 #if 0
+    { L"FAT32", VfatFormat, VfatChkdsk }, // Do we support specific FAT sub-formats specifications?
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
-
-    { L"EXT2" , Ext2Format, Ext2Chkdsk },
-    { L"EXT3" , Ext2Format, Ext2Chkdsk },
-    { L"EXT4" , Ext2Format, Ext2Chkdsk },
 #endif
     { L"BTRFS", BtrfsFormatEx, BtrfsChkdskEx },
 #if 0
+    { L"EXT2" , Ext2Format, Ext2Chkdsk },
+    { L"EXT3" , Ext2Format, Ext2Chkdsk },
+    { L"EXT4" , Ext2Format, Ext2Chkdsk },
     { L"FFS"  , FfsFormat , FfsChkdsk  },
     { L"REISERFS", ReiserfsFormat, ReiserfsChkdsk },
 #endif
@@ -108,8 +108,6 @@ GetFileSystemByName(
 // FileSystem recognition (using NT OS functionality)
 //
 
-#if 0 // FIXME: To be fully enabled when our storage stack & al. will work better!
-
 /* NOTE: Ripped & adapted from base/system/autochk/autochk.c */
 static NTSTATUS
 _MyGetFileSystem(
@@ -118,21 +116,17 @@ _MyGetFileSystem(
     IN SIZE_T FileSystemNameSize)
 {
     NTSTATUS Status;
+    UNICODE_STRING PartitionRootPath;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE FileHandle;
     IO_STATUS_BLOCK IoStatusBlock;
-    PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
-    UCHAR Buffer[sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
-
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
-
-    FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
+    UCHAR Buffer[sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+    PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
     /* Set PartitionRootPath */
     RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                        // L"\\Device\\Harddisk%lu\\Partition%lu", // Should work! But because ReactOS sucks atm. it actually doesn't work!!
-                        L"\\Device\\Harddisk%lu\\Partition%lu\\",  // HACK: Use this as a temporary hack!
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
                         PartEntry->DiskEntry->DiskNumber,
                         PartEntry->PartitionNumber);
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
@@ -148,11 +142,11 @@ _MyGetFileSystem(
                         FILE_GENERIC_READ /* | SYNCHRONIZE */,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        FILE_SHARE_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         0 /* FILE_SYNCHRONOUS_IO_NONALERT */);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open partition %wZ, Status 0x%08lx\n", &PartitionRootPath, Status);
+        DPRINT1("Failed to open partition '%wZ', Status 0x%08lx\n", &PartitionRootPath, Status);
         return Status;
     }
 
@@ -166,22 +160,18 @@ _MyGetFileSystem(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtQueryVolumeInformationFile failed for partition %wZ, Status 0x%08lx\n", &PartitionRootPath, Status);
+        DPRINT1("NtQueryVolumeInformationFile failed for partition '%wZ', Status 0x%08lx\n",
+                &PartitionRootPath, Status);
         return Status;
     }
 
-    if (FileSystemNameSize * sizeof(WCHAR) < FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+    if (FileSystemNameSize < FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
         return STATUS_BUFFER_TOO_SMALL;
 
-    RtlCopyMemory(FileSystemName,
-                  FileFsAttribute->FileSystemName,
-                  FileFsAttribute->FileSystemNameLength);
-    FileSystemName[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = UNICODE_NULL;
-
-    return STATUS_SUCCESS;
+    return RtlStringCbCopyNW(FileSystemName, FileSystemNameSize,
+                             FileFsAttribute->FileSystemName,
+                             FileFsAttribute->FileSystemNameLength);
 }
-
-#endif
 
 PFILE_SYSTEM
 GetFileSystem(
@@ -189,11 +179,9 @@ GetFileSystem(
     IN struct _PARTENTRY* PartEntry)
 {
     PFILE_SYSTEM CurrentFileSystem;
-    PWSTR FileSystemName = NULL;
-#if 0 // For code temporarily disabled below
     NTSTATUS Status;
+    PWSTR FileSystemName = NULL;
     WCHAR FsRecFileSystemName[MAX_PATH];
-#endif
 
     CurrentFileSystem = PartEntry->FileSystem;
 
@@ -205,62 +193,21 @@ GetFileSystem(
 
     CurrentFileSystem = NULL;
 
-#if 0 // This is an example of old code...
-
-    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-        (PartEntry->PartitionType == PARTITION_FAT_16) ||
-        (PartEntry->PartitionType == PARTITION_HUGE) ||
-        (PartEntry->PartitionType == PARTITION_XINT13) ||
-        (PartEntry->PartitionType == PARTITION_FAT32) ||
-        (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-    {
-        if (CheckFatFormat())
-            FileSystemName = L"FAT";
-        else
-            FileSystemName = NULL;
-    }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
-    {
-        if (CheckExt2Format())
-            FileSystemName = L"EXT2";
-        else
-            FileSystemName = NULL;
-    }
-    else if (PartEntry->PartitionType == PARTITION_IFS)
-    {
-        if (CheckNtfsFormat())
-            FileSystemName = L"NTFS";
-        else if (CheckHpfsFormat())
-            FileSystemName = L"HPFS";
-        else
-            FileSystemName = NULL;
-    }
-    else
-    {
-        FileSystemName = NULL;
-    }
-
-#endif
-
-#if 0 // FIXME: To be fully enabled when our storage stack & al. work better!
-
     /*
      * We don't have one...
      *
-     * Try to infer one using NT file system recognition.
+     * Try to infer a file system using NT file system recognition.
      */
-    Status = _MyGetFileSystem(PartEntry, FsRecFileSystemName, ARRAYSIZE(FsRecFileSystemName));
+    Status = _MyGetFileSystem(PartEntry, FsRecFileSystemName, sizeof(FsRecFileSystemName));
     if (NT_SUCCESS(Status) && *FsRecFileSystemName)
     {
         /* Temporary HACK: map FAT32 back to FAT */
         if (wcscmp(FsRecFileSystemName, L"FAT32") == 0)
-            wcscpy(FsRecFileSystemName, L"FAT");
+            RtlStringCbCopyW(FsRecFileSystemName, sizeof(FsRecFileSystemName), L"FAT");
 
         FileSystemName = FsRecFileSystemName;
         goto Quit;
     }
-
-#endif
 
     /*
      * We don't have one...
@@ -289,19 +236,17 @@ GetFileSystem(
     else if (PartEntry->PartitionType == PARTITION_LINUX)
     {
         // WARNING: See the warning above.
+        /* Could also be EXT2/3/4, ReiserFS, ... */
         FileSystemName = L"BTRFS";
     }
     else if (PartEntry->PartitionType == PARTITION_IFS)
     {
         // WARNING: See the warning above.
-        FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
-        // FIXME: We may have HPFS too...
+        /* Could also be HPFS */
+        FileSystemName = L"NTFS";
     }
 
-#if 0
-Quit: // For code temporarily disabled above
-#endif
-
+Quit:
     // HACK: WARNING: We cannot write on this FS yet!
     if (FileSystemName)
     {
@@ -312,7 +257,7 @@ Quit: // For code temporarily disabled above
     DPRINT1("GetFileSystem -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
             PartEntry->PartitionType, FileSystemName ? FileSystemName : L"None");
 
-    if (FileSystemName != NULL)
+    if (FileSystemName)
         CurrentFileSystem = GetFileSystemByName(FileSystemName);
 
     return CurrentFileSystem;
@@ -384,7 +329,7 @@ PreparePartitionForFormatting(
 #if 0
     else if (wcscmp(FileSystem->FileSystemName, L"EXT2") == 0)
     {
-        SetPartitionType(PartEntry, PARTITION_EXT2);
+        SetPartitionType(PartEntry, PARTITION_LINUX);
     }
     else if (wcscmp(FileSystem->FileSystemName, L"NTFS") == 0)
     {

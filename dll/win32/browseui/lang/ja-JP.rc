@@ -304,6 +304,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "%s へ戻る"
     IDS_FORWARD "%s へ進む"
+    IDS_FOLDER_OPTIONS "フォルダ オプション"
 END
 
 STRINGTABLE

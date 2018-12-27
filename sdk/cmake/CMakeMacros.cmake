@@ -294,6 +294,8 @@ macro(dir_to_num dir var)
         set(${var} 61)
     elseif(${dir} STREQUAL reactos/Resources/Themes/Modern)
         set(${var} 62)
+    elseif(${dir} STREQUAL reactos/3rdParty)
+        set(${var} 63)
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
@@ -811,7 +813,7 @@ function(create_registry_hives)
     # BootCD setup system hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
-        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
         DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
 
     add_custom_target(bootcd_hives

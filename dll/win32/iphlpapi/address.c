@@ -265,6 +265,51 @@ EnumerateServerName(
     *Ptr = &ServerAddress->Next;
 }
 
+static
+VOID
+QueryFlags(
+    _In_ PUCHAR Interface,
+    _In_ DWORD InterfaceLength,
+    _Out_ LPDWORD Flags)
+{
+    HKEY InterfaceKey;
+    CHAR KeyName[256];
+    DWORD Type, Size, Data;
+
+    *Flags = 0;
+
+    snprintf(KeyName, 256,
+             "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+             InterfaceLength, Interface);
+
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+    {
+        Size = sizeof(DWORD);
+        if (RegQueryValueExA(InterfaceKey, "EnableDHCP", NULL, &Type, (LPBYTE)&Data, &Size) == ERROR_SUCCESS &&
+            Type == REG_DWORD && Data == 1)
+        {
+            *Flags |= IP_ADAPTER_DHCP_ENABLED;
+        }
+
+        Size = sizeof(DWORD);
+        if (RegQueryValueExA(InterfaceKey, "RegisterAdapterName", NULL, &Type, (LPBYTE)&Data, &Size) == ERROR_SUCCESS &&
+            Type == REG_DWORD && Data == 1)
+        {
+            *Flags |= IP_ADAPTER_REGISTER_ADAPTER_SUFFIX;
+        }
+
+        Size = 0;
+        if (RegQueryValueExA(InterfaceKey, "NameServer", NULL, &Type, (LPBYTE)&Data, &Size) != ERROR_SUCCESS)
+        {
+            *Flags |= IP_ADAPTER_DDNS_ENABLED;
+        }
+
+        RegCloseKey(InterfaceKey);
+    }
+
+    // FIXME: handle 0x8 -> 0x20
+}
+
 DWORD
 WINAPI
 DECLSPEC_HOTPATCH
@@ -346,6 +391,7 @@ GetAdaptersAddresses(
     {
         PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr;
         ULONG CurrentAASize = 0;
+        ULONG FriendlySize = 0;
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
         {
@@ -382,8 +428,31 @@ GetAdaptersAddresses(
 
             if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
             {
-                /* Just an empty string for now. */
-                FIXME("Should get adapter friendly name.\n");
+                /* Get the friendly name */
+                HKEY ConnectionKey;
+                CHAR KeyName[256];
+
+                snprintf(KeyName, 256,
+                    "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                    Entry->if_descrlen, &Entry->if_descr[0]);
+
+                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                {
+                    DWORD ValueType;
+                    DWORD ValueSize = 0;
+
+                    if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                        ValueType == REG_SZ)
+                    {
+                        /* We remove the null char, it will be re-added after */
+                        FriendlySize = ValueSize - sizeof(WCHAR);
+                        CurrentAASize += FriendlySize;
+                    }
+
+                    RegCloseKey(ConnectionKey);
+                }
+
+                /* We always make sure to have enough room for empty string */
                 CurrentAASize += sizeof(WCHAR);
             }
 
@@ -414,7 +483,7 @@ GetAdaptersAddresses(
                 CurrentAA->IfIndex = Entry->if_index;
                 CopyMemory(CurrentAA->PhysicalAddress, Entry->if_physaddr, Entry->if_physaddrlen);
                 CurrentAA->PhysicalAddressLength = Entry->if_physaddrlen;
-                CurrentAA->Flags = 0; // FIXME!
+                QueryFlags(&Entry->if_descr[0], Entry->if_descrlen, &CurrentAA->Flags);
                 CurrentAA->Mtu = Entry->if_mtu;
                 CurrentAA->IfType = Entry->if_type;
                 if(Entry->if_operstatus >= IF_OPER_STATUS_CONNECTING)
@@ -448,9 +517,51 @@ GetAdaptersAddresses(
                 if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
                 {
                     CurrentAA->FriendlyName = (PWCHAR)Ptr;
-                    CurrentAA->FriendlyName[0] = L'\0';
-                    /* Next items */
-                    Ptr = (BYTE*)(CurrentAA->FriendlyName + 1);
+
+                    if (FriendlySize != 0)
+                    {
+                        /* Get the friendly name */
+                        HKEY ConnectionKey;
+                        CHAR KeyName[256];
+
+                        snprintf(KeyName, 256,
+                            "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                            Entry->if_descrlen, &Entry->if_descr[0]);
+
+                        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                        {
+                            DWORD ValueType;
+                            DWORD ValueSize = FriendlySize + sizeof(WCHAR);
+
+                            if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, (LPBYTE)CurrentAA->FriendlyName, &ValueSize) == ERROR_SUCCESS &&
+                                ValueType == REG_SZ && ValueSize == FriendlySize + sizeof(WCHAR))
+                            {
+                                /* We're done, next items */
+                                Ptr = (BYTE*)(CurrentAA->FriendlyName + (ValueSize / sizeof(WCHAR)));
+                            }
+                            else
+                            {
+                                /* Fail */
+                                ERR("Friendly name changed after probe!\n");
+                                FriendlySize = 0;
+                            }
+
+                            RegCloseKey(ConnectionKey);
+                        }
+                        else
+                        {
+                            /* Fail */
+                            FriendlySize = 0;
+                        }
+                    }
+
+                    /* In case of failure (or no name) */
+                    if (FriendlySize == 0)
+                    {
+                        CurrentAA->FriendlyName[0] = L'\0';
+                        /* Next items */
+                        Ptr = (BYTE*)(CurrentAA->FriendlyName + 1);
+                    }
                 }
 
                 /* The DNS Servers */

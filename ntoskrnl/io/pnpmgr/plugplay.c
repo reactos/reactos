@@ -359,40 +359,61 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
         }
         else
         {
-//            DEVICE_CAPABILITIES DeviceCapabilities;
+            DEVICE_CAPABILITIES DeviceCapabilities;
             PCM_POWER_DATA PowerData;
-
-//            Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
+            IO_STACK_LOCATION Stack;
+            IO_STATUS_BLOCK IoStatusBlock;
 
             PowerData = (PCM_POWER_DATA)Buffer;
-
             RtlZeroMemory(PowerData, sizeof(CM_POWER_DATA));
             PowerData->PD_Size = sizeof(CM_POWER_DATA);
-//            PowerData->PD_MostRecentPowerState;
-            PowerData->PD_Capabilities = PDCAP_D0_SUPPORTED | PDCAP_D3_SUPPORTED;
-/*
-            if (DeviceCapabilities.DeviceD1)
-                PowerData->PD_Capabilities |= PDCAP_D1_SUPPORTED;
-            if (DeviceCapabilities.DeviceD2)
-                PowerData->PD_Capabilities |= PDCAP_D2_SUPPORTED;
-            if (DeviceCapabilities.WakeFromD0)
-                PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D0_SUPPORTED;
-            if (DeviceCapabilities.WakeFromD1)
-                PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D1_SUPPORTED;
-            if (DeviceCapabilities.WakeFromD2)
-                PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D2_SUPPORTED;
-            if (DeviceCapabilities.WakeFromD3)
-                PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D3_SUPPORTED;
-            if (DeviceCapabilities.WarmEjectSupported)
-                PowerData->PD_Capabilities |= PDCAP_WARM_EJECT_SUPPORTED;
-            PowerData->PD_D1Latency = DeviceCapabilities.D1Latency;
-            PowerData->PD_D2Latency = DeviceCapabilities.D2Latency;
-            PowerData->PD_D3Latency = DeviceCapabilities.D3Latency;
-            RtlCopyMemory(&PowerData->PD_PowerStateMapping,
-                          &DeviceCapabilities.DeviceState,
-                          sizeof(DeviceCapabilities.DeviceState));
-            PowerData->PD_DeepestSystemWake = DeviceCapabilities.SystemWake;
-*/
+
+            RtlZeroMemory(&DeviceCapabilities, sizeof(DEVICE_CAPABILITIES));
+            DeviceCapabilities.Size = sizeof(DEVICE_CAPABILITIES);
+            DeviceCapabilities.Version = 1;
+            DeviceCapabilities.Address = -1;
+            DeviceCapabilities.UINumber = -1;
+
+            Stack.Parameters.DeviceCapabilities.Capabilities = &DeviceCapabilities;
+
+            Status = IopInitiatePnpIrp(DeviceObject,
+                                       &IoStatusBlock,
+                                       IRP_MN_QUERY_CAPABILITIES,
+                                       &Stack);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("Got device capabiliities\n");
+
+                PowerData->PD_MostRecentPowerState = PowerDeviceD0; // FIXME
+                if (DeviceCapabilities.DeviceD1)
+                    PowerData->PD_Capabilities |= PDCAP_D1_SUPPORTED;
+                if (DeviceCapabilities.DeviceD2)
+                    PowerData->PD_Capabilities |= PDCAP_D2_SUPPORTED;
+                if (DeviceCapabilities.WakeFromD0)
+                    PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D0_SUPPORTED;
+                if (DeviceCapabilities.WakeFromD1)
+                    PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D1_SUPPORTED;
+                if (DeviceCapabilities.WakeFromD2)
+                    PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D2_SUPPORTED;
+                if (DeviceCapabilities.WakeFromD3)
+                    PowerData->PD_Capabilities |= PDCAP_WAKE_FROM_D3_SUPPORTED;
+                if (DeviceCapabilities.WarmEjectSupported)
+                    PowerData->PD_Capabilities |= PDCAP_WARM_EJECT_SUPPORTED;
+                PowerData->PD_D1Latency = DeviceCapabilities.D1Latency;
+                PowerData->PD_D2Latency = DeviceCapabilities.D2Latency;
+                PowerData->PD_D3Latency = DeviceCapabilities.D3Latency;
+                RtlCopyMemory(&PowerData->PD_PowerStateMapping,
+                              &DeviceCapabilities.DeviceState,
+                              sizeof(DeviceCapabilities.DeviceState));
+                PowerData->PD_DeepestSystemWake = DeviceCapabilities.SystemWake;
+            }
+            else
+            {
+                DPRINT("IRP_MN_QUERY_CAPABILITIES failed (Status 0x%08lx)\n", Status);
+
+                PowerData->PD_Capabilities = PDCAP_D0_SUPPORTED | PDCAP_D3_SUPPORTED;
+                PowerData->PD_MostRecentPowerState = PowerDeviceD0;
+            }
         }
     }
     else if (Property == PNP_PROPERTY_REMOVAL_POLICY_OVERRIDE)

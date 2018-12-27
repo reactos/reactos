@@ -778,7 +778,7 @@ BEGIN
     IDS_DELETEMULTIPLE_TEXT "Are you sure you want to delete these %1 items?"
     IDS_DELETESELECTED_TEXT "Are you sure you want to delete the selected item(s)?"
     IDS_TRASHITEM_TEXT "Are you sure that you want to send '%1' to the Recycle Bin?"
-    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its content to the Recycle Bin?"
+    IDS_TRASHFOLDER_TEXT "Are you sure that you want to send '%1' and all its contents to the Recycle Bin?"
     IDS_TRASHMULTIPLE_TEXT "Are you sure that you want to send these %1 items to the Recycle Bin?"
     IDS_CANTTRASH_TEXT "The item '%1' can't be sent to Recycle Bin. Do you want to delete it instead?"
     IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
@@ -797,6 +797,11 @@ BEGIN
     IDS_RESTART_PROMPT "Do you want to restart the system?"
     IDS_SHUTDOWN_TITLE "Shutdown"
     IDS_SHUTDOWN_PROMPT "Do you want to shutdown?"
+    
+    /* Format Dialog Strings */
+    IDS_FORMAT_TITLE "Format Local Disk"
+    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
+    IDS_FORMAT_COMPLETE "Format Complete."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"

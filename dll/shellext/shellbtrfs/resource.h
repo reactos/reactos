@@ -196,6 +196,17 @@
 #define IDS_BALANCE_CANCELLED_SHRINK    278
 #define IDS_BALANCE_COMPLETE_SHRINK     279
 #define IDS_BALANCE_FAILED_SHRINK       280
+#define IDS_COMPRESS_ZSTD               281
+#define IDS_RECV_RTLUNICODETOUTF8N_FAILED 282
+#define IDS_REGCREATEKEY_FAILED         283
+#define IDS_REGSETVALUEEX_FAILED        284
+#define IDS_REGCLOSEKEY_FAILED          285
+#define IDS_REGDELETETREE_FAILED        286
+#define IDS_CANT_REFLINK_DIFFERENT_FS   287
+#define IDS_INITCOMMONCONTROLSEX_FAILED 288
+#define IDS_CANT_OPEN_MOUNTMGR          289
+#define IDS_TVM_INSERTITEM_FAILED       290
+#define IDS_RECV_PATH_TOO_LONG          291
 #define IDC_UID                         1001
 #define IDC_GID                         1002
 #define IDC_USERR                       1003
@@ -226,6 +237,8 @@
 #define IDC_SIZE_LZO                    1022
 #define IDC_VOL_SHOW_USAGE              1022
 #define IDC_VOL_BALANCE                 1023
+#define IDC_SIZE_ZSTD                   1023
+#define IDC_COMPRESSION_RATIO           1023
 #define IDC_PROFILES                    1024
 #define IDC_PROFILES_SINGLE             1025
 #define IDC_PROFILES_DUP                1026
@@ -324,7 +337,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        173
+#define _APS_NEXT_RESOURCE_VALUE        175
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1073
 #define _APS_NEXT_SYMED_VALUE           101

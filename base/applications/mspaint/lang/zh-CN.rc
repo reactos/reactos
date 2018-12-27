@@ -37,7 +37,7 @@ BEGIN
     POPUP "编辑(&E)"
     BEGIN
         MENUITEM "撤销(&U)\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "重做(&R)\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "重来(&R)\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "剪切(&T)\tCtrl+X", IDM_EDITCUT
         MENUITEM "复制(&C)\tCtrl+C", IDM_EDITCOPY
@@ -95,7 +95,7 @@ BEGIN
     BEGIN
         MENUITEM "帮助主题(&H)", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "信息(&I)", IDM_HELPINFO
+        MENUITEM "系统信息(&I)", IDM_HELPINFO
     END
 END
 

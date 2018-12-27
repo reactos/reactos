@@ -1,10 +1,41 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 #pragma once
+/* Hebrew text is in visual order */
 
-MUI_LAYOUTS heILLayouts[] =
+static MUI_ENTRY heILSetupInitPageEntries[] =
 {
-    { L"0409", L"00000409" },
-    { L"040D", L"0000040D" },
-    { NULL, NULL }
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
 };
 
 static MUI_ENTRY heILLanguagePageEntries[] =
@@ -12,37 +43,37 @@ static MUI_ENTRY heILLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " öêóöÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ñîô öòâáÅ",
+        "\204\224\231 \232\230\211\207\201",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  ÑêóöÑÑ äåÑéÅ ÑÅ ôéöôöô ÑîôÑ öÄ ÑôóÅÅ òáÅ Äê.",
+        "\x07  .\204\220\227\232\204\204 \212\211\214\204\232 \230\205\201\222 \204\224\231\204 \232\200 \230\207\201 \200\220\200",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   .ENTER ôóÑ äã òáÄ",
+        "   .ENTER \231\227\204 \206\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  .öâîÖëÑ öãòíéÅ åÉáéÑ öòâòÅ öîô ÑâÑö ÖÜÑ ÑîôÑ",
+        "\x07  .\232\211\224\205\221\204 \232\213\230\222\216\201 \214\203\207\216\204 \232\230\211\230\201 \232\224\231 \204\211\204\232 \232\200\206 \204\224\231",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "åàÅ = F3  äôéÑ = ENTER",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -58,55 +89,56 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " ÑêóöÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS åô ÑêóöÑÑ öâêãöå ÄÅÑ äÖòÅ",
+        "ReactOS \232\220\227\232\204\214 \215\211\200\201\204 \215\211\213\205\230\201",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ÑåíîÑÑ öãòíé öÄ öÄ óâöíé ÑêóöÑÑ åô ÑÜÑ óåáÑ",
+        "ReactOS \204\214\222\224\204\204 \232\213\230\222\216 \232\200 \227\211\232\222\211 \204\220\227\232\204\204 \214\231 \204\206\204 \201\214\231\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ÑêóöÑÑ åô âêôÑ óåáå èêÖãöéÖ äÅôáéå.",
+        ".\204\220\227\232\204\204 \214\231 \211\220\231\204 \201\214\231\204 \232\200 \217\211\213\232\205 \212\201\231\207\216\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  ReactOS öÄ èâóöÑå âÉã ENTER ôóÑ",
+        "\x07  .ReactOS \232\200 \202\230\203\231\214 \205\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  .ReactOS öÄ èãÉíå ÖÄ èóöå âÉã R ôóÑ",
+     // "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
+        "\x07  .ReactOS \232\220\227\232\204 \217\227\232\214 \211\203\213 R \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  .ReactOS åô çÖôâòÑ âÄêöÖ âÇôÖé öÄ öÖÄòå âÉã L ôóÑ",
+        "\x07  .ReactOS \214\231 \211\205\231\211\230\204 \211\200\220\232 \232\205\200\230\214 \211\203\213 L \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  .ReactOS öÄ èâóöÑå âåÅ åàÅå âÉã F3 ôóÑ",
+        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        ":Å òóÅ Äê ,ReactOS âÅÇå íÉâé ÉÖíå",
+        ":\230\232\200\201 \230\227\201\214 \217\232\211\220 ,ReactOS \211\201\202\214 \222\203\211\216 \230\232\205\211\214",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,7 +150,7 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         0,
         0,
-        "åàÅ = F3  èÖâôò = L  èóö = R  äôéÑ = ENTER",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \217\205\211\231\230 = L  \204\220\227\232\204 \217\205\227\211\232 = R  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -134,61 +166,61 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "ReactOS \232\221\230\202 \201\226\216",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "\232\205\207\213\205\220 \232\205\220\205\213\232\204 \214\213 \200\214\231 \232\205\222\216\231\216 ,\200\224\214\200 \201\214\231\201 \232\200\226\216\220 ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "\230\205\201\222 \227\230 \232\213\230\222\216\201 \231\216\232\231\204\214 \225\214\216\205\216 .\207\205\232\211\224 \232\207\232\205",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        ".\215\205\211 \215\205\211 \231\205\216\211\231 \230\205\201\222 \232\213\230\222\216 \212\205\232\201 \200\214\205 \232\205\221\220\232\204\205 \204\227\211\203\201 \232\205\230\210\216\214",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "\211\220\231\216 \201\231\207\216\201 \231\216\232\231\204\214 \205\200 \212\214\231 \222\203\211\216\204 \232\200 \232\205\201\202\214 \225\214\216\205\216",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        ".\232\211\206\211\224 \204\230\216\205\207 \214\222 ReactOS \232\200 \225\211\230\204\214 \232\220\216 \214\222",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  .ReactOS \232\220\227\232\204 \232\200 \212\211\231\216\204\214 \211\203\213 ENTER \231\227\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -204,13 +236,13 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
-        "Licensing:",
+        ":\211\205\231\211\230",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -288,7 +320,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         22,
-        "Warranty:",
+        ":\232\205\211\230\207\200",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -312,7 +344,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = áÜÖò",
+        "\215\203\205\227 \223\203 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -328,84 +360,84 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows the current device settings.",
+        ".\215\211\211\207\213\205\220\204 \215\211\220\227\232\204\204 \232\205\230\203\202\204 \232\200 \204\200\230\216 \204\210\216\214 \204\216\211\231\230\204",
         TEXT_STYLE_NORMAL
     },
     {
         24,
         11,
-        "éáôÅ:",
+        ":\201\231\207\216",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         12,
-        "öñÖÇÑ:",
+        ":\204\202\205\226\232",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         13,
-        "éóåÉö:",
+        ":\232\203\214\227\216",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "öñÖòö éóåÉö:",
+        ":\232\203\214\227\216 \232\230\205\226\232",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         16,
-        "óÅå:",
+        ":\230\205\231\211\200",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "Accept these device settings",
+        16, "\215\211\220\227\232\204\204 \232\205\230\203\202\204 \230\205\231\211\200",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "You can change the hardware settings by pressing the UP or DOWN keys",
+        "\220\211\232\217 \214\231\220\205\232 \200\232 \204\202\203\230\205\232 \204\204\232\227\220\211\215 \201\214\207\211\226\232 \216\227\231\211 \204\214\216\222\214\204 \205\214\216\210\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "to select an entry. Then press the ENTER key to select alternative",
+        ".\204\220\205\231 \204\230\203\202\204 \230\205\207\201\214 \211\203\213 ENTER \225\207\214 \206\200 .\217\227\232\204 \230\205\207\201\214 \211\203\213",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "ÑÇÉòÖö.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "When all settings are correct, select \"Accept these device settings\"",
+        "\"\215\211\220\227\232\204\204 \232\205\230\203\202\204 \230\205\231\211\200\"\201 \230\207\201 ,\232\205\220\205\213\220 \232\205\230\203\202\204\204 \214\213\231 \211\232\216",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "ÖÄáò ãä Ñóô ENTER",
+        ".ENTER \225\207\214\205",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -421,55 +453,125 @@ static MUI_ENTRY heILRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        ".\215\203\227\205\216 \207\205\232\211\224 \201\226\216\201 \232\200\226\216\220 ReactOS \232\220\227\232\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        ".\232\211\220\227\232 \204\220\227\232\204 \232\211\220\213\232 \214\231 \232\205\220\205\213\232\204 \214\213 \232\200 \232\230\231\224\200\216 \204\220\211\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not implemented yet.",
+        ".\232\205\216\231\205\211\216 \217\211\211\203\222 \215\220\211\200 \217\205\227\211\232\204 \232\205\220\205\213\232",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press U for Updating OS.",
+        "\x07  .\232\213\230\222\216\204 \232\200 \217\213\203\222\214 \211\203\213 U \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R for the Recovery Console.",
+        "\x07  .\230\205\206\207\231\204 \223\205\221\216 \232\200 \207\205\232\224\214 \211\203\213 R \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to return to the main page.",
+        "\x07  .\211\231\200\230\204 \203\205\216\222\214 \230\205\206\207\214 \211\203\213 ESC \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ENTER to reboot your computer.",
+        "\x07  .\201\231\207\216\204 \232\200 \231\203\207\216 \214\211\222\224\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = íéÖÉ òÄôâ  U = íÉãè  R = ôáÜÖò  ENTER = ÄöáÖå",
+        "\231\203\207\216 \204\214\222\224\204 = ENTER  \230\205\206\207\231 = R  \217\205\213\203\222 = U  \211\231\200\230 \203\205\216\222 = ESC",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY heILUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "ReactOS \232\205\220\227\232\204\216 \232\207\200 \232\200 \202\230\203\231\214 \204\214\205\213\211 ReactOS \232\220\227\232\204",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "\204\220\227\232\204\204 \232\211\220\213\232 ,\204\216\205\202\224 \232\205\220\227\232\204\204\216 \232\207\200 \215\200 \205\200 ,\204\210\216\214 \232\205\216\205\231\230\204",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        ".\204\220\227\232\214 \232\205\221\220\214 \204\214\205\213\211",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        ".\204\200\205\214\216\201 \232\216\231\205\211\216 \204\220\211\200 \217\205\227\211\232\204 \232\213\230\222\216",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  .\204\220\227\232\204 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  .\232\230\207\201\220\204 \232\213\230\222\216\204 \232\220\227\232\204 \232\200 \202\230\203\231\214 \211\203\213 U \225\207\214",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  .\204\231\203\207 \232\213\230\222\216 \232\220\227\232\204 \215\222 \212\211\231\216\204\214 \211\203\213 ESC \225\207\214",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \202\230\203\231\214 \200\214 = ESC  \202\205\230\203\231 = ESC",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -485,43 +587,43 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of computer to be installed.",
+        ".\217\227\232\205\216\204 \201\231\207\216\204 \202\205\221 \232\200 \232\205\220\231\214 \204\226\205\230 \204\232\200",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired computer type.",
+        "\x07  .\211\205\226\230\204 \201\231\207\216\204 \202\205\221 \232\200 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   ÖÄáò ãä Ñóô ENTER.",
+        "   .ENTER \225\207\214 \206\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .\201\231\207\216\204 \202\205\221 \232\200 \232\205\220\231\214 \211\214\201\216 \215\203\205\227\204 \203\205\216\222\214 \230\205\206\207\214 \211\203\213 ESC \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the computer type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = Åàå   F3 = îòÖô",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -537,31 +639,31 @@ static MUI_ENTRY heILFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "\212\214\231 \217\220\205\213\204 \214\222 \230\205\216\231 \222\203\211\216\204 \214\213\231 \200\203\205\205\232 \205\211\231\213\222 \232\213\230\222\216\204.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "\232\205\227\203 \204\216\213 \232\207\227\214 \214\205\213\211 \204\206.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "\211\210\216\205\210\205\200 \217\224\205\200\201 \231\203\207\216 \214\222\224\205\211 \201\231\207\216\204 ,\215\205\211\221\201.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Flushing cache",
+        "\217\205\216\210\216\204 \232\200 \223\210\205\231",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -577,37 +679,37 @@ static MUI_ENTRY heILQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "\200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        " :A \217\220\205\213\216 \217\205\210\211\214\227\232\204 \232\200 \200\211\226\205\204\214 \200\220",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drives.",
+        ".\215\211\220\220\205\213\204\216 \215\211\230\205\210\211\214\227\232\204 \214\213 \232\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Press ENTER to reboot your computer.",
+        ".\201\231\207\216\204 \232\200 \231\203\207\216 \214\211\222\224\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Please wait ...",
+        "...\217\211\232\216\204\214 \200\220",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -623,42 +725,42 @@ static MUI_ENTRY heILDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of display to be installed.",
+        ".\217\227\232\205\216\204 \204\202\205\226\232\204 \202\205\221 \232\200 \232\205\220\231\214 \212\220\205\226\230\201",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Press the UP or DOWN key to select the desired display type.",
+         "\x07  .\211\205\226\230\204 \204\202\205\226\232\204 \202\205\221 \232\200 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   .ENTER \225\207\214 \206\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .\204\202\205\226\232\204 \202\205\221 \232\200 \232\205\220\231\214 \211\214\201\216 \230\205\206\207\214 \211\203\213 ESC \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the display type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -674,37 +776,37 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ÑòãâÅâç ÑÅëâëââç ôå ReactOS ÑÖöóêÖ ÅÑñåáÑ.",
+        ".\204\207\214\226\204\201 \205\220\227\232\205\204 ReactOS \214\231 \215\211\211\221\211\221\201\204 \215\211\201\211\213\230\204",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        " :A \217\220\205\213\216 \217\205\210\211\214\227\232\204 \232\200 \200\211\226\205\204\214 \200\220",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drive.",
+        ".\215\211\220\220\205\213\204\216 \215\211\230\205\210\211\214\227\232\204 \214\213 \232\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Ñóô ENTER ãÉâ åÑîíâå éáÉô Äö éáôÅä",
+        ".\201\231\207\216\204 \232\200 \231\203\207\216 \214\211\222\224\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñîíå éáÉô",
+        "\231\203\207\216 \204\214\222\224\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -720,37 +822,37 @@ static MUI_ENTRY heILBootPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup cannot install the bootloader on your computers",
+        "\207\211\231\227\204 \217\220\205\213\204 \214\222 \214\205\207\232\200\204 \214\204\220\216 \232\200 \217\211\227\232\204\214 \204\214\205\213\211 \204\220\211\200 \204\220\227\232\204\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "hardisk",
+        "\212\201\231\207\216\201",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Please insert a formatted floppy disk in drive A: and",
+        ".ENTER \225\207\214\205 :A \217\220\205\213\214 \214\207\232\205\200\216 \217\205\210\211\214\227\232 \221\220\213\204 \204\231\227\201\201",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "press ENTER.",
+        "",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -767,61 +869,61 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " ÑöóêÑ ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "\214\226\205\220\216 \200\214 \227\221\211\203 \207\210\231\205 \232\205\226\211\207\216 \215\211\202\226\205\216 \204\210\216\214 \204\216\211\231\230\201",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        ".\232\205\231\203\207 \232\205\226\211\207\216 \230\205\201\222",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  .\204\216\205\231\230 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  .\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 ReactOS \232\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  .\232\211\231\200\230 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 P \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  .\232\201\207\230\205\216 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 E \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
+        "\x07  .\232\211\202\205\214 \204\226\211\207\216 \230\205\226\211\214 \211\203\213 L \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  .\232\216\211\211\227 \204\226\211\207\216 \227\205\207\216\214 \211\203\213 D \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "êÄ åáãÖö...",
+        "...\217\211\232\216\204\214 \200\220",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -837,85 +939,85 @@ static MUI_ENTRY heILConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        ".\232\213\230\222\216 \232\226\211\207\216 \227\205\207\216\214 \232\230\207\201",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        ",\204\230\216\205\207 \232\230\203\202\204 \232\205\211\220\213\205\232 ,\217\205\207\201\200 \232\205\211\220\213\205\232 \214\211\213\204\214 \232\205\214\205\213\211 \232\213\230\222\216 \232\205\226\211\207\216",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        ")ReactOS \205\216\213( \204\214\222\224\204 \232\205\213\230\222\216 \232\214\222\224\204\214 \232\205\211\220\213\232",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        ".\204\230\216\205\207\204 \217\230\226\211 \211\203\211 \214\222 \232\205\227\224\205\221\216\231 \232\205\230\207\200 \232\205\211\220\213\232 \205\200",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "\205\214\200\213 \232\205\211\220\213\232 \217\211\200\231 \207\205\210\201 \204\232\200 \215\200 \227\230 \232\213\230\222\216 \232\226\211\207\216 \227\207\216",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        ".\217\232\205\200 \227\205\207\216\214 \207\205\210\201 \204\232\200\231 \205\200 ,\204\226\211\207\216\204 \214\222",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "\207\211\231\227\204 \217\220\205\213\204\216 \232\205\214\222\214 \200\214 \214\205\214\222 \201\231\207\216\204 ,\204\226\211\207\216\204 \227\207\216\232\231 \211\232\216",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        ".ReactOS \232\220\227\232\204 \215\205\211\221\214 \203\222",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  \204\227\211\207\216\214 \211\205\203\211\205 \231\227\201\232\211 .\232\213\230\222\216\204 \232\226\211\207\216 \232\200 \227\205\207\216\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   .\204\220\227\232\204\201 \230\232\205\211 \230\207\205\200\216 \203\222\205\216\201",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  .\227\207\216\211\232 \200\214 \204\226\211\207\216\204 ,\215\203\205\227\204 \203\205\216\222\214 \230\205\206\207\214 \211\203\213 ESC \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continue  ESC=Cancel",
+        "\214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -931,25 +1033,25 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ÄöáÖå éáâñÑ",
+        "\204\226\211\207\216 \214\205\207\232\200",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        ".\212\211\231\216\204\214 \211\203\213 ENTER \225\207\214 .\204\226\211\207\216\204 \232\200 \214\207\232\200\232 \205\211\231\213\222 \204\220\227\232\204\204",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -965,43 +1067,43 @@ static MUI_ENTRY heILInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        ".\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 ReactOS \232\200 \217\211\227\232\232 \204\220\227\232\204\204",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        ":ReactOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232 \230\207\201",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "\227\205\207\216\214 \211\203\213 BACKSPACE \225\207\214 ,\232\222\226\205\216\204 \204\211\211\227\211\232\204 \232\200 \232\205\220\231\214 \211\203\213",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        ".ReactOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232\204 \232\200 \215\205\231\230\232 \206\200\205 \215\211\205\205\232",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1017,31 +1119,31 @@ static MUI_ENTRY heILFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Ñöóêö ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         0,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "\215\211\226\201\227 \204\227\211\232\222\216 ReactOS \232\220\227\232\204\231 \217\216\206\201 \217\211\232\216\204\214 \200\220",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         13,
-        "installation folder.",
+        ".\232\230\207\201\231 \204\220\227\232\204\204 \232\211\211\227\211\232\214",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "This may take several minutes to complete.",
+        ".\232\205\227\203 \230\224\221\216 \212\231\216\204\214 \204\214\205\213\211 \205\206 \204\214\205\222\224",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,
         0,
-        "\xB3 êÄ åáãÖö...    ",
+        "\xB3 ...\217\211\232\216\204\214 \200\220    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1057,43 +1159,43 @@ static MUI_ENTRY heILBootLoaderEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "\214\205\207\232\200\204 \214\204\220\216 \232\200 \232\222\213 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        ".(VBR-\205 MBR) \207\211\231\227\204 \227\221\211\203 \214\222 \214\205\207\232\200 \214\204\220\216 \217\227\232\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        ".(\203\201\214\201 VBR) \207\211\231\227\204 \227\221\211\203 \214\222 \214\205\207\232\200 \214\204\220\216 \217\227\232\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Install bootloader on a floppy disk.",
+        ".\217\205\210\211\214\227\232 \214\222 \214\205\207\232\200 \214\204\220\216 \217\227\232\204",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Skip install bootloader.",
+        ".\214\205\207\232\200\204 \214\204\220\216 \232\220\227\232\204 \214\222 \202\205\214\211\203",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1109,43 +1211,43 @@ static MUI_ENTRY heILKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        ".\232\220\227\232\205\216\204 \232\203\214\227\216\204 \202\205\221 \232\205\220\231\214 \212\220\205\226\230\201",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  .\211\205\226\230\204 \232\203\214\227\216\204 \202\205\221 \232\200 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   .ENTER \225\207\214 \206\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .\232\203\214\227\216\204 \202\205\221 \232\200 \232\205\220\231\214 \211\214\201\216 \215\203\205\227\204 \203\205\216\222\214 \230\205\206\207\214 \211\203\213 ESC \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1161,43 +1263,43 @@ static MUI_ENTRY heILLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        ".\214\203\207\216 \232\230\211\230\201 \232\220\227\232\205\216\204 \232\203\214\227\216\204 \232\230\205\226\232 \232\200 \230\205\207\201\214 \200\220",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  .\204\211\205\226\230\204 \204\230\205\226\232\204 \232\200 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    .ENTER \225\207\214 \206\200\205",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  .\232\203\214\227\216\204 \232\230\205\226\232 \232\200 \232\205\220\231\214 \211\214\201\216 \215\203\205\227\204 \203\205\216\222\214 \230\205\206\207\214 \211\203\213 ESC \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Ñéôä   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1214,19 +1316,19 @@ static MUI_ENTRY heILPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        ".ReactOS \211\226\201\227 \232\227\232\222\204\214 \212\201\231\207\216 \232\200 \204\220\211\213\216 \204\220\227\232\204\204 \232\211\220\213\232 ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Building the file copy list...",
+        "...\215\211\226\201\227 \232\227\232\222\204 \232\216\211\231\230 \204\220\205\201",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1243,37 +1345,37 @@ static MUI_ENTRY heILSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         17,
-        "Select a file system from the list below.",
+        ".\204\210\216\214 \204\216\211\231\230\204\216 \215\211\226\201\227 \232\213\230\222\216 \230\207\201",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  .\215\211\226\201\227 \232\213\230\222\216 \230\205\207\201\214 \211\203\213 \204\210\216\214 \205\200 \204\214\222\216\214 \214\222 \225\207\214",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  .\204\226\211\207\216\204 \232\200 \214\207\232\200\214 \211\203\213 ENTER \225\207\214",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  .\232\230\207\200 \204\226\211\207\216 \230\205\207\201\214 \211\203\213 ESC \225\207\214",
         0
     },
     {
         0,
         0,
-        "ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \212\231\216\204 = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1290,37 +1392,37 @@ static MUI_ENTRY heILDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "\204\226\211\207\216\204 \232\200 \227\205\207\216\214 \232\230\207\201",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  .\204\226\211\207\216\204 \232\200 \227\205\207\216\214 \211\203\213 D \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "!\203\201\200\211 \204\226\211\207\216\201 \222\203\211\216\204 \214\213 :\204\230\204\206\200",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  .\214\210\201\214 \211\203\213 ESC \225\207\214",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \204\226\211\207\216 \227\207\216 = D",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1336,19 +1438,19 @@ static MUI_ENTRY heILRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        " .\232\213\230\222\216\204 \232\230\205\226\232 \232\200 \232\213\203\222\216 \204\220\227\232\204\204 \232\211\220\213\232",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Creating registry hives...",
+        "...\232\216\205\231\211\230 \232\205\230\205\205\213 \230\226\205\211",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1364,245 +1466,237 @@ MUI_ERROR heILErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "\204\207\214\226\204\n"
     },
     {
-        //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-        "computer. If you quit Setup now, you will need to\n"
-        "run Setup again to install ReactOS.\n"
+        // ERROR_NOT_INSTALLED
+        ".\212\201\231\207\216 \214\222 \200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 ReactOS\n"
+        "\201\205\231 \204\220\227\232\204\204 \232\200 \214\211\222\224\204\214 \212\230\210\226\232 ,\232\222\213 \204\220\227\232\204\204\216 \200\226\232 \215\200\n"
+        ".ReactOS \232\200 \217\211\227\232\204\214 \211\203\213\n"
         "\n"
-        "  \x07  Press ENTER to continue Setup.\n"
-        "  \x07  Press F3 to quit Setup.",
-        "F3 = Quit  ENTER = Continue"
+        "  \x07  .\204\220\227\232\204\204\201 \212\211\231\216\204\214 \211\203\213 ENTER \225\207\214\n"
+        "  \x07  .\204\220\227\232\204\204\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER"
     },
     {
-        //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        // ERROR_NO_HDD
+        ".\207\211\231\227 \217\220\205\213 \204\200\226\216 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        // ERROR_NO_SOURCE_DRIVE
+        ".\204\214\231 \230\205\227\216\204 \217\220\205\213 \232\200 \204\200\226\216 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        // ERROR_LOAD_TXTSETUPSIF
+        ".TXTSETUP.SIF \225\201\205\227 \232\200 \204\200\226\216 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        // ERROR_CORRUPT_TXTSETUPSIF
+        ".\215\205\202\224 TXTSETUP.SIF \225\201\205\227\204 \232\200 \204\200\226\216 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        // ERROR_SIGNATURE_TXTSETUPSIF,
+        ".TXTSETUP.SIF-\201 \204\211\205\202\231 \232\216\232\205\207 \204\200\226\216 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        // ERROR_DRIVE_INFORMATION
+        ".\232\213\230\222\216\204 \214\231 \215\211\220\220\205\213\204 \222\203\211\216 \232\200 \202\211\231\204\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        // ERROR_WRITE_BOOT,
+        ".\232\213\230\222\216\204 \232\226\211\207\216 \214\222 %S \214\231 \214\205\207\232\200\204 \203\205\227 \232\200 \217\211\227\232\204\214\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        // ERROR_LOAD_COMPUTER,
+        ".\215\211\201\231\207\216\204 \211\202\205\221 \232\216\211\231\230 \232\220\211\222\210\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        // ERROR_LOAD_DISPLAY,
+        ".\204\202\205\226\232\204 \232\205\230\203\202\204 \211\202\205\221 \232\216\211\231\230 \232\220\211\222\210\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        // ERROR_LOAD_KEYBOARD,
+        ".\232\205\203\214\227\216\204 \211\202\205\221 \232\216\211\231\230 \232\220\211\222\210\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        // ERROR_LOAD_KBLAYOUT,
+        ".\232\203\214\227\216\204 \232\205\230\205\226\232 \232\216\211\231\230 \232\220\211\222\210\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
-          "\n"
-          "Creating or deleting partitions can destroy the partition table.\n"
-          "\n"
-          "  \x07  Press F3 to quit Setup.\n"
-          "  \x07  Press ENTER to continue.",
-          "F3 = Quit  ENTER = Continue"
-    },
-    {
-        //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        // ERROR_WARN_PARTITION,
+        "\203\207\200 \207\211\231\227 \227\221\211\203 \232\205\207\224\214 \204\200\226\216 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        "!\205\201 \232\205\226\211\207\216\204 \232\214\201\210\201 \212\211\230\226\231 \205\216\213 \231\216\232\231\204\214 \217\232\211\220 \200\214\231\n"
         "\n"
-        "  * Press any key to continue.",
+        ".\232\205\226\211\207\216\204 \232\214\201\210 \232\200 \203\211\216\231\204\214 \204\214\205\214\222 \204\226\211\207\216 \232\227\211\207\216 \205\200 \232\230\211\226\211\n"
+        "\n"
+        "  \x07  .\204\220\227\232\204\204 \214\205\210\211\201\214 F3 \225\207\214\n"
+        "  \x07  .\212\211\231\216\204\214 \211\203\213 ENTER \225\207\214",
+        "\204\220\227\232\204 \214\205\210\211\201 = F3  \212\231\216\204 = ENTER"
+    },
+    {
+        // ERROR_NEW_PARTITION,
+        "!\232\216\211\211\227 \204\226\211\207\216 \212\205\232\201 \204\226\211\207\216 \230\205\226\211\214 \217\232\211\220 \200\214\n"
+        "\n"
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  ",
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        // ERROR_DELETE_SPACE,
+        "!\204\226\227\205\216 \200\214\231 \227\221\211\203 \207\210\231 \227\205\207\216\214 \217\232\211\220 \200\214\n"
         "\n"
-        "  * Press any key to continue.",
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  ",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        // ERROR_INSTALL_BOOTCODE,
+        ".\232\213\230\222\216\204 \232\226\211\207\216 \214\222 %S \230\205\201\222 \214\205\207\232\200 \203\205\227 \232\220\227\232\204\201 \204\231\214\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        // ERROR_NO_FLOPPY,
+        ".:A \217\220\205\213\201 \217\205\210\211\214\227\232 \217\211\200",
+        "\212\231\216\204 = ENTER"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        // ERROR_UPDATE_KBSETTINGS,
+        ".\232\203\214\227\216\204 \232\230\205\226\232 \232\205\230\203\202\204 \232\200 \217\213\203\222\214\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
+        ".\204\202\205\226\232\204 \215\205\231\230 \232\205\230\203\202\204 \232\200 \217\213\203\222\214\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        // ERROR_IMPORT_HIVE,
+        ".\215\205\231\211\230 \232\230\205\205\213 \225\201\205\227 \200\205\201\211\211\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        // ERROR_FIND_REGISTRY
+        "\232\213\220\211\232 \204\204\232\227\220\204 \220\213\231\214\204 \201\214\216\226\205\200 \200\232 \227\201\226\211 \216\211\203\222 \204\230\211\231\205\215.",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        // ERROR_CREATE_HIVE,
+        ".\215\205\231\211\230\204 \232\205\230\205\205\213 \232\230\211\226\211\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to initialize the registry.",
-        "ENTER = Reboot computer"
+        // ERROR_INITIALIZE_REGISTRY,
+        ".\215\205\231\211\230\204 \214\205\207\232\200\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        // ERROR_INVALID_CABINET_INF,
+        ".inf \225\201\205\227 \217\211\200 Cabinet \225\201\205\227\214\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        // ERROR_CABINET_MISSING,
+        ".\200\226\216\220 \200\214 Cabinet \225\201\205\227\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        // ERROR_CABINET_SCRIPT,
+        "\214\227\205\201\225 Cabinet \200\211\217 \232\221\230\211\210 \204\232\227\220\204.\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        // ERROR_COPY_QUEUE,
+        ".\215\211\201\226\227 \232\227\232\222\204 \230\205\232 \232\207\211\232\224\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        // ERROR_CREATE_DIR,
+        ".\204\220\227\232\204\204 \232\205\211\227\211\232 \232\200 \230\205\226\211\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        // ERROR_TXTSETUP_SECTION,
+        ".TXTSETUP.SIF\201 '%S' \227\214\207 \232\200 \200\205\226\216\214 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        // ERROR_CABINET_SECTION,
+        "'%S' \227\214\207 \232\200 \200\205\226\216\214 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        ".Cabinet \225\201\205\227\201\n",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        // ERROR_CREATE_INSTALL_DIR
+        ".\204\220\227\232\204\204 \204\211\211\227\211\232 \232\200 \232\200 \230\205\226\211\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232",
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        // ERROR_WRITE_PTABLE,
+        ".\232\205\226\211\207\216\204 \232\214\201\210 \232\201\211\232\213\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        // ERROR_ADDING_CODEPAGE,
+        ".\215\205\231\211\230\214 codepage \232\224\221\205\204\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        // ERROR_UPDATE_LOCALESETTINGS,
+        ".\232\213\230\222\216\204 \230\205\206\200 \232\200 \222\205\201\227\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232n"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        // ERROR_ADDING_KBLAYOUTS,
+        ".\215\205\231\211\230\214 \232\203\214\227\216 \232\205\230\205\226\232 \232\224\221\205\204\201 \204\214\231\213\220 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        // ERROR_UPDATE_GEOID,
+        ".geo id \204 \232\200 \222\205\201\227\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
-        //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
-    },
-    {
-        //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        // ERROR_DIRECTORY_NAME,
+        ".\211\227\205\207 \200\214 \204\211\211\227\211\232 \215\231\n"
         "\n"
-        "  * Press any key to continue."
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  "
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
+        ".ReactOS \232\200 \217\211\227\232\204\214 \211\203\213 \227\211\224\221\216 \204\214\205\203\202 \200\214 \204\230\207\201\220\231 \204\226\211\207\216\204\n"
+        ".\201\"\216 %lu \214\231 \214\203\205\202\201 \232\205\211\204\214 \232\205\207\224\214 \232\201\211\211\207 \204\220\227\232\204\204 \225\226\211\207\216\n"
         "\n"
-        "  * Press any key to continue.",
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  ",
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        // ERROR_PARTITION_TABLE_FULL,
+        "\214\200 \220\211\232\217 \214\211\226\205\230 \216\207\211\226\204 \207\203\231\204 \200\205 \216\207\211\226\204 \216\205\230\207\201\232 \207\203\231\204\n"
+        ".\232\205\224\221\205\220 \232\205\226\211\207\216\214 \215\205\227\216 \200\214\214 \204\220\211\204 \204\214\201\210\204 \211\213 \232\205\226\211\207\216\204 \232\214\201\210 \214\222\n"
         "\n"
-        "  * Press any key to continue."
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  "
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        // ERROR_ONLY_ONE_EXTENDED,
+        ".\207\211\231\227 \217\220\205\213 \214\213\214 \232\207\200 \232\201\207\230\205\216 \204\226\211\207\216\216 \230\232\205\211 \230\205\226\211\214 \217\232\211\220 \200\214\n"
         "\n"
-        "  * Press any key to continue."
+        ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  "
     },
     {
-        //ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        // ERROR_FORMATTING_PARTITION,
+        ":\204\226\211\207\216\204 \232\200 \214\207\232\200\214 \204\214\213\211 \200\214 \204\220\227\232\204\204 \232\211\220\213\232\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "\201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"
     },
     {
         NULL,
@@ -1613,11 +1707,15 @@ MUI_ERROR heILErrorEntries[] =
 MUI_PAGE heILPages[] =
 {
     {
+        SETUP_INIT_PAGE,
+        heILSetupInitPageEntries
+    },
+    {
         LANGUAGE_PAGE,
         heILLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         heILWelcomePageEntries
     },
     {
@@ -1635,6 +1733,10 @@ MUI_PAGE heILPages[] =
     {
         REPAIR_INTRO_PAGE,
         heILRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        heILUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1717,129 +1819,136 @@ MUI_PAGE heILPages[] =
 MUI_STRING heILStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   êÄ åáãÖö..."},
+     "   ...\217\211\232\216\204\214 \200\220"},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Ñöóè   C = ñÖò éáâñÑ   F3 = Åàå ÑöóêÑ"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\201\207\230\205\216 \230\205\226 = E  \232\211\231\200\230 \230\205\226 = P  \217\227\232\204 = ENTER"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \232\211\202\205\214 \204\226\211\207\216 \230\205\226 = L  \217\227\232\204 = ENTER"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Ñöóè   D = éáó éáâñÑ   F3 = Åàå ÑöóêÑ"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \204\226\211\207\216 \227\207\216 = D  \217\227\232\204 = ENTER"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \204\226\211\207\216 \227\207\216 = D"},
     {STRING_PARTITIONSIZE,
-     "ÇÖÉå ÑéáâñÑ ÑáÉôÑ:"},
+     ":\204\231\203\207 \204\226\211\207\216 \214\231 \214\203\205\202"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
+     "\214\222 \232\211\230\227\211\222 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "\214\222 \232\201\207\230\205\216 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "\214\222 \232\211\202\205\214 \204\226\211\207\216 \230\205\226\211\214 \232\230\207\201"},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    ".\215\211\232\201-\204\202\216\201 \204\231\203\207\204 \204\226\211\207\216\204 \214\231 \214\203\205\202\204 \232\200 \203\214\227\204 \204\231\227\201\201"},
     {STRING_CREATEPARTITION,
-     "   ENTER = ñÖò éáâñÑ   ESC = ÅâàÖå   F3 = Åàå ÑöóêÑ"},
+     "   \204\220\227\232\204 \214\205\210\211\201 = F3  \214\205\210\211\201 = ESC  \204\226\211\207\216 \230\205\226 = ENTER"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    ".\212\231\216\204\201 \214\207\232\205\200\232 \232\200\206\204 \204\226\211\207\216\204"},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    ".\232\214\207\232\205\200\216 \200\214/\204\231\203\207 \204\226\211\207\216 \214\222 ReactOS \232\200 \217\211\227\232\204\214 \232\230\207\201"},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "The system partition is not formatted yet."},
+    ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \232\213\230\222\216\204 \232\226\211\207\216"},
     {STRING_NONFORMATTEDOTHERPART,
-    "The new partition is not formatted yet."},
+    ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \204\231\203\207\204 \204\226\211\207\216\204"},
     {STRING_INSTALLONPART,
-    "Setup installs ReactOS onto Partition"},
+    "\204\226\211\207\216 \214\222 ReactOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CONTINUE,
-    "ENTER = Ñéôä"},
+    "\212\231\216\204 = ENTER"},
     {STRING_QUITCONTINUE,
-    "F3 = Åàå ÑöóêÑ  ENTER = Ñéôä"},
+    "\212\231\216\204 = ENTER  \204\220\227\232\204 \214\205\210\211\201 = F3"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Ñîíå éáÉô Äö ÑéáôÅ"},
-    {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "\231\203\207\216 \204\214\222\224\204 = ENTER"},
+    {STRING_DELETING,
+     "   \225\201\205\227 \227\207\205\216: %S"},
+    {STRING_MOVING,
+     "   \225\201\205\227 \230\211\201\222\216: %S \214: %S"},
+    {STRING_RENAMING,
+     "   \225\201\205\227 \215\231 \204\220\231\216: %S \214: %S"},
     {STRING_COPYING,
-     "   éíöâó óÖÅï: %S"},
+     "   \225\201\205\227 \227\211\232\222\216: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "öãêâö ÑÑöóêÑ éíöâóÑ óÅñâç..."},
+     "...\215\211\226\201\227 \204\227\211\232\222\216 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   ...\215\205\231\211\230\204 \232\205\230\205\205\213 \232\200 \217\213\203\222\216"},
     {STRING_IMPORTFILE,
-    "   éââÅÄ %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   \200\201\211\211\216 %S..."},
+    {STRING_DISPLAYSETTINGSUPDATE,
+    "   ...\204\202\205\226\232\204 \214\231 \215\205\231\211\230 \232\205\230\203\202\204 \217\213\203\222\216"},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   ...\230\205\206\200 \232\205\230\203\202\204 \217\213\203\222\216"},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   ...\232\203\214\227\216\204 \232\230\205\226\232 \232\205\230\203\202\204 \232\200 \217\213\203\222\216"},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   ...\215\205\231\211\230\214 codepage \222\203\211\216 \223\211\221\205\216"},
     {STRING_DONE,
-    "   ëâÖç..."},
+    "   ...\215\211\211\221\216"},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Ñîíå éáÉô Äö ÑéôÅ"},
+    "   \201\231\207\216\204 \232\200 \231\203\207\216 \214\222\224\204 = ENTER"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " ...\232\205\211\220\231 %li \203\205\222\201 \231\203\207\216 \214\222\224\205\211 \212\201\231\207\216 "},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\r\n\r\n"},
+    "\223\205\221\216\204 \232\200 \207\205\232\224\214 \217\232\211\220 \200\214\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\r\n"},
+    "USB \232\203\214\227\216\201 \231\205\216\211\231 \200\205\204 \204\206 \214\231 \204\226\205\224\220 \211\213\204 \204\201\211\221\204\r\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\r\n"},
+    "\200\214\216 \217\224\205\200\201 \232\205\213\216\232\220 \200\214 \217\211\211\203\222 USB \232\205\203\214\227\216\r\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "\217\220\205\213\204 \232\200 \232\214\207\232\200\216 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "\217\220\205\213\204 \232\200 \232\227\203\205\201 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " (\230\211\204\216 \214\205\207\232\200) %S \215\211\226\201\227 \232\213\230\222\216 \215\222 \204\226\211\207\216 \214\205\207\232\200 "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " %S \215\211\226\201\227 \232\213\230\222\216 \215\222 \204\226\211\207\216 \214\205\207\232\200 "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    " (\211\205\220\211\231 \200\214\214( \232\211\207\213\205\220 \215\211\226\201\227 \232\213\230\222\216 \232\230\200\231\204 "},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTZEROED_2,
+    // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
+    // {STRING_HDINFOPARTEXISTS_2,
+    // "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                      %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "\214\222 \204\231\203\207 \204\226\211\207\216 \204\230\226\211 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_UNPSPACE,
     "    %sUnpartitioned space%s            %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "\216\"\201 (\216\227\221. ul% \216\"\201)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "\232\201\207\230\205\216 \204\226\211\207\216"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    ")\214\207\232\205\200\216 \200\214( \231\203\207"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "\231\205\216\211\231\201 \200\214"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "\222\205\203\211 \200\214"},
     {STRING_KB,
-    "óâåÖÅââà"},
+    "\201\"\227"},
     {STRING_MB,
-    "éÇÑÅââà"},
+    "\201\"\216"},
     {STRING_GB,
-    "ÇâÇÑÅââà"},
+    "\201\"\202"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "...\232\203\214\227\216 \232\205\230\205\226\232 \223\211\221\205\216"},
     {0, 0}
 };

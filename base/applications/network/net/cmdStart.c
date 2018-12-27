@@ -57,7 +57,7 @@ EnumerateRunningServices(VOID)
                                     &dwServiceCount,
                                     &dwResumeHandle))
             {
-                ConPuts(StdOut, L"The following services hav been started:\n\n");
+                ConPuts(StdOut, L"The following services have been started:\n\n");
 
                 for (i = 0; i < dwServiceCount; i++)
                 {
@@ -174,10 +174,8 @@ cmdStart(INT argc, WCHAR **argv)
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-            ConResPuts(StdOut, IDS_START_SYNTAX);
-            ConResPuts(StdOut, IDS_START_HELP_1);
-            ConResPuts(StdOut, IDS_START_HELP_2);
-            ConResPuts(StdOut, IDS_START_HELP_3);
+            PrintNetMessage(MSG_START_SYNTAX);
+            PrintNetMessage(MSG_START_HELP);
             return 1;
         }
     }

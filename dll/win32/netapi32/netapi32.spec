@@ -10,8 +10,8 @@
 @ stub DsGetDcCloseW
 @ stdcall DsGetDcNameA(str str ptr str long ptr)
 @ stdcall DsGetDcNameW(wstr wstr ptr wstr long ptr)
-@ stub DsGetDcNameWithAccountA
-@ stub DsGetDcNameWithAccountW
+@ stdcall DsGetDcNameWithAccountA(str str long str ptr str long ptr)
+@ stdcall DsGetDcNameWithAccountW(wstr wstr long wstr ptr wstr long ptr)
 @ stub DsGetDcNextA
 @ stub DsGetDcNextW
 @ stub DsGetDcOpenA
@@ -181,7 +181,7 @@
 @ stdcall NetMessageNameEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetMessageNameGetInfo(wstr wstr long ptr)
 @ stdcall NetQueryDisplayInformation(wstr long long long long ptr ptr)
-@ stub NetRegisterDomainNameChangeNotification
+@ stdcall NetRegisterDomainNameChangeNotification(ptr)
 @ stub NetRemoteComputerSupports
 @ stdcall NetRemoteTOD(wstr ptr)
 @ stdcall NetRemoveAlternateComputerName(wstr wstr wstr wstr long)
@@ -234,7 +234,7 @@
 @ stdcall NetShareSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetStatisticsGet(wstr wstr long long ptr)
 @ stdcall NetUnjoinDomain(wstr wstr wstr long)
-@ stub NetUnregisterDomainNameChangeNotification
+@ stdcall NetUnregisterDomainNameChangeNotification(ptr)
 @ stdcall NetUseAdd(wstr long ptr ptr)
 @ stdcall NetUseDel(wstr wstr long)
 @ stdcall NetUseEnum(wstr long ptr long ptr ptr ptr)

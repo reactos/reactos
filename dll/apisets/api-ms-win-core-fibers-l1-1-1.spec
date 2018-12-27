@@ -5,4 +5,4 @@
 @ stdcall FlsFree() kernel32.FlsFree
 @ stdcall FlsGetValue() kernel32.FlsGetValue
 @ stdcall FlsSetValue() kernel32.FlsSetValue
-@ stub IsThreadAFiber
+@ stdcall -version=0x600+ IsThreadAFiber() kernel32.IsThreadAFiber

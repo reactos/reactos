@@ -1,0 +1,33 @@
+/* Translation has been created by Luo Yufan in 2018 (njlyf2011@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+Usage: %s [drive:] [-F] [-V] [-R] [-C] \n\n\
+[drive:]    指定需要检查的驱动器。\n\
+-F          修复磁盘上的错误。\n\
+-V          显示每一个文件的完整路径。\n\
+-R          寻找坏扇区并修复里面的可读信息。\n\
+-C          仅在驱动器被标记为出错时检查驱动器。\n\
+\n"
+
+    IDS_PERCENT_COMPL "百分之 %d 已完成。\r"
+    IDS_FILE_SYSTEM "文件系统类型为 %s。\n"
+    IDS_ABOUT "\n\
+Chkdskx v1.0.1 by Mark Russinovich\n\
+Systems Internals - http://www.sysinternals.com\n\
+ReactOS 于 1999 年由 Emanuele Aliberti 改编"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_IN_USE "卷正在被使用，无法锁定。\n"
+    IDS_CHKDSK_FAIL "Chkdsk 没有成功完成。\n\n"
+    IDS_NO_ENTRY_POINT "无法找到 FMIFS 入口点。\n\n"
+    IDS_BAD_ARGUMENT "未知参数: %s\n"
+    IDS_NO_CURRENT_DIR "无法获得当前目录。错误代码: "
+    IDS_NO_QUERY_VOL "无法查询卷。错误代码: "
+    IDS_VOLUME_IN_USE_PROC "Chkdsk 无法运行，因为该卷正在被另一个进程所使用。\n\n"
+END

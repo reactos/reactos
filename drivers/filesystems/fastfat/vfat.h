@@ -16,12 +16,16 @@
 #define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
 
+
 #define USE_ROS_CC_AND_FS
-#if 0
-#ifndef _MSC_VER
 #define ENABLE_SWAPOUT
-#endif
-#endif
+
+/* FIXME: because volume is not cached, we have to perform direct IOs
+ * The day this is fixed, just comment out that line, and check
+ * it still works (and delete old code ;-))
+ */
+#define VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
@@ -244,6 +248,8 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 #define VCB_IS_SYS_OR_HAS_PAGE  0x0008
 #define VCB_IS_DIRTY            0x4000 /* Volume is dirty */
 #define VCB_CLEAR_DIRTY         0x8000 /* Clean dirty flag at shutdown */
+/* VCB condition state */
+#define VCB_GOOD                0x0010 /* If not set, the VCB is improper for usage */
 
 typedef struct
 {
@@ -326,6 +332,7 @@ typedef struct DEVICE_EXTENSION
     BOOLEAN AvailableClustersValid;
     ULONG Flags;
     struct _VFATFCB *VolumeFcb;
+    struct _VFATFCB *RootFcb;
     PSTATISTICS Statistics;
 
     /* Pointers to functions for manipulating FAT. */

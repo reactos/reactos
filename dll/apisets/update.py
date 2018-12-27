@@ -17,7 +17,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 NL_CHAR = '\n'
 
 IGNORE_OPTIONS = ('-norelay', '-ret16', '-ret64', '-register', '-private',
-                  '-noname', '-ordinal', '-i386', '-arch=', '-stub')
+                  '-noname', '-ordinal', '-i386', '-arch=', '-stub', '-version=')
 
 # Figure these out later
 FUNCTION_BLACKLIST = [
@@ -34,6 +34,16 @@ SPEC_HEADER = [
     '\n'
 ]
 
+ALIAS_DLL = {
+    'ucrtbase': 'msvcrt',
+    'kernelbase': 'kernel32',
+    'shcore': 'shlwapi',
+    'combase': 'ole32',
+
+    # These modules cannot be linked against in ROS, so forward it
+    'cfgmgr32': 'setupapi', # Forward everything
+    'wmi': 'advapi32',      # Forward everything
+}
 
 class InvalidSpecError(Exception):
     def __init__(self, message):
@@ -102,16 +112,20 @@ class Arch(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-ALIAS_DLL = {
-    'ucrtbase': 'msvcrt',
-    'kernelbase': 'kernel32',
-    'shcore': 'shlwapi',
-    'combase': 'ole32',
 
-    # These modules cannot be linked against in ROS, so forward it
-    'cfgmgr32': 'setupapi', # Forward everything
-    'wmi': 'advapi32',      # Forward everything
-}
+class VersionExpr(object):
+    def __init__(self, text):
+        self.text = text
+        self.parse()
+
+    def parse(self):
+        pass
+
+    def to_str(self):
+        if self.text:
+            return '-version={}'.format(self.text)
+        return ''
+
 
 class SpecEntry(object):
     def __init__(self, text, spec):
@@ -120,6 +134,7 @@ class SpecEntry(object):
         self.callconv = None
         self.name = None
         self.arch = Arch()
+        self.version = None
         self._forwarder = None
         self.init(text)
         self.noname = False
@@ -148,6 +163,8 @@ class SpecEntry(object):
         while self.name.startswith(IGNORE_OPTIONS):
             if self.name.startswith('-arch='):
                 self.arch.add(self.name[6:])
+            elif self.name.startswith('-version='):
+                self.version = VersionExpr(self.name[9:])
             elif self.name == '-i386':
                 self.arch.add('i386')
             self.name = tokens.pop(0)
@@ -185,10 +202,12 @@ class SpecEntry(object):
             module = module_lookup[module_name]
             fwd_arch = module.find_arch(self.name)
             callconv = module.find_callconv(self.name)
+            version = module.find_version(self.name)
             if fwd_arch:
                 self.arch = fwd_arch
                 self._forwarder = [module_name, self.name]
                 self.callconv = callconv
+                self.version = version
                 return 1
         return 0
 
@@ -214,6 +233,7 @@ class SpecEntry(object):
             mod = module_lookup[mod]
             self.arch = mod.find_arch(self.name)
             self.callconv = mod.find_callconv(self.name)
+            self.version = mod.find_version(self.name)
             return 1
         return 0
 
@@ -232,6 +252,8 @@ class SpecEntry(object):
         estimate_size = 0
         if self.noname:
             opts = '{} -noname'.format(opts)
+        if self.version:
+            opts = '{} {}'.format(opts, self.version.to_str())
         if self.name == '@':
             assert self._ord != '@'
             name = 'Ordinal' + self._ord
@@ -309,6 +331,18 @@ class SpecFile(object):
                     assert callconv != 'extern', 'Cannot have data/function with same name'
                     callconv = func.callconv
         return callconv
+
+    def find_version(self, name):
+        functions = self.find(name)
+        version = None
+        if functions:
+            for func in functions:
+                if not func.version:
+                    continue
+                if version:
+                    assert version.text == func.version.text
+                version = func.version
+        return version
 
     def resolve_forwarders(self, module_lookup):
         modules = self.forwarder_modules()
@@ -424,23 +458,35 @@ def run(wineroot):
     print 'found', total[0], '/', total[1], 'forwarders'
 
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt.in'), 'rb') as template:
-        data = template.read()
-        data = data.replace('%WINE_GIT_VERSION%', version)
+        cmake_template = template.read()
+        cmake_template = cmake_template.replace('%WINE_GIT_VERSION%', version)
         # Detect the checkout newline settings
-        if '\r\n' in data:
+        if '\r\n' in cmake_template:
             NL_CHAR = '\r\n'
 
+    manifest_files = []
     print 'Writing apisets'
     spec_header = [line.replace('\n', NL_CHAR) for line in SPEC_HEADER]
     for apiset in wine_apisets:
         with open(os.path.join(SCRIPT_DIR, apiset.name + '.spec'), 'wb') as out_spec:
             out_spec.writelines(spec_header)
             apiset.write(out_spec)
+        manifest_files.append('  <file name="{}.dll"/>'.format(apiset.name))
+
+    print 'Generating manifest'
+    manifest_name = 'x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef.manifest'
+    with open(os.path.join(SCRIPT_DIR, manifest_name + '.in'), 'rb') as template:
+        manifest_template = template.read()
+        manifest_template = manifest_template.replace('%WINE_GIT_VERSION%', version)
+        file_list = '\r\n'.join(manifest_files)
+        manifest_template = manifest_template.replace('%MANIFEST_FILE_LIST%', file_list)
+        with open(os.path.join(SCRIPT_DIR, manifest_name), 'wb') as manifest:
+            manifest.write(manifest_template)
 
     print 'Writing CMakeLists.txt'
     baseaddress = 0x60000000
     with open(os.path.join(SCRIPT_DIR, 'CMakeLists.txt'), 'wb') as cmakelists:
-        cmakelists.write(data)
+        cmakelists.write(cmake_template)
         for apiset in wine_apisets:
             baseaddress += apiset.write_cmake(cmakelists, baseaddress)
             baseaddress += (0x10000 - baseaddress) % 0x10000

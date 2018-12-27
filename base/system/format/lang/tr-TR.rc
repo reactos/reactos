@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,11 +6,11 @@ STRINGTABLE
 BEGIN
     STRING_HELP "Kullanım: %s sürücü: [-FS:kütük dizgesi] [-V:etiket] [-Q] [-A:boyut] [-C]\n\n\
   [sürücü:]         Biçimlendirilecek sürücüyü belirtir.\n\
-  -FS:kütük dizgesi (%s) kütük dizgesinin türünü belirtir.\n\
+  -FS:kütük sistemi (%s) dosya sisteminin türünü belirtir.\n\
   -V:etiket         Birim etiketini belirtir.\n\
   -Q                Bir hızlı biçimlendirme gerçekleştirir.\n\
   -A:boyut          Ön tanımlı ayırma birimi boyutunu geçersiz kılar. Ön tanımlı\n\
-                    ayarlar umûmî kullanım için şiddetle önerilendir.\n\
+                    ayarlar genel kullanım için şiddetle önerilendir.\n\
                     NTFS destekler: 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                     FAT destekler: 8192, 16K, 32K, 64K, 128K, 256K.\n\
                     4096'dan yukarısındaki ayırma birimi boyutları\n\
@@ -24,22 +24,22 @@ BEGIN
     STRING_UNKNOW_ARG "Bilinmeyen değiştirgen: %s\n"
     STRING_DRIVE_PARM "İstenen sürücü değişkeni eksik.\n\n"
     STRING_ERROR_DRIVE_TYPE "Sürücü türü alınamadı."
-    STRING_INSERT_DISK "%C: sürücüsüne yeni bir yumuşak disk yerleştiriniz\nve anık olduğunda Giriş'e basınız..."
+    STRING_INSERT_DISK "%C: sürücüsüne yeni bir yumuşak disk yerleştiriniz\nve hazır olduğunda Enter'e basınız..."
     STRING_NO_VOLUME "Birim sorgulanamadı."
     STRING_NO_VOLUME_SIZE "Birim boyutu sorgulanamadı."
-    STRING_FILESYSTEM "Kütük dizgesinin türü %s.\n"
+    STRING_FILESYSTEM "Dosya sisteminin türü %s.\n"
     STRING_LABEL_NAME_EDIT "%C: sürücüsü için şimdiki birim etiketini giriniz: "
     STRING_ERROR_LABEL "Bu sürücü için yanlış bir birim etiketi girildi.\n"
-    STRING_YN_FORMAT "\nUYARI, %C: SÜRÜCÜSÜNÜN SÂBİT DİSK ÜZERİNDEKİ TÜM VERİLER\n\
+    STRING_YN_FORMAT "\nUYARI, %C: SÜRÜCÜSÜNÜN SABİT DİSK ÜZERİNDEKİ TÜM VERİLER\n\
 SİLİNECEKTİR!\nBiçimlendirme sürsün mü (E/H)? "
     STRING_YES_NO_FAQ "EH"
     STRING_VERIFYING "Doğrulanıyor"
     STRING_FAST_FMT "Hızlı biçimlendiriliyor"
-    STRING_CREATE_FSYS "Kütük dizgesi yapıları oluşturuluyor.\n"
+    STRING_CREATE_FSYS "Dosya sistemi yapıları oluşturuluyor.\n"
     STRING_FMT_COMPLETE "Biçimlendirme bitti.\n"
     STRING_VOL_COMPRESS "Birim sıkıştırmayı desteklemiyor.\n"
-    STRING_ENTER_LABEL "Birim Etiketi (11 damga, yok için Giriş)? "
+    STRING_ENTER_LABEL "Birim Etiketi (11 karakter, yok için Enter)? "
     STRING_NO_LABEL "Birim etiketlenemedi."
     STRING_FREE_SPACE "\n%I64d çoklu tüm disk alanı.\nDiskte %I64d çoklu kullanılabilir.\n"
-    STRING_SERIAL_NUMBER "\nBirim Dizilik Numarası %04X-%04X\n"
+    STRING_SERIAL_NUMBER "\nBirim Seri Numarası %04X-%04X\n"
 END

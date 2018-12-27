@@ -23,202 +23,202 @@
 #ifdef __REACTOS__
 #undef DeleteFile
 #endif
+#include <iostream>
 
 #define SEND_BUFFER_LEN 1048576
 
-void BtrfsSend::ShowSendError(UINT msg, ...) {
-    WCHAR s[1024], t[1024];
-    va_list ap;
-
-    if (!LoadStringW(module, msg, s, sizeof(s) / sizeof(WCHAR))) {
-        ShowError(hwnd, GetLastError());
-        return;
-    }
-
-    va_start(ap, msg);
-#ifndef __REACTOS__
-    vswprintf(t, sizeof(t) / sizeof(WCHAR), s, ap);
-#else
-    vsnwprintf(t, sizeof(t) / sizeof(WCHAR), s, ap);
-#endif
-
-    SetDlgItemTextW(hwnd, IDC_SEND_STATUS, t);
-
-    va_end(ap);
-}
-
 DWORD BtrfsSend::Thread() {
-    NTSTATUS Status;
-    IO_STATUS_BLOCK iosb;
-    btrfs_send_subvol* bss;
-    btrfs_send_header header;
-    btrfs_send_command end;
-    BOOL success = FALSE;
-    ULONG bss_size, i;
+    try {
+        NTSTATUS Status;
+        IO_STATUS_BLOCK iosb;
+        btrfs_send_subvol* bss;
+        btrfs_send_header header;
+        btrfs_send_command end;
+        ULONG bss_size, i;
 
-    buf = (char*)malloc(SEND_BUFFER_LEN);
+        buf = (char*)malloc(SEND_BUFFER_LEN);
 
-    dirh = CreateFileW(subvol.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (dirh == INVALID_HANDLE_VALUE) {
-        ShowSendError(IDS_SEND_CANT_OPEN_DIR, subvol.c_str(), GetLastError(), format_message(GetLastError()).c_str());
-        goto end3;
-    }
+        try {
+            dirh = CreateFileW(subvol.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+            if (dirh == INVALID_HANDLE_VALUE)
+                throw string_error(IDS_SEND_CANT_OPEN_DIR, subvol.c_str(), GetLastError(), format_message(GetLastError()).c_str());
 
-    bss_size = offsetof(btrfs_send_subvol, clones[0]) + (clones.size() * sizeof(HANDLE));
-    bss = (btrfs_send_subvol*)malloc(bss_size);
-    memset(bss, 0, bss_size);
+            try {
+                bss_size = offsetof(btrfs_send_subvol, clones[0]) + (clones.size() * sizeof(HANDLE));
+                bss = (btrfs_send_subvol*)malloc(bss_size);
+                memset(bss, 0, bss_size);
 
-    if (incremental) {
-        WCHAR parent[MAX_PATH];
-        HANDLE parenth;
+                if (incremental) {
+                    WCHAR parent[MAX_PATH];
+                    HANDLE parenth;
 
-        parent[0] = 0;
+                    parent[0] = 0;
 
-        GetDlgItemTextW(hwnd, IDC_PARENT_SUBVOL, parent, sizeof(parent) / sizeof(WCHAR));
+                    GetDlgItemTextW(hwnd, IDC_PARENT_SUBVOL, parent, sizeof(parent) / sizeof(WCHAR));
 
-        parenth = CreateFileW(parent, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        if (parenth == INVALID_HANDLE_VALUE) {
-            ShowSendError(IDS_SEND_CANT_OPEN_DIR, parent, GetLastError(), format_message(GetLastError()).c_str());
-            goto end2;
-        }
+                    parenth = CreateFileW(parent, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+                    if (parenth == INVALID_HANDLE_VALUE)
+                        throw string_error(IDS_SEND_CANT_OPEN_DIR, parent, GetLastError(), format_message(GetLastError()).c_str());
 
-        bss->parent = parenth;
-    } else
-        bss->parent = NULL;
+                    bss->parent = parenth;
+                } else
+                    bss->parent = nullptr;
 
-    bss->num_clones = clones.size();
+                bss->num_clones = clones.size();
 
-    for (i = 0; i < bss->num_clones; i++) {
-        HANDLE h;
+                for (i = 0; i < bss->num_clones; i++) {
+                    HANDLE h;
 
-        h = CreateFileW(clones[i].c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        if (h == INVALID_HANDLE_VALUE) {
-            ULONG j;
+                    h = CreateFileW(clones[i].c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+                    if (h == INVALID_HANDLE_VALUE) {
+                        auto le = GetLastError();
+                        ULONG j;
 
-            ShowSendError(IDS_SEND_CANT_OPEN_DIR, clones[i].c_str(), GetLastError(), format_message(GetLastError()).c_str());
+                        for (j = 0; j < i; j++) {
+                            CloseHandle(bss->clones[j]);
+                        }
 
-            for (j = 0; j < i; j++) {
-                CloseHandle(bss->clones[j]);
-            }
+                        if (bss->parent) CloseHandle(bss->parent);
 
-            if (bss->parent) CloseHandle(bss->parent);
-            goto end2;
-        }
+                        throw string_error(IDS_SEND_CANT_OPEN_DIR, clones[i].c_str(), le, format_message(le).c_str());
+                    }
 
-        bss->clones[i] = h;
-    }
-
-    Status = NtFsControlFile(dirh, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_SEND_SUBVOL, bss, bss_size, NULL, 0);
-
-    for (i = 0; i < bss->num_clones; i++) {
-        CloseHandle(bss->clones[i]);
-    }
-
-    if (!NT_SUCCESS(Status)) {
-        if (Status == (NTSTATUS)STATUS_INVALID_PARAMETER) {
-            BY_HANDLE_FILE_INFORMATION fileinfo;
-            if (!GetFileInformationByHandle(dirh, &fileinfo)) {
-                ShowSendError(IDS_SEND_GET_FILE_INFO_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-                if (bss->parent) CloseHandle(bss->parent);
-                goto end2;
-            }
-
-            if (!(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) {
-                ShowSendError(IDS_SEND_NOT_READONLY);
-                if (bss->parent) CloseHandle(bss->parent);
-                goto end2;
-            }
-
-            if (bss->parent) {
-                if (!GetFileInformationByHandle(bss->parent, &fileinfo)) {
-                    ShowSendError(IDS_SEND_GET_FILE_INFO_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-                    CloseHandle(bss->parent);
-                    goto end2;
+                    bss->clones[i] = h;
                 }
 
-                if (!(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) {
-                    ShowSendError(IDS_SEND_PARENT_NOT_READONLY);
-                    CloseHandle(bss->parent);
-                    goto end2;
+                Status = NtFsControlFile(dirh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SEND_SUBVOL, bss, bss_size, nullptr, 0);
+
+                for (i = 0; i < bss->num_clones; i++) {
+                    CloseHandle(bss->clones[i]);
                 }
+
+                if (!NT_SUCCESS(Status)) {
+                    if (Status == (NTSTATUS)STATUS_INVALID_PARAMETER) {
+                        BY_HANDLE_FILE_INFORMATION fileinfo;
+                        if (!GetFileInformationByHandle(dirh, &fileinfo)) {
+                            auto le = GetLastError();
+                            if (bss->parent) CloseHandle(bss->parent);
+                            throw string_error(IDS_SEND_GET_FILE_INFO_FAILED, le, format_message(le).c_str());
+                        }
+
+                        if (!(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) {
+                            if (bss->parent) CloseHandle(bss->parent);
+                            throw string_error(IDS_SEND_NOT_READONLY);
+                        }
+
+                        if (bss->parent) {
+                            if (!GetFileInformationByHandle(bss->parent, &fileinfo)) {
+                                auto le = GetLastError();
+                                CloseHandle(bss->parent);
+                                throw string_error(IDS_SEND_GET_FILE_INFO_FAILED, le, format_message(le).c_str());
+                            }
+
+                            if (!(fileinfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) {
+                                CloseHandle(bss->parent);
+                                throw string_error(IDS_SEND_PARENT_NOT_READONLY);
+                            }
+                        }
+                    }
+
+                    if (bss->parent) CloseHandle(bss->parent);
+                    throw string_error(IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED, Status, format_ntstatus(Status).c_str());
+                }
+
+                if (bss->parent) CloseHandle(bss->parent);
+
+                stream = CreateFileW(file, FILE_WRITE_DATA | DELETE, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+                if (stream == INVALID_HANDLE_VALUE)
+                    throw string_error(IDS_SEND_CANT_OPEN_FILE, file, GetLastError(), format_message(GetLastError()).c_str());
+
+                try {
+                    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
+                    header.version = 1;
+
+                    if (!WriteFile(stream, &header, sizeof(header), nullptr, nullptr))
+                        throw string_error(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+
+                    do {
+                        Status = NtFsControlFile(dirh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_READ_SEND_BUFFER, nullptr, 0, buf, SEND_BUFFER_LEN);
+
+                        if (NT_SUCCESS(Status)) {
+                            if (!WriteFile(stream, buf, iosb.Information, nullptr, nullptr))
+                                throw string_error(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+                        }
+                    } while (NT_SUCCESS(Status));
+
+                    if (Status != STATUS_END_OF_FILE)
+                        throw string_error(IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED, Status, format_ntstatus(Status).c_str());
+
+                    end.length = 0;
+                    end.cmd = BTRFS_SEND_CMD_END;
+                    end.csum = 0x9dc96c50;
+
+                    if (!WriteFile(stream, &end, sizeof(end), nullptr, nullptr))
+                        throw string_error(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
+
+                    SetEndOfFile(stream);
+                } catch (...) {
+                    FILE_DISPOSITION_INFO fdi;
+
+                    fdi.DeleteFile = true;
+
+                    SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
+
+                    CloseHandle(stream);
+                    stream = INVALID_HANDLE_VALUE;
+
+                    throw;
+                }
+
+                CloseHandle(stream);
+                stream = INVALID_HANDLE_VALUE;
+            } catch (...) {
+                CloseHandle(dirh);
+                dirh = INVALID_HANDLE_VALUE;
+
+                throw;
             }
+
+            CloseHandle(dirh);
+            dirh = INVALID_HANDLE_VALUE;
+        } catch (...) {
+            free(buf);
+            buf = nullptr;
+
+            started = false;
+
+            SetDlgItemTextW(hwnd, IDCANCEL, closetext);
+            EnableWindow(GetDlgItem(hwnd, IDOK), true);
+            EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), true);
+            EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), true);
+
+            throw;
         }
+    } catch (const exception& e) {
+        wstring msg;
 
-        ShowSendError(IDS_SEND_FSCTL_BTRFS_SEND_SUBVOL_FAILED, Status, format_ntstatus(Status).c_str());
-        if (bss->parent) CloseHandle(bss->parent);
-        goto end2;
+        utf8_to_utf16(e.what(), msg);
+
+        SetDlgItemTextW(hwnd, IDC_SEND_STATUS, msg.c_str());
+        return 0;
     }
 
-    if (bss->parent) CloseHandle(bss->parent);
 
-    stream = CreateFileW(file, FILE_WRITE_DATA | DELETE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (stream == INVALID_HANDLE_VALUE) {
-        ShowSendError(IDS_SEND_CANT_OPEN_FILE, file, GetLastError(), format_message(GetLastError()).c_str());
-        goto end2;
-    }
-
-    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
-    header.version = 1;
-
-    if (!WriteFile(stream, &header, sizeof(header), NULL, NULL)) {
-        ShowSendError(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-        goto end;
-    }
-
-    do {
-        Status = NtFsControlFile(dirh, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_READ_SEND_BUFFER, NULL, 0, buf, SEND_BUFFER_LEN);
-
-        if (NT_SUCCESS(Status)) {
-            if (!WriteFile(stream, buf, iosb.Information, NULL, NULL))
-                ShowSendError(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-        }
-    } while (NT_SUCCESS(Status));
-
-    if (Status != STATUS_END_OF_FILE) {
-        ShowSendError(IDS_SEND_FSCTL_BTRFS_READ_SEND_BUFFER_FAILED, Status, format_ntstatus(Status).c_str());
-        goto end;
-    }
-
-    end.length = 0;
-    end.cmd = BTRFS_SEND_CMD_END;
-    end.csum = 0x9dc96c50;
-
-    if (!WriteFile(stream, &end, sizeof(end), NULL, NULL)) {
-        ShowSendError(IDS_SEND_WRITEFILE_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-        goto end;
-    }
-
-    SetEndOfFile(stream);
-
-    ShowSendError(IDS_SEND_SUCCESS);
-    success = TRUE;
-
-end:
-    if (!success) {
-        FILE_DISPOSITION_INFO fdi;
-
-        fdi.DeleteFile = TRUE;
-
-        SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
-    }
-
-    CloseHandle(stream);
-    stream = INVALID_HANDLE_VALUE;
-
-end2:
-    CloseHandle(dirh);
-    dirh = INVALID_HANDLE_VALUE;
-
-end3:
     free(buf);
-    buf = NULL;
+    buf = nullptr;
 
-    started = FALSE;
+    started = false;
 
     SetDlgItemTextW(hwnd, IDCANCEL, closetext);
-    EnableWindow(GetDlgItem(hwnd, IDOK), TRUE);
-    EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), TRUE);
-    EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), TRUE);
+    EnableWindow(GetDlgItem(hwnd, IDOK), true);
+    EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), true);
+    EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), true);
+
+    wstring success;
+
+    load_string(module, IDS_SEND_SUCCESS, success);
+
+    SetDlgItemTextW(hwnd, IDC_SEND_STATUS, success.c_str());
 
     return 0;
 }
@@ -230,7 +230,7 @@ static DWORD WINAPI send_thread(LPVOID lpParameter) {
 }
 
 void BtrfsSend::StartSend(HWND hwnd) {
-    WCHAR s[255];
+    wstring s;
     HWND cl;
     ULONG num_clones;
 
@@ -251,15 +251,20 @@ void BtrfsSend::StartSend(HWND hwnd) {
             return;
     }
 
-    started = TRUE;
-    ShowSendError(IDS_SEND_WRITING);
+    started = true;
 
-    LoadStringW(module, IDS_SEND_CANCEL, s, sizeof(s) / sizeof(WCHAR));
-    SetDlgItemTextW(hwnd, IDCANCEL, s);
+    wstring writing;
 
-    EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
-    EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), FALSE);
-    EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), FALSE);
+    load_string(module, IDS_SEND_WRITING, writing);
+
+    SetDlgItemTextW(hwnd, IDC_SEND_STATUS, writing.c_str());
+
+    load_string(module, IDS_SEND_CANCEL, s);
+    SetDlgItemTextW(hwnd, IDCANCEL, s.c_str());
+
+    EnableWindow(GetDlgItem(hwnd, IDOK), false);
+    EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), false);
+    EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), false);
 
     clones.clear();
 
@@ -270,24 +275,24 @@ void BtrfsSend::StartSend(HWND hwnd) {
         ULONG i;
 
         for (i = 0; i < num_clones; i++) {
-            WCHAR* s;
+            WCHAR* t;
             ULONG len;
 
             len = SendMessageW(cl, LB_GETTEXTLEN, i, 0);
-            s = (WCHAR*)malloc((len + 1) * sizeof(WCHAR));
+            t = (WCHAR*)malloc((len + 1) * sizeof(WCHAR));
 
-            SendMessageW(cl, LB_GETTEXT, i, (LPARAM)s);
+            SendMessageW(cl, LB_GETTEXT, i, (LPARAM)t);
 
-            clones.push_back(s);
+            clones.push_back(t);
 
-            free(s);
+            free(t);
         }
     }
 
-    thread = CreateThread(NULL, 0, send_thread, this, 0, NULL);
+    thread = CreateThread(nullptr, 0, send_thread, this, 0, nullptr);
 
     if (!thread)
-        ShowError(NULL, GetLastError());
+        throw last_error(GetLastError());
 }
 
 void BtrfsSend::Browse(HWND hwnd) {
@@ -313,21 +318,16 @@ void BtrfsSend::BrowseParent(HWND hwnd) {
     PIDLIST_ABSOLUTE root, pidl;
     HRESULT hr;
     WCHAR parent[MAX_PATH], volpathw[MAX_PATH];
-    HANDLE h;
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
     btrfs_get_file_ids bgfi;
 
-    if (!GetVolumePathNameW(subvol.c_str(), volpathw, (sizeof(volpathw) / sizeof(WCHAR)) - 1)) {
-        ShowStringError(hwnd, IDS_RECV_GETVOLUMEPATHNAME_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-        return;
-    }
+    if (!GetVolumePathNameW(subvol.c_str(), volpathw, (sizeof(volpathw) / sizeof(WCHAR)) - 1))
+        throw string_error(IDS_RECV_GETVOLUMEPATHNAME_FAILED, GetLastError(), format_message(GetLastError()).c_str());
 
     hr = SHParseDisplayName(volpathw, 0, &root, 0, 0);
-    if (FAILED(hr)) {
-        ShowStringError(hwnd, IDS_SHPARSEDISPLAYNAME_FAILED);
-        return;
-    }
+    if (FAILED(hr))
+        throw string_error(IDS_SHPARSEDISPLAYNAME_FAILED);
 
     memset(&bi, 0, sizeof(BROWSEINFOW));
 
@@ -340,30 +340,21 @@ void BtrfsSend::BrowseParent(HWND hwnd) {
     if (!pidl)
         return;
 
-    if (!SHGetPathFromIDListW(pidl, parent)) {
-        ShowStringError(hwnd, IDS_SHGETPATHFROMIDLIST_FAILED);
-        return;
+    if (!SHGetPathFromIDListW(pidl, parent))
+        throw string_error(IDS_SHGETPATHFROMIDLIST_FAILED);
+
+    {
+        win_handle h = CreateFileW(parent, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (h == INVALID_HANDLE_VALUE)
+            throw string_error(IDS_SEND_CANT_OPEN_DIR, parent, GetLastError(), format_message(GetLastError()).c_str());
+
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_FILE_IDS, nullptr, 0, &bgfi, sizeof(btrfs_get_file_ids));
+        if (!NT_SUCCESS(Status))
+            throw string_error(IDS_GET_FILE_IDS_FAILED, Status, format_ntstatus(Status).c_str());
     }
 
-    h = CreateFileW(parent, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (h == INVALID_HANDLE_VALUE) {
-        ShowStringError(hwnd, IDS_SEND_CANT_OPEN_DIR, parent, GetLastError(), format_message(GetLastError()).c_str());
-        return;
-    }
-
-    Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_GET_FILE_IDS, NULL, 0, &bgfi, sizeof(btrfs_get_file_ids));
-    if (!NT_SUCCESS(Status)) {
-        ShowStringError(hwnd, IDS_GET_FILE_IDS_FAILED, Status, format_ntstatus(Status).c_str());
-        CloseHandle(h);
-        return;
-    }
-
-    CloseHandle(h);
-
-    if (bgfi.inode != 0x100 || bgfi.top) {
-        ShowStringError(hwnd, IDS_NOT_SUBVOL);
-        return;
-    }
+    if (bgfi.inode != 0x100 || bgfi.top)
+        throw string_error(IDS_NOT_SUBVOL);
 
     SetDlgItemTextW(hwnd, IDC_PARENT_SUBVOL, parent);
 }
@@ -373,21 +364,16 @@ void BtrfsSend::AddClone(HWND hwnd) {
     PIDLIST_ABSOLUTE root, pidl;
     HRESULT hr;
     WCHAR path[MAX_PATH], volpathw[MAX_PATH];
-    HANDLE h;
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
     btrfs_get_file_ids bgfi;
 
-    if (!GetVolumePathNameW(subvol.c_str(), volpathw, (sizeof(volpathw) / sizeof(WCHAR)) - 1)) {
-        ShowStringError(hwnd, IDS_RECV_GETVOLUMEPATHNAME_FAILED, GetLastError(), format_message(GetLastError()).c_str());
-        return;
-    }
+    if (!GetVolumePathNameW(subvol.c_str(), volpathw, (sizeof(volpathw) / sizeof(WCHAR)) - 1))
+        throw string_error(IDS_RECV_GETVOLUMEPATHNAME_FAILED, GetLastError(), format_message(GetLastError()).c_str());
 
     hr = SHParseDisplayName(volpathw, 0, &root, 0, 0);
-    if (FAILED(hr)) {
-        ShowStringError(hwnd, IDS_SHPARSEDISPLAYNAME_FAILED);
-        return;
-    }
+    if (FAILED(hr))
+        throw string_error(IDS_SHPARSEDISPLAYNAME_FAILED);
 
     memset(&bi, 0, sizeof(BROWSEINFOW));
 
@@ -400,30 +386,21 @@ void BtrfsSend::AddClone(HWND hwnd) {
     if (!pidl)
         return;
 
-    if (!SHGetPathFromIDListW(pidl, path)) {
-        ShowStringError(hwnd, IDS_SHGETPATHFROMIDLIST_FAILED);
-        return;
+    if (!SHGetPathFromIDListW(pidl, path))
+        throw string_error(IDS_SHGETPATHFROMIDLIST_FAILED);
+
+    {
+        win_handle h = CreateFileW(path, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (h == INVALID_HANDLE_VALUE)
+            throw string_error(IDS_SEND_CANT_OPEN_DIR, path, GetLastError(), format_message(GetLastError()).c_str());
+
+        Status = NtFsControlFile(h, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_GET_FILE_IDS, nullptr, 0, &bgfi, sizeof(btrfs_get_file_ids));
+        if (!NT_SUCCESS(Status))
+            throw string_error(IDS_GET_FILE_IDS_FAILED, Status, format_ntstatus(Status).c_str());
     }
 
-    h = CreateFileW(path, FILE_TRAVERSE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (h == INVALID_HANDLE_VALUE) {
-        ShowStringError(hwnd, IDS_SEND_CANT_OPEN_DIR, path, GetLastError(), format_message(GetLastError()).c_str());
-        return;
-    }
-
-    Status = NtFsControlFile(h, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_GET_FILE_IDS, NULL, 0, &bgfi, sizeof(btrfs_get_file_ids));
-    if (!NT_SUCCESS(Status)) {
-        ShowStringError(hwnd, IDS_GET_FILE_IDS_FAILED, Status, format_ntstatus(Status).c_str());
-        CloseHandle(h);
-        return;
-    }
-
-    CloseHandle(h);
-
-    if (bgfi.inode != 0x100 || bgfi.top) {
-        ShowStringError(hwnd, IDS_NOT_SUBVOL);
-        return;
-    }
+    if (bgfi.inode != 0x100 || bgfi.top)
+        throw string_error(IDS_NOT_SUBVOL);
 
     SendMessageW(GetDlgItem(hwnd, IDC_CLONE_LIST), LB_ADDSTRING, 0, (LPARAM)path);
 }
@@ -440,89 +417,93 @@ void BtrfsSend::RemoveClone(HWND hwnd) {
     SendMessageW(cl, LB_DELETESTRING, sel, 0);
 
     if (SendMessageW(cl, LB_GETCURSEL, 0, 0) == LB_ERR)
-        EnableWindow(GetDlgItem(hwnd, IDC_CLONE_REMOVE), FALSE);
+        EnableWindow(GetDlgItem(hwnd, IDC_CLONE_REMOVE), false);
 }
 
 INT_PTR BtrfsSend::SendDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_INITDIALOG:
-            this->hwnd = hwndDlg;
+    try {
+        switch (uMsg) {
+            case WM_INITDIALOG:
+                this->hwnd = hwndDlg;
 
-            GetDlgItemTextW(hwndDlg, IDCANCEL, closetext, sizeof(closetext) / sizeof(WCHAR));
-        break;
+                GetDlgItemTextW(hwndDlg, IDCANCEL, closetext, sizeof(closetext) / sizeof(WCHAR));
+            break;
 
-        case WM_COMMAND:
-            switch (HIWORD(wParam)) {
-                case BN_CLICKED:
-                    switch (LOWORD(wParam)) {
-                        case IDOK:
-                            StartSend(hwndDlg);
-                        return TRUE;
+            case WM_COMMAND:
+                switch (HIWORD(wParam)) {
+                    case BN_CLICKED:
+                        switch (LOWORD(wParam)) {
+                            case IDOK:
+                                StartSend(hwndDlg);
+                            return true;
 
-                        case IDCANCEL:
-                            if (started) {
-                                TerminateThread(thread, 0);
+                            case IDCANCEL:
+                                if (started) {
+                                    TerminateThread(thread, 0);
 
-                                if (stream != INVALID_HANDLE_VALUE) {
-                                    FILE_DISPOSITION_INFO fdi;
+                                    if (stream != INVALID_HANDLE_VALUE) {
+                                        FILE_DISPOSITION_INFO fdi;
 
-                                    fdi.DeleteFile = TRUE;
+                                        fdi.DeleteFile = true;
 
-                                    SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
-                                    CloseHandle(stream);
-                                }
+                                        SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
+                                        CloseHandle(stream);
+                                    }
 
-                                if (dirh != INVALID_HANDLE_VALUE)
-                                    CloseHandle(dirh);
+                                    if (dirh != INVALID_HANDLE_VALUE)
+                                        CloseHandle(dirh);
 
-                                started = FALSE;
+                                    started = false;
 
-                                SetDlgItemTextW(hwndDlg, IDCANCEL, closetext);
+                                    SetDlgItemTextW(hwndDlg, IDCANCEL, closetext);
 
-                                EnableWindow(GetDlgItem(hwnd, IDOK), TRUE);
-                                EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), TRUE);
-                                EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), TRUE);
-                            } else
-                                EndDialog(hwndDlg, 1);
-                        return TRUE;
+                                    EnableWindow(GetDlgItem(hwnd, IDOK), true);
+                                    EnableWindow(GetDlgItem(hwnd, IDC_STREAM_DEST), true);
+                                    EnableWindow(GetDlgItem(hwnd, IDC_BROWSE), true);
+                                } else
+                                    EndDialog(hwndDlg, 1);
+                            return true;
 
-                        case IDC_BROWSE:
-                            Browse(hwndDlg);
-                        return TRUE;
+                            case IDC_BROWSE:
+                                Browse(hwndDlg);
+                            return true;
 
-                        case IDC_INCREMENTAL:
-                            incremental = IsDlgButtonChecked(hwndDlg, LOWORD(wParam));
+                            case IDC_INCREMENTAL:
+                                incremental = IsDlgButtonChecked(hwndDlg, LOWORD(wParam));
 
-                            EnableWindow(GetDlgItem(hwnd, IDC_PARENT_SUBVOL), incremental);
-                            EnableWindow(GetDlgItem(hwnd, IDC_PARENT_BROWSE), incremental);
-                        return TRUE;
+                                EnableWindow(GetDlgItem(hwnd, IDC_PARENT_SUBVOL), incremental);
+                                EnableWindow(GetDlgItem(hwnd, IDC_PARENT_BROWSE), incremental);
+                            return true;
 
-                        case IDC_PARENT_BROWSE:
-                            BrowseParent(hwndDlg);
-                        return TRUE;
+                            case IDC_PARENT_BROWSE:
+                                BrowseParent(hwndDlg);
+                            return true;
 
-                        case IDC_CLONE_ADD:
-                            AddClone(hwndDlg);
-                        return TRUE;
+                            case IDC_CLONE_ADD:
+                                AddClone(hwndDlg);
+                            return true;
 
-                        case IDC_CLONE_REMOVE:
-                            RemoveClone(hwndDlg);
-                        return TRUE;
-                    }
-                break;
+                            case IDC_CLONE_REMOVE:
+                                RemoveClone(hwndDlg);
+                            return true;
+                        }
+                    break;
 
-                case LBN_SELCHANGE:
-                    switch (LOWORD(wParam)) {
-                        case IDC_CLONE_LIST:
-                            EnableWindow(GetDlgItem(hwnd, IDC_CLONE_REMOVE), TRUE);
-                        return TRUE;
-                    }
-                break;
-            }
-        break;
+                    case LBN_SELCHANGE:
+                        switch (LOWORD(wParam)) {
+                            case IDC_CLONE_LIST:
+                                EnableWindow(GetDlgItem(hwnd, IDC_CLONE_REMOVE), true);
+                            return true;
+                        }
+                    break;
+                }
+            break;
+        }
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
 
-    return FALSE;
+    return false;
 }
 
 static INT_PTR CALLBACK stub_SendDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -537,14 +518,14 @@ static INT_PTR CALLBACK stub_SendDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     if (bs)
         return bs->SendDlgProc(hwndDlg, uMsg, wParam, lParam);
     else
-        return FALSE;
+        return false;
 }
 
 void BtrfsSend::Open(HWND hwnd, LPWSTR path) {
     subvol = path;
 
     if (DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_SEND_SUBVOL), hwnd, stub_SendDlgProc, (LPARAM)this) <= 0)
-        ShowError(hwnd, GetLastError());
+        throw last_error(GetLastError());
 }
 
 #ifdef __REACTOS__
@@ -552,156 +533,146 @@ extern "C" {
 #endif
 
 void CALLBACK SendSubvolGUIW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    HANDLE token;
-    TOKEN_PRIVILEGES tp;
-    LUID luid;
-    BtrfsSend* bs;
+    try {
+        win_handle token;
+        TOKEN_PRIVILEGES tp;
+        LUID luid;
 
-    set_dpi_aware();
+        set_dpi_aware();
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
-        ShowError(hwnd, GetLastError());
-        return;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+            throw last_error(GetLastError());
+
+        if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+            throw last_error(GetLastError());
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+            throw last_error(GetLastError());
+
+        BtrfsSend bs;
+
+        bs.Open(hwnd, lpszCmdLine);
+    } catch (const exception& e) {
+        error_message(hwnd, e.what());
     }
-
-    if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
-        ShowError(hwnd, GetLastError());
-        CloseHandle(token);
-        return;
-    }
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
-        ShowError(hwnd, GetLastError());
-        CloseHandle(token);
-        return;
-    }
-
-    bs = new BtrfsSend;
-
-    bs->Open(hwnd, lpszCmdLine);
-
-    delete bs;
-
-    CloseHandle(token);
 }
 
 #ifdef __REACTOS__
 } /* extern "C" */
 #endif
 
-static void send_subvol(std::wstring subvol, std::wstring file, std::wstring parent, std::vector<std::wstring> clones) {
+static void send_subvol(const wstring& subvol, const wstring& file, const wstring& parent, const vector<wstring>& clones) {
     char* buf;
-    HANDLE dirh, stream;
+    win_handle dirh, stream;
     ULONG bss_size, i;
     btrfs_send_subvol* bss;
     IO_STATUS_BLOCK iosb;
     NTSTATUS Status;
     btrfs_send_header header;
     btrfs_send_command end;
-    BOOL success = FALSE;
 
     buf = (char*)malloc(SEND_BUFFER_LEN);
 
-    dirh = CreateFileW(subvol.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    if (dirh == INVALID_HANDLE_VALUE)
-        goto end3;
+    try {
+        dirh = CreateFileW(subvol.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (dirh == INVALID_HANDLE_VALUE)
+            throw last_error(GetLastError());
 
-    stream = CreateFileW(file.c_str(), FILE_WRITE_DATA | DELETE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (stream == INVALID_HANDLE_VALUE) {
-        CloseHandle(dirh);
-        goto end3;
-    }
+        stream = CreateFileW(file.c_str(), FILE_WRITE_DATA | DELETE, 0, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (stream == INVALID_HANDLE_VALUE)
+            throw last_error(GetLastError());
 
-    bss_size = offsetof(btrfs_send_subvol, clones[0]) + (clones.size() * sizeof(HANDLE));
-    bss = (btrfs_send_subvol*)malloc(bss_size);
-    memset(bss, 0, bss_size);
+        try {
+            bss_size = offsetof(btrfs_send_subvol, clones[0]) + (clones.size() * sizeof(HANDLE));
+            bss = (btrfs_send_subvol*)malloc(bss_size);
+            memset(bss, 0, bss_size);
 
-    if (parent != L"") {
-        HANDLE parenth;
+            if (parent != L"") {
+                HANDLE parenth;
 
-        parenth = CreateFileW(parent.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        if (parenth == INVALID_HANDLE_VALUE)
-            goto end2;
+                parenth = CreateFileW(parent.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+                if (parenth == INVALID_HANDLE_VALUE)
+                    throw last_error(GetLastError());
 
-        bss->parent = parenth;
-    } else
-        bss->parent = NULL;
+                bss->parent = parenth;
+            } else
+                bss->parent = nullptr;
 
-    bss->num_clones = clones.size();
+            bss->num_clones = clones.size();
 
-    for (i = 0; i < bss->num_clones; i++) {
-        HANDLE h;
+            for (i = 0; i < bss->num_clones; i++) {
+                HANDLE h;
 
-        h = CreateFileW(clones[i].c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        if (h == INVALID_HANDLE_VALUE) {
-            ULONG j;
+                h = CreateFileW(clones[i].c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+                if (h == INVALID_HANDLE_VALUE) {
+                    auto le = GetLastError();
+                    ULONG j;
 
-            for (j = 0; j < i; j++) {
-                CloseHandle(bss->clones[j]);
+                    for (j = 0; j < i; j++) {
+                        CloseHandle(bss->clones[j]);
+                    }
+
+                    if (bss->parent) CloseHandle(bss->parent);
+
+                    throw last_error(le);
+                }
+
+                bss->clones[i] = h;
+            }
+
+            Status = NtFsControlFile(dirh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_SEND_SUBVOL, bss, bss_size, nullptr, 0);
+
+            for (i = 0; i < bss->num_clones; i++) {
+                CloseHandle(bss->clones[i]);
             }
 
             if (bss->parent) CloseHandle(bss->parent);
-            goto end2;
+
+            if (!NT_SUCCESS(Status))
+                throw ntstatus_error(Status);
+
+            memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
+            header.version = 1;
+
+            if (!WriteFile(stream, &header, sizeof(header), nullptr, nullptr))
+                throw last_error(GetLastError());
+
+            do {
+                Status = NtFsControlFile(dirh, nullptr, nullptr, nullptr, &iosb, FSCTL_BTRFS_READ_SEND_BUFFER, nullptr, 0, buf, SEND_BUFFER_LEN);
+
+                if (NT_SUCCESS(Status))
+                    WriteFile(stream, buf, iosb.Information, nullptr, nullptr);
+            } while (NT_SUCCESS(Status));
+
+            if (Status != STATUS_END_OF_FILE)
+                throw ntstatus_error(Status);
+
+            end.length = 0;
+            end.cmd = BTRFS_SEND_CMD_END;
+            end.csum = 0x9dc96c50;
+
+            if (!WriteFile(stream, &end, sizeof(end), nullptr, nullptr))
+                throw last_error(GetLastError());
+
+            SetEndOfFile(stream);
+        } catch (...) {
+            FILE_DISPOSITION_INFO fdi;
+
+            fdi.DeleteFile = true;
+
+            SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
+
+            throw;
         }
-
-        bss->clones[i] = h;
+    } catch (...) {
+        free(buf);
+        throw;
     }
 
-    Status = NtFsControlFile(dirh, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_SEND_SUBVOL, bss, bss_size, NULL, 0);
-
-    for (i = 0; i < bss->num_clones; i++) {
-        CloseHandle(bss->clones[i]);
-    }
-
-    if (bss->parent) CloseHandle(bss->parent);
-
-    if (!NT_SUCCESS(Status))
-        goto end2;
-
-    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
-    header.version = 1;
-
-    if (!WriteFile(stream, &header, sizeof(header), NULL, NULL))
-        goto end2;
-
-    do {
-        Status = NtFsControlFile(dirh, NULL, NULL, NULL, &iosb, FSCTL_BTRFS_READ_SEND_BUFFER, NULL, 0, buf, SEND_BUFFER_LEN);
-
-        if (NT_SUCCESS(Status))
-            WriteFile(stream, buf, iosb.Information, NULL, NULL);
-    } while (NT_SUCCESS(Status));
-
-    if (Status != STATUS_END_OF_FILE)
-        goto end2;
-
-    end.length = 0;
-    end.cmd = BTRFS_SEND_CMD_END;
-    end.csum = 0x9dc96c50;
-
-    if (!WriteFile(stream, &end, sizeof(end), NULL, NULL))
-        goto end2;
-
-    SetEndOfFile(stream);
-
-    success = TRUE;
-
-end2:
-    if (!success) {
-        FILE_DISPOSITION_INFO fdi;
-
-        fdi.DeleteFile = TRUE;
-
-        SetFileInformationByHandle(stream, FileDispositionInfo, &fdi, sizeof(FILE_DISPOSITION_INFO));
-    }
-
-    CloseHandle(dirh);
-    CloseHandle(stream);
-
-end3:
     free(buf);
 }
 
@@ -710,40 +681,36 @@ extern "C" {
 #endif
 
 void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
-    LPWSTR* args;
-    int num_args;
-    std::wstring subvol = L"", parent = L"", file = L"";
-    std::vector<std::wstring> clones;
+    vector<wstring> args;
+    wstring subvol = L"", parent = L"", file = L"";
+    vector<wstring> clones;
 
-    args = CommandLineToArgvW(lpszCmdLine, &num_args);
+    command_line_to_args(lpszCmdLine, args);
 
-    if (!args)
-        return;
-
-    if (num_args >= 2) {
-        HANDLE token;
+    if (args.size() >= 2) {
         TOKEN_PRIVILEGES tp;
         LUID luid;
-        int i;
 
-        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
-            goto end;
+        {
+            win_handle token;
 
-        if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid))
-            goto end;
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+                return;
 
-        tp.PrivilegeCount = 1;
-        tp.Privileges[0].Luid = luid;
-        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            if (!LookupPrivilegeValueW(nullptr, L"SeManageVolumePrivilege", &luid))
+                return;
 
-        if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL))
-            goto end;
+            tp.PrivilegeCount = 1;
+            tp.Privileges[0].Luid = luid;
+            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-        CloseHandle(token);
+            if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr))
+                return;
+        }
 
-        for (i = 0; i < num_args; i++) {
+        for (unsigned int i = 0; i < args.size(); i++) {
             if (args[i][0] == '-') {
-                if (args[i][2] == 0 && i < num_args - 1) {
+                if (args[i][2] == 0 && i < args.size() - 1) {
                     if (args[i][1] == 'p') {
                         parent = args[i+1];
                         i++;
@@ -760,12 +727,14 @@ void CALLBACK SendSubvolW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
             }
         }
 
-        if (subvol != L"" && file != L"")
-            send_subvol(subvol, file, parent, clones);
+        if (subvol != L"" && file != L"") {
+            try {
+                send_subvol(subvol, file, parent, clones);
+            } catch (const exception& e) {
+                cerr << "Error: " << e.what() << endl;
+            }
+        }
     }
-
-end:
-    LocalFree(args);
 }
 
 #ifdef __REACTOS__

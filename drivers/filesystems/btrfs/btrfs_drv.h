@@ -74,6 +74,7 @@
 // #define DEBUG_LONG_MESSAGES
 // #define DEBUG_FLUSH_TIMES
 // #define DEBUG_STATS
+// #define DEBUG_CHUNK_LOCKS
 #define DEBUG_PARANOID
 #endif
 
@@ -109,6 +110,11 @@
 #define READ_AHEAD_GRANULARITY COMPRESSED_EXTENT_SIZE // really ought to be a multiple of COMPRESSED_EXTENT_SIZE
 
 #define IO_REPARSE_TAG_LXSS_SYMLINK 0xa000001d // undocumented?
+
+#define IO_REPARSE_TAG_LXSS_SOCKET      0x80000023
+#define IO_REPARSE_TAG_LXSS_FIFO        0x80000024
+#define IO_REPARSE_TAG_LXSS_CHARDEV     0x80000025
+#define IO_REPARSE_TAG_LXSS_BLOCKDEV    0x80000026
 
 #define BTRFS_VOLUME_PREFIX L"\\Device\\Btrfs{"
 
@@ -234,7 +240,8 @@ typedef struct {
 enum prop_compression_type {
     PropCompression_None,
     PropCompression_Zlib,
-    PropCompression_LZO
+    PropCompression_LZO,
+    PropCompression_ZSTD
 };
 
 typedef struct {
@@ -606,6 +613,7 @@ typedef struct {
     UINT8 compress_type;
     BOOL readonly;
     UINT32 zlib_level;
+    UINT32 zstd_level;
     UINT32 flush_interval;
     UINT32 max_inline;
     UINT64 subvol_id;
@@ -716,6 +724,9 @@ typedef struct _device_extension {
     LIST_ENTRY devices;
 #ifdef DEBUG_STATS
     debug_stats stats;
+#endif
+#ifdef DEBUG_CHUNK_LOCKS
+    LONG chunk_locks_held;
 #endif
     UINT64 devices_loaded;
     superblock superblock;
@@ -955,10 +966,10 @@ static __inline UINT64 unix_time_to_win(BTRFS_TIME* t) {
 }
 
 static __inline void win_time_to_unix(LARGE_INTEGER t, BTRFS_TIME* out) {
-    ULONGLONG l = t.QuadPart - 116444736000000000;
+    ULONGLONG l = (ULONGLONG)t.QuadPart - 116444736000000000;
 
     out->seconds = l / 10000000;
-    out->nanoseconds = (l % 10000000) * 100;
+    out->nanoseconds = (UINT32)((l % 10000000) * 100);
 }
 
 _Post_satisfies_(*stripe>=0&&*stripe<num_stripes)
@@ -1083,12 +1094,20 @@ void protect_superblocks(_Inout_ chunk* c);
 BOOL is_top_level(_In_ PIRP Irp);
 NTSTATUS create_root(_In_ _Requires_exclusive_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_ UINT64 id,
                      _Out_ root** rootptr, _In_ BOOL no_tree, _In_ UINT64 offset, _In_opt_ PIRP Irp);
-void uninit(_In_ device_extension* Vcb, _In_ BOOL flush);
+void uninit(_In_ device_extension* Vcb);
 NTSTATUS dev_ioctl(_In_ PDEVICE_OBJECT DeviceObject, _In_ ULONG ControlCode, _In_reads_bytes_opt_(InputBufferSize) PVOID InputBuffer, _In_ ULONG InputBufferSize,
                    _Out_writes_bytes_opt_(OutputBufferSize) PVOID OutputBuffer, _In_ ULONG OutputBufferSize, _In_ BOOLEAN Override, _Out_opt_ IO_STATUS_BLOCK* iosb);
 BOOL is_file_name_valid(_In_ PUNICODE_STRING us, _In_ BOOL posix);
 void send_notification_fileref(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
 void send_notification_fcb(_In_ file_ref* fileref, _In_ ULONG filter_match, _In_ ULONG action, _In_opt_ PUNICODE_STRING stream);
+
+#ifdef DEBUG_CHUNK_LOCKS
+#define acquire_chunk_lock(c, Vcb) { ExAcquireResourceExclusiveLite(&c->lock, TRUE); InterlockedIncrement(&Vcb->chunk_locks_held); }
+#define release_chunk_lock(c, Vcb) { InterlockedDecrement(&Vcb->chunk_locks_held); ExReleaseResourceLite(&c->lock); }
+#else
+#define acquire_chunk_lock(c, Vcb) ExAcquireResourceExclusiveLite(&(c)->lock, TRUE)
+#define release_chunk_lock(c, Vcb) ExReleaseResourceLite(&(c)->lock)
+#endif
 
 _Ret_z_
 WCHAR* file_desc(_In_ PFILE_OBJECT FileObject);
@@ -1123,6 +1142,7 @@ extern UINT32 mount_compress;
 extern UINT32 mount_compress_force;
 extern UINT32 mount_compress_type;
 extern UINT32 mount_zlib_level;
+extern UINT32 mount_zstd_level;
 extern UINT32 mount_flush_interval;
 extern UINT32 mount_max_inline;
 extern UINT32 mount_skip_balance;
@@ -1207,6 +1227,18 @@ typedef struct {
     void* ptr;
     LIST_ENTRY list_entry;
 } rollback_item;
+
+typedef struct {
+    ANSI_STRING name;
+    ANSI_STRING value;
+    UCHAR flags;
+    LIST_ENTRY list_entry;
+} ea_item;
+
+static const char lxuid[] = "$LXUID";
+static const char lxgid[] = "$LXGID";
+static const char lxmod[] = "$LXMOD";
+static const char lxdev[] = "$LXDEV";
 
 // in treefuncs.c
 NTSTATUS find_item(_In_ _Requires_lock_held_(_Curr_->tree_lock) device_extension* Vcb, _In_ root* r, _Out_ traverse_ptr* tp,
@@ -1307,6 +1339,7 @@ _Function_class_(DRIVER_DISPATCH)
 NTSTATUS NTAPI drv_directory_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 ULONG get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 type, ULONG atts, BOOL lxss, PIRP Irp);
+ULONG get_reparse_tag_fcb(fcb* fcb);
 
 // in security.c
 
@@ -1353,6 +1386,7 @@ void remove_dir_child_from_hash_lists(fcb* fcb, dir_child* dc);
 
 // in reparse.c
 NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen);
+NTSTATUS set_reparse_point2(fcb* fcb, REPARSE_DATA_BUFFER* rdb, ULONG buflen, ccb* ccb, file_ref* fileref, PIRP Irp, LIST_ENTRY* rollback);
 NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
@@ -1479,6 +1513,7 @@ void watch_registry(HANDLE regh);
 // in compress.c
 NTSTATUS zlib_decompress(UINT8* inbuf, UINT32 inlen, UINT8* outbuf, UINT32 outlen);
 NTSTATUS lzo_decompress(UINT8* inbuf, UINT32 inlen, UINT8* outbuf, UINT32 outlen, UINT32 inpageoff);
+NTSTATUS zstd_decompress(UINT8* inbuf, UINT32 inlen, UINT8* outbuf, UINT32 outlen);
 NTSTATUS write_compressed_bit(fcb* fcb, UINT64 start_data, UINT64 end_data, void* data, BOOL* compressed, PIRP Irp, LIST_ENTRY* rollback);
 
 // in galois.c
@@ -1720,6 +1755,10 @@ static __inline void do_xor(UINT8* buf1, UINT8* buf2, UINT32 len) {
 #define S_ISVTX 0001000
 #endif
 
+// based on functions in sys/sysmacros.h
+#define major(rdev) ((((rdev) >> 8) & 0xFFF) | ((UINT32)((rdev) >> 32) & ~0xFFF))
+#define minor(rdev) (((rdev) & 0xFF) | ((UINT32)((rdev) >> 12) & ~0xFF))
+
 static __inline UINT64 fcb_alloc_size(fcb* fcb) {
     if (S_ISDIR(fcb->inode_item.st_mode))
         return 0;
@@ -1817,6 +1856,11 @@ NTSTATUS NTAPI ZwQueryInformationProcess(
 #endif
 #endif
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+typedef struct _ECP_LIST ECP_LIST;
+typedef struct _ECP_LIST *PECP_LIST;
+#endif
+
 #if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7)
 NTSTATUS WINAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
                                   ULONG *utf8_bytes_written,
@@ -1831,6 +1875,13 @@ NTSTATUS NTAPI FsRtlRemoveDotsFromPath(PWSTR OriginalString,
 NTSTATUS NTAPI FsRtlValidateReparsePointBuffer(ULONG BufferLength,
                                                PREPARSE_DATA_BUFFER ReparseBuffer);
 ULONG NTAPI KeQueryActiveProcessorCount(PKAFFINITY ActiveProcessors);
+NTSTATUS NTAPI FsRtlGetEcpListFromIrp(IN PIRP Irp,
+                                      OUT PECP_LIST *EcpList);
+NTSTATUS NTAPI FsRtlGetNextExtraCreateParameter(IN PECP_LIST EcpList,
+                                                IN PVOID CurrentEcpContext,
+                                                OUT LPGUID NextEcpType OPTIONAL,
+                                                OUT PVOID *NextEcpContext,
+                                                OUT PULONG NextEcpContextSize OPTIONAL);
 #endif /* defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA) */
 
 #endif

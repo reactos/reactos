@@ -125,10 +125,10 @@ class CDefView :
         HRESULT OnStateChange(UINT uFlags);
         void UpdateStatusbar();
         void CheckToolbar();
-        void SetStyle(DWORD dwAdd, DWORD dwRemove);
         BOOL CreateList();
         void UpdateListColors();
         BOOL InitList();
+        HRESULT DefMessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
         static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
 
         PCUITEMID_CHILD _PidlByItem(int i);
@@ -500,18 +500,6 @@ void CDefView::UpdateStatusbar()
  *
  * ##### helperfunctions for initializing the view #####
  */
-/**********************************************************
- *    change the style of the listview control
- */
-void CDefView::SetStyle(DWORD dwAdd, DWORD dwRemove)
-{
-    DWORD tmpstyle;
-
-    TRACE("(%p)\n", this);
-
-    tmpstyle = ::GetWindowLongPtrW(m_ListView, GWL_STYLE);
-    ::SetWindowLongPtrW(m_ListView, GWL_STYLE, dwAdd | (tmpstyle & ~dwRemove));
-}
 
 /**********************************************************
 * ShellView_CreateList()
@@ -1192,6 +1180,19 @@ HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
                        m_sortInfo.nHeaderID + 0x30, 
                        MF_BYCOMMAND);
 
+    if (m_FolderSettings.ViewMode == FVM_DETAILS || m_FolderSettings.ViewMode == FVM_LIST)
+    {
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND | MF_GRAYED);
+    }
+    else
+    {
+        EnableMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND); 
+
+        if (GetAutoArrange() == S_OK)
+            CheckMenuItem(hmenuArrange, FCIDM_SHVIEW_AUTOARRANGE, MF_CHECKED);
+    }
+
+
     return S_OK;
 }
 
@@ -1555,25 +1556,25 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     {
         case FCIDM_SHVIEW_SMALLICON:
             m_FolderSettings.ViewMode = FVM_SMALLICON;
-            SetStyle (LVS_SMALLICON, LVS_TYPEMASK);
+            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_SMALLICON);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_BIGICON:
             m_FolderSettings.ViewMode = FVM_ICON;
-            SetStyle (LVS_ICON, LVS_TYPEMASK);
+            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_ICON);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_LISTVIEW:
             m_FolderSettings.ViewMode = FVM_LIST;
-            SetStyle (LVS_LIST, LVS_TYPEMASK);
+            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_LIST);
             CheckToolbar();
             break;
 
         case FCIDM_SHVIEW_REPORTVIEW:
             m_FolderSettings.ViewMode = FVM_DETAILS;
-            SetStyle (LVS_REPORT, LVS_TYPEMASK);
+            m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_REPORT);
             CheckToolbar();
             break;
 
@@ -1588,8 +1589,13 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             break;
 
         case FCIDM_SHVIEW_SNAPTOGRID:
-        case FCIDM_SHVIEW_AUTOARRANGE:
             //FIXME
+            break;
+        case FCIDM_SHVIEW_AUTOARRANGE:
+            if (GetAutoArrange() == S_OK)
+                m_ListView.ModifyStyle(LVS_AUTOARRANGE, 0);
+            else
+                AutoArrange();
             break;
         case FCIDM_SHVIEW_SELECTALL:
             m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
@@ -1855,7 +1861,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 LVITEMW lvItem;
 
                 pidl = _PidlByItem(lpdi->item);
-                PITEMID_CHILD pidlNew;
+                PITEMID_CHILD pidlNew = NULL;
                 hr = m_pSFParent->SetNameOf(0, pidl, lpdi->item.pszText, SHGDN_INFOLDER, &pidlNew);
 
                 if (SUCCEEDED(hr) && pidlNew)
@@ -2375,7 +2381,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
         }
     }
 
-    SetStyle(dwStyle, LVS_TYPEMASK);
+    m_ListView.ModifyStyle(LVS_TYPEMASK, dwStyle);
 
     /* This will not necessarily be the actual mode set above.
        This mimics the behavior of Windows XP. */
@@ -2476,7 +2482,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetDefaultSpacing(POINT *ppt)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetAutoArrange()
 {
-    return E_NOTIMPL;
+    return ((m_ListView.GetStyle() & LVS_AUTOARRANGE) ? S_OK : S_FALSE);
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
@@ -2661,8 +2667,9 @@ HRESULT STDMETHODCALLTYPE CDefView::ArrangeGrid()
 
 HRESULT STDMETHODCALLTYPE CDefView::AutoArrange()
 {
-    FIXME("(%p) stub\n", this);
-    return E_NOTIMPL;
+    m_ListView.ModifyStyle(0, LVS_AUTOARRANGE);
+    m_ListView.Arrange(LVA_DEFAULT);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::AddObject(PITEMID_CHILD pidl, UINT *item)
@@ -3257,13 +3264,29 @@ HRESULT CDefView::_MergeToolbar()
     return S_OK;
 }
 
+// The default processing of IShellFolderView callbacks
+HRESULT CDefView::DefMessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    // TODO: SFVM_GET_CUSTOMVIEWINFO, SFVM_WINDOWCREATED
+    TRACE("CDefView::DefMessageSFVCB uMsg=%u\n", uMsg);
+    return E_NOTIMPL;
+}
+
 HRESULT CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HRESULT hr = E_NOTIMPL;
+
     if (m_pShellFolderViewCB)
     {
-        return m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
+        hr = m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
     }
-    return E_NOINTERFACE;
+
+    if (hr == E_NOTIMPL)
+    {
+        hr = DefMessageSFVCB(uMsg, wParam, lParam);
+    }
+
+    return hr;
 }
 
 HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)

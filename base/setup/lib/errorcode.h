@@ -7,7 +7,12 @@
 
 #pragma once
 
-typedef enum
+/* setupapi.h defines ERROR_NOT_INSTALLED with another meaning */
+#ifdef ERROR_NOT_INSTALLED
+#undef ERROR_NOT_INSTALLED
+#endif
+
+typedef enum _ERROR_NUMBER
 {
     NOT_AN_ERROR = 0,   // ERROR_SUCCESS,
     ERROR_NOT_INSTALLED,
@@ -41,7 +46,6 @@ typedef enum
     ERROR_TXTSETUP_SECTION,
     ERROR_CABINET_SECTION,
     ERROR_CREATE_INSTALL_DIR,
-    ERROR_FIND_SETUPDATA,
     ERROR_WRITE_PTABLE,
     ERROR_ADDING_CODEPAGE,
     ERROR_UPDATE_LOCALESETTINGS,

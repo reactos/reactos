@@ -1,0 +1,10 @@
+/*
+ * COMBINING COMMA BELOW
+ * The dead key transformation set was defined by checking the availability of
+ * the resulting letters in Unicode character table: https://unicode-table.com
+ */
+
+  { DEADTRANS(L's', 0x0326, 0x0219, 0x00) },
+  { DEADTRANS(L'S', 0x0326, 0x0218, 0x00) },
+  { DEADTRANS(L't', 0x0326, 0x021B, 0x00) },
+  { DEADTRANS(L'T', 0x0326, 0x021A, 0x00) },

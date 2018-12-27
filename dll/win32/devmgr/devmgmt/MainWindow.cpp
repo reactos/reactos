@@ -155,9 +155,9 @@ CDeviceManager::Initialize(_In_z_ LPCTSTR lpCaption,
     wc.hIconSm = (HICON)LoadImage(g_hThisInstance,
                                   MAKEINTRESOURCE(IDI_MAIN_ICON),
                                   IMAGE_ICON,
-                                  16,
-                                  16,
-                                  LR_SHARED);
+                                  GetSystemMetrics(SM_CXSMICON),
+                                  GetSystemMetrics(SM_CYSMICON),
+                                  0);
 
     // Register the window
     if (RegisterClassExW(&wc))

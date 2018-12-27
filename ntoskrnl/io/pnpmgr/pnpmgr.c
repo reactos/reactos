@@ -23,7 +23,6 @@ RTL_AVL_TABLE PpDeviceReferenceTable;
 
 extern ERESOURCE IopDriverLoadResource;
 extern ULONG ExpInitializationPhase;
-extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
 #define MAX_DEVICE_ID_LEN          200
@@ -647,6 +646,147 @@ IopSendStopDevice(IN PDEVICE_OBJECT DeviceObject)
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 }
 
+static
+NTSTATUS
+IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
+{
+    UNICODE_STRING ServicesKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+    UNICODE_STRING ServiceKeyName;
+    UNICODE_STRING EnumKeyName;
+    UNICODE_STRING ValueName;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
+    HANDLE ServiceKey = NULL, ServiceEnumKey;
+    ULONG Disposition;
+    ULONG Count = 0, NextInstance = 0;
+    WCHAR ValueBuffer[6];
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("IopSetServiceEnumData(%p)\n", DeviceNode);
+    DPRINT("Instance: %wZ\n", &DeviceNode->InstancePath);
+    DPRINT("Service: %wZ\n", &DeviceNode->ServiceName);
+
+    if (DeviceNode->ServiceName.Buffer == NULL)
+    {
+        DPRINT1("No service!\n");
+        return STATUS_SUCCESS;
+    }
+
+    ServiceKeyName.MaximumLength = ServicesKeyPath.Length + DeviceNode->ServiceName.Length + sizeof(UNICODE_NULL);
+    ServiceKeyName.Length = 0;
+    ServiceKeyName.Buffer = ExAllocatePool(PagedPool, ServiceKeyName.MaximumLength);
+    if (ServiceKeyName.Buffer == NULL)
+    {
+        DPRINT1("No ServiceKeyName.Buffer!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&ServiceKeyName, &ServicesKeyPath);
+    RtlAppendUnicodeStringToString(&ServiceKeyName, &DeviceNode->ServiceName);
+
+    DPRINT("ServiceKeyName: %wZ\n", &ServiceKeyName);
+
+    Status = IopOpenRegistryKeyEx(&ServiceKey, NULL, &ServiceKeyName, KEY_CREATE_SUB_KEY);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
+    RtlInitUnicodeString(&EnumKeyName, L"Enum");
+    Status = IopCreateRegistryKeyEx(&ServiceEnumKey,
+                                    ServiceKey,
+                                    &EnumKeyName,
+                                    KEY_SET_VALUE,
+                                    REG_OPTION_VOLATILE,
+                                    &Disposition);
+    if (NT_SUCCESS(Status))
+    {
+        if (Disposition == REG_OPENED_EXISTING_KEY)
+        {
+            /* Read the NextInstance value */
+            Status = IopGetRegistryValue(ServiceEnumKey,
+                                         L"Count",
+                                         &KeyValueInformation);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            if ((KeyValueInformation->Type == REG_DWORD) &&
+                (KeyValueInformation->DataLength))
+            {
+                /* Read it */
+                Count = *(PULONG)((ULONG_PTR)KeyValueInformation +
+                                  KeyValueInformation->DataOffset);
+            }
+
+            ExFreePool(KeyValueInformation);
+            KeyValueInformation = NULL;
+
+            /* Read the NextInstance value */
+            Status = IopGetRegistryValue(ServiceEnumKey,
+                                         L"NextInstance",
+                                         &KeyValueInformation);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            if ((KeyValueInformation->Type == REG_DWORD) &&
+                (KeyValueInformation->DataLength))
+            {
+                NextInstance = *(PULONG)((ULONG_PTR)KeyValueInformation +
+                                         KeyValueInformation->DataOffset);
+            }
+
+            ExFreePool(KeyValueInformation);
+            KeyValueInformation = NULL;
+        }
+
+        /* Set the instance path */
+        swprintf(ValueBuffer, L"%lu", NextInstance);
+        RtlInitUnicodeString(&ValueName, ValueBuffer);
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               DeviceNode->InstancePath.Buffer,
+                               DeviceNode->InstancePath.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Increment Count and NextInstance */
+        Count++;
+        NextInstance++;
+
+        /* Set the new Count value */
+        RtlInitUnicodeString(&ValueName, L"Count");
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_DWORD,
+                               &Count,
+                               sizeof(Count));
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Set the new NextInstance value */
+        RtlInitUnicodeString(&ValueName, L"NextInstance");
+        Status = ZwSetValueKey(ServiceEnumKey,
+                               &ValueName,
+                               0,
+                               REG_DWORD,
+                               &NextInstance,
+                               sizeof(NextInstance));
+    }
+
+done:
+    if (ServiceEnumKey != NULL)
+        ZwClose(ServiceEnumKey);
+
+    if (ServiceKey != NULL)
+        ZwClose(ServiceKey);
+
+    ExFreePool(ServiceKeyName.Buffer);
+
+    return Status;
+}
+
 VOID
 NTAPI
 IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
@@ -740,6 +880,8 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
     }
 #endif
 
+    IopSetServiceEnumData(DeviceNode);
+
     /* Make sure we're started, and check if we need enumeration */
     if ((DeviceNode->Flags & DNF_STARTED) &&
         (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY))
@@ -812,7 +954,13 @@ IopStartDevice(
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                InstanceHandle,
                                NULL);
-    Status = ZwCreateKey(&ControlHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+    Status = ZwCreateKey(&ControlHandle,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
     if (!NT_SUCCESS(Status))
         goto ByeBye;
 
@@ -1458,10 +1606,6 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     /* Assume failure */
     *Handle = NULL;
 
-    /* Create a volatile device tree in 1st stage so we have a clean slate
-     * for enumeration using the correct HAL (chosen in 1st stage setup) */
-    if (ExpInTextModeSetup) CreateOptions |= REG_OPTION_VOLATILE;
-
     /* Open root key for device instances */
     Status = IopOpenRegistryKeyEx(&hParent, NULL, &EnumU, KEY_CREATE_SUB_KEY);
     if (!NT_SUCCESS(Status))
@@ -1555,6 +1699,8 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                          &ObjectAttributes,
                          0,
                          NULL,
+                         // FIXME? In r53694 it was silently turned from non-volatile into this,
+                         // without any extra warning. Is this still needed??
                          REG_OPTION_VOLATILE,
                          NULL);
     if (NT_SUCCESS(Status))
@@ -3267,7 +3413,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -3283,7 +3429,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       ZwClose(hLevel1Key);
       if (!NT_SUCCESS(Status))
@@ -3461,7 +3607,7 @@ IopUpdateRootKey(VOID)
    NTSTATUS Status;
 
    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-   Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
@@ -3469,7 +3615,7 @@ IopUpdateRootKey(VOID)
    }
 
    InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hEnum, NULL);
-   Status = ZwCreateKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   Status = ZwCreateKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
    ZwClose(hEnum);
    if (!NT_SUCCESS(Status))
    {
@@ -4538,8 +4684,13 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                               *DevInstRegKey,
                               NULL);
-   Status = ZwCreateKey(DevInstRegKey, DesiredAccess, &ObjectAttributes,
-                        0, NULL, ExpInTextModeSetup ? REG_OPTION_VOLATILE : 0, NULL);
+   Status = ZwCreateKey(DevInstRegKey,
+                        DesiredAccess,
+                        &ObjectAttributes,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        NULL);
    ZwClose(ObjectAttributes.RootDirectory);
 
    return Status;

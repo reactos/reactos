@@ -1,15 +1,52 @@
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     ReactOS Networking Configuration
+ * COPYRIGHT:   Copyright 2008 Johannes Anderwald (johannes.anderwald@reactos.org)
+ */
+
 #include "precomp.h"
 
-#include <olectl.h>
+HMODULE g_hModule = NULL;
 
 HINSTANCE netshell_hInstance;
 
+class CNetshellModule : public CComModule
+{
+public:
+};
+
+BEGIN_OBJECT_MAP(ObjectMap)
+    OBJECT_ENTRY(CLSID_ConnectionFolder, CNetworkConnections)
+    OBJECT_ENTRY(CLSID_ConnectionManager, CNetConnectionManager)
+    OBJECT_ENTRY(CLSID_LanConnectionUi, CNetConnectionPropertyUi)
+    OBJECT_ENTRY(CLSID_ConnectionTray, CLanStatus)
+END_OBJECT_MAP()
+
+CNetshellModule gModule;
+
+HPROPSHEETPAGE
+InitializePropertySheetPage(LPWSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
+{
+    PROPSHEETPAGEW ppage;
+
+    memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
+    ppage.dwSize = sizeof(PROPSHEETPAGEW);
+    ppage.dwFlags = PSP_DEFAULT;
+    ppage.pszTemplate = resname;
+    ppage.pfnDlgProc = dlgproc;
+    ppage.lParam = lParam;
+    ppage.hInstance = netshell_hInstance;
+    if (szTitle)
+    {
+        ppage.dwFlags |= PSP_USETITLE;
+        ppage.pszTitle = szTitle;
+    }
+    return CreatePropertySheetPageW(&ppage);
+}
+
 extern "C"
 {
-
-/* FIXME: rpcproxy.h */
-HRESULT __wine_register_resources(HMODULE module);
-HRESULT __wine_unregister_resources(HMODULE module);
 
 BOOL
 WINAPI
@@ -20,6 +57,7 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         case DLL_PROCESS_ATTACH:
             netshell_hInstance = hinstDLL;
             DisableThreadLibraryCalls(netshell_hInstance);
+            gModule.Init(ObjectMap, netshell_hInstance, NULL);
             break;
     default:
         break;
@@ -38,13 +76,33 @@ DllCanUnloadNow(void)
 STDAPI
 DllRegisterServer(void)
 {
-    return __wine_register_resources(netshell_hInstance);
+    HRESULT hr;
+
+    hr = gModule.DllRegisterServer(FALSE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = gModule.UpdateRegistryFromResource(IDR_NETSHELL, TRUE, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 STDAPI
 DllUnregisterServer(void)
 {
-    return __wine_unregister_resources(netshell_hInstance);
+    HRESULT hr;
+
+    hr = gModule.DllUnregisterServer(FALSE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = gModule.UpdateRegistryFromResource(IDR_NETSHELL, FALSE, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 STDAPI
@@ -53,12 +111,7 @@ DllGetClassObject(
   REFIID riid,
   LPVOID *ppv)
 {
-    if (!ppv)
-        return E_INVALIDARG;
-
-    *ppv = NULL;
-
-    return IClassFactory_fnConstructor(rclsid, riid, ppv);
+    return gModule.DllGetClassObject(rclsid, riid, ppv);
 }
 
 VOID

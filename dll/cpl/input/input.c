@@ -38,6 +38,22 @@ InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
     page->pfnDlgProc  = DlgProc;
 }
 
+static int CALLBACK
+PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
+{
+    // NOTE: This callback is needed to set large icon correctly.
+    HICON hIcon;
+    switch (uMsg)
+    {
+        case PSCB_INITIALIZED:
+        {
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO));
+            SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+            break;
+        }
+    }
+    return 0;
+}
 
 /* First Applet */
 static LONG CALLBACK
@@ -52,15 +68,15 @@ SystemApplet(VOID)
     ZeroMemory(&header, sizeof(header));
 
     header.dwSize      = sizeof(header);
-    header.dwFlags     = PSH_PROPSHEETPAGE;
+    header.dwFlags     = PSH_PROPSHEETPAGE | PSH_USEICONID | PSH_USECALLBACK;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
-    header.hIcon       = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
+    header.pszIcon     = MAKEINTRESOURCEW(IDI_KEY_SHORT_ICO);
     header.pszCaption  = szCaption;
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
     header.ppsp        = page;
-    header.pfnCallback = NULL;
+    header.pfnCallback = PropSheetProc;
 
     /* Settings */
     InitPropSheetPage(&page[0], IDD_PROPPAGESETTINGS, SettingsPageProc);

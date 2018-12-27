@@ -18,40 +18,52 @@ enum Rle_EscapeCodes
     RLE_DELTA = 2  /* Delta */
 };
 
-VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format, ULONG cjSizeImage)
+VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits,
+                      LONG Delta, ULONG Format, ULONG cjSizeImage)
 {
-    INT x = 0;
-    INT y = Size.cy - 1;
-    INT c;
-    INT length;
-    INT width;
-    INT height = y;
+    INT x = 0, y = Size.cy - 1;
+    INT i, c, c2, length;
+    INT width = Size.cx, height = y;
     BYTE *begin = CompressedBits;
     BYTE *bits = CompressedBits;
     BYTE *temp;
-    INT shift = 0;
+    BOOL is4bpp = FALSE;
 
     if ((Format == BMF_4RLE) || (Format == BMF_4BPP))
-        shift = 1;
+        is4bpp = TRUE;
     else if ((Format != BMF_8RLE) && (Format != BMF_8BPP))
         return;
-
-    width = ((Size.cx + shift) >> shift);
 
     _SEH2_TRY
     {
         while (y >= 0 && (bits - begin) <= cjSizeImage)
         {
-            length = (*bits++) >> shift;
+            length = *bits++;
             if (length)
             {
                 c = *bits++;
-                while (length--)
+                for (i = 0; i < length; i++)
                 {
                     if (x >= width) break;
-                    temp = UncompressedBits + (((height - y) * Delta) + x);
+                    temp = UncompressedBits + (height - y) * Delta;
+                    if (is4bpp)
+                    {
+                        temp += x / 2;
+                        if (i & 1)
+                            c2 = c & 0x0F;
+                        else
+                            c2 = c >> 4;
+                        if (x & 1)
+                            *temp |= c2;
+                        else
+                            *temp |= c2 << 4;
+                    }
+                    else
+                    {
+                        temp += x;
+                        *temp = c;
+                    }
                     x++;
-                    *temp = c;
                 }
             }
             else
@@ -66,19 +78,36 @@ VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, 
                 case RLE_END:
                     _SEH2_YIELD(return);
                 case RLE_DELTA:
-                    x += (*bits++) >> shift;
-                    y -= (*bits++) >> shift;
+                    x += *bits++;
+                    y -= *bits++;
                     break;
                 default:
-                    length = length >> shift;
-                    while (length--)
+                    for (i = 0; i < length; i++)
                     {
-                        c = *bits++;
+                        if (!(is4bpp && i & 1))
+                            c = *bits++;
+
                         if (x < width)
                         {
-                            temp = UncompressedBits + (((height - y) * Delta) + x);
+                            temp = UncompressedBits + (height - y) * Delta;
+                            if (is4bpp)
+                            {
+                                temp += x / 2;
+                                if (i & 1)
+                                    c2 = c & 0x0F;
+                                else
+                                    c2 = c >> 4;
+                                if (x & 1)
+                                    *temp |= c2;
+                                else
+                                    *temp |= c2 << 4;
+                            }
+                            else
+                            {
+                                temp += x;
+                                *temp = c;
+                            }
                             x++;
-                            *temp = c;
                         }
                     }
                     if ((bits - begin) & 1)

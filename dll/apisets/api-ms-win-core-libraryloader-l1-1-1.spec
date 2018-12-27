@@ -3,12 +3,12 @@
 
 @ stub AddDllDirectory
 @ stdcall DisableThreadLibraryCalls() kernel32.DisableThreadLibraryCalls
-@ stub EnumResourceLanguagesExA
-@ stub EnumResourceLanguagesExW
-@ stub EnumResourceNamesExA
-@ stub EnumResourceNamesExW
-@ stub EnumResourceTypesExA
-@ stub EnumResourceTypesExW
+@ stdcall -version=0x600+ EnumResourceLanguagesExA() kernel32.EnumResourceLanguagesExA
+@ stdcall -version=0x600+ EnumResourceLanguagesExW() kernel32.EnumResourceLanguagesExW
+@ stdcall -version=0x600+ EnumResourceNamesExA() kernel32.EnumResourceNamesExA
+@ stdcall -version=0x600+ EnumResourceNamesExW() kernel32.EnumResourceNamesExW
+@ stdcall -version=0x600+ EnumResourceTypesExA() kernel32.EnumResourceTypesExA
+@ stdcall -version=0x600+ EnumResourceTypesExW() kernel32.EnumResourceTypesExW
 @ stdcall FindResourceExW() kernel32.FindResourceExW
 @ stub FindStringOrdinal
 @ stdcall FreeLibrary() kernel32.FreeLibrary

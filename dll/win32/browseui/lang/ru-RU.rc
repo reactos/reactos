@@ -288,6 +288,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Назад на ""%s"""
     IDS_FORWARD "Вперед на ""%s"""
+    IDS_FOLDER_OPTIONS "Folder Options"
 END
 
 STRINGTABLE

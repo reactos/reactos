@@ -959,6 +959,118 @@ DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
 #define DBC_SHOWOBSCURE 2
 
 
+/* As indicated by the documentation for IActiveDesktop,
+   you must include wininet.h before shlobj.h */
+#ifdef _WINE_WININET_H_
+
+
+/* Structs are taken from msdn, and not verified!
+   Only stuff needed to make it compile are here, no flags or anything */
+
+typedef struct _tagWALLPAPEROPT
+{
+    DWORD dwSize;
+    DWORD dwStyle;
+} WALLPAPEROPT;
+
+typedef WALLPAPEROPT *LPWALLPAPEROPT;
+typedef const WALLPAPEROPT *LPCWALLPAPEROPT;
+
+typedef struct _tagCOMPONENTSOPT
+{
+    DWORD dwSize;
+    BOOL  fEnableComponents;
+    BOOL  fActiveDesktop;
+} COMPONENTSOPT;
+
+typedef COMPONENTSOPT *LPCOMPONENTSOPT;
+typedef const COMPONENTSOPT *LPCCOMPONENTSOPT;
+
+
+typedef struct _tagCOMPPOS
+{
+    DWORD dwSize;
+    int   iLeft;
+    int   iTop;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    int   izIndex;
+    BOOL  fCanResize;
+    BOOL  fCanResizeX;
+    BOOL  fCanResizeY;
+    int   iPreferredLeftPercent;
+    int   iPreferredTopPercent;
+} COMPPOS;
+
+typedef struct _tagCOMPSTATEINFO
+{
+    DWORD dwSize;
+    int   iLeft;
+    int   iTop;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    DWORD dwItemState;
+} COMPSTATEINFO;
+
+typedef struct _tagCOMPONENT
+{
+    DWORD         dwSize;
+    DWORD         dwID;
+    int           iComponentType;
+    BOOL          fChecked;
+    BOOL          fDirty;
+    BOOL          fNoScroll;
+    COMPPOS       cpPos;
+    WCHAR         wszFriendlyName[MAX_PATH];
+    WCHAR         wszSource[INTERNET_MAX_URL_LENGTH];
+    WCHAR         wszSubscribedURL[INTERNET_MAX_URL_LENGTH];
+    DWORD         dwCurItemState;
+    COMPSTATEINFO csiOriginal;
+    COMPSTATEINFO csiRestored;
+} COMPONENT;
+
+typedef COMPONENT *LPCOMPONENT;
+typedef const COMPONENT *LPCCOMPONENT;
+
+#pragma push_macro("AddDesktopItem")
+#undef AddDesktopItem
+
+/* IDeskBarClient interface */
+#define INTERFACE IActiveDesktop
+DECLARE_INTERFACE_(IActiveDesktop, IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface) (THIS_ _In_ REFIID riid, _Outptr_ void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)  (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    /*** IActiveDesktop methods ***/
+    STDMETHOD(ApplyChanges)(THIS_ DWORD dwFlags) PURE;
+    STDMETHOD(GetWallpaper)(THIS_ PWSTR pwszWallpaper, UINT cchWallpaper, DWORD dwFlags) PURE;
+    STDMETHOD(SetWallpaper)(THIS_ PCWSTR pwszWallpaper, DWORD dwReserved) PURE;
+    STDMETHOD(GetWallpaperOptions)(THIS_ LPWALLPAPEROPT pwpo, DWORD dwReserved) PURE;
+    STDMETHOD(SetWallpaperOptions)(THIS_ LPCWALLPAPEROPT pwpo, DWORD dwReserved) PURE;
+    STDMETHOD(GetPattern)(THIS_ PWSTR pwszPattern, UINT cchPattern, DWORD dwReserved) PURE;
+    STDMETHOD(SetPattern)(THIS_ PCWSTR pwszPattern, DWORD dwReserved) PURE;
+    STDMETHOD(GetDesktopItemOptions)(THIS_ LPCOMPONENTSOPT pco, DWORD dwReserved) PURE;
+    STDMETHOD(SetDesktopItemOptions)(THIS_ LPCCOMPONENTSOPT pco, DWORD dwReserved) PURE;
+    STDMETHOD(AddDesktopItem)(THIS_ LPCCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(AddDesktopItemWithUI)(THIS_ HWND hwnd, LPCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(ModifyDesktopItem)(THIS_ LPCCOMPONENT pcomp, DWORD dwFlags) PURE;
+    STDMETHOD(RemoveDesktopItem)(THIS_ LPCCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(GetDesktopItemCount)(THIS_ int *pcItems, DWORD dwReserved) PURE;
+    STDMETHOD(GetDesktopItem)(THIS_ int nComponent, LPCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(GetDesktopItemByID)(THIS_ ULONG_PTR dwID, LPCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(GenerateDesktopItemHtml)(THIS_ PCWSTR pwszFileName, LPCOMPONENT pcomp, DWORD dwReserved) PURE;
+    STDMETHOD(AddUrl)(THIS_ HWND hwnd, PCWSTR pszSource, LPCOMPONENT pcomp, DWORD dwFlags) PURE;
+    STDMETHOD(GetDesktopItemBySource)(THIS_ PCWSTR pwszSource, LPCOMPONENT pcomp, DWORD dwReserved) PURE;
+};
+#undef INTERFACE
+
+#pragma pop_macro("AddDesktopItem")
+
+#endif
+
 /****************************************************************************
 * SHAddToRecentDocs API
 */

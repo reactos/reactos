@@ -253,6 +253,8 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     /* This has to be a connection port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
     {
+        DPRINT1("Port '%wZ' is not a connection port (Flags: 0x%lx)\n", PortName, Port->Flags);
+
         /* It isn't, so fail */
         ObDereferenceObject(Port);
 
@@ -280,6 +282,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 if (!RtlEqualSid(CapturedServerSid, TokenUserInfo->User.Sid))
                 {
                     /* Fail */
+                    DPRINT1("Port '%wZ': server SID mismatch\n", PortName);
                     Status = STATUS_SERVER_SID_MISMATCH;
                 }
 
@@ -290,6 +293,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         else
         {
             /* Invalid SID */
+            DPRINT1("Port '%wZ': server SID mismatch\n", PortName);
             Status = STATUS_SERVER_SID_MISMATCH;
         }
 
@@ -319,6 +323,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, dereference the server port and return */
+        DPRINT1("Failed to create Port object: 0x%lx\n", Status);
         ObDereferenceObject(Port);
         return Status;
     }
@@ -351,6 +356,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Security failed, dereference and return */
+            DPRINT1("SeCreateClientSecurity failed: 0x%lx\n", Status);
             ObDereferenceObject(ClientPort);
             return Status;
         }
@@ -361,6 +367,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
+        DPRINT1("LpcpInitializePortQueue failed: 0x%lx\n", Status);
         ObDereferenceObject(ClientPort);
         return Status;
     }
@@ -379,6 +386,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
+            DPRINT1("Failed to reference port section handle: 0x%lx\n", Status);
             ObDereferenceObject(ClientPort);
             return Status;
         }
@@ -405,6 +413,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
+            DPRINT1("Failed to map port section: 0x%lx\n", Status);
             ObDereferenceObject(SectionToMap);
             ObDereferenceObject(ClientPort);
             return Status;
@@ -435,6 +444,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     if (!Message)
     {
         /* Fail if we couldn't allocate a message */
+        DPRINT1("LpcpAllocateFromPortZone failed\n");
         if (SectionToMap) ObDereferenceObject(SectionToMap);
         ObDereferenceObject(ClientPort);
         return STATUS_NO_MEMORY;
@@ -486,6 +496,9 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            DPRINT1("Exception 0x%lx when copying connection info to user mode\n",
+                    _SEH2_GetExceptionCode());
+
             /* Cleanup and return the exception code */
 
             /* Free the message we have */

@@ -343,8 +343,7 @@ cleanup0:
 
 static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
 {
-    CComPtr<IBrowserService2> browser;
-    HRESULT                   hResult;
+    HRESULT hResult;
     MSG Msg;
     BOOL Ret;
 
@@ -366,25 +365,32 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
         ILRemoveLastID(parameters->directoryPIDL);
     }
 
-    hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, wFlags, IID_PPV_ARG(IBrowserService2, &browser));
+    CComPtr<IShellBrowser> psb;
+    hResult = CShellBrowser_CreateInstance(IID_PPV_ARG(IShellBrowser, &psb));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    hResult = psb->BrowseObject(parameters->directoryPIDL, wFlags);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     if (pidlSelect != NULL)
     {
-        CComPtr<IShellBrowser> pisb;
-        hResult = browser->QueryInterface(IID_PPV_ARG(IShellBrowser, &pisb));
+        CComPtr<IShellView> shellView;
+        hResult = psb->QueryActiveShellView(&shellView);
         if (SUCCEEDED(hResult))
         {
-            CComPtr<IShellView> shellView;
-            hResult = pisb->QueryActiveShellView(&shellView);
-            if (SUCCEEDED(hResult))
-            {
-                shellView->SelectItem(pidlSelect, SVSI_SELECT|SVSI_ENSUREVISIBLE);
-            }
+            shellView->SelectItem(pidlSelect, SVSI_SELECT|SVSI_ENSUREVISIBLE);
         }
         ILFree(pidlSelect);
     }
+
+    CComPtr<IBrowserService2> browser;
+    hResult = psb->QueryInterface(IID_PPV_ARG(IBrowserService2, &browser));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    psb.Release();
 
     while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
     {
@@ -617,7 +623,7 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
     }
 
     parameters->dwFlags = parseResults->dwFlags;
-    parameters->offset8 = parseResults->offsetC;
+    parameters->offset8 = parseResults->nCmdShow;
 
     LPITEMIDLIST pidl = parseResults->pidlPath ? ILClone(parseResults->pidlPath) : NULL;
     if (!pidl && parseResults->dwFlags & SH_EXPLORER_CMDLINE_FLAG_STRING)

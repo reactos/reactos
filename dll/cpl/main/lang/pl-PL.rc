@@ -61,17 +61,17 @@ BEGIN
     GROUPBOX "Konfiguracja przycisków", -1, 5, 5, 230, 70
     CHECKBOX "&Przełącz przycisk podstawowy i pomocniczy", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 155, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Zaznacz to pole wyboru, aby używać prawego przycisku do wykonywania funkcji podstawowych, takich jak zaznaczanie i przeciąganie.", -1, 10, 30, 150, 30
+    LTEXT "Zaznacz to pole wyboru, aby używać prawego przycisku do wykonywania funkcji podstawowych, takich jak zaznaczanie i przeciąganie.", -1, 10, 30, 150, 32
     GROUPBOX "Szybkość dwukrotnego kliknięcia", -1, 5, 75, 230, 70
-    LTEXT "Kliknij dwukrotnie folder, aby przetestować ustawienie. Jeśli folder nie otworzy się lub nie zamknie, spróbuj użyć wolniejszego ustawienia.", -1, 10, 85, 150, 30
+    LTEXT "Kliknij dwukrotnie folder, aby przetestować ustawienie. Jeśli folder nie otworzy się lub nie zamknie, spróbuj użyć wolniejszego ustawienia.", -1, 10, 85, 170, 30
     LTEXT "&Szybkość:    Wolno", -1, 10, 120, 90, 8
     LTEXT "Szybko", -1, 140, 120, 30, 8
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 70, 120, 70, 17
-    CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 175, 85, 65, 57, WS_EX_STATICEDGE
+    CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
     GROUPBOX "Blokada Kliknięcia", -1, 5, 150, 230, 70
     CHECKBOX "&Włącz funkcję Blokada Kliknięcia", IDC_CHECK_CLICK_LOCK, 10, 160, 120, 20
-    PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
-    LTEXT "Umożliwia podświetlanie lub przeciąganie bez przytrzymywania naciśniętego przycisku myszy. Aby ustawić, naciśnij na krótko przycisk myszy. Aby zwolnić, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 30
+    PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 14
+    LTEXT "Umożliwia podświetlanie lub przeciąganie bez przytrzymywania naciśniętego przycisku myszy. Aby ustawić, naciśnij na krótko przycisk myszy. Aby zwolnić, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 32
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228

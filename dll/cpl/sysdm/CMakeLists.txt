@@ -2,8 +2,7 @@
 spec2def(sysdm.cpl sysdm.spec)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp
-    ${REACTOS_SOURCE_DIR}/sdk/lib/dmilib)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/udmihelp)
 
 list(APPEND SOURCE
     advanced.c

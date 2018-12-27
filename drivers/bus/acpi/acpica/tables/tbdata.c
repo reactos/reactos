@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -603,9 +603,9 @@ AcpiTbVerifyTempTable (
             {
                 if (Status != AE_CTRL_TERMINATE)
                 {
-                    ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
+                    ACPI_EXCEPTION ((AE_INFO, Status,
                         "%4.4s 0x%8.8X%8.8X"
-                        " Table is duplicated",
+                        " Table is already loaded",
                         AcpiUtValidNameseg (TableDesc->Signature.Ascii) ?
                             TableDesc->Signature.Ascii : "????",
                         ACPI_FORMAT_UINT64 (TableDesc->Address)));
@@ -1082,12 +1082,18 @@ AcpiTbLoadTable (
 
     Status = AcpiNsLoadTable (TableIndex, ParentNode);
 
-    /* Execute any module-level code that was found in the table */
-
-    if (!AcpiGbl_ParseTableAsTermList && AcpiGbl_GroupModuleLevelCode)
-    {
-        AcpiNsExecModuleCodeList ();
-    }
+    /*
+     * This case handles the legacy option that groups all module-level
+     * code blocks together and defers execution until all of the tables
+     * are loaded. Execute all of these blocks at this time.
+     * Execute any module-level code that was detected during the table
+     * load phase.
+     *
+     * Note: this option is deprecated and will be eliminated in the
+     * future. Use of this option can cause problems with AML code that
+     * depends upon in-order immediate execution of module-level code.
+     */
+    AcpiNsExecModuleCodeList ();
 
     /*
      * Update GPEs for any new _Lxx/_Exx methods. Ignore errors. The host is

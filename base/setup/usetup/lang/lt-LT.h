@@ -1,3 +1,6 @@
+// This file is converted by code7bit.
+// code7bit: https://github.com/katahiromz/code7bit
+// To revert conversion, please execute "code7bit -r <file>".
 /*
  * PROJECT:     ReactOS Setup
  * LICENSE:     GPL - See COPYING in the top level directory
@@ -9,11 +12,38 @@
 
 #pragma once
 
-MUI_LAYOUTS ltLTLayouts[] =
+static MUI_ENTRY ltLTSetupInitPageEntries[] =
 {
-    { L"0427", L"00010427" },
-    { L"0409", L"00000409" },
-    { NULL, NULL }
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
 };
 
 static MUI_ENTRY ltLTLanguagePageEntries[] =
@@ -33,7 +63,7 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Pasirinkite kalb–, kuri bus naudojama diegimo proceso metu.",
+        "\x07  Pasirinkite kalb\320, kuri bus naudojama diegimo proceso metu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -45,13 +75,13 @@ static MUI_ENTRY ltLTLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  æi kalba bus nustatyta standartine ‘diegtoje sistemoje.",
+        "\x07  \276i kalba bus nustatyta standartine \324diegtoje sistemoje.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = T“sti  F3 = Baigti",
+        "ENTER = T\322sti  F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -79,19 +109,19 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         6,
         11,
-        "æi diegimo dalis nukopijuos ReactOS operacin”s sistemos bylas ‘ j◊s÷",
+        "\276i diegimo dalis nukopijuos ReactOS operacin\323s sistemos bylas \324 j\327s\326",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "kompiuter‘ ir paruo’ antr–j– diegimo dal‘.",
+        "kompiuter\324 ir paruo\325 antr\320j\320 diegimo dal\324.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Spauskite ENTER, jei norite diegti ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -103,19 +133,19 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Spauskite L, jei norite pamatyti ReactOS licencijos s–lygas.",
+        "\x07  Spauskite L, jei norite pamatyti ReactOS licencijos s\320lygas.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Spauskite F3, jei norite uÿdaryti ReactOS diegimo program–.",
+        "\x07  Spauskite F3, jei norite u\330daryti ReactOS diegimo program\320.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Nor”dami gauti daugiau informacijos apie ReactOS, aplankykite:",
+        "Nor\323dami gauti daugiau informacijos apie ReactOS, aplankykite:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -127,7 +157,7 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti  R = Taisyti F3 = Baigti",
+        "ENTER = T\322sti  R = Taisyti F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -143,7 +173,7 @@ static MUI_ENTRY ltLTIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -321,7 +351,7 @@ static MUI_ENTRY ltLTLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = Gr‘ÿti",
+        "ENTER = Gr\324\330ti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -343,7 +373,7 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         6,
         8,
-        "œemiau esantis s–ra’as rodo dabartinius ‘rengini÷ nustatymus.",
+        "\317emiau esantis s\320ra\325as rodo dabartinius \324rengini\326 nustatymus.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -361,13 +391,13 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     {
         24,
         13,
-        "Klaviat◊ra:",
+        "Klaviat\327ra:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Klav i’d”stymas:",
+        "Klav i\325d\323stymas:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -378,43 +408,43 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     },
     {
         25,
-        16, "Naudoti ’iuos ‘rengini÷ nustatymus",
+        16, "Naudoti \325iuos \324rengini\326 nustatymus",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "J◊s galite pakeisti ‘rengini÷ nustatymus. Spausdami klavi’us AUKæTYN",
+        "J\327s galite pakeisti \324rengini\326 nustatymus. Spausdami klavi\325us AUK\276TYN",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "arba œEMYN, pasirinkite punkt–, kur‘ norite pakeisti. Paspaud“ ENTER",
+        "arba \317EMYN, pasirinkite punkt\320, kur\324 norite pakeisti. Paspaud\322 ENTER",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "gal”site pasirinkti alternatyv–.",
+        "gal\323site pasirinkti alternatyv\320.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Kai visi nustatymai bus teisingi, pasirinkite \"Naudoti ’iuos ‘rengi-",
+        "Kai visi nustatymai bus teisingi, pasirinkite \"Naudoti \325iuos \324rengi-",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "ni÷ nustatymus\" ir paspauskite ENTER.",
+        "ni\326 nustatymus\" ir paspauskite ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -489,6 +519,76 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
     }
 };
 
+static MUI_ENTRY ltLTUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ltLTComputerPageEntries[] =
 {
     {
@@ -530,7 +630,7 @@ static MUI_ENTRY ltLTComputerPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -552,19 +652,19 @@ static MUI_ENTRY ltLTFlushPageEntries[] =
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "The system is now making sure all data is stored on your disk.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "This may take a minute.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "When finished, your computer will reboot automatically.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -592,7 +692,7 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "ReactOS is not completely installed.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -616,7 +716,7 @@ static MUI_ENTRY ltLTQuitPageEntries[] =
     {
         0,
         0,
-        "Pra’ome palaukti...",
+        "Pra\325ome palaukti...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -667,7 +767,7 @@ static MUI_ENTRY ltLTDisplayPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -759,7 +859,7 @@ static MUI_ENTRY ltLTBootPageEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -830,7 +930,7 @@ static MUI_ENTRY ltLTSelectPartitionEntries[] =
     {
         0,
         0,
-        "Pra’ome palaukti...",
+        "Pra\325ome palaukti...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -958,7 +1058,7 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1010,7 +1110,7 @@ static MUI_ENTRY ltLTInstallDirectoryEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1102,7 +1202,7 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   F3 = Baigti",
+        "ENTER = T\322sti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1154,7 +1254,7 @@ static MUI_ENTRY ltLTKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1206,7 +1306,7 @@ static MUI_ENTRY ltLTLayoutSettingsEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1229,7 +1329,7 @@ static MUI_ENTRY ltLTPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup prepares your computer for copying the ReactOS files.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1282,7 +1382,7 @@ static MUI_ENTRY ltLTSelectFSEntries[] =
     {
         0,
         0,
-        "ENTER = T“sti   ESC = At’aukti   F3 = Baigti",
+        "ENTER = T\322sti   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1329,7 +1429,7 @@ static MUI_ENTRY ltLTDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = Delete Partition   ESC = At’aukti   F3 = Baigti",
+        "D = Delete Partition   ESC = At\325aukti   F3 = Baigti",
         TEXT_TYPE_STATUS
     },
     {
@@ -1351,7 +1451,7 @@ static MUI_ENTRY ltLTRegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup is updating the system configuration.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1376,7 +1476,7 @@ MUI_ERROR ltLTErrorEntries[] =
         "Success\n"
     },
     {
-        //ERROR_NOT_INSTALLED
+        // ERROR_NOT_INSTALLED
         "ReactOS is not completely installed on your\n"
         "computer. If you quit Setup now, you will need to\n"
         "run Setup again to install ReactOS.\n"
@@ -1386,62 +1486,62 @@ MUI_ERROR ltLTErrorEntries[] =
         "F3 = Quit  ENTER = Continue"
     },
     {
-        //ERROR_NO_HDD
+        // ERROR_NO_HDD
         "Setup could not find a harddisk.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_NO_SOURCE_DRIVE
+        // ERROR_NO_SOURCE_DRIVE
         "Setup could not find its source drive.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_TXTSETUPSIF
+        // ERROR_LOAD_TXTSETUPSIF
         "Setup failed to load the file TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CORRUPT_TXTSETUPSIF
+        // ERROR_CORRUPT_TXTSETUPSIF
         "Setup found a corrupt TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_SIGNATURE_TXTSETUPSIF,
+        // ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup found an invalid signature in TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_DRIVE_INFORMATION
+        // ERROR_DRIVE_INFORMATION
         "Setup could not retrieve system drive information.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        // ERROR_WRITE_BOOT,
+        "Setup failed to install %S bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_COMPUTER,
+        // ERROR_LOAD_COMPUTER,
         "Setup failed to load the computer type list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_DISPLAY,
+        // ERROR_LOAD_DISPLAY,
         "Setup failed to load the display settings list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_KEYBOARD,
+        // ERROR_LOAD_KEYBOARD,
         "Setup failed to load the keyboard type list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_LOAD_KBLAYOUT,
+        // ERROR_LOAD_KBLAYOUT,
         "Setup failed to load the keyboard layout list.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_WARN_PARTITION,
+        // ERROR_WARN_PARTITION,
           "Setup found that at least one harddisk contains an incompatible\n"
           "partition table that can not be handled properly!\n"
           "\n"
@@ -1452,7 +1552,7 @@ MUI_ERROR ltLTErrorEntries[] =
           "F3 = Quit  ENTER = Continue"
     },
     {
-        //ERROR_NEW_PARTITION,
+        // ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
         "of an already existing Partition!\n"
         "\n"
@@ -1460,133 +1560,127 @@ MUI_ERROR ltLTErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE,
+        // ERROR_DELETE_SPACE,
         "You can not delete unpartitioned disk space!\n"
         "\n"
         "  * Press any key to continue.",
         NULL
     },
     {
-        //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        // ERROR_INSTALL_BOOTCODE,
+        "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_NO_FLOPPY,
+        // ERROR_NO_FLOPPY,
         "No disk in drive A:.",
         "ENTER = Continue"
     },
     {
-        //ERROR_UPDATE_KBSETTINGS,
+        // ERROR_UPDATE_KBSETTINGS,
         "Setup failed to update keyboard layout settings.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        // ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_IMPORT_HIVE,
+        // ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_FIND_REGISTRY
+        // ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_HIVE,
+        // ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_INITIALIZE_REGISTRY,
+        // ERROR_INITIALIZE_REGISTRY,
         "Setup failed to initialize the registry.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_INVALID_CABINET_INF,
+        // ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_MISSING,
+        // ERROR_CABINET_MISSING,
         "Cabinet not found.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_SCRIPT,
+        // ERROR_CABINET_SCRIPT,
         "Cabinet has no setup script.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_COPY_QUEUE,
+        // ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
+        // ERROR_CREATE_DIR,
+        "Setup could not create the installation directories.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
+        // ERROR_TXTSETUP_SECTION,
+        "Setup failed to find the '%S' section\n"
         "in TXTSETUP.SIF.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
+        // ERROR_CABINET_SECTION,
+        "Setup failed to find the '%S' section\n"
         "in the cabinet.\n",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
+        // ERROR_CREATE_INSTALL_DIR
+        "Setup could not create the installation directory.",
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
-    },
-    {
-        //ERROR_WRITE_PTABLE,
+        // ERROR_WRITE_PTABLE,
         "Setup failed to write partition tables.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_ADDING_CODEPAGE,
+        // ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_LOCALESETTINGS,
+        // ERROR_UPDATE_LOCALESETTINGS,
         "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_ADDING_KBLAYOUTS,
+        // ERROR_ADDING_KBLAYOUTS,
         "Setup failed to add keyboard layouts to registry.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_UPDATE_GEOID,
+        // ERROR_UPDATE_GEOID,
         "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
     },
     {
-        //ERROR_DIRECTORY_NAME,
+        // ERROR_DIRECTORY_NAME,
         "Invalid directory name.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        // ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"
         "\n"
@@ -1594,20 +1688,20 @@ MUI_ERROR ltLTErrorEntries[] =
         NULL
     },
     {
-        //ERROR_PARTITION_TABLE_FULL,
+        // ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_ONLY_ONE_EXTENDED,
+        // ERROR_ONLY_ONE_EXTENDED,
         "You can not create more than one extended partition per disk.\n"
         "\n"
         "  * Press any key to continue."
     },
     {
-        //ERROR_FORMATTING_PARTITION,
+        // ERROR_FORMATTING_PARTITION,
         "Setup is unable to format the partition:\n"
         " %S\n"
         "\n"
@@ -1622,11 +1716,15 @@ MUI_ERROR ltLTErrorEntries[] =
 MUI_PAGE ltLTPages[] =
 {
     {
+        SETUP_INIT_PAGE,
+        ltLTSetupInitPageEntries
+    },
+    {
         LANGUAGE_PAGE,
         ltLTLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ltLTWelcomePageEntries
     },
     {
@@ -1644,6 +1742,10 @@ MUI_PAGE ltLTPages[] =
     {
         REPAIR_INTRO_PAGE,
         ltLTRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        ltLTUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
@@ -1765,8 +1867,12 @@ MUI_STRING ltLTStrings[] =
     "F3 = Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
     "ENTER = Reboot computer"},
-    {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    {STRING_DELETING,
+     "   Deleting file: %S"},
+    {STRING_MOVING,
+     "   Moving file: %S to: %S"},
+    {STRING_RENAMING,
+     "   Renaming file: %S to: %S"},
     {STRING_COPYING,
      "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1775,7 +1881,7 @@ MUI_STRING ltLTStrings[] =
     "   Updating registry hives..."},
     {STRING_IMPORTFILE,
     "   Importing %S..."},
-    {STRING_DISPLAYETTINGSUPDATE,
+    {STRING_DISPLAYSETTINGSUPDATE,
     "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Updating locale settings..."},
@@ -1805,28 +1911,28 @@ MUI_STRING ltLTStrings[] =
     " Format partition as %S file system "},
     {STRING_KEEPFORMAT,
     " Keep current file system (no changes) "},
-    {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    {STRING_HDINFOPARTCREATE_1,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTCREATE_2,
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
-    {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
-    {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTDELETE_1,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]."},
+    {STRING_HDINFOPARTDELETE_2,
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]."},
+    {STRING_HDINFOPARTZEROED_1,
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type 0x%02X    %I64u %s"},
-    {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    {STRING_HDINFOPARTEXISTS_1,
+    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]."},
     {STRING_HDDINFOUNK5,
     "%c%c %c %sType %-3u%s                         %6lu %s"},
-    {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
-    {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    {STRING_HDINFOPARTSELECT_1,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
+    {STRING_HDINFOPARTSELECT_2,
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
     {STRING_NEWPARTITION,
     "Setup created a new partition on"},
     {STRING_UNPSPACE,

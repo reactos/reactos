@@ -7,10 +7,10 @@
 @ stdcall CreateRemoteThread() kernel32.CreateRemoteThread
 @ stub CreateRemoteThreadEx
 @ stdcall CreateThread() kernel32.CreateThread
-@ stub DeleteProcThreadAttributeList
+@ stdcall -version=0x600+ DeleteProcThreadAttributeList() kernel32.DeleteProcThreadAttributeList
 @ stdcall ExitProcess() kernel32.ExitProcess
 @ stdcall ExitThread() kernel32.ExitThread
-@ stub FlushProcessWriteBuffers
+@ stdcall -version=0x600+ FlushProcessWriteBuffers() kernel32.FlushProcessWriteBuffers
 @ stdcall GetCurrentProcess() kernel32.GetCurrentProcess
 @ stdcall GetCurrentProcessId() kernel32.GetCurrentProcessId
 @ stdcall GetCurrentThread() kernel32.GetCurrentThread
@@ -26,16 +26,16 @@
 @ stdcall GetThreadId() kernel32.GetThreadId
 @ stdcall GetThreadPriority() kernel32.GetThreadPriority
 @ stdcall GetThreadPriorityBoost() kernel32.GetThreadPriorityBoost
-@ stub InitializeProcThreadAttributeList
+@ stdcall -version=0x600+ InitializeProcThreadAttributeList() kernel32.InitializeProcThreadAttributeList
 @ stdcall OpenProcessToken() advapi32.OpenProcessToken
 @ stdcall OpenThread() kernel32.OpenThread
 @ stdcall OpenThreadToken() advapi32.OpenThreadToken
 @ stdcall ProcessIdToSessionId() kernel32.ProcessIdToSessionId
-@ stub QueryProcessAffinityUpdateMode
+@ stdcall -version=0x600+ QueryProcessAffinityUpdateMode() kernel32.QueryProcessAffinityUpdateMode
 @ stdcall QueueUserAPC() kernel32.QueueUserAPC
 @ stdcall ResumeThread() kernel32.ResumeThread
 @ stdcall SetPriorityClass() kernel32.SetPriorityClass
-@ stub SetProcessAffinityUpdateMode
+@ stdcall -version=0x600+ SetProcessAffinityUpdateMode() kernel32.SetProcessAffinityUpdateMode
 @ stdcall SetProcessShutdownParameters() kernel32.SetProcessShutdownParameters
 @ stdcall SetThreadPriority() kernel32.SetThreadPriority
 @ stdcall SetThreadPriorityBoost() kernel32.SetThreadPriorityBoost
@@ -49,4 +49,4 @@
 @ stdcall TlsFree() kernel32.TlsFree
 @ stdcall TlsGetValue() kernel32.TlsGetValue
 @ stdcall TlsSetValue() kernel32.TlsSetValue
-@ stub UpdateProcThreadAttribute
+@ stdcall -version=0x600+ UpdateProcThreadAttribute() kernel32.UpdateProcThreadAttribute

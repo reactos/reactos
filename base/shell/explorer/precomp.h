@@ -130,6 +130,7 @@ HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void 
  * traywnd.c
  */
 
+#define TWM_GETTASKSWITCH (WM_USER + 236)
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 #define TWM_SETTINGSCHANGED (WM_USER + 300)
 
@@ -169,12 +170,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)
 #endif
-
-BOOL
-RegisterTrayWindowClass(VOID);
-
-VOID
-UnregisterTrayWindowClass(VOID);
 
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray);
 
@@ -309,7 +304,7 @@ HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBa
  * startmnu.cpp
  */
 
-HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
+HRESULT CStartMenuBtnCtxMenu_CreateInstance(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
@@ -328,7 +323,7 @@ ShowCustomizeClassic(HINSTANCE, HWND);
 */
 
 HRESULT 
-CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
+CStartMenuSite_CreateInstance(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
  * trayntfy.c

@@ -11,7 +11,7 @@ STRINGTABLE
     STRING_SUCCESS, "操作已成功完成\n"
     STRING_INVALID_KEY, "錯誤: 無效的金鑰名稱\n"
     STRING_INVALID_CMDLINE, "錯誤: 無效的命令列參數\n"
-    STRING_NO_REMOTE, "錯誤: 無法訪問遠端計算機\n"
+    STRING_NO_REMOTE, "錯誤: 無法訪問遠端電腦\n"
     STRING_CANNOT_FIND, "錯誤: 系統是無法找到指定的註冊表項或值\n"
     STRING_UNSUPPORTED_TYPE, "錯誤: 不支援的類型\n"
     STRING_MISSING_INTEGER, "reg: The option [/d] must be followed by a valid integer\n"

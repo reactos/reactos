@@ -23,7 +23,7 @@ IDI_NET_TRANS ICON "res/nettrans.ico"
 IDI_NET_TRANSREC ICON "res/nettrrec.ico"
 IDI_NET_SETUP ICON "res/netsetup.ico"
 
-IDR_NETSHELL WINE_REGISTRY "res/netshell.rgs"
+IDR_NETSHELL REGISTRY "res/netshell.rgs"
 
 #include <reactos/manifest_dll.rc>
 

@@ -11,6 +11,7 @@
 #define IDC_LED_NUM             100
 #define IDC_LED_CAPS            101
 #define IDC_LED_SCROLL          102
+#define IDC_SHOWWARNINGCHECK    103
 
 #define IDI_OSK                 200
 #define IDI_BACK                201
@@ -27,6 +28,8 @@
 #define IDI_TOP                 212
 #define IDI_RIGHT               213
 #define IDI_BOTTOM              214
+
+#define IDD_WARNINGDIALOG_OSK   215
 
 #define IDC_STATIC              -1
 

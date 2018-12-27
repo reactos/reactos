@@ -351,11 +351,6 @@ DWORD getUDPStats(MIB_UDPSTATS *stats, DWORD family)
   return NO_ERROR;
 }
 
-static DWORD getNumWithOneHeader(const char *filename)
-{
-    return 0;
-}
-
 DWORD getNumRoutes(void)
 {
     DWORD numEntities, numRoutes = 0;
@@ -595,64 +590,241 @@ PMIB_IPNETTABLE getArpTable(void)
     return IpArpTable;
 }
 
+struct _TABLE_CALL
+{
+    DWORD TOIID;
+    SIZE_T UdpSize;
+    SIZE_T TcpSize;
+    SIZE_T UdpOffset;
+    SIZE_T TcpOffset;
+} UdpTcpTableCall[] = {
+    {IP_MIB_ARPTABLE_ENTRY_ID, sizeof(MIB_UDPROW), sizeof(MIB_TCPROW), FIELD_OFFSET(MIB_UDPTABLE, table), FIELD_OFFSET(MIB_TCPTABLE, table)},
+    {IP_MIB_ADDRTABLE_ENTRY_ID, sizeof(MIB_UDPROW_OWNER_PID), sizeof(MIB_TCPROW_OWNER_PID), FIELD_OFFSET(MIB_UDPTABLE_OWNER_PID, table), FIELD_OFFSET(MIB_TCPTABLE_OWNER_PID, table)},
+    {IP_SPECIFIC_MODULE_ENTRY_ID, sizeof(MIB_UDPROW_OWNER_MODULE), sizeof(MIB_TCPROW_OWNER_MODULE), FIELD_OFFSET(MIB_UDPTABLE_OWNER_MODULE, table), FIELD_OFFSET(MIB_TCPTABLE_OWNER_MODULE, table)},
+};
+
+#define Add2Ptr(PTR, INC) (PVOID)((ULONG_PTR)(PTR) + (INC))
+
 DWORD getNumUdpEntries(void)
 {
-  return getNumWithOneHeader("/proc/net/udp");
+    DWORD numEntities;
+    TDIEntityID *entitySet = NULL;
+    HANDLE tcpFile;
+    int i, totalNumber = 0;
+    NTSTATUS status;
+    PMIB_UDPROW IpUdpTable = NULL;
+    DWORD returnSize;
+
+    TRACE("called.\n");
+
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CL_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_MIB_ARPTABLE_ENTRY_ID,
+					CL_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(MIB_UDPROW),
+					(PVOID *)&IpUdpTable,
+					&returnSize );
+
+	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
+		if( IpUdpTable ) {
+			tdiFreeThingSet( IpUdpTable );
+			IpUdpTable = NULL;
+		}
+	}
+    }
+
+    closeTcpFile( tcpFile );
+    if( IpUdpTable ) tdiFreeThingSet( IpUdpTable );
+    if( entitySet ) tdiFreeThingSet( entitySet );
+    return totalNumber;
 }
 
-PMIB_UDPTABLE getUdpTable(void)
+PVOID getUdpTable(CLASS_TABLE Class)
 {
-  DWORD numEntries = getNumUdpEntries();
-  PMIB_UDPTABLE ret;
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_UDPTABLE IpUdpTable = NULL;
+    PVOID AdapterUdpTable = NULL;
 
-  ret = (PMIB_UDPTABLE)calloc(1, sizeof(MIB_UDPTABLE) +
-   (numEntries - 1) * sizeof(MIB_UDPROW));
-  if (ret) {
-    FILE *fp;
+    TRACE("called.\n");
 
-    /* get from /proc/net/udp, no error if can't */
-    fp = fopen("/proc/net/udp", "r");
-    if (fp) {
-      char buf[512] = { 0 }, *ptr;
+    totalNumber = getNumUdpEntries();
 
-      /* skip header line */
-      ptr = fgets(buf, sizeof(buf), fp);
-      while (ptr && ret->dwNumEntries < numEntries) {
-        ptr = fgets(buf, sizeof(buf), fp);
-        if (ptr) {
-          char *endPtr;
-
-          if (ptr && *ptr) {
-            strtoul(ptr, &endPtr, 16); /* skip */
-            ptr = endPtr;
-          }
-          if (ptr && *ptr) {
-            ptr++;
-            ret->table[ret->dwNumEntries].dwLocalAddr = strtoul(ptr, &endPtr,
-             16);
-            ptr = endPtr;
-          }
-          if (ptr && *ptr) {
-            ptr++;
-            ret->table[ret->dwNumEntries].dwLocalPort = strtoul(ptr, &endPtr,
-             16);
-            ptr = endPtr;
-          }
-          ret->dwNumEntries++;
-        }
-      }
-      fclose(fp);
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
     }
-  }
-  return ret;
+
+    IpUdpTable = HeapAlloc
+	( GetProcessHeap(), 0,
+	  UdpTcpTableCall[Class].UdpOffset + (UdpTcpTableCall[Class].UdpSize * totalNumber) );
+    if (!IpUdpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CL_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					UdpTcpTableCall[Class].TOIID,
+					CL_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					UdpTcpTableCall[Class].UdpSize,
+					&AdapterUdpTable,
+					&returnSize );
+
+            if( status == STATUS_SUCCESS ) {
+                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+                    CopyMemory(Add2Ptr(IpUdpTable, UdpTcpTableCall[Class].UdpOffset + UdpTcpTableCall[Class].UdpSize * CurrIdx),
+                               Add2Ptr(AdapterUdpTable, UdpTcpTableCall[Class].UdpSize * TmpIdx),
+                               UdpTcpTableCall[Class].UdpSize);
+                tdiFreeThingSet( AdapterUdpTable );
+            }
+        }
+    }
+
+    closeTcpFile( tcpFile );
+
+    tdiFreeThingSet( entitySet );
+    IpUdpTable->dwNumEntries = CurrIdx;
+
+    return IpUdpTable;
 }
 
 DWORD getNumTcpEntries(void)
 {
-  return getNumWithOneHeader("/proc/net/tcp");
+    DWORD numEntities;
+    TDIEntityID *entitySet = NULL;
+    HANDLE tcpFile;
+    int i, totalNumber = 0;
+    NTSTATUS status;
+    PMIB_TCPROW IpTcpTable = NULL;
+    DWORD returnSize;
+
+    TRACE("called.\n");
+
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CO_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_MIB_ARPTABLE_ENTRY_ID,
+					CO_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(MIB_TCPROW),
+					(PVOID *)&IpTcpTable,
+					&returnSize );
+
+	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
+		if( IpTcpTable ) {
+			tdiFreeThingSet( IpTcpTable );
+			IpTcpTable = NULL;
+		}
+	}
+    }
+
+    closeTcpFile( tcpFile );
+    if( IpTcpTable ) tdiFreeThingSet( IpTcpTable );
+    if( entitySet ) tdiFreeThingSet( entitySet );
+    return totalNumber;
 }
 
-PMIB_TCPTABLE getTcpTable(void)
+PVOID getTcpTable(CLASS_TABLE Class)
 {
-    return 0;
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
+    NTSTATUS status;
+    PMIB_TCPTABLE IpTcpTable = NULL;
+    PVOID AdapterTcpTable = NULL;
+
+    TRACE("called.\n");
+
+    totalNumber = getNumTcpEntries();
+
+    status = openTcpFile( &tcpFile, FILE_READ_DATA );
+    if( !NT_SUCCESS(status) ) {
+        ERR("openTcpFile returned 0x%08lx\n", status);
+        return 0;
+    }
+
+    IpTcpTable = HeapAlloc
+	( GetProcessHeap(), 0,
+	  UdpTcpTableCall[Class].TcpOffset + (UdpTcpTableCall[Class].TcpSize * totalNumber) );
+    if (!IpTcpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( entitySet[i].tei_entity == CO_TL_ENTITY &&
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					UdpTcpTableCall[Class].TOIID,
+					CO_TL_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					UdpTcpTableCall[Class].TcpSize,
+					&AdapterTcpTable,
+					&returnSize );
+
+            if( status == STATUS_SUCCESS ) {
+                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+                    CopyMemory(Add2Ptr(IpTcpTable, UdpTcpTableCall[Class].TcpOffset + UdpTcpTableCall[Class].TcpSize * CurrIdx),
+                               Add2Ptr(AdapterTcpTable, UdpTcpTableCall[Class].TcpSize * TmpIdx),
+                               UdpTcpTableCall[Class].TcpSize);
+                tdiFreeThingSet( AdapterTcpTable );
+            }
+        }
+    }
+
+    closeTcpFile( tcpFile );
+
+    tdiFreeThingSet( entitySet );
+    IpTcpTable->dwNumEntries = CurrIdx;
+
+    return IpTcpTable;
 }

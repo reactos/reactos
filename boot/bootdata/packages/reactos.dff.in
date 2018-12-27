@@ -11,7 +11,8 @@
 
 .InfBegin
 [Version]
-Signature = "$ReactOS$"
+Signature = "$Windows NT$"
+;Signature = "$ReactOS$"
 
 ; Directories relative to the installation directory.
 ; For specifying absolute directories, use the SystemPartitionFiles section,
@@ -80,6 +81,7 @@ Signature = "$ReactOS$"
 60 = winsxs\x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef
 61 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
 62 = Resources\Themes\Modern
+63 = 3rdParty
 
 .InfEnd
 

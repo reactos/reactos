@@ -10,6 +10,7 @@ KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_CcMapData;
 KMT_TESTFUNC Test_CcPinMappedData;
 KMT_TESTFUNC Test_CcPinRead;
+KMT_TESTFUNC Test_CcSetFileSizes;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
@@ -41,6 +42,7 @@ const KMT_TEST TestList[] =
     { "CcMapData",                    Test_CcMapData },
     { "CcPinMappedData",              Test_CcPinMappedData },
     { "CcPinRead",                    Test_CcPinRead },
+    { "CcSetFileSizes",               Test_CcSetFileSizes },
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },

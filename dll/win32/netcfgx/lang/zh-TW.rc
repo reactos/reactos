@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "備用配置"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "如果此計算機使用多個網路，輸入下面的備用 IP 設定", -1, 9, 9, 220, 20
+    LTEXT "如果這台電腦使用多個網路，輸入下面的備用 IP 設定", -1, 9, 9, 220, 20
     CONTROL "自動專用 IP 地址(&T)", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "使用者配置(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12

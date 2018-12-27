@@ -1,0 +1,70 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+/* Translated by Luo Yufan (njlyf2011@hotmail.com) on 2018-11-13 */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
+描述:\n\
+  本命令行工具允许管理员查询基本系统配置信息。\n\n\
+参数列表:\n\
+  /S      system           指定要连接的远程系统。\n\n\
+  /U      [domain\\]user   指定应该在哪个用户的上下文执行命令。\n\n\
+  /P      [password]       指定指定用户上下文的密码。如果省略则\n\
+                           提示输入。\n\n\
+  /FO     format           指定显示结果的格式。\n\
+                           有效值: ""TABLE"", ""LIST"", ""CSV""。\n\n\
+  /NH                      指定“列标题”不应该在输出中显示。\n\
+                           只对 ""TABLE"" 和 ""CSV"" 格式有效。\n\n\
+  /?                       显示此帮助/用法。\n\n\
+示例:\n\
+  SYSTEMINFO\n\
+  SYSTEMINFO /?\n\
+  SYSTEMINFO /S system\n\
+  SYSTEMINFO /S system /U user\n\
+  SYSTEMINFO /S system /U domain\\user /P password /FO TABLE\n\
+  SYSTEMINFO /S system /FO LIST\n\
+  SYSTEMINFO /S system /FO CSV /NH\n"
+
+IDS_HOST_NAME,               "主机名"
+IDS_OS_NAME,                 "OS 名称"
+IDS_OS_VERSION,              "OS 版本"
+IDS_BUILD,                   "构建"
+IDS_OS_BUILD_TYPE,           "OS 构建类型"
+IDS_REG_OWNER,               "注册拥有者"
+IDS_REG_ORG,                 "注册组织"
+IDS_PRODUCT_ID,              "产品 ID"
+IDS_INST_DATE,               "安装日期"
+IDS_UP_TIME,                 "系统开机时间"
+IDS_UP_TIME_FORMAT,          "%u 日, %u 小时, %u 分钟, %u 秒"
+IDS_SYS_MANUFACTURER,        "系统制造商"
+IDS_SYS_MODEL,               "系统型号"
+IDS_SYS_TYPE,                "系统类型"
+IDS_PROCESSORS,              "处理器"
+IDS_PROCESSORS_FORMAT,       "已安装 %u 个处理器。"
+IDS_BIOS_DATE,               "BIOS 日期"
+IDS_BIOS_VERSION,            "BIOS 版本"
+IDS_ROS_DIR,                 "ReactOS 目录"
+IDS_SYS_DIR,                 "系统目录"
+IDS_BOOT_DEV,                "启动设备"
+IDS_SYS_LOCALE,              "系统区域位置"
+IDS_INPUT_LOCALE,            "输入区域位置"
+IDS_TIME_ZONE,               "时区"
+IDS_TOTAL_PHYS_MEM,          "物理内存总量"
+IDS_AVAIL_PHISICAL_MEM,      "物理内存可用量"
+IDS_VIRT_MEM_MAX,            "虚拟内存: 最大大小"
+IDS_VIRT_MEM_AVAIL,          "虚拟内存: 可用"
+IDS_VIRT_MEM_INUSE,          "虚拟内存: 已使用"
+IDS_PAGEFILE_LOC,            "页面文件位置"
+IDS_DOMAIN,                  "域"
+IDS_NETWORK_CARDS,           "网卡"
+IDS_NETWORK_CARDS_FORMAT,    "已安装 %u 。"
+IDS_CONNECTION_NAME,         "连接名称"
+IDS_STATUS,                  "状态"
+IDS_MEDIA_DISCONNECTED,      "媒体连接已中断"
+IDS_DHCP_ENABLED,            "DHCP 已启用"
+IDS_NO,                      "否"
+IDS_IP_ADDRESSES,            "IP 地址"
+
+END

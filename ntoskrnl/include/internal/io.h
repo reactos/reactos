@@ -527,6 +527,18 @@ typedef struct _RESERVE_IRP_ALLOCATOR
 } RESERVE_IRP_ALLOCATOR, *PRESERVE_IRP_ALLOCATOR;
 
 //
+// Type selection for IopCreateSecurityDescriptorPerType()
+//
+typedef enum _SECURITY_DESCRIPTOR_TYPE
+{
+    RestrictedPublic = 1,
+    UnrestrictedPublic,
+    RestrictedPublicOpen,
+    UnrestrictedPublicOpen,
+    SystemDefault,
+} SECURITY_DESCRIPTOR_TYPE, *PSECURITY_DESCRIPTOR_TYPE;
+
+//
 // Resource code
 //
 ULONG

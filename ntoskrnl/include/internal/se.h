@@ -487,6 +487,12 @@ SeReleaseSidAndAttributesArray(
 
 NTSTATUS
 NTAPI
+SeComputeQuotaInformationSize(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Out_ PULONG QuotaInfoSize);
+
+NTSTATUS
+NTAPI
 SepCaptureAcl(
     IN PACL InputAcl,
     IN KPROCESSOR_MODE AccessMode,

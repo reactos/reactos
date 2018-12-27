@@ -118,6 +118,7 @@ list(APPEND SOURCE
     user/ntuser/draw.c
     user/ntuser/event.c
     user/ntuser/focus.c
+    user/ntuser/ghost.c
     user/ntuser/guicheck.c
     user/ntuser/hook.c
     user/ntuser/hotkey.c

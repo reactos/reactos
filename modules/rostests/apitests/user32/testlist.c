@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_AttachThreadInput(void);
+extern void func_CloseWindow(void);
 extern void func_CreateDialog(void);
 extern void func_CreateIconFromResourceEx(void);
 extern void func_CreateWindowEx(void);
@@ -38,6 +39,7 @@ extern void func_SetParent(void);
 extern void func_SetProp(void);
 extern void func_SetScrollInfo(void);
 extern void func_SetScrollRange(void);
+extern void func_SwitchToThisWindow(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
@@ -46,6 +48,7 @@ extern void func_wsprintf(void);
 const struct test winetest_testlist[] =
 {
     { "AttachThreadInput", func_AttachThreadInput },
+    { "CloseWindow", func_CloseWindow },
     { "CreateDialog", func_CreateDialog },
     { "CreateIconFromResourceEx", func_CreateIconFromResourceEx },
     { "CreateWindowEx", func_CreateWindowEx },
@@ -80,6 +83,7 @@ const struct test winetest_testlist[] =
     { "SetProp", func_SetProp },
     { "SetScrollInfo", func_SetScrollInfo },
     { "SetScrollRange", func_SetScrollRange },
+    { "SwitchToThisWindow", func_SwitchToThisWindow },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },

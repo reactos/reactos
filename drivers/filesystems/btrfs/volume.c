@@ -53,6 +53,8 @@ NTSTATUS vol_close(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
 
     Irp->IoStatus.Information = 0;
 
+    ExAcquireResourceExclusiveLite(&pdo_list_lock, TRUE);
+
     ExAcquireResourceSharedLite(&pdode->child_lock, TRUE);
 
     if (InterlockedDecrement(&vde->open_count) == 0 && vde->removing) {
@@ -83,15 +85,19 @@ NTSTATUS vol_close(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
 
         ExReleaseResourceLite(&pdode->child_lock);
         ExDeleteResourceLite(&pdode->child_lock);
-        IoDetachDevice(vde->pdo);
+
+        if (vde->pdo->AttachedDevice)
+            IoDetachDevice(vde->pdo);
 
         pdo = vde->pdo;
         IoDeleteDevice(vde->device);
 
-        if (no_pnp)
+        if (!no_pnp)
             IoDeleteDevice(pdo);
     } else
         ExReleaseResourceLite(&pdode->child_lock);
+
+    ExReleaseResourceLite(&pdo_list_lock);
 
     return STATUS_SUCCESS;
 }
@@ -971,7 +977,7 @@ static BOOL allow_degraded_mount(BTRFS_UUID* uuid) {
     }
 
     adus.Buffer = L"AllowDegraded";
-    adus.Length = adus.MaximumLength = (USHORT)(wcslen(adus.Buffer) * sizeof(WCHAR));
+    adus.Length = adus.MaximumLength = sizeof(adus.Buffer) - sizeof(WCHAR);
 
     if (NT_SUCCESS(ZwQueryValueKey(h, &adus, KeyValueFullInformation, kvfi, kvfilen, &retlen))) {
         if (kvfi->Type == REG_DWORD && kvfi->DataLength >= sizeof(UINT32)) {

@@ -154,6 +154,8 @@ typedef struct _ADDRESS_FILE {
     /* Associated listener (see transport/tcp/accept.c) */
     IP_ADDRESS AddrCache;                 /* One entry address cache (destination
                                              address of last packet transmitted) */
+    HANDLE ProcessId;                     /* Creator process ID */
+    LARGE_INTEGER CreationTime;           /* Time of creation */
 
     /* The following members are used to control event notification */
 

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2017, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,7 @@ AcpiUpdateAllGpes (
     void)
 {
     ACPI_STATUS             Status;
+    BOOLEAN                 IsPollingNeeded = FALSE;
 
 
     ACPI_FUNCTION_TRACE (AcpiUpdateAllGpes);
@@ -96,7 +97,8 @@ AcpiUpdateAllGpes (
         goto UnlockAndExit;
     }
 
-    Status = AcpiEvWalkGpeList (AcpiEvInitializeGpeBlock, NULL);
+    Status = AcpiEvWalkGpeList (AcpiEvInitializeGpeBlock,
+        &IsPollingNeeded);
     if (ACPI_SUCCESS (Status))
     {
         AcpiGbl_AllGpesInitialized = TRUE;
@@ -104,6 +106,13 @@ AcpiUpdateAllGpes (
 
 UnlockAndExit:
     (void) AcpiUtReleaseMutex (ACPI_MTX_EVENTS);
+
+    if (IsPollingNeeded && AcpiGbl_AllGpesInitialized)
+    {
+        /* Poll GPEs to handle already triggered events */
+
+        AcpiEvGpeDetect (AcpiGbl_GpeXruptListHead);
+    }
     return_ACPI_STATUS (Status);
 }
 
@@ -151,6 +160,16 @@ AcpiEnableGpe (
             ACPI_GPE_DISPATCH_NONE)
         {
             Status = AcpiEvAddGpeReference (GpeEventInfo);
+            if (ACPI_SUCCESS (Status) &&
+                ACPI_GPE_IS_POLLING_NEEDED (GpeEventInfo))
+            {
+                /* Poll edge-triggered GPEs to handle existing events */
+
+                AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+                (void) AcpiEvDetectGpe (
+                    GpeDevice, GpeEventInfo, GpeNumber);
+                Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+            }
         }
         else
         {
@@ -500,6 +519,16 @@ AcpiSetupGpeForWake (
          */
         GpeEventInfo->Flags =
             (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
+    }
+    else if (GpeEventInfo->Flags & ACPI_GPE_AUTO_ENABLED)
+    {
+        /*
+         * A reference to this GPE has been added during the GPE block
+         * initialization, so drop it now to prevent the GPE from being
+         * permanently enabled and clear its ACPI_GPE_AUTO_ENABLED flag.
+         */
+        (void) AcpiEvRemoveGpeReference (GpeEventInfo);
+        GpeEventInfo->Flags &= ~~ACPI_GPE_AUTO_ENABLED;
     }
 
     /*

@@ -27,6 +27,20 @@ Author:
 #include <ntpoapi.h>
 #endif
 
+#ifdef NTOS_MODE_USER
+//
+// Information Structures for NtPowerInformation
+// Copied from ddk\ntpoapi.h
+//
+typedef struct _SYSTEM_POWER_INFORMATION
+{
+    ULONG MaxIdlenessAllowed;
+    ULONG Idleness;
+    ULONG TimeRemaining;
+    UCHAR CoolingMode;
+} SYSTEM_POWER_INFORMATION, *PSYSTEM_POWER_INFORMATION;
+#endif
+
 //
 // Docking states
 //
@@ -123,7 +137,9 @@ typedef struct _PO_IRP_QUEUE
     PIRP PendingIrpList;
 } PO_IRP_QUEUE, *PPO_IRP_QUEUE;
 
+//
 // Power IRP Manager
+//
 typedef struct _PO_IRP_MANAGER
 {
     PO_IRP_QUEUE DeviceIrpQueue;

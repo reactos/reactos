@@ -1,5 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -47,7 +47,7 @@ STRINGTABLE
     IDS_TB_FORWARD          "前进"
     IDS_TB_STOP             "停止"
     IDS_TB_REFRESH          "刷新"
-    IDS_TB_HOME             "首页"
+    IDS_TB_HOME             "主页"
     IDS_TB_PRINT            "打印..."
 }
 
@@ -60,8 +60,8 @@ STRINGTABLE
 {
     IDS_FINDINGRESOURCE     "正在搜索 %s"
     IDS_BEGINDOWNLOADDATA   "开始下载 %s"
-    IDS_ENDDOWNLOADDATA     "下载 %s 中"
-    IDS_SENDINGREQUEST      "要求 %s"
+    IDS_ENDDOWNLOADDATA     "正在下载 %s "
+    IDS_SENDINGREQUEST      "需要 %s"
 }
 
 

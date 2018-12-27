@@ -1,0 +1,10 @@
+/*
+ * COMBINING DOUBLE ACUTE ACCENT
+ * The dead key transformation set was defined by checking the availability of
+ * the resulting letters in Unicode character table: https://unicode-table.com
+ */
+
+  { DEADTRANS(L'o', 0x030B, 0x0151, 0x00) },
+  { DEADTRANS(L'O', 0x030B, 0x0150, 0x00) },
+  { DEADTRANS(L'u', 0x030B, 0x0171, 0x00) },
+  { DEADTRANS(L'U', 0x030B, 0x0170, 0x00) },

@@ -1,0 +1,12 @@
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    STRING_CHCP_HELP "Kuvab või sätib aktiivse koodilehe numbri.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Määrab aktiivse koodilehe numbri.\n\n\
+Kirjuta CHCP parameetriteta, et kuvada aktiivset koodilehel numbrit.\n"
+    STRING_CHCP_ERROR1 "Aktiivne koodileht: %u\n"
+    STRING_CHCP_ERROR4 "Sobimatu koodileht\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Sobimatu parameetrite vorming - %s\n"
+END
