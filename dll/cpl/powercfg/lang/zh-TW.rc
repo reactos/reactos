@@ -95,12 +95,12 @@ BEGIN
     LTEXT "在計算機休眠時，它將內存中所有信息保存到硬碟上，然後關閉計算機。在退出休眠狀態時，計算機會恢復到原來的狀態。", -1, 37, 6, 210, 35
     GROUPBOX "休眠", -1, 6, 41, 240, 32
     AUTOCHECKBOX "啓用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "用於休眠的磁盤空間", -1, 6, 80, 240, 76
-    LTEXT "空閒的磁盤空間:", -1, 15, 95, 140, 10
+    GROUPBOX "用於休眠的磁碟空間", -1, 6, 80, 240, 76
+    LTEXT "空閒的磁碟空間:", -1, 15, 95, 140, 10
     LTEXT "未知", IDC_FREESPACE, 160, 95, 80, 10
-    LTEXT "休眠所需的磁盤空間:", -1, 15, 115, 140, 10
+    LTEXT "休眠所需的磁碟空間:", -1, 15, 115, 140, 10
     LTEXT "未知", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "在計算機進入休眠之前，您必須釋放一些磁盤空間。", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "在計算機進入休眠之前，您必須釋放一些磁碟空間。", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE

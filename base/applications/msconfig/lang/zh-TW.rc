@@ -153,7 +153,7 @@ BEGIN
     IDS_TOOLS_INFO_DESCR "顯示版本訊息。"
     IDS_TOOLS_INFO_CMD "winver.exe"
     IDS_TOOLS_REGEDIT_NAME "登錄表編輯器"
-    IDS_TOOLS_REGEDIT_DESCR "打開登錄表編輯器。"
+    IDS_TOOLS_REGEDIT_DESCR "開啟登錄表編輯器。"
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "系統內容"
     IDS_TOOLS_SYSDM_DESCR "顯示這台電腦的內容"
