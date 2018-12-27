@@ -1,17 +1,5 @@
 /* Translated by ??? and Ismael Ferreras Morezuelas (Swyter) */
 
-/*
- * PROJECT:    ReactOS Setup
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/setup/usetup/lang/es-ES.h
- * PURPOSE:    Spanish Language File for ReactOS Setup
- * TRANSLATOR: 2007       Gabriel Ilardi             (gabrielilardi [at] hotmail [dot] it)
- * UPDATED:    2007       Remialdo <remialdo at gmail dot com>
- * UPDATED:    2007       Marc Piulachs              (marc [dot] piulachs [at] codexchange [dot] net)
- * UPDATED:    2016       Ismael Ferreras Morezuelas (swyterzone [plus] ros [at] gmail [dot] com)
- * UPDATED:    2018       Julio Carchi Ruiz          (contacto [at] julcar [dot] info [dot] tm)
- */
-
 #pragma once
 
 MUI_LAYOUTS esESLayouts[] =
@@ -26,19 +14,19 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Selección del idioma",
+        "Selecci¢n del idioma",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Seleccione el idioma que será utilizado durante la instalación.",
+        "\x07  Seleccione el idioma a utilizar durante la instalaci¢n.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -50,7 +38,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  El idioma seleccionado también será el idioma del sistema.",
+        "\x07  El idioma seleccionado tambi‚n ser  el idioma del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -72,25 +60,25 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Bienvenido a la instalación de ReactOS",
+        "Bienvenido a la instalaci¢n de ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Esta parte de la instalación copiará en su equipo los archivos",
+        "Esta parte de la instalaci¢n copiar  ReactOS en su equipo y",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "necesarios de ReactOS y prepara la segunda parte de la instalación.",
+        "prepara la segunda parte de la instalaci¢n.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -108,7 +96,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Presione L para ver las condiciones y términos de licencia.",
+        "\x07  Presione L para ver las condiciones y t‚rminos de licencia.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -120,13 +108,13 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         6,
         23,
-        "Para más información sobre ReactOS, visite nuestro sitio Web:",
+        "Para m s informaci¢n sobre ReactOS, visite la Web:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "https://www.reactos.org",
+        "http://www.reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -148,61 +136,61 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Acerca del estado de ReactOS",
+        "ReactOS Version Status",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS está en estado Alpha, es decir, no es un sistema completo",
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "y está en constante desarrollo. Sólo es recomendado usarlo con fines",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "de prueba y evaluación y no como su sistema de uso diario.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Respalde sus datos o pruébelo en una computadora no habitual si usted",
+        "Backup your data or test on a secondary computer if you attempt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "desea ejecutar ReactOS en hardware real.",
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Presione INTRO para continuar la instalación de ReactOS.",
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Presione F3 para salir sin instalar ReactOS.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "INTRO = Continuar   F3 = Salir",
+        "ENTER = Continue   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -218,7 +206,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -230,13 +218,13 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS se distribuye bajo los términos de la licencia",
+        "ReactOS se distribuye bajo los t‚rminos de la licencia",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU GPL con partes que contienen código de otras",
+        "GNU GPL con partes que contienen c¢digo de otras",
         TEXT_STYLE_NORMAL
     },
     {
@@ -248,13 +236,13 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         11,
-        "Todo el software que forma parte del sistema ReactOS está",
+        "Todo el software que forma parte del sistema ReactOS est ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "por tanto liberado bajo licencia GNU GPL así como manteniendo",
+        "por tanto liberado bajo licencia GNU GPL as¡ como manteniendo",
         TEXT_STYLE_NORMAL
     },
     {
@@ -278,13 +266,13 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         17,
-        "de ReactOS cubre solo la distribución a terceras partes.",
+        "de ReactOS cubre solo la distribuci¢n a terceras partes.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "Si por algún motivo no recibió una copia de la",
+        "Si por alg£n motivo no recibi¢ una copia de la",
         TEXT_STYLE_NORMAL
     },
     {
@@ -302,25 +290,25 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         22,
-        "Garantía:",
+        "Garant¡a:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
-        "Este es un software libre; vea el código para las condiciones de copia.",
+        "Este es un software libre; vea el c¢digo para las condiciones de copia.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "No existe garantía; ni siquiera de MERCANTIBILIDAD",
+        "No existe garant¡a; ni siquiera de MERCANTIBILIDAD",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
-        "o el cumplimiento de algún propósito particular",
+        "o el cumplimiento de alg£n prop¢sito particular",
         TEXT_STYLE_NORMAL
     },
     {
@@ -342,13 +330,13 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "La lista inferior muestra la configuración actual de dispositivos.",
+        "La lista inferior muestra la configuraci¢n actual de dispositivos.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -383,19 +371,19 @@ static MUI_ENTRY esESDevicePageEntries[] =
     },
     {
         25,
-        16, "Aceptar la configuración de los dispositivos",
+        16, "Aceptar la configuraci¢n de los dispositivos",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "Puede modificar la configuración con las teclas ARRIBA y ABAJO",
+        "Puede modificar la configuraci¢n con las teclas ARRIBA y ABAJO",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "para elegir. Luego presione INTRO para cambiar a una configuración",
+        "para elegir. Luego presione INTRO para cambiar a una configuraci¢n",
         TEXT_STYLE_NORMAL
     },
     {
@@ -407,7 +395,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         23,
-        "Cuando la configuración sea correcta, elija \"Aceptar la configuración",
+        "Cuando la configuraci¢n sea correcta, elija \"Aceptar la configuraci¢n",
         TEXT_STYLE_NORMAL
     },
     {
@@ -435,7 +423,7 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -447,13 +435,13 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         6,
         9,
-        "Aún no posee todas las funciones de un instalador.",
+        "A£n no posee todas las funciones de un instalador.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Las funciones de reparación aún no han sido implementadas.",
+        "Las funciones de reparaci¢n no han sido a£n implementadas.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -465,13 +453,13 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         8,
         17,
-        "\x07  Presione R para la consola de recuperación.",
+        "\x07  Presione R para la consola de recuperaci¢n.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Presione ESC para volver al menú principal.",
+        "\x07  Presione ESC para volver al men£ principal.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -483,7 +471,7 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Regresar al inicio  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
+        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -499,7 +487,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -523,7 +511,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         8,
         13,
-        "\x07  Presione ESC para volver a la página anterior sin cambiar",
+        "\x07  Presione ESC para volver a la p gina anterior sin cambiar",
         TEXT_STYLE_NORMAL
     },
     {
@@ -551,31 +539,31 @@ static MUI_ENTRY esESFlushPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "El sistema se está asegurando que todos los datos sean guardados",
+        "El sistema se est  asegurando que todos los datos sean salvados",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Esta operación puede durar varios minutos",
+        "Esta operaci¢n puede durar varios minutos",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Cuando haya terminado, su equipo se reiniciará automáticamente",
+        "Cuando haya terminado, su equipo se reiniciar  autom ticamente",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Vaciando la caché",
+        "Vaciando la cach‚",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -591,7 +579,7 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -637,7 +625,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -660,7 +648,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     {
         8,
         13,
-        "\x07  Presione la tecla ESC para volver a la página anterior sin",
+        "\x07  Presione la tecla ESC para volver a la p gina anterior sin",
         TEXT_STYLE_NORMAL
     },
     {
@@ -688,13 +676,13 @@ static MUI_ENTRY esESSuccessPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Los componentes básicos de ReactOS han sido instalados correctamente.",
+        "Los componentes b sicos de ReactOS han sido instalados correctamente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -734,7 +722,7 @@ static MUI_ENTRY esESBootPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -781,7 +769,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -805,32 +793,32 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Presione INTRO para instalar ReactOS en la partición seleccionada.",
+        "\x07  Presione INTRO para instalar ReactOS en la partici¢n seleccionada.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Presione P para crear una partición primaria.",
-//        "\x07  Presione C para crear una nueva partición.",
+        "\x07  Presione P para crear una partici¢n primaria.",
+//        "\x07  Presione C para crear una nueva partici¢n.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Presione E para crear una partición extendida.",
+        "\x07  Presione E para crear una partici¢n extendida.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Presione L para crear una partición lógica.",
+        "\x07  Presione L para crear una partici¢n l¢gica.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Presione D para borrar una partición existente.",
+        "\x07  Presione D para borrar una partici¢n existente.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -852,19 +840,19 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ha solicitado borrar la partición del sistema.",
+        "Ha solicitado borrar la partici¢n del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Las particiones del sistema contienen programas de diagnóstico y configuración",
+        "Las particiones del sistema contienen programas de diagn¢stico y configuraci¢n",
         TEXT_STYLE_NORMAL
     },
     {
@@ -882,19 +870,19 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         14,
-        "Borre particiones del sistema únicamente cuando esté seguro de que no",
+        "Borre particiones del sistema £nicamente cuando est‚ seguro de que no",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "haya programas de ese tipo en la partición, o cuando esté seguro de borrarlos.",
+        "haya programas de ese tipo en la partici¢n, o cuando est‚ seguro de borrarlos.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "Cuando se elimina una partición puede perder la posibilidad de arrancar el",
+        "Cuando se elimina una partici¢n puede perder la posibilidad de arrancar el",
         TEXT_STYLE_NORMAL
     },
     {
@@ -906,25 +894,25 @@ static MUI_ENTRY esESConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         20,
-        "\x07  Presione INTRO para borrar la partición del sistema, se",
+        "\x07  Presione INTRO para borrar la partici¢n del sistema, se",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   volverá a pedir confirmación más tarde.",
+        "   volver  a pedir confirmaci¢n m s tarde.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Presione ESC para volver a la página anterior. Si lo hace ",
+        "\x07  Presione ESC para volver a la p gina anterior. Si lo hace ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   la partición no se borrará.",
+        "   la partici¢n no se borrar .",
         TEXT_STYLE_NORMAL
     },
     {
@@ -946,19 +934,19 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Formato de la partición",
+        "Formato de la partici¢n",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "El instalador formateará la partición. Presione INTRO para continuar.",
+        "El instalador formatear  la partici¢n. Presione INTRO para continuar.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -980,13 +968,13 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "El programa instalará los archivos en la partición seleccionada. ",
+        "El programa instalar  los archivos en la partici¢n seleccionada. ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1032,7 +1020,7 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1044,13 +1032,13 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         0,
         13,
-        "archivos en su carpeta de instalación de ReactOS.",
+        "archivos en su carpeta de instalaci¢n de ReactOS.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         14,
-        "Esta operación puede durar varios minutos.",
+        "Esta operaci¢n puede durar varios minutos.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -1072,13 +1060,13 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "A continuación el programa instalará el cargador de arranque",
+        "A continuaci¢n el programa instalar  el cargador de arranque",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1090,7 +1078,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         13,
-        "Instalar el cargador de arranque en el disco duro (sólo VBR).",
+        "Instalar el cargador de arranque en el disco duro (s¢lo VBR).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1102,7 +1090,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         15,
-        "Omitir la instalación del cargador de arranque.",
+        "Omitir la instalaci¢n del cargador de arranque.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1124,7 +1112,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1148,7 +1136,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Presione la tecla ESC para volver a la página anterior sin cambiar",
+        "\x07  Presione la tecla ESC para volver a la p gina anterior sin cambiar",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1176,19 +1164,19 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Seleccione la distribución de teclado a instalar de forma predeterminada.",
+        "Seleccione la distribuci¢n de teclado a instalar de forma predeterminada.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Presione ARRIBA o ABAJO para seleccionar la distribución de teclado",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar la distribuci¢n de teclado",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1200,13 +1188,13 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Presione la tecla ESC para volver a la página anterior sin cambiar",
+        "\x07  Presione la tecla ESC para volver a la p gina anterior sin cambiar",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   la distribución de teclado.",
+        "   la distribuci¢n de teclado.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1229,7 +1217,7 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1258,7 +1246,7 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1276,13 +1264,13 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         8,
         21,
-        "\x07  Presione INTRO para formatear partición.",
+        "\x07  Presione INTRO para formatear partici¢n.",
         0
     },
     {
         8,
         23,
-        "\x07  Presione ESC para seleccionar otra partición.",
+        "\x07  Presione ESC para seleccionar otra partici¢n.",
         0
     },
     {
@@ -1305,25 +1293,25 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ha elegido borrar la partición",
+        "Ha elegido borrar la partici¢n",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Presione D para borrar la partición.",
+        "\x07  Presione D para borrar la partici¢n.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "ADVERTENCIA: ­Se perderán todos los datos de esta partición!",
+        "ADVERTENCIA: ­Se perder n todos los datos de esta partici¢n!",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1335,7 +1323,7 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Borrar partición   ESC = Cancelar   F3 = Salir",
+        "   D = Borrar partici¢n   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1351,13 +1339,13 @@ static MUI_ENTRY esESRegistryEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        " Instalaci¢n de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "El instalador está actualizando la configuración del sistema. ",
+        "El instalador est  actualizando la configuraci¢n del sistema. ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1383,8 +1371,8 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS no está completamente instalado en su\n"
-        "equipo. Si cierra ahora el Instalador, necesitará\n"
+        "ReactOS no est  completamente instalado en su\n"
+        "equipo. Si cierra ahora el Instalador, necesitar \n"
         "ejecutarlo otra vez para instalar ReactOS.\n"
         "\n"
         "  \x07  Presione INTRO para continuar con el instalador.\n"
@@ -1403,53 +1391,53 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "El instalador falló al cargar el archivo TXTSETUP.SIF.\n",
+        "El instalador fall¢ al cargar el archivo TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "El instalador encontró un archivo TXTSETUP.SIF corrupto.\n",
+        "El instalador encontr¢ un archivo TXTSETUP.SIF corrupto.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "El instalador encontró una firma incorrecta en TXTSETUP.SIF.\n",
+        "El instalador encontr¢ una firma incorrecta en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "El instalador no pudo recibir información del disco del sistema.\n",
+        "El instalador no pudo recibir informaci¢n del disco del sistema.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_BOOT,
-        "El instalador falló al instalar el código de inicio FAT en la partición del sistema.",
+        "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "El instalador falló al cargar la lista de tipos de equipos.\n",
+        "El instalador fall¢ al cargar la lista de tipos de equipos.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "El instalador falló al cargar la lista de resoluciones de pantalla.\n",
+        "El instalador fall¢ al cargar la lista de resoluciones de pantalla.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "El instalador falló al cargar la lista de teclados.\n",
+        "El instalador fall¢ al cargar la lista de teclados.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "El instalador falló al cargar la lista de distribuciones de teclado.\n",
+        "El instalador fall¢ al cargar la lista de distribuciones de teclado.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WARN_PARTITION,
-        "­El instalador encontró que al menos un disco duro contiene una tabla\n"
-        "de partición incompatible que no puede ser manejada correctamente!\n"
+        "­El instalador encontr¢ que al menos un disco duro contiene una tabla\n"
+        "de partici¢n incompatible que no puede ser manejada correctamente!\n"
         "\n"
         "Crear o borrar particiones puede destruir la tabla de particiones.\n"
         "\n"
@@ -1459,8 +1447,8 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_NEW_PARTITION,
-        "­No puede crear una nueva partición dentro\n"
-        "de una partición existente!\n"
+        "­No puede crear una nueva partici¢n dentro\n"
+        "de una partici¢n existente!\n"
         "\n"
         "  * Presione cualquier tecla para continuar.",
         NULL
@@ -1474,7 +1462,7 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "El instalador falló al instalar el código de inicio FAT en la partición del sistema.",
+        "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
         "INTRO = Reiniciar el equipo"
     },
     {
@@ -1484,37 +1472,37 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "El instalador falló al actualizar la configuración de distribución de teclado.",
+        "El instalador fall¢ al actualizar la configuraci¢n de distribuci¢n de teclado.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "El instalador falló al actualizar la configuración de la pantalla.",
+        "El instalador fall¢ al actualizar la configuraci¢n de la pantalla.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "El instalador falló al importar un archivo de la estructura.",
+        "El instalador fall¢ al importar un archivo de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_REGISTRY
-        "El instalador falló al buscar los archivos de datos registrados.",
+        "El instalador fall¢ al buscar los archivos de datos registrados.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_HIVE,
-        "El instalador falló al crear el registro de la estructura.",
+        "El instalador fall¢ al crear el registro de la estructura.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "El instalador falló al configurar el registro de inicio.",
+        "El instalador fall¢ al configurar el registro de inicio.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet no tiene un archivo inf válido.\n",
+        "Cabinet no tiene un archivo inf v lido.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
@@ -1524,50 +1512,50 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet no tiene ningún script de instalación.\n",
+        "Cabinet no tiene ning£n script de instalaci¢n.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_COPY_QUEUE,
-        "El instalador falló al abrir la lista de archivos a copiar.\n",
+        "El instalador fall¢ al abrir la lista de archivos a copiar.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_DIR,
-        "El instalador no puede crear los directorios de instalación.",
+        "El instalador no puede crear los directorios de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "El instalador falló al buscar la sección 'Directorios'\n"
+        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
         "en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_SECTION,
-        "El instalador falló al buscar la sección 'Directorios'\n"
+        "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
         "en el cabinet.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "El instalador no puede crear el directorio de instalación.",
+        "El instalador no puede crear el directorio de instalaci¢n.",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "El instalador falló al buscar la sección 'SetupData'\n"
+        "El instalador fall¢ al buscar la secci¢n 'SetupData'\n"
         "en TXTSETUP.SIF.\n",
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "El instalador falló al escribir la tabla de particiones.\n"
+        "El instalador fall¢ al escribir la tabla de particiones.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "El instalador falló al añadir el código de páginas al registro.\n"
+        "El instalador fall¢ al a¤adir el c¢digo de p ginas al registro.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
@@ -1582,42 +1570,42 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "El instalador no ha podido configurar el ID geográfico.\n"
+        "El instalador no ha podido configurar el ID geogr fico.\n"
         "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Nombre de carpeta no válido.\n"
+        "Nombre de carpeta no v lido.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "La partición selecionada no es lo suficientemente grande como para.\n"
-        "instalar ReactOS. Se necesita una partición de al menos %lu MB.\n"
+        "La partici¢n selecionada no es lo suficientemente grande como para.\n"
+        "instalar ReactOS. Se necesita una partici¢n de al menos %lu MB.\n"
         "\n"
         "  * Presione una tecla para continuar.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "No es posible añadir una partición primaria o extendida en la\n"
-        "tabla de partición de este disco, ya que está completamente llena.\n"
+        "No es posible a¤adir una partici¢n primaria o extendida en la\n"
+        "tabla de partici¢n de este disco, ya que est  completamente llena.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "No es posible crear más de una partición extendida por disco.\n"
+        "No es posible crear m s de una partici¢n extendida por disco.\n"
         "\n"
         "  * Presione una tecla para continuar."
     },
     {
         //ERROR_FORMATTING_PARTITION,
-        "El instalador es incapaz de formatear la partición:\n"
+        "El instalador es incapaz de formatear la partici¢n:\n"
         " %S\n"
         "\n"
-        "INTRO = Reiniciar equipo"
+        "INTRO = reiniciar equipo"
     },
     {
         NULL,
@@ -1736,35 +1724,35 @@ MUI_STRING esESStrings[] =
     {STRING_INSTALLCREATEPARTITION,
      "   INTRO = Instalar  P = Crear primaria   E = Crear extendida   F3 = Salir"},
     {STRING_INSTALLCREATELOGICAL,
-     "   INTRO = Instalar  C = Crear partición lógica   F3 = Salir"},
+     "   INTRO = Instalar  C = Crear partici¢n l¢gica   F3 = Salir"},
     {STRING_DELETEPARTITION,
-     "   D = Borrar partición   F3 = Salir"},
+     "   D = Borrar partici¢n   F3 = Salir"},
     {STRING_INSTALLDELETEPARTITION,
-     "   INTRO = Instalar   D = Borrar partición   F3 = Salir"},
+     "   INTRO = Instalar   D = Borrar partici¢n   F3 = Salir"},
     {STRING_PARTITIONSIZE,
-     "Tamaño de la nueva partición:"},
+     "Tama¤o de la nueva partici¢n:"},
     {STRING_CHOOSENEWPARTITION,
-     "Ha elegido crear una nueva partición primaria en"},
+     "Ha elegido crear una nueva partici¢n primaria en"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Ha elegido crear una nueva partición extendida en"},
+     "Ha elegido crear una nueva partici¢n extendida en"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Ha elegido crear una nueva partición lógica en"},
+     "Ha elegido crear una nueva partici¢n l¢gica en"},
     {STRING_HDDSIZE,
-    "Escriba el tamaño de la nueva partición en megabytes."},
+    "Escriba el tama¤o de la nueva partici¢n en megabytes."},
     {STRING_CREATEPARTITION,
-     "   INTRO = Crear partición   ESC = Cancelar   F3 = Salir"},
+     "   INTRO = Crear partici¢n   ESC = Cancelar   F3 = Salir"},
     {STRING_PARTFORMAT,
-    "A continuación se formateará esta partición."},
+    "A continuaci¢n se formatear  esta partici¢n."},
     {STRING_NONFORMATTEDPART,
-    "Ha elegido instalar ReactOS en una nueva partición o en una partición sin formato."},
+    "Ha elegido instalar ReactOS en una nueva partici¢n o en una partici¢n sin formato."},
     {STRING_NONFORMATTEDSYSTEMPART,
-    "La partición del sistema todavía no ha sido formateada."},
+    "La partici¢n del sistema todav¡a no ha sido formateada."},
     {STRING_NONFORMATTEDOTHERPART,
-    "La partición nueva todavía no ha sido formateada."},
+    "La partici¢n nueva todav¡a no ha sido formateada."},
     {STRING_INSTALLONPART,
-    "El instalador está instalando ReactOS en la partición"},
+    "El instalador est  instalando ReactOS en la partici¢n"},
     {STRING_CHECKINGPART,
-    "El instalador está comprobando la partición seleccionada."},
+    "El instalador est  comprobando la partici¢n seleccionada."},
     {STRING_CONTINUE,
     "INTRO = Continuar"},
     {STRING_QUITCONTINUE,
@@ -1772,43 +1760,43 @@ MUI_STRING esESStrings[] =
     {STRING_REBOOTCOMPUTER,
     "INTRO = Reiniciar el equipo"},
     {STRING_TXTSETUPFAILED,
-    "El instalador falló al buscar la sección\nen TXTSETUP.SIF.\n"},
+    "El instalador fall¢ al buscar la secci¢n\nen TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "El instalador está copiando archivos..."},
+     "El instalador est  copiando archivos..."},
     {STRING_REGHIVEUPDATE,
-    "   Actualizando el árbol del registro..."},
+    "   Actualizando el  rbol del registro..."},
     {STRING_IMPORTFILE,
     "   Importando %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Actualizando configuración del tipo de pantalla..."},
+    "   Actualizando configuraci¢n del tipo de pantalla..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Actualizando configuración regional..."},
+    "   Actualizando configuraci¢n regional..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Actualizando configuración de distribución de teclado..."},
+    "   Actualizando configuraci¢n de distribuci¢n de teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Añadiendo información al registro..."},
+    "   A¤adiendo informaci¢n al registro..."},
     {STRING_DONE,
     "   Terminado..."},
     {STRING_REBOOTCOMPUTER2,
     "   INTRO = Reiniciar el equipo"},
     {STRING_REBOOTPROGRESSBAR,
-    " Su computadora se reiniciará en %li segundo(s)... "},
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "No se pudo abrir la consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
-    "La causa más común es la utilización de un teclado USB\r\n"},
+    "La causa m s com£n es la utilizaci¢n de un teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Todavía no se soportan los teclados USB por completo\r\n"},
+    "Todav¡a no se soportan los teclados USB por completo\r\n"},
     {STRING_FORMATTINGDISK,
-    "El instalador está formateando el disco"},
+    "El instalador est  formateando el disco"},
     {STRING_CHECKINGDISK,
-    "El instalador está verificando el disco"},
+    "El instalador est  verificando el disco"},
     {STRING_FORMATDISK1,
-    " Formatear la partición con sistema de archivos %S (formato rápido) "},
+    " Formatear la partici¢n con sistema de archivos %S (formato r pido) "},
     {STRING_FORMATDISK2,
-    " Formatear la partición con sistema de archivos %S "},
+    " Formatear la partici¢n con sistema de archivos %S "},
     {STRING_KEEPFORMAT,
     " Mantener el sistema de archivos actual (sin cambios) "},
     {STRING_HDINFOPARTCREATE,
@@ -1834,13 +1822,13 @@ MUI_STRING esESStrings[] =
     {STRING_HDDINFOUNK6,
     "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "El instalador ha creado una nueva partición en"},
+    "El instalador ha creado una nueva partici¢n en"},
     {STRING_UNPSPACE,
     "    %sEspacio sin particionar%s            %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (máx. %lu MB)"},
+    "MB (m x. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Partición extendida"},
+    "Partici¢n extendida"},
     {STRING_UNFORMATTED,
     "Nueva (sin formato)"},
     {STRING_FORMATUNUSED,
@@ -1854,6 +1842,6 @@ MUI_STRING esESStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Añadiendo distribución de teclado"},
+    "A¤adiendo distribuci¢n de teclado"},
     {0, 0}
 };
