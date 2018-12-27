@@ -5806,6 +5806,8 @@ GreExtTextOutW(
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
+    if ((fuOptions & ETO_OPAQUE) ||
+        (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)))
     {
         TextLeft = RealXStart;
         TextTop = YStart;
