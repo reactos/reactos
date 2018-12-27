@@ -655,7 +655,7 @@ IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
     UNICODE_STRING EnumKeyName;
     UNICODE_STRING ValueName;
     PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
-    HANDLE ServiceKey = NULL, ServiceEnumKey;
+    HANDLE ServiceKey = NULL, ServiceEnumKey = NULL;
     ULONG Disposition;
     ULONG Count = 0, NextInstance = 0;
     WCHAR ValueBuffer[6];
