@@ -108,7 +108,7 @@ CAPTION "關於"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "ReactOS 程式管理器 版權所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS 程式管理員 版權所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
     DEFPUSHBUTTON "關閉", IDOK, 133, 46, 50, 14
 END
 
@@ -184,13 +184,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 程式管理器"
+    IDS_APPTITLE "ReactOS 程式管理員"
     IDS_SEARCH_TEXT "搜索…"
     IDS_INSTALL "安裝"
     IDS_UNINSTALL "解除安裝"
     IDS_MODIFY "修改"
     IDS_APPS_COUNT "程式個數：%d; Selected: %d"
-    IDS_WELCOME_TITLE "歡迎來到 ReactOS 程式管理器！\n\n"
+    IDS_WELCOME_TITLE "歡迎來到 ReactOS 程式管理員！\n\n"
     IDS_WELCOME_TEXT "從左欄選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站："
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "已安裝"
