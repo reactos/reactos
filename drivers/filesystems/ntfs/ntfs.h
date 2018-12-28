@@ -3,13 +3,7 @@
 
 #include <ntifs.h>
 #include <pseh/pseh2.h>
-
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
-#define INIT_FUNCTION INIT_SECTION
+#include <section_attribs.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \

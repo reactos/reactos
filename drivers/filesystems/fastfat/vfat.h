@@ -5,17 +5,11 @@
 #include <ntdddisk.h>
 #include <dos.h>
 #include <pseh/pseh2.h>
+#include <section_attribs.h>
 #ifdef KDBG
 #include <ndk/kdfuncs.h>
 #include <reactos/kdros.h>
 #endif
-
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
-#define INIT_FUNCTION INIT_SECTION
 
 
 #define USE_ROS_CC_AND_FS
