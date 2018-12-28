@@ -25,16 +25,7 @@ Author:
 #include <umtypes.h>
 #include <haltypes.h>
 #include <ketypes.h>
-
-#ifndef INIT_SECTION
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
-#define INIT_FUNCTION INIT_SECTION
-#endif
-
+#include <section_attribs.h>
 
 #ifndef NTOS_MODE_USER
 
