@@ -274,6 +274,7 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse)
 {
     PMENU SubMenu;
 
+    ASSERT(UserIsEnteredExclusive());
     if (pMenu->rgItems) /* recursively destroy submenus */
     {
        int i;
@@ -319,6 +320,7 @@ UserDestroyMenuObject(PVOID Object)
 BOOL FASTCALL
 IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
+   ASSERT(UserIsEnteredExclusive());
    if (Menu)
    {
       PWND Window;
@@ -5485,7 +5487,7 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    DECLARE_RETURN(HMENU);
 
    TRACE("Enter NtUserGetSystemMenu\n");
-   UserEnterShared();
+   UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
