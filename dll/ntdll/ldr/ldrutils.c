@@ -1851,6 +1851,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
 
     /* FIXME: Setup TestName here */
     Status = STATUS_NOT_FOUND;
+    BufEnd = Buffer;
 
     /* Start loop */
     do
