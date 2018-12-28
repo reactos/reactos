@@ -38,6 +38,11 @@ FormatPartition=1
 ; 0 - disabled
 AutoPartition = 1
 
+; choose default file system type
+; 0 - FAT
+; 1 - BtrFS
+FsType = 0
+
 ; set this option to automatically
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages

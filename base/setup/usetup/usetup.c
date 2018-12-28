@@ -2859,8 +2859,31 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     if (FileSystemList == NULL)
     {
-        /* Create the file system list, and by default select the "FAT" file system */
-        FileSystemList = CreateFileSystemList(6, 26, PartEntry->New, L"FAT");
+        PWSTR DefaultFs;
+
+        if (IsUnattendedSetup)
+        {
+            switch (USetupData.FsType)
+            {
+                /* 1 is for BtrFS */
+                case 1:
+                    DefaultFs = L"BTRFS";
+                    break;
+
+                /* If we don't understand input, default to FAT */
+                default:
+                    DefaultFs = L"FAT";
+                    break;
+            }
+        }
+        else
+        {
+            /* By default select the "FAT" file system */
+            DefaultFs = L"FAT";
+        }
+
+        /* Create the file system list */
+        FileSystemList = CreateFileSystemList(6, 26, PartEntry->New, DefaultFs);
         if (FileSystemList == NULL)
         {
             /* FIXME: show an error dialog */
@@ -2878,13 +2901,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         if (USetupData.FormatPartition)
         {
-            /*
-             * We use whatever currently selected file system we have
-             * (by default, this is "FAT", as per the initialization
-             * performed above). Note that it may be interesting to specify
-             * which file system to use in unattended installations, in the
-             * txtsetup.sif file.
-             */
             return FORMAT_PARTITION_PAGE;
         }
 
