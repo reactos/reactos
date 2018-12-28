@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+INIT_FUNCTION
 PBUS_HANDLER
 NTAPI
 HalpAllocateAndInitPciBusHandler(
@@ -20,12 +21,14 @@ HalpAllocateAndInitPciBusHandler(
     IN BOOLEAN TestAllocation
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpFixupPciSupportedRanges(
     IN ULONG BusCount
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpGetChipHacks(
@@ -35,6 +38,7 @@ HalpGetChipHacks(
     IN PULONG HackFlags
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpGetPciBridgeConfig(
@@ -42,18 +46,21 @@ HalpGetPciBridgeConfig(
     IN PUCHAR BusCount
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsBridgeDevice(
     IN PPCI_COMMON_CONFIG PciData
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsIdeDevice(
     IN PPCI_COMMON_CONFIG PciData
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsRecognizedCard(
@@ -62,6 +69,7 @@ HalpIsRecognizedCard(
     IN ULONG Flags
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpIsValidPCIDevice(
@@ -69,18 +77,21 @@ HalpIsValidPCIDevice(
     IN PCI_SLOT_NUMBER Slot
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpMarkChipsetDecode(
     IN BOOLEAN OverrideEnable
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterInternalBusHandlers(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 ShowSize(

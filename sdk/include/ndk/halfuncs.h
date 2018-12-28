@@ -26,6 +26,16 @@ Author:
 #include <haltypes.h>
 #include <ketypes.h>
 
+#ifndef INIT_SECTION
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#endif
+#define INIT_FUNCTION INIT_SECTION
+#endif
+
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -80,6 +90,7 @@ HalInitializeProcessor(
     _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
 
+INIT_FUNCTION
 NTHALAPI
 BOOLEAN
 NTAPI
@@ -175,6 +186,7 @@ HalGetInterruptSource(
 );
 #endif
 
+INIT_FUNCTION
 NTHALAPI
 VOID
 NTAPI

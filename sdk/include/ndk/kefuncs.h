@@ -25,6 +25,15 @@ Author:
 #include <umtypes.h>
 #include <ketypes.h>
 
+#ifndef INIT_SECTION
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#endif
+#define INIT_FUNCTION INIT_SECTION
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -244,6 +253,7 @@ KeSignalCallDpcSynchronize(
 // ARC Configuration Functions. Only enabled if you have ARC Support
 //
 #ifdef _ARC_
+INIT_FUNCTION
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -254,6 +264,7 @@ KeFindConfigurationNextEntry(
     _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
+INIT_FUNCTION
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(

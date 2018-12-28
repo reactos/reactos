@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpGetResourceSortValue(
@@ -20,6 +21,7 @@ HalpGetResourceSortValue(
     OUT PLARGE_INTEGER Value
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpBuildPartialFromIdt(
@@ -28,6 +30,7 @@ HalpBuildPartialFromIdt(
     IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpBuildPartialFromAddress(

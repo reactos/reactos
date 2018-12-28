@@ -34,6 +34,7 @@ HalpInitPhase1(VOID)
 {
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

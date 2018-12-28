@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpGetParameters(

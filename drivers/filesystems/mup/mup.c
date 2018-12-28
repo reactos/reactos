@@ -32,6 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -39,11 +40,13 @@ DriverEntry(
     PUNICODE_STRING RegistryPath
 );
 
+INIT_FUNCTION
 VOID
 MupInitializeData(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 MupInitializeVcb(
     PMUP_VCB Vcb

@@ -694,6 +694,7 @@ CmpFlushNotify(
     IN BOOLEAN LockHeld
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitCallback(
@@ -703,24 +704,28 @@ CmpInitCallback(
 //
 // KCB Cache/Delay Routines
 //
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitializeCache(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitCmPrivateDelayAlloc(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitCmPrivateAlloc(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitDelayDerefKCBEngine(
@@ -963,6 +968,7 @@ VOID
 NTAPI
 CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmpInitializeDelayedCloseTable(
@@ -1161,6 +1167,7 @@ CmpCreateLinkNode(
 //
 // Boot Routines
 //
+INIT_FUNCTION
 HCELL_INDEX
 NTAPI
 CmpFindControlSet(
@@ -1170,6 +1177,7 @@ CmpFindControlSet(
     OUT PBOOLEAN AutoSelect
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 CmGetSystemControlValues(
@@ -1186,6 +1194,7 @@ CmpSaveBootControlSet(
 //
 // Hardware Configuration Routines
 //
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 CmpInitializeRegistryNode(
@@ -1203,6 +1212,7 @@ CmpInitializeMachineDependentConfiguration(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 CmpInitializeHardwareConfiguration(
@@ -1407,6 +1417,7 @@ CmSaveMergedKeys(
 //
 // Startup and Shutdown
 //
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CmInitSystem1(
@@ -1434,12 +1445,14 @@ CmpSetVersionData(
 //
 // Driver List Routines
 //
+INIT_FUNCTION
 PUNICODE_STRING*
 NTAPI
 CmGetSystemDriverList(
     VOID
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CmpFindDrivers(
@@ -1450,7 +1463,7 @@ CmpFindDrivers(
     IN PLIST_ENTRY DriverListHead
 );
 
-
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CmpSortDriverList(
@@ -1459,12 +1472,14 @@ CmpSortDriverList(
     IN PLIST_ENTRY DriverListHead
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CmpResolveDriverDependencies(
     IN PLIST_ENTRY DriverListHead
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CmpIsSafe(

@@ -4,14 +4,6 @@
 
 #pragma once
 
-#if defined(__GNUC__) && !defined(_MINIHAL_)
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
-#define INIT_FUNCTION INIT_SECTION
-
-
 #ifdef CONFIG_SMP
 #define HAL_BUILD_TYPE (DBG ? PRCB_BUILD_DEBUG : 0)
 #else
@@ -557,6 +549,7 @@ typedef struct _HalAddressUsage
 PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
 
 /* sysinfo.c */
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterVector(IN UCHAR Flags,
@@ -564,6 +557,7 @@ HalpRegisterVector(IN UCHAR Flags,
                    IN ULONG SystemVector,
                    IN KIRQL Irql);
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpEnableInterruptHandler(IN UCHAR Flags,
@@ -585,7 +579,7 @@ DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME Tr
 extern BOOLEAN HalpProfilingStopped;
 
 /* timer.c */
-VOID NTAPI HalpInitializeClock(VOID);
+INIT_FUNCTION VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
@@ -597,7 +591,7 @@ HalpCalibrateStallExecution(VOID);
 VOID HalpInitPciBus (VOID);
 
 /* dma.c */
-VOID HalpInitDma (VOID);
+INIT_FUNCTION VOID HalpInitDma (VOID);
 
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -616,12 +610,14 @@ HalpCheckPowerButton(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterKdSupportFunctions(
     VOID
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpSetupPciDeviceForDebugging(
@@ -629,6 +625,7 @@ HalpSetupPciDeviceForDebugging(
     IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpReleasePciDeviceForDebugging(
@@ -728,6 +725,7 @@ HaliHaltSystem(
 //
 // CMOS Routines
 //
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializeCmos(
@@ -778,36 +776,42 @@ HalpOpenRegistryKey(
     IN BOOLEAN Create
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpGetNMICrashFlag(
     VOID
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpGetDebugPortTable(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpReportSerialNumber(
     VOID
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpMarkAcpiHal(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpBuildAddressMap(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpReportResourceUsage(
@@ -815,6 +819,7 @@ HalpReportResourceUsage(
     IN INTERFACE_TYPE InterfaceType
 );
 
+INIT_FUNCTION
 ULONG
 NTAPI
 HalpIs16BitPortDecodeSupported(
@@ -835,6 +840,7 @@ KeUpdateSystemTime(
     IN KIRQL OldIrql
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitBusHandlers(
@@ -847,6 +853,7 @@ HaliInitPnpDriver(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 HalpDebugPciDumpBus(
