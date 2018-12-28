@@ -4504,6 +4504,10 @@ PopupMenuWndProc(
       {
         CREATESTRUCTW *cs = (CREATESTRUCTW *) lParam;
         pPopupMenu->spmenu = UserGetMenuObject(cs->lpCreateParams);
+        if (pPopupMenu->spmenu)
+        {
+           UserReferenceObject(pPopupMenu->spmenu);
+        }
         break;
       }
 
@@ -4548,6 +4552,10 @@ PopupMenuWndProc(
 
     case WM_NCDESTROY:
       {
+         if (pPopupMenu->spmenu)
+         {
+            IntReleaseMenuObject(pPopupMenu->spmenu);
+         }
          DesktopHeapFree(Wnd->head.rpdesk, pPopupMenu );
          ((PMENUWND)Wnd)->ppopupmenu = 0;
          Wnd->fnid = FNID_DESTROY;
@@ -4562,6 +4570,11 @@ PopupMenuWndProc(
         {
            ERR("Bad Menu Handle\n");
            break;
+        }
+        UserReferenceObject(pmenu);
+        if (pPopupMenu->spmenu)
+        {
+           IntReleaseMenuObject(pPopupMenu->spmenu);
         }
         pPopupMenu->spmenu = pmenu;
         break;
