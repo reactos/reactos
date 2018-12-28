@@ -407,12 +407,14 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     UINT nPages = 0;
     UINT nLength;
     DWORD attrs;
+    PCREATE_LINK_CONTEXT pContext;
 
-    PCREATE_LINK_CONTEXT pContext = (PCREATE_LINK_CONTEXT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CREATE_LINK_CONTEXT));
+    pContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pContext));
     if (!pContext)
     {
-       /* no memory */
-       return FALSE;
+        /* no memory */
+        MessageBoxA(hwndCPl, "Out of memory!", NULL, MB_ICONERROR);
+        return FALSE;
     }
 
     nLength = wcslen(szPath);
@@ -421,6 +423,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         HeapFree(GetProcessHeap(), 0, pContext);
 
         /* no directory given */
+        MessageBoxA(hwndCPl, "No directory given!", NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -430,6 +433,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         HeapFree(GetProcessHeap(), 0, pContext);
 
         /* invalid path */
+        MessageBoxA(hwndCPl, "Invalid path!", NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -460,7 +464,6 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCEW(IDD_SHORTCUT_FINISH);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
