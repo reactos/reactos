@@ -57,6 +57,137 @@ static void deinit_sym()
     ((PSYMBOL_INFO)(buff))->MaxNameLen = MAX_SYM_NAME; \
 } while (0)
 
+/* modified copy of function from apitests/apphelp/apitest.c */
+BOOL get_module_version(
+    _In_ HMODULE mod,
+    _Out_ VS_FIXEDFILEINFO *fileinfo)
+{
+    BOOL res = FALSE;
+    HRSRC hResInfo;
+    char *errmsg;
+    DWORD dwSize, errcode = 0;
+    UINT uLen;
+    HGLOBAL hResData = 0;
+    LPVOID pRes = NULL;
+    HLOCAL pResCopy = 0;
+    VS_FIXEDFILEINFO *lpFfi;
+
+    if (fileinfo == NULL)
+    {
+        errmsg = "fileinfo is NULL.\n";
+        goto cleanup;
+    }
+
+    hResInfo = FindResource(mod, MAKEINTRESOURCE(VS_VERSION_INFO), RT_VERSION);
+    if (hResInfo == 0)
+    {
+        errmsg = "FindResource failed";
+        errcode = GetLastError();
+        goto cleanup;
+    }
+
+    dwSize = SizeofResource(mod, hResInfo);
+    if (dwSize == 0)
+    {
+        errmsg = "SizeofResource failed";
+        errcode = GetLastError();
+        goto cleanup;
+    }
+
+    hResData = LoadResource(mod, hResInfo);
+    if (hResData == 0)
+    {
+        errmsg = "LoadResource failed";
+        errcode = GetLastError();
+        goto cleanup;
+    }
+
+    pRes = LockResource(hResData);
+    if (pRes == NULL)
+    {
+        errmsg = "LockResource failed";
+        errcode = GetLastError();
+        goto cleanup;
+    }
+
+    pResCopy = LocalAlloc(LMEM_FIXED, dwSize);
+    if (pResCopy == NULL)
+    {
+        errmsg = "LocalAlloc failed";
+        errcode = GetLastError();
+        goto cleanup;
+    }
+
+    CopyMemory(pResCopy, pRes, dwSize);
+
+    if (VerQueryValueW(pResCopy, L"\\", (LPVOID*)&lpFfi, &uLen))
+    {
+        *fileinfo = *lpFfi;
+        res = TRUE;
+    }
+
+cleanup:
+    /* cleanup */
+    if (hResData != 0)
+        FreeResource(hResData);
+    if (pResCopy != NULL)
+        LocalFree(pResCopy);
+    /* if it was good */
+    if (res == TRUE)
+        return TRUE;
+    /* failure path */
+    if (errcode == 0)
+        trace("get_module_version - %s.\n", errmsg);
+    else
+        trace("get_module_version - %s (lasterror %d).\n", errmsg, errcode);
+    return FALSE;
+}
+
+static VS_FIXEDFILEINFO dbghelpFileVer;
+static void init_dbghelp_version()
+{
+    LPAPI_VERSION v;
+    WCHAR filenameW[MAX_PATH + 1];
+    HMODULE hDLL;
+    DWORD fileLen;
+    VS_FIXEDFILEINFO fileInfo;
+
+    memset(&dbghelpFileVer, 0, sizeof(dbghelpFileVer));
+
+    /* get internal file version */
+    v = ImagehlpApiVersion();
+    if (v == NULL)
+        return;
+
+    /* get module file version */
+    hDLL = GetModuleHandleW(L"dbghelp.dll");
+    if (hDLL == 0)
+    {
+        ok(FALSE, "Dbghelp.dll is not loaded!\n");
+        return;
+    }
+    if (!get_module_version(hDLL, &fileInfo))
+        memset(&fileInfo, 0, sizeof(fileInfo));
+    dbghelpFileVer = fileInfo;
+
+    /* get full file path */
+    fileLen = GetModuleFileNameW(hDLL, filenameW, MAX_PATH + 1);
+    if (fileLen == 0)
+    {
+        ok(FALSE, "GetModuleFileNameW for dbghelp.dll failed!\n");
+        return;
+    }
+
+    trace("Using %S\n", filenameW);
+    trace("  API-Version: %hu.%hu.%hu (%hu)\n",
+          v->MajorVersion, v->MinorVersion, v->Revision, v->Reserved);
+
+    trace("  Fileversion: %hu.%hu.%hu.%hu\n",
+          HIWORD(fileInfo.dwProductVersionMS),
+          LOWORD(fileInfo.dwProductVersionMS),
+          HIWORD(fileInfo.dwProductVersionLS),
+          LOWORD(fileInfo.dwProductVersionLS));
+}
 
 /* Maybe our dbghelp.dll is too old? */
 static BOOL can_enumerate(HANDLE hProc, DWORD64 BaseAddress)
@@ -353,6 +484,96 @@ static void test_SymEnumSymbols(HANDLE hProc, const char* szModuleName)
     deinit_sym();
 }
 
+typedef struct _symregcallback_context
+{
+    UINT idx;
+    BOOL isANSI;
+} symregcallback_context;
+
+static struct _symregcallback_test_data {
+    ULONG ActionCode;
+    const char* Name;
+} symregcallback_test_data[] = {
+    { CBA_DEFERRED_SYMBOL_LOAD_CANCEL },
+    { CBA_DEFERRED_SYMBOL_LOAD_START },
+    { CBA_READ_MEMORY },
+    { CBA_DEFERRED_SYMBOL_LOAD_PARTIAL },
+    { CBA_DEFERRED_SYMBOL_LOAD_COMPLETE }
+};
+
+static BOOL CALLBACK SymRegisterCallback64Proc(
+    HANDLE hProcess,
+    ULONG ActionCode,
+    ULONG64 CallbackData,
+    ULONG64 UserContext)
+{
+    symregcallback_context *ctx;
+    ctx = (symregcallback_context*)(ULONG_PTR)UserContext;
+
+    if (ctx->idx > sizeof(symregcallback_test_data))
+    {
+        ok(FALSE, "SymRegisterCallback64Proc: Too many calls.\n");
+    }
+    else
+    {
+        ok(ActionCode == symregcallback_test_data[ctx->idx].ActionCode,
+            "ActionCode (idx %u) expected %u, got %u\n",
+            ctx->idx, symregcallback_test_data[ctx->idx].ActionCode, ActionCode);
+    }
+    ctx->idx++;
+
+    return FALSE;
+}
+
+static void test_SymRegCallback(HANDLE hProc, const char* szModuleName, BOOL testANSI)
+{
+    BOOL Ret;
+    DWORD dwErr;
+    ULONG64 BaseAddress;
+    symregcallback_context ctx;
+
+    ctx.idx = 0;
+    ctx.isANSI = testANSI;
+
+    if (!init_sym())
+        return;
+
+    if (testANSI)
+    {
+        Ret = SymRegisterCallback64(hProc, SymRegisterCallback64Proc, (ULONG_PTR)&ctx);
+    }
+    else
+    {
+        // dbghelp fileversion 5.2.3790.3959
+        // SymRegisterCallbackW64 crash only happens on real Windows 2003
+        // Fileversion 5.2.3790.3959 is used in Windows 2003.
+        // In ROS there is no crash.
+        // I could not figure out whats wrong.
+        if ((dbghelpFileVer.dwProductVersionMS == MAKELONG(2, 5)) &&
+            (dbghelpFileVer.dwProductVersionLS == MAKELONG(3959, 3790)))
+        {
+            skip("dbghelp.dll ver 5.2.3790.3959 (w2k3), SymRegisterCallbackW64 would crash!\n");
+            return;
+        }
+        Ret = SymRegisterCallbackW64(hProc, SymRegisterCallback64Proc, (ULONG_PTR)&ctx);
+    }
+
+    ok_int(Ret, TRUE);
+    if (!Ret)
+        return;
+
+    SetLastError(ERROR_SUCCESS);
+    BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
+    dwErr = GetLastError();
+
+    ok_ulonglong(BaseAddress, 0x600000);
+    ok_hex(dwErr, ERROR_SUCCESS);
+
+    /* this is what we want to test ... we expect 5 calls */
+    ok_int(ctx.idx, 5);
+
+    deinit_sym();
+}
 
 START_TEST(pdb)
 {
@@ -370,9 +591,14 @@ START_TEST(pdb)
         return;
     }
 
+    init_dbghelp_version();
+
     test_SymFromName(proc(), szDllName);
     test_SymFromAddr(proc(), szDllName);
     test_SymEnumSymbols(proc(), szDllName);
+    test_SymRegCallback(proc(), szDllName, TRUE);
+    test_SymRegCallback(proc(), szDllName, FALSE);
 
     cleanup_msvc_exe();
+
 }
