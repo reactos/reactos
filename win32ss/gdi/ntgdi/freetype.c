@@ -256,7 +256,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
+    FT_Done_Glyph(Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
     ExFreePoolWithTag(Entry, TAG_FONT);
     g_FontCacheNumEntries--;
@@ -2950,7 +2950,7 @@ ftGdiGlyphSet(
     if (FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
     {
         DPRINT1("Conversion failed\n");
-        FT_Done_Glyph((FT_Glyph)BitmapGlyph);
+        FT_Done_Glyph(BitmapGlyph);
         return NULL;
     }
 
@@ -3007,7 +3007,7 @@ ftGdiGlyphCacheSet(
         DPRINT1("Conversion failed\n");
         ExFreePoolWithTag(NewEntry, TAG_FONT);
         FT_Bitmap_Done(GlyphSlot->library, &AlignedBitmap);
-        FT_Done_Glyph((FT_Glyph)BitmapGlyph);
+        FT_Done_Glyph(BitmapGlyph);
         return NULL;
     }
 
@@ -4088,10 +4088,10 @@ TextIntGetTextExtentPoint(PDC dc,
             Dx[i] = (TotalWidth + 32) >> 6;
         }
 
+        /* Bold and italic do not use the cache */
         if (EmuBold || EmuItalic)
         {
-            FT_Done_Glyph((FT_Glyph)realglyph);
-            realglyph = NULL;
+            FT_Done_Glyph(realglyph);
         }
 
         previous = glyph_index;
@@ -6192,10 +6192,10 @@ GreExtTextOutW(
 
         previous = glyph_index;
 
+        /* No cache, so clean up */
         if (EmuBold || EmuItalic)
         {
-            FT_Done_Glyph((FT_Glyph)realglyph);
-            realglyph = NULL;
+            FT_Done_Glyph(realglyph);
         }
     }
 
