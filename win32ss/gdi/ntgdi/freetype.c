@@ -5876,11 +5876,7 @@ GreExtTextOutW(
 
             previous = glyph_index;
 
-            if (EmuBold || EmuItalic)
-            {
-                FT_Done_Glyph((FT_Glyph)realglyph);
-                realglyph = NULL;
-            }
+            FT_Done_Glyph(realglyph);
         }
 
         TextWidth = TextLeft - RealXStart;
