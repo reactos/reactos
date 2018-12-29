@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include "marshalling/printerdrivers.h"
 
 DWORD
 _RpcAddPrinterDriver(WINSPOOL_HANDLE pName, WINSPOOL_DRIVER_CONTAINER* pDriverContainer)
@@ -45,8 +46,33 @@ _RpcEnumPrinterDrivers(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, 
 DWORD
 _RpcGetPrinterDriver(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pEnvironment, DWORD Level, BYTE* pDriver, DWORD cbBuf, DWORD* pcbNeeded)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+    PBYTE pDriverAligned;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    pDriverAligned = AlignRpcPtr(pDriver, &cbBuf);
+
+    if (GetPrinterDriverW(hPrinter, pEnvironment, Level, pDriverAligned, cbBuf, pcbNeeded))
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        ASSERT(Level >= 1 && Level <= 3);
+        MarshallDownStructure(pDriverAligned, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
+    }
+
+    RpcRevertToSelf();
+    UndoAlignRpcPtr(pDriver, pDriverAligned, cbBuf, pcbNeeded);
+
+    return dwErrorCode;
 }
 
 DWORD

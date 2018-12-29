@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include <marshalling/printers.h>
+#include <marshalling/printerdrivers.h>
 
 // Local Constants
 
@@ -513,8 +514,50 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 BOOL WINAPI
 GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
     TRACE("GetPrinterDriverW(%p, %S, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
-    return FALSE;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Dismiss invalid levels already at this point.
+    if (Level > 8 || Level < 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    if (cbBuf && pDriverInfo)
+        ZeroMemory(pDriverInfo, cbBuf);
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcGetPrinterDriver(pHandle->hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcGetPrinter failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        ASSERT(Level <= 3);
+        MarshallUpStructure(cbBuf, pDriverInfo, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
+    }
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI

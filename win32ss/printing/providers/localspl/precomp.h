@@ -287,6 +287,10 @@ DWORD WINAPI LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pVal
 DWORD WINAPI LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData);
 DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD Type, LPBYTE pData, DWORD cbData);
 
+// printerdriver.c
+BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded);
+
+
 // printers.c
 extern SKIPLIST PrinterList;
 BOOL InitializePrinterList(void);
