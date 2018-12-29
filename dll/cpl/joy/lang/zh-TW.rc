@@ -9,7 +9,7 @@ CAPTION "遊戲控制器"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "這些設定幫助您配置安裝在計算機上的遊戲控制器。", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "這些設定幫助您配置安裝在電腦上的遊戲控制器。", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "安裝遊戲控制器(&N)", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "添加(&A)...", IDC_ADD_BUTTON, 35, 129, 65, 14

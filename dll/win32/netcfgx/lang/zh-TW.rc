@@ -224,7 +224,7 @@ BEGIN
     IDS_NET_CONNECT "網路連線"
     IDS_NO_IPADDR_SET "介面卡需要至少一個 IP 地址。請輸入一個。"
     IDS_NO_SUBMASK_SET "您輸入缺少及其子網掩碼地址。請添加子網掩碼。"
-    IDS_TCPFILTERDESC "TCP/IP 篩選允許您控制到達您的計算機的 TCP/IP 網路通訊的類型。"
+    IDS_TCPFILTERDESC "TCP/IP 篩選允許您控制到達您的電腦的 TCP/IP 網路通訊的類型。"
     IDS_TCPFILTER "TCP/IP 篩選"
     IDS_IPADDR "IP 地址"
     IDS_SUBMASK "子網掩碼"

@@ -269,6 +269,6 @@ STRINGTABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "顯示設定"
     IDS_APPLY_FAILED "應用新設定失敗..."
-    IDS_APPLY_NEEDS_RESTART "需要重新啟動計算機使更改生效。"
+    IDS_APPLY_NEEDS_RESTART "需要重新啟動電腦使更改生效。"
     IDS_TIMEOUTTEXT "在 %d 內還原設定。"
 END

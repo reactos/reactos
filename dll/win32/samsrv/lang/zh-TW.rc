@@ -8,7 +8,7 @@ BEGIN
     IDS_GROUP_NONE_NAME "無"
     IDS_GROUP_NONE_COMMENT "普通使用者"
     IDS_ALIAS_ADMINISTRATORS_NAME "管理員"
-    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理員可以無限制地訪問計算機或域。"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理員可以無限制地訪問電腦或域。"
     IDS_ALIAS_GUESTS_NAME "來賓"
     IDS_ALIAS_GUESTS_COMMENT "來賓在默認情況下享有同樣的權利的使用者組的成員。"
     IDS_ALIAS_POWER_USERS_NAME "超級使用者"
@@ -21,7 +21,7 @@ BEGIN
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */
     IDS_USER_ADMINISTRATOR_NAME "Administrator"
-    IDS_USER_ADMINISTRATOR_COMMENT "用於管理計算機或域的內建帳戶。"
+    IDS_USER_ADMINISTRATOR_COMMENT "用於管理電腦或域的內建帳戶。"
     IDS_USER_GUEST_NAME "來賓"
-    IDS_USER_GUEST_COMMENT "來賓訪問計算機或域的內建帳戶。"
+    IDS_USER_GUEST_COMMENT "來賓訪問電腦或域的內建帳戶。"
 END
