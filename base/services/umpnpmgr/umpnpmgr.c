@@ -746,9 +746,70 @@ GetDeviceInstanceListSize(
     RegCloseKey(hDeviceKey);
 
     /* Return the largest possible buffer size */
-    *pulLength = (dwSubKeys * (wcslen(pszDevice) + 1 + dwMaxSubKeyLength + 1)) + 1;
+    *pulLength = dwSubKeys * (wcslen(pszDevice) + 1 + dwMaxSubKeyLength + 1);
 
     return CR_SUCCESS;
+}
+
+
+static
+CONFIGRET
+GetEnumeratorInstanceListSize(
+    _In_ LPCWSTR pszEnumerator,
+    _Out_ PULONG pulLength)
+{
+    WCHAR szDeviceBuffer[MAX_DEVICE_ID_LEN];
+    WCHAR szPathBuffer[512];
+    HKEY hEnumeratorKey;
+    DWORD dwIndex, dwDeviceLength, dwBufferLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    *pulLength = 0;
+
+    /* Open the enumerator key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszEnumerator,
+                            0,
+                            KEY_ENUMERATE_SUB_KEYS,
+                            &hEnumeratorKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the enumerator key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwDeviceLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumeratorKey,
+                                dwIndex,
+                                szDeviceBuffer,
+                                &dwDeviceLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        wsprintf(szPathBuffer, L"%s\\%s", pszEnumerator, szDeviceBuffer);
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        ret = GetDeviceInstanceListSize(szPathBuffer, &dwBufferLength);
+        if (ret != CR_SUCCESS)
+        {
+            *pulLength = 0;
+            break;
+        }
+
+        *pulLength += dwBufferLength;
+    }
+
+    /* Close the enumerator key */
+    RegCloseKey(hEnumeratorKey);
+
+    return ret;
 }
 
 
@@ -840,13 +901,18 @@ PNP_GetDeviceListSize(
         }
         else
         {
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = GetEnumeratorInstanceListSize(pszFilter,
+                                                pulLength);
         }
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
         ret = CR_CALL_NOT_IMPLEMENTED;
     }
+
+    /* Add one character for the terminating double UNICODE_NULL */
+    if (ret == CR_SUCCESS)
+        (*pulLength) += 1;
 
     return ret;
 }
