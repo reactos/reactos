@@ -6050,8 +6050,12 @@ GreExtTextOutW(
             if ( !HSourceGlyph )
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
-                // FT_Done_Glyph(realglyph);
                 bResult = FALSE;
+                if (EmuBold || EmuItalic)
+                {
+                    FT_Done_Glyph(realglyph);
+                }
+
                 break;
             }
             SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
@@ -6060,6 +6064,11 @@ GreExtTextOutW(
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
+                if (EmuBold || EmuItalic)
+                {
+                    FT_Done_Glyph(realglyph);
+                }
+
                 break;
             }
 
@@ -6108,6 +6117,11 @@ GreExtTextOutW(
 
         if (DoBreak)
         {
+            if (EmuBold || EmuItalic)
+            {
+                FT_Done_Glyph(realglyph);
+            }
+
             break;
         }
 
