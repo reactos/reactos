@@ -6798,8 +6798,12 @@ NtGdiGetGlyphIndicesW(
         FT_Face Face = FontGDI->SharedFace->Face;
         if (FT_IS_SFNT(Face))
         {
-            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+            TT_OS2 *pOS2;
+            
+            IntLockFreeType();
+            pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
             DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
+            IntUnLockFreeType();
         }
         else
         {
