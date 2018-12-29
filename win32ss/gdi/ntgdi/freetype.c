@@ -4142,10 +4142,9 @@ ftGdiGetTextCharsetInfo(
     Face = FontGdi->SharedFace->Face;
     TEXTOBJ_UnlockText(TextObj);
 
+    memset(&fs, 0, sizeof(FONTSIGNATURE));
     IntLockFreeType();
     pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-    IntUnLockFreeType();
-    memset(&fs, 0, sizeof(FONTSIGNATURE));
     if (NULL != pOS2)
     {
         fs.fsCsb[0] = pOS2->ulCodePageRange1;
@@ -4164,6 +4163,8 @@ ftGdiGetTextCharsetInfo(
                 fs.fsCsb[0] |= FS_SYMBOL;
         }
     }
+    pOS2 = NULL;
+    IntUnLockFreeType();
     DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
     if (fs.fsCsb[0] == 0)
     { /* Let's see if we can find any interesting cmaps */
