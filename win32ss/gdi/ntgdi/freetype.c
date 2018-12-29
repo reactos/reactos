@@ -4865,6 +4865,9 @@ IntFontType(PFONTGDI Font)
     FT_ULong tmp_size = 0;
     FT_Face Face = Font->SharedFace->Face;
 
+    ASSERT_FREETYPE_LOCK_NOT_HELD();
+    IntLockFreeType();
+
     if (FT_HAS_MULTIPLE_MASTERS(Face))
         Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
     if (FT_HAS_VERTICAL(Face))
@@ -4886,6 +4889,8 @@ IntFontType(PFONTGDI Font)
     {
         Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
     }
+
+    IntUnLockFreeType();
 }
 
 static BOOL
