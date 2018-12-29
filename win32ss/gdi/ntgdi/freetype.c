@@ -5821,6 +5821,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType();
+                bResult = FALSE;
                 goto Cleanup;
             }
 
@@ -5834,6 +5835,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
                 IntUnLockFreeType();
+                bResult = FALSE;
                 goto Cleanup;
             }
 
