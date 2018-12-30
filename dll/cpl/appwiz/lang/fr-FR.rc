@@ -82,4 +82,7 @@ BEGIN
     IDS_DWL_FAILED "Échec lors du téléchargement du paquet Gecko. Assurez-vous d'avoir une connexion Internet pour pouvoir le télécharger. L'installation va continuer sans installer Gecko."
     IDS_CANTMAKEINETSHORTCUT "Échec lors de la création du raccourci Internet."
     IDS_CANTMAKESHORTCUT "Échec lors de la création du raccourci."
+    IDS_NO_MEMORY "No memory could be allocated!"
+    IDS_NO_DIRECTORY "No directory given!"
+    IDS_INVALID_PATH "The given path is invalid!"
 END

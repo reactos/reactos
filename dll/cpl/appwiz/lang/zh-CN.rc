@@ -91,4 +91,7 @@ BEGIN
     IDS_DWL_FAILED "无法下载 Gecko 安装包。请确保您有互联网连接才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
     IDS_CANTMAKEINETSHORTCUT "无法创建 Internet 快捷方式"
     IDS_CANTMAKESHORTCUT "无法创建快捷方式。"
+    IDS_NO_MEMORY "No memory could be allocated!"
+    IDS_NO_DIRECTORY "No directory given!"
+    IDS_INVALID_PATH "The given path is invalid!"
 END

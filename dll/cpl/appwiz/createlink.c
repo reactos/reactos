@@ -408,12 +408,14 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     UINT nLength;
     DWORD attrs;
     PCREATE_LINK_CONTEXT pContext;
+    WCHAR szMessage[128];
 
     pContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pContext));
     if (!pContext)
     {
         /* no memory */
-        MessageBoxA(hwndCPl, "Out of memory!", NULL, MB_ICONERROR);
+        LoadStringW(hApplet, IDS_NO_MEMORY, szMessage, _countof(szMessage));
+        MessageBoxW(hwndCPl, szMessage, NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -423,7 +425,8 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         HeapFree(GetProcessHeap(), 0, pContext);
 
         /* no directory given */
-        MessageBoxA(hwndCPl, "No directory given!", NULL, MB_ICONERROR);
+        LoadStringW(hApplet, IDS_NO_DIRECTORY, szMessage, _countof(szMessage));
+        MessageBoxW(hwndCPl, szMessage, NULL, MB_ICONERROR);
         return FALSE;
     }
 
@@ -433,7 +436,8 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         HeapFree(GetProcessHeap(), 0, pContext);
 
         /* invalid path */
-        MessageBoxA(hwndCPl, "Invalid path!", NULL, MB_ICONERROR);
+        LoadStringW(hApplet, IDS_INVALID_PATH, szMessage, _countof(szMessage));
+        MessageBoxW(hwndCPl, szMessage, NULL, MB_ICONERROR);
         return FALSE;
     }
 
