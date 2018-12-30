@@ -5,6 +5,7 @@
  * PURPOSE:         Service control manager functions
  * PROGRAMMER:      Emanuele Aliberti
  *                  Eric Kohl
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES ******************************************************************/
@@ -3027,7 +3028,94 @@ I_ScQueryServiceTagInfo(PVOID Unused,
                         TAG_INFO_LEVEL dwInfoLevel,
                         PTAG_INFO_NAME_FROM_TAG InOutParams)
 {
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SC_HANDLE hScm;
+    DWORD dwError;
+    PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams;
+    PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS OutParams;
+    LPWSTR lpszName;
+
+    /* We only support one class */
+    if (dwInfoLevel != TagInfoLevelNameFromTag)
+    {
+        return ERROR_RETRY;
+    }
+
+    /* Validate input structure */
+    if (InOutParams->InParams.dwPid == 0 || InOutParams->InParams.dwTag == 0)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Validate output structure */
+    if (InOutParams->OutParams.pszName != NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Open service manager */
+    hScm = OpenSCManagerW(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (hScm == NULL)
+    {
+        return GetLastError();
+    }
+
+    /* Setup call parameters */
+    InParams = &InOutParams->InParams;
+    OutParams = NULL;
+
+    /* Call SCM to query tag information */
+    RpcTryExcept
+    {
+        dwError = RI_ScQueryServiceTagInfo(hScm, TagInfoLevelNameFromTag, &InParams, &OutParams);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    /* Quit if not a success */
+    if (dwError != ERROR_SUCCESS)
+    {
+        goto Cleanup;
+    }
+
+    /* OutParams must be set now and we must have a name */
+    if (OutParams == NULL ||
+        OutParams->pszName == NULL)
+    {
+        dwError = ERROR_INVALID_DATA;
+        goto Cleanup;
+    }
+
+    /* Copy back what SCM returned */
+    lpszName = LocalAlloc(LPTR,
+                          sizeof(WCHAR) * wcslen(OutParams->pszName) + sizeof(UNICODE_NULL));
+    if (lpszName == NULL)
+    {
+        dwError = GetLastError();
+        goto Cleanup;
+    }
+
+    wcscpy(lpszName, OutParams->pszName);
+    InOutParams->OutParams.pszName = lpszName;
+    InOutParams->OutParams.TagType = OutParams->TagType;
+
+Cleanup:
+    CloseServiceHandle(hScm);
+
+    /* Free memory allocated by SCM */
+    if (OutParams != NULL)
+    {
+        if (OutParams->pszName != NULL)
+        {
+            midl_user_free(OutParams->pszName);
+        }
+
+        midl_user_free(OutParams);
+    }
+
+    return dwError;
 }
 
 /**********************************************************************
