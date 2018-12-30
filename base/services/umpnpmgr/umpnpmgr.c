@@ -886,6 +886,41 @@ GetEnumeratorInstanceListSize(
 }
 
 
+static
+CONFIGRET
+GetAllInstanceListSize(
+    _In_ LPCWSTR pszEnumerator,
+    _Out_ PULONG pulLength)
+{
+    WCHAR szEnumeratorBuffer[MAX_DEVICE_ID_LEN];
+    DWORD dwIndex, dwEnumeratorLength, dwBufferLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwEnumeratorLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumKey,
+                                dwIndex,
+                                szEnumeratorBuffer,
+                                &dwEnumeratorLength,
+                                NULL, NULL, NULL, NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        /* Get the size of all device instances for the enumerator */
+        ret = GetEnumeratorInstanceListSize(szEnumeratorBuffer,
+                                            &dwBufferLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        *pulLength += dwBufferLength;
+    }
+
+    return ret;
+}
+
+
 /* Function 11 */
 DWORD
 WINAPI
@@ -902,7 +937,8 @@ PNP_GetDeviceListSize(
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
-    DPRINT("PNP_GetDeviceListSize() called\n");
+    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%lx)\n",
+           hBinding, pszFilter, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
         return CR_INVALID_FLAG;
@@ -980,7 +1016,8 @@ PNP_GetDeviceListSize(
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetAllInstanceListSize(pszFilter,
+                                     pulLength);
     }
 
     /* Add one character for the terminating double UNICODE_NULL */
