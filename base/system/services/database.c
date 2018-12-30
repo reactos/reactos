@@ -31,6 +31,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD ResumeCount = 1;
 static DWORD NoInteractiveServices = 0;
+static DWORD ServiceTag = 0;
 
 /* The critical section synchronizes service control requests */
 static CRITICAL_SECTION ControlServiceCriticalSection;
@@ -635,6 +636,29 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 
 DWORD
+ScmGenerateServiceTag(PSERVICE lpServiceRecord)
+{
+    /* Check for an overflow */
+    if (ServiceTag == -1)
+    {
+        return ERROR_INVALID_DATA;
+    }
+
+    /* This is only valid for Win32 services */
+    if (!(lpServiceRecord->Status.dwServiceType & SERVICE_WIN32))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Increment the tag counter and set it */
+    ServiceTag = ServiceTag % 0xFFFFFFFF + 1;
+    lpServiceRecord->dwTag = ServiceTag;
+
+    return ERROR_SUCCESS;
+}
+
+
+DWORD
 ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                           PSERVICE *lpServiceRecord,
                           DWORD dwServiceType,
@@ -847,6 +871,8 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
 
     if (ScmIsDeleteFlagSet(hServiceKey))
         lpService->bDeleted = TRUE;
+    else
+        ScmGenerateServiceTag(lpService);
 
     if (lpService->Status.dwServiceType & SERVICE_WIN32)
     {

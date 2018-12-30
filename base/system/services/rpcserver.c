@@ -2636,6 +2636,10 @@ RCreateServiceW(
         goto done;
 
     lpService->dwRefCount = 1;
+
+    /* Get the service tag (if Win32) */
+    ScmGenerateServiceTag(lpService);
+
     DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
 
 done:
