@@ -6155,9 +6155,9 @@ GreExtTextOutW(
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft64 += delta.x;
         }
-        //DPRINT("TextLeft64: %I64d\n", TextLeft64);
-        //DPRINT("TextTop64: %I64d\n", TextTop64);
-        //DPRINT("Advance: %d\n", realglyph->root.advance.x);
+        DPRINT("TextLeft64: %I64d\n", TextLeft64);
+        DPRINT("TextTop64: %I64d\n", TextTop64);
+        DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
         DestRect.left = ((TextLeft64 + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
@@ -6262,7 +6262,7 @@ GreExtTextOutW(
         {
             TextLeft64 += realglyph->root.advance.x >> 10;
             TextTop64 -= realglyph->root.advance.y >> 10;
-            //DPRINT("New TextLeft64: %I64d\n", TextLeft64);
+            DPRINT("New TextLeft64: %I64d\n", TextLeft64);
         }
         else
         {
@@ -6274,7 +6274,7 @@ GreExtTextOutW(
             /* do the shift before multiplying to preserve precision */
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
             TextLeft64 += FLOATOBJ_GetLong(&Scale);
-            //DPRINT("New TextLeft64 2: %I64d\n", TextLeft64);
+            DPRINT("New TextLeft64 2: %I64d\n", TextLeft64);
         }
 
         if (DxShift)
