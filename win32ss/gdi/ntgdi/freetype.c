@@ -689,8 +689,8 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 
     pmat->xx = (FT_Fixed)(cos(radian) * (1 << 16));
     pmat->xy = (FT_Fixed)(-sin(radian) * (1 << 16));
-    pmat->yx = (FT_Fixed)(sin(radian) * (1 << 16));
-    pmat->yy = (FT_Fixed)(cos(radian) * (1 << 16));
+    pmat->yx = -pmat->xy;
+    pmat->yy = pmat->xx;
 }
 
 VOID FASTCALL
