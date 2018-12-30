@@ -145,6 +145,14 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 }
 
 
+DWORD
+ScmGetServiceNameFromTag(PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams, PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams)
+{
+    UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 static
 BOOL
 ScmIsSameServiceAccount(

@@ -6586,8 +6586,38 @@ RI_ScQueryServiceTagInfo(
     PTAG_INFO_NAME_FROM_TAG_IN_PARAMS * lpInParams,
     PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS * lpOutParams)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PMANAGER_HANDLE hManager;
+
+    /* Validate handle */
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: should check whether client is local */
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Check parameters */
+    if (lpInParams == NULL || lpOutParams == NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Check info level */
+    if (dwInfoLevel != TagInfoLevelNameFromTag)
+    {
+        return ERROR_RETRY;
+    }
+
+    /* Call internal helper */
+    return ScmGetServiceNameFromTag(*lpInParams, lpOutParams);
 }
 
 

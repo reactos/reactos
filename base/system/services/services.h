@@ -197,6 +197,8 @@ VOID ScmUnlockDatabase(VOID);
 VOID ScmInitNamedPipeCriticalSection(VOID);
 VOID ScmDeleteNamedPipeCriticalSection(VOID);
 
+DWORD ScmGetServiceNameFromTag(PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams,
+                               PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams);
 
 /* driver.c */
 
