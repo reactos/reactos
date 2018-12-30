@@ -544,6 +544,7 @@ GetDeviceInstanceList(
     PWSTR pPtr;
     CONFIGRET ret = CR_SUCCESS;
 
+    /* Open the device key */
     dwError = RegOpenKeyExW(hEnumKey,
                             pszDevice,
                             0,
@@ -590,6 +591,76 @@ GetDeviceInstanceList(
     }
 
     RegCloseKey(hDeviceKey);
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
+CONFIGRET
+GetEnumeratorInstanceList(
+    _In_ PWSTR pszEnumerator,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szDeviceBuffer[MAX_DEVICE_ID_LEN];
+    WCHAR szPathBuffer[512];
+    HKEY hEnumeratorKey;
+    PWSTR pPtr;
+    DWORD dwIndex, dwDeviceLength, dwUsedLength, dwRemainingLength, dwPathLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the enumerator key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszEnumerator,
+                            0,
+                            KEY_ENUMERATE_SUB_KEYS,
+                            &hEnumeratorKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the enumerator key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwUsedLength = 0;
+    dwRemainingLength = *pulLength;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwDeviceLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumeratorKey,
+                                dwIndex,
+                                szDeviceBuffer,
+                                &dwDeviceLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        wsprintf(szPathBuffer, L"%s\\%s", pszEnumerator, szDeviceBuffer);
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        dwPathLength = dwRemainingLength;
+        ret = GetDeviceInstanceList(szPathBuffer,
+                                    pPtr,
+                                    &dwPathLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        dwUsedLength += dwPathLength - 1;
+        dwRemainingLength += dwPathLength - 1;
+        pPtr += dwPathLength - 1;
+    }
+
+    RegCloseKey(hEnumeratorKey);
 
     if (ret == CR_SUCCESS)
         *pulLength = dwUsedLength + 1;
@@ -688,7 +759,9 @@ PNP_GetDeviceList(
         }
         else
         {
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = GetEnumeratorInstanceList(pszFilter,
+                                            Buffer,
+                                            pulLength);
         }
     }
     else /* CM_GETIDLIST_FILTER_NONE */
