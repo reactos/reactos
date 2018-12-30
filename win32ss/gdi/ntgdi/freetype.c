@@ -5616,7 +5616,6 @@ GreExtTextOutW(
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
     SIZEL bitSize;
-    INT yoff;
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
@@ -5627,7 +5626,7 @@ GreExtTextOutW(
     BOOL DoBreak = FALSE;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
-    LONG fixAscender, fixDescender, lfEscapement;
+    LONG fixAscender, lfEscapement;
     FLOATOBJ Scale;
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
@@ -5797,7 +5796,7 @@ GreExtTextOutW(
         FtSetCoordinateTransform(face, pmxWorldToDevice);
 
         fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
-        fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
+        //fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
     }
     else
     {
@@ -5805,28 +5804,25 @@ GreExtTextOutW(
         FtSetCoordinateTransform(face, pmxWorldToDevice);
 
         fixAscender = FontGDI->tmAscent << 6;
-        fixDescender = FontGDI->tmDescent << 6;
+        //fixDescender = FontGDI->tmDescent << 6;
     }
 
     /*
-     * Process the vertical alignment and determine the yoff.
+     * Process the vertical alignment and determine DY1 and DY2.
      */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
     if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
     {
-        yoff = 0;
         DY1 = FontGDI->tmAscent;
         DY2 = FontGDI->tmDescent;
     }
     else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
-        yoff = -(fixDescender >> 6);
         DY1 = FontGDI->tmHeight;
         DY2 = 0;
     }
     else /* TA_TOP */
     {
-        yoff = fixAscender >> 6;
         DY1 = 0;
         DY2 = FontGDI->tmHeight;
     }
@@ -6103,7 +6099,6 @@ GreExtTextOutW(
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
-        //DestRect.top = TextTop + yoff - realglyph->top;
         DestRect.top = TextTop - realglyph->top;
         DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
 
@@ -6219,9 +6214,9 @@ GreExtTextOutW(
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
                           (TextLeft >> 6),
-                          TextTop + yoff - position + i - (realglyph->root.advance.y >> 16),
+                          TextTop - position + i,
                           ((TextLeft + (realglyph->root.advance.x >> 10)) >> 6),
-                          TextTop + yoff - position + i,
+                          TextTop - position + i - (realglyph->root.advance.y >> 16),
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
@@ -6235,9 +6230,9 @@ GreExtTextOutW(
                           (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
                           (TextLeft >> 6),
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i - (realglyph->root.advance.y >> 16),
+                          TextTop - (fixAscender >> 6) / 3 + i,
                           ((TextLeft + (realglyph->root.advance.x >> 10)) >> 6),
-                          TextTop + yoff - (fixAscender >> 6) / 3 + i,
+                          TextTop - (fixAscender >> 6) / 3 + i - (realglyph->root.advance.y >> 16),
                           NULL,
                           ROP2_TO_MIX(R2_COPYPEN));
             }
