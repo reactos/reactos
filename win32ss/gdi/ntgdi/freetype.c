@@ -660,33 +660,39 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = (FT_Fixed)(cos(radian) * (1 << 16));
 }
 
-VOID
+VOID FASTCALL
+FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
+{
+    FLOATOBJ ef;
+
+    /* Create a freetype matrix, by converting to 16.16 fixpoint format */
+    ef = pmx->efM11;
+    FLOATOBJ_MulLong(&ef, 0x00010000);
+    pmat->xx = FLOATOBJ_GetLong(&ef);
+
+    ef = pmx->efM12;
+    FLOATOBJ_MulLong(&ef, 0x00010000);
+    pmat->xy = FLOATOBJ_GetLong(&ef);
+
+    ef = pmx->efM21;
+    FLOATOBJ_MulLong(&ef, 0x00010000);
+    pmat->yx = FLOATOBJ_GetLong(&ef);
+
+    ef = pmx->efM22;
+    FLOATOBJ_MulLong(&ef, 0x00010000);
+    pmat->yy = FLOATOBJ_GetLong(&ef);
+}
+
+static __inline VOID FASTCALL
 FtSetCoordinateTransform(
     FT_Face face,
     PMATRIX pmx)
 {
-    FT_Matrix ftmatrix;
-    FLOATOBJ efTemp;
-
-    /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-    efTemp = pmx->efM11;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM12;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM21;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
-
-    efTemp = pmx->efM22;
-    FLOATOBJ_MulLong(&efTemp, 0x00010000);
-    ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+    FT_Matrix mat;
+    FtMatrixFromMx(&mat, pmx);
 
     /* Set the transformation matrix */
-    FT_Set_Transform(face, &ftmatrix, 0);
+    FT_Set_Transform(face, &mat, 0);
 }
 
 static BOOL
@@ -5985,7 +5991,7 @@ GreExtTextOutW(
         vecs[8].y = (DY1 - FontGDI->tmAscent + (FontGDI->tmAscent / 3)) << 16;
     }
 
-    // convert
+    // convert vecs to pts
     for (i = 0; i < 9; ++i)
     {
         FT_Vector_Transform(&vecs[i], &mat);
