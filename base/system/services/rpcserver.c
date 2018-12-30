@@ -6580,8 +6580,11 @@ RCreateServiceWOW64W(
 /* Function 46 */
 DWORD
 WINAPI
-RQueryServiceTagInfo(
-    handle_t BindingHandle)  /* FIXME */
+RI_ScQueryServiceTagInfo(
+    SC_RPC_HANDLE hSCManager,
+    TAG_INFO_LEVEL dwInfoLevel,
+    PTAG_INFO_NAME_FROM_TAG_IN_PARAMS * lpInParams,
+    PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS * lpOutParams)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
