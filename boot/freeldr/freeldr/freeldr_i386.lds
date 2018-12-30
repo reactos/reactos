@@ -4,6 +4,8 @@ SECTIONS
   {
     *(.text)
     *(SORT(.text*))
+    *(INIT)
+    *(SORT(INIT*))
     *(.data)
     *(SORT(.data*))
     *(.rdata)

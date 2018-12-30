@@ -82,7 +82,7 @@ DfsUnload(PDRIVER_OBJECT DriverObject)
     UNIMPLEMENTED;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 DfsDriverEntry(PDRIVER_OBJECT DriverObject,
                PUNICODE_STRING RegistryPath)

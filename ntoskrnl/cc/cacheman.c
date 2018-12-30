@@ -22,9 +22,9 @@ static ULONG BugCheckFileId = 0x4 << 16;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 CcPfInitializePrefetcher(VOID)
 {
     /* Notify debugger */
@@ -40,9 +40,9 @@ CcPfInitializePrefetcher(VOID)
     /* FIXME: Setup the rest of the prefetecher */
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CcInitializeCacheManager(VOID)
 {
     ULONG Thread;

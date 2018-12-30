@@ -3095,7 +3095,9 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode)
    return IopTraverseDeviceTree(&Context);
 }
 
-static NTSTATUS INIT_FUNCTION
+static
+INIT_FUNCTION
+NTSTATUS
 IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
    IN PUNICODE_STRING RelativePath OPTIONAL,
@@ -3526,7 +3528,9 @@ cleanup:
    return Status;
 }
 
-static BOOLEAN INIT_FUNCTION
+static
+INIT_FUNCTION
+BOOLEAN
 IopIsFirmwareMapperDisabled(VOID)
 {
    UNICODE_STRING KeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CURRENTCONTROLSET\\Control\\Pnp");
@@ -3594,9 +3598,9 @@ IopIsFirmwareMapperDisabled(VOID)
    return (KeyValue != 0) ? TRUE : FALSE;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 IopUpdateRootKey(VOID)
 {
    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");

@@ -62,9 +62,9 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+INIT_FUNCTION
 USHORT
 NTAPI
-INIT_FUNCTION
 NameToOrdinal(IN PCHAR Name,
               IN PVOID DllBase,
               IN ULONG NumberOfNames,
@@ -105,9 +105,9 @@ NameToOrdinal(IN PCHAR Name,
     return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 LookupEntryPoint(IN PVOID DllBase,
                  IN PCHAR Name,
                  OUT PVOID *EntryPoint)
@@ -157,9 +157,9 @@ LookupEntryPoint(IN PVOID DllBase,
     return STATUS_SUCCESS;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PspLookupSystemDllEntryPoint(IN PCHAR Name,
                              IN PVOID *EntryPoint)
 {
@@ -167,9 +167,9 @@ PspLookupSystemDllEntryPoint(IN PCHAR Name,
     return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
@@ -273,9 +273,9 @@ PspMapSystemDll(IN PEPROCESS Process,
     return Status;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PsLocateSystemDll(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -359,9 +359,9 @@ PsLocateSystemDll(VOID)
     return Status;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PspInitializeSystemDll(VOID)
 {
     NTSTATUS Status;
@@ -392,9 +392,9 @@ PspInitializeSystemDll(VOID)
     return Status;
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 PspInitPhase1(VOID)
 {
     /* Initialize the System DLL and return status of operation */
@@ -402,9 +402,9 @@ PspInitPhase1(VOID)
     return TRUE;
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;
@@ -620,9 +620,9 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Check the initialization phase */

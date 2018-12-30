@@ -5,15 +5,10 @@
 #include <ntdddisk.h>
 #include <dos.h>
 #include <pseh/pseh2.h>
+#include <section_attribs.h>
 #ifdef KDBG
 #include <ndk/kdfuncs.h>
 #include <reactos/kdros.h>
-#endif
-
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
 #endif
 
 
@@ -823,6 +818,7 @@ VfatSetExtendedAttributes(
 
 /* fastio.c */
 
+INIT_FUNCTION
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch);
@@ -1127,6 +1123,7 @@ VfatFileSystemControl(
 
 /* iface.c */
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(

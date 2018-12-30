@@ -1,15 +1,6 @@
 #pragma once
 
-/*
- * Use these to place a function in a specific section of the executable
- */
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#define INIT_FUNCTION INIT_SECTION
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#define INIT_FUNCTION INIT_SECTION
-#endif
+#include <section_attribs.h>
 
 
 

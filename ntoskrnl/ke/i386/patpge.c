@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_SECTION
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(IN ULONG_PTR Context)
@@ -55,18 +55,18 @@ Ki386EnableGlobalPage(IN ULONG_PTR Context)
     return 0;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializePAT(VOID)
 {
     /* FIXME: Support this */
     DPRINT("PAT support detected but not yet taken advantage of\n");
 }
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
-INIT_FUNCTION
 Ki386EnableTargetLargePage(IN ULONG_PTR Context)
 {
     PLARGE_IDENTITY_MAP IdentityMap = (PLARGE_IDENTITY_MAP)Context;

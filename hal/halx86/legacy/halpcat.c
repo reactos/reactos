@@ -30,7 +30,7 @@ PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -39,7 +39,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_NO_SUCH_DEVICE;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpBuildAddressMap(VOID)
@@ -51,7 +51,7 @@ HalpBuildAddressMap(VOID)
     //HalpAddROMRanges();
 }
 
-INIT_SECTION
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpGetDebugPortTable(VOID)
@@ -60,7 +60,7 @@ HalpGetDebugPortTable(VOID)
     return FALSE;
 }
 
-INIT_SECTION
+INIT_FUNCTION
 ULONG
 NTAPI
 HalpIs16BitPortDecodeSupported(VOID)
@@ -70,7 +70,7 @@ HalpIs16BitPortDecodeSupported(VOID)
 }
 
 #if 0
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 HaliInitPnpDriver(VOID)
@@ -84,7 +84,7 @@ HaliInitPnpDriver(VOID)
 /*
  * @implemented
  */
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalReportResourceUsage(VOID)

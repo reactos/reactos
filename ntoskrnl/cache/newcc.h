@@ -38,6 +38,7 @@ typedef struct _NOCC_CACHE_MAP
     ULONG ReadAheadGranularity;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
+INIT_FUNCTION
 VOID
 NTAPI
 CcPfInitializePrefetcher(VOID);
@@ -53,6 +54,7 @@ CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
                     IN PLARGE_INTEGER FileOffset,
                     IN PMDL MdlChain);
 
+INIT_FUNCTION
 VOID
 NTAPI
 CcInitView(VOID);
@@ -62,6 +64,7 @@ NTAPI
 CcpUnpinData(PNOCC_BCB Bcb,
              BOOLEAN ActuallyRelease);
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID);

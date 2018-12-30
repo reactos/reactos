@@ -628,9 +628,9 @@ MiDumpPoolConsumers(BOOLEAN CalledFromDbg, ULONG Tag, ULONG Mask, ULONG Flags)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_SECTION
 ExpSeedHotTags(VOID)
 {
     ULONG i, Key, Hash, Index;
@@ -958,9 +958,9 @@ ExpInsertPoolTracker(IN ULONG Key,
     DPRINT1("Out of pool tag space, ignoring...\n");
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_SECTION
 ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
                            IN POOL_TYPE PoolType,
                            IN ULONG PoolIndex,
@@ -1009,9 +1009,9 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
     ASSERT(PoolType != PagedPoolSession);
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_SECTION
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {

@@ -24,6 +24,7 @@ Author:
 //
 #include <umtypes.h>
 #include <inbvtypes.h>
+#include <section_attribs.h>
 
 #ifndef NTOS_MODE_USER
 //
@@ -50,6 +51,7 @@ InbvNotifyDisplayOwnershipLost(
 //
 // Installation Functions
 //
+INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(

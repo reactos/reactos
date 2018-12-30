@@ -144,9 +144,9 @@ FsRtlWorkerThread(IN PVOID StartContext)
 /*
  * @implemented
  */
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 FsRtlInitializeWorkerThread(VOID)
 {
     ULONG_PTR i;

@@ -22,9 +22,9 @@ EX_PUSH_LOCK HandleTableListLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 ExpInitializeHandleTables(VOID)
 {
     /* Initialize the list of handle tables and the lock */

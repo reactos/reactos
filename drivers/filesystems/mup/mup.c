@@ -32,6 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -39,11 +40,13 @@ DriverEntry(
     PUNICODE_STRING RegistryPath
 );
 
+INIT_FUNCTION
 VOID
 MupInitializeData(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 MupInitializeVcb(
     PMUP_VCB Vcb
@@ -76,7 +79,7 @@ NTSTATUS MupOrderedErrorList[] = { STATUS_UNSUCCESSFUL,
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 MupInitializeData(VOID)
 {
@@ -102,7 +105,7 @@ MupUninitializeData()
   ExDeleteResourceLite(&MupVcbLock);
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 MupInitializeVcb(PMUP_VCB Vcb)
 {
@@ -2507,7 +2510,7 @@ MupUnload(PDRIVER_OBJECT DriverObject)
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
-INIT_SECTION
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
