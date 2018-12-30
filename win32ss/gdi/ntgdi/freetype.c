@@ -715,7 +715,7 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
     pmat->yy = FLOATOBJ_GetLong(&ef);
 }
 
-static __inline VOID FASTCALL
+FORCEINLINE VOID FASTCALL
 FtSetCoordinateTransform(
     FT_Face face,
     PMATRIX pmx)
@@ -5603,7 +5603,8 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
-LONG IntNormalizeAngle(LONG nTenthAngle)
+FORCEINLINE LONG FASTCALL
+IntNormalizeAngle(LONG nTenthAngle)
 {
     const LONG nFullAngle = 360 * 10;
     nTenthAngle %= nFullAngle;
