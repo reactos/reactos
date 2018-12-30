@@ -5581,6 +5581,13 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
+LONG IntNormalizeAngle(LONG nTenthAngle)
+{
+    const LONG nFullAngle = 360 * 10;
+    nTenthAngle %= nFullAngle;
+    return (nTenthAngle + nFullAngle) % nFullAngle;
+}
+
 BOOL
 APIENTRY
 GreExtTextOutW(
@@ -5775,7 +5782,7 @@ GreExtTextOutW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    lfEscapement = plf->lfEscapement % 3600;
+    lfEscapement = IntNormalizeAngle(plf->lfEscapement);
 
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
