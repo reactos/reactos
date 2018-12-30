@@ -671,6 +671,54 @@ GetEnumeratorInstanceList(
 }
 
 
+static
+CONFIGRET
+GetAllInstanceList(
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szEnumeratorBuffer[MAX_DEVICE_ID_LEN];
+    PWSTR pPtr;
+    DWORD dwIndex, dwEnumeratorLength, dwUsedLength, dwRemainingLength, dwPathLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    dwUsedLength = 0;
+    dwRemainingLength = *pulLength;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwEnumeratorLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumKey,
+                                dwIndex,
+                                szEnumeratorBuffer,
+                                &dwEnumeratorLength,
+                                NULL, NULL, NULL, NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        dwPathLength = dwRemainingLength;
+        ret = GetEnumeratorInstanceList(szEnumeratorBuffer,
+                                        pPtr,
+                                        &dwPathLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        dwUsedLength += dwPathLength - 1;
+        dwRemainingLength += dwPathLength - 1;
+        pPtr += dwPathLength - 1;
+    }
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
 /* Function 10 */
 DWORD
 WINAPI
@@ -766,7 +814,8 @@ PNP_GetDeviceList(
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetAllInstanceList(Buffer,
+                                 pulLength);
     }
 
     return ret;
@@ -889,7 +938,6 @@ GetEnumeratorInstanceListSize(
 static
 CONFIGRET
 GetAllInstanceListSize(
-    _In_ LPCWSTR pszEnumerator,
     _Out_ PULONG pulLength)
 {
     WCHAR szEnumeratorBuffer[MAX_DEVICE_ID_LEN];
@@ -1016,8 +1064,7 @@ PNP_GetDeviceListSize(
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-        ret = GetAllInstanceListSize(pszFilter,
-                                     pulLength);
+        ret = GetAllInstanceListSize(pulLength);
     }
 
     /* Add one character for the terminating double UNICODE_NULL */
