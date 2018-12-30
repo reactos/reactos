@@ -3022,4 +3022,48 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
     return TRUE;
 }
 
+DWORD
+I_ScQueryServiceTagInfo(PVOID Unused,
+                        TAG_INFO_LEVEL dwInfoLevel,
+                        PTAG_INFO_NAME_FROM_TAG InOutParams)
+{
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/**********************************************************************
+ *  I_QueryTagInformation
+ *
+ * @implemented
+ */
+DWORD WINAPI
+I_QueryTagInformation(PVOID Unused,
+                      TAG_INFO_LEVEL dwInfoLevel,
+                      PTAG_INFO_NAME_FROM_TAG InOutParams)
+{
+    /*
+     * We only support one information class and it
+     * needs parameters
+     */
+    if (dwInfoLevel != TagInfoLevelNameFromTag ||
+        InOutParams == NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Validate input structure */
+    if (InOutParams->InParams.dwPid == 0 || InOutParams->InParams.dwTag == 0)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Validate output structure */
+    if (InOutParams->OutParams.pszName != NULL)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Call internal function for the RPC call */
+    return I_ScQueryServiceTagInfo(Unused, TagInfoLevelNameFromTag, InOutParams);
+}
+
 /* EOF */
