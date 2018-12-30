@@ -147,7 +147,8 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 
 
 DWORD
-ScmGetServiceNameFromTag(PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams, PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams)
+ScmGetServiceNameFromTag(IN PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams,
+                         OUT PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
@@ -172,7 +173,7 @@ ScmGetServiceNameFromTag(PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams, PTAG_INFO_N
         {
             CurrentImage = CurrentService->lpImage;
             /* And matching the PID */
-            if (CurrentImage->hProcess == (HANDLE)InParams->dwPid)
+            if (CurrentImage->dwProcessId == InParams->dwPid)
             {
                 break;
             }
@@ -220,7 +221,10 @@ Cleanup:
     /* If failure, free allocated memory */
     if (dwError != ERROR_SUCCESS)
     {
-        MIDL_user_free(OutBuffer);
+        if (OutBuffer != NULL)
+        {
+            MIDL_user_free(OutBuffer);
+        }
     }
 
     /* Return error/success */
