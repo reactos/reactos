@@ -1392,7 +1392,6 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN IsValid, IsEmpty = TRUE;
     PVOID MbrBuffer;
     PIO_STACK_LOCATION IoStackLocation;
-    PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
     UCHAR PartitionType;
     LARGE_INTEGER HiddenSectors64;
     VolumeOffset.QuadPart = Offset.QuadPart = 0;
@@ -1723,6 +1722,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     if ((DiskGeometry.MediaType == RemovableMedia) &&
         (j == 0) && (MbrFound) && (IsEmpty))
     {
+        PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
+
         /* Read the jump bytes to detect super-floppy */
         if ((BootSectorInfo->JumpByte[0] == 0xeb) ||
             (BootSectorInfo->JumpByte[0] == 0xe9))
