@@ -311,7 +311,7 @@ typedef struct _TAG_INFO_NAME_FROM_TAG_IN_PARAMS {
 
 typedef struct _TAG_INFO_NAME_FROM_TAG_OUT_PARAMS {
     TAG_TYPE TagType;
-    LPWSTR pszName;
+    [string] LPWSTR pszName;
 } TAG_INFO_NAME_FROM_TAG_OUT_PARAMS, *PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS;
 
 typedef struct _TAG_INFO_NAME_FROM_TAG
