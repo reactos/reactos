@@ -210,7 +210,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
         }
         else
         {
-            /* Compute how much mem we'll need */
+            /* Compute how much memory we'll need */
             RequiredLength = DataBuffer->Reserved + Length + sizeof(UNICODE_NULL);
 
             /* Check if FileObject can already hold what we need */
@@ -224,7 +224,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
                 NewBuffer = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_IO_NAME);
                 if (NewBuffer == NULL)
                 {
-                     Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                    Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 }
             }
         }
@@ -233,7 +233,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
     /* Everything went right */
     if (NT_SUCCESS(Irp->IoStatus.Status))
     {
-        /* Copy reserved */
+        /* Copy the reserved data */
         if (DataBuffer->Reserved)
         {
             RtlMoveMemory((PWSTR)((ULONG_PTR)NewBuffer + Length),
@@ -241,7 +241,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
                           DataBuffer->Reserved);
         }
 
-        /* Then, buffer */
+        /* Then the buffer */
         if (Length)
         {
             RtlCopyMemory(NewBuffer, Buffer, Length);
@@ -958,12 +958,9 @@ IopParseDevice(IN PVOID ParseObject,
         if (RemainingName->Length)
         {
             /* Setup the unicode string */
-            FileObject->FileName.MaximumLength = RemainingName->Length +
-                                                 sizeof(WCHAR);
+            FileObject->FileName.MaximumLength = RemainingName->Length + sizeof(WCHAR);
             FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                                FileObject->
-                                                                FileName.
-                                                                MaximumLength,
+                                                                FileObject->FileName.MaximumLength,
                                                                 TAG_IO_NAME);
             if (!FileObject->FileName.Buffer)
             {
