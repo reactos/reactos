@@ -662,6 +662,7 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
     if (lfWidth == 0)
         return;
 
+    ASSERT_FREETYPE_LOCK_HELD();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
     if (!pOS2)
         return;
