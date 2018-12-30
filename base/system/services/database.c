@@ -148,8 +148,82 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 DWORD
 ScmGetServiceNameFromTag(PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams, PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+    PSERVICE_IMAGE CurrentImage;
+    PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS OutBuffer = NULL;
+    DWORD dwError;
+
+    /* Lock the database */
+    ScmLockDatabaseExclusive();
+
+    /* Find the matching service */
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
+        /* We must match the tag */
+        if (CurrentService->dwTag == InParams->dwTag &&
+            CurrentService->lpImage != NULL)
+        {
+            CurrentImage = CurrentService->lpImage;
+            /* And matching the PID */
+            if (CurrentImage->hProcess == (HANDLE)InParams->dwPid)
+            {
+                break;
+            }
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    /* No match! */
+    if (ServiceEntry == &ServiceListHead)
+    {
+        dwError = ERROR_RETRY;
+        goto Cleanup;
+    }
+
+    /* Allocate the output buffer */
+    OutBuffer = MIDL_user_allocate(sizeof(TAG_INFO_NAME_FROM_TAG_OUT_PARAMS));
+    if (OutBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
+
+    /* And the buffer for the name */
+    OutBuffer->pszName = MIDL_user_allocate(wcslen(CurrentService->lpServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (OutBuffer->pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Fill in output data */
+    wcscpy(OutBuffer->pszName, CurrentService->lpServiceName);
+    OutBuffer->TagType = TagTypeService;
+
+    /* And return */
+    *OutParams = OutBuffer;
+    dwError = ERROR_SUCCESS;
+
+Cleanup:
+
+    /* Unlock database */
+    ScmUnlockDatabase();
+
+    /* If failure, free allocated memory */
+    if (dwError != ERROR_SUCCESS)
+    {
+        MIDL_user_free(OutBuffer);
+    }
+
+    /* Return error/success */
+    return dwError;
 }
 
 
