@@ -30,6 +30,7 @@ typedef struct _SCM_CONTROL_PACKET
     DWORD dwSize;
     DWORD dwControl;
     DWORD dwArgumentsCount;
+    DWORD dwServiceTag;
     SERVICE_STATUS_HANDLE hServiceStatus;
     DWORD dwServiceNameOffset;
     DWORD dwArgumentsOffset;
