@@ -43,6 +43,7 @@
 
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
+static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
@@ -648,6 +649,37 @@ InitFontSupport(VOID)
 #endif
 
     return TRUE;
+}
+
+VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
+{
+    LONG tmAveCharWidth;
+    TT_OS2 *pOS2;
+    FT_Fixed XScale;
+
+    *pmat = identityMat;
+
+    if (lfWidth == 0)
+        return;
+
+    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
+    if (!pOS2)
+        return;
+
+    XScale = face->size->metrics.x_scale;
+    tmAveCharWidth = (FT_MulFix(pOS2->xAvgCharWidth, XScale) + 32) >> 6;
+    if (tmAveCharWidth == 0)
+    {
+        tmAveCharWidth = 1;
+    }
+
+    if (lfWidth == tmAveCharWidth)
+        return;
+
+    pmat->xx = (FT_Fixed)((1 << 16) * lfWidth / tmAveCharWidth);
+    pmat->xy = 0;
+    pmat->yx = 0;
+    pmat->yy = (FT_Fixed)(1 << 16);
 }
 
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
@@ -3528,7 +3560,6 @@ ftGdiGetGlyphOutline(
     LPMAT2 pmat2,
     BOOL bIgnoreRotation)
 {
-    static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
@@ -3655,25 +3686,10 @@ ftGdiGetGlyphOutline(
     /* World transform */
     {
         FT_Matrix ftmatrix;
-        FLOATOBJ efTemp;
         PMATRIX pmx = DC_pmxWorldToDevice(dc);
 
         /* Create a freetype matrix, by converting to 16.16 fixpoint format */
-        efTemp = pmx->efM11;
-        FLOATOBJ_MulLong(&efTemp, 0x00010000);
-        ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
-
-        efTemp = pmx->efM12;
-        FLOATOBJ_MulLong(&efTemp, 0x00010000);
-        ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
-
-        efTemp = pmx->efM21;
-        FLOATOBJ_MulLong(&efTemp, 0x00010000);
-        ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
-
-        efTemp = pmx->efM22;
-        FLOATOBJ_MulLong(&efTemp, 0x00010000);
-        ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+        FtMatrixFromMx(&ftmatrix, pmx);
 
         if (memcmp(&ftmatrix, &identityMat, sizeof(identityMat)) != 0)
         {
@@ -5639,7 +5655,7 @@ GreExtTextOutW(
     BOOL DoBreak = FALSE;
     USHORT DxShift;
     PMATRIX pmxWorldToDevice;
-    LONG /*fixAscender, */ lfEscapement;
+    LONG lfEscapement, lfWidth;
     FLOATOBJ Scale;
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
@@ -5647,7 +5663,7 @@ GreExtTextOutW(
     BOOL bResult;
     LONGLONG TextTop, TextWidth;
     INT DY1, DY2;
-    FT_Matrix mat;
+    FT_Matrix mat1, mat2 = identityMat;
     FT_Vector vecs[9];
     POINT pts[9];
 
@@ -5789,6 +5805,7 @@ GreExtTextOutW(
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
     lfEscapement = IntNormalizeAngle(plf->lfEscapement);
+    lfWidth = FT_IS_SCALABLE(face) ? labs(plf->lfWidth) : 0;
 
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
@@ -5807,17 +5824,11 @@ GreExtTextOutW(
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
-
-        //fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
-        //fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
     }
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
         FtSetCoordinateTransform(face, pmxWorldToDevice);
-
-        //fixAscender = FontGDI->tmAscent << 6;
-        //fixDescender = FontGDI->tmDescent << 6;
     }
 
     /*
@@ -5840,6 +5851,10 @@ GreExtTextOutW(
         DY2 = FontGDI->tmHeight;
     }
 #undef VALIGN_MASK
+
+    IntWidthMatrix(face, &mat1, lfWidth);
+    FT_Matrix_Multiply(&mat1, &mat2);
+    FT_Set_Transform(face, &mat2, NULL);
 
     /*
      * Calculate width of the text.
@@ -5951,7 +5966,9 @@ GreExtTextOutW(
             thickness = 1;
     }
 
-    IntEscapeMatrix(&mat, lfEscapement);
+    IntEscapeMatrix(&mat1, lfEscapement);
+    FT_Matrix_Multiply(&mat1, &mat2);
+    FT_Set_Transform(face, &mat2, NULL);
 
     // background rectangle
     vecs[0].x = 0;
@@ -5994,14 +6011,9 @@ GreExtTextOutW(
     // convert vecs to pts
     for (i = 0; i < 9; ++i)
     {
-        FT_Vector_Transform(&vecs[i], &mat);
+        FT_Vector_Transform(&vecs[i], &mat1);
         pts[i].x = (RealXStart >> 6) + (vecs[i].x >> 16);
         pts[i].y = YStart - (vecs[i].y >> 16);
-    }
-
-    if (lfEscapement)
-    {
-        FT_Set_Transform(face, &mat, NULL);
     }
 
     if (fuOptions & ETO_OPAQUE)
