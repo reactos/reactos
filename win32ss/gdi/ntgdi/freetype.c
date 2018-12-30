@@ -4018,7 +4018,7 @@ TextIntGetTextExtentPoint(PDC dc,
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     INT error, glyph_index, i, previous;
-    ULONGLONG TotalWidth = 0;
+    ULONGLONG TotalWidth64 = 0;
     BOOL use_kerning;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
@@ -4106,18 +4106,18 @@ TextIntGetTextExtentPoint(PDC dc,
         {
             FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TotalWidth += delta.x;
+            TotalWidth64 += delta.x;
         }
 
-        TotalWidth += realglyph->root.advance.x >> 10;
+        TotalWidth64 += realglyph->root.advance.x >> 10;
 
-        if (((TotalWidth + 32) >> 6) <= MaxExtent && NULL != Fit)
+        if (((TotalWidth64 + 32) >> 6) <= MaxExtent && NULL != Fit)
         {
             *Fit = i + 1;
         }
         if (NULL != Dx)
         {
-            Dx[i] = (TotalWidth + 32) >> 6;
+            Dx[i] = (TotalWidth64 + 32) >> 6;
         }
 
         /* Bold and italic do not use the cache */
@@ -4134,7 +4134,7 @@ TextIntGetTextExtentPoint(PDC dc,
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
 
-    Size->cx = (TotalWidth + 32) >> 6;
+    Size->cx = (TotalWidth64 + 32) >> 6;
     Size->cy = ascender + descender;
 
     return TRUE;
@@ -5637,7 +5637,7 @@ GreExtTextOutW(
     FT_Face face;
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft, RealXStart;
+    LONGLONG TextLeft64, TextTop64, TextWidth64, RealXStart64;
     ULONG previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
@@ -5661,7 +5661,6 @@ GreExtTextOutW(
     BOOL EmuBold, EmuItalic;
     int thickness;
     BOOL bResult;
-    LONGLONG TextTop, TextWidth;
     INT DY1, DY2;
     FT_Matrix mat1, mat2 = identityMat;
     FT_Vector vecs[9];
@@ -5727,7 +5726,7 @@ GreExtTextOutW(
     }
 
     IntLPtoDP(dc, &Start, 1);
-    RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
+    RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
     SourcePoint.x = 0;
@@ -5866,7 +5865,7 @@ GreExtTextOutW(
     /*
      * Calculate width of the text.
      */
-    TextWidth = 0;
+    TextWidth64 = 0;
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -5874,8 +5873,8 @@ GreExtTextOutW(
         (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)) ||
         lfEscapement || plf->lfUnderline || plf->lfStrikeOut)
     {
-        TextLeft = RealXStart;
-        TextTop = YStart << 6;
+        TextLeft64 = RealXStart64;
+        TextTop64 = YStart << 6;
         for (i = 0; i < Count; ++i)
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
@@ -5909,28 +5908,28 @@ GreExtTextOutW(
             {
                 FT_Vector delta;
                 FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft += delta.x;
+                TextLeft64 += delta.x;
             }
 
             if (Dx == NULL)
             {
-                TextLeft += realglyph->root.advance.x >> 10;
+                TextLeft64 += realglyph->root.advance.x >> 10;
             }
             else
             {
-                // FIXME this should probably be a matrix transform with TextTop as well.
+                // FIXME this should probably be a matrix transform with TextTop64 as well.
                 Scale = pdcattr->mxWorldToDevice.efM11;
                 if (FLOATOBJ_Equal0(&Scale))
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
                 FLOATOBJ_MulLong(&Scale, Dx[i << DxShift] << 6);
-                TextLeft += FLOATOBJ_GetLong(&Scale);
+                TextLeft64 += FLOATOBJ_GetLong(&Scale);
             }
 
             if (DxShift)
             {
-                TextTop -= Dx[2 * i + 1] << 6;
+                TextTop64 -= Dx[2 * i + 1] << 6;
             }
 
             previous = glyph_index;
@@ -5938,7 +5937,7 @@ GreExtTextOutW(
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
 
-        TextWidth = TextLeft - RealXStart;
+        TextWidth64 = TextLeft64 - RealXStart64;
     }
 
     /*
@@ -5946,13 +5945,13 @@ GreExtTextOutW(
      */
     if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
     {
-        RealXStart -= TextWidth / 2;
+        RealXStart64 -= TextWidth64 / 2;
     }
     else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
     {
-        RealXStart -= TextWidth;
-        if (((RealXStart + TextWidth + 32) >> 6) <= Start.x + dc->ptlDCOrig.x)
-            RealXStart += 1 << 6;
+        RealXStart64 -= TextWidth64;
+        if (((RealXStart64 + TextWidth64 + 32) >> 6) <= Start.x + dc->ptlDCOrig.x)
+            RealXStart64 += 1 << 6;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5980,9 +5979,9 @@ GreExtTextOutW(
     // background rectangle
     vecs[0].x = 0;
     vecs[0].y = (DY1 - FontGDI->tmHeight) << 16;    // Top Left
-    vecs[1].x = TextWidth << 10;
+    vecs[1].x = TextWidth64 << 10;
     vecs[1].y = (DY1 - FontGDI->tmHeight) << 16;    // Top Right
-    vecs[2].x = TextWidth << 10;
+    vecs[2].x = TextWidth64 << 10;
     vecs[2].y = DY1 << 16;                          // Bottom Right
     vecs[3].x = 0;
     vecs[3].y = DY1 << 16;                          // Bottom Left
@@ -6002,7 +6001,7 @@ GreExtTextOutW(
         }
         vecs[5].x = 0;
         vecs[5].y = (DY1 - FontGDI->tmAscent + position) << 16;
-        vecs[6].x = TextWidth << 10;
+        vecs[6].x = TextWidth64 << 10;
         vecs[6].y = (DY1 - FontGDI->tmAscent + position) << 16;
     }
 
@@ -6011,7 +6010,7 @@ GreExtTextOutW(
     {
         vecs[7].x = 0;
         vecs[7].y = (DY1 - FontGDI->tmAscent + (FontGDI->tmAscent / 3)) << 16;
-        vecs[8].x = TextWidth << 10;
+        vecs[8].x = TextWidth64 << 10;
         vecs[8].y = (DY1 - FontGDI->tmAscent + (FontGDI->tmAscent / 3)) << 16;
     }
 
@@ -6019,7 +6018,7 @@ GreExtTextOutW(
     for (i = 0; i < 9; ++i)
     {
         FT_Vector_Transform(&vecs[i], &mat1);
-        pts[i].x = (RealXStart >> 6) + (vecs[i].x >> 16);
+        pts[i].x = (RealXStart64 >> 6) + (vecs[i].x >> 16);
         pts[i].y = YStart - (vecs[i].y >> 16);
     }
 
@@ -6027,33 +6026,33 @@ GreExtTextOutW(
     {
         /* Draw background */
         RECTL Rect;
-        INT X1 = ((RealXStart + 32) >> 6);
+        INT X1 = ((RealXStart64 + 32) >> 6);
 
         switch (lfEscapement)
         {
         case 0:
             Rect.left = X1;
-            Rect.top = ((TextTop + 32) >> 6) - DY1;
-            Rect.right = (RealXStart + TextWidth + 32) >> 6;
-            Rect.bottom = ((TextTop + 32) >> 6) + DY2;
+            Rect.top = ((TextTop64 + 32) >> 6) - DY1;
+            Rect.right = (RealXStart64 + TextWidth64 + 32) >> 6;
+            Rect.bottom = ((TextTop64 + 32) >> 6) + DY2;
             break;
         case 90 * 10:
             Rect.left = X1 - DY1;
-            Rect.top = ((TextTop - TextWidth + 32) >> 6);
+            Rect.top = ((TextTop64 - TextWidth64 + 32) >> 6);
             Rect.right = X1 + DY2;
-            Rect.bottom = ((TextTop + 32) >> 6);
+            Rect.bottom = ((TextTop64 + 32) >> 6);
             break;
         case 180 * 10:
-            Rect.left = (RealXStart - TextWidth + 32) >> 6;
-            Rect.top = ((TextTop + 32) >> 6) - DY2;
+            Rect.left = (RealXStart64 - TextWidth64 + 32) >> 6;
+            Rect.top = ((TextTop64 + 32) >> 6) - DY2;
             Rect.right = X1;
-            Rect.bottom = ((TextTop + 32) >> 6) + DY1;
+            Rect.bottom = ((TextTop64 + 32) >> 6) + DY1;
             break;
         case 270 * 10:
             Rect.left = X1 - DY2;
-            Rect.top = ((TextTop + 32) >> 6);
+            Rect.top = ((TextTop64 + 32) >> 6);
             Rect.right = X1 + DY1;
-            Rect.bottom = ((TextTop + TextWidth + 32) >> 6);
+            Rect.bottom = ((TextTop64 + TextWidth64 + 32) >> 6);
             break;
         default:
             DPRINT1("FIXME: Not implemented lfEscapement\n");
@@ -6099,8 +6098,8 @@ GreExtTextOutW(
      * The main rendering loop.
      */
     bResult = TRUE;
-    TextLeft = pts[4].x << 6;
-    TextTop = pts[4].y << 6;
+    TextLeft64 = pts[4].x << 6;
+    TextTop64 = pts[4].y << 6;
     previous = 0;
     for (i = 0; i < Count; ++i)
     {
@@ -6152,15 +6151,15 @@ GreExtTextOutW(
         {
             FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            TextLeft += delta.x;
+            TextLeft64 += delta.x;
         }
-        //DPRINT("TextLeft: %I64d\n", TextLeft);
-        //DPRINT("TextTop: %I64u\n", TextTop);
+        //DPRINT("TextLeft64: %I64d\n", TextLeft64);
+        //DPRINT("TextTop64: %I64d\n", TextTop64);
         //DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
-        DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
+        DestRect.left = ((TextLeft64 + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
-        DestRect.top = ((TextTop + 32) >> 6) - realglyph->top;
+        DestRect.top = ((TextTop64 + 32) >> 6) - realglyph->top;
         DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
 
         bitSize.cx = realglyph->bitmap.width;
@@ -6259,26 +6258,26 @@ GreExtTextOutW(
 
         if (NULL == Dx)
         {
-            TextLeft += realglyph->root.advance.x >> 10;
-            TextTop -= realglyph->root.advance.y >> 10;
-            //DPRINT("New TextLeft: %I64d\n", TextLeft);
+            TextLeft64 += realglyph->root.advance.x >> 10;
+            TextTop64 -= realglyph->root.advance.y >> 10;
+            //DPRINT("New TextLeft64: %I64d\n", TextLeft64);
         }
         else
         {
-            // FIXME this should probably be a matrix transform with TextTop as well.
+            // FIXME this should probably be a matrix transform with TextTop64 as well.
             Scale = pdcattr->mxWorldToDevice.efM11;
             if (FLOATOBJ_Equal0(&Scale))
                 FLOATOBJ_Set1(&Scale);
 
             /* do the shift before multiplying to preserve precision */
             FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
-            TextLeft += FLOATOBJ_GetLong(&Scale);
-            //DPRINT("New TextLeft2: %I64d\n", TextLeft);
+            TextLeft64 += FLOATOBJ_GetLong(&Scale);
+            //DPRINT("New TextLeft64 2: %I64d\n", TextLeft64);
         }
 
         if (DxShift)
         {
-            TextTop -= Dx[2 * i + 1] << 6;
+            TextTop64 -= Dx[2 * i + 1] << 6;
         }
 
         previous = glyph_index;
