@@ -5804,8 +5804,15 @@ GreExtTextOutW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
     EmuItalic = (plf->lfItalic && !FontGDI->OriginalItalic);
-    lfEscapement = IntNormalizeAngle(plf->lfEscapement);
-    lfWidth = FT_IS_SCALABLE(face) ? labs(plf->lfWidth) : 0;
+    if (FT_IS_SCALABLE(face))
+    {
+        lfEscapement = IntNormalizeAngle(plf->lfEscapement);
+        lfWidth = labs(plf->lfWidth);
+    }
+    else
+    {
+        lfEscapement = lfWidth = 0;
+    }
 
     if (Render)
         RenderMode = IntGetFontRenderMode(plf);
@@ -6051,6 +6058,7 @@ GreExtTextOutW(
         default:
             DPRINT1("FIXME: Not implemented lfEscapement\n");
             RtlZeroMemory(&Rect, sizeof(Rect));
+            // FIXME: Use pts[0] ... pts[3] and EngFillPath
         }
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
