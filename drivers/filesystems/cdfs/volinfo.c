@@ -418,7 +418,11 @@ Return Value:
     //
 
     Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+#ifndef __REACTOS__
     Buffer->DeviceType = FILE_DEVICE_CD_ROM;
+#else
+    Buffer->DeviceType = Vcb->TargetDeviceObject->DeviceType;
+#endif
 
     //
     //  Adjust the length variable
