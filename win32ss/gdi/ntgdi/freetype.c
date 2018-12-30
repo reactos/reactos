@@ -6318,10 +6318,10 @@ GreExtTextOutW(
 
     if (plf->lfUnderline)
     {
-        INT i, Escape = lfEscapement % 180 * 10;
+        INT i, nEscape = lfEscapement % (180 * 10);
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            if (Escape < 45 * 10 || Escape > (180 - 45) * 10)
+            if (nEscape < 45 * 10 || nEscape > (180 - 45) * 10)
             {
                 // move vertical
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
@@ -6344,10 +6344,10 @@ GreExtTextOutW(
 
     if (plf->lfStrikeOut)
     {
-        INT i, Escape = lfEscapement % 180 * 10;
+        INT i, nEscape = lfEscapement % (180 * 10);
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            if (Escape < 45 * 10 || Escape > (180 - 45) * 10)
+            if (nEscape < 45 * 10 || nEscape > (180 - 45) * 10)
             {
                 // move vertical
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
