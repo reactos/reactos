@@ -531,6 +531,57 @@ PNP_EnumerateSubKeys(
 
 static
 CONFIGRET
+GetRelationsInstanceList(
+    _In_ PWSTR pszDevice,
+    _In_ DWORD ulFlags,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDevice);
+
+    if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+    {
+        PlugPlayData.Relations = 3;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+    {
+        PlugPlayData.Relations = 2;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+    {
+        PlugPlayData.Relations = 1;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+    {
+        PlugPlayData.Relations = 0;
+    }
+
+    PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
+    PlugPlayData.Buffer = pszBuffer;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
 GetDeviceInstanceList(
     _In_ PWSTR pszDevice,
     _Inout_ PWSTR pszBuffer,
@@ -729,12 +780,10 @@ PNP_GetDeviceList(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
     WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
     WCHAR szDevice[MAX_DEVICE_ID_LEN];
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceList() called\n");
 
@@ -754,39 +803,10 @@ PNP_GetDeviceList(
          CM_GETIDLIST_FILTER_REMOVALRELATIONS |
          CM_GETIDLIST_FILTER_EJECTRELATIONS))
     {
-        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                             pszFilter);
-        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
-        {
-            PlugPlayData.Relations = 3;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
-        {
-            PlugPlayData.Relations = 2;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
-        {
-            PlugPlayData.Relations = 1;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
-        {
-            PlugPlayData.Relations = 0;
-        }
-
-        PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
-        PlugPlayData.Buffer = Buffer;
-
-        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
-                                   (PVOID)&PlugPlayData,
-                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
-        if (NT_SUCCESS(Status))
-        {
-            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
-        }
-        else
-        {
-            ret = NtStatusToCrError(Status);
-        }
+        ret = GetRelationsInstanceList(pszFilter,
+                                       ulFlags,
+                                       Buffer,
+                                       pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
@@ -816,6 +836,56 @@ PNP_GetDeviceList(
     {
         ret = GetAllInstanceList(Buffer,
                                  pulLength);
+    }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetRelationsInstanceListSize(
+    _In_ PWSTR pszDevice,
+    _In_ DWORD ulFlags,
+    _Inout_ PDWORD pulLength)
+{
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDevice);
+
+    if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+    {
+        PlugPlayData.Relations = 3;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+    {
+        PlugPlayData.Relations = 2;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+    {
+        PlugPlayData.Relations = 1;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+    {
+        PlugPlayData.Relations = 0;
+    }
+
+    PlugPlayData.BufferSize = 0;
+    PlugPlayData.Buffer = NULL;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
     }
 
     return ret;
@@ -978,12 +1048,10 @@ PNP_GetDeviceListSize(
     PNP_RPC_BUFFER_SIZE *pulLength,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
     WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
     WCHAR szDevice[MAX_DEVICE_ID_LEN];
     WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%lx)\n",
            hBinding, pszFilter, pulLength, ulFlags);
@@ -1006,39 +1074,9 @@ PNP_GetDeviceListSize(
          CM_GETIDLIST_FILTER_REMOVALRELATIONS |
          CM_GETIDLIST_FILTER_EJECTRELATIONS))
     {
-        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                             pszFilter);
-        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
-        {
-            PlugPlayData.Relations = 3;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
-        {
-            PlugPlayData.Relations = 2;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
-        {
-            PlugPlayData.Relations = 1;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
-        {
-            PlugPlayData.Relations = 0;
-        }
-
-        PlugPlayData.BufferSize = 0;
-        PlugPlayData.Buffer = NULL;
-
-        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
-                                   (PVOID)&PlugPlayData,
-                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
-        if (NT_SUCCESS(Status))
-        {
-            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
-        }
-        else
-        {
-            ret = NtStatusToCrError(Status);
-        }
+        ret = GetRelationsInstanceListSize(pszFilter,
+                                           ulFlags,
+                                           pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
