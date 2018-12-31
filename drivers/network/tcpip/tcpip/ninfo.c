@@ -251,8 +251,8 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     {
         if (Class == TcpUdpClassOwner)
         {
-            /* FIXME */
             RtlZeroMemory(&TcpRow.OwningModuleInfo[0], sizeof(TcpRow.OwningModuleInfo));
+            TcpRow.OwningModuleInfo[0] = (ULONG_PTR)AddrFile->SubProcessTag;
         }
 
         Status = InfoCopyOut( (PCHAR)&TcpRow, Size,
@@ -295,8 +295,8 @@ TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
     UdpRow.dwFlags = 0; /* FIXME */
     if (Class == TcpUdpClassOwner)
     {
-        /* FIXME */
         RtlZeroMemory(&UdpRow.OwningModuleInfo[0], sizeof(UdpRow.OwningModuleInfo));
+        UdpRow.OwningModuleInfo[0] = (ULONG_PTR)AddrFile->SubProcessTag;
     }
 
     Status = InfoCopyOut( (PCHAR)&UdpRow,
