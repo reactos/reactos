@@ -673,7 +673,7 @@ RtlNewSecurityGrantedAccess(IN ACCESS_MASK DesiredAccess,
     }
 
     /* Check if the SACL right was granted... */
-    RtlZeroMemory(&Privileges, Size);
+    RtlZeroMemory(Privileges, Size);
     if (Granted)
     {
         /* Yes, return it in the structure */
