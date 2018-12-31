@@ -76,7 +76,7 @@ BEGIN
     PUSHBUTTON "新增(&N)...", 1030, 87, 103, 50, 14
     PUSHBUTTON "編輯(&E)...", 1031, 141, 103, 50, 14
     PUSHBUTTON "刪除(&D)", 1032, 195, 103, 50, 14
-    LTEXT "帳號:(&C)", -1, 7, 127, 91, 8
+    LTEXT "帳號(&C):", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
     LTEXT "個人ID號 (PIN)(&P):", -1, 7, 145, 91, 8
     EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
