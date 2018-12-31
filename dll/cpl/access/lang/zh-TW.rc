@@ -283,7 +283,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "輔助功能"
-    IDS_CPLSYSTEMDESCRIPTION "為視覺、聽力和行動能力而調整計算機設定。"
+    IDS_CPLSYSTEMDESCRIPTION "為視覺、聽力和行動能力而調整電腦設定。"
     IDS_SENTRY_NONE "[無]"
     IDS_SENTRY_TITLE "閃爍活動標題欄"
     IDS_SENTRY_WINDOW "閃爍活動視窗"

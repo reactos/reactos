@@ -50,7 +50,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "高级"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "大多数这些设置都需要管理员权限。", IDC_STATIC, 12, 5, 236, 8
+    LTEXT "这些设置中的大多数都需要管理员权限。", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "性能", IDC_STATIC, 6, 18, 244, 50
     LTEXT "性能选项控制应用程序如何使用内存，这会影响计算机的运行速度。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON "设置", IDC_PERFOR, 194, 48, 50, 15
