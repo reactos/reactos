@@ -64,7 +64,7 @@ END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Wine Gecko 安装包"
+CAPTION "Wine Gecko 套件"
 FONT 9, "宋体"
 BEGIN
     CONTROL "ReactOS 无法找到使内嵌 HTML 的应用程序正常工作的 Wine Gecko 包。ReactOS 能为您自动下载并安装。",
@@ -86,12 +86,12 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "正在下载..."
     IDS_INSTALLING "正在安装..."
-    IDS_INVALID_SHA "下载的文件校验和错误。中止安装已损坏的文件。"
+    IDS_INVALID_SHA "下载的文件校验和错误。正在中止安装已损坏的文件。"
     IDS_NEW_INTERNET_SHORTCUT "新建 Internet 快捷方式"
-    IDS_DWL_FAILED "无法下载 Gecko 安装包。请确保您有互联网连接才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
+    IDS_DWL_FAILED "无法下载 Gecko 套件。请确保在您有互联网连接的情況下才能进行下载。安装程序将在不安装 Gecko 的情况下继续。"
     IDS_CANTMAKEINETSHORTCUT "无法创建 Internet 快捷方式"
     IDS_CANTMAKESHORTCUT "无法创建快捷方式。"
-    IDS_NO_MEMORY "No memory could be allocated!"
-    IDS_NO_DIRECTORY "No directory given!"
-    IDS_INVALID_PATH "The given path is invalid!"
+    IDS_NO_MEMORY "没有可以分配的内存空间。"
+    IDS_NO_DIRECTORY "没有指定路径。"
+    IDS_INVALID_PATH "指定的路径无效。"
 END

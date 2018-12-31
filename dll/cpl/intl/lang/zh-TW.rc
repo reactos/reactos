@@ -45,12 +45,12 @@ END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "高階"
+CAPTION "進階"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "非 Unicode 程式的語言", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "這個設定啟動某些非 Unicode 程式以便用母語顯示選單和對話。這不會影響到 Unicode 的程式，但是會應用在這臺電腦上的所有使用者。", -1, 14, 18, 223, 33
+    LTEXT "這個設定啟動某些非 Unicode 程式以便用母語顯示選單和對話。這不會影響到 Unicode 的程式，但是會應用在這部電腦上的所有使用者。", -1, 14, 18, 223, 33
     LTEXT "選擇一種語言，使之與您想使用的非 Unicode 程式的語言版本相匹配(&S):", -1, 14, 55, 223, 18
     GROUPBOX "內碼表轉換表(&C)", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
