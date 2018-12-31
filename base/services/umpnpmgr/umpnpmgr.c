@@ -582,6 +582,17 @@ GetRelationsInstanceList(
 
 static
 CONFIGRET
+GetServiceInstanceList(
+    _In_ PWSTR pszService,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static
+CONFIGRET
 GetDeviceInstanceList(
     _In_ PWSTR pszDevice,
     _Inout_ PWSTR pszBuffer,
@@ -810,6 +821,9 @@ PNP_GetDeviceList(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
+        ret = GetServiceInstanceList(pszFilter,
+                                     Buffer,
+                                     pulLength);
         ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
@@ -887,6 +901,105 @@ GetRelationsInstanceListSize(
     {
         ret = NtStatusToCrError(Status);
     }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetServiceInstanceListSize(
+    _In_ PWSTR pszService,
+    _Out_ PDWORD pulLength)
+{
+    HKEY hServicesKey = NULL, hServiceKey = NULL, hEnumKey = NULL;
+    DWORD dwValues, dwMaxValueLength, dwSize;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the services key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwError = RegOpenKeyExW(hServicesKey,
+                            pszService,
+                            0,
+                            KEY_READ,
+                            &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Enum",
+                            0,
+                            KEY_READ,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service enum key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    /* Retrieve the number of device instances */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hEnumKey,
+                               L"Count",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwValues,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW failed (Error %lu)\n", dwError);
+        dwValues = 1;
+    }
+
+    /* Retrieve the maximum instance name length */
+    dwError = RegQueryInfoKeyW(hEnumKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwMaxValueLength,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryInfoKeyW failed (Error %lu)\n", dwError);
+        dwMaxValueLength = MAX_DEVICE_ID_LEN;
+    }
+
+    DPRINT("dwValues %lu  dwMaxValueLength %lu\n", dwValues, dwMaxValueLength / sizeof(WCHAR));
+
+    /* Return the largest possible buffer size */
+    *pulLength = dwValues * dwMaxValueLength / sizeof(WCHAR) + 2;
+
+Done:
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    if (hServicesKey != NULL)
+        RegCloseKey(hServicesKey);
 
     return ret;
 }
@@ -1080,7 +1193,8 @@ PNP_GetDeviceListSize(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetServiceInstanceListSize(pszFilter,
+                                         pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
