@@ -396,6 +396,7 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   PADDRESS_FILE AddrFile;
+  PTEB Teb;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
@@ -429,7 +430,12 @@ NTSTATUS FileOpenAddress(
   AddrFile->BCast = 1;
   AddrFile->HeaderIncl = 1;
   AddrFile->ProcessId = PsGetCurrentProcessId();
-  AddrFile->SubProcessTag = ((PTEB)PsGetCurrentThreadTeb())->SubProcessTag;
+
+  Teb = PsGetCurrentThreadTeb();
+  if (Teb != NULL) {
+    AddrFile->SubProcessTag = Teb->SubProcessTag;
+  }
+
   KeQuerySystemTime(&AddrFile->CreationTime);
 
   /* Make sure address is a local unicast address or 0 */
