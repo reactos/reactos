@@ -587,7 +587,115 @@ GetServiceInstanceList(
     _Inout_ PWSTR pszBuffer,
     _Inout_ PDWORD pulLength)
 {
-    return CR_CALL_NOT_IMPLEMENTED;
+    WCHAR szPathBuffer[512];
+    WCHAR szName[16];
+    HKEY hServicesKey = NULL, hServiceKey = NULL, hEnumKey = NULL;
+    DWORD dwValues, dwSize, dwIndex, dwUsedLength, dwPathLength;
+    DWORD dwError;
+    PWSTR pPtr;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the services key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwError = RegOpenKeyExW(hServicesKey,
+                            pszService,
+                            0,
+                            KEY_READ,
+                            &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Enum",
+                            0,
+                            KEY_READ,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service enum key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    /* Retrieve the number of device instances */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hEnumKey,
+                               L"Count",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwValues,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW failed (Error %lu)\n", dwError);
+        dwValues = 1;
+    }
+
+    DPRINT("dwValues %lu\n", dwValues);
+
+    dwUsedLength = 0;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; dwIndex < dwValues; dwIndex++)
+    {
+        wsprintf(szName, L"%lu", dwIndex);
+
+        dwSize = sizeof(szPathBuffer);
+        dwError = RegQueryValueExW(hEnumKey,
+                                   szName,
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)szPathBuffer,
+                                   &dwSize);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        dwPathLength = wcslen(szPathBuffer) + 1;
+        if (dwUsedLength + dwPathLength + 1 > *pulLength)
+        {
+            ret = CR_BUFFER_SMALL;
+            break;
+        }
+
+        wcscpy(pPtr, szPathBuffer);
+        dwUsedLength += dwPathLength;
+        pPtr += dwPathLength;
+
+        *pPtr = UNICODE_NULL;
+    }
+
+Done:
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    if (hServicesKey != NULL)
+        RegCloseKey(hServicesKey);
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
 }
 
 
@@ -824,7 +932,6 @@ PNP_GetDeviceList(
         ret = GetServiceInstanceList(pszFilter,
                                      Buffer,
                                      pulLength);
-        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
