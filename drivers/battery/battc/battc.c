@@ -26,10 +26,11 @@ NTSTATUS
 NTAPI
 BatteryClassUnload(PVOID ClassData)
 {
-    PBATTERY_CLASS_DATA BattClass = ClassData;
+    PBATTERY_CLASS_DATA BattClass;
 
-    DPRINT("Battery 0x%x is being unloaded\n");
+    DPRINT("Battery %p is being unloaded\n", ClassData);
 
+    BattClass = ClassData;
     if (BattClass->InterfaceName.Length != 0)
     {
         IoSetDeviceInterfaceState(&BattClass->InterfaceName, FALSE);
@@ -77,12 +78,15 @@ NTSTATUS
 NTAPI
 BatteryClassStatusNotify(PVOID ClassData)
 {
-    PBATTERY_CLASS_DATA BattClass = ClassData;
-    PBATTERY_WAIT_STATUS BattWait = BattClass->EventTriggerContext;
+    PBATTERY_CLASS_DATA BattClass;
+    PBATTERY_WAIT_STATUS BattWait;
     BATTERY_STATUS BattStatus;
     NTSTATUS Status;
 
-    DPRINT("Received battery status notification from 0x%x\n", ClassData);
+    DPRINT("Received battery status notification from %p\n", ClassData);
+
+    BattClass = ClassData;
+    BattWait = BattClass->EventTriggerContext;
 
     ExAcquireFastMutex(&BattClass->Mutex);
     if (!BattClass->Waiting)
@@ -134,11 +138,12 @@ BatteryClassInitializeDevice(PBATTERY_MINIPORT_INFO MiniportInfo,
                              PVOID *ClassData)
 {
     NTSTATUS Status;
-    PBATTERY_CLASS_DATA BattClass = ExAllocatePoolWithTag(NonPagedPool,
-                                                          sizeof(BATTERY_CLASS_DATA),
-                                                          BATTERY_CLASS_DATA_TAG);
+    PBATTERY_CLASS_DATA BattClass;
 
-    if (!BattClass)
+    BattClass = ExAllocatePoolWithTag(NonPagedPool,
+                                      sizeof(BATTERY_CLASS_DATA),
+                                      BATTERY_CLASS_DATA_TAG);
+    if (BattClass == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlZeroMemory(BattClass, sizeof(BATTERY_CLASS_DATA));
@@ -184,8 +189,8 @@ NTAPI
 BatteryClassIoctl(PVOID ClassData,
                   PIRP Irp)
 {
-    PBATTERY_CLASS_DATA BattClass = ClassData;
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    PBATTERY_CLASS_DATA BattClass;
+    PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG WaitTime;
     PBATTERY_WAIT_STATUS BattWait;
@@ -196,10 +201,12 @@ BatteryClassIoctl(PVOID ClassData,
     BATTERY_NOTIFY BattNotify;
     ULONG ReturnedLength;
 
-    Irp->IoStatus.Information = 0;
-
-    DPRINT("Received IOCTL %x for 0x%x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode,
+    DPRINT("Received IOCTL %x for %p\n", IrpSp->Parameters.DeviceIoControl.IoControlCode,
            ClassData);
+
+    BattClass = ClassData;
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    Irp->IoStatus.Information = 0;
 
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -247,7 +254,9 @@ BatteryClassIoctl(PVOID ClassData,
                 }
             }
             else
+            {
                 Irp->IoStatus.Information = sizeof(ULONG);
+            }
             break;
 
         case IOCTL_BATTERY_QUERY_STATUS:
@@ -313,7 +322,9 @@ BatteryClassIoctl(PVOID ClassData,
                 }
             }
             else
+            {
                 Irp->IoStatus.Information = sizeof(BATTERY_STATUS);
+            }
             break;
 
         case IOCTL_BATTERY_QUERY_INFORMATION:
@@ -334,7 +345,9 @@ BatteryClassIoctl(PVOID ClassData,
                                                               &ReturnedLength);
             Irp->IoStatus.Information = ReturnedLength;
             if (!NT_SUCCESS(Status))
+            {
                 DPRINT1("QueryInformation failed (0x%x)\n", Status);
+            }
             break;
 
         case IOCTL_BATTERY_SET_INFORMATION:
@@ -351,7 +364,9 @@ BatteryClassIoctl(PVOID ClassData,
                                                             BattSetInfo->InformationLevel,
                                                             BattSetInfo->Buffer);
             if (!NT_SUCCESS(Status))
+            {
                 DPRINT1("SetInformation failed (0x%x)\n", Status);
+            }
             break;
 
         default:
