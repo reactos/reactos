@@ -312,12 +312,12 @@ TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
     IP_ADDRESS Address, Netmask, Router;
     PIPROUTE_ENTRY Route = Buffer;
 
+    if (!Buffer || BufferSize < sizeof(IPROUTE_ENTRY))
+        return TDI_INVALID_PARAMETER;
+
     AddrInitIPv4( &Address, Route->Dest );
     AddrInitIPv4( &Netmask, Route->Mask );
     AddrInitIPv4( &Router,  Route->Gw );
-
-    if (!Buffer || BufferSize < sizeof(IPROUTE_ENTRY))
-        return TDI_INVALID_PARAMETER;
 
     if (IF == Loopback)
     {
