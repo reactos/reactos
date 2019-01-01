@@ -201,12 +201,15 @@ BatteryClassIoctl(PVOID ClassData,
     BATTERY_NOTIFY BattNotify;
     ULONG ReturnedLength;
 
-    DPRINT("Received IOCTL %x for %p\n", IrpSp->Parameters.DeviceIoControl.IoControlCode,
-           ClassData);
+    DPRINT("BatteryClassIoctl(%p %p)\n", ClassData, Irp);
 
     BattClass = ClassData;
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     Irp->IoStatus.Information = 0;
+
+    DPRINT("Received IOCTL %x for %p\n", IrpSp->Parameters.DeviceIoControl.IoControlCode,
+           ClassData);
 
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
     {
