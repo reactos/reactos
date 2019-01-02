@@ -169,7 +169,7 @@ InitVideo(VOID)
     Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
     if (NT_SUCCESS(Status))
     {
-        cbValue = 256;
+        cbValue = sizeof(awcBuffer);
         Status = RegQueryValue(hkey, L"SystemStartOptions", REG_SZ, awcBuffer, &cbValue);
         if (NT_SUCCESS(Status))
         {
@@ -193,11 +193,11 @@ InitVideo(VOID)
     }
 
     /* Read the name of the VGA adapter */
-    cbValue = 20;
+    cbValue = sizeof(awcDeviceName);
     Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
     if (NT_SUCCESS(Status))
     {
-        iVGACompatible = _wtoi(&awcDeviceName[13]);
+        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
         ERR("VGA adapter = %lu\n", iVGACompatible);
     }
 
