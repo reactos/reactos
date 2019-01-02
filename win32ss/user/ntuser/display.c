@@ -712,9 +712,13 @@ UserChangeDisplaySettings(
         }
     }
     else if (pdm->dmSize < FIELD_OFFSET(DEVMODEW, dmFields))
-        return DISP_CHANGE_BADMODE; /* This is what winXP SP3 returns */
+    {
+        return DISP_CHANGE_BADMODE; /* This is what WinXP SP3 returns */
+    }
     else
+    {
         dm = *pdm;
+    }
 
     /* Save original bit count */
     OrigBC = gpsi->BitCount;
@@ -735,13 +739,13 @@ UserChangeDisplaySettings(
     }
 
     /* Fixup values */
-    if(dm.dmBitsPerPel == 0 || !(dm.dmFields & DM_BITSPERPEL))
+    if (dm.dmBitsPerPel == 0 || !(dm.dmFields & DM_BITSPERPEL))
     {
         dm.dmBitsPerPel = ppdev->pdmwDev->dmBitsPerPel;
         dm.dmFields |= DM_BITSPERPEL;
     }
 
-    if((dm.dmFields & DM_DISPLAYFREQUENCY) && (dm.dmDisplayFrequency == 0))
+    if ((dm.dmFields & DM_DISPLAYFREQUENCY) && (dm.dmDisplayFrequency == 0))
         dm.dmDisplayFrequency = ppdev->pdmwDev->dmDisplayFrequency;
 
     /* Look for the requested DEVMODE */
@@ -836,20 +840,20 @@ UserChangeDisplaySettings(
         //IntHideDesktop(pdesk);
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
-        UserSendNotifyMessage( HWND_BROADCAST,
-                               WM_DISPLAYCHANGE,
-                               gpsi->BitCount,
-                               MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]) );
+        UserSendNotifyMessage(HWND_BROADCAST,
+                              WM_DISPLAYCHANGE,
+                              gpsi->BitCount,
+                              MAKELONG(gpsi->aiSysMet[SM_CXSCREEN], gpsi->aiSysMet[SM_CYSCREEN]));
 
         ERR("BitCount New %d Orig %d ChkNew %d\n",gpsi->BitCount,OrigBC,ppdev->gdiinfo.cBitsPixel);
 
         /* Not full screen and different bit count, send messages */
         if (!(flags & CDS_FULLSCREEN) &&
-              gpsi->BitCount != OrigBC )
+            gpsi->BitCount != OrigBC)
         {
-           ERR("Detect settings changed.\n");
-           UserSendNotifyMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0 );
-           UserSendNotifyMessage( HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0 );
+            ERR("Detect settings changed.\n");
+            UserSendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0);
+            UserSendNotifyMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
         }
 
         //co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
