@@ -800,38 +800,53 @@ UserChangeDisplaySettings(
         pvOldCursor = UserSetCursor(pvOldCursor, TRUE);
         ASSERT(pvOldCursor == NULL);
 
-        /* Check for failure */
+        /* Check for success or failure */
         if (!ulResult)
         {
+            /* Setting mode failed */
             ERR("Failed to set mode\n");
-            lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
-                DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
 
-            goto leave;
-        }
-
-        UserUpdateFullscreen(flags);
-
-        /* Update the system metrics */
-        InitMetrics();
-
-        /* Set new size of the monitor */
-        UserUpdateMonitorSize((HDEV)ppdev);
-
-        /* Update the SERVERINFO */
-        gpsi->dmLogPixels = ppdev->gdiinfo.ulLogPixelsY;
-        gpsi->Planes      = ppdev->gdiinfo.cPlanes;
-        gpsi->BitsPixel   = ppdev->gdiinfo.cBitsPixel;
-        gpsi->BitCount    = gpsi->Planes * gpsi->BitsPixel;
-        if (ppdev->gdiinfo.flRaster & RC_PALETTE)
-        {
-            gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
+            /* Set the correct return value */
+            if ((flags & CDS_UPDATEREGISTRY) && (lResult != DISP_CHANGE_NOTUPDATED))
+                lResult = DISP_CHANGE_RESTART;
+            else
+                lResult = DISP_CHANGE_FAILED;
         }
         else
-            gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
-        // Font is realized and this dc was previously set to internal DC_ATTR.
-        gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
-        gpsi->tmSysFont     = tmw;
+        {
+            /* Setting mode succeeded */
+            lResult = DISP_CHANGE_SUCCESSFUL;
+
+            UserUpdateFullscreen(flags);
+
+            /* Update the system metrics */
+            InitMetrics();
+
+            /* Set new size of the monitor */
+            UserUpdateMonitorSize((HDEV)ppdev);
+
+            /* Update the SERVERINFO */
+            gpsi->dmLogPixels = ppdev->gdiinfo.ulLogPixelsY;
+            gpsi->Planes      = ppdev->gdiinfo.cPlanes;
+            gpsi->BitsPixel   = ppdev->gdiinfo.cBitsPixel;
+            gpsi->BitCount    = gpsi->Planes * gpsi->BitsPixel;
+            if (ppdev->gdiinfo.flRaster & RC_PALETTE)
+            {
+                gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
+            }
+            else
+            {
+                gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
+            }
+            // Font is realized and this dc was previously set to internal DC_ATTR.
+            gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
+            gpsi->tmSysFont     = tmw;
+        }
+
+        /*
+         * Refresh the display on success and even on failure,
+         * since the display may have been messed up.
+         */
 
         /* Remove all cursor clipping */
         UserClipCursor(NULL);

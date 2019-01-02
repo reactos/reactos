@@ -522,10 +522,10 @@ PDEVOBJ_bSwitchMode(
     // Lookup the GraphicsDevice + select DEVMODE
     // pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
 
-    /* 1. Temporarily disable the current PDEV */
+    /* 1. Temporarily disable the current PDEV and reset video to its default mode */
     if (!ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE))
     {
-        DPRINT1("DrvAssertMode failed\n");
+        DPRINT1("DrvAssertMode(FALSE) failed\n");
         goto leave;
     }
 
@@ -535,7 +535,7 @@ PDEVOBJ_bSwitchMode(
     if (!ppdevTmp)
     {
         DPRINT1("Failed to create a new PDEV\n");
-        goto leave;
+        goto leave2;
     }
 
     /* 3. Create a new surface */
@@ -543,7 +543,8 @@ PDEVOBJ_bSwitchMode(
     if (!pSurface)
     {
         DPRINT1("PDEVOBJ_pSurface failed\n");
-        goto leave;
+        PDEVOBJ_vRelease(ppdevTmp);
+        goto leave2;
     }
 
     /* 4. Get DirectDraw information */
@@ -565,10 +566,19 @@ PDEVOBJ_bSwitchMode(
 
     /* Success! */
     retval = TRUE;
+
+leave2:
+    /* Set the new video mode, or restore the original one in case of failure */
+    if (!ppdev->pfn.AssertMode(ppdev->dhpdev, TRUE))
+    {
+        DPRINT1("DrvAssertMode(TRUE) failed\n");
+    }
+
 leave:
-    /* Unlock PDEV */
-    EngReleaseSemaphore(ppdev->hsemDevLock);
+    /* Unlock everything else */
     EngReleaseSemaphore(ghsemPDEV);
+    /* Unlock the PDEV */
+    EngReleaseSemaphore(ppdev->hsemDevLock);
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
