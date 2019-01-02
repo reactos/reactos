@@ -62,7 +62,7 @@
 #define MmSetPageEntrySectionSegment(S,O,E) do { \
         DPRINT("SetPageEntrySectionSegment(old,%p,%x,%x)\n",(S),(O)->LowPart,E); \
         _MmSetPageEntrySectionSegment((S),(O),(E),__FILE__,__LINE__);   \
-   } while (0)
+	} while (0)
 
 extern MMSESSION MmSession;
 
@@ -121,7 +121,7 @@ C_ASSERT(PEFMT_FIELDS_EQUAL(IMAGE_OPTIONAL_HEADER32, IMAGE_OPTIONAL_HEADER64, Si
 
 typedef struct
 {
-   PSECTION Section;
+	PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER Offset;
     BOOLEAN WasDirty;
@@ -2766,7 +2766,7 @@ INIT_FUNCTION
 NTAPI
 MmCreatePhysicalMemorySection(VOID)
 {
-   PSECTION PhysSection;
+	PSECTION PhysSection;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES Obj;
     UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
@@ -4356,7 +4356,7 @@ NtQuerySection(
 
                 if (Section->u.Flags.Image == 0)
                 {
-                   PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+                	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
 
                     Sbi.BaseAddress = (PVOID)Segment->Image.VirtualAddress;
                     Sbi.Size.QuadPart = Segment->Length.QuadPart;
@@ -4364,7 +4364,7 @@ NtQuerySection(
 
                 _SEH2_TRY
                 {
-                   RtlCopyMemory(SectionInformation, &Sbi, sizeof(Sbi));
+                	RtlCopyMemory(SectionInformation, &Sbi, sizeof(Sbi));
 
                     if (ResultLength != NULL)
                     {
@@ -4530,7 +4530,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                    IN ULONG AllocationType,
                    IN ULONG Protect)
 {
-   PSECTION Section;
+	PSECTION Section;
     PMMSUPPORT AddressSpace;
     ULONG ViewOffset;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -4565,7 +4565,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     AddressSpace = &Process->Vm;
 
     if (Section->u.Flags.NoChange)
-       AllocationType |= SEC_NO_CHANGE;
+    	AllocationType |= SEC_NO_CHANGE;
 
     MmLockAddressSpace(AddressSpace);
 
@@ -4662,7 +4662,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     }
     else
     {
-       PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+    	PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
 
         /* check for write access */
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
@@ -4871,7 +4871,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PSIZE_T ViewSize)
 {
-   PSECTION Section;
+	PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;

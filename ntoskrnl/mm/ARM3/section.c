@@ -1805,12 +1805,12 @@ MmGetFileNameForSection(IN PVOID Section,
     PFILE_OBJECT FileObject;
 
     /* Make sure it's an image section */
-   if (((PSECTION)Section)->u.Flags.Image == 0)
-   {
-      /* It's not, fail */
-      DPRINT1("Not an image section\n");
-      return STATUS_SECTION_NOT_IMAGE;
-   }
+	if (((PSECTION)Section)->u.Flags.Image == 0)
+	{
+		/* It's not, fail */
+		DPRINT1("Not an image section\n");
+		return STATUS_SECTION_NOT_IMAGE;
+	}
 
     /* Get the file object */
     FileObject = MmGetFileObjectForSection(Section);

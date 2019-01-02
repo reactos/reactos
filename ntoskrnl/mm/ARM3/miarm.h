@@ -2304,27 +2304,27 @@ FORCEINLINE
 ULONG
 MiSectionFlagsFromAllocationAttributes(ULONG Attributes)
 {
-    union
-    {
-        ULONG LongFlags;
-        MMSECTION_FLAGS Flags;
-    } u;
+	union
+	{
+		ULONG LongFlags;
+		MMSECTION_FLAGS Flags;
+	} u;
 
-    u.LongFlags = 0;
+	u.LongFlags = 0;
 
 #define ATTRIBUTE_TO_FLAG(__a, __f) if (Attributes & __a) u.Flags.__f = 1
-    ATTRIBUTE_TO_FLAG(SEC_IMAGE, Image);
-    ATTRIBUTE_TO_FLAG(SEC_PHYSICALMEMORY, PhysicalMemory);
-    ATTRIBUTE_TO_FLAG(SEC_FILE, File);
-    ATTRIBUTE_TO_FLAG(SEC_NO_CHANGE, NoChange);
-    ATTRIBUTE_TO_FLAG(SEC_BASED, Based);
-    ATTRIBUTE_TO_FLAG(SEC_RESERVE, Reserve);
-    ATTRIBUTE_TO_FLAG(SEC_COMMIT, Commit);
-    ATTRIBUTE_TO_FLAG(SEC_NOCACHE, NoCache);
-    ATTRIBUTE_TO_FLAG(SEC_WRITECOMBINE, WriteCombined);
+	ATTRIBUTE_TO_FLAG(SEC_IMAGE, Image);
+	ATTRIBUTE_TO_FLAG(SEC_PHYSICALMEMORY, PhysicalMemory);
+	ATTRIBUTE_TO_FLAG(SEC_FILE, File);
+	ATTRIBUTE_TO_FLAG(SEC_NO_CHANGE, NoChange);
+	ATTRIBUTE_TO_FLAG(SEC_BASED, Based);
+	ATTRIBUTE_TO_FLAG(SEC_RESERVE, Reserve);
+	ATTRIBUTE_TO_FLAG(SEC_COMMIT, Commit);
+	ATTRIBUTE_TO_FLAG(SEC_NOCACHE, NoCache);
+	ATTRIBUTE_TO_FLAG(SEC_WRITECOMBINE, WriteCombined);
 #undef ATTRIBUTE_TO_FLAG
 
-    return u.LongFlags;
+	return u.LongFlags;
 }
 
 /* EOF */
