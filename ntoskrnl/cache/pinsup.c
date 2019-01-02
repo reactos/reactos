@@ -245,7 +245,7 @@ CcpDereferenceCache(ULONG Start,
 
     if (Immediate)
     {
-    	PSECTION ToDeref = Bcb->SectionObject;
+        PSECTION ToDeref = Bcb->SectionObject;
         Bcb->Map = NULL;
         Bcb->SectionObject = NULL;
         Bcb->BaseAddress = NULL;
@@ -308,7 +308,7 @@ on failure.
 /* Needs mutex */
 ULONG
 CcpAllocateCacheSections(PFILE_OBJECT FileObject,
-						 PSECTION SectionObject)
+                         PSECTION SectionObject)
 {
     ULONG i = INVALID_CACHE;
     PNOCC_CACHE_MAP Map;

@@ -350,7 +350,10 @@ MmCreateCacheSection(PSECTION *SectionObject,
 
     /* Initialize it */
     RtlZeroMemory(Section, sizeof(*Section));
-    Section->u.Flags.filler0 = 1;
+
+    /* Mark it as a "ROS" Section */
+    Section->u.Flags.filler0 = 1
+
     Section->InitialPageProtection = SectionPageProtection;
     Section->u.LongFlags = MiSectionFlagsFromAllocationAttributes(AllocationAttributes);
     Section->Segment = NULL;
