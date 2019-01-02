@@ -159,26 +159,26 @@ typedef ULONG_PTR SWAPENTRY;
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    FAST_MUTEX Lock;		/* lock which protects the page directory */
-	PFILE_OBJECT FileObject;
-    LARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
-    LARGE_INTEGER Length;			/* absolute length of the segment */
+    FAST_MUTEX Lock;      /* lock which protects the page directory */
+    PFILE_OBJECT FileObject;
+    LARGE_INTEGER RawLength;      /* length of the segment which is part of the mapped file */
+    LARGE_INTEGER Length;         /* absolute length of the segment */
     ULONG ReferenceCount;
-	ULONG CacheCount;
+    ULONG CacheCount;
     ULONG Protection;
     ULONG Flags;
     BOOLEAN WriteCopy;
-	BOOLEAN Locked;
+    BOOLEAN Locked;
 
-	struct
-	{
-		ULONGLONG FileOffset;		/* start offset into the file for image sections */
-		ULONG_PTR VirtualAddress;	/* start offset into the address range for image sections */
-		ULONG Characteristics;
-	} Image;
+    struct
+    {
+        ULONGLONG FileOffset;      /* start offset into the file for image sections */
+        ULONG_PTR VirtualAddress;   /* start offset into the address range for image sections */
+        ULONG Characteristics;
+    } Image;
 
-	LIST_ENTRY ListOfSegments;
-	RTL_GENERIC_TABLE PageTable;
+    LIST_ENTRY ListOfSegments;
+    RTL_GENERIC_TABLE PageTable;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
@@ -195,15 +195,15 @@ FORCEINLINE
 PFILE_OBJECT
 FILE_OBJECT_FROM_SECTION(PSECTION Section)
 {
-	ASSERT(Section->u.Flags.filler0 == 1);
+   ASSERT(Section->u.Flags.filler0 == 1);
 
-	if (!Section->Segment)
-		return NULL;
+    if (!Section->Segment)
+        return NULL;
 
-	if (Section->u.Flags.Image)
-		return ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->FileObject;
+    if (Section->u.Flags.Image)
+        return ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->FileObject;
 
-	return ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
+    return ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
 }
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)
@@ -1093,9 +1093,9 @@ MmInitGlobalKernelPageDirectory(VOID);
 VOID
 NTAPI
 MmGetPageFileMapping(
-	struct _EPROCESS *Process,
-	PVOID Address,
-	SWAPENTRY* SwapEntry);
+    struct _EPROCESS *Process,
+    PVOID Address,
+    SWAPENTRY* SwapEntry);
 
 VOID
 NTAPI
