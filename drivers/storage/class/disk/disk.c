@@ -116,6 +116,15 @@ typedef struct _DISK_DATA {
 
     PARTITION_LIST_STATE PartitionListState;
 
+#ifdef __REACTOS__
+    //
+    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
+    // for removable devices and avoid an infinite recursive loop between
+    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
+    //
+    ULONG UpdateRemovableGeometryCount;
+#endif
+
 } DISK_DATA, *PDISK_DATA;
 
 //
@@ -1146,6 +1155,15 @@ CreatePartitionDeviceObjects(
         dmByteSkew = physicalDeviceExtension->DMByteSkew;
 
     }
+
+#ifdef __REACTOS__
+    //
+    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
+    // for removable devices and avoid an infinite recursive loop between
+    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
+    //
+    diskData->UpdateRemovableGeometryCount = 0;
+#endif
 
     //
     // Create objects for all the partitions on the device.
@@ -4456,6 +4474,21 @@ Return Value:
         return(status);
     }
 
+#ifdef __REACTOS__
+    //
+    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
+    // for removable devices and avoid an infinite recursive loop between
+    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
+    //
+    // Check whether the update-count is greater or equal than one
+    // (and increase it) and if so, reset it and return success.
+    if (diskData->UpdateRemovableGeometryCount++ >= 1)
+    {
+        diskData->UpdateRemovableGeometryCount = 0;
+        return(STATUS_SUCCESS);
+    }
+#endif
+
     //
     // Read the partition table again.
     //
@@ -4465,6 +4498,15 @@ Return Value:
                       TRUE,
                       &partitionList);
 
+#ifdef __REACTOS__
+    //
+    // HACK so that we can use NT5+ NTOS functions with this NT4 driver
+    // for removable devices and avoid an infinite recursive loop between
+    // disk!UpdateRemovableGeometry() and ntos!IoReadPartitionTable().
+    //
+    // Inconditionally reset the update-count.
+    diskData->UpdateRemovableGeometryCount = 0;
+#endif
 
     if (!NT_SUCCESS(status)) {
 
