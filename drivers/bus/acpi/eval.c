@@ -3,6 +3,83 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+NTSTATUS
+GetPackageSize(ACPI_OBJECT *Package,
+               PULONG Count,
+               PULONG Size)
+{
+    ULONG Length, RawLength, TotalLength;
+    UINT32 i;
+
+    TotalLength = 0;
+    for (i = 0; i < Package->Package.Count; i++)
+    {
+        switch (Package->Package.Elements[i].Type)
+        {
+            case ACPI_TYPE_INTEGER:
+                Length = sizeof(ACPI_METHOD_ARGUMENT);
+                DPRINT("Integer %lu -> %lu: %lu (0x%lx)\n", sizeof(ULONG), Length, Package->Package.Elements[i].Integer.Value);
+                TotalLength += Length;
+                break;
+
+            case ACPI_TYPE_STRING:
+                RawLength = Package->Package.Elements[i].String.Length + 1;
+                Length = sizeof(ACPI_METHOD_ARGUMENT);
+                if (RawLength > sizeof(ULONG))
+                    Length += RawLength - sizeof(ULONG);
+                DPRINT("String %lu -> %lu: '%s'\n", RawLength, Length, Package->Package.Elements[i].String.Pointer);
+                TotalLength += Length;
+                break;
+
+            default:
+                DPRINT1("Unsupported element type %lu\n", Package->Package.Elements[i].Type);
+                return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    *Count = Package->Package.Count;
+    *Size = TotalLength;
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+ConvertPackageArguments(ACPI_METHOD_ARGUMENT *Argument,
+                        ACPI_OBJECT *Package)
+{
+    ACPI_METHOD_ARGUMENT *Ptr;
+    UINT32 i;
+
+    Ptr = Argument;
+    for (i = 0; i < Package->Package.Count; i++)
+    {
+        switch (Package->Package.Elements[i].Type)
+        {
+            case ACPI_TYPE_INTEGER:
+                DPRINT("Integer %lu\n", sizeof(ACPI_METHOD_ARGUMENT));
+                ACPI_METHOD_SET_ARGUMENT_INTEGER(Ptr, Package->Package.Elements[i].Integer.Value);
+                break;
+
+            case ACPI_TYPE_STRING:
+                DPRINT("String %lu\n", Package->Package.Elements[i].String.Length);
+                ACPI_METHOD_SET_ARGUMENT_STRING(Ptr, Package->Package.Elements[i].String.Pointer);
+                break;
+
+            default:
+                DPRINT1("Unsupported element type %lu\n", Package->Package.Elements[i].Type);
+                return STATUS_UNSUCCESSFUL;
+        }
+
+        Ptr = ACPI_METHOD_NEXT_ARGUMENT(Ptr);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
 Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
@@ -83,7 +160,8 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
   if (ACPI_SUCCESS(Status))
   {
       ACPI_OBJECT *Obj = RetBuff.Pointer;
-      ULONG ExtraParamLength;
+      ULONG ExtraParamLength = 0;
+      ULONG Count = 1;
 
       /* If we didn't get anything back then we're done */
       if (!RetBuff.Pointer || RetBuff.Length == 0)
@@ -92,39 +170,43 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
       switch (Obj->Type)
       {
           case ACPI_TYPE_INTEGER:
-             ExtraParamLength = sizeof(ULONG);
+             ExtraParamLength = sizeof(ACPI_METHOD_ARGUMENT);
              break;
 
           case ACPI_TYPE_STRING:
-             ExtraParamLength = Obj->String.Length;
+             ExtraParamLength = sizeof(ACPI_METHOD_ARGUMENT);
+             if (Obj->String.Length + 1 > sizeof(ULONG))
+                 ExtraParamLength += Obj->String.Length + 1 - sizeof(ULONG);
              break;
 
           case ACPI_TYPE_BUFFER:
-             ExtraParamLength = Obj->Buffer.Length;
+             ExtraParamLength = sizeof(ACPI_METHOD_ARGUMENT);
+             if (Obj->Buffer.Length > sizeof(ULONG))
+                 ExtraParamLength += Obj->Buffer.Length + 1 - sizeof(ULONG);
              break;
 
           case ACPI_TYPE_PACKAGE:
              DPRINT1("ACPI_TYPE_PACKAGE not supported yet!\n");
-             return STATUS_UNSUCCESSFUL;
+             Status = GetPackageSize(Obj, &Count, &ExtraParamLength);
+             if (!NT_SUCCESS(Status))
+                 return Status;
+             break;
 
           default:
              ASSERT(FALSE);
              return STATUS_UNSUCCESSFUL;
       }
 
-      /* Enough space for a ULONG is always included */
-      if (ExtraParamLength >= sizeof(ULONG))
-          ExtraParamLength -= sizeof(ULONG);
-      else
-          ExtraParamLength = 0;
-
-      OutputBuf = ExAllocatePoolWithTag(NonPagedPool, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
-                                               ExtraParamLength, 'BpcA');
-      if (!OutputBuf) return STATUS_INSUFFICIENT_RESOURCES;
+      DPRINT("ExtraParamLength %lu\n", ExtraParamLength);
+      OutputBuf = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(ACPI_EVAL_OUTPUT_BUFFER) - sizeof(ACPI_METHOD_ARGUMENT) + ExtraParamLength,
+                                        'BpcA');
+      if (!OutputBuf)
+          return STATUS_INSUFFICIENT_RESOURCES;
 
       OutputBuf->Signature = ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE;
-      OutputBuf->Length = ExtraParamLength + sizeof(ACPI_METHOD_ARGUMENT);
-      OutputBuf->Count = 1;
+      OutputBuf->Length = ExtraParamLength;
+      OutputBuf->Count = Count;
 
       switch (Obj->Type)
       {
@@ -142,19 +224,22 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
           case ACPI_TYPE_PACKAGE:
              DPRINT1("ACPI_TYPE_PACKAGE not supported yet!\n");
-             return STATUS_UNSUCCESSFUL;
+             Status = ConvertPackageArguments(OutputBuf->Argument, Obj);
+             if (!NT_SUCCESS(Status))
+                 return Status;
+             break;
 
           default:
              ASSERT(FALSE);
              return STATUS_UNSUCCESSFUL;
       }
 
-      if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
+      if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(ACPI_EVAL_OUTPUT_BUFFER) - sizeof(ACPI_METHOD_ARGUMENT) +
                                                                   ExtraParamLength)
       {
-          RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, OutputBuf, sizeof(ACPI_EVAL_OUTPUT_BUFFER) +
+          RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, OutputBuf, sizeof(ACPI_EVAL_OUTPUT_BUFFER) - sizeof(ACPI_METHOD_ARGUMENT) +
                                                                     ExtraParamLength);
-          Irp->IoStatus.Information = sizeof(ACPI_EVAL_OUTPUT_BUFFER) + ExtraParamLength;
+          Irp->IoStatus.Information = sizeof(ACPI_EVAL_OUTPUT_BUFFER) - sizeof(ACPI_METHOD_ARGUMENT) + ExtraParamLength;
           ExFreePoolWithTag(OutputBuf, 'BpcA');
           return STATUS_SUCCESS;
       }
@@ -166,7 +251,7 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
   }
   else
   {
-      DPRINT1("Query method %s failed on %p\n", EvalInputBuff->MethodName, DeviceData->AcpiHandle);
+      DPRINT1("Query method %4s failed on %p\n", EvalInputBuff->MethodName, DeviceData->AcpiHandle);
       return STATUS_UNSUCCESSFUL; 
   }
 }
