@@ -92,4 +92,7 @@ BEGIN
     IDS_DWL_FAILED "Nie udało się pobrać pakietu Gecko. Upewnij się, że masz połączenie z internetem, aby pobrać pakiet. Instalacja będzie kontynuowana bez pakietu Gecko."
     IDS_CANTMAKEINETSHORTCUT "Nie można utworzyć skrótu internetowego."
     IDS_CANTMAKESHORTCUT "Nie można utworzyć skrótu."
+    IDS_NO_MEMORY "No memory could be allocated!"
+    IDS_NO_DIRECTORY "No directory given!"
+    IDS_INVALID_PATH "The given path is invalid!"
 END

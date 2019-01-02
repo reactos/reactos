@@ -13,14 +13,15 @@
 #include <initguid.h>
 #include <batclass.h>
 
-typedef struct _BATTERY_CLASS_DATA {
-  BATTERY_MINIPORT_INFO MiniportInfo;
-  KEVENT WaitEvent;
-  BOOLEAN Waiting;
-  FAST_MUTEX Mutex;
-  UCHAR EventTrigger;
-  PVOID EventTriggerContext;
-  UNICODE_STRING InterfaceName;
+typedef struct _BATTERY_CLASS_DATA
+{
+    BATTERY_MINIPORT_INFO MiniportInfo;
+    KEVENT WaitEvent;
+    BOOLEAN Waiting;
+    FAST_MUTEX Mutex;
+    UCHAR EventTrigger;
+    PVOID EventTriggerContext;
+    UNICODE_STRING InterfaceName;
 } BATTERY_CLASS_DATA, *PBATTERY_CLASS_DATA;
 
 /* Memory tags */

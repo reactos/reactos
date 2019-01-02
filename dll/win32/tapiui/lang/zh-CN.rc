@@ -27,15 +27,15 @@ BEGIN
     LTEXT "位置名称(&N):", -1, 35, 11, 56, 8, SS_CENTERIMAGE
     EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
     LTEXT "指定拨号位置。", 2001, 7, 33, 238, 8
-    LTEXT "国家(地区):(&R)", -1, 7, 49, 161, 8
+    LTEXT "国家(地区)(&R):", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "区号:(&C)", -1, 190, 49, 48, 8
+    LTEXT "区号(&C):", -1, 190, 49, 48, 8
     EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
     GROUPBOX "拨号规则", 2002, 7, 80, 238, 92
     LTEXT "从此位置拨号时，使用下面的规则:", 2003, 14, 92, 224, 8
     LTEXT "本地电话的外线号码是(&L):", -1, 14, 106, 170, 8
     EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
-    LTEXT "长途电话的外线号码是(&D):(&D)", -1, 14, 122, 170, 8
+    LTEXT "长途电话的外线号码是(&D):", -1, 14, 122, 170, 8
     EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
     LTEXT "使用此电话公司代码来打长途电话(&E):", -1, 14, 138, 170, 8
     EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL

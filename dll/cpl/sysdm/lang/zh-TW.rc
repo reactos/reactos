@@ -52,7 +52,7 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     LTEXT "要進行大多數改動，您必須作爲管理員身分登錄。", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "性能", IDC_STATIC, 6, 18, 244, 50
-    LTEXT "性能選項控制應用程序如何使用內存。這將會影響到電腦運行速度。", IDC_STATIC, 16, 29, 228, 17
+    LTEXT "性能選項控制應用程式如何使用內存。這將會影響到電腦運行速度。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON "設定", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "使用者設定檔", IDC_STATIC, 6, 75, 244, 48
     LTEXT "與您登入時相關的桌面設定", IDC_STATIC, 16, 88, 228, 20
@@ -105,7 +105,7 @@ END
 
 IDD_HARDWAREPROFILE DIALOGEX 0, 0, 212, 188
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "常規"
+CAPTION "一般"
 FONT 8, "新細明體"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 10, 10, 18, 20, SS_ICON
@@ -162,7 +162,7 @@ BEGIN
     PUSHBUTTON "更改類型", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
     PUSHBUTTON "刪除", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
     PUSHBUTTON "複製到", IDC_USERPROFILE_COPY, 200, 155, 50, 15
-    CONTROL "要創建一個新的使用者帳戶，在控制面板中打開<A>使用者帳戶</A> 。",
+    CONTROL "要創建一個新的使用者帳戶，在控制面板中開啟<A>使用者帳戶</A> 。",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
     DEFPUSHBUTTON "確定", IDOK, 134, 198, 54, 15
     PUSHBUTTON "取消", IDCANCEL, 196, 198, 54, 15
@@ -301,8 +301,8 @@ BEGIN
     IDS_MESSAGEBOXTITLE "系統控制面板小程序"
     IDS_WARNINITIALSIZE "爲分頁文件的初始大小輸入一個數字值。"
     IDS_WARNMAXIMUMSIZE "爲分頁文件的最大大小輸入一個數字值。"
-    IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 16 MB，並且不得超過所選磁盤上的可用空間。"
-    IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁盤上的可用空間。"
+    IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 16 MB，並且不得超過所選磁碟上的可用空間。"
+    IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁碟上的可用空間。"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "系統已管理"
     IDS_INFOREBOOT "您必須重新啓動電腦，才能套用更改。"

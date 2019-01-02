@@ -434,9 +434,9 @@ ApphelpCacheWrite(VOID)
 }
 
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 ApphelpCacheInitialize(VOID)
 {
     DPRINT("SHIMS: ApphelpCacheInitialize\n");

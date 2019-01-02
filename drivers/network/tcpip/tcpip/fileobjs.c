@@ -10,6 +10,10 @@
 
 #include "precomp.h"
 
+/* FIXME: including pstypes.h without ntifs fails */
+#include <ntifs.h>
+#include <ndk/pstypes.h>
+
 /* Uncomment for logging of connections and address files every 10 seconds */
 //#define LOG_OBJECTS
 
@@ -392,6 +396,7 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   PADDRESS_FILE AddrFile;
+  PTEB Teb;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
@@ -425,6 +430,12 @@ NTSTATUS FileOpenAddress(
   AddrFile->BCast = 1;
   AddrFile->HeaderIncl = 1;
   AddrFile->ProcessId = PsGetCurrentProcessId();
+
+  Teb = PsGetCurrentThreadTeb();
+  if (Teb != NULL) {
+    AddrFile->SubProcessTag = Teb->SubProcessTag;
+  }
+
   KeQuerySystemTime(&AddrFile->CreationTime);
 
   /* Make sure address is a local unicast address or 0 */

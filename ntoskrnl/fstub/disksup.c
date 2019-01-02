@@ -1392,7 +1392,6 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN IsValid, IsEmpty = TRUE;
     PVOID MbrBuffer;
     PIO_STACK_LOCATION IoStackLocation;
-    PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
     UCHAR PartitionType;
     LARGE_INTEGER HiddenSectors64;
     VolumeOffset.QuadPart = Offset.QuadPart = 0;
@@ -1503,8 +1502,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!Offset.QuadPart)
         {
             /* Then read the signature off the disk */
-            (*PartitionBuffer)->Signature =  ((PULONG)Buffer)
-                                             [PARTITION_TABLE_OFFSET / 2 - 1];
+            (*PartitionBuffer)->Signature = ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1];
         }
 
         /* Get the partition descriptor array */
@@ -1540,7 +1538,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             /* Make sure that the partition is valid, unless it's the first */
             if (!(HalpIsValidPartitionEntry(PartitionDescriptor,
                                             MaxOffset,
-                                            MaxSector)) && !(j))
+                                            MaxSector)) && (j == 0))
             {
                 /* It's invalid, so fail */
                 IsValid = FALSE;
@@ -1722,10 +1720,10 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
     /* Check if this is a removable device that's probably a super-floppy */
     if ((DiskGeometry.MediaType == RemovableMedia) &&
-        !(j) &&
-        (MbrFound) &&
-        (IsEmpty))
+        (j == 0) && (MbrFound) && (IsEmpty))
     {
+        PBOOT_SECTOR_INFO BootSectorInfo = (PBOOT_SECTOR_INFO)Buffer;
+
         /* Read the jump bytes to detect super-floppy */
         if ((BootSectorInfo->JumpByte[0] == 0xeb) ||
             (BootSectorInfo->JumpByte[0] == 0xe9))
@@ -2133,7 +2131,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 if (((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] !=
                     PartitionBuffer->Signature)
                 {
-                    /* Then write the signature and now w need a rewrite */
+                    /* Then write the signature and now we need a rewrite */
                     ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] =
                         PartitionBuffer->Signature;
                     DoRewrite = TRUE;

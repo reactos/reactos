@@ -314,7 +314,7 @@ BEGIN
     IDS_HINT_EDIT " 編輯選定服務的屬性。"
     IDS_HINT_CREATE " 創建一個新的服務。"
     IDS_HINT_DELETE " 刪除選定的服務。"
-    IDS_HINT_PROP " 為當前選擇專案打開屬性頁。"
+    IDS_HINT_PROP " 為當前選擇專案開啟屬性頁。"
     IDS_HINT_LARGE " 用大圖示顯示條目。"
     IDS_HINT_SMALL " 用小圖示顯示條目。"
     IDS_HINT_LIST " 用清單顯示條目。"

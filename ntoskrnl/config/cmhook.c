@@ -32,9 +32,9 @@ typedef struct _REGISTRY_CALLBACK
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 CmpInitCallback(VOID)
 {
     ULONG i;

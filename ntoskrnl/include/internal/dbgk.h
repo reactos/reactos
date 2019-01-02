@@ -46,6 +46,7 @@
 #define DBGKTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
 #endif
 
+INIT_FUNCTION
 VOID
 NTAPI
 DbgkInitialize(

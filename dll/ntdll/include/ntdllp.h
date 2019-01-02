@@ -32,6 +32,7 @@ typedef struct _LDRP_TLS_DATA
 /* Global data */
 extern RTL_CRITICAL_SECTION LdrpLoaderLock;
 extern BOOLEAN LdrpInLdrInit;
+extern PVOID LdrpHeap;
 extern LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 extern BOOLEAN ShowSnaps;
 extern UNICODE_STRING LdrpDefaultPath;

@@ -81,7 +81,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "系統區域設置應與您要使用的應用程序的語言相匹配。使用者區域設置控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "系統區域設置應與您要使用的應用程式的語言相匹配。使用者區域設置控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "若要變更系統和使用者的地區設定, 點選自訂。", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14

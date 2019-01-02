@@ -212,9 +212,9 @@ BootLogoFadeIn(VOID)
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 PVOID
 NTAPI
-INIT_FUNCTION
 FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                    IN ULONG ResourceId)
 {
@@ -277,9 +277,9 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     return Data;
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN ULONG Count)
 {
@@ -357,9 +357,9 @@ InbvReleaseLock(VOID)
     if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
     /* Check if we're installed */
@@ -622,9 +622,9 @@ InbvSolidColorFill(IN ULONG Left,
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 InbvUpdateProgressBar(IN ULONG Progress)
 {
     ULONG FillCount, BoundedProgress;
@@ -738,9 +738,9 @@ InbvSetProgressBarSubset(IN ULONG Floor,
     InbvProgressState.Bias = (Ceiling * 100) - Floor;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 InbvIndicateProgress(VOID)
 {
     ULONG Percentage;
@@ -930,9 +930,9 @@ InbvRotationThread(
     PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 InbvRotBarInit(VOID)
 {
     PltRotBarStatus = RBS_FADEIN;
@@ -940,9 +940,9 @@ InbvRotBarInit(VOID)
 }
 #endif
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
     PVOID Header = NULL, Footer = NULL, Screen = NULL;
@@ -1185,9 +1185,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 DisplayFilter(PCHAR *String)
 {
     /* Windows hack to skip first dots */
@@ -1209,9 +1209,9 @@ DisplayFilter(PCHAR *String)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 FinalizeBootLogo(VOID)
 {
     /* Acquire lock and check the display state */

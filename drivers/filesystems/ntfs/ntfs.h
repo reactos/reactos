@@ -3,12 +3,7 @@
 
 #include <ntifs.h>
 #include <pseh/pseh2.h>
-
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
+#include <section_attribs.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
@@ -1260,8 +1255,10 @@ NtfsSetVolumeInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* ntfs.c */
 
+INIT_FUNCTION
 DRIVER_INITIALIZE DriverEntry;
 
+INIT_FUNCTION
 VOID
 NTAPI
 NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject);

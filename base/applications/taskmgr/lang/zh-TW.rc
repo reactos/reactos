@@ -332,7 +332,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "工作管理員"
     IDC_TASKMGR "工作管理員"
-    IDS_IDLE_PROCESS "系統空閒進程"
+    IDS_IDLE_PROCESS "系統空閒處理序"
 END
 
 STRINGTABLE
@@ -363,7 +363,7 @@ BEGIN
     ID_HELP_ABOUT "顯示程式資訊、 版本號和版權資訊"
     ID_FILE_EXIT "退出工作管理員應用程式"
     ID_OPTIONS_SHOW16BITTASKS "顯示關聯 ntvdm.exe 下的 16 位任務"
-    ID_VIEW_SELECTCOLUMNS "選擇哪一列將可見的進程頁"
+    ID_VIEW_SELECTCOLUMNS "選擇哪一列將可見的處理序頁"
     ID_VIEW_SHOWKERNELTIMES "在績效圖中顯示核心程式的時間"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "單一歷史記錄圖表顯示出總的 CPU 使用率"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "每個 CPU 都有其自身的歷史圖"
@@ -374,10 +374,10 @@ STRINGTABLE
 BEGIN
     ID_ENDTASK "告訴要關閉所選的任務"
     ID_GOTOPROCESS "將焦點切換到所選任務的過程"
-    ID_RESTORE "從其隱藏狀態恢復工作管理器"
+    ID_RESTORE "從其隱藏狀態恢復工作管理員"
     ID_PROCESS_PAGE_ENDPROCESS "從系統中刪除的過程"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "從系統中刪除此進程及其所有子體"
-    ID_PROCESS_PAGE_DEBUG "將調試器附加到該進程"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "從系統中刪除此處理序及其所有子體"
+    ID_PROCESS_PAGE_DEBUG "將調試器附加到該處理序"
     ID_PROCESS_PAGE_SETAFFINITY "控制程序允許在哪個處理器運行"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME "設定程序優先順序為即時"
     ID_PROCESS_PAGE_SETPRIORITY_HIGH "設定程序優先順序為高"
@@ -431,7 +431,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "CPU 使用記錄(&C)"
     IDS_MENU_SHOWKERNELTIMES "顯示核心時間(&S)"
     IDS_CREATENEWTASK "新工作"
-    IDS_CREATENEWTASK_DESC "工作管理員將根據您所輸入的名稱，為您打開相應的程式、資料夾、檔案或網路資源。"
+    IDS_CREATENEWTASK_DESC "工作管理員將根據您所輸入的名稱，為您開啟相應的程式、資料夾、檔案或網路資源。"
     IDS_MSG_ACCESSPROCESSAFF "無法存取或設定處理器親和性"
     IDS_MSG_PROCESSONEPRO "程序必須連繫至少一個處理器。"
     IDS_MSG_INVALIDOPTION "選項無效"
@@ -440,7 +440,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "工作管理員警告"
     IDS_MSG_WARNINGTERMINATING "警告: 結束程序可能導政資料遺失或系統不穩定。\n程序在結束時將不能儲存任何資料。\n你是否確定要繼續？"
     IDS_MSG_UNABLETERMINATEPRO "無法結束處理程序"
-    IDS_MSG_CLOSESYSTEMPROCESS "這是一個關鍵的系統過程。工作管理員不會結束這一進程。"
+    IDS_MSG_CLOSESYSTEMPROCESS "這是一個關鍵的系統過程。工作管理員不會結束這一處理序。"
     IDS_MSG_UNABLECHANGEPRIORITY "無法更改優先順序"
     IDS_MSG_WARNINGCHANGEPRIORITY "警告: 更改此程序的優先順序可能導致系統不穩定。\n你是否確定要更改優先順序？"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況: %d%%"

@@ -4,7 +4,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "用法: taskkill [/?] [/f] [/im 進程名稱 | /pid 進程 ID]\n"
+    STRING_USAGE, "用法: taskkill [/?] [/f] [/im 處理序名稱 | /pid 處理序 ID]\n"
     STRING_INVALID_OPTION, "錯誤: 未知或不正確命令列選項指定。\n"
     STRING_INVALID_PARAM, "錯誤: 不正確命令列參數指定。\n"
     STRING_MISSING_OPTION, "錯誤: 選項 /im 或 /pid 之一必須指定。\n"
@@ -14,8 +14,8 @@ STRINGTABLE
     STRING_CLOSE_PROC_SRCH, "關閉消息發送到頂級視窗的過程 ""%1"" 與 PID %2!u!.\n"
     STRING_TERM_PID_SEARCH, "過程與 PID %1!u! 被強行終止。\n"
     STRING_TERM_PROC_SEARCH, " ""%1"" 過程與 PID %2!u! 被強行終止。\n"
-    STRING_SEARCH_FAILED, "錯誤: 找不到進程 ""%1""。\n"
-    STRING_ENUM_FAILED, "錯誤: 無法枚舉進程清單。\n"
-    STRING_TERMINATE_FAILED, "錯誤: 無法終止進程 ""%1""。\n"
-    STRING_SELF_TERMINATION, "錯誤: 不允許自我終止的進程。\n"
+    STRING_SEARCH_FAILED, "錯誤: 找不到處理序 ""%1""。\n"
+    STRING_ENUM_FAILED, "錯誤: 無法枚舉處理序清單。\n"
+    STRING_TERMINATE_FAILED, "錯誤: 無法終止處理序 ""%1""。\n"
+    STRING_SELF_TERMINATION, "錯誤: 不允許自我終止的處理序。\n"
 }

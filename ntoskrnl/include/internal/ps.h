@@ -90,6 +90,7 @@ PspShutdownProcessManager(
     VOID
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 PsInitSystem(
@@ -120,6 +121,7 @@ PspMapSystemDll(
     IN BOOLEAN UseLargePages
 );
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 PsLocateSystemDll(
@@ -352,6 +354,7 @@ PspRemoveProcessFromJob(
     IN PEJOB Job
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 PspInitializeJobStructures(
@@ -415,6 +418,7 @@ PspIsProcessExiting(IN PEPROCESS Process);
 //
 // Apphelp functions
 //
+INIT_FUNCTION
 NTSTATUS
 NTAPI
 ApphelpCacheInitialize(VOID);

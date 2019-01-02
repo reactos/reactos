@@ -55,6 +55,7 @@ ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
 BOOLEAN RtlpTimeoutDisable;
+PVOID LdrpHeap;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 LIST_ENTRY LdrpDllNotificationList;
 HANDLE LdrpKnownDllObjectDirectory;
@@ -663,7 +664,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         if (Count > 16)
         {
             /* Allocate space for all the entries */
-            LdrRootEntry = RtlAllocateHeap(RtlGetProcessHeap(),
+            LdrRootEntry = RtlAllocateHeap(LdrpHeap,
                                            0,
                                            Count * sizeof(*LdrRootEntry));
             if (!LdrRootEntry) return STATUS_NO_MEMORY;
@@ -921,7 +922,7 @@ Quickie:
     if (LdrRootEntry != LocalArray)
     {
         /* Free the array */
-        RtlFreeHeap(RtlGetProcessHeap(), 0, LdrRootEntry);
+        RtlFreeHeap(LdrpHeap, 0, LdrRootEntry);
     }
 
     /* Return to caller */
@@ -1752,9 +1753,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                               &ConfigSize);
 
     /* Setup the Heap Parameters */
-    RtlZeroMemory(&HeapParameters, sizeof(RTL_HEAP_PARAMETERS));
+    RtlZeroMemory(&HeapParameters, sizeof(HeapParameters));
     HeapFlags = HEAP_GROWABLE;
-    HeapParameters.Length = sizeof(RTL_HEAP_PARAMETERS);
+    HeapParameters.Length = sizeof(HeapParameters);
 
     /* Check if we have Configuration Data */
     if ((LoadConfig) && (ConfigSize == sizeof(IMAGE_LOAD_CONFIG_DIRECTORY)))
@@ -1875,8 +1876,15 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     Status = RtlAllocateActivationContextStack(&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
 
-    // FIXME: Loader private heap is missing
-    //DPRINT1("Loader private heap is missing\n");
+    RtlZeroMemory(&HeapParameters, sizeof(HeapParameters));
+    HeapFlags = HEAP_GROWABLE | HEAP_CLASS_1;
+    HeapParameters.Length = sizeof(HeapParameters);
+    LdrpHeap = RtlCreateHeap(HeapFlags, 0, 0x10000, 0x6000, 0, &HeapParameters);
+    if (!LdrpHeap)
+    {
+        DPRINT1("Failed to create loader private heap\n");
+        return STATUS_NO_MEMORY;
+    }
 
     /* Check for Debug Heap */
     if (OptionsKey)

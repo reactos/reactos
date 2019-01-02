@@ -25,6 +25,7 @@ Author:
 #include <umtypes.h>
 #include <haltypes.h>
 #include <ketypes.h>
+#include <section_attribs.h>
 
 #ifndef NTOS_MODE_USER
 
@@ -80,6 +81,7 @@ HalInitializeProcessor(
     _In_ struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
 
+INIT_FUNCTION
 NTHALAPI
 BOOLEAN
 NTAPI
@@ -175,6 +177,7 @@ HalGetInterruptSource(
 );
 #endif
 
+INIT_FUNCTION
 NTHALAPI
 VOID
 NTAPI

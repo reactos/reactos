@@ -111,7 +111,7 @@ HalpSetTimerRollOver(USHORT RollOver)
     __writeeflags(Flags);
 }
 
-INIT_SECTION
+INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializeClock(VOID)

@@ -809,7 +809,7 @@ ProcessDisplayRegistry(
     }
 
     ASSERT(wcslen(ServiceName) < 10);
-    DPRINT1("Service name: '%S'\n", ServiceName);
+    DPRINT("Service name: '%S'\n", ServiceName);
 
     RtlStringCchPrintfW(RegPath, ARRAYSIZE(RegPath),
                         L"System\\CurrentControlSet\\Services\\%s",
@@ -853,7 +853,7 @@ ProcessDisplayRegistry(
     RtlStringCchPrintfW(RegPath, ARRAYSIZE(RegPath),
                         L"System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0",
                         ServiceName);
-    DPRINT1("RegPath: '%S'\n", RegPath);
+    DPRINT("RegPath: '%S'\n", RegPath);
     RtlInitUnicodeString(&KeyName, RegPath);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,

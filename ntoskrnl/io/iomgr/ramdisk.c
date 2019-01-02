@@ -22,9 +22,9 @@
 
 /* FUNCTIONS ******************************************************************/
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PMEMORY_ALLOCATION_DESCRIPTOR MemoryDescriptor;

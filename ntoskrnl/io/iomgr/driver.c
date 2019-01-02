@@ -713,9 +713,9 @@ MiResolveImageReferences(IN PVOID ImageBase,
 //
 // Used for images already loaded (boot drivers)
 //
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                        PUNICODE_STRING FileName,
                        PLDR_DATA_TABLE_ENTRY *ModuleObject)
@@ -793,9 +793,9 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
  *
  * Initialize a driver that is already loaded in memory.
  */
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 {
     PDEVICE_NODE DeviceNode;
@@ -924,9 +924,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
  * Return Value
  *    None
  */
+INIT_FUNCTION
 VOID
 FASTCALL
-INIT_FUNCTION
 IopInitializeBootDrivers(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry, NextEntry2;
@@ -1120,9 +1120,9 @@ IopInitializeBootDrivers(VOID)
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
 
+INIT_FUNCTION
 VOID
 FASTCALL
-INIT_FUNCTION
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;

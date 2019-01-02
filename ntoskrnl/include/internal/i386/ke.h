@@ -321,6 +321,7 @@ KiSetTebBase(PKPCR Pcr, PVOID TebAddress)
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
 }
 
+INIT_FUNCTION
 VOID
 FASTCALL
 Ki386InitializeTss(
@@ -329,30 +330,36 @@ Ki386InitializeTss(
     IN PKGDTENTRY Gdt
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiSetCR0Bits(VOID);
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiGetCacheInformation(VOID);
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 KiIsNpxPresent(
     VOID
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 KiIsNpxErrataPresent(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiSetProcessorType(VOID);
 
+INIT_FUNCTION
 ULONG
 NTAPI
 KiGetFeatureBits(VOID);
@@ -387,18 +394,21 @@ Ki386SetupAndExitToV86Mode(
     OUT PTEB VdmTeb
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KeI386VdmInitialize(
     VOID
 );
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(
     IN ULONG_PTR Context
 );
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableTargetLargePage(
@@ -426,48 +436,56 @@ Ki386EnableCurrentLargePage(
     IN ULONG Cr3
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiI386PentiumLockErrataFixup(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiInitializePAT(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiInitializeMTRR(
     IN BOOLEAN FinalCpu
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiAmdK6InitializeMTRR(
     VOID
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(
     VOID
 );
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableDE(
     IN ULONG_PTR Context
 );
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableFxsr(
     IN ULONG_PTR Context
 );
 
+INIT_FUNCTION
 ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(
@@ -791,11 +809,12 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 //
 // Switches from boot loader to initial kernel stack
 //
+INIT_FUNCTION
 FORCEINLINE
 VOID
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
-    VOID NTAPI KiSystemStartupBootStack(VOID);
+    INIT_FUNCTION VOID NTAPI KiSystemStartupBootStack(VOID);
 
     /* We have to switch to a new stack before continuing kernel initialization */
 #ifdef __GNUC__

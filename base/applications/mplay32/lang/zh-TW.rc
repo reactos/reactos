@@ -53,7 +53,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_MODE_UNKNOWN "未知"
-    IDS_MODE_OPEN "已打開"
+    IDS_MODE_OPEN "已開啟"
     IDS_MODE_STOP "已停止"
     IDS_MODE_PLAY "播放中"
     IDS_MODE_PAUSE "已暫停"

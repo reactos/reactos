@@ -5,12 +5,7 @@
 #include <ntifs.h>
 #include <pseh/pseh2.h>
 #include <ndk/muptypes.h>
-
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#else
-#define INIT_SECTION /* Done via alloc_text for MSC */
-#endif
+#include <section_attribs.h>
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define IO_METHOD_FROM_CTL_CODE(C) (C & 0x00000003)

@@ -113,19 +113,20 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
         {
             /* IN/OUT parameter structure for I_QueryTagInformation() function
              * See: https://wj32.org/wp/2010/03/30/howto-use-i_querytaginformation/
+             * See: https://github.com/processhacker/processhacker/blob/master/phnt/include/subprocesstag.h
              */
             struct
             {
                 ULONG ProcessId;
                 PVOID ServiceTag;
-                ULONG Unknown;
+                ULONG TagType;
                 PWSTR Buffer;
             } ServiceQuery;
 
             /* Set our input parameters */
             ServiceQuery.ProcessId = GetCurrentProcessId();
             ServiceQuery.ServiceTag = Teb->SubProcessTag;
-            ServiceQuery.Unknown = 0;
+            ServiceQuery.TagType = 0;
             ServiceQuery.Buffer = NULL;
             /* Call ADVAPI32 to query the correctness of our tag */
             _I_QueryTagInformation(NULL, 1, &ServiceQuery);
@@ -135,6 +136,7 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
             {
                 /* It should match our service name */
                 service_ok(wcscmp(lpszArgv[0], ServiceQuery.Buffer) == 0, "Mismatching info: %S - %S\n", lpszArgv[0], ServiceQuery.Buffer);
+                service_ok(ServiceQuery.TagType == 1, "Invalid tag type: %x\n", ServiceQuery.TagType);
                 LocalFree(ServiceQuery.Buffer);
             }
         }

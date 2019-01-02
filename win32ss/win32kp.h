@@ -10,14 +10,6 @@
 
 #pragma once
 
-#ifdef __GNUC__
-#define INIT_SECTION __attribute__((section ("INIT")))
-#define INIT_FUNCTION INIT_SECTION
-#else
-#define INIT_SECTION  /* Done via alloc_text for MSC */
-#define INIT_FUNCTION INIT_SECTION
-#endif
-
 /* Enable debugging features */
 #define GDI_DEBUG 0
 #define DBG_ENABLE_GDIOBJ_BACKTRACES 0

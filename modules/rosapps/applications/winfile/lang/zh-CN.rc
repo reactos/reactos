@@ -182,7 +182,7 @@ IDM_WINEFILE MENU
 #endif
     }
 
-    POPUP "磁盤(&D)"  {
+    POPUP "磁碟(&D)"  {
         MENUITEM "複製(&C)...",               201
         MENUITEM "命名(&L)...",               202
         MENUITEM SEPARATOR

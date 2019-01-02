@@ -71,6 +71,8 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 - *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
 - *Do not be afraid to ask questions.* Ask our developers on JIRA or [IRC] channel.
 
+To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
+
 ## Where To Start?
 
 Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:

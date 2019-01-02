@@ -3032,7 +3032,7 @@ CheckActiveSystemPartition(
         return;
     }
 
-    DPRINT1("We are here (1)!\n");
+    DPRINT("We are here (1)!\n");
 
     List->SystemPartition = NULL;
     List->OriginalSystemPartition = NULL;
@@ -3070,7 +3070,7 @@ CheckActiveSystemPartition(
         DPRINT1("NewDisk TRUE but first partition is used?\n");
     }
 
-    DPRINT1("We are here (2)!\n");
+    DPRINT("We are here (2)!\n");
 
     /*
      * The disk is not new, check if any partition is initialized;
@@ -3111,7 +3111,7 @@ CheckActiveSystemPartition(
     List->SystemPartition = NULL;
     List->OriginalSystemPartition = NULL;
 
-    DPRINT1("We are here (3)!\n");
+    DPRINT("We are here (3)!\n");
 
     /* The disk is not new, scan all partitions to find the (active) system partition */
     for (ListEntry = DiskEntry->PrimaryPartListHead.Flink;
