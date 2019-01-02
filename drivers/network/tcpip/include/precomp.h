@@ -16,5 +16,6 @@
 #include <lock.h>
 #include <interface.h>
 #include <chew/chew.h>
+#include <pseh/pseh2.h>
 
 #endif /* _TCPIP_PCH_ */
