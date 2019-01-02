@@ -517,6 +517,8 @@ RxReinitializeContext(
 }
 #endif
 
+extern FAST_MUTEX RxContextPerFileSerializationMutex;
+
 VOID
 NTAPI
 RxResumeBlockedOperations_Serially(
@@ -525,6 +527,21 @@ RxResumeBlockedOperations_Serially(
 
 VOID
 RxResumeBlockedOperations_ALL(
+    _Inout_ PRX_CONTEXT RxContext);
+
+#if (_WIN32_WINNT >= 0x0600)
+VOID
+RxCancelBlockingOperation(
+    _Inout_ PRX_CONTEXT RxContext,
+    _In_ PIRP Irp);
+#else
+VOID
+RxCancelBlockingOperation(
+    _Inout_ PRX_CONTEXT RxContext);
+#endif
+
+VOID
+RxRemoveOperationFromBlockingQueue(
     _Inout_ PRX_CONTEXT RxContext);
 
 #endif
