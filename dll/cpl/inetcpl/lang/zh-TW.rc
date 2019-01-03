@@ -28,7 +28,7 @@ BEGIN
     IDS_CPL_NAME        "網際網路設定"
     IDS_CPL_INFO        "配置 Wine 網際網路瀏覽器和相關的設定"
     IDS_SEC_SETTINGS    "區域的安全設定: "
-    IDS_SEC_LEVEL0      "自定義"
+    IDS_SEC_LEVEL0      "自訂"
     IDS_SEC_LEVEL1      "非常低"
     IDS_SEC_LEVEL2      "低"
     IDS_SEC_LEVEL3      "中等"
@@ -40,7 +40,7 @@ END
 IDD_GENERAL DIALOG  0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 9, "新細明體"
-CAPTION "常規"
+CAPTION "一般"
 BEGIN
 
     GROUPBOX    "主頁", IDC_STATIC, 4, 4, 312, 56
@@ -67,7 +67,7 @@ BEGIN
 
     AUTOCHECKBOX   "網際網路臨時檔案\n快取的網站頁面、 影象和證書的副本。",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "小型文字檔案\n通過網站在您的計算機上儲存檔案存儲使用者首選項和登入資訊。",
+    AUTOCHECKBOX   "Cookie\n通過網站在您的電腦上儲存檔案存儲使用者首選項和登入資訊。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "歷史記錄\n您進入的網站的列表。",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE

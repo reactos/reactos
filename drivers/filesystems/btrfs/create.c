@@ -2510,10 +2510,8 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     UNICODE_STRING dsus, fpus, stream;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     POOL_TYPE pool_type = IrpSp->Flags & SL_OPEN_PAGING_FILE ? NonPagedPool : PagedPool;
-#ifndef __REACTOS__
     ECP_LIST* ecp_list;
     ATOMIC_CREATE_ECP_CONTEXT* acec = NULL;
-#endif
 #ifdef DEBUG_FCB_REFCOUNTS
     LONG oc;
 #endif
@@ -2526,7 +2524,6 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
     if (options & FILE_DELETE_ON_CLOSE && IrpSp->Parameters.Create.FileAttributes & FILE_ATTRIBUTE_READONLY)
         return STATUS_CANNOT_DELETE;
 
-#ifndef __REACTOS__
     if (NT_SUCCESS(FsRtlGetEcpListFromIrp(Irp, &ecp_list)) && ecp_list) {
         void* ctx = NULL;
         GUID type;
@@ -2543,7 +2540,6 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
             }
         } while (NT_SUCCESS(Status));
     }
-#endif
 
     dsus.Buffer = (WCHAR*)datasuf;
     dsus.Length = dsus.MaximumLength = sizeof(datasuf) - sizeof(WCHAR);
@@ -2720,7 +2716,6 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
 
     FileObject->SectionObjectPointer = &fileref->fcb->nonpaged->segment_object;
 
-#ifndef __REACTOS__
     // FIXME - ATOMIC_CREATE_ECP_IN_FLAG_BEST_EFFORT
     if (acec && acec->InFlags & ATOMIC_CREATE_ECP_IN_FLAG_REPARSE_POINT_SPECIFIED) {
         if (acec->ReparseBufferLength > sizeof(UINT32) && *(UINT32*)acec->ReparseBuffer == IO_REPARSE_TAG_SYMLINK) {
@@ -2751,7 +2746,6 @@ static NTSTATUS file_create(PIRP Irp, _Requires_lock_held_(_Curr_->tree_lock) _R
 
         acec->OutFlags |= ATOMIC_CREATE_ECP_OUT_FLAG_REPARSE_POINT_SET;
     }
-#endif
 
     fileref->dc->type = fileref->fcb->type;
 

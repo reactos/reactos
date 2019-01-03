@@ -521,6 +521,8 @@ IntCreateWindowStation(
           ObjectAttributes->ObjectName, WindowStation, hWinSta);
 
     *phWinSta = hWinSta;
+    EngSetLastError(ERROR_SUCCESS);
+
     return STATUS_SUCCESS;
 }
 

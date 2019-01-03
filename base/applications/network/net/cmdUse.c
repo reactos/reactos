@@ -109,7 +109,7 @@ cmdUse(
     {
         Status = EnumerateConnections(NULL);
         if (Status == NO_ERROR)
-            ConResPrintf(StdOut, IDS_ERROR_NO_ERROR);
+            PrintErrorMessage(ERROR_SUCCESS);
         else
             PrintError(Status);
 
@@ -125,7 +125,7 @@ cmdUse(
 
         Status = EnumerateConnections(argv[2]);
         if (Status == NO_ERROR)
-            ConResPrintf(StdOut, IDS_ERROR_NO_ERROR);
+            PrintErrorMessage(ERROR_SUCCESS);
         else
             PrintError(Status);
 

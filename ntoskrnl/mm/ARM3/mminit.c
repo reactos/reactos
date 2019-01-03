@@ -477,9 +477,9 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MxOldFreeDescriptor = *MxFreeDescriptor;
 }
 
+INIT_FUNCTION
 PFN_NUMBER
 NTAPI
-INIT_FUNCTION
 MxGetNextPage(IN PFN_NUMBER PageCount)
 {
     PFN_NUMBER Pfn;
@@ -502,9 +502,9 @@ MxGetNextPage(IN PFN_NUMBER PageCount)
     return Pfn;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiComputeColorInformation(VOID)
 {
     ULONG L2Associativity;
@@ -556,9 +556,9 @@ MiComputeColorInformation(VOID)
     KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeColorTables(VOID)
 {
     ULONG i;
@@ -607,9 +607,9 @@ MiInitializeColorTables(VOID)
 }
 
 #ifndef _M_AMD64
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN PFN_NUMBER Pfn)
 {
@@ -666,9 +666,9 @@ MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     return FALSE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
@@ -762,9 +762,9 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MxFreeDescriptor->PageCount = FreePageCount;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PMMPDE PointerPde;
@@ -871,9 +871,9 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseZeroPage(VOID)
 {
     PMMPFN Pfn1;
@@ -894,9 +894,9 @@ MiBuildPfnDatabaseZeroPage(VOID)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
@@ -1038,9 +1038,9 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseSelf(VOID)
 {
     PMMPTE PointerPte, LastPte;
@@ -1068,9 +1068,9 @@ MiBuildPfnDatabaseSelf(VOID)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Scan memory and start setting up PFN entries */
@@ -1087,9 +1087,9 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 #endif /* !_M_AMD64 */
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextMd;
@@ -1197,9 +1197,9 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ExFreePoolWithTag(Buffer, 'lMmM');
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
 {
     /* This function needs to do more work, for now, we tune page minimums */
@@ -1212,9 +1212,9 @@ MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiNotifyMemoryEvents(VOID)
 {
     /* Are we in a low-memory situation? */
@@ -1238,9 +1238,9 @@ MiNotifyMemoryEvents(VOID)
     }
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                     OUT PKEVENT *Event)
 {
@@ -1333,9 +1333,9 @@ CleanUp:
     return Status;
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 MiInitializeMemoryEvents(VOID)
 {
     UNICODE_STRING LowString = RTL_CONSTANT_STRING(L"\\KernelObjects\\LowMemoryCondition");
@@ -1412,9 +1412,9 @@ MiInitializeMemoryEvents(VOID)
     return TRUE;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiAddHalIoMappings(VOID)
 {
     PVOID BaseAddress;
@@ -1616,9 +1616,9 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
     KeLowerIrql(OldIrql);
 }
 
+INIT_FUNCTION
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
-INIT_FUNCTION
 MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          IN PBOOLEAN IncludeType)
 {
@@ -1745,9 +1745,9 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     return Buffer;
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPagedPool(VOID)
 {
     PMMPTE PointerPte;
@@ -1985,9 +1985,9 @@ MiBuildPagedPool(VOID)
     MiInitializeSystemSpaceMap(NULL);
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiDbgDumpMemoryDescriptors(VOID)
 {
     PLIST_ENTRY NextEntry;
@@ -2037,9 +2037,9 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%lu MB)\n", (ULONG)TotalPages, (ULONG)(TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 MmArmInitSystem(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

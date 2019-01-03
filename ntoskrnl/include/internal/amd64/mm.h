@@ -289,6 +289,7 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
     return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
 }
 
+INIT_FUNCTION
 VOID
 FORCEINLINE
 MmInitGlobalKernelPageDirectory(VOID)

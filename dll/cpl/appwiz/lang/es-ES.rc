@@ -1,7 +1,10 @@
-/* Spanish Language resource file
- *
- * Traducido por: Javier Remacha             2007-12-22
- * Traducido por: Ismael Ferreras Morezuelas 2014-12-30
+/*
+ * PROJECT:     ReactOS Application Wizard
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish language file ...
+ * COPYRIGHT:   Javier Remacha 2007-12-22
+ *              Ismael Ferreras Morezuelas 2014-12-30
+ *              Julio Carchi Ruiz 2018-10-19
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -49,14 +52,14 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Shortcuts/Folders"
+CAPTION "Quitar accesos directos y directorios"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    LTEXT "Para quitar un elemento del Menú Inicio, selecciónelo y presione Quitar.", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Quitar", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Salir", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
@@ -68,7 +71,7 @@ BEGIN
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "C&ancelar", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Cancelar", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
@@ -84,8 +87,11 @@ BEGIN
     IDS_DOWNLOADING "Descargando..."
     IDS_INSTALLING "Instalando..."
     IDS_INVALID_SHA "La suma de verificación del archivo descargado no coincide. Se ha cancelado la instalación del archivo corrupto."
-    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
-    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
-    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
+    IDS_NEW_INTERNET_SHORTCUT "Nuevo acceso directo a Internet"
+    IDS_DWL_FAILED "ReactOS no pudo descargar el paquete de Wine Gecko. Asegúrese de que tiene conexión a Internet. La instalación continuará sin instalar Wine Gecko."
+    IDS_CANTMAKEINETSHORTCUT "No se pudo crear un acceso directo a Internet."
+    IDS_CANTMAKESHORTCUT "No se pudo crear un acceso directo."
+    IDS_NO_MEMORY "No se pudo asignar memoria"
+    IDS_NO_DIRECTORY "No se ha especificado directorio alguno"
+    IDS_INVALID_PATH "La ruta proporcionada es inválida"
 END

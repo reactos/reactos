@@ -42,9 +42,9 @@ IopInitializeArbiters(VOID)
     return STATUS_SUCCESS;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 PiInitCacheGroupInformation(VOID)
 {
     HANDLE KeyHandle;
@@ -374,9 +374,9 @@ Exit:
     return Status;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 IopInitializePlugPlayServices(VOID)
 {
     NTSTATUS Status;

@@ -19,6 +19,7 @@ extern void func_RtlEncryptMemory(void);
 extern void func_SaferIdentifyLevel(void);
 extern void func_ServiceArgs(void);
 extern void func_ServiceEnv(void);
+extern void func_ServiceNetwork(void);
 
 const struct test winetest_testlist[] =
 {
@@ -38,6 +39,7 @@ const struct test winetest_testlist[] =
     { "SaferIdentifyLevel", func_SaferIdentifyLevel },
     { "ServiceArgs", func_ServiceArgs },
     { "ServiceEnv", func_ServiceEnv },
+    { "ServiceNetwork", func_ServiceNetwork },
     { 0, 0 }
 };
 

@@ -21,18 +21,21 @@ typedef enum _ROT_BAR_TYPE
     RB_PROGRESS_BAR
 } ROT_BAR_TYPE;
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvUpdateProgressBar(
     IN ULONG Progress
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvRotBarInit(
     VOID
 );
 
+INIT_FUNCTION
 BOOLEAN
 NTAPI
 InbvDriverInitialize(
@@ -40,24 +43,28 @@ InbvDriverInitialize(
     IN ULONG Count
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvEnableBootDriver(
     IN BOOLEAN Enable
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 DisplayBootBitmap(
     IN BOOLEAN TextMode
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 DisplayFilter(
     IN PCHAR *String
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 FinalizeBootLogo(
@@ -78,6 +85,7 @@ InbvBitBlt(
     IN ULONG Y
 );
 
+INIT_FUNCTION
 VOID
 NTAPI
 InbvIndicateProgress(

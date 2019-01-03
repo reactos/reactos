@@ -251,8 +251,8 @@ TDI_STATUS InfoTdiQueryGetConnectionTcpTable(PADDRESS_FILE AddrFile,
     {
         if (Class == TcpUdpClassOwner)
         {
-            /* FIXME */
             RtlZeroMemory(&TcpRow.OwningModuleInfo[0], sizeof(TcpRow.OwningModuleInfo));
+            TcpRow.OwningModuleInfo[0] = (ULONG_PTR)AddrFile->SubProcessTag;
         }
 
         Status = InfoCopyOut( (PCHAR)&TcpRow, Size,
@@ -295,8 +295,8 @@ TDI_STATUS InfoTdiQueryGetConnectionUdpTable(PADDRESS_FILE AddrFile,
     UdpRow.dwFlags = 0; /* FIXME */
     if (Class == TcpUdpClassOwner)
     {
-        /* FIXME */
         RtlZeroMemory(&UdpRow.OwningModuleInfo[0], sizeof(UdpRow.OwningModuleInfo));
+        UdpRow.OwningModuleInfo[0] = (ULONG_PTR)AddrFile->SubProcessTag;
     }
 
     Status = InfoCopyOut( (PCHAR)&UdpRow,
@@ -312,12 +312,12 @@ TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize)
     IP_ADDRESS Address, Netmask, Router;
     PIPROUTE_ENTRY Route = Buffer;
 
+    if (!Buffer || BufferSize < sizeof(IPROUTE_ENTRY))
+        return TDI_INVALID_PARAMETER;
+
     AddrInitIPv4( &Address, Route->Dest );
     AddrInitIPv4( &Netmask, Route->Mask );
     AddrInitIPv4( &Router,  Route->Gw );
-
-    if (!Buffer || BufferSize < sizeof(IPROUTE_ENTRY))
-        return TDI_INVALID_PARAMETER;
 
     if (IF == Loopback)
     {

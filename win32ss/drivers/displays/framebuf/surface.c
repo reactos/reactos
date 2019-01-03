@@ -174,27 +174,28 @@ DrvAssertMode(
 
    if (bEnable)
    {
-      BOOLEAN Result;
       /*
        * Reinitialize the device to a clean state.
        */
-      Result = EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
-                                  &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
-                                  &ulTemp);
+      if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
+                             &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
+                             &ulTemp))
+      {
+          /* We failed, bail out */
+          return FALSE;
+      }
       if (ppdev->BitsPerPixel == 8)
       {
 	     IntSetPalette(dhpdev, ppdev->PaletteEntries, 0, 256);
       }
 
-      return Result;
-
+      return TRUE;
    }
    else
    {
       /*
        * Call the miniport driver to reset the device to a known state.
        */
-
       return !EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_RESET_DEVICE,
                                  NULL, 0, NULL, 0, &ulTemp);
    }

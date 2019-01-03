@@ -5,6 +5,40 @@
 
 #pragma once
 
+static MUI_ENTRY trTRSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY trTRLanguagePageEntries[] =
 {
     {
@@ -1651,6 +1685,10 @@ MUI_ERROR trTRErrorEntries[] =
 
 MUI_PAGE trTRPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        trTRSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         trTRLanguagePageEntries

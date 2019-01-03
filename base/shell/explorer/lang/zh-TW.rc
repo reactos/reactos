@@ -4,6 +4,7 @@
  * FILE:       base/shell/explorer/lang/zh-TW.rc
  * PURPOSE:    Traditional Chinese Language File for ReactOS Explorer
  * TRANSLATOR: 2015-04-27 Alvin Wong <alvinhochun [at] gmail [dot] com>
+ *             2018-12-25 Luo Yufan <njlyf2011 [at] hotmail [dot] com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -122,28 +123,28 @@ END
 
 IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "自定義經典開始選單"
+CAPTION "自訂經典開始功能表"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX         "開始選單", IDC_STATIC, 8, 7, 218, 114
+    GROUPBOX         "開始功能表", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "你可以通過添加或移除項自定義開始選單。", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "你可以通過添加或移除項自訂開始功能表。", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "添加...(&D)", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "刪除...(&R)", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "高階(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "排序(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "要刪除最近訪問過的檔案、 程式和網站點記錄，單擊清除。", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "要刪除最近訪問過的檔案、 程式和網站點記錄，點選清除。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "開始選單中的高階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
-    CONTROL          "開始選單設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
+    LTEXT            "開始功能表中的高階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
+    CONTROL          "開始功能表設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "確定", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "取消", IDCANCEL, 176, 220, 50, 14
 END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "檔名稱警告"
+CAPTION "檔案名稱警告"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON    "忽略(&I)", IDIGNORE, 215, 60, 50, 14
@@ -151,7 +152,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "不執行此檢查啟動時(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "有是一個檔案或資料夾在您的計算機被稱為 %s 這可能會導致某些應用程式不能夠正確。重新命名為 %s 將解決這個問題。您想現在重新命名它?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "有是一個檔案或資料夾在您的電腦中被稱為 %s 這可能會導致某些應用程式不能夠正確。重新命名為 %s 將解決這個問題。您想現在重新命名它?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
@@ -159,11 +160,11 @@ STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "高階"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX         "開始選單設定 ", IDC_STATIC, 7, 7, 238, 42
+    GROUPBOX         "開始功能表設定 ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "與我的滑鼠上他們暫停時開啟子選單(&O)", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "突出顯示新安裝的程式(&N)", IDC_HIGHLIGHT, 14, 35, 224, 10
-    LTEXT            "開始選單項:(&M)", IDC_STATIC, 7, 53, 238, 8
-    CONTROL          "開始選單設定(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
+    LTEXT            "開始功能表項:(&M)", IDC_STATIC, 7, 53, 238, 8
+    CONTROL          "開始功能表設定(&T)", IDC_ITEMS, "SysTreeView32", WS_BORDER | 0x00000001, 7, 63, 238, 67, WS_EX_CLIENTEDGE
     GROUPBOX         "最近使用的檔案 ", IDC_STATIC, 7, 133, 238, 56
     LTEXT            "選擇此選項來提供對您最近開啟的檔案的快速訪問。清除此列表並不會刪除檔案。", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "列出我最近開啟的檔案(&R)", IDC_RECENTLY, 14, 168, 147, 10
@@ -172,7 +173,7 @@ END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "常規"
+CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX         "選擇程式圖示大小 ", IDC_STATIC, 7, 7, 238, 37
@@ -181,12 +182,12 @@ BEGIN
     AUTORADIOBUTTON  "大圖示(&L)", IDC_CHOOSELARGE, 43, 25, 53, 10
     AUTORADIOBUTTON  "小圖示(&S)", IDC_CHOOSESMALL, 177, 25, 51, 10, NOT WS_TABSTOP
     GROUPBOX         "程式 ", IDC_STATIC, 7, 49, 238, 70
-    LTEXT            "開始選單包含您最常使用的程式的快捷方式。清除快捷方式的列表並不會刪除程式。", IDC_STATIC, 14, 63, 224, 20
-    LTEXT            "開始選單上的程式的數目:(&N)", IDC_STATIC, 14, 86, 112, 8
+    LTEXT            "開始功能表包含您最常使用的程式的快捷方式。清除快捷方式的列表並不會刪除程式。", IDC_STATIC, 14, 63, 224, 20
+    LTEXT            "開始功能表上的程式的數目:(&N)", IDC_STATIC, 14, 86, 112, 8
     EDITTEXT         IDC_NUMBEROFPROGRAMS, 133, 84, 27, 12, ES_LEFT | ES_RIGHT | ES_NUMBER
     CONTROL          "", IDC_NUMBERUPDOWN, "msctls_updown32", WS_BORDER | 0x000000B6, 160, 84, 11, 12
     PUSHBUTTON       "清除列表(&C)", IDC_CLEARLIST, 182, 98, 57, 14
-    GROUPBOX         "在開始選單上顯示 ", IDC_STATIC, 7, 126, 238, 63
+    GROUPBOX         "在開始功能表上顯示 ", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "網際網路:(&I)", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "電子郵件:(&E)", IDC_SHOWEMAIL, 14, 157, 37, 10
@@ -205,5 +206,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "工作列及開始功能表"
-    IDS_RESTORE_ALL "&Show Open Windows"
+    IDS_RESTORE_ALL "顯示開啟的視窗(&S)"
 END

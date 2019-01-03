@@ -3,12 +3,46 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY bgBGSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY bgBGLanguagePageEntries[] =
 {
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -54,7 +88,7 @@ static MUI_ENTRY bgBGWelcomePageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -136,7 +170,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -206,7 +240,7 @@ static MUI_ENTRY bgBGLicensePageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -330,7 +364,7 @@ static MUI_ENTRY bgBGDevicePageEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -423,7 +457,7 @@ static MUI_ENTRY bgBGRepairPageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -487,7 +521,7 @@ static MUI_ENTRY bgBGUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -557,7 +591,7 @@ static MUI_ENTRY bgBGComputerPageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -609,7 +643,7 @@ static MUI_ENTRY bgBGFlushPageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -649,7 +683,7 @@ static MUI_ENTRY bgBGQuitPageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -695,7 +729,7 @@ static MUI_ENTRY bgBGDisplayPageEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -746,7 +780,7 @@ static MUI_ENTRY bgBGSuccessPageEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -792,7 +826,7 @@ static MUI_ENTRY bgBGBootPageEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -839,7 +873,7 @@ static MUI_ENTRY bgBGSelectPartitionEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -910,7 +944,7 @@ static MUI_ENTRY bgBGConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1004,7 +1038,7 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     {
         4,
         3,
-        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1038,7 +1072,7 @@ static MUI_ENTRY bgBGInstallDirectoryEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1090,7 +1124,7 @@ static MUI_ENTRY bgBGFileCopyEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1131,7 +1165,7 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1183,7 +1217,7 @@ static MUI_ENTRY bgBGKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1235,7 +1269,7 @@ static MUI_ENTRY bgBGLayoutSettingsEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1288,13 +1322,13 @@ static MUI_ENTRY bgBGPrepareCopyEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "\212\256\254\257\356\342\352\340\352\342 \341\245 \257\256\244\243\256\342\242\357 \247\240 \247\240\257\250\341 \255\240 \344\240\251\253\256\242\245\342\245 \255\240 \220\245\240\252\342\216\221. ",
+        "\212\256\254\257\356\342\352\340\352\342 \341\245 \257\256\244\243\256\342\242\357 \247\240 \247\240\257\250\341 \255\240 \344\240\251\253\256\242\245\342\245 \255\240 \220\245\240\252\342\216\221.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1317,7 +1351,7 @@ static MUI_ENTRY bgBGSelectFSEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1364,7 +1398,7 @@ static MUI_ENTRY bgBGDeletePartitionEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1410,13 +1444,13 @@ static MUI_ENTRY bgBGRegistryEntries[] =
     {
         4,
         3,
-        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " . ",
+        " \215\240\341\342\340\256\251\252\240 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "\217\340\256\342\250\347\240 \256\241\255\256\242\357\242\240\255\245 \255\240 \341\250\341\342\245\254\255\250\342\245 \255\240\341\342\340\256\251\252\250. ",
+        "\217\340\256\342\250\347\240 \256\241\255\256\242\357\242\240\255\245 \255\240 \341\250\341\342\245\254\255\250\342\245 \255\240\341\342\340\256\251\252\250.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1682,6 +1716,10 @@ MUI_ERROR bgBGErrorEntries[] =
 
 MUI_PAGE bgBGPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        bgBGSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         bgBGLanguagePageEntries

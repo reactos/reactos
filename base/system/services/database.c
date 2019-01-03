@@ -31,6 +31,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD ResumeCount = 1;
 static DWORD NoInteractiveServices = 0;
+static DWORD ServiceTag = 0;
 
 /* The critical section synchronizes service control requests */
 static CRITICAL_SECTION ControlServiceCriticalSection;
@@ -142,6 +143,92 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 
     return NULL;
 
+}
+
+
+DWORD
+ScmGetServiceNameFromTag(IN PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams,
+                         OUT PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS *OutParams)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+    PSERVICE_IMAGE CurrentImage;
+    PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS OutBuffer = NULL;
+    DWORD dwError;
+
+    /* Lock the database */
+    ScmLockDatabaseExclusive();
+
+    /* Find the matching service */
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+
+        /* We must match the tag */
+        if (CurrentService->dwTag == InParams->dwTag &&
+            CurrentService->lpImage != NULL)
+        {
+            CurrentImage = CurrentService->lpImage;
+            /* And matching the PID */
+            if (CurrentImage->dwProcessId == InParams->dwPid)
+            {
+                break;
+            }
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    /* No match! */
+    if (ServiceEntry == &ServiceListHead)
+    {
+        dwError = ERROR_RETRY;
+        goto Cleanup;
+    }
+
+    /* Allocate the output buffer */
+    OutBuffer = MIDL_user_allocate(sizeof(TAG_INFO_NAME_FROM_TAG_OUT_PARAMS));
+    if (OutBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
+
+    /* And the buffer for the name */
+    OutBuffer->pszName = MIDL_user_allocate(wcslen(CurrentService->lpServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    if (OutBuffer->pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
+    }
+
+    /* Fill in output data */
+    wcscpy(OutBuffer->pszName, CurrentService->lpServiceName);
+    OutBuffer->TagType = TagTypeService;
+
+    /* And return */
+    *OutParams = OutBuffer;
+    dwError = ERROR_SUCCESS;
+
+Cleanup:
+
+    /* Unlock database */
+    ScmUnlockDatabase();
+
+    /* If failure, free allocated memory */
+    if (dwError != ERROR_SUCCESS)
+    {
+        if (OutBuffer != NULL)
+        {
+            MIDL_user_free(OutBuffer);
+        }
+    }
+
+    /* Return error/success */
+    return dwError;
 }
 
 
@@ -553,6 +640,29 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 
 DWORD
+ScmGenerateServiceTag(PSERVICE lpServiceRecord)
+{
+    /* Check for an overflow */
+    if (ServiceTag == -1)
+    {
+        return ERROR_INVALID_DATA;
+    }
+
+    /* This is only valid for Win32 services */
+    if (!(lpServiceRecord->Status.dwServiceType & SERVICE_WIN32))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Increment the tag counter and set it */
+    ServiceTag = ServiceTag % 0xFFFFFFFF + 1;
+    lpServiceRecord->dwTag = ServiceTag;
+
+    return ERROR_SUCCESS;
+}
+
+
+DWORD
 ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                           PSERVICE *lpServiceRecord,
                           DWORD dwServiceType,
@@ -765,6 +875,8 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
 
     if (ScmIsDeleteFlagSet(hServiceKey))
         lpService->bDeleted = TRUE;
+    else
+        ScmGenerateServiceTag(lpService);
 
     if (lpService->Status.dwServiceType & SERVICE_WIN32)
     {
@@ -1323,6 +1435,7 @@ ScmSendStartCommand(PSERVICE Service,
                                ? SERVICE_CONTROL_START_OWN
                                : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
+    ControlPacket->dwServiceTag = Service->dwTag;
 
     /* Copy the start command line */
     ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);

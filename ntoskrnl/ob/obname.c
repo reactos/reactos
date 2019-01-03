@@ -34,9 +34,9 @@ ULONG ObpUnsecureGlobalNamesLength = sizeof(ObpUnsecureGlobalNamesBuffer);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR Sd = NULL;
@@ -127,9 +127,9 @@ done:
     return Status;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 ObpCreateDosDevicesDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;

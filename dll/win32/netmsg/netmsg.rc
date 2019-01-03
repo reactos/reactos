@@ -4,4 +4,4 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "netmsg.dll"
 #include <reactos/version.rc>
 
-#include <netmsg_msg.rc>
+#include <netmsgmsg.rc>

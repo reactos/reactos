@@ -143,6 +143,7 @@ LIST_ENTRY RxRecurrentWorkItemsList;
 KDPC RxTimerDpc;
 KTIMER RxTimer;
 ULONG RxTimerTickCount;
+FAST_MUTEX RxContextPerFileSerializationMutex;
 #if DBG
 BOOLEAN DumpDispatchRoutine = TRUE;
 #else
@@ -713,6 +714,65 @@ RxBootstrapWorkerThreadDispatcher(
 
     RxWorkQueue = WorkQueue;
     RxpWorkerThreadDispatcher(RxWorkQueue, NULL);
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxCancelBlockingOperation(
+    IN OUT PRX_CONTEXT RxContext)
+{
+    PFOBX Fobx;
+    BOOLEAN PostRequest;
+
+    PAGED_CODE();
+
+    Fobx = (PFOBX)RxContext->pFobx;
+    PostRequest = FALSE;
+
+    /* Acquire the pipe mutex */
+    ExAcquireFastMutex(&RxContextPerFileSerializationMutex);
+
+    /* If that's a blocking pipe operation which is not the CCB one, then handle it */
+    if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION) &&
+        RxContext->RxContextSerializationQLinks.Flink != NULL &&
+        RxContext != CONTAINING_RECORD(&Fobx->Specific.NamedPipe.ReadSerializationQueue, RX_CONTEXT, RxContextSerializationQLinks) &&
+        RxContext != CONTAINING_RECORD(&Fobx->Specific.NamedPipe.WriteSerializationQueue, RX_CONTEXT, RxContextSerializationQLinks))
+    {
+        /* Clear it! */
+        ClearFlag(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION);
+
+        /* Drop it off the list */
+        RemoveEntryList(&RxContext->RxContextSerializationQLinks);
+        RxContext->RxContextSerializationQLinks.Flink = NULL;
+        RxContext->RxContextSerializationQLinks.Blink = NULL;
+
+        /* Set we've been cancelled */
+        RxContext->IoStatusBlock.Status = STATUS_CANCELLED;
+
+        /*
+         * If it's async, we'll post completion, otherwise, we signal to waiters
+         * it's being cancelled
+         */
+        if (BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_ASYNC_OPERATION))
+        {
+            PostRequest = TRUE;
+        }
+        else
+        {
+            RxSignalSynchronousWaiter(RxContext);
+        }
+    }
+
+    /* Done */
+    ExReleaseFastMutex(&RxContextPerFileSerializationMutex);
+
+    /* Post if async */
+    if (PostRequest)
+    {
+        RxFsdPostRequest(RxContext);
+    }
 }
 
 /*
@@ -7560,6 +7620,32 @@ RxRemoveNameNetFcb(
 #ifdef __REACTOS__
     }
 #endif
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxRemoveOperationFromBlockingQueue(
+    IN OUT PRX_CONTEXT RxContext)
+{
+    /* Acquire the pipe mutex */
+    ExAcquireFastMutex(&RxContextPerFileSerializationMutex);
+
+    /* Is that a blocking serial operation? */
+    if (BooleanFlagOn(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION))
+    {
+        /* Clear it! */
+        ClearFlag(RxContext->FlagsForLowIo, RXCONTEXT_FLAG4LOWIO_PIPE_SYNC_OPERATION);
+
+        /* Drop it off the list */
+        RemoveEntryList(&RxContext->RxContextSerializationQLinks);
+        RxContext->RxContextSerializationQLinks.Flink = NULL;
+        RxContext->RxContextSerializationQLinks.Blink = NULL;
+    }
+
+    /* Done */
+    ExReleaseFastMutex(&RxContextPerFileSerializationMutex);
 }
 
 /*

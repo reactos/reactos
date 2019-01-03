@@ -28,9 +28,9 @@ BOOLEAN MiLargePageAllDrivers;
 
 /* FUNCTIONS ******************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeLargePageSupport(VOID)
 {
 #if _MI_PAGING_LEVELS > 2
@@ -48,9 +48,9 @@ MiInitializeLargePageSupport(VOID)
 #endif
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiSyncCachedRanges(VOID)
 {
     ULONG i;
@@ -62,9 +62,9 @@ MiSyncCachedRanges(VOID)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeDriverLargePageList(VOID)
 {
     PWCHAR p, pp;

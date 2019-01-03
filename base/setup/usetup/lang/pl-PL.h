@@ -12,6 +12,40 @@
 
 #pragma once
 
+static MUI_ENTRY plPLSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY plPLLanguagePageEntries[] =
 {
     {
@@ -618,7 +652,7 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         10,
         6,
-        "System ReactOS sprawdza, czy dane s\245 poprawnie zapisane na dysku",
+        "System ReactOS sprawdza, czy dane s\245 poprawnie zapisane na dysku.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -682,7 +716,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         0,
         0,
-        "Prosz\251 czeka\206 ...",
+        "Prosz\251 czeka\206...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -1295,7 +1329,7 @@ static MUI_ENTRY plPLPrepareCopyEntries[] =
     {
         6,
         8,
-        "Instalator przygotuje tw\242j komputer do skopiowania plik\242w systemu. ",
+        "Instalator przygotuje tw\242j komputer do skopiowania plik\242w systemu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1417,7 +1451,7 @@ static MUI_ENTRY plPLRegistryEntries[] =
     {
         6,
         8,
-        "Instalator uaktualnia w\210a\230nie konfiguracj\251 systemu. ",
+        "Instalator uaktualnia w\210a\230nie konfiguracj\251 systemu.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1681,6 +1715,10 @@ MUI_ERROR plPLErrorEntries[] =
 
 MUI_PAGE plPLPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        plPLSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         plPLLanguagePageEntries

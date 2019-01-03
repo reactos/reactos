@@ -40,6 +40,7 @@ void KiSystemCallEntry32();
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiInitMachineDependent(VOID)
@@ -364,6 +365,7 @@ KiInitModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

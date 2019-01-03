@@ -5,6 +5,7 @@ add_definitions(-DUNICODE -D_UNICODE -D__NTOSKRNL__ -D_NTOSKRNL_ -D_NTSYSTEM_)
 
 list(APPEND SOURCE
     fsrtl.c
+    io.c
     ke.c
     rtl.c)
 

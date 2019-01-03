@@ -1,4 +1,5 @@
 /* Simplified Chinese translation by Jingjing Fu (jingjingf AT 188.com) 2009-05-02 */
+/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -8,7 +9,7 @@ CAPTION "区域选项"
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "标准和格式", -1, 5, 5, 234, 162
-    LTEXT "这个选项影响到某些程序如何格式化数字、货币、时间和日期。", -1, 14, 17, 220, 25
+    LTEXT "这个选项将会影响一些程序的数字、货币、日期和时间格式。", -1, 14, 17, 220, 25
     LTEXT "选择一个与其首选项匹配的项或单击“自定义”选择您自己的格式(&S):", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "自定义(&Z)...", IDC_SETUP_BUTTON, 178, 56, 52, 13

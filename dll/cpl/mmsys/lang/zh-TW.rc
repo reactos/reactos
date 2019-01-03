@@ -118,7 +118,7 @@ CAPTION "揚聲器"
 FONT 9, "新細明體"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "請選擇最接近您的計算機設定的揚聲器設定。", -1, 36, 8, 215, 27
+    LTEXT "請選擇最接近您的設定電腦的揚聲器設定。", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
     LTEXT "揚聲器設定(&P):", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -173,11 +173,11 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "ReactOS 音訊", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "因為 ReactOS 音訊服務無效因此這臺計算機目前無法播放聲音", 10245, 60, 25, 150, 40
+    LTEXT "因為 ReactOS 音訊服務無效因此這部電腦目前無法播放聲音", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "啟用ReactOS 音訊(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必須是管理員才能啟用此服務。如果您沒有以管理員身份登入，您將提示輸入管理員名稱和密碼。", 10247, 60, 100, 150, 40
-    LTEXT "2. 您啟用ReactOS音訊後，必須重新啟動計算機。", 10248, 60, 140, 150, 40
+    LTEXT "2. 您啟用ReactOS音訊後，必須重新啟動電腦。", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -237,7 +237,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "聲音和音訊裝置"
-    IDS_CPLDESCRIPTION "更改計算機的聲音方案，或者配置揚聲器和錄音裝置的設定"
+    IDS_CPLDESCRIPTION "更改電腦的聲音方案，或者配置揚聲器和錄音裝置的設定"
     IDS_NO_SOUND "(無)"
     IDS_NO_DEVICES "沒有裝置"
     5825 "程式出錯"

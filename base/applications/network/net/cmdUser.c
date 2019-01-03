@@ -636,19 +636,6 @@ cmdUser(
     BOOL bPasswordAllocated = FALSE;
     NET_API_STATUS Status;
 
-    if (argc == 2)
-    {
-        Status = EnumerateUsers();
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
-        return 0;
-    }
-    else if (argc == 3)
-    {
-        Status = DisplayUser(argv[2]);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
-        return 0;
-    }
-
     i = 2;
     if (argv[i][0] != L'/')
     {
@@ -668,7 +655,7 @@ cmdUser(
     {
         if (_wcsicmp(argv[j], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_USER_HELP);
+            PrintNetMessage(MSG_USER_HELP);
             return 0;
         }
         else if (_wcsicmp(argv[j], L"/add") == 0)
@@ -692,6 +679,19 @@ cmdUser(
             GenerateRandomPassword(&lpPassword,
                                    &bPasswordAllocated);
         }
+    }
+
+    if (lpUserName == NULL && lpPassword == NULL)
+    {
+        Status = EnumerateUsers();
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        return 0;
+    }
+    else if (lpUserName != NULL && lpPassword == NULL)
+    {
+        Status = DisplayUser(lpUserName);
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        return 0;
     }
 
     if (bAdd && bDelete)
@@ -923,7 +923,7 @@ done:
     if (result != 0)
     {
         ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
-        ConResPuts(StdOut, IDS_USER_SYNTAX);
+        PrintNetMessage(MSG_USER_SYNTAX);
     }
 
     return result;

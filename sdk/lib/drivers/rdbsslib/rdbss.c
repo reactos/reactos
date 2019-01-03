@@ -361,6 +361,11 @@ NTSTATUS
 RxNotifyChangeDirectory(
     PRX_CONTEXT RxContext);
 
+VOID
+NTAPI
+RxpCancelRoutine(
+    PVOID Context);
+
 NTSTATUS
 RxpQueryInfoMiniRdr(
     PRX_CONTEXT RxContext,
@@ -529,7 +534,6 @@ BOOLEAN DisableFlushOnCleanup = FALSE;
 ULONG ReadAheadGranularity = 1 << PAGE_SHIFT;
 LIST_ENTRY RxActiveContexts;
 NPAGED_LOOKASIDE_LIST RxContextLookasideList;
-FAST_MUTEX RxContextPerFileSerializationMutex;
 RDBSS_DATA RxData;
 FCB RxDeviceFCB;
 BOOLEAN RxLoudLowIoOpsEnabled = FALSE;
@@ -1128,13 +1132,126 @@ RxCancelNotifyChangeDirectoryRequestsForVNetRoot(
     return Status;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+RxCancelOperationInOverflowQueue(
+    PRX_CONTEXT RxContext)
+{
+    KIRQL OldIrql;
+    BOOLEAN OperationToCancel;
+
+    /* By default, nothing cancelled */
+    OperationToCancel = FALSE;
+
+    /* Acquire the overflow spinlock */
+    KeAcquireSpinLock(&RxFileSystemDeviceObject->OverflowQueueSpinLock, &OldIrql);
+
+    /* Is our context in any queue? */
+    if (BooleanFlagOn(RxContext->Flags, (RX_CONTEXT_FLAG_FSP_DELAYED_OVERFLOW_QUEUE | RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE)))
+    {
+        /* Make sure flag is consistent with facts... */
+        if (RxContext->OverflowListEntry.Flink != NULL)
+        {
+            /* Remove it from the list */
+            RemoveEntryList(&RxContext->OverflowListEntry);
+            RxContext->OverflowListEntry.Flink = NULL;
+
+            /* Decrement appropriate count */
+            if (BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE))
+            {
+                --RxFileSystemDeviceObject->OverflowQueueCount[CriticalWorkQueue];
+            }
+            else
+            {
+                --RxFileSystemDeviceObject->OverflowQueueCount[DelayedWorkQueue];
+            }
+
+            /* Clear the flag */
+            ClearFlag(RxContext->Flags, ~(RX_CONTEXT_FLAG_FSP_DELAYED_OVERFLOW_QUEUE | RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE));
+
+            /* Time to cancel! */
+            OperationToCancel = TRUE;
+        }
+    }
+
+    KeReleaseSpinLock(&RxFileSystemDeviceObject->OverflowQueueSpinLock, OldIrql);
+
+    /* We have something to cancel & complete */
+    if (OperationToCancel)
+    {
+        RxRemoveOperationFromBlockingQueue(RxContext);
+        RxCompleteRequest(RxContext, STATUS_CANCELLED);
+    }
+
+    return OperationToCancel;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 RxCancelRoutine(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED;
+    KIRQL OldIrql;
+    PLIST_ENTRY Entry;
+    PRX_CONTEXT RxContext;
+
+    /* Lock our contexts list */
+    KeAcquireSpinLock(&RxStrucSupSpinLock, &OldIrql);
+
+    /* Now, find a context that matches the cancelled IRP */
+    Entry = RxActiveContexts.Flink;
+    while (Entry != &RxActiveContexts)
+    {
+        RxContext = CONTAINING_RECORD(Entry, RX_CONTEXT, ContextListEntry);
+        Entry = Entry->Flink;
+
+        /* Found! */
+        if (RxContext->CurrentIrp == Irp)
+        {
+            break;
+        }
+    }
+
+    /* If we reached the end of the list, we didn't find any context, so zero the buffer
+     * If the context is already under cancellation, forget about it too
+     */
+    if (Entry == &RxActiveContexts || BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_CANCELLED))
+    {
+        RxContext = NULL;
+    }
+    else
+    {
+        /* Otherwise, reference it and mark it cancelled */
+        SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_CANCELLED);
+        InterlockedIncrement((volatile long *)&RxContext->ReferenceCount);
+    }
+
+    /* Done with the contexts list */
+    KeReleaseSpinLock(&RxStrucSupSpinLock, OldIrql);
+
+    /* And done with the cancellation, we'll do it now */
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    /* If we have a context to cancel */
+    if (RxContext != NULL)
+    {
+        /* We cannot executed at dispatch, so queue a deferred cancel */
+        if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+        {
+            RxDispatchToWorkerThread(RxFileSystemDeviceObject, CriticalWorkQueue, RxpCancelRoutine, RxContext);
+        }
+        /* Cancel now! */
+        else
+        {
+            RxpCancelRoutine(RxContext);
+        }
+    }
 }
 
 /*
@@ -7489,6 +7606,35 @@ RxNotifyChangeDirectory(
     _SEH2_END;
 
     return Status;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxpCancelRoutine(
+    PVOID Context)
+{
+    PRX_CONTEXT RxContext;
+
+    PAGED_CODE();
+
+    RxContext = Context;
+
+    /* First, notify mini-rdr about cancellation */
+    if (RxContext->MRxCancelRoutine != NULL)
+    {
+        RxContext->MRxCancelRoutine(RxContext);
+    }
+    /* If we didn't find in overflow queue, try in blocking operations */
+    else if (!RxCancelOperationInOverflowQueue(RxContext))
+    {
+        RxCancelBlockingOperation(RxContext);
+    }
+
+    /* And delete the context */
+    RxDereferenceAndDeleteRxContext_Real(RxContext);
 }
 
 NTSTATUS

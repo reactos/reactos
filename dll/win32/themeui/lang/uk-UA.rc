@@ -1,0 +1,35 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "Цегла"
+    IDS_EGGPLANT "Баклажан"
+    IDS_GOLIVE "Зелена Оливка" //Spruce
+    IDS_HCONTRAST_1 "Висока Контрастність 1"
+    IDS_HCONTRAST_2 "Висока Контрастність 2"
+    IDS_HCONTRAST_BLACK "Контрастна Чорна"
+    IDS_HCONTRAST_WHITE "Контрастна Біла"
+    IDS_LILAC "Бузок"
+    IDS_MAPLE "Клен"
+    IDS_MARINE "Морська"
+    IDS_PLUM "Слива"
+    IDS_PUMPKIN "Гарбуз"
+    IDS_RAIN "Дощовий День"
+    IDS_RWB "Red, White, and Blue"
+    IDS_CLASSIC "ReactOS Класична"
+    IDS_STANDARD "ReactOS Стандартна"
+    IDS_ROSE "Троянда"
+    IDS_SAND "Пісок" //Desert
+    IDS_SLATE "Шифер"
+    IDS_SKY "Небо"
+    IDS_STORM "Шторм"
+    IDS_TEAL "Зеленовато-блакитна"
+    IDS_WHEAT "Пшениця"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "Normal"
+    IDS_SIZE_LARGE "Large"
+    IDS_SIZE_XLARGE "Extra Large"
+END

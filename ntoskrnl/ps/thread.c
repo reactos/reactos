@@ -780,7 +780,7 @@ PsGetThreadTeb(IN PETHREAD Thread)
 /*
  * @implemented
  */
-PTEB
+PVOID
 NTAPI
 PsGetCurrentThreadTeb(VOID)
 {

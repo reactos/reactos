@@ -296,6 +296,30 @@ typedef struct _STRING_PTRSW {
     [string] LPWSTR StringPtr;
 } STRING_PTRSW, *PSTRING_PTRSW, *LPSTRING_PTRSW;
 
+typedef [v1_enum] enum _TAG_INFO_LEVEL {
+    TagInfoLevelNameFromTag = 1,
+} TAG_INFO_LEVEL;
+
+typedef [v1_enum] enum _TAG_TYPE {
+    TagTypeService = 1,
+} TAG_TYPE;
+
+typedef struct _TAG_INFO_NAME_FROM_TAG_IN_PARAMS {
+    DWORD dwPid;
+    DWORD dwTag;
+} TAG_INFO_NAME_FROM_TAG_IN_PARAMS, *PTAG_INFO_NAME_FROM_TAG_IN_PARAMS;
+
+typedef struct _TAG_INFO_NAME_FROM_TAG_OUT_PARAMS {
+    TAG_TYPE TagType;
+    [string] LPWSTR pszName;
+} TAG_INFO_NAME_FROM_TAG_OUT_PARAMS, *PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS;
+
+typedef struct _TAG_INFO_NAME_FROM_TAG
+{
+    TAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams;
+    TAG_INFO_NAME_FROM_TAG_OUT_PARAMS OutParams;
+} TAG_INFO_NAME_FROM_TAG, *PTAG_INFO_NAME_FROM_TAG;
+
 [
   uuid(367abb81-9844-35f1-ad32-98f038001003),
   version(2.0),
@@ -798,8 +822,11 @@ interface svcctl
     /* Function 46 */
     DWORD
     __stdcall
-    RQueryServiceTagInfo(
-        [in] handle_t BindingHandle); /* FIXME */
+    RI_ScQueryServiceTagInfo(
+        [in] SC_RPC_HANDLE hSCManager,
+        [in] TAG_INFO_LEVEL dwInfoLevel,
+        [in] PTAG_INFO_NAME_FROM_TAG_IN_PARAMS * lpInParams,
+        [out] PTAG_INFO_NAME_FROM_TAG_OUT_PARAMS * lpOutParams);
 
     /* Function 47 */
     DWORD

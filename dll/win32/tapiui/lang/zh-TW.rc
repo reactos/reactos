@@ -9,10 +9,10 @@ FONT 9, "新細明體"
 BEGIN
     ICON 201, 2000, 7, 7, 21, 20
     LTEXT "下面的列表顯示您指定的位置。選擇您撥號的位置。", -1, 35, 7, 210, 16
-    LTEXT "地點位置:(&L)", -1, 7, 35, 210, 8
+    LTEXT "地點位置(&L):", -1, 7, 35, 210, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000011D, 7, 46, 238, 105, WS_EX_CLIENTEDGE
-    PUSHBUTTON "新建...(&N)", 1030, 87, 155, 50, 14
-    PUSHBUTTON "編輯...(&E)", 1031, 141, 155, 50, 14
+    PUSHBUTTON "新增(&N)...", 1030, 87, 155, 50, 14
+    PUSHBUTTON "編輯(&E)...", 1031, 141, 155, 50, 14
     PUSHBUTTON "刪除(&D)", 1032, 195, 155, 50, 14
     LTEXT "要撥的電話號碼:", 1052, 7, 181, 100, 8
     LTEXT "", 1053, 14, 195, 224, 16
@@ -20,28 +20,28 @@ END
 
 102 DIALOGEX 0, 0, 252, 255
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "常規"
+CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     ICON 202, 2000, 7, 7, 20, 20
-    LTEXT "地點位置名稱:(&N)", -1, 35, 11, 56, 8, SS_CENTERIMAGE
+    LTEXT "地點位置名稱(&N):", -1, 35, 11, 56, 8, SS_CENTERIMAGE
     EDITTEXT 1038, 96, 8, 149, 14, ES_AUTOHSCROLL
     LTEXT "指定從中你將撥號的位置。", 2001, 7, 33, 238, 8
-    LTEXT "國家/地區:(&R)", -1, 7, 49, 161, 8
+    LTEXT "國家/地區(&R):", -1, 7, 49, 161, 8
     COMBOBOX 1006, 7, 60, 175, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "地區代碼:(&C)", -1, 190, 49, 48, 8
+    LTEXT "地區代碼(&C):", -1, 190, 49, 48, 8
     EDITTEXT 1034, 190, 60, 48, 12, ES_AUTOHSCROLL
     GROUPBOX "撥號規則", 2002, 7, 80, 238, 92
     LTEXT "當從該位置撥號，使用以下規則:", 2003, 14, 92, 224, 8
-    LTEXT "若要訪問本地電話的外線電話，請撥:(&L)", -1, 14, 106, 170, 8
+    LTEXT "若要訪問本地電話的外線電話，請撥(&L):", -1, 14, 106, 170, 8
     EDITTEXT 1010, 190, 104, 48, 12, ES_AUTOHSCROLL
-    LTEXT "要訪問外線長途電話，請先撥:(&D)", -1, 14, 122, 170, 8
+    LTEXT "要訪問外線長途電話，請先撥(&D):", -1, 14, 122, 170, 8
     EDITTEXT 1011, 190, 120, 48, 12, ES_AUTOHSCROLL
-    LTEXT "使用此載波碼來打長途電話:(&E)", -1, 14, 138, 170, 8
+    LTEXT "使用此載波碼來打長途電話(&E):", -1, 14, 138, 170, 8
     EDITTEXT 1059, 190, 136, 48, 12, ES_AUTOHSCROLL
-    LTEXT "使用此載波碼來打國際電話:(&I)", -1, 14, 154, 170, 8
+    LTEXT "使用此載波碼來打國際電話(&I):", -1, 14, 154, 170, 8
     EDITTEXT 1060, 190, 152, 48, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "若要禁用呼叫等待，請撥打:(&W)", 1035, 14, 177, 170, 10
+    AUTOCHECKBOX "若要禁用呼叫等待，請撥打(&W):", 1035, 14, 177, 170, 10
     COMBOBOX 1013, 190, 176, 48, 73, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL
     LTEXT "使用撥號:", -1, 14, 195, 40, 8
     AUTORADIOBUTTON "語氣(&T)", 1036, 58, 194, 50, 10, NOT WS_TABSTOP
@@ -56,10 +56,10 @@ CAPTION "區號規則"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "區號規則確定電話號碼的撥號方式從你當前的地區代碼於其他地區代碼和區號中。", 2000, 7, 7, 238, 16
-    LTEXT "區號規則:(&C)", -1, 7, 31, 238, 8
+    LTEXT "區號規則(&C):", -1, 7, 31, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
-    PUSHBUTTON "新建...(&N)", 1030, 87, 147, 50, 14
-    PUSHBUTTON "編輯...(&E)", 1031, 141, 147, 50, 14
+    PUSHBUTTON "新增(&N)...", 1030, 87, 147, 50, 14
+    PUSHBUTTON "編輯(&E)...", 1031, 141, 147, 50, 14
     PUSHBUTTON "刪除(&D)", 1032, 195, 147, 50, 14
     GROUPBOX "描述", 2006, 7, 166, 238, 45
     LTEXT "", 1039, 14, 180, 224, 24
@@ -70,15 +70,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "電話卡"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "選擇您將使用的電話卡，或單擊新建添加不同的卡。", 2000, 7, 7, 238, 8
-    LTEXT "卡類型:(&T)", -1, 7, 23, 238, 8
+    LTEXT "選擇您將使用的電話卡，或按新增添加不同的卡。", 2000, 7, 7, 238, 8
+    LTEXT "卡類型(&T):", -1, 7, 23, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 34, 238, 63, WS_EX_CLIENTEDGE
-    PUSHBUTTON "新建...(&N)", 1030, 87, 103, 50, 14
-    PUSHBUTTON "編輯...(&E)", 1031, 141, 103, 50, 14
+    PUSHBUTTON "新增(&N)...", 1030, 87, 103, 50, 14
+    PUSHBUTTON "編輯(&E)...", 1031, 141, 103, 50, 14
     PUSHBUTTON "刪除(&D)", 1032, 195, 103, 50, 14
-    LTEXT "帳號:(&C)", -1, 7, 127, 91, 8
+    LTEXT "帳號(&C):", -1, 7, 127, 91, 8
     EDITTEXT 1018, 102, 125, 143, 12, ES_AUTOHSCROLL
-    LTEXT "個人ID號 (PIN):(&P)", -1, 7, 145, 91, 8
+    LTEXT "個人ID號 (PIN)(&P):", -1, 7, 145, 91, 8
     EDITTEXT 1019, 102, 143, 143, 12, ES_AUTOHSCROLL
     GROUPBOX "訪問的電話號碼", 2001, 7, 158, 238, 53
     LTEXT "長途電話:", -1, 14, 172, 84, 8
@@ -91,15 +91,15 @@ END
 
 105 DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "常規"
+CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     ICON 203, 2000, 7, 7, 20, 20
-    LTEXT "電話卡名:(&C)", -1, 35, 12, 64, 8, SS_CENTERIMAGE
+    LTEXT "電話卡名(&C):", -1, 35, 12, 64, 8, SS_CENTERIMAGE
     EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
-    LTEXT "帳號:(&N)", -1, 7, 35, 238, 8
+    LTEXT "帳號(&N):", -1, 7, 35, 238, 8
     EDITTEXT 1018, 7, 46, 116, 14, ES_AUTOHSCROLL
-    LTEXT "個人識別號碼 (PIN):(&P)", -1, 7, 68, 238, 8
+    LTEXT "個人識別號碼 (PIN)(&P):", -1, 7, 68, 238, 8
     EDITTEXT 1019, 7, 80, 116, 14, ES_AUTOHSCROLL
     LTEXT "此電話卡將時使用:", 1056, 14, 117, 224, 8
     GROUPBOX "電話卡詳細信息", 2001, 7, 105, 238, 66
@@ -113,10 +113,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "長途"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "長途電話訪問號碼:(&L)", -1, 7, 7, 238, 8
+    LTEXT "長途電話訪問號碼(&L):", -1, 7, 7, 238, 8
     EDITTEXT 1044, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "使用下面的按鈕來輸入打長途電話撥號步驟。當它們出現在你的名片上，按準確順序輸入這些步驟。", 2000, 7, 40, 238, 24
-    LTEXT "電話卡撥號步驟:(&R)", -1, 7, 72, 80, 8
+    LTEXT "電話卡撥號步驟(&R):", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "向上移動(&U)", 1022, 195, 83, 50, 14
     PUSHBUTTON "向下移動(&M)", 1023, 195, 101, 50, 14
@@ -124,9 +124,9 @@ BEGIN
     PUSHBUTTON "訪問號碼(&N)", 1025, 7, 161, 90, 14
     PUSHBUTTON "帳號(&C)", 1018, 101, 161, 90, 14
     PUSHBUTTON "密碼(&P)", 1019, 7, 179, 90, 14
-    PUSHBUTTON "目標號碼...(&E)", 1020, 101, 179, 90, 14
-    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
-    PUSHBUTTON "指定數字...(&S)", 1021, 101, 197, 90, 14
+    PUSHBUTTON "目標號碼(&E)...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示(&W)...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定數字(&S)...", 1021, 101, 197, 90, 14
 END
 
 107 DIALOGEX 0, 0, 252, 218
@@ -134,10 +134,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "國際"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "國際電話訪問號碼:(&I)", -1, 7, 7, 238, 8
+    LTEXT "國際電話訪問號碼(&I):", -1, 7, 7, 238, 8
     EDITTEXT 1045, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "使用下面的按鈕來輸入打國際電話撥號步驟。當它們出現在你的名片上，按準確順序輸入這些步驟。", 2000, 7, 40, 244, 24
-    LTEXT "電話卡撥號步驟:(&R)", -1, 7, 72, 80, 8
+    LTEXT "電話卡撥號步驟(&R):", -1, 7, 72, 80, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "向上移動(&U)", 1022, 195, 83, 50, 14
     PUSHBUTTON "向下移動(&M)", 1023, 195, 101, 50, 14
@@ -145,9 +145,9 @@ BEGIN
     PUSHBUTTON "訪問號碼(&N)", 1025, 7, 161, 90, 14
     PUSHBUTTON "帳號(&C)", 1018, 101, 161, 90, 14
     PUSHBUTTON "密碼(&P)", 1019, 7, 179, 90, 14
-    PUSHBUTTON "目標號碼...(&E)", 1020, 101, 179, 90, 14
-    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
-    PUSHBUTTON "指定數字...(&S)", 1021, 101, 197, 90, 14
+    PUSHBUTTON "目標號碼(&E)...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示(&W)...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定數字(&S)...", 1021, 101, 197, 90, 14
 END
 
 108 DIALOGEX 0, 0, 252, 218
@@ -155,10 +155,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "本地電話"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "本地電話訪問號碼:(&L)", -1, 7, 7, 238, 8
+    LTEXT "本地電話訪問號碼(&L):", -1, 7, 7, 238, 8
     EDITTEXT 1008, 7, 18, 140, 14, ES_AUTOHSCROLL
     LTEXT "使用下面的按鈕來輸入打市內電話撥號步驟。當他們出現在你的名片上，按準確順序輸入這些步驟。來而無需使用您的電話卡打本地電話，請將此部分留爲空白。", 2000, 7, 40, 238, 24
-    LTEXT "電話卡撥號步驟:(&R)", -1, 7, 72, 238, 8
+    LTEXT "電話卡撥號步驟(&R):", -1, 7, 72, 238, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 83, 184, 74, WS_EX_CLIENTEDGE
     PUSHBUTTON "向上移動(&U)", 1022, 195, 83, 50, 14
     PUSHBUTTON "向下移動(&M)", 1023, 195, 101, 50, 14
@@ -166,9 +166,9 @@ BEGIN
     PUSHBUTTON "訪問號碼(&N)", 1025, 7, 161, 90, 14
     PUSHBUTTON "帳號(&C)", 1018, 101, 161, 90, 14
     PUSHBUTTON "密碼(&P)", 1019, 7, 179, 90, 14
-    PUSHBUTTON "目標號碼...(&E)", 1020, 101, 179, 90, 14
-    PUSHBUTTON "等待提示...(&W)", 1017, 7, 197, 90, 14
-    PUSHBUTTON "指定數字...(&S)", 1021, 101, 197, 90, 14
+    PUSHBUTTON "目標號碼(&E)...", 1020, 101, 179, 90, 14
+    PUSHBUTTON "等待提示(&W)...", 1017, 7, 197, 90, 14
+    PUSHBUTTON "指定數字(&S)...", 1021, 101, 197, 90, 14
 END
 
 109 DIALOGEX 0, 0, 252, 257
@@ -179,17 +179,17 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "此區號規則只適用於電話的區號和您在下面指定的前綴組合作出。", 2000, 7, 6, 238, 16
     LTEXT "要調用的地區代碼:", -1, 7, 31, 110, 8
-    LTEXT "地區代碼:(&R)", -1, 7, 47, 36, 8
+    LTEXT "地區代碼(&R):", -1, 7, 47, 36, 8
     EDITTEXT 1034, 46, 44, 50, 14, ES_AUTOHSCROLL
     LTEXT "指定要用於此區號規則的前綴。", -1, 14, 78, 224, 8
     AUTORADIOBUTTON "包含此區號之內的所有前綴(&I)", 1014, 14, 90, 224, 12, NOT WS_TABSTOP
-    AUTORADIOBUTTON "在下面的列表中包括唯一的前綴:(&O)", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
-    LTEXT "要包含的前綴:(&P)", 1057, 26, 117, 119, 8
+    AUTORADIOBUTTON "在下面的列表中包括唯一的前綴(&O):", 1015, 14, 104, 224, 12, NOT WS_TABSTOP
+    LTEXT "要包含的前綴(&P):", 1057, 26, 117, 119, 8
     CONTROL "List1", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000411D, 25, 128, 66, 32, WS_EX_CLIENTEDGE
-    PUSHBUTTON "添加...(&A)", 1005, 95, 128, 50, 14
+    PUSHBUTTON "添加(&A)...", 1005, 95, 128, 50, 14
     PUSHBUTTON "刪除(&E)", 1024, 95, 146, 50, 14
     LTEXT "當撥號電話號碼包含上述前綴:", -1, 14, 184, 224, 8
-    AUTOCHECKBOX "撥打:(&D)", 1012, 14, 198, 30, 12
+    AUTOCHECKBOX "撥打(&D):", 1012, 14, 198, 30, 12
     EDITTEXT 1007, 46, 196, 42, 14, ES_AUTOHSCROLL
     AUTOCHECKBOX "包括地區代碼(&C)", 1029, 14, 214, 85, 12
     DEFPUSHBUTTON "確定", 1, 141, 236, 50, 14
@@ -224,7 +224,7 @@ BEGIN
     LTEXT "選擇提示繼續撥號序列之前等待的類型。", 2000, 7, 7, 238, 16
     AUTORADIOBUTTON "等待撥號音(&D)", 1009, 7, 31, 238, 10, WS_GROUP
     AUTORADIOBUTTON "等待完成語音消息(&V)", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "等待一個特定的時間長度:(&T)", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "等待一個特定的時間長度(&T):", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
     LTEXT "秒(&S)", -1, 58, 81, 187, 8
@@ -252,21 +252,21 @@ CAPTION "高級"
 FONT 9, "新細明體"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "在此計算機上安裝下列電話服務提供程序:", -1, 40, 7, 205, 8
-    LTEXT "提供商:(&P)", -1, 7, 35, 238, 8
+    LTEXT "在此電腦上安裝下列電話服務提供程式:", -1, 40, 7, 205, 8
+    LTEXT "提供商(&P):", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
-    PUSHBUTTON "添加...(&D)", 1005, 87, 197, 50, 14
+    PUSHBUTTON "添加(&D)...", 1005, 87, 197, 50, 14
     PUSHBUTTON "刪除(&R)", 1024, 141, 197, 50, 14
-    PUSHBUTTON "配置...(&C)", 1031, 195, 197, 50, 14
+    PUSHBUTTON "配置(&C)...", 1031, 195, 197, 50, 14
 END
 
 114 DIALOGEX 20, 15, 252, 127
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "添加提供程序"
+CAPTION "添加提供程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "選擇你想從下面列表中安裝的提供程序並單擊添加。", 2000, 7, 7, 241, 8
-    LTEXT "電話服務提供程序:(&T)", -1, 7, 23, 144, 10
+    LTEXT "選擇你想從下面列表中安裝的提供程式並點選添加。", 2000, 7, 7, 241, 8
+    LTEXT "電話服務提供程式(&T):", -1, 7, 23, 144, 10
     LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
     PUSHBUTTON "添加(&A)", 1005, 141, 106, 50, 14
     DEFPUSHBUTTON "取消", 2, 195, 106, 50, 14
@@ -280,13 +280,13 @@ FONT 9, "新細明體"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
     LTEXT "您可以使任何電話或調制解調器的連接之前，電腦需要以下有關您當前的位置信息。", 2000, 107, 15, 188, 25
-    LTEXT "你現在在什麼國家/地區?(&W)", -1, 107, 43, 189, 10
+    LTEXT "你現在在什麼國家/地區(&W)?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "現在你的是什麼區號 (或城市代碼) ?(&C)", -1, 107, 74, 189, 10
+    LTEXT "現在你的是什麼區號 (或城市代碼) (&C)?", -1, 107, 74, 189, 10
     EDITTEXT 1034, 107, 87, 45, 12, ES_AUTOHSCROLL
-    LTEXT "如果您需要指定承運人代碼，是什麼?(&R)", -1, 107, 105, 189, 10
+    LTEXT "如果您需要指定承運人代碼，是什麼(&R)?", -1, 107, 105, 189, 10
     EDITTEXT 1058, 106, 118, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
-    LTEXT "如果你撥一個號碼才能撥打外線，它是什麼?(&O)", -1, 107, 137, 189, 10
+    LTEXT "如果你撥一個號碼才能撥打外線，它是什麼(&O)?", -1, 107, 137, 189, 10
     EDITTEXT 1010, 107, 149, 45, 12, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "在此位置的電話系統使用:", -1, 107, 168, 189, 10
     AUTORADIOBUTTON "音頻撥號(&T)", 1036, 107, 178, 57, 14, WS_GROUP | NOT WS_TABSTOP
@@ -301,11 +301,11 @@ FONT 9, "新細明體"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
     LTEXT "您可以使任何電話或調制解調器的連接之前，電腦需要以下有關您當前的位置信息。", 2000, 95, 2, 188, 25
-    LTEXT "你現在在什麼國家/地區?(&W)", -1, 95, 30, 188, 10
+    LTEXT "你現在在什麼國家/地區(&W)?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "現在你的是什麼區號 (或城市代碼) ?(&C)", -1, 95, 61, 188, 10
+    LTEXT "現在你的是什麼區號 (或城市代碼) (&C)?", -1, 95, 61, 188, 10
     EDITTEXT 1034, 95, 73, 40, 14, ES_AUTOHSCROLL
-    LTEXT "如果你撥一個號碼才能撥打外線，它是什麼?(&O)", -1, 95, 96, 188, 10
+    LTEXT "如果你撥一個號碼才能撥打外線，它是什麼(&O)?", -1, 95, 96, 188, 10
     EDITTEXT 1010, 95, 107, 40, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     LTEXT "在此位置的電話系統使用:", -1, 95, 129, 159, 10
     AUTORADIOBUTTON "音頻撥號(&T)", 1036, 95, 139, 55, 12, WS_GROUP | NOT WS_TABSTOP
@@ -396,7 +396,7 @@ BEGIN
     68 "您的國際規則需要您的電話卡國際訪問號碼。"
     69 "您的本地規則需要您的電話卡的本地訪問號碼。"
     70 "無"
-    71 "確實要刪除選定的電話服務提供程序嗎?"
+    71 "確實要刪除選定的電話服務提供程式嗎?"
     72 "< 沒有服務提供商安裝 >"
     73 "您必須輸入此規則適用的前綴。"
     74 "數字:(&D)"
@@ -408,18 +408,18 @@ BEGIN
     80 "是否確實要刪除此區號規則?"
     81 "您必須輸入要撥打的號碼。"
     82 "您輸入的電話卡名稱已在使用。請輸入一個唯一的名稱。"
-    83 "ReactOS 需要從中你將撥號的位置電話信息。如果您取消沒有提供此信息，此程序可能無法正常撥號時。此外，一些應用程序響應您取消此對話框由立即重新發佈它。\n確實要取消嗎?"
+    83 "ReactOS 需要從中你將撥號的位置電話信息。如果您取消沒有提供此信息，此程式可能無法正常撥號時。此外，一些應用程式響應您取消此對話方塊由立即重新發佈它。\n確實要取消嗎?"
     84 "確認取消"
     85 "我的位置"
     86 "< 沒有服務提供商可用於安裝 >"
     87 "您輸入的字符無效。\n\n有效的字符是 0 到 9，A 到 D，*，#，+，!，空格和逗號。"
     88 "您必須輸入此位置國際承運人代碼。"
     89 "您必須輸入此位置的承運人代碼。"
-    90 "此頁正在嘗試進行或監視電話呼叫或其他多媒體連接您的計算機上。\n您想允許它繼續嗎?"
+    90 "此頁正在嘗試進行或監視電話呼叫或其他多媒體連接您的電腦上。\n您想允許它繼續嗎?"
     91 "此頁正在嘗試訪問您的網絡上的目錄信息。\n你想允許它繼續嗎?"
     92 "此頁嘗試訪問或更改網絡會議信息。\n你想允許它繼續嗎?"
-    93 "此頁嘗試訪問或更改註冊表信息。\n你想允許它繼續嗎?"
-    1064 "不能打開電話和調制解調器控制面板。你可能有問題啓動電話服務。"
+    93 "此頁嘗試訪問或更改登錄資訊。\n你想允許它繼續嗎?"
+    1064 "不能開啟電話和調制解調器控制面板。你可能有問題啓動電話服務。"
     1065 "刪除提供商"
     15800 "23"
     15801 "0,""None (Direct Dial)"","""","""","""","""","""","""","""","""",1"

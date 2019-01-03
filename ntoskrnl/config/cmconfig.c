@@ -14,9 +14,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                           IN HANDLE NodeHandle,
                           OUT PHANDLE NewHandle,
@@ -199,9 +199,9 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     return Status;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                           IN HANDLE ParentHandle,
                           IN INTERFACE_TYPE InterfaceType,
@@ -322,9 +322,9 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     return STATUS_SUCCESS;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;

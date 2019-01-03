@@ -96,6 +96,8 @@ BOOLEAN ExpKdbgExtPoolUsed(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[]);
 BOOLEAN ExpKdbgExtDefWrites(ULONG Argc, PCHAR Argv[]);
 
+BOOLEAN PspKdbgIrpFind(ULONG Argc, PCHAR Argv[]);
+
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
@@ -190,6 +192,7 @@ static const struct
     { "!poolused", "!poolused [Flags [Tag]]", "Display pool usage.", ExpKdbgExtPoolUsed },
     { "!filecache", "!filecache", "Display cache usage.", ExpKdbgExtFileCache },
     { "!defwrites", "!defwrites", "Display cache write values.", ExpKdbgExtDefWrites },
+    { "!irpfind", "!irpfind [criteria data]", "Lists IRPs potentially matching criteria", PspKdbgIrpFind },
 };
 
 /* FUNCTIONS *****************************************************************/

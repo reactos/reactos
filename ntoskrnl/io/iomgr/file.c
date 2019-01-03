@@ -210,7 +210,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
         }
         else
         {
-            /* Compute how much mem we'll need */
+            /* Compute how much memory we'll need */
             RequiredLength = DataBuffer->Reserved + Length + sizeof(UNICODE_NULL);
 
             /* Check if FileObject can already hold what we need */
@@ -224,7 +224,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
                 NewBuffer = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_IO_NAME);
                 if (NewBuffer == NULL)
                 {
-                     Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                    Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
                 }
             }
         }
@@ -233,7 +233,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
     /* Everything went right */
     if (NT_SUCCESS(Irp->IoStatus.Status))
     {
-        /* Copy reserved */
+        /* Copy the reserved data */
         if (DataBuffer->Reserved)
         {
             RtlMoveMemory((PWSTR)((ULONG_PTR)NewBuffer + Length),
@@ -241,7 +241,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
                           DataBuffer->Reserved);
         }
 
-        /* Then, buffer */
+        /* Then the buffer */
         if (Length)
         {
             RtlCopyMemory(NewBuffer, Buffer, Length);
@@ -253,7 +253,12 @@ IopDoNameTransmogrify(IN PIRP Irp,
         {
             if (FileObject->FileName.Buffer)
             {
-                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+                /*
+                 * Don't use TAG_IO_NAME since the FileObject's FileName
+                 * may have been re-allocated using a different tag
+                 * by a filesystem.
+                 */
+                ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
             }
 
             FileObject->FileName.Buffer = NewBuffer;
@@ -958,12 +963,9 @@ IopParseDevice(IN PVOID ParseObject,
         if (RemainingName->Length)
         {
             /* Setup the unicode string */
-            FileObject->FileName.MaximumLength = RemainingName->Length +
-                                                 sizeof(WCHAR);
+            FileObject->FileName.MaximumLength = RemainingName->Length + sizeof(WCHAR);
             FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                                FileObject->
-                                                                FileName.
-                                                                MaximumLength,
+                                                                FileObject->FileName.MaximumLength,
                                                                 TAG_IO_NAME);
             if (!FileObject->FileName.Buffer)
             {
@@ -1063,11 +1065,16 @@ IopParseDevice(IN PVOID ParseObject,
         /* The driver failed to create the file */
         if (!NT_SUCCESS(Status))
         {
-            /* Check if we have a name */
+            /* Check if we have a name and if so, free it */
             if (FileObject->FileName.Length)
             {
-                /* Free it */
-                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+                /*
+                 * Don't use TAG_IO_NAME since the FileObject's FileName
+                 * may have been re-allocated using a different tag
+                 * by a filesystem.
+                 */
+                ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
+                FileObject->FileName.Buffer = NULL;
                 FileObject->FileName.Length = 0;
             }
 
@@ -1115,6 +1122,11 @@ IopParseDevice(IN PVOID ParseObject,
                     /* Release the old one */
                     if (CompleteName->Buffer != NULL)
                     {
+                        /*
+                         * Don't use TAG_IO_NAME since the FileObject's FileName
+                         * may have been re-allocated using a different tag
+                         * by a filesystem.
+                         */
                         ExFreePoolWithTag(CompleteName->Buffer, 0);
                     }
 
@@ -1132,11 +1144,16 @@ IopParseDevice(IN PVOID ParseObject,
                 }
             }
 
-            /* Check if we have a name */
+            /* Check if we have a name and if so, free it */
             if (FileObject->FileName.Length)
             {
-                /* Free it */
+                /*
+                 * Don't use TAG_IO_NAME since the FileObject's FileName
+                 * may have been re-allocated using a different tag
+                 * by a filesystem.
+                 */
                 ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
+                FileObject->FileName.Buffer = NULL;
                 FileObject->FileName.Length = 0;
             }
 
@@ -1430,8 +1447,13 @@ IopDeleteFile(IN PVOID ObjectBody)
         /* Clear the file name */
         if (FileObject->FileName.Buffer)
         {
-           ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
-           FileObject->FileName.Buffer = NULL;
+            /*
+             * Don't use TAG_IO_NAME since the FileObject's FileName
+             * may have been re-allocated using a different tag
+             * by a filesystem.
+             */
+            ExFreePoolWithTag(FileObject->FileName.Buffer, 0);
+            FileObject->FileName.Buffer = NULL;
         }
 
         /* Check if the FO had a completion port */

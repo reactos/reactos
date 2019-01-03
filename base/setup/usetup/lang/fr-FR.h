@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY frFRSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Veuillez patienter pendant que le programme d'installation de ReactOS",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "s'initialise et d\202couvre vos p\202riph\202riques...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Veuillez patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY frFRLanguagePageEntries[] =
 {
     {
@@ -72,7 +106,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         6,
         12,
-        "sur votre ordinateur et le pr\202pare \205 la 2e partie de l'installation.",
+        "sur votre ordinateur et le pr\202pare \205 la 2\212me partie de l'installation.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -130,7 +164,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -615,19 +649,19 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         6,
-        "Le syst\212me s'assure que toutes les donn\202es sont \202crites sur le disque",
+        "Le syst\212me s'assure que toutes les donn\202es sont \202crites sur le disque.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Cela peut prendre une minute",
+        "Cela peut prendre une minute.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Quand cela sera fini, votre ordinateur red\202marrera automatiquement",
+        "Quand cela sera fini, votre ordinateur red\202marrera automatiquement.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS n'est pas compl\212tement install\202",
+        "ReactOS n'est pas compl\212tement install\202.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -679,7 +713,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         0,
         0,
-        "Veuillez attendre ...",
+        "Veuillez patienter...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1304,7 +1338,7 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup pr\202pare votre ordinateur pour copier les fichiers de ReactOS. ",
+        "Setup pr\202pare votre ordinateur pour copier les fichiers de ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1426,7 +1460,7 @@ static MUI_ENTRY frFRRegistryEntries[] =
     {
         6,
         8,
-        "Setup met \205 jour la configuration du syst\212me. ",
+        "Setup met \205 jour la configuration du syst\212me.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1690,6 +1724,10 @@ MUI_ERROR frFRErrorEntries[] =
 
 MUI_PAGE frFRPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        frFRSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         frFRLanguagePageEntries

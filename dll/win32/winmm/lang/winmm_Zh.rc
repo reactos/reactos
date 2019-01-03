@@ -150,7 +150,7 @@ MMSYSERR_INVALPARAM, 		"不正確參數被傳遞給系統函數。"
 WAVERR_BADFORMAT, 		"以指定的格式不受支援或無法進行轉換。 使用能力功能來確定所支援的格式"
 WAVERR_STILLPLAYING, 		"還播放媒體資料時，無法執行此操作。 重置該設備，或等到完成資料玩。"
 WAVERR_UNPREPARED, 		"沒有準備的波標題。使用準備功能來準備標題，然後再試。 "
-WAVERR_SYNC, 			"無法打開設備沒有使用 WAVE_ALLOWSYNC 標誌。 請使用該標誌，然後再試。"
+WAVERR_SYNC, 			"無法開啟設備沒有使用 WAVE_ALLOWSYNC 標誌。 請使用該標誌，然後再試。"
 
 /* MIDI errors */
 MIDIERR_UNPREPARED, 		"MIDI 標題未準備。 使用準備功能來準備標題，然後再試。"
@@ -161,11 +161,11 @@ MIDIERR_NODEVICE, 		"當前的 MIDI 映射器安裝是指沒有安裝在系統�
 MIDIERR_INVALIDSETUP, 		"當前的 MIDI 設置已損壞。 複製原始的 MIDIMAP. CFG 檔到電腦系統的目錄，然後再試。"
 
 /* MCI errors */
-MCIERR_INVALID_DEVICE_ID, 	"不正確 MCI 裝置識別碼。 使用時打開 MCI 設備返回的 ID。"
+MCIERR_INVALID_DEVICE_ID, 	"不正確 MCI 裝置識別碼。 使用時開啟 MCI 設備返回的 ID。"
 MCIERR_UNRECOGNIZED_KEYWORD, 	"驅動程式無法識別指定的命令參數。 "
 MCIERR_UNRECOGNIZED_COMMAND,	"驅動程式無法識別指定的命令。"
 MCIERR_HARDWARE, 		"還有一個問題與您的媒體設備。請確保它正常工作，或與設備製造商聯繫。"
-MCIERR_INVALID_DEVICE_NAME, 	"指定的設備未打開，或不被 MCI 識別。"
+MCIERR_INVALID_DEVICE_NAME, 	"指定的設備未開啟，或不被 MCI 識別。"
 MCIERR_OUT_OF_MEMORY, 		"沒有足夠的記憶體完成此任務。\n退出一個或多個應用程式以增加可用記憶體，然後再試一次。"
 MCIERR_DEVICE_OPEN, 		"設備名稱是已被該應用程式用作別名。使用唯一的別名。"
 MCIERR_CANNOT_LOAD_DRIVER, 	"在載入指定的裝置驅動程式是檢測不到的問題。"

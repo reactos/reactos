@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY deDESetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY deDELanguagePageEntries[] =
 {
     {
@@ -615,7 +649,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         6,
-        "Die geschrieben Daten werden \201berpr\201ft",
+        "Die geschrieben Daten werden \201berpr\201ft.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS wurde nicht vollst\204ndig installiert",
+        "ReactOS wurde nicht vollst\204ndig installiert.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -673,7 +707,7 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         0,
         0,
-        "Bitte warten ...",
+        "Bitte warten...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1408,7 +1442,7 @@ static MUI_ENTRY deDERegistryEntries[] =
     {
         6,
         8,
-        "Systemkonfiguration wird aktualisiert. ",
+        "Systemkonfiguration wird aktualisiert.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
@@ -1675,6 +1709,10 @@ MUI_ERROR deDEErrorEntries[] =
 
 MUI_PAGE deDEPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        deDESetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         deDELanguagePageEntries

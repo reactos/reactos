@@ -1162,6 +1162,7 @@ FailurePath:
             {
                 /* Import by name */
                 ForwardName = &ForwarderName;
+                ForwardOrdinal = 0;
             }
 
             /* Get the pointer */

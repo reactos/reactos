@@ -685,8 +685,7 @@ CcCanIWrite (
         Length = BytesToWrite;
     }
 
-    /* Convert it to pages count */
-    Pages = (Length + PAGE_SIZE - 1) >> PAGE_SHIFT;
+    Pages = BYTES_TO_PAGES(Length);
 
     /* By default, assume limits per file won't be hit */
     PerFileDefer = FALSE;

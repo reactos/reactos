@@ -1,6 +1,15 @@
 #ifndef _DFS_PCH_
 #define _DFS_PCH_
 
+#ifndef INIT_SECTION
+#ifdef __GNUC__
+#define INIT_SECTION __attribute__((section ("INIT")))
+#else
+#define INIT_SECTION /* Done via alloc_text for MSC */
+#endif
+#define INIT_FUNCTION INIT_SECTION
+#endif
+
 #define DFS_OPEN_CONTEXT 0xFF444653
 #define DFS_DOWNLEVEL_OPEN_CONTEXT 0x11444653
 #define DFS_CSCAGENT_NAME_CONTEXT 0xAAAAAAAA
@@ -49,6 +58,7 @@ DfsUnload(
     PDRIVER_OBJECT DriverObject
 );
 
+INIT_FUNCTION
 NTSTATUS
 DfsDriverEntry(
     PDRIVER_OBJECT DriverObject,

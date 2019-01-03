@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "縮放"
         BEGIN
-            POPUP "用戶自定義"
+            POPUP "使用者自訂"
             BEGIN
                 MENUITEM "12.5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25

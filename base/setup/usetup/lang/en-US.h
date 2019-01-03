@@ -1,5 +1,39 @@
 #pragma once
 
+static MUI_ENTRY enUSSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY enUSLanguagePageEntries[] =
 {
     {
@@ -607,19 +641,19 @@ static MUI_ENTRY enUSFlushPageEntries[] =
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "The system is now making sure all data is stored on your disk.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "This may take a minute.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "When finished, your computer will reboot automatically.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -647,7 +681,7 @@ static MUI_ENTRY enUSQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "ReactOS is not completely installed.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -671,7 +705,7 @@ static MUI_ENTRY enUSQuitPageEntries[] =
     {
         0,
         0,
-        "Please wait ...",
+        "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -1284,7 +1318,7 @@ static MUI_ENTRY enUSPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup prepares your computer for copying the ReactOS files.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1406,7 +1440,7 @@ static MUI_ENTRY enUSRegistryEntries[] =
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Setup is updating the system configuration.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1670,6 +1704,10 @@ MUI_ERROR enUSErrorEntries[] =
 
 MUI_PAGE enUSPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        enUSSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         enUSLanguagePageEntries

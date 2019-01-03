@@ -10,7 +10,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_TCPIP_BASIC_DLG DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "常規"
+CAPTION "一般"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "你可以得到如果您的網路支援此功能自動分配的 IP 設定。 否則，您需要詢問網路管理員以獲得合適的 IP 設定。", -1, 9, 9, 235, 27
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "備用配置"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "如果此計算機使用多個網路，輸入下面的備用 IP 設定", -1, 9, 9, 220, 20
+    LTEXT "如果這台電腦使用多個網路，輸入下面的備用 IP 設定", -1, 9, 9, 220, 20
     CONTROL "自動專用 IP 地址(&T)", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 40, 210, 12
     GROUPBOX "", -1, 9, 55, 228, 80, BS_GROUPBOX
     CONTROL "使用者配置(&S)", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
@@ -224,7 +224,7 @@ BEGIN
     IDS_NET_CONNECT "網路連線"
     IDS_NO_IPADDR_SET "介面卡需要至少一個 IP 地址。請輸入一個。"
     IDS_NO_SUBMASK_SET "您輸入缺少及其子網掩碼地址。請添加子網掩碼。"
-    IDS_TCPFILTERDESC "TCP/IP 篩選允許您控制到達您的計算機的 TCP/IP 網路通訊的類型。"
+    IDS_TCPFILTERDESC "TCP/IP 篩選允許您控制到達您的電腦的 TCP/IP 網路通訊的類型。"
     IDS_TCPFILTER "TCP/IP 篩選"
     IDS_IPADDR "IP 地址"
     IDS_SUBMASK "子網掩碼"

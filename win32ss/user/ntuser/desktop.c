@@ -1471,7 +1471,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
             if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
             {
-                HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
+                HDESK hdesk = UserOpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
                 IntSetThreadDesktop(hdesk, FALSE);
             }
             break;
@@ -2569,6 +2569,48 @@ NtUserOpenDesktop(
     return Desktop;
 }
 
+HDESK UserOpenInputDesktop(DWORD dwFlags,
+                           BOOL fInherit,
+                           ACCESS_MASK dwDesiredAccess)
+{
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    NTSTATUS Status;
+    ULONG HandleAttributes = 0;
+    HDESK hdesk = NULL;
+
+    if (!gpdeskInputDesktop)
+    {
+        return NULL;
+    }
+
+    if (pti->ppi->prpwinsta != InputWindowStation)
+    {
+        ERR("Tried to open input desktop from non interactive winsta!\n");
+        EngSetLastError(ERROR_INVALID_FUNCTION);
+        return NULL;
+    }
+
+    if (fInherit) HandleAttributes = OBJ_INHERIT;
+
+    /* Create a new handle to the object */
+    Status = ObOpenObjectByPointer(
+                 gpdeskInputDesktop,
+                 HandleAttributes,
+                 NULL,
+                 dwDesiredAccess,
+                 ExDesktopObjectType,
+                 UserMode,
+                 (PHANDLE)&hdesk);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open input desktop object\n");
+        SetLastNtError(Status);
+    }
+
+    return hdesk;
+}
+
 /*
  * NtUserOpenInputDesktop
  *
@@ -2597,30 +2639,12 @@ NtUserOpenInputDesktop(
     BOOL fInherit,
     ACCESS_MASK dwDesiredAccess)
 {
-    NTSTATUS Status;
-    HDESK hdesk = NULL;
-    ULONG HandleAttributes = 0;
+    HDESK hdesk;
 
     UserEnterExclusive();
     TRACE("Enter NtUserOpenInputDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
 
-    if (fInherit) HandleAttributes = OBJ_INHERIT;
-
-    /* Create a new handle to the object */
-    Status = ObOpenObjectByPointer(
-                 gpdeskInputDesktop,
-                 HandleAttributes,
-                 NULL,
-                 dwDesiredAccess,
-                 ExDesktopObjectType,
-                 UserMode,
-                 (PHANDLE)&hdesk);
-
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to open input desktop object\n");
-        SetLastNtError(Status);
-    }
+    hdesk = UserOpenInputDesktop(dwFlags, fInherit, dwDesiredAccess);
 
     TRACE("NtUserOpenInputDesktop returning 0x%p\n",hdesk);
     UserLeave();

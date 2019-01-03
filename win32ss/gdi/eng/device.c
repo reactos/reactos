@@ -485,6 +485,11 @@ EngDeviceIoControl(
 
     TRACE("EngDeviceIoControl() called\n");
 
+    if (!hDevice)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     DeviceObject = (PDEVICE_OBJECT) hDevice;

@@ -9,6 +9,40 @@
 
 #pragma once
 
+static MUI_ENTRY csCZSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY csCZLanguagePageEntries[] =
 {
     {
@@ -136,7 +170,7 @@ static MUI_ENTRY csCZIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -487,7 +521,7 @@ static MUI_ENTRY csCZUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY csCZQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS nen\241 kompletn\330 nainstalov\240n",
+        "ReactOS nen\241 kompletn\330 nainstalov\240n.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1678,6 +1712,10 @@ MUI_ERROR csCZErrorEntries[] =
 
 MUI_PAGE csCZPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        csCZSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         csCZLanguagePageEntries

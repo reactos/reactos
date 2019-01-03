@@ -89,59 +89,12 @@ CloseLogonLsaHandle(VOID)
 static
 BOOL
 CreateProcessAsUserCommon(
-    _In_ BOOL bUnicode,
     _In_opt_ HANDLE hToken,
-    _In_opt_ LPCVOID lpApplicationName,
-    _Inout_opt_ LPVOID lpCommandLine,
-    _In_opt_ LPSECURITY_ATTRIBUTES lpProcessAttributes,
-    _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    _In_ BOOL bInheritHandles,
     _In_ DWORD dwCreationFlags,
-    _In_opt_ LPVOID lpEnvironment,
-    _In_opt_ LPCVOID lpCurrentDirectory,
-    _In_ LPVOID lpStartupInfo,
     _Out_ LPPROCESS_INFORMATION lpProcessInformation)
 {
     NTSTATUS Status;
     PROCESS_ACCESS_TOKEN AccessToken;
-
-    /* Create the process with a suspended main thread */
-    if (bUnicode)
-    {
-        /* Call the UNICODE version */
-        if (!CreateProcessW((LPCWSTR)lpApplicationName,
-                            (LPWSTR)lpCommandLine,
-                            lpProcessAttributes,
-                            lpThreadAttributes,
-                            bInheritHandles,
-                            dwCreationFlags | CREATE_SUSPENDED,
-                            lpEnvironment,
-                            (LPCWSTR)lpCurrentDirectory,
-                            (LPSTARTUPINFOW)lpStartupInfo,
-                            lpProcessInformation))
-        {
-            ERR("CreateProcessW failed, last error: %d\n", GetLastError());
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* Call the ANSI version */
-        if (!CreateProcessA((LPCSTR)lpApplicationName,
-                            (LPSTR)lpCommandLine,
-                            lpProcessAttributes,
-                            lpThreadAttributes,
-                            bInheritHandles,
-                            dwCreationFlags | CREATE_SUSPENDED,
-                            lpEnvironment,
-                            (LPCSTR)lpCurrentDirectory,
-                            (LPSTARTUPINFOA)lpStartupInfo,
-                            lpProcessInformation))
-        {
-            ERR("CreateProcessA failed, last error: %d\n", GetLastError());
-            return FALSE;
-        }
-    }
 
     if (hToken != NULL)
     {
@@ -293,18 +246,25 @@ CreateProcessAsUserA(
         debugstr_a(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
         dwCreationFlags, lpEnvironment, debugstr_a(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
 
+    /* Create the process with a suspended main thread */
+    if (!CreateProcessA(lpApplicationName,
+                        lpCommandLine,
+                        lpProcessAttributes,
+                        lpThreadAttributes,
+                        bInheritHandles,
+                        dwCreationFlags | CREATE_SUSPENDED,
+                        lpEnvironment,
+                        lpCurrentDirectory,
+                        lpStartupInfo,
+                        lpProcessInformation))
+    {
+        ERR("CreateProcessA failed, last error: %d\n", GetLastError());
+        return FALSE;
+    }
+
     /* Call the helper function */
-    return CreateProcessAsUserCommon(FALSE,
-                                     hToken,
-                                     lpApplicationName,
-                                     lpCommandLine,
-                                     lpProcessAttributes,
-                                     lpThreadAttributes,
-                                     bInheritHandles,
+    return CreateProcessAsUserCommon(hToken,
                                      dwCreationFlags,
-                                     lpEnvironment,
-                                     lpCurrentDirectory,
-                                     lpStartupInfo,
                                      lpProcessInformation);
 }
 
@@ -332,18 +292,25 @@ CreateProcessAsUserW(
         debugstr_w(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
         dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
 
+    /* Create the process with a suspended main thread */
+    if (!CreateProcessW(lpApplicationName,
+                        lpCommandLine,
+                        lpProcessAttributes,
+                        lpThreadAttributes,
+                        bInheritHandles,
+                        dwCreationFlags | CREATE_SUSPENDED,
+                        lpEnvironment,
+                        lpCurrentDirectory,
+                        lpStartupInfo,
+                        lpProcessInformation))
+    {
+        ERR("CreateProcessW failed, last error: %d\n", GetLastError());
+        return FALSE;
+    }
+
     /* Call the helper function */
-    return CreateProcessAsUserCommon(TRUE,
-                                     hToken,
-                                     lpApplicationName,
-                                     lpCommandLine,
-                                     lpProcessAttributes,
-                                     lpThreadAttributes,
-                                     bInheritHandles,
+    return CreateProcessAsUserCommon(hToken,
                                      dwCreationFlags,
-                                     lpEnvironment,
-                                     lpCurrentDirectory,
-                                     lpStartupInfo,
                                      lpProcessInformation);
 }
 

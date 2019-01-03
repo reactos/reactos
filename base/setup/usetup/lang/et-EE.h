@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY etEESetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY etEELanguagePageEntries[] =
 {
     {
@@ -481,7 +515,7 @@ static MUI_ENTRY etEEUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -609,19 +643,19 @@ static MUI_ENTRY etEEFlushPageEntries[] =
     {
         10,
         6,
-        "S\201steem kirjutab n\201\201d andmed kettale",
+        "S\201steem kirjutab n\201\201d andmed kettale.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "V\344ib kuluda veidi aega",
+        "V\344ib kuluda veidi aega.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "L\344petamisel taask\204ivitub arvuti automaatselt",
+        "L\344petamisel taask\204ivitub arvuti automaatselt.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -649,7 +683,7 @@ static MUI_ENTRY etEEQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS ei ole t\204ielikult paigaldatud",
+        "ReactOS ei ole t\204ielikult paigaldatud.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1671,6 +1705,10 @@ MUI_ERROR etEEErrorEntries[] =
 
 MUI_PAGE etEEPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        etEESetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         etEELanguagePageEntries

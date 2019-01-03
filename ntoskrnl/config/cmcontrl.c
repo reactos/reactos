@@ -16,9 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 LANGID
 NTAPI
-INIT_FUNCTION
 CmpConvertLangId(IN LPWSTR Name,
                  IN ULONG NameLength)
 {
@@ -67,9 +67,9 @@ CmpConvertLangId(IN LPWSTR Name,
     return LangId;
 }
 
+INIT_FUNCTION
 HCELL_INDEX
 NTAPI
-INIT_FUNCTION
 CmpWalkPath(IN PHHIVE SystemHive,
             IN HCELL_INDEX ParentCell,
             IN LPWSTR Path)
@@ -98,9 +98,9 @@ CmpWalkPath(IN PHHIVE SystemHive,
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 CmGetSystemControlValues(IN PVOID SystemHiveData,
                          IN PCM_SYSTEM_CONTROL_VECTOR ControlVector)
 {

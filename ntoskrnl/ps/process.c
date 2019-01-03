@@ -1614,4 +1614,119 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     /* Return status */
     return Status;
 }
+
+#if DBG && defined(KDBG)
+BOOLEAN
+PspKdbgIrpFind(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    PLIST_ENTRY PsEntry, TdEntry, IrpEntry;
+    PEPROCESS Process = NULL;
+    PETHREAD Thread = NULL;
+    PIRP Irp = NULL;
+    PIO_STACK_LOCATION IoStack = NULL;
+    PUNICODE_STRING DriverName;
+    ULONG_PTR SData = 0;
+    ULONG Criteria = 0;
+
+    /*
+     * FIXME: To improve, badly
+     * This should just be a wrapper over !poolfind
+     * As a hack, here we just browse all the queued IRPs
+     * and return them
+     * If that's not *that* wrong, it makes sure that leaked
+     * IRPs are invisible!
+     * We also don't care about pool type, nor address start
+     */
+
+    /* Gets the criteria and its data */
+    if (Argc > 2)
+    {
+        if (!KdbpGetHexNumber(Argv[2], &SData))
+        {
+            SData = 0;
+        }
+        else
+        {
+            if (strcmp(Argv[1], "device") == 0)
+            {
+                Criteria = 0x1;
+            }
+            else if (strcmp(Argv[1], "fileobject") == 0)
+            {
+                Criteria = 0x2;
+            }
+            else if (strcmp(Argv[1], "mdlprocess") == 0)
+            {
+                Criteria = 0x4;
+            }
+            else if (strcmp(Argv[1], "thread") == 0)
+            {
+                Criteria = 0x8;
+            }
+            else if (strcmp(Argv[1], "userevent") == 0)
+            {
+                Criteria = 0x10;
+            }
+            else if (strcmp(Argv[1], "arg") == 0)
+            {
+                Criteria = 0x1f;
+            }
+        }
+    }
+
+    PsEntry = PsActiveProcessHead.Flink;
+    /* Loop the process list */
+    while (PsEntry != &PsActiveProcessHead)
+    {
+        /* Get the process */
+        Process = CONTAINING_RECORD(PsEntry, EPROCESS, ActiveProcessLinks);
+
+        /* Loop the thread list */
+        TdEntry = Process->ThreadListHead.Flink;
+        while (TdEntry != &Process->ThreadListHead)
+        {
+            /* Get the thread */
+            Thread = CONTAINING_RECORD(TdEntry, ETHREAD, ThreadListEntry);
+
+            /* Loop the IRP list */
+            IrpEntry = Thread->IrpList.Flink;
+            while (IrpEntry != &Thread->IrpList)
+            {
+                /* Get the IRP and its current stack */
+                Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
+                IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+                /* Get associated driver */
+                if (IoStack->DeviceObject && IoStack->DeviceObject->DriverObject)
+                    DriverName = &IoStack->DeviceObject->DriverObject->DriverName;
+                else
+                    DriverName = NULL;
+
+                /* Display if: no data, no criteria or if criteria matches data */
+                if (SData == 0 || Criteria == 0 ||
+                    (Criteria & 0x1 && SData == (ULONG_PTR)IoStack->DeviceObject) ||
+                    (Criteria & 0x2 && SData == (ULONG_PTR)Irp->Tail.Overlay.OriginalFileObject) ||
+                    (Criteria & 0x4 && Irp->MdlAddress && SData == (ULONG_PTR)Irp->MdlAddress->Process) ||
+                    (Criteria & 0x8 && SData == (ULONG_PTR)Irp->Tail.Overlay.Thread) ||
+                    (Criteria & 0x10 && SData == (ULONG_PTR)Irp->UserEvent))
+                {
+                    KdbpPrint("%p Thread %p current stack belongs to %wZ\n", Irp, Thread, DriverName);
+                }
+
+                IrpEntry = IrpEntry->Flink;
+            }
+
+            TdEntry = TdEntry->Flink;
+        }
+
+        PsEntry = PsEntry->Flink;
+    }
+
+    return TRUE;
+}
+
+#endif // DBG && KDBG
+
 /* EOF */

@@ -71,7 +71,7 @@ BOOL fInEndMenu = FALSE;
 #define MENU_COL_SPACE 4
 
 /*  top and bottom margins for popup menus */
-#define MENU_TOP_MARGIN 2 //3
+#define MENU_TOP_MARGIN 3
 #define MENU_BOTTOM_MARGIN 2
 
 #define MENU_ITEM_HBMP_SPACE (5)
@@ -274,6 +274,7 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse)
 {
     PMENU SubMenu;
 
+    ASSERT(UserIsEnteredExclusive());
     if (pMenu->rgItems) /* recursively destroy submenus */
     {
        int i;
@@ -319,6 +320,7 @@ UserDestroyMenuObject(PVOID Object)
 BOOL FASTCALL
 IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
+   ASSERT(UserIsEnteredExclusive());
    if (Menu)
    {
       PWND Window;
@@ -2380,7 +2382,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
         rc.left++;
         rc.right--;
-        rc.top = ( rc.top + rc.bottom) / 2;
+        rc.top = (rc.top + rc.bottom) / 2 - 1;
         if (flat_menu)
         {
             oldPen = NtGdiSelectPen( hdc, NtGdiGetStockObject(DC_PEN) );
@@ -2539,6 +2541,9 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             RECTL_vOffsetRect(&rect, +1, +1);
         }
 
+        if (!menuBar)
+            --rect.bottom;
+
         if(lpitem->fState & MF_GRAYED)
         {
             if (!(lpitem->fState & MF_HILITE) )
@@ -2579,6 +2584,9 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
             }
             DrawTextW( hdc, Text + i + 1, -1, &rect, uFormat );
         }
+
+        if (!menuBar)
+            ++rect.bottom;
 
         if (menuBar &&
             !flat_menu &&
@@ -4504,6 +4512,10 @@ PopupMenuWndProc(
       {
         CREATESTRUCTW *cs = (CREATESTRUCTW *) lParam;
         pPopupMenu->spmenu = UserGetMenuObject(cs->lpCreateParams);
+        if (pPopupMenu->spmenu)
+        {
+           UserReferenceObject(pPopupMenu->spmenu);
+        }
         break;
       }
 
@@ -4548,6 +4560,10 @@ PopupMenuWndProc(
 
     case WM_NCDESTROY:
       {
+         if (pPopupMenu->spmenu)
+         {
+            IntReleaseMenuObject(pPopupMenu->spmenu);
+         }
          DesktopHeapFree(Wnd->head.rpdesk, pPopupMenu );
          ((PMENUWND)Wnd)->ppopupmenu = 0;
          Wnd->fnid = FNID_DESTROY;
@@ -4562,6 +4578,11 @@ PopupMenuWndProc(
         {
            ERR("Bad Menu Handle\n");
            break;
+        }
+        UserReferenceObject(pmenu);
+        if (pPopupMenu->spmenu)
+        {
+           IntReleaseMenuObject(pPopupMenu->spmenu);
         }
         pPopupMenu->spmenu = pmenu;
         break;
@@ -5479,7 +5500,7 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    DECLARE_RETURN(HMENU);
 
    TRACE("Enter NtUserGetSystemMenu\n");
-   UserEnterShared();
+   UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {

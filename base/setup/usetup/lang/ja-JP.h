@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY jaJPSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY jaJPLanguagePageEntries[] =
 {
     {
@@ -130,7 +164,7 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -481,7 +515,7 @@ static MUI_ENTRY jaJPUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -673,7 +707,7 @@ static MUI_ENTRY jaJPQuitPageEntries[] =
     {
         0,
         0,
-        "\265\317\301 \270\300\336\273\262 ...",
+        "\265\317\301 \270\300\336\273\262...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -1673,6 +1707,10 @@ MUI_ERROR jaJPErrorEntries[] =
 
 MUI_PAGE jaJPPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        jaJPSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         jaJPLanguagePageEntries

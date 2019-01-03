@@ -184,6 +184,53 @@ NtStatusToCrError(NTSTATUS Status)
 }
 
 
+static VOID
+SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
+                      OUT LPWSTR pszEnumerator,
+                      OUT LPWSTR pszDevice,
+                      OUT LPWSTR pszInstance)
+{
+    WCHAR szLocalDeviceInstanceID[MAX_DEVICE_ID_LEN];
+    LPWSTR lpEnumerator = NULL;
+    LPWSTR lpDevice = NULL;
+    LPWSTR lpInstance = NULL;
+    LPWSTR ptr;
+
+    wcscpy(szLocalDeviceInstanceID, pszDeviceInstanceID);
+
+    *pszEnumerator = 0;
+    *pszDevice = 0;
+    *pszInstance = 0;
+
+    lpEnumerator = szLocalDeviceInstanceID;
+
+    ptr = wcschr(lpEnumerator, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = 0;
+        lpDevice = ++ptr;
+
+        ptr = wcschr(lpDevice, L'\\');
+        if (ptr != NULL)
+        {
+            *ptr = 0;
+            lpInstance = ++ptr;
+        }
+    }
+
+    if (lpEnumerator != NULL)
+        wcscpy(pszEnumerator, lpEnumerator);
+
+    if (lpDevice != NULL)
+        wcscpy(pszDevice, lpDevice);
+
+    if (lpInstance != NULL)
+        wcscpy(pszInstance, lpInstance);
+}
+
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
 /* Function 0 */
 DWORD
 WINAPI
@@ -482,6 +529,366 @@ PNP_EnumerateSubKeys(
 }
 
 
+static
+CONFIGRET
+GetRelationsInstanceList(
+    _In_ PWSTR pszDevice,
+    _In_ DWORD ulFlags,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDevice);
+
+    if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+    {
+        PlugPlayData.Relations = 3;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+    {
+        PlugPlayData.Relations = 2;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+    {
+        PlugPlayData.Relations = 1;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+    {
+        PlugPlayData.Relations = 0;
+    }
+
+    PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
+    PlugPlayData.Buffer = pszBuffer;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetServiceInstanceList(
+    _In_ PWSTR pszService,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szPathBuffer[512];
+    WCHAR szName[16];
+    HKEY hServicesKey = NULL, hServiceKey = NULL, hEnumKey = NULL;
+    DWORD dwValues, dwSize, dwIndex, dwUsedLength, dwPathLength;
+    DWORD dwError;
+    PWSTR pPtr;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the services key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwError = RegOpenKeyExW(hServicesKey,
+                            pszService,
+                            0,
+                            KEY_READ,
+                            &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Enum",
+                            0,
+                            KEY_READ,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service enum key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    /* Retrieve the number of device instances */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hEnumKey,
+                               L"Count",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwValues,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW failed (Error %lu)\n", dwError);
+        dwValues = 1;
+    }
+
+    DPRINT("dwValues %lu\n", dwValues);
+
+    dwUsedLength = 0;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; dwIndex < dwValues; dwIndex++)
+    {
+        wsprintf(szName, L"%lu", dwIndex);
+
+        dwSize = sizeof(szPathBuffer);
+        dwError = RegQueryValueExW(hEnumKey,
+                                   szName,
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)szPathBuffer,
+                                   &dwSize);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        dwPathLength = wcslen(szPathBuffer) + 1;
+        if (dwUsedLength + dwPathLength + 1 > *pulLength)
+        {
+            ret = CR_BUFFER_SMALL;
+            break;
+        }
+
+        wcscpy(pPtr, szPathBuffer);
+        dwUsedLength += dwPathLength;
+        pPtr += dwPathLength;
+
+        *pPtr = UNICODE_NULL;
+    }
+
+Done:
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    if (hServicesKey != NULL)
+        RegCloseKey(hServicesKey);
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetDeviceInstanceList(
+    _In_ PWSTR pszDevice,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szInstanceBuffer[MAX_DEVICE_ID_LEN];
+    WCHAR szPathBuffer[512];
+    HKEY hDeviceKey;
+    DWORD dwInstanceLength, dwPathLength, dwUsedLength;
+    DWORD dwIndex, dwError;
+    PWSTR pPtr;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszDevice,
+                            0,
+                            KEY_ENUMERATE_SUB_KEYS,
+                            &hDeviceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the device key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwUsedLength = 0;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwInstanceLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hDeviceKey,
+                                dwIndex,
+                                szInstanceBuffer,
+                                &dwInstanceLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        wsprintf(szPathBuffer, L"%s\\%s", pszDevice, szInstanceBuffer);
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        dwPathLength = wcslen(szPathBuffer) + 1;
+        if (dwUsedLength + dwPathLength + 1 > *pulLength)
+        {
+            ret = CR_BUFFER_SMALL;
+            break;
+        }
+
+        wcscpy(pPtr, szPathBuffer);
+        dwUsedLength += dwPathLength;
+        pPtr += dwPathLength;
+
+        *pPtr = UNICODE_NULL;
+    }
+
+    RegCloseKey(hDeviceKey);
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
+CONFIGRET
+GetEnumeratorInstanceList(
+    _In_ PWSTR pszEnumerator,
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szDeviceBuffer[MAX_DEVICE_ID_LEN];
+    WCHAR szPathBuffer[512];
+    HKEY hEnumeratorKey;
+    PWSTR pPtr;
+    DWORD dwIndex, dwDeviceLength, dwUsedLength, dwRemainingLength, dwPathLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the enumerator key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszEnumerator,
+                            0,
+                            KEY_ENUMERATE_SUB_KEYS,
+                            &hEnumeratorKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the enumerator key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwUsedLength = 0;
+    dwRemainingLength = *pulLength;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwDeviceLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumeratorKey,
+                                dwIndex,
+                                szDeviceBuffer,
+                                &dwDeviceLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        wsprintf(szPathBuffer, L"%s\\%s", pszEnumerator, szDeviceBuffer);
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        dwPathLength = dwRemainingLength;
+        ret = GetDeviceInstanceList(szPathBuffer,
+                                    pPtr,
+                                    &dwPathLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        dwUsedLength += dwPathLength - 1;
+        dwRemainingLength += dwPathLength - 1;
+        pPtr += dwPathLength - 1;
+    }
+
+    RegCloseKey(hEnumeratorKey);
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetAllInstanceList(
+    _Inout_ PWSTR pszBuffer,
+    _Inout_ PDWORD pulLength)
+{
+    WCHAR szEnumeratorBuffer[MAX_DEVICE_ID_LEN];
+    PWSTR pPtr;
+    DWORD dwIndex, dwEnumeratorLength, dwUsedLength, dwRemainingLength, dwPathLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    dwUsedLength = 0;
+    dwRemainingLength = *pulLength;
+    pPtr = pszBuffer;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwEnumeratorLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumKey,
+                                dwIndex,
+                                szEnumeratorBuffer,
+                                &dwEnumeratorLength,
+                                NULL, NULL, NULL, NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        dwPathLength = dwRemainingLength;
+        ret = GetEnumeratorInstanceList(szEnumeratorBuffer,
+                                        pPtr,
+                                        &dwPathLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        dwUsedLength += dwPathLength - 1;
+        dwRemainingLength += dwPathLength - 1;
+        pPtr += dwPathLength - 1;
+    }
+
+    if (ret == CR_SUCCESS)
+        *pulLength = dwUsedLength + 1;
+    else
+        *pulLength = 0;
+
+    return ret;
+}
+
+
 /* Function 10 */
 DWORD
 WINAPI
@@ -492,20 +899,22 @@ PNP_GetDeviceList(
     PNP_RPC_STRING_LEN *pulLength,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
+    WCHAR szDevice[MAX_DEVICE_ID_LEN];
+    WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceList() called\n");
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
         return CR_INVALID_FLAG;
 
-    if (pulLength == NULL || pszFilter == NULL)
+    if (pulLength == NULL)
         return CR_INVALID_POINTER;
 
-//    if (Buffer == NULL)
-//        return CR_INVALID_POINTER;
+    if ((ulFlags != CM_GETIDLIST_FILTER_NONE) &&
+        (pszFilter == NULL))
+        return CR_INVALID_POINTER;
 
     if (ulFlags &
         (CM_GETIDLIST_FILTER_BUSRELATIONS |
@@ -513,51 +922,337 @@ PNP_GetDeviceList(
          CM_GETIDLIST_FILTER_REMOVALRELATIONS |
          CM_GETIDLIST_FILTER_EJECTRELATIONS))
     {
-        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                             pszFilter);
-        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
-        {
-            PlugPlayData.Relations = 3;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
-        {
-            PlugPlayData.Relations = 2;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
-        {
-            PlugPlayData.Relations = 1;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
-        {
-            PlugPlayData.Relations = 0;
-        }
-
-        PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
-        PlugPlayData.Buffer = Buffer;
-
-        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
-                                   (PVOID)&PlugPlayData,
-                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
-        if (NT_SUCCESS(Status))
-        {
-            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
-        }
-        else
-        {
-            ret = NtStatusToCrError(Status);
-        }
+        ret = GetRelationsInstanceList(pszFilter,
+                                       ulFlags,
+                                       Buffer,
+                                       pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetServiceInstanceList(pszFilter,
+                                     Buffer,
+                                     pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        SplitDeviceInstanceID(pszFilter,
+                              szEnumerator,
+                              szDevice,
+                              szInstance);
+
+        if (*szEnumerator != UNICODE_NULL && *szDevice != UNICODE_NULL)
+        {
+            ret = GetDeviceInstanceList(pszFilter,
+                                        Buffer,
+                                        pulLength);
+        }
+        else
+        {
+            ret = GetEnumeratorInstanceList(pszFilter,
+                                            Buffer,
+                                            pulLength);
+        }
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetAllInstanceList(Buffer,
+                                 pulLength);
+    }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetRelationsInstanceListSize(
+    _In_ PWSTR pszDevice,
+    _In_ DWORD ulFlags,
+    _Inout_ PDWORD pulLength)
+{
+    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    NTSTATUS Status;
+    CONFIGRET ret = CR_SUCCESS;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         pszDevice);
+
+    if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
+    {
+        PlugPlayData.Relations = 3;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
+    {
+        PlugPlayData.Relations = 2;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
+    {
+        PlugPlayData.Relations = 1;
+    }
+    else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
+    {
+        PlugPlayData.Relations = 0;
+    }
+
+    PlugPlayData.BufferSize = 0;
+    PlugPlayData.Buffer = NULL;
+
+    Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
+    if (NT_SUCCESS(Status))
+    {
+        *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
+    }
+    else
+    {
+        ret = NtStatusToCrError(Status);
+    }
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetServiceInstanceListSize(
+    _In_ PWSTR pszService,
+    _Out_ PDWORD pulLength)
+{
+    HKEY hServicesKey = NULL, hServiceKey = NULL, hEnumKey = NULL;
+    DWORD dwValues, dwMaxValueLength, dwSize;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the services key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    dwError = RegOpenKeyExW(hServicesKey,
+                            pszService,
+                            0,
+                            KEY_READ,
+                            &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Enum",
+                            0,
+                            KEY_READ,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the service enum key (Error %lu)\n", dwError);
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    /* Retrieve the number of device instances */
+    dwSize = sizeof(DWORD);
+    dwError = RegQueryValueExW(hEnumKey,
+                               L"Count",
+                               NULL,
+                               NULL,
+                               (LPBYTE)&dwValues,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW failed (Error %lu)\n", dwError);
+        dwValues = 1;
+    }
+
+    /* Retrieve the maximum instance name length */
+    dwError = RegQueryInfoKeyW(hEnumKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwMaxValueLength,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryInfoKeyW failed (Error %lu)\n", dwError);
+        dwMaxValueLength = MAX_DEVICE_ID_LEN;
+    }
+
+    DPRINT("dwValues %lu  dwMaxValueLength %lu\n", dwValues, dwMaxValueLength / sizeof(WCHAR));
+
+    /* Return the largest possible buffer size */
+    *pulLength = dwValues * dwMaxValueLength / sizeof(WCHAR) + 2;
+
+Done:
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    if (hServicesKey != NULL)
+        RegCloseKey(hServicesKey);
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetDeviceInstanceListSize(
+    _In_ LPCWSTR pszDevice,
+    _Out_ PULONG pulLength)
+{
+    HKEY hDeviceKey;
+    DWORD dwSubKeys, dwMaxSubKeyLength;
+    DWORD dwError;
+
+    /* Open the device key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszDevice,
+                            0,
+                            KEY_READ,
+                            &hDeviceKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the device key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    /* Retrieve the number of device instances and the maximum name length */
+    dwError = RegQueryInfoKeyW(hDeviceKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwSubKeys,
+                               &dwMaxSubKeyLength,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryInfoKeyW failed (Error %lu)\n", dwError);
+        dwSubKeys = 0;
+        dwMaxSubKeyLength = 0;
+    }
+
+    /* Close the device key */
+    RegCloseKey(hDeviceKey);
+
+    /* Return the largest possible buffer size */
+    *pulLength = dwSubKeys * (wcslen(pszDevice) + 1 + dwMaxSubKeyLength + 1);
+
+    return CR_SUCCESS;
+}
+
+
+static
+CONFIGRET
+GetEnumeratorInstanceListSize(
+    _In_ LPCWSTR pszEnumerator,
+    _Out_ PULONG pulLength)
+{
+    WCHAR szDeviceBuffer[MAX_DEVICE_ID_LEN];
+    WCHAR szPathBuffer[512];
+    HKEY hEnumeratorKey;
+    DWORD dwIndex, dwDeviceLength, dwBufferLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    *pulLength = 0;
+
+    /* Open the enumerator key */
+    dwError = RegOpenKeyExW(hEnumKey,
+                            pszEnumerator,
+                            0,
+                            KEY_ENUMERATE_SUB_KEYS,
+                            &hEnumeratorKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the enumerator key (Error %lu)\n", dwError);
+        return CR_REGISTRY_ERROR;
+    }
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwDeviceLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumeratorKey,
+                                dwIndex,
+                                szDeviceBuffer,
+                                &dwDeviceLength,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        wsprintf(szPathBuffer, L"%s\\%s", pszEnumerator, szDeviceBuffer);
+        DPRINT("Path: %S\n", szPathBuffer);
+
+        ret = GetDeviceInstanceListSize(szPathBuffer, &dwBufferLength);
+        if (ret != CR_SUCCESS)
+        {
+            *pulLength = 0;
+            break;
+        }
+
+        *pulLength += dwBufferLength;
+    }
+
+    /* Close the enumerator key */
+    RegCloseKey(hEnumeratorKey);
+
+    return ret;
+}
+
+
+static
+CONFIGRET
+GetAllInstanceListSize(
+    _Out_ PULONG pulLength)
+{
+    WCHAR szEnumeratorBuffer[MAX_DEVICE_ID_LEN];
+    DWORD dwIndex, dwEnumeratorLength, dwBufferLength;
+    DWORD dwError;
+    CONFIGRET ret = CR_SUCCESS;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwEnumeratorLength = MAX_DEVICE_ID_LEN;
+        dwError = RegEnumKeyExW(hEnumKey,
+                                dwIndex,
+                                szEnumeratorBuffer,
+                                &dwEnumeratorLength,
+                                NULL, NULL, NULL, NULL);
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        /* Get the size of all device instances for the enumerator */
+        ret = GetEnumeratorInstanceListSize(szEnumeratorBuffer,
+                                            &dwBufferLength);
+        if (ret != CR_SUCCESS)
+            break;
+
+        *pulLength += dwBufferLength;
     }
 
     return ret;
@@ -573,16 +1268,22 @@ PNP_GetDeviceListSize(
     PNP_RPC_BUFFER_SIZE *pulLength,
     DWORD ulFlags)
 {
-    PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
+    WCHAR szEnumerator[MAX_DEVICE_ID_LEN];
+    WCHAR szDevice[MAX_DEVICE_ID_LEN];
+    WCHAR szInstance[MAX_DEVICE_ID_LEN];
     CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
 
-    DPRINT("PNP_GetDeviceListSize() called\n");
+    DPRINT("PNP_GetDeviceListSize(%p %S %p 0x%lx)\n",
+           hBinding, pszFilter, pulLength, ulFlags);
 
     if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
         return CR_INVALID_FLAG;
 
-    if (pulLength == NULL || pszFilter == NULL)
+    if (pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((ulFlags != CM_GETIDLIST_FILTER_NONE) &&
+        (pszFilter == NULL))
         return CR_INVALID_POINTER;
 
     *pulLength = 0;
@@ -593,52 +1294,41 @@ PNP_GetDeviceListSize(
          CM_GETIDLIST_FILTER_REMOVALRELATIONS |
          CM_GETIDLIST_FILTER_EJECTRELATIONS))
     {
-        RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
-                             pszFilter);
-        if (ulFlags & CM_GETIDLIST_FILTER_BUSRELATIONS)
-        {
-            PlugPlayData.Relations = 3;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
-        {
-            PlugPlayData.Relations = 2;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
-        {
-            PlugPlayData.Relations = 1;
-        }
-        else if (ulFlags & CM_GETIDLIST_FILTER_EJECTRELATIONS)
-        {
-            PlugPlayData.Relations = 0;
-        }
-
-        PlugPlayData.BufferSize = 0;
-        PlugPlayData.Buffer = NULL;
-
-        Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
-                                   (PVOID)&PlugPlayData,
-                                   sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
-        if (NT_SUCCESS(Status))
-        {
-            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
-        }
-        else
-        {
-            ret = NtStatusToCrError(Status);
-        }
+        ret = GetRelationsInstanceListSize(pszFilter,
+                                           ulFlags,
+                                           pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetServiceInstanceListSize(pszFilter,
+                                         pulLength);
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        SplitDeviceInstanceID(pszFilter,
+                              szEnumerator,
+                              szDevice,
+                              szInstance);
+
+        if (*szEnumerator != UNICODE_NULL && *szDevice != UNICODE_NULL)
+        {
+            ret = GetDeviceInstanceListSize(pszFilter,
+                                            pulLength);
+        }
+        else
+        {
+            ret = GetEnumeratorInstanceListSize(pszFilter,
+                                                pulLength);
+        }
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-        ret = CR_CALL_NOT_IMPLEMENTED;
+        ret = GetAllInstanceListSize(pulLength);
     }
+
+    /* Add one character for the terminating double UNICODE_NULL */
+    if (ret == CR_SUCCESS)
+        (*pulLength) += 1;
 
     return ret;
 }
@@ -1627,51 +2317,6 @@ done:
         RegCloseKey(hInstKey);
 
     return ret;
-}
-
-
-static VOID
-SplitDeviceInstanceID(IN LPWSTR pszDeviceInstanceID,
-                      OUT LPWSTR pszEnumerator,
-                      OUT LPWSTR pszDevice,
-                      OUT LPWSTR pszInstance)
-{
-    WCHAR szLocalDeviceInstanceID[MAX_DEVICE_ID_LEN];
-    LPWSTR lpEnumerator = NULL;
-    LPWSTR lpDevice = NULL;
-    LPWSTR lpInstance = NULL;
-    LPWSTR ptr;
-
-    wcscpy(szLocalDeviceInstanceID, pszDeviceInstanceID);
-
-    *pszEnumerator = 0;
-    *pszDevice = 0;
-    *pszInstance = 0;
-
-    lpEnumerator = szLocalDeviceInstanceID;
-
-    ptr = wcschr(lpEnumerator, L'\\');
-    if (ptr != NULL)
-    {
-        *ptr = 0;
-        lpDevice = ++ptr;
-
-        ptr = wcschr(lpDevice, L'\\');
-        if (ptr != NULL)
-        {
-            *ptr = 0;
-            lpInstance = ++ptr;
-        }
-    }
-
-    if (lpEnumerator != NULL)
-        wcscpy(pszEnumerator, lpEnumerator);
-
-    if (lpDevice != NULL)
-        wcscpy(pszDevice, lpDevice);
-
-    if (lpInstance != NULL)
-        wcscpy(pszInstance, lpInstance);
 }
 
 
@@ -3476,6 +4121,7 @@ DeviceInstallThread(LPVOID lpParameter)
             ResetEvent(hNoPendingInstalls);
             Params = CONTAINING_RECORD(ListEntry, DeviceInstallParams, ListEntry);
             InstallDevice(Params->DeviceIds, showWizard);
+            HeapFree(GetProcessHeap(), 0, Params);
         }
     }
 
@@ -3486,10 +4132,11 @@ DeviceInstallThread(LPVOID lpParameter)
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {
-    PPLUGPLAY_EVENT_BLOCK PnpEvent;
-    ULONG PnpEventSize;
+    DWORD dwRet = ERROR_SUCCESS;
     NTSTATUS Status;
     RPC_STATUS RpcStatus;
+    PPLUGPLAY_EVENT_BLOCK PnpEvent, NewPnpEvent;
+    ULONG PnpEventSize;
 
     UNREFERENCED_PARAMETER(lpParameter);
 
@@ -3502,27 +4149,30 @@ PnpEventThread(LPVOID lpParameter)
     {
         DPRINT("Calling NtGetPlugPlayEvent()\n");
 
-        /* Wait for the next pnp event */
+        /* Wait for the next PnP event */
         Status = NtGetPlugPlayEvent(0, 0, PnpEvent, PnpEventSize);
 
-        /* Resize the buffer for the PnP event if it's too small. */
+        /* Resize the buffer for the PnP event if it's too small */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            HeapFree(GetProcessHeap(), 0, PnpEvent);
-            PnpEvent = HeapAlloc(GetProcessHeap(), 0, PnpEventSize);
-            if (PnpEvent == NULL)
-                return ERROR_OUTOFMEMORY;
+            NewPnpEvent = HeapReAlloc(GetProcessHeap(), 0, PnpEvent, PnpEventSize);
+            if (NewPnpEvent == NULL)
+            {
+                dwRet = ERROR_OUTOFMEMORY;
+                break;
+            }
+            PnpEvent = NewPnpEvent;
             continue;
         }
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtGetPlugPlayEvent() failed (Status %lx)\n", Status);
+            DPRINT1("NtGetPlugPlayEvent() failed (Status 0x%08lx)\n", Status);
             break;
         }
 
-        /* Process the pnp event */
+        /* Process the PnP event */
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ENUMERATED, &RpcStatus))
         {
@@ -3613,13 +4263,13 @@ PnpEventThread(LPVOID lpParameter)
                 PnpEvent->EventGuid.Data4[6], PnpEvent->EventGuid.Data4[7]);
         }
 
-        /* Dequeue the current pnp event and signal the next one */
+        /* Dequeue the current PnP event and signal the next one */
         NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
     }
 
     HeapFree(GetProcessHeap(), 0, PnpEvent);
 
-    return ERROR_SUCCESS;
+    return dwRet;
 }
 
 

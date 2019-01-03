@@ -9,6 +9,33 @@
 #include <ntdef.h>
 #include <ntifs.h>
 
+typedef struct _ECP_LIST
+{
+    ULONG Signature;
+    ULONG Flags;
+    LIST_ENTRY EcpList;
+} ECP_LIST, *PECP_LIST;
+
+typedef ULONG ECP_HEADER_FLAGS;
+
+typedef struct _ECP_HEADER
+{
+    ULONG Signature;
+    ULONG Spare;
+    LIST_ENTRY ListEntry;
+    GUID EcpType;
+    PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback;
+    ECP_HEADER_FLAGS Flags;
+    ULONG Size;
+    PVOID ListAllocatedFrom;
+    PVOID Filter;
+} ECP_HEADER, *PECP_HEADER;
+
+#define ECP_HEADER_SIZE (sizeof(ECP_HEADER))
+
+#define ECP_HEADER_TO_CONTEXT(H) ((PVOID)((ULONG_PTR)H + ECP_HEADER_SIZE))
+#define ECP_CONTEXT_TO_HEADER(C) ((PECP_HEADER)((ULONG_PTR)C - ECP_HEADER_SIZE))
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -238,5 +265,97 @@ FsRtlValidateReparsePointBuffer(IN ULONG BufferLength,
     }
 
     return STATUS_IO_REPARSE_TAG_INVALID;
+}
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetEcpListFromIrp(IN PIRP Irp,
+                       OUT PECP_LIST *EcpList)
+{
+    /* Call Io */
+    return IoGetIrpExtraCreateParameter(Irp, EcpList);
+}
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetNextExtraCreateParameter(IN PECP_LIST EcpList,
+                                 IN PVOID CurrentEcpContext,
+                                 OUT LPGUID NextEcpType OPTIONAL,
+                                 OUT PVOID *NextEcpContext,
+                                 OUT PULONG NextEcpContextSize OPTIONAL)
+{
+    PECP_HEADER CurrentEntry;
+
+    /* If we have no context ... */
+    if (CurrentEcpContext == NULL)
+    {
+        if (IsListEmpty(&EcpList->EcpList))
+        {
+            goto FailEmpty;
+        }
+
+        /* Simply consider first entry */
+        CurrentEntry = CONTAINING_RECORD(EcpList->EcpList.Flink, ECP_HEADER, ListEntry);
+    }
+    else
+    {
+        /* Otherwise, consider the entry matching the given context */
+        CurrentEntry = ECP_CONTEXT_TO_HEADER(CurrentEcpContext);
+
+        /* Make sure we didn't reach the end */
+        if (&CurrentEntry->ListEntry == &EcpList->EcpList)
+        {
+            goto FailEmpty;
+        }
+    }
+
+    /* We must have an entry */
+    if (CurrentEntry == NULL)
+    {
+        goto FailEmpty;
+    }
+
+    /* If caller wants a context, give it */
+    if (NextEcpContext != NULL)
+    {
+        *NextEcpContext = ECP_HEADER_TO_CONTEXT(CurrentEntry);
+    }
+
+    /* Same for its size (which the size minus the header overhead) */
+    if (NextEcpContextSize != NULL)
+    {
+         *NextEcpContextSize = CurrentEntry->Size - sizeof(ECP_HEADER);
+    }
+
+    /* And copy the type if asked to */
+    if (NextEcpType != NULL)
+    {
+        RtlCopyMemory(NextEcpType, &CurrentEntry->EcpType, sizeof(GUID));
+    }
+
+    /* Job done */
+    return STATUS_SUCCESS;
+
+    /* Failure case: just zero everything */
+FailEmpty:
+    if (NextEcpContext != NULL)
+    {
+        *NextEcpContext = NULL;
+    }
+
+    if (NextEcpContextSize != NULL)
+    {
+        *NextEcpContextSize = 0;
+    }
+
+    if (NextEcpType != NULL)
+    {
+        RtlZeroMemory(NextEcpType, sizeof(GUID));
+    }
+
+    /* And return failure */
+    return STATUS_NOT_FOUND;
 }
 

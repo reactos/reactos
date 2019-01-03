@@ -39,7 +39,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "您的計算機需要重新啟動才能完成安裝。您要繼續嗎？"
+    IDS_QUERY_REBOOT_TEXT "您的電腦需要重新啟動才能完成安裝。您要繼續嗎？"
     IDS_QUERY_REBOOT_CAPTION "重新啟動"
     IDS_INF_FILE "安裝程式資訊"
 END

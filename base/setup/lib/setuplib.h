@@ -110,6 +110,7 @@ typedef struct _USETUP_DATA
     LONG MBRInstallType;
     LONG FormatPartition;
     LONG AutoPartition;
+    LONG FsType;
 
 /* Settings lists *****/
     PGENERIC_LIST ComputerList;

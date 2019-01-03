@@ -22,6 +22,7 @@ typedef struct _SERVICE_THREAD_PARAMSA
     LPSERVICE_MAIN_FUNCTIONA lpServiceMain;
     DWORD dwArgCount;
     LPSTR *lpArgVector;
+    DWORD dwServiceTag;
 } SERVICE_THREAD_PARAMSA, *PSERVICE_THREAD_PARAMSA;
 
 
@@ -30,6 +31,7 @@ typedef struct _SERVICE_THREAD_PARAMSW
     LPSERVICE_MAIN_FUNCTIONW lpServiceMain;
     DWORD dwArgCount;
     LPWSTR *lpArgVector;
+    DWORD dwServiceTag;
 } SERVICE_THREAD_PARAMSW, *PSERVICE_THREAD_PARAMSW;
 
 
@@ -47,6 +49,7 @@ typedef struct _ACTIVE_SERVICE
     LPVOID HandlerContext;
     BOOL bUnicode;
     BOOL bOwnProcess;
+    DWORD dwServiceTag;
 } ACTIVE_SERVICE, *PACTIVE_SERVICE;
 
 
@@ -164,13 +167,21 @@ ScLookupServiceByServiceName(LPCWSTR lpServiceName)
 static DWORD WINAPI
 ScServiceMainStubA(LPVOID Context)
 {
+    PTEB Teb;
     PSERVICE_THREAD_PARAMSA ThreadParams = Context;
 
     TRACE("ScServiceMainStubA(%p)\n", Context);
 
+    /* Set service tag */
+    Teb = NtCurrentTeb();
+    Teb->SubProcessTag = (PVOID)ThreadParams->dwServiceTag;
+
     /* Call the main service routine and free the arguments vector */
     (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
                                   ThreadParams->lpArgVector);
+
+    /* Reset service tag */
+    Teb->SubProcessTag = 0;
 
     if (ThreadParams->lpArgVector != NULL)
     {
@@ -185,13 +196,21 @@ ScServiceMainStubA(LPVOID Context)
 static DWORD WINAPI
 ScServiceMainStubW(LPVOID Context)
 {
+    PTEB Teb;
     PSERVICE_THREAD_PARAMSW ThreadParams = Context;
 
     TRACE("ScServiceMainStubW(%p)\n", Context);
 
+    /* Set service tag */
+    Teb = NtCurrentTeb();
+    Teb->SubProcessTag = (PVOID)ThreadParams->dwServiceTag;
+
     /* Call the main service routine and free the arguments vector */
     (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
                                   ThreadParams->lpArgVector);
+
+    /* Reset service tag */
+    Teb->SubProcessTag = 0;
 
     if (ThreadParams->lpArgVector != NULL)
     {
@@ -440,6 +459,8 @@ ScStartService(PACTIVE_SERVICE lpService,
 
     /* Set the service status handle */
     lpService->hServiceStatus = ControlPacket->hServiceStatus;
+    /* Set the service tag */
+    lpService->dwServiceTag = ControlPacket->dwServiceTag;
 
     /* Build the arguments vector */
     if (lpService->bUnicode != FALSE)
@@ -456,6 +477,7 @@ ScStartService(PACTIVE_SERVICE lpService,
             return dwError;
         }
         ThreadParamsW->lpServiceMain = lpService->ServiceMain.W;
+        ThreadParamsW->dwServiceTag = ControlPacket->dwServiceTag;
         ThreadHandle = CreateThread(NULL,
                                     0,
                                     ScServiceMainStubW,
@@ -489,6 +511,7 @@ ScStartService(PACTIVE_SERVICE lpService,
             return dwError;
         }
         ThreadParamsA->lpServiceMain = lpService->ServiceMain.A;
+        ThreadParamsA->dwServiceTag = ControlPacket->dwServiceTag;
         ThreadHandle = CreateThread(NULL,
                                     0,
                                     ScServiceMainStubA,
@@ -528,6 +551,9 @@ ScControlService(PACTIVE_SERVICE lpService,
     TRACE("Size: %lu\n", ControlPacket->dwSize);
     TRACE("Service: %S\n", (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
+    /* Set service tag */
+    NtCurrentTeb()->SubProcessTag = (PVOID)lpService->dwServiceTag;
+
     if (lpService->HandlerFunction)
     {
         _SEH2_TRY
@@ -559,6 +585,9 @@ ScControlService(PACTIVE_SERVICE lpService,
     {
         dwError = ERROR_SERVICE_CANNOT_ACCEPT_CTRL;
     }
+
+    /* Reset service tag */
+    NtCurrentTeb()->SubProcessTag = 0;
 
     TRACE("ScControlService() done (Error %lu)\n", dwError);
 

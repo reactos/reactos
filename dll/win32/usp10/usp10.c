@@ -3416,35 +3416,41 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
     if (pABC) memset(pABC, 0, sizeof(ABC));
     for (i = 0; i < cGlyphs; i++)
     {
+        WORD glyph;
         ABC abc;
+
+        /* FIXME: set to more reasonable values */
+        pGoffset[i].du = pGoffset[i].dv = 0;
+
         if (pGlyphProps[i].sva.fZeroWidth)
         {
             abc.abcA = abc.abcB = abc.abcC = 0;
+            if (piAdvance) piAdvance[i] = 0;
+            continue;
         }
-        else if (!get_cache_glyph_widths(psc, pwGlyphs[i], &abc))
+
+        if (psa->fNoGlyphIndex)
         {
-            BOOL ret;
+            if (FAILED(hr = ScriptGetCMap(hdc, psc, &pwGlyphs[i], 1, 0, &glyph))) return hr;
+        }
+        else
+            glyph = pwGlyphs[i];
+
+        if (!get_cache_glyph_widths(psc, glyph, &abc))
+        {
             if (!hdc) return E_PENDING;
             if (get_cache_pitch_family(psc) & TMPF_TRUETYPE)
             {
-                if (psa->fNoGlyphIndex)
-                    ret = GetCharABCWidthsW(hdc, pwGlyphs[i], pwGlyphs[i], &abc);
-                else
-                    ret = GetCharABCWidthsI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &abc);
-                if (!ret) return S_FALSE;
+                if (!GetCharABCWidthsI(hdc, glyph, 1, NULL, &abc)) return S_FALSE;
             }
             else
             {
                 INT width;
-                if (psa->fNoGlyphIndex)
-                    ret = GetCharWidth32W(hdc, pwGlyphs[i], pwGlyphs[i], &width);
-                else
-                    ret = GetCharWidthI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &width);
-                if (!ret) return S_FALSE;
+                if (!GetCharWidthI(hdc, glyph, 1, NULL, &width)) return S_FALSE;
                 abc.abcB = width;
                 abc.abcA = abc.abcC = 0;
             }
-            set_cache_glyph_widths(psc, pwGlyphs[i], &abc);
+            set_cache_glyph_widths(psc, glyph, &abc);
         }
         if (pABC)
         {
@@ -3452,8 +3458,6 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
             pABC->abcB += abc.abcB;
             pABC->abcC += abc.abcC;
         }
-        /* FIXME: set to more reasonable values */
-        pGoffset[i].du = pGoffset[i].dv = 0;
         if (piAdvance) piAdvance[i] = abc.abcA + abc.abcB + abc.abcC;
     }
 
@@ -3708,14 +3712,14 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
     if (!get_cache_glyph_widths(psc, glyph, abc))
     {
         if (!hdc) return E_PENDING;
-        if ((get_cache_pitch_family(psc) & TMPF_TRUETYPE))
+        if (get_cache_pitch_family(psc) & TMPF_TRUETYPE)
         {
             if (!GetCharABCWidthsI(hdc, 0, 1, &glyph, abc)) return S_FALSE;
         }
         else
         {
             INT width;
-            if (!GetCharWidth32W(hdc, glyph, glyph, &width)) return S_FALSE;
+            if (!GetCharWidthI(hdc, glyph, 1, NULL, &width)) return S_FALSE;
             abc->abcB = width;
             abc->abcA = abc->abcC = 0;
         }

@@ -222,9 +222,9 @@ CcRosFlushDirtyPages (
             continue;
         }
 
-        Locked = current->SharedCacheMap->Callbacks->AcquireForLazyWrite(
-                     current->SharedCacheMap->LazyWriteContext, Wait);
-        if (!Locked)
+        /* Don't attempt to lazy write the files that asked not to */
+        if (CalledFromLazy &&
+            BooleanFlagOn(current->SharedCacheMap->Flags, WRITEBEHIND_DISABLED))
         {
             CcRosVacbDecRefCount(current);
             continue;
@@ -233,6 +233,15 @@ CcRosFlushDirtyPages (
         ASSERT(current->Dirty);
 
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+        Locked = current->SharedCacheMap->Callbacks->AcquireForLazyWrite(
+                     current->SharedCacheMap->LazyWriteContext, Wait);
+        if (!Locked)
+        {
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            CcRosVacbDecRefCount(current);
+            continue;
+        }
 
         Status = CcRosFlushVacb(current);
 

@@ -1048,7 +1048,10 @@ RegCleanupRegistry(
             Status = DisconnectRegistry(NULL,
                                         RegistryHives[i].HiveRegistryPath,
                                         1 /* REG_FORCE_UNLOAD */);
-            DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Unmounting '%S' failed\n", RegistryHives[i].HiveRegistryPath);
+            }
 
             /* Switch the hive state to 'Update' */
             RegistryHives[i].State = Update;

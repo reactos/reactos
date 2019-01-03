@@ -196,6 +196,16 @@ CheckUnattendedSetup(
        }
     }
 
+    /* Search for FsType in the 'Unattend' section */
+    pSetupData->FsType = 0;
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FsType", &Context))
+    {
+        if (SpInfGetIntField(&Context, 1, &IntValue))
+        {
+            pSetupData->FsType = IntValue;
+        }
+    }
+
 Quit:
     SpInfCloseInfFile(UnattendInf);
 }

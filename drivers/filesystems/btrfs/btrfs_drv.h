@@ -1856,6 +1856,11 @@ NTSTATUS NTAPI ZwQueryInformationProcess(
 #endif
 #endif
 
+#if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA)
+typedef struct _ECP_LIST ECP_LIST;
+typedef struct _ECP_LIST *PECP_LIST;
+#endif
+
 #if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7)
 NTSTATUS WINAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
                                   ULONG *utf8_bytes_written,
@@ -1870,6 +1875,13 @@ NTSTATUS NTAPI FsRtlRemoveDotsFromPath(PWSTR OriginalString,
 NTSTATUS NTAPI FsRtlValidateReparsePointBuffer(ULONG BufferLength,
                                                PREPARSE_DATA_BUFFER ReparseBuffer);
 ULONG NTAPI KeQueryActiveProcessorCount(PKAFFINITY ActiveProcessors);
+NTSTATUS NTAPI FsRtlGetEcpListFromIrp(IN PIRP Irp,
+                                      OUT PECP_LIST *EcpList);
+NTSTATUS NTAPI FsRtlGetNextExtraCreateParameter(IN PECP_LIST EcpList,
+                                                IN PVOID CurrentEcpContext,
+                                                OUT LPGUID NextEcpType OPTIONAL,
+                                                OUT PVOID *NextEcpContext,
+                                                OUT PULONG NextEcpContextSize OPTIONAL);
 #endif /* defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_VISTA) */
 
 #endif

@@ -3,6 +3,40 @@
 // To revert conversion, please execute "code7bit -r <file>".
 #pragma once
 
+static MUI_ENTRY daDKSetupInitPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        0,
+        20,
+        "Please wait while the ReactOS Setup initializes itself",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        21,
+        "and discovers your devices...",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY daDKLanguagePageEntries[] =
 {
     {
@@ -130,7 +164,7 @@ static MUI_ENTRY daDKIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -487,7 +521,7 @@ static MUI_ENTRY daDKUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -615,13 +649,13 @@ static MUI_ENTRY daDKFlushPageEntries[] =
     {
         10,
         6,
-        "Systemet tjekker i \233jeblikket om alt er blevet kopieret til din disk",
+        "Systemet tjekker i \233jeblikket om alt er blevet kopieret til din disk.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Dette tager et \233jeblik",
+        "Dette tager et \233jeblik.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -655,7 +689,7 @@ static MUI_ENTRY daDKQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS er ikke blevet helt installeret",
+        "ReactOS er ikke blevet helt installeret.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1299,7 +1333,7 @@ static MUI_ENTRY daDKPrepareCopyEntries[] =
     {
         6,
         8,
-        "Installationen g\233r din computer klar til at kopiere ReactOS filerne. ",
+        "Installationen g\233r din computer klar til at kopiere ReactOS filerne.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1421,7 +1455,7 @@ static MUI_ENTRY daDKRegistryEntries[] =
     {
         6,
         8,
-        "Installationen opdatere systemkonfigurationen. ",
+        "Installationen opdatere systemkonfigurationen.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1686,6 +1720,10 @@ MUI_ERROR daDKErrorEntries[] =
 
 MUI_PAGE daDKPages[] =
 {
+    {
+        SETUP_INIT_PAGE,
+        daDKSetupInitPageEntries
+    },
     {
         LANGUAGE_PAGE,
         daDKLanguagePageEntries

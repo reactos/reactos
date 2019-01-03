@@ -16,18 +16,18 @@
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeMTRR(IN BOOLEAN FinalCpu)
 {
     /* FIXME: Support this */
     DPRINT("MTRR support detected but not yet taken advantage of\n");
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiAmdK6InitializeMTRR(VOID)
 {
     /* FIXME: Support this */

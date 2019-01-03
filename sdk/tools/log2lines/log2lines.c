@@ -644,8 +644,12 @@ main(int argc, const char **argv)
                 if (exefile)
                 {
                     l2l_dbg(2, "translating %s %s\n", exefile, offset);
-                    translate_file(exefile, my_atoi(offset), Line);
-                    printf("%s\n", Line);
+                    printf("<%s:%s", exefile, offset);
+                    if (!translate_file(exefile, my_atoi(offset), Line))
+                    {
+                        printf(" (%s)", Line);
+                    }
+                    printf(">\n");
                     report(conOut);
                 }
                 else

@@ -81,7 +81,7 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "系統區域設置應與您要使用的應用程序的語言相匹配。使用者區域設置控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "系統區域設置應與您要使用的應用程式的語言相匹配。使用者區域設置控制數字，貨幣和日期的顯示方式。", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "若要變更系統和使用者的地區設定, 點選自訂。", IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "自訂(&C)...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
@@ -130,9 +130,9 @@ CAPTION "ReactOS 安裝程式已完成"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "已經完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程序已順利完成。\n\n要重新啓動計算機，請點選 [完成]。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS 安裝程式已順利完成。\n\n要重新啓動電腦，請點選 [完成]。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裏有光碟，請將其取出要重新啓動計算機，請按 [完成]。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裏有光碟，請將其取出要重新啓動電腦，請按 [完成]。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
@@ -176,7 +176,7 @@ BEGIN
     IDS_ACKTITLE "致謝"
     IDS_ACKSUBTITLE "ReactOS 所依賴的開源項目及其許可證信息"
     IDS_OWNERTITLE "自訂您的軟體"
-    IDS_OWNERSUBTITLE "安裝程序將使用您提供的個人信息，自訂您的 ReactOS 軟體。"
+    IDS_OWNERSUBTITLE "安裝程式將使用您提供的個人信息，自訂您的 ReactOS 軟體。"
     IDS_COMPUTERTITLE "電腦名稱和系統管理員密碼"
     IDS_COMPUTERSUBTITLE "您必須提供電腦名稱和管理員密碼。"
     IDS_LOCALETITLE "地區設定"
