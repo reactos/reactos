@@ -1,14 +1,17 @@
 /*
  * PROJECT:     ReactOS Application compatibility module
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     All tags
  * COPYRIGHT:   Copyright 2013 Mislav Blažević
- *              Copyright 2015,2016 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SDBTAGID_H
 #define SDBTAGID_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define TAGID_NULL 0x0
 #define TAGID_ROOT 0x0
@@ -202,5 +205,9 @@
 #define TAG_FIX_ID (0x10 | TAG_TYPE_BINARY)
 #define TAG_APP_ID (0x11 | TAG_TYPE_BINARY)
 #define TAG_INDEX_BITS (0x801 | TAG_TYPE_BINARY)
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // SDBTAGID_H

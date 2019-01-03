@@ -1,8 +1,8 @@
 /*
  * PROJECT:     xml2sdb
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Define mapping of all shim database types to xml
- * COPYRIGHT:   Copyright 2016-2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -14,9 +14,9 @@
 
 #include <typedefs.h>
 #include <guiddef.h>
-#include "sdbtypes.h"
+#include <sdbtypes.h>
 #include "sdbwrite.h"
-#include "sdbtagid.h"
+#include <sdbtagid.h>
 
 namespace tinyxml2
 {
