@@ -265,7 +265,7 @@ MountMgrCreatePoint(IN PDEVICE_EXTENSION DeviceExtension,
 
     MaxLength = MAX((Point->DeviceNameOffset + Point->DeviceNameLength),
                     (Point->SymbolicLinkNameLength + Point->SymbolicLinkNameOffset));
-    if (MaxLength >= Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (MaxLength > Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
