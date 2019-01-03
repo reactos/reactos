@@ -424,8 +424,15 @@ BOOL ProcessHotKey(VOID)
       windowCount=0;
       EnumChildWindowsZOrder(NULL, EnumerateCallback, 0);
 
-      if (windowCount < 2)
+      if (windowCount == 0)
          return FALSE;
+
+      if (windowCount == 1)
+      {
+         selectedWindow = 0;
+         CompleteSwitch(TRUE);
+         return TRUE;
+      }
 
       selectedWindow = 1;
 
