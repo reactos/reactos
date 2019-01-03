@@ -725,7 +725,12 @@ RxCancelBlockingOperation(
 {
     PFOBX Fobx;
     BOOLEAN PostRequest;
-    C_ASSERT(FIELD_OFFSET(RX_CONTEXT, IoStatusBlock.Status) == 100);
+
+#ifdef _WIN64
+    C_ASSERT(FIELD_OFFSET(RX_CONTEXT, IoStatusBlock.Status) == 0x0B0);
+#else
+    C_ASSERT(FIELD_OFFSET(RX_CONTEXT, IoStatusBlock.Status) == 0x064);
+#endif
 
     PAGED_CODE();
 
