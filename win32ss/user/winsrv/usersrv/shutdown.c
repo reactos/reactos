@@ -394,31 +394,6 @@ IsConsoleMode(VOID)
     return (BOOLEAN)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE);
 }
 
-
-/* TODO: Find an other way to do it. */
-#if 0
-VOID FASTCALL
-ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
-{
-    HANDLE Thread;
-
-    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ClientId.UniqueProcess);
-
-    if (ProcessData->CtrlDispatcher)
-    {
-        Thread = CreateRemoteThread(ProcessData->ProcessHandle, NULL, 0,
-                                    (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
-                                    UlongToPtr(Event), 0, NULL);
-        if (Thread == NULL)
-        {
-            DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
-            return;
-        }
-        WaitForSingleObject(Thread, Timeout);
-        CloseHandle(Thread);
-    }
-}
-#endif
 /************************************************/
 
 
@@ -448,8 +423,10 @@ ThreadShutdownNotify(IN PCSR_THREAD CsrThread,
         }
         if (TopWnd != tmpWnd) MY_DPRINT("(TopWnd = %x) != (tmpWnd = %x)\n", TopWnd, tmpWnd);
     }
-    if (TopWnd == NULL)
+    else
+    {
         return;
+    }
 
     Context->wParam = Flags2;
     Context->lParam = (0 != (Flags & EWX_CALLER_WINLOGON_LOGOFF) ?
@@ -511,116 +488,104 @@ NotifyProcessForShutdown(PCSR_PROCESS CsrProcess,
                          UINT Flags)
 {
     DWORD QueryResult = QUERY_RESULT_CONTINUE;
+    PCSR_PROCESS Process;
+    PCSR_THREAD Thread;
+    PLIST_ENTRY NextEntry;
+    NOTIFY_CONTEXT Context;
 
     /* In case we make a forced shutdown, just kill the process */
     if (Flags & EWX_FORCE)
         return TRUE;
 
-    // TODO: Find an other way whether or not the process has a console.
-#if 0
-    if (CsrProcess->Console)
+    Context.ShutdownSettings = ShutdownSettings;
+    Context.QueryResult = QUERY_RESULT_CONTINUE; // We continue shutdown by default.
+
+    /* Lock the process */
+    CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
+
+    /* Send first the QUERYENDSESSION messages to all the threads of the process */
+    MY_DPRINT2("Sending the QUERYENDSESSION messages...\n");
+
+    NextEntry = CsrProcess->ThreadList.Flink;
+    while (NextEntry != &CsrProcess->ThreadList)
     {
-        ConioConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, CsrProcess,
-                                     ShutdownSettings->WaitToKillAppTimeout);
-    }
-    else
-#endif
-    {
-        PCSR_PROCESS Process;
-        PCSR_THREAD Thread;
-        PLIST_ENTRY NextEntry;
+        /* Get the current thread entry */
+        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
 
-        NOTIFY_CONTEXT Context;
-        Context.ShutdownSettings = ShutdownSettings;
-        Context.QueryResult = QUERY_RESULT_CONTINUE; // We continue shutdown by default.
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
 
-        /* Lock the process */
-        CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
+        /* If the thread is being terminated, just skip it */
+        if (Thread->Flags & CsrThreadTerminated) continue;
 
-        /* Send first the QUERYENDSESSION messages to all the threads of the process */
-        MY_DPRINT2("Sending the QUERYENDSESSION messages...\n");
-
-        NextEntry = CsrProcess->ThreadList.Flink;
-        while (NextEntry != &CsrProcess->ThreadList)
-        {
-            /* Get the current thread entry */
-            Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
-
-            /* Move to the next entry */
-            NextEntry = NextEntry->Flink;
-
-            /* If the thread is being terminated, just skip it */
-            if (Thread->Flags & CsrThreadTerminated) continue;
-
-            /* Reference the thread and temporarily unlock the process */
-            CsrReferenceThread(Thread);
-            CsrUnlockProcess(Process);
-
-            Context.QueryResult = QUERY_RESULT_CONTINUE;
-            ThreadShutdownNotify(Thread, Flags,
-                                 MCS_QUERYENDSESSION,
-                                 &Context);
-
-            /* Lock the process again and dereference the thread */
-            CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
-            CsrDereferenceThread(Thread);
-
-            // FIXME: Analyze Context.QueryResult !!
-            /**/if (Context.QueryResult == QUERY_RESULT_ABORT) goto Quit;/**/
-        }
-
-        QueryResult = Context.QueryResult;
-        MY_DPRINT2("QueryResult = %s\n",
-                   QueryResult == QUERY_RESULT_ABORT ? "Abort" : "Continue");
-
-        /* Now send the ENDSESSION messages to the threads */
-        MY_DPRINT2("Now sending the ENDSESSION messages...\n");
-
-        NextEntry = CsrProcess->ThreadList.Flink;
-        while (NextEntry != &CsrProcess->ThreadList)
-        {
-            /* Get the current thread entry */
-            Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
-
-            /* Move to the next entry */
-            NextEntry = NextEntry->Flink;
-
-            /* If the thread is being terminated, just skip it */
-            if (Thread->Flags & CsrThreadTerminated) continue;
-
-            /* Reference the thread and temporarily unlock the process */
-            CsrReferenceThread(Thread);
-            CsrUnlockProcess(Process);
-
-            Context.QueryResult = QUERY_RESULT_CONTINUE;
-            ThreadShutdownNotify(Thread, Flags,
-                                 (QUERY_RESULT_ABORT != QueryResult) ? MCS_ENDSESSION : 0,
-                                 &Context);
-
-            /* Lock the process again and dereference the thread */
-            CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
-            CsrDereferenceThread(Thread);
-        }
-
-Quit:
-        /* Unlock the process */
+        /* Reference the thread and temporarily unlock the process */
+        CsrReferenceThread(Thread);
         CsrUnlockProcess(Process);
 
-#if 0
-        if (Context.UIThread)
-        {
-            if (Context.Dlg)
-            {
-                SendMessageW(Context.Dlg, WM_CLOSE, 0, 0);
-            }
-            else
-            {
-                TerminateThread(Context.UIThread, QUERY_RESULT_ERROR);
-            }
-            CloseHandle(Context.UIThread);
-        }
-#endif
+        Context.QueryResult = QUERY_RESULT_CONTINUE;
+        ThreadShutdownNotify(Thread, Flags,
+                             MCS_QUERYENDSESSION,
+                             &Context);
+
+        /* Lock the process again and dereference the thread */
+        CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
+        CsrDereferenceThread(Thread);
+
+        // FIXME: Analyze Context.QueryResult !!
+        /**/if (Context.QueryResult == QUERY_RESULT_ABORT) goto Quit;/**/
     }
+
+    QueryResult = Context.QueryResult;
+    MY_DPRINT2("QueryResult = %s\n",
+               QueryResult == QUERY_RESULT_ABORT ? "Abort" : "Continue");
+
+    /* Now send the ENDSESSION messages to the threads */
+    MY_DPRINT2("Now sending the ENDSESSION messages...\n");
+
+    NextEntry = CsrProcess->ThreadList.Flink;
+    while (NextEntry != &CsrProcess->ThreadList)
+    {
+        /* Get the current thread entry */
+        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
+        /* If the thread is being terminated, just skip it */
+        if (Thread->Flags & CsrThreadTerminated) continue;
+
+        /* Reference the thread and temporarily unlock the process */
+        CsrReferenceThread(Thread);
+        CsrUnlockProcess(Process);
+
+        Context.QueryResult = QUERY_RESULT_CONTINUE;
+        ThreadShutdownNotify(Thread, Flags,
+                             (QUERY_RESULT_ABORT != QueryResult) ? MCS_ENDSESSION : 0,
+                             &Context);
+
+        /* Lock the process again and dereference the thread */
+        CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
+        CsrDereferenceThread(Thread);
+    }
+
+Quit:
+    /* Unlock the process */
+    CsrUnlockProcess(Process);
+
+#if 0
+    if (Context.UIThread)
+    {
+        if (Context.Dlg)
+        {
+            SendMessageW(Context.Dlg, WM_CLOSE, 0, 0);
+        }
+        else
+        {
+            TerminateThread(Context.UIThread, QUERY_RESULT_ERROR);
+        }
+        CloseHandle(Context.UIThread);
+    }
+#endif
 
     /* Kill the process unless we abort shutdown */
     return (QueryResult != QUERY_RESULT_ABORT);
