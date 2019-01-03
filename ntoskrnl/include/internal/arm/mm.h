@@ -4,6 +4,7 @@
 #pragma once
 
 #define _MI_PAGING_LEVELS 2
+#define _MI_HAS_NO_EXECUTE 1
 
 /* Memory layout base addresses */
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000

@@ -2351,13 +2351,6 @@ MiSetSystemCodeProtection(
     PMMPTE PointerPte;
     MMPTE TempPte;
 
-    /* Check if the registry setting is on or not */
-    if (!MmEnforceWriteProtection)
-    {
-        /* Always allow write and execute */
-        Protection |= (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
-    }
-
     /* Loop the PTEs */
     for (PointerPte = FirstPte; PointerPte <= LastPte; PointerPte++)
     {
@@ -2369,7 +2362,7 @@ MiSetSystemCodeProtection(
 
         /* Update the protection */
         TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
-#ifdef _M_AMD64
+#if _MI_HAS_NO_EXECUTE
         TempPte.u.Hard.NoExecute = !BooleanFlagOn(Protection, IMAGE_SCN_MEM_EXECUTE);
 #endif
 
@@ -2394,6 +2387,13 @@ MiWriteProtectSystemImage(
     ULONG SectionSize;
     ULONG Protection;
     PMMPTE FirstPte, LastPte;
+
+    /* Check if the registry setting is on or not */
+    if (!MmEnforceWriteProtection)
+    {
+        /* Ignore section protection */
+        return;
+    }
 
     /* Large page mapped images are not supported */
     NT_ASSERT(!MI_IS_PHYSICAL_ADDRESS(ImageBase));
