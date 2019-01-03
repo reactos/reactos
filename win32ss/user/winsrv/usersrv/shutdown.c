@@ -397,7 +397,7 @@ IsConsoleMode(VOID)
 /************************************************/
 
 
-static VOID
+static BOOL
 ThreadShutdownNotify(IN PCSR_THREAD CsrThread,
                      IN ULONG Flags,
                      IN ULONG Flags2,
@@ -425,7 +425,7 @@ ThreadShutdownNotify(IN PCSR_THREAD CsrThread,
     }
     else
     {
-        return;
+        return FALSE;
     }
 
     Context->wParam = Flags2;
@@ -480,22 +480,25 @@ ThreadShutdownNotify(IN PCSR_THREAD CsrThread,
     SwitchDesktop(Context->OldDesktop);
     MY_DPRINT("Switched back ok\n");
 #endif
+
+    return TRUE;
 }
 
-static BOOL
-NotifyProcessForShutdown(PCSR_PROCESS CsrProcess,
-                         PSHUTDOWN_SETTINGS ShutdownSettings,
-                         UINT Flags)
+static ULONG
+NotifyUserProcessForShutdown(PCSR_PROCESS CsrProcess,
+                             PSHUTDOWN_SETTINGS ShutdownSettings,
+                             UINT Flags)
 {
     DWORD QueryResult = QUERY_RESULT_CONTINUE;
     PCSR_PROCESS Process;
     PCSR_THREAD Thread;
     PLIST_ENTRY NextEntry;
     NOTIFY_CONTEXT Context;
+    BOOL FoundWindows = FALSE;
 
     /* In case we make a forced shutdown, just kill the process */
     if (Flags & EWX_FORCE)
-        return TRUE;
+        return CsrShutdownCsrProcess;
 
     Context.ShutdownSettings = ShutdownSettings;
     Context.QueryResult = QUERY_RESULT_CONTINUE; // We continue shutdown by default.
@@ -523,9 +526,10 @@ NotifyProcessForShutdown(PCSR_PROCESS CsrProcess,
         CsrUnlockProcess(Process);
 
         Context.QueryResult = QUERY_RESULT_CONTINUE;
-        ThreadShutdownNotify(Thread, Flags,
-                             MCS_QUERYENDSESSION,
-                             &Context);
+        if (ThreadShutdownNotify(Thread, Flags, MCS_QUERYENDSESSION, &Context))
+        {
+            FoundWindows = TRUE;
+        }
 
         /* Lock the process again and dereference the thread */
         CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
@@ -533,6 +537,14 @@ NotifyProcessForShutdown(PCSR_PROCESS CsrProcess,
 
         // FIXME: Analyze Context.QueryResult !!
         /**/if (Context.QueryResult == QUERY_RESULT_ABORT) goto Quit;/**/
+    }
+
+    if (!FoundWindows)
+    {
+        /* We looped all threads but no top level window was found so we didn't send any message */
+        /* Let the console server run the generic process shutdown handler */
+        CsrUnlockProcess(Process);
+        return CsrShutdownNonCsrProcess;
     }
 
     QueryResult = Context.QueryResult;
@@ -588,7 +600,10 @@ Quit:
 #endif
 
     /* Kill the process unless we abort shutdown */
-    return (QueryResult != QUERY_RESULT_ABORT);
+    if (QueryResult == QUERY_RESULT_ABORT)
+        return CsrShutdownCancelled;
+
+    return CsrShutdownCsrProcess;
 }
 
 static NTSTATUS FASTCALL
@@ -718,6 +733,8 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
                    IN ULONG Flags,
                    IN BOOLEAN FirstPhase)
 {
+    ULONG result;
+
     DPRINT("UserClientShutdown(0x%p, 0x%x, %s) - [0x%x, 0x%x], ShutdownFlags: %lu\n",
             CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase",
             CsrProcess->ClientId.UniqueProcess, CsrProcess->ClientId.UniqueThread,
@@ -749,11 +766,12 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     }
 
     /* Notify the process for shutdown if needed */
-    if (!NotifyProcessForShutdown(CsrProcess, &ShutdownSettings, Flags))
+    result = NotifyUserProcessForShutdown(CsrProcess, &ShutdownSettings, Flags);
+    if (result == CsrShutdownCancelled || result == CsrShutdownNonCsrProcess)
     {
-        DPRINT1("Process 0x%x aborted shutdown\n", CsrProcess->ClientId.UniqueProcess);
-        /* Abort shutdown */
-        return CsrShutdownCancelled;
+        if (result == CsrShutdownCancelled)
+            DPRINT1("Process 0x%x aborted shutdown\n", CsrProcess->ClientId.UniqueProcess);
+        return result;
     }
 
     /* Terminate this process */
