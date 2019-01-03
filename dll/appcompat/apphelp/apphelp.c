@@ -4,7 +4,7 @@
  * PURPOSE:     apphelp entrypoint / generic interface functions
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -66,7 +66,7 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 
 BOOL WINAPI ApphelpCheckInstallShieldPackage(void* ptr, LPCWSTR path)
 {
-    SHIM_WARN("stub: ptr=%p, path='%S'\r\n", ptr, path);
+    SHIM_WARN("stub: ptr=%p, path='%S'\n", ptr, path);
     return TRUE;
 }
 
@@ -238,5 +238,57 @@ ApphelpCheckRunAppEx(
 
     /* We should _ALWAYS_ return TRUE here, unless we want to block an application from starting! */
     return TRUE;
+}
+
+
+/**
+ * @name SdbRegisterDatabaseEx
+ * Register an application compatibility database
+ *
+ * @param pszDatabasePath   The database. Required
+ * @param dwDatabaseType    The database type. SDB_DATABASE_*
+ * @param pTimeStamp        The timestamp. When this argument is not provided, the system time is used.
+ * @return                  TRUE on success, or FALSE on failure.
+ */
+BOOL WINAPI SdbRegisterDatabaseEx(
+    _In_ LPCTSTR pszDatabasePath,
+    _In_ DWORD dwDatabaseType,
+    _In_opt_ PULONGLONG pTimeStamp)
+{
+    SHIM_ERR("UNIMPLEMENTED, pszDatabasePath=%ws, dwDatabaseType=0x%x, pTimeStamp=%p\n",
+             pszDatabasePath, dwDatabaseType, pTimeStamp);
+
+    return FALSE;
+}
+
+
+/**
+ * @name SdbRegisterDatabase
+ * Register an application compatibility database
+ *
+ * @param pszDatabasePath   The database. Required
+ * @param dwDatabaseType    The database type. SDB_DATABASE_*
+ * @return                  TRUE on success, or FALSE on failure.
+ */
+BOOL WINAPI SdbRegisterDatabase(
+    _In_ LPCTSTR pszDatabasePath,
+    _In_ DWORD dwDatabaseType)
+{
+    return SdbRegisterDatabaseEx(pszDatabasePath, dwDatabaseType, NULL);
+}
+
+
+/**
+ * @name SdbUnregisterDatabase
+ * 
+ *
+ * @param pguidDB
+ * @return 
+ */
+BOOL WINAPI SdbUnregisterDatabase(_In_ GUID *pguidDB)
+{
+    SHIM_ERR("UNIMPLEMENTED, pguidDB = %p\n", pguidDB);
+
+    return FALSE;
 }
 

@@ -129,7 +129,7 @@
 @ stub SdbReadStringTagRef
 @ stdcall SdbReadWORDTag(ptr long long)
 @ stub SdbReadWORDTagRef
-@ stub SdbRegisterDatabase
+@ stdcall SdbRegisterDatabase(wstr long)
 @ stdcall SdbReleaseDatabase(ptr)
 @ stub SdbReleaseMatchingExe
 @ stub SdbResolveDatabase
@@ -147,7 +147,7 @@
 @ stdcall SdbTagIDToTagRef(ptr ptr long ptr)
 @ stdcall SdbTagRefToTagID(ptr long ptr ptr)
 @ stdcall SdbTagToString(long)
-@ stub SdbUnregisterDatabase
+@ stdcall SdbUnregisterDatabase(ptr)
 @ stdcall SdbWriteBinaryTag(ptr long ptr long)
 @ stdcall SdbWriteBinaryTagFromFile(ptr long wstr)
 @ stub SdbWriteBYTETag
@@ -176,3 +176,4 @@
 @ stub ShimDumpCache
 @ stub ShimFlushCache
 @ stdcall SetPermLayerState(wstr wstr long long long)
+@ stdcall SdbRegisterDatabaseEx(wstr long ptr)
