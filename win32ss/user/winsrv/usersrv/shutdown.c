@@ -770,15 +770,17 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
         return CsrShutdownNonCsrProcess;
     }
 
-    /* Do not kill Winlogon or CSRSS */
-    if (CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ||
-        CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
+    /* Do not kill Winlogon */
+    if (CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
     {
         DPRINT("Not killing %s; CsrProcess->ShutdownFlags = %lu\n",
                 CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ? "CSRSS" : "Winlogon",
                 CsrProcess->ShutdownFlags);
 
-        return CsrShutdownNonCsrProcess;
+        /* Returning CsrShutdownCsrProcess means that we handled this process by doing nothing */
+        /* This will mark winlogon as processed so consrv won't be notified again for it */
+        CsrDereferenceProcess(CsrProcess);
+        return CsrShutdownCsrProcess;
     }
 
     /* Notify the process for shutdown if needed */
