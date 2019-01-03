@@ -805,7 +805,7 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 
 
 
-static NTSTATUS
+NTSTATUS
 ConSrvConsoleCtrlEventTimeout(IN ULONG CtrlEvent,
                               IN PCONSOLE_PROCESS_DATA ProcessData,
                               IN ULONG Timeout)
