@@ -1171,6 +1171,14 @@ Language=English
 PP1_INITIALIZATION_FAILED
 .
 
+MessageId=0x91
+Severity=Success
+Facility=System
+SymbolicName=WIN32K_INIT_OR_RIT_FAILURE
+Language=English
+WIN32K_INIT_OR_RIT_FAILURE
+.
+
 MessageId=0x93
 Severity=Success
 Facility=System
@@ -1271,7 +1279,7 @@ Severity=Success
 Facility=System
 SymbolicName=VIDEO_DRIVER_INIT_FAILURE
 Language=English
-The video driver failed to initialize
+The video driver failed to initialize.
 .
 
 MessageId=0xB7
