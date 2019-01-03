@@ -1156,7 +1156,7 @@ RxCancelOperationInOverflowQueue(
         {
             /* Remove it from the list */
             RemoveEntryList(&RxContext->OverflowListEntry);
-            RxContext->OverflowListEntry.Flink == NULL;
+            RxContext->OverflowListEntry.Flink = NULL;
 
             /* Decrement appropriate count */
             if (BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_FSP_CRITICAL_OVERFLOW_QUEUE))
