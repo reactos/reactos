@@ -134,7 +134,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "La tastiera virtuale fornisce un livello minimo di funzionalità per gli utenti con mobilità ridotta. Gli utenti con mobilità ridotta hanno bisogno di questa programma con maggiore funzionalità per un uso giornaliero.", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "La tastiera virtuale fornisce un livello minimo di funzionalità per gli utenti con mobilità ridotta. Gli utenti con mobilità ridotta hanno bisogno di un programma con maggiori funzionalità per un uso giornaliero.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "Non visualizzare più questo messaggio", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
