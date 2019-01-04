@@ -112,10 +112,10 @@ typedef		TVSORTEX				TV_SORTEX;
 #define 	TVE_EXPANDNEXT			(0x20000000)
 #define 	TVE_ALLCHILDS			(0x10000000)
 #define 	TVE_ONLYCHILDS			(0x00000008)
-#define 	TVI_SORTEX				((HTREEITEM) 0xFFFF0007)
-#define 	TVI_BEFORE				((HTREEITEM) 0xFFFF0006)
-#define 	TVI_AFTER				((HTREEITEM) 0xFFFF0005)
-#define		TVI_ROW(n)		        ((HTREEITEM)(0xFFE00000+(n)))
+#define 	TVI_SORTEX				((HTREEITEM)(ULONG_PTR)0xFFFF0007)
+#define 	TVI_BEFORE				((HTREEITEM)(ULONG_PTR)0xFFFF0006)
+#define 	TVI_AFTER				((HTREEITEM)(ULONG_PTR)0xFFFF0005)
+#define		TVI_ROW(n)		        ((HTREEITEM)(ULONG_PTR)(0xFFE00000+(n)))
 #ifndef		VK_DBLCLK
 #define 	VK_DBLCLK				0x10000				// Edit with doubleclick
 #endif
@@ -404,7 +404,7 @@ typedef		TVSORTEX				TV_SORTEX;
 #define		TreeList_FindItem(h,p,f)					((HTREEITEM )SNDMSG(h,TVM_FINDITEM ,(WPARAM)p,(LPARAM)f))
 #define		TreeList_CreateDragImage(h,i)				((HIMAGELIST)SNDMSG(h,TVM_CREATEDRAGIMAGE, 0, (LPARAM)(HTREEITEM)(i)))
 #define		TreeList_CreateDragImageEx(h,i,s)			((HIMAGELIST)SNDMSG(h,TVM_CREATEDRAGIMAGE, s, (LPARAM)(HTREEITEM)(i)))
-#define		TreeList_SetImageList(h,l,i)				((HIMAGELIST)SNDMSG(h,TVM_SETIMAGELIST,i,(LPARAM)(UINT)(HIMAGELIST)(l)))
+#define		TreeList_SetImageList(h,l,i)				((HIMAGELIST)SNDMSG(h,TVM_SETIMAGELIST,i,(LPARAM)(HIMAGELIST)(l)))
 #define		TreeList_SetIndent(h,i)					    ((BOOL      )SNDMSG(h,TVM_SETINDENT,(WPARAM)(i),0))
 #define		TreeList_SetItem(h,p)					    ((BOOL      )SNDMSG(h,TVM_SETITEM,0,(LPARAM)(const TV_ITEM*)(p)))
 #define		TreeList_SortChildren(h,i,r)				((BOOL      )SNDMSG(h,TVM_SORTCHILDREN  ,(WPARAM)r,(LPARAM)(HTREEITEM)(i)))
@@ -484,7 +484,7 @@ extern BOOL	TreeListUnregister(HINSTANCE hInstance);
     _ms_tvi.hItem       = (hItem_); \
     _ms_tvi.stateMask   = 0; \
     _ms_tvi.pszText     = _my_pszText; \
-    _ms_tvi.cchTextMax  = _my_pszText ? wcslen(_my_pszText) : 0; \
+    _ms_tvi.cchTextMax  = _my_pszText ? (int)wcslen(_my_pszText) : 0; \
     _ms_tvi.cChildren   = (iSubItem_); \
     TreeList_SetItem((hwndLV), &_ms_tvi); \
 }
