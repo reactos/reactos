@@ -204,58 +204,47 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
     tma->ntmFontSig = tmw->ntmFontSig;
 }
 
-static int
-IntFontFamilyCompare(const void *x, const void *y)
+// IntFontFamilyCompareEx's flags
+#define IFFCX_CHARSET 1
+#define IFFCX_STYLE 2
+
+FORCEINLINE int FASTCALL
+IntFontFamilyCompareEx(const FONTFAMILYINFO *ffi1,
+                       const FONTFAMILYINFO *ffi2, DWORD dwCompareFlags)
 {
-    const FONTFAMILYINFO *ffi1 = x;
-    const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
     ULONG WeightDiff1, WeightDiff2;
     int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
-    if (plf1->lfCharSet < plf2->lfCharSet)
-        return -1;
-    if (plf1->lfCharSet > plf2->lfCharSet)
-        return 1;
-    WeightDiff1 = labs(plf1->lfWeight - FW_NORMAL);
-    WeightDiff2 = labs(plf2->lfWeight - FW_NORMAL);
-    if (WeightDiff1 < WeightDiff2)
-        return -1;
-    if (WeightDiff1 > WeightDiff2)
-        return 1;
-    if (plf1->lfItalic < plf2->lfItalic)
-        return -1;
-    if (plf1->lfItalic > plf2->lfItalic)
-        return 1;
+    if (dwCompareFlags & IFFCX_STYLE)
+    {
+        WeightDiff1 = labs(plf1->lfWeight - FW_NORMAL);
+        WeightDiff2 = labs(plf2->lfWeight - FW_NORMAL);
+        if (WeightDiff1 < WeightDiff2)
+            return -1;
+        if (WeightDiff1 > WeightDiff2)
+            return 1;
+        if (plf1->lfItalic < plf2->lfItalic)
+            return -1;
+        if (plf1->lfItalic > plf2->lfItalic)
+            return 1;
+    }
+    if (dwCompareFlags & IFFCX_CHARSET)
+    {
+        if (plf1->lfCharSet < plf2->lfCharSet)
+            return -1;
+        if (plf1->lfCharSet > plf2->lfCharSet)
+            return 1;
+    }
     return 0;
 }
 
-FORCEINLINE int FASTCALL
-IntFontFamilyCompareNameOnly(const FONTFAMILYINFO *ffi1, const FONTFAMILYINFO *ffi2)
+static int __cdecl
+IntFontFamilyCompare(const void *ffi1, const void *ffi2)
 {
-    const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
-    const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
-    int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
-    if (cmp)
-        return cmp;
-    return 0;
-}
-
-FORCEINLINE int FASTCALL
-IntFontFamilyCompareNoStyle(const FONTFAMILYINFO *ffi1, const FONTFAMILYINFO *ffi2)
-{
-    const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
-    const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
-    int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
-    if (cmp)
-        return cmp;
-    if (plf1->lfCharSet < plf2->lfCharSet)
-        return -1;
-    if (plf1->lfCharSet > plf2->lfCharSet)
-        return 1;
-    return 0;
+    return IntFontFamilyCompareEx(ffi1, ffi2, IFFCX_STYLE | IFFCX_CHARSET);
 }
 
 // IntEnumFontFamilies' flags:
@@ -267,31 +256,23 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
                         const LOGFONTW *plf, DWORD dwFlags)
 {
     FONTFAMILYINFO *first, *last, *result;
+    DWORD dwCompareFlags = IFFCX_STYLE | IFFCX_CHARSET;
 
-    // If non-Ex, then shrink about lfCharSet and font style.
-    if (!(dwFlags & IEFF_EXTENDED))
+    // if lfFaceName was empty, then styles are dropped.
+    if (!plf->lfFaceName[0])
     {
-        // std::unique(first, last, IntFontFamilyCompareNameOnly);
-        if (nCount == 0)
-            return 0;
-
-        result = first = InfoList;
-        last = &InfoList[nCount];
-        while (++first != last)
-        {
-            if (IntFontFamilyCompareNameOnly(result, first) != 0 &&
-                ++result != first)
-            {
-                *result = *first;
-            }
-        }
-        nCount = (int)(++result - InfoList);
+        dwCompareFlags &= ~IFFCX_STYLE;
     }
 
-    // If lfCharSet is DEFAULT_CHARSET, then shrink about font style.
-    if (plf->lfCharSet == DEFAULT_CHARSET)
+    // If non-Ex, then shrink about lfCharSet.
+    if (!(dwFlags & IEFF_EXTENDED))
     {
-        // std::unique(first, last, IntFontFamilyCompareNoStyle);
+        dwCompareFlags &= ~IFFCX_CHARSET;
+    }
+
+    if (dwCompareFlags != (IFFCX_CHARSET | IFFCX_STYLE))
+    {
+        // std::unique(first, last, IntFontFamilyCompareEx);
         if (nCount == 0)
             return 0;
 
@@ -299,7 +280,7 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
         last = &InfoList[nCount];
         while (++first != last)
         {
-            if (IntFontFamilyCompareNoStyle(result, first) != 0 &&
+            if (IntFontFamilyCompareEx(result, first, dwCompareFlags) != 0 &&
                 ++result != first)
             {
                 *result = *first;
