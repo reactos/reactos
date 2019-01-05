@@ -233,10 +233,8 @@ IntFontFamilyCompare(const void *x, const void *y)
 }
 
 FORCEINLINE int FASTCALL
-IntFontFamilyCompareNameOnly(const void *x, const void *y)
+IntFontFamilyCompareNameOnly(const FONTFAMILYINFO *ffi1, const FONTFAMILYINFO *ffi2)
 {
-    const FONTFAMILYINFO *ffi1 = x;
-    const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
     int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
@@ -246,10 +244,8 @@ IntFontFamilyCompareNameOnly(const void *x, const void *y)
 }
 
 FORCEINLINE int FASTCALL
-IntFontFamilyCompareNoStyle(const void *x, const void *y)
+IntFontFamilyCompareNoStyle(const FONTFAMILYINFO *ffi1, const FONTFAMILYINFO *ffi2)
 {
-    const FONTFAMILYINFO *ffi1 = x;
-    const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
     int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
@@ -271,16 +267,16 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
                         const LOGFONTW *plf, DWORD dwFlags)
 {
     FONTFAMILYINFO *first, *last, *result;
-    if (nCount == 0)
-        return 0;
 
     // If non-Ex, then shrink about lfCharSet and font style.
     if (!(dwFlags & IEFF_EXTENDED))
     {
+        // std::unique(first, last, IntFontFamilyCompareNameOnly);
+        if (nCount == 0)
+            return 0;
+
         result = first = InfoList;
         last = &InfoList[nCount];
-
-        // std::unique(first, last);
         while (++first != last)
         {
             if (IntFontFamilyCompareNameOnly(result, first) != 0 &&
@@ -292,16 +288,15 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
         nCount = (int)(++result - InfoList);
     }
 
-    if (nCount == 0)
-        return 0;
-
     // If lfCharSet is DEFAULT_CHARSET, then shrink about font style.
     if (plf->lfCharSet == DEFAULT_CHARSET)
     {
+        // std::unique(first, last, IntFontFamilyCompareNoStyle);
+        if (nCount == 0)
+            return 0;
+
         result = first = InfoList;
         last = &InfoList[nCount];
-
-        // std::unique(first, last);
         while (++first != last)
         {
             if (IntFontFamilyCompareNoStyle(result, first) != 0 &&
