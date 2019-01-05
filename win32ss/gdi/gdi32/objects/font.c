@@ -271,7 +271,6 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
                         const LOGFONTW *plf, DWORD dwFlags)
 {
     FONTFAMILYINFO *first, *last, *result;
-
     if (nCount == 0)
         return 0;
 
@@ -280,6 +279,8 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
     {
         result = first = InfoList;
         last = &InfoList[nCount];
+
+        // std::unique(first, last);
         while (++first != last)
         {
             if (IntFontFamilyCompareNameOnly(result, first) != 0 &&
@@ -299,6 +300,8 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
     {
         result = first = InfoList;
         last = &InfoList[nCount];
+
+        // std::unique(first, last);
         while (++first != last)
         {
             if (IntFontFamilyCompareNoStyle(result, first) != 0 &&
