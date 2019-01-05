@@ -22,6 +22,13 @@
 
 /* PROTOTYPES ***************************************************************/
 
+VOID
+AddReactOSArcDiskInfo(
+    IN PSTR ArcName,
+    IN ULONG Signature,
+    IN ULONG Checksum,
+    IN BOOLEAN ValidPartitionTable);
+
 //
 // ARC Component Configuration Routines
 //

@@ -26,6 +26,32 @@ ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
 #define TAG_HW_NAME             'mNwH'
 
 VOID
+AddReactOSArcDiskInfo(
+    IN PSTR ArcName,
+    IN ULONG Signature,
+    IN ULONG Checksum,
+    IN BOOLEAN ValidPartitionTable)
+{
+    ASSERT(reactos_disk_count < sizeof(reactos_arc_disk_info)/sizeof(reactos_arc_disk_info[0]));
+
+    /* Fill out the ARC disk block */
+
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ValidPartitionTable = ValidPartitionTable;
+
+    strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
+        reactos_arc_disk_info[reactos_disk_count].ArcName;
+
+    reactos_disk_count++;
+}
+
+//
+// ARC Component Configuration Routines
+//
+
+VOID
 NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PCHAR IdentifierString)
