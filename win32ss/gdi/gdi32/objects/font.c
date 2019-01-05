@@ -238,7 +238,7 @@ IntFontFamilyCompare(const void *x, const void *y)
     return 0;
 }
 
-static int
+FORCEINLINE int FASTCALL
 IntFontFamilyCompareNameOnly(const void *x, const void *y)
 {
     const FONTFAMILYINFO *ffi1 = x;
@@ -252,7 +252,7 @@ IntFontFamilyCompareNameOnly(const void *x, const void *y)
     return 0;
 }
 
-static int
+FORCEINLINE int FASTCALL
 IntFontFamilyCompareNoStyle(const void *x, const void *y)
 {
     const FONTFAMILYINFO *ffi1 = x;
@@ -283,7 +283,7 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList,
     if (count == 0)
         return 0;
 
-    // If non-Ex, then shrink about lfCharSet.
+    // If non-Ex, then shrink about lfCharSet and font style.
     if (!(dwFlags & IEFF_EXTENDED))
     {
         result = first = InfoList;
