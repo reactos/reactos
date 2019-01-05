@@ -12,7 +12,7 @@
 #include <math.h>
 #include <strsafe.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* Rounds a floating point number to integer. The world-to-viewport
@@ -204,9 +204,126 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
     tma->ntmFontSig = tmw->ntmFontSig;
 }
 
+// IntEnumFontFamilies's flags:
+#define IEFF_UNICODE 1
+#define IEFF_EXTENDED 2
+
+static int
+IntFontFamilyCompare(const void *x, const void *y)
+{
+    const FONTFAMILYINFO *ffi1 = x;
+    const FONTFAMILYINFO *ffi2 = y;
+    const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
+    const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
+    int cmp;
+    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    if (cmp)
+        return cmp;
+    if (plf1->lfCharSet == DEFAULT_CHARSET && plf2->lfCharSet != DEFAULT_CHARSET)
+        return -1;
+    if (plf1->lfCharSet != DEFAULT_CHARSET && plf2->lfCharSet == DEFAULT_CHARSET)
+        return 1;
+    if (plf1->lfCharSet < plf2->lfCharSet)
+        return -1;
+    if (plf1->lfCharSet > plf2->lfCharSet)
+        return 1;
+    if (plf1->lfWeight < plf2->lfWeight)
+        return -1;
+    if (plf1->lfWeight > plf2->lfWeight)
+        return 1;
+    if (plf1->lfItalic < plf2->lfItalic)
+        return -1;
+    if (plf1->lfItalic > plf2->lfItalic)
+        return 1;
+    return 0;
+}
+
+static int
+IntFontFamilyCompareNameOnly(const void *x, const void *y)
+{
+    const FONTFAMILYINFO *ffi1 = x;
+    const FONTFAMILYINFO *ffi2 = y;
+    const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
+    const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
+    int cmp;
+    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    if (cmp)
+        return cmp;
+    return 0;
+}
+
+static int
+IntFontFamilyCompareNoStyle(const void *x, const void *y)
+{
+    const FONTFAMILYINFO *ffi1 = x;
+    const FONTFAMILYINFO *ffi2 = y;
+    const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
+    const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
+    int cmp;
+    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    if (cmp)
+        return cmp;
+    if (plf1->lfCharSet == DEFAULT_CHARSET && plf2->lfCharSet != DEFAULT_CHARSET)
+        return -1;
+    if (plf1->lfCharSet != DEFAULT_CHARSET && plf2->lfCharSet == DEFAULT_CHARSET)
+        return 1;
+    if (plf1->lfCharSet < plf2->lfCharSet)
+        return -1;
+    if (plf1->lfCharSet > plf2->lfCharSet)
+        return 1;
+    return 0;
+}
+
+int FASTCALL
+IntFontFamilyListUnique(FONTFAMILYINFO *InfoList,
+                        LPLOGFONTW plf, int count, DWORD dwFlags)
+{
+    FONTFAMILYINFO *first, *last, *result;
+
+    if (count == 0)
+        return 0;
+
+    // If non-Ex, then shrink about lfCharSet.
+    if (!(dwFlags & IEFF_EXTENDED))
+    {
+        result = first = InfoList;
+        last = &InfoList[count];
+        while (++first != last)
+        {
+            if (IntFontFamilyCompareNameOnly(result, first) != 0 &&
+                ++result != first)
+            {
+                *result = *first;
+            }
+        }
+        count = (int)(++result - InfoList);
+    }
+
+    if (count == 0)
+        return 0;
+
+    // If lfCharSet is DEFAULT_CHARSET, then shrink about font style.
+    if (plf->lfCharSet == DEFAULT_CHARSET)
+    {
+        result = first = InfoList;
+        last = &InfoList[count];
+        while (++first != last)
+        {
+            if (IntFontFamilyCompareNoStyle(result, first) != 0 &&
+                ++result != first)
+            {
+                *result = *first;
+            }
+        }
+        count = (int)(++result - InfoList);
+    }
+
+    return count;
+}
+
 static int FASTCALL
 IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
-                    BOOL Unicode)
+                    DWORD dwFlags)
 {
     int FontFamilyCount;
     int FontFamilySize;
@@ -256,9 +373,15 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
         }
     }
 
+    DPRINT("qsort\n");
+    qsort(Info, FontFamilyCount, sizeof(*Info), IntFontFamilyCompare);
+    DPRINT1("qsort done\n");
+    FontFamilyCount = IntFontFamilyListUnique(Info, LogFont, FontFamilyCount, dwFlags);
+    DPRINT1("unique done\n");
+
     for (i = 0; i < FontFamilyCount; i++)
     {
-        if (Unicode)
+        if (dwFlags & IEFF_UNICODE)
         {
             Ret = ((FONTENUMPROCW) EnumProc)(
                       (VOID*)&Info[i].EnumLogFontEx,
@@ -299,7 +422,8 @@ int WINAPI
 EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamExProc,
                     LPARAM lParam, DWORD dwFlags)
 {
-    return IntEnumFontFamilies(hdc, lpLogfont, lpEnumFontFamExProc, lParam, TRUE);
+    return IntEnumFontFamilies(hdc, lpLogfont, lpEnumFontFamExProc, lParam,
+                               IEFF_UNICODE | IEFF_EXTENDED);
 }
 
 
@@ -320,7 +444,7 @@ EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
         lstrcpynW(LogFont.lfFaceName, lpszFamily, LF_FACESIZE);
     }
 
-    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, TRUE);
+    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, IEFF_UNICODE);
 }
 
 
@@ -341,7 +465,7 @@ EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamE
     else pLogFontW = NULL;
 
     /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
-    return IntEnumFontFamilies(hdc, pLogFontW, lpEnumFontFamExProc, lParam, FALSE);
+    return IntEnumFontFamilies(hdc, pLogFontW, lpEnumFontFamExProc, lParam, IEFF_EXTENDED);
 }
 
 
@@ -362,7 +486,7 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
         MultiByteToWideChar(CP_THREAD_ACP, 0, lpszFamily, -1, LogFont.lfFaceName, LF_FACESIZE);
     }
 
-    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, FALSE);
+    return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, 0);
 }
 
 
