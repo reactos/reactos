@@ -220,10 +220,6 @@ IntFontFamilyCompare(const void *x, const void *y)
     cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
-    if (plf1->lfCharSet == DEFAULT_CHARSET && plf2->lfCharSet != DEFAULT_CHARSET)
-        return -1;
-    if (plf1->lfCharSet != DEFAULT_CHARSET && plf2->lfCharSet == DEFAULT_CHARSET)
-        return 1;
     if (plf1->lfCharSet < plf2->lfCharSet)
         return -1;
     if (plf1->lfCharSet > plf2->lfCharSet)
