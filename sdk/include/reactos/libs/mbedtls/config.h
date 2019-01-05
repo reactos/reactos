@@ -1190,7 +1190,7 @@
 /**
  * \def MBEDTLS_SSL_RENEGOTIATION
  *
- * Disable support for TLS renegotiation.
+ * Enable support for TLS renegotiation.
  *
  * The two main uses of renegotiation are (1) refresh keys on long-lived
  * connections and (2) client authentication after the initial handshake.

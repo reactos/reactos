@@ -177,19 +177,34 @@ int mbedtls_x509_crt_parse_der( mbedtls_x509_crt *chain, const unsigned char *bu
                         size_t buflen );
 
 /**
- * \brief          Parse one or more certificates and add them
- *                 to the chained list. Parses permissively. If some
- *                 certificates can be parsed, the result is the number
- *                 of failed certificates it encountered. If none complete
- *                 correctly, the first error is returned.
+ * \brief          Parse one DER-encoded or one or more concatenated PEM-encoded
+ *                 certificates and add them to the chained list.
  *
- * \param chain    points to the start of the chain
- * \param buf      buffer holding the certificate data in PEM or DER format
- * \param buflen   size of the buffer
- *                 (including the terminating null byte for PEM data)
+ *                 For CRTs in PEM encoding, the function parses permissively:
+ *                 if at least one certificate can be parsed, the function
+ *                 returns the number of certificates for which parsing failed
+ *                 (hence \c 0 if all certificates were parsed successfully).
+ *                 If no certificate could be parsed, the function returns
+ *                 the first (negative) error encountered during parsing.
  *
- * \return         0 if all certificates parsed successfully, a positive number
- *                 if partly successful or a specific X509 or PEM error code
+ *                 PEM encoded certificates may be interleaved by other data
+ *                 such as human readable descriptions of their content, as
+ *                 long as the certificates are enclosed in the PEM specific
+ *                 '-----{BEGIN/END} CERTIFICATE-----' delimiters.
+ *
+ * \param chain    The chain to which to add the parsed certificates.
+ * \param buf      The buffer holding the certificate data in PEM or DER format.
+ *                 For certificates in PEM encoding, this may be a concatenation
+ *                 of multiple certificates; for DER encoding, the buffer must
+ *                 comprise exactly one certificate.
+ * \param buflen   The size of \p buf, including the terminating \c NULL byte
+ *                 in case of PEM encoded data.
+ *
+ * \return         \c 0 if all certificates were parsed successfully.
+ * \return         The (positive) number of certificates that couldn't
+ *                 be parsed if parsing was partly successful (see above).
+ * \return         A negative X509 or PEM error code otherwise.
+ *
  */
 int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, size_t buflen );
 

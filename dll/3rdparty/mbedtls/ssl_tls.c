@@ -2133,13 +2133,13 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             correct = 0;
         }
         auth_done++;
-
-        /*
-         * Finally check the correct flag
-         */
-        if( correct == 0 )
-            return( MBEDTLS_ERR_SSL_INVALID_MAC );
     }
+
+    /*
+     * Finally check the correct flag
+     */
+    if( correct == 0 )
+        return( MBEDTLS_ERR_SSL_INVALID_MAC );
 #endif /* SSL_SOME_MODES_USE_MAC */
 
     /* Make extra sure authentication was performed, exactly once */
@@ -3237,6 +3237,7 @@ static int ssl_reassemble_dtls_handshake( mbedtls_ssl_context *ssl )
 
     memcpy( ssl->in_msg, ssl->handshake->hs_msg, ssl->in_hslen );
 
+    mbedtls_zeroize( ssl->handshake->hs_msg, ssl->in_hslen );
     mbedtls_free( ssl->handshake->hs_msg );
     ssl->handshake->hs_msg = NULL;
 

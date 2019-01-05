@@ -172,19 +172,19 @@
 
 #define MULADDC_INIT                        \
     asm(                                    \
-        "xorq   %%r8, %%r8          \n\t"
+        "xorq   %%r8, %%r8\n"
 
 #define MULADDC_CORE                        \
-        "movq   (%%rsi), %%rax      \n\t"   \
-        "mulq   %%rbx               \n\t"   \
-        "addq   $8,      %%rsi      \n\t"   \
-        "addq   %%rcx,   %%rax      \n\t"   \
-        "movq   %%r8,    %%rcx      \n\t"   \
-        "adcq   $0,      %%rdx      \n\t"   \
-        "nop                        \n\t"   \
-        "addq   %%rax,   (%%rdi)    \n\t"   \
-        "adcq   %%rdx,   %%rcx      \n\t"   \
-        "addq   $8,      %%rdi      \n\t"
+        "movq   (%%rsi), %%rax\n"           \
+        "mulq   %%rbx\n"                    \
+        "addq   $8, %%rsi\n"                \
+        "addq   %%rcx, %%rax\n"             \
+        "movq   %%r8, %%rcx\n"              \
+        "adcq   $0, %%rdx\n"                \
+        "nop    \n"                         \
+        "addq   %%rax, (%%rdi)\n"           \
+        "adcq   %%rdx, %%rcx\n"             \
+        "addq   $8, %%rdi\n"
 
 #define MULADDC_STOP                        \
         : "+c" (c), "+D" (d), "+S" (s)      \

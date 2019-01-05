@@ -229,14 +229,37 @@ int mbedtls_ctr_drbg_reseed( mbedtls_ctr_drbg_context *ctx,
  *
  * \param ctx           The CTR_DRBG context.
  * \param additional    The data to update the state with.
- * \param add_len       Length of \p additional data.
+ * \param add_len       Length of \p additional in bytes. This must be at
+ *                      most #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT.
  *
- * \note     If \p add_len is greater than #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT,
- *           only the first #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT Bytes are used.
- *           The remaining Bytes are silently discarded.
+ * \return              \c 0 on success.
+ * \return              #MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG if
+ *                      \p add_len is more than
+ *                      #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT.
+ * \return              An error from the underlying AES cipher on failure.
+ */
+int mbedtls_ctr_drbg_update_ret( mbedtls_ctr_drbg_context *ctx,
+                                 const unsigned char *additional,
+                                 size_t add_len );
+
+/**
+ * \brief               This function updates the state of the CTR_DRBG context.
+ *
+ * \warning             This function cannot report errors. You should use
+ *                      mbedtls_ctr_drbg_update_ret() instead.
+ *
+ * \note                If \p add_len is greater than
+ *                      #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT, only the first
+ *                      #MBEDTLS_CTR_DRBG_MAX_SEED_INPUT Bytes are used.
+ *                      The remaining Bytes are silently discarded.
+ *
+ * \param ctx           The CTR_DRBG context.
+ * \param additional    The data to update the state with.
+ * \param add_len       Length of \p additional data.
  */
 void mbedtls_ctr_drbg_update( mbedtls_ctr_drbg_context *ctx,
-                      const unsigned char *additional, size_t add_len );
+                              const unsigned char *additional,
+                              size_t add_len );
 
 /**
  * \brief   This function updates a CTR_DRBG instance with additional

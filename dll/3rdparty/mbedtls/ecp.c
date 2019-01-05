@@ -411,7 +411,7 @@ int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt )
 }
 
 /*
- * Compare two points lazyly
+ * Compare two points lazily
  */
 int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
                            const mbedtls_ecp_point *Q )

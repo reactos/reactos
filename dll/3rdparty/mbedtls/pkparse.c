@@ -1304,6 +1304,7 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
         return( 0 );
 
     mbedtls_pk_free( pk );
+    mbedtls_pk_init( pk );
 
     if( ret == MBEDTLS_ERR_PK_PASSWORD_MISMATCH )
     {
@@ -1315,38 +1316,41 @@ int mbedtls_pk_parse_key( mbedtls_pk_context *pk,
         return( 0 );
 
     mbedtls_pk_free( pk );
+    mbedtls_pk_init( pk );
 
 #if defined(MBEDTLS_RSA_C)
 
     pk_info = mbedtls_pk_info_from_type( MBEDTLS_PK_RSA );
-    if( ( ret = mbedtls_pk_setup( pk, pk_info ) ) != 0 ||
-        ( ret = pk_parse_key_pkcs1_der( mbedtls_pk_rsa( *pk ),
-                                        key, keylen ) ) != 0 )
-    {
-        mbedtls_pk_free( pk );
-    }
-    else
+    if( mbedtls_pk_setup( pk, pk_info ) == 0 &&
+        pk_parse_key_pkcs1_der( mbedtls_pk_rsa( *pk ), key, keylen ) == 0 )
     {
         return( 0 );
     }
 
+    mbedtls_pk_free( pk );
+    mbedtls_pk_init( pk );
 #endif /* MBEDTLS_RSA_C */
 
 #if defined(MBEDTLS_ECP_C)
-
     pk_info = mbedtls_pk_info_from_type( MBEDTLS_PK_ECKEY );
-    if( ( ret = mbedtls_pk_setup( pk, pk_info ) ) != 0 ||
-        ( ret = pk_parse_key_sec1_der( mbedtls_pk_ec( *pk ),
-                                       key, keylen ) ) != 0 )
-    {
-        mbedtls_pk_free( pk );
-    }
-    else
+    if( mbedtls_pk_setup( pk, pk_info ) == 0 &&
+        pk_parse_key_sec1_der( mbedtls_pk_ec( *pk ),
+                               key, keylen ) == 0 )
     {
         return( 0 );
     }
-
+    mbedtls_pk_free( pk );
 #endif /* MBEDTLS_ECP_C */
+
+    /* If MBEDTLS_RSA_C is defined but MBEDTLS_ECP_C isn't,
+     * it is ok to leave the PK context initialized but not
+     * freed: It is the caller's responsibility to call pk_init()
+     * before calling this function, and to call pk_free()
+     * when it fails. If MBEDTLS_ECP_C is defined but MBEDTLS_RSA_C
+     * isn't, this leads to mbedtls_pk_free() being called
+     * twice, once here and once by the caller, but this is
+     * also ok and in line with the mbedtls_pk_free() calls
+     * on failed PEM parsing attempts. */
 
     return( MBEDTLS_ERR_PK_KEY_INVALID_FORMAT );
 }

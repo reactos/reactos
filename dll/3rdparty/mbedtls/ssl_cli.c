@@ -2093,7 +2093,7 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
      *
      * opaque psk_identity_hint<0..2^16-1>;
      */
-    if( (*p) > end - 2 )
+    if( end - (*p) < 2 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message "
                                     "(psk_identity_hint length)" ) );
@@ -2102,7 +2102,7 @@ static int ssl_parse_server_psk_hint( mbedtls_ssl_context *ssl,
     len = (*p)[0] << 8 | (*p)[1];
     *p += 2;
 
-    if( (*p) > end - len )
+    if( end - (*p) < (int) len )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message "
                                     "(psk_identity_hint length)" ) );
