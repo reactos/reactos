@@ -204,7 +204,7 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
     tma->ntmFontSig = tmw->ntmFontSig;
 }
 
-// IntEnumFontFamilies's flags:
+// IntEnumFontFamilies' flags:
 #define IEFF_UNICODE 1
 #define IEFF_EXTENDED 2
 
