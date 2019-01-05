@@ -211,9 +211,8 @@ IntFontFamilyCompare(const void *x, const void *y)
     const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
-    int cmp;
     ULONG WeightDiff1, WeightDiff2;
-    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
     if (plf1->lfCharSet < plf2->lfCharSet)
@@ -240,8 +239,7 @@ IntFontFamilyCompareNameOnly(const void *x, const void *y)
     const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
-    int cmp;
-    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
     return 0;
@@ -254,8 +252,7 @@ IntFontFamilyCompareNoStyle(const void *x, const void *y)
     const FONTFAMILYINFO *ffi2 = y;
     const LOGFONTW *plf1 = &ffi1->EnumLogFontEx.elfLogFont;
     const LOGFONTW *plf2 = &ffi2->EnumLogFontEx.elfLogFont;
-    int cmp;
-    cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
+    int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
     if (plf1->lfCharSet < plf2->lfCharSet)
