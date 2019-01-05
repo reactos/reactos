@@ -40,7 +40,9 @@ IntInitializeVideoAddressSpace(VOID)
     PVOID BaseAddress;
     LARGE_INTEGER Offset;
     SIZE_T ViewSize;
+#ifdef _M_IX86
     CHAR IVTAndBda[1024+256];
+#endif // _M_IX86
 
     /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
     BaseAddress = 0;
@@ -124,6 +126,7 @@ IntInitializeVideoAddressSpace(VOID)
         return 0;
     }
 
+#ifdef _M_IX86
     /* Get the real mode IVT and BDA from the kernel */
     Status = NtVdmControl(VdmInitialize, IVTAndBda);
     if (!NT_SUCCESS(Status))
@@ -131,6 +134,7 @@ IntInitializeVideoAddressSpace(VOID)
         DPRINT1("NtVdmControl failed (status %x)\n", Status);
         return Status;
     }
+#endif // _M_IX86
 
     /* Return success */
     return STATUS_SUCCESS;

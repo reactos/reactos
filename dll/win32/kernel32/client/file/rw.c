@@ -24,7 +24,7 @@ BOOL WINAPI
 WriteFile(IN HANDLE hFile,
           IN LPCVOID lpBuffer,
           IN DWORD nNumberOfBytesToWrite OPTIONAL,
-          OUT LPDWORD lpNumberOfBytesWritten OPTIONAL,
+          OUT LPDWORD lpNumberOfBytesWritten,
           IN LPOVERLAPPED lpOverlapped OPTIONAL)
 {
     NTSTATUS Status;

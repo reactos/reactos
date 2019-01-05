@@ -113,7 +113,7 @@
  * (by reading outside of the prefetch buffer). The prefetch cache must
  * also not cross a page boundary.
  */
-C_ASSERT((FAST486_CACHE_SIZE >= sizeof(DWORD))
+C_ASSERT((FAST486_CACHE_SIZE >= sizeof(ULONG))
          && (FAST486_CACHE_SIZE <= FAST486_PAGE_SIZE));
 
 struct _FAST486_STATE;

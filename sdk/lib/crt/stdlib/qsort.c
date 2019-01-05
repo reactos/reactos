@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <search.h>
 
+#define long intptr_t
+
 #define min(a, b)	(a) < (b) ? (a) : (b)
 
 /*
@@ -50,7 +52,7 @@
 	es % sizeof(long) ? 2 : es == sizeof(long)? 0 : 1;
 
 static __inline void
-swapfunc(char *a, char *b, int n, int swaptype)
+swapfunc(char *a, char *b, intptr_t n, int swaptype)
 {
 	if(swaptype <= 1)
 		swapcode(long, a, b, n)
@@ -91,7 +93,8 @@ __cdecl
 qsort(void *a, size_t n, size_t es, int (__cdecl *cmp)(const void*, const void*))
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
-	int d, r, swaptype, swap_cnt;
+	int swaptype, swap_cnt;
+	intptr_t d, r;
 
 loop:	SWAPINIT(a, es);
 	swap_cnt = 0;

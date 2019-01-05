@@ -342,10 +342,10 @@ ViewTree_LoadTree(HKEY hKey, LPCWSTR pszKeyName, DWORD dwParentID)
     else
     {
         // HKeyRoot
-        Value = DWORD(HKEY_CURRENT_USER);
-        Size = sizeof(Value);
-        RegQueryValueExW(hKey, L"HKeyRoot", NULL, NULL, LPBYTE(&Value), &Size);
-        pEntry->hkeyRoot = HKEY(Value);
+        HKEY HKeyRoot = HKEY_CURRENT_USER;
+        Size = sizeof(HKeyRoot);
+        RegQueryValueExW(hKey, L"HKeyRoot", NULL, NULL, LPBYTE(&HKeyRoot), &Size);
+        pEntry->hkeyRoot = HKeyRoot;
 
         // RegPath
         pEntry->szRegPath[0] = 0;
@@ -782,7 +782,7 @@ ViewDlg_RestoreDefaults(HWND hwndDlg)
             continue;
         }
         RegSetValueExW(hKey, pEntry->szValueName, 0, REG_DWORD,
-                       LPBYTE(pEntry->dwDefaultValue), sizeof(DWORD));
+                       LPBYTE(&pEntry->dwDefaultValue), sizeof(DWORD));
         RegCloseKey(hKey);
 
         // update check status

@@ -248,7 +248,7 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
 {
     INT ErrorCode;
     LPWSAQUERYSETW UnicodeQuerySet = NULL;
-    DWORD UnicodeQuerySetSize = 0;
+    SIZE_T UnicodeQuerySetSize = 0;
 
     DPRINT("WSALookupServiceBeginA: %p\n", lpqsRestrictions);
 
@@ -523,12 +523,25 @@ WSALookupServiceNextA(IN HANDLE hLookup,
 
     if (ErrorCode == ERROR_SUCCESS)
     {
+        SIZE_T SetSize = *lpdwBufferLength;
+
         /* Now convert back to ANSI */
         ErrorCode = MapUnicodeQuerySetToAnsi(UnicodeQuerySet,
-                                             lpdwBufferLength,
+                                             &SetSize,
                                              lpqsResults);
         if (ErrorCode != ERROR_SUCCESS)
+        {
             SetLastError(ErrorCode);
+        }
+        else if (SetSize > MAXDWORD)
+        {
+            ErrorCode = ERROR_ARITHMETIC_OVERFLOW;
+            SetLastError(ErrorCode);
+        }
+        else
+        {
+            *lpdwBufferLength = SetSize;
+        }
     }
     else
     {

@@ -365,7 +365,7 @@ DbgGdiHTIntegrityCheck(VOID)
 
 		pEntry = &GdiHandleTable->Entries[i];
 		Type = pEntry->Type;
-		Handle = (HGDIOBJ)(((ULONG_PTR)Type << GDI_ENTRY_UPPER_SHIFT) + i);
+		Handle = (HGDIOBJ)(ULONG_PTR)((Type << GDI_ENTRY_UPPER_SHIFT) + i);
 
 		if (Type & GDI_ENTRY_BASETYPE_MASK)
 		{
