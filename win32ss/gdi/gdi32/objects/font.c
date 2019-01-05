@@ -271,7 +271,7 @@ IntFontFamilyCompareNoStyle(const void *x, const void *y)
 
 int FASTCALL
 IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
-                        LPLOGFONTW plf, DWORD dwFlags)
+                        const LOGFONTW *plf, DWORD dwFlags)
 {
     FONTFAMILYINFO *first, *last, *result;
 
