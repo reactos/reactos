@@ -204,10 +204,6 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
     tma->ntmFontSig = tmw->ntmFontSig;
 }
 
-// IntEnumFontFamilies' flags:
-#define IEFF_UNICODE 1
-#define IEFF_EXTENDED 2
-
 static int
 IntFontFamilyCompare(const void *x, const void *y)
 {
@@ -268,6 +264,10 @@ IntFontFamilyCompareNoStyle(const void *x, const void *y)
         return 1;
     return 0;
 }
+
+// IntEnumFontFamilies' flags:
+#define IEFF_UNICODE 1
+#define IEFF_EXTENDED 2
 
 int FASTCALL
 IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
