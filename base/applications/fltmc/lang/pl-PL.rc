@@ -5,17 +5,20 @@ BEGIN
     IDS_USAGE "\nPrawidłowe polecenia:\n\
                load        Ładuje sterownik filtra\n\
                unload      Wyładowuje sterownik filtra\n\
-               filters     Wyświetla listę aktualnie zarejestrowanych filtrów\n\n"
+               filters     Wyświetla listę aktualnie zarejestrowanych filtrów\n\n\
+               volumes     Lists all volumes\n\n"
 
     IDS_USAGE_LOAD      "Ładuje sterownik filtra\n"
     IDS_USAGE_UNLOAD    "Wyładowuje sterownik filtra\n"
     IDS_USAGE_FILTERS   "Wyświetla listę zarejestrowanych filtrów\n"
+    IDS_USAGE_VOLUMES   "Lists all volumes\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_FILTERS1    "Nazwa filtra                    Liczba wystąpień    Wysokość    Ramka\n"
     IDS_DISPLAY_FILTERS2    "Nazwa filtra                    Liczba wystąpień   Ramka\n"
+    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
 END
 
 STRINGTABLE
@@ -24,4 +27,5 @@ BEGIN
     IDS_ERROR_FILTERS   "Nie udało się wyświetlić listy filtrów (0x%X)\n"
     IDS_ERROR_LOAD      "Nie udało się załadować filtra (0x%X)\n"
     IDS_ERROR_UNLOAD    "Nie udało się wyładować filtra (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
 END

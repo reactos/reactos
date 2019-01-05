@@ -66,6 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Α&ποκοπή", IDM_CUT
         MENUITEM "Α&ντιγραφή", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Δημιουργία &συντόμευσης", IDM_CREATELINK
         MENUITEM "&Διαγραφή", IDM_DELETE

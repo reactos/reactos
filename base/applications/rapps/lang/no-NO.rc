@@ -158,6 +158,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nHjemmeside: "
     IDS_AINFO_LICENSE "\nLisens: "
     IDS_AINFO_URLDOWNLOAD "\nNedlasting: "
+    IDS_AINFO_LANGUAGES "\nLanguages: "
 END
 
 STRINGTABLE

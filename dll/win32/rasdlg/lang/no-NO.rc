@@ -1955,6 +1955,7 @@ BEGIN
     313 "Sikre mitt passord og min data\0"
     314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access.  To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
     315 "Kan ikke lagre vise data.\0"
+    316 "Cannot display data.\0"
     317 "Kan ikke få auto-dial informasjon.\0"
     318 "Kan ikke laste dialog.\0"
     319 "Kan ikke deaktiver delt tilgang.\0"
