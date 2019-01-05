@@ -271,7 +271,7 @@ co_IntInitializeDesktopGraphics(VOID)
     }
     GreSetDCOwner(ScreenDeviceContext, GDI_OBJ_HMGR_PUBLIC);
 
-    if (! IntCreatePrimarySurface())
+    if (!IntCreatePrimarySurface())
     {
         return FALSE;
     }
@@ -280,6 +280,12 @@ co_IntInitializeDesktopGraphics(VOID)
 
     NtGdiSelectFont(hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
     GreSetDCOwner(hSystemBM, GDI_OBJ_HMGR_PUBLIC);
+
+    /* Update the system metrics */
+    InitMetrics();
+
+    /* Set new size of the monitor */
+    UserUpdateMonitorSize((HDEV)gppdevPrimary);
 
     /* Update the SERVERINFO */
     gpsi->aiSysMet[SM_CXSCREEN] = gppdevPrimary->gdiinfo.ulHorzRes;
@@ -293,7 +299,9 @@ co_IntInitializeDesktopGraphics(VOID)
         gpsi->PUSIFlags |= PUSIF_PALETTEDISPLAY;
     }
     else
+    {
         gpsi->PUSIFlags &= ~PUSIF_PALETTEDISPLAY;
+    }
     // Font is realized and this dc was previously set to internal DC_ATTR.
     gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
     gpsi->tmSysFont     = tmw;
