@@ -132,9 +132,13 @@ UserInitialize(VOID)
     Status = UserCreateWinstaDirectory();
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Initialize Video */
+    /* Initialize the Video */
     Status = InitVideo();
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, bugcheck */
+        KeBugCheckEx(VIDEO_DRIVER_INIT_FAILURE, Status, 0, 0, USER_VERSION);
+    }
 
 // {
 //     DrvInitConsole.
@@ -185,8 +189,8 @@ NtUserInitialize(
     /* Check Windows USER subsystem version */
     if (dwWinVersion != USER_VERSION)
     {
-        // FIXME: Should bugcheck!
-        return STATUS_UNSUCCESSFUL;
+        /* No match, bugcheck */
+        KeBugCheckEx(WIN32K_INIT_OR_RIT_FAILURE, 0, 0, dwWinVersion, USER_VERSION);
     }
 
     /* Acquire exclusive lock */
