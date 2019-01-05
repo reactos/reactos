@@ -12,10 +12,14 @@ cmdComputer(
     INT argc,
     WCHAR **argv)
 {
+    WCHAR ComputerAccountName[MAX_PATH + 2];
+    WCHAR ComputerPassword[LM20_PWLEN + 1];
+    USER_INFO_1 UserInfo;
     INT i, result = 0;
     BOOL bAdd = FALSE;
     BOOL bDelete = FALSE;
     PWSTR pComputerName = NULL;
+    NET_API_STATUS Status = NERR_Success;
 /*
     OSVERSIONINFOEX VersionInfo;
 
@@ -34,7 +38,7 @@ cmdComputer(
 */
 
     i = 2;
-    if (argc > 2 && argv[i][0] != L'\\' && argv[i][1] != L'\\')
+    if (argc > 2 && argv[i][0] == L'\\' && argv[i][1] == L'\\')
     {
         pComputerName = argv[i];
         i++;
@@ -85,17 +89,56 @@ cmdComputer(
         return 1;
     }
 
+    /*
+     * Create the computer account name:
+     *  Skip the leading '\\' and appand a '$'.
+     */
+    wcscpy(ComputerAccountName, &pComputerName[2]);
+    wcscat(ComputerAccountName, L"$");
+
     if (bAdd)
     {
-        printf("Add %S (not implemented yet)\n", pComputerName);
+        /*
+         * Create the computer password:
+         *   Skip the leading '\\', shorten to a maximum of 14 characters
+         *   and convert to lower case
+         */
+        wcsncpy(ComputerPassword, &pComputerName[2], LM20_PWLEN);
+        ComputerPassword[LM20_PWLEN] = UNICODE_NULL;
+        _wcslwr(ComputerPassword);
+
+        /* Set the account data */
+        UserInfo.usri1_name = ComputerAccountName;
+        UserInfo.usri1_password = ComputerPassword;
+        UserInfo.usri1_password_age = 0;
+        UserInfo.usri1_priv = USER_PRIV_USER;
+        UserInfo.usri1_home_dir = NULL;
+        UserInfo.usri1_comment = NULL;
+        UserInfo.usri1_flags = UF_SCRIPT | UF_WORKSTATION_TRUST_ACCOUNT;
+        UserInfo.usri1_script_path = NULL;
+
+        /* Add the computer account */
+        Status = NetUserAdd(NULL,
+                            1,
+                            (LPBYTE)&UserInfo,
+                            NULL);
     }
     else if (bDelete)
     {
-        printf("Delete %S (not implemented yet)\n", pComputerName);
+        /* Delete the coputer account */
+        Status = NetUserDel(NULL,
+                            ComputerAccountName);
     }
 
-    if (result == 0)
+    if (Status == NERR_Success)
+    {
         PrintErrorMessage(ERROR_SUCCESS);
+    }
+    else
+    {
+        PrintErrorMessage(Status);
+        result = 1;
+    }
 
     return result;
 }
