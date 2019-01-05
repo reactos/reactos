@@ -375,9 +375,9 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
 
     DPRINT("qsort\n");
     qsort(Info, FontFamilyCount, sizeof(*Info), IntFontFamilyCompare);
-    DPRINT1("qsort done\n");
+    DPRINT("qsort done\n");
     FontFamilyCount = IntFontFamilyListUnique(Info, LogFont, FontFamilyCount, dwFlags);
-    DPRINT1("unique done\n");
+    DPRINT("unique done\n");
 
     for (i = 0; i < FontFamilyCount; i++)
     {
