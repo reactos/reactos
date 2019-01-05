@@ -37,8 +37,9 @@
  * Returns the callback function or NULL if not found
  */
 xmlXPathFunction
-xsltXPathFunctionLookup (xmlXPathContextPtr ctxt,
+xsltXPathFunctionLookup (void *vctxt,
 			 const xmlChar *name, const xmlChar *ns_uri) {
+    xmlXPathContextPtr ctxt = (xmlXPathContextPtr) vctxt;
     xmlXPathFunction ret;
 
     if ((ctxt == NULL) || (name == NULL) || (ns_uri == NULL))

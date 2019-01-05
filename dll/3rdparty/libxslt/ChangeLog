@@ -2057,7 +2057,7 @@ Wed Feb 25 16:35:01 CET 2004 Daniel Veillard <daniel@veillard.com>
 	* libxslt/attributes.c libxslt/keys.h libxslt/preproc.c 
 	  libxslt/transform.c libxslt/variables.c libxslt/xsltutils.c:
 	  First step toward _private cleanup: use the psvi field to store
-	  the precompilation informations in the stylesheet nodes.
+	  the precompilation information in the stylesheet nodes.
 
 Wed Feb 25 14:24:34 CET 2004 Daniel Veillard <daniel@veillard.com>
 
@@ -2402,7 +2402,7 @@ Mon Dec  8 23:34:32 HKT 2003 William Brack <wbrack@mmm.com.hk>
 	  
 Mon Dec  1 16:41:27 CET 2003 Daniel Veillard <daniel@veillard.com>
 
-	* libxslt/*.h *.h.in: updated the metadata informations in the headers
+	* libxslt/*.h *.h.in: updated the metadata information in the headers
 	* doc/* doc/html/*: regenerated the docs.
 
 Sun Nov 30 23:25:22 HKT 2003 William Brack <wbrack@mmm.com.hk>
@@ -3614,14 +3614,14 @@ Tue Nov 26 16:02:38 CET 2002 Daniel Veillard <daniel@veillard.com>
 Tue Nov 26 15:17:13 CET 2002 Daniel Veillard <daniel@veillard.com>
 
 	* libxslt/xsltutils.c libxslt/xsltutils.h: added the function
-	  xsltGetProfileInformation() to retrieve profiling informations
+	  xsltGetProfileInformation() to retrieve profiling information
 	  from an XSLT transformation context. It returns it as an XML
 	  tree. Provided by Michael Rothwell this closes RFE #99527
 
 Tue Nov 26 14:40:45 CET 2002 Daniel Veillard <daniel@veillard.com>
 
 	* libxslt/imports.c: apply patch from Daniel Stodden, a bug
-	  in xsltFindElemSpaceHandling() missing imported informations
+	  in xsltFindElemSpaceHandling() missing imported information
 	* tests/REC/stand-2.7-1.stand.out: this change slightly the result
 	  of this test.
 
@@ -3903,7 +3903,7 @@ Mon Oct 14 09:27:01 CEST 2002 Daniel Veillard <daniel@veillard.com>
 
 Tue Oct 15 12:42:25 CEST 2002 Daniel Veillard <daniel@veillard.com>
 
-	* README: updated the contact informations
+	* README: updated the contact information
 
 Tue Oct 15 11:40:19 CEST 2002 Daniel Veillard <daniel@veillard.com>
 
@@ -4196,7 +4196,7 @@ Tue Jul  2 00:02:53 CEST 2002 Daniel Veillard <daniel@veillard.com>
 	  tests/general/Makefile.am tests/general/bug-87.*: added a
 	  example in the regression tests for a case where the XML
 	  default namespace was missing from the namespace axis
-	* xsltproc/xsltproc.c: added the informations that parameter
+	* xsltproc/xsltproc.c: added the information that parameter
 	  strings are expected to be UTF8
 	* libxslt/attributes.c: fixes on attribute group implementation
 
@@ -4685,7 +4685,7 @@ Sun Feb 10 20:16:15 CET 2002 Daniel Veillard <daniel@veillard.com>
 
 	* libxslt/imports.c libxslt/numbers.c libxslt/pattern.c
 	  libxslt/pattern.h libxslt/transform.c libxslt/xslt.c
-	  libxslt/xsltInternals.h: adding extra run-time informations
+	  libxslt/xsltInternals.h: adding extra run-time information
 	  to make the stylesheet really read-only at run-time.
 
 Sun Feb 10 16:21:09 CET 2002 Daniel Veillard <daniel@veillard.com>
@@ -5822,7 +5822,7 @@ Mon Jul 16 14:26:48 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 	* tests/*/Makefile.am: updated the path to xsltproc
 	* libexslt/common.c libexslt/exslt.h libexslt/exsltconfig.h.in
 	  libexslt/functions.c libexslt/math.c libexslt/sets.c: added
-	  versionning informations, some cleanup, and added documentation
+	  versioning information, some cleanup, and added documentation
 	  to a couple of exported functions
 
 Sun Jul 15 15:27:47 CEST 2001 Thomas Broyer <tbroyer@ltgt.net>
@@ -5955,7 +5955,7 @@ Sun Jul  8 15:40:44 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 Sun Jul  8 14:39:27 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 	* doc/extensions.html: fixed a number of typo found by Dan York
-	* libxslt/xsltutils.c: improved the profiling ouput, added the
+	* libxslt/xsltutils.c: improved the profiling output, added the
 	  average value too.
 
 Sun Jul  8 00:01:21 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
@@ -6076,7 +6076,7 @@ Thu Jun 28 23:01:14 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 Thu Jun 28 15:48:06 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 	* libxslt/xsltwin32config.h[.in]: added configuration/version
-	  informations for Windows/MSC
+	  information for Windows/MSC
 	* libxslt/libxslt.h libxslt/*.c: internal header to centralize
 	  includes switches
 	* libxslt/Makefile.am: added libxslt.h and xsltwin32config.h[.in]
@@ -6205,7 +6205,7 @@ Sun Jun 17 13:15:48 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 	* configure.in: preparing 0.12.0 release
 	* libxslt/transform.c: a bit of cleanup on the XInclude defaults
 	* libxslt/xsltconfig.h.in: added doc inline comment
-	* libxslt/xslt.[ch] libxslt/xsltproc.c: added more version informations
+	* libxslt/xslt.[ch] libxslt/xsltproc.c: added more version information
 	  and enriched xsltproc --version to show them
 	* doc/html/*.html: rebuilt the docs
 	* doc/Makefile.am libxslt.spec.in: try to make sure John Fleck
@@ -6440,7 +6440,7 @@ Fri May 18 16:48:13 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 	* libxslt/xslt.c libxslt/variables.c libxslt/templates.c
 	  libxslt/keys.[ch] libxslt/functions.c: cleanups for ctxt->inst
-	  avoiding modifying stylesheet informations, and fixing
+	  avoiding modifying stylesheet information, and fixing
 	  document() when called from a global variable init
 
 Thu May 17 17:24:35 CEST 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
@@ -6954,7 +6954,7 @@ Tue Mar  6 19:03:21 CET 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 	* libxslt/preproc.[ch] Makefile.am templates.[ch] transform.[ch]
 	  xsltInternals.h: started working on optimizing stylesheet
-	  element parsing. Just builds the extra informations so far.
+	  element parsing. Just builds the extra information so far.
 	* xsltutils.h: added a missing XPath decl
 
 Tue Mar  6 09:52:13 CET 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
@@ -7145,7 +7145,7 @@ Wed Feb 14 15:39:06 CET 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 	  libxslt/xsltInternals.h libxslt/transform.[ch]
 	  libxslt/templates.c libxslt/xslt.c:
 	  Added apply-imports, keep a stack of running templates
-	* libxslt/xsltutils.c: bugfixes, gather the output informations
+	* libxslt/xsltutils.c: bugfixes, gather the output information
 	  down the cascade
 	* tests/xmlspec/Makefile.am tests/xmlspec/REC-xml-2e.xsl
 	  tests/xmlspec/diffspec.xsl tests/xmlspec/xmlspec.xsl: running
@@ -7679,5 +7679,5 @@ Fri Jan  5 11:34:12 CET 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
 Fri Jan  5 11:14:29 CET 2001 Daniel Veillard <Daniel.Veillard@imag.fr>
 
-	* README: basic informations
+	* README: basic information
 	* Changelog: created

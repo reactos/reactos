@@ -28,8 +28,7 @@
 static void xsltFixImportedCompSteps(xsltStylesheetPtr master,
 			xsltStylesheetPtr style) {
     xsltStylesheetPtr res;
-    xmlHashScan(style->templatesHash,
-	            (xmlHashScanner) xsltNormalizeCompSteps, master);
+    xmlHashScan(style->templatesHash, xsltNormalizeCompSteps, master);
     master->extrasNr += style->extrasNr;
     for (res = style->imports; res != NULL; res = res->next) {
         xsltFixImportedCompSteps(master, res);
@@ -292,7 +291,7 @@ xsltNeedElemSpaceHandling(xsltTransformContextPtr ctxt) {
  * @ctxt:  an XSLT transformation context
  * @node:  an XML node
  *
- * Find strip-space or preserve-space informations for an element
+ * Find strip-space or preserve-space information for an element
  * respect the import precedence or the wildcards
  *
  * Returns 1 if space should be stripped, 0 if not, and 2 if everything

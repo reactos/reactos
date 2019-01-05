@@ -113,8 +113,8 @@
   #endif
 #endif
 
-/* Cygwin platform, GNU compiler */
-#if defined(_WIN32) && defined(__CYGWIN__)
+/* Cygwin platform (does not define _WIN32), GNU compiler */
+#if defined(__CYGWIN__)
   #undef XSLTPUBFUN
   #undef XSLTPUBVAR
   #undef XSLTCALL
@@ -126,7 +126,7 @@
     #if !defined(LIBXSLT_STATIC)
       #define XSLTPUBVAR __declspec(dllimport) extern
     #else
-      #define XSLTPUBVAR
+      #define XSLTPUBVAR extern
     #endif
   #endif
   #define XSLTCALL __cdecl

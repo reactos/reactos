@@ -636,9 +636,11 @@ xsltResolveAttrSet(xsltAttrSetPtr set, xsltStylesheetPtr topStyle,
  * resolve the references in an attribute set.
  */
 static void
-xsltResolveSASCallback(xsltAttrSetPtr set, xsltAttrSetContextPtr asctx,
+xsltResolveSASCallback(void *payload, void *data,
 	               const xmlChar *name, const xmlChar *ns,
 		       ATTRIBUTE_UNUSED const xmlChar *ignored) {
+    xsltAttrSetPtr set = (xsltAttrSetPtr) payload;
+    xsltAttrSetContextPtr asctx = (xsltAttrSetContextPtr) data;
     xsltStylesheetPtr topStyle = asctx->topStyle;
     xsltStylesheetPtr style = asctx->style;
 
@@ -685,8 +687,8 @@ xsltResolveStylesheetAttributeSet(xsltStylesheetPtr style) {
 		style->attributeSets = xmlHashCreate(10);
 	    }
             asctx.style = cur;
-	    xmlHashScanFull(cur->attributeSets,
-		(xmlHashScannerFull) xsltResolveSASCallback, &asctx);
+	    xmlHashScanFull(cur->attributeSets, xsltResolveSASCallback,
+                            &asctx);
 
             if (cur != style) {
                 /*
@@ -714,13 +716,13 @@ void
 xsltAttribute(xsltTransformContextPtr ctxt,
 	      xmlNodePtr contextNode,
               xmlNodePtr inst,
-	      xsltStylePreCompPtr castedComp)
+	      xsltElemPreCompPtr castedComp)
 {
 #ifdef XSLT_REFACTORED
     xsltStyleItemAttributePtr comp =
 	(xsltStyleItemAttributePtr) castedComp;
 #else
-    xsltStylePreCompPtr comp = castedComp;
+    xsltStylePreCompPtr comp = (xsltStylePreCompPtr) castedComp;
 #endif
     xmlNodePtr targetElem;
     xmlChar *prop = NULL;
@@ -1187,6 +1189,12 @@ xsltApplyAttributeSet(xsltTransformContextPtr ctxt, xmlNodePtr node,
     }
 }
 
+static void
+xsltFreeAttributeSetsEntry(void *payload,
+                           const xmlChar *name ATTRIBUTE_UNUSED) {
+    xsltFreeAttrSet((xsltAttrSetPtr) payload);
+}
+
 /**
  * xsltFreeAttributeSetsHashes:
  * @style: an XSLT stylesheet
@@ -1197,6 +1205,6 @@ void
 xsltFreeAttributeSetsHashes(xsltStylesheetPtr style) {
     if (style->attributeSets != NULL)
 	xmlHashFree((xmlHashTablePtr) style->attributeSets,
-		    (xmlHashDeallocator) xsltFreeAttrSet);
+		    xsltFreeAttributeSetsEntry);
     style->attributeSets = NULL;
 }

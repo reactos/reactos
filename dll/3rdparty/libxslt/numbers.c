@@ -699,7 +699,7 @@ xsltNumberFormatGetValue(xmlXPathContextPtr context,
 /**
  * xsltNumberFormat:
  * @ctxt: the XSLT transformation context
- * @data: the formatting informations
+ * @data: the formatting information
  * @node: the data to format
  *
  * Convert one number.
@@ -869,7 +869,7 @@ xsltFormatNumberPreSuffix(xsltDecimalFormatPtr self, xmlChar **format, xsltForma
  * @self: the decimal format
  * @format: the format requested
  * @number: the value to format
- * @result: the place to ouput the result
+ * @result: the place to output the result
  *
  * format-number() uses the JDK 1.1 DecimalFormat class:
  *

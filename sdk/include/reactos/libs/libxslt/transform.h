@@ -91,87 +91,87 @@ XSLTPUBFUN void XSLTCALL
 		xsltDocumentElem	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltSort		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltCopy		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltText		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltElement		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltComment		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltAttribute		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltProcessingInstruction(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltCopyOf		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltValueOf		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltNumber		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltApplyImports	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltCallTemplate	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltApplyTemplates	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltChoose		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltIf			(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltForEach		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 XSLTPUBFUN void XSLTCALL
 		xsltRegisterAllElement	(xsltTransformContextPtr ctxt);
 

@@ -94,6 +94,7 @@ struct _xsltCompMatch {
     xmlNsPtr *nsList;		/* the namespaces in scope */
     int nsNr;			/* the number of namespaces in scope */
     xsltStepOpPtr steps;        /* ops for computation */
+    int novar;                  /* doesn't contain variables */
 };
 
 typedef struct _xsltParserContext xsltParserContext;
@@ -197,6 +198,12 @@ xsltFreeCompMatchList(xsltCompMatchPtr comp) {
 	comp = comp->next;
 	xsltFreeCompMatch(cur);
     }
+}
+
+static void
+xsltFreeCompMatchListEntry(void *payload,
+                           const xmlChar *name ATTRIBUTE_UNUSED) {
+    xsltFreeCompMatchList((xsltCompMatchPtr) payload);
 }
 
 /**
@@ -494,6 +501,11 @@ xsltPatPushState(xsltTransformContextPtr ctxt, xsltStepStates *states,
     return(0);
 }
 
+static void
+xmlXPathFreeObjectWrapper(void *obj) {
+    xmlXPathFreeObject((xmlXPathObjectPtr) obj);
+}
+
 /**
  * xsltTestCompMatchDirect:
  * @ctxt:  a XSLT process context
@@ -564,7 +576,8 @@ xsltTestCompMatchDirect(xsltTransformContextPtr ctxt, xsltCompMatchPtr comp,
 	}
 	ix = 0;
 
-	if ((parent == NULL) || (node->doc == NULL) || isRVT)
+	if ((parent == NULL) || (node->doc == NULL) || isRVT ||
+            (comp->novar == 0))
 	    nocache = 1;
 
 	if (nocache == 0) {
@@ -579,7 +592,7 @@ xsltTestCompMatchDirect(xsltTransformContextPtr ctxt, xsltCompMatchPtr comp,
 	    XSLT_RUNTIME_EXTRA(ctxt, sel->indexExtra, ival) =
 		0;
 	    XSLT_RUNTIME_EXTRA_FREE(ctxt, sel->lenExtra) =
-		(xmlFreeFunc) xmlXPathFreeObject;
+		xmlXPathFreeObjectWrapper;
 	} else
 	    list = newlist;
     }
@@ -1940,6 +1953,7 @@ xsltCompilePatternInternal(const xmlChar *pattern, xmlDocPtr doc,
 		j++;
 	}
 	element->nsNr = j;
+        element->novar = novar;
 
 
 #ifdef WITH_XSLT_DEBUG_PATTERN
@@ -2559,7 +2573,7 @@ void
 xsltFreeTemplateHashes(xsltStylesheetPtr style) {
     if (style->templatesHash != NULL)
 	xmlHashFree((xmlHashTablePtr) style->templatesHash,
-		    (xmlHashDeallocator) xsltFreeCompMatchList);
+		    xsltFreeCompMatchListEntry);
     if (style->rootMatch != NULL)
         xsltFreeCompMatchList(style->rootMatch);
     if (style->keyMatch != NULL)

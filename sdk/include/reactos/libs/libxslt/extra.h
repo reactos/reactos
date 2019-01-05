@@ -56,7 +56,7 @@ XSLTPUBFUN void XSLTCALL
 		xsltDebug		(xsltTransformContextPtr ctxt,
 					 xmlNodePtr node,
 					 xmlNodePtr inst,
-					 xsltStylePreCompPtr comp);
+					 xsltElemPreCompPtr comp);
 
 
 XSLTPUBFUN void XSLTCALL

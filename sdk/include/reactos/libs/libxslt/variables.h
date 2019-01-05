@@ -46,28 +46,20 @@ extern "C" {
 #define XSLT_RVT_LOCAL       ((void *)1)
 
 /**
- * XSLT_RVT_VARIABLE:
- *
- * RVT is part of a local variable and destroyed after the variable goes out
- * of scope.
- */
-#define XSLT_RVT_VARIABLE    ((void *)2)
-
-/**
  * XSLT_RVT_FUNC_RESULT:
  *
  * RVT is part of results returned with func:result. The RVT won't be
  * destroyed after exiting a template and will be reset to XSLT_RVT_LOCAL or
  * XSLT_RVT_VARIABLE in the template that receives the return value.
  */
-#define XSLT_RVT_FUNC_RESULT ((void *)3)
+#define XSLT_RVT_FUNC_RESULT ((void *)2)
 
 /**
  * XSLT_RVT_GLOBAL:
  *
  * RVT is part of a global variable.
  */
-#define XSLT_RVT_GLOBAL      ((void *)4)
+#define XSLT_RVT_GLOBAL      ((void *)3)
 
 /*
  * Interfaces for the variable module.
