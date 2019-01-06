@@ -3163,7 +3163,6 @@ ExpKdbgExtPoolFindPagedPool(
     ULONG i = 0;
     PPOOL_HEADER Entry;
     PVOID BaseVa;
-    PMMPTE PointerPte;
     PMMPDE PointerPde;
 
     KdbpPrint("Searching Paged pool (%p : %p) for Tag: %.4s\n", MmPagedPoolStart, MmPagedPoolEnd, (PCHAR)&Tag);
@@ -3192,13 +3191,7 @@ ExpKdbgExtPoolFindPagedPool(
         }
 
         /* Check if allocation is valid */
-        PointerPte = MiAddressToPte(BaseVa);
-        if ((ULONG_PTR)PointerPte > PTE_TOP)
-        {
-            break;
-        }
-
-        if (PointerPte->u.Hard.Valid)
+        if (MmIsAddressValid(BaseVa))
         {
             for (Entry = BaseVa;
                  (ULONG_PTR)Entry + sizeof(POOL_HEADER) < (ULONG_PTR)BaseVa + PAGE_SIZE;
@@ -3243,7 +3236,6 @@ ExpKdbgExtPoolFindNonPagedPool(
 {
     PPOOL_HEADER Entry;
     PVOID BaseVa;
-    PMMPTE PointerPte;
 
     KdbpPrint("Searching NonPaged pool (%p : %p) for Tag: %.4s\n", MmNonPagedPoolStart, MmNonPagedPoolEnd0, (PCHAR)&Tag);
 
@@ -3261,38 +3253,34 @@ ExpKdbgExtPoolFindNonPagedPool(
         }
 
         /* Check if allocation is valid */
-        PointerPte = MiAddressToPte(BaseVa);
-        if ((ULONG_PTR)PointerPte > PTE_TOP)
+        if (!MmIsAddressValid(BaseVa))
         {
-            break;
+            continue;
         }
 
-        if (PointerPte->u.Hard.Valid)
+        for (Entry = BaseVa;
+             (ULONG_PTR)Entry + sizeof(POOL_HEADER) < (ULONG_PTR)BaseVa + PAGE_SIZE;
+             Entry = (PVOID)((ULONG_PTR)Entry + 8))
         {
-            for (Entry = BaseVa;
-                 (ULONG_PTR)Entry + sizeof(POOL_HEADER) < (ULONG_PTR)BaseVa + PAGE_SIZE;
-                 Entry = (PVOID)((ULONG_PTR)Entry + 8))
+            /* Try to find whether we have a pool entry */
+            if (!ExpKdbgExtValidatePoolHeader(BaseVa, Entry, NonPagedPool))
             {
-                /* Try to find whether we have a pool entry */
-                if (!ExpKdbgExtValidatePoolHeader(BaseVa, Entry, NonPagedPool))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                if ((Entry->PoolTag & Mask) == (Tag & Mask))
+            if ((Entry->PoolTag & Mask) == (Tag & Mask))
+            {
+                if (FoundCallback != NULL)
                 {
-                    if (FoundCallback != NULL)
-                    {
-                        FoundCallback(Entry, CallbackContext);
-                    }
-                    else
-                    {
-                        /* Print the line */
-                        KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
-                                  Entry, Entry->BlockSize, Entry->PreviousSize,
-                                  Entry->PoolType ? "(Allocated)" : "(Free)     ",
-                                  (PCHAR)&Entry->PoolTag);
-                    }
+                    FoundCallback(Entry, CallbackContext);
+                }
+                else
+                {
+                    /* Print the line */
+                    KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
+                              Entry, Entry->BlockSize, Entry->PreviousSize,
+                              Entry->PoolType ? "(Allocated)" : "(Free)     ",
+                              (PCHAR)&Entry->PoolTag);
                 }
             }
         }
