@@ -1231,7 +1231,7 @@ public:
 
     LONG SetStringValue(LPCTSTR pszValueName, LPCTSTR pszValue, DWORD dwType = REG_SZ) throw()
     {
-        ULONG length;
+        SIZE_T length;
         switch (dwType)
         {
         case REG_SZ:
