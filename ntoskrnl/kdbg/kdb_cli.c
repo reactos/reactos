@@ -193,7 +193,7 @@ static const struct
     { "!poolfind", "!poolfind Tag [Pool]", "Search for pool tag allocations.", ExpKdbgExtPoolFind },
     { "!filecache", "!filecache", "Display cache usage.", ExpKdbgExtFileCache },
     { "!defwrites", "!defwrites", "Display cache write values.", ExpKdbgExtDefWrites },
-    { "!irpfind", "!irpfind [Pool [Restart Address [criteria data]]]", "Lists IRPs potentially matching criteria", ExpKdbgExtIrpFind },
+    { "!irpfind", "!irpfind [Pool [startaddress [criteria data]]]", "Lists IRPs potentially matching criteria", ExpKdbgExtIrpFind },
 };
 
 /* FUNCTIONS *****************************************************************/
