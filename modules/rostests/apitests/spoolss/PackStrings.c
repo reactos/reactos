@@ -21,8 +21,8 @@ EXAMPLE_STRUCT, *PEXAMPLE_STRUCT;
 
 START_TEST(PackStrings)
 {
-    PWSTR Source1[] = { L"Test", L"String" };
-    PWSTR Source2[] = { L"Test", NULL };
+    PCWSTR Source1[] = { L"Test", L"String" };
+    PCWSTR Source2[] = { L"Test", NULL };
 
     BYTE Buffer[50];
     PBYTE pEnd;

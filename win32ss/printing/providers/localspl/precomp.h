@@ -264,7 +264,7 @@ extern const DWORD dwSpoolerMinorVersion;
 extern const WCHAR wszDefaultDocumentName[];
 extern HKEY hPrintKey;
 extern HKEY hPrintersKey;
-extern PWSTR wszPrintProviderInfo[3];
+extern PCWSTR wszPrintProviderInfo[3];
 extern WCHAR wszJobDirectory[MAX_PATH];
 extern DWORD cchJobDirectory;
 extern WCHAR wszSpoolDirectory[MAX_PATH];

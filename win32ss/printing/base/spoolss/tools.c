@@ -36,7 +36,7 @@
  * The strings are copied in reverse order, so this pointer will point to the last copied string of pSource.
  */
 PBYTE WINAPI
-PackStrings(PWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd)
+PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd)
 {
     DWORD cbString;
     ULONG_PTR StringAddress;

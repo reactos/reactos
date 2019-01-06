@@ -374,7 +374,7 @@ static void
 _LocalmonGetPortLevel1(PLOCALMON_PORT pPort, PPORT_INFO_1W* ppPortInfo, PBYTE* ppPortInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbPortName;
-    PWSTR pwszStrings[1];
+    PCWSTR pwszStrings[1];
 
     // Calculate the string lengths.
     if (!ppPortInfo)
@@ -397,7 +397,7 @@ static void
 _LocalmonGetPortLevel2(PLOCALMON_PORT pPort, PPORT_INFO_2W* ppPortInfo, PBYTE* ppPortInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbPortName;
-    PWSTR pwszStrings[3];
+    PCWSTR pwszStrings[3];
 
     // Calculate the string lengths.
     if (!ppPortInfo)
