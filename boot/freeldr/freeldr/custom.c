@@ -51,13 +51,12 @@ VOID OptionMenuCustomBoot(VOID)
 #endif
         "ReactOS"
         };
-    ULONG CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
     ULONG SelectedMenuItem;
 
     if (!UiDisplayMenu("Please choose a boot method:", "",
                        FALSE,
                        CustomBootMenuList,
-                       CustomBootMenuCount,
+                       sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]),
                        0, -1,
                        &SelectedMenuItem,
                        TRUE,

@@ -50,6 +50,7 @@ PCSTR OptionsMenuList[] =
 #endif
 };
 
+const
 PCSTR FrldrDbgMsg = "Enable FreeLdr debug channels\n"
                     "Acceptable syntax: [level1]#channel1[,[level2]#channel2]\n"
                     "level can be one of: trace,warn,fixme,err\n"
@@ -78,8 +79,6 @@ enum BootOption
     DIRECTORY_SERVICES_RESTORE_MODE,
 };
 
-ULONG OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
-
 static enum BootOption BootOptionChoice = NO_OPTION;
 static BOOLEAN BootLogging = FALSE;
 static BOOLEAN VgaMode = FALSE;
@@ -95,7 +94,7 @@ VOID DoOptionsMenu(VOID)
     if (!UiDisplayMenu("Select an option:", "",
                        TRUE,
                        OptionsMenuList,
-                       OptionsMenuItemCount,
+                       sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]),
                        11, // Use "Start ReactOS normally" as default; see the switch below.
                        -1,
                        &SelectedMenuItem,

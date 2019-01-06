@@ -29,9 +29,9 @@ VOID
 (*OS_LOADING_METHOD)(IN OperatingSystemItem* OperatingSystem,
                      IN USHORT OperatingSystemVersion);
 
-struct
+static const struct
 {
-    CHAR BootType[80];
+    PCHAR BootType;
     USHORT OperatingSystemVersion;
     OS_LOADING_METHOD Load;
 } OSLoadingMethods[] =

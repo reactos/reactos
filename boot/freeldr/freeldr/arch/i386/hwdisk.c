@@ -38,7 +38,7 @@ typedef struct tagDISKCONTEXT
     ULONGLONG SectorNumber;
 } DISKCONTEXT;
 
-static CHAR Hex[] = "0123456789abcdef";
+static const CHAR Hex[] = "0123456789abcdef";
 
 /* Data cache for BIOS disks pre-enumeration */
 UCHAR PcBiosDiskCount = 0;
