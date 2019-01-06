@@ -155,7 +155,6 @@ IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
     CREATESTRUCTW Cs;
     LARGE_STRING WindowName;
     PTHREADINFO ptiCurrent;
-    PGHOST_ENTRY pEntry = NULL;
     BOOL NoHooks = FALSE;
 
     ptiCurrent = PsGetCurrentThreadWin32Thread();
@@ -181,7 +180,7 @@ IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
     if (!pTargetWnd)
     {
         ERR("ValidateHwndNoErr: %p\n", (void *)hwndTarget);
-        goto Quit;
+        goto Cleanup;
     }
 
     // get target info
@@ -191,7 +190,7 @@ IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
     if (rc.left >= rc.right || rc.top >= rc.bottom)
     {
         ERR("Rect empty: %p\n", (void *)hwndTarget);
-        goto Quit;
+        goto Cleanup;
     }
 
     // don't use scrollbars.
