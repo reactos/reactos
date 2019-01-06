@@ -3156,7 +3156,9 @@ static
 VOID
 ExpKdbgExtPoolFindPagedPool(
     ULONG Tag,
-    ULONG Mask)
+    ULONG Mask,
+    VOID (NTAPI* FoundCallback)(PPOOL_HEADER, PVOID),
+    PVOID CallbackContext)
 {
     ULONG i = 0;
     PPOOL_HEADER Entry;
@@ -3210,11 +3212,18 @@ ExpKdbgExtPoolFindPagedPool(
 
                 if ((Entry->PoolTag & Mask) == (Tag & Mask))
                 {
-                    /* Print the line */
-                    KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
-                              Entry, Entry->BlockSize, Entry->PreviousSize,
-                              Entry->PoolType ? "(Allocated)" : "(Free)     ",
-                              (PCHAR)&Entry->PoolTag);
+                    if (FoundCallback != NULL)
+                    {
+                        FoundCallback(Entry, CallbackContext);
+                    }
+                    else
+                    {
+                        /* Print the line */
+                        KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
+                                  Entry, Entry->BlockSize, Entry->PreviousSize,
+                                  Entry->PoolType ? "(Allocated)" : "(Free)     ",
+                                  (PCHAR)&Entry->PoolTag);
+                    }
                 }
             }
         }
@@ -3228,7 +3237,9 @@ static
 VOID
 ExpKdbgExtPoolFindNonPagedPool(
     ULONG Tag,
-    ULONG Mask)
+    ULONG Mask,
+    VOID (NTAPI* FoundCallback)(PPOOL_HEADER, PVOID),
+    PVOID CallbackContext)
 {
     PPOOL_HEADER Entry;
     PVOID BaseVa;
@@ -3270,11 +3281,18 @@ ExpKdbgExtPoolFindNonPagedPool(
 
                 if ((Entry->PoolTag & Mask) == (Tag & Mask))
                 {
-                    /* Print the line */
-                    KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
-                              Entry, Entry->BlockSize, Entry->PreviousSize,
-                              Entry->PoolType ? "(Allocated)" : "(Free)     ",
-                              (PCHAR)&Entry->PoolTag);
+                    if (FoundCallback != NULL)
+                    {
+                        FoundCallback(Entry, CallbackContext);
+                    }
+                    else
+                    {
+                        /* Print the line */
+                        KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
+                                  Entry, Entry->BlockSize, Entry->PreviousSize,
+                                  Entry->PoolType ? "(Allocated)" : "(Free)     ",
+                                  (PCHAR)&Entry->PoolTag);
+                    }
                 }
             }
         }
@@ -3318,11 +3336,149 @@ ExpKdbgExtPoolFind(
 
     if (PoolType == NonPagedPool)
     {
-        ExpKdbgExtPoolFindNonPagedPool(Tag, Mask);
+        ExpKdbgExtPoolFindNonPagedPool(Tag, Mask, NULL, NULL);
     }
     else if (PoolType == PagedPool)
     {
-        ExpKdbgExtPoolFindPagedPool(Tag, Mask);
+        ExpKdbgExtPoolFindPagedPool(Tag, Mask, NULL, NULL);
+    }
+
+    return TRUE;
+}
+
+typedef struct _IRP_FIND_CTXT
+{
+    ULONG_PTR RestartAddress;
+    ULONG_PTR SData;
+    ULONG Criteria;
+} IRP_FIND_CTXT, *PIRP_FIND_CTXT;
+
+VOID
+NTAPI
+ExpKdbgExtIrpFindPrint(
+    PPOOL_HEADER Entry,
+    PVOID Context)
+{
+    PIRP Irp;
+    PIRP_FIND_CTXT FindCtxt = Context;
+    PIO_STACK_LOCATION IoStack = NULL;
+    PUNICODE_STRING DriverName;
+    ULONG_PTR SData = FindCtxt->SData;
+    ULONG Criteria = FindCtxt->Criteria;
+
+    /* Free entry, ignore */
+    if (Entry->PoolType == 0)
+    {
+        return;
+    }
+
+    /* Get the IRP */
+    Irp = (PIRP)POOL_FREE_BLOCK(Entry);
+
+    /* Bail out if not matching restart address */
+    if ((ULONG_PTR)Irp < FindCtxt->RestartAddress)
+    {
+        return;
+    }
+
+    /* Avoid bogus IRP stack locations */
+    if (Irp->CurrentLocation <= Irp->StackCount + 1)
+    {
+        IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+        /* Get associated driver */
+        if (IoStack->DeviceObject && IoStack->DeviceObject->DriverObject)
+            DriverName = &IoStack->DeviceObject->DriverObject->DriverName;
+        else
+            DriverName = NULL;
+    }
+
+    /* Display if: no data, no criteria or if criteria matches data */
+    if (SData == 0 || Criteria == 0 ||
+        (Criteria & 0x1 && IoStack && SData == (ULONG_PTR)IoStack->DeviceObject) ||
+        (Criteria & 0x2 && SData == (ULONG_PTR)Irp->Tail.Overlay.OriginalFileObject) ||
+        (Criteria & 0x4 && Irp->MdlAddress && SData == (ULONG_PTR)Irp->MdlAddress->Process) ||
+        (Criteria & 0x8 && SData == (ULONG_PTR)Irp->Tail.Overlay.Thread) ||
+        (Criteria & 0x10 && SData == (ULONG_PTR)Irp->UserEvent))
+    {
+        KdbpPrint("%p Thread %p current stack belongs to %wZ\n", Irp, Irp->Tail.Overlay.Thread, DriverName);
+    }
+}
+
+BOOLEAN
+ExpKdbgExtIrpFind(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    ULONG PoolType = NonPagedPool;
+    IRP_FIND_CTXT FindCtxt;
+
+    /* Pool type */
+    if (Argc > 1)
+    {
+        PoolType = strtoul(Argv[1], NULL, 0);
+
+        if (PoolType > 1)
+        {
+            KdbpPrint("Only (non) paged pool are supported\n");
+            return TRUE;
+        }
+    }
+
+    RtlZeroMemory(&FindCtxt, sizeof(IRP_FIND_CTXT));
+
+    /* Restart address */
+    if (Argc > 2)
+    {
+        if (!KdbpGetHexNumber(Argv[2], &FindCtxt.RestartAddress))
+        {
+            KdbpPrint("Invalid parameter: %s\n", Argv[0]);
+            FindCtxt.RestartAddress = 0;
+        }
+    }
+
+    if (Argc > 4)
+    {
+        if (!KdbpGetHexNumber(Argv[4], &FindCtxt.SData))
+        {
+            FindCtxt.SData = 0;
+        }
+        else
+        {
+            if (strcmp(Argv[3], "device") == 0)
+            {
+                FindCtxt.Criteria = 0x1;
+            }
+            else if (strcmp(Argv[3], "fileobject") == 0)
+            {
+                FindCtxt.Criteria = 0x2;
+            }
+            else if (strcmp(Argv[3], "mdlprocess") == 0)
+            {
+                FindCtxt.Criteria = 0x4;
+            }
+            else if (strcmp(Argv[3], "thread") == 0)
+            {
+                FindCtxt.Criteria = 0x8;
+            }
+            else if (strcmp(Argv[3], "userevent") == 0)
+            {
+                FindCtxt.Criteria = 0x10;
+            }
+            else if (strcmp(Argv[3], "arg") == 0)
+            {
+                FindCtxt.Criteria = 0x1f;
+            }
+        }
+    }
+
+    if (PoolType == NonPagedPool)
+    {
+        ExpKdbgExtPoolFindNonPagedPool(TAG_IRP, 0xFFFFFFFF, ExpKdbgExtIrpFindPrint, &FindCtxt);
+    }
+    else if (PoolType == PagedPool)
+    {
+        ExpKdbgExtPoolFindPagedPool(TAG_IRP, 0xFFFFFFFF, ExpKdbgExtIrpFindPrint, &FindCtxt);
     }
 
     return TRUE;
