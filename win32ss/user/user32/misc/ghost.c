@@ -280,9 +280,12 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // don't use scrollbars.
     style &= ~(WS_HSCROLL | WS_VSCROLL | WS_VISIBLE);
 
+    exstyle &= ~WS_EX_APPWINDOW;
+    exstyle |= WS_EX_MAKEVISIBLEWHENUNGHOSTED;
+
     // set style
     SetWindowLongPtrW(hwnd, GWL_STYLE, style);
-    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle | WS_EX_MAKEVISIBLEWHENUNGHOSTED);
+    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
 
     // set text with " (Not Responding)"
     LoadStringW(User32Instance, IDS_NOT_RESPONDING,
@@ -297,15 +300,16 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
     // get previous window of target
     hwndPrev = GetWindow(hwndTarget, GW_HWNDPREV);
 
+    // get target rect
+    GetWindowRect(hwndTarget, &rc);
+
     // hide target by setting zero size
     SetWindowPos(hwndTarget, NULL, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
-                 SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOZORDER);
-    // hide from taskbar
-    SetWindowLongPtrW(hwndTarget, GWL_EXSTYLE, pData->exstyle | WS_EX_TOOLWINDOW);
+                 SWP_NOMOVE | SWP_NOACTIVATE |
+                 SWP_NOCOPYBITS | SWP_NOOWNERZORDER | SWP_NOREDRAW |
+                 SWP_NOSENDCHANGING | SWP_NOZORDER);
 
     // insert the ghost
-    GetWindowRect(hwndTarget, &rc);
     SetWindowPos(hwnd, hwndPrev,
                  rc.left, rc.top,
                  rc.right - rc.left, rc.bottom - rc.top,
