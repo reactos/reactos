@@ -256,38 +256,29 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
                         const LOGFONTW *plf, DWORD dwFlags)
 {
     FONTFAMILYINFO *first, *last, *result;
-    DWORD dwCompareFlags = IFFCX_STYLE | IFFCX_CHARSET;
+    DWORD dwCompareFlags = 0;
 
-    // if lfFaceName was empty, then styles are dropped.
-    if (!plf->lfFaceName[0])
+    if (plf->lfFaceName[0])
+        dwCompareFlags |= IFFCX_STYLE;
+
+    if ((dwFlags & IEFF_EXTENDED) && plf->lfCharSet == DEFAULT_CHARSET)
+        dwCompareFlags |= IFFCX_CHARSET;
+
+    // std::unique(first, last, IntFontFamilyCompareEx);
+    if (nCount == 0)
+        return 0;
+
+    result = first = InfoList;
+    last = &InfoList[nCount];
+    while (++first != last)
     {
-        dwCompareFlags &= ~IFFCX_STYLE;
-    }
-
-    // If non-Ex, then shrink about lfCharSet.
-    if (!(dwFlags & IEFF_EXTENDED))
-    {
-        dwCompareFlags &= ~IFFCX_CHARSET;
-    }
-
-    if (dwCompareFlags != (IFFCX_CHARSET | IFFCX_STYLE))
-    {
-        // std::unique(first, last, IntFontFamilyCompareEx);
-        if (nCount == 0)
-            return 0;
-
-        result = first = InfoList;
-        last = &InfoList[nCount];
-        while (++first != last)
+        if (IntFontFamilyCompareEx(result, first, dwCompareFlags) != 0 &&
+            ++result != first)
         {
-            if (IntFontFamilyCompareEx(result, first, dwCompareFlags) != 0 &&
-                ++result != first)
-            {
-                *result = *first;
-            }
+            *result = *first;
         }
-        nCount = (int)(++result - InfoList);
     }
+    nCount = (int)(++result - InfoList);
 
     return nCount;
 }
