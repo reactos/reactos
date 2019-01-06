@@ -325,7 +325,7 @@ Ghost_OnCreate(HWND hwnd, CREATESTRUCTW *lpcs)
 }
 
 static BOOL
-Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
+Ghost_Unghost(HWND hwnd, BOOL bDestroyTarget)
 {
     DWORD exstyle;
     GHOST_DATA *pData = Ghost_GetData(hwnd);
@@ -338,6 +338,23 @@ Ghost_Unenchant(HWND hwnd, BOOL bDestroyTarget)
         exstyle &= ~WS_EX_MAKEVISIBLEWHENUNGHOSTED;
     }
     SetWindowLongPtrW(hwnd, GWL_EXSTYLE, exstyle);
+
+    if (exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED)
+    {
+        // hide ghost
+        ShowWindow(hwnd, SW_HIDE);
+
+        // show target
+        SetWindowLongPtr(hwndTarget, GWL_STYLE, pData->style);
+        SetWindowLongPtr(hwndTarget, GWL_EXSTYLE, pData->exstyle);
+        SetWindowPos(hwndTarget, NULL,
+                     pData->rcWindow.left,
+                     pData->rcWindow.top,
+                     pData->rcWindow.right - pData->rcWindow.left,
+                     pData->rcWindow.bottom - pData->rcWindow.top,
+                     SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
+                     SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
+    }
 
     return DestroyWindow(hwnd);
 }
@@ -434,20 +451,7 @@ Ghost_OnNCDestroy(HWND hwnd)
         DeleteObject(pData->hbm32bpp);
         pData->hbm32bpp = NULL;
 
-        if (exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED)
-        {
-            // show target
-            SetWindowLongPtr(hwndTarget, GWL_STYLE, pData->style);
-            SetWindowLongPtr(hwndTarget, GWL_EXSTYLE, pData->exstyle);
-            SetWindowPos(hwndTarget, NULL,
-                         pData->rcWindow.left,
-                         pData->rcWindow.top,
-                         pData->rcWindow.right - pData->rcWindow.left,
-                         pData->rcWindow.bottom - pData->rcWindow.top,
-                         SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
-                         SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
-        }
-        else
+        if (!(exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED))
         {
             Ghost_DestroyTarget(pData);
         }
@@ -481,7 +485,7 @@ Ghost_OnClose(HWND hwnd)
     if (id == IDYES)
     {
         // destroy the target
-        Ghost_Unenchant(hwnd, TRUE);
+        Ghost_Unghost(hwnd, TRUE);
         return;
     }
 
@@ -505,7 +509,7 @@ Ghost_OnTimer(HWND hwnd, UINT id)
     if (!IsWindow(hwndTarget) || !IsHungAppWindow(hwndTarget))
     {
         // resume if window is destroyed or responding
-        Ghost_Unenchant(hwnd, FALSE);
+        Ghost_Unghost(hwnd, FALSE);
         return;
     }
 
@@ -603,7 +607,7 @@ GhostWndProc_common(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
             return (LRESULT)Ghost_GetIcon(hwnd, (INT)wParam);
 
         case GWM_UNGHOST:
-            return Ghost_Unenchant(hwnd, (BOOL)wParam);
+            return Ghost_Unghost(hwnd, (BOOL)wParam);
 
         case WM_DESTROY:
             Ghost_OnDestroy(hwnd);
