@@ -585,7 +585,7 @@ BEGIN
     LTEXT "維持工作階段，电脑數據仍然保持在 RAM 中。當你按下一個鍵或移動鼠標將喚醒這台電腦。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "確定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON "幫助(&H)", IDHELP, 144, 82, 60, 14
+    PUSHBUTTON "說明(&H)", IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218

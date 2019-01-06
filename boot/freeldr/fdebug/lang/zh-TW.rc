@@ -19,7 +19,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "關閉(&X)", IDM_EXIT
     END
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     BEGIN
         MENUITEM "關於 ...(&A)", IDM_ABOUT
     END
@@ -74,12 +74,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "fdebug"
+    IDS_APP_TITLE "FreeLoader 偵錯程式"
     IDS_HELLO "世界您好！"
     IDC_FDEBUG "FDEBUG"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "此程式是免費軟體; 你可以將它重新分發和/或修改根據 GNU 通用公共許可的條款，如由自由軟體基金會出版; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "本程式為自由軟體; 您可以根據自由軟體基金會發佈的 GNU 通用公共授權條款的第 2 版，或（根據您的選擇）任何更高版本的條款進行重新分發和修改它。\r\n\r\n本程式的發佈是希望它有用，但沒有任何擔保; 甚至沒有適銷性或特定用途適用性的暗示保證。 有關詳細信息，請參閱 GNU 通用公共許可證。\r\n\r\n您應該已收到GNU通用公共授權條款的副本以及本程式; 如果沒有，請寫信給 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
 END

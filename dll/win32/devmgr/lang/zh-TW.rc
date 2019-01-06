@@ -263,7 +263,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "顯示隱藏的裝置",         IDC_SHOWHIDDEN
   END
-  POPUP "幫助"
+  POPUP "說明"
   BEGIN
     MENUITEM "關於",                       IDC_ABOUT
   END

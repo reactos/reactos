@@ -160,7 +160,7 @@ BEGIN
     IDS_AINFO_URLSITE "\n主頁："
     IDS_AINFO_LICENSE "\n協議："
     IDS_AINFO_URLDOWNLOAD "\n下載:"
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\n語言: "
 END
 
 STRINGTABLE
@@ -247,6 +247,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
+    IDS_DL_DIALOG_DB_DISP "應用程式資料庫"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "更新資料庫…"
 END

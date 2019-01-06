@@ -34,7 +34,7 @@ IDR_BROWSE_MAIN_MENU MENU
         MENUITEM "添加到收藏夾...(&A)",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     {
         MENUITEM "關於網際網路瀏覽器(&A)", ID_BROWSE_ABOUT
     }

@@ -91,7 +91,7 @@ BEGIN
             MENUITEM "淡黃色(&P)\tCtrl+2", ID_BACK_2
         END
     END
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     BEGIN
         MENUITEM "關於 &Wine 寫字板", ID_ABOUT
     END
