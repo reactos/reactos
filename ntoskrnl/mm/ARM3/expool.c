@@ -3106,6 +3106,228 @@ ExpKdbgExtPoolUsed(
     return TRUE;
 }
 
+static
+BOOLEAN
+ExpKdbgExtValidatePoolHeader(
+    PVOID BaseVa,
+    PPOOL_HEADER Entry,
+    POOL_TYPE BasePoolTye)
+{
+    /* Block size cannot be NULL or negative and it must cover the page */
+    if (Entry->BlockSize <= 0)
+    {
+        return FALSE;
+    }
+    if (Entry->BlockSize * 8 + (ULONG_PTR)Entry - (ULONG_PTR)BaseVa > PAGE_SIZE)
+    {
+        return FALSE;
+    }
+
+    /*
+     * PreviousSize cannot be 0 unless on page begin
+     * And it cannot be bigger that our current
+     * position in page
+     */
+    if (Entry->PreviousSize == 0 && BaseVa != Entry)
+    {
+        return FALSE;
+    }
+    if (Entry->PreviousSize * 8 > (ULONG_PTR)Entry - (ULONG_PTR)BaseVa)
+    {
+        return FALSE;
+    }
+
+    /* Must be paged pool */
+    if (((Entry->PoolType - 1) & BASE_POOL_TYPE_MASK) != BasePoolTye)
+    {
+        return FALSE;
+    }
+
+    /* Match tag mask */
+    if ((Entry->PoolTag & 0x00808080) != 0)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+VOID
+ExpKdbgExtPoolFindPagedPool(
+    ULONG Tag,
+    ULONG Mask)
+{
+    ULONG i = 0;
+    PPOOL_HEADER Entry;
+    PVOID BaseVa;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
+
+    KdbpPrint("Searching Paged pool (%p : %p) for Tag: %.4s\n", MmPagedPoolStart, MmPagedPoolEnd, (PCHAR)&Tag);
+
+    /*
+     * To speed up paged pool search, we will use the allocation bipmap.
+     * This is possible because we live directly in the kernel :-)
+     */
+    i = RtlFindSetBits(MmPagedPoolInfo.PagedPoolAllocationMap, 1, 0);
+    while (i != 0xFFFFFFFF)
+    {
+        BaseVa = (PVOID)((ULONG_PTR)MmPagedPoolStart + (i << PAGE_SHIFT));
+        Entry = BaseVa;
+
+        /* Validate our address */
+        if ((ULONG_PTR)BaseVa > (ULONG_PTR)MmPagedPoolEnd || (ULONG_PTR)BaseVa + PAGE_SIZE > (ULONG_PTR)MmPagedPoolEnd)
+        {
+            break;
+        }
+
+        /* Check whether we are beyond expansion */
+        PointerPde = MiAddressToPde(BaseVa);
+        if (PointerPde >= MmPagedPoolInfo.NextPdeForPagedPoolExpansion)
+        {
+            break;
+        }
+
+        /* Check if allocation is valid */
+        PointerPte = MiAddressToPte(BaseVa);
+        if ((ULONG_PTR)PointerPte > PTE_TOP)
+        {
+            break;
+        }
+
+        if (PointerPte->u.Hard.Valid)
+        {
+            for (Entry = BaseVa;
+                 (ULONG_PTR)Entry + sizeof(POOL_HEADER) < (ULONG_PTR)BaseVa + PAGE_SIZE;
+                 Entry = (PVOID)((ULONG_PTR)Entry + 8))
+            {
+                /* Try to find whether we have a pool entry */
+                if (!ExpKdbgExtValidatePoolHeader(BaseVa, Entry, PagedPool))
+                {
+                    continue;
+                }
+
+                if ((Entry->PoolTag & Mask) == (Tag & Mask))
+                {
+                    /* Print the line */
+                    KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
+                              Entry, Entry->BlockSize, Entry->PreviousSize,
+                              Entry->PoolType ? "(Allocated)" : "(Free)     ",
+                              (PCHAR)&Entry->PoolTag);
+                }
+            }
+        }
+
+        i = RtlFindSetBits(MmPagedPoolInfo.PagedPoolAllocationMap, 1, i + 1);
+    }
+}
+
+extern PVOID MmNonPagedPoolEnd0;
+static
+VOID
+ExpKdbgExtPoolFindNonPagedPool(
+    ULONG Tag,
+    ULONG Mask)
+{
+    PPOOL_HEADER Entry;
+    PVOID BaseVa;
+    PMMPTE PointerPte;
+
+    KdbpPrint("Searching NonPaged pool (%p : %p) for Tag: %.4s\n", MmNonPagedPoolStart, MmNonPagedPoolEnd0, (PCHAR)&Tag);
+
+    /* Brute force search: start browsing the whole non paged pool */
+    for (BaseVa = MmNonPagedPoolStart;
+         (ULONG_PTR)BaseVa + PAGE_SIZE <= (ULONG_PTR)MmNonPagedPoolEnd0;
+         BaseVa = (PVOID)((ULONG_PTR)BaseVa + PAGE_SIZE))
+    {
+        Entry = BaseVa;
+
+        /* Check whether we are beyond expansion */
+        if (BaseVa >= MmNonPagedPoolExpansionStart)
+        {
+            break;
+        }
+
+        /* Check if allocation is valid */
+        PointerPte = MiAddressToPte(BaseVa);
+        if ((ULONG_PTR)PointerPte > PTE_TOP)
+        {
+            break;
+        }
+
+        if (PointerPte->u.Hard.Valid)
+        {
+            for (Entry = BaseVa;
+                 (ULONG_PTR)Entry + sizeof(POOL_HEADER) < (ULONG_PTR)BaseVa + PAGE_SIZE;
+                 Entry = (PVOID)((ULONG_PTR)Entry + 8))
+            {
+                /* Try to find whether we have a pool entry */
+                if (!ExpKdbgExtValidatePoolHeader(BaseVa, Entry, NonPagedPool))
+                {
+                    continue;
+                }
+
+                if ((Entry->PoolTag & Mask) == (Tag & Mask))
+                {
+                    /* Print the line */
+                    KdbpPrint("%p size: %4d previous size: %4d  %s  %.4s\n",
+                              Entry, Entry->BlockSize, Entry->PreviousSize,
+                              Entry->PoolType ? "(Allocated)" : "(Free)     ",
+                              (PCHAR)&Entry->PoolTag);
+                }
+            }
+        }
+    }
+}
+
+BOOLEAN
+ExpKdbgExtPoolFind(
+    ULONG Argc,
+    PCHAR Argv[])
+{
+    ULONG Tag = 0;
+    ULONG Mask = 0;
+    ULONG PoolType = NonPagedPool;
+
+    if (Argc == 1)
+    {
+        KdbpPrint("Specify a tag string\n");
+        return TRUE;
+    }
+
+    /* First arg is tag */
+    if (strlen(Argv[1]) != 1 || Argv[1][0] != '*')
+    {
+        ExpKdbgExtPoolUsedGetTag(Argv[1], &Tag, &Mask);
+    }
+
+    /* Second arg might be pool to search */
+    if (Argc > 2)
+    {
+        PoolType = strtoul(Argv[2], NULL, 0);
+
+        if (PoolType > 1)
+        {
+            KdbpPrint("Only (non) paged pool are supported\n");
+            return TRUE;
+        }
+    }
+
+    /* FIXME: What about large pool? */
+
+    if (PoolType == NonPagedPool)
+    {
+        ExpKdbgExtPoolFindNonPagedPool(Tag, Mask);
+    }
+    else if (PoolType == PagedPool)
+    {
+        ExpKdbgExtPoolFindPagedPool(Tag, Mask);
+    }
+
+    return TRUE;
+}
+
 #endif // DBG && KDBG
 
 /* EOF */
