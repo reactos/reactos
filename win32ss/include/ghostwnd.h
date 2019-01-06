@@ -32,7 +32,7 @@ typedef struct GHOST_DATA
 
 // GTM_CREATE_GHOST message:
 //   wParam: HWND hwndTarget: The target window.
-//   lParam: HWND hwndGhost: The ghost window.
+//   lParam: VOID Ignored: Ignored.
 #define GTM_CREATE_GHOST        (WM_USER + 1)
 
 // GTM_GHOST_DESTROYED message:
