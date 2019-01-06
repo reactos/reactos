@@ -434,19 +434,20 @@ Ghost_OnNCDestroy(HWND hwnd)
         DeleteObject(pData->hbm32bpp);
         pData->hbm32bpp = NULL;
 
-        // show target
-        SetWindowPos(pData->hwndTarget, NULL,
-                     pData->rcWindow.left,
-                     pData->rcWindow.top,
-                     pData->rcWindow.right - pData->rcWindow.left,
-                     pData->rcWindow.bottom - pData->rcWindow.top,
-                     SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
-                     SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
-        SetWindowLongPtr(pData->hwndTarget, GWL_STYLE, pData->style);
-        SetWindowLongPtr(pData->hwndTarget, GWL_EXSTYLE, pData->exstyle);
-
-        // destroy target if necessary
-        if (!(exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED))
+        if (exstyle & WS_EX_MAKEVISIBLEWHENUNGHOSTED)
+        {
+            // show target
+            SetWindowLongPtr(hwndTarget, GWL_STYLE, pData->style);
+            SetWindowLongPtr(hwndTarget, GWL_EXSTYLE, pData->exstyle);
+            SetWindowPos(hwndTarget, NULL,
+                         pData->rcWindow.left,
+                         pData->rcWindow.top,
+                         pData->rcWindow.right - pData->rcWindow.left,
+                         pData->rcWindow.bottom - pData->rcWindow.top,
+                         SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
+                         SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
+        }
+        else
         {
             Ghost_DestroyTarget(pData);
         }
