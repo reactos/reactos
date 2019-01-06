@@ -31,7 +31,7 @@ IDR_BROWSE_MAIN_MENU MENU
     }
     POPUP "我的最愛(&F)"
     {
-        MENUITEM "添加到我的最愛...(&A)",        ID_BROWSE_ADDFAV
+        MENUITEM "添加到我的最愛(&A)...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "說明(&H)"
