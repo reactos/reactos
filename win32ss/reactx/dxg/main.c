@@ -40,9 +40,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 {
 
     PDRVFN drv_func;
-    ULONG peng_funcs;
-    PULONG peng_func;
-
+    PFN *peng_funcs;
     UINT i;
 
     /* Test see if the data is vaild we got from win32k.sys */
@@ -75,9 +73,9 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
      * and if it really are exported
      */
 
-    peng_funcs = (ULONG)&gpEngFuncs;
+    peng_funcs = (PFN*)&gpEngFuncs;
 
-    for (i=1 ; i < DXENG_INDEX_DxEngLoadImage + 1; i++)
+    for (i = 1; i < DXENG_INDEX_DxEngLoadImage + 1; i++)
     {
         drv_func = &pDxEngDrv->pdrvfn[i];
 
@@ -86,8 +84,8 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
         {
             return STATUS_INTERNAL_ERROR;
         }
-        peng_func = (PULONG)(peng_funcs+(i * sizeof(ULONG)));
-        *peng_func = (ULONG)drv_func->pfn;
+
+        peng_funcs[i] = drv_func->pfn;
     }
 
     /* Note 12/1-2004 : Why is this set to 0x618 */
