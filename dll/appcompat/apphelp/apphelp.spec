@@ -173,7 +173,7 @@
 @ stub SE_LdrEntryRemoved
 @ stub SetPermLayers
 @ cdecl ShimDbgPrint(long str str)
-@ stub ShimDumpCache
-@ stub ShimFlushCache
+@ stdcall ShimDumpCache(ptr ptr wstr long)
+@ stdcall ShimFlushCache(ptr ptr wstr long)
 @ stdcall SetPermLayerState(wstr wstr long long long)
 @ stdcall SdbRegisterDatabaseEx(wstr long ptr)

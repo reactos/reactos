@@ -292,3 +292,38 @@ BOOL WINAPI SdbUnregisterDatabase(_In_ GUID *pguidDB)
     return FALSE;
 }
 
+
+/* kernel32.dll */
+BOOL WINAPI BaseDumpAppcompatCache(VOID);
+BOOL WINAPI BaseFlushAppcompatCache(VOID);
+
+
+/**
+ * @name ShimDumpCache
+ * Dump contents of the shim cache.
+ *
+ * @param hwnd          Unused, pass 0
+ * @param hInstance     Unused, pass 0
+ * @param lpszCmdLine   Unused, pass 0
+ * @param nCmdShow      Unused, pass 0
+ * @return 
+ */
+BOOL WINAPI ShimDumpCache(HWND hwnd, HINSTANCE hInstance, LPCSTR lpszCmdLine, int nCmdShow)
+{
+    return BaseDumpAppcompatCache();
+}
+
+/**
+* @name ShimFlushCache
+* Flush the shim cache. Call this after installing a new shim database
+*
+* @param hwnd          Unused, pass 0
+* @param hInstance     Unused, pass 0
+* @param lpszCmdLine   Unused, pass 0
+* @param nCmdShow      Unused, pass 0
+* @return 
+*/
+BOOL WINAPI ShimFlushCache(HWND hwnd, HINSTANCE hInstance, LPCSTR lpszCmdLine, int nCmdShow)
+{
+    return BaseFlushAppcompatCache();
+}
