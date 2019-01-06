@@ -29,12 +29,12 @@ IDR_BROWSE_MAIN_MENU MENU
             MENUITEM "位址列(&A)",            ID_BROWSE_BAR_ADDR
         }
     }
-    POPUP "收藏夾(&F)"
+    POPUP "我的最愛(&F)"
     {
-        MENUITEM "添加到收藏夾...(&A)",        ID_BROWSE_ADDFAV
+        MENUITEM "添加到我的最愛(&A)...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     {
         MENUITEM "關於網際網路瀏覽器(&A)", ID_BROWSE_ABOUT
     }

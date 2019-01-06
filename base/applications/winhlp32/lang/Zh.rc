@@ -141,8 +141,8 @@ MAIN_MENU MENU
     MENUITEM "大號",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "幫助(&H)" {
-   MENUITEM "如何使用幫助(&O)", MNID_HELP_HELPON
+ POPUP "說明(&H)" {
+   MENUITEM "如何使用說明(&O)", MNID_HELP_HELPON
    MENUITEM "資訊(&I)...", MNID_HELP_ABOUT
  }
 }

@@ -76,7 +76,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)", IDM_GAME_EXIT
     END
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     BEGIN
         MENUITEM "目錄(&C)\tF1", IDM_HELP_CONTENTS
         MENUITEM "關於接龍(&A)", IDM_HELP_ABOUT

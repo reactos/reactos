@@ -35,10 +35,10 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "裝置管理員列出所有安裝在電腦上的硬體裝置。請使用設備管理器來變更設備的屬性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "裝置管理員(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
-    GROUPBOX "添加硬體嚮導", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "新增硬體精靈", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "“添加硬體嚮導”幫助您安裝新的硬件。", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "添加硬體件嚮導(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    LTEXT "“新增硬體精靈”幫助您安裝新的硬件。", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON "新增硬體精靈(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬體設定檔", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "硬體設定檔向您提供建立和保存不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
