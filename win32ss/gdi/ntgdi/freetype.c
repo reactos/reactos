@@ -2723,8 +2723,12 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         }
         else
         {
-            if (_wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0 &&
-                _wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfFullName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0)
+            if (_wcsnicmp(LogFont->lfFaceName,
+                          InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName,
+                          RTL_NUMBER_OF(LogFont->lfFaceName) - 1) != 0 &&
+                _wcsnicmp(LogFont->lfFaceName,
+                          InfoEntry.EnumLogFontEx.elfFullName,
+                          RTL_NUMBER_OF(LogFont->lfFaceName) - 1) != 0)
             {
                 continue;
             }
