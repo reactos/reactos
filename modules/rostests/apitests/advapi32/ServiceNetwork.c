@@ -288,8 +288,8 @@ service_main(DWORD dwArgc, LPWSTR* lpszArgv)
         goto quit;
     }
 
-    test_tcp(lpszArgv[0], (DWORD)Teb->SubProcessTag);
-    test_udp(lpszArgv[0], (DWORD)Teb->SubProcessTag);
+    test_tcp(lpszArgv[0], PtrToUlong(Teb->SubProcessTag));
+    test_udp(lpszArgv[0], PtrToUlong(Teb->SubProcessTag));
 
     WSACleanup();
 quit:
