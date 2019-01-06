@@ -444,9 +444,10 @@ ExpKdbgExtIrpFindPrint(
     PVOID Context)
 {
     PIRP Irp;
+    BOOLEAN IsComplete = FALSE;
     PIRP_FIND_CTXT FindCtxt = Context;
     PIO_STACK_LOCATION IoStack = NULL;
-    PUNICODE_STRING DriverName;
+    PUNICODE_STRING DriverName = NULL;
     ULONG_PTR SData = FindCtxt->SData;
     ULONG Criteria = FindCtxt->Criteria;
 
@@ -473,8 +474,10 @@ ExpKdbgExtIrpFindPrint(
         /* Get associated driver */
         if (IoStack->DeviceObject && IoStack->DeviceObject->DriverObject)
             DriverName = &IoStack->DeviceObject->DriverObject->DriverName;
-        else
-            DriverName = NULL;
+    }
+    else
+    {
+        IsComplete = TRUE;
     }
 
     /* Display if: no data, no criteria or if criteria matches data */
@@ -485,7 +488,14 @@ ExpKdbgExtIrpFindPrint(
         (Criteria & 0x8 && SData == (ULONG_PTR)Irp->Tail.Overlay.Thread) ||
         (Criteria & 0x10 && SData == (ULONG_PTR)Irp->UserEvent))
     {
-        KdbpPrint("%p Thread %p current stack belongs to %wZ\n", Irp, Irp->Tail.Overlay.Thread, DriverName);
+        if (!IsComplete)
+        {
+            KdbpPrint("%p Thread %p current stack belongs to %wZ\n", Irp, Irp->Tail.Overlay.Thread, DriverName);
+        }
+        else
+        {
+            KdbpPrint("%p Thread %p is complete (CurrentLocation %d > StackCount %d)\n", Irp, Irp->Tail.Overlay.Thread, Irp->CurrentLocation, Irp->StackCount + 1);
+        }
     }
 }
 
