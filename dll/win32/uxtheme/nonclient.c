@@ -230,7 +230,11 @@ void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
         return;
 
     if (!htheme)
-        htheme = pwndData->hthemeWindow;
+    {
+        htheme = GetNCCaptionTheme(hWnd, style);
+        if (!htheme)
+            return;
+    }
 
     if(!GetWindowInfo(hWnd, &wi))
         return;

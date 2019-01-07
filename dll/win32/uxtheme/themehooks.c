@@ -323,7 +323,8 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
         case WM_SIZE:
         case WM_WINDOWPOSCHANGED:
         {
-            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
+            if(IsAppThemed() && (GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+                ThemeCalculateCaptionButtonsPos(hWnd, NULL);
             break;
         }
         case WM_THEMECHANGED:
@@ -360,7 +361,11 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
                 pwndData->hthemeScrollbar = NULL;
             }
 
-            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
+            if(IsAppThemed() && (GetThemeAppProperties() & STAP_ALLOW_NONCLIENT))
+                ThemeCalculateCaptionButtonsPos(hWnd, NULL);
+
+            pwndData->DirtyThemeRegion = TRUE;
+            break;
         }
         case WM_NCCREATE:
         {
