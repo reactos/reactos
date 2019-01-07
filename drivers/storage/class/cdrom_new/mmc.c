@@ -1233,7 +1233,11 @@ CdRompFlushDelayedList(
     IN BOOLEAN CalledFromWorkItem
     )
 {
+#ifdef __REACTOS__
+    PSLIST_ENTRY list;
+#else
     PSINGLE_LIST_ENTRY list;
+#endif
     PIRP irp;
 
     // NOTE - REF #0002
