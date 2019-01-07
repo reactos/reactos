@@ -490,7 +490,7 @@ ExpKdbgExtIrpFindPrint(
     {
         if (!IsComplete)
         {
-            KdbpPrint("%p Thread %p current stack belongs to %wZ\n", Irp, Irp->Tail.Overlay.Thread, DriverName);
+            KdbpPrint("%p Thread %p current stack (%x, %x) belongs to %wZ\n", Irp, Irp->Tail.Overlay.Thread, IoStack->MajorFunction, IoStack->MinorFunction, DriverName);
         }
         else
         {
