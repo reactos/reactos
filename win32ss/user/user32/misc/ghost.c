@@ -345,15 +345,15 @@ Ghost_Unghost(HWND hwnd, BOOL bDestroyTarget)
         ShowWindow(hwnd, SW_HIDE);
 
         // show target
-        SetWindowLongPtr(hwndTarget, GWL_STYLE, pData->style);
-        SetWindowLongPtr(hwndTarget, GWL_EXSTYLE, pData->exstyle);
-        SetWindowPos(hwndTarget, NULL,
+        SetWindowLongPtr(pData->hwndTarget, GWL_STYLE, pData->style);
+        SetWindowLongPtr(pData->hwndTarget, GWL_EXSTYLE, pData->exstyle);
+        SetWindowPos(pData->hwndTarget, NULL,
                      pData->rcWindow.left,
                      pData->rcWindow.top,
                      pData->rcWindow.right - pData->rcWindow.left,
                      pData->rcWindow.bottom - pData->rcWindow.top,
                      SWP_SHOWWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
-                     SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOZORDER);
+                     SWP_NOREPOSITION | SWP_NOZORDER);
     }
 
     return DestroyWindow(hwnd);

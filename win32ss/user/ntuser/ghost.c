@@ -120,6 +120,7 @@ BOOL FASTCALL IntCheckWindowClass(PWND Window, PUNICODE_STRING pClass)
     if (Len > 0)
     {
         Ret = RtlEqualUnicodeString(&ClassName, pClass, TRUE);
+        ERR("%S: %S\n", ClassName.Buffer, pClass->Buffer);
     }
     else
     {
@@ -147,7 +148,7 @@ __inline BOOL FASTCALL IntIsGhostWindow(PWND Window)
 
 // create a ghost window for the target
 PGHOST_ENTRY FASTCALL
-IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
+IntCreateGhostWindow(HWND hwndTarget)
 {
     DWORD style, exstyle;
     RECT rc;
@@ -156,6 +157,7 @@ IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
     LARGE_STRING WindowName;
     PTHREADINFO ptiCurrent;
     BOOL NoHooks = FALSE;
+    PGHOST_ENTRY pEntry = NULL;
 
     ptiCurrent = PsGetCurrentThreadWin32Thread();
     if (!ptiCurrent || !gptiDesktopThread)
@@ -222,8 +224,7 @@ IntCreateGhostWindow(PGHOST_ENTRY pEntry, HWND hwndTarget)
         goto Cleanup;
     }
 
-    pEntry->hwndTarget = hwndTarget;
-    pEntry->hwndGhost = pGhostWnd->head.h;
+    pEntry = IntAddGhostEntry(hwndTarget, pGhostWnd->head.h);
 
 Cleanup:
     if (!pEntry && pGhostWnd)
@@ -291,7 +292,7 @@ UserGhostThreadEntry(VOID)
     // This thread should handle all ghost windows and exit when no ghost window is needed.
     MSG msg;
     HDESK hDesk;
-    PGHOST_ENTRY pEntry;
+    BOOL bInitialized = FALSE;
 
     TRACE("UserGhostThreadEntry: started.\n");
 
@@ -306,14 +307,11 @@ UserGhostThreadEntry(VOID)
     FIXME("We're missing a thread lock before this line.\n");
     gptiGhostThread = PsGetCurrentThreadWin32Thread();
 
-    // add an entry to the list
-    pEntry = IntAddGhostEntry(NULL, NULL);
-
     // set event
     KeSetEvent(gpGhostStartupEvent, IO_NO_INCREMENT, FALSE);
 
     // thread message loop
-    while (!IsListEmpty(&gGhostListHead))
+    while (!bInitialized || !IsListEmpty(&gGhostListHead))
     {
         RtlZeroMemory(&msg, sizeof(MSG));
 
@@ -330,19 +328,14 @@ UserGhostThreadEntry(VOID)
 
                 TRACE("GTM_CREATE_GHOST: %p\n", (void *)hwndTarget);
 
-                // add ghost entry if necessary
-                if (!pEntry)
-                    pEntry = IntAddGhostEntry(hwndTarget, NULL);
-
                 // create ghost window
-                if (!IntCreateGhostWindow(pEntry, hwndTarget))
+                if (!IntCreateGhostWindow(hwndTarget))
                 {
                     ERR("IntCreateGhostWindow failed: %p\n", (void *)hwndTarget);
-                    goto QuitThread;
                 }
 
-                pEntry = NULL;
-                break;
+                bInitialized = TRUE;
+                continue;
             }
 
             case GTM_GHOST_DESTROYED:
@@ -354,14 +347,13 @@ UserGhostThreadEntry(VOID)
                       (void *)hwndTarget, (void *)hwndGhost);
 
                 IntGhostOnDestroy(hwndGhost, hwndTarget);
-                break;
+                continue;
             }
         }
 
         IntDispatchMessage(&msg);
     }
 
-QuitThread:
     IntFreeGhostList();
 
     gptiGhostThread = NULL;
@@ -459,10 +451,16 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
     }
 
     if (!(pHungWnd->style & WS_VISIBLE))
+    {
+        ERR("Invisible (hwndHung: %p)\n", (void *)hwndHung);
         return FALSE;   // invisible
+    }
 
     if (pHungWnd->style & WS_CHILD)
+    {
+        ERR("Child (hwndHung: %p)\n", (void *)hwndHung);
         return FALSE;   // child
+    }
 
     if (IntIsGhostWindow(pHungWnd))
     {
@@ -484,8 +482,10 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         return FALSE;   // Progman
     }
 
+    TRACE("gptiGhostThread: %p\n", (void *)gptiGhostThread);
     if (!gptiGhostThread)
     {
+        TRACE("gptiGhostThread was NULL\n");
         if (gpGhostStartupEvent == NULL)
         {
             // create event
@@ -502,6 +502,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         }
 
         // create ghost thread
+        TRACE("UserCreateSystemThread\n");
         if (!UserCreateSystemThread(ST_GHOST_THREAD))
         {
             ERR("Unable to create ghost thread for pHungWnd(%p), hwndHung(%p)\n",
@@ -511,6 +512,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
         }
 
         // wait for event
+        TRACE("KeWaitForSingleObject\n");
         UserLeave();
         Status = KeWaitForSingleObject(gpGhostStartupEvent, UserRequest, UserMode, FALSE, NULL);
         UserEnterExclusive();
@@ -520,6 +522,7 @@ BOOL FASTCALL IntMakeHungWindowGhosted(HWND hwndHung)
             IntDeleteGhostEntry(hwndHung);
             return FALSE;
         }
+        TRACE("KeWaitForSingleObject done\n");
     }
 
     // Pass the hwnd of pHungWnd to the ghost thread as we can't pass parameters directly

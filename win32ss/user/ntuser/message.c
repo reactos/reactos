@@ -1425,9 +1425,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (MsqIsHung(ptiSendTo))
     {
+        TRACE("Let's go Ghost!\n");
+        IntMakeHungWindowGhosted(hWnd);
+
         if (uFlags & SMTO_ABORTIFHUNG)
         {
-            // FIXME: Set window hung and add to a list.
             /* FIXME: Set a LastError? */
             RETURN( FALSE);
         }
@@ -1593,6 +1595,12 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         /* FIXME: last error? */
         ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN(FALSE);
+    }
+
+    if (MsqIsHung(Window->head.pti))
+    {
+        TRACE("Let's go Ghost!\n");
+        IntMakeHungWindowGhosted(hWnd);
     }
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
