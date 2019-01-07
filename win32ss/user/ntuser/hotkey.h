@@ -16,6 +16,12 @@ typedef struct _HOT_KEY
 #define IDHK_WINKEY    -7
 #define IDHK_REACTOS   -8
 
+/* Window Snap Hot Keys */
+#define IDHK_SNAP_LEFT   -10
+#define IDHK_SNAP_RIGHT  -11
+#define IDHK_SNAP_UP     -12
+#define IDHK_SNAP_DOWN   -13
+
 VOID FASTCALL UnregisterWindowHotKeys(PWND Window);
 VOID FASTCALL UnregisterThreadHotKeys(PTHREADINFO pti);
 BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);

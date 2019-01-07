@@ -202,6 +202,11 @@ RawInputThreadMain(VOID)
                 UserEnterExclusive();
                 // Register the Window hotkey.
                 UserRegisterHotKey(PWND_BOTTOM, IDHK_WINKEY, MOD_WIN, 0);
+                // Register the Window Snap hotkey.
+                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_LEFT, MOD_WIN, VK_LEFT);
+                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_RIGHT, MOD_WIN, VK_RIGHT);
+                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_UP, MOD_WIN, VK_UP);
+                UserRegisterHotKey(PWND_BOTTOM, IDHK_SNAP_DOWN, MOD_WIN, VK_DOWN);
                 // Register the debug hotkeys.
                 StartDebugHotKeys();
                 UserLeave();
