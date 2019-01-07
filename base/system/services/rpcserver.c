@@ -1612,6 +1612,8 @@ WINAPI
 ScmStopThread(PVOID pParam)
 {
     PSERVICE lpService = (PSERVICE)pParam;
+    WCHAR szLogBuffer[80];
+    LPCWSTR lpLogStrings[2];
 
     /* Check if we are about to stop this service*/
     if (lpService->lpImage->dwImageRunCount == 1)
@@ -1619,7 +1621,7 @@ ScmStopThread(PVOID pParam)
         /* Stop the dispatcher thread. */
         /* We must not send a control message while hodling the database lock or it can cause timeouts */
         /* We are sure that the service won't be deleted in the meantime because we still have a reference to it */
-        DPRINT1("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
+        DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
         ScmControlService(lpService,
                           L"",
                           (SERVICE_STATUS_HANDLE)lpService,
@@ -1630,6 +1632,7 @@ ScmStopThread(PVOID pParam)
     ScmLockDatabaseExclusive();
 
     DPRINT("Service %S image count:%d\n", lpService->lpServiceName, lpService->lpImage->dwImageRunCount);
+
     /* Decrement the image run counter */
     lpService->lpImage->dwImageRunCount--;
 
@@ -1640,6 +1643,33 @@ ScmStopThread(PVOID pParam)
         DPRINT("Removing service image for %S\n", lpService->lpServiceName);
         ScmRemoveServiceImage(lpService->lpImage);
         lpService->lpImage = NULL;
+    }
+
+    /* Report the results of the status change here */
+    if (lpService->Status.dwWin32ExitCode != ERROR_SUCCESS)
+    {
+        /* Log a failed service stop */
+        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
+                         L"%lu", lpService->Status.dwWin32ExitCode);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
+                    EVENTLOG_ERROR_TYPE,
+                    2,
+                    lpLogStrings);
+    }
+    else 
+    {
+        /* Log a successful service status change */
+        LoadStringW(GetModuleHandle(NULL), IDS_SERVICE_STOPPED, szLogBuffer, ARRAYSIZE(szLogBuffer));
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    2,
+                    lpLogStrings);
     }
 
     /* Remove the reference that was added when the service started */
@@ -1665,6 +1695,8 @@ RSetServiceStatus(
     LPCWSTR lpLogStrings[2];
     WCHAR szLogBuffer[80];
     UINT uID;
+    HANDLE hStopThread;
+    DWORD dwStopThreadId;
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
@@ -1748,78 +1780,45 @@ RSetServiceStatus(
         dwPreviousState != SERVICE_STOPPED)
     {
         DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
-        /* If there are pending operations for this service we need to create a thread to handle them */
-        if (lpService->bDeleted || lpService->lpImage->dwImageRunCount == 1)
-        {
-            HANDLE hStopThread;
-            DWORD dwStopThreadId;
 
-            /* 
-             * The service just changed its status to stopped.
-             * Create a thread that will complete the stop sequence.
-             * This thread will remove the reference that was added when the service started
-             * This will ensure that the service will remain valid as long as this reference is still held 
-             */
-            hStopThread = CreateThread(NULL,
-                                      0,
-                                      (LPTHREAD_START_ROUTINE)ScmStopThread,
-                                      (LPVOID)lpService,
-                                      0,
-                                      &dwStopThreadId);
-            if (hStopThread == NULL)
-            {
-                DPRINT1("Failed to create thread to complete service stop!\n");
-                /* This can cause timeouts all over the place but we can't leave without releasing the reference */
-                ScmDereferenceService(lpService);
-                DPRINT("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
-            }
-            else
-            {
-                CloseHandle(hStopThread);
-            }
+        /* 
+         * The service just changed its status to stopped.
+         * Create a thread that will complete the stop sequence.
+         * This thread will remove the reference that was added when the service started
+         * This will ensure that the service will remain valid as long as this reference is still held 
+         */
+        hStopThread = CreateThread(NULL,
+                                  0,
+                                  (LPTHREAD_START_ROUTINE)ScmStopThread,
+                                  (LPVOID)lpService,
+                                  0,
+                                  &dwStopThreadId);
+        if (hStopThread == NULL)
+        {
+            DPRINT1("Failed to create thread to complete service stop!\n");
+            /* We can't leave without releasing the reference
+             * We also can't remove it without holding the lock */
+            ScmDereferenceService(lpService);
+            DPRINT("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
         }
         else
         {
-            /* Decrement the image run counter */
-            lpService->lpImage->dwImageRunCount--;
-
-            /* Note that ScmDereferenceService must be called with the lock held */
-            ScmDereferenceService(lpService);
-
-            DPRINT("Service %S stopped, new ref count %d, new image run count %d\n", lpService->lpServiceName, lpService->RefCount, lpService->lpImage->dwImageRunCount);
+            CloseHandle(hStopThread);
         }
     }
 
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
-        (dwPreviousState != SERVICE_STOPPED) &&
-        (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
-    {
-        /* Log a failed service stop */
-        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
-                         L"%lu", lpServiceStatus->dwWin32ExitCode);
-        lpLogStrings[0] = lpService->lpDisplayName;
-        lpLogStrings[1] = szLogBuffer;
+    /* Don't log any events here regarding a service stop as it can become invalid at any time */
 
-        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
-                    EVENTLOG_ERROR_TYPE,
-                    2,
-                    lpLogStrings);
-    }
-    else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
-             (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
-              lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
-              lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
+    if (lpServiceStatus->dwCurrentState != dwPreviousState &&
+        (lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
+         lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
     {
         /* Log a successful service status change */
         switch(lpServiceStatus->dwCurrentState)
         {
-            case SERVICE_STOPPED:
-                uID = IDS_SERVICE_STOPPED;
-                break;
-
             case SERVICE_RUNNING:
                 uID = IDS_SERVICE_RUNNING;
                 break;
@@ -1839,7 +1838,6 @@ RSetServiceStatus(
                     lpLogStrings);
     }
 
-    DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");
 
     return ERROR_SUCCESS;

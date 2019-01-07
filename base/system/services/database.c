@@ -524,7 +524,7 @@ done:
 VOID
 ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
 {
-    DPRINT1("ScmRemoveServiceImage() called\n");
+    DPRINT("ScmRemoveServiceImage() called\n");
 
     /* FIXME: Terminate the process */
 
