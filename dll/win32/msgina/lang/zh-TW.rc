@@ -208,7 +208,7 @@ STRINGTABLE
 BEGIN
     IDS_SHUTDOWN_LOGOFF "登出 ""%S"""
     IDS_SHUTDOWN_SHUTDOWN "關閉"
-    IDS_SHUTDOWN_RESTART "重新啟動"
+    IDS_SHUTDOWN_RESTART "重新開機"
     IDS_SHUTDOWN_SLEEP "睡眠狀態"
     IDS_SHUTDOWN_HIBERNATE "休眠狀態"
     /* Shut down descriptions */
