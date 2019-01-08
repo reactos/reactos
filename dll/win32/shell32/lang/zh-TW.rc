@@ -802,8 +802,8 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
-    IDS_RESTART_TITLE "重新啟動"
-    IDS_RESTART_PROMPT "您確定要重新啟動嗎?"
+    IDS_RESTART_TITLE "重新開機"
+    IDS_RESTART_PROMPT "您確定要重新開機嗎?"
     IDS_SHUTDOWN_TITLE "關機"
     IDS_SHUTDOWN_PROMPT "您確定要關機嗎?"
     
