@@ -26,6 +26,10 @@ typedef struct _IRP_FIND_CTXT
 } IRP_FIND_CTXT, *PIRP_FIND_CTXT;
 
 extern PVOID MmNonPagedPoolEnd0;
+extern SIZE_T PoolBigPageTableSize;
+extern PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
+
+#define POOL_BIG_TABLE_ENTRY_FREE 0x1
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -208,6 +212,34 @@ ExpKdbgExtPoolUsed(
     MiDumpPoolConsumers(TRUE, Tag, Mask, Flags);
 
     return TRUE;
+}
+
+static
+VOID
+ExpKdbgExtPoolFindLargePool(
+    ULONG Tag,
+    ULONG Mask)
+{
+    ULONG i;
+
+    KdbpPrint("Scanning large pool allocation table for Tag: %.4s (%p : %p)\n", (PCHAR)&Tag, &PoolBigPageTable[0], &PoolBigPageTable[PoolBigPageTableSize - 1]);
+
+    for (i = 0; i < PoolBigPageTableSize; i++)
+    {
+        /* Free entry? */
+        if ((ULONG_PTR)PoolBigPageTable[i].Va & POOL_BIG_TABLE_ENTRY_FREE)
+        {
+            continue;
+        }
+
+        if ((PoolBigPageTable[i].Key & Mask) == (Tag & Mask))
+        {
+            /* Print the line */
+            KdbpPrint("%p: tag %.4s, size: %I64x\n",
+                      PoolBigPageTable[i].Va, (PCHAR)&PoolBigPageTable[i].Key,
+                      PoolBigPageTable[i].NumberOfPages << PAGE_SHIFT);
+        }
+    }
 }
 
 static
@@ -423,7 +455,8 @@ ExpKdbgExtPoolFind(
         }
     }
 
-    /* FIXME: What about large pool? */
+    /* First search for large allocations */
+    ExpKdbgExtPoolFindLargePool(Tag, Mask);
 
     if (PoolType == NonPagedPool)
     {
