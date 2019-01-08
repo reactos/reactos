@@ -283,8 +283,8 @@ typedef struct _CLASS_ERROR_LOG_DATA {
 
 typedef struct _TRANSFER_PACKET {
 
+        SLIST_ENTRY SlistEntry;   // for when in free list (use fast slist)
         LIST_ENTRY AllPktsListEntry;    // entry in fdoData's static AllTransferPacketsList
-        SINGLE_LIST_ENTRY SlistEntry;   // for when in free list (use fast slist)
 
         PIRP Irp;
         PDEVICE_OBJECT Fdo;
@@ -475,25 +475,25 @@ struct _CLASS_PRIVATE_FDO_DATA {
 /*
  *  Simple singly-linked-list queuing macros, with no synchronization.
  */
-static inline VOID SimpleInitSlistHdr(SINGLE_LIST_ENTRY *SListHdr)
+static inline VOID SimpleInitSlistHdr(SLIST_ENTRY *SListHdr)
 {
     SListHdr->Next = NULL;
 }
-static inline VOID SimplePushSlist(SINGLE_LIST_ENTRY *SListHdr, SINGLE_LIST_ENTRY *SListEntry)
+static inline VOID SimplePushSlist(SLIST_ENTRY *SListHdr, SLIST_ENTRY *SListEntry)
 {
     SListEntry->Next = SListHdr->Next;
     SListHdr->Next = SListEntry;
 }
-static inline SINGLE_LIST_ENTRY *SimplePopSlist(SINGLE_LIST_ENTRY *SListHdr)
+static inline SLIST_ENTRY *SimplePopSlist(SLIST_ENTRY *SListHdr)
 {
-    SINGLE_LIST_ENTRY *sListEntry = SListHdr->Next;
+    SLIST_ENTRY *sListEntry = SListHdr->Next;
     if (sListEntry){
         SListHdr->Next = sListEntry->Next;
         sListEntry->Next = NULL;
     }
     return sListEntry;
 }
-static inline BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
+static inline BOOLEAN SimpleIsSlistEmpty(SLIST_ENTRY *SListHdr)
 {
     return (SListHdr->Next == NULL);
 }
