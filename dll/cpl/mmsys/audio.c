@@ -116,6 +116,18 @@ InitAudioDlg(HWND hwnd)
     }
     else
     {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            RegQueryValueExW(hKey, L"szPname", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
+        }
+
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
             if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
@@ -126,10 +138,11 @@ InitAudioDlg(HWND hwnd)
             if (CB_ERR != Res)
             {
                 SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                // TODO: Getting default device
-                SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+                if (!wcsicmp(midiOutCaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
             }
         }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 }
 
