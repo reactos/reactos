@@ -7,7 +7,7 @@ set(OARCH "armv7-a" CACHE STRING
 "Generate instructions for this CPU type. Specify one of:
  armv5te armv7-a")
 
-set (OPTIMIZE "1" CACHE STRING
+set(OPTIMIZE "1" CACHE STRING
 "What level of optimization to use.
  0 = off
  1 = Default option, optimize for size (-Os) with some additional options

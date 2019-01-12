@@ -6,7 +6,7 @@ set(OARCH "athlon64" CACHE STRING
 "Generate instructions for this CPU type. Specify one of:
  k8 opteron athlon64 athlon-fx")
 
-set (OPTIMIZE "1" CACHE STRING
+set(OPTIMIZE "1" CACHE STRING
 "What level of optimization to use.
  0 = off
  1 = Default option, optimize for size (-Os) with some additional options

@@ -7,16 +7,21 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_flags("/Ox /Ob2 /Ot /Oy /GT /GF")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
 elseif(OPTIMIZE STREQUAL "1")
-    add_definitions(/O1)
+    add_compile_flags("/O1")
 elseif(OPTIMIZE STREQUAL "2")
-    add_definitions(/O2)
+    add_compile_flags("/O2")
 elseif(OPTIMIZE STREQUAL "3")
-    add_definitions(/Ot /Ox /GS-)
+    add_compile_flags("/Ot /Ox /GS-")
 elseif(OPTIMIZE STREQUAL "4")
-    add_definitions(/Os /Ox /GS-)
+    add_compile_flags("/Os /Ox /GS-")
 elseif(OPTIMIZE STREQUAL "5")
-    add_definitions(/GF /Gy /Ob2 /Os /Ox /GS-)
+    add_compile_flags("/GF /Gy /Ob2 /Os /Ox /GS-")
 endif()
+
+# Always use string pooling: this helps reducing the binaries size since a lot
+# of redundancy come from the usage of __FILE__ / __RELFILE__ in the debugging
+# helper macros. Note also that GCC builds use string pooling by default.
+add_compile_flags("/GF")
 
 # Enable function level linking and comdat folding
 add_compile_flags("/Gy")
@@ -29,11 +34,14 @@ endif()
 
 add_definitions(/Dinline=__inline /D__STDC__=1)
 
+# Ignore any "standard" include paths, and do not use any default CRT library.
 if(NOT USE_CLANG_CL)
     add_compile_flags("/X /Zl")
 endif()
 
-add_compile_flags("/GR- /EHs-c- /GS- /W3")
+# Disable RTTI, exception handling and buffer security checks by default.
+# These require run-time support that may not always be available.
+add_compile_flags("/GR- /EHs-c- /GS-")
 
 if(USE_CLANG_CL)
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
@@ -54,6 +62,9 @@ endif ()
 if(MSVC_VERSION GREATER 1899)
     add_compile_flags("/Zc:threadSafeInit-")
 endif ()
+
+# Generate Warnings Level 3
+add_compile_flags("/W3")
 
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
@@ -381,7 +392,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Add our library
     if(MSVC_IDE)
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file}.obj)
-        set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT 1)
+        set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT TRUE)
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
     else()
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
@@ -522,7 +533,7 @@ macro(add_asm_files _target)
                 OUTPUT ${_preprocessed_asm_file} ${_object_file}
                 COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file} && ${_pp_asm_compile_command}
                 DEPENDS ${_source_file_full_path})
-            set_source_files_properties(${_object_file} PROPERTIES EXTERNAL_OBJECT 1)
+            set_source_files_properties(${_object_file} PROPERTIES EXTERNAL_OBJECT TRUE)
             list(APPEND ${_target} ${_object_file})
         endforeach()
     else()
