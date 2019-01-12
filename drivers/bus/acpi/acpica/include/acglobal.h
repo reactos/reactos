@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -200,6 +200,7 @@ ACPI_GLOBAL (ACPI_MEMORY_LIST *,        AcpiGbl_GlobalList);
 ACPI_GLOBAL (ACPI_MEMORY_LIST *,        AcpiGbl_NsNodeList);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DisplayFinalMemStats);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DisableMemTracking);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_VerboseLeakDump);
 #endif
 
 

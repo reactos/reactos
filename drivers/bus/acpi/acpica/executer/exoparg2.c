@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -458,7 +458,7 @@ AcpiExOpcode_2A_1T_1R (
 
         if (ACPI_FAILURE (Status))
         {
-            ACPI_EXCEPTION ((AE_INFO, Status,
+            ACPI_BIOS_EXCEPTION ((AE_INFO, Status,
                 "Index (0x%X%8.8X) is beyond end of object (length 0x%X)",
                 ACPI_FORMAT_UINT64 (Index), (UINT32) Length));
             goto Cleanup;

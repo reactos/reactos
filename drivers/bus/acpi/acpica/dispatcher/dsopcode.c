@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -178,7 +178,7 @@ AcpiDsInitBufferField (
 
         if (BitCount == 0)
         {
-            ACPI_ERROR ((AE_INFO,
+            ACPI_BIOS_ERROR ((AE_INFO,
                 "Attempt to CreateField of length zero"));
             Status = AE_AML_OPERAND_VALUE;
             goto Cleanup;
@@ -244,12 +244,12 @@ AcpiDsInitBufferField (
     if ((BitOffset + BitCount) >
         (8 * (UINT32) BufferDesc->Buffer.Length))
     {
-        ACPI_ERROR ((AE_INFO,
+        Status = AE_AML_BUFFER_LIMIT;
+        ACPI_BIOS_EXCEPTION ((AE_INFO, Status,
             "Field [%4.4s] at bit offset/length %u/%u "
             "exceeds size of target Buffer (%u bits)",
             AcpiUtGetNodeName (ResultDesc), BitOffset, BitCount,
             8 * (UINT32) BufferDesc->Buffer.Length));
-        Status = AE_AML_BUFFER_LIMIT;
         goto Cleanup;
     }
 
