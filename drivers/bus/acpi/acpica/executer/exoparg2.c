@@ -352,9 +352,9 @@ AcpiExOpcode_2A_1T_1R (
          * NOTE: A length of zero is ok, and will create a zero-length, null
          *       terminated string.
          */
-        while ((Length < Operand[0]->Buffer.Length) &&
-               (Length < Operand[1]->Integer.Value) &&
-               (Operand[0]->Buffer.Pointer[Length]))
+        while ((Length < Operand[0]->Buffer.Length) &&  /* Length of input buffer */
+               (Length < Operand[1]->Integer.Value) &&  /* Length operand */
+               (Operand[0]->Buffer.Pointer[Length]))    /* Null terminator */
         {
             Length++;
         }

@@ -478,6 +478,9 @@ AcpiDsEvalRegionOperands (
         ObjDesc, ACPI_FORMAT_UINT64 (ObjDesc->Region.Address),
         ObjDesc->Region.Length));
 
+    Status = AcpiUtAddAddressRange (ObjDesc->Region.SpaceId,
+        ObjDesc->Region.Address, ObjDesc->Region.Length, Node);
+
     /* Now the address and length are valid for this opregion */
 
     ObjDesc->Region.Flags |= AOPOBJ_DATA_VALID;

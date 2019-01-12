@@ -74,6 +74,7 @@
 #define ACPI_SIG_XSDT           "XSDT"      /* Extended  System Description Table */
 #define ACPI_SIG_SSDT           "SSDT"      /* Secondary System Description Table */
 #define ACPI_RSDP_NAME          "RSDP"      /* Short name for RSDP, not signature */
+#define ACPI_OEM_NAME           "OEM"       /* Short name for OEM, not signature */
 
 
 /*

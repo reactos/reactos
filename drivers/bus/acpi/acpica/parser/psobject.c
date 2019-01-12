@@ -665,7 +665,7 @@ AcpiPsCompleteOp (
              * because there could be correct AML beyond the parts that caused
              * the runtime error.
              */
-            ACPI_ERROR ((AE_INFO, "Ignore error and continue table load"));
+            ACPI_INFO (("Ignoring error and continuing table load"));
             return_ACPI_STATUS (AE_OK);
         }
         return_ACPI_STATUS (Status);

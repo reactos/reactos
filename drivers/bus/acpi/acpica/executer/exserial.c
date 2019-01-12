@@ -337,14 +337,12 @@ AcpiExWriteSerialBus (
     case ACPI_ADR_SPACE_SMBUS:
 
         BufferLength = ACPI_SMBUS_BUFFER_SIZE;
-        DataLength = ACPI_SMBUS_DATA_SIZE;
         Function = ACPI_WRITE | (ObjDesc->Field.Attribute << 16);
         break;
 
     case ACPI_ADR_SPACE_IPMI:
 
         BufferLength = ACPI_IPMI_BUFFER_SIZE;
-        DataLength = ACPI_IPMI_DATA_SIZE;
         Function = ACPI_WRITE;
         break;
 
@@ -363,28 +361,12 @@ AcpiExWriteSerialBus (
         /* Add header length to get the full size of the buffer */
 
         BufferLength += ACPI_SERIAL_HEADER_SIZE;
-        DataLength = SourceDesc->Buffer.Pointer[1];
         Function = ACPI_WRITE | (AccessorType << 16);
         break;
 
     default:
         return_ACPI_STATUS (AE_AML_INVALID_SPACE_ID);
     }
-
-#if 0
-OBSOLETE?
-    /* Check for possible buffer overflow */
-
-    if (DataLength > SourceDesc->Buffer.Length)
-    {
-        ACPI_ERROR ((AE_INFO,
-            "Length in buffer header (%u)(%u) is greater than "
-            "the physical buffer length (%u) and will overflow",
-            DataLength, BufferLength, SourceDesc->Buffer.Length));
-
-        return_ACPI_STATUS (AE_AML_BUFFER_LIMIT);
-    }
-#endif
 
     /* Create the transfer/bidirectional/return buffer */
 
@@ -397,6 +379,8 @@ OBSOLETE?
     /* Copy the input buffer data to the transfer buffer */
 
     Buffer = BufferDesc->Buffer.Pointer;
+    DataLength = (BufferLength < SourceDesc->Buffer.Length ?
+        BufferLength : SourceDesc->Buffer.Length);
     memcpy (Buffer, SourceDesc->Buffer.Pointer, DataLength);
 
     /* Lock entire transaction if requested */

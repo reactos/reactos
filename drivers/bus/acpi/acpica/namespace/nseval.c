@@ -150,6 +150,12 @@ AcpiNsEvaluate (
         return_ACPI_STATUS (AE_NO_MEMORY);
     }
 
+    /* Optional object evaluation log */
+
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EVALUATION,
+        "%-26s:  %s (%s)\n", "   Enter evaluation",
+        &Info->FullPathname[1], AcpiUtGetTypeName (Info->Node->Type)));
+
     /* Count the number of arguments being passed in */
 
     Info->ParamCount = 0;
@@ -336,6 +342,12 @@ AcpiNsEvaluate (
         Info->RelativePathname));
 
 Cleanup:
+    /* Optional object evaluation log */
+
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EVALUATION,
+        "%-26s:  %s\n", "   Exit evaluation",
+        &Info->FullPathname[1]));
+
     /*
      * Namespace was unlocked by the handling AcpiNs* function, so we
      * just free the pathname and return

@@ -313,6 +313,7 @@ AcpiNsLookup (
     ACPI_OBJECT_TYPE        ThisSearchType;
     UINT32                  SearchParentFlag = ACPI_NS_SEARCH_PARENT;
     UINT32                  LocalFlags;
+    ACPI_INTERPRETER_MODE   LocalInterpreterMode;
 
 
     ACPI_FUNCTION_TRACE (NsLookup);
@@ -562,6 +563,7 @@ AcpiNsLookup (
      */
     ThisSearchType = ACPI_TYPE_ANY;
     CurrentNode = ThisNode;
+
     while (NumSegments && CurrentNode)
     {
         NumSegments--;
@@ -596,6 +598,16 @@ AcpiNsLookup (
             }
         }
 
+        /* Handle opcodes that create a new NameSeg via a full NamePath */
+
+        LocalInterpreterMode = InterpreterMode;
+        if ((Flags & ACPI_NS_PREFIX_MUST_EXIST) && (NumSegments > 0))
+        {
+            /* Every element of the path must exist (except for the final NameSeg) */
+
+            LocalInterpreterMode = ACPI_IMODE_EXECUTE;
+        }
+
         /* Extract one ACPI name from the front of the pathname */
 
         ACPI_MOVE_32_TO_32 (&SimpleName, Path);
@@ -603,11 +615,18 @@ AcpiNsLookup (
         /* Try to find the single (4 character) ACPI name */
 
         Status = AcpiNsSearchAndEnter (SimpleName, WalkState, CurrentNode,
-            InterpreterMode, ThisSearchType, LocalFlags, &ThisNode);
+            LocalInterpreterMode, ThisSearchType, LocalFlags, &ThisNode);
         if (ACPI_FAILURE (Status))
         {
             if (Status == AE_NOT_FOUND)
             {
+#if !defined ACPI_ASL_COMPILER /* Note: iASL reports this error by itself, not needed here */
+                if (Flags & ACPI_NS_PREFIX_MUST_EXIST)
+                {
+                    AcpiOsPrintf (ACPI_MSG_BIOS_ERROR
+                        "Object does not exist: %4.4s\n", &SimpleName);
+                }
+#endif
                 /* Name not found in ACPI namespace */
 
                 ACPI_DEBUG_PRINT ((ACPI_DB_NAMES,

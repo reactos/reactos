@@ -625,7 +625,7 @@ AcpiDsCreateWalkState (
 
     /* Init the method args/local */
 
-#if (!defined (ACPI_NO_METHOD_EXECUTION) && !defined (ACPI_CONSTANT_EVAL_ONLY))
+#ifndef ACPI_CONSTANT_EVAL_ONLY
     AcpiDsMethodDataInit (WalkState);
 #endif
 

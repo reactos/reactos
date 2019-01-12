@@ -46,7 +46,7 @@
 
 /* Current ACPICA subsystem version in YYYYMMDD format */
 
-#define ACPI_CA_VERSION                 0x20181003
+#define ACPI_CA_VERSION                 0x20181213
 
 #include "acconfig.h"
 #include "actypes.h"
@@ -191,13 +191,6 @@ ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_CopyDsdtLocally, FALSE);
  * some machines. Default behavior is to use the XSDT if present.
  */
 ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_DoNotUseXsdt, FALSE);
-
-/*
- * Optionally support group module level code.
- * NOTE, this is essentially obsolete and will be removed soon
- * (01/2018).
- */
-ACPI_INIT_GLOBAL (UINT8,            AcpiGbl_GroupModuleLevelCode, FALSE);
 
 /*
  * Optionally support module level code by parsing an entire table as

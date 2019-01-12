@@ -73,7 +73,6 @@ AcpiExDigitsNeeded (
     UINT32                  Base);
 
 
-#ifndef ACPI_NO_METHOD_EXECUTION
 /*******************************************************************************
  *
  * FUNCTION:    AcpiExEnterInterpreter
@@ -507,4 +506,3 @@ AcpiIsValidSpaceId (
     return (TRUE);
 }
 
-#endif

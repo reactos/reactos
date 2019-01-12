@@ -97,6 +97,8 @@ typedef struct acpi_walk_state
     ACPI_PARSE_STATE                ParserState;        /* Current state of parser */
     UINT32                          PrevArgTypes;
     UINT32                          ArgCount;           /* push for fixed or var args */
+    UINT16                          MethodNestingDepth;
+    UINT8                           MethodIsNested;
 
     struct acpi_namespace_node      Arguments[ACPI_METHOD_NUM_ARGS];        /* Control method arguments */
     struct acpi_namespace_node      LocalVariables[ACPI_METHOD_NUM_LOCALS]; /* Control method locals */
@@ -111,7 +113,8 @@ typedef struct acpi_walk_state
     struct acpi_namespace_node      *MethodCallNode;    /* Called method Node*/
     ACPI_PARSE_OBJECT               *MethodCallOp;      /* MethodCall Op if running a method */
     union acpi_operand_object       *MethodDesc;        /* Method descriptor if running a method */
-    struct acpi_namespace_node      *MethodNode;        /* Method node if running a method. */
+    struct acpi_namespace_node      *MethodNode;        /* Method node if running a method */
+    char                            *MethodPathname;    /* Full pathname of running method */
     ACPI_PARSE_OBJECT               *Op;                /* Current parser op */
     const ACPI_OPCODE_INFO          *OpInfo;            /* Info on current opcode */
     ACPI_PARSE_OBJECT               *Origin;            /* Start of walk [Obsolete] */

@@ -153,7 +153,17 @@ AcpiNsExecuteTable (
         goto Cleanup;
     }
 
+    /* Optional object evaluation log */
+
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EVALUATION,
+        "%-26s:  (Definition Block level)\n", "Module-level evaluation"));
+
     Status = AcpiPsExecuteTable (Info);
+
+    /* Optional object evaluation log */
+
+    ACPI_DEBUG_PRINT_RAW ((ACPI_DB_EVALUATION,
+        "%-26s:  (Definition Block level)\n", "Module-level complete"));
 
 Cleanup:
     if (Info)

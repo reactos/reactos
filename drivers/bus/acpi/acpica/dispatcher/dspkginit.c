@@ -200,6 +200,32 @@ AcpiDsBuildInternalPackageObj (
     {
         if (Arg->Common.AmlOpcode == AML_INT_RETURN_VALUE_OP)
         {
+            if (!Arg->Common.Node)
+            {
+                /*
+                 * This is the case where an expression has returned a value.
+                 * The use of expressions (TermArgs) within individual
+                 * package elements is not supported by the AML interpreter,
+                 * even though the ASL grammar supports it. Example:
+                 *
+                 *      Name (INT1, 0x1234)
+                 *
+                 *      Name (PKG3, Package () {
+                 *          Add (INT1, 0xAAAA0000)
+                 *      })
+                 *
+                 *  1) No known AML interpreter supports this type of construct
+                 *  2) This fixes a fault if the construct is encountered
+                 */
+                ACPI_EXCEPTION ((AE_INFO, AE_SUPPORT,
+                    "Expressions within package elements are not supported"));
+
+                /* Cleanup the return object, it is not needed */
+
+                AcpiUtRemoveReference (WalkState->Results->Results.ObjDesc[0]);
+                return_ACPI_STATUS (AE_SUPPORT);
+            }
+
             if (Arg->Common.Node->Type == ACPI_TYPE_METHOD)
             {
                 /*

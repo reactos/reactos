@@ -101,7 +101,6 @@ AcpiDsClearImplicitReturn (
 }
 
 
-#ifndef ACPI_NO_METHOD_EXECUTION
 /*******************************************************************************
  *
  * FUNCTION:    AcpiDsDoImplicitReturn
@@ -475,7 +474,6 @@ AcpiDsClearOperands (
     WalkState->NumOperands = 0;
     return_VOID;
 }
-#endif
 
 
 /*******************************************************************************

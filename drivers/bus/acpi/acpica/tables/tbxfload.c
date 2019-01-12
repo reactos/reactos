@@ -111,7 +111,7 @@ AcpiLoadTables (
             "While loading namespace from ACPI tables"));
     }
 
-    if (AcpiGbl_ExecuteTablesAsMethods || !AcpiGbl_GroupModuleLevelCode)
+    if (AcpiGbl_ExecuteTablesAsMethods)
     {
         /*
          * If the module-level code support is enabled, initialize the objects
