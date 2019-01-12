@@ -539,12 +539,12 @@ VfatCheckForDismount(
         }
         if (DeviceExt->FATFileObject)
         {
-            Fcb = (PVFATFCB)DeviceExt->FATFileObject->FsContext;
+            Fcb = DeviceExt->FATFileObject->FsContext;
             CcUninitializeCacheMap(DeviceExt->FATFileObject,
                                    &Zero,
                                    NULL);
-            ObDereferenceObject(DeviceExt->FATFileObject);
             DeviceExt->FATFileObject->FsContext = NULL;
+            ObDereferenceObject(DeviceExt->FATFileObject);
             DeviceExt->FATFileObject = NULL;
             vfatDestroyFCB(Fcb);
         }
