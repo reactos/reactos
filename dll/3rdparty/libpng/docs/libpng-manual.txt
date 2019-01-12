@@ -1,7 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.35 - July 15, 2018
- Updated and distributed by Glenn Randers-Pehrson
+ Copyright (c) 2018 Cosmin Truta
  Copyright (c) 1998-2018 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
@@ -10,9 +9,13 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
+ libpng version 1.6.36 - December 1, 2018
+ Updated and distributed by Cosmin Truta
+ Copyright (c) 2018 Cosmin Truta
+
  libpng versions 0.97, January 1998, through 1.6.35 - July 15, 2018
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2017 Glenn Randers-Pehrson
+ Copyright (c) 1998-2018 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6 - version 0.96 - May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -44,7 +47,6 @@ libpng-manual.txt - A description on how to use and modify libpng
  XIII. Detecting libpng
   XIV. Source code repository
    XV. Coding style
-  XVI. Y2K Compliance in libpng
 
 I. Introduction
 
@@ -65,7 +67,7 @@ file format in application programs.
 
 The PNG specification (second edition), November 2003, is available as
 a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2004 (E)) at
-<https://www.w3.org/TR/2003/REC-PNG-20031110/
+<https://www.w3.org/TR/2003/REC-PNG-20031110/>.
 The W3C and ISO documents have identical technical content.
 
 The PNG-1.2 specification is available at
@@ -73,9 +75,9 @@ The PNG-1.2 specification is available at
 It is technically equivalent
 to the PNG specification (second edition) but has some additional material.
 
-The PNG-1.0 specification is available as RFC 2083
+The PNG-1.0 specification is available as RFC 2083 at
 <https://png-mng.sourceforge.io/pub/png/spec/1.0/> and as a
-W3C Recommendation <https://www.w3.org/TR/REC-png-961001>.
+W3C Recommendation at <https://www.w3.org/TR/REC-png-961001>.
 
 Some additional chunks are described in the special-purpose public chunks
 documents at <http://www.libpng.org/pub/png/spec/register/>
@@ -4054,7 +4056,7 @@ Flags containing additional information about the image are held in
 the 'flags' field of png_image.
 
   PNG_IMAGE_FLAG_COLORSPACE_NOT_sRGB == 0x01
-    This indicates the the RGB values of the in-memory bitmap do not
+    This indicates that the RGB values of the in-memory bitmap do not
     correspond to the red, green and blue end-points defined by sRGB.
 
   PNG_IMAGE_FLAG_FAST == 0x02
@@ -4520,7 +4522,7 @@ When PNG_DEBUG = 1, the macros are defined, but only png_debug statements
 having level = 0 will be printed.  There aren't any such statements in
 this version of libpng, but if you insert some they will be printed.
 
-VII.  MNG support
+VII. MNG support
 
 The MNG specification (available at http://www.libpng.org/pub/mng) allows
 certain extensions to PNG for PNG images that are embedded in MNG datastreams.
@@ -4547,7 +4549,7 @@ or any other MNG chunks; your application must provide its own support for
 them.  You may wish to consider using libmng (available at
 https://www.libmng.com/) instead.
 
-VIII.  Changes to Libpng from version 0.88
+VIII. Changes to Libpng from version 0.88
 
 It should be noted that versions of libpng later than 0.96 are not
 distributed by the original libpng author, Guy Schalnat, nor by
@@ -4602,7 +4604,7 @@ application:
 
    png_uint_32 application_vn = PNG_LIBPNG_VER;
 
-IX.  Changes to Libpng from version 1.0.x to 1.2.x
+IX. Changes to Libpng from version 1.0.x to 1.2.x
 
 Support for user memory management was enabled by default.  To
 accomplish this, the functions png_create_read_struct_2(),
@@ -4699,7 +4701,7 @@ which also expands tRNS to alpha was replaced with
     png_set_expand_gray_1_2_4_to_8()
 which does not. It has been deprecated since libpng-1.0.18 and 1.2.9.
 
-X.  Changes to Libpng from version 1.0.x/1.2.x to 1.4.x
+X. Changes to Libpng from version 1.0.x/1.2.x to 1.4.x
 
 Private libpng prototypes and macro definitions were moved from
 png.h and pngconf.h into a new pngpriv.h header file.
@@ -4809,7 +4811,7 @@ was renamed to PNG_READ_QUANTIZE_SUPPORTED.
 
 We removed the trailing '.' from the warning and error messages.
 
-XI.  Changes to Libpng from version 1.4.x to 1.5.x
+XI. Changes to Libpng from version 1.4.x to 1.5.x
 
 From libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the
 function) incorrectly returned a value of type png_uint_32.
@@ -4872,7 +4874,7 @@ to png_bytepp, and in png_set_iCCP, from png_charp to png_const_bytep.
 There are changes of form in png.h, including new and changed macros to
 declare parts of the API.  Some API functions with arguments that are
 pointers to data not modified within the function have been corrected to
-declare these arguments with PNG_CONST.
+declare these arguments with const.
 
 Much of the internal use of C macros to control the library build has also
 changed and some of this is visible in the exported header files, in
@@ -5067,7 +5069,7 @@ even though the default is to use the macros - this allows applications
 to choose at app buildtime whether or not to use macros (previously
 impossible because the functions weren't in the default build.)
 
-XII.  Changes to Libpng from version 1.5.x to 1.6.x
+XII. Changes to Libpng from version 1.5.x to 1.6.x
 
 A "simplified API" has been added (see documentation in png.h and a simple
 example in contrib/examples/pngtopng.c).  The new publicly visible API
@@ -5230,7 +5232,7 @@ attempt to decode the Exif profile; it simply returns a byte array
 containing the profile to the calling application which must do its own
 decoding.
 
-XIII.  Detecting libpng
+XIII. Detecting libpng
 
 The png_get_io_ptr() function has been present since libpng-0.88, has never
 changed, and is unaffected by conditional compilation macros.  It is the
@@ -5255,7 +5257,7 @@ or you can browse it with a web browser at
     https://sourceforge.net/p/libpng/code/ci/libpng16/tree/
 
 Patches can be sent to png-mng-implement at lists.sourceforge.net or
-you can upload them to the libpng bug tracker at
+uploaded to the libpng bug tracker at
 
     https://libpng.sourceforge.io/
 
@@ -5405,58 +5407,3 @@ We do not use the TAB character for indentation in the C sources.
 Lines do not exceed 80 characters.
 
 Other rules can be inferred by inspecting the libpng source.
-
-XVI. Y2K Compliance in libpng
-
-Since the PNG Development group is an ad-hoc body, we can't make
-an official declaration.
-
-This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.35 are Y2K compliant.  It is my belief that earlier
-versions were also Y2K compliant.
-
-Libpng only has two year fields.  One is a 2-byte unsigned integer
-that will hold years up to 65535.  The other, which is deprecated,
-holds the date in text format, and will hold years up to 9999.
-
-The integer is
-    "png_uint_16 year" in png_time_struct.
-
-The string is
-    "char time_buffer[29]" in png_struct.  This is no longer used
-in libpng-1.6.x and will be removed from libpng-1.7.0.
-
-There are seven time-related functions:
-
-    png_convert_to_rfc_1123_buffer() in png.c
-      (formerly png_convert_to_rfc_1152() in error, and
-      also formerly png_convert_to_rfc_1123())
-    png_convert_from_struct_tm() in pngwrite.c, called
-      in pngwrite.c
-    png_convert_from_time_t() in pngwrite.c
-    png_get_tIME() in pngget.c
-    png_handle_tIME() in pngrutil.c, called in pngread.c
-    png_set_tIME() in pngset.c
-    png_write_tIME() in pngwutil.c, called in pngwrite.c
-
-All appear to handle dates properly in a Y2K environment.  The
-png_convert_from_time_t() function calls gmtime() to convert from system
-clock time, which returns (year - 1900), which we properly convert to
-the full 4-digit year.  There is a possibility that applications using
-libpng are not passing 4-digit years into the png_convert_to_rfc_1123()
-function, or that they are incorrectly passing only a 2-digit year
-instead of "year - 1900" into the png_convert_from_struct_tm() function,
-but this is not under our control.  The libpng documentation has always
-stated that it works with 4-digit years, and the APIs have been
-documented as such.
-
-The tIME chunk itself is also Y2K compliant.  It uses a 2-byte unsigned
-integer to hold the year, and can hold years as large as 65535.
-
-zlib, upon which libpng depends, is also Y2K compliant.  It contains
-no date-related code.
-
-
-   Glenn Randers-Pehrson
-   libpng maintainer
-   PNG Development Group
