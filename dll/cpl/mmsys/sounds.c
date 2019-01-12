@@ -812,11 +812,11 @@ ShowSoundScheme(HWND hwndDlg)
     LRESULT lIndex;
     PSOUND_SCHEME_CONTEXT pScheme;
     PAPP_MAP pAppMap;
-    LV_ITEM listItem;
-    LV_COLUMN dummy;
+    PLABEL_MAP pLabelMap;
     HWND hDlgCtrl, hList;
-    RECT rect;
-    int ItemIndex;
+    TVINSERTSTRUCT tvItem;
+    HTREEITEM hTreeItem;
+
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SOUND_SCHEME);
     hList = GetDlgItem(hwndDlg, IDC_SCHEME_LIST);
 
@@ -835,29 +835,35 @@ ShowSoundScheme(HWND hwndDlg)
 
     _tcscpy(szDefault, pScheme->szName);
 
-    /*  add column for app */
-    GetClientRect(hList, &rect);
-    ZeroMemory(&dummy, sizeof(dummy));
-    dummy.mask      = LVCF_WIDTH;
-    dummy.iSubItem  = 0;
-    dummy.cx        = rect.right - rect.left - GetSystemMetrics(SM_CXVSCROLL);
-    (void)ListView_InsertColumn(hList, 0, &dummy);
-    ItemIndex = 0;
-
     pAppMap = s_App;
     while (pAppMap)
     {
-        PLABEL_MAP pLabelMap = pAppMap->LabelMap;
+        ZeroMemory(&tvItem, sizeof(tvItem));
+        tvItem.hParent = TVI_ROOT;
+        tvItem.hInsertAfter = TVI_FIRST;
+
+        tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM;
+        tvItem.item.state = TVIS_EXPANDED;
+        tvItem.item.stateMask = TVIS_EXPANDED;
+        tvItem.item.pszText = pAppMap->szDesc;
+        tvItem.item.lParam = (LPARAM)NULL;
+
+        hTreeItem = TreeView_InsertItem(hList, &tvItem);
+
+        pLabelMap = pAppMap->LabelMap;
         while (pLabelMap)
         {
-            ZeroMemory(&listItem, sizeof(listItem));
-            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
-            listItem.pszText    = pLabelMap->szDesc;
-            listItem.lParam     = (LPARAM)FindLabelContext(pScheme, pAppMap->szName, pLabelMap->szName);
-            listItem.iItem      = ItemIndex;
-            listItem.iImage     = -1;
-            (void)ListView_InsertItem(hList, &listItem);
-            ItemIndex++;
+            ZeroMemory(&tvItem, sizeof(tvItem));
+            tvItem.hParent = /*TVI_ROOT;*/ hTreeItem;
+            tvItem.hInsertAfter = TVI_SORT;
+
+            tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM;
+            tvItem.item.state = TVIS_EXPANDED;
+            tvItem.item.stateMask = TVIS_EXPANDED;
+            tvItem.item.pszText = pLabelMap->szDesc;
+            tvItem.item.lParam = (LPARAM)FindLabelContext(pScheme, pAppMap->szName, pLabelMap->szName);
+
+            TreeView_InsertItem(hList, &tvItem);
 
             pLabelMap = pLabelMap->Next;
         }
@@ -1036,7 +1042,7 @@ SoundsDlgProc(HWND hwndDlg,
                 {
                     if (HIWORD(wParam) == CBN_SELENDOK)
                     {
-                        (void)ListView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
+                        (void)TreeView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
                         ShowSoundScheme(hwndDlg);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), FALSE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), FALSE);
@@ -1051,23 +1057,26 @@ SoundsDlgProc(HWND hwndDlg,
                     if (HIWORD(wParam) == CBN_SELENDOK)
                     {
                         PLABEL_CONTEXT pLabelContext;
-                        INT SelCount;
-                        LVITEM item;
+                        HTREEITEM hItem;
+                        TVITEM item;
                         LRESULT lIndex;
-                        SelCount = ListView_GetSelectionMark(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
-                        if (SelCount == -1)
+
+                        hItem = TreeView_GetSelection(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
+                        if (hItem == NULL)
                         {
                             break;
                         }
+
                         lIndex = ComboBox_GetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
                         if (lIndex == CB_ERR)
                         {
                             break;
                         }
+
                         ZeroMemory(&item, sizeof(item));
-                        item.mask = LVIF_PARAM;
-                        item.iItem = SelCount;
-                        if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
+                        item.mask = TVIF_PARAM;
+                        item.hItem = hItem;
+                        if (TreeView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
                         {
                             LRESULT lResult;
                             pLabelContext = (PLABEL_CONTEXT)item.lParam;
@@ -1107,7 +1116,6 @@ SoundsDlgProc(HWND hwndDlg,
         }
         case WM_NOTIFY:
         {
-            LVITEM item;
             PLABEL_CONTEXT pLabelContext;
             TCHAR * ptr;
 
@@ -1120,65 +1128,63 @@ SoundsDlgProc(HWND hwndDlg,
                     ApplyChanges(hwndDlg);
                     break;
                 }
-                case LVN_ITEMCHANGED:
+                case TVN_SELCHANGED:
                 {
-                    LPNMLISTVIEW nm = (LPNMLISTVIEW)lParam;
+                    LPNMTREEVIEW nm = (LPNMTREEVIEW)lParam;
+                    LRESULT lCount, lIndex, lResult;
 
-                    if ((nm->uNewState & LVIS_SELECTED) == 0)
+                    pLabelContext = (PLABEL_CONTEXT)nm->itemNew.lParam;
+                    if (pLabelContext == NULL)
                     {
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_BROWSE_SOUND), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
                         return FALSE;
                     }
-                    ZeroMemory(&item, sizeof(item));
-                    item.mask = LVIF_PARAM;
-                    item.iItem = nm->iItem;
 
-                    if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_BROWSE_SOUND), TRUE);
+
+                    if (_tcslen(pLabelContext->szValue) == 0)
                     {
-                        LRESULT lCount, lIndex, lResult;
-                        pLabelContext = (PLABEL_CONTEXT)item.lParam;
-                        if (!pLabelContext)
+                        lIndex = ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), 0);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
+                        break;
+                    }
+
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
+
+                    lCount = ComboBox_GetCount(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
+                    for (lIndex = 0; lIndex < lCount; lIndex++)
+                    {
+                        lResult = ComboBox_GetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
+                        if (lResult == CB_ERR || lResult == 0)
+                            continue;
+
+                        if (!_tcscmp((TCHAR*)lResult, pLabelContext->szValue))
                         {
+                            ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                             return FALSE;
                         }
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), TRUE);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), TRUE);
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_BROWSE_SOUND), TRUE);
-                        if (_tcslen(pLabelContext->szValue) == 0)
-                        {
-                            lIndex = ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), 0);
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
-                            break;
+                    }
 
-                        }
-                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
-                        lCount = ComboBox_GetCount(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
-                        for (lIndex = 0; lIndex < lCount; lIndex++)
-                        {
-                            lResult = ComboBox_GetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
-                            if (lResult == CB_ERR || lResult == 0)
-                                continue;
+                    ptr = _tcsrchr(pLabelContext->szValue, _T('\\'));
+                    if (ptr)
+                    {
+                        ptr++;
+                    }
+                    else
+                    {
+                        ptr = pLabelContext->szValue;
+                    }
 
-                            if (!_tcscmp((TCHAR*)lResult, pLabelContext->szValue))
-                            {
-                                ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
-                                return FALSE;
-                            }
-                        }
-                        ptr = _tcsrchr(pLabelContext->szValue, _T('\\'));
-                        if (ptr)
-                        {
-                            ptr++;
-                        }
-                        else
-                        {
-                            ptr = pLabelContext->szValue;
-                        }
-                        lIndex = ComboBox_AddString(GetDlgItem(hwndDlg, IDC_SOUND_LIST), ptr);
-                        if (lIndex != CB_ERR)
-                        {
-                            ComboBox_SetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex, _tcsdup(pLabelContext->szValue));
-                            ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
-                        }
+                    lIndex = ComboBox_AddString(GetDlgItem(hwndDlg, IDC_SOUND_LIST), ptr);
+                    if (lIndex != CB_ERR)
+                    {
+                        ComboBox_SetItemData(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex, _tcsdup(pLabelContext->szValue));
+                        ComboBox_SetCurSel(GetDlgItem(hwndDlg, IDC_SOUND_LIST), lIndex);
                     }
                     break;
                 }

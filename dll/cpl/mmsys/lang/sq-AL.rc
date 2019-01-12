@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON "&Fshi", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Për të ndryshuar zërin, klikoni një ngjarje programi në listën e mëposhtme dhe pastaj përzgjidhni një tingull për të aplikuar. Ju mund të ruani ndryshimet si një skemë të re.", -1, 8, 90, 230, 27
     LTEXT "Evente &Programi:", -1, 8, 118, 150, 9
-    CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
+    CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "&Zëri:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON

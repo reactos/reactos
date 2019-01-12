@@ -39,7 +39,7 @@ BEGIN
     PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Pentru a schimba sunetele, selectați un eveniment din lista de mai jos, apoi alegeți sunetul corespunzător care va fi emis. Modificările pot fi păstrate într-o nouă colecție de sunete.", -1, 8, 90, 230, 40
     LTEXT "E&venimente:", -1, 8, 118, 150, 17
-    CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
+    CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "S&unete:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168, 205, 15, 15, WS_DISABLED | BS_ICON
