@@ -33,7 +33,7 @@ VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VP_STATUS
@@ -42,7 +42,7 @@ VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
     ULONG NumModesSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VP_STATUS
@@ -51,7 +51,7 @@ VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VOID
@@ -99,12 +99,12 @@ Return Value:
 
 {
     ULONG ulCmd;
-    ULONG ulPort;
+    ULONG_PTR ulPort;
     UCHAR jValue;
     USHORT usValue;
     ULONG culCount;
     ULONG ulIndex;
-    ULONG ulBase;
+    ULONG_PTR ulBase;
 
     if (pusCmdStream == NULL) {
 
@@ -112,7 +112,7 @@ Return Value:
         return TRUE;
     }
 
-    ulBase = (ULONG)HwDeviceExtension->IOAddress;
+    ulBase = (ULONG_PTR)HwDeviceExtension->IOAddress;
 
     //
     // Now set the adapter to the desired mode.
@@ -518,7 +518,7 @@ VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     )
 
 /*++
@@ -656,7 +656,7 @@ VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
     ULONG NumModesSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     )
 
 /*++
@@ -720,7 +720,7 @@ VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     )
 
 /*++

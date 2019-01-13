@@ -53,7 +53,7 @@ VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VP_STATUS
@@ -62,7 +62,7 @@ VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
     ULONG NumModesSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VP_STATUS
@@ -71,7 +71,7 @@ VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
     ULONG ModeInformationSize,
-    PULONG OutputSize
+    PULONG_PTR OutputSize
     );
 
 VP_STATUS
