@@ -57,6 +57,7 @@ static PLABEL_MAP s_Map = NULL;
 static PAPP_MAP s_App = NULL;
 
 TCHAR szDefault[MAX_PATH];
+HIMAGELIST hSoundsImageList = NULL;
 
 /* A filter string is a list separated by NULL and ends with double NULLs. */
 LPWSTR MakeFilter(LPWSTR psz)
@@ -813,12 +814,18 @@ ShowSoundScheme(HWND hwndDlg)
     PSOUND_SCHEME_CONTEXT pScheme;
     PAPP_MAP pAppMap;
     PLABEL_MAP pLabelMap;
+    PLABEL_CONTEXT pLabelContext;
     HWND hDlgCtrl, hList;
     TVINSERTSTRUCT tvItem;
     HTREEITEM hTreeItem;
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_SOUND_SCHEME);
     hList = GetDlgItem(hwndDlg, IDC_SCHEME_LIST);
+
+    if (hSoundsImageList != NULL)
+    {
+        TreeView_SetImageList(hList, hSoundsImageList, TVSIL_NORMAL);
+    }
 
     lIndex = SendMessage(hDlgCtrl, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
     if (lIndex == CB_ERR)
@@ -842,10 +849,12 @@ ShowSoundScheme(HWND hwndDlg)
         tvItem.hParent = TVI_ROOT;
         tvItem.hInsertAfter = TVI_FIRST;
 
-        tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM;
+        tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
         tvItem.item.state = TVIS_EXPANDED;
         tvItem.item.stateMask = TVIS_EXPANDED;
         tvItem.item.pszText = pAppMap->szDesc;
+        tvItem.item.iImage = IMAGE_SOUND_SECTION;
+        tvItem.item.iSelectedImage = IMAGE_SOUND_SECTION;
         tvItem.item.lParam = (LPARAM)NULL;
 
         hTreeItem = TreeView_InsertItem(hList, &tvItem);
@@ -853,14 +862,26 @@ ShowSoundScheme(HWND hwndDlg)
         pLabelMap = pAppMap->LabelMap;
         while (pLabelMap)
         {
+            pLabelContext = FindLabelContext(pScheme, pAppMap->szName, pLabelMap->szName);
+
             ZeroMemory(&tvItem, sizeof(tvItem));
             tvItem.hParent = /*TVI_ROOT;*/ hTreeItem;
             tvItem.hInsertAfter = TVI_SORT;
 
-            tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM;
+            tvItem.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
             tvItem.item.state = TVIS_EXPANDED;
             tvItem.item.stateMask = TVIS_EXPANDED;
             tvItem.item.pszText = pLabelMap->szDesc;
+            if (pLabelContext->szValue && _tcslen(pLabelContext->szValue) > 0)
+            {
+                tvItem.item.iImage = IMAGE_SOUND_ASSIGNED;
+                tvItem.item.iSelectedImage = IMAGE_SOUND_ASSIGNED;
+            }
+            else
+            {
+                tvItem.item.iImage = IMAGE_SOUND_NONE;
+                tvItem.item.iSelectedImage = IMAGE_SOUND_NONE;
+            }
             tvItem.item.lParam = (LPARAM)FindLabelContext(pScheme, pAppMap->szName, pLabelMap->szName);
 
             TreeView_InsertItem(hList, &tvItem);
@@ -940,6 +961,68 @@ ApplyChanges(HWND hwndDlg)
 }
 
 
+HIMAGELIST
+InitImageList(UINT StartResource,
+              UINT EndResource,
+              UINT Width,
+              UINT Height,
+              ULONG type)
+{
+    HANDLE hImage;
+    HIMAGELIST himl;
+    UINT i;
+    INT ret;
+
+    /* Create the toolbar icon image list */
+    himl = ImageList_Create(Width,
+                            Height,
+                            ILC_MASK | ILC_COLOR32,
+                            EndResource - StartResource,
+                            0);
+    if (himl == NULL)
+        return NULL;
+
+    ret = 0;
+    for (i = StartResource; i <= EndResource && ret != -1; i++)
+    {
+        hImage = LoadImageW(hApplet,
+                            MAKEINTRESOURCEW(i),
+                            type,
+                            Width,
+                            Height,
+                            LR_LOADTRANSPARENT);
+        if (hImage == NULL)
+        {
+            ImageList_Destroy(himl);
+            himl = NULL;
+            break;
+        }
+
+        if (type == IMAGE_BITMAP)
+        {
+            ret = ImageList_AddMasked(himl,
+                                      hImage,
+                                      RGB(255, 0, 128));
+        }
+        else if (type == IMAGE_ICON)
+        {
+            ret = ImageList_AddIcon(himl,
+                                    hImage);
+        }
+
+        DeleteObject(hImage);
+    }
+
+    if (ret == -1)
+    {
+        ImageList_Destroy(himl);
+        himl = NULL;
+    }
+
+    return himl;
+}
+
+
 /* Sounds property page dialog callback */
 INT_PTR
 CALLBACK
@@ -963,6 +1046,12 @@ SoundsDlgProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
                         BM_SETIMAGE,(WPARAM)IMAGE_ICON,
                         (LPARAM)(HANDLE)LoadIcon(hApplet, MAKEINTRESOURCE(IDI_PLAY_ICON)));
+
+            hSoundsImageList = InitImageList(IDI_SOUND_SECTION,
+                                             IDI_SOUND_ASSIGNED,
+                                             GetSystemMetrics(SM_CXSMICON),
+                                             GetSystemMetrics(SM_CXSMICON),
+                                             IMAGE_ICON);
 
             LoadEventLabels();
             LoadSoundProfiles(hwndDlg);
@@ -1112,6 +1201,12 @@ SoundsDlgProc(HWND hwndDlg,
                     break;
                 }
             }
+            break;
+        }
+        case WM_DESTROY:
+        {
+            if (hSoundsImageList)
+                ImageList_Destroy(hSoundsImageList);
             break;
         }
         case WM_NOTIFY:
