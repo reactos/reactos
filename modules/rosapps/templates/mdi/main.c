@@ -127,7 +127,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hFont = CreateFont(-MulDiv(8,GetDeviceCaps(hdc,LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, _T("MS Sans Serif"));
     ReleaseDC(0, hdc);
 
-    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
+    hFrameWnd = CreateWindowEx(0, (LPCTSTR)hFrameWndClass, szTitle,
 //  hFrameWnd = CreateWindow(szFrameClass, szTitle,
                     WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -165,7 +165,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         nParts[0] = 100;
         nParts[1] = 210;
         nParts[2] = 400;
-        SendMessage(hStatusBar, SB_SETPARTS, 3, (long)nParts);
+        SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)nParts);
     } else {
         CheckMenuItem(hMenuOptions, ID_OPTIONS_TOOLBAR, MF_BYCOMMAND|MF_GRAYED);
         CheckMenuItem(hMenuOptions, ID_OPTIONS_STATUSBAR, MF_BYCOMMAND|MF_GRAYED);
