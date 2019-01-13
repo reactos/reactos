@@ -472,7 +472,11 @@ VolumeDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)NM_RELEASEDCAPTURE)
+            {
+                PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ALIAS_ID | SND_ASYNC);
+            }
+            else if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
                 SaveData(hwndDlg);
             }
