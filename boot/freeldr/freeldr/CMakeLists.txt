@@ -6,8 +6,11 @@ if(SEPARATE_DBG)
 endif()
 
 if(MSVC)
-    # We don't need it here
+    # We don't need hotpatching
     replace_compile_flags("/hotpatch" " ")
+
+    # Explicitly use string pooling
+    add_compile_flags("/GF")
 endif()
 
 spec2def(freeldr_pe.exe freeldr.spec)
@@ -32,7 +35,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-list(APPEND FREELDR_BOOTLIB_COMMON_SOURCE
+list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/debug.c
     lib/peloader.c
     lib/comm/rs232.c
@@ -50,14 +53,14 @@ list(APPEND FREELDR_BOOTLIB_COMMON_SOURCE
     lib/mm/mm.c
     lib/mm/heap.c)
 
-list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+list(APPEND FREELDR_NTLDR_SOURCE
     ntldr/conversion.c
     ntldr/registry.c
     ntldr/winldr.c
     ntldr/wlmemory.c
     ntldr/wlregistry.c)
 
-list(APPEND FREELDR_ARC_COMMON_SOURCE
+list(APPEND FREELDR_ARC_SOURCE
     arcname.c
     machine.c
     arch/archwsup.c
@@ -68,7 +71,7 @@ list(APPEND FREELDR_ARC_COMMON_SOURCE
     disk/ramdisk.c)
     #disk/scsiport.c
 
-list(APPEND FREELDR_COMMON_SOURCE
+list(APPEND FREELDR_BOOTMGR_SOURCE
     include/freeldr.h
     cmdline.c
     custom.c
@@ -97,11 +100,11 @@ if(ARCH STREQUAL "i386")
         arch/i386/linux.S
         arch/i386/mb.S)
 
-    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+    list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/i386/winldr.c
         ntldr/headless.c)
 
-    list(APPEND FREELDR_ARC_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_SOURCE
         lib/fs/pxe.c
         arch/i386/halstub.c
         arch/i386/ntoskrnl.c
@@ -134,16 +137,17 @@ if(ARCH STREQUAL "i386")
     if(NOT MSVC)
         list(APPEND FREELDR_COMMON_ASM_SOURCE arch/i386/drvmap.S)
     endif()
+
 elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
         arch/amd64/pnpbios.S)
 
-    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+    list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/amd64/winldr.c)
 
-    list(APPEND FREELDR_ARC_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_SOURCE
         lib/fs/pxe.c
         arch/i386/ntoskrnl.c
         arch/i386/drivemap.c
@@ -161,14 +165,15 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/pcmem.c
         arch/i386/pcrtc.c
         arch/i386/pcvideo.c)
+
 elseif(ARCH STREQUAL "arm")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/arm/boot.S)
 
-    list(APPEND FREELDR_NTLDR_COMMON_SOURCE
+    list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/arm/winldr.c)
 
-    list(APPEND FREELDR_ARC_COMMON_SOURCE
+    list(APPEND FREELDR_ARC_SOURCE
         arch/arm/entry.c
         arch/arm/macharm.c)
 else()
@@ -178,12 +183,11 @@ endif()
 add_asm_files(freeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE})
 
 add_library(freeldr_common
-    ${FREELDR_BOOTLIB_COMMON_SOURCE}
-    ${FREELDR_ARC_COMMON_SOURCE}
-    ${FREELDR_NTLDR_COMMON_SOURCE}
-    ${FREELDR_COMMON_SOURCE}
     ${freeldr_common_asm}
-    linuxboot.c)
+    ${FREELDR_BOOTLIB_SOURCE}
+    ${FREELDR_ARC_SOURCE}
+    ${FREELDR_NTLDR_SOURCE}
+    ${FREELDR_BOOTMGR_SOURCE})
 
 if(USE_CLANG_CL)
     # We need to reduce the binary size
@@ -191,16 +195,17 @@ if(USE_CLANG_CL)
 endif()
 
 set(PCH_SOURCE
-    ${FREELDR_BOOTLIB_COMMON_SOURCE}
-    ${FREELDR_ARC_COMMON_SOURCE}
-    ${FREELDR_NTLDR_COMMON_SOURCE}
-    ${FREELDR_COMMON_SOURCE})
+    ${FREELDR_BOOTLIB_SOURCE}
+    ${FREELDR_ARC_SOURCE}
+    ${FREELDR_NTLDR_SOURCE}
+    ${FREELDR_BOOTMGR_SOURCE})
 
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
 
 if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
+## GCC builds need this extra thing for some reason...
     target_link_libraries(freeldr_common mini_hal)
 endif()
 
@@ -208,7 +213,7 @@ list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
     ntldr/setupldr.c ## Strangely enough this file is needed in GCC builds
-                     ## even if ${FREELDR_NTLDR_COMMON_SOURCE} is not added,
+                     ## even if ${FREELDR_NTLDR_SOURCE} is not added,
                      ## otherwise we get linking errors with Rtl**Bitmap** APIs.
                      ## Do not happen on MSVC builds however...
     lib/inffile/inffile.c
@@ -279,7 +284,7 @@ else()
     add_custom_target(freeldr ALL DEPENDS freeldr_pe)
 endif()
 
-# rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
+# Rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR livecd hybridcd NAME_ON_CD setupldr.sys)
 

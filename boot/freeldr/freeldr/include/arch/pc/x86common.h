@@ -66,7 +66,7 @@
 
 /* Defines needed for switching between real and protected mode */
 //#ifdef _M_IX86
-#define NULL_DESC    HEX(00)    /* NULL descriptor */
+#define NULL_DESC   HEX(00)    /* NULL descriptor */
 #define PMODE_CS    HEX(08)    /* PMode code selector, base 0 limit 4g */
 #define PMODE_DS    HEX(10)    /* PMode data selector, base 0 limit 4g */
 #define RMODE_CS    HEX(18)    /* RMode code selector, base 0 limit 64k */
