@@ -139,7 +139,6 @@ HalpGetRootInterruptVector(IN ULONG BusInterruptLevel,
     return SystemVector;
 }
 
-INIT_FUNCTION
 ULONG
 NTAPI
 HalpGetSystemInterruptVector(IN PBUS_HANDLER BusHandler,

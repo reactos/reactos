@@ -610,7 +610,6 @@ HalpTranslateIsaBusAddress(
     OUT PPHYSICAL_ADDRESS TranslatedAddress
 );
 
-INIT_FUNCTION
 ULONG
 NTAPI
 HalpGetSystemInterruptVector(
