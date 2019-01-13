@@ -100,7 +100,7 @@ ENDM
 
 .code16 MACRO
     ASSUME nothing
-    .text SEGMENT use16
+    .text SEGMENT use16 PUBLIC 'CODE'
     .586P
 ENDM
 
