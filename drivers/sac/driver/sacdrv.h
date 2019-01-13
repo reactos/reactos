@@ -44,10 +44,9 @@
 //
 // SAC Parameter Checking Macros
 //
-#define CHECK_PARAMETER_WITH_STATUS(Parameter, Status)  \
+#define CHECK_PARAMETER_WITH_STATUS(Condition, Status)  \
 {                                                       \
-    ASSERT(((PVOID)(Parameter)) != NULL);               \
-    if (((PVOID)(Parameter)) == NULL)                   \
+    if (!NT_VERIFY(Condition))                          \
     {                                                   \
         return Status;                                  \
     }                                                   \
