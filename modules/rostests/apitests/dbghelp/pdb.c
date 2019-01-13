@@ -11,6 +11,7 @@
 #include <dbghelp.h>
 #include <cvconst.h>    // SymTagXXX
 #include <stdio.h>
+#include <delayimp.h>
 
 #include "wine/test.h"
 
@@ -188,6 +189,37 @@ static void init_dbghelp_version()
           HIWORD(fileInfo.dwProductVersionLS),
           LOWORD(fileInfo.dwProductVersionLS));
 }
+
+static
+int g_SymRegisterCallbackW64NotFound = 0;
+
+static
+BOOL WINAPI SymRegisterCallbackW64_Stub(HANDLE hProcess, PSYMBOL_REGISTERED_CALLBACK64 CallbackFunction, ULONG64 UserContext)
+{
+    g_SymRegisterCallbackW64NotFound++;
+    return FALSE;
+}
+
+/* A delay-load failure hook will be called when resolving a delay-load dependency (dll or function) fails */
+FARPROC WINAPI DliFailHook(unsigned dliNotify, PDelayLoadInfo pdli)
+{
+    /* Was the failure a function, and did we get info */
+    if (dliNotify == dliFailGetProc && pdli)
+    {
+        /* Is it our function? */
+        if (pdli->dlp.fImportByName && !strcmp(pdli->dlp.szProcName, "SymRegisterCallbackW64"))
+        {
+            /* Redirect execution to the stub */
+            return (FARPROC)SymRegisterCallbackW64_Stub;
+        }
+    }
+    /* This is not the function you are looking for, continue default behavior (throw exception) */
+    return NULL;
+}
+
+/* Register the failure hook using the magic name '__pfnDliFailureHook2'. */
+PfnDliHook __pfnDliFailureHook2 = DliFailHook;
+
 
 /* Maybe our dbghelp.dll is too old? */
 static BOOL can_enumerate(HANDLE hProc, DWORD64 BaseAddress)
@@ -544,18 +576,12 @@ static void test_SymRegCallback(HANDLE hProc, const char* szModuleName, BOOL tes
     }
     else
     {
-        // dbghelp fileversion 5.2.3790.3959
-        // SymRegisterCallbackW64 crash only happens on real Windows 2003
-        // Fileversion 5.2.3790.3959 is used in Windows 2003.
-        // In ROS there is no crash.
-        // I could not figure out whats wrong.
-        if ((dbghelpFileVer.dwProductVersionMS == MAKELONG(2, 5)) &&
-            (dbghelpFileVer.dwProductVersionLS == MAKELONG(3959, 3790)))
+        Ret = SymRegisterCallbackW64(hProc, SymRegisterCallback64Proc, (ULONG_PTR)&ctx);
+        if (g_SymRegisterCallbackW64NotFound)
         {
-            skip("dbghelp.dll ver 5.2.3790.3959 (w2k3), SymRegisterCallbackW64 would crash!\n");
+            skip("SymRegisterCallbackW64 not found in dbghelp.dll\n");
             return;
         }
-        Ret = SymRegisterCallbackW64(hProc, SymRegisterCallback64Proc, (ULONG_PTR)&ctx);
     }
 
     ok_int(Ret, TRUE);
