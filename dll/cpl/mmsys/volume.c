@@ -11,7 +11,10 @@
 
 #include <shellapi.h>
 
-#define VOLUME_DIVIDER 0xFFF
+#define VOLUME_MIN        0
+#define VOLUME_MAX      500
+#define VOLUME_TICFREQ   50
+#define VOLUME_PAGESIZE 100
 
 typedef struct _IMGINFO
 {
@@ -35,7 +38,7 @@ typedef struct _GLOBAL_DATA
     DWORD volumeMinimum;
     DWORD volumeMaximum;
     DWORD volumeValue;
-
+    DWORD volumeStep;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -168,6 +171,7 @@ GetVolumeControl(PGLOBAL_DATA pGlobalData)
     pGlobalData->volumeMinimum = mxc.Bounds.dwMinimum;
     pGlobalData->volumeMaximum = mxc.Bounds.dwMaximum;
     pGlobalData->volumeControlID = mxc.dwControlID;
+    pGlobalData->volumeStep = (pGlobalData->volumeMaximum - pGlobalData->volumeMinimum) / (VOLUME_MAX - VOLUME_MIN);
 }
 
 
@@ -303,12 +307,10 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     GetVolumeValue(pGlobalData);
 
     SendDlgItemMessage(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, 0, (LPARAM)mxc.szPname);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE,
-        (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeMaximum/VOLUME_DIVIDER));
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, (WPARAM)FALSE, (LPARAM)1);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETSEL, (WPARAM)FALSE,
-        (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeValue/VOLUME_DIVIDER));
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->volumeValue - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
 }
 
 VOID
@@ -344,8 +346,6 @@ VolumeDlgProc(HWND hwndDlg,
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-
-
     switch(uMsg)
     {
         case MM_MIXM_LINE_CHANGE:
@@ -366,8 +366,7 @@ VolumeDlgProc(HWND hwndDlg,
         case MM_MIXM_CONTROL_CHANGE:
         {
             GetVolumeValue(pGlobalData);
-            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETSEL, (WPARAM)FALSE, (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeValue/VOLUME_DIVIDER));
-            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
+            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->volumeValue - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
             break;
         }
         case WM_INITDIALOG:
@@ -455,10 +454,11 @@ VolumeDlgProc(HWND hwndDlg,
             HWND hVolumeTrackbar = GetDlgItem(hwndDlg, IDC_VOLUME_TRACKBAR);
             if (hVolumeTrackbar == (HWND)lParam)
             {
-                pGlobalData->volumeValue = (DWORD)SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_GETPOS, 0, 0)*VOLUME_DIVIDER;
+                pGlobalData->volumeValue = ((DWORD)SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_GETPOS, 0, 0) * pGlobalData->volumeStep) + pGlobalData->volumeMinimum;
                 SetVolumeValue(pGlobalData);
-                SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETSEL, (WPARAM)TRUE,
-                    (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeValue/VOLUME_DIVIDER));
+
+                if (LOWORD(wParam) == TB_ENDTRACK)
+                    PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ALIAS_ID | SND_ASYNC);
             }
             break;
         }
@@ -472,11 +472,7 @@ VolumeDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)NM_RELEASEDCAPTURE)
-            {
-                PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ALIAS_ID | SND_ASYNC);
-            }
-            else if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
                 SaveData(hwndDlg);
             }
