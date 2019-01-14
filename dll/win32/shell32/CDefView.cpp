@@ -1324,14 +1324,11 @@ cleanup:
  */
 LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    WORD    x, y;
+    int     x, y;
     UINT    uCommand;
     HRESULT hResult;
 
-    x = LOWORD(lParam);
-    y = HIWORD(lParam);
-
-    TRACE("(%p)->(0x%08x 0x%08x) stub\n", this, x, y);
+    TRACE("(%p)->()\n", this);
 
     m_hContextMenu = CreatePopupMenu();
     if (!m_hContextMenu) 
@@ -1347,6 +1344,43 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, CMF_NORMAL);
     if (FAILED_UNEXPECTEDLY(hResult))
         goto cleanup;
+
+    /* There is no position requested, so try to find one */
+    if (lParam == ~0)
+    {
+        int lvIndex;
+        POINT pt;
+
+        /* Do we have a focused item, */
+        if ((lvIndex = m_ListView.GetNextItem(-1, LVIS_FOCUSED)) < 0)
+        {
+            /* or a selected item? */
+            lvIndex = m_ListView.GetNextItem(-1, LVIS_SELECTED);
+        }
+        /* We got something */
+        if (lvIndex > -1)
+        {
+            /* Let's find the center of the icon */
+            RECT rc = { LVIR_ICON };
+            m_ListView.SendMessage(LVM_GETITEMRECT, lvIndex, (LPARAM)&rc);
+            pt.x = (rc.right + rc.left) / 2;
+            pt.y = (rc.bottom + rc.top) / 2;
+        }
+        else
+        {
+            /* We have to drop it somewhere.. */
+            pt.x = pt.y = 0;
+        }
+        
+        m_ListView.ClientToScreen(&pt);
+        x = pt.x;
+        y = pt.y;
+    }
+    else
+    {
+        x = GET_X_LPARAM(lParam);
+        y = GET_Y_LPARAM(lParam);
+    }
 
     uCommand = TrackPopupMenu(m_hContextMenu,
                               TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
