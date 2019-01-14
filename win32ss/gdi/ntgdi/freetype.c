@@ -5898,13 +5898,13 @@ GreExtTextOutW(
             position = face->underline_position *
                 face->size->metrics.y_ppem / face->units_per_EM;
         }
-        vecs[5].y = vecs[6].y = vecs[4].y + (position << 16);
+        vecs[5].y = vecs[6].y = vecs[4].y - (position << 16);
     }
 
     // strike through
     if (plf->lfStrikeOut)
     {
-        vecs[7].y = vecs[8].y = vecs[4].y - (((FontGDI->tmAscent * 2) / 3) << 16);
+        vecs[7].y = vecs[8].y = vecs[4].y - ((FontGDI->tmAscent / 3) << 16);
     }
 
     // invert y axis
