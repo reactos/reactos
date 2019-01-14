@@ -715,11 +715,11 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
 
     ef = pmx->efM21;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->xy = -FLOATOBJ_GetLong(&ef);
+    pmat->xy = FLOATOBJ_GetLong(&ef);
 
     ef = pmx->efM12;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->yx = -FLOATOBJ_GetLong(&ef);
+    pmat->yx = FLOATOBJ_GetLong(&ef);
 
     ef = pmx->efM22;
     FLOATOBJ_MulLong(&ef, 0x00010000);
@@ -5743,6 +5743,8 @@ GreExtTextOutW(
     FT_Matrix_Multiply(&matEscape, &mat);
 
     FtMatrixFromMx(&matWorld, pmxWorldToDevice);
+    matWorld.yx = -matWorld.yx;
+    matWorld.xy = -matWorld.xy;
     FT_Matrix_Multiply(&matWorld, &mat);
 
     IntViewportMatrix(&matViewport, pdcattr);
