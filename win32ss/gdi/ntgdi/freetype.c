@@ -693,18 +693,6 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = pmat->xx;
 }
 
-#if 0
-VOID FASTCALL IntViewportMatrix(FT_Matrix *pmat, PDC_ATTR pdcattr)
-{
-    ASSERT(pdcattr->szlWindowExt.cx != 0);
-    ASSERT(pdcattr->szlWindowExt.cy != 0);
-    pmat->xx = (1 << 16) * pdcattr->szlViewportExt.cx / pdcattr->szlWindowExt.cx;
-    pmat->yx = 0;
-    pmat->xy = 0;
-    pmat->yy = (1 << 16) * pdcattr->szlViewportExt.cy / pdcattr->szlWindowExt.cy;
-}
-#endif
-
 VOID FASTCALL
 FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
 {
@@ -5749,14 +5737,9 @@ GreExtTextOutW(
     matWorld.xy = -matWorld.xy;
     FT_Matrix_Multiply(&matWorld, &mat);
 
-    //IntViewportMatrix(&matViewport, pdcattr);
-    //FT_Matrix_Multiply(&matViewport, &mat);
-
     FT_Set_Transform(face, &mat, NULL);
 
-    /*
-     * Calculate displacement of the text.
-     */
+    // Calculate displacement of the text.
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -5833,9 +5816,7 @@ GreExtTextOutW(
         DeltaY64 = TextTop64;
     }
 
-    /*
-     * Process the horizontal alignment and modify XStart accordingly.
-     */
+    // Process the X and Y alignments.
     if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
     {
         XStart64 = -DeltaX64 / 2;
@@ -5914,8 +5895,6 @@ GreExtTextOutW(
 
     // invert y axis
     IntEscapeMatrix(&matEscape, -lfEscapement);
-    //matWorld.yx = -matWorld.yx;
-    //matWorld.xy = -matWorld.xy;
 
     // convert vecs
     for (i = 0; i < 9; ++i)
@@ -5923,18 +5902,11 @@ GreExtTextOutW(
         POINT pt;
         FT_Vector_Transform(&vecs[i], &matWidth);
         FT_Vector_Transform(&vecs[i], &matEscape);
-        //FT_Vector_Transform(&vecs[i], &matWorld);
-        //vecs[i].x += FIX2LONG(pmxWorldToDevice->fxDx) * (1 << 16);
-        //vecs[i].y += FIX2LONG(pmxWorldToDevice->fxDy) * (1 << 16);
         vecs[i].x += (Start.x << 16) + (XStart64 << 10);
         vecs[i].y += (Start.y << 16) + (YStart64 << 10);
         pt.x = vecs[i].x >> 16;
         pt.y = vecs[i].y >> 16;
         IntLPtoDP(dc, &pt, 1);
-        //vecs[i].x = (vecs[i].x - pdcattr->ptlWindowOrg.x) * pdcattr->szlViewportExt.cx /
-        //            pdcattr->szlWindowExt.cx + pdcattr->ptlViewportOrg.x;
-        //vecs[i].y = (vecs[i].y - pdcattr->ptlWindowOrg.y) * pdcattr->szlViewportExt.cy /
-        //            pdcattr->szlWindowExt.cy + pdcattr->ptlViewportOrg.y;
         vecs[i].x = pt.x + dc->ptlDCOrig.x;
         vecs[i].y = pt.y + dc->ptlDCOrig.y;
     }
@@ -6002,9 +5974,7 @@ GreExtTextOutW(
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-    /*
-     * The main rendering loop.
-     */
+    // The main rendering loop.
     bResult = TRUE;
     TextLeft64 = vecs[4].x << 6;
     TextTop64 = vecs[4].y << 6;
