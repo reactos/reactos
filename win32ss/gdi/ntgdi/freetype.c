@@ -693,6 +693,7 @@ VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
     pmat->yy = pmat->xx;
 }
 
+#if 0
 VOID FASTCALL IntViewportMatrix(FT_Matrix *pmat, PDC_ATTR pdcattr)
 {
     ASSERT(pdcattr->szlWindowExt.cx != 0);
@@ -702,6 +703,7 @@ VOID FASTCALL IntViewportMatrix(FT_Matrix *pmat, PDC_ATTR pdcattr)
     pmat->xy = 0;
     pmat->yy = (1 << 16) * pdcattr->szlViewportExt.cy / pdcattr->szlWindowExt.cy;
 }
+#endif
 
 VOID FASTCALL
 FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
@@ -5565,7 +5567,7 @@ GreExtTextOutW(
     BOOL EmuBold, EmuItalic;
     int thickness;
     BOOL bResult;
-    FT_Matrix mat = identityMat, matWidth, matEscape, matWorld, matViewport;
+    FT_Matrix mat = identityMat, matWidth, matEscape, matWorld;
     FT_Vector vecs[9];
 
     /* Check if String is valid */
@@ -5747,8 +5749,8 @@ GreExtTextOutW(
     matWorld.xy = -matWorld.xy;
     FT_Matrix_Multiply(&matWorld, &mat);
 
-    IntViewportMatrix(&matViewport, pdcattr);
-    FT_Matrix_Multiply(&matViewport, &mat);
+    //IntViewportMatrix(&matViewport, pdcattr);
+    //FT_Matrix_Multiply(&matViewport, &mat);
 
     FT_Set_Transform(face, &mat, NULL);
 
@@ -5912,27 +5914,29 @@ GreExtTextOutW(
 
     // invert y axis
     IntEscapeMatrix(&matEscape, -lfEscapement);
-    matWorld.yx = -matWorld.yx;
-    matWorld.xy = -matWorld.xy;
+    //matWorld.yx = -matWorld.yx;
+    //matWorld.xy = -matWorld.xy;
 
     // convert vecs
     for (i = 0; i < 9; ++i)
     {
+        POINT pt;
         FT_Vector_Transform(&vecs[i], &matWidth);
         FT_Vector_Transform(&vecs[i], &matEscape);
-        FT_Vector_Transform(&vecs[i], &matWorld);
+        //FT_Vector_Transform(&vecs[i], &matWorld);
         //vecs[i].x += FIX2LONG(pmxWorldToDevice->fxDx) * (1 << 16);
         //vecs[i].y += FIX2LONG(pmxWorldToDevice->fxDy) * (1 << 16);
         vecs[i].x += (Start.x << 16) + (XStart64 << 10);
         vecs[i].y += (Start.y << 16) + (YStart64 << 10);
-        vecs[i].x >>= 16;
-        vecs[i].y >>= 16;
-        vecs[i].x = (vecs[i].x - pdcattr->ptlWindowOrg.x) * pdcattr->szlViewportExt.cx /
-                    pdcattr->szlWindowExt.cx + pdcattr->ptlViewportOrg.x;
-        vecs[i].y = (vecs[i].y - pdcattr->ptlWindowOrg.y) * pdcattr->szlViewportExt.cy /
-                    pdcattr->szlWindowExt.cy + pdcattr->ptlViewportOrg.y;
-        vecs[i].x += dc->ptlDCOrig.x;
-        vecs[i].y += dc->ptlDCOrig.y;
+        pt.x = vecs[i].x >> 16;
+        pt.y = vecs[i].y >> 16;
+        IntLPtoDP(dc, &pt, 1);
+        //vecs[i].x = (vecs[i].x - pdcattr->ptlWindowOrg.x) * pdcattr->szlViewportExt.cx /
+        //            pdcattr->szlWindowExt.cx + pdcattr->ptlViewportOrg.x;
+        //vecs[i].y = (vecs[i].y - pdcattr->ptlWindowOrg.y) * pdcattr->szlViewportExt.cy /
+        //            pdcattr->szlWindowExt.cy + pdcattr->ptlViewportOrg.y;
+        vecs[i].x = pt.x + dc->ptlDCOrig.x;
+        vecs[i].y = pt.y + dc->ptlDCOrig.y;
     }
     vecs[2].x += DeltaX64 >> 6;
     vecs[2].y += DeltaY64 >> 6;     // upper right
