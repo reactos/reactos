@@ -5875,15 +5875,15 @@ GreExtTextOutW(
     }
     else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
-        vecs[1].y = 0;                          // upper left
+        vecs[1].y = -FontGDI->tmHeight << 16;   // upper left
         vecs[4].y = -FontGDI->tmDescent << 16;  // baseline
-        vecs[0].y = -FontGDI->tmHeight << 16;   // lower left
+        vecs[0].y = 0;                          // lower left
     }
     else /* TA_TOP */
     {
-        vecs[1].y = FontGDI->tmHeight << 16;    // upper left
+        vecs[1].y = 0;                          // upper left
         vecs[4].y = FontGDI->tmAscent << 16;    // baseline
-        vecs[0].y = 0;                          // lower left
+        vecs[0].y = FontGDI->tmHeight << 16;    // lower left
     }
     vecs[2] = vecs[1];      // upper right
     vecs[3] = vecs[0];      // lower right
