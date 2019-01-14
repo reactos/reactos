@@ -25,10 +25,6 @@ toolbar, and address band for an explorer window
 
 #include "precomp.h"
 
-/* FIXME, I can't include windowsx because it conflicts with some #defines */
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 #if 1
 
 interface IAugmentedShellFolder : public IShellFolder
