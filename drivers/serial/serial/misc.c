@@ -297,7 +297,7 @@ done:
 
 		/* We are now ready to handle another IRP, even if this one is not completed */
 		DeviceExtension->WaitOnMaskIrp = NULL;
-		return STATUS_SUCCESS;
+		return TRUE;
 	}
 	return TRUE;
 }
