@@ -360,13 +360,13 @@ void Test_GetDIBits()
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 1);
     ok_int(pbi->bmiHeader.biPlanes, 1);
     SetLastError(0xdeadbabe);
-    ok_int(GetDIBits((HDC)0xff00ff00, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_int(GetDIBits((HDC)UlongToHandle(0xff00ff00), hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
     ok_err(0x57);
     SetLastError(0xdeadbabe);
-    ok_int(GetDIBits(hdcScreen, (HBITMAP)0xff00ff00, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_int(GetDIBits(hdcScreen, (HBITMAP)UlongToHandle(0xff00ff00), 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
     ok_err(0xdeadbabe);
     SetLastError(0xdeadbabe);
-    ok_int(GetDIBits((HDC)0xff00ff00, (HBITMAP)0xff00ff00, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_int(GetDIBits((HDC)UlongToHandle(0xff00ff00), (HBITMAP)UlongToHandle(0xff00ff00), 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
     ok_err(0x57);
     SetLastError(0xdeadbabe);
     ok_int(GetDIBits(NULL, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);

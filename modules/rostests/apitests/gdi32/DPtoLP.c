@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 
+#define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
+
 void Test_DPtoLP_Params()
 {
     HDC hdc;
@@ -24,7 +26,7 @@ void Test_DPtoLP_Params()
     ok_int(DPtoLP(NULL, NULL, -1), 1);
     ok_err(ERROR_SUCCESS);
 
-    ok_int(DPtoLP(NULL, (PVOID)0x80000000, -1), 1);
+    ok_int(DPtoLP(NULL, INVALID_POINTER, -1), 1);
     ok_err(ERROR_SUCCESS);
 
     ok_int(DPtoLP(NULL, NULL, 2), 0);
@@ -53,7 +55,7 @@ void Test_DPtoLP_Params()
 
     hdc = GetDC(0);
     SetLastError(ERROR_SUCCESS);
-    ok_int(DPtoLP(hdc, (PVOID)0x80000000, 2), 1);
+    ok_int(DPtoLP(hdc, INVALID_POINTER, 2), 1);
     ok_err(ERROR_SUCCESS);
 
 
