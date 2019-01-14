@@ -5939,6 +5939,10 @@ GreExtTextOutW(
                 Rect.bottom = max(Rect.bottom, vecs[i].y);
             }
         }
+        else
+        {
+            // FIXME: Use pts[0] ... pts[3] and EngFillPath
+        }
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
         {
