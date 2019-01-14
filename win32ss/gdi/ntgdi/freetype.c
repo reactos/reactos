@@ -5869,24 +5869,24 @@ GreExtTextOutW(
     RtlZeroMemory(vecs, sizeof(vecs));
     if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
     {
-        vecs[0].y = FontGDI->tmDescent << 16;   // upper left
+        vecs[1].y = -FontGDI->tmAscent << 16;   // upper left
         vecs[4].y = 0;                          // baseline
-        vecs[1].y = -FontGDI->tmAscent << 16;   // lower left
+        vecs[0].y = FontGDI->tmDescent << 16;   // lower left
     }
     else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
-        vecs[0].y = -FontGDI->tmHeight << 16;   // upper left
+        vecs[1].y = 0;                          // upper left
         vecs[4].y = -FontGDI->tmDescent << 16;  // baseline
-        vecs[1].y = 0;                          // lower left
+        vecs[0].y = -FontGDI->tmHeight << 16;   // lower left
     }
     else /* TA_TOP */
     {
-        vecs[0].y = 0;                          // upper left
+        vecs[1].y = FontGDI->tmHeight << 16;    // upper left
         vecs[4].y = FontGDI->tmAscent << 16;    // baseline
-        vecs[1].y = FontGDI->tmHeight << 16;    // lower left
+        vecs[0].y = 0;                          // lower left
     }
-    vecs[3] = vecs[0];      // upper right
-    vecs[2] = vecs[1];      // lower right
+    vecs[2] = vecs[1];      // upper right
+    vecs[3] = vecs[0];      // lower right
 #undef VALIGN_MASK
 
     // underline
@@ -5932,9 +5932,9 @@ GreExtTextOutW(
         vecs[i].y += dc->ptlDCOrig.y;
     }
     vecs[2].x += DeltaX64 >> 6;
-    vecs[2].y += DeltaY64 >> 6;     // lower right
+    vecs[2].y += DeltaY64 >> 6;     // upper right
     vecs[3].x += DeltaX64 >> 6;
-    vecs[3].y += DeltaY64 >> 6;     // upper right
+    vecs[3].y += DeltaY64 >> 6;     // lower right
     vecs[6].x += DeltaX64 >> 6;
     vecs[6].y += DeltaY64 >> 6;     // underline right
     vecs[8].x += DeltaX64 >> 6;
