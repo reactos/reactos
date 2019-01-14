@@ -5726,6 +5726,7 @@ GreExtTextOutW(
     }
 
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
+    DC_vUpdateWorldToDevice(dc);
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
@@ -5918,8 +5919,8 @@ GreExtTextOutW(
         FT_Vector_Transform(&vecs[i], &matWidth);
         FT_Vector_Transform(&vecs[i], &matEscape);
         FT_Vector_Transform(&vecs[i], &matWorld);
-        vecs[i].x += FIX2LONG(pmxWorldToDevice->fxDx) * (1 << 16);
-        vecs[i].y += FIX2LONG(pmxWorldToDevice->fxDy) * (1 << 16);
+        //vecs[i].x += FIX2LONG(pmxWorldToDevice->fxDx) * (1 << 16);
+        //vecs[i].y += FIX2LONG(pmxWorldToDevice->fxDy) * (1 << 16);
         vecs[i].x += (Start.x << 16) + (XStart64 << 10);
         vecs[i].y += (Start.y << 16) + (YStart64 << 10);
         vecs[i].x >>= 16;
