@@ -2904,8 +2904,9 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
 
         if( x + width > monitor->rcMonitor.right)
         {
-            /* If we would flip around our origin, would we go off screen on the other side? */
-            if (x - width < monitor->rcMonitor.left)
+            /* If we would flip around our origin, would we go off screen on the other side?
+               Or is our origin itself too far to the right already? */
+            if (x - width < monitor->rcMonitor.left || x > monitor->rcMonitor.right)
                 x = monitor->rcMonitor.right - width;
             else
                 x -= width;
@@ -2927,8 +2928,9 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
 
         if( y + height > monitor->rcMonitor.bottom)
         {
-            /* If we would flip around our origin, would we go off screen on the other side? */
-            if (y - height < monitor->rcMonitor.top)
+            /* If we would flip around our origin, would we go off screen on the other side?
+               Or is our origin itself too far to the bottom already? */
+            if (y - height < monitor->rcMonitor.top || y > monitor->rcMonitor.bottom)
                 y = monitor->rcMonitor.bottom - height;
             else
                 y -= height;
