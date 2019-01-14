@@ -4,7 +4,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # no optimization
     add_compile_flags("/Ob0 /Od")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_flags("/Ox /Ob2 /Ot /Oy /GT /GF")
+    add_compile_flags("/Ox /Ob2 /Ot /Oy /GT")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
 elseif(OPTIMIZE STREQUAL "1")
     add_compile_flags("/O1")
@@ -15,7 +15,7 @@ elseif(OPTIMIZE STREQUAL "3")
 elseif(OPTIMIZE STREQUAL "4")
     add_compile_flags("/Os /Ox /GS-")
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_flags("/GF /Gy /Ob2 /Os /Ox /GS-")
+    add_compile_flags("/Gy /Ob2 /Os /Ox /GS-")
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
