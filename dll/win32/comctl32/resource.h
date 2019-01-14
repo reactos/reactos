@@ -70,4 +70,5 @@
 // This is really ComCtl32 v5.82, the last one not supporting SxS
 #undef  COMCTL32_VERSION // Undefines what the PSDK gave to us
 #define COMCTL32_VERSION        5
+#define COMCTL32_VERSION_MINOR 82
 
