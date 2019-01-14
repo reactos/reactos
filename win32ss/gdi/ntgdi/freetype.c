@@ -713,13 +713,13 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->xx = FLOATOBJ_GetLong(&ef);
 
-    ef = pmx->efM12;
-    FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->xy = FLOATOBJ_GetLong(&ef);
-
     ef = pmx->efM21;
     FLOATOBJ_MulLong(&ef, 0x00010000);
-    pmat->yx = FLOATOBJ_GetLong(&ef);
+    pmat->xy = -FLOATOBJ_GetLong(&ef);
+
+    ef = pmx->efM12;
+    FLOATOBJ_MulLong(&ef, 0x00010000);
+    pmat->yx = -FLOATOBJ_GetLong(&ef);
 
     ef = pmx->efM22;
     FLOATOBJ_MulLong(&ef, 0x00010000);
