@@ -5612,9 +5612,7 @@ GreExtTextOutW(
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
-    }
-    else
-    {
+    } else {
         Start.x = XStart;
         Start.y = YStart;
     }
