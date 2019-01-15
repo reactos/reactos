@@ -1311,6 +1311,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
     BOOL DoCallBack = TRUE;
+    LARGE_INTEGER LargeTickCount;
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
@@ -1420,16 +1421,18 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         // Only happens when calling the client!
         IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
+        KeQueryTickCount(&LargeTickCount);
+        Window->head.pti->timeLast = LargeTickCount.u.LowPart;
+        Window->head.pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+
         RETURN( TRUE);
     }
 
     if (MsqIsHung(ptiSendTo))
     {
-        TRACE("Let's go Ghost!\n");
-        IntMakeHungWindowGhosted(hWnd);
-
         if (uFlags & SMTO_ABORTIFHUNG)
         {
+            // FIXME: Set window hung and add to a list.
             /* FIXME: Set a LastError? */
             RETURN( FALSE);
         }
@@ -1460,6 +1463,11 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
+        if (MsqIsHung(ptiSendTo))
+        {
+            TRACE("Let's go Ghost!\n");
+            IntMakeHungWindowGhosted(hWnd);
+        }
 /*
  *  MSDN says:
  *  Microsoft Windows 2000: If GetLastError returns zero, then the function
@@ -1476,6 +1484,10 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         SetLastNtError(Status);
         RETURN( FALSE);
     }
+
+    KeQueryTickCount(&LargeTickCount);
+    ptiSendTo->timeLast = LargeTickCount.u.LowPart;
+    ptiSendTo->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
 
     RETURN( TRUE);
 
@@ -1595,12 +1607,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         /* FIXME: last error? */
         ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN(FALSE);
-    }
-
-    if (MsqIsHung(Window->head.pti))
-    {
-        TRACE("Let's go Ghost!\n");
-        IntMakeHungWindowGhosted(hWnd);
     }
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
