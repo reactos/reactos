@@ -787,6 +787,11 @@ IntDefWindowProc(
             
             if (topWnd)
             {
+               if ((topWnd->style & WS_THICKFRAME) == 0)
+               {
+                  return 0;
+               }
+               
                if (wParam == VK_DOWN)
                {
                   co_IntSendMessage(UserHMGetHandle(topWnd), WM_SYSCOMMAND, (topWnd->style & WS_MAXIMIZE) ? SC_RESTORE : SC_MINIMIZE, lParam);
