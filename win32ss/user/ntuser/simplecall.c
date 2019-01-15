@@ -515,6 +515,11 @@ NtUserCallTwoParam(
             {
                 break;
             }
+            if (MsqIsHung(Window->head.pti))
+            {
+                // TODO: Make the window ghosted and activate.
+                break;
+            }
             if (fAltTab)
             {
                 if (Window->style & WS_MINIMIZE)
