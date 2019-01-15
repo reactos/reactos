@@ -5738,6 +5738,7 @@ GreExtTextOutW(
     FT_Set_Transform(face, &mat, NULL);
 
     // Calculate displacement of the text.
+    DeltaX64 = DeltaY64 = 0;
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -5746,7 +5747,6 @@ GreExtTextOutW(
         memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
         plf->lfUnderline || plf->lfStrikeOut)
     {
-        DeltaX64 = DeltaY64 = 0;
         for (i = 0; i < Count; ++i)
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
