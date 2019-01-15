@@ -5927,10 +5927,8 @@ GreExtTextOutW(
 
         if ((mat.xy == 0 && mat.yx == 0) || (mat.xx == 0 && mat.yy == 0))
         {
-            Rect.left = MAXLONG;
-            Rect.top = MAXLONG;
-            Rect.right = MINLONG;
-            Rect.bottom = MINLONG;
+            Rect.left = Rect.top = MAXLONG;
+            Rect.right = Rect.bottom = MINLONG;
             for (i = 0; i < 4; ++i)
             {
                 Rect.left = min(Rect.left, vecs[i].x);
