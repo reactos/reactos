@@ -18,6 +18,8 @@
 #include <marshalling/marshalling.h>
 #include <marshalling/ports.h>
 
+#define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
+
 START_TEST(MarshallDownStructuresArray)
 {
     const DWORD cElements = 2;
@@ -49,11 +51,11 @@ START_TEST(MarshallDownStructuresArray)
 
     // This is triggered by both pStructuresArray and pInfo.
     SetLastError(0xDEADBEEF);
-    ok(!MarshallDownStructuresArray((PVOID)0xDEADDEAD, 1, NULL, 0, FALSE), "MarshallDownStructuresArray returns TRUE!\n");
+    ok(!MarshallDownStructuresArray(INVALID_POINTER, 1, NULL, 0, FALSE), "MarshallDownStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError returns %lu!\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
-    ok(!MarshallDownStructuresArray(NULL, 1, (const MARSHALLING_INFO*)0xDEADDEAD, 0, FALSE), "MarshallDownStructuresArray returns TRUE!\n");
+    ok(!MarshallDownStructuresArray(NULL, 1, (const MARSHALLING_INFO*)INVALID_POINTER, 0, FALSE), "MarshallDownStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError returns %lu!\n", GetLastError());
 
     // Now create two PORT_INFO_2W structures.
@@ -99,13 +101,13 @@ START_TEST(MarshallDownStructuresArray)
     // Due to the implementation of PackStrings, (&pPortInfo2[0])->pPortName contains the highest offset.
     // Show that MarshallUpStructuresArray checks the offsets and bails out with ERROR_INVALID_DATA if cbSize <= highest offset.
     SetLastError(0xDEADBEEF);
-    ok(!MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName, pPortInfo2Test, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns TRUE!\n");
+    ok(!MarshallUpStructuresArray((DWORD_PTR)(&pPortInfo2[0])->pPortName, pPortInfo2Test, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_DATA, "GetLastError returns %lu!\n", GetLastError());
 
     // It works with cbSize > highest offset.
     // In real world cases, we would use cbPortInfo2Size for cbSize.
     SetLastError(0xDEADBEEF);
-    ok(MarshallUpStructuresArray((DWORD)(&pPortInfo2[0])->pPortName + 1, pPortInfo2, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns FALSE!\n");
+    ok(MarshallUpStructuresArray((DWORD_PTR)(&pPortInfo2[0])->pPortName + 1, pPortInfo2, cElements, pPortInfoMarshalling[2]->pInfo, pPortInfoMarshalling[2]->cbStructureSize, TRUE), "MarshallUpStructuresArray returns FALSE!\n");
     ok(GetLastError() == 0xDEADBEEF, "GetLastError returns %lu!\n", GetLastError());
 
     // pPortInfo2 should now be identical to the copy again.
