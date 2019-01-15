@@ -511,7 +511,7 @@ NtUserCallTwoParam(
             BOOL fAltTab = (BOOL)Param2;
             Ret = 0;
             Window = UserGetWindowObject(hwnd);
-            if (!Window)
+            if (!Window || MsqIsHung(Window->head.pti))
             {
                 break;
             }
