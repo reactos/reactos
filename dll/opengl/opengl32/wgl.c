@@ -205,28 +205,28 @@ INT WINAPI wglChoosePixelFormat(HDC hdc, const PIXELFORMATDESCRIPTOR* ppfd)
         }
 
         /* only use bitmap capable formats for bitmap rendering */
-        if ((ppfd->dwFlags & PFD_DRAW_TO_BITMAP) != (format.dwFlags & PFD_DRAW_TO_BITMAP))
+        if ((ppfd->dwFlags & PFD_DRAW_TO_BITMAP) && !(format.dwFlags & PFD_DRAW_TO_BITMAP))
         {
             TRACE( "PFD_DRAW_TO_BITMAP mismatch for iPixelFormat=%d\n", i );
             continue;
         }
 
         /* only use window capable formats for window rendering */
-        if ((ppfd->dwFlags & PFD_DRAW_TO_WINDOW) != (format.dwFlags & PFD_DRAW_TO_WINDOW))
+        if ((ppfd->dwFlags & PFD_DRAW_TO_WINDOW) && !(format.dwFlags & PFD_DRAW_TO_WINDOW))
         {
             TRACE( "PFD_DRAW_TO_WINDOW mismatch for iPixelFormat=%d\n", i );
             continue;
         }
 
         /* only use opengl capable formats for opengl rendering */
-        if ((ppfd->dwFlags & PFD_SUPPORT_OPENGL) != (format.dwFlags & PFD_SUPPORT_OPENGL))
+        if ((ppfd->dwFlags & PFD_SUPPORT_OPENGL) && !(format.dwFlags & PFD_SUPPORT_OPENGL))
         {
             TRACE( "PFD_SUPPORT_OPENGL mismatch for iPixelFormat=%d\n", i );
             continue;
         }
 
         /* only use GDI capable formats for GDI rendering */
-        if ((ppfd->dwFlags & PFD_SUPPORT_GDI) != (format.dwFlags & PFD_SUPPORT_GDI))
+        if ((ppfd->dwFlags & PFD_SUPPORT_GDI) && !(format.dwFlags & PFD_SUPPORT_GDI))
         {
             TRACE( "PFD_SUPPORT_GDI mismatch for iPixelFormat=%d\n", i );
             continue;
