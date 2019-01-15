@@ -511,8 +511,13 @@ NtUserCallTwoParam(
             BOOL fAltTab = (BOOL)Param2;
             Ret = 0;
             Window = UserGetWindowObject(hwnd);
-            if (!Window || MsqIsHung(Window->head.pti))
+            if (!Window)
             {
+                break;
+            }
+            if (MsqIsHung(Window->head.pti))
+            {
+                // TODO: Create a Ghost window and activate.
                 break;
             }
             if (fAltTab)
