@@ -140,34 +140,34 @@ static void Test_MouseSpeed()
     ok(ulMouseSpeed >= 1 && ulMouseSpeed <=20, "Wrong mouse speed (%d)\n", (int)ulMouseSpeed);
 
     temp = 1;
-    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)temp, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, UlongToPtr(temp), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     ok(ret, "SystemParametersInfo failed\n");
     ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &temp, 0);
     ok(ret, "SystemParametersInfo failed\n");
     ok(temp == 1, "SPI_GETMOUSESPEED did not get value set by SPI_SETMOUSESPEED (%d instead of 1)\n", (int)temp);
 
     temp = 20;
-    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)temp, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, UlongToPtr(temp), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     ok(ret, "SystemParametersInfo failed\n");
     ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &temp, 0);
     ok(ret, "SystemParametersInfo failed\n");
     ok(temp == 20, "SPI_GETMOUSESPEED did not get value set by SPI_SETMOUSESPEED (%d instead of 20)\n", (int)temp);
 
     temp = 21;
-    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)temp, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, UlongToPtr(temp), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     ok(!ret, "expected SystemParametersInfo to fail\n");
     ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &temp, 0);
     ok(ret, "SystemParametersInfo failed\n");
     ok(temp == 20, "SPI_GETMOUSESPEED got unexpected value (%d instead of 20)\n", (int)temp);
 
     temp = 0;
-    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)temp, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, UlongToPtr(temp), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     ok(!ret, "expected SystemParametersInfo to fail\n");
     ret = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &temp, 0);
     ok(ret, "SystemParametersInfo failed\n");
     ok(temp == 20, "SPI_GETMOUSESPEED got unexpected value (%d instead of 20)\n", (int)temp);
 
-    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)ulMouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ret = SystemParametersInfo(SPI_SETMOUSESPEED, 0, UlongToPtr(ulMouseSpeed), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     ok(ret, "SystemParametersInfo failed\n");
 }
 

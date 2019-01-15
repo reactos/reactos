@@ -36,16 +36,16 @@ START_TEST(PrivateExtractIcons)
     for (i = 0; i < _countof(IconTests); ++i)
     {
         /* Always test extraction of the FIRST icon (index 0) */
-        ahIcon = (HICON)0xdeadbeef;
+        ahIcon = (HICON)UlongToHandle(0xdeadbeef);
         aIconId = 0xdeadbeef;
         cIcons = PrivateExtractIconsW(IconTests[i].FilePath, 0, 16, 16, &ahIcon, &aIconId, 1, 0);
         ok(cIcons == IconTests[i].cIcons, "PrivateExtractIconsW(%u): got %u, expected %u\n", i, cIcons, IconTests[i].cIcons);
-        ok(ahIcon != (HICON)0xdeadbeef, "PrivateExtractIconsW(%u): icon not set\n", i);
+        ok(ahIcon != (HICON)UlongToHandle(0xdeadbeef), "PrivateExtractIconsW(%u): icon not set\n", i);
         ok((IconTests[i].bhIconValid && ahIcon) || (!IconTests[i].bhIconValid && !ahIcon),
             "PrivateExtractIconsW(%u): icon expected to be %s, but got 0x%p\n",
             i, IconTests[i].bhIconValid ? "valid" : "not valid", ahIcon);
         ok(aIconId != 0xdeadbeef, "PrivateExtractIconsW(%u): id not set\n", i);
-        if (ahIcon && ahIcon != (HICON)0xdeadbeef)
+        if (ahIcon && ahIcon != (HICON)UlongToHandle(0xdeadbeef))
             DestroyIcon(ahIcon);
     }
 }
