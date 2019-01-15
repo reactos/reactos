@@ -218,7 +218,9 @@ static
 VOID
 ExpKdbgExtPoolFindLargePool(
     ULONG Tag,
-    ULONG Mask)
+    ULONG Mask,
+    VOID (NTAPI* FoundCallback)(PVOID, PVOID),
+    PVOID CallbackContext)
 {
     ULONG i;
 
@@ -234,10 +236,17 @@ ExpKdbgExtPoolFindLargePool(
 
         if ((PoolBigPageTable[i].Key & Mask) == (Tag & Mask))
         {
-            /* Print the line */
-            KdbpPrint("%p: tag %.4s, size: %I64x\n",
-                      PoolBigPageTable[i].Va, (PCHAR)&PoolBigPageTable[i].Key,
-                      PoolBigPageTable[i].NumberOfPages << PAGE_SHIFT);
+            if (FoundCallback != NULL)
+            {
+                FoundCallback(PoolBigPageTable[i].Va, CallbackContext);
+            }
+            else
+            {
+                /* Print the line */
+                KdbpPrint("%p: tag %.4s, size: %I64x\n",
+                          PoolBigPageTable[i].Va, (PCHAR)&PoolBigPageTable[i].Key,
+                          PoolBigPageTable[i].NumberOfPages << PAGE_SHIFT);
+            }
         }
     }
 }
@@ -456,7 +465,7 @@ ExpKdbgExtPoolFind(
     }
 
     /* First search for large allocations */
-    ExpKdbgExtPoolFindLargePool(Tag, Mask);
+    ExpKdbgExtPoolFindLargePool(Tag, Mask, NULL, NULL);
 
     if (PoolType == NonPagedPool)
     {
