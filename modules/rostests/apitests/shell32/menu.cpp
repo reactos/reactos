@@ -120,7 +120,7 @@ void test_CShellMenu_params()
     hResult = shellMenu->SetMenu(hmenu, NULL, 0);
     test_S_OK(hResult, "SetMenu failed");
 
-    hwndToolbar = (HWND)0xdeadbeef;
+    hwndToolbar = (HWND)UlongToPtr(0xdeadbeef);
     hResult = dockingMenu->GetWindow(&hwndToolbar);
     test_S_OK(hResult, "GetWindow failed");
     ok (hwndToolbar == NULL, "Expected NULL window\n");
@@ -144,7 +144,7 @@ void test_CShellMenu_params()
     hResult = shellMenu->SetShellFolder(NULL, NULL, 0, 0);
     test_HRES(hResult, E_INVALIDARG, "SetShellFolder should fail");
 
-    hwndToolbar = (HWND)0xdeadbeef;
+    hwndToolbar = (HWND)UlongToHandle(0xdeadbeef);
     hResult = dockingMenu->GetWindow(&hwndToolbar);
     test_S_OK(hResult, "GetWindow failed");
     ok (hwndToolbar == NULL, "Expected NULL window\n");
