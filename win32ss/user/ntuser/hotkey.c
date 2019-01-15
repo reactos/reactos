@@ -250,6 +250,19 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                return FALSE;
             }
         }
+        
+        if (pHotKey->id == IDHK_SNAP_LEFT ||
+            pHotKey->id == IDHK_SNAP_RIGHT ||
+            pHotKey->id == IDHK_SNAP_UP ||
+            pHotKey->id == IDHK_SNAP_DOWN)
+        {
+            HWND topWnd = UserGetForegroundWindow();
+            if (topWnd)
+            {
+                UserPostMessage(topWnd, WM_KEYDOWN, wVk, 0);
+            }
+            return TRUE;
+        }
 
         if (!pHotKey->pWnd)
         {

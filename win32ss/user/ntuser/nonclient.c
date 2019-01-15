@@ -391,10 +391,59 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
-      /* Exit on button-up, Return, or Esc */
-      if ((msg.message == WM_LBUTTONUP) ||
-	  ((msg.message == WM_KEYDOWN) &&
-	   ((msg.wParam == VK_RETURN) || (msg.wParam == VK_ESCAPE)))) break;
+      /* Exit on button-up */
+      if (msg.message == WM_LBUTTONUP)
+      {
+         // check for snapping if was moved by caption
+         if (hittest == HTCAPTION)
+         {
+            RECT snapRect;
+            BOOL doSideSnap = FALSE;
+            UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
+
+            // snap to left
+            if (pt.x <= snapRect.left)
+            {
+               snapRect.right = (snapRect.right - snapRect.left) / 2 + snapRect.left;
+               doSideSnap = TRUE;
+            }
+            // snap to right
+            if (pt.x >= snapRect.right-1)
+            {
+               snapRect.left = (snapRect.right - snapRect.left) / 2 + snapRect.left;
+               doSideSnap = TRUE;
+            }
+            
+            if (doSideSnap)
+            {
+               co_WinPosSetWindowPos(pwnd,
+                                     0,
+                                     snapRect.left,
+                                     snapRect.top,
+                                     snapRect.right - snapRect.left,
+                                     snapRect.bottom - snapRect.top,
+                                     0);
+               pwnd->InternalPos.NormalRect = origRect;
+            }
+            else
+            {
+               // maximize if on dragged to top
+               if (pt.y <= snapRect.top)
+               {
+                  co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+                  pwnd->InternalPos.NormalRect = origRect;
+               }
+            }
+         }
+         break;
+      }
+      
+      /* Exit on Return or Esc */
+      if (msg.message == WM_KEYDOWN &&
+          (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
+      {
+         break;
+      }
 
       if ((msg.message != WM_KEYDOWN) && (msg.message != WM_MOUSEMOVE))
       {
@@ -1563,6 +1612,21 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
           break;
 
       co_IntSendMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_CLOSE, lParam);
+      break;
+    }
+    case HTTOP:
+    case HTBOTTOM:
+    {
+      RECT sizingRect = pWnd->rcWindow, mouseRect;
+      UserSystemParametersInfo(SPI_GETWORKAREA, 0, &mouseRect, 0);
+        
+      co_WinPosSetWindowPos(pWnd,
+                            0,
+                            sizingRect.left,
+                            mouseRect.top,
+                            sizingRect.right - sizingRect.left,
+                            mouseRect.bottom - mouseRect.top,
+                            0);
       break;
     }
     default:
