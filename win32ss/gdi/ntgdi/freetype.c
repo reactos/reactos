@@ -5935,7 +5935,7 @@ GreExtTextOutW(
         }
         else
         {
-            // FIXME: Use pts[0] ... pts[3] and EngFillPath
+            // FIXME: Use vecs[0] ... vecs[3] and EngFillPath
         }
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
