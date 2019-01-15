@@ -5745,7 +5745,8 @@ GreExtTextOutW(
     previous = 0;
     if ((fuOptions & ETO_OPAQUE) ||
         (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)) ||
-        lfEscapement || plf->lfUnderline || plf->lfStrikeOut)
+        memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
+        plf->lfUnderline || plf->lfStrikeOut)
     {
         TextLeft64 = TextTop64 = 0;
         for (i = 0; i < Count; ++i)
