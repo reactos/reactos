@@ -517,7 +517,7 @@ NtUserCallTwoParam(
             }
             if (MsqIsHung(Window->head.pti))
             {
-                // TODO: Create a Ghost window and activate.
+                // TODO: Make the window ghosted and activate.
                 break;
             }
             if (fAltTab)
