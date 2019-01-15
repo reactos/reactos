@@ -5979,9 +5979,11 @@ GreExtTextOutW(
     previous = 0;
     for (i = 0; i < Count; ++i)
     {
+        BOOL bNeedCache = (!EmuBold && !EmuItalic &&
+                           memcmp(&mat, &identityMat, sizeof(mat)) == 0);
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
         realglyph = NULL;
-        if (!EmuBold && !EmuItalic && memcmp(&mat, &identityMat, sizeof(mat)) == 0)
+        if (bNeedCache)
         {
             realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
                                            RenderMode, pmxWorldToDevice);
@@ -5996,11 +5998,23 @@ GreExtTextOutW(
                 break;
             }
             glyph = face->glyph;
-            if (EmuBold)
-                FT_GlyphSlot_Embolden(glyph);
-            if (EmuItalic)
-                FT_GlyphSlot_Oblique(glyph);
-            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
+            if (bNeedCache)
+            {
+                realglyph = ftGdiGlyphCacheSet(face,
+                                               glyph_index,
+                                               plf->lfHeight,
+                                               pmxWorldToDevice,
+                                               glyph,
+                                               RenderMode);
+            }
+            else
+            {
+                if (EmuBold)
+                    FT_GlyphSlot_Embolden(glyph);
+                if (EmuItalic)
+                    FT_GlyphSlot_Oblique(glyph);
+                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
+            }
             if (!realglyph)
             {
                 DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
@@ -6148,7 +6162,7 @@ GreExtTextOutW(
         previous = glyph_index;
 
         /* No cache, so clean up */
-        if (EmuBold || EmuItalic || memcmp(&mat, &identityMat, sizeof(mat)) != 0)
+        if (!bNeedCache)
         {
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
