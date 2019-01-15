@@ -6166,11 +6166,9 @@ GreExtTextOutW(
 
     if (plf->lfUnderline)
     {
-        INT i;
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            LONG dx = (LONG)(DeltaX64 >> 6);
-            LONG dy = (LONG)(DeltaY64 >> 6);
+            LONG dx = (LONG)(DeltaX64 >> 6), dy = (LONG)(DeltaY64 >> 6);
             if (labs(dx) > labs(dy))
             {
                 // move vertical
@@ -6194,11 +6192,9 @@ GreExtTextOutW(
 
     if (plf->lfStrikeOut)
     {
-        INT i;
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            LONG dx = (LONG)(DeltaX64 >> 6);
-            LONG dy = (LONG)(DeltaY64 >> 6);
+            LONG dx = (LONG)(DeltaX64 >> 6), dy = (LONG)(DeltaY64 >> 6);
             if (labs(dx) > labs(dy))
             {
                 // move vertical
