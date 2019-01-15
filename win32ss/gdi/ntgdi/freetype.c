@@ -6220,8 +6220,7 @@ GreExtTextOutW(
                           &dc->eboText.BrushObject,
                           vecs[7].x + i, vecs[7].y,
                           vecs[8].x + i, vecs[8].y,
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
+                          NULL, ROP2_TO_MIX(R2_COPYPEN));
             }
         }
     }
