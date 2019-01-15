@@ -150,19 +150,20 @@ XFORMOBJ_iSetXform(
     IN const XFORML *pxform)
 {
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
-    FLOATOBJ ef1, ef2, ef3, ef4;
+    FLOATOBJ ef1, ef2, efTemp;
 
     /* Check parameters */
     if (!pxo || !pxform) return DDI_ERROR;
 
-    /* eM11 * eM22 - eM12 * eM21 != 0 */
+    /* Check if the xform is valid */
+    /* M11 * M22 - M12 * M21 != 0 */
     FLOATOBJ_SetFloat(&ef1, pxform->eM11);
-    FLOATOBJ_SetFloat(&ef2, pxform->eM22);
-    FLOATOBJ_Mul(&ef1, &ef2);
-    FLOATOBJ_SetFloat(&ef3, pxform->eM12);
-    FLOATOBJ_SetFloat(&ef4, pxform->eM21);
-    FLOATOBJ_Mul(&ef3, &ef4);
-    if (FLOATOBJ_Equal(&ef1, &ef3))
+    FLOATOBJ_SetFloat(&efTemp, pxform->eM22);
+    FLOATOBJ_Mul(&ef1, &efTemp);
+    FLOATOBJ_SetFloat(&ef2, pxform->eM12);
+    FLOATOBJ_SetFloat(&efTemp, pxform->eM21);
+    FLOATOBJ_Mul(&ef2, &efTemp);
+    if (FLOATOBJ_Equal(&ef1, &ef2))
         return DDI_ERROR;
 
     /* Copy members */
