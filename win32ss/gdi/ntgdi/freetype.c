@@ -5748,7 +5748,7 @@ GreExtTextOutW(
         memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
         plf->lfUnderline || plf->lfStrikeOut)
     {
-        TextLeft64 = TextTop64 = 0;
+        DeltaX64 = DeltaY64 = 0;
         for (i = 0; i < Count; ++i)
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
@@ -5782,39 +5782,36 @@ GreExtTextOutW(
             {
                 FT_Vector delta;
                 FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft64 += delta.x;
-                TextTop64 -= delta.y;
+                DeltaX64 += delta.x;
+                DeltaY64 -= delta.y;
             }
 
             if (Dx == NULL)
             {
-                TextLeft64 += realglyph->root.advance.x >> 10;
-                TextTop64 -= realglyph->root.advance.y >> 10;
+                DeltaX64 += realglyph->root.advance.x >> 10;
+                DeltaY64 -= realglyph->root.advance.y >> 10;
             }
             else
             {
-                // FIXME this should probably be a matrix transform with TextTop64 as well.
+                // FIXME this should probably be a matrix transform with DeltaY64 as well.
                 Scale = pdcattr->mxWorldToDevice.efM11;
                 if (FLOATOBJ_Equal0(&Scale))
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
                 FLOATOBJ_MulLong(&Scale, Dx[i << DxShift] << 6);
-                TextLeft64 += FLOATOBJ_GetLong(&Scale);
+                DeltaX64 += FLOATOBJ_GetLong(&Scale);
             }
 
             if (DxShift)
             {
-                TextTop64 -= Dx[2 * i + 1] << 6;
+                DeltaY64 -= Dx[2 * i + 1] << 6;
             }
 
             previous = glyph_index;
 
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
-
-        DeltaX64 = TextLeft64;
-        DeltaY64 = TextTop64;
     }
 
     // Process the X and Y alignments.
