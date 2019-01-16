@@ -6,7 +6,6 @@
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
                      Alexandre Julliard
                      Maarten Lankhorst
-                     Katayama Hirofumi MZ
  */
 
 #include <win32k.h>
@@ -659,12 +658,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        {
           // Set the send pti to the message queue mouse pti.
           pti = MessageQueue->ptiMouse;
-       }
-
-       if (MsqIsHung(pti))
-       {
-           TRACE("Let's go Ghost!\n");
-           IntMakeHungWindowGhosted(Msg->hwnd);
        }
 
        if (Msg->message == WM_MOUSEMOVE)
