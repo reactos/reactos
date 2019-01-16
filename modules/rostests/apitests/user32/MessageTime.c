@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 #define TIMER_ID 999
-#define TIMER_INTERVAL  500
+#define TIMER_INTERVAL 500  /* 500 milliseconds */
 
 static INT s_nCount = 0;
 static LONG s_nMsgTime = 0;
@@ -67,8 +67,10 @@ START_TEST(MessageTime)
     ok(atom != 0, "RegisterClassW\n");
 
     hwnd = CreateWindowW(s_szName, s_szName,
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
-        NULL, NULL, GetModuleHandleW(NULL), NULL);
+                         WS_OVERLAPPEDWINDOW,
+                         CW_USEDEFAULT, 0,
+                         CW_USEDEFAULT, 0,
+                         NULL, NULL, GetModuleHandleW(NULL), NULL);
     ok(hwnd != NULL, "CreateWindowW\n");
 
     if (hwnd)
