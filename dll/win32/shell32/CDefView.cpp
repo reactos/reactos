@@ -1328,7 +1328,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     UINT    uCommand;
     HRESULT hResult;
 
-    TRACE("(%p)->()\n", this);
+    TRACE("(%p)\n", this);
 
     m_hContextMenu = CreatePopupMenu();
     if (!m_hContextMenu) 
