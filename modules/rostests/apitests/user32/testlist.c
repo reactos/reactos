@@ -24,6 +24,7 @@ extern void func_GetWindowPlacement(void);
 extern void func_InitializeLpkHooks(void);
 extern void func_LoadImage(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
+extern void func_MessageTime(void);
 extern void func_NextDlgItem(void);
 extern void func_PrivateExtractIcons(void);
 extern void func_RealGetWindowClass(void);
@@ -68,6 +69,7 @@ const struct test winetest_testlist[] =
     { "InitializeLpkHooks", func_InitializeLpkHooks },
     { "LoadImage", func_LoadImage },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
+    { "MessageTime", func_MessageTime },
     { "NextDlgItem", func_NextDlgItem },
     { "PrivateExtractIcons", func_PrivateExtractIcons },
     { "RealGetWindowClass", func_RealGetWindowClass },

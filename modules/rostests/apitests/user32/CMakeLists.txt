@@ -22,6 +22,7 @@ list(APPEND SOURCE
     InitializeLpkHooks.c
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
+    MessageTime.c
     NextDlgItem.c
     PrivateExtractIcons.c
     RealGetWindowClass.c
