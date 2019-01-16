@@ -637,6 +637,7 @@ main(int argc, const char **argv)
         char PathBuffer[LINESIZE + 1];
         char LineOutBuffer[LINESIZE + 1];
 
+        // TODO: Re-use one translate_files(), instead of repeated translate_line().
         while (i < argc)
         {
             offset = argv[optCount + i++];
@@ -646,7 +647,7 @@ main(int argc, const char **argv)
                 {
                     l2l_dbg(2, "translating %s %s\n", exefile, offset);
 
-                    sprintf(Line, "<%s:%s>\n", exefile, offset);
+                    snprintf(Line, LINESIZE, "<%s:%s>\n", exefile, offset);
                     translate_line(conOut, Line, PathBuffer, LineOutBuffer);
                     report(conOut);
                 }
