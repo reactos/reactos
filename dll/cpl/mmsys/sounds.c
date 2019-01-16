@@ -1157,7 +1157,7 @@ SoundsDlgProc(HWND hwndDlg,
                     ofn.nFilterIndex = 0;
                     LoadStringW(hApplet, IDS_BROWSE_FOR_SOUND, szTitle, _countof(szTitle));
                     ofn.lpstrTitle = szTitle;
-                    ofn.lpstrInitialDir = NULL;
+                    ofn.lpstrInitialDir = L"%SystemRoot%\\Media";
                     ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
                     if (GetOpenFileNameW(&ofn) != FALSE)
