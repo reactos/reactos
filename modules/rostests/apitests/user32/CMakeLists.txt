@@ -15,6 +15,7 @@ list(APPEND SOURCE
     GetDCEx.c
     GetIconInfo.c
     GetKeyState.c
+    GetMessageTime.c
     GetPeekMessage.c
     GetSystemMetrics.c
     GetUserObjectInformation.c
@@ -22,7 +23,6 @@ list(APPEND SOURCE
     InitializeLpkHooks.c
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
-    MessageTime.c
     NextDlgItem.c
     PrivateExtractIcons.c
     RealGetWindowClass.c
