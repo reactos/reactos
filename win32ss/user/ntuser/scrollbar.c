@@ -90,7 +90,7 @@ IntGetSBData(PWND pwnd, INT Bar)
        case SB_VERT:
          return &pSBInfo->Vert;
        case SB_CTL:
-         if ( pwnd->cbwndExtra != (sizeof(SBWND)-sizeof(WND)) )
+         if ( pwnd->cbwndExtra < (sizeof(SBWND)-sizeof(WND)) )
          {
             ERR("IntGetSBData Wrong Extra bytes for CTL Scrollbar!\n");
             return 0;

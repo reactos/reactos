@@ -100,7 +100,7 @@ IntGetSBData(PWND pwnd, INT Bar)
        case SB_VERT:
          return &pSBInfo->Vert;
        case SB_CTL:
-         if ( pwnd->cbwndExtra != (sizeof(SBWND)-sizeof(WND)) )
+         if ( pwnd->cbwndExtra < (sizeof(SBWND)-sizeof(WND)) )
          {
             ERR("IntGetSBData Wrong Extra bytes for CTL Scrollbar!\n");
             return 0;
@@ -1186,7 +1186,7 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
      if (!pWnd->fnid)
      {
         TRACE("ScrollBar CTL size %d\n", (sizeof(SBWND)-sizeof(WND)));
-        if ( pWnd->cbwndExtra != (sizeof(SBWND)-sizeof(WND)) )
+        if ( pWnd->cbwndExtra < (sizeof(SBWND)-sizeof(WND)) )
         {
            ERR("Wrong Extra bytes for Scrollbar!\n");
            return 0;
