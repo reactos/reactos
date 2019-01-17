@@ -151,9 +151,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Copy the data over */
         RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
 
-        /* Set the ARC Name pointer and mark the partition table as valid */
+        /* Set the ARC Name pointer */
         ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
-        ArcDiskSig->DiskSignature.ValidPartitionTable = TRUE;
 
         /* Insert into the list */
         InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,

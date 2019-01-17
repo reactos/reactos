@@ -2017,6 +2017,16 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
          EngSetLastError(ERROR_TLW_WITH_WSCHILD);
          goto cleanup;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
+    else if (Cs->lpszClass != (LPCWSTR)MAKEINTATOM(gpsi->atomSysClass[ICLS_DESKTOP]) &&
+             (IS_INTRESOURCE(Cs->lpszClass) ||
+              Cs->lpszClass != (LPCWSTR)MAKEINTATOM(gpsi->atomSysClass[ICLS_HWNDMESSAGE]) ||
+              _wcsicmp(Cs->lpszClass, L"Message") != 0))
+    {
+        if (pti->ppi->dwLayout & LAYOUT_RTL)
+        {
+            Cs->dwExStyle |= WS_EX_LAYOUTRTL;
+        }
+    }
 
     ParentWindow = hWndParent ? UserGetWindowObject(hWndParent): NULL;
     OwnerWindow = hWndOwner ? UserGetWindowObject(hWndOwner): NULL;

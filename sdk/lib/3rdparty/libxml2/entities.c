@@ -885,10 +885,9 @@ xmlCreateEntitiesTable(void) {
  * Deallocate the memory used by an entities in the hash table.
  */
 static void
-xmlFreeEntityWrapper(xmlEntityPtr entity,
-	               const xmlChar *name ATTRIBUTE_UNUSED) {
+xmlFreeEntityWrapper(void *entity, const xmlChar *name ATTRIBUTE_UNUSED) {
     if (entity != NULL)
-	xmlFreeEntity(entity);
+	xmlFreeEntity((xmlEntityPtr) entity);
 }
 
 /**
@@ -899,7 +898,7 @@ xmlFreeEntityWrapper(xmlEntityPtr entity,
  */
 void
 xmlFreeEntitiesTable(xmlEntitiesTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeEntityWrapper);
+    xmlHashFree(table, xmlFreeEntityWrapper);
 }
 
 #ifdef LIBXML_TREE_ENABLED
@@ -911,8 +910,9 @@ xmlFreeEntitiesTable(xmlEntitiesTablePtr table) {
  *
  * Returns the new xmlEntitiesPtr or NULL in case of error.
  */
-static xmlEntityPtr
-xmlCopyEntity(xmlEntityPtr ent) {
+static void *
+xmlCopyEntity(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlEntityPtr ent = (xmlEntityPtr) payload;
     xmlEntityPtr cur;
 
     cur = (xmlEntityPtr) xmlMalloc(sizeof(xmlEntity));
@@ -949,7 +949,7 @@ xmlCopyEntity(xmlEntityPtr ent) {
  */
 xmlEntitiesTablePtr
 xmlCopyEntitiesTable(xmlEntitiesTablePtr table) {
-    return(xmlHashCopy(table, (xmlHashCopier) xmlCopyEntity));
+    return(xmlHashCopy(table, xmlCopyEntity));
 }
 #endif /* LIBXML_TREE_ENABLED */
 
@@ -1090,8 +1090,9 @@ xmlDumpEntityDecl(xmlBufferPtr buf, xmlEntityPtr ent) {
  * When using the hash table scan function, arguments need to be reversed
  */
 static void
-xmlDumpEntityDeclScan(xmlEntityPtr ent, xmlBufferPtr buf) {
-    xmlDumpEntityDecl(buf, ent);
+xmlDumpEntityDeclScan(void *ent, void *buf,
+                      const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlDumpEntityDecl((xmlBufferPtr) buf, (xmlEntityPtr) ent);
 }
 
 /**
@@ -1103,7 +1104,7 @@ xmlDumpEntityDeclScan(xmlEntityPtr ent, xmlBufferPtr buf) {
  */
 void
 xmlDumpEntitiesTable(xmlBufferPtr buf, xmlEntitiesTablePtr table) {
-    xmlHashScan(table, (xmlHashScanner)xmlDumpEntityDeclScan, buf);
+    xmlHashScan(table, xmlDumpEntityDeclScan, buf);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
 #define bottom_entities

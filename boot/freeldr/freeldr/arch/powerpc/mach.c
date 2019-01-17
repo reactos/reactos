@@ -24,7 +24,7 @@
 #include "compat.h"
 
 extern void BootMain( LPSTR CmdLine );
-extern PCHAR GetFreeLoaderVersionString();
+extern const PCSTR GetFreeLoaderVersionString(VOID);
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;

@@ -2842,7 +2842,7 @@ xmlSchemaPResCompAttrErr(xmlSchemaParserCtxtPtr ctxt,
     xmlSchemaFormatItemForReport(&des, NULL, ownerItem, ownerElem);
     if (refTypeStr == NULL)
 	refTypeStr = (const char *) xmlSchemaItemTypeToStr(refType);
-	xmlSchemaPErrExt(ctxt, ownerElem, error,
+    xmlSchemaPErrExt(ctxt, ownerElem, error,
 	    NULL, NULL, NULL,
 	    "%s, attribute '%s': The QName value '%s' does not resolve to a(n) "
 	    "%s.\n", BAD_CAST des, BAD_CAST name,
@@ -3565,6 +3565,12 @@ xmlSchemaBucketFree(xmlSchemaBucketPtr bucket)
     xmlFree(bucket);
 }
 
+static void
+xmlSchemaBucketFreeEntry(void *bucket, const xmlChar *name ATTRIBUTE_UNUSED)
+{
+    xmlSchemaBucketFree((xmlSchemaBucketPtr) bucket);
+}
+
 static xmlSchemaBucketPtr
 xmlSchemaBucketCreate(xmlSchemaParserCtxtPtr pctxt,
 			 int type, const xmlChar *targetNamespace)
@@ -4159,8 +4165,7 @@ xmlSchemaFree(xmlSchemaPtr schema)
         xmlHashFree(schema->idcDef, NULL);
 
     if (schema->schemasImports != NULL)
-	xmlHashFree(schema->schemasImports,
-		    (xmlHashDeallocator) xmlSchemaBucketFree);
+	xmlHashFree(schema->schemasImports, xmlSchemaBucketFreeEntry);
     if (schema->includes != NULL) {
 	xmlSchemaItemListPtr list = (xmlSchemaItemListPtr) schema->includes;
 	int i;
@@ -4196,11 +4201,13 @@ xmlSchemaTypeDump(xmlSchemaTypePtr type, FILE * output); /* forward */
  * Dump the element
  */
 static void
-xmlSchemaElementDump(xmlSchemaElementPtr elem, FILE * output,
+xmlSchemaElementDump(void *payload, void *data,
                      const xmlChar * name ATTRIBUTE_UNUSED,
 		     const xmlChar * namespace ATTRIBUTE_UNUSED,
                      const xmlChar * context ATTRIBUTE_UNUSED)
 {
+    xmlSchemaElementPtr elem = (xmlSchemaElementPtr) payload;
+    FILE *output = (FILE *) data;
     if (elem == NULL)
         return;
 
@@ -4515,6 +4522,13 @@ xmlSchemaTypeDump(xmlSchemaTypePtr type, FILE * output)
 #endif
 }
 
+static void
+xmlSchemaTypeDumpEntry(void *type, void *output,
+                       const xmlChar *name ATTRIBUTE_UNUSED)
+{
+    xmlSchemaTypeDump((xmlSchemaTypePtr) type, (FILE *) output);
+}
+
 /**
  * xmlSchemaDump:
  * @output:  the file output
@@ -4543,10 +4557,8 @@ xmlSchemaDump(FILE * output, xmlSchemaPtr schema)
     fprintf(output, "\n");
     if (schema->annot != NULL)
         xmlSchemaAnnotDump(output, schema->annot);
-    xmlHashScan(schema->typeDecl, (xmlHashScanner) xmlSchemaTypeDump,
-                output);
-    xmlHashScanFull(schema->elemDecl,
-                    (xmlHashScannerFull) xmlSchemaElementDump, output);
+    xmlHashScan(schema->typeDecl, xmlSchemaTypeDumpEntry, output);
+    xmlHashScanFull(schema->elemDecl, xmlSchemaElementDump, output);
 }
 
 #ifdef DEBUG_IDC_NODE_TABLE
@@ -5704,6 +5716,12 @@ xmlSchemaSubstGroupFree(xmlSchemaSubstGroupPtr group)
     if (group->members != NULL)
 	xmlSchemaItemListFree(group->members);
     xmlFree(group);
+}
+
+static void
+xmlSchemaSubstGroupFreeEntry(void *group, const xmlChar *name ATTRIBUTE_UNUSED)
+{
+    xmlSchemaSubstGroupFree((xmlSchemaSubstGroupPtr) group);
 }
 
 static xmlSchemaSubstGroupPtr
@@ -7373,8 +7391,8 @@ attr_next:
 	*/
 	if (defValue != NULL)
 	    use->defValue = defValue;
-	    if (defValueType == WXS_ATTR_DEF_VAL_FIXED)
-		use->flags |= XML_SCHEMA_ATTR_USE_FIXED;
+	if (defValueType == WXS_ATTR_DEF_VAL_FIXED)
+	    use->flags |= XML_SCHEMA_ATTR_USE_FIXED;
     }
 
 check_children:
@@ -9918,8 +9936,7 @@ xmlSchemaConstructionCtxtFree(xmlSchemaConstructionCtxtPtr con)
     if (con->pending != NULL)
 	xmlSchemaItemListFree(con->pending);
     if (con->substGroups != NULL)
-	xmlHashFree(con->substGroups,
-	    (xmlHashDeallocator) xmlSchemaSubstGroupFree);
+	xmlHashFree(con->substGroups, xmlSchemaSubstGroupFreeEntry);
     if (con->redefs != NULL)
 	xmlSchemaRedefListFree(con->redefs);
     if (con->dict != NULL)
@@ -21293,8 +21310,7 @@ exit:
     con->bucket = oldbucket;
     con->pending->nbItems = 0;
     if (con->substGroups != NULL) {
-	xmlHashFree(con->substGroups,
-	    (xmlHashDeallocator) xmlSchemaSubstGroupFree);
+	xmlHashFree(con->substGroups, xmlSchemaSubstGroupFreeEntry);
 	con->substGroups = NULL;
     }
     if (con->redefs != NULL) {
@@ -22002,9 +22018,11 @@ xmlSchemaVAddNodeQName(xmlSchemaValidCtxtPtr vctxt,
  * Returns the item, or NULL on internal errors.
  */
 static void
-xmlSchemaAugmentIDC(xmlSchemaIDCPtr idcDef,
-		    xmlSchemaValidCtxtPtr vctxt)
+xmlSchemaAugmentIDC(void *payload, void *data,
+                    const xmlChar *name ATTRIBUTE_UNUSED)
 {
+    xmlSchemaIDCPtr idcDef = (xmlSchemaIDCPtr) payload;
+    xmlSchemaValidCtxtPtr vctxt = (xmlSchemaValidCtxtPtr) data;
     xmlSchemaIDCAugPtr aidc;
 
     aidc = (xmlSchemaIDCAugPtr) xmlMalloc(sizeof(xmlSchemaIDCAug));
@@ -22038,10 +22056,12 @@ xmlSchemaAugmentIDC(xmlSchemaIDCPtr idcDef,
  * Creates an augmented IDC definition for the imported schema.
  */
 static void
-xmlSchemaAugmentImportedIDC(xmlSchemaImportPtr imported, xmlSchemaValidCtxtPtr vctxt, xmlChar *name ATTRIBUTE_UNUSED) {
+xmlSchemaAugmentImportedIDC(void *payload, void *data,
+                            const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlSchemaImportPtr imported = (xmlSchemaImportPtr) payload;
+    xmlSchemaValidCtxtPtr vctxt = (xmlSchemaValidCtxtPtr) data;
     if (imported->schema->idcDef != NULL) {
-	    xmlHashScan(imported->schema->idcDef ,
-	    (xmlHashScanner) xmlSchemaAugmentIDC, vctxt);
+	    xmlHashScan(imported->schema->idcDef, xmlSchemaAugmentIDC, vctxt);
     }
 }
 
@@ -25966,11 +25986,12 @@ xmlSchemaCheckCOSValidDefault(xmlSchemaValidCtxtPtr vctxt,
 }
 
 static void
-xmlSchemaVContentModelCallback(xmlSchemaValidCtxtPtr vctxt ATTRIBUTE_UNUSED,
+xmlSchemaVContentModelCallback(xmlRegExecCtxtPtr exec ATTRIBUTE_UNUSED,
 			       const xmlChar * name ATTRIBUTE_UNUSED,
-			       xmlSchemaElementPtr item,
-			       xmlSchemaNodeInfoPtr inode)
+			       void *transdata, void *inputdata)
 {
+    xmlSchemaElementPtr item = (xmlSchemaElementPtr) transdata;
+    xmlSchemaNodeInfoPtr inode = (xmlSchemaNodeInfoPtr) inputdata;
     inode->decl = item;
 #ifdef DEBUG_CONTENT
     {
@@ -26075,8 +26096,7 @@ xmlSchemaValidatorPopElem(xmlSchemaValidCtxtPtr vctxt)
 		*/
 		inode->regexCtxt =
 		    xmlRegNewExecCtxt(inode->typeDef->contModel,
-		    (xmlRegExecCallbacks) xmlSchemaVContentModelCallback,
-		    vctxt);
+		    xmlSchemaVContentModelCallback, vctxt);
 		if (inode->regexCtxt == NULL) {
 		    VERROR_INT("xmlSchemaValidatorPopElem",
 			"failed to create a regex context");
@@ -26624,8 +26644,7 @@ xmlSchemaValidateChildElem(xmlSchemaValidCtxtPtr vctxt)
 		* Create the regex context.
 		*/
 		regexCtxt = xmlRegNewExecCtxt(ptype->contModel,
-		    (xmlRegExecCallbacks) xmlSchemaVContentModelCallback,
-		    vctxt);
+		    xmlSchemaVContentModelCallback, vctxt);
 		if (regexCtxt == NULL) {
 		    VERROR_INT("xmlSchemaValidateChildElem",
 			"failed to create a regex context");
@@ -26885,7 +26904,8 @@ xmlSchemaValidateElem(xmlSchemaValidCtxtPtr vctxt)
          * Augment the IDC definitions for the main schema and all imported ones
          * NOTE: main schema is the first in the imported list
          */
-        xmlHashScan(vctxt->schema->schemasImports,(xmlHashScanner)xmlSchemaAugmentImportedIDC, vctxt);
+        xmlHashScan(vctxt->schema->schemasImports, xmlSchemaAugmentImportedIDC,
+                    vctxt);
     }
     if (vctxt->depth > 0) {
 	/*
@@ -27817,7 +27837,7 @@ xmlSchemaSetValidStructuredErrors(xmlSchemaValidCtxtPtr ctxt,
 {
     if (ctxt == NULL)
         return;
-	ctxt->serror = serror;
+    ctxt->serror = serror;
     ctxt->error = NULL;
     ctxt->warning = NULL;
     ctxt->errCtxt = ctx;
@@ -28127,7 +28147,8 @@ xmlSchemaPreRun(xmlSchemaValidCtxtPtr vctxt) {
     * Augment the IDC definitions for the main schema and all imported ones
     * NOTE: main schema if the first in the imported list
     */
-    xmlHashScan(vctxt->schema->schemasImports,(xmlHashScanner)xmlSchemaAugmentImportedIDC, vctxt);
+    xmlHashScan(vctxt->schema->schemasImports, xmlSchemaAugmentImportedIDC,
+                vctxt);
 
     return(0);
 }

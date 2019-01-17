@@ -1,8 +1,9 @@
 /**
  * \file bignum.h
  *
- * \brief  Multi-precision integer library
- *
+ * \brief Multi-precision integer library
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -72,7 +73,7 @@
  * Maximum size of MPIs allowed in bits and bytes for user-MPIs.
  * ( Default: 512 bytes => 4096 bits, Maximum tested: 2048 bytes => 16384 bits )
  *
- * Note: Calculations can results temporarily in larger MPIs. So the number
+ * Note: Calculations can temporarily result in larger MPIs. So the number
  * of limbs required (MBEDTLS_MPI_MAX_LIMBS) is higher.
  */
 #define MBEDTLS_MPI_MAX_SIZE                              1024     /**< Maximum number of bytes for usable MPIs. */
@@ -685,6 +686,10 @@ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
  *
  * \return         0 if successful,
  *                 MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
+ *
+ * \note           The bytes obtained from the PRNG are interpreted
+ *                 as a big-endian representation of an MPI; this can
+ *                 be relevant in applications like deterministic ECDSA.
  */
 int mbedtls_mpi_fill_random( mbedtls_mpi *X, size_t size,
                      int (*f_rng)(void *, unsigned char *, size_t),

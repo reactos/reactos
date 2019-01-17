@@ -455,7 +455,7 @@ _LocalGetJobLevel1(PLOCAL_JOB pJob, PJOB_INFO_1W* ppJobInfo, PBYTE* ppJobInfoEnd
     DWORD cbPrinterName;
     DWORD cbStatus = 0;
     DWORD cbUserName = 0;
-    PWSTR pwszStrings[6];
+    PCWSTR pwszStrings[6];
 
     // Calculate the string lengths.
     if (!ppJobInfo)
@@ -536,7 +536,7 @@ _LocalGetJobLevel2(PLOCAL_JOB pJob, PJOB_INFO_2W* ppJobInfo, PBYTE* ppJobInfoEnd
     DWORD cbUserName = 0;
     FILETIME ftNow;
     FILETIME ftSubmitted;
-    PWSTR pwszStrings[10];
+    PCWSTR pwszStrings[10];
     ULARGE_INTEGER uliNow;
     ULARGE_INTEGER uliSubmitted;
 

@@ -962,7 +962,7 @@ LdrpSnapThunk(IN PVOID ExportBase,
     PIMAGE_IMPORT_BY_NAME AddressOfData;
     PULONG NameTable;
     PUSHORT OrdinalTable;
-    LPSTR ImportName = NULL;
+    LPSTR ImportName = NULL, DotPosition;
     USHORT Hint;
     NTSTATUS Status;
     ULONG_PTR HardErrorParameters[3];
@@ -1117,8 +1117,14 @@ FailurePath:
         {
             /* Get the Import and Forwarder Names */
             ImportName = (LPSTR)Thunk->u1.Function;
+
+            DotPosition = strchr(ImportName, '.');
+            ASSERT(DotPosition != NULL);
+            if (!DotPosition)
+                goto FailurePath;
+
             ForwarderName.Buffer = ImportName;
-            ForwarderName.Length = (USHORT)(strchr(ImportName, '.') - ImportName);
+            ForwarderName.Length = (USHORT)(DotPosition - ImportName);
             ForwarderName.MaximumLength = ForwarderName.Length;
             Status = RtlAnsiStringToUnicodeString(&TempUString,
                                                   &ForwarderName,

@@ -814,13 +814,14 @@ xmlShellReadline(char *prompt) {
  *									*
  ************************************************************************/
 
-static int myRead(FILE *f, char * buf, int len) {
-    return(fread(buf, 1, len, f));
+static int myRead(void *f, char *buf, int len) {
+    return(fread(buf, 1, len, (FILE *) f));
 }
-static void myClose(FILE *f) {
-  if (f != stdin) {
-    fclose(f);
-  }
+static int myClose(void *context) {
+    FILE *f = (FILE *) context;
+    if (f == stdin)
+        return(0);
+    return(fclose(f));
 }
 
 /************************************************************************
@@ -2303,14 +2304,11 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 #endif
 		if (f != NULL) {
 		    if (rectxt == NULL)
-			doc = xmlReadIO((xmlInputReadCallback) myRead,
-					(xmlInputCloseCallback) myClose, f,
-					filename, NULL, options);
+			doc = xmlReadIO(myRead, myClose, f, filename, NULL,
+                                        options);
 		    else
-			doc = xmlCtxtReadIO(rectxt,
-			                (xmlInputReadCallback) myRead,
-					(xmlInputCloseCallback) myClose, f,
-					filename, NULL, options);
+			doc = xmlCtxtReadIO(rectxt, myRead, myClose, f,
+					    filename, NULL, options);
 		} else
 		    doc = NULL;
 	    }
@@ -3017,7 +3015,7 @@ static void usage(FILE *f, const char *name) {
     fprintf(f, "\t--repeat : repeat 100 times, for timing or profiling\n");
     fprintf(f, "\t--insert : ad-hoc test for valid insertions\n");
 #ifdef LIBXML_OUTPUT_ENABLED
-#ifdef HAVE_ZLIB_H
+#ifdef LIBXML_ZLIB_ENABLED
     fprintf(f, "\t--compress : turn on gzip compression of output\n");
 #endif
 #endif /* LIBXML_OUTPUT_ENABLED */
@@ -3297,7 +3295,7 @@ main(int argc, char **argv) {
 	}
 #endif
 #ifdef LIBXML_OUTPUT_ENABLED
-#ifdef HAVE_ZLIB_H
+#ifdef LIBXML_ZLIB_ENABLED
 	else if ((!strcmp(argv[i], "-compress")) ||
 	         (!strcmp(argv[i], "--compress"))) {
 	    compress++;

@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Application compatibility module
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     common structures / functions
  * COPYRIGHT:   Copyright 2013 Mislav Blažević
- *              Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef APPHELP_H
@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include "sdbtypes.h"
+#include <appcompat/sdbtypes.h>
 
 /* Flags for SdbInitDatabase */
 #define HID_DOS_PATHS 0x1
@@ -126,7 +126,7 @@ DWORD WINAPI SdbQueryData(HSDB hsdb, TAGREF trWhich, LPCWSTR lpszDataName, LPDWO
 #define ATTRIBUTE_AVAILABLE 0x1
 #define ATTRIBUTE_FAILED 0x2
 
-#include "sdbtagid.h"
+#include <appcompat/sdbtagid.h>
 
 #ifdef __cplusplus
 } // extern "C"

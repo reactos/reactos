@@ -2,7 +2,8 @@
  * \file x509_csr.h
  *
  * \brief X.509 certificate signing request parsing and writing
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

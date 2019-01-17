@@ -15,6 +15,7 @@ list(APPEND SOURCE
     GetDCEx.c
     GetIconInfo.c
     GetKeyState.c
+    GetMessageTime.c
     GetPeekMessage.c
     GetSystemMetrics.c
     GetUserObjectInformation.c

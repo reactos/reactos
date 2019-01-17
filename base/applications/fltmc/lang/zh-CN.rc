@@ -5,17 +5,20 @@ BEGIN
     IDS_USAGE "\n有效的命令 :\n\
                load        加载一个过滤驱动\n\
                unload      卸载一个过滤驱动\n\
-               filters     显示已在系统中注册的过滤驱动列表\n\n"
+               filters     显示已在系统中注册的过滤驱动列表\n\n\
+               volumes     Lists all volumes\n\n"
 
     IDS_USAGE_LOAD      "加载一个过滤驱动\n"
     IDS_USAGE_UNLOAD    "卸载一个过滤驱动\n"
     IDS_USAGE_FILTERS   "显示已在系统中注册的过滤驱动列表\n"
+    IDS_USAGE_VOLUMES   "Lists all volumes\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_FILTERS1    "过滤驱动名称                   数目 实例         权值        帧\n"
     IDS_DISPLAY_FILTERS2    "过滤驱动名称                   数目 实例        帧\n"
+    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
 END
 
 STRINGTABLE
@@ -24,4 +27,5 @@ BEGIN
     IDS_ERROR_FILTERS   "无法列举过滤驱动列表 (0x%X)\n"
     IDS_ERROR_LOAD      "无法加载过滤驱动 (0x%X)\n"
     IDS_ERROR_UNLOAD    "无法卸载过滤驱动 (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
 END

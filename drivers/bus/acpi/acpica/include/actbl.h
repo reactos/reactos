@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@
 #define ACPI_SIG_XSDT           "XSDT"      /* Extended  System Description Table */
 #define ACPI_SIG_SSDT           "SSDT"      /* Secondary System Description Table */
 #define ACPI_RSDP_NAME          "RSDP"      /* Short name for RSDP, not signature */
+#define ACPI_OEM_NAME           "OEM"       /* Short name for OEM, not signature */
 
 
 /*

@@ -36,4 +36,4 @@
 #define FREELOADER_MINOR_VERSION    0
 #define FREELOADER_PATCH_VERSION    0
 
-PCHAR GetFreeLoaderVersionString(VOID);
+const PCSTR GetFreeLoaderVersionString(VOID);

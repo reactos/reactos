@@ -31,10 +31,10 @@
 #define PtrToPfn(p) \
     ((((ULONGLONG)p) >> PAGE_SHIFT) & 0xfffffffULL)
 
-#define VAtoPXI(va) ((((ULONG64)va) >> PXI_SHIFT) & 0x1FF)
-#define VAtoPPI(va) ((((ULONG64)va) >> PPI_SHIFT) & 0x1FF)
-#define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
-#define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
+#define VAtoPXI(va) ((((ULONG64)(va)) >> PXI_SHIFT) & 0x1FF)
+#define VAtoPPI(va) ((((ULONG64)(va)) >> PPI_SHIFT) & 0x1FF)
+#define VAtoPDI(va) ((((ULONG64)(va)) >> PDI_SHIFT) & 0x1FF)
+#define VAtoPTI(va) ((((ULONG64)(va)) >> PTI_SHIFT) & 0x1FF)
 
 #ifndef ASM
 

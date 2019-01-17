@@ -13,7 +13,6 @@
 #include "wincecompat.h"
 #else
 #define HAVE_SYS_STAT_H
-#define HAVE__STAT
 #define HAVE_STAT
 #define HAVE_STDLIB_H
 #define HAVE_TIME_H

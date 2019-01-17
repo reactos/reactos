@@ -264,9 +264,9 @@ IDM_WINEFILE MENU
     }
 
     POPUP "&?"  {
-        MENUITEM "幫助主題(&H)\tF1",          ID_HELP
-        MENUITEM "搜索幫助(&S)...\tF1",       ID_HELP
-        MENUITEM "使用幫助(&U)\tF1",          ID_HELP_USING
+        MENUITEM "說明主題(&H)\tF1",          ID_HELP
+        MENUITEM "搜索說明(&S)...\tF1",       ID_HELP
+        MENUITEM "使用說明(&U)\tF1",          ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&關於 Winefile...",           ID_ABOUT
     }

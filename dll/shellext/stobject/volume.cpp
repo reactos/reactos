@@ -32,7 +32,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
     TRACE("Volume_FindDefaultMixerID\n");
 
-    result = waveOutMessage((HWAVEOUT)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR)&waveOutId, (DWORD_PTR)&param2);
+    result = waveOutMessage((HWAVEOUT)UlongToHandle(WAVE_MAPPER), DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR)&waveOutId, (DWORD_PTR)&param2);
     if (result)
         return E_FAIL;
 
@@ -46,7 +46,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     {
         TRACE("waveOut default device is %d\n", waveOutId);
 
-        result = mixerGetID((HMIXEROBJ)waveOutId, &mixerId, MIXER_OBJECTF_WAVEOUT);
+        result = mixerGetID((HMIXEROBJ)UlongToHandle(waveOutId), &mixerId, MIXER_OBJECTF_WAVEOUT);
         if (result)
             return E_FAIL;
 
@@ -77,7 +77,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     {
         mixerLine.cbStruct = sizeof(mixerLine);
         mixerLine.dwDestination = idx;
-        if (!mixerGetLineInfoW((HMIXEROBJ)g_mixerId, &mixerLine, 0))
+        if (!mixerGetLineInfoW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLine, 0))
         {
             if (mixerLine.dwComponentType >= MIXERLINE_COMPONENTTYPE_DST_SPEAKERS &&
                 mixerLine.dwComponentType <= MIXERLINE_COMPONENTTYPE_DST_HEADPHONES)
@@ -100,7 +100,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     mixerLineControls.pamxctrl = &mixerControl;
     mixerLineControls.cbmxctrl = sizeof(mixerControl);
 
-    if (mixerGetLineControlsW((HMIXEROBJ)g_mixerId, &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
+    if (mixerGetLineControlsW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
         return E_FAIL;
 
     TRACE("Found control id %d for mute: %d\n", mixerControl.dwControlID);

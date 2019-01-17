@@ -2911,9 +2911,23 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
             x -= width - xanchor;
 
         if( x + width > monitor->rcMonitor.right)
-            x = monitor->rcMonitor.right - width;
+        {
+            /* If we would flip around our origin, would we go off screen on the other side?
+               Or is our origin itself too far to the right already? */
+            if (x - width < monitor->rcMonitor.left || x > monitor->rcMonitor.right)
+                x = monitor->rcMonitor.right - width;
+            else
+                x -= width;
+        }
     }
-    if( x < monitor->rcMonitor.left ) x = monitor->rcMonitor.left;
+    if( x < monitor->rcMonitor.left )
+    {
+        /* If we would flip around our origin, would we go off screen on the other side? */
+        if (x + width > monitor->rcMonitor.right)
+            x = monitor->rcMonitor.left;
+        else
+            x += width;
+    }
 
     if( y + height > monitor->rcMonitor.bottom)
     {
@@ -2921,9 +2935,23 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
             y -= height + yanchor;
 
         if( y + height > monitor->rcMonitor.bottom)
-            y = monitor->rcMonitor.bottom - height;
+        {
+            /* If we would flip around our origin, would we go off screen on the other side?
+               Or is our origin itself too far to the bottom already? */
+            if (y - height < monitor->rcMonitor.top || y > monitor->rcMonitor.bottom)
+                y = monitor->rcMonitor.bottom - height;
+            else
+                y -= height;
+        }
     }
-    if( y < monitor->rcMonitor.top ) y = monitor->rcMonitor.top;
+    if( y < monitor->rcMonitor.top )
+    {
+        /* If we would flip around our origin, would we go off screen on the other side? */
+        if (y + height > monitor->rcMonitor.bottom)
+            y = monitor->rcMonitor.top;
+        else
+            y += height;
+    }
 
     pWnd = ValidateHwndNoErr( menu->hWnd );
 

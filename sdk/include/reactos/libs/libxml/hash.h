@@ -66,7 +66,7 @@ extern "C" {
  *
  * Callback to free data from a hash.
  */
-typedef void (*xmlHashDeallocator)(void *payload, xmlChar *name);
+typedef void (*xmlHashDeallocator)(void *payload, const xmlChar *name);
 /**
  * xmlHashCopier:
  * @payload:  the data in the hash
@@ -76,7 +76,7 @@ typedef void (*xmlHashDeallocator)(void *payload, xmlChar *name);
  *
  * Returns a copy of the data or NULL in case of error.
  */
-typedef void *(*xmlHashCopier)(void *payload, xmlChar *name);
+typedef void *(*xmlHashCopier)(void *payload, const xmlChar *name);
 /**
  * xmlHashScanner:
  * @payload:  the data in the hash
@@ -85,7 +85,7 @@ typedef void *(*xmlHashCopier)(void *payload, xmlChar *name);
  *
  * Callback when scanning data in a hash with the simple scanner.
  */
-typedef void (*xmlHashScanner)(void *payload, void *data, xmlChar *name);
+typedef void (*xmlHashScanner)(void *payload, void *data, const xmlChar *name);
 /**
  * xmlHashScannerFull:
  * @payload:  the data in the hash
@@ -111,6 +111,9 @@ XMLPUBFUN xmlHashTablePtr XMLCALL
 XMLPUBFUN void XMLCALL
 			xmlHashFree	(xmlHashTablePtr table,
 					 xmlHashDeallocator f);
+XMLPUBFUN void XMLCALL
+			xmlHashDefaultDeallocator(void *entry,
+					 const xmlChar *name);
 
 /*
  * Add a new entry to the hash table.

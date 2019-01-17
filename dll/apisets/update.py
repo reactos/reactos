@@ -375,9 +375,9 @@ class SpecFile(object):
 
     def write_cmake(self, cmakelists, baseaddress):
         seen = set()
-        # ntdll and kernel32 are linked against everything, self = internal,
+        # ntdll is linked against everything, self = internal,
         # we cannot link cfgmgr32 and wmi?
-        ignore = ['ntdll', 'kernel32', 'self', 'cfgmgr32', 'wmi']
+        ignore = ['ntdll', 'self', 'cfgmgr32', 'wmi']
         forwarders = self.forwarder_modules()
         fwd_strings = [x for x in forwarders if not (x in seen or x in ignore or seen.add(x))]
         fwd_strings = ' '.join(fwd_strings)

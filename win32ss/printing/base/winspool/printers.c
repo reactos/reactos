@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include <marshalling/printers.h>
+#include <marshalling/printerdrivers.h>
 
 // Local Constants
 
@@ -200,12 +201,91 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
     return -1;
 }
 
+static PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
+{
+    PRINTER_INFO_9W *pi9 = NULL;
+    DWORD needed = 0;
+    BOOL res;
+
+    res = GetPrinterW(hprn, 9, NULL, 0, &needed);
+    if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+    {
+        pi9 = HeapAlloc(hProcessHeap, 0, needed);
+        res = GetPrinterW(hprn, 9, (LPBYTE)pi9, needed, &needed);
+    }
+
+    if (res)
+        return pi9;
+
+    ERR("GetPrinterW failed with %u\n", GetLastError());
+    HeapFree(hProcessHeap, 0, pi9);
+    return NULL;
+}
+
 LONG WINAPI
 DocumentPropertiesW(HWND hWnd, HANDLE hPrinter, LPWSTR pDeviceName, PDEVMODEW pDevModeOutput, PDEVMODEW pDevModeInput, DWORD fMode)
 {
+    HANDLE hUseHandle = NULL;
+    PRINTER_INFO_9W *pi9 = NULL;
+    LONG Result = -1, Length;
+
     TRACE("DocumentPropertiesW(%p, %p, %S, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
-    UNIMPLEMENTED;
-    return -1;
+    if (hPrinter)
+    {
+        hUseHandle = hPrinter;
+    }
+    else if (!OpenPrinterW(pDeviceName, &hUseHandle, NULL))
+    {
+        ERR("No handle, and no usable printer name passed in\n");
+        return -1;
+    }
+
+    pi9 = get_devmodeW(hUseHandle);
+
+    if (pi9)
+    {
+        Length = pi9->pDevMode->dmSize + pi9->pDevMode->dmDriverExtra;
+        // See wineps.drv PSDRV_ExtDeviceMode
+        if (fMode)
+        {
+            Result = 1; /* IDOK */
+
+            if (fMode & DM_IN_BUFFER)
+            {
+                FIXME("Merge pDevModeInput with pi9, write back to driver!\n");
+                // See wineps.drv PSDRV_MergeDevmodes
+            }
+
+            if (fMode & DM_IN_PROMPT)
+            {
+                FIXME("Show property sheet!\n");
+                Result = 2; /* IDCANCEL */
+            }
+
+            if (fMode & (DM_OUT_BUFFER | DM_OUT_DEFAULT))
+            {
+                if (pDevModeOutput)
+                {
+                    memcpy(pDevModeOutput, pi9->pDevMode, pi9->pDevMode->dmSize + pi9->pDevMode->dmDriverExtra);
+                }
+                else
+                {
+                    ERR("No pDevModeOutput\n");
+                    Result = -1;
+                }
+            }
+        }
+        else
+        {
+            Result = Length;
+        }
+
+        HeapFree(hProcessHeap, 0, pi9);
+    }
+
+    if (hUseHandle && !hPrinter)
+        ClosePrinter(hUseHandle);
+    return Result;
 }
 
 BOOL WINAPI
@@ -513,8 +593,50 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
 BOOL WINAPI
 GetPrinterDriverW(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded)
 {
+    DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
     TRACE("GetPrinterDriverW(%p, %S, %lu, %p, %lu, %p)\n", hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
-    return FALSE;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Dismiss invalid levels already at this point.
+    if (Level > 8 || Level < 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    if (cbBuf && pDriverInfo)
+        ZeroMemory(pDriverInfo, cbBuf);
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcGetPrinterDriver(pHandle->hPrinter, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcGetPrinter failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        // Replace relative offset addresses in the output by absolute pointers.
+        ASSERT(Level <= 3);
+        MarshallUpStructure(cbBuf, pDriverInfo, pPrinterDriverMarshalling[Level]->pInfo, pPrinterDriverMarshalling[Level]->cbStructureSize, TRUE);
+    }
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI

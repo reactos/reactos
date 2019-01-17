@@ -1841,6 +1841,21 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 BOOL WINAPI
 IsHungAppWindow(HWND hwnd)
 {
+    PWND Window;
+    UNICODE_STRING ClassName;
+    WCHAR szClass[16];
+    static const UNICODE_STRING GhostClass = RTL_CONSTANT_STRING(L"Ghost");
+
+    /* Ghost is a hung window */
+    RtlInitEmptyUnicodeString(&ClassName, szClass, sizeof(szClass));
+    Window = ValidateHwnd(hwnd);
+    if (Window && Window->fnid == FNID_GHOST &&
+        NtUserGetClassName(hwnd, FALSE, &ClassName) &&
+        RtlEqualUnicodeString(&ClassName, &GhostClass, TRUE))
+    {
+        return TRUE;
+    }
+
     return (NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG) != 0);
 }
 

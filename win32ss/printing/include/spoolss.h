@@ -63,7 +63,7 @@ PVOID WINAPI DllAllocSplMem(DWORD dwBytes);
 BOOL WINAPI DllFreeSplMem(PVOID pMem);
 BOOL WINAPI DllFreeSplStr(PWSTR pwszString);
 BOOL WINAPI InitializeRouter(HANDLE SpoolerStatusHandle);
-PBYTE WINAPI PackStrings(PWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd);
+PBYTE WINAPI PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd);
 PVOID WINAPI ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew);
 BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
 BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);

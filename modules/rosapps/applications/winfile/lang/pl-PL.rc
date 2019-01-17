@@ -95,10 +95,10 @@ IDM_WINEFILE MENU
         MENUITEM "&Wszystkie atrybuty pliku",   ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "Wybrane &atrybuty pliku...",  ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "P&osortuj alfabetycznie",     404
-        MENUITEM "Posortuj po &typie",          405
-        MENUITEM "Posortuj po wie&lkości",      406
-        MENUITEM "Po&sortuj po dacie",            407
+        MENUITEM "P&osortuj alfabetycznie",     ID_VIEW_SORT_NAME
+        MENUITEM "Posortuj po &typie",          ID_VIEW_SORT_TYPE
+        MENUITEM "Posortuj po wie&lkości",      ID_VIEW_SORT_SIZE
+        MENUITEM "Po&sortuj po dacie",          ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Filtruj widok &...",              ID_VIEW_FILTER
     }
@@ -116,7 +116,7 @@ IDM_WINEFILE MENU
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Zminimalizuj przy starcie",  504
-        MENUITEM "Z&apisz ustawienia przed zakończeniem",511
+        MENUITEM "Z&apisz ustawienia przed zakończeniem",ID_VIEW_SAVESETTINGS
     }
 
 

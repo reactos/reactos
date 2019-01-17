@@ -129,13 +129,13 @@ END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "On-Screen Keyboard"
+CAPTION "Tastatură virtuală"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Tastatura virtuală asigură un nivel minim de funcționalitate pentru utilizatori cu dizabilități. Utilizatori cu dizabilități au nevoie de un program cu o mai mare funcționalitate pentru un uz zilnic.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Nu mai afișa acest mesaj", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 

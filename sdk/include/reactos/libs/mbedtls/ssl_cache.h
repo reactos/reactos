@@ -2,7 +2,8 @@
  * \file ssl_cache.h
  *
  * \brief SSL session cache implementation
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

@@ -7,6 +7,8 @@
 #define IDI_MIDICON         3007
 #define IDI_JOY_ICON        4361
 #define IDI_CAMERA_ICON     4364
+#define IDI_SOUND_SECTION   4366
+#define IDI_SOUND_ASSIGNED  4367
 #define IDI_SHUTDOWN_ICON   3009
 #define IDI_NO_HW           4390
 #define IDI_MUTED_ICON      4393
@@ -77,3 +79,8 @@
 #define IDS_CPLDESCRIPTION 1001
 #define IDS_NO_SOUND       1002
 #define IDS_NO_DEVICES     1003
+
+/* Sounds Image List */
+#define IMAGE_SOUND_SECTION  0
+#define IMAGE_SOUND_ASSIGNED 1
+#define IMAGE_SOUND_NONE     2

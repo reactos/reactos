@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -625,7 +625,7 @@ AcpiDsCreateWalkState (
 
     /* Init the method args/local */
 
-#if (!defined (ACPI_NO_METHOD_EXECUTION) && !defined (ACPI_CONSTANT_EVAL_ONLY))
+#ifndef ACPI_CONSTANT_EVAL_ONLY
     AcpiDsMethodDataInit (WalkState);
 #endif
 

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -443,6 +443,34 @@ typedef struct acpi_table_tcpa_server
  * February 27, 2017
  *
  ******************************************************************************/
+
+/* Revision 3 */
+
+typedef struct acpi_table_tpm23
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT32                  Reserved;
+    UINT64                  ControlAddress;
+    UINT32                  StartMethod;
+
+} ACPI_TABLE_TPM23;
+
+/* Value for StartMethod above */
+
+#define ACPI_TPM23_ACPI_START_METHOD                 2
+
+/*
+ * Optional trailer for revision 3. If start method is 2, there is a 4 byte
+ * reserved area of all zeros.
+ */
+typedef struct acpi_tmp23_trailer
+{
+    UINT32                  Reserved;
+
+} ACPI_TPM23_TRAILER;
+
+
+/* Revision 4 */
 
 typedef struct acpi_table_tpm2
 {

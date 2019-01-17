@@ -24,9 +24,9 @@ BEGIN
     BEGIN
         MENUITEM "自動(&A)", CMD_AUTOMATIC
     END
-    POPUP "幫助(&H)"
+    POPUP "說明(&H)"
     BEGIN
-        MENUITEM "幫助主題(&H)", CMD_HELP
+        MENUITEM "說明主題(&H)", CMD_HELP
         MENUITEM SEPARATOR
         MENUITEM "關於(&A)", CMD_ABOUT
     END

@@ -84,31 +84,33 @@ static int pem_get_iv( const unsigned char *s, unsigned char *iv,
     return( 0 );
 }
 
-static void pem_pbkdf1( unsigned char *key, size_t keylen,
-                        unsigned char *iv,
-                        const unsigned char *pwd, size_t pwdlen )
+static int pem_pbkdf1( unsigned char *key, size_t keylen,
+                       unsigned char *iv,
+                       const unsigned char *pwd, size_t pwdlen )
 {
     mbedtls_md5_context md5_ctx;
     unsigned char md5sum[16];
     size_t use_len;
+    int ret;
 
     mbedtls_md5_init( &md5_ctx );
 
     /*
      * key[ 0..15] = MD5(pwd || IV)
      */
-    mbedtls_md5_starts( &md5_ctx );
-    mbedtls_md5_update( &md5_ctx, pwd, pwdlen );
-    mbedtls_md5_update( &md5_ctx, iv,  8 );
-    mbedtls_md5_finish( &md5_ctx, md5sum );
+    if( ( ret = mbedtls_md5_starts_ret( &md5_ctx ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, pwd, pwdlen ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, iv,  8 ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_finish_ret( &md5_ctx, md5sum ) ) != 0 )
+        goto exit;
 
     if( keylen <= 16 )
     {
         memcpy( key, md5sum, keylen );
-
-        mbedtls_md5_free( &md5_ctx );
-        mbedtls_zeroize( md5sum, 16 );
-        return;
+        goto exit;
     }
 
     memcpy( key, md5sum, 16 );
@@ -116,11 +118,16 @@ static void pem_pbkdf1( unsigned char *key, size_t keylen,
     /*
      * key[16..23] = MD5(key[ 0..15] || pwd || IV])
      */
-    mbedtls_md5_starts( &md5_ctx );
-    mbedtls_md5_update( &md5_ctx, md5sum,  16 );
-    mbedtls_md5_update( &md5_ctx, pwd, pwdlen );
-    mbedtls_md5_update( &md5_ctx, iv,  8 );
-    mbedtls_md5_finish( &md5_ctx, md5sum );
+    if( ( ret = mbedtls_md5_starts_ret( &md5_ctx ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, md5sum, 16 ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, pwd, pwdlen ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_update_ret( &md5_ctx, iv, 8 ) ) != 0 )
+        goto exit;
+    if( ( ret = mbedtls_md5_finish_ret( &md5_ctx, md5sum ) ) != 0 )
+        goto exit;
 
     use_len = 16;
     if( keylen < 32 )
@@ -128,53 +135,68 @@ static void pem_pbkdf1( unsigned char *key, size_t keylen,
 
     memcpy( key + 16, md5sum, use_len );
 
+exit:
     mbedtls_md5_free( &md5_ctx );
     mbedtls_zeroize( md5sum, 16 );
+
+    return( ret );
 }
 
 #if defined(MBEDTLS_DES_C)
 /*
  * Decrypt with DES-CBC, using PBKDF1 for key derivation
  */
-static void pem_des_decrypt( unsigned char des_iv[8],
-                               unsigned char *buf, size_t buflen,
-                               const unsigned char *pwd, size_t pwdlen )
+static int pem_des_decrypt( unsigned char des_iv[8],
+                            unsigned char *buf, size_t buflen,
+                            const unsigned char *pwd, size_t pwdlen )
 {
     mbedtls_des_context des_ctx;
     unsigned char des_key[8];
+    int ret;
 
     mbedtls_des_init( &des_ctx );
 
-    pem_pbkdf1( des_key, 8, des_iv, pwd, pwdlen );
+    if( ( ret = pem_pbkdf1( des_key, 8, des_iv, pwd, pwdlen ) ) != 0 )
+        goto exit;
 
-    mbedtls_des_setkey_dec( &des_ctx, des_key );
-    mbedtls_des_crypt_cbc( &des_ctx, MBEDTLS_DES_DECRYPT, buflen,
+    if( ( ret = mbedtls_des_setkey_dec( &des_ctx, des_key ) ) != 0 )
+        goto exit;
+    ret = mbedtls_des_crypt_cbc( &des_ctx, MBEDTLS_DES_DECRYPT, buflen,
                      des_iv, buf, buf );
 
+exit:
     mbedtls_des_free( &des_ctx );
     mbedtls_zeroize( des_key, 8 );
+
+    return( ret );
 }
 
 /*
  * Decrypt with 3DES-CBC, using PBKDF1 for key derivation
  */
-static void pem_des3_decrypt( unsigned char des3_iv[8],
-                               unsigned char *buf, size_t buflen,
-                               const unsigned char *pwd, size_t pwdlen )
+static int pem_des3_decrypt( unsigned char des3_iv[8],
+                             unsigned char *buf, size_t buflen,
+                             const unsigned char *pwd, size_t pwdlen )
 {
     mbedtls_des3_context des3_ctx;
     unsigned char des3_key[24];
+    int ret;
 
     mbedtls_des3_init( &des3_ctx );
 
-    pem_pbkdf1( des3_key, 24, des3_iv, pwd, pwdlen );
+    if( ( ret = pem_pbkdf1( des3_key, 24, des3_iv, pwd, pwdlen ) ) != 0 )
+        goto exit;
 
-    mbedtls_des3_set3key_dec( &des3_ctx, des3_key );
-    mbedtls_des3_crypt_cbc( &des3_ctx, MBEDTLS_DES_DECRYPT, buflen,
+    if( ( ret = mbedtls_des3_set3key_dec( &des3_ctx, des3_key ) ) != 0 )
+        goto exit;
+    ret = mbedtls_des3_crypt_cbc( &des3_ctx, MBEDTLS_DES_DECRYPT, buflen,
                      des3_iv, buf, buf );
 
+exit:
     mbedtls_des3_free( &des3_ctx );
     mbedtls_zeroize( des3_key, 24 );
+
+    return( ret );
 }
 #endif /* MBEDTLS_DES_C */
 
@@ -182,23 +204,29 @@ static void pem_des3_decrypt( unsigned char des3_iv[8],
 /*
  * Decrypt with AES-XXX-CBC, using PBKDF1 for key derivation
  */
-static void pem_aes_decrypt( unsigned char aes_iv[16], unsigned int keylen,
-                               unsigned char *buf, size_t buflen,
-                               const unsigned char *pwd, size_t pwdlen )
+static int pem_aes_decrypt( unsigned char aes_iv[16], unsigned int keylen,
+                            unsigned char *buf, size_t buflen,
+                            const unsigned char *pwd, size_t pwdlen )
 {
     mbedtls_aes_context aes_ctx;
     unsigned char aes_key[32];
+    int ret;
 
     mbedtls_aes_init( &aes_ctx );
 
-    pem_pbkdf1( aes_key, keylen, aes_iv, pwd, pwdlen );
+    if( ( ret = pem_pbkdf1( aes_key, keylen, aes_iv, pwd, pwdlen ) ) != 0 )
+        goto exit;
 
-    mbedtls_aes_setkey_dec( &aes_ctx, aes_key, keylen * 8 );
-    mbedtls_aes_crypt_cbc( &aes_ctx, MBEDTLS_AES_DECRYPT, buflen,
+    if( ( ret = mbedtls_aes_setkey_dec( &aes_ctx, aes_key, keylen * 8 ) ) != 0 )
+        goto exit;
+    ret = mbedtls_aes_crypt_cbc( &aes_ctx, MBEDTLS_AES_DECRYPT, buflen,
                      aes_iv, buf, buf );
 
+exit:
     mbedtls_aes_free( &aes_ctx );
     mbedtls_zeroize( aes_key, keylen );
+
+    return( ret );
 }
 #endif /* MBEDTLS_AES_C */
 
@@ -333,6 +361,7 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
 
     if( ( ret = mbedtls_base64_decode( buf, len, &len, s1, s2 - s1 ) ) != 0 )
     {
+        mbedtls_zeroize( buf, len );
         mbedtls_free( buf );
         return( MBEDTLS_ERR_PEM_INVALID_DATA + ret );
     }
@@ -343,25 +372,34 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
     ( defined(MBEDTLS_DES_C) || defined(MBEDTLS_AES_C) )
         if( pwd == NULL )
         {
+            mbedtls_zeroize( buf, len );
             mbedtls_free( buf );
             return( MBEDTLS_ERR_PEM_PASSWORD_REQUIRED );
         }
 
+        ret = 0;
+
 #if defined(MBEDTLS_DES_C)
         if( enc_alg == MBEDTLS_CIPHER_DES_EDE3_CBC )
-            pem_des3_decrypt( pem_iv, buf, len, pwd, pwdlen );
+            ret = pem_des3_decrypt( pem_iv, buf, len, pwd, pwdlen );
         else if( enc_alg == MBEDTLS_CIPHER_DES_CBC )
-            pem_des_decrypt( pem_iv, buf, len, pwd, pwdlen );
+            ret = pem_des_decrypt( pem_iv, buf, len, pwd, pwdlen );
 #endif /* MBEDTLS_DES_C */
 
 #if defined(MBEDTLS_AES_C)
         if( enc_alg == MBEDTLS_CIPHER_AES_128_CBC )
-            pem_aes_decrypt( pem_iv, 16, buf, len, pwd, pwdlen );
+            ret = pem_aes_decrypt( pem_iv, 16, buf, len, pwd, pwdlen );
         else if( enc_alg == MBEDTLS_CIPHER_AES_192_CBC )
-            pem_aes_decrypt( pem_iv, 24, buf, len, pwd, pwdlen );
+            ret = pem_aes_decrypt( pem_iv, 24, buf, len, pwd, pwdlen );
         else if( enc_alg == MBEDTLS_CIPHER_AES_256_CBC )
-            pem_aes_decrypt( pem_iv, 32, buf, len, pwd, pwdlen );
+            ret = pem_aes_decrypt( pem_iv, 32, buf, len, pwd, pwdlen );
 #endif /* MBEDTLS_AES_C */
+
+        if( ret != 0 )
+        {
+            mbedtls_free( buf );
+            return( ret );
+        }
 
         /*
          * The result will be ASN.1 starting with a SEQUENCE tag, with 1 to 3
@@ -371,10 +409,12 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
          */
         if( len <= 2 || buf[0] != 0x30 || buf[1] > 0x83 )
         {
+            mbedtls_zeroize( buf, len );
             mbedtls_free( buf );
             return( MBEDTLS_ERR_PEM_PASSWORD_MISMATCH );
         }
 #else
+        mbedtls_zeroize( buf, len );
         mbedtls_free( buf );
         return( MBEDTLS_ERR_PEM_FEATURE_UNAVAILABLE );
 #endif /* MBEDTLS_MD5_C && MBEDTLS_CIPHER_MODE_CBC &&
@@ -389,6 +429,8 @@ int mbedtls_pem_read_buffer( mbedtls_pem_context *ctx, const char *header, const
 
 void mbedtls_pem_free( mbedtls_pem_context *ctx )
 {
+    if( ctx->buf != NULL )
+        mbedtls_zeroize( ctx->buf, ctx->buflen );
     mbedtls_free( ctx->buf );
     mbedtls_free( ctx->info );
 
@@ -402,7 +444,7 @@ int mbedtls_pem_write_buffer( const char *header, const char *footer,
                       unsigned char *buf, size_t buf_len, size_t *olen )
 {
     int ret;
-    unsigned char *encode_buf, *c, *p = buf;
+    unsigned char *encode_buf = NULL, *c, *p = buf;
     size_t len = 0, use_len, add_len = 0;
 
     mbedtls_base64_encode( NULL, 0, &use_len, der_data, der_len );
@@ -414,7 +456,8 @@ int mbedtls_pem_write_buffer( const char *header, const char *footer,
         return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
     }
 
-    if( ( encode_buf = mbedtls_calloc( 1, use_len ) ) == NULL )
+    if( use_len != 0 &&
+        ( ( encode_buf = mbedtls_calloc( 1, use_len ) ) == NULL ) )
         return( MBEDTLS_ERR_PEM_ALLOC_FAILED );
 
     if( ( ret = mbedtls_base64_encode( encode_buf, use_len, &use_len, der_data,

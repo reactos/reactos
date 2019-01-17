@@ -214,8 +214,8 @@ BEGIN
     CHECKBOX "विभिन्न क्रिडेन्शॅल के साथ रन करें", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "यह विकल्प आपको इस शॉर्टकट को किसी अन्य उपयोगकर्ता के रूप में चलाने की अनुमति दे सकता है, या अनधिकृत प्रोग्राम गतिविधि से आपके कंप्यूटर और डेटा की सुरक्षा करते समय स्वयं के रूप में जारी रख सकता है।", -1, 50, 60, 175, 40
     CHECKBOX "अलग मेमोरी स्पेस में चलाएं", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "ओके", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "रद्द करें", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "ओके", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "रद्द करें", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205

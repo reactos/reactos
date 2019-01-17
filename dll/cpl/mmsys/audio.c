@@ -10,8 +10,20 @@
 
 #include "mmsys.h"
 
+typedef struct _GLOBAL_DATA
+{
+    BOOL bNoAudioOut;
+    BOOL bNoAudioIn;
+    BOOL bNoMIDIOut;
+
+    BOOL bAudioOutChanged;
+    BOOL bAudioInChanged;
+    BOOL bMIDIOutChanged;
+
+} GLOBAL_DATA, *PGLOBAL_DATA;
+
 VOID
-InitAudioDlg(HWND hwnd)
+InitAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
 {
     WAVEOUTCAPSW waveOutputPaps;
     WAVEINCAPS waveInputPaps;
@@ -32,6 +44,7 @@ InitAudioDlg(HWND hwnd)
     {
         Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
         SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        pGlobalData->bNoAudioOut = TRUE;
     }
     else
     {
@@ -72,6 +85,7 @@ InitAudioDlg(HWND hwnd)
     {
         Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
         SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        pGlobalData->bNoAudioIn = TRUE;
     }
     else
     {
@@ -113,9 +127,22 @@ InitAudioDlg(HWND hwnd)
     {
         Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
         SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+        pGlobalData->bNoMIDIOut = TRUE;
     }
     else
     {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            RegQueryValueExW(hKey, L"szPname", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
+        }
+
         for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
             if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
@@ -126,10 +153,65 @@ InitAudioDlg(HWND hwnd)
             if (CB_ERR != Res)
             {
                 SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-                // TODO: Getting default device
-                SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+                if (!wcsicmp(midiOutCaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
             }
         }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
+    }
+}
+
+VOID
+UpdateRegistryString(HWND hwnd, INT ctrl, LPWSTR key, LPWSTR value)
+{
+    HWND hwndCombo = GetDlgItem(hwnd, ctrl);
+    INT CurSel = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
+    UINT TextLen;
+    WCHAR SelectedDevice[MAX_PATH] = {0};
+    HKEY hKey;
+
+    if (CurSel == CB_ERR)
+        return;
+
+    TextLen = SendMessageW(hwndCombo, CB_GETLBTEXTLEN, CurSel, 0) + 1;
+
+    if (TextLen > _countof(SelectedDevice))
+        return;
+
+    SendMessageW(hwndCombo, CB_GETLBTEXT, CurSel, (LPARAM)SelectedDevice);
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+        return;
+
+    RegSetValueExW(hKey, value, 0, REG_SZ, (BYTE *)SelectedDevice, (wcslen(SelectedDevice) + 1) * sizeof(WCHAR));
+    RegCloseKey(hKey);
+}
+
+VOID
+SaveAudioDlg(HWND hwnd, PGLOBAL_DATA pGlobalData)
+{
+    if (pGlobalData->bAudioOutChanged)
+    {
+        UpdateRegistryString(hwnd,
+                             IDC_DEVICE_PLAY_LIST,
+                             L"Software\\Microsoft\\Multimedia\\Sound Mapper",
+                             L"Playback");
+    }
+
+    if (pGlobalData->bAudioInChanged)
+    {
+        UpdateRegistryString(hwnd,
+                             IDC_DEVICE_REC_LIST,
+                             L"Software\\Microsoft\\Multimedia\\Sound Mapper",
+                             L"Record");
+    }
+
+    if (pGlobalData->bMIDIOutChanged)
+    {
+        UpdateRegistryString(hwnd,
+                             IDC_DEVICE_MIDI_LIST,
+                             L"Software\\Microsoft\\Windows\\CurrentVersion\\Multimedia\\MIDIMap",
+                             L"szPname");
     }
 }
 
@@ -161,9 +243,9 @@ AudioDlgProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
@@ -171,7 +253,13 @@ AudioDlgProc(HWND hwndDlg,
         {
             UINT NumWavOut = waveOutGetNumDevs();
 
-            InitAudioDlg(hwndDlg);
+            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            if (!pGlobalData)
+                break;
+
+            InitAudioDlg(hwndDlg, pGlobalData);
 
             if (!NumWavOut)
             {
@@ -186,6 +274,27 @@ AudioDlgProc(HWND hwndDlg,
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME3_BTN),          FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ADV3_BTN),             FALSE);
             }
+
+            if (pGlobalData->bNoAudioOut)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_PLAY_LIST),     FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME1_BTN),          FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_ADV2_BTN),             FALSE);
+            }
+
+            if (pGlobalData->bNoAudioIn)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_REC_LIST),      FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME2_BTN),          FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_ADV1_BTN),             FALSE);
+            }
+
+            if (pGlobalData->bNoMIDIOut)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_MIDI_LIST),     FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME3_BTN),          FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_ADV3_BTN),             FALSE);
+            }
         }
         break;
 
@@ -194,6 +303,9 @@ AudioDlgProc(HWND hwndDlg,
             STARTUPINFO si;
             PROCESS_INFORMATION pi;
             WCHAR szPath[MAX_PATH];
+
+            if (!pGlobalData)
+                break;
 
             switch(LOWORD(wParam))
             {
@@ -256,9 +368,55 @@ AudioDlgProc(HWND hwndDlg,
 
                 }
                 break;
+
+                case IDC_DEVICE_PLAY_LIST:
+                {
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        pGlobalData->bAudioOutChanged = TRUE;
+                    }
+                }
+                break;
+
+                case IDC_DEVICE_REC_LIST:
+                {
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        pGlobalData->bAudioInChanged = TRUE;
+                    }
+                }
+
+                case IDC_DEVICE_MIDI_LIST:
+                {
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        pGlobalData->bMIDIOutChanged = TRUE;
+                    }
+                }
+                break;
             }
         }
         break;
+
+        case WM_DESTROY:
+            if (!pGlobalData)
+                break;
+
+            HeapFree(GetProcessHeap(), 0, pGlobalData);
+            break;
+
+        case WM_NOTIFY:
+            if (!pGlobalData)
+                break;
+
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            {
+                SaveAudioDlg(hwndDlg, pGlobalData);
+            }
+            return TRUE;
     }
 
     return FALSE;

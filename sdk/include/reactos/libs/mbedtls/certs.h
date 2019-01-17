@@ -2,7 +2,8 @@
  * \file certs.h
  *
  * \brief Sample certificates and DHM parameters for testing
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *

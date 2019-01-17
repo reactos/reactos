@@ -257,7 +257,7 @@ static void
 _LocalGetMonitorLevel1(PLOCAL_PRINT_MONITOR pPrintMonitor, PMONITOR_INFO_1W* ppMonitorInfo, PBYTE* ppMonitorInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbMonitorName;
-    PWSTR pwszStrings[1];
+    PCWSTR pwszStrings[1];
 
     // Calculate the string lengths.
     if (!ppMonitorInfo)
@@ -281,7 +281,7 @@ _LocalGetMonitorLevel2(PLOCAL_PRINT_MONITOR pPrintMonitor, PMONITOR_INFO_2W* ppM
 {
     DWORD cbFileName;
     DWORD cbMonitorName;
-    PWSTR pwszStrings[3];
+    PCWSTR pwszStrings[3];
 
     // Calculate the string lengths.
     if (!ppMonitorInfo)

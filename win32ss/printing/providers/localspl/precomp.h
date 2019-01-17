@@ -264,7 +264,7 @@ extern const DWORD dwSpoolerMinorVersion;
 extern const WCHAR wszDefaultDocumentName[];
 extern HKEY hPrintKey;
 extern HKEY hPrintersKey;
-extern PWSTR wszPrintProviderInfo[3];
+extern PCWSTR wszPrintProviderInfo[3];
 extern WCHAR wszJobDirectory[MAX_PATH];
 extern DWORD cchJobDirectory;
 extern WCHAR wszSpoolDirectory[MAX_PATH];
@@ -286,6 +286,10 @@ DWORD WINAPI LocalGetPrinterData(HANDLE hPrinter, PWSTR pValueName, PDWORD pType
 DWORD WINAPI LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded);
 DWORD WINAPI LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData);
 DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD Type, LPBYTE pData, DWORD cbData);
+
+// printerdriver.c
+BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded);
+
 
 // printers.c
 extern SKIPLIST PrinterList;

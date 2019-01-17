@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,7 @@ AcpiLoadTables (
             "While loading namespace from ACPI tables"));
     }
 
-    if (AcpiGbl_ExecuteTablesAsMethods || !AcpiGbl_GroupModuleLevelCode)
+    if (AcpiGbl_ExecuteTablesAsMethods)
     {
         /*
          * If the module-level code support is enabled, initialize the objects

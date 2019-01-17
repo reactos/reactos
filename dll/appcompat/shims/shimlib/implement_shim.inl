@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Shim helper library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Shimlib helper file, used to register shims setup with macro's from setup_shim.inl
- * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #ifndef SHIM_NS
@@ -37,7 +37,7 @@ PHOOKAPI WINAPI SHIM_OBJ_NAME(GetHookAPIs)(DWORD fdwReason, PCSTR pszCmdLine, PD
     {
         SHIM_OBJ_NAME(g_szCommandLine) = "";
     }
-    SHIM_OBJ_NAME(g_pAPIHooks) = ShimLib_ShimMalloc(sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
+    SHIM_OBJ_NAME(g_pAPIHooks) = (PHOOKAPI)ShimLib_ShimMalloc(sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
     if (SHIM_NUM_HOOKS)
         ZeroMemory(SHIM_OBJ_NAME(g_pAPIHooks), sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
     *pdwHookCount = SHIM_NUM_HOOKS;

@@ -17,6 +17,7 @@ extern void func_EnumDisplaySettings(void);
 extern void func_GetDCEx(void);
 extern void func_GetIconInfo(void);
 extern void func_GetKeyState(void);
+extern void func_GetMessageTime(void);
 extern void func_GetPeekMessage(void);
 extern void func_GetSystemMetrics(void);
 extern void func_GetUserObjectInformation(void);
@@ -61,6 +62,7 @@ const struct test winetest_testlist[] =
     { "GetDCEx", func_GetDCEx },
     { "GetIconInfo", func_GetIconInfo },
     { "GetKeyState", func_GetKeyState },
+    { "GetMessageTime", func_GetMessageTime },
     { "GetPeekMessage", func_GetPeekMessage },
     { "GetSystemMetrics", func_GetSystemMetrics },
     { "GetUserObjectInformation", func_GetUserObjectInformation },

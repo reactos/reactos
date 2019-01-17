@@ -7,7 +7,6 @@ BEGIN
                unload      Unloads a Filter driver\n\
                filters     Lists the Filters currently registered in the system\n\
                volumes     Lists all volumes\n\n"
-    
 
     IDS_USAGE_LOAD      "Loads a filter driver\n"
     IDS_USAGE_UNLOAD    "Unloads a filter driver\n"

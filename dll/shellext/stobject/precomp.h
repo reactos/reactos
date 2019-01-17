@@ -34,9 +34,6 @@ extern HINSTANCE g_hInstance;
 #define ID_ICON_HOTPLUG (WM_APP + 0x4CC)
 #define ID_ICON_POWER   (WM_APP + 0x4CD)
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 #include "csystray.h"
 
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTINIT)     (_In_ CSysTray * pSysTray);

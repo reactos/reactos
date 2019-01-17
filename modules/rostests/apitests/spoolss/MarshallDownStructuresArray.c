@@ -32,7 +32,7 @@ START_TEST(MarshallDownStructuresArray)
     PPORT_INFO_2W pPortInfo2Copy;
     PPORT_INFO_2W pPortInfo2Test;
     PBYTE pPortInfoEnd;
-    PWSTR pwszStrings[] = { L"PortName", L"MonitorName", L"Description" };
+    PCWSTR pwszStrings[] = { L"PortName", L"MonitorName", L"Description" };
     DWORD cbPortInfo2Size = cElements * (sizeof(PORT_INFO_2W) + (wcslen(pwszStrings[0]) + 1 + wcslen(pwszStrings[1]) + 1 + wcslen(pwszStrings[2]) + 1) * sizeof(WCHAR));
     DWORD fPortType = 1337;
     DWORD Reserved = 42;

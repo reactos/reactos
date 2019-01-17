@@ -26,11 +26,11 @@ extern "C" {
  */
 #define XSLT_REGISTER_FUNCTION_LOOKUP(ctxt)			\
     xmlXPathRegisterFuncLookup((ctxt)->xpathCtxt,		\
-	(xmlXPathFuncLookupFunc) xsltXPathFunctionLookup,	\
+	xsltXPathFunctionLookup,				\
 	(void *)(ctxt->xpathCtxt));
 
 XSLTPUBFUN xmlXPathFunction XSLTCALL
-	xsltXPathFunctionLookup		(xmlXPathContextPtr ctxt,
+	xsltXPathFunctionLookup		(void *vctxt,
 					 const xmlChar *name,
 					 const xmlChar *ns_uri);
 

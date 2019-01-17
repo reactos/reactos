@@ -2261,4 +2261,17 @@ GetNLSVersion(IN NLS_FUNCTION Function,
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GetNLSVersionEx(IN NLS_FUNCTION function,
+                IN LPCWSTR lpLocaleName,
+                IN OUT LPNLSVERSIONINFOEX lpVersionInformation)
+{
+    STUB;
+    return TRUE;
+}
+
 /* EOF */

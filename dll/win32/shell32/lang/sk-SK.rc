@@ -66,6 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Vystrihnúť", IDM_CUT
         MENUITEM "&Kopírovať", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Vytvoriť o&dkaz", IDM_CREATELINK
         MENUITEM "&Odstrániť", IDM_DELETE
@@ -213,8 +214,8 @@ BEGIN
     CHECKBOX "&Spustiť s inými povereniami", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Táto možnosť umožňuje spustiť tento odkaz ako iný používateľ, alebo pokračovať so svojím používateľským oprávnením, ale s ochranou počítača a údajov pred neoprávnenými aktivitami programu.", -1, 50, 60, 170, 40
     CHECKBOX "Spustiť v oddelenom pa&mäťovom priestore", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 190, 10, WS_DISABLED
-    PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "Prerušiť", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Prerušiť", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205

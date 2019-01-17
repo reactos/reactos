@@ -2,7 +2,8 @@
  * \file check_config.h
  *
  * \brief Consistency checks for configuration options
- *
+ */
+/*
  *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -79,6 +80,10 @@
 #error "MBEDTLS_DHM_C defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_SSL_TRUNCATED_HMAC_COMPAT) && !defined(MBEDTLS_SSL_TRUNCATED_HMAC)
+#error "MBEDTLS_SSL_TRUNCATED_HMAC_COMPAT defined, but not all prerequisites"
+#endif
+
 #if defined(MBEDTLS_CMAC_C) && \
     !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_DES_C)
 #error "MBEDTLS_CMAC_C defined, but not all prerequisites"
@@ -117,6 +122,10 @@
     !defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) &&                  \
     !defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED) ) )
 #error "MBEDTLS_ECP_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PK_PARSE_C) && !defined(MBEDTLS_ASN1_PARSE_C)
+#error "MBEDTLS_PK_PARSE_C defined, but not all prerequesites"
 #endif
 
 #if defined(MBEDTLS_ENTROPY_C) && (!defined(MBEDTLS_SHA512_C) &&      \

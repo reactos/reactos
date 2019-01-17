@@ -2,7 +2,8 @@
  * \file ssl_ciphersuites.h
  *
  * \brief SSL Ciphersuites for mbed TLS
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
@@ -268,7 +269,7 @@ typedef enum {
     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)      ||       \
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)     ||       \
     defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED)    ||       \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) 
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
 #define MBEDTLS_KEY_EXCHANGE__CERT_REQ_ALLOWED__ENABLED
 #endif
 

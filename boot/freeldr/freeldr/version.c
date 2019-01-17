@@ -19,15 +19,17 @@
 
 #include <freeldr.h>
 
-CHAR FreeLoaderVersionString[80];
+#define TOSTRING_(X) #X
+#define TOSTRING(X) TOSTRING_(X)
 
-PCHAR GetFreeLoaderVersionString(VOID)
-{
+static const PCSTR FreeLoaderVersionString =
 #if (FREELOADER_PATCH_VERSION == 0)
-    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION);
+    "FreeLoader v" TOSTRING(FREELOADER_MAJOR_VERSION) "." TOSTRING(FREELOADER_MINOR_VERSION);
 #else
-    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
+    "FreeLoader v" TOSTRING(FREELOADER_MAJOR_VERSION) "." TOSTRING(FREELOADER_MINOR_VERSION) "." TOSTRING(FREELOADER_PATCH_VERSION);
 #endif
 
+const PCSTR GetFreeLoaderVersionString(VOID)
+{
     return FreeLoaderVersionString;
 }

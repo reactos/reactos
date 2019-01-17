@@ -6,7 +6,6 @@
 #define IMAGE_FILE_HEADER_SIZE 20
 #define IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint 16
 
-
 .code16
 
 /* fat helper code */
@@ -292,7 +291,7 @@ ExitToLongMode:
     mov gs,ax
     mov ss,ax
 
-    /* Safe current stack pointer */
+    /* Save current stack pointer */
     mov word ptr ds:[stack16], sp
 
     /* Set PAE and PGE: 10100000b */

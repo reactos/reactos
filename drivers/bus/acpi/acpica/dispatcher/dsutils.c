@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,7 +101,6 @@ AcpiDsClearImplicitReturn (
 }
 
 
-#ifndef ACPI_NO_METHOD_EXECUTION
 /*******************************************************************************
  *
  * FUNCTION:    AcpiDsDoImplicitReturn
@@ -475,7 +474,6 @@ AcpiDsClearOperands (
     WalkState->NumOperands = 0;
     return_VOID;
 }
-#endif
 
 
 /*******************************************************************************

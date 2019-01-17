@@ -264,10 +264,52 @@ TestPoolQuota(VOID)
     KmtEndSeh(STATUS_SUCCESS);
 }
 
+static
+VOID
+TestBigPoolExpansion(VOID)
+{
+    POOL_TYPE PoolType;
+    PVOID *BigAllocations;
+    const ULONG MaxAllocations = 1024 * 128;
+    ULONG NumAllocations;
+
+    for (PoolType = NonPagedPool; PoolType <= PagedPool; PoolType++)
+    {
+        BigAllocations = ExAllocatePoolWithTag(PoolType,
+                                               MaxAllocations * sizeof(*BigAllocations),
+                                               'ABmK');
+
+        /* Allocate a lot of pages (== big pool allocations) */
+        for (NumAllocations = 0; NumAllocations < MaxAllocations; NumAllocations++)
+        {
+            BigAllocations[NumAllocations] = ExAllocatePoolWithTag(PoolType,
+                                                                   PAGE_SIZE,
+                                                                   'aPmK');
+            if (BigAllocations[NumAllocations] == NULL)
+            {
+                NumAllocations--;
+                break;
+            }
+        }
+
+        trace("Got %lu allocations for PoolType %d\n", NumAllocations, PoolType);
+
+        /* Free them */
+        for (; NumAllocations < MaxAllocations; NumAllocations--)
+        {
+            ASSERT(BigAllocations[NumAllocations] != NULL);
+            ExFreePoolWithTag(BigAllocations[NumAllocations],
+                              'aPmK');
+        }
+        ExFreePoolWithTag(BigAllocations, 'ABmK');
+    }
+}
+
 START_TEST(ExPools)
 {
     PoolsTest();
     PoolsCorruption();
     TestPoolTags();
     TestPoolQuota();
+    TestBigPoolExpansion();
 }

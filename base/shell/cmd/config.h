@@ -42,7 +42,7 @@
 /* Define one of these to select the used locale. */
 /*  (date and time formats etc.) used in DATE, TIME, */
 /*  DIR, PROMPT etc. */
-#define LOCALE_WINDOWS   /* System locale */
+/* #define LOCALE_WINDOWS */   /* System locale */
 /* #define LOCALE_GERMAN */    /* German locale */
 /* #define LOCALE_DEFAULT */   /* United States locale */
 

@@ -201,6 +201,8 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
     } else {
         r.left += x;
 #ifdef __REACTOS__
+        r.left += 3;
+        r.right -= 3;
         if (!theme)
             DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
         else

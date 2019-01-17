@@ -126,6 +126,11 @@ xsltNewKeyTable(const xmlChar *name, const xmlChar *nameURI) {
     return(cur);
 }
 
+static void
+xsltFreeNodeSetEntry(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlXPathFreeNodeSet((xmlNodeSetPtr) payload);
+}
+
 /**
  * xsltFreeKeyTable:
  * @keyt:  an XSLT key table
@@ -141,8 +146,7 @@ xsltFreeKeyTable(xsltKeyTablePtr keyt) {
     if (keyt->nameURI != NULL)
 	xmlFree(keyt->nameURI);
     if (keyt->keys != NULL)
-	xmlHashFree(keyt->keys,
-		    (xmlHashDeallocator) xmlXPathFreeNodeSet);
+	xmlHashFree(keyt->keys, xsltFreeNodeSetEntry);
     memset(keyt, -1, sizeof(xsltKeyTable));
     xmlFree(keyt);
 }

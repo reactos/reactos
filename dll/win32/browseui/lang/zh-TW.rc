@@ -91,7 +91,7 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "資料夾選項(&O)...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "幫助(&H)", FCIDM_MENU_HELP
+    POPUP "說明(&H)", FCIDM_MENU_HELP
     BEGIN
         MENUITEM "關於 ReactOS(&A)", IDM_HELP_ABOUT
     END

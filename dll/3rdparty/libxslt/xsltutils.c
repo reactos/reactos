@@ -1438,7 +1438,7 @@ xsltSaveResultTo(xmlOutputBufferPtr buf, xmlDocPtr result,
 	((style->method == NULL) ||
 	 (!xmlStrEqual(style->method, (const xmlChar *) "xhtml")))) {
         xsltGenericError(xsltGenericErrorContext,
-		"xsltSaveResultTo : unknown ouput method\n");
+		"xsltSaveResultTo : unknown output method\n");
         return(-1);
     }
 
@@ -1766,7 +1766,7 @@ xsltSaveResultToString(xmlChar **doc_txt_ptr, int * doc_txt_len,
 
 /************************************************************************
  *									*
- *		Generating profiling informations			*
+ *		Generating profiling information			*
  *									*
  ************************************************************************/
 
@@ -1929,9 +1929,9 @@ pretty_templ_match(xsltTemplatePtr templ) {
 /**
  * xsltSaveProfiling:
  * @ctxt:  an XSLT context
- * @output:  a FILE * for saving the informations
+ * @output:  a FILE * for saving the information
  *
- * Save the profiling informations on @output
+ * Save the profiling information on @output
  */
 void
 xsltSaveProfiling(xsltTransformContextPtr ctxt, FILE *output) {
@@ -2128,7 +2128,7 @@ xsltSaveProfiling(xsltTransformContextPtr ctxt, FILE *output) {
 
 /************************************************************************
  *									*
- *		Fetching profiling informations				*
+ *		Fetching profiling information				*
  *									*
  ************************************************************************/
 
@@ -2137,8 +2137,8 @@ xsltSaveProfiling(xsltTransformContextPtr ctxt, FILE *output) {
  * @ctxt:  a transformation context
  *
  * This function should be called after the transformation completed
- * to extract template processing profiling informations if availble.
- * The informations are returned as an XML document tree like
+ * to extract template processing profiling information if available.
+ * The information is returned as an XML document tree like
  * <?xml version="1.0"?>
  * <profile>
  * <template rank="1" match="*" name=""

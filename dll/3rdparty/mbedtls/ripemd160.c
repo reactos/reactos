@@ -48,6 +48,8 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+#if !defined(MBEDTLS_RIPEMD160_ALT)
+
 /*
  * 32-bit integer manipulation macros (little endian)
  */
@@ -98,7 +100,7 @@ void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
 /*
  * RIPEMD-160 context setup
  */
-void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
+int mbedtls_ripemd160_starts_ret( mbedtls_ripemd160_context *ctx )
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -108,13 +110,23 @@ void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
     ctx->state[4] = 0xC3D2E1F0;
+
+    return( 0 );
 }
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
+{
+    mbedtls_ripemd160_starts_ret( ctx );
+}
+#endif
 
 #if !defined(MBEDTLS_RIPEMD160_PROCESS_ALT)
 /*
  * Process one block
  */
-void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned char data[64] )
+int mbedtls_internal_ripemd160_process( mbedtls_ripemd160_context *ctx,
+                                        const unsigned char data[64] )
 {
     uint32_t A, B, C, D, E, Ap, Bp, Cp, Dp, Ep, X[16];
 
@@ -289,20 +301,32 @@ void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned c
     ctx->state[3] = ctx->state[4] + A + Bp;
     ctx->state[4] = ctx->state[0] + B + Cp;
     ctx->state[0] = C;
+
+    return( 0 );
 }
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx,
+                                const unsigned char data[64] )
+{
+    mbedtls_internal_ripemd160_process( ctx, data );
+}
+#endif
 #endif /* !MBEDTLS_RIPEMD160_PROCESS_ALT */
 
 /*
  * RIPEMD-160 process buffer
  */
-void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
-                       const unsigned char *input, size_t ilen )
+int mbedtls_ripemd160_update_ret( mbedtls_ripemd160_context *ctx,
+                                  const unsigned char *input,
+                                  size_t ilen )
 {
+    int ret;
     size_t fill;
     uint32_t left;
 
     if( ilen == 0 )
-        return;
+        return( 0 );
 
     left = ctx->total[0] & 0x3F;
     fill = 64 - left;
@@ -316,7 +340,10 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
     if( left && ilen >= fill )
     {
         memcpy( (void *) (ctx->buffer + left), input, fill );
-        mbedtls_ripemd160_process( ctx, ctx->buffer );
+
+        if( ( ret = mbedtls_internal_ripemd160_process( ctx, ctx->buffer ) ) != 0 )
+            return( ret );
+
         input += fill;
         ilen  -= fill;
         left = 0;
@@ -324,7 +351,9 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
 
     while( ilen >= 64 )
     {
-        mbedtls_ripemd160_process( ctx, input );
+        if( ( ret = mbedtls_internal_ripemd160_process( ctx, input ) ) != 0 )
+            return( ret );
+
         input += 64;
         ilen  -= 64;
     }
@@ -333,7 +362,18 @@ void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
     {
         memcpy( (void *) (ctx->buffer + left), input, ilen );
     }
+
+    return( 0 );
 }
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+void mbedtls_ripemd160_update( mbedtls_ripemd160_context *ctx,
+                               const unsigned char *input,
+                               size_t ilen )
+{
+    mbedtls_ripemd160_update_ret( ctx, input, ilen );
+}
+#endif
 
 static const unsigned char ripemd160_padding[64] =
 {
@@ -346,8 +386,10 @@ static const unsigned char ripemd160_padding[64] =
 /*
  * RIPEMD-160 final digest
  */
-void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char output[20] )
+int mbedtls_ripemd160_finish_ret( mbedtls_ripemd160_context *ctx,
+                                  unsigned char output[20] )
 {
+    int ret;
     uint32_t last, padn;
     uint32_t high, low;
     unsigned char msglen[8];
@@ -362,30 +404,68 @@ void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx, unsigned char out
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    mbedtls_ripemd160_update( ctx, ripemd160_padding, padn );
-    mbedtls_ripemd160_update( ctx, msglen, 8 );
+    ret = mbedtls_ripemd160_update_ret( ctx, ripemd160_padding, padn );
+    if( ret != 0 )
+        return( ret );
+
+    ret = mbedtls_ripemd160_update_ret( ctx, msglen, 8 );
+    if( ret != 0 )
+        return( ret );
 
     PUT_UINT32_LE( ctx->state[0], output,  0 );
     PUT_UINT32_LE( ctx->state[1], output,  4 );
     PUT_UINT32_LE( ctx->state[2], output,  8 );
     PUT_UINT32_LE( ctx->state[3], output, 12 );
     PUT_UINT32_LE( ctx->state[4], output, 16 );
+
+    return( 0 );
 }
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+void mbedtls_ripemd160_finish( mbedtls_ripemd160_context *ctx,
+                               unsigned char output[20] )
+{
+    mbedtls_ripemd160_finish_ret( ctx, output );
+}
+#endif
+
+#endif /* ! MBEDTLS_RIPEMD160_ALT */
 
 /*
  * output = RIPEMD-160( input buffer )
  */
-void mbedtls_ripemd160( const unsigned char *input, size_t ilen,
-                unsigned char output[20] )
+int mbedtls_ripemd160_ret( const unsigned char *input,
+                           size_t ilen,
+                           unsigned char output[20] )
 {
+    int ret;
     mbedtls_ripemd160_context ctx;
 
     mbedtls_ripemd160_init( &ctx );
-    mbedtls_ripemd160_starts( &ctx );
-    mbedtls_ripemd160_update( &ctx, input, ilen );
-    mbedtls_ripemd160_finish( &ctx, output );
+
+    if( ( ret = mbedtls_ripemd160_starts_ret( &ctx ) ) != 0 )
+        goto exit;
+
+    if( ( ret = mbedtls_ripemd160_update_ret( &ctx, input, ilen ) ) != 0 )
+        goto exit;
+
+    if( ( ret = mbedtls_ripemd160_finish_ret( &ctx, output ) ) != 0 )
+        goto exit;
+
+exit:
     mbedtls_ripemd160_free( &ctx );
+
+    return( ret );
 }
+
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
+void mbedtls_ripemd160( const unsigned char *input,
+                        size_t ilen,
+                        unsigned char output[20] )
+{
+    mbedtls_ripemd160_ret( input, ilen, output );
+}
+#endif
 
 #if defined(MBEDTLS_SELF_TEST)
 /*
@@ -393,18 +473,22 @@ void mbedtls_ripemd160( const unsigned char *input, size_t ilen,
  * http://homes.esat.kuleuven.be/~bosselae/mbedtls_ripemd160.html#HMAC
  */
 #define TESTS   8
-#define KEYS    2
-static const char *ripemd160_test_input[TESTS] =
+static const unsigned char ripemd160_test_str[TESTS][81] =
 {
-    "",
-    "a",
-    "abc",
-    "message digest",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-    "1234567890123456789012345678901234567890"
-        "1234567890123456789012345678901234567890",
+    { "" },
+    { "a" },
+    { "abc" },
+    { "message digest" },
+    { "abcdefghijklmnopqrstuvwxyz" },
+    { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" },
+    { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" },
+    { "12345678901234567890123456789012345678901234567890123456789012"
+      "345678901234567890" },
+};
+
+static const size_t ripemd160_test_strlen[TESTS] =
+{
+    0, 1, 3, 14, 26, 56, 62, 80
 };
 
 static const unsigned char ripemd160_test_md[TESTS][20] =
@@ -432,7 +516,7 @@ static const unsigned char ripemd160_test_md[TESTS][20] =
  */
 int mbedtls_ripemd160_self_test( int verbose )
 {
-    int i;
+    int i, ret = 0;
     unsigned char output[20];
 
     memset( output, 0, sizeof output );
@@ -442,16 +526,15 @@ int mbedtls_ripemd160_self_test( int verbose )
         if( verbose != 0 )
             mbedtls_printf( "  RIPEMD-160 test #%d: ", i + 1 );
 
-        mbedtls_ripemd160( (const unsigned char *) ripemd160_test_input[i],
-                   strlen( ripemd160_test_input[i] ),
-                   output );
+        ret = mbedtls_ripemd160_ret( ripemd160_test_str[i],
+                                     ripemd160_test_strlen[i], output );
+        if( ret != 0 )
+            goto fail;
 
         if( memcmp( output, ripemd160_test_md[i], 20 ) != 0 )
         {
-            if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
-
-            return( 1 );
+            ret = 1;
+            goto fail;
         }
 
         if( verbose != 0 )
@@ -462,6 +545,12 @@ int mbedtls_ripemd160_self_test( int verbose )
         mbedtls_printf( "\n" );
 
     return( 0 );
+
+fail:
+    if( verbose != 0 )
+        mbedtls_printf( "failed\n" );
+
+    return( ret );
 }
 
 #endif /* MBEDTLS_SELF_TEST */

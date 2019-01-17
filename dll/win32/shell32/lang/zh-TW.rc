@@ -75,6 +75,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "剪下(&U)", IDM_CUT
         MENUITEM "複製(&C)", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "建立捷徑(&L)", IDM_CREATELINK
         MENUITEM "刪除(&D)", IDM_DELETE
@@ -222,8 +223,8 @@ BEGIN
     CHECKBOX "以不同的身分執行", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
     CHECKBOX "在獨立的記憶體空間中執行", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "確定", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "取消", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "確定", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "取消", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -584,7 +585,7 @@ BEGIN
     LTEXT "維持工作階段，电脑數據仍然保持在 RAM 中。當你按下一個鍵或移動鼠標將喚醒這台電腦。", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "確定", 1, 7, 82, 60, 14, WS_GROUP
     PUSHBUTTON "取消", IDCANCEL, 75, 82, 60, 14
-    PUSHBUTTON "幫助(&H)", IDHELP, 144, 82, 60, 14
+    PUSHBUTTON "說明(&H)", IDHELP, 144, 82, 60, 14
 END
 
 IDD_FORMAT_DRIVE DIALOGEX 50, 50, 184, 218
@@ -801,8 +802,8 @@ BEGIN
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
-    IDS_RESTART_TITLE "重新啟動"
-    IDS_RESTART_PROMPT "您確定要重新啟動嗎?"
+    IDS_RESTART_TITLE "重新開機"
+    IDS_RESTART_PROMPT "您確定要重新開機嗎?"
     IDS_SHUTDOWN_TITLE "關機"
     IDS_SHUTDOWN_PROMPT "您確定要關機嗎?"
     

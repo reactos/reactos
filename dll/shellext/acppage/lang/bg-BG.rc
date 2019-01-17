@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Съвместимост"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Ако имате затруднения при работата на приложението с РеактОС, изберете като коя операционна система да му се представя РеактОС.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    LTEXT "Ако имате затруднения при работата на приложението с РеактОС, изберете като коя операционна система да му се представя РеактОС.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Режими на съвместимост", IDC_COMPATGROUP, 7, 41, 225, 49
     CHECKBOX "Изпълняване на приложението в режим на съвместимост за:", IDC_CHKRUNCOMPATIBILITY, 10, 57, 220, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 10, 70, 220, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED

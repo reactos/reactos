@@ -68,6 +68,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Decupează", IDM_CUT
         MENUITEM "&Copiază", IDM_COPY
+        MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Crează sc&urtătură", IDM_CREATELINK
         MENUITEM "Șt&erge", IDM_DELETE
@@ -215,8 +216,8 @@ BEGIN
     CHECKBOX "Execută sub o i&dentitate explicită", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "Această opțiune vă permite execuția scurtăturii sub autoritatea unui alt utilizator sau continuarea folosirii scurtăturii în mod securizat, protejând astfel calculatorul de activități neautorizate.", -1, 50, 60, 175, 40
     CHECKBOX "Execută în sp&ațiu de memorie separat", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
-    PUSHBUTTON "Con&firmă", 1, 63, 124, 50, 15, WS_VISIBLE
-    PUSHBUTTON "A&nulează", 2, 120, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "Con&firmă", IDOK, 63, 124, 50, 15, WS_VISIBLE
+    PUSHBUTTON "A&nulează", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
 
 IDD_FOLDER_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -493,7 +494,7 @@ CAPTION "Deautentificare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "Sigur doriți să vă deautentificați?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Sigur doriți să vă deautentificați?", -1, 35, 16, 146, 8
     DEFPUSHBUTTON "&Deautentifică", IDOK, 41, 39, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 95, 39, 50, 14
 END

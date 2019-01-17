@@ -53,7 +53,7 @@
 @ stub SetupGetProductType
 @ stub SetupGetSetupInfo
 @ stub SetupGetValidEula
-@ stub SetupInfObjectInstallActionW
+@ stdcall SetupInfObjectInstallActionW() SETUPAPI.InstallHinfSectionW
 @ stub SetupInstallCatalog
 @ stub SetupMapTapiToIso
 @ stub SetupOobeBnk

@@ -1,35 +1,77 @@
-Libpng 1.6.34 - September 29, 2017
+libpng 1.6.36 - December 1, 2018
+================================
 
-This is a public release of libpng, intended for use in production codes.
+This is a public release of libpng, intended for use in production code.
 
-Files available for download:
 
-Source files with LF line endings (for Unix/Linux) and with a
-"configure" script
+Files available for download
+----------------------------
 
-   libpng-1.6.34.tar.xz (LZMA-compressed, recommended)
-   libpng-1.6.34.tar.gz
+Source files with LF line endings (for Unix/Linux):
 
-Source files with CRLF line endings (for Windows), without the
-"configure" script
+ * libpng-1.6.36.tar.xz (LZMA-compressed, recommended)
+ * libpng-1.6.36.tar.gz
 
-   lpng1634.7z  (LZMA-compressed, recommended)
-   lpng1634.zip
+Source files with CRLF line endings (for Windows):
+
+ * lp1636.7z (LZMA-compressed, recommended)
+ * lp1636.zip
 
 Other information:
 
-   libpng-1.6.34-README.txt
-   libpng-1.6.34-LICENSE.txt
-   libpng-1.6.34-*.asc (armored detached GPG signatures)
+ * README.md
+ * LICENSE.md
+ * AUTHORS.md
+ * TRADEMARK.md
 
-Changes since the last public release (1.6.33):
-  Removed contrib/pngsuite/i*.png; some of these were incorrect and caused
-    test failures.
 
-Send comments/corrections/commendations to png-mng-implement at lists.sf.net
-(subscription required; visit
+IMPORTANT licensing update: libpng license v2
+---------------------------------------------
+
+The new libpng license comprises the terms and conditions from the zlib
+license, and the disclaimer from the Boost license.
+
+The legacy libpng license, used until libpng-1.6.35, is appended to the
+new license, following the precedent established in the Python Software
+Foundation License version 2.
+
+From now on, the list of contributing authors shall be maintained in a
+separate AUTHORS file.  The lists of previous contributing authors,
+mentioned in the legacy libpng license and considered to be an integral
+part of that license, are kept intact, with no further updates.
+
+
+Changes since the previous public release (version 1.6.35)
+----------------------------------------------------------
+
+ * Optimized png_do_expand_palette for ARM processors.
+   Improved performance by around 10-22% on a recent ARM Chromebook.
+   (Contributed by Richard Townsend, ARM Holdings)
+ * Fixed manipulation of machine-specific optimization options.
+   (Contributed by Vicki Pfau)
+ * Used memcpy instead of manual pointer arithmetic on Intel SSE2.
+   (Contributed by Samuel Williams)
+ * Fixed build errors with MSVC on ARM64.
+   (Contributed by Zhijie Liang)
+ * Fixed detection of libm in CMakeLists.
+   (Contributed by Cameron Cawley)
+ * Fixed incorrect creation of pkg-config file in CMakeLists.
+   (Contributed by Kyle Bentley)
+ * Fixed the CMake build on Windows MSYS by avoiding symlinks.
+ * Fixed a build warning on OpenBSD.
+   (Contributed by Theo Buehler)
+ * Fixed various typos in comments.
+   (Contributed by "luz.paz")
+ * Raised the minimum required CMake version from 3.0.2 to 3.1.
+ * Removed yet more of the vestigial support for pre-ANSI C compilers.
+ * Removed ancient makefiles for ancient systems that have been broken
+   across all previous libpng-1.6.x versions.
+ * Removed the Y2K compliance statement and the export control
+   information.
+ * Applied various code style and documentation fixes.
+
+
+Send comments/corrections/commendations to png-mng-implement at lists.sf.net.
+Subscription is required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
-to subscribe)
-or to glennrp at users.sourceforge.net
-
-Glenn R-P
+to subscribe.

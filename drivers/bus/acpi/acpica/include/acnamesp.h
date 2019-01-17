@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@
 #define ACPI_NS_TEMPORARY           0x0040
 #define ACPI_NS_OVERRIDE_IF_FOUND   0x0080
 #define ACPI_NS_EARLY_INIT          0x0100
+#define ACPI_NS_PREFIX_MUST_EXIST   0x0200
 
 /* Flags for AcpiNsWalkNamespace */
 

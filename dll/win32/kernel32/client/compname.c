@@ -236,7 +236,8 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                                L"ComputerName",
                                                lpBuffer,
                                                nSize);
-            if (ret == FALSE)
+            if ((ret == FALSE) &&
+                (GetLastError() != ERROR_MORE_DATA))
             {
                 ret = GetComputerNameFromRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
                                                   L"\\Control\\ComputerName\\ComputerName",

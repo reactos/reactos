@@ -290,7 +290,7 @@ struct _xsltTemplate {
     int inheritedNsNr;  /* number of inherited namespaces */
     xmlNsPtr *inheritedNs;/* inherited non-excluded namespaces */
 
-    /* Profiling informations */
+    /* Profiling information */
     int nbCalls;        /* the number of time the template was called */
     unsigned long time; /* the time spent in this template */
     void *params;       /* xsl:param instructions */
@@ -1513,7 +1513,7 @@ struct _xsltStylesheet {
      */
     xsltTemplatePtr templates;	/* the ordered list of templates */
     void *templatesHash;	/* hash table or wherever compiled templates
-				   informations are stored */
+				   information is stored */
     void *rootMatch;		/* template based on / */
     void *keyMatch;		/* template based on key() */
     void *elemMatch;		/* template based on * */
@@ -1733,7 +1733,7 @@ struct _xsltTransformContext {
 
     int              extrasNr;		/* the number of extras used */
     int              extrasMax;		/* the number of extras allocated */
-    xsltRuntimeExtraPtr extras;		/* extra per runtime informations */
+    xsltRuntimeExtraPtr extras;		/* extra per runtime information */
 
     xsltDocumentPtr  styleList;		/* the stylesheet docs list */
     void                 * sec;		/* the security preferences if any */

@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -200,6 +200,7 @@ ACPI_GLOBAL (ACPI_MEMORY_LIST *,        AcpiGbl_GlobalList);
 ACPI_GLOBAL (ACPI_MEMORY_LIST *,        AcpiGbl_NsNodeList);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DisplayFinalMemStats);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DisableMemTracking);
+ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_VerboseLeakDump);
 #endif
 
 
@@ -209,11 +210,7 @@ ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DisableMemTracking);
  *
  ****************************************************************************/
 
-#if !defined (ACPI_NO_METHOD_EXECUTION) || defined (ACPI_CONSTANT_EVAL_ONLY)
 #define NUM_PREDEFINED_NAMES            10
-#else
-#define NUM_PREDEFINED_NAMES            9
-#endif
 
 ACPI_GLOBAL (ACPI_NAMESPACE_NODE,       AcpiGbl_RootNodeStruct);
 ACPI_GLOBAL (ACPI_NAMESPACE_NODE *,     AcpiGbl_RootNode);

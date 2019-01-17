@@ -38,7 +38,7 @@ FASTCALL
 Fast486MemReadCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-    RtlMoveMemory(Buffer, (PVOID)Address, Size);
+    RtlMoveMemory(Buffer, UlongToPtr(Address), Size);
 }
 
 static VOID
@@ -46,7 +46,7 @@ FASTCALL
 Fast486MemWriteCallback(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
-    RtlMoveMemory((PVOID)Address, Buffer, Size);
+    RtlMoveMemory(UlongToPtr(Address), Buffer, Size);
 }
 
 static VOID

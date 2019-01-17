@@ -42,10 +42,6 @@ typedef enum
     ENCODING_UTF16BE =  2,
     ENCODING_UTF8    =  3
 } ENCODING;
-// #define ENCODING_ANSI       0
-#define ENCODING_UNICODE    1
-#define ENCODING_UNICODE_BE 2
-// #define ENCODING_UTF8       3
 
 // #define MIN_ENCODING   0
 // #define MAX_ENCODING   3

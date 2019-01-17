@@ -198,6 +198,15 @@ extern "C" {
 #define LCID_INSTALLED 1
 #define LCID_SUPPORTED 2
 #define LCID_ALTERNATE_SORTS 4
+
+#define LOCALE_ALL                  0x00
+#define LOCALE_WINDOWS              0x01
+#define LOCALE_SUPPLEMENTAL         0x02
+#define LOCALE_ALTERNATE_SORTS      0x04
+#define LOCALE_REPLACEMENT          0x08
+#define LOCALE_NEUTRALDATA          0x10
+#define LOCALE_SPECIFICDATA         0x20
+
 #define MAP_FOLDCZONE 16
 #define MAP_FOLDDIGITS 128
 #define MAP_PRECOMPOSED 32
@@ -611,6 +620,13 @@ typedef struct nlsversioninfo {
 	DWORD dwNLSVersion;
 	DWORD dwDefinedVersion;
 } NLSVERSIONINFO,*LPNLSVERSIONINFO;
+typedef struct _nlsversioninfoex {
+    DWORD dwNLSVersionInfoSize;
+    DWORD dwNLSVersion;
+    DWORD dwDefinedVersion;
+    DWORD dwEffectiveId;
+    GUID  guidCustomVersion;
+} NLSVERSIONINFOEX, *LPNLSVERSIONINFOEX;
 typedef struct _numberfmtA {
 	UINT NumDigits;
 	UINT LeadingZero;
@@ -760,6 +776,7 @@ GetCurrencyFormatW(
 
 int WINAPI GetDateFormatA(LCID,DWORD,const SYSTEMTIME*,LPCSTR,LPSTR,int);
 int WINAPI GetDateFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
+int WINAPI GetDateFormatEx(LPCWSTR,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int,LPCWSTR);
 
 int
 WINAPI
@@ -796,6 +813,13 @@ GetLocaleInfoW(
   _In_ int cchData);
 
 BOOL WINAPI GetNLSVersion(_In_ NLS_FUNCTION, _In_ LCID, _Inout_ LPNLSVERSIONINFO);
+
+BOOL
+WINAPI
+GetNLSVersionEx(
+  _In_ NLS_FUNCTION function,
+  _In_ LPCWSTR lpLocaleName,
+  _Inout_ LPNLSVERSIONINFOEX lpVersionInformation);
 
 int
 WINAPI
@@ -859,6 +883,7 @@ LCID WINAPI GetSystemDefaultLCID(void);
 LCID WINAPI GetThreadLocale(void);
 int WINAPI GetTimeFormatA(LCID,DWORD,const SYSTEMTIME*,LPCSTR,LPSTR,int);
 int WINAPI GetTimeFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
+int WINAPI GetTimeFormatEx(LPCWSTR,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 LANGID WINAPI GetUserDefaultLangID(void);
 LCID WINAPI GetUserDefaultLCID(void);
 GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
@@ -978,6 +1003,8 @@ GetLocaleInfoEx(
   _Out_writes_opt_(cchData) LPWSTR lpLCData,
   _In_ int cchData);
 
+BOOL WINAPI IsValidLocaleName(_In_ LPCWSTR lpLocaleName);
+
 BOOL
 WINAPI
 GetProcessPreferredUILanguages(
@@ -1076,6 +1103,8 @@ GetStringScripts(
 BOOL WINAPI SetProcessPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
 BOOL WINAPI SetThreadPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
 BOOL WINAPI VerifyScripts(_In_ DWORD, _In_ LPCWSTR, _In_ int, _In_ LPCWSTR, _In_ int);
+INT  WINAPI LCMapStringEx(_In_ LPCWSTR, _In_ DWORD, _In_ LPCWSTR, _In_ INT, _Out_opt_ LPWSTR, _In_ INT, _In_ LPNLSVERSIONINFO, _In_ LPVOID, _In_ LPARAM);
+LCID WINAPI LocaleNameToLCID(_In_ LPCWSTR, _In_ DWORD);
 
 #endif /* (WINVER >= 0x0600) */
 

@@ -38,10 +38,7 @@ typedef struct tagDISKCONTEXT
     ULONGLONG SectorNumber;
 } DISKCONTEXT;
 
-extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
-
-static CHAR Hex[] = "0123456789abcdef";
+static const CHAR Hex[] = "0123456789abcdef";
 
 /* Data cache for BIOS disks pre-enumeration */
 UCHAR PcBiosDiskCount = 0;
@@ -216,6 +213,7 @@ GetHarddiskInformation(UCHAR DriveNumber)
     ULONG i;
     ULONG Checksum;
     ULONG Signature;
+    BOOLEAN ValidPartitionTable;
     CHAR ArcName[MAX_PATH];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     PCHAR Identifier = PcDiskIdentifier[DriveNumber - 0x80];
@@ -224,6 +222,8 @@ GetHarddiskInformation(UCHAR DriveNumber)
     if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
     {
         ERR("Reading MBR failed\n");
+        /* We failed, use a default identifier */
+        sprintf(Identifier, "BIOSDISK%d", DriveNumber - 0x80 + 1);
         return;
     }
 
@@ -242,14 +242,11 @@ GetHarddiskInformation(UCHAR DriveNumber)
     Checksum = ~Checksum + 1;
     TRACE("Checksum: %x\n", Checksum);
 
+    ValidPartitionTable = (Mbr->MasterBootRecordMagic == 0xAA55);
+
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)", reactos_disk_count);
-    strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
-    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
-        reactos_arc_disk_info[reactos_disk_count].ArcName;
-    reactos_disk_count++;
+    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)", DriveNumber - 0x80);
+    AddReactOSArcDiskInfo(ArcName, Signature, Checksum, ValidPartitionTable);
 
     sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);
     FsRegisterDevice(ArcName, &DiskVtbl);
@@ -287,21 +284,21 @@ GetHarddiskInformation(UCHAR DriveNumber)
     Identifier[15] = Hex[(Signature >> 4) & 0x0F];
     Identifier[16] = Hex[Signature & 0x0F];
     Identifier[17] = '-';
-    Identifier[18] = 'A'; // FIXME: Not always 'A' ...
+    Identifier[18] = (ValidPartitionTable ? 'A' : 'X');
     Identifier[19] = 0;
     TRACE("Identifier: %s\n", Identifier);
 }
 
-BOOLEAN
-PcInitializeBootDevices(VOID)
+static UCHAR
+EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
 {
     UCHAR DiskCount, DriveNumber;
     ULONG i;
     BOOLEAN Changed;
-    BOOLEAN BootDriveReported = FALSE;
-    CHAR BootPath[MAX_PATH];
 
-    /* Count the number of visible drives */
+    *BootDriveReported = FALSE;
+
+    /* Count the number of visible harddisk drives */
     DiskReportError(FALSE);
     DiskCount = 0;
     DriveNumber = 0x80;
@@ -333,7 +330,7 @@ PcInitializeBootDevices(VOID)
 
         /* Check if we have seen the boot drive */
         if (FrldrBootDrive == DriveNumber)
-            BootDriveReported = TRUE;
+            *BootDriveReported = TRUE;
 
         DiskCount++;
         DriveNumber++;
@@ -344,6 +341,19 @@ PcInitializeBootDevices(VOID)
     PcBiosDiskCount = DiskCount;
     TRACE("BIOS reports %d harddisk%s\n",
           (int)DiskCount, (DiskCount == 1) ? "" : "s");
+
+    return DiskCount;
+}
+
+BOOLEAN
+PcInitializeBootDevices(VOID)
+{
+    UCHAR DiskCount;
+    BOOLEAN BootDriveReported = FALSE;
+    ULONG i;
+    CHAR BootPath[MAX_PATH];
+
+    DiskCount = EnumerateHarddisks(&BootDriveReported);
 
     /* Get the drive we're booting from */
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
@@ -373,17 +383,15 @@ PcInitializeBootDevices(VOID)
         TRACE("Signature: %x\n", Signature);
 
         /* Calculate the MBR checksum */
-        for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
+        for (i = 0; i < 2048 / sizeof(ULONG); i++)
+        {
+            Checksum += Buffer[i];
+        }
         Checksum = ~Checksum + 1;
         TRACE("Checksum: %x\n", Checksum);
 
         /* Fill out the ARC disk block */
-        reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
-        reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
-        strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, BootPath);
-        reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
-            reactos_arc_disk_info[reactos_disk_count].ArcName;
-        reactos_disk_count++;
+        AddReactOSArcDiskInfo(BootPath, Signature, Checksum, TRUE);
 
         FsRegisterDevice(BootPath, &DiskVtbl);
         DiskCount++; // This is not accounted for in the number of pre-enumerated BIOS drives!

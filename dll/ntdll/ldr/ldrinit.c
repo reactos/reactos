@@ -2135,8 +2135,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (FreeCurDir) RtlFreeUnicodeString(&CurrentDirectory);
     }
 
-    /* Check if we should look for a .local file */
-    if (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH)
+    /* Check if we should look for a .local file 
+        FIXME: Thomas suggested that this check might actually be reversed, we should check this file
+               if the flag is NOT set. */
+    if (ProcessParameters && (ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH))
     {
         /* FIXME */
         DPRINT1("We don't support .local overrides yet\n");

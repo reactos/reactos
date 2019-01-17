@@ -53,6 +53,7 @@
 
 #include <windows.h>
 #include <winbase.h>
+#include <process.h>
 
 struct _hr_time
 {
@@ -246,64 +247,72 @@ volatile int mbedtls_timing_alarmed = 0;
 
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
 {
-    unsigned long delta;
-    LARGE_INTEGER offset, hfreq;
     struct _hr_time *t = (struct _hr_time *) val;
 
-    QueryPerformanceCounter(  &offset );
-    QueryPerformanceFrequency( &hfreq );
-
-    delta = (unsigned long)( ( 1000 *
-        ( offset.QuadPart - t->start.QuadPart ) ) /
-           hfreq.QuadPart );
-
     if( reset )
+    {
         QueryPerformanceCounter( &t->start );
-
-    return( delta );
+        return( 0 );
+    }
+    else
+    {
+        unsigned long delta;
+        LARGE_INTEGER now, hfreq;
+        QueryPerformanceCounter(  &now );
+        QueryPerformanceFrequency( &hfreq );
+        delta = (unsigned long)( ( now.QuadPart - t->start.QuadPart ) * 1000ul
+                                 / hfreq.QuadPart );
+        return( delta );
+    }
 }
 
 /* It's OK to use a global because alarm() is supposed to be global anyway */
 static DWORD alarmMs;
 
-static DWORD WINAPI TimerProc( LPVOID TimerContext )
+static void TimerProc( void *TimerContext )
 {
-    ((void) TimerContext);
+    (void) TimerContext;
     Sleep( alarmMs );
     mbedtls_timing_alarmed = 1;
-    return( TRUE );
+    /* _endthread will be called implicitly on return
+     * That ensures execution of thread funcition's epilogue */
 }
 
 void mbedtls_set_alarm( int seconds )
 {
-    DWORD ThreadId;
+    if( seconds == 0 )
+    {
+        /* No need to create a thread for this simple case.
+         * Also, this shorcut is more reliable at least on MinGW32 */
+        mbedtls_timing_alarmed = 1;
+        return;
+    }
 
     mbedtls_timing_alarmed = 0;
     alarmMs = seconds * 1000;
-    CloseHandle( CreateThread( NULL, 0, TimerProc, NULL, 0, &ThreadId ) );
+    (void) _beginthread( TimerProc, 0, NULL );
 }
 
 #else /* _WIN32 && !EFIX64 && !EFI32 */
 
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
 {
-    unsigned long delta;
-    struct timeval offset;
     struct _hr_time *t = (struct _hr_time *) val;
-
-    gettimeofday( &offset, NULL );
 
     if( reset )
     {
-        t->start.tv_sec  = offset.tv_sec;
-        t->start.tv_usec = offset.tv_usec;
+        gettimeofday( &t->start, NULL );
         return( 0 );
     }
-
-    delta = ( offset.tv_sec  - t->start.tv_sec  ) * 1000
-          + ( offset.tv_usec - t->start.tv_usec ) / 1000;
-
-    return( delta );
+    else
+    {
+        unsigned long delta;
+        struct timeval now;
+        gettimeofday( &now, NULL );
+        delta = ( now.tv_sec  - t->start.tv_sec  ) * 1000ul
+              + ( now.tv_usec - t->start.tv_usec ) / 1000;
+        return( delta );
+    }
 }
 
 static void sighandler( int signum )
@@ -317,6 +326,12 @@ void mbedtls_set_alarm( int seconds )
     mbedtls_timing_alarmed = 0;
     signal( SIGALRM, sighandler );
     alarm( seconds );
+    if( seconds == 0 )
+    {
+        /* alarm(0) cancelled any previous pending alarm, but the
+           handler won't fire, so raise the flag straight away. */
+        mbedtls_timing_alarmed = 1;
+    }
 }
 
 #endif /* _WIN32 && !EFIX64 && !EFI32 */
@@ -380,13 +395,21 @@ static void busy_msleep( unsigned long msec )
     (void) j;
 }
 
-#define FAIL    do                      \
-{                                       \
-    if( verbose != 0 )                  \
-        mbedtls_printf( "failed\n" );   \
-                                        \
-    return( 1 );                        \
-} while( 0 )
+#define FAIL    do                                                      \
+    {                                                                   \
+        if( verbose != 0 )                                              \
+        {                                                               \
+            mbedtls_printf( "failed at line %d\n", __LINE__ );          \
+            mbedtls_printf( " cycles=%lu ratio=%lu millisecs=%lu secs=%lu hardfail=%d a=%lu b=%lu\n", \
+                            cycles, ratio, millisecs, secs, hardfail,   \
+                            (unsigned long) a, (unsigned long) b );     \
+            mbedtls_printf( " elapsed(hires)=%lu elapsed(ctx)=%lu status(ctx)=%d\n", \
+                            mbedtls_timing_get_timer( &hires, 0 ),      \
+                            mbedtls_timing_get_timer( &ctx.timer, 0 ),  \
+                            mbedtls_timing_get_delay( &ctx ) );         \
+        }                                                               \
+        return( 1 );                                                    \
+    } while( 0 )
 
 /*
  * Checkup routine
@@ -396,22 +419,22 @@ static void busy_msleep( unsigned long msec )
  */
 int mbedtls_timing_self_test( int verbose )
 {
-    unsigned long cycles, ratio;
-    unsigned long millisecs, secs;
-    int hardfail;
+    unsigned long cycles = 0, ratio = 0;
+    unsigned long millisecs = 0, secs = 0;
+    int hardfail = 0;
     struct mbedtls_timing_hr_time hires;
-    uint32_t a, b;
+    uint32_t a = 0, b = 0;
     mbedtls_timing_delay_context ctx;
 
     if( verbose != 0 )
         mbedtls_printf( "  TIMING tests note: will take some time!\n" );
 
-
     if( verbose != 0 )
         mbedtls_printf( "  TIMING test #1 (set_alarm / get_timer): " );
 
-    for( secs = 1; secs <= 3; secs++ )
     {
+        secs = 1;
+
         (void) mbedtls_timing_get_timer( &hires, 1 );
 
         mbedtls_set_alarm( (int) secs );
@@ -423,12 +446,7 @@ int mbedtls_timing_self_test( int verbose )
         /* For some reason on Windows it looks like alarm has an extra delay
          * (maybe related to creating a new thread). Allow some room here. */
         if( millisecs < 800 * secs || millisecs > 1200 * secs + 300 )
-        {
-            if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
-
-            return( 1 );
-        }
+            FAIL;
     }
 
     if( verbose != 0 )
@@ -437,28 +455,22 @@ int mbedtls_timing_self_test( int verbose )
     if( verbose != 0 )
         mbedtls_printf( "  TIMING test #2 (set/get_delay        ): " );
 
-    for( a = 200; a <= 400; a += 200 )
     {
-        for( b = 200; b <= 400; b += 200 )
-        {
-            mbedtls_timing_set_delay( &ctx, a, a + b );
+        a = 800;
+        b = 400;
+        mbedtls_timing_set_delay( &ctx, a, a + b );          /* T = 0 */
 
-            busy_msleep( a - a / 8 );
-            if( mbedtls_timing_get_delay( &ctx ) != 0 )
-                FAIL;
+        busy_msleep( a - a / 4 );                      /* T = a - a/4 */
+        if( mbedtls_timing_get_delay( &ctx ) != 0 )
+            FAIL;
 
-            busy_msleep( a / 4 );
-            if( mbedtls_timing_get_delay( &ctx ) != 1 )
-                FAIL;
+        busy_msleep( a / 4 + b / 4 );                  /* T = a + b/4 */
+        if( mbedtls_timing_get_delay( &ctx ) != 1 )
+            FAIL;
 
-            busy_msleep( b - a / 8 - b / 8 );
-            if( mbedtls_timing_get_delay( &ctx ) != 1 )
-                FAIL;
-
-            busy_msleep( b / 4 );
-            if( mbedtls_timing_get_delay( &ctx ) != 2 )
-                FAIL;
-        }
+        busy_msleep( b );                          /* T = a + b + b/4 */
+        if( mbedtls_timing_get_delay( &ctx ) != 2 )
+            FAIL;
     }
 
     mbedtls_timing_set_delay( &ctx, 0, 0 );
@@ -477,7 +489,6 @@ int mbedtls_timing_self_test( int verbose )
      * On a 4Ghz 32-bit machine the cycle counter wraps about once per second;
      * since the whole test is about 10ms, it shouldn't happen twice in a row.
      */
-    hardfail = 0;
 
 hard_test:
     if( hardfail > 1 )

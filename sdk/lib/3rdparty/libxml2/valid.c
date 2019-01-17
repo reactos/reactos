@@ -1597,6 +1597,11 @@ xmlAddElementDecl(xmlValidCtxtPtr ctxt,
     return(ret);
 }
 
+static void
+xmlFreeElementTableEntry(void *elem, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlFreeElement((xmlElementPtr) elem);
+}
+
 /**
  * xmlFreeElementTable:
  * @table:  An element table
@@ -1605,7 +1610,7 @@ xmlAddElementDecl(xmlValidCtxtPtr ctxt,
  */
 void
 xmlFreeElementTable(xmlElementTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeElement);
+    xmlHashFree(table, xmlFreeElementTableEntry);
 }
 
 #ifdef LIBXML_TREE_ENABLED
@@ -1617,8 +1622,9 @@ xmlFreeElementTable(xmlElementTablePtr table) {
  *
  * Returns the new xmlElementPtr or NULL in case of error.
  */
-static xmlElementPtr
-xmlCopyElement(xmlElementPtr elem) {
+static void *
+xmlCopyElement(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlElementPtr elem = (xmlElementPtr) payload;
     xmlElementPtr cur;
 
     cur = (xmlElementPtr) xmlMalloc(sizeof(xmlElement));
@@ -1653,8 +1659,7 @@ xmlCopyElement(xmlElementPtr elem) {
  */
 xmlElementTablePtr
 xmlCopyElementTable(xmlElementTablePtr table) {
-    return((xmlElementTablePtr) xmlHashCopy(table,
-		                            (xmlHashCopier) xmlCopyElement));
+    return((xmlElementTablePtr) xmlHashCopy(table, xmlCopyElement));
 }
 #endif /* LIBXML_TREE_ENABLED */
 
@@ -1728,8 +1733,9 @@ xmlDumpElementDecl(xmlBufferPtr buf, xmlElementPtr elem) {
  * the arguments.
  */
 static void
-xmlDumpElementDeclScan(xmlElementPtr elem, xmlBufferPtr buf) {
-    xmlDumpElementDecl(buf, elem);
+xmlDumpElementDeclScan(void *elem, void *buf,
+                       const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlDumpElementDecl((xmlBufferPtr) buf, (xmlElementPtr) elem);
 }
 
 /**
@@ -1743,7 +1749,7 @@ void
 xmlDumpElementTable(xmlBufferPtr buf, xmlElementTablePtr table) {
     if ((buf == NULL) || (table == NULL))
         return;
-    xmlHashScan(table, (xmlHashScanner) xmlDumpElementDeclScan, buf);
+    xmlHashScan(table, xmlDumpElementDeclScan, buf);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
 
@@ -2143,6 +2149,11 @@ xmlAddAttributeDecl(xmlValidCtxtPtr ctxt,
     return(ret);
 }
 
+static void
+xmlFreeAttributeTableEntry(void *attr, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlFreeAttribute((xmlAttributePtr) attr);
+}
+
 /**
  * xmlFreeAttributeTable:
  * @table:  An attribute table
@@ -2151,7 +2162,7 @@ xmlAddAttributeDecl(xmlValidCtxtPtr ctxt,
  */
 void
 xmlFreeAttributeTable(xmlAttributeTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeAttribute);
+    xmlHashFree(table, xmlFreeAttributeTableEntry);
 }
 
 #ifdef LIBXML_TREE_ENABLED
@@ -2163,8 +2174,9 @@ xmlFreeAttributeTable(xmlAttributeTablePtr table) {
  *
  * Returns the new xmlAttributePtr or NULL in case of error.
  */
-static xmlAttributePtr
-xmlCopyAttribute(xmlAttributePtr attr) {
+static void *
+xmlCopyAttribute(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlAttributePtr attr = (xmlAttributePtr) payload;
     xmlAttributePtr cur;
 
     cur = (xmlAttributePtr) xmlMalloc(sizeof(xmlAttribute));
@@ -2198,8 +2210,7 @@ xmlCopyAttribute(xmlAttributePtr attr) {
  */
 xmlAttributeTablePtr
 xmlCopyAttributeTable(xmlAttributeTablePtr table) {
-    return((xmlAttributeTablePtr) xmlHashCopy(table,
-				    (xmlHashCopier) xmlCopyAttribute));
+    return((xmlAttributeTablePtr) xmlHashCopy(table, xmlCopyAttribute));
 }
 #endif /* LIBXML_TREE_ENABLED */
 
@@ -2294,8 +2305,9 @@ xmlDumpAttributeDecl(xmlBufferPtr buf, xmlAttributePtr attr) {
  * This is used with the hash scan function - just reverses arguments
  */
 static void
-xmlDumpAttributeDeclScan(xmlAttributePtr attr, xmlBufferPtr buf) {
-    xmlDumpAttributeDecl(buf, attr);
+xmlDumpAttributeDeclScan(void *attr, void *buf,
+                         const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlDumpAttributeDecl((xmlBufferPtr) buf, (xmlAttributePtr) attr);
 }
 
 /**
@@ -2309,7 +2321,7 @@ void
 xmlDumpAttributeTable(xmlBufferPtr buf, xmlAttributeTablePtr table) {
     if ((buf == NULL) || (table == NULL))
         return;
-    xmlHashScan(table, (xmlHashScanner) xmlDumpAttributeDeclScan, buf);
+    xmlHashScan(table, xmlDumpAttributeDeclScan, buf);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
 
@@ -2415,6 +2427,11 @@ xmlAddNotationDecl(xmlValidCtxtPtr ctxt, xmlDtdPtr dtd,
     return(ret);
 }
 
+static void
+xmlFreeNotationTableEntry(void *nota, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlFreeNotation((xmlNotationPtr) nota);
+}
+
 /**
  * xmlFreeNotationTable:
  * @table:  An notation table
@@ -2423,7 +2440,7 @@ xmlAddNotationDecl(xmlValidCtxtPtr ctxt, xmlDtdPtr dtd,
  */
 void
 xmlFreeNotationTable(xmlNotationTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeNotation);
+    xmlHashFree(table, xmlFreeNotationTableEntry);
 }
 
 #ifdef LIBXML_TREE_ENABLED
@@ -2435,8 +2452,9 @@ xmlFreeNotationTable(xmlNotationTablePtr table) {
  *
  * Returns the new xmlNotationPtr or NULL in case of error.
  */
-static xmlNotationPtr
-xmlCopyNotation(xmlNotationPtr nota) {
+static void *
+xmlCopyNotation(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlNotationPtr nota = (xmlNotationPtr) payload;
     xmlNotationPtr cur;
 
     cur = (xmlNotationPtr) xmlMalloc(sizeof(xmlNotation));
@@ -2469,8 +2487,7 @@ xmlCopyNotation(xmlNotationPtr nota) {
  */
 xmlNotationTablePtr
 xmlCopyNotationTable(xmlNotationTablePtr table) {
-    return((xmlNotationTablePtr) xmlHashCopy(table,
-				    (xmlHashCopier) xmlCopyNotation));
+    return((xmlNotationTablePtr) xmlHashCopy(table, xmlCopyNotation));
 }
 #endif /* LIBXML_TREE_ENABLED */
 
@@ -2510,8 +2527,9 @@ xmlDumpNotationDecl(xmlBufferPtr buf, xmlNotationPtr nota) {
  * This is called with the hash scan function, and just reverses args
  */
 static void
-xmlDumpNotationDeclScan(xmlNotationPtr nota, xmlBufferPtr buf) {
-    xmlDumpNotationDecl(buf, nota);
+xmlDumpNotationDeclScan(void *nota, void *buf,
+                        const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlDumpNotationDecl((xmlBufferPtr) buf, (xmlNotationPtr) nota);
 }
 
 /**
@@ -2525,7 +2543,7 @@ void
 xmlDumpNotationTable(xmlBufferPtr buf, xmlNotationTablePtr table) {
     if ((buf == NULL) || (table == NULL))
         return;
-    xmlHashScan(table, (xmlHashScanner) xmlDumpNotationDeclScan, buf);
+    xmlHashScan(table, xmlDumpNotationDeclScan, buf);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
 
@@ -2653,6 +2671,11 @@ xmlAddID(xmlValidCtxtPtr ctxt, xmlDocPtr doc, const xmlChar *value,
     return(ret);
 }
 
+static void
+xmlFreeIDTableEntry(void *id, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlFreeID((xmlIDPtr) id);
+}
+
 /**
  * xmlFreeIDTable:
  * @table:  An id table
@@ -2661,7 +2684,7 @@ xmlAddID(xmlValidCtxtPtr ctxt, xmlDocPtr doc, const xmlChar *value,
  */
 void
 xmlFreeIDTable(xmlIDTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeID);
+    xmlHashFree(table, xmlFreeIDTableEntry);
 }
 
 /**
@@ -2761,7 +2784,7 @@ xmlRemoveID(xmlDocPtr doc, xmlAttrPtr attr) {
         return(-1);
     }
 
-    xmlHashRemoveEntry(table, ID, (xmlHashDeallocator) xmlFreeID);
+    xmlHashRemoveEntry(table, ID, xmlFreeIDTableEntry);
     xmlFree(ID);
     attr->atype = 0;
     return(0);
@@ -2845,13 +2868,14 @@ xmlFreeRef(xmlLinkPtr lk) {
 }
 
 /**
- * xmlFreeRefList:
+ * xmlFreeRefTableEntry:
  * @list_ref:  A list of references.
  *
  * Deallocate the memory used by a list of references
  */
 static void
-xmlFreeRefList(xmlListPtr list_ref) {
+xmlFreeRefTableEntry(void *payload, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlListPtr list_ref = (xmlListPtr) payload;
     if (list_ref == NULL) return;
     xmlListDelete(list_ref);
 }
@@ -2864,7 +2888,7 @@ xmlFreeRefList(xmlListPtr list_ref) {
  * Returns 0 to abort the walk or 1 to continue
  */
 static int
-xmlWalkRemoveRef(const void *data, const void *user)
+xmlWalkRemoveRef(const void *data, void *user)
 {
     xmlAttrPtr attr0 = ((xmlRefPtr)data)->attr;
     xmlAttrPtr attr1 = ((xmlRemoveMemoPtr)user)->ap;
@@ -3002,7 +3026,7 @@ failed:
  */
 void
 xmlFreeRefTable(xmlRefTablePtr table) {
-    xmlHashFree(table, (xmlHashDeallocator) xmlFreeRefList);
+    xmlHashFree(table, xmlFreeRefTableEntry);
 }
 
 /**
@@ -3099,8 +3123,7 @@ xmlRemoveRef(xmlDocPtr doc, xmlAttrPtr attr) {
 
     /*If the list is empty then remove the list entry in the hash */
     if (xmlListEmpty(ref_list))
-        xmlHashUpdateEntry(table, ID, NULL, (xmlHashDeallocator)
-        xmlFreeRefList);
+        xmlHashUpdateEntry(table, ID, NULL, xmlFreeRefTableEntry);
     xmlFree(ID);
     return(0);
 }
@@ -4096,8 +4119,10 @@ xmlValidNormalizeAttributeValue(xmlDocPtr doc, xmlNodePtr elem,
 }
 
 static void
-xmlValidateAttributeIdCallback(xmlAttributePtr attr, int *count,
-	                       const xmlChar* name ATTRIBUTE_UNUSED) {
+xmlValidateAttributeIdCallback(void *payload, void *data,
+	                       const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlAttributePtr attr = (xmlAttributePtr) payload;
+    int *count = (int *) data;
     if (attr->atype == XML_ATTRIBUTE_ID) (*count)++;
 }
 
@@ -4169,7 +4194,7 @@ xmlValidateAttributeDecl(xmlValidCtxtPtr ctxt, xmlDocPtr doc,
 	    nbId = 0;
 	    if (doc->intSubset != NULL) {
 		table = (xmlAttributeTablePtr) doc->intSubset->attributes;
-		xmlHashScan3(table, NULL, NULL, attr->elem, (xmlHashScanner)
+		xmlHashScan3(table, NULL, NULL, attr->elem,
 			     xmlValidateAttributeIdCallback, &nbId);
 	    }
 	}
@@ -6530,7 +6555,7 @@ xmlValidateRef(xmlRefPtr ref, xmlValidCtxtPtr ctxt,
  * Returns 0 to abort the walk or 1 to continue
  */
 static int
-xmlWalkValidateList(const void *data, const void *user)
+xmlWalkValidateList(const void *data, void *user)
 {
 	xmlValidateMemoPtr memo = (xmlValidateMemoPtr)user;
 	xmlValidateRef((xmlRefPtr)data, memo->ctxt, memo->name);
@@ -6545,8 +6570,9 @@ xmlWalkValidateList(const void *data, const void *user)
  *
  */
 static void
-xmlValidateCheckRefCallback(xmlListPtr ref_list, xmlValidCtxtPtr ctxt,
-	                   const xmlChar *name) {
+xmlValidateCheckRefCallback(void *payload, void *data, const xmlChar *name) {
+    xmlListPtr ref_list = (xmlListPtr) payload;
+    xmlValidCtxtPtr ctxt = (xmlValidCtxtPtr) data;
     xmlValidateMemo memo;
 
     if (ref_list == NULL)
@@ -6602,7 +6628,7 @@ xmlValidateDocumentFinal(xmlValidCtxtPtr ctxt, xmlDocPtr doc) {
     table = (xmlRefTablePtr) doc->refs;
     ctxt->doc = doc;
     ctxt->valid = 1;
-    xmlHashScan(table, (xmlHashScanner) xmlValidateCheckRefCallback, ctxt);
+    xmlHashScan(table, xmlValidateCheckRefCallback, ctxt);
 
     ctxt->finishDtd = save;
     return(ctxt->valid);
@@ -6659,8 +6685,10 @@ xmlValidateDtd(xmlValidCtxtPtr ctxt, xmlDocPtr doc, xmlDtdPtr dtd) {
 }
 
 static void
-xmlValidateNotationCallback(xmlEntityPtr cur, xmlValidCtxtPtr ctxt,
+xmlValidateNotationCallback(void *payload, void *data,
 	                    const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlEntityPtr cur = (xmlEntityPtr) payload;
+    xmlValidCtxtPtr ctxt = (xmlValidCtxtPtr) data;
     if (cur == NULL)
 	return;
     if (cur->etype == XML_EXTERNAL_GENERAL_UNPARSED_ENTITY) {
@@ -6678,8 +6706,10 @@ xmlValidateNotationCallback(xmlEntityPtr cur, xmlValidCtxtPtr ctxt,
 }
 
 static void
-xmlValidateAttributeCallback(xmlAttributePtr cur, xmlValidCtxtPtr ctxt,
-	                    const xmlChar *name ATTRIBUTE_UNUSED) {
+xmlValidateAttributeCallback(void *payload, void *data,
+	                     const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlAttributePtr cur = (xmlAttributePtr) payload;
+    xmlValidCtxtPtr ctxt = (xmlValidCtxtPtr) data;
     int ret;
     xmlDocPtr doc;
     xmlElementPtr elem = NULL;
@@ -6778,22 +6808,20 @@ xmlValidateDtdFinal(xmlValidCtxtPtr ctxt, xmlDocPtr doc) {
     dtd = doc->intSubset;
     if ((dtd != NULL) && (dtd->attributes != NULL)) {
 	table = (xmlAttributeTablePtr) dtd->attributes;
-	xmlHashScan(table, (xmlHashScanner) xmlValidateAttributeCallback, ctxt);
+	xmlHashScan(table, xmlValidateAttributeCallback, ctxt);
     }
     if ((dtd != NULL) && (dtd->entities != NULL)) {
 	entities = (xmlEntitiesTablePtr) dtd->entities;
-	xmlHashScan(entities, (xmlHashScanner) xmlValidateNotationCallback,
-		    ctxt);
+	xmlHashScan(entities, xmlValidateNotationCallback, ctxt);
     }
     dtd = doc->extSubset;
     if ((dtd != NULL) && (dtd->attributes != NULL)) {
 	table = (xmlAttributeTablePtr) dtd->attributes;
-	xmlHashScan(table, (xmlHashScanner) xmlValidateAttributeCallback, ctxt);
+	xmlHashScan(table, xmlValidateAttributeCallback, ctxt);
     }
     if ((dtd != NULL) && (dtd->entities != NULL)) {
 	entities = (xmlEntitiesTablePtr) dtd->entities;
-	xmlHashScan(entities, (xmlHashScanner) xmlValidateNotationCallback,
-		    ctxt);
+	xmlHashScan(entities, xmlValidateNotationCallback, ctxt);
     }
     return(ctxt->valid);
 }

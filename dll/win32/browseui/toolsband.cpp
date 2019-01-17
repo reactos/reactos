@@ -24,10 +24,6 @@ Implements the toolbar band of a cabinet window
 
 #include "precomp.h"
 
-/* FIXME, I can't include windowsx because it conflicts with some #defines */
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 class CToolsBand :
     public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

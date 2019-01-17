@@ -1,10 +1,10 @@
 /*
  * PROJECT:     ReactOS Application compatibility module
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Shim matching / data (un)packing
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -99,7 +99,7 @@ static BOOL SdbpMatchFileAttributes(PDB pdb, TAGID matching_file, PATTRINFO attr
             }
         }
         if (n == attr_count)
-            SHIM_WARN("Unhandled tag %ws in MACHING_FILE\n", SdbTagToString(tag));
+            SHIM_WARN("Unhandled tag %ws in MATCHING_FILE\n", SdbTagToString(tag));
     }
     return TRUE;
 }
@@ -416,8 +416,11 @@ HSDB WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path)
  */
 void WINAPI SdbReleaseDatabase(HSDB hsdb)
 {
-    SdbCloseDatabase(hsdb->pdb);
-    SdbFree(hsdb);
+    if (hsdb)
+    {
+        SdbCloseDatabase(hsdb->pdb);
+        SdbFree(hsdb);
+    }
 }
 
 /**

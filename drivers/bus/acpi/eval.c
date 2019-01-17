@@ -19,7 +19,7 @@ GetPackageSize(ACPI_OBJECT *Package,
         {
             case ACPI_TYPE_INTEGER:
                 Length = sizeof(ACPI_METHOD_ARGUMENT);
-                DPRINT("Integer %lu -> %lu: %lu (0x%lx)\n", sizeof(ULONG), Length, Package->Package.Elements[i].Integer.Value);
+                DPRINT("Integer %lu -> %lu: %lu\n", sizeof(ULONG), Length, Package->Package.Elements[i].Integer.Value);
                 TotalLength += Length;
                 break;
 
@@ -186,7 +186,6 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
              break;
 
           case ACPI_TYPE_PACKAGE:
-             DPRINT1("ACPI_TYPE_PACKAGE not supported yet!\n");
              Status = GetPackageSize(Obj, &Count, &ExtraParamLength);
              if (!NT_SUCCESS(Status))
                  return Status;
@@ -223,7 +222,6 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
              break;
 
           case ACPI_TYPE_PACKAGE:
-             DPRINT1("ACPI_TYPE_PACKAGE not supported yet!\n");
              Status = ConvertPackageArguments(OutputBuf->Argument, Obj);
              if (!NT_SUCCESS(Status))
                  return Status;

@@ -1672,6 +1672,37 @@ Leave:
     return Status;
 }
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlGetFullPathName_UEx(
+    _In_ PWSTR FileName,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_(BufferLength) PWSTR Buffer,
+    _Out_opt_ PWSTR *FilePart,
+    _Out_opt_ RTL_PATH_TYPE *InputPathType)
+{
+    UNICODE_STRING FileNameString;
+    NTSTATUS status;
+
+    if (InputPathType)
+        *InputPathType = 0;
+
+    /* Build the string */
+    status = RtlInitUnicodeStringEx(&FileNameString, FileName);
+    if (!NT_SUCCESS(status)) return 0;
+
+    /* Call the extended function */
+    return RtlGetFullPathName_Ustr(
+        &FileNameString,
+        BufferLength,
+        Buffer,
+        (PCWSTR*)FilePart,
+        NULL,
+        InputPathType);
+}
 
 /******************************************************************
  *    RtlGetFullPathName_U  (NTDLL.@)
@@ -1697,20 +1728,13 @@ RtlGetFullPathName_U(
     _Out_z_bytecap_(Size) PWSTR Buffer,
     _Out_opt_ PWSTR *ShortName)
 {
-    NTSTATUS Status;
-    UNICODE_STRING FileNameString;
     RTL_PATH_TYPE PathType;
 
-    /* Build the string */
-    Status = RtlInitUnicodeStringEx(&FileNameString, FileName);
-    if (!NT_SUCCESS(Status)) return 0;
-
     /* Call the extended function */
-    return RtlGetFullPathName_Ustr(&FileNameString,
+    return RtlGetFullPathName_UEx((PWSTR)FileName,
                                    Size,
                                    Buffer,
-                                   (PCWSTR*)ShortName,
-                                   NULL,
+                                   ShortName,
                                    &PathType);
 }
 

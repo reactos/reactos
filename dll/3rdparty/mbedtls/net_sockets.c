@@ -47,11 +47,12 @@
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
     !defined(EFI32)
 
-#ifdef _WIN32_WINNT
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0501)
 #undef _WIN32_WINNT
-#endif
 /* Enables getaddrinfo() & Co */
 #define _WIN32_WINNT 0x0501
+#endif
+
 #include <ws2tcpip.h>
 
 #include <winsock2.h>
@@ -65,8 +66,8 @@
 #endif
 #endif /* _MSC_VER */
 
-#define read(fd,buf,len)        recv(fd,(char*)buf,(int) len,0)
-#define write(fd,buf,len)       send(fd,(char*)buf,(int) len,0)
+#define read(fd,buf,len)        recv( fd, (char*)( buf ), (int)( len ), 0 )
+#define write(fd,buf,len)       send( fd, (char*)( buf ), (int)( len ), 0 )
 #define close(fd)               closesocket(fd)
 
 static int wsa_init_done = 0;
@@ -87,7 +88,7 @@ static int wsa_init_done = 0;
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
 
 /* Some MS functions want int and MSVC warns if we pass size_t,
- * but the standard fucntions use socklen_t, so cast only for MSVC */
+ * but the standard functions use socklen_t, so cast only for MSVC */
 #if defined(_MSC_VER)
 #define MSVC_INT_CAST   (int)
 #else
@@ -272,13 +273,18 @@ static int net_would_block( const mbedtls_net_context *ctx )
  */
 static int net_would_block( const mbedtls_net_context *ctx )
 {
+    int err = errno;
+
     /*
      * Never return 'WOULD BLOCK' on a non-blocking socket
      */
     if( ( fcntl( ctx->fd, F_GETFL ) & O_NONBLOCK ) != O_NONBLOCK )
+    {
+        errno = err;
         return( 0 );
+    }
 
-    switch( errno )
+    switch( errno = err )
     {
 #if defined EAGAIN
         case EAGAIN:

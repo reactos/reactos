@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2018, Intel Corp.
+ * Copyright (C) 2000 - 2019, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -199,6 +199,9 @@ AcpiPsExecuteMethod (
         goto Cleanup;
     }
 
+    WalkState->MethodPathname = Info->FullPathname;
+    WalkState->MethodIsNested = FALSE;
+
     if (Info->ObjDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL)
     {
         WalkState->ParseFlags |= ACPI_PARSE_MODULE_LEVEL;
@@ -328,6 +331,9 @@ AcpiPsExecuteTable (
     {
         goto Cleanup;
     }
+
+    WalkState->MethodPathname = Info->FullPathname;
+    WalkState->MethodIsNested = FALSE;
 
     if (Info->ObjDesc->Method.InfoFlags & ACPI_METHOD_MODULE_LEVEL)
     {

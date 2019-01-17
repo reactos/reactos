@@ -30,7 +30,7 @@ RealModeEntryPoint:
     /* Enable A20 address line */
     call EnableA20
 
-    /* Safe real mode entry point in shared memory */
+    /* Save real mode entry point in shared memory */
     mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
 
     /* Address the image with es segment */
@@ -116,7 +116,7 @@ exit_to_protected:
 
     cli
 
-    /* Safe current stack pointer */
+    /* Save current stack pointer */
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */

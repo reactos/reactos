@@ -82,7 +82,7 @@ BEGIN
     IDS_DWL_FAILED "Не удалось скачать пакет установки Gecko, проверьте ваше подключение к сети интернет. Установка будет продолжена без включения пакета Gecko."
     IDS_CANTMAKEINETSHORTCUT "Не удалось создать ярлык интернета."
     IDS_CANTMAKESHORTCUT "Не удалось создать ярлык."
-    IDS_NO_MEMORY "No memory could be allocated!"
-    IDS_NO_DIRECTORY "No directory given!"
-    IDS_INVALID_PATH "The given path is invalid!"
+    IDS_NO_MEMORY "Невозможно выделить память."
+    IDS_NO_DIRECTORY "Не указано ни одного каталога!"
+    IDS_INVALID_PATH "Указанный путь неверен!"
 END

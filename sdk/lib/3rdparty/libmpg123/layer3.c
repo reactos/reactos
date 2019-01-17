@@ -1226,7 +1226,6 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 	part2remain += num;
 	backbits(fr, num);
 	num = 0;
-
 	}
 	else
 	{
@@ -1235,7 +1234,7 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 		gr_info->maxband[0] =
 		gr_info->maxband[1] =
 		gr_info->maxband[2] =
-		gr_info->maxbandl   = 0;
+		gr_info->maxbandl   = 1; /* sfb=maxband[lwin]*3 + lwin - mixed_block_flag must be >= 0 */
 		gr_info->maxb       = 1;
 	}
 

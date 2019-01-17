@@ -38,6 +38,8 @@
 
 #include <string.h>
 
+#if !defined(MBEDTLS_ECJPAKE_ALT)
+
 /*
  * Convert a mbedtls_ecjpake_role to identifier string
  */
@@ -301,7 +303,7 @@ cleanup:
  */
 static int ecjpake_zkp_write( const mbedtls_md_info_t *md_info,
                               const mbedtls_ecp_group *grp,
-                              const int pf, 
+                              const int pf,
                               const mbedtls_ecp_point *G,
                               const mbedtls_mpi *x,
                               const mbedtls_ecp_point *X,
@@ -766,6 +768,7 @@ cleanup:
 #undef ID_MINE
 #undef ID_PEER
 
+#endif /* ! MBEDTLS_ECJPAKE_ALT */
 
 #if defined(MBEDTLS_SELF_TEST)
 

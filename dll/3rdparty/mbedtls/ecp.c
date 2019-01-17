@@ -411,7 +411,7 @@ int mbedtls_ecp_is_zero( mbedtls_ecp_point *pt )
 }
 
 /*
- * Compare two points lazyly
+ * Compare two points lazily
  */
 int mbedtls_ecp_point_cmp( const mbedtls_ecp_point *P,
                            const mbedtls_ecp_point *Q )
@@ -1450,7 +1450,12 @@ static int ecp_mul_comb( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 
 cleanup:
 
-    if( T != NULL && ! p_eq_g )
+    /* There are two cases where T is not stored in grp:
+     * - P != G
+     * - An intermediate operation failed before setting grp->T
+     * In either case, T must be freed.
+     */
+    if( T != NULL && T != grp->T )
     {
         for( i = 0; i < pre_len; i++ )
             mbedtls_ecp_point_free( &T[i] );
@@ -1955,7 +1960,6 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
     {
         /* SEC1 3.2.1: Generate d such that 1 <= n < N */
         int count = 0;
-        unsigned char rnd[MBEDTLS_ECP_MAX_BYTES];
 
         /*
          * Match the procedure given in RFC 6979 (deterministic ECDSA):
@@ -1966,8 +1970,7 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
          */
         do
         {
-            MBEDTLS_MPI_CHK( f_rng( p_rng, rnd, n_size ) );
-            MBEDTLS_MPI_CHK( mbedtls_mpi_read_binary( d, rnd, n_size ) );
+            MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( d, n_size, f_rng, p_rng ) );
             MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( d, 8 * n_size - grp->nbits ) );
 
             /*

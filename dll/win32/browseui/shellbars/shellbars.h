@@ -31,9 +31,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 #include "CBandSiteMenu.h"
 #include "CISFBand.h"
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 #define USE_SYSTEM_ISFBAND 0
 
 #if USE_SYSTEM_ISFBAND

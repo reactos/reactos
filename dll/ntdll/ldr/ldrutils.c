@@ -52,7 +52,7 @@ LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
     /* Allocate the string*/
     StringOut->Buffer = RtlAllocateHeap(LdrpHeap,
                                         0,
-                                        StringOut->Length + sizeof(WCHAR));
+                                        Length + sizeof(WCHAR));
     if (!StringOut->Buffer)
     {
         /* Fail */
@@ -61,13 +61,13 @@ LdrpAllocateUnicodeString(IN OUT PUNICODE_STRING StringOut,
     }
 
     /* Null-terminate it */
-    StringOut->Buffer[StringOut->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    StringOut->Buffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Check if this is a maximum-sized string */
-    if (StringOut->Length != UNICODE_STRING_MAX_BYTES)
+    if (Length != UNICODE_STRING_MAX_BYTES)
     {
         /* It's not, so set the maximum length to be one char more */
-        StringOut->MaximumLength = StringOut->Length + sizeof(UNICODE_NULL);
+        StringOut->MaximumLength = Length + sizeof(UNICODE_NULL);
     }
     else
     {
@@ -1851,6 +1851,7 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
 
     /* FIXME: Setup TestName here */
     Status = STATUS_NOT_FOUND;
+    BufEnd = Buffer;
 
     /* Start loop */
     do

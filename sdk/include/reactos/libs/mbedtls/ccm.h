@@ -1,9 +1,19 @@
 /**
  * \file ccm.h
  *
- * \brief Counter with CBC-MAC (CCM) for 128-bit block ciphers
+ * \brief CCM combines Counter mode encryption with CBC-MAC authentication
+ *        for 128-bit block ciphers.
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ * Input to CCM includes the following elements:
+ * <ul><li>Payload - data that is both authenticated and encrypted.</li>
+ * <li>Associated data (Adata) - data that is authenticated but not
+ * encrypted, For example, a header.</li>
+ * <li>Nonce - A unique value that is assigned to the payload and the
+ * associated data.</li></ul>
+ *
+ */
+/*
+ *  Copyright (C) 2006-2018, Arm Limited (or its affiliates), All Rights Reserved
  *  SPDX-License-Identifier: GPL-2.0
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,46 +30,54 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- *  This file is part of mbed TLS (https://tls.mbed.org)
+ *  This file is part of Mbed TLS (https://tls.mbed.org)
  */
+
 #ifndef MBEDTLS_CCM_H
 #define MBEDTLS_CCM_H
 
 #include "cipher.h"
 
-#define MBEDTLS_ERR_CCM_BAD_INPUT      -0x000D /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_CCM_AUTH_FAILED    -0x000F /**< Authenticated decryption failed. */
+#define MBEDTLS_ERR_CCM_BAD_INPUT       -0x000D /**< Bad input parameters to the function. */
+#define MBEDTLS_ERR_CCM_AUTH_FAILED     -0x000F /**< Authenticated decryption failed. */
+#define MBEDTLS_ERR_CCM_HW_ACCEL_FAILED -0x0011 /**< CCM hardware accelerator failed. */
+
+#if !defined(MBEDTLS_CCM_ALT)
+// Regular implementation
+//
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * \brief          CCM context structure
+ * \brief    The CCM context-type definition. The CCM context is passed
+ *           to the APIs called.
  */
 typedef struct {
-    mbedtls_cipher_context_t cipher_ctx;    /*!< cipher context used */
+    mbedtls_cipher_context_t cipher_ctx;    /*!< The cipher context used. */
 }
 mbedtls_ccm_context;
 
 /**
- * \brief           Initialize CCM context (just makes references valid)
- *                  Makes the context ready for mbedtls_ccm_setkey() or
- *                  mbedtls_ccm_free().
+ * \brief           This function initializes the specified CCM context,
+ *                  to make references valid, and prepare the context
+ *                  for mbedtls_ccm_setkey() or mbedtls_ccm_free().
  *
- * \param ctx       CCM context to initialize
+ * \param ctx       The CCM context to initialize.
  */
 void mbedtls_ccm_init( mbedtls_ccm_context *ctx );
 
 /**
- * \brief           CCM initialization (encryption and decryption)
+ * \brief           This function initializes the CCM context set in the
+ *                  \p ctx parameter and sets the encryption key.
  *
- * \param ctx       CCM context to be initialized
- * \param cipher    cipher to use (a 128-bit block cipher)
- * \param key       encryption key
- * \param keybits   key size in bits (must be acceptable by the cipher)
+ * \param ctx       The CCM context to initialize.
+ * \param cipher    The 128-bit block cipher to use.
+ * \param key       The encryption key.
+ * \param keybits   The key size in bits. This must be acceptable by the cipher.
  *
- * \return          0 if successful, or a cipher specific error code
+ * \return          \c 0 on success, or a cipher-specific error code.
  */
 int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
                         mbedtls_cipher_id_t cipher,
@@ -67,36 +85,37 @@ int mbedtls_ccm_setkey( mbedtls_ccm_context *ctx,
                         unsigned int keybits );
 
 /**
- * \brief           Free a CCM context and underlying cipher sub-context
+ * \brief   This function releases and clears the specified CCM context
+ *          and underlying cipher sub-context.
  *
- * \param ctx       CCM context to free
+ * \param ctx       The CCM context to clear.
  */
 void mbedtls_ccm_free( mbedtls_ccm_context *ctx );
 
 /**
- * \brief           CCM buffer encryption
+ * \brief           This function encrypts a buffer using CCM.
  *
- * \param ctx       CCM context
- * \param length    length of the input data in bytes
- * \param iv        nonce (initialization vector)
- * \param iv_len    length of IV in bytes
- *                  must be 2, 3, 4, 5, 6, 7 or 8
- * \param add       additional data
- * \param add_len   length of additional data in bytes
- *                  must be less than 2^16 - 2^8
- * \param input     buffer holding the input data
- * \param output    buffer for holding the output data
- *                  must be at least 'length' bytes wide
- * \param tag       buffer for holding the tag
- * \param tag_len   length of the tag to generate in bytes
- *                  must be 4, 6, 8, 10, 14 or 16
+ * \param ctx       The CCM context to use for encryption.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        Initialization vector (nonce).
+ * \param iv_len    The length of the IV in Bytes: 7, 8, 9, 10, 11, 12, or 13.
+ * \param add       The additional data field.
+ * \param add_len   The length of additional data in Bytes.
+ *                  Must be less than 2^16 - 2^8.
+ * \param input     The buffer holding the input data.
+ * \param output    The buffer holding the output data.
+ *                  Must be at least \p length Bytes wide.
+ * \param tag       The buffer holding the tag.
+ * \param tag_len   The length of the tag to generate in Bytes:
+ *                  4, 6, 8, 10, 12, 14 or 16.
  *
- * \note            The tag is written to a separate buffer. To get the tag
- *                  concatenated with the output as in the CCM spec, use
- *                  tag = output + length and make sure the output buffer is
- *                  at least length + tag_len wide.
+ * \note            The tag is written to a separate buffer. To concatenate
+ *                  the \p tag with the \p output, as done in <em>RFC-3610:
+ *                  Counter with CBC-MAC (CCM)</em>, use
+ *                  \p tag = \p output + \p length, and make sure that the
+ *                  output buffer is at least \p length + \p tag_len wide.
  *
- * \return          0 if successful
+ * \return          \c 0 on success.
  */
 int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          const unsigned char *iv, size_t iv_len,
@@ -105,21 +124,25 @@ int mbedtls_ccm_encrypt_and_tag( mbedtls_ccm_context *ctx, size_t length,
                          unsigned char *tag, size_t tag_len );
 
 /**
- * \brief           CCM buffer authenticated decryption
+ * \brief           This function performs a CCM authenticated decryption of a
+ *                  buffer.
  *
- * \param ctx       CCM context
- * \param length    length of the input data
- * \param iv        initialization vector
- * \param iv_len    length of IV
- * \param add       additional data
- * \param add_len   length of additional data
- * \param input     buffer holding the input data
- * \param output    buffer for holding the output data
- * \param tag       buffer holding the tag
- * \param tag_len   length of the tag
+ * \param ctx       The CCM context to use for decryption.
+ * \param length    The length of the input data in Bytes.
+ * \param iv        Initialization vector.
+ * \param iv_len    The length of the IV in Bytes: 7, 8, 9, 10, 11, 12, or 13.
+ * \param add       The additional data field.
+ * \param add_len   The length of additional data in Bytes.
+ *                  Must be less than 2^16 - 2^8.
+ * \param input     The buffer holding the input data.
+ * \param output    The buffer holding the output data.
+ *                  Must be at least \p length Bytes wide.
+ * \param tag       The buffer holding the tag.
+ * \param tag_len   The length of the tag in Bytes.
+ *                  4, 6, 8, 10, 12, 14 or 16.
  *
- * \return         0 if successful and authenticated,
- *                 MBEDTLS_ERR_CCM_AUTH_FAILED if tag does not match
+ * \return          0 if successful and authenticated, or
+ *                  #MBEDTLS_ERR_CCM_AUTH_FAILED if the tag does not match.
  */
 int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *iv, size_t iv_len,
@@ -127,11 +150,23 @@ int mbedtls_ccm_auth_decrypt( mbedtls_ccm_context *ctx, size_t length,
                       const unsigned char *input, unsigned char *output,
                       const unsigned char *tag, size_t tag_len );
 
+#ifdef __cplusplus
+}
+#endif
+
+#else  /* MBEDTLS_CCM_ALT */
+#include "ccm_alt.h"
+#endif /* MBEDTLS_CCM_ALT */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(MBEDTLS_SELF_TEST) && defined(MBEDTLS_AES_C)
 /**
- * \brief          Checkup routine
+ * \brief          The CCM checkup routine.
  *
- * \return         0 if successful, or 1 if the test failed
+ * \return         \c 0 on success, or \c 1 on failure.
  */
 int mbedtls_ccm_self_test( int verbose );
 #endif /* MBEDTLS_SELF_TEST && MBEDTLS_AES_C */
