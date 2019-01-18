@@ -197,9 +197,10 @@ private:
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
         HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
+        BOOL policyNoSimpleStartMenu = (int)SHRestricted(REST_NOSTARTPANEL) == 1 ? TRUE : FALSE;
         
-        /* If this policy is true, disable ability to use Modern Start Menu */
-        if(g_TaskbarSettings.bPolicyNoSimpleStartMenu)
+        /* If restriced, disable ability to use Modern Start Menu */
+        if(policyNoSimpleStartMenu)
         {
             /* Swich to classic */
             CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
@@ -208,7 +209,7 @@ private:
         }
 
         BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
-        ::EnableWindow(hwndCustomizeModern, g_TaskbarSettings.bPolicyNoSimpleStartMenu ? FALSE : bModern);
+        ::EnableWindow(hwndCustomizeModern, policyNoSimpleStartMenu ? FALSE : bModern);
         ::EnableWindow(hwndCustomizeClassic, !bModern);
         
         UINT uImageId = bModern ? IDB_STARTPREVIEW : IDB_STARTPREVIEW_CLASSIC;

@@ -40,7 +40,6 @@ BOOL TaskbarSettings::Load()
 {
     DWORD dwRet, cbSize, dwValue = NULL;
 
-    /* Shell Settings */
     cbSize = sizeof(dwValue);
     dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", NULL, &dwValue, &cbSize);
     bLock = (dwRet == ERROR_SUCCESS) ? (dwValue == 0) : TRUE;
@@ -75,9 +74,6 @@ BOOL TaskbarSettings::Load()
             sr.Position = ABE_BOTTOM;
     }
     
-    /* Policies Settings */
-    bPolicyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL);
-
     return TRUE;
 }
 

@@ -137,12 +137,6 @@ static const char strNoSimpleStartMenu[] = {"NoSimpleStartMenu"};
 static POLICYDATA sh32_policy_table[] =
 {
   {
-    REST_NOSTARTPANEL,
-    strExplorer,
-    strNoSimpleStartMenu,
-    SHELL_NO_POLICY
-  },
-  {
     REST_NORUN,
     strExplorer,
     strNoRun,
@@ -767,6 +761,12 @@ static POLICYDATA sh32_policy_table[] =
     REST_NONLEGACYSHELLMODE,
     strExplorer,
     "NoneLegacyShellMode",
+    SHELL_NO_POLICY
+  },
+  {
+    REST_NOSTARTPANEL,
+    strExplorer,
+    strNoSimpleStartMenu,
     SHELL_NO_POLICY
   },
   {

@@ -207,9 +207,7 @@ struct TaskbarSettings
     BOOL bShowSeconds;
     BOOL bHideInactiveIcons;
     TW_STRUCKRECTS2 sr;
-
-    BOOL bPolicyNoSimpleStartMenu;
-
+    
     BOOL Load();
     BOOL Save();
 };
