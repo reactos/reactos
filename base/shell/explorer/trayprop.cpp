@@ -196,11 +196,21 @@ private:
         HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
+        HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
+        
+        /* If this policy is true, disable ability to use Modern Start Menu */
+        if(g_TaskbarSettings.bPolicyNoSimpleStartMenu)
+        {
+            /* Swich to classic */
+            CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+            /* Disable radion button */
+            ::EnableWindow(hwndModernRadioBtn, FALSE);
+        }
 
         BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
-        ::EnableWindow(hwndCustomizeModern, bModern);
+        ::EnableWindow(hwndCustomizeModern, g_TaskbarSettings.bPolicyNoSimpleStartMenu ? FALSE : bModern);
         ::EnableWindow(hwndCustomizeClassic, !bModern);
-
+        
         UINT uImageId = bModern ? IDB_STARTPREVIEW : IDB_STARTPREVIEW_CLASSIC;
         SetBitmap(hwndStartBitmap, &m_hbmpStartBitmap, uImageId);
     }
@@ -227,8 +237,10 @@ public:
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);    // HACK: This has to be read from registry!
+        // fix me: start menu style (classic/modern) should be read somewhere from the registry.
+        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!! 
         UpdateDialog();
+    
         return TRUE;
     }
 

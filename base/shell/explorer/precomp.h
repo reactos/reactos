@@ -62,6 +62,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
 extern HINSTANCE hExplorerInstance;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
+extern HKEY hkExplorerPolicies;
 extern BOOL bExplorerIsShell;
 
 /*
@@ -207,6 +208,8 @@ struct TaskbarSettings
     BOOL bShowSeconds;
     BOOL bHideInactiveIcons;
     TW_STRUCKRECTS2 sr;
+
+    BOOL bPolicyNoSimpleStartMenu;
 
     BOOL Load();
     BOOL Save();

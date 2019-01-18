@@ -23,7 +23,7 @@
 
 HINSTANCE hExplorerInstance;
 HANDLE hProcessHeap;
-HKEY hkExplorer = NULL;
+HKEY hkExplorer = NULL, hkExplorerPolicies = NULL;
 BOOL bExplorerIsShell = FALSE;
 
 class CExplorerModule : public CComModule
@@ -117,7 +117,10 @@ StartWithDesktop(IN HINSTANCE hInstance)
 
     if (RegOpenKeyW(HKEY_CURRENT_USER,
         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-        &hkExplorer) != ERROR_SUCCESS)
+        &hkExplorer) != ERROR_SUCCESS ||
+        RegOpenKeyW(HKEY_CURRENT_USER,
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+        &hkExplorerPolicies) != ERROR_SUCCESS)
     {
         WCHAR Message[256];
         LoadStringW(hInstance, IDS_STARTUP_ERROR, Message, _countof(Message));
@@ -186,6 +189,9 @@ StartWithDesktop(IN HINSTANCE hInstance)
 
     RegCloseKey(hkExplorer);
     hkExplorer = NULL;
+    
+    RegCloseKey(hkExplorerPolicies);
+    hkExplorerPolicies = NULL;
 
     InitializeAtlModule(hInstance, FALSE);
 
