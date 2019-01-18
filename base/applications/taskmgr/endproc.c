@@ -41,16 +41,6 @@ void ProcessPage_OnEndProcess(void)
 
     hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessId);
 
-    /* forbid killing system processes even if we have privileges -- sigh, windows kludge! */
-    if (hProcess && IsCriticalProcess(hProcess))
-    {
-        LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
-        LoadStringW(hInst, IDS_MSG_CLOSESYSTEMPROCESS, strErrorText, 256);
-        MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONWARNING|MB_TOPMOST);
-        CloseHandle(hProcess);
-        return;
-    }
-
     /* if this is a standard process just ask for confirmation before doing it */
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
@@ -58,6 +48,18 @@ void ProcessPage_OnEndProcess(void)
     {
         if (hProcess) CloseHandle(hProcess);
         return;
+    }
+    
+    /* if it's system, ask for confirmation again if it's critical */
+    if (hProcess && IsCriticalProcess(hProcess))
+    {
+        LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
+        LoadStringW(hInst, IDS_MSG_CLOSESYSTEMPROCESS, strErrorText, 256);
+        if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING|MB_TOPMOST) != IDYES)
+        {
+            CloseHandle(hProcess);
+            return;
+        }
     }
 
     /* no such process or not enough privileges to open its token */
