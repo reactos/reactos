@@ -434,7 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Предупреждение диспетчера задач"
     IDS_MSG_WARNINGTERMINATING "ВНИМАНИЕ! Завершение процесса может привести к нежелательным результатам, в том числе к потере данных или к нестабильной работе системы.\nВы действительно хотите завершить процесс?"
     IDS_MSG_UNABLETERMINATEPRO "Не удалось завершить процесс"
-    IDS_MSG_CLOSESYSTEMPROCESS "Это критический системный процесс. Диспетчер задач не может его завершить."
+    IDS_MSG_CLOSESYSTEMPROCESS "WARNING: This is a CRITICAL system process.\n\nEnding this process will cause ReactOS to become unusable or shutdown,\ncausing you to lose any data hasn't been saved. Are you sure you want to\ncontinue?"
     IDS_MSG_UNABLECHANGEPRIORITY "Не удалось изменить приоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ! Изменение класса приоритета этого процесса может привести к нежелательным результатам, в том числе к нестабильной работе системы.\nВы действительно хотите изменить класс приоритета?"
     IDS_MSG_TRAYICONCPUUSAGE "Загрузка ЦП: %d%%"
