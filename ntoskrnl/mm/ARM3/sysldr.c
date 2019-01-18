@@ -2341,252 +2341,146 @@ MiUseLargeDriverPage(IN ULONG NumberOfPtes,
     return FALSE;
 }
 
-ULONG
-NTAPI
-MiComputeDriverProtection(IN BOOLEAN SessionSpace,
-                          IN ULONG SectionProtection)
-{
-    ULONG Protection = MM_ZERO_ACCESS;
-
-    /* Check if the caller gave anything */
-    if (SectionProtection)
-    {
-        /* Always turn on execute access */
-        SectionProtection |= IMAGE_SCN_MEM_EXECUTE;
-
-        /* Check if the registry setting is on or not */
-        if (!MmEnforceWriteProtection)
-        {
-            /* Turn on write access too */
-            SectionProtection |= (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
-        }
-    }
-
-    /* Convert to internal PTE flags */
-    if (SectionProtection & IMAGE_SCN_MEM_EXECUTE) Protection |= MM_EXECUTE;
-    if (SectionProtection & IMAGE_SCN_MEM_READ) Protection |= MM_READONLY;
-
-    /* Check for write access */
-    if (SectionProtection & IMAGE_SCN_MEM_WRITE)
-    {
-        /* Session space is not supported */
-        if (SessionSpace)
-        {
-            DPRINT1("Session drivers not supported\n");
-            ASSERT(SessionSpace == FALSE);
-        }
-        else
-        {
-            /* Convert to internal PTE flag */
-            Protection = (Protection & MM_EXECUTE) ? MM_EXECUTE_READWRITE : MM_READWRITE;
-        }
-    }
-
-    /* If there's no access at all by now, convert to internal no access flag */
-    if (Protection == MM_ZERO_ACCESS) Protection = MM_NOACCESS;
-
-    /* Return the computed PTE protection */
-    return Protection;
-}
-
 VOID
 NTAPI
-MiSetSystemCodeProtection(IN PMMPTE FirstPte,
-                          IN PMMPTE LastPte,
-                          IN ULONG ProtectionMask)
+MiSetSystemCodeProtection(
+    _In_ PMMPTE FirstPte,
+    _In_ PMMPTE LastPte,
+    _In_ ULONG Protection)
 {
-    /* I'm afraid to introduce regressions at the moment... */
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    /* Loop the PTEs */
+    for (PointerPte = FirstPte; PointerPte <= LastPte; PointerPte++)
+    {
+        /* Read the PTE */
+        TempPte = *PointerPte;
+
+        /* Make sure it's valid */
+        ASSERT(TempPte.u.Hard.Valid == 1);
+
+        /* Update the protection */
+        TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
+#if _MI_HAS_NO_EXECUTE
+        TempPte.u.Hard.NoExecute = !BooleanFlagOn(Protection, IMAGE_SCN_MEM_EXECUTE);
+#endif
+
+        MI_UPDATE_VALID_PTE(PointerPte, TempPte);
+    }
+
+    /* Flush it all */
+    KeFlushEntireTb(TRUE, TRUE);
+
     return;
 }
 
 VOID
 NTAPI
-MiWriteProtectSystemImage(IN PVOID ImageBase)
+MiWriteProtectSystemImage(
+    _In_ PVOID ImageBase)
 {
     PIMAGE_NT_HEADERS NtHeaders;
-    PIMAGE_SECTION_HEADER Section;
-    PFN_NUMBER DriverPages;
-    ULONG CurrentProtection, SectionProtection, CombinedProtection = 0, ProtectionMask;
-    ULONG Sections, Size;
-    ULONG_PTR BaseAddress, CurrentAddress;
-    PMMPTE PointerPte, StartPte, LastPte, CurrentPte, ComboPte = NULL;
-    ULONG CurrentMask, CombinedMask = 0;
-    PAGED_CODE();
+    PIMAGE_SECTION_HEADER SectionHeaders, Section;
+    ULONG i;
+    PVOID SectionBase, SectionEnd;
+    ULONG SectionSize;
+    ULONG Protection;
+    PMMPTE FirstPte, LastPte;
 
-    /* No need to write protect physical memory-backed drivers (large pages) */
-    if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
+    /* Check if the registry setting is on or not */
+    if (!MmEnforceWriteProtection)
+    {
+        /* Ignore section protection */
+        return;
+    }
 
-    /* Get the image headers */
+    /* Large page mapped images are not supported */
+    NT_ASSERT(!MI_IS_PHYSICAL_ADDRESS(ImageBase));
+
+    /* Session images are not yet supported */
+    NT_ASSERT(!MI_IS_SESSION_ADDRESS(ImageBase));
+
+    /* Get the NT headers */
     NtHeaders = RtlImageNtHeader(ImageBase);
-    if (!NtHeaders) return;
-
-    /* Check if this is a session driver or not */
-    if (!MI_IS_SESSION_ADDRESS(ImageBase))
+    if (NtHeaders == NULL)
     {
-        /* Don't touch NT4 drivers */
-        if (NtHeaders->OptionalHeader.MajorOperatingSystemVersion < 5) return;
-        if (NtHeaders->OptionalHeader.MajorImageVersion < 5) return;
-    }
-    else
-    {
-        /* Not supported */
-        UNIMPLEMENTED_DBGBREAK("Session drivers not supported\n");
+        DPRINT1("Failed to get NT headers for image @ %p\n", ImageBase);
+        return;
     }
 
-    /* These are the only protection masks we care about */
-    ProtectionMask = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE;
-
-    /* Calculate the number of pages this driver is occupying */
-    DriverPages = BYTES_TO_PAGES(NtHeaders->OptionalHeader.SizeOfImage);
-
-    /* Get the number of sections and the first section header */
-    Sections = NtHeaders->FileHeader.NumberOfSections;
-    ASSERT(Sections != 0);
-    Section = IMAGE_FIRST_SECTION(NtHeaders);
-
-    /* Loop all the sections */
-    CurrentAddress = (ULONG_PTR)ImageBase;
-    while (Sections)
+    /* Don't touch NT4 drivers */
+    if ((NtHeaders->OptionalHeader.MajorOperatingSystemVersion < 5) ||
+        (NtHeaders->OptionalHeader.MajorSubsystemVersion < 5))
     {
-        /* Get the section size */
-        Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+        DPRINT1("Skipping NT 4 driver @ %p\n", ImageBase);
+        return;
+    }
 
-        /* Get its virtual address */
-        BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
-        if (BaseAddress < CurrentAddress)
+    /* Get the section headers */
+    SectionHeaders = IMAGE_FIRST_SECTION(NtHeaders);
+
+    /* Get the base address of the first section */
+    SectionBase = Add2Ptr(ImageBase, SectionHeaders[0].VirtualAddress);
+
+    /* Start protecting the image header as R/O */
+    FirstPte = MiAddressToPte(ImageBase);
+    LastPte = MiAddressToPte(SectionBase) - 1;
+    Protection = IMAGE_SCN_MEM_READ;
+    if (LastPte >= FirstPte)
+    {
+        MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
+    }
+
+    /* Loop the sections */
+    for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++)
+    {
+        /* Get the section base address and size */
+        Section = &SectionHeaders[i];
+        SectionBase = Add2Ptr(ImageBase, Section->VirtualAddress);
+        SectionSize = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+
+        /* Get the first PTE of this section */
+        FirstPte = MiAddressToPte(SectionBase);
+
+        /* Check for overlap with the previous range */
+        if (FirstPte == LastPte)
         {
-            /* Windows doesn't like these */
-            DPRINT1("Badly linked image!\n");
-            return;
+            /* Combine the old and new protection by ORing them */
+            Protection |= (Section->Characteristics & IMAGE_SCN_PROTECTION_MASK);
+
+            /* Update the protection for this PTE */
+            MiSetSystemCodeProtection(FirstPte, FirstPte, Protection);
+
+            /* Skip this PTE */
+            FirstPte++;
         }
 
-        /* Remember the current address */
-        CurrentAddress = BaseAddress + Size - 1;
+        /* There can not be gaps! */
+        NT_ASSERT(FirstPte == (LastPte + 1));
 
-        /* Next */
-        Sections--;
-        Section++;
-    }
+        /* Get the end of the section and the last PTE */
+        SectionEnd = Add2Ptr(SectionBase, SectionSize - 1);
+        NT_ASSERT(SectionEnd < Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage));
+        LastPte = MiAddressToPte(SectionEnd);
 
-    /* Get the number of sections and the first section header */
-    Sections = NtHeaders->FileHeader.NumberOfSections;
-    ASSERT(Sections != 0);
-    Section = IMAGE_FIRST_SECTION(NtHeaders);
-
-    /* Set the address at the end to initialize the loop */
-    CurrentAddress = (ULONG_PTR)Section + Sections - 1;
-    CurrentProtection = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ;
-
-    /* Set the PTE points for the image, and loop its sections */
-    StartPte = MiAddressToPte(ImageBase);
-    LastPte = StartPte + DriverPages;
-    while (Sections)
-    {
-        /* Get the section size */
-        Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-
-        /* Get its virtual address and PTE */
-        BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
-        PointerPte = MiAddressToPte(BaseAddress);
-
-        /* Check if we were already protecting a run, and found a new run */
-        if ((ComboPte) && (PointerPte > ComboPte))
+        /* If there are no more pages (after an overlap), skip this section */
+        if (LastPte < FirstPte)
         {
-            /* Compute protection */
-            CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
-
-            /* Set it */
-            MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
-
-            /* Check for overlap */
-            if (ComboPte == StartPte) StartPte++;
-
-            /* One done, reset variables */
-            ComboPte = NULL;
-            CombinedProtection = 0;
-        }
-
-        /* Break out when needed */
-        if (PointerPte >= LastPte) break;
-
-        /* Get the requested protection from the image header */
-        SectionProtection = Section->Characteristics & ProtectionMask;
-        if (SectionProtection == CurrentProtection)
-        {
-            /* Same protection, so merge the request */
-            CurrentAddress = BaseAddress + Size - 1;
-
-            /* Next */
-            Sections--;
-            Section++;
+            NT_ASSERT(FirstPte == (LastPte + 1));
             continue;
         }
 
-        /* This is now a new section, so close up the old one */
-        CurrentPte = MiAddressToPte(CurrentAddress);
+        /* Get the section protection */
+        Protection = (Section->Characteristics & IMAGE_SCN_PROTECTION_MASK);
 
-        /* Check for overlap */
-        if (CurrentPte == PointerPte)
-        {
-            /* Skip the last PTE, since it overlaps with us */
-            CurrentPte--;
-
-            /* And set the PTE we will merge with */
-            ASSERT((ComboPte == NULL) || (ComboPte == PointerPte));
-            ComboPte = PointerPte;
-
-            /* Get the most flexible protection by merging both */
-            CombinedMask |= (SectionProtection | CurrentProtection);
-        }
-
-        /* Loop any PTEs left */
-        if (CurrentPte >= StartPte)
-        {
-            /* Sanity check */
-            ASSERT(StartPte < LastPte);
-
-            /* Make sure we don't overflow past the last PTE in the driver */
-            if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
-            ASSERT(CurrentPte >= StartPte);
-
-            /* Compute the protection and set it */
-            CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
-            MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
-        }
-
-        /* Set new state */
-        StartPte = PointerPte;
-        CurrentAddress = BaseAddress + Size - 1;
-        CurrentProtection = SectionProtection;
-
-        /* Next */
-        Sections--;
-        Section++;
+        /* Update the protection for this section */
+        MiSetSystemCodeProtection(FirstPte, LastPte, Protection);
     }
 
-    /* Is there a leftover section to merge? */
-    if (ComboPte)
-    {
-        /* Compute and set the protection */
-        CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
-        MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
-
-        /* Handle overlap */
-        if (ComboPte == StartPte) StartPte++;
-    }
-
-    /* Finally, handle the last section */
-    CurrentPte = MiAddressToPte(CurrentAddress);
-    if ((StartPte < LastPte) && (CurrentPte >= StartPte))
-    {
-        /* Handle overlap */
-        if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
-        ASSERT(CurrentPte >= StartPte);
-
-        /* Compute and set the protection */
-        CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
-        MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
-    }
+    /* Image should end with the last section */
+    NT_ASSERT(ALIGN_UP_POINTER_BY(SectionEnd, PAGE_SIZE) == 
+              Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage));
 }
 
 VOID

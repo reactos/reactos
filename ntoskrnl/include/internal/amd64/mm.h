@@ -3,7 +3,8 @@
  */
 #pragma once
 
-#define _MI_PAGING_LEVELS                   4
+#define _MI_PAGING_LEVELS 4
+#define _MI_HAS_NO_EXECUTE 1
 
 /* Memory layout base addresses (This is based on Vista!) */
 #define MI_USER_PROBE_ADDRESS           (PVOID)0x000007FFFFFF0000ULL

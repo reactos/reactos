@@ -203,6 +203,8 @@ MmInitSystem(IN ULONG Phase,
     PMMPTE PointerPte;
     MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameNumber;
+    PLIST_ENTRY ListEntry;
+    PLDR_DATA_TABLE_ENTRY DataTableEntry;
 
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
@@ -270,6 +272,18 @@ MmInitSystem(IN ULONG Phase,
 
     /* Initialize the balance set manager */
     MmInitBsmThread();
+
+    /* Loop the boot loaded images */
+    for (ListEntry = PsLoadedModuleList.Flink;
+         ListEntry != &PsLoadedModuleList;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the data table entry */
+        DataTableEntry = CONTAINING_RECORD(ListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        /* Set up the image protection */
+        MiWriteProtectSystemImage(DataTableEntry->DllBase);
+    }
 
     return TRUE;
 }
