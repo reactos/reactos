@@ -298,8 +298,8 @@ NtUserGetThreadState(
            LARGE_INTEGER LargeTickCount;
            pti = PsGetCurrentThreadWin32Thread();
            KeQueryTickCount(&LargeTickCount);
-           pti->timeLast = LargeTickCount.u.LowPart;
-           pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+           pti->timeLast = MsqCalculateMessageTime(&LargeTickCount);
+           pti->pcti->tickLastMsgChecked = pti->timeLast;
          }
          break;
 

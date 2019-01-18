@@ -2201,7 +2201,7 @@ MsqIsHung(PTHREADINFO pti)
 
    KeQueryTickCount(&LargeTickCount);
 
-   if ((LargeTickCount.u.LowPart - pti->timeLast) > MSQ_HUNG &&
+   if ((MsqCalculateMessageTime(&LargeTickCount) - pti->timeLast) > MSQ_HUNG &&
        !(pti->pcti->fsWakeMask & QS_INPUT) &&
        !PsGetThreadFreezeCount(pti->pEThread) &&
        !(pti->ppi->W32PF_flags & W32PF_APPSTARTING))

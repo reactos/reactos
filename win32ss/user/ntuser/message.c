@@ -834,8 +834,8 @@ co_IntPeekMessage( PMSG Msg,
     do
     {
         KeQueryTickCount(&LargeTickCount);
-        pti->timeLast = LargeTickCount.u.LowPart;
-        pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+        pti->timeLast = MsqCalculateMessageTime(&LargeTickCount);
+        pti->pcti->tickLastMsgChecked = pti->timeLast;
 
         // Post mouse moves while looping through peek messages.
         if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)

@@ -252,7 +252,7 @@ BOOL FASTCALL IntMsqClearWakeMask(VOID);
 static __inline LONG
 MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 {
-    return TickCount->LowPart;
+    return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
 
 VOID FASTCALL IdlePing(VOID);

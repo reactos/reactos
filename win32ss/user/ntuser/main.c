@@ -505,7 +505,7 @@ InitThreadCallback(PETHREAD Thread)
     }
 
     KeQueryTickCount(&LargeTickCount);
-    ptiCurrent->timeLast = LargeTickCount.u.LowPart;
+    ptiCurrent->timeLast = MsqCalculateMessageTime(&LargeTickCount);
 
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if (ptiCurrent->MessageQueue == NULL)
