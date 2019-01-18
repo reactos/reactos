@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for GetMessageTime
+ * PURPOSE:         Test for GetMessageTime and GetTickCount
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 #include "precomp.h"
@@ -46,7 +46,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (s_nCount != 0)
             {
                 ok(GetMessageTime() - s_nMsgTime >= TIMER_INTERVAL / 2,
-                   "message time is wrong\n");
+                   "GetMessageTime() is wrong, compared to previous one\n");
+                ok(GetTickCount() - (DWORD)GetMessageTime() < TIMER_INTERVAL / 2,
+                   "GetMessageTime() is wrong, compared to GetTickCount()\n");
             }
             s_nMsgTime = GetMessageTime();
             ok(s_nMsgTime != 0, "message time was zero.\n");
@@ -65,19 +67,28 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             trace("WM_MOUSEMOVE\n");
             ok_int(s_nCount, 5);
-            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL, "message time is wrong.\n");
+            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL,
+               "GetMessageTime() is wrong, compared to previous one\n");
+            ok(GetTickCount() - (DWORD)GetMessageTime() < TIMER_INTERVAL / 2,
+               "GetMessageTime() is wrong, compared to GetTickCount()\n");
             s_bReach_WM_MOUSEMOVE = TRUE;
             break;
         case WM_LBUTTONDOWN:
             trace("WM_LBUTTONDOWN\n");
             ok_int(s_nCount, 5);
-            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL, "message time is wrong.\n");
+            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL,
+               "GetMessageTime() is wrong, compared to previous one\n");
+            ok(GetTickCount() - (DWORD)GetMessageTime() < TIMER_INTERVAL / 2,
+               "GetMessageTime() is wrong, compared to GetTickCount()\n");
             s_bReach_WM_LBUTTONDOWN = TRUE;
             break;
         case WM_LBUTTONUP:
             trace("WM_LBUTTONUP\n");
             ok_int(s_nCount, 5);
-            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL, "message time is wrong.\n");
+            ok(GetMessageTime() - s_nMsgTime < TIMER_INTERVAL,
+               "GetMessageTime() is wrong, compared to previous one\n");
+            ok(GetTickCount() - (DWORD)GetMessageTime() < TIMER_INTERVAL / 2,
+               "GetMessageTime() is wrong, compared to GetTickCount()\n");
             s_bReach_WM_LBUTTONUP = TRUE;
             break;
         case WM_DESTROY:
