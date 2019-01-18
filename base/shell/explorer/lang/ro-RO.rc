@@ -92,7 +92,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "Meniul „&Pornire”", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_STATIC, 20, 145, 150, 24,
+    LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_STATIC, 20, 145, 150, 24
     PUSHBUTTON "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Meniul „Pornire” &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Acest model de meniu vă oferă aspectul și funcționalitatea clasică", IDC_STATIC, 20, 185, 150, 24
