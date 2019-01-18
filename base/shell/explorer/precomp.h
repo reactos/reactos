@@ -62,7 +62,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
 extern HINSTANCE hExplorerInstance;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
-extern HKEY hkExplorerPolicies;
 extern BOOL bExplorerIsShell;
 
 /*
