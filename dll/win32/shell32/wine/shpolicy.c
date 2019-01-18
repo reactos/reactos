@@ -131,10 +131,17 @@ static const char strNoFileMenu[] = {"NoFileMenu"};
 static const char strNoSaveSetting[] = {"NoSaveSettings"};
 static const char strNoClose[] = {"NoClose"};
 static const char strNoRun[] = {"NoRun"};
+static const char strNoSimpleStartMenu[] = {"NoSimpleStartMenu"};
 
 /* policy data array */
 static POLICYDATA sh32_policy_table[] =
 {
+  {
+    REST_NOSTARTPANEL,
+    strExplorer,
+    strNoSimpleStartMenu,
+    SHELL_NO_POLICY
+  },
   {
     REST_NORUN,
     strExplorer,
