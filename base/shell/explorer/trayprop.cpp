@@ -197,7 +197,7 @@ private:
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
         HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
-        BOOL policyNoSimpleStartMenu = (int)SHRestricted(REST_NOSTARTPANEL) == 1 ? TRUE : FALSE;
+        BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) ? TRUE : FALSE;
         
         /* If restriced, disable ability to use Modern Start Menu */
         if(policyNoSimpleStartMenu)

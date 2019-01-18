@@ -73,7 +73,7 @@ BOOL TaskbarSettings::Load()
         if (sr.Position > ABE_BOTTOM)
             sr.Position = ABE_BOTTOM;
     }
-    
+
     return TRUE;
 }
 
