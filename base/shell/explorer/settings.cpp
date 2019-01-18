@@ -76,9 +76,7 @@ BOOL TaskbarSettings::Load()
     }
     
     /* Policies Settings */
-    //cbSize = sizeof(NULL); // dwValue was NULL at the start, is it right?
-    //dwRet = SHGetValueW(hkExplorerPolicies, NULL, L"NoSimpleStartMenu", NULL, &dwValue, &cbSize);
-    //bPolicyNoSimpleStartMenu = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
+    bPolicyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) == 1 ? TRUE : FALSE;
 
     return TRUE;
 }
