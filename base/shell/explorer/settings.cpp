@@ -76,7 +76,7 @@ BOOL TaskbarSettings::Load()
     }
     
     /* Policies Settings */
-    bPolicyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) == 1 ? TRUE : FALSE;
+    bPolicyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL);
 
     return TRUE;
 }
