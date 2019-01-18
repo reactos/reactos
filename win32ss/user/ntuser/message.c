@@ -681,7 +681,6 @@ static LRESULT handle_internal_events( PTHREADINFO pti, PWND pWnd, DWORD dwQEven
 LRESULT FASTCALL
 IntDispatchMessage(PMSG pMsg)
 {
-    LARGE_INTEGER TickCount;
     LONG Time;
     LRESULT retval = 0;
     PTHREADINFO pti;
@@ -710,8 +709,7 @@ IntDispatchMessage(PMSG pMsg)
         {
             if (ValidateTimerCallback(pti,pMsg->lParam))
             {
-                KeQueryTickCount(&TickCount);
-                Time = MsqCalculateMessageTime(&TickCount);
+                Time = (DWORD)EngGetTickCount();
                 retval = co_IntCallWindowProc((WNDPROC)pMsg->lParam,
                                               TRUE,
                                               pMsg->hwnd,
@@ -727,8 +725,7 @@ IntDispatchMessage(PMSG pMsg)
             PTIMER pTimer = FindSystemTimer(pMsg);
             if (pTimer && pTimer->pfn)
             {
-                KeQueryTickCount(&TickCount);
-                Time = MsqCalculateMessageTime(&TickCount);
+                Time = (DWORD)EngGetTickCount();
                 pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, Time);
             }
             return 0;
@@ -815,7 +812,6 @@ co_IntPeekMessage( PMSG Msg,
                    BOOL bGMSG )
 {
     PTHREADINFO pti;
-    LARGE_INTEGER LargeTickCount;
     BOOL RemoveMessages;
     UINT ProcessMask;
     BOOL Hit = FALSE;
@@ -833,8 +829,7 @@ co_IntPeekMessage( PMSG Msg,
 
     do
     {
-        KeQueryTickCount(&LargeTickCount);
-        pti->timeLast = MsqCalculateMessageTime(&LargeTickCount);
+        pti->timeLast = (DWORD)EngGetTickCount();
         pti->pcti->tickLastMsgChecked = pti->timeLast;
 
         // Post mouse moves while looping through peek messages.
@@ -1152,7 +1147,6 @@ UserPostThreadMessage( PTHREADINFO pti,
                        LPARAM lParam )
 {
     MSG Message;
-    LARGE_INTEGER LargeTickCount;
 
     if (is_pointer_message(Msg))
     {
@@ -1164,9 +1158,7 @@ UserPostThreadMessage( PTHREADINFO pti,
     Message.wParam = wParam;
     Message.lParam = lParam;
     Message.pt = gpsi->ptCursor;
-
-    KeQueryTickCount(&LargeTickCount);
-    Message.time = MsqCalculateMessageTime(&LargeTickCount);
+    Message.time = (DWORD)EngGetTickCount();
     MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
     return TRUE;
 }
@@ -1193,7 +1185,6 @@ UserPostMessage( HWND Wnd,
 {
     PTHREADINFO pti;
     MSG Message;
-    LARGE_INTEGER LargeTickCount;
     LONG_PTR ExtraInfo = 0;
 
     Message.hwnd = Wnd;
@@ -1201,8 +1192,7 @@ UserPostMessage( HWND Wnd,
     Message.wParam = wParam;
     Message.lParam = lParam;
     Message.pt = gpsi->ptCursor;
-    KeQueryTickCount(&LargeTickCount);
-    Message.time = MsqCalculateMessageTime(&LargeTickCount);
+    Message.time = (DWORD)EngGetTickCount();
 
     if (is_pointer_message(Message.message))
     {
