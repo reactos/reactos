@@ -432,7 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Попередження диспетчера завдань"
     IDS_MSG_WARNINGTERMINATING "УВАГА! Припинення процесу може призвести до \nнебажаних наслідків, включаючи втрату даних і \nнестабільну роботу системи. Процес не зможе \nзберегти свій стан або дані перед припиненням. \nВи дійсно бажаєте припинити процес?"
     IDS_MSG_UNABLETERMINATEPRO "Неможливо завершити процес"
-    IDS_MSG_CLOSESYSTEMPROCESS "WARNING: This is a CRITICAL system process.\n\nEnding this process will cause ReactOS to become unusable or shutdown,\ncausing you to lose any data hasn't been saved. Are you sure you want to\ncontinue?"
+    IDS_MSG_CLOSESYSTEMPROCESS "УВАГА! Це КРИТИЧНИЙ системний процес.\n\nЗавершення цього процесу може стати причиною нестабільної або неправильної роботи ReactOS\nчерез що Ви можете втратити всю Незбережені інформацію. Бажаєте\nпродовжити?"
     IDS_MSG_UNABLECHANGEPRIORITY "Неможливо змінити пріоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "УВАГА! Зміна класу пріоритету цього процесу може призвести до \nнебажаних наслідків, включаючи нестабільну роботу \nсистеми.  Ви дійсно бажаєте змінити пріоритет класу?"
     IDS_MSG_TRAYICONCPUUSAGE "Використання ЦП: %d%%"
