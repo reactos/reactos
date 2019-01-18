@@ -89,9 +89,9 @@ CAPTION "Startmenü"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "Modernes &Startmenü", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
-    LTEXT "Dieser Stil gewährt Ihnen einfachen Zugriff auf Ihre Verzeichnisse, bevorzugten Programme und die Suchfunktion.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
-    PUSHBUTTON "An&passen...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "Modernes &Startmenü", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Dieser Stil gewährt Ihnen einfachen Zugriff auf Ihre Verzeichnisse, bevorzugten Programme und die Suchfunktion.", IDC_STATIC, 20, 145, 150, 24
+    PUSHBUTTON "An&passen...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Klassisches Start&menü", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Dieser Stil beinhaltet das klassische Aussehen mit gewohnter Funktionalität", IDC_STATIC, 20, 185, 150, 24
     PUSHBUTTON "An&passen...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14

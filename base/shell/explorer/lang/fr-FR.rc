@@ -89,9 +89,9 @@ CAPTION "Menu démarrer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
 CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "&Menu démarrer", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
-    LTEXT "Ce style de menu vous donne un accès rapide à vos dossiers, programmes favoris et à l'outil de recherche.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "&Menu démarrer", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Ce style de menu vous donne un accès rapide à vos dossiers, programmes favoris et à l'outil de recherche.", IDC_STATIC, 20, 145, 150, 24
+    PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Menu démarrer &classique", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Ce style de menu vous donne l'apparence et les fonctionnalités classiques", IDC_STATIC, 20, 185, 150, 24
     PUSHBUTTON "&Personnaliser...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14

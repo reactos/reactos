@@ -89,9 +89,9 @@ CAPTION "Käynnistä Valikko"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "&Käynnistä Valikko", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
-    LTEXT "Tämä valikkotyyli tarjoaa helpon pääsyn kansioihisi, suosikki ohjelmiisi, ja etsimiseen.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Mukauta...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "&Käynnistä Valikko", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Tämä valikkotyyli tarjoaa helpon pääsyn kansioihisi, suosikki ohjelmiisi, ja etsimiseen.", IDC_STATIC, 20, 145, 150, 24
+    PUSHBUTTON "&Mukauta...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Klassinen Käynnistä &valikko", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
     LTEXT "Tämä valikkotyyli tarjoaa klassisen tyylin ja toiminnallisuuden", IDC_STATIC, 20, 185, 150, 24
     PUSHBUTTON "M&ukauta...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
