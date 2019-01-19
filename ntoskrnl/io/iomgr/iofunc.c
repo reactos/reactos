@@ -2158,7 +2158,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Validate the information class */
-        if ((FileInformationClass >= FileMaximumInformation) ||
+        if ((FileInformationClass < 0) ||
+            (FileInformationClass >= FileMaximumInformation) ||
             !(IopQueryOperationLength[FileInformationClass]))
         {
             /* Invalid class */
@@ -2192,7 +2193,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     else
     {
         /* Validate the information class */
-        if ((FileInformationClass >= FileMaximumInformation) ||
+        if ((FileInformationClass < 0) ||
+            (FileInformationClass >= FileMaximumInformation) ||
             !(IopQueryOperationLength[FileInformationClass]))
         {
             /* Invalid class */
@@ -2959,7 +2961,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Validate the information class */
-        if ((FileInformationClass >= FileMaximumInformation) ||
+        if ((FileInformationClass < 0) ||
+            (FileInformationClass >= FileMaximumInformation) ||
             !(IopSetOperationLength[FileInformationClass]))
         {
             /* Invalid class */
@@ -2995,7 +2998,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
     else
     {
         /* Validate the information class */
-        if ((FileInformationClass >= FileMaximumInformation) ||
+        if ((FileInformationClass < 0) ||
+            (FileInformationClass >= FileMaximumInformation) ||
             !(IopSetOperationLength[FileInformationClass]))
         {
             /* Invalid class */
@@ -3991,7 +3995,8 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Validate the information class */
-        if ((FsInformationClass >= FileFsMaximumInformation) ||
+        if ((FsInformationClass < 0) ||
+            (FsInformationClass >= FileFsMaximumInformation) ||
             !(IopQueryFsOperationLength[FsInformationClass]))
         {
             /* Invalid class */
@@ -4163,7 +4168,8 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Validate the information class */
-        if ((FsInformationClass >= FileFsMaximumInformation) ||
+        if ((FsInformationClass < 0) ||
+            (FsInformationClass >= FileFsMaximumInformation) ||
             !(IopSetFsOperationLength[FsInformationClass]))
         {
             /* Invalid class */

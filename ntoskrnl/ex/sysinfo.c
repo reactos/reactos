@@ -2847,7 +2847,8 @@ NtQuerySystemInformation(
         /*
          * Check if the request is valid.
          */
-        if (SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
+        if (SystemInformationClass < MIN_SYSTEM_INFO_CLASS ||
+            SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
         {
             _SEH2_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
@@ -2871,7 +2872,8 @@ NtQuerySystemInformation(
         /*
          * Check if the request is valid.
          */
-        if (SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
+        if (SystemInformationClass < MIN_SYSTEM_INFO_CLASS ||
+            SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
         {
             _SEH2_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
