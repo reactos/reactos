@@ -2443,6 +2443,12 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
         return Status;
     }
 
+    if (NewHandleEntry.ObAttributes & OBJ_PROTECT_CLOSE)
+    {
+        NewHandleEntry.ObAttributes &= ~OBJ_PROTECT_CLOSE;
+        NewHandleEntry.GrantedAccess |= ObpAccessProtectCloseBit;
+    }
+
     /* Now create the handle */
     NewHandle = ExCreateHandle(HandleTable, &NewHandleEntry);
     if (!NewHandle)
