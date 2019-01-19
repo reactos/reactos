@@ -192,8 +192,8 @@ Test_CreateDIBitmap_Params(void)
         HDC ahdc[3] = {0, hdc, (HDC)-1};
         PBITMAPINFOHEADER apbih[4] = {NULL, &bmi.bmiHeader, &bmiBroken.bmiHeader, INVALID_POINTER};
         ULONG afInitf[12] = {0, 1, 2, 3, CBM_INIT, 4, 5, 6, 7, 8, 0x10, 0x20};
-        PVOID apvBits[3] = {NULL, ajBits, INVALID_POINTER };
-        PBITMAPINFO apbmi[4] = {NULL, &bmi, &bmiBroken, INVALID_POINTER };
+        PVOID apvBits[3] = {NULL, ajBits, INVALID_POINTER};
+        PBITMAPINFO apbmi[4] = {NULL, &bmi, &bmiBroken, INVALID_POINTER};
         ULONG aiUsage[5] = {0, 1, 2, 3, 23};
         DWORD dwExpError;
         BOOL bExpSuccess;

@@ -632,7 +632,7 @@ NTSTATUS TdiReceiveDatagram(
 
 	ReturnInfo = (PTDI_CONNECTION_INFORMATION) ((PUCHAR)ReceiveInfo + sizeof(TDI_CONNECTION_INFORMATION));
 	ReturnInfo->RemoteAddressLength = sizeof(TA_IP_ADDRESS);
-	ReturnInfo->RemoteAddress       = (PUCHAR) ((PUCHAR)ReturnInfo + sizeof(TDI_CONNECTION_INFORMATION));
+	ReturnInfo->RemoteAddress       = ((PUCHAR)ReturnInfo + sizeof(TDI_CONNECTION_INFORMATION));
 
 	ReturnAddress = (PTA_IP_ADDRESS)(ReturnInfo->RemoteAddress);
 	ReturnAddress->TAAddressCount           = 1;

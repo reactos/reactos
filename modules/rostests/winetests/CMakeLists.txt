@@ -1,8 +1,8 @@
 
 add_definitions(-D__ROS_LONG64__)
 
-if (MSVC AND ${ARCH} MATCHES "amd64")
-    add_definitions("/wd4312")
+if (MSVC AND ARCH STREQUAL "amd64")
+    add_compile_flags("/wd4312")
 endif()
 
 add_subdirectory(advapi32)
