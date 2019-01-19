@@ -190,7 +190,7 @@ void DisplayScreen()
 	for (idx=0; idx<ProcPerScreen; idx++)
 	{
 		int i;
-        SIZE_T len;
+		SIZE_T len;
 		TCHAR lpNumber[5];
 		TCHAR lpPid[8];
 		TCHAR lpCpu[6];
