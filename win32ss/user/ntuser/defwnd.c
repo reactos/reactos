@@ -787,6 +787,11 @@ IntDefWindowProc(
             PWND topWnd = UserGetWindowObject(hwndTop);
             if (topWnd)
             {
+               if ((topWnd->style & WS_THICKFRAME) == 0)
+               {
+                  return 0;
+               }
+               
                if (wParam == VK_DOWN)
                {
                    if (topWnd->style & WS_MAXIMIZE)
