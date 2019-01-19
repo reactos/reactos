@@ -2389,7 +2389,7 @@ MiWriteProtectSystemImage(
     PMMPTE FirstPte, LastPte;
 
     /* Check if the registry setting is on or not */
-    if (!MmEnforceWriteProtection)
+    if (MmEnforceWriteProtection)
     {
         /* Ignore section protection */
         return;
@@ -2479,8 +2479,17 @@ MiWriteProtectSystemImage(
     }
 
     /* Image should end with the last section */
-    NT_ASSERT(ALIGN_UP_POINTER_BY(SectionEnd, PAGE_SIZE) == 
-              Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage));
+    if (ALIGN_UP_POINTER_BY(SectionEnd, PAGE_SIZE) !=
+        Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage))
+    {
+        DPRINT1("ImageBase 0x%p ImageSize 0x%lx Section %u VA 0x%lx Raw 0x%lx virt 0x%lx\n",
+            ImageBase,
+            NtHeaders->OptionalHeader.SizeOfImage,
+            i,
+            Section->VirtualAddress,
+            Section->SizeOfRawData,
+            Section->Misc.VirtualSize);
+    }
 }
 
 VOID
