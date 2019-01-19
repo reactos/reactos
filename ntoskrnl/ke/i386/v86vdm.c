@@ -44,6 +44,67 @@ KiVdmUnhandledOpcode(HLT);
 KiVdmUnhandledOpcode(INTO);
 KiVdmUnhandledOpcode(INV);
 
+VOID
+KiVdmDumpTrapFrame(_In_ PKTRAP_FRAME TrapFrame)
+{
+    ULONG FlatIp = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
+    UCHAR Bytes[8];
+
+    DbgPrint("Trap information:\n");
+
+    DbgPrint("Eip=%08x Esp=%08x Ebp=%08x EFlags=%08x ErrCode=%08x\n",
+             TrapFrame->Eip,
+             TrapFrame->HardwareEsp,
+             TrapFrame->Ebp,
+             TrapFrame->EFlags,
+             TrapFrame->ErrCode);
+
+    DbgPrint("CS=%04x DS=%04x ES=%04x FS=%04x GS=%04x SS=%04x\n",
+             TrapFrame->SegCs,
+             TrapFrame->SegDs,
+             TrapFrame->SegEs,
+             TrapFrame->SegFs,
+             TrapFrame->SegGs,
+             TrapFrame->HardwareSegSs);
+
+    DbgPrint("V86Ds=%04x V86Es=%04x V86Fs=%04x V86Gs=%04x\n",
+             TrapFrame->V86Ds,
+             TrapFrame->V86Es,
+             TrapFrame->V86Fs,
+             TrapFrame->V86Gs);
+
+    DbgPrint("DR0=%08x DR1=%08x DR2=%08x DR3=%08x DR6=%08x DR8=%08x\n",
+             TrapFrame->Dr0,
+             TrapFrame->Dr1,
+             TrapFrame->Dr2,
+             TrapFrame->Dr3,
+             TrapFrame->Dr6,
+             TrapFrame->Dr7);
+
+    DbgPrint("Eax=%08x Ebx=%08x Ecx=%08x Edx=%08x Esi=%08x Edi=%08x\n",
+             TrapFrame->Eax,
+             TrapFrame->Ebx,
+             TrapFrame->Ecx,
+             TrapFrame->Edx,
+             TrapFrame->Esi,
+             TrapFrame->Edi);
+
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Bytes, (const UCHAR*)FlatIp, sizeof(Bytes));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Failed to copy instruction bytes!\n");
+        return;
+    }
+    _SEH2_END;
+
+    DbgPrint("Instruction bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+             Bytes[0], Bytes[1], Bytes[2], Bytes[3],
+             Bytes[4], Bytes[5], Bytes[6], Bytes[7]);
+}
+
 /* OPCODE HANDLERS ************************************************************/
 
 BOOLEAN
@@ -429,10 +490,13 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
         case 0xF4:              return KiCallVdmHandler(HLT);
         case 0xFA:              return KiCallVdmHandler(CLI);
         case 0xFB:              return KiCallVdmHandler(STI);
-        default:
-            DPRINT1("Unhandled instruction: 0x%02x.\n", *(PUCHAR)Eip);
-            return KiCallVdmHandler(INV);
+        default:                break;
     }
+
+    DPRINT1("Unhandled VDM Opcode 0x%2x @ 0x%08x\n", *(PUCHAR)Eip, Eip);
+    KiVdmDumpTrapFrame(TrapFrame);
+
+    return KiCallVdmHandler(INV);
 }
 
 /* PREFIX HANDLER *************************************************************/
