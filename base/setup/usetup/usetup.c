@@ -4025,11 +4025,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
             CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line = 12;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
@@ -4039,12 +4034,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
             CONSOLE_NormalTextXY(8, Line, 60, 1);
 
             Line = 15;
-            if (Line < 12)
-                Line = 15;
-
-            if (Line > 15)
-                Line = 12;
-
+            
             CONSOLE_InvertTextXY(8, Line, 60, 1);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
