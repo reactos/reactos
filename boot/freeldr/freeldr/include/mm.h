@@ -21,15 +21,15 @@
 
 extern char __ImageBase;
 #ifdef __GNUC__
-/* .text, .edata and .bss */
+/* .text/.data/.rdata, .edata and .bss */
 #define FREELDR_SECTION_COUNT 3
 #else
 #ifdef _M_AMD64
-/* .text and .pdata */
-#define FREELDR_SECTION_COUNT 2
+/* .text, .rdata/.edata, .pdata and .data/.bss */
+#define FREELDR_SECTION_COUNT 4
 #else
-/* .text and .edata */
-#define FREELDR_SECTION_COUNT 2
+/* .text, .rdata/.edata and .data/.bss */
+#define FREELDR_SECTION_COUNT 3
 #endif
 #endif
 

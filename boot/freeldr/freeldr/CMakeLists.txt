@@ -5,6 +5,74 @@ if(SEPARATE_DBG)
     set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 endif()
 
+if(NOT MSVC)
+###
+### For GCC
+###
+function(add_linker_script _target _linker_script_file)
+    get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
+    add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
+
+    # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
+    # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
+    add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+endfunction()
+
+else()
+###
+### For MSVC
+###
+function(add_linker_script _target _linker_script_file)
+    get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
+    get_filename_component(_file_name ${_linker_script_file} NAME)
+    set(_generated_file_path_prefix "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_target}.dir/${_file_name}")
+
+    # Generate the ASM module containing sections specifications and layout.
+    set(_generated_file "${_generated_file_path_prefix}.S")
+    add_custom_command(
+        OUTPUT ${_generated_file}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
+        DEPENDS ${_file_full_path})
+    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "ASM" GENERATED TRUE)
+    add_asm_files(freeldr_linker_file ${_generated_file})
+
+    # Generate the C module containing extra sections specifications and layout,
+    # as well as comment-type linker #pragma directives.
+    set(_generated_file "${_generated_file_path_prefix}.c")
+    add_custom_command(
+        OUTPUT ${_generated_file}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
+        DEPENDS ${_file_full_path})
+    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "C" GENERATED TRUE)
+    list(APPEND freeldr_linker_file ${_generated_file})
+
+    # Add both files to the sources of the target.
+    target_sources(${_target} PRIVATE ${freeldr_linker_file})
+
+    # Create the additional linker response file.
+    set(_generated_file "${_generated_file_path_prefix}.rsp")
+    if(USE_CLANG_CL)
+        set(_no_std_includes_flag "-nostdinc")
+    else()
+        set(_no_std_includes_flag "/X")
+    endif()
+    add_custom_command(
+        #OUTPUT ${_generated_file}
+        TARGET ${_target} PRE_LINK
+        COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
+        DEPENDS ${_file_full_path}
+        VERBATIM)
+    set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
+    add_target_link_flags(${_target} "@${_generated_file}")
+
+    # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
+    # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
+    add_target_property(${_target} LINK_DEPENDS ${_generated_file})
+endfunction()
+
+endif()
+
+
 if(MSVC)
     # We don't need hotpatching
     replace_compile_flags("/hotpatch" " ")
@@ -238,12 +306,16 @@ if(MSVC)
         add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
         add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER")
     else()
-        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:INIT=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
-        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:INIT=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
+        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:0x200 /ALIGN:0x200")
+        add_linker_script(freeldr_pe freeldr_i386.msvc.lds)
+        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:0x200 /ALIGN:0x200")
+        add_linker_script(freeldr_pe_dbg freeldr_i386.msvc.lds)
     endif()
 else()
-    add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
-    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
+    add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
+    add_linker_script(freeldr_pe freeldr_i386.lds)
+    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
+    add_linker_script(freeldr_pe_dbg freeldr_i386.lds)
 endif()
 
 set_image_base(freeldr_pe 0x10000)

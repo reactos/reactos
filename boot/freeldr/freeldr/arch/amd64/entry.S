@@ -3,6 +3,12 @@
 #include <arch/pc/x86common.h>
 
 EXTERN BootMain:PROC
+// EXTERN cmdline:DWORD
+
+#ifdef _USE_ML
+EXTERN __bss_start__:FWORD
+EXTERN __bss_end__:FWORD
+#endif
 
 .code64
 
@@ -40,13 +46,24 @@ FrldrStartup:
     mov eax, dword ptr [BSS_RealModeEntry]
     mov dword ptr [AddressOfRealModeEntryPoint], eax
 
-    /* GO! */
+    /* Clean out BSS */
+    xor rax, rax
+    mov rdi, offset __bss_start__
+    mov rcx, offset __bss_end__ + 7
+    sub rcx, rdi
+    shr rcx, 3
+    rep stosq
+
+    /* Pass the command line to BootMain */
+    // mov rcx, offset cmdline
     xor rcx, rcx
+
+    /* GO! */
     call BootMain
 
     /* We should never get here */
 stop:
-    jmp stop
+    jmp short stop
     nop
     nop
 
