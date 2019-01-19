@@ -313,6 +313,10 @@ ENDM
     .text
 .endm
 
+.macro .const
+    .section .rdata
+.endm
+
 /* check http://msdn.microsoft.com/en-us/library/9c9k076y%28VS.80%29.aspx
    and http://msdn.microsoft.com/en-us/library/ms679352%28VS.85%29.aspx */
 .macro FPO cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame
