@@ -33,6 +33,9 @@
 
 #include "resource.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS ******************************************************************/
 
 #define IDS_LIST_COLUMN_FIRST IDS_PARTITION_NAME
@@ -795,8 +798,11 @@ DisableWizNext:
                     Status = InitDestinationPaths(&pSetupData->USetupData,
                                                   NULL, // pSetupData->USetupData.InstallationDirectory,
                                                   &DiskEntry, &PartEntry);
-                    // TODO: Check Status
-                    UNREFERENCED_PARAMETER(Status);
+
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("InitDestinationPaths() failed with status 0x%08lx\n", Status);
+                    }
 
                     break;
                 }

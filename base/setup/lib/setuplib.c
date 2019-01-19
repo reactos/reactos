@@ -637,15 +637,20 @@ InitDestinationPaths(
                      DiskEntry->DiskNumber,
                      PartEntry->PartitionNumber);
 
-    /* Check the condition status of RtlStringCchPrintfW() */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
+        DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
         return Status;
     }
 
-    /* Status assignment to Run-Time function returning boolean values (such values are of BOOLEAN type) */
     Status = RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
     DPRINT("DestinationRootPath: %wZ\n", &pSetupData->DestinationRootPath);
 
     // FIXME! Which variable to choose?
@@ -660,24 +665,30 @@ InitDestinationPaths(
                      DiskEntry->BiosDiskNumber,
                      PartEntry->OnDiskPartitionNumber);
 
-    /* Check the condition status of RtlStringCchPrintfW() */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
+        DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         return Status;
     }
 
     Status = ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
 
-    /* Check the condition status of ConcatPaths() */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ConcatPaths() failed with status 0x%08lx\n", Status);
+        DPRINT1("ConcatPaths() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         return Status;
     }
 
-    /* Status assignment to Run-Time function returning boolean values (such values are of BOOLEAN type) */
     Status = RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        return Status;
+    }
 
 /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     /* Create 'pSetupData->DestinationPath' string */
@@ -685,20 +696,36 @@ InitDestinationPaths(
     Status = CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
                           pSetupData->DestinationRootPath.Buffer, InstallationDir);
 
-    /* Check the condition status of CombinePaths() */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("CombinePaths() failed with status 0x%08lx\n", Status);
+        DPRINT1("CombinePaths() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
         return Status;
     }
 
-    /* Status assignment to Run-Time function returning boolean values (such values are of BOOLEAN type) */
     Status = RtlCreateUnicodeString(&pSetupData->DestinationPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        return Status;
+    }
 
 /** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
     // FIXME: This is only temporary!! Must be removed later!
-    /* Status assignment to Run-Time function returning boolean values (such values are of BOOLEAN type) */
-    /***/Status = RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir) ? STATUS_SUCCESS : STATUS_NO_MEMORY;/***/
+    Status = RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationPath);
+        return Status;
+    }
 
     return STATUS_SUCCESS;
 }

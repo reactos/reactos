@@ -3247,10 +3247,9 @@ BuildInstallPaths(PWSTR InstallDir,
 
     Status = InitDestinationPaths(&USetupData, InstallDir, DiskEntry, PartEntry);
 
-    /* Check the condition status of InitDestinationPaths() */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("InitDestinationPaths() failed with status 0x%08lx\n", Status);
+        DPRINT1("InitDestinationPaths() failed with status 0x%08lx\n", Status);
         return Status;
     }
 
