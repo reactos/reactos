@@ -239,6 +239,11 @@ static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
 	    {
 		ret = MIDIMAP_LoadSettingsDefault(mom, buffer);
 	    }
+	    else if (!RegQueryValueExW(hKey, L"szPname", 0, &type, (void*)buffer, &size) && *buffer)
+	    {
+		/* Windows XP and higher setting */
+		ret = MIDIMAP_LoadSettingsDefault(mom, buffer);
+	    }
 	    else
 	    {
 		ret = MIDIMAP_LoadSettingsDefault(mom, NULL);
