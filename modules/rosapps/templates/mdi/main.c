@@ -127,7 +127,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hFont = CreateFont(-MulDiv(8,GetDeviceCaps(hdc,LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, _T("MS Sans Serif"));
     ReleaseDC(0, hdc);
 
-    hFrameWnd = CreateWindowEx(0, (LPCTSTR)hFrameWndClass, szTitle,
+    hFrameWnd = CreateWindowEx(0, (LPCTSTR)(ULONG_PTR)hFrameWndClass, szTitle,
 //  hFrameWnd = CreateWindow(szFrameClass, szTitle,
                     WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
