@@ -213,12 +213,12 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
     PIRP Irp;
     USHORT Size;
     KEVENT Event;
-    NTSTATUS Status;
     BOOLEAN IsRemovable;
     PMOUNTDEV_NAME Name;
     PMOUNTDEV_UNIQUE_ID Id;
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION Stack;
+    NTSTATUS Status, IntStatus;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK IoStatusBlock;
     PARTITION_INFORMATION_EX PartitionInfo;
@@ -282,7 +282,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status =  IoStatusBlock.Status;
+                Status = IoStatusBlock.Status;
             }
 
             /* In case of failure, don't fail, that's no vital */
@@ -329,7 +329,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             if (Status == STATUS_PENDING)
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status =  IoStatusBlock.Status;
+                Status = IoStatusBlock.Status;
             }
 
             /* Once again here, failure isn't major */
@@ -368,7 +368,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                 if (Status == STATUS_PENDING)
                 {
                     KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                    Status =  IoStatusBlock.Status;
+                    Status = IoStatusBlock.Status;
                 }
 
                 if (!NT_SUCCESS(Status))
@@ -470,30 +470,31 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             }
         }
 
-        /* Here we can't fail and assume default value */
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            FreePool(Name);
-            ObDereferenceObject(DeviceObject);
-            ObDereferenceObject(FileObject);
-            return Status;
+            /* Copy back found name to the caller */
+            DeviceName->Length = Name->NameLength;
+            DeviceName->MaximumLength = Name->NameLength + sizeof(WCHAR);
+            DeviceName->Buffer = AllocatePool(DeviceName->MaximumLength);
+            if (!DeviceName->Buffer)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+            else
+            {
+                RtlCopyMemory(DeviceName->Buffer, Name->Name, Name->NameLength);
+                DeviceName->Buffer[Name->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            }
         }
 
-        /* Copy back found name to the caller */
-        DeviceName->Length = Name->NameLength;
-        DeviceName->MaximumLength = Name->NameLength + sizeof(WCHAR);
-        DeviceName->Buffer = AllocatePool(DeviceName->MaximumLength);
-        if (!DeviceName->Buffer)
-        {
-            FreePool(Name);
-            ObDereferenceObject(DeviceObject);
-            ObDereferenceObject(FileObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlCopyMemory(DeviceName->Buffer, Name->Name, Name->NameLength);
-        DeviceName->Buffer[Name->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
         FreePool(Name);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(DeviceObject);
+        ObDereferenceObject(FileObject);
+        return Status;
     }
 
     /* If caller wants device unique ID */
@@ -628,14 +629,14 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->FileObject = FileObject;
 
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
+        IntStatus = IoCallDriver(DeviceObject, Irp);
+        if (IntStatus == STATUS_PENDING)
         {
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = IoStatusBlock.Status;
+            IntStatus = IoStatusBlock.Status;
         }
 
-        *HasGuid = NT_SUCCESS(Status);
+        *HasGuid = NT_SUCCESS(IntStatus);
     }
 
     ObDereferenceObject(DeviceObject);
