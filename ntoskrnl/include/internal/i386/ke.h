@@ -190,16 +190,6 @@ typedef union _KTRAP_EXIT_SKIP_BITS
 #define KiVdmClearVdmEFlags(x)      InterlockedAnd((PLONG)KiNtVdmState, ~(x))
 #define KiCallVdmHandler(x)         KiVdmOpcode##x(TrapFrame, Flags)
 #define KiCallVdmPrefixHandler(x)   KiVdmOpcodePrefix(TrapFrame, Flags | x)
-#define KiVdmUnhandledOpcode(x)                     \
-    BOOLEAN                                         \
-    FASTCALL                                        \
-    KiVdmOpcode##x(IN PKTRAP_FRAME TrapFrame,       \
-                   IN ULONG Flags)                  \
-    {                                               \
-        /* Not yet handled */                       \
-        UNIMPLEMENTED_DBGBREAK();                   \
-        return FALSE;                               \
-    }
 
 C_ASSERT(NPX_FRAME_LENGTH == sizeof(FX_SAVE_AREA));
 
