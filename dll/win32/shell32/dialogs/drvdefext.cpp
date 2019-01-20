@@ -651,9 +651,9 @@ CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
     if (GetDriveTypeW(m_wszDrive) != DRIVE_REMOTE)
     {
         hPage = SH_CreatePropertySheetPage(IDD_DRIVE_HARDWARE,
-                                            HardwarePageProc,
-                                            (LPARAM)this,
-                                            NULL);
+                                           HardwarePageProc,
+                                           (LPARAM)this,
+                                           NULL);
         if (hPage)
             pfnAddPage(hPage, lParam);
     }
