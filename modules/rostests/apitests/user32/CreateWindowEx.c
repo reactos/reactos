@@ -805,7 +805,7 @@ static LRESULT CALLBACK MSGTestProcMDI2(HWND hWnd, UINT message, WPARAM wParam, 
         mcs.style = WS_MAXIMIZE;
 
         hchild = (HWND) SendMessage (g_hwndMDIClient, WM_MDICREATE, 0,
-            (LONG)(LPMDICREATESTRUCT) &mcs);
+            (LPARAM)&mcs);
         ok(hchild == g_ChildWindow, "We are testing with %p instead of %p\n", g_ChildWindow, hchild);
 
     }

@@ -11,6 +11,8 @@
 
 #define CBM_CREATDIB 2
 
+#define INVALID_POINTER ((PVOID)(ULONG_PTR)0xC0000000C0000000ULL)
+
 BOOL
 GetExpected(
     DWORD *pdwError,
@@ -39,14 +41,14 @@ GetExpected(
     {
         if (!lpbmih)
         {
-            if (!lpbInit || (lpbInit == (PVOID)0xC0000000)) return FALSE;
+            if (!lpbInit || (lpbInit == INVALID_POINTER)) return FALSE;
         }
         else
         {
             if (lpbInit)
             {
-                if (lpbInit == (PVOID)0xC0000000) return FALSE;
-                if (!lpbmi || (lpbmi == (PVOID)0xC0000000)) return FALSE;
+                if (lpbInit == INVALID_POINTER) return FALSE;
+                if (!lpbmi || (lpbmi == INVALID_POINTER)) return FALSE;
                 if (lpbmi->bmiHeader.biSize == 0) return FALSE;
                 if (fuUsage == 2) return FALSE;
             }
@@ -64,10 +66,10 @@ GetExpected(
 
         if (fdwInit & CBM_INIT)
         {
-            if (!lpbInit || (lpbInit == (PVOID)0xC0000000)) return FALSE;
+            if (!lpbInit || (lpbInit == INVALID_POINTER)) return FALSE;
         }
 
-        if ((!lpbmi) || (lpbmi == (PVOID)0xc0000000) || (lpbmi->bmiHeader.biSize == 0))
+        if ((!lpbmi) || (lpbmi == INVALID_POINTER) || (lpbmi->bmiHeader.biSize == 0))
         {
             return FALSE;
         }
@@ -76,7 +78,7 @@ GetExpected(
     {
 
         if ((lpbmih == NULL) ||
-            (lpbmih == (PVOID)0xC0000000) ||
+            (lpbmih == INVALID_POINTER) ||
             (lpbmih->biSize == 0))
         {
             return FALSE;
@@ -89,7 +91,7 @@ GetExpected(
         }
 
 
-        if (lpbmi == (PVOID)0xc0000000) return FALSE;
+        if (lpbmi == INVALID_POINTER) return FALSE;
     }
 
     return TRUE;
@@ -119,7 +121,7 @@ Test_CreateDIBitmap_Params(void)
     hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_INIT, NULL, NULL, DIB_PAL_COLORS);
     ok(hbmp != 0, "\n");
 
-    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, 0, (PVOID)0xc0000000, &bmi, DIB_PAL_COLORS);
+    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, 0, INVALID_POINTER, &bmi, DIB_PAL_COLORS);
     ok(hbmp != 0, "\n");
 
     hbmp = CreateDIBitmap(NULL, &bmi.bmiHeader, CBM_INIT, NULL, &bmi, DIB_PAL_COLORS);
@@ -152,14 +154,14 @@ Test_CreateDIBitmap_Params(void)
     ok_err(0xbadbad00);
 
     SetLastError(0xbadbad00);
-    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_INIT, (PVOID)0xc0000000, &bmi, DIB_PAL_COLORS);
+    hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, CBM_INIT, INVALID_POINTER, &bmi, DIB_PAL_COLORS);
     ok(hbmp == 0, "\n");
     ok_err(0xbadbad00);
 
     SetLastError(0xbadbad00);
     _SEH2_TRY
     {
-        hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, 0, ajBits, (PVOID)0xc0000000, DIB_PAL_COLORS);
+        hbmp = CreateDIBitmap(hdc, &bmi.bmiHeader, 0, ajBits, INVALID_POINTER, DIB_PAL_COLORS);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -188,10 +190,10 @@ Test_CreateDIBitmap_Params(void)
     {
         ULONG i1, i2, i3, i4, i5, i6;
         HDC ahdc[3] = {0, hdc, (HDC)-1};
-        PBITMAPINFOHEADER apbih[4] = {NULL, &bmi.bmiHeader, &bmiBroken.bmiHeader, (PVOID)0xC0000000};
+        PBITMAPINFOHEADER apbih[4] = {NULL, &bmi.bmiHeader, &bmiBroken.bmiHeader, INVALID_POINTER};
         ULONG afInitf[12] = {0, 1, 2, 3, CBM_INIT, 4, 5, 6, 7, 8, 0x10, 0x20};
-        PVOID apvBits[3] = {NULL, ajBits, (PVOID)0xc0000000};
-        PBITMAPINFO apbmi[4] = {NULL, &bmi, &bmiBroken, (PVOID)0xC0000000};
+        PVOID apvBits[3] = {NULL, ajBits, INVALID_POINTER};
+        PBITMAPINFO apbmi[4] = {NULL, &bmi, &bmiBroken, INVALID_POINTER};
         ULONG aiUsage[5] = {0, 1, 2, 3, 23};
         DWORD dwExpError;
         BOOL bExpSuccess;

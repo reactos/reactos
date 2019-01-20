@@ -12,6 +12,8 @@
 #include <winbase.h>
 #include <marshalling/marshalling.h>
 
+#define INVALID_POINTER ((PVOID)(ULONG_PTR)0xdeadbeefdeadbeefULL)
+
 START_TEST(MarshallUpStructuresArray)
 {
     // Setting cElements to zero should yield success.
@@ -26,11 +28,11 @@ START_TEST(MarshallUpStructuresArray)
 
     // This is triggered by both pStructuresArray and pInfo.
     SetLastError(0xDEADBEEF);
-    ok(!MarshallUpStructuresArray(0, (PVOID)0xDEADDEAD, 1, NULL, 0, FALSE), "MarshallUpStructuresArray returns TRUE!\n");
+    ok(!MarshallUpStructuresArray(0, INVALID_POINTER, 1, NULL, 0, FALSE), "MarshallUpStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError returns %lu!\n", GetLastError());
 
     SetLastError(0xDEADBEEF);
-    ok(!MarshallUpStructuresArray(0, NULL, 1, (const MARSHALLING_INFO*)0xDEADDEAD, 0, FALSE), "MarshallUpStructuresArray returns TRUE!\n");
+    ok(!MarshallUpStructuresArray(0, NULL, 1, (const MARSHALLING_INFO*)INVALID_POINTER, 0, FALSE), "MarshallUpStructuresArray returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError returns %lu!\n", GetLastError());
 
     // More testing is conducted in the MarshallDownStructuresArray test.
