@@ -348,14 +348,70 @@ struct InternalIconData : NOTIFYICONDATA
 {
     // Must keep a separate copy since the original is unioned with uTimeout.
     UINT uVersionCopy;
+    
+    BOOL Locked; // hack for USB icon
+    
+    // Icon showing behaviour 
+    UINT uBehaviour;
+};
+
+
+
+#define BEH_ALWAYS_SHOW   0
+#define BEH_ALWAYS_HIDE   1
+#define BEH_HIDE_INACTIVE 2
+
+class CBalloonQueue;
+
+class CNotifyToolbar :
+    public CWindowImplBaseT< CToolbar<InternalIconData>, CControlWinTraits >
+{
+    HIMAGELIST m_ImageList;
+    int m_VisibleButtonCount;
+    
+    CBalloonQueue * m_BalloonQueue;
+    
+    BOOL expanded;
+
+public:
+    CNotifyToolbar();
+    virtual ~CNotifyToolbar();
+
+    int GetVisibleButtonCount();
+    int FindItem(IN HWND hWnd, IN UINT uID, InternalIconData ** pdata);
+    int FindExistingSharedIcon(HICON handle);
+    BOOL AddButton(IN CONST NOTIFYICONDATA *iconData);
+    BOOL SwitchVersion(IN CONST NOTIFYICONDATA *iconData);
+    BOOL UpdateButton(IN CONST NOTIFYICONDATA *iconData);
+    BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData);
+    VOID ResizeImagelist();
+    bool SendNotifyCallback(InternalIconData* notifyItem, UINT uMsg);
+    VOID SetBehavior(int iItem, int iBehavior);
+    VOID Toogle(BOOL expand);
+
+private:
+    //LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);  UNCOMMENT ON MERGE OR REBASE
+    VOID SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam);
+    LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnTooltipShow(INT uCode, LPNMHDR hdr, BOOL& bHandled);
+    void Realign();
+
+public:
+    BEGIN_MSG_MAP(CNotifyToolbar)
+        //MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)          UNCOMMENT ON MERGE OR REBASE
+        MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
+        NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
+    END_MSG_MAP()
+
+    void Initialize(HWND hWndParent, CBalloonQueue * queue);
 };
 
 HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
-CToolbar<InternalIconData>* CTrayNotifyWnd_GetTrayToolbar(IUnknown *pTray);
+CNotifyToolbar* CTrayNotifyWnd_GetTrayToolbar(IUnknown *pTray);
 
 /* SysPagerWnd */
 HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
-CToolbar<InternalIconData>* CSysPagerWnd_GetTrayToolbar(IUnknown *pPager);
+CNotifyToolbar* CSysPagerWnd_GetTrayToolbar(IUnknown *pPager);
 
 /*
  * taskswnd.c
