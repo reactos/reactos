@@ -26,7 +26,8 @@
     <img alt="Follow on Twitter" src="https://img.shields.io/twitter/follow/reactos.svg?style=social&label=Follow%20%40reactos">
   </a>
 </p>
-**Note: ReactOS is still alpha and may crash on some Hardware its recommended to install it in a Virtual Machine (VirtualBox(TM),Hyper-V(TM),VMWare(TM),Qemu,ETC)**
+## Note: ReactOS is still alpha and may crash on some Hardware its recommended to install it in a Virtual Machine (VirtualBox(TM),Hyper-V(TM),VMWare(TM),Qemu,ETC)
+
 ## Quick Links
 
 - [Website](https://reactos.org)
