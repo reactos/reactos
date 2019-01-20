@@ -31,6 +31,7 @@ extern void func_RealGetWindowClass(void);
 extern void func_RedrawWindow(void);
 extern void func_RegisterHotKey(void);
 extern void func_RegisterClassEx(void);
+extern void func_ScrollBarWndExtra(void);
 extern void func_ScrollDC(void);
 extern void func_ScrollWindowEx(void);
 extern void func_SendMessageTimeout(void);
@@ -76,6 +77,7 @@ const struct test winetest_testlist[] =
     { "RedrawWindow", func_RedrawWindow },
     { "RegisterHotKey", func_RegisterHotKey },
     { "RegisterClassEx", func_RegisterClassEx },
+    { "ScrollBarWndExtra", func_ScrollBarWndExtra },
     { "ScrollDC", func_ScrollDC },
     { "ScrollWindowEx", func_ScrollWindowEx },
     { "SendMessageTimeout", func_SendMessageTimeout },
