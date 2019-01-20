@@ -121,7 +121,7 @@ VOID ParseCommandLine(LPWSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 
 	if(isdigit(ch))
 	{
-		unsigned int i = _wtoi(szCmdLine - 1);
+		ULONG_PTR i = _wtoi(szCmdLine - 1);
 		*hwndParent = (HWND)i;
 	}
 	else

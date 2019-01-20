@@ -189,7 +189,8 @@ void DisplayScreen()
 		lines = ProcPerScreen;
 	for (idx=0; idx<ProcPerScreen; idx++)
 	{
-		int len, i;
+		int i;
+		SIZE_T len;
 		TCHAR lpNumber[5];
 		TCHAR lpPid[8];
 		TCHAR lpCpu[6];
@@ -501,7 +502,7 @@ void PerfDataRefresh()
 		// so that we can establish delta values
 		pPDOld = NULL;
 		for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-			if (pPerfDataOld[Idx2].ProcessId == (ULONG)(pSPI->UniqueProcessId) &&
+			if (pPerfDataOld[Idx2].ProcessId == HandleToUlong(pSPI->UniqueProcessId) &&
 			    /* check also for the creation time, a new process may have an id of an old one */
 			    pPerfDataOld[Idx2].CreateTime.QuadPart == pSPI->CreateTime.QuadPart) {
 				pPDOld = &pPerfDataOld[Idx2];
@@ -525,7 +526,7 @@ void PerfDataRefresh()
 #endif
 		}
 
-		pPerfData[Idx].ProcessId = (ULONG)(pSPI->UniqueProcessId);
+		pPerfData[Idx].ProcessId = HandleToUlong(pSPI->UniqueProcessId);
 		pPerfData[Idx].CreateTime = pSPI->CreateTime;
 
 		if (pPDOld)	{
