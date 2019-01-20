@@ -88,8 +88,8 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
         }
     }
 
+#if defined(_M_IX86)
     /* Install the drive mapper according to this section drive mappings */
-#if defined(_M_IX86) && !defined(_MSC_VER)
     DriveMapMapDrivesInSection(SectionName);
 #endif
 

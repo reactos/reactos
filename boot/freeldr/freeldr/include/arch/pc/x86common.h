@@ -77,6 +77,3 @@
 #define LMODE_DS HEX(18)
 #define CMODE_CS HEX(30)
 //#endif
-
-/* Makes "x" a global variable or label */
-#define EXTERN(x)    .global x; x:

@@ -159,14 +159,19 @@ list(APPEND FREELDR_BOOTMGR_SOURCE
     video/palette.c
     video/video.c)
 
+list(APPEND FREELDR_BASE_ASM_SOURCE)
+
 if(ARCH STREQUAL "i386")
+    list(APPEND FREELDR_BASE_ASM_SOURCE
+        arch/i386/multiboot.S)
+
     list(APPEND FREELDR_COMMON_ASM_SOURCE
+        arch/i386/drvmap.S
         arch/i386/entry.S
         arch/i386/int386.S
         arch/i386/pnpbios.S
         arch/i386/i386trap.S
-        arch/i386/linux.S
-        arch/i386/mb.S)
+        arch/i386/linux.S)
 
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/i386/winldr.c
@@ -202,9 +207,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/xboxrtc.c
         arch/i386/xboxvideo.c
         disk/scsiport.c)
-    if(NOT MSVC)
-        list(APPEND FREELDR_COMMON_ASM_SOURCE arch/i386/drvmap.S)
-    endif()
 
 elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_ASM_SOURCE
@@ -271,13 +273,15 @@ set(PCH_SOURCE
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
 
-if(ARCH STREQUAL "i386" AND NOT MSVC)
-    list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
 ## GCC builds need this extra thing for some reason...
+if(ARCH STREQUAL "i386" AND NOT MSVC)
     target_link_libraries(freeldr_common mini_hal)
 endif()
 
+add_asm_files(freeldr_base_asm ${FREELDR_BASE_ASM_SOURCE})
+
 list(APPEND FREELDR_BASE_SOURCE
+    ${freeldr_base_asm}
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
     ntldr/setupldr.c ## Strangely enough this file is needed in GCC builds

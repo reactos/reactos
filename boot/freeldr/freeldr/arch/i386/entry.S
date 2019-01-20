@@ -25,7 +25,7 @@ EXTERN _BootMain:PROC
 EXTERN _InitIdt:PROC
 EXTERN _i386Idt:DWORD
 //EXTERN _i386idtptr:FWORD
-// EXTERN cmdline:DWORD
+EXTERN cmdline:DWORD
 
 #ifdef _USE_ML
 EXTERN __bss_start__:DWORD
@@ -89,8 +89,7 @@ ASSUME /*CS:_TEXT,*/ DS:_DATA, ES:_DATA, FS:_DATA, GS:_DATA, SS:_DATA
     call _InitIdt
 
     /* Pass the command line to BootMain */
-    // mov eax, offset cmdline
-    xor eax, eax
+    mov eax, offset cmdline
 
     /* GO! */
     push eax

@@ -17,7 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
@@ -25,8 +24,8 @@
 
 PUBLIC _DriveMapInt13HandlerStart
 _DriveMapInt13HandlerStart:
-Int13Handler:
 
+Int13Handler:
     push bp
     mov bp, sp
     push ax
@@ -40,14 +39,14 @@ Int13Handler:
     mov word ptr cs:[CallersFlags - Int13Handler], ax
 
     /* Save the drive number they passed in */
-    mov cs:[PassedInDriveNumber - Int13Handler], dl
+    mov byte ptr cs:[PassedInDriveNumber - Int13Handler], dl
 
     /* Now we need to perform the mapping */
     xor cx, cx
     mov si, offset Int13HandlerMapCount - Int13Handler
 
     /* Get the count of drives in the map list */
-    mov cl, cs:[si]
+    mov cl, byte ptr cs:[si]
     inc si
 
     /* If the map list is empty then just call the old int 13h handler */
@@ -56,8 +55,8 @@ Int13Handler:
 
 GetMappedDriveNumberLoop:
 
-    /* Get the next drive number in the list */
-    lods ax, cs:[si]
+    /* Get the next drive number in the list (store it in AX) */
+    lods word ptr cs:[si]
 
     /* Check to see if it's the one they are calling int 13h for */
     cmp dl, al
@@ -84,7 +83,6 @@ CallOldInt13Handler:
     /* Put flags onto stack */
     push word ptr cs:[CallersFlags - Int13Handler]
 
-
     /* Call old int 13h handler with new drive number */
     .byte HEX(9a) /* lcall */
 PUBLIC _DriveMapOldInt13HandlerAddress
@@ -100,7 +98,7 @@ _DriveMapOldInt13HandlerAddress:
     pop ax
 
     /* Restore the callers drive number */
-    mov dl, cs:[PassedInDriveNumber - Int13Handler]
+    mov dl, byte ptr cs:[PassedInDriveNumber - Int13Handler]
 
     pop bp
 
@@ -112,6 +110,7 @@ CallersFlags:
 PassedInDriveNumber:
     .byte   0
 
+/* See the DRIVE_MAP_LIST structure in include/arch/i386/drivemap.h */
 PUBLIC _DriveMapInt13HandlerMapList
 _DriveMapInt13HandlerMapList:
 Int13HandlerMapCount:
@@ -139,3 +138,7 @@ Int13HandlerDriveNew4:
 
 PUBLIC _DriveMapInt13HandlerEnd
 _DriveMapInt13HandlerEnd:
+
+.endcode16
+
+END

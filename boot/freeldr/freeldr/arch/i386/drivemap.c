@@ -20,21 +20,20 @@
 #include <freeldr.h>
 #include <debug.h>
 
-DBG_DEFAULT_CHANNEL(WARNING);
+DBG_DEFAULT_CHANNEL(DISK);
 
 BOOLEAN      DriveMapInstalled = FALSE;    // Tells us if we have already installed our drive map int 13h handler code
 ULONG        OldInt13HandlerAddress = 0;   // Address of BIOS int 13h handler
 ULONG        DriveMapHandlerAddress = 0;   // Linear address of our drive map handler
 ULONG        DriveMapHandlerSegOff = 0;    // Segment:offset style address of our drive map handler
 
-#ifndef _MSC_VER
 VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 {
     CHAR           SettingName[80];
     CHAR           SettingValue[80];
     CHAR           Drive1[80];
     CHAR           Drive2[80];
-    ULONG          SectionId;
+    ULONG_PTR      SectionId;
     ULONG          SectionItemCount;
     ULONG          Index;
     ULONG          Index2;
@@ -143,7 +142,6 @@ BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 
     return TRUE;
 }
-#endif
 
 UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 {
@@ -172,7 +170,6 @@ UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
     return BiosDriveNumber;
 }
 
-#ifndef _MSC_VER
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
     ULONG*  RealModeIVT = (ULONG*)0x00000000;
@@ -226,4 +223,3 @@ VOID DriveMapRemoveInt13Handler(VOID)
         DriveMapInstalled = FALSE;
     }
 }
-#endif

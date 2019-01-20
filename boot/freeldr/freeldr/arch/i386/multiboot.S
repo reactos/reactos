@@ -42,6 +42,18 @@
  */
 #define INITIAL_BASE HEX(200000)
 
+
+#ifdef _USE_ML
+EXTERN __bss_start__:DWORD
+EXTERN __bss_end__:DWORD
+#endif
+
+
+#ifdef _USE_ML
+.MBDATA SEGMENT PUBLIC 'DATA'
+ASSUME nothing
+#endif
+
     /* Align to 32 bits boundary */
     .align 4
 
@@ -54,7 +66,7 @@ MultibootHeader:
     /* checksum */
     .long -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
     /* header_addr */
-    .long INITIAL_BASE + MultibootHeader - FREELDR_BASE
+    .long MultibootHeader + INITIAL_BASE - FREELDR_BASE
     /* load_addr */
     .long INITIAL_BASE
     /* load_end_addr */
@@ -62,15 +74,27 @@ MultibootHeader:
     /* bss_end_addr */
     .long 0
     /* entry_addr */
-    .long INITIAL_BASE + MultibootEntry - FREELDR_BASE
+    .long MultibootEntry + INITIAL_BASE - FREELDR_BASE
+
+#ifdef _USE_ML
+.MBDATA ENDS
+#endif
+
+
+.code32
+ASSUME ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 MultibootEntry:
     cld
 
+    /* Check for valid multiboot signature */
+    cmp eax, MULTIBOOT_BOOTLOADER_MAGIC
+    jne mbfail
+
     /* Save command line */
-    test dword ptr [ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
+    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
     jz mb2
-    mov esi, [ebx + MB_INFO_COMMAND_LINE_OFFSET]
+    mov esi, dword ptr ds:[ebx + MB_INFO_COMMAND_LINE_OFFSET]
     mov edi, offset cmdline + INITIAL_BASE - FREELDR_BASE
     mov ecx, CMDLINE_SIZE - 1
 mb1:
@@ -83,14 +107,14 @@ mb1:
 
 mb2:
     /* See if the boot device was passed in */
-    test dword ptr [ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_BOOT_DEVICE
+    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_BOOT_DEVICE
 
     /* If no boot device known, assume first partition of first harddisk */
     mov dx, HEX(0180)
     jz mb3
 
     /* Load boot drive into DL, boot partition into DH */
-    mov edx, [ebx + MB_INFO_BOOT_DEVICE_OFFSET]
+    mov edx, dword ptr ds:[ebx + MB_INFO_BOOT_DEVICE_OFFSET]
     bswap edx
     inc dh
 
@@ -103,7 +127,11 @@ mb3:
     rep movsd
 
     /* Load segment registers for real-address mode */
-    lgdt gdtptr
+#ifdef _USE_ML
+    lgdt fword ptr ds:[gdtptr]
+#else
+    lgdt ds:[gdtptr]
+#endif
     mov ax, HEX(10)
     mov ds, ax
     mov es, ax
@@ -114,6 +142,11 @@ mb3:
     /* Jump to relocated code */
     ljmp HEX(08), mb4
 
+mbfail:
+    int 3
+mbstop:
+    jmp short mbstop  /* We should never get here */
+
 .code16
 mb4:
     /* Disable protected mode */
@@ -123,26 +156,20 @@ mb4:
 
     /* Jump to real entry point */
     ljmp16 0, FREELDR_BASE
+.endcode16
+
 
     /* Force 8-byte alignment */
     .align 8
 gdt:
-    /* 16-bit flat CS (!) */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9B00)
-    .word HEX(008F)
+    .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 00: NULL descriptor */
+    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(008F) /* 08: 16-bit flat CS (!) */
+    .word HEX(FFFF), HEX(0000), HEX(9300), HEX(0000) /* 10: 16-bit real mode DS */
 
-    /* 16-bit real mode DS */
-    .word HEX(FFFF)
-    .word HEX(0000)
-    .word HEX(9300)
-    .word HEX(0000)
-
-    /* GDT pointer */
+/* GDT table pointer */
 gdtptr:
-    .word HEX(17)       /* Limit */
-    .long gdt - 8       /* Base Address */
+    .word HEX(17)   /* Limit */
+    .long gdt       /* Base Address */
 
 PUBLIC cmdline
 cmdline:
