@@ -16,6 +16,7 @@ typedef struct _PAGE_DATA
     DWORD volumeMaximum;
     DWORD volumeStep;
     PMIXERCONTROLDETAILS_UNSIGNED volumeValues;
+    BOOL volumeSync;
 } PAGE_DATA, *PPAGE_DATA;
 
 
@@ -132,7 +133,7 @@ OnMixerControlChange(
     if (mixerGetControlDetails((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
         return;
 
-    for (i = 0; i < min(pPageData->volumeChannels, 5); i++)
+    for (i = 0; i < pPageData->volumeChannels; i++)
     {
         j = i * 4;
 
@@ -150,7 +151,8 @@ OnHScroll(
     LPARAM lParam)
 {
     MIXERCONTROLDETAILS mxcd;
-    INT id, idx;
+    DWORD dwValue, dwPos;
+    INT id, idx, i, j;
 
     id = (INT)GetWindowLongPtr((HWND)lParam, GWLP_ID);
     if (id < 9475 && id > 9503)
@@ -159,9 +161,51 @@ OnHScroll(
     if ((id - 9475) % 4 != 0)
         return;
 
-    idx = (id - 9475) / 4;
+    dwPos = (DWORD)SendDlgItemMessage(hwndDlg, id, TBM_GETPOS, 0, 0);
+    dwValue = (dwPos * pPageData->volumeStep) + pPageData->volumeMinimum;
 
-    pPageData->volumeValues[idx].dwValue = ((DWORD)SendDlgItemMessage(hwndDlg, id, TBM_GETPOS, 0, 0) * pPageData->volumeStep) + pPageData->volumeMinimum;
+    if (pPageData->volumeSync)
+    {
+        for (i = 0; i < pPageData->volumeChannels; i++)
+        {
+            j = 9475 + (i * 4);
+            if (j != id)
+                SendDlgItemMessage(hwndDlg, j, TBM_SETPOS, (WPARAM)TRUE, dwPos);
+
+            pPageData->volumeValues[i].dwValue = dwValue;
+        }
+    }
+    else
+    {
+        idx = (id - 9475) / 4;
+        pPageData->volumeValues[idx].dwValue = dwValue;
+    }
+
+    mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
+    mxcd.dwControlID = pPageData->volumeControlID;
+    mxcd.cChannels = pPageData->volumeChannels;
+    mxcd.cMultipleItems = 0;
+    mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    mxcd.paDetails = pPageData->volumeValues;
+
+    if (mixerSetControlDetails((HMIXEROBJ)pPageData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_SETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
+        return;
+}
+
+
+static
+VOID
+OnSetDefaults(
+    PPAGE_DATA pPageData,
+    HWND hwndDlg)
+{
+    MIXERCONTROLDETAILS mxcd;
+    DWORD dwValue, i;
+
+    dwValue = ((VOLUME_MAX - VOLUME_MIN) / 2 * pPageData->volumeStep) + pPageData->volumeMinimum;
+
+    for (i = 0; i < pPageData->volumeChannels; i++)
+        pPageData->volumeValues[i].dwValue = dwValue;
 
     mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
     mxcd.dwControlID = pPageData->volumeControlID;
@@ -218,7 +262,25 @@ SpeakerVolumeDlgProc(
 
         case WM_HSCROLL:
             if (pPageData)
+            {
                 OnHScroll(pPageData, hwndDlg, wParam, lParam);
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case 9504:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        pPageData->volumeSync = (SendDlgItemMessage(hwndDlg, 9504, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    break;
+
+                case 9505:
+                    OnSetDefaults(pPageData, hwndDlg);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
             break;
 
         case WM_NOTIFY:
@@ -255,6 +317,8 @@ SpeakerVolume(
     psh.ppsp = psp;
 
     InitPropSheetPage(&psp[0], IDD_MULTICHANNEL, SpeakerVolumeDlgProc);
+    psp[0].dwFlags |= PSP_USETITLE;
+    psp[0].pszTitle = Caption;
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
