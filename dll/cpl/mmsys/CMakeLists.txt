@@ -4,6 +4,7 @@ spec2def(mmsys.cpl mmsys.spec)
 list(APPEND SOURCE
     mmsys.c
     sounds.c
+    speakervolume.c
     volume.c
     audio.c
     voice.c

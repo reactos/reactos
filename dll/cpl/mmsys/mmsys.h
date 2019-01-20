@@ -37,12 +37,19 @@ extern HINSTANCE hApplet;
 #define DRVM_MAPPER_PREFERRED_GET (DRVM_MAPPER+21)
 #define DRVM_MAPPER_PREFERRED_SET (DRVM_MAPPER+22)
 
+#define VOLUME_MIN        0
+#define VOLUME_MAX      500
+#define VOLUME_TICFREQ   50
+#define VOLUME_PAGESIZE 100
+
 /* main.c */
 
 VOID
-InitPropSheetPage(PROPSHEETPAGE *psp,
-		  WORD idDlg,
-		  DLGPROC DlgProc);
+InitPropSheetPage(
+    PROPSHEETPAGE *psp,
+    WORD idDlg,
+    DLGPROC DlgProc,
+    LPARAM lParam);
 
 LONG APIENTRY
 MmSysApplet(HWND hwnd,
@@ -82,5 +89,11 @@ AudioDlgProc(HWND hwndDlg,
              UINT uMsg,
              WPARAM wParam,
              LPARAM lParam);
+
+/* speakervolume.c */
+
+INT_PTR
+SpeakerVolume(HWND hwndDlg,
+              HMIXER hMixer);
 
 #endif /* _MMSYS_H */

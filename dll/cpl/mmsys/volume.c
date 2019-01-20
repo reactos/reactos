@@ -11,10 +11,6 @@
 
 #include <shellapi.h>
 
-#define VOLUME_MIN        0
-#define VOLUME_MAX      500
-#define VOLUME_TICFREQ   50
-#define VOLUME_PAGESIZE 100
 
 typedef struct _IMGINFO
 {
@@ -444,6 +440,10 @@ VolumeDlgProc(HWND hwndDlg,
 
                 case IDC_ADVANCED_BTN:
                     LaunchSoundControl(hwndDlg);
+                    break;
+
+                case IDC_SPEAKER_VOL_BTN:
+                    SpeakerVolume(hwndDlg, pGlobalData->hMixer);
                     break;
             }
             break;

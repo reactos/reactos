@@ -733,11 +733,11 @@ MmSysApplet(HWND hwnd,
     psh.ppsp = psp;
     psh.pfnCallback = PropSheetProc;
 
-    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc);
-    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc);
-    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc);
-    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc);
-    InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc);
+    InitPropSheetPage(&psp[0], IDD_VOLUME,VolumeDlgProc, 0);
+    InitPropSheetPage(&psp[1], IDD_SOUNDS,SoundsDlgProc, 0);
+    InitPropSheetPage(&psp[2], IDD_AUDIO,AudioDlgProc, 0);
+    InitPropSheetPage(&psp[3], IDD_VOICE,VoiceDlgProc, 0);
+    InitPropSheetPage(&psp[4], IDD_HARDWARE,HardwareDlgProc, 0);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -745,7 +745,8 @@ MmSysApplet(HWND hwnd,
 VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
                   WORD idDlg,
-                  DLGPROC DlgProc)
+                  DLGPROC DlgProc,
+                  LPARAM lParam)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -753,6 +754,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
     psp->hInstance = hApplet;
     psp->pszTemplate = MAKEINTRESOURCE(idDlg);
     psp->pfnDlgProc = DlgProc;
+    psp->lParam = lParam;
 }
 
 
