@@ -48,8 +48,7 @@ VOID
 InitPropSheetPage(
     PROPSHEETPAGE *psp,
     WORD idDlg,
-    DLGPROC DlgProc,
-    LPARAM lParam);
+    DLGPROC DlgProc);
 
 LONG APIENTRY
 MmSysApplet(HWND hwnd,
@@ -93,7 +92,6 @@ AudioDlgProc(HWND hwndDlg,
 /* speakervolume.c */
 
 INT_PTR
-SpeakerVolume(HWND hwndDlg,
-              HMIXER hMixer);
+SpeakerVolume(HWND hwndDlg);
 
 #endif /* _MMSYS_H */

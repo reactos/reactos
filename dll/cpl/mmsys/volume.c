@@ -443,7 +443,7 @@ VolumeDlgProc(HWND hwndDlg,
                     break;
 
                 case IDC_SPEAKER_VOL_BTN:
-                    SpeakerVolume(hwndDlg, pGlobalData->hMixer);
+                    SpeakerVolume(hwndDlg);
                     break;
             }
             break;
