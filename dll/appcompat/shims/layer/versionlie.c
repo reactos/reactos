@@ -47,6 +47,7 @@ VersionLieInfo g_WinVistaSP1 = { 0x17710006, 6, 0, 6001, VER_PLATFORM_WIN32_NT, 
 VersionLieInfo g_WinVistaSP2 = { 0x17720006, 6, 0, 6002, VER_PLATFORM_WIN32_NT, 2, 0 };
 
 VersionLieInfo g_Win7RTM = { 0x1db00106, 6, 1, 7600, VER_PLATFORM_WIN32_NT, 0, 0 };
+VersionLieInfo g_Win7SP1 = { 0x1db10106, 6, 1, 7601, VER_PLATFORM_WIN32_NT, 1, 0 };
 
 VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
 VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
@@ -230,6 +231,9 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_GetVersionExW)(LPOSVERSIONINFOEXA lpOsVersionI
 #define VERSION_INFO    g_Win7RTM
 #include "versionlie.inl"
 
+#define SHIM_NS         Win7SP1VersionLie
+#define VERSION_INFO    g_Win7SP1
+#include "versionlie.inl"
 
 #define SHIM_NS         Win8RTMVersionLie
 #define VERSION_INFO    g_Win8RTM
