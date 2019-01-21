@@ -13,7 +13,7 @@ START_TEST(NtGdiSetBitmapBits)
 	HBITMAP hBitmap;
 
 	SetLastError(ERROR_SUCCESS);
-    ok_long(NtGdiSetBitmapBits(0, 0, 0), 0);
+	ok_long(NtGdiSetBitmapBits(0, 0, 0), 0);
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	/* Test NULL bitnap handle */
