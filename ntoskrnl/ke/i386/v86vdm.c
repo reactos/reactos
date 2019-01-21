@@ -429,7 +429,9 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
         case 0xF4:              return KiCallVdmHandler(HLT);
         case 0xFA:              return KiCallVdmHandler(CLI);
         case 0xFB:              return KiCallVdmHandler(STI);
-        default:                return KiCallVdmHandler(INV);
+        default:
+            DPRINT1("Unhandled instruction: 0x%02x.\n", *(PUCHAR)Eip);
+            return KiCallVdmHandler(INV);
     }
 }
 
