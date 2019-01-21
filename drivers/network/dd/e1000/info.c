@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Miniport information callbacks
- * COPYRIGHT:   Copyright 2013 Cameron Gutman (cameron.gutman@reactos.org)
- *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   2013 Cameron Gutman (cameron.gutman@reactos.org)
+ *              2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "nic.h"
@@ -65,8 +65,6 @@ MiniportQueryInformation(
     status = NDIS_STATUS_SUCCESS;
     copySource = &genericUlong;
     copyLength = sizeof(ULONG);
-
-    NdisAcquireSpinLock(&Adapter->Lock);
 
     switch (Oid)
     {
@@ -219,7 +217,6 @@ MiniportQueryInformation(
         *BytesNeeded = 0;
     }
 
-    NdisReleaseSpinLock(&Adapter->Lock);
     /* XMIT_ERROR and RCV_ERROR are really noisy, so do not log those. */
     if (Oid != OID_GEN_XMIT_ERROR && Oid != OID_GEN_RCV_ERROR)
     {
@@ -245,8 +242,6 @@ MiniportSetInformation(
     NDIS_STATUS status;
 
     status = NDIS_STATUS_SUCCESS;
-
-    NdisAcquireSpinLock(&Adapter->Lock);
 
     switch (Oid)
     {
@@ -342,8 +337,6 @@ MiniportSetInformation(
         *BytesRead = InformationBufferLength;
         *BytesNeeded = 0;
     }
-
-    NdisReleaseSpinLock(&Adapter->Lock);
 
     return status;
 }

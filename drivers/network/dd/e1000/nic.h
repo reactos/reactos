@@ -1,9 +1,10 @@
 /*
  * PROJECT:     ReactOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Intel PRO/1000 driver definitions
- * COPYRIGHT:   Copyright 2013 Cameron Gutman (cameron.gutman@reactos.org)
- *              Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ * PURPOSE:     Hardware specific functions
+ * COPYRIGHT:   2013 Cameron Gutman (cameron.gutman@reactos.org)
+ *              2018 Mark Jansen (mark.jansen@reactos.org)
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #ifndef _E1000_PCH_
@@ -15,17 +16,18 @@
 
 #define E1000_TAG '001e'
 
-#define MAXIMUM_FRAME_SIZE 1522
-#define RECEIVE_BUFFER_SIZE          2048
+#define MAXIMUM_FRAME_SIZE   1522
+#define RECEIVE_BUFFER_SIZE  2048
 
 #define DRIVER_VERSION 1
 
+#define DEFAULT_INTERRUPT_MASK  (E1000_IMS_LSC | E1000_IMS_TXDW | E1000_IMS_TXQE | E1000_IMS_RXDMT0 | E1000_IMS_RXT0 | E1000_IMS_TXD_LOW)
 
-#define DEFAULT_INTERRUPT_MASK      (E1000_IMS_LSC | E1000_IMS_TXDW | E1000_IMS_RXDMT0 | E1000_IMS_RXT0)
 
 typedef struct _E1000_ADAPTER
 {
-    NDIS_SPIN_LOCK Lock;
+    // NDIS_SPIN_LOCK AdapterLock;
+
     NDIS_HANDLE AdapterHandle;
     USHORT VendorID;
     USHORT DeviceID;
@@ -60,13 +62,15 @@ typedef struct _E1000_ADAPTER
     NDIS_MINIPORT_INTERRUPT Interrupt;
     BOOLEAN InterruptRegistered;
 
-    ULONG InterruptMask;
-    ULONG InterruptPending;
+    LONG InterruptMask;
+    LONG InterruptPending;
 
 
     /* Transmit */
     PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptors;
     NDIS_PHYSICAL_ADDRESS TransmitDescriptorsPa;
+
+    PNDIS_PACKET TransmitPackets[NUM_TRANSMIT_DESCRIPTORS];
 
     ULONG CurrentTxDesc;
     ULONG LastTxDesc;
@@ -76,8 +80,6 @@ typedef struct _E1000_ADAPTER
     /* Receive */
     PE1000_RECEIVE_DESCRIPTOR ReceiveDescriptors;
     NDIS_PHYSICAL_ADDRESS ReceiveDescriptorsPa;
-
-    ULONG CurrentRxDesc;
 
     E1000_RCVBUF_SIZE ReceiveBufferType;
     volatile PUCHAR ReceiveBuffer;
@@ -179,7 +181,7 @@ NDIS_STATUS
 NTAPI
 NICTransmitPacket(
     IN PE1000_ADAPTER Adapter,
-    IN ULONG PhysicalAddress,
+    IN PHYSICAL_ADDRESS PhysicalAddress,
     IN ULONG Length);
 
 NDIS_STATUS
@@ -217,11 +219,16 @@ MiniportHandleInterrupt(
 
 VOID
 NTAPI
+E1000ReadUlong(
+    IN PE1000_ADAPTER Adapter,
+    IN ULONG Address,
+    OUT PULONG Value);
+
+VOID
+NTAPI
 E1000WriteUlong(
     IN PE1000_ADAPTER Adapter,
     IN ULONG Address,
     IN ULONG Value);
-
-
 
 #endif /* _E1000_PCH_ */

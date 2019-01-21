@@ -1,4 +1,4 @@
-; NETRTL.INF
+; NETE1000.INF
 
 ; Installation file for Intel-based NICs
 
@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 18/05/2018,1.00
+DriverVer  = 22/01/2019,1.00
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -18,7 +18,43 @@ DefaultDestDir = 12
 %IntelMfg% = IntelMfg
 
 [IntelMfg]
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1000
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1001
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1004
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1008
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1009
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100A
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100C
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100D
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100E
 %IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_100F
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1010
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1011
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1012
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1013
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1014
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1015
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1016
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1017
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1018
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1019
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_101A
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_101D
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_101E
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1026
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1027
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1028
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1075
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1076
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1077
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1078
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1079
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_107A
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_107B
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_107C
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_108A
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_1099
+%IntelE1000.DeviceDesc% = E1000_Inst.ndi,PCI\VEN_8086&DEV_10B5
 
 ;----------------------------- E1000 DRIVER -----------------------------
 
