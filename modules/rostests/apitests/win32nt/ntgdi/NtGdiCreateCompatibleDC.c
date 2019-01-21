@@ -29,5 +29,5 @@ START_TEST(NtGdiCreateCompatibleDC)
 	hObj = SelectObject(hDC, GetStockObject(WHITE_PEN));
 	ok_ptr(hObj, GetStockObject(BLACK_PEN));
 
-	ok_int(NtGdiDeleteObjectApp(hDC) != 0, "NtGdiDeleteObjectApp(hDC) was zero.\n");
+	ok(NtGdiDeleteObjectApp(hDC) != 0, "NtGdiDeleteObjectApp(hDC) was zero.\n");
 }
