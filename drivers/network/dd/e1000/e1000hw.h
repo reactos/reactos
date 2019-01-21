@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Intel PRO/1000 driver definitions
- * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ * PURPOSE:     Hardware specific definitions
+ * COPYRIGHT:   2018 Mark Jansen (mark.jansen@reactos.org)
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #pragma once
@@ -30,6 +31,8 @@ typedef struct _ETH_HEADER {
 } ETH_HEADER, *PETH_HEADER;
 
 
+C_ASSERT(sizeof(ETH_HEADER) == 14);
+
 
 typedef enum _E1000_RCVBUF_SIZE
 {
@@ -53,6 +56,8 @@ typedef enum _E1000_RCVBUF_SIZE
 
 /* 3.2.3 Receive Descriptor Format */
 
+#define E1000_RDESC_STATUS_PIF          (1 << 7)    /* Passed in-exact filter */
+#define E1000_RDESC_STATUS_IXSM         (1 << 2)    /* Ignore Checksum Indication */
 #define E1000_RDESC_STATUS_EOP          (1 << 1)    /* End of Packet */
 #define E1000_RDESC_STATUS_DD           (1 << 0)    /* Descriptor Done */
 
@@ -71,6 +76,7 @@ typedef struct _E1000_RECEIVE_DESCRIPTOR
 
 /* 3.3.3 Legacy Transmit Descriptor Format */
 
+#define E1000_TDESC_CMD_IDE             (1 << 7)    /* Interrupt Delay Enable */
 #define E1000_TDESC_CMD_RS              (1 << 3)    /* Report Status */
 #define E1000_TDESC_CMD_IFCS            (1 << 1)    /* Insert FCS */
 #define E1000_TDESC_CMD_EOP             (1 << 0)    /* End Of Packet */
@@ -118,18 +124,23 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 
 #define E1000_REG_RCTL              0x0100      /* Receive Control Register, R/W */
 #define E1000_REG_TCTL              0x0400      /* Transmit Control Register, R/W */
+#define E1000_REG_TIPG              0x0410      /* Transmit IPG Register, R/W */
 
 #define E1000_REG_RDBAL             0x2800      /* Receive Descriptor Base Address Low, R/W */
 #define E1000_REG_RDBAH             0x2804      /* Receive Descriptor Base Address High, R/W */
 #define E1000_REG_RDLEN             0x2808      /* Receive Descriptor Length, R/W */
 #define E1000_REG_RDH               0x2810      /* Receive Descriptor Head, R/W */
 #define E1000_REG_RDT               0x2818      /* Receive Descriptor Tail, R/W */
+#define E1000_REG_RDTR              0x2820      /* Receive Delay Timer, R/W */
+#define E1000_REG_RADV              0x282C      /* Receive Absolute Delay Timer, R/W */
 
 #define E1000_REG_TDBAL             0x3800      /* Transmit Descriptor Base Address Low, R/W */
 #define E1000_REG_TDBAH             0x3804      /* Transmit Descriptor Base Address High, R/W */
 #define E1000_REG_TDLEN             0x3808      /* Transmit Descriptor Length, R/W */
 #define E1000_REG_TDH               0x3810      /* Transmit Descriptor Head, R/W */
 #define E1000_REG_TDT               0x3818      /* Transmit Descriptor Tail, R/W */
+#define E1000_REG_TIDV              0x3820      /* Transmit Interrupt Delay Value, R/W */
+#define E1000_REG_TADV              0x382C      /* Transmit Absolute Delay Timer, R/W */
 
 
 #define E1000_REG_RAL               0x5400      /* Receive Address Low, R/W */
@@ -137,11 +148,16 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 
 
 /* E1000_REG_CTRL */
+#define E1000_CTRL_LRST             (1 << 3)    /* Link Reset */
+#define E1000_CTRL_ASDE             (1 << 5)    /* Auto-Speed Detection Enable */
+#define E1000_CTRL_SLU              (1 << 6)    /* Set Link Up */
 #define E1000_CTRL_RST              (1 << 26)   /* Device Reset, Self clearing */
+#define E1000_CTRL_VME              (1 << 30)   /* VLAN Mode Enable */
 
 
 /* E1000_REG_STATUS */
-#define E1000_STATUS_LU             (1 << 0)    /* Link Up Indication */
+#define E1000_STATUS_FD             (1 << 0)    /* Full Duplex Indication */
+#define E1000_STATUS_LU             (1 << 1)    /* Link Up Indication */
 #define E1000_STATUS_SPEEDSHIFT     6           /* Link speed setting */
 #define E1000_STATUS_SPEEDMASK      (3 << E1000_STATUS_SPEEDSHIFT)
 
@@ -164,9 +180,12 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 
 /* E1000_REG_IMS */
 #define E1000_IMS_TXDW              (1 << 0)    /* Transmit Descriptor Written Back */
+#define E1000_IMS_TXQE              (1 << 1)    /* Transmit Queue Empty */
 #define E1000_IMS_LSC               (1 << 2)    /* Sets mask for Link Status Change */
 #define E1000_IMS_RXDMT0            (1 << 4)    /* Receive Descriptor Minimum Threshold Reached */
 #define E1000_IMS_RXT0              (1 << 7)    /* Receiver Timer Interrupt */
+#define E1000_IMS_TXD_LOW           (1 << 15)   /* Transmit Descriptor Low Threshold hit */
+#define E1000_IMS_SRPD              (1 << 16)   /* Small Receive Packet Detection */
 
 
 /* E1000_REG_ITR */
@@ -192,7 +211,10 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 #define E1000_TCTL_EN               (1 << 1)    /* Transmit Enable */
 #define E1000_TCTL_PSP              (1 << 3)    /* Pad Short Packets */
 
-
+/* E1000_REG_TIPG */
+#define E1000_TIPG_IPGT_DEF         (10 << 0)   /* IPG Transmit Time */
+#define E1000_TIPG_IPGR1_DEF        (10 << 10)  /* IPG Receive Time 1 */
+#define E1000_TIPG_IPGR2_DEF        (10 << 20)  /* IPG Receive Time 2 */
 
 
 /* E1000_REG_RAH */
@@ -222,4 +244,3 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 #define E1000_PSS_SPEED_AND_DUPLEX  (1 << 11)   /* Speed and Duplex Resolved */
 #define E1000_PSS_SPEEDSHIFT        14
 #define E1000_PSS_SPEEDMASK         (3 << E1000_PSS_SPEEDSHIFT)
-

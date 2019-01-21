@@ -10,7 +10,7 @@
 
 #include <debug.h>
 
-ULONG DebugTraceLevel = DEBUG_ULTRA;
+ULONG DebugTraceLevel = MIN_TRACE;
 
 NDIS_STATUS
 NTAPI
@@ -33,40 +33,32 @@ MiniportSend(
     PE1000_ADAPTER Adapter = (PE1000_ADAPTER)MiniportAdapterContext;
     PSCATTER_GATHER_LIST sgList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, ScatterGatherListPacketInfo);
     ULONG TransmitLength;
-    ULONG TransmitBuffer;
+    PHYSICAL_ADDRESS TransmitBuffer;
     NDIS_STATUS Status;
 
     ASSERT(sgList != NULL);
     ASSERT(sgList->NumberOfElements == 1);
-    ASSERT(sgList->Elements[0].Address.HighPart == 0);
     ASSERT((sgList->Elements[0].Address.LowPart & 3) == 0);
     ASSERT(sgList->Elements[0].Length <= MAXIMUM_FRAME_SIZE);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Sending %d byte packet\n", sgList->Elements[0].Length));
-
-    NdisAcquireSpinLock(&Adapter->Lock);
-
     if (Adapter->TxFull)
     {
-        NdisReleaseSpinLock(&Adapter->Lock);
         NDIS_DbgPrint(MIN_TRACE, ("All TX descriptors are full\n"));
         return NDIS_STATUS_RESOURCES;
     }
 
     TransmitLength = sgList->Elements[0].Length;
-    TransmitBuffer = sgList->Elements[0].Address.LowPart;
+    TransmitBuffer = sgList->Elements[0].Address;
+    Adapter->TransmitPackets[Adapter->CurrentTxDesc] = Packet;
 
     Status = NICTransmitPacket(Adapter, TransmitBuffer, TransmitLength);
     if (Status != NDIS_STATUS_SUCCESS)
     {
-        NdisReleaseSpinLock(&Adapter->Lock);
         NDIS_DbgPrint(MIN_TRACE, ("Transmit packet failed\n"));
         return Status;
     }
 
-    NdisReleaseSpinLock(&Adapter->Lock);
-
-    return NDIS_STATUS_SUCCESS;
+    return NDIS_STATUS_PENDING;
 }
 
 VOID
@@ -107,7 +99,6 @@ MiniportInitialize(
     PNDIS_RESOURCE_LIST ResourceList;
     UINT ResourceListSize;
     PCI_COMMON_CONFIG PciConfig;
-    //ULONG Value;
 
     /* Make sure the medium is supported */
     for (i = 0; i < MediumArraySize; i++)
@@ -137,8 +128,6 @@ MiniportInitialize(
 
     RtlZeroMemory(Adapter, sizeof(*Adapter));
     Adapter->AdapterHandle = MiniportAdapterHandle;
-    NdisAllocateSpinLock(&Adapter->Lock);
-
 
     /* Notify NDIS of some characteristics of our NIC */
     NdisMSetAttributesEx(MiniportAdapterHandle,
@@ -219,7 +208,7 @@ MiniportInitialize(
 
     /* Allocate the DMA resources */
     Status = NdisMInitializeScatterGatherDma(MiniportAdapterHandle,
-                                             FALSE, // 32bit
+                                             FALSE, // 64bit is supported but can be buggy
                                              MAXIMUM_FRAME_SIZE);
     if (Status != NDIS_STATUS_SUCCESS)
     {

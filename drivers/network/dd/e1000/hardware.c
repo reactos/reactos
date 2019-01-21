@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Hardware specific functions
- * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   2018 Mark Jansen (mark.jansen@reactos.org)
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #include "nic.h"
@@ -12,7 +13,44 @@
 
 static USHORT SupportedDevices[] =
 {
-    0x100f,     // Intel 82545EM (VMWare E1000)
+    /* 8254x Family adapters. Not all of them are tested */
+    0x1000,     // Intel 82542
+    0x1001,     // Intel 82543GC Fiber
+    0x1004,     // Intel 82543GC Copper
+    0x1008,     // Intel 82544EI Copper
+    0x1009,     // Intel 82544EI Fiber
+    0x100A,     // Intel 82540EM
+    0x100C,     // Intel 82544GC Copper
+    0x100D,     // Intel 82544GC LOM (LAN on Motherboard)
+    0x100E,     // Intel 82540EM
+    0x100F,     // Intel 82545EM Copper
+    0x1010,     // Intel 82546EB Copper
+    0x1011,     // Intel 82545EM Fiber
+    0x1012,     // Intel 82546EB Fiber
+    0x1013,     // Intel 82541EI
+    0x1014,     // Intel 82541EI LOM
+    0x1015,     // Intel 82540EM LOM
+    0x1016,     // Intel 82540EP LOM
+    0x1017,     // Intel 82540EP
+    0x1018,     // Intel 82541EI Mobile
+    0x1019,     // Intel 82547EI
+    0x101A,     // Intel 82547EI Mobile
+    0x101D,     // Intel 82546EB Quad Copper
+    0x101E,     // Intel 82540EP LP (Low profile)
+    0x1026,     // Intel 82545GM Copper
+    0x1027,     // Intel 82545GM Fiber
+    0x1028,     // Intel 82545GM SerDes
+    0x1075,     // Intel 82547GI
+    0x1076,     // Intel 82541GI
+    0x1077,     // Intel 82541GI Mobile
+    0x1078,     // Intel 82541ER
+    0x1079,     // Intel 82546GB Copper
+    0x107A,     // Intel 82546GB Fiber
+    0x107B,     // Intel 82546GB SerDes
+    0x107C,     // Intel 82541PI
+    0x108A,     // Intel 82546GB PCI-E
+    0x1099,     // Intel 82546GB Quad Copper
+    0x10B5,     // Intel 82546GB Quad Copper KSP3
 };
 
 
@@ -29,7 +67,7 @@ VOID NTAPI E1000WriteUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, IN ULONG
     NdisWriteRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
 }
 
-static VOID E1000ReadUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, OUT PULONG Value)
+VOID NTAPI E1000ReadUlong(IN PE1000_ADAPTER Adapter, IN ULONG Address, OUT PULONG Value)
 {
     NdisReadRegisterUlong((PULONG)(Adapter->IoBase + Address), Value);
 }
@@ -99,6 +137,8 @@ static ULONG RcvBufRegisterMask(E1000_RCVBUF_SIZE BufSize)
     return Mask;
 }
 
+#if 0
+/* This function works, but the driver does not use PHY register access right now */
 static BOOLEAN E1000ReadMdic(IN PE1000_ADAPTER Adapter, IN ULONG Address, USHORT *Result)
 {
     ULONG ResultAddress;
@@ -147,11 +187,12 @@ static BOOLEAN E1000ReadMdic(IN PE1000_ADAPTER Adapter, IN ULONG Address, USHORT
     *Result = (USHORT) Mdic;
     return TRUE;
 }
+#endif
 
 
 static BOOLEAN E1000ReadEeprom(IN PE1000_ADAPTER Adapter, IN UCHAR Address, USHORT *Result)
 {
-    UINT Value;
+    ULONG Value;
     UINT n;
 
     E1000WriteUlong(Adapter, E1000_REG_EERD, E1000_EERD_START | ((UINT)Address << E1000_EERD_ADDR_SHIFT));
@@ -524,10 +565,9 @@ NICSoftReset(
     ULONG Value, ResetAttempts;
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    //em_get_hw_control(adapter);
-
     NICDisableInterrupts(Adapter);
     E1000WriteUlong(Adapter, E1000_REG_RCTL, 0);
+    E1000WriteUlong(Adapter, E1000_REG_TCTL, 0);
     E1000ReadUlong(Adapter, E1000_REG_CTRL, &Value);
     /* Write this using IO port, some devices cannot ack this otherwise */
     E1000WriteIoUlong(Adapter, E1000_REG_CTRL, Value | E1000_CTRL_RST);
@@ -535,7 +575,8 @@ NICSoftReset(
 
     for (ResetAttempts = 0; ResetAttempts < MAX_RESET_ATTEMPTS; ResetAttempts++)
     {
-        NdisStallExecution(100);
+        /* Wait 1us after reset (according to manual) */
+        NdisStallExecution(1);
         E1000ReadUlong(Adapter, E1000_REG_CTRL, &Value);
 
         if (!(Value & E1000_CTRL_RST))
@@ -543,11 +584,13 @@ NICSoftReset(
             NDIS_DbgPrint(MAX_TRACE, ("Device is back (%u)\n", ResetAttempts));
 
             NICDisableInterrupts(Adapter);
-            /* Clear out interrupts */
+            /* Clear out interrupts (the register is cleared upon read) */
             E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
 
-            //NdisWriteRegisterUlong(Adapter->IoBase + E1000_REG_WUFC, 0);
-            //NdisWriteRegisterUlong(Adapter->IoBase + E1000_REG_VET, E1000_VET_VLAN);
+            E1000ReadUlong(Adapter, E1000_REG_CTRL, &Value);
+            Value &= ~(E1000_CTRL_LRST|E1000_CTRL_VME);
+            Value |= (E1000_CTRL_ASDE|E1000_CTRL_SLU);
+            E1000WriteUlong(Adapter, E1000_REG_CTRL, Value);
 
             return NDIS_STATUS_SUCCESS;
         }
@@ -582,10 +625,13 @@ NICEnableTxRx(
     E1000WriteUlong(Adapter, E1000_REG_TDT, 0);
     Adapter->CurrentTxDesc = 0;
 
+    /* Set up interrupt timers */
+    E1000WriteUlong(Adapter, E1000_REG_TADV, 96); // value is in 1.024 of usec
+    E1000WriteUlong(Adapter, E1000_REG_TIDV, 16);
 
-    Value = E1000_TCTL_EN | E1000_TCTL_PSP;
-    E1000WriteUlong(Adapter, E1000_REG_TCTL, Value);
+    E1000WriteUlong(Adapter, E1000_REG_TCTL, E1000_TCTL_EN | E1000_TCTL_PSP);
 
+    E1000WriteUlong(Adapter, E1000_REG_TIPG, E1000_TIPG_IPGT_DEF | E1000_TIPG_IPGR1_DEF | E1000_TIPG_IPGR2_DEF);
 
     NDIS_DbgPrint(MID_TRACE, ("Setting up receive.\n"));
 
@@ -602,10 +648,10 @@ NICEnableTxRx(
     /* Receive descriptor tail / head */
     E1000WriteUlong(Adapter, E1000_REG_RDH, 0);
     E1000WriteUlong(Adapter, E1000_REG_RDT, NUM_RECEIVE_DESCRIPTORS - 1);
-    Adapter->CurrentRxDesc = 0;
 
-    /* Setup Interrupt Throttling */
-    E1000WriteUlong(Adapter, E1000_REG_ITR, DEFAULT_ITR);
+    /* Set up interrupt timers */
+    E1000WriteUlong(Adapter, E1000_REG_RADV, 96);
+    E1000WriteUlong(Adapter, E1000_REG_RDTR, 16);
 
     /* Some defaults */
     Value = E1000_RCTL_SECRC | E1000_RCTL_EN;
@@ -634,9 +680,9 @@ NICDisableTxRx(
     Value &= ~E1000_TCTL_EN;
     E1000WriteUlong(Adapter, E1000_REG_TCTL, Value);
 
-    //E1000ReadUlong(Adapter, E1000_REG_RCTL, &Value);
-    //Value &= ~E1000_RCTL_EN;
-    //E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
+    E1000ReadUlong(Adapter, E1000_REG_RCTL, &Value);
+    Value &= ~E1000_RCTL_EN;
+    E1000WriteUlong(Adapter, E1000_REG_RCTL, Value);
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -724,7 +770,7 @@ NICApplyInterruptMask(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    E1000WriteUlong(Adapter, E1000_REG_IMS, Adapter->InterruptMask);
+    E1000WriteUlong(Adapter, E1000_REG_IMS, Adapter->InterruptMask /*| 0x1F6DC*/);
     return NDIS_STATUS_SUCCESS;
 }
 
@@ -747,12 +793,12 @@ NICInterruptRecognized(
 {
     ULONG Value;
 
-    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
     /* Reading the interrupt acknowledges them */
     E1000ReadUlong(Adapter, E1000_REG_ICR, &Value);
 
     *InterruptRecognized = (Value & Adapter->InterruptMask) != 0;
+
+    NDIS_DbgPrint(MAX_TRACE, ("NICInterruptRecognized(0x%x, 0x%x).\n", Value, *InterruptRecognized));
 
     return (Value & Adapter->InterruptMask);
 }
@@ -762,55 +808,23 @@ NTAPI
 NICUpdateLinkStatus(
     IN PE1000_ADAPTER Adapter)
 {
-    ULONG SpeedIndex;
-    USHORT PhyStatus;
+    ULONG DeviceStatus;
+    SIZE_T SpeedIndex;
     static ULONG SpeedValues[] = { 10, 100, 1000, 1000 };
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-#if 0
-    /* This does not work */
-    E1000ReadUlong(Adapter, E1000_REG_STATUS, &DeviceStatus);
     E1000ReadUlong(Adapter, E1000_REG_STATUS, &DeviceStatus);
     Adapter->MediaState = (DeviceStatus & E1000_STATUS_LU) ? NdisMediaStateConnected : NdisMediaStateDisconnected;
     SpeedIndex = (DeviceStatus & E1000_STATUS_SPEEDMASK) >> E1000_STATUS_SPEEDSHIFT;
     Adapter->LinkSpeedMbps = SpeedValues[SpeedIndex];
-#else
-    /* Link bit can be sticky on some boards, read it twice */
-    if (!E1000ReadMdic(Adapter, E1000_PHY_STATUS, &PhyStatus))
-        NdisStallExecution(100);
-
-    Adapter->MediaState = NdisMediaStateDisconnected;
-    Adapter->LinkSpeedMbps = 0;
-
-    if (!E1000ReadMdic(Adapter, E1000_PHY_STATUS, &PhyStatus))
-        return;
-
-    if (!(PhyStatus & E1000_PS_LINK_STATUS))
-        return;
-
-    Adapter->MediaState = NdisMediaStateConnected;
-
-    if (E1000ReadMdic(Adapter, E1000_PHY_SPECIFIC_STATUS, &PhyStatus))
-    {
-        if (PhyStatus & E1000_PSS_SPEED_AND_DUPLEX)
-        {
-            SpeedIndex = (PhyStatus & E1000_PSS_SPEEDMASK) >> E1000_PSS_SPEEDSHIFT;
-            Adapter->LinkSpeedMbps = SpeedValues[SpeedIndex];
-        }
-        else
-        {
-            NDIS_DbgPrint(MIN_TRACE, ("Speed and duplex not yet resolved, retry?.\n"));
-        }
-    }
-#endif
 }
 
 NDIS_STATUS
 NTAPI
 NICTransmitPacket(
     IN PE1000_ADAPTER Adapter,
-    IN ULONG PhysicalAddress,
+    IN PHYSICAL_ADDRESS PhysicalAddress,
     IN ULONG Length)
 {
     volatile PE1000_TRANSMIT_DESCRIPTOR TransmitDescriptor;
@@ -818,10 +832,10 @@ NICTransmitPacket(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     TransmitDescriptor = Adapter->TransmitDescriptors + Adapter->CurrentTxDesc;
-    TransmitDescriptor->Address = PhysicalAddress;
+    TransmitDescriptor->Address = PhysicalAddress.QuadPart;
     TransmitDescriptor->Length = Length;
     TransmitDescriptor->ChecksumOffset = 0;
-    TransmitDescriptor->Command = E1000_TDESC_CMD_RS | E1000_TDESC_CMD_IFCS | E1000_TDESC_CMD_EOP;
+    TransmitDescriptor->Command = E1000_TDESC_CMD_RS | E1000_TDESC_CMD_IFCS | E1000_TDESC_CMD_EOP | E1000_TDESC_CMD_IDE;
     TransmitDescriptor->Status = 0;
     TransmitDescriptor->ChecksumStartField = 0;
     TransmitDescriptor->Special = 0;
@@ -829,8 +843,6 @@ NICTransmitPacket(
     Adapter->CurrentTxDesc = (Adapter->CurrentTxDesc + 1) % NUM_TRANSMIT_DESCRIPTORS;
 
     E1000WriteUlong(Adapter, E1000_REG_TDT, Adapter->CurrentTxDesc);
-
-    NDIS_DbgPrint(MAX_TRACE, ("CurrentTxDesc:%u, LastTxDesc:%u\n", Adapter->CurrentTxDesc, Adapter->LastTxDesc));
 
     if (Adapter->CurrentTxDesc == Adapter->LastTxDesc)
     {
