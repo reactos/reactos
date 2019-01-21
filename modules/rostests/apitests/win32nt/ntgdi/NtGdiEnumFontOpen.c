@@ -19,12 +19,15 @@ START_TEST(NtGdiEnumFontOpen)
 	// FIXME: We should load the font first
 
 	idEnum = NtGdiEnumFontOpen(hDC, 2, 0, 32, L"Courier", ANSI_CHARSET, &ulCount);
-	ok_ptr((void *)idEnum, NULL);
+	ok(idEnum != 0, "idEnum was 0.\n");
 	if (idEnum == 0)
+	{
+		skip("idEnum == 0");
 		return;
+    }
 
 	/* we should have a gdi handle here */
-	ok_ptr((void *)GDI_HANDLE_GET_TYPE(idEnum) == (void *)GDI_OBJECT_TYPE_ENUMFONT);
+	ok_ptr((void *)GDI_HANDLE_GET_TYPE(idEnum), (void *)GDI_OBJECT_TYPE_ENUMFONT);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
 	ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
 	ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
