@@ -19,27 +19,25 @@ START_TEST(NtGdiEnumFontOpen)
 	// FIXME: We should load the font first
 
 	idEnum = NtGdiEnumFontOpen(hDC, 2, 0, 32, L"Courier", ANSI_CHARSET, &ulCount);
-	TEST(idEnum != 0);
+	ok_ptr((void *)idEnum, NULL);
 	if (idEnum == 0)
 		return;
 
 	/* we should have a gdi handle here */
-	TEST(GDI_HANDLE_GET_TYPE(idEnum) == GDI_OBJECT_TYPE_ENUMFONT);
+	ok_ptr((void *)GDI_HANDLE_GET_TYPE(idEnum) == (void *)GDI_OBJECT_TYPE_ENUMFONT);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
-	TEST(pEntry->einfo.pobj != NULL);
-	TEST(pEntry->ObjectOwner.ulObj == GetCurrentProcessId());
-	TEST(pEntry->pUser == NULL);
-	TEST(pEntry->FullUnique == (idEnum >> 16));
-	TEST(pEntry->Objt == GDI_OBJECT_TYPE_ENUMFONT >> 16);
-	TEST(pEntry->Flags == 0);
+	ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
+	ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
+	ok_ptr(pEntry->pUser, NULL);
+	ok_int(pEntry->FullUnique, (idEnum >> 16));
+	ok_int(pEntry->Objt, GDI_OBJECT_TYPE_ENUMFONT >> 16);
+	ok_int(pEntry->Flags, 0);
 
 	/* We should not be able to use DeleteObject() on the handle */
-	TEST(DeleteObject((HGDIOBJ)idEnum) == FALSE);
+	ok_int(DeleteObject((HGDIOBJ)idEnum), FALSE);
 
 	NtGdiEnumFontClose(idEnum);
 
 	// Test no logfont (NULL): should word
 	// Test empty lfFaceName string: should not work
-
 }
-
