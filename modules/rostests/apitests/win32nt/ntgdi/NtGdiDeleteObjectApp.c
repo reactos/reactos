@@ -105,7 +105,7 @@ START_TEST(NtGdiDeleteObjectApp)
 
     /* Bitmap get's deleted as soon as we dereference it */
     NtGdiSelectBitmap(hdc, GetStockObject(DEFAULT_BITMAP));
-    oK_int(GdiIsHandleValid(hbmp), 0);
+    ok_int(GdiIsHandleValid(hbmp), 0);
 
     ok_int(NtGdiDeleteObjectApp(hbmp), 1);
     ok_long(GetLastError(), 0);
