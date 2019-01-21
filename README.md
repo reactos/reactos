@@ -26,7 +26,6 @@
     <img alt="Follow on Twitter" src="https://img.shields.io/twitter/follow/reactos.svg?style=social&label=Follow%20%40reactos">
   </a>
 </p>
-## Note: ReactOS is still alpha and may crash on some Hardware its recommended to install it in a Virtual Machine (VirtualBox(TM),Hyper-V(TM),VMWare(TM),Qemu,ETC)
 
 ## Quick Links
 
@@ -44,7 +43,7 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 The ReactOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
 
 The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
-
+***ReactOS is currently an Alpha quality software which means the operating system is under heavy development, things may not work well and it can corrupt the data present on the hard disk. It's recommended to test the operating system on a virtual machine or on a computer with no sensitive and credential data!***
 ## Building
 
 [![appveyor.badge]][appveyor.link] [![travis.badge]][travis.link] [![rosbewin.badge]][rosbewin.link] [![rosbeunix.badge]][rosbeunix.link] [![coverity.badge]][coverity.link]
