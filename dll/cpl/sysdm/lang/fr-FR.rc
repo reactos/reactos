@@ -10,9 +10,9 @@ BEGIN
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Version", IDC_ROSVERSION, 10, 137, 116, 9
     LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "System Uptime:", IDC_STATIC, 4, 158, 86, 9
+    LTEXT "Temps d'activité :", IDC_STATIC, 4, 158, 86, 9
     LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "Machine:", IDC_STATIC, 124, 116, 34, 9
+    LTEXT "Machine :", IDC_STATIC, 124, 116, 34, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -57,19 +57,19 @@ BEGIN
     GROUPBOX "Démarrage et Récupération", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Les options Démarrage et Récupération indiquent à l'ordinateur comment démarrer et quoi faire si une erreur empêche l'ordinateur de s'arrêter.", IDC_STATIC, 16, 144, 210, 30
     PUSHBUTTON "Réglages", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Paramètres système", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "Variables d'en&vironnement", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Rapport d'e&rreurs", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
+CAPTION "Paramètres système"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
-    CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    GROUPBOX "Information de version", IDC_STATIC, 6, 3, 210, 73
+    LTEXT "ReactOS est construit comme un OS serveur et se présente comme tel. Cochez cette case pour changer ce comportement pour les applications.", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "Se présenter comme une station de travail", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 
@@ -283,7 +283,7 @@ BEGIN
     IDS_PETABYTE "Po de RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Days, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%u jours, %02u:%02u:%02u"
     IDS_VARIABLE "Variable"
     IDS_VALUE "Valeur"
     IDS_NO_DUMP "(Aucun)"
@@ -296,17 +296,17 @@ BEGIN
     IDS_USERPROFILE_STATUS "Statut"
     IDS_USERPROFILE_MODIFIED "Modifié"
     IDS_MESSAGEBOXTITLE "System control panel applet"
-    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
-    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 16 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
+    IDS_WARNINITIALSIZE "Entrez une valeur numérique pour la taille initiale du fichier d'échange."
+    IDS_WARNMAXIMUMSIZE "Entrez une valeur numérique pour la taille maximale du fichier d'échange."
+    IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange ne peut pas être inférieure à 16 Mo and ne doit pas dépasser l'espace libre total du disque.
+    IDS_WARNMAXIMUMRANGE "La taille maximale du fichier d'échange ne peut pas être inférieure à sa taille initiale, et ne peut pas être supérieur à 4095 Mo et ne peut pas dépasser l'espace libre total du disque."
     IDS_PAGEFILE_NONE "Aucun"
-    IDS_PAGEFILE_SYSTEM "System Managed"
-    IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
+    IDS_PAGEFILE_SYSTEM "Géré par le système"
+    IDS_INFOREBOOT "Vous devez redémarrer le système pour appliquer les changements."
     IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
-    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
+    IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmation de suppression"
+    IDS_HWPROFILE_CONFIRM_DELETE "Êtes-vous sûre de vouloir supprimer le profil matériel ""%s"" ?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Le nom de profil est déjà utilisé."
+    IDS_HWPROFILE_PROFILE "Profil"
+    IDS_HWPROFILE_WARNING "Attention"
 END
