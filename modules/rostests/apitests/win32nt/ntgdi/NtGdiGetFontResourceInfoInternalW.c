@@ -31,7 +31,7 @@ START_TEST(NtGdiGetFontResourceInfoInternalW)
 		&logfont,
 		2);
 
-	TEST(bRet != FALSE);
+	ok(bRet != FALSE, "bRet was not FALSE.\n");
 
 	printf("lfHeight = %ld\n", logfont.lfHeight);
 	printf("lfWidth = %ld\n", logfont.lfWidth);
@@ -40,4 +40,3 @@ START_TEST(NtGdiGetFontResourceInfoInternalW)
 //	RemoveFontResourceW(szFullFileName);
 
 }
-
