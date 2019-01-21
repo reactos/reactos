@@ -28,7 +28,7 @@ START_TEST(NtGdiBitBlt)
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	hdc1 = NtGdiCreateCompatibleDC(0);
-	ok_ptr(hdc1, NULL);
+	ok(hdc1 != NULL, "hdc1 was NULL.\n");
 
 	hdc2 = NtGdiCreateCompatibleDC(0);
 	ok(hdc2 != NULL, "hdc2 was NULL.\n");
