@@ -298,8 +298,8 @@ BEGIN
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Entrez une valeur numérique pour la taille initiale du fichier d'échange."
     IDS_WARNMAXIMUMSIZE "Entrez une valeur numérique pour la taille maximale du fichier d'échange."
-    IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange ne peut pas être inférieure à 16 Mo and ne doit pas dépasser l'espace libre total du disque.
-    IDS_WARNMAXIMUMRANGE "La taille maximale du fichier d'échange ne peut pas être inférieure à sa taille initiale, et ne peut pas être supérieur à 4095 Mo et ne peut pas dépasser l'espace libre total du disque."
+    IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange ne peut pas être inférieure à 16 Mo and ne doit pas dépasser l'espace libre total du disque."
+    IDS_WARNMAXIMUMRANGE "La taille maximale du fichier d'échange ne peut pas être inférieure à sa taille initiale, et ne peut pas être supérieure à 4095 Mo et ne peut pas dépasser l'espace libre total du disque."
     IDS_PAGEFILE_NONE "Aucun"
     IDS_PAGEFILE_SYSTEM "Géré par le système"
     IDS_INFOREBOOT "Vous devez redémarrer le système pour appliquer les changements."
