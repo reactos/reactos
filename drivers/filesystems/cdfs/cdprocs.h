@@ -1836,7 +1836,10 @@ CdRaiseStatusEx (
 
 #else
 
+#ifdef __REACTOS__
+static //  make windows gcc release build compile
 INLINE
+#endif
 DECLSPEC_NORETURN
 VOID
 CdRaiseStatusEx(
