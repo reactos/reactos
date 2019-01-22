@@ -21,33 +21,32 @@ START_TEST(NtGdiCombineRgn)
 
 	/* RGN_AND = 1, RGN_OR = 2, RGN_XOR = 3, RGN_DIFF = 4, RGN_COPY = 5 */
 
-	TEST(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, 0) == ERROR);
-	TEST(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, 6) == ERROR);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, 0), ERROR);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, 6), ERROR);
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCombineRgn(hRgnDest, 0, 0, RGN_AND) == ERROR);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	ok_int(NtGdiCombineRgn(hRgnDest, 0, 0, RGN_AND), ERROR);
+	ok_long(GetLastError(), ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCombineRgn(hRgnDest, hRgn1, 0, RGN_AND) == ERROR);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgn1, 0, RGN_AND), ERROR);
+	ok_long(GetLastError(), ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCombineRgn(hRgnDest, 0, hRgn1, RGN_AND) == ERROR);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	ok_int(NtGdiCombineRgn(hRgnDest, 0, hRgn1, RGN_AND), ERROR);
+	ok_long(GetLastError(), ERROR_INVALID_HANDLE);
 	SetLastError(ERROR_SUCCESS);
-	TEST(NtGdiCombineRgn(0, hRgn1, hRgn2, RGN_AND) == ERROR);
-	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+	ok_int(NtGdiCombineRgn(0, hRgn1, hRgn2, RGN_AND), ERROR);
+	ok_long(GetLastError(), ERROR_INVALID_HANDLE);
 
 	/* Create intersection */
-	TEST(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, RGN_AND) == SIMPLEREGION);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgn1, hRgn2, RGN_AND), SIMPLEREGION);
 	SetRectRgn(hRgn1, 2, 2, 4, 3);
-	TEST(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgn1, RGN_XOR) == NULLREGION);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgn1, RGN_XOR), NULLREGION);
 
 	/* Create intersection with itself */
 	SetRectRgn(hRgnDest, 2, 2, 4, 3);
-	TEST(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgnDest, RGN_AND) == SIMPLEREGION);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgnDest, RGN_AND), SIMPLEREGION);
 	SetRectRgn(hRgn1, 2, 2, 4, 3);
-	TEST(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgn1, RGN_XOR) == NULLREGION);
+	ok_int(NtGdiCombineRgn(hRgnDest, hRgnDest, hRgn1, RGN_XOR), NULLREGION);
 
 	/* What if 2 regions are the same */
 }
-
