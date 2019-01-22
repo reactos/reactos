@@ -16,7 +16,7 @@ START_TEST(NtGdiEngCreatePalette)
 	hPal = NtGdiEngCreatePalette(PAL_RGB, 3, Colors, 0xff000000, 0x00ff0000, 0x0000ff00);
 
 	ok(hPal != NULL, "hPal was NULL.\n");
-	ok_ptr((void *)GDI_HANDLE_GET_TYPE(hPal), (void *)GDI_OBJECT_TYPE_PALETTE);
+	ok_int((int)GDI_HANDLE_GET_TYPE(hPal), (int)GDI_OBJECT_TYPE_PALETTE);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(hPal)];
 	ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
 	ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
