@@ -34,7 +34,7 @@ START_TEST(NtGdiGetBitmapBits)
 	/* test NULL pointer and count buffer size != 0 */
 	ok_long(NtGdiGetBitmapBits(hBitmap, 5, NULL), 12);
 
-	/* test NULL pointer and buffer size, 0*/
+	/* test NULL pointer and buffer size == 0*/
 	ok_long(NtGdiGetBitmapBits(hBitmap, 0, NULL), 12);
 
 	/* test bad pointer */

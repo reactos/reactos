@@ -8,7 +8,6 @@ list(APPEND SOURCE
     directory.c
     env.c
     error.c
-    exception.c
     file.c
     info.c
     large_int.c
@@ -26,7 +25,9 @@ list(APPEND SOURCE
     precomp.h)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE generated.c)
+    list(APPEND SOURCE
+        exception.c
+        generated.c)
 endif()
 
 add_executable(ntdll_winetest ${SOURCE} testlist.c)

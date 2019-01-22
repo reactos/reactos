@@ -121,11 +121,11 @@ FreeGuarded(
 #define TestUserObjectInfoWithString(Handle, Index, Buffer, BufferSize, String) do                                                          \
     {                                                                                                                                       \
         BOOLEAN _Check;                                                                                                                     \
-        ULONG SizeOfString = wcslen(String) * sizeof(WCHAR) + sizeof(UNICODE_NULL);                                                         \
+        SIZE_T SizeOfString = wcslen(String) * sizeof(WCHAR) + sizeof(UNICODE_NULL);                                                         \
         TestUserObjectInfo(Handle,  Index,     NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
-        TestUserObjectInfo(Handle,  Index,     (PVOID)1,         0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
+        TestUserObjectInfo(Handle,  Index,     UlongToPtr(1),    0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
         TestUserObjectInfo(Handle,  Index,     NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);        \
-        TestUserObjectInfo(Handle,  Index,     (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);        \
+        TestUserObjectInfo(Handle,  Index,     UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);        \
         RtlFillMemory(Buffer, BufferSize, 0x55);                                                                                            \
         TestUserObjectInfo(Handle,  Index,     Buffer,           SizeOfString - 2,        FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
         _Check = CheckBuffer(Buffer, BufferSize, 0x55);                                                                                     \
@@ -168,21 +168,21 @@ TestGetUserObjectInfoW(void)
 
     TestUserObjectInfo(NULL,    5,         NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
     TestUserObjectInfo(NULL,    UOI_FLAGS, NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
-    TestUserObjectInfo(NULL,    UOI_FLAGS, (PVOID)1,         0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, UlongToPtr(1),    0,                       FALSE, ERROR_INVALID_HANDLE,      0);
     TestUserObjectInfo(NULL,    UOI_FLAGS, NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
-    TestUserObjectInfo(NULL,    UOI_FLAGS, (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(NULL,    UOI_FLAGS, UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);
     TestUserObjectInfo(NULL,    UOI_FLAGS, &UserObjectFlags, sizeof(UserObjectFlags), FALSE, ERROR_INVALID_HANDLE,      0);
 
     TestUserObjectInfo(NULL,    UOI_TYPE,  NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
-    TestUserObjectInfo(NULL,    UOI_TYPE,  (PVOID)1,         0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  UlongToPtr(1),    0,                       FALSE, ERROR_INVALID_HANDLE,      0);
     TestUserObjectInfo(NULL,    UOI_TYPE,  NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
-    TestUserObjectInfo(NULL,    UOI_TYPE,  (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(NULL,    UOI_TYPE,  UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);
     TestUserObjectInfo(NULL,    UOI_TYPE,  Buffer,           BufferSize,              FALSE, ERROR_INVALID_HANDLE,      0);
 
     TestUserObjectInfo(NULL,    UOI_NAME,  NULL,             0,                       FALSE, ERROR_INVALID_HANDLE,      0);
-    TestUserObjectInfo(NULL,    UOI_NAME,  (PVOID)1,         0,                       FALSE, ERROR_INVALID_HANDLE,      0);
+    TestUserObjectInfo(NULL,    UOI_NAME,  UlongToPtr(1),    0,                       FALSE, ERROR_INVALID_HANDLE,      0);
     TestUserObjectInfo(NULL,    UOI_NAME,  NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
-    TestUserObjectInfo(NULL,    UOI_NAME,  (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(NULL,    UOI_NAME,  UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);
     TestUserObjectInfo(NULL,    UOI_NAME,  Buffer,           BufferSize,              FALSE, ERROR_INVALID_HANDLE,      0);
 
     Desktop = GetThreadDesktop(GetCurrentThreadId());
@@ -203,9 +203,9 @@ TestGetUserObjectInfoW(void)
 
     TestUserObjectInfo(Desktop, 5,         NULL,             0,                       FALSE, ERROR_INVALID_PARAMETER,   0);
     TestUserObjectInfo(Desktop, UOI_FLAGS, NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(USEROBJECTFLAGS));
-    TestUserObjectInfo(Desktop, UOI_FLAGS, (PVOID)1,         0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(USEROBJECTFLAGS));
+    TestUserObjectInfo(Desktop, UOI_FLAGS, UlongToPtr(1),    0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, sizeof(USEROBJECTFLAGS));
     TestUserObjectInfo(Desktop, UOI_FLAGS, NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);
-    TestUserObjectInfo(Desktop, UOI_FLAGS, (PVOID)1,         1,                       FALSE, ERROR_NOACCESS,            NOTSET);
+    TestUserObjectInfo(Desktop, UOI_FLAGS, UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);
     TestUserObjectInfo(Desktop, UOI_FLAGS, &UserObjectFlags, sizeof(UserObjectFlags), TRUE,  0xdeadbeef,                sizeof(USEROBJECTFLAGS));
 
     TestUserObjectInfoWithString(Desktop, UOI_TYPE, Buffer, BufferSize, L"Desktop");

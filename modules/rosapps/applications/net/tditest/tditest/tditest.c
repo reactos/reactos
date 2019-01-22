@@ -442,7 +442,7 @@ NTSTATUS TdiQueryAddress(
 						if (SnmpInfo.NumAddr != 1)
 							{
 								/* Skip loopback address */
-								*Address = DN2H(((PIPADDR_ENTRY)((ULONG)IpAddress + sizeof(IPADDR_ENTRY)))->Addr);
+								*Address = DN2H(((PIPADDR_ENTRY)((PUCHAR)IpAddress + sizeof(IPADDR_ENTRY)))->Addr);
 							}
 						else
 							{
@@ -507,7 +507,7 @@ NTSTATUS TdiSendDatagram(
 	RtlZeroMemory(ConnectInfo, sizeof(TDI_CONNECTION_INFORMATION) + sizeof(TA_IP_ADDRESS));
 
 	ConnectInfo->RemoteAddressLength = sizeof(TA_IP_ADDRESS);
-	ConnectInfo->RemoteAddress       = (PUCHAR) ((ULONG)ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
+	ConnectInfo->RemoteAddress       = ((PUCHAR)ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
 
 	TA = (PTA_IP_ADDRESS)(ConnectInfo->RemoteAddress);
 	TA->TAAddressCount           = 1;
@@ -630,9 +630,9 @@ NTSTATUS TdiReceiveDatagram(
 	ReceiveInfo->RemoteAddressLength = 0;
 	ReceiveInfo->RemoteAddress       = NULL;
 
-	ReturnInfo = (PTDI_CONNECTION_INFORMATION) ((ULONG)ReceiveInfo + sizeof(TDI_CONNECTION_INFORMATION));
+	ReturnInfo = (PTDI_CONNECTION_INFORMATION) ((PUCHAR)ReceiveInfo + sizeof(TDI_CONNECTION_INFORMATION));
 	ReturnInfo->RemoteAddressLength = sizeof(TA_IP_ADDRESS);
-	ReturnInfo->RemoteAddress       = (PUCHAR) ((ULONG)ReturnInfo + sizeof(TDI_CONNECTION_INFORMATION));
+	ReturnInfo->RemoteAddress       = ((PUCHAR)ReturnInfo + sizeof(TDI_CONNECTION_INFORMATION));
 
 	ReturnAddress = (PTA_IP_ADDRESS)(ReturnInfo->RemoteAddress);
 	ReturnAddress->TAAddressCount           = 1;

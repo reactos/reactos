@@ -47,7 +47,7 @@ void *PsaiMalloc(SIZE_T size)
   NtCurrentProcess(),
   &pBuf,
   0,
-  (PULONG)&size,
+  &size,
   MEM_COMMIT,
   PAGE_READWRITE
  );
@@ -58,7 +58,7 @@ void *PsaiMalloc(SIZE_T size)
 
 void PsaiFree(void *ptr)
 {
- ULONG nSize = 0;
+ SIZE_T nSize = 0;
 
  NtFreeVirtualMemory(NtCurrentProcess(), &ptr, &nSize, MEM_RELEASE);
 }
@@ -117,7 +117,7 @@ ProcessHasDescendants (
   if (NULL == pInfo) return 0;
   do {
 
-      if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+      if (ALREADY_PROCESSED != HandleToUlong(pInfo->InheritedFromUniqueProcessId))
       {
         if ((Pid != (HANDLE)pInfo->UniqueProcessId) && (Pid == (HANDLE)pInfo->InheritedFromUniqueProcessId))
         {
@@ -158,8 +158,8 @@ int WINAPI PrintProcessInfoDepth (
   wprintf (
     L"%s (%d, %d) %s\n",
     Module,
-    pInfo->UniqueProcessId,
-    pInfo->InheritedFromUniqueProcessId,
+    HandleToUlong(pInfo->UniqueProcessId),
+    HandleToUlong(pInfo->InheritedFromUniqueProcessId),
     Title
     );
   return EXIT_SUCCESS;
@@ -177,13 +177,13 @@ PrintProcessAndDescendants (
   if (NULL == pInfo) return EXIT_FAILURE;
   /* Print current pInfo process */
   PrintProcessInfoDepth (pInfo, Depth ++);
-  pInfo->InheritedFromUniqueProcessId = (HANDLE)ALREADY_PROCESSED;
+  pInfo->InheritedFromUniqueProcessId = UlongToHandle(ALREADY_PROCESSED);
   /* Save current process' PID */
   Pid = pInfo->UniqueProcessId;
   /* Scan and print possible children */
   do {
 
-    if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+    if (ALREADY_PROCESSED != HandleToUlong(pInfo->InheritedFromUniqueProcessId))
     {
       if (Pid == pInfo->InheritedFromUniqueProcessId)
       {
@@ -198,7 +198,7 @@ PrintProcessAndDescendants (
 	else
 	{
           PrintProcessInfoDepth (pInfo, Depth);
-	  pInfo->InheritedFromUniqueProcessId = (HANDLE)ALREADY_PROCESSED;
+	  pInfo->InheritedFromUniqueProcessId = UlongToHandle(ALREADY_PROCESSED);
 	}
       }
     }
@@ -227,16 +227,16 @@ int WINAPI PrintProcessList (BOOL DisplayTree)
       {
         GetProcessInfo (pInfo, & Module, & Title);
         wprintf (
-          L"%4d %-16s %s\n",
-	  pInfo->UniqueProcessId,
+          L"%4d %-16s %s (%04d)\n",
+	  HandleToUlong(pInfo->UniqueProcessId),
 	  Module,
 	  Title,
-	  pInfo->InheritedFromUniqueProcessId
+	  HandleToUlong(pInfo->InheritedFromUniqueProcessId)
 	  );
       }
       else
       {
-	if (ALREADY_PROCESSED != (DWORD)pInfo->InheritedFromUniqueProcessId)
+	if (ALREADY_PROCESSED != HandleToUlong(pInfo->InheritedFromUniqueProcessId))
 	{
 	  PrintProcessAndDescendants (pInfo, pInfoBase, 0);
 	}
@@ -310,8 +310,8 @@ int WINAPI PrintThreads (PSYSTEM_PROCESS_INFORMATION pInfo)
     NtClose (hThread);
 
     /* Now print the collected information */
-    wprintf (L"   %4d Win32StartAddr:0x%08x LastErr:0x%08x State:%s\n",
-      CurThread->ClientId.UniqueThread,
+    wprintf (L"   %4d Win32StartAddr:0x%p LastErr:0x%08x State:%s\n",
+      HandleToUlong(CurThread->ClientId.UniqueThread),
       Win32StartAddress,
       0 /* FIXME: ((PTEB) tInfo.TebBaseAddress)->LastErrorValue */,
       ThreadStateName[CurThread->ThreadState]
@@ -357,7 +357,7 @@ int WINAPI PrintProcess (char * PidStr)
   CLIENT_ID                   ClientId = {0, 0};
 
 
-  ClientId.UniqueProcess = (PVOID) atol (PidStr);
+  ClientId.UniqueProcess = UlongToHandle(atol (PidStr));
 
   if (FALSE == AcquirePrivileges ())
   {
@@ -411,7 +411,7 @@ int WINAPI PrintProcess (char * PidStr)
 
     GetProcessInfo (pInfo, & Module, & Title);
 
-    wprintf (L"%4d %s\n", ClientId.UniqueProcess, Module);
+    wprintf (L"%4d %s\n", HandleToUlong(ClientId.UniqueProcess), Module);
 #if 0
     printf ("   CWD:     %s\n", ""); /* it won't appear if empty */
     printf ("   CmdLine: %s\n", ""); /* it won't appear if empty */

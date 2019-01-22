@@ -29,6 +29,7 @@ list(APPEND SOURCE
     RedrawWindow.c
     RegisterClassEx.c
     RegisterHotKey.c
+    ScrollBarWndExtra.c
     ScrollDC.c
     ScrollWindowEx.c
     SendMessageTimeout.c

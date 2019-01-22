@@ -36,7 +36,7 @@ void AddFonts(HWND hwndCombo)
 	lf.lfFaceName[0]    = _T('\0');
 
 	hdc = GetDC(0);
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontProc, (LONG)hwndCombo, 0);
+	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontProc, (LONG_PTR)hwndCombo, 0);
 	ReleaseDC(0, hdc);
 }
 
@@ -53,7 +53,7 @@ void UpdatePreview(HWND hwnd)
 //
 //	Dialogbox procedure for Configuration window
 //
-BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static TCHAR buf[256];
 	HWND	hwndCombo, hwndCtrl;
@@ -112,7 +112,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			SetTextColor((HDC)wParam, RGB(0,80,0));
 			SetBkColor((HDC)wParam, GetSysColor(COLOR_3DFACE));
-			return (BOOL)GetSysColorBrush(COLOR_3DFACE);
+			return (INT_PTR)GetSysColorBrush(COLOR_3DFACE);
 		}
 		else if(GetDlgCtrlID((HWND)lParam) == IDC_PREVIEW)
 		{
@@ -167,7 +167,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DrawText(hdc, buf, -1, &rect, DT_CENTER|DT_VCENTER|DT_WORDBREAK);
 
 
-			return (BOOL)GetStockObject(NULL_BRUSH);
+			return (INT_PTR)GetStockObject(NULL_BRUSH);
 		}
 		else
 		{

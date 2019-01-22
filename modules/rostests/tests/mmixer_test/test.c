@@ -100,7 +100,7 @@ printMixerLine(LPMIXERLINEW MixerLine, IN ULONG MixerIndex)
     MixerLineControls.cbmxctrl= sizeof(MIXERCONTROLW);
     MixerLineControls.pamxctrl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MixerLineControls.cControls * sizeof(MIXERCONTROLW));
 
-    Result = mixerGetLineControlsW((HMIXEROBJ)MixerIndex, &MixerLineControls, MIXER_GETLINECONTROLSF_ALL | MIXER_OBJECTF_MIXER);
+    Result = mixerGetLineControlsW((HMIXEROBJ)UlongToHandle(MixerIndex), &MixerLineControls, MIXER_GETLINECONTROLSF_ALL | MIXER_OBJECTF_MIXER);
 
     printf("Result %u\n", Result);
 
@@ -136,7 +136,7 @@ printMixerLine(LPMIXERLINEW MixerLine, IN ULONG MixerIndex)
             MixerControlDetails.dwControlID = MixerLineControls.pamxctrl[Index].dwControlID;
             MixerControlDetails.paDetails = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MixerControlDetails.cbDetails * MixerControlDetails.cChannels * MixerControlDetails.cMultipleItems);
 
-            Result = mixerGetControlDetailsW((HMIXEROBJ)MixerIndex, &MixerControlDetails, MIXER_GETCONTROLDETAILSF_LISTTEXT | MIXER_OBJECTF_MIXER);
+            Result = mixerGetControlDetailsW((HMIXEROBJ)UlongToHandle(MixerIndex), &MixerControlDetails, MIXER_GETCONTROLDETAILSF_LISTTEXT | MIXER_OBJECTF_MIXER);
 
             printf("Result %x\n", Result);
             ListText = (LPMIXERCONTROLDETAILS_LISTTEXTW)MixerControlDetails.paDetails;
@@ -190,7 +190,7 @@ test();
             DstMixerLine.dwDestination = DestinationIndex;
             DstMixerLine.cbStruct = sizeof(DstMixerLine);
 
-            Result = mixerGetLineInfoW((HMIXEROBJ)MixerIndex, &DstMixerLine, MIXER_GETLINEINFOF_DESTINATION | MIXER_OBJECTF_MIXER);
+            Result = mixerGetLineInfoW((HMIXEROBJ)UlongToHandle(MixerIndex), &DstMixerLine, MIXER_GETLINEINFOF_DESTINATION | MIXER_OBJECTF_MIXER);
             printf("\n");
             printf("Destination Index %lu\n", DestinationIndex);
             printMixerLine(&DstMixerLine, MixerIndex);
@@ -201,7 +201,7 @@ test();
                 SrcLine.dwSource = SrcIndex;
                 SrcLine.cbStruct = sizeof(SrcLine);
 
-                Result = mixerGetLineInfoW((HMIXEROBJ)MixerIndex, &SrcLine, MIXER_GETLINEINFOF_SOURCE  | MIXER_OBJECTF_MIXER);
+                Result = mixerGetLineInfoW((HMIXEROBJ)UlongToHandle(MixerIndex), &SrcLine, MIXER_GETLINEINFOF_SOURCE  | MIXER_OBJECTF_MIXER);
 
                 if (Result == MMSYSERR_NOERROR)
                 {

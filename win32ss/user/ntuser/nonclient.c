@@ -395,7 +395,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (msg.message == WM_LBUTTONUP)
       {
          // check for snapping if was moved by caption
-         if (hittest == HTCAPTION)
+         if (hittest == HTCAPTION && thickframe && (ExStyle & WS_EX_MDICHILD) == 0)
          {
             RECT snapRect;
             BOOL doSideSnap = FALSE;
@@ -1618,6 +1618,10 @@ NC_HandleNCLButtonDblClk(PWND pWnd, WPARAM wParam, LPARAM lParam)
     case HTBOTTOM:
     {
       RECT sizingRect = pWnd->rcWindow, mouseRect;
+      
+      if (pWnd->ExStyle & WS_EX_MDICHILD)
+          break;
+      
       UserSystemParametersInfo(SPI_GETWORKAREA, 0, &mouseRect, 0);
         
       co_WinPosSetWindowPos(pWnd,

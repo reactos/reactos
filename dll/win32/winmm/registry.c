@@ -32,6 +32,9 @@ BOOL LoadRegistryMMEDrivers(char* key)
     DWORD value_data_length = 256;
     char value_data[256];
 
+    char wavemapper[256] = { 0 };
+    char midimapper[256] = { 0 };
+
     DWORD value_type;
 
     if ( RegOpenKeyA(HKEY_LOCAL_MACHINE, key, &drivers_key) != ERROR_SUCCESS )
@@ -60,14 +63,16 @@ BOOL LoadRegistryMMEDrivers(char* key)
             if ( ! stricmp("wavemapper", value_name) )
             {
                 TRACE("Found a Wave-mapper: %s\n", value_data);
-                valid_driver = TRUE;
+                /* Delay loading Wave mapper driver */
+                strcpy(wavemapper, value_data);
                 is_mapper = TRUE;
                 driver_count ++;
             }
             else if ( ! stricmp("midimapper", value_name) )
             {
                 TRACE("Found a MIDI-mapper: %s\n", value_data);
-                valid_driver = TRUE;
+                /* Delay loading MIDI mapper driver */
+                strcpy(midimapper, value_data);
                 is_mapper = TRUE;
                 driver_count ++;
             }
@@ -123,6 +128,23 @@ BOOL LoadRegistryMMEDrivers(char* key)
         memset(value_data, 0, value_data_length);
 
         driver_index ++;
+    }
+
+    /* Finally load mapper drivers, since they expect device drivers already loaded */
+    if (*wavemapper)
+    {
+        if (!MMDRV_Install("wavemapper", wavemapper, TRUE))
+        {
+            TRACE("FAILED when initializing %s\n", wavemapper);
+        }
+    }
+
+    if (*midimapper)
+    {
+        if (!MMDRV_Install("midimapper", midimapper, TRUE))
+        {
+            TRACE("FAILED when initializing %s\n", midimapper);
+        }
     }
 
     TRACE("Found a total of %d drivers\n", driver_count);

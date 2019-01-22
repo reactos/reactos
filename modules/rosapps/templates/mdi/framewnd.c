@@ -205,7 +205,7 @@ void OnEnterMenuLoop(HWND hWnd)
 
     // Update the status bar pane sizes
     nParts = -1;
-    SendMessage(hStatusBar, SB_SETPARTS, 1, (long)&nParts);
+    SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
     bInMenuLoop = TRUE;
     SendMessage(hStatusBar, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
 }
@@ -221,7 +221,7 @@ void OnExitMenuLoop(HWND hWnd)
     nParts[0] = 100;
     nParts[1] = 210;
     nParts[2] = rc.right;
-    SendMessage(hStatusBar, SB_SETPARTS, 3, (long)nParts);
+    SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)nParts);
     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
     UpdateStatusBar();
 }
