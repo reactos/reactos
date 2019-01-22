@@ -39,69 +39,69 @@ Test_NtGdiDoPalette_GdiPalAnimate(void)
 
 	/* Test stock palette */
 	SetLastError(ERROR_SUCCESS);
-	RTEST(NtGdiDoPalette(GetStockObject(DEFAULT_PALETTE), 0, 1, palEntries, GdiPalAnimate, FALSE) == 0);
-	RTEST(GetLastError() == ERROR_SUCCESS);
+	ok_long(NtGdiDoPalette(GetStockObject(DEFAULT_PALETTE), 0, 1, palEntries, GdiPalAnimate, FALSE), 0);
+	ok_long(GetLastError(), ERROR_SUCCESS);
 
 
 	/* Test pEntries = NULL */
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalAnimate, TRUE) == 0);
-	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalAnimate, FALSE) == 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalAnimate, TRUE), 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalAnimate, FALSE), 0);
 	DeleteObject(hPal);
 
 	/* Test PC_RESERVED */
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalAnimate, TRUE) == 2);
+	ok_long(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalAnimate, TRUE), 2);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 1, 5, palEntries, GdiPalAnimate, TRUE) == 2);
+	ok_long(NtGdiDoPalette(hPal, 1, 5, palEntries, GdiPalAnimate, TRUE), 2);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 2, 5, palEntries, GdiPalAnimate, TRUE) == 1);
+	ok_long(NtGdiDoPalette(hPal, 2, 5, palEntries, GdiPalAnimate, TRUE), 1);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 3, 5, palEntries, GdiPalAnimate, TRUE) == 1);
+	ok_long(NtGdiDoPalette(hPal, 3, 5, palEntries, GdiPalAnimate, TRUE), 1);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 4, 5, palEntries, GdiPalAnimate, TRUE) == 0);
+	ok_long(NtGdiDoPalette(hPal, 4, 5, palEntries, GdiPalAnimate, TRUE), 0);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 5, 5, palEntries, GdiPalAnimate, TRUE) == 0);
+	ok_long(NtGdiDoPalette(hPal, 5, 5, palEntries, GdiPalAnimate, TRUE), 0);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalAnimate, FALSE) == 2);
+	ok_long(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalAnimate, FALSE), 2);
 	DeleteObject(hPal);
 
 	hPal = CreateTestPalette();
-	RTEST(NtGdiDoPalette(hPal, 3, 5, palEntries, GdiPalAnimate, FALSE) == 1);
+	ok_long(NtGdiDoPalette(hPal, 3, 5, palEntries, GdiPalAnimate, FALSE), 1);
 	DeleteObject(hPal);
 
 	/* Test if entries are set correctly */
 	hPal = CreateTestPalette();
 	NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalAnimate, TRUE);
 	NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalGetEntries, FALSE);
-	RTEST(palEntries2[0].peRed == 1);
-	RTEST(palEntries2[0].peGreen == 2);
-	RTEST(palEntries2[0].peBlue == 3);
-	RTEST(palEntries2[0].peFlags == 0);
-	RTEST(palEntries2[1].peRed == palEntries[1].peRed);
-	RTEST(palEntries2[1].peGreen == palEntries[1].peGreen);
-	RTEST(palEntries2[1].peBlue == palEntries[1].peBlue);
-	RTEST(palEntries2[1].peFlags == palEntries[1].peFlags);
-	RTEST(palEntries2[2].peRed == 11);
-	RTEST(palEntries2[2].peGreen == 55);
-	RTEST(palEntries2[2].peBlue == 77);
-	TEST(palEntries2[2].peFlags == PC_EXPLICIT);
-	RTEST(palEntries2[3].peRed == palEntries[3].peRed);
-	RTEST(palEntries2[3].peGreen == palEntries[3].peGreen);
-	RTEST(palEntries2[3].peBlue == palEntries[3].peBlue);
-	RTEST(palEntries2[3].peFlags == palEntries[3].peFlags);
+	ok_int(palEntries2[0].peRed, 1);
+	ok_int(palEntries2[0].peGreen, 2);
+	ok_int(palEntries2[0].peBlue, 3);
+	ok_int(palEntries2[0].peFlags, 0);
+	ok_int(palEntries2[1].peRed, palEntries[1].peRed);
+	ok_int(palEntries2[1].peGreen, palEntries[1].peGreen);
+	ok_int(palEntries2[1].peBlue, palEntries[1].peBlue);
+	ok_int(palEntries2[1].peFlags, palEntries[1].peFlags);
+	ok_int(palEntries2[2].peRed, 11);
+	ok_int(palEntries2[2].peGreen, 55);
+	ok_int(palEntries2[2].peBlue, 77);
+	ok_int(palEntries2[2].peFlags, PC_EXPLICIT);
+	ok_int(palEntries2[3].peRed, palEntries[3].peRed);
+	ok_int(palEntries2[3].peGreen, palEntries[3].peGreen);
+	ok_int(palEntries2[3].peBlue, palEntries[3].peBlue);
+	ok_int(palEntries2[3].peFlags, palEntries[3].peFlags);
 	DeleteObject(hPal);
 
 }
@@ -123,44 +123,44 @@ Test_NtGdiDoPalette_GdiPalSetEntries(void)
 
 	/* Test invalid handle */
 	SetLastError(ERROR_SUCCESS);
-	RTEST(NtGdiDoPalette((HPALETTE)23, 0, 1, palEntries, GdiPalSetEntries, TRUE) == 0);
-	RTEST(GetLastError() == ERROR_SUCCESS);
+	ok_long(NtGdiDoPalette((HPALETTE)23, 0, 1, palEntries, GdiPalSetEntries, TRUE), 0);
+	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	/* Test system palette */
-	RTEST(NtGdiDoPalette(GetStockObject(DEFAULT_PALETTE), 0, 1, palEntries, GdiPalSetEntries, TRUE) == 0);
-	RTEST(GetLastError() == ERROR_SUCCESS);
+	ok_long(NtGdiDoPalette(GetStockObject(DEFAULT_PALETTE), 0, 1, palEntries, GdiPalSetEntries, TRUE), 0);
+	ok_long(GetLastError(), ERROR_SUCCESS);
 
-	RTEST(NtGdiDoPalette(hPal, 0, 1, palEntries, GdiPalSetEntries, TRUE) == 1);
-	RTEST(NtGdiDoPalette(hPal, 0, 2, palEntries, GdiPalSetEntries, TRUE) == 2);
-	RTEST(NtGdiDoPalette(hPal, 0, 3, palEntries, GdiPalSetEntries, TRUE) == 3);
-	RTEST(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalSetEntries, TRUE) == 5);
-	RTEST(NtGdiDoPalette(hPal, 0, 6, palEntries, GdiPalSetEntries, TRUE) == 5);
-	RTEST(NtGdiDoPalette(hPal, 3, 6, palEntries, GdiPalSetEntries, TRUE) == 2);
-//	TEST(NtGdiDoPalette(hPal, 4, 23247, palEntries, GdiPalSetEntries, TRUE) == 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, palEntries, GdiPalSetEntries, TRUE), 1);
+	ok_long(NtGdiDoPalette(hPal, 0, 2, palEntries, GdiPalSetEntries, TRUE), 2);
+	ok_long(NtGdiDoPalette(hPal, 0, 3, palEntries, GdiPalSetEntries, TRUE), 3);
+	ok_long(NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalSetEntries, TRUE), 5);
+	ok_long(NtGdiDoPalette(hPal, 0, 6, palEntries, GdiPalSetEntries, TRUE), 5);
+	ok_long(NtGdiDoPalette(hPal, 3, 6, palEntries, GdiPalSetEntries, TRUE), 2);
+//	TEST(NtGdiDoPalette(hPal, 4, 23247, palEntries, GdiPalSetEntries, TRUE), 0);
 
-	/* Test bInbound == FALSE */
+	/* Test bInbound, FALSE */
 	NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalSetEntries, TRUE);
 	ZeroMemory(palEntries2, sizeof(palEntries2));
-	RTEST(NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalSetEntries, FALSE) == 5);
+	ok_long(NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalSetEntries, FALSE), 5);
 	/* we should get the old values returned in our buffer! */
-	TEST(memcmp(palEntries2, palEntries, sizeof(palEntries)) == 0);
+	ok_int(memcmp(palEntries2, palEntries, sizeof(palEntries)), 0);
 
 	/* check what we have in our palette now */
 	ZeroMemory(palEntries2, sizeof(palEntries2));
-	RTEST(NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalGetEntries, FALSE) == 5);
-	TEST(memcmp(palEntries2, palEntries, sizeof(palEntries)) == 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalGetEntries, FALSE), 5);
+	ok_int(memcmp(palEntries2, palEntries, sizeof(palEntries)), 0);
 
-	RTEST(NtGdiDoPalette(hPal, 0, 4, palEntries2, GdiPalSetEntries, TRUE) == 4);
-	RTEST(GetLastError() == ERROR_SUCCESS);
+	ok_long(NtGdiDoPalette(hPal, 0, 4, palEntries2, GdiPalSetEntries, TRUE), 4);
+	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	/* Test if entries are set correctly */
 	hPal = CreateTestPalette();
 	NtGdiDoPalette(hPal, 0, 5, palEntries, GdiPalSetEntries, TRUE);
 	NtGdiDoPalette(hPal, 0, 5, palEntries2, GdiPalGetEntries, FALSE);
-	RTEST(palEntries2[0].peRed == 0);
-	RTEST(palEntries2[0].peGreen == 0);
-	RTEST(palEntries2[0].peBlue == 0);
-	RTEST(palEntries2[0].peFlags == 0);
+	ok_int(palEntries2[0].peRed, 0);
+	ok_int(palEntries2[0].peGreen, 0);
+	ok_int(palEntries2[0].peBlue, 0);
+	ok_int(palEntries2[0].peFlags, 0);
 
 	/* Test that the buffer was not changed */
 
@@ -168,11 +168,11 @@ Test_NtGdiDoPalette_GdiPalSetEntries(void)
 	/* Test with palette selected into dc */
 	hDC = CreateCompatibleDC(NULL);
 	hOldPal = SelectPalette(hDC, hPal, 0);
-	RTEST(NtGdiDoPalette(hPal, 0, 4, palEntries, GdiPalSetEntries, TRUE) == 4);
+	ok_long(NtGdiDoPalette(hPal, 0, 4, palEntries, GdiPalSetEntries, TRUE), 4);
 	SelectPalette(hDC, hOldPal, 0);
 
 	/* Test pEntries = NULL */
-	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, TRUE) == 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, TRUE), 0);
 
 }
 
@@ -184,12 +184,12 @@ Test_NtGdiDoPalette_GdiPalGetEntries(void)
 	hPal = CreateTestPalette();
 
 	/* Test pEntries = NULL */
-	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, TRUE) == 0);
-	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, FALSE) == 5);
-	RTEST(NtGdiDoPalette(hPal, 2, 1, NULL, GdiPalGetEntries, FALSE) == 5);
-	RTEST(NtGdiDoPalette(hPal, 20, 1, NULL, GdiPalGetEntries, FALSE) == 5);
-	RTEST(NtGdiDoPalette(hPal, -20, 1, NULL, GdiPalGetEntries, FALSE) == 5);
-	RTEST(NtGdiDoPalette(hPal, 2, 0, NULL, GdiPalGetEntries, FALSE) == 5);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, TRUE), 0);
+	ok_long(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, FALSE), 5);
+	ok_long(NtGdiDoPalette(hPal, 2, 1, NULL, GdiPalGetEntries, FALSE), 5);
+	ok_long(NtGdiDoPalette(hPal, 20, 1, NULL, GdiPalGetEntries, FALSE), 5);
+	ok_long(NtGdiDoPalette(hPal, -20, 1, NULL, GdiPalGetEntries, FALSE), 5);
+	ok_long(NtGdiDoPalette(hPal, 2, 0, NULL, GdiPalGetEntries, FALSE), 5);
 
 
 // Test flags 0xf0
@@ -222,7 +222,7 @@ Test_NtGdiDoPalette_SetDIBColorTable(void)
     } bmi;
 
     hdc = CreateCompatibleDC(0);
-    ASSERT(hdc != NULL);
+    ok(hdc != NULL, "hdc was NULL.\n");
 
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = 10;
@@ -245,11 +245,10 @@ Test_NtGdiDoPalette_SetDIBColorTable(void)
     bmi.bmiColors[7] = 0xE0E0E0;
     bmi.bmiColors[8] = 0xffffff;
     hbmp = CreateDIBSection(hdc, (BITMAPINFO*)&bmi, DIB_PAL_COLORS, (PVOID*)&pjBits, NULL, 0);
-	ASSERT(hbmp);
-    ASSERT(pjBits);
+	ok(hbmp != NULL, "hbmp was NULL.\n");
+    ok(pjBits != NULL, "pjBits was NULL.\n");
 
     SelectObject(hdc, hbmp);
-
 
     pjBits[0] = 8;
     pjBits[1] = 1;
@@ -265,7 +264,7 @@ Test_NtGdiDoPalette_SetDIBColorTable(void)
     bmi.bmiColors[2] = 0xC0C0C0;
     bmi.bmiColors[1] = 0xE0E0E0;
     bmi.bmiColors[0] = 0xffffff;
-	TEST(NtGdiDoPalette(hdc, 0, 9, &bmi.bmiColors, GdiPalSetColorTable, FALSE) == 9);
+	ok_long(NtGdiDoPalette(hdc, 0, 9, &bmi.bmiColors, GdiPalSetColorTable, FALSE), 9);
 
     SetDCPenColor(hdc, 0xE0E0E0);
     SetDCBrushColor(hdc, 0x202020);
@@ -275,7 +274,6 @@ Test_NtGdiDoPalette_SetDIBColorTable(void)
     DeleteObject(hbmp);
 }
 
-
 START_TEST(NtGdiDoPalette)
 {
 	Test_NtGdiDoPalette_GdiPalAnimate();
@@ -284,5 +282,4 @@ START_TEST(NtGdiDoPalette)
 	Test_NtGdiDoPalette_GetSystemPalette();
 	Test_NtGdiDoPalette_GetBIBColorTable();
 	Test_NtGdiDoPalette_SetDIBColorTable();
-
 }
