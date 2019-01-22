@@ -21,16 +21,16 @@ START_TEST(NtGdiFlushUserBatch)
         return APISTATUS_NOT_FOUND;
 
 	pTeb = NtCurrentTeb();
-	ASSERT(pTeb);
+	ok(pTeb != NULL, "pTeb was NULL.\n");
 
 	pRet = (PVOID)pNtGdiFlushUserBatch();
 
-	TEST(pRet != 0);
-	TEST(pRet == &pTeb->RealClientId);
+	ok(pRet != NULL, "pRet was NULL.\n");
+	ok_ptr(pRet, &pTeb->RealClientId);
 
-	TEST(pTeb->GdiBatchCount == 0);
-	TEST(pTeb->GdiTebBatch.Offset == 0);
-	TEST(pTeb->GdiTebBatch.HDC == 0);
+	ok_long(pTeb->GdiBatchCount, 0);
+	ok_long(pTeb->GdiTebBatch.Offset, 0);
+	ok_ptr(pTeb->GdiTebBatch.HDC, NULL);
 
 	/* Set up some bullshit */
 	pTeb->InDbgPrint = 1;
@@ -39,11 +39,10 @@ START_TEST(NtGdiFlushUserBatch)
 	pTeb->GdiTebBatch.HDC = (HDC)123;
 
 	pRet = (PVOID)pNtGdiFlushUserBatch();
-	TEST(pRet == &pTeb->RealClientId);
+	ok_ptr(pRet, &pTeb->RealClientId);
 
-	TEST(pTeb->InDbgPrint == 0);
-	TEST(pTeb->GdiBatchCount == 12);
-	TEST(pTeb->GdiTebBatch.Offset == 0);
-	TEST(pTeb->GdiTebBatch.HDC == 0);
-
+	ok_int(pTeb->InDbgPrint, 0);
+	ok_long(pTeb->GdiBatchCount, 12);
+	ok_long(pTeb->GdiTebBatch.Offset, 0);
+	ok_ptr(pTeb->GdiTebBatch.HDC, NULL);
 }
