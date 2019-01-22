@@ -25,7 +25,7 @@ START_TEST(NtGdiFlushUserBatch)
 
 	pRet = (PVOID)pNtGdiFlushUserBatch();
 
-	ok_ptr(pRet != NULL, "pRet was NULL.\n");
+	ok(pRet != NULL, "pRet was NULL.\n");
 	ok_ptr(pRet, &pTeb->RealClientId);
 
 	ok_long(pTeb->GdiBatchCount, 0);
