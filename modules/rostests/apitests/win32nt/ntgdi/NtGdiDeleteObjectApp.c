@@ -16,108 +16,108 @@ START_TEST(NtGdiDeleteObjectApp)
 
     /* Try to delete 0 */
     SetLastError(0);
-    TEST(NtGdiDeleteObjectApp(0) == 0);
-    TEST(GetLastError() == 0);
+    ok_int(NtGdiDeleteObjectApp(0), 0);
+    ok_long(GetLastError(), 0);
 
     /* Try to delete something with a stockbit */
     SetLastError(0);
-    TEST(NtGdiDeleteObjectApp((PVOID)(GDI_HANDLE_STOCK_MASK | 0x1234)) == 1);
-    TEST(GetLastError() == 0);
+    ok_int(NtGdiDeleteObjectApp((PVOID)(GDI_HANDLE_STOCK_MASK | 0x1234)), 1);
+    ok_long(GetLastError(), 0);
 
     /* Delete a compatible DC */
     SetLastError(0);
     hdc = CreateCompatibleDC(NULL);
-    ASSERT(GdiIsHandleValid(hdc) == 1);
-    TEST(NtGdiDeleteObjectApp(hdc) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hdc) == 0);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_int(NtGdiDeleteObjectApp(hdc), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hdc), 0);
 
     /* Delete a display DC */
     SetLastError(0);
     hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-    ASSERT(GdiIsHandleValid(hdc) == 1);
-    TEST((hpen=SelectObject(hdc, GetStockObject(WHITE_PEN))) != NULL);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok((hpen=SelectObject(hdc, GetStockObject(WHITE_PEN))) != NULL, "hpen was NULL.\n");
     SelectObject(hdc, hpen);
-    TEST(NtGdiDeleteObjectApp(hdc) != 0);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hdc) == 1);
-    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
-    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
+    ok(NtGdiDeleteObjectApp(hdc) != 0, "NtGdiDeleteObjectApp(hdc) was zero.\n");
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_ptr(SelectObject(hdc, GetStockObject(WHITE_PEN)), NULL);
+    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
 
     /* Once more */
     SetLastError(0);
     hdc = GetDC(0);
-    ASSERT(GdiIsHandleValid(hdc) == 1);
-    TEST(NtGdiDeleteObjectApp(hdc) != 0);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hdc) == 1);
-    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
-    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok(NtGdiDeleteObjectApp(hdc) != 0, "NtGdiDeleteObjectApp(hdc) was zero.\n");
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_ptr(SelectObject(hdc, GetStockObject(WHITE_PEN)), NULL);
+    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
     /* Make sure */
-    TEST(NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC) == 0);
+    ok_ptr((void *)NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC), NULL);
 
     /* Delete a brush */
     SetLastError(0);
     hbrush = CreateSolidBrush(0x123456);
-    ASSERT(GdiIsHandleValid(hbrush) == 1);
-    TEST(NtGdiDeleteObjectApp(hbrush) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbrush) == 0);
+    ok_int(GdiIsHandleValid(hbrush), 1);
+    ok_int(NtGdiDeleteObjectApp(hbrush), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbrush), 0);
 
     /* Try to delete a stock brush */
     SetLastError(0);
     hbrush = GetStockObject(BLACK_BRUSH);
-    ASSERT(GdiIsHandleValid(hbrush) == 1);
-    TEST(NtGdiDeleteObjectApp(hbrush) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbrush) == 1);
+    ok_int(GdiIsHandleValid(hbrush), 1);
+    ok_int(NtGdiDeleteObjectApp(hbrush), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbrush), 1);
 
     /* Delete a bitmap */
     SetLastError(0);
     hbmp = CreateBitmap(10, 10, 1, 1, NULL);
-    ASSERT(GdiIsHandleValid(hbmp) == 1);
-    TEST(NtGdiDeleteObjectApp(hbmp) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbmp) == 0);
+    ok_int(GdiIsHandleValid(hbmp), 1);
+    ok_int(NtGdiDeleteObjectApp(hbmp), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbmp), 0);
 
     /* Create a DC for further use */
     hdc = CreateCompatibleDC(NULL);
-    ASSERT(hdc);
+    ok(hdc != NULL, "hdc was NULL.\n");
 
     /* Try to delete a brush that is selected into a DC */
     SetLastError(0);
     hbrush = CreateSolidBrush(0x123456);
-    ASSERT(GdiIsHandleValid(hbrush) == 1);
-    TEST(NtGdiSelectBrush(hdc, hbrush) != NULL);
-    TEST(NtGdiDeleteObjectApp(hbrush) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbrush) == 1);
+    ok_int(GdiIsHandleValid(hbrush), 1);
+    ok(NtGdiSelectBrush(hdc, hbrush) != NULL, "NtGdiSelectBrush(hdc, hbrush) was NULL.\n");
+    ok_int(NtGdiDeleteObjectApp(hbrush), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbrush), 1);
 
     /* Try to delete a bitmap that is selected into a DC */
     SetLastError(0);
     hbmp = CreateBitmap(10, 10, 1, 1, NULL);
-    ASSERT(GdiIsHandleValid(hbmp) == 1);
-    TEST(NtGdiSelectBitmap(hdc, hbmp) != NULL);
+    ok_int(GdiIsHandleValid(hbmp), 1);
+    ok(NtGdiSelectBitmap(hdc, hbmp) != NULL, "NtGdiSelectBitmap(hdc, hbmp) was NULL.\n");
 
-    TEST(NtGdiDeleteObjectApp(hbmp) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbmp) == 1);
+    ok_int(NtGdiDeleteObjectApp(hbmp), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbmp), 1);
 
     /* Bitmap get's deleted as soon as we dereference it */
     NtGdiSelectBitmap(hdc, GetStockObject(DEFAULT_BITMAP));
-    TEST(GdiIsHandleValid(hbmp) == 0);
+    ok_int(GdiIsHandleValid(hbmp), 0);
 
-    TEST(NtGdiDeleteObjectApp(hbmp) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbmp) == 0);
+    ok_int(NtGdiDeleteObjectApp(hbmp), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbmp), 0);
 
     /* Try to delete a brush that is selected into a DC */
     SetLastError(0);
     hbrush = CreateSolidBrush(123);
-    ASSERT(GdiIsHandleValid(hbrush) == 1);
-    TEST(NtGdiSelectBrush(hdc, hbrush) != NULL);
+    ok_int(GdiIsHandleValid(hbrush), 1);
+    ok(NtGdiSelectBrush(hdc, hbrush) != NULL, "NtGdiSelectBrush(hdc, hbrush) was NULL.\n");
 
-    TEST(NtGdiDeleteObjectApp(hbrush) == 1);
-    TEST(GetLastError() == 0);
-    TEST(GdiIsHandleValid(hbrush) == 1);
+    ok_int(NtGdiDeleteObjectApp(hbrush), 1);
+    ok_long(GetLastError(), 0);
+    ok_int(GdiIsHandleValid(hbrush), 1);
 }
