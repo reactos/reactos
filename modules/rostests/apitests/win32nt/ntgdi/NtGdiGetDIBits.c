@@ -75,7 +75,8 @@ START_TEST(NtGdiGetDIBitsInternal)
 	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
 
 	SetLastError(ERROR_SUCCESS);
-	ok_int(NtGdiGetDIBitsInternal((HDC)0, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0);
+	ok(NtGdiGetDIBitsInternal((HDC)0, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0,
+	   "NtGdiGetDIBitsInternal((HDC)0, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) <= 0.\n");
 	ok_long(GetLastError(), ERROR_SUCCESS);
 	ok_int(bmp.Colors[0].rgbRed, 0x44);
 
@@ -84,7 +85,8 @@ START_TEST(NtGdiGetDIBitsInternal)
 	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
 
 	SetLastError(ERROR_SUCCESS);
-	ok_int(NtGdiGetDIBitsInternal((HDC)2345, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0);
+	ok(NtGdiGetDIBitsInternal((HDC)2345, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0,
+	   "The return value was <= 0.\n");
 	ok_long(GetLastError(), ERROR_SUCCESS);
 	ok_int(bmp.Colors[0].rgbRed, 0x44);
 
@@ -93,8 +95,8 @@ START_TEST(NtGdiGetDIBitsInternal)
 	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
 
 	SetLastError(ERROR_SUCCESS);
-	ok_int(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, &bmp.bi, DIB_RGB_COLORS,
-								 DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0);
+	ok(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, &bmp.bi, DIB_RGB_COLORS,
+	   DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0, "The return value was <= 0.\n");
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	ScreenBpp = GetDeviceCaps(hDCScreen, BITSPIXEL);
@@ -112,8 +114,8 @@ START_TEST(NtGdiGetDIBitsInternal)
 //	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x11223344);
 
 	SetLastError(ERROR_SUCCESS);
-	ok_int(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, (void*)data, &bmp.bi, DIB_RGB_COLORS,
-								 DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0);
+	ok(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, (void*)data, &bmp.bi, DIB_RGB_COLORS,
+	   DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0, "The return value was <= 0.\n");
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	ok_long(bmp.bi.bmiHeader.biWidth, 16);
@@ -127,8 +129,8 @@ START_TEST(NtGdiGetDIBitsInternal)
 	SetLastError(ERROR_SUCCESS);
 	ZeroMemory(&bic, sizeof(BITMAPCOREINFO));
 	bic.bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
-	ok_int(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, (PBITMAPINFO)&bic, DIB_RGB_COLORS,
-								 DIB_BitmapMaxBitsSize((PBITMAPINFO)&bic, 15), 0) > 0);
+	ok(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, (PBITMAPINFO)&bic, DIB_RGB_COLORS,
+	   DIB_BitmapMaxBitsSize((PBITMAPINFO)&bic, 15), 0) > 0, "The return value was <= 0.\n");
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 
