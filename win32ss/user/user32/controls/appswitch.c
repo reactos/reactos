@@ -169,18 +169,6 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 
    UNREFERENCED_PARAMETER(lParam);
 
-   if (!IsWindowVisible(window))
-            return TRUE;
-
-   hwndOwner = GetWindow(window, GW_OWNER);
-   if (hwndOwner && IsWindowVisible(hwndOwner))
-       return TRUE;
-
-   GetClassNameW(window, windowText, _countof(windowText));
-   if ((wcscmp(L"Shell_TrayWnd", windowText)==0) ||
-       (wcscmp(L"Progman", windowText)==0) )
-            return TRUE;
-
    // First try to get the big icon assigned to the window
    hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
    if (!hIcon)
@@ -218,24 +206,42 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    return TRUE;
 }
 
+   GetClassNameW(window, windowText, _countof(windowText));
+
 // Function mostly compatible with the normal EnumChildWindows,
 // except it lists in Z-Order and it doesn't ensure consistency
 // if a window is removed while enumerating
-void EnumChildWindowsZOrder(HWND hwnd, WNDENUMPROC callback, LPARAM lParam)
+void EnumWindowsZOrder(WNDENUMPROC callback, LPARAM lParam)
 {
-    HWND next = GetTopWindow(hwnd);
-    while (next != NULL)
+    HWND hwnd, hwndOwner;
+    WCHAR szClass[64];
+    DWORD ExStyle;
+
+    for (hwnd = GetTopWindow(NULL); hwnd; hwnd = GetWindow(hwnd, GW_HWNDNEXT))
     {
-        if (!hwnd && !IsWindowVisible(next))
+        if (!IsWindowVisible(hwnd))
+            continue;
+
+        // check special windows
+        if (!GetClassNameW(hwnd, szClass, _countof(szClass)) ||
+            wcscmp(szClass, L"Shell_TrayWnd") == 0 ||
+            wcscmp(szClass, L"Progman") == 0)
         {
-            // UPDATE: Seek also the owned windows of the hidden top-level window.
-            EnumChildWindowsZOrder(next, callback, lParam);
+            continue;
         }
 
-        if (!callback(next, lParam))
-            break;
+        ExStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        if (ExStyle & WS_EX_TOOLWINDOW)
+            continue;
 
-        next = GetWindow(next, GW_HWNDNEXT);
+        hwndOwner = GetWindow(hwnd, GW_OWNER);
+        if ((ExStyle & WS_EX_APPWINDOW) || !IsWindowVisible(hwndOwner))
+        {
+            if (!callback(hwnd, lParam))
+                break;
+
+            continue;
+        }
     }
 }
 
@@ -422,7 +428,7 @@ BOOL ProcessHotKey(VOID)
    if (!isOpen)
    {
       windowCount=0;
-      EnumChildWindowsZOrder(NULL, EnumerateCallback, 0);
+      EnumWindowsZOrder(EnumerateCallback, 0);
 
       if (windowCount == 0)
          return FALSE;
@@ -567,7 +573,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
       Esc = TRUE;
 
       windowCount = 0;
-      EnumChildWindowsZOrder(NULL, EnumerateCallback, 0);
+      EnumWindowsZOrder(EnumerateCallback, 0);
 
       if (windowCount < 2)
           return 0;
