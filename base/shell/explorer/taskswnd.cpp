@@ -1373,20 +1373,19 @@ public:
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
-        /* Only show windows that still exist and are visible and none of explorer's
-        special windows (such as the desktop or the tray window) */
-        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
-            !m_Tray->IsSpecialHWND(hWnd))
-        {
-            DWORD exStyle = ::GetWindowLong(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
-                !(exStyle & WS_EX_TOOLWINDOW))
-            {
-                TRACE("Adding task for %p...\n", hWnd);
-                AddTask(hWnd);
-            }
+        if (!::IsWindowVisible(hWnd) || m_Tray->IsSpecialHWND(hWnd))
+            return TRUE;
 
+        DWORD ExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+        if (ExStyle & WS_EX_TOOLWINDOW)
+            return TRUE;
+
+        HWND hwndOwner = ::GetWindow(hWnd, GW_OWNER);
+        if (hwndOwner == NULL || (ExStyle & WS_EX_APPWINDOW))
+        {
+            TRACE("Adding task for %p...\n", hWnd);
+            AddTask(hWnd);
+            return TRUE;
         }
 
         return TRUE;
