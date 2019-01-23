@@ -165,7 +165,6 @@ void CompleteSwitch(BOOL doSwitch)
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
    HICON hIcon;
-   HWND hwndOwner;
 
    UNREFERENCED_PARAMETER(lParam);
 
@@ -205,8 +204,6 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 
    return TRUE;
 }
-
-   GetClassNameW(window, windowText, _countof(windowText));
 
 // Function mostly compatible with the normal EnumChildWindows,
 // except it lists in Z-Order and it doesn't ensure consistency

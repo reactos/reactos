@@ -1376,11 +1376,11 @@ public:
         if (!::IsWindowVisible(hWnd) || m_Tray->IsSpecialHWND(hWnd))
             return TRUE;
 
-        DWORD ExStyle = GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+        DWORD ExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
         if (ExStyle & WS_EX_TOOLWINDOW)
             return TRUE;
 
-        HWND hwndOwner = GetWindow(hWnd, GW_OWNER);
+        HWND hwndOwner = ::GetWindow(hWnd, GW_OWNER);
         if (hwndOwner == NULL || (ExStyle & WS_EX_APPWINDOW))
         {
             TRACE("Adding task for %p...\n", hWnd);
