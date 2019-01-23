@@ -15,3 +15,13 @@ ReactOS_CirclesBlue_2.jpg           | See above                                 
 ReactOS_CirclesGold_1.jpg           | See above                                      | See above
 ReactOS_CirclesGold_2.jpg           | See above                                      | See above
 ReactOS_Hexagons.jpg                | See above                                      | http://www.reactos.org/forum/viewtopic.php?p=109866#p109866
+
+To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1 
+
+# For Windows users
+
+    configure.cmd -DENABLE_WALLPAPERS=1
+
+# For UNIX users
+
+    ./configure.sh -DENABLE_WALLPAPERS=1
