@@ -24,7 +24,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
 BOOL OSK_ReleaseKey(WORD ScanCode);
 
 INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int);
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -39,8 +39,8 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
     HICON hIcon;
     HWND hWndItem;
 
-    hIcon = (HICON)LoadImage(Globals.hInstance, MAKEINTRESOURCE(IdResource),
-                             IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    hIcon = (HICON)LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IdResource),
+                              IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
     if (hIcon == NULL)
         return FALSE;
 
@@ -51,7 +51,7 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
         return FALSE;
     }
 
-    SendMessage(hWndItem, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
+    SendMessageW(hWndItem, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)hIcon);
 
     /* The system automatically deletes these resources when the process that created them terminates (MSDN) */
 
@@ -174,7 +174,7 @@ int OSK_DlgInitDialog(HWND hDlg)
     /* If the member of the struct (bShowWarning) is set then display the dialog box */
     if (Globals.bShowWarning)
     {
-        DialogBox(Globals.hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+        DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
     }
 
     return TRUE;
@@ -253,19 +253,19 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
         MSG msg;
 
         SetForegroundWindow(Globals.hActiveWnd);
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
     }
 
     /* KeyDown and/or KeyUp ? */
-    WindowStyle = GetWindowLong(hWndControl, GWL_STYLE);
+    WindowStyle = GetWindowLongW(hWndControl, GWL_STYLE);
     if ((WindowStyle & BS_AUTOCHECKBOX) == BS_AUTOCHECKBOX)
     {
         /* 2-states key like Shift, Alt, Ctrl, ... */
-        if (SendMessage(hWndControl, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        if (SendMessageW(hWndControl, BM_GETCHECK, 0, 0) == BST_CHECKED)
         {
             bKeyDown = TRUE;
             bKeyUp = FALSE;
@@ -334,11 +334,11 @@ BOOL OSK_ReleaseKey(WORD ScanCode)
 
     /* Is it a 2-states key ? */
     hWndControl = GetDlgItem(Globals.hMainWnd, ScanCode);
-    WindowStyle = GetWindowLong(hWndControl, GWL_STYLE);
+    WindowStyle = GetWindowLongW(hWndControl, GWL_STYLE);
     if ((WindowStyle & BS_AUTOCHECKBOX) != BS_AUTOCHECKBOX) return FALSE;
 
     /* Is the key down ? */
-    if (SendMessage(hWndControl, BM_GETCHECK, 0, 0) != BST_CHECKED) return TRUE;
+    if (SendMessageW(hWndControl, BM_GETCHECK, 0, 0) != BST_CHECKED) return TRUE;
 
     /* Extended key ? */
     if (ScanCode & 0x0200)
@@ -419,10 +419,10 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
  *
  *       WinMain
  */
-int WINAPI _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE prev,
-                     LPTSTR cmdline,
-                     int show)
+int WINAPI wWinMain(HINSTANCE hInstance,
+                    HINSTANCE prev,
+                    LPWSTR cmdline,
+                    int show)
 {
     HANDLE hMutex;
 
@@ -434,17 +434,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
     Globals.hInstance = hInstance;
 
     /* Rry to open a mutex for a single instance */
-    hMutex = OpenMutexA(MUTEX_ALL_ACCESS, FALSE, "osk");
+    hMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, L"osk");
 
     if (!hMutex)
     {
         /* Mutex doesn’t exist. This is the first instance so create the mutex. */
-        hMutex = CreateMutexA(NULL, FALSE, "osk");
+        hMutex = CreateMutexW(NULL, FALSE, L"osk");
 
-        DialogBox(hInstance,
-                  MAKEINTRESOURCE(MAIN_DIALOG),
-                  GetDesktopWindow(),
-                  OSK_DlgProc);
+        DialogBoxW(hInstance,
+                   MAKEINTRESOURCEW(MAIN_DIALOG),
+                   GetDesktopWindow(),
+                   OSK_DlgProc);
 
         /* Delete the mutex */
         if (hMutex) CloseHandle(hMutex);
