@@ -71,6 +71,10 @@ void viewport_activate(struct d3d_viewport *This, BOOL ignore_lights)
     /* And copy the values in the structure used by the device */
     if (This->use_vp2)
     {
+        if (!This->viewports.vp2.dvMinZ && !This->viewports.vp2.dvMaxZ
+                && !This->viewports.vp2.dvClipWidth && !This->viewports.vp2.dvClipHeight)
+            return;
+
         vp.dwX = This->viewports.vp2.dwX;
         vp.dwY = This->viewports.vp2.dwY;
         vp.dwHeight = This->viewports.vp2.dwHeight;

@@ -987,9 +987,10 @@ static void shader_arb_request_a0(const struct wined3d_shader_instruction *ins, 
     struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
     struct wined3d_string_buffer *buffer = ins->ctx->buffer;
 
-    if (!strcmp(priv->addr_reg, src)) return;
+    if (!strcmp(priv->addr_reg, src))
+        return;
 
-    strcpy(priv->addr_reg, src);
+    snprintf(priv->addr_reg, sizeof(priv->addr_reg), "%s", src);
     shader_addline(buffer, "ARL A0.x, %s;\n", src);
 }
 
@@ -4229,12 +4230,12 @@ static GLuint shader_arb_generate_vshader(const struct wined3d_shader *shader,
 }
 
 /* Context activation is done by the caller. */
-static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_shader *shader,
-        const struct arb_ps_compile_args *args)
+static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_context *context,
+        struct wined3d_shader *shader, const struct arb_ps_compile_args *args)
 {
+    const struct wined3d_d3d_info *d3d_info = context->d3d_info;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     struct wined3d_device *device = shader->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    const struct wined3d_d3d_info *d3d_info = &device->adapter->d3d_info;
     UINT i;
     DWORD new_size;
     struct arb_ps_compiled_shader *new_array;
@@ -4565,7 +4566,7 @@ static void shader_arb_select(void *shader_priv, struct wined3d_context *context
 
         TRACE("Using pixel shader %p.\n", ps);
         find_arb_ps_compile_args(state, context, ps, &compile_args);
-        compiled = find_arb_pshader(ps, &compile_args);
+        compiled = find_arb_pshader(context, ps, &compile_args);
         priv->current_fprogram_id = compiled->prgId;
         priv->compiled_fprog = compiled;
 
@@ -4732,56 +4733,42 @@ static void shader_arb_disable(void *shader_priv, struct wined3d_context *contex
 static void shader_arb_destroy(struct wined3d_shader *shader)
 {
     struct wined3d_device *device = shader->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    const struct wined3d_gl_info *gl_info;
+    struct wined3d_context *context;
+    unsigned int i;
+
+    /* This can happen if a shader was never compiled */
+    if (!shader->backend_data)
+        return;
+
+    context = context_acquire(device, NULL, 0);
+    gl_info = context->gl_info;
 
     if (shader_is_pshader_version(shader->reg_maps.shader_version.type))
     {
         struct arb_pshader_private *shader_data = shader->backend_data;
-        UINT i;
 
-        if(!shader_data) return; /* This can happen if a shader was never compiled */
-
-        if (shader_data->num_gl_shaders)
-        {
-            struct wined3d_context *context = context_acquire(device, NULL, 0);
-
-            for (i = 0; i < shader_data->num_gl_shaders; ++i)
-            {
-                GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
-                checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId))");
-            }
-
-            context_release(context);
-        }
+        for (i = 0; i < shader_data->num_gl_shaders; ++i)
+            GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
 
         heap_free(shader_data->gl_shaders);
-        heap_free(shader_data);
-        shader->backend_data = NULL;
     }
     else
     {
         struct arb_vshader_private *shader_data = shader->backend_data;
-        UINT i;
 
-        if(!shader_data) return; /* This can happen if a shader was never compiled */
-
-        if (shader_data->num_gl_shaders)
-        {
-            struct wined3d_context *context = context_acquire(device, NULL, 0);
-
-            for (i = 0; i < shader_data->num_gl_shaders; ++i)
-            {
-                GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
-                checkGLcall("GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId))");
-            }
-
-            context_release(context);
-        }
+        for (i = 0; i < shader_data->num_gl_shaders; ++i)
+            GL_EXTCALL(glDeleteProgramsARB(1, &shader_data->gl_shaders[i].prgId));
 
         heap_free(shader_data->gl_shaders);
-        heap_free(shader_data);
-        shader->backend_data = NULL;
     }
+
+    checkGLcall("delete programs");
+
+    context_release(context);
+
+    heap_free(shader->backend_data);
+    shader->backend_data = NULL;
 }
 
 static int sig_tree_compare(const void *key, const struct wine_rb_entry *entry)
@@ -5084,7 +5071,6 @@ static const SHADER_HANDLER shader_arb_instruction_handler_table[WINED3DSIH_TABL
     /* WINED3DSIH_DSY                              */ shader_hw_dsy,
     /* WINED3DSIH_DSY_COARSE                       */ NULL,
     /* WINED3DSIH_DSY_FINE                         */ NULL,
-    /* WINED3DSIH_EVAL_SAMPLE_INDEX                */ NULL,
     /* WINED3DSIH_ELSE                             */ shader_hw_else,
     /* WINED3DSIH_EMIT                             */ NULL,
     /* WINED3DSIH_EMIT_STREAM                      */ NULL,
@@ -5093,6 +5079,7 @@ static const SHADER_HANDLER shader_arb_instruction_handler_table[WINED3DSIH_TABL
     /* WINED3DSIH_ENDREP                           */ shader_hw_endrep,
     /* WINED3DSIH_ENDSWITCH                        */ NULL,
     /* WINED3DSIH_EQ                               */ NULL,
+    /* WINED3DSIH_EVAL_SAMPLE_INDEX                */ NULL,
     /* WINED3DSIH_EXP                              */ shader_hw_scalar_op,
     /* WINED3DSIH_EXPP                             */ shader_hw_scalar_op,
     /* WINED3DSIH_F16TOF32                         */ NULL,

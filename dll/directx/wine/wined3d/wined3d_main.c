@@ -225,8 +225,8 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             if (!strcmp(buffer,"disabled"))
             {
                 ERR_(winediag)("The GLSL shader backend has been disabled. You get to keep all the pieces if it breaks.\n");
-                TRACE("Use of GL Shading Language disabled\n");
-                wined3d_settings.glslRequested = FALSE;
+                TRACE("Use of GL Shading Language disabled.\n");
+                wined3d_settings.use_glsl = FALSE;
             }
         }
         if (!get_config_key(hkey, appkey, "OffscreenRenderingMode", buffer, size)
@@ -307,7 +307,8 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelCS", &wined3d_settings.max_sm_cs))
             TRACE("Limiting CS shader model to %u.\n", wined3d_settings.max_sm_cs);
-        if (!get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size)
+        if ((!get_config_key(hkey, appkey, "renderer", buffer, size)
+                || !get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size))
                 && !strcmp(buffer, "gdi"))
         {
             TRACE("Disabling 3D support.\n");
@@ -317,8 +318,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
-
-    wined3d_dxtn_init();
 
     return TRUE;
 }
@@ -351,9 +350,6 @@ static BOOL wined3d_dll_destroy(HINSTANCE hInstDLL)
 
     DeleteCriticalSection(&wined3d_wndproc_cs);
     DeleteCriticalSection(&wined3d_cs);
-
-    wined3d_dxtn_free();
-
     return TRUE;
 }
 
