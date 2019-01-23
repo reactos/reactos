@@ -1385,7 +1385,7 @@ public:
         {
             TRACE("Adding task for %p...\n", hWnd);
             AddTask(hWnd);
-            continue;
+            return TRUE;
         }
 
         return TRUE;
