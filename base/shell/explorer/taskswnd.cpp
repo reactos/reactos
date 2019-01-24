@@ -1461,6 +1461,8 @@ public:
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_IsDestroying = TRUE;
+        KillTimer(m_hWnd, 1);
+        KillTimer(m_hWnd, TASK_REFRESH_TIMER);
 
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
