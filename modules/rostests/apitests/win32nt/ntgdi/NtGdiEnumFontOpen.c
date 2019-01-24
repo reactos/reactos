@@ -24,7 +24,7 @@ START_TEST(NtGdiEnumFontOpen)
 	{
 		skip("idEnum == 0");
 		return;
-    }
+	}
 
 	/* we should have a gdi handle here */
 	ok_ptr((void *)GDI_HANDLE_GET_TYPE(idEnum), (void *)GDI_OBJECT_TYPE_ENUMFONT);
