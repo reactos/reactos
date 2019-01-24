@@ -1452,17 +1452,17 @@ public:
         UpdateButtonsSize(FALSE);
 
 #if DUMP_TASKS != 0
-        ::SetTimer(m_hWnd, 1, 5000, NULL);
+        SetTimer(1, 5000, NULL);
 #endif
-        ::SetTimer(m_hWnd, TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
+        SetTimer(TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return TRUE;
     }
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_IsDestroying = TRUE;
-        KillTimer(m_hWnd, 1);
-        KillTimer(m_hWnd, TASK_REFRESH_TIMER);
+        KillTimer(1);
+        KillTimer(TASK_REFRESH_TIMER);
 
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
@@ -1843,7 +1843,7 @@ public:
         LRESULT Ret = 0;
         INT_PTR iBtn = -1;
 
-        ::KillTimer(m_hWnd, TASK_REFRESH_TIMER);
+        KillTimer(TASK_REFRESH_TIMER);
         if (m_TaskBar.m_hWnd != NULL)
         {
             POINT pt;
@@ -1864,7 +1864,7 @@ public:
             /* Not on a taskbar button, so forward message to tray */
             Ret = SendMessage(m_Tray->GetHWND(), uMsg, wParam, lParam);
         }
-        ::SetTimer(m_hWnd, TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
+        SetTimer(TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return Ret;
     }
 
