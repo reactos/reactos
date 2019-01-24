@@ -199,26 +199,31 @@ private:
         HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
         HWND hwndModernText = GetDlgItem(IDC_TASKBARPROP_STARTMENUMODERNTEXT);
         BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) != 0;
+        BOOL bModern = FALSE;
 
         /* If NoSimpleStartMenu, disable ability to use Modern Start Menu */
-        if(policyNoSimpleStartMenu)
+        if (policyNoSimpleStartMenu)
         {
             /* Swich to classic */
             CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
-            
+
             /* Disable radion button */
             ::EnableWindow(hwndModernRadioBtn, FALSE);
-            
+
             /* Hide controls related to modern menu */
             ::ShowWindow(hwndModernRadioBtn, SW_HIDE);
             ::ShowWindow(hwndModernText, SW_HIDE);
             ::ShowWindow(hwndCustomizeModern, SW_HIDE);
         }
+        /* If no restrictions, then get bModern from dialog */
+        else
+        {
+            bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
+        }
 
-        BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
-        ::EnableWindow(hwndCustomizeModern, policyNoSimpleStartMenu ? FALSE : bModern);
+        ::EnableWindow(hwndCustomizeModern, bModern);
         ::EnableWindow(hwndCustomizeClassic, !bModern);
-        
+
         UINT uImageId = bModern ? IDB_STARTPREVIEW : IDB_STARTPREVIEW_CLASSIC;
         SetBitmap(hwndStartBitmap, &m_hbmpStartBitmap, uImageId);
     }
@@ -246,7 +251,7 @@ public:
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
         // fix me: start menu style (classic/modern) should be read somewhere from the registry.
-        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!! 
+        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         UpdateDialog();
     
         return TRUE;
