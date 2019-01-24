@@ -165,20 +165,24 @@ void CompleteSwitch(BOOL doSwitch)
 BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
 {
    HICON hIcon;
+   HWND hwndIcon, hwndOwner;
 
    UNREFERENCED_PARAMETER(lParam);
 
+   hwndOwner = GetWindow(window, GW_OWNER);
+   hwndIcon = (hwndOwner ? hwndOwner : window);
+
    // First try to get the big icon assigned to the window
-   hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_BIG, 0);
+   hIcon = (HICON)SendMessageW(hwndIcon, WM_GETICON, ICON_BIG, 0);
    if (!hIcon)
    {
       // If no icon is assigned, try to get the icon assigned to the windows' class
-      hIcon = (HICON)GetClassLongPtrW(window, GCL_HICON);
+      hIcon = (HICON)GetClassLongPtrW(hwndIcon, GCL_HICON);
       if (!hIcon)
       {
          // If we still don't have an icon, see if we can do with the small icon,
          // or a default application icon
-         hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
+         hIcon = (HICON)SendMessageW(hwndIcon, WM_GETICON, ICON_SMALL2, 0);
          if (!hIcon)
          {
             // using windows logo icon as default
