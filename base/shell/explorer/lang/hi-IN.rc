@@ -90,10 +90,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&प्रारंभ मेनू", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "यह मेनू शैली आपको अपने फ़ोल्डर्स, पसंदीदा प्रोग्राम और ढूंढ ने में आसान पहुंच प्रदान करती है।", IDC_STATIC, 20, 145, 150, 24
+    LTEXT "यह मेनू शैली आपको अपने फ़ोल्डर्स, पसंदीदा प्रोग्राम और ढूंढ ने में आसान पहुंच प्रदान करती है।", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&कस्टमाइज़...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "क्लासिक स्टार्ट &मेनू", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "यह मेनू शैली आपको क्लासिक लुक और कार्यक्षमता देता है", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "यह मेनू शैली आपको क्लासिक लुक और कार्यक्षमता देता है", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&कस्टमाइज़...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
 END
 

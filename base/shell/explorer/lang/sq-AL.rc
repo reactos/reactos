@@ -94,10 +94,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&Fillo menu", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Ky stil menu ju jep juve akses të lehtë në dosjet tuaja të preferuara, programet, dhe kërko.", IDC_STATIC, 20, 145, 150, 24
+    LTEXT "Ky stil menu ju jep juve akses të lehtë në dosjet tuaja të preferuara, programet, dhe kërko.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Modifiko...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Start &menu klasike", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Ky stil menu ju jep pamjen klasike dhe funksionalitetin", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "Ky stil menu ju jep pamjen klasike dhe funksionalitetin", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&Modifiko...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 

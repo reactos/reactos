@@ -92,10 +92,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "Menu Mula(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Gaya menu ini memberikan anda akses ke folder, programs kegemaran anda, dan cari fail anda.", IDC_STATIC, 20, 145, 150, 24
+    LTEXT "Gaya menu ini memberikan anda akses ke folder, programs kegemaran anda, dan cari fail anda.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "Suaikan...(&C)", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Klasik &menu mula", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Gaya menu ini memberikan anda lihat klasik dan berfungsi", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "Gaya menu ini memberikan anda lihat klasik dan berfungsi", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Suaikan...(&C)", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
 END
 

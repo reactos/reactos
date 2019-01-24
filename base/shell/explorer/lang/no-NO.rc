@@ -91,10 +91,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
 CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&Startmeny", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Denne meny stilen gir deg enkelt tilgang til dine mapper, favoritt programmer, og søk.", IDC_STATIC, 20, 145, 150, 24
+    LTEXT "Denne meny stilen gir deg enkelt tilgang til dine mapper, favoritt programmer, og søk.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Tilpass...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Klassisk Start&meny", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Denne menystilen gir deg en klassisk utsende og funksjoner", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "Denne menystilen gir deg en klassisk utsende og funksjoner", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&Tilpass...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 

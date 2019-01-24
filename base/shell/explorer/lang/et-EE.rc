@@ -97,10 +97,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
     AUTORADIOBUTTON "&Menüü Start", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
-    LTEXT "Valige see menüü, et tagada lihtne juurdepääs Internetile, e-postile ja oma lemmikprogrammidele", IDC_STATIC, 20, 145, 150, 24
+    LTEXT "Valige see menüü, et tagada lihtne juurdepääs Internetile, e-postile ja oma lemmikprogrammidele", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "&Kohanda...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "Klassikaline menüü &Start", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Valige see menüü, et kasutada Windowsi varasemate versioonide menüülaadi.", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "Valige see menüü, et kasutada Windowsi varasemate versioonide menüülaadi.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&Kohanda...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14    
 END
 
