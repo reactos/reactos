@@ -1376,9 +1376,12 @@ public:
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
+        /* Only show windows that still exist and are visible and none of explorer's
+           special windows (such as the desktop or the tray window) */
         if (!::IsWindowVisible(hWnd) || m_Tray->IsSpecialHWND(hWnd))
             return TRUE;
 
+        /* Don't list owned windows and also no tool windows */
         DWORD ExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
         if (ExStyle & WS_EX_TOOLWINDOW)
             return TRUE;
