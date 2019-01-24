@@ -11,6 +11,7 @@ LANGUAGE LANG_ARABIC, SUBLANG_DEFAULT
 MAIN_DIALOG DIALOGEX DISCARDABLE 0, 0, 608, 164
 CAPTION "On screen keyboard"
 FONT 8, "MS Shell Dlg"
+MENU IDR_OSK_MENU
 STYLE WS_SYSMENU | WS_MINIMIZEBOX
 EXSTYLE WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_APPWINDOW
 BEGIN
@@ -126,6 +127,45 @@ BEGIN
     CONTROL         "",IDC_LED_SCROLL,"Static",SS_CENTER|SS_NOTIFY,580,16,4,3
 END
 
+IDR_OSK_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "&Exit", IDM_EXIT
+    END
+
+    POPUP "Keyboard"
+    BEGIN
+        MENUITEM "Enhanced Keyboard", IDM_ENCHANCED_KB, CHECKED, GRAYED
+        MENUITEM "Standard Keyboard", IDM_STANDARD_KB, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
+        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+    END
+
+    POPUP "Settings"
+    BEGIN
+        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Font...", IDM_FONT, GRAYED
+    END
+
+    POPUP "Help"
+    BEGIN
+        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+    END
+END
+
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
 CAPTION "On-Screen Keyboard"
@@ -136,6 +176,12 @@ BEGIN
     LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
+END
+
+STRINGTABLE
+BEGIN
+    STRING_OSK "On-Screen Keyboard"
+    STRING_AUTHORS "Copyright Denis Robert"
 END
 
 /* EOF */

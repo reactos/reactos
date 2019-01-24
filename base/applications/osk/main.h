@@ -31,6 +31,7 @@ typedef struct
 extern OSK_GLOBALS Globals;
 
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
+#define MAX_BUFF 256
 
 #endif
 

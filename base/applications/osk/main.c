@@ -99,6 +99,32 @@ INT_PTR CALLBACK OSK_WarningProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
+/***********************************************************************
+ *
+ *          OSK_About
+ *
+ *  Initializes the "About" dialog box
+ */
+VOID OSK_About(VOID)
+{
+    WCHAR szTitle[MAX_BUFF];
+    WCHAR szAuthors[MAX_BUFF];
+    HICON OSKIcon;
+
+    /* Load the icon */
+    OSKIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+
+    /* Load the strings into the "About" dialog */
+    LoadStringW(Globals.hInstance, STRING_OSK, szTitle, countof(szTitle));
+    LoadStringW(Globals.hInstance, STRING_AUTHORS, szAuthors, countof(szAuthors));
+
+    /* Finally, execute the "About" dialog by using the Shell routine */
+    ShellAboutW(Globals.hMainWnd, szTitle, szAuthors, OSKIcon);
+
+    /* Once done, destroy the icon */
+    DestroyIcon(OSKIcon);
+}
+
 
 /***********************************************************************
  *
@@ -401,10 +427,30 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if (wParam == IDCANCEL)
-                EndDialog(hDlg, FALSE);
-            else if (wParam != IDC_STATIC)
-                OSK_DlgCommand(wParam, (HWND) lParam);
+            switch (LOWORD(wParam))
+            {
+                case IDCANCEL:
+                {
+                    EndDialog(hDlg, FALSE);
+                    break;
+                }
+
+                case IDM_EXIT:
+                {
+                    EndDialog(hDlg, FALSE);
+                    break;
+                }
+
+                case IDM_ABOUT:
+                {
+                    OSK_About();
+                    break;
+                }
+
+                default:
+                    OSK_DlgCommand(wParam, (HWND)lParam);
+                    break;
+            }
             break;
 
         case WM_CLOSE:
