@@ -27,7 +27,7 @@ START_TEST(NtGdiEnumFontOpen)
 	}
 
 	/* we should have a gdi handle here */
-	ok_ptr((void *)GDI_HANDLE_GET_TYPE(idEnum), (void *)GDI_OBJECT_TYPE_ENUMFONT);
+	ok_int((int)GDI_HANDLE_GET_TYPE(idEnum), (int)GDI_OBJECT_TYPE_ENUMFONT);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
 	ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
 	ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
