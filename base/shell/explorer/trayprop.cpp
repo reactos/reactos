@@ -197,15 +197,22 @@ private:
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
         HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
+        HWND hwndModernText = GetDlgItem(IDC_TASKBARPROP_STARTMENUMODERNTEXT);
         BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) != 0;
 
-        /* If restriced, disable ability to use Modern Start Menu */
+        /* If NoSimpleStartMenu, disable ability to use Modern Start Menu */
         if(policyNoSimpleStartMenu)
         {
             /* Swich to classic */
             CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+            
             /* Disable radion button */
             ::EnableWindow(hwndModernRadioBtn, FALSE);
+            
+            /* Hide controls related to modern menu */
+            ::ShowWindow(hwndModernRadioBtn, SW_HIDE);
+            ::ShowWindow(hwndModernText, SW_HIDE);
+            ::ShowWindow(hwndCustomizeModern, SW_HIDE);
         }
 
         BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
