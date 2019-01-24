@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ * Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +29,8 @@
 
 #define MAX_TASKS_COUNT (0x7FFF)
 #define TASK_ITEM_ARRAY_ALLOC   64
+#define TASK_REFRESH_TIMER 999
+#define REFRESH_INTERVAL 1000
 
 const WCHAR szTaskSwitchWndClass[] = L"MSTaskSwWClass";
 const WCHAR szRunningApps[] = L"Running Applications";
@@ -1373,20 +1376,19 @@ public:
 
     BOOL CALLBACK EnumWindowsProc(IN HWND hWnd)
     {
-        /* Only show windows that still exist and are visible and none of explorer's
-        special windows (such as the desktop or the tray window) */
-        if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) &&
-            !m_Tray->IsSpecialHWND(hWnd))
-        {
-            DWORD exStyle = ::GetWindowLong(hWnd, GWL_EXSTYLE);
-            /* Don't list popup windows and also no tool windows */
-            if ((::GetWindow(hWnd, GW_OWNER) == NULL || exStyle & WS_EX_APPWINDOW) &&
-                !(exStyle & WS_EX_TOOLWINDOW))
-            {
-                TRACE("Adding task for %p...\n", hWnd);
-                AddTask(hWnd);
-            }
+        if (!::IsWindowVisible(hWnd) || m_Tray->IsSpecialHWND(hWnd))
+            return TRUE;
 
+        DWORD ExStyle = ::GetWindowLongPtrW(hWnd, GWL_EXSTYLE);
+        if (ExStyle & WS_EX_TOOLWINDOW)
+            return TRUE;
+
+        HWND hwndOwner = ::GetWindow(hWnd, GW_OWNER);
+        if (!hwndOwner || (ExStyle & WS_EX_APPWINDOW))
+        {
+            TRACE("Adding task for %p...\n", hWnd);
+            AddTask(hWnd);
+            return TRUE;
         }
 
         return TRUE;
@@ -1447,8 +1449,9 @@ public:
         UpdateButtonsSize(FALSE);
 
 #if DUMP_TASKS != 0
-        SetTimer(hwnd, 1, 5000, NULL);
+        ::SetTimer(m_hWnd, 1, 5000, NULL);
 #endif
+        ::SetTimer(m_hWnd, TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return TRUE;
     }
 
@@ -1835,6 +1838,7 @@ public:
         LRESULT Ret = 0;
         INT_PTR iBtn = -1;
 
+        ::KillTimer(m_hWnd, TASK_REFRESH_TIMER);
         if (m_TaskBar.m_hWnd != NULL)
         {
             POINT pt;
@@ -1855,6 +1859,7 @@ public:
             /* Not on a taskbar button, so forward message to tray */
             Ret = SendMessage(m_Tray->GetHWND(), uMsg, wParam, lParam);
         }
+        ::SetTimer(m_hWnd, TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return Ret;
     }
 
@@ -1883,14 +1888,18 @@ public:
 
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-#if DUMP_TASKS != 0
         switch (wParam)
         {
+#if DUMP_TASKS != 0
         case 1:
             DumpTasks();
             break;
-        }
 #endif
+        case TASK_REFRESH_TIMER:
+            RefreshWindowList();
+            UpdateButtonsSize(FALSE);
+            break;
+        }
         return TRUE;
     }
 
