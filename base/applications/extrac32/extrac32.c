@@ -118,7 +118,7 @@ static void copy_file(LPCWSTR source, LPCWSTR destination)
         static const WCHAR overwriteMsg[] = {'O','v','e','r','w','r','i','t','e',' ','"','%','s','"','?',0};
         static const WCHAR titleMsg[] = {'E','x','t','r','a','c','t',0};
         WCHAR msg[MAX_PATH+100];
-        snprintfW(msg, sizeof(msg)/sizeof(msg[0]), overwriteMsg, destination);
+        snprintfW(msg, ARRAY_SIZE(msg), overwriteMsg, destination);
         if (MessageBoxW(NULL, msg, titleMsg, MB_YESNO | MB_ICONWARNING) != IDYES)
             return;
     }

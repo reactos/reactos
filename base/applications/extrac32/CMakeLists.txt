@@ -1,4 +1,5 @@
 
+add_definitions(-D__WINESRC__)
 add_executable(extrac32 extrac32.c)
 target_link_libraries(extrac32 wine)
 set_module_type(extrac32 win32gui UNICODE)
