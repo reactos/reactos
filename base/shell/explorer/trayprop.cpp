@@ -207,7 +207,7 @@ private:
             /* Swich to classic */
             CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
 
-            /* Disable radion button */
+            /* Disable radio button */
             ::EnableWindow(hwndModernRadioBtn, FALSE);
 
             /* Hide controls related to modern menu */
