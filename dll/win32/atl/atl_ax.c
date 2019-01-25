@@ -28,6 +28,7 @@
 #include "winerror.h"
 #include "winuser.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 #include "objbase.h"
 #include "objidl.h"
 #include "ole2.h"
@@ -104,7 +105,7 @@ BOOL WINAPI AtlAxWinInit(void)
 #error Unsupported version
 #endif
 
-    const WCHAR AtlAxWinW[] = {'A','t','l','A','x','W','i','n',ATL_NAME_SUFFIX};
+    static const WCHAR AtlAxWinW[] = {'A','t','l','A','x','W','i','n',ATL_NAME_SUFFIX};
 
     FIXME("version %04x semi-stub\n", _ATL_VER);
 
@@ -128,7 +129,7 @@ BOOL WINAPI AtlAxWinInit(void)
         return FALSE;
 
     if(_ATL_VER > _ATL_VER_30) {
-        const WCHAR AtlAxWinLicW[] = {'A','t','l','A','x','W','i','n','L','i','c',ATL_NAME_SUFFIX};
+        static const WCHAR AtlAxWinLicW[] = {'A','t','l','A','x','W','i','n','L','i','c',ATL_NAME_SUFFIX};
 
         wcex.lpszClassName = AtlAxWinLicW;
         if ( !RegisterClassExW( &wcex ) )
@@ -1001,9 +1002,9 @@ enum content
 
 static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
 {
+    static const WCHAR mshtml_prefixW[] = {'m','s','h','t','m','l',':',0};
     WCHAR new_urlW[MAX_PATH];
     DWORD size = MAX_PATH;
-    WCHAR mshtml_prefixW[] = {'m','s','h','t','m','l',':','\0'};
 
     if (!name || !name[0])
     {
@@ -1407,25 +1408,64 @@ HRESULT WINAPI AtlAxGetControl(HWND hWnd, IUnknown **pUnk)
 }
 
 /***********************************************************************
- *           AtlAxDialogBoxW              [atl100.35]
+ *           AtlAxDialogBoxA              [atl100.@]
  *
  */
-INT_PTR WINAPI AtlAxDialogBoxW(HINSTANCE hInstance, LPCWSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogProc,
-        LPARAM dwInitParam)
+INT_PTR WINAPI AtlAxDialogBoxA(HINSTANCE hInst, LPCSTR name, HWND owner, DLGPROC dlgProc, LPARAM param)
 {
-    FIXME("(%p %s %p %p %lx)\n", hInstance, debugstr_w(lpTemplateName), hWndParent, lpDialogProc, dwInitParam);
-    return 0;
+    INT_PTR res = 0;
+    int length;
+    WCHAR *nameW;
+
+    if (IS_INTRESOURCE(name))
+        return AtlAxDialogBoxW( hInst, (LPCWSTR) name, owner, dlgProc, param );
+
+    length = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
+    nameW = heap_alloc( length * sizeof(WCHAR) );
+    if (nameW)
+    {
+        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, length );
+        res = AtlAxDialogBoxW( hInst, nameW, owner, dlgProc, param );
+        heap_free( nameW );
+    }
+    return res;
 }
 
 /***********************************************************************
- *           AtlAxDialogBoxA              [atl100.36]
+ *           AtlAxDialogBoxW              [atl100.@]
  *
  */
-INT_PTR WINAPI AtlAxDialogBoxA(HINSTANCE hInstance, LPCSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogProc,
-        LPARAM dwInitParam)
+INT_PTR WINAPI AtlAxDialogBoxW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPROC dlgProc, LPARAM param)
 {
-    FIXME("(%p %s %p %p %lx)\n", hInstance, debugstr_a(lpTemplateName), hWndParent, lpDialogProc, dwInitParam);
-    return 0;
+    HRSRC hrsrc;
+    HGLOBAL hgl;
+    LPCDLGTEMPLATEW ptr;
+    LPDLGTEMPLATEW newptr;
+    INT_PTR res;
+
+    TRACE("(%p %s %p %p %lx)\n", hInst, debugstr_w(name), owner, dlgProc, param);
+
+    hrsrc = FindResourceW( hInst, name, (LPWSTR)RT_DIALOG );
+    if ( !hrsrc )
+        return 0;
+    hgl = LoadResource (hInst, hrsrc);
+    if ( !hgl )
+        return 0;
+    ptr = LockResource ( hgl );
+    if (!ptr)
+    {
+        FreeResource( hgl );
+        return 0;
+    }
+    newptr = AX_ConvertDialogTemplate( ptr );
+    if ( newptr )
+    {
+        res = DialogBoxIndirectParamW( hInst, newptr, owner, dlgProc, param );
+        heap_free( newptr );
+    } else
+        res = 0;
+    FreeResource ( hrsrc );
+    return res;
 }
 
 /***********************************************************************
