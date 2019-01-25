@@ -201,9 +201,6 @@ void yyfree (void *  );
 
 /* Begin user sect3 */
 
-#define yywrap() 1
-#define YY_SKIP_YYWRAP
-
 extern int yylineno;
 
 extern char *yytext;
@@ -318,6 +315,6 @@ extern int yylex (void);
 #line 107 "macro.lex.l"
 
 
-#line 322 "macro.lex.yy.h"
+#line 319 "macro.lex.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

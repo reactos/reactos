@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 %}
-%option noinput nounput never-interactive 8bit noyywrap
+%option noinput nounput never-interactive 8bit
 %x quote
 %{
 #include "config.h"
@@ -75,7 +75,7 @@ struct lexret  yylval;
         /* opening a new one */
         if (lex_data->quote_stk_idx == 0)
         {
-            assert(lex_data->cache_used < sizeof(lex_data->cache_string) / sizeof(lex_data->cache_string[0]));
+            assert(lex_data->cache_used < ARRAY_SIZE(lex_data->cache_string));
             lex_data->strptr = lex_data->cache_string[lex_data->cache_used] = HeapAlloc(GetProcessHeap(), 0, strlen(lex_data->macroptr) + 1);
             yylval.string = lex_data->strptr;
             lex_data->cache_used++;
@@ -83,7 +83,7 @@ struct lexret  yylval;
         }
         else *lex_data->strptr++ = yytext[0];
         lex_data->quote_stack[lex_data->quote_stk_idx++] = yytext[0];
-        assert(lex_data->quote_stk_idx < sizeof(lex_data->quote_stack) / sizeof(lex_data->quote_stack[0]));
+        assert(lex_data->quote_stk_idx < ARRAY_SIZE(lex_data->quote_stack));
     }
     else
     {
@@ -222,7 +222,7 @@ CheckArgs_end:
 static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 {
     void*       pa[2];
-    int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
+    int         idx = MACRO_CheckArgs(pa, ARRAY_SIZE(pa), args);
 
     if (idx < 0) return 0;
     if (!fn)     return 1;
@@ -257,7 +257,7 @@ static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 static int MACRO_CallVoidFunc(void *fn, const char* args)
 {
     void*       pa[6];
-    int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
+    int         idx = MACRO_CheckArgs(pa, ARRAY_SIZE(pa), args);
 
     if (idx < 0) return 0;
     if (!fn)     return 1;
@@ -367,3 +367,7 @@ WINHELP_WINDOW* MACRO_CurrentWindow(void)
 {
     return lex_data ? lex_data->window : Globals.active_win;
 }
+
+#ifndef yywrap
+int yywrap(void) { return 1; }
+#endif

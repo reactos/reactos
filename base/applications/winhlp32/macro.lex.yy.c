@@ -333,9 +333,6 @@ void yyfree (void *  );
 
 /* Begin user sect3 */
 
-#define yywrap() 1
-#define YY_SKIP_YYWRAP
-
 typedef unsigned char YY_CHAR;
 
 FILE *yyin = (FILE *) 0, *yyout = (FILE *) 0;
@@ -528,7 +525,7 @@ struct lexret  yylval;
 #define YY_INPUT(buf,result,max_size)\
   if ((result = *lex_data->macroptr ? 1 : 0)) buf[0] = *lex_data->macroptr++;
 
-#line 532 "macro.lex.yy.c"
+#line 529 "macro.lex.yy.c"
 
 #define INITIAL 0
 #define quote 1
@@ -712,7 +709,7 @@ YY_DECL
 #line 58 "macro.lex.l"
 
 
-#line 716 "macro.lex.yy.c"
+#line 713 "macro.lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -827,7 +824,7 @@ YY_RULE_SETUP
         /* opening a new one */
         if (lex_data->quote_stk_idx == 0)
         {
-            assert(lex_data->cache_used < sizeof(lex_data->cache_string) / sizeof(lex_data->cache_string[0]));
+            assert(lex_data->cache_used < ARRAY_SIZE(lex_data->cache_string));
             lex_data->strptr = lex_data->cache_string[lex_data->cache_used] = HeapAlloc(GetProcessHeap(), 0, strlen(lex_data->macroptr) + 1);
             yylval.string = lex_data->strptr;
             lex_data->cache_used++;
@@ -835,7 +832,7 @@ YY_RULE_SETUP
         }
         else *lex_data->strptr++ = yytext[0];
         lex_data->quote_stack[lex_data->quote_stk_idx++] = yytext[0];
-        assert(lex_data->quote_stk_idx < sizeof(lex_data->quote_stack) / sizeof(lex_data->quote_stack[0]));
+        assert(lex_data->quote_stk_idx < ARRAY_SIZE(lex_data->quote_stack));
     }
     else
     {
@@ -880,7 +877,7 @@ YY_RULE_SETUP
 #line 108 "macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 884 "macro.lex.yy.c"
+#line 881 "macro.lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1957,7 +1954,7 @@ CheckArgs_end:
 static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 {
     void*       pa[2];
-    int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
+    int         idx = MACRO_CheckArgs(pa, ARRAY_SIZE(pa), args);
 
     if (idx < 0) return 0;
     if (!fn)     return 1;
@@ -1992,7 +1989,7 @@ static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 static int MACRO_CallVoidFunc(void *fn, const char* args)
 {
     void*       pa[6];
-    int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
+    int         idx = MACRO_CheckArgs(pa, ARRAY_SIZE(pa), args);
 
     if (idx < 0) return 0;
     if (!fn)     return 1;
@@ -2102,4 +2099,8 @@ WINHELP_WINDOW* MACRO_CurrentWindow(void)
 {
     return lex_data ? lex_data->window : Globals.active_win;
 }
+
+#ifndef yywrap
+int yywrap(void) { return 1; }
+#endif
 

@@ -154,7 +154,7 @@ void CALLBACK MACRO_About(void)
     WCHAR name[256];
     HICON icon = LoadImageW( Globals.hInstance, MAKEINTRESOURCEW(IDI_WINHELP),
                              IMAGE_ICON, 48, 48, LR_SHARED );
-    LoadStringW( Globals.hInstance, STID_WINE_HELP, name, sizeof(name)/sizeof(WCHAR) );
+    LoadStringW( Globals.hInstance, STID_WINE_HELP, name, ARRAY_SIZE( name ));
     ShellAboutW( MACRO_CurrentWindow()->hMainWnd, name, NULL, icon );
 }
 

@@ -2,8 +2,8 @@
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 add_definitions(
+    -D__WINESRC__
     -D__ROS_LONG64__
-    -D_CRT_NONSTDC_NO_DEPRECATE
     -Dfileno=_fileno
     -Disatty=_isatty)
 
