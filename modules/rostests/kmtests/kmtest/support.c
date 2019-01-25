@@ -54,10 +54,35 @@ KmtUserCallbackThread(
         {
             case QueryVirtualMemory:
             {
-                SIZE_T InfoBufferSize = VirtualQuery(RequestPacket.Parameters, &Response.MemInfo, sizeof(Response.MemInfo));
+                SIZE_T InfoBufferSize = VirtualQuery(RequestPacket.BaseAddress, &Response.MemInfo, sizeof(Response.MemInfo));
                 /* FIXME: an error is a valid result. That should go as a response to kernel mode instead of terminating the thread */
                 if (InfoBufferSize == 0)
                     error_goto(Error, cleanup);
+
+                if (!DeviceIoControl(LocalKmtHandle, IOCTL_KMTEST_USERMODE_SEND_RESPONSE, &RequestPacket.RequestId, sizeof(RequestPacket.RequestId), &Response, sizeof(Response), &BytesReturned, NULL))
+                    error_goto(Error, cleanup);
+                ASSERT(BytesReturned == 0);
+
+                break;
+            }
+            case StartDriver:
+            {
+                KmtLoadDriver(RequestPacket.DriverName, FALSE);
+                KmtOpenDriver();
+                Response.StartDriverResult = STATUS_SUCCESS;
+
+                if (!DeviceIoControl(LocalKmtHandle, IOCTL_KMTEST_USERMODE_SEND_RESPONSE, &RequestPacket.RequestId, sizeof(RequestPacket.RequestId), &Response, sizeof(Response), &BytesReturned, NULL))
+                    error_goto(Error, cleanup);
+                ASSERT(BytesReturned == 0);
+
+                break;
+            }
+            case StopDriver:
+            {
+                KmtCloseDriver();
+                KmtUnloadDriver();
+
+                Response.StopDriverResult = STATUS_SUCCESS;
 
                 if (!DeviceIoControl(LocalKmtHandle, IOCTL_KMTEST_USERMODE_SEND_RESPONSE, &RequestPacket.RequestId, sizeof(RequestPacket.RequestId), &Response, sizeof(Response), &BytesReturned, NULL))
                     error_goto(Error, cleanup);

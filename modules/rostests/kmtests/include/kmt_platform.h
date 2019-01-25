@@ -26,6 +26,7 @@
 #include <ndk/obfuncs.h>
 #include <ndk/sefuncs.h>
 #include <ntstrsafe.h>
+#include <strsafe.h>
 #if defined KMT_FILTER_DRIVER
 #include <fltkernel.h>
 #endif

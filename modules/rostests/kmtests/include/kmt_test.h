@@ -48,13 +48,17 @@ typedef struct
 /* list of supported operations */
 typedef enum _KMT_CALLBACK_INFORMATION_CLASS
 {
-    QueryVirtualMemory
+    QueryVirtualMemory,
+    StartDriver,
+    StopDriver
 } KMT_CALLBACK_INFORMATION_CLASS, *PKMT_CALLBACK_INFORMATION_CLASS;
 
 /* TODO: "response" is a little generic */
 typedef union _KMT_RESPONSE
 {
     MEMORY_BASIC_INFORMATION MemInfo;
+    NTSTATUS StartDriverResult;
+    NTSTATUS StopDriverResult;
 } KMT_RESPONSE, *PKMT_RESPONSE;
 
 /* this struct is sent from driver to usermode */
@@ -62,24 +66,74 @@ typedef struct _KMT_CALLBACK_REQUEST_PACKET
 {
     ULONG RequestId;
     KMT_CALLBACK_INFORMATION_CLASS OperationClass;
-    PVOID Parameters;
+    union
+    {
+        PVOID BaseAddress;
+        WCHAR DriverName[32];
+    };
 } KMT_CALLBACK_REQUEST_PACKET, *PKMT_CALLBACK_REQUEST_PACKET;
 
-PKMT_RESPONSE KmtUserModeCallback(KMT_CALLBACK_INFORMATION_CLASS Operation, PVOID Parameters);
+PKMT_RESPONSE KmtUserModeCallback(PKMT_CALLBACK_REQUEST_PACKET Request);
 VOID KmtFreeCallbackResponse(PKMT_RESPONSE Response);
 
 //macro to simplify using the mechanism
-#define Test_NtQueryVirtualMemory(BaseAddress, Size, AllocationType, ProtectionType)            \
+#define Test_NtQueryVirtualMemory(__BaseAddress, __Size, __AllocationType, __ProtectionType)    \
     do {                                                                                        \
-    PKMT_RESPONSE NtQueryTest = KmtUserModeCallback(QueryVirtualMemory, BaseAddress);           \
-    if (NtQueryTest != NULL)                                                                    \
-    {                                                                                           \
-        ok_eq_hex(NtQueryTest->MemInfo.Protect, ProtectionType);                                \
-        ok_eq_hex(NtQueryTest->MemInfo.State, AllocationType);                                  \
-        ok_eq_size(NtQueryTest->MemInfo.RegionSize, Size);                                      \
-        KmtFreeCallbackResponse(NtQueryTest);                                                   \
-    }                                                                                           \
+        KMT_CALLBACK_REQUEST_PACKET Request;                                                    \
+        PKMT_RESPONSE Response;                                                                 \
+                                                                                                \
+        Request.OperationClass = QueryVirtualMemory;                                            \
+        Request.BaseAddress = __BaseAddress;                                                    \
+                                                                                                \
+        Response = KmtUserModeCallback(&Request);                                               \
+        if (Response != NULL)                                                                   \
+        {                                                                                       \
+            ok_eq_hex(Response->MemInfo.Protect, __ProtectionType);                             \
+            ok_eq_hex(Response->MemInfo.State, __AllocationType);                               \
+            ok_eq_size(Response->MemInfo.RegionSize, __Size);                                   \
+            KmtFreeCallbackResponse(Response);                                                  \
+        }                                                                                       \
     } while (0)                                                                                 \
+
+static __inline
+NTSTATUS
+KmtStartDriver(LPCWSTR DriverName)
+{
+    KMT_CALLBACK_REQUEST_PACKET Request;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PKMT_RESPONSE Response;
+
+    Request.OperationClass = StartDriver;
+    StringCbCopyW(Request.DriverName, sizeof(Request.DriverName), DriverName);
+
+    Response = KmtUserModeCallback(&Request);
+    if (Response != NULL)
+    {
+        Status = Response->StartDriverResult;
+        KmtFreeCallbackResponse(Response);
+    }
+    return Status;
+}
+
+static __inline
+NTSTATUS
+KmtStopDriver(LPCWSTR DriverName)
+{
+    KMT_CALLBACK_REQUEST_PACKET Request;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PKMT_RESPONSE Response;
+
+    Request.OperationClass = StopDriver;
+    StringCbCopyW(Request.DriverName, sizeof(Request.DriverName), DriverName);
+
+    Response = KmtUserModeCallback(&Request);
+    if (Response != NULL)
+    {
+        Status = Response->StopDriverResult;
+        KmtFreeCallbackResponse(Response);
+    }
+    return Status;
+}
 
 #endif
 

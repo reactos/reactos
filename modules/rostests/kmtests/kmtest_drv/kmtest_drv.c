@@ -549,8 +549,7 @@ DriverIoControl(
  */
 PKMT_RESPONSE
 KmtUserModeCallback(
-    IN KMT_CALLBACK_INFORMATION_CLASS Operation,
-    IN PVOID Parameters)
+    _In_ PKMT_CALLBACK_REQUEST_PACKET Request)
 {
     PKMT_RESPONSE Result;
     NTSTATUS Status;
@@ -564,9 +563,8 @@ KmtUserModeCallback(
         return NULL;
 
     KeInitializeEvent(&WorkEntry->WorkDoneEvent, NotificationEvent, FALSE);
+    RtlCopyMemory(&WorkEntry->Request, Request, sizeof(*Request));
     WorkEntry->Request.RequestId = RequestId++;
-    WorkEntry->Request.OperationClass = Operation;
-    WorkEntry->Request.Parameters = Parameters;
     WorkEntry->Response = NULL;
 
     ExAcquireFastMutex(&WorkList.Lock);
