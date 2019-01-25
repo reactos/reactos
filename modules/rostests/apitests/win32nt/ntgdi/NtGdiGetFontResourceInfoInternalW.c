@@ -31,7 +31,7 @@ START_TEST(NtGdiGetFontResourceInfoInternalW)
 		&logfont,
 		2);
 
-	ok(bRet != FALSE, "bRet was not FALSE.\n");
+	ok(bRet != FALSE, "bRet was FALSE.\n");
 
 	printf("lfHeight = %ld\n", logfont.lfHeight);
 	printf("lfWidth = %ld\n", logfont.lfWidth);
