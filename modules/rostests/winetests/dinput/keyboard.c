@@ -411,6 +411,8 @@ static void test_dik_codes(IDirectInputA *dI, HWND hwnd, LANGID langid)
 
         if (!PeekMessageA(&msg, hwnd, 0, 0, PM_REMOVE))
         {
+            U(in).ki.dwFlags = KEYEVENTF_KEYUP;
+            SendInput(1, &in, sizeof(in));
             win_skip("failed to queue keyboard event\n");
             break;
         }
@@ -471,6 +473,7 @@ static void keyboard_tests(DWORD version)
     hwnd = CreateWindowA("static", "Title", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 10, 10, 200, 200,
                          NULL, NULL, NULL, NULL);
     ok(hwnd != NULL, "err: %d\n", GetLastError());
+    SetForegroundWindow( hwnd );
 
     if (hwnd)
     {
