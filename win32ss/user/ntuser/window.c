@@ -2842,18 +2842,24 @@ CLEANUP:
 }
 
 
-HWND FASTCALL
+static HWND FASTCALL
 IntFindWindow(PWND Parent,
-              PWND ChildAfter,
+              PWND ChildAfter OPTIONAL,
               RTL_ATOM ClassAtom,
-              PUNICODE_STRING WindowName)
+              PUNICODE_STRING WindowName OPTIONAL)
 {
    BOOL CheckWindowName;
    HWND *List, *phWnd;
    HWND Ret = NULL;
    UNICODE_STRING CurrentWindowName;
+   UNICODE_STRING EmptyWindowName = {0};
 
    ASSERT(Parent);
+
+   if (!WindowName)
+   {
+      WindowName = &EmptyWindowName;
+   }
 
    CheckWindowName = WindowName->Buffer != 0;
 
@@ -4479,6 +4485,21 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
    ExFreePoolWithTag(win_array, USERTAG_WINDOWLIST);
    TRACE("Leave ShowOwnedPopups\n");
    return TRUE;
+}
+
+/* Notify (WM_USER + x) message to Shell_TrayWnd */
+VOID FASTCALL IntNotifyUserMessageToTrayWnd(UINT x)
+{
+    static UNICODE_STRING ClassName = RTL_CONSTANT_STRING(L"Shell_TrayWnd");
+    HWND hTrayWnd, hwndDesktop = IntGetDesktopWindow();
+    PWND pwndDesktop = ValidateHwndNoErr(hwndDesktop);
+    RTL_ATOM ClassAtom = 0;
+    if (IntGetAtomFromStringOrAtom(&ClassName, &ClassAtom))
+    {
+        hTrayWnd = IntFindWindow(pwndDesktop, NULL, ClassAtom, NULL);
+        if (hTrayWnd)
+            co_IntSendMessage(hTrayWnd, WM_USER + x, 0, 0);
+    }
 }
 
 /* EOF */
