@@ -1,6 +1,7 @@
 /*
  * Copyright 2002 Mike McCormack for CodeWeavers
  * Copyright 2005-2006 Juan Lang
+ * Copyright 2018 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +23,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#ifdef __REACTOS__
+#include <stdlib.h>
+#endif
 #define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
@@ -58,6 +62,7 @@ struct OIDFunctionSet
 
 struct OIDFunction
 {
+    HMODULE hModule;
     DWORD encoding;
     CRYPT_OID_FUNC_ENTRY entry;
     struct list next;
@@ -71,6 +76,13 @@ static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b'
 static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
 static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
 static WCHAR LocalizedNames[ARRAY_SIZE(LocalizedKeys)][256];
+
+static const WCHAR nameW[] = { 'N','a','m','e',0 };
+static const WCHAR algidW[] = { 'A','l','g','i','d',0 };
+static const WCHAR extraW[] = { 'E','x','t','r','a','I','n','f','o',0 };
+static const WCHAR cngalgidW[] = { 'C','N','G','A','l','g','i','d',0 };
+static const WCHAR cngextraalgidW[] = { 'C','N','G','E','x','t','r','a','A','l','g','i','d',0 };
+static const WCHAR flagsW[] = { 'F','l','a','g','s',0 };
 
 static void free_function_sets(void)
 {
@@ -242,6 +254,8 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
         {
             struct OIDFunction *func;
 
+            TRACE("OID %s, func %p\n", debugstr_a(rgFuncEntry[i].pszOID), rgFuncEntry[i].pvFuncAddr);
+
             if (!IS_INTOID(rgFuncEntry[i].pszOID))
                 func = CryptMemAlloc(sizeof(struct OIDFunction)
                  + strlen(rgFuncEntry[i].pszOID) + 1);
@@ -261,6 +275,7 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
                 else
                     func->entry.pszOID = rgFuncEntry[i].pszOID;
                 func->entry.pvFuncAddr = rgFuncEntry[i].pvFuncAddr;
+                func->hModule = hModule;
                 list_add_tail(&set->functions, &func->next);
             }
             else
@@ -418,6 +433,38 @@ BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
     return ret;
 }
 
+static BOOL is_module_registered(HMODULE hModule)
+{
+    struct OIDFunctionSet *set;
+    BOOL ret = FALSE;
+
+    EnterCriticalSection(&funcSetCS);
+
+    LIST_FOR_EACH_ENTRY(set, &funcSets, struct OIDFunctionSet, next)
+    {
+        struct OIDFunction *function;
+
+        EnterCriticalSection(&set->cs);
+
+        LIST_FOR_EACH_ENTRY(function, &set->functions, struct OIDFunction, next)
+        {
+            if (function->hModule == hModule)
+            {
+                ret = TRUE;
+                break;
+            }
+        }
+
+        LeaveCriticalSection(&set->cs);
+
+        if (ret) break;
+    }
+
+    LeaveCriticalSection(&funcSetCS);
+
+    return ret;
+}
+
 BOOL WINAPI CryptFreeOIDFunctionAddress(HCRYPTOIDFUNCADDR hFuncAddr,
  DWORD dwFlags)
 {
@@ -431,9 +478,12 @@ BOOL WINAPI CryptFreeOIDFunctionAddress(HCRYPTOIDFUNCADDR hFuncAddr,
     {
         struct FuncAddr *addr = hFuncAddr;
 
-        CryptMemFree(addr->dllList);
-        FreeLibrary(addr->lib);
-        CryptMemFree(addr);
+        if (!is_module_registered(addr->lib))
+        {
+            CryptMemFree(addr->dllList);
+            FreeLibrary(addr->lib);
+            CryptMemFree(addr);
+        }
     }
     return TRUE;
 }
@@ -653,13 +703,126 @@ error_close_key:
 }
 
 /***********************************************************************
+ *             CryptUnregisterOIDInfo (CRYPT32.@)
+ */
+BOOL WINAPI CryptUnregisterOIDInfo(PCCRYPT_OID_INFO info)
+{
+    char *key_name;
+    HKEY root;
+    DWORD err;
+
+    TRACE("(%p)\n", info);
+
+    if (!info || info->cbSize != sizeof(*info) || !info->pszOID)
+    {
+        SetLastError(E_INVALIDARG);
+        return FALSE;
+    }
+
+    err = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo", 0, KEY_ALL_ACCESS, &root);
+    if (err != ERROR_SUCCESS)
+    {
+        SetLastError(err);
+        return FALSE;
+    }
+
+    key_name = CryptMemAlloc(strlen(info->pszOID) + 16);
+    if (key_name)
+    {
+        sprintf(key_name, "%s!%u", info->pszOID, info->dwGroupId);
+        err = RegDeleteKeyA(root, key_name);
+    }
+    else
+        err = ERROR_OUTOFMEMORY;
+
+    CryptMemFree(key_name);
+    RegCloseKey(root);
+
+    if (err)
+        SetLastError(err);
+
+    return !err;
+}
+
+/***********************************************************************
  *             CryptRegisterOIDInfo (CRYPT32.@)
  */
-BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags)
+BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO info, DWORD flags)
 {
-    FIXME("(%p, %x): stub\n", pInfo, dwFlags );
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    char *key_name;
+    HKEY root = 0, key = 0;
+    DWORD err;
+
+    TRACE("(%p, %x)\n", info, flags );
+
+    if (!info || info->cbSize != sizeof(*info) || !info->pszOID)
+    {
+        SetLastError(E_INVALIDARG);
+        return FALSE;
+    }
+
+    if (!info->dwGroupId) return TRUE;
+
+    key_name = CryptMemAlloc(strlen(info->pszOID) + 16);
+    if (!key_name)
+    {
+        err = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    err = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
+                          0, NULL, 0, KEY_ALL_ACCESS, NULL, &root, NULL);
+    if (err != ERROR_SUCCESS) goto done;
+
+    sprintf(key_name, "%s!%u", info->pszOID, info->dwGroupId);
+    err = RegCreateKeyA(root, key_name, &key);
+    if (err != ERROR_SUCCESS) goto done;
+
+    if (flags)
+    {
+        err = RegSetValueExW(key, flagsW, 0, REG_DWORD, (const BYTE *)&flags, sizeof(flags));
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+    if (info->pwszName)
+    {
+        err = RegSetValueExW(key, nameW, 0, REG_SZ, (const BYTE *)info->pwszName, (lstrlenW(info->pwszName) + 1) * sizeof(WCHAR));
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+    if (info->u.Algid)
+    {
+        err = RegSetValueExW(key, algidW, 0, REG_DWORD, (const BYTE *)&info->u.Algid, sizeof(info->u.Algid));
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+    if (info->ExtraInfo.cbData && info->ExtraInfo.pbData)
+    {
+        err = RegSetValueExW(key, extraW, 0, REG_BINARY, info->ExtraInfo.pbData, info->ExtraInfo.cbData);
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+    if (info->pwszCNGAlgid)
+    {
+        err = RegSetValueExW(key, cngalgidW, 0, REG_SZ, (const BYTE *)info->pwszCNGAlgid, (lstrlenW(info->pwszCNGAlgid) + 1) * sizeof(WCHAR));
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+    if (info->pwszCNGExtraAlgid)
+    {
+        err = RegSetValueExW(key, cngextraalgidW, 0, REG_SZ, (const BYTE *)info->pwszCNGExtraAlgid, (lstrlenW(info->pwszCNGExtraAlgid) + 1) * sizeof(WCHAR));
+        if (err != ERROR_SUCCESS) goto done;
+    }
+
+done:
+    CryptMemFree(key_name);
+    if (key) RegCloseKey(key);
+    if (root) RegCloseKey(root);
+
+    if (err)
+        SetLastError(err);
+
+    return !err;
 }
 
 /***********************************************************************
@@ -1405,6 +1568,125 @@ struct OIDInfo {
     struct list entry;
 };
 
+static struct OIDInfo *read_oid_info(HKEY root, char *key_name, DWORD *flags)
+{
+    HKEY key;
+    DWORD len, oid_len, name_len = 0, extra_len = 0, cngalgid_len = 0, cngextra_len = 0, group_id = 0;
+    struct OIDInfo *info;
+    char *p;
+
+    if (RegOpenKeyExA(root, key_name, 0, KEY_READ, &key))
+        return NULL;
+
+    p = strchr(key_name, '!');
+    if (p)
+    {
+        group_id = strtol(p + 1, NULL, 10);
+        *p = 0;
+    }
+
+    oid_len = strlen(key_name) + 1;
+
+    RegQueryValueExW(key, nameW, NULL, NULL, NULL, &name_len);
+    RegQueryValueExW(key, extraW, NULL, NULL, NULL, &extra_len);
+    RegQueryValueExW(key, cngalgidW, NULL, NULL, NULL, &cngalgid_len);
+    RegQueryValueExW(key, cngextraalgidW, NULL, NULL, NULL, &cngextra_len);
+
+    info = CryptMemAlloc(sizeof(*info) + oid_len + name_len + extra_len + cngalgid_len + cngextra_len);
+    if (info)
+    {
+        *flags = 0;
+        len = sizeof(*flags);
+        RegQueryValueExW(key, flagsW, NULL, NULL, (BYTE *)flags, &len);
+
+        memset(info, 0, sizeof(*info));
+        info->info.cbSize = sizeof(info->info);
+
+        p = (char *)(info + 1);
+
+        info->info.pszOID = p;
+        strcpy((char *)info->info.pszOID, key_name);
+        p += oid_len;
+
+        if (name_len)
+        {
+            info->info.pwszName = (WCHAR *)p;
+            RegQueryValueExW(key, nameW, NULL, NULL, (BYTE *)info->info.pwszName, &name_len);
+            p += name_len;
+        }
+
+        info->info.dwGroupId = group_id;
+
+        len = sizeof(info->info.u.Algid);
+        RegQueryValueExW(key, algidW, NULL, NULL, (BYTE *)&info->info.u.Algid, &len);
+
+        if (extra_len)
+        {
+            info->info.ExtraInfo.cbData = extra_len;
+            info->info.ExtraInfo.pbData = (BYTE *)p;
+            RegQueryValueExW(key, extraW, NULL, NULL, info->info.ExtraInfo.pbData, &extra_len);
+            p += extra_len;
+        }
+
+        if (cngalgid_len)
+        {
+            info->info.pwszCNGAlgid = (WCHAR *)p;
+            RegQueryValueExW(key, cngalgidW, NULL, NULL, (BYTE *)info->info.pwszCNGAlgid, &cngalgid_len);
+            p += cngalgid_len;
+        }
+
+        if (cngextra_len)
+        {
+            info->info.pwszCNGExtraAlgid = (WCHAR *)p;
+            RegQueryValueExW(key, cngextraalgidW, NULL, NULL, (BYTE *)info->info.pwszCNGExtraAlgid, &cngalgid_len);
+        }
+    }
+
+    RegCloseKey(key);
+
+    return info;
+}
+
+static void init_registered_oid_info(void)
+{
+    DWORD err, idx;
+    HKEY root;
+
+    err = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
+                        0, KEY_ALL_ACCESS, &root);
+    if (err != ERROR_SUCCESS) return;
+
+    idx = 0;
+    for (;;)
+    {
+        char key_name[MAX_PATH];
+        struct OIDInfo *info;
+        DWORD flags;
+
+        err = RegEnumKeyA(root, idx++, key_name, MAX_PATH);
+        if (err == ERROR_NO_MORE_ITEMS)
+            break;
+
+        if (err == ERROR_SUCCESS)
+        {
+            if ((info = read_oid_info(root, key_name, &flags)))
+            {
+                TRACE("adding oid %s, name %s, groupid %u, algid %u, extra %u, CNG algid %s, CNG extra %s\n",
+                      debugstr_a(info->info.pszOID), debugstr_w(info->info.pwszName),
+                      info->info.dwGroupId, info->info.u.Algid, info->info.ExtraInfo.cbData,
+                      debugstr_w(info->info.pwszCNGAlgid), debugstr_w(info->info.pwszCNGExtraAlgid));
+
+                if (flags & CRYPT_INSTALL_OID_INFO_BEFORE_FLAG)
+                    list_add_head(&oidInfo, &info->entry);
+                else
+                    list_add_tail(&oidInfo, &info->entry);
+            }
+        }
+    }
+
+    RegCloseKey(root);
+}
+
 static void init_oid_info(void)
 {
     DWORD i;
@@ -1632,6 +1914,7 @@ DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId)
 void crypt_oid_init(void)
 {
     init_oid_info();
+    init_registered_oid_info();
 }
 
 void crypt_oid_free(void)

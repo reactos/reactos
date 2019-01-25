@@ -116,6 +116,7 @@ typedef struct _CRYPT_SIGNED_INFO
     CRYPT_CONTENT_INFO    content;
     DWORD                 cSignerInfo;
     PCMSG_CMS_SIGNER_INFO rgSignerInfo;
+    PDWORD                signerKeySpec;
 } CRYPT_SIGNED_INFO;
 
 BOOL CRYPT_AsnEncodeCMSSignedInfo(CRYPT_SIGNED_INFO *, void *pvData,
@@ -149,7 +150,7 @@ BOOL WINAPI CRYPT_AsnEncodePubKeyInfoNoNull(DWORD dwCertEncodingType,
 /* Returns a handle to the default crypto provider; loads it if necessary.
  * Returns NULL on failure.
  */
-HCRYPTPROV CRYPT_GetDefaultProvider(void) DECLSPEC_HIDDEN;
+HCRYPTPROV WINAPI I_CryptGetDefaultCryptProv(ALG_ID);
 
 HINSTANCE hInstance DECLSPEC_HIDDEN;
 

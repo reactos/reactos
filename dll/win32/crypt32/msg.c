@@ -567,7 +567,12 @@ static HCRYPTMSG CHashEncodeMsg_Open(DWORD dwFlags, const void *pvMsgEncodeInfo,
         prov = info->hCryptProv;
     else
     {
-        prov = CRYPT_GetDefaultProvider();
+        prov = I_CryptGetDefaultCryptProv(algID);
+        if (!prov)
+        {
+            SetLastError(E_INVALIDARG);
+            return NULL;
+        }
         dwFlags &= ~CMSG_CRYPT_RELEASE_CONTEXT_FLAG;
     }
     msg = CryptMemAlloc(sizeof(CHashEncodeMsg));
@@ -921,17 +926,25 @@ typedef struct _CSignedMsgData
  * been constructed.
  */
 static BOOL CSignedMsgData_ConstructSignerHandles(CSignedMsgData *msg_data,
- DWORD signerIndex, HCRYPTPROV crypt_prov)
+ DWORD signerIndex, HCRYPTPROV *crypt_prov, DWORD *flags)
 {
     ALG_ID algID;
     BOOL ret;
 
     algID = CertOIDToAlgId(
      msg_data->info->rgSignerInfo[signerIndex].HashAlgorithm.pszObjId);
-    ret = CryptCreateHash(crypt_prov, algID, 0, 0,
+
+    if (!*crypt_prov)
+    {
+        *crypt_prov = I_CryptGetDefaultCryptProv(algID);
+        if (!*crypt_prov) return FALSE;
+        *flags &= ~CMSG_CRYPT_RELEASE_CONTEXT_FLAG;
+    }
+
+    ret = CryptCreateHash(*crypt_prov, algID, 0, 0,
      &msg_data->signerHandles->contentHash);
     if (ret && msg_data->info->rgSignerInfo[signerIndex].AuthAttrs.cAttr > 0)
-        ret = CryptCreateHash(crypt_prov, algID, 0, 0,
+        ret = CryptCreateHash(*crypt_prov, algID, 0, 0,
          &msg_data->signerHandles->authAttrHash);
     return ret;
 }
@@ -1125,12 +1138,15 @@ static BOOL CSignedMsgData_Sign(CSignedMsgData *msg_data)
     for (i = 0; ret && i < msg_data->info->cSignerInfo; i++)
     {
         HCRYPTHASH hash;
+        DWORD keySpec = msg_data->info->signerKeySpec[i];
 
+        if (!keySpec)
+            keySpec = AT_SIGNATURE;
         if (msg_data->info->rgSignerInfo[i].AuthAttrs.cAttr)
             hash = msg_data->signerHandles[i].authAttrHash;
         else
             hash = msg_data->signerHandles[i].contentHash;
-        ret = CryptSignHashW(hash, AT_SIGNATURE, NULL, 0, NULL,
+        ret = CryptSignHashW(hash, keySpec, NULL, 0, NULL,
          &msg_data->info->rgSignerInfo[i].EncryptedHash.cbData);
         if (ret)
         {
@@ -1139,7 +1155,7 @@ static BOOL CSignedMsgData_Sign(CSignedMsgData *msg_data)
              msg_data->info->rgSignerInfo[i].EncryptedHash.cbData);
             if (msg_data->info->rgSignerInfo[i].EncryptedHash.pbData)
             {
-                ret = CryptSignHashW(hash, AT_SIGNATURE, NULL, 0,
+                ret = CryptSignHashW(hash, keySpec, NULL, 0,
                  msg_data->info->rgSignerInfo[i].EncryptedHash.pbData,
                  &msg_data->info->rgSignerInfo[i].EncryptedHash.cbData);
                 if (ret)
@@ -1189,6 +1205,7 @@ static void CSignedEncodeMsg_Close(HCRYPTMSG hCryptMsg)
     for (i = 0; i < msg->msg_data.info->cSignerInfo; i++)
         CSignerInfo_Free(&msg->msg_data.info->rgSignerInfo[i]);
     CSignedMsgData_CloseHandles(&msg->msg_data);
+    CryptMemFree(msg->msg_data.info->signerKeySpec);
     CryptMemFree(msg->msg_data.info->rgSignerInfo);
     CryptMemFree(msg->msg_data.info);
 }
@@ -1411,6 +1428,9 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
                      msg->msg_data.info->cSignerInfo *
                      sizeof(CMSG_CMS_SIGNER_INFO));
                     ret = CSignedMsgData_AllocateHandles(&msg->msg_data);
+                    msg->msg_data.info->signerKeySpec = CryptMemAlloc(info->cSigners * sizeof(DWORD));
+                    if (!msg->msg_data.info->signerKeySpec)
+                        ret = FALSE;
                     for (i = 0; ret && i < msg->msg_data.info->cSignerInfo; i++)
                     {
                         if (info->rgSigners[i].SignerId.dwIdChoice ==
@@ -1422,11 +1442,13 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
                         if (ret)
                         {
                             ret = CSignedMsgData_ConstructSignerHandles(
-                             &msg->msg_data, i, info->rgSigners[i].hCryptProv);
+                             &msg->msg_data, i, &info->rgSigners[i].hCryptProv, &dwFlags);
                             if (dwFlags & CMSG_CRYPT_RELEASE_CONTEXT_FLAG)
                                 CryptReleaseContext(info->rgSigners[i].hCryptProv,
                                  0);
                         }
+                        msg->msg_data.info->signerKeySpec[i] =
+                         info->rgSigners[i].dwKeySpec;
                     }
                 }
                 else
@@ -1956,7 +1978,7 @@ static HCRYPTMSG CEnvelopedEncodeMsg_Open(DWORD dwFlags,
         prov = info->hCryptProv;
     else
     {
-        prov = CRYPT_GetDefaultProvider();
+        prov = I_CryptGetDefaultCryptProv(0);
         dwFlags &= ~CMSG_CRYPT_RELEASE_CONTEXT_FLAG;
     }
     msg = CryptMemAlloc(sizeof(CEnvelopedEncodeMsg));
@@ -2078,7 +2100,7 @@ static void CDecodeMsg_Close(HCRYPTMSG hCryptMsg)
 {
     CDecodeMsg *msg = hCryptMsg;
 
-    if (msg->base.open_flags & CMSG_CRYPT_RELEASE_CONTEXT_FLAG)
+    if (msg->crypt_prov && msg->base.open_flags & CMSG_CRYPT_RELEASE_CONTEXT_FLAG)
         CryptReleaseContext(msg->crypt_prov, 0);
     switch (msg->type)
     {
@@ -2329,6 +2351,14 @@ static BOOL CDecodeMsg_FinalizeHashedContent(CDecodeMsg *msg,
      &size);
     if (ret)
         algID = CertOIDToAlgId(hashAlgoID->pszObjId);
+
+    if (!msg->crypt_prov)
+    {
+        msg->crypt_prov = I_CryptGetDefaultCryptProv(algID);
+        if (msg->crypt_prov)
+            msg->base.open_flags &= ~CMSG_CRYPT_RELEASE_CONTEXT_FLAG;
+    }
+
     ret = CryptCreateHash(msg->crypt_prov, algID, 0, 0, &msg->u.hash);
     if (ret)
     {
@@ -2375,7 +2405,7 @@ static BOOL CDecodeMsg_FinalizeSignedContent(CDecodeMsg *msg,
     ret = CSignedMsgData_AllocateHandles(&msg->u.signed_data);
     for (i = 0; ret && i < msg->u.signed_data.info->cSignerInfo; i++)
         ret = CSignedMsgData_ConstructSignerHandles(&msg->u.signed_data, i,
-         msg->crypt_prov);
+         &msg->crypt_prov, &msg->base.open_flags);
     if (ret)
     {
         CRYPT_DATA_BLOB *content;
@@ -3541,13 +3571,7 @@ HCRYPTMSG WINAPI CryptMsgOpenToDecode(DWORD dwMsgEncodingType, DWORD dwFlags,
          CDecodeMsg_Close, CDecodeMsg_GetParam, CDecodeMsg_Update,
          CDecodeMsg_Control);
         msg->type = dwMsgType;
-        if (hCryptProv)
-            msg->crypt_prov = hCryptProv;
-        else
-        {
-            msg->crypt_prov = CRYPT_GetDefaultProvider();
-            msg->base.open_flags &= ~CMSG_CRYPT_RELEASE_CONTEXT_FLAG;
-        }
+        msg->crypt_prov = hCryptProv;
         memset(&msg->u, 0, sizeof(msg->u));
         msg->msg_data.cbData = 0;
         msg->msg_data.pbData = NULL;
