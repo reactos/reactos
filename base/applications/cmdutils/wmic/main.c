@@ -121,45 +121,55 @@ static WCHAR *find_prop( IWbemClassObject *class, const WCHAR *prop )
     return ret;
 }
 
-static int output_string( const WCHAR *msg, ... )
+static int output_string( HANDLE handle, const WCHAR *msg, ... )
 {
     va_list va_args;
-    int wlen;
-    DWORD count, ret;
+    int len;
+    DWORD count;
     WCHAR buffer[8192];
 
     va_start( va_args, msg );
-    vsprintfW( buffer, msg, va_args );
+    len = vsnprintfW( buffer, ARRAY_SIZE(buffer), msg, va_args );
     va_end( va_args );
 
-    wlen = strlenW( buffer );
-    ret = WriteConsoleW( GetStdHandle(STD_OUTPUT_HANDLE), buffer, wlen, &count, NULL );
-    if (!ret)
-    {
-        DWORD len;
-        char *msgA;
+    if (!WriteConsoleW( handle, buffer, len, &count, NULL ))
+        WriteFile( handle, buffer, len * sizeof(WCHAR), &count, FALSE );
 
-        /* On Windows WriteConsoleW() fails if the output is redirected. So fall
-         * back to WriteFile(), assuming the console encoding is still the right
-         * one in that case.
-         */
-        len = WideCharToMultiByte( GetConsoleOutputCP(), 0, buffer, wlen, NULL, 0, NULL, NULL );
-        if (!(msgA = HeapAlloc( GetProcessHeap(), 0, len * sizeof(char) ))) return 0;
-
-        WideCharToMultiByte( GetConsoleOutputCP(), 0, buffer, wlen, msgA, len, NULL, NULL );
-        WriteFile( GetStdHandle(STD_OUTPUT_HANDLE), msgA, len, &count, FALSE );
-        HeapFree( GetProcessHeap(), 0, msgA );
-    }
     return count;
 }
 
-static int output_message( int msg )
+static int output_error( int msg )
 {
     static const WCHAR fmtW[] = {'%','s',0};
     WCHAR buffer[8192];
 
     LoadStringW( GetModuleHandleW(NULL), msg, buffer, ARRAY_SIZE(buffer));
-    return output_string( fmtW, buffer );
+    return output_string( GetStdHandle(STD_ERROR_HANDLE), fmtW, buffer );
+}
+
+static int output_header( const WCHAR *prop, ULONG column_width )
+{
+    static const WCHAR bomW[] = {0xfeff}, fmtW[] = {'%','-','*','s','\r','\n',0};
+    int len;
+    DWORD count;
+    WCHAR buffer[8192];
+
+    len = snprintfW( buffer, ARRAY_SIZE(buffer), fmtW, column_width, prop );
+
+    if (!WriteConsoleW( GetStdHandle(STD_OUTPUT_HANDLE), buffer, len, &count, NULL )) /* redirected */
+    {
+        WriteFile( GetStdHandle(STD_OUTPUT_HANDLE), bomW, sizeof(bomW), &count, FALSE );
+        WriteFile( GetStdHandle(STD_OUTPUT_HANDLE), buffer, len * sizeof(WCHAR), &count, FALSE );
+        count += sizeof(bomW);
+    }
+
+    return count;
+}
+
+static int output_line( const WCHAR *str, ULONG column_width )
+{
+    static const WCHAR fmtW[] = {'%','-','*','s','\r','\n',0};
+    return output_string( GetStdHandle(STD_OUTPUT_HANDLE), fmtW, column_width, str );
 }
 
 static int query_prop( const WCHAR *class, const WCHAR *propname )
@@ -167,8 +177,6 @@ static int query_prop( const WCHAR *class, const WCHAR *propname )
     static const WCHAR select_allW[] = {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',0};
     static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2',0};
     static const WCHAR wqlW[] = {'W','Q','L',0};
-    static const WCHAR newlineW[] = {'\n',0};
-    static const WCHAR fmtW[] = {'%','s','\n',0};
     HRESULT hr;
     IWbemLocator *locator = NULL;
     IWbemServices *services = NULL;
@@ -178,6 +186,9 @@ static int query_prop( const WCHAR *class, const WCHAR *propname )
     WCHAR *prop = NULL;
     BOOL first = TRUE;
     int len, ret = -1;
+    IWbemClassObject *obj;
+    ULONG count, width = 0;
+    VARIANT v;
 
     WINE_TRACE("%s, %s\n", debugstr_w(class), debugstr_w(propname));
 
@@ -202,34 +213,45 @@ static int query_prop( const WCHAR *class, const WCHAR *propname )
     hr = IWbemServices_ExecQuery( services, wql, query, flags, NULL, &result );
     if (hr != S_OK) goto done;
 
+    for (;;) /* get column width */
+    {
+        IEnumWbemClassObject_Next( result, WBEM_INFINITE, 1, &obj, &count );
+        if (!count) break;
+
+        if (!prop && !(prop = find_prop( obj, propname )))
+        {
+            output_error( STRING_INVALID_QUERY );
+            goto done;
+        }
+        if (IWbemClassObject_Get( obj, prop, 0, &v, NULL, NULL ) == WBEM_S_NO_ERROR)
+        {
+            VariantChangeType( &v, &v, 0, VT_BSTR );
+            width = max( strlenW( V_BSTR( &v ) ), width );
+            VariantClear( &v );
+        }
+        IWbemClassObject_Release( obj );
+    }
+    width += 2;
+
+    IEnumWbemClassObject_Reset( result );
     for (;;)
     {
-        IWbemClassObject *obj;
-        ULONG count;
-        VARIANT v;
-
         IEnumWbemClassObject_Next( result, WBEM_INFINITE, 1, &obj, &count );
         if (!count) break;
 
         if (first)
         {
-            if (!(prop = find_prop( obj, propname )))
-            {
-                output_message( STRING_INVALID_QUERY );
-                goto done;
-            }
-            output_string( fmtW, prop );
+            output_header( prop, width );
             first = FALSE;
         }
         if (IWbemClassObject_Get( obj, prop, 0, &v, NULL, NULL ) == WBEM_S_NO_ERROR)
         {
             VariantChangeType( &v, &v, 0, VT_BSTR );
-            output_string( fmtW, V_BSTR( &v ) );
+            output_line( V_BSTR( &v ), width );
             VariantClear( &v );
         }
         IWbemClassObject_Release( obj );
     }
-    output_string( newlineW );
     ret = 0;
 
 done:
@@ -278,7 +300,7 @@ int wmain(int argc, WCHAR *argv[])
     {
         if (++i >= argc)
         {
-            output_message( STRING_INVALID_PATH );
+            output_error( STRING_INVALID_PATH );
             return 1;
         }
         class = argv[i];
@@ -288,7 +310,7 @@ int wmain(int argc, WCHAR *argv[])
         class = find_class( argv[i] );
         if (!class)
         {
-            output_message( STRING_ALIAS_NOT_FOUND );
+            output_error( STRING_ALIAS_NOT_FOUND );
             return 1;
         }
     }
@@ -305,6 +327,6 @@ int wmain(int argc, WCHAR *argv[])
     }
 
 not_supported:
-    output_message( STRING_CMDLINE_NOT_SUPPORTED );
+    output_error( STRING_CMDLINE_NOT_SUPPORTED );
     return 1;
 }
