@@ -29,8 +29,6 @@
 
 #define MAX_TASKS_COUNT (0x7FFF)
 #define TASK_ITEM_ARRAY_ALLOC   64
-#define TASK_REFRESH_TIMER 999
-#define REFRESH_INTERVAL 1000
 
 const WCHAR szTaskSwitchWndClass[] = L"MSTaskSwWClass";
 const WCHAR szRunningApps[] = L"Running Applications";
@@ -1454,17 +1452,12 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(1, 5000, NULL);
 #endif
-        SetTimer(TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return TRUE;
     }
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         m_IsDestroying = TRUE;
-#if DUMP_TASKS != 0
-        KillTimer(1);
-#endif
-        KillTimer(TASK_REFRESH_TIMER);
 
         /* Unregister the shell hook */
         RegisterShellHook(m_hWnd, FALSE);
@@ -1845,7 +1838,6 @@ public:
         LRESULT Ret = 0;
         INT_PTR iBtn = -1;
 
-        KillTimer(TASK_REFRESH_TIMER);
         if (m_TaskBar.m_hWnd != NULL)
         {
             POINT pt;
@@ -1866,7 +1858,6 @@ public:
             /* Not on a taskbar button, so forward message to tray */
             Ret = SendMessage(m_Tray->GetHWND(), uMsg, wParam, lParam);
         }
-        SetTimer(TASK_REFRESH_TIMER, REFRESH_INTERVAL, NULL);
         return Ret;
     }
 
@@ -1902,10 +1893,6 @@ public:
             DumpTasks();
             break;
 #endif
-        case TASK_REFRESH_TIMER:
-            RefreshWindowList();
-            UpdateButtonsSize(FALSE);
-            break;
         }
         return TRUE;
     }
