@@ -1563,7 +1563,7 @@ static void test_object(void)
     ok(hr == CLASSFACTORY_E_FIRST, "Expected hr == CLASSFACTORY_E_FIRST, got %#x.\n", hr);
     ok(!unknown, "Expected object returned == NULL, got %p.\n", unknown);
 
-    for (i = 0; i < sizeof(tests) / sizeof(*tests); ++i)
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
     {
         unknown = (IUnknown *)0xdeadbeef;
         hr = IDirect3DRM_CreateObject(d3drm1, NULL, NULL, tests[i].iid, (void **)&unknown);
@@ -3028,7 +3028,7 @@ static void test_d3drm_qi(void)
     hr = Direct3DRMCreate(&d3drm);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
 
-    test_qi("d3drm_qi", (IUnknown *)d3drm, &IID_IDirect3DRM, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("d3drm_qi", (IUnknown *)d3drm, &IID_IDirect3DRM, tests, ARRAY_SIZE(tests));
 
     IDirect3DRM_Release(d3drm);
 }
@@ -3122,7 +3122,7 @@ static void test_frame_qi(void)
     hr = IDirect3DRMFrame_QueryInterface(frame1, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame1 (hr = %x)\n", hr);
     IDirect3DRMFrame_Release(frame1);
-    test_qi("frame1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("frame1_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
@@ -3132,7 +3132,7 @@ static void test_frame_qi(void)
     hr = IDirect3DRMFrame2_QueryInterface(frame2, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame2 (hr = %x)\n", hr);
     IDirect3DRMFrame2_Release(frame2);
-    test_qi("frame2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("frame2_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
@@ -3142,7 +3142,7 @@ static void test_frame_qi(void)
     hr = IDirect3DRMFrame3_QueryInterface(frame3, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame3 (hr = %x)\n", hr);
     IDirect3DRMFrame3_Release(frame3);
-    test_qi("frame3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("frame3_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     IDirect3DRM3_Release(d3drm3);
@@ -3251,7 +3251,7 @@ static void test_device_qi(void)
     hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice (hr = %x)\n", hr);
     IDirect3DRMDevice_Release(device1);
-    test_qi("device1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("device1_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
@@ -3261,7 +3261,7 @@ static void test_device_qi(void)
     hr = IDirect3DRMDevice2_QueryInterface(device2, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice2 (hr = %x)\n", hr);
     IDirect3DRMDevice2_Release(device2);
-    test_qi("device2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("device2_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
@@ -3271,7 +3271,7 @@ static void test_device_qi(void)
     IDirect3DRMDevice3_QueryInterface(device3, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMDevice3 (hr = %x)\n", hr);
     IDirect3DRMDevice3_Release(device3);
-    test_qi("device3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("device3_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     IDirectDrawClipper_Release(clipper);
@@ -4439,7 +4439,7 @@ static IDirect3DDevice *create_device1(IDirectDraw *ddraw, HWND window, IDirectD
     /* We used to use EnumDevices() for this, but it seems
     * D3DDEVICEDESC.dwDeviceZBufferBitDepth only has a very casual
     * relationship with reality. */
-    for (i = 0; i < sizeof(z_depths) / sizeof(*z_depths); ++i)
+    for (i = 0; i < ARRAY_SIZE(z_depths); ++i)
     {
         memset(&surface_desc, 0, sizeof(surface_desc));
         surface_desc.dwSize = sizeof(surface_desc);
@@ -4773,7 +4773,7 @@ static IDirect3DDevice2 *create_device2(IDirectDraw2 *ddraw, HWND window, IDirec
     /* We used to use EnumDevices() for this, but it seems
     * D3DDEVICEDESC.dwDeviceZBufferBitDepth only has a very casual
     * relationship with reality. */
-    for (i = 0; i < sizeof(z_depths) / sizeof(*z_depths); ++i)
+    for (i = 0; i < ARRAY_SIZE(z_depths); ++i)
     {
         memset(&surface_desc, 0, sizeof(surface_desc));
         surface_desc.dwSize = sizeof(surface_desc);
@@ -5569,10 +5569,11 @@ static void test_load_texture(void)
     IDirect3DRM3 *d3drm3;
     IDirect3DRM2 *d3drm2;
     IDirect3DRM *d3drm1;
+    ULONG ref1, ref2;
+    unsigned int i;
     char *filename;
     HRESULT hr;
     BOOL ret;
-    int i;
 
     static const struct
     {
@@ -5595,42 +5596,138 @@ static void test_load_texture(void)
     ok(SUCCEEDED(hr), "Failed to get IDirect3DRM2 interface, hr %#x.\n", hr);
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
     ok(SUCCEEDED(hr), "Failed to get IDirect3DRM3 interface, hr %#x.\n", hr);
+    ref1 = get_refcount((IUnknown *)d3drm1);
 
-    for (i = 0; i < sizeof(tests) / sizeof(*tests); ++i)
+    /* Test all failures together. */
+    texture1 = (IDirect3DRMTexture *)0xdeadbeef;
+    hr = IDirect3DRM_LoadTexture(d3drm1, NULL, &texture1);
+    ok(hr == D3DRMERR_BADVALUE, "Got unexpected hr %#x.\n", hr);
+    ok(!texture1, "Got unexpected texture %p.\n", texture1);
+    texture1 = (IDirect3DRMTexture *)0xdeadbeef;
+    hr = IDirect3DRM_LoadTexture(d3drm1, "", &texture1);
+    ok(hr == D3DRMERR_FILENOTFOUND, "Got unexpected hr %#x.\n", hr);
+    ok(!texture1, "Got unexpected texture %p.\n", texture1);
+    hr = IDirect3DRM_LoadTexture(d3drm1, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Got unexpected hr %#x.\n", hr);
+
+    texture2 = (IDirect3DRMTexture2 *)0xdeadbeef;
+    hr = IDirect3DRM2_LoadTexture(d3drm2, NULL, &texture2);
+    ok(hr == D3DRMERR_FILENOTFOUND, "Got unexpected hr %#x.\n", hr);
+    ok(!texture2, "Got unexpected texture %p.\n", texture2);
+    texture2 = (IDirect3DRMTexture2 *)0xdeadbeef;
+    hr = IDirect3DRM2_LoadTexture(d3drm2, "", &texture2);
+    ok(hr == D3DRMERR_FILENOTFOUND, "Got unexpected hr %#x.\n", hr);
+    ok(!texture2, "Got unexpected texture %p.\n", texture2);
+    hr = IDirect3DRM2_LoadTexture(d3drm2, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Got unexpected hr %#x.\n", hr);
+
+    texture3 = (IDirect3DRMTexture3 *)0xdeadbeef;
+    hr = IDirect3DRM3_LoadTexture(d3drm3, NULL, &texture3);
+    ok(hr == D3DRMERR_FILENOTFOUND, "Got unexpected hr %#x.\n", hr);
+    ok(!texture3, "Got unexpected texture %p.\n", texture3);
+    texture3 = (IDirect3DRMTexture3 *)0xdeadbeef;
+    hr = IDirect3DRM_LoadTexture(d3drm3, "", &texture3);
+    ok(hr == D3DRMERR_FILENOTFOUND, "Got unexpected hr %#x.\n", hr);
+    ok(!texture3, "Got unexpected texture %p.\n", texture3);
+    hr = IDirect3DRM3_LoadTexture(d3drm3, NULL, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Got unexpected hr %#x.\n", hr);
+
+    for (i = 0; i < ARRAY_SIZE(tests); ++i)
     {
         filename = create_bitmap(tests[i].w, tests[i].h, tests[i].palettized);
 
         hr = IDirect3DRM_LoadTexture(d3drm1, filename, &texture1);
         ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 %u, ref2 %u.\n", i, ref1, ref2);
+
+        hr = IDirect3DRMTexture_InitFromFile(texture1, filename);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        /* InitFromFile() seems to AddRef() IDirect3DRM even if it fails. */
+        IDirect3DRM_Release(d3drm1);
         d3drm_img = IDirect3DRMTexture_GetImage(texture1);
-        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
-        if (d3drm_img)
-            test_bitmap_data(i * 4, d3drm_img, FALSE, tests[i].w, tests[i].h, tests[i].palettized);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7, d3drm_img, FALSE, tests[i].w, tests[i].h, tests[i].palettized);
+        IDirect3DRMTexture_Release(texture1);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref1 == ref2, "Test %u: expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+        hr = IDirect3DRM_CreateObject(d3drm1, &CLSID_CDirect3DRMTexture,
+                NULL, &IID_IDirect3DRMTexture, (void **)&texture1);
+        ok(SUCCEEDED(hr), "Test %u: Failed to create texture, hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture_InitFromFile(texture1, NULL);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture_InitFromFile(texture1, "");
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture_InitFromFile(texture1, filename);
+        ok(SUCCEEDED(hr), "Test %u: Failed to initialise texture from file, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture_GetImage(texture1);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 1, d3drm_img, FALSE, tests[i].w, tests[i].h, tests[i].palettized);
         IDirect3DRMTexture_Release(texture1);
 
         hr = IDirect3DRM2_LoadTexture(d3drm2, filename, &texture2);
         ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 %u, ref2 %u.\n", i, ref1, ref2);
+
+        hr = IDirect3DRMTexture2_InitFromFile(texture2, filename);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        IDirect3DRM_Release(d3drm1);
         d3drm_img = IDirect3DRMTexture2_GetImage(texture2);
-        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
-        if (d3drm_img)
-            test_bitmap_data(i * 4 + 1, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 2, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        IDirect3DRMTexture2_Release(texture2);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref1 == ref2, "Test %u: expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+        hr = IDirect3DRM2_CreateObject(d3drm2, &CLSID_CDirect3DRMTexture,
+                NULL, &IID_IDirect3DRMTexture2, (void **)&texture2);
+        ok(SUCCEEDED(hr), "Test %u: Failed to create texture, hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture2_InitFromFile(texture2, NULL);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture2_InitFromFile(texture2, "");
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture2_InitFromFile(texture2, filename);
+        ok(SUCCEEDED(hr), "Test %u: Failed to initialise texture from file, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture2_GetImage(texture2);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 3, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
         IDirect3DRMTexture2_Release(texture2);
 
         hr = IDirect3DRM3_LoadTexture(d3drm3, filename, &texture3);
         ok(SUCCEEDED(hr), "Test %u: Failed to load texture, hr %#x.\n", i, hr);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref2 > ref1, "Test %u: expected ref2 > ref1, got ref1 %u, ref2 %u.\n", i, ref1, ref2);
+
+        hr = IDirect3DRMTexture3_InitFromFile(texture3, filename);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        IDirect3DRM_Release(d3drm1);
         d3drm_img = IDirect3DRMTexture3_GetImage(texture3);
-        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
-        if (d3drm_img)
-            test_bitmap_data(i * 4 + 2, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 4, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
         /* Test whether querying a version 1 texture from version 3 causes a
          * change in the loading behavior. */
         hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IDirect3DRMTexture, (void **)&texture1);
         ok(SUCCEEDED(hr), "Failed to get IDirect3DRMTexture interface, hr %#x.\n", hr);
         d3drm_img = IDirect3DRMTexture_GetImage(texture1);
-        todo_wine ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
-        if (d3drm_img)
-            test_bitmap_data(i * 4 + 3, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 5, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
         IDirect3DRMTexture_Release(texture1);
+        IDirect3DRMTexture3_Release(texture3);
+        ref2 = get_refcount((IUnknown *)d3drm1);
+        ok(ref1 == ref2, "Test %u: expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", i, ref1, ref2);
+
+        hr = IDirect3DRM3_CreateObject(d3drm3, &CLSID_CDirect3DRMTexture,
+                NULL, &IID_IDirect3DRMTexture3, (void **)&texture3);
+        ok(SUCCEEDED(hr), "Test %u: Failed to create texture, hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture3_InitFromFile(texture3, NULL);
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture3_InitFromFile(texture3, "");
+        ok(hr == D3DRMERR_BADOBJECT, "Test %u: Got unexpected hr %#x.\n", i, hr);
+        hr = IDirect3DRMTexture3_InitFromFile(texture3, filename);
+        ok(SUCCEEDED(hr), "Test %u: Failed to initialize texture from file, hr %#x.\n", i, hr);
+        d3drm_img = IDirect3DRMTexture3_GetImage(texture3);
+        ok(!!d3drm_img, "Test %u: Failed to get image.\n", i);
+        test_bitmap_data(i * 7 + 6, d3drm_img, TRUE, tests[i].w, tests[i].h, tests[i].palettized);
         IDirect3DRMTexture3_Release(texture3);
 
         ret = DeleteFileA(filename);
@@ -5736,7 +5833,7 @@ static void test_texture_qi(void)
     hr = IDirect3DRMTexture_QueryInterface(texture1, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture (hr = %#x)\n", hr);
     IDirect3DRMTexture_Release(texture1);
-    test_qi("texture1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("texture1_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
@@ -5746,7 +5843,7 @@ static void test_texture_qi(void)
     hr = IDirect3DRMTexture2_QueryInterface(texture2, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture2 (hr = %#x)\n", hr);
     IDirect3DRMTexture2_Release(texture2);
-    test_qi("texture2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("texture2_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
@@ -5757,7 +5854,7 @@ static void test_texture_qi(void)
     hr = IDirect3DRMTexture3_QueryInterface(texture3, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface from IDirect3DRMTexture3 (hr = %#x)\n", hr);
     IDirect3DRMTexture3_Release(texture3);
-    test_qi("texture3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("texture3_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     IDirect3DRM3_Release(d3drm3);
@@ -5873,7 +5970,7 @@ static void test_viewport_qi(void)
     hr = IDirect3DRMViewport_QueryInterface(viewport1, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
     IDirect3DRMViewport_Release(viewport1);
-    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
@@ -5883,7 +5980,7 @@ static void test_viewport_qi(void)
     hr = IDirect3DRMViewport_QueryInterface(viewport1, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
     IDirect3DRMViewport_Release(viewport1);
-    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
     IDirect3DRMDevice_Release(device1);
     IDirect3DRMFrame_Release(camera1);
@@ -5902,7 +5999,7 @@ static void test_viewport_qi(void)
     hr = IDirect3DRMViewport2_QueryInterface(viewport2, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
     IDirect3DRMViewport_Release(viewport2);
-    test_qi("viewport2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("viewport2_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
     IDirect3DRMDevice3_Release(device3);
     IDirect3DRMFrame3_Release(camera3);
@@ -7181,7 +7278,7 @@ static void test_animation_qi(void)
     ok(SUCCEEDED(hr), "Failed to get IUnknown from animation, hr %#x.\n", hr);
     IDirect3DRMAnimation_Release(animation);
 
-    test_qi("animation_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("animation_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
@@ -7194,7 +7291,7 @@ static void test_animation_qi(void)
     ok(SUCCEEDED(hr), "Failed to get IUnknown from animation, hr %#x.\n", hr);
     IDirect3DRMAnimation2_Release(animation2);
 
-    test_qi("animation2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("animation2_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     IDirect3DRM3_Release(d3drm3);
@@ -7302,7 +7399,7 @@ static void test_wrap_qi(void)
     hr = IDirect3DRMWrap_QueryInterface(wrap, &IID_IUnknown, (void **)&unknown);
     ok(SUCCEEDED(hr), "Failed to get IUnknown from wrap (hr = %#x)\n", hr);
     IDirect3DRMWrap_Release(wrap);
-    test_qi("wrap_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    test_qi("wrap_qi", unknown, &IID_IUnknown, tests, ARRAY_SIZE(tests));
     IUnknown_Release(unknown);
 
     IDirect3DRM_Release(d3drm1);
