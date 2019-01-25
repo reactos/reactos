@@ -33,10 +33,6 @@
 #include "wine/heap.h"
 #include "wine/list.h"
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
-#endif
-
 struct d3drm_object
 {
     LONG ref;

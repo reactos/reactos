@@ -2,6 +2,7 @@
  * Implementation of IDirect3DRMTextureX interfaces
  *
  * Copyright 2012 Christian Costa
+ * Copyright 2016 Aaryaman Vasishta
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -65,6 +66,289 @@ static BOOL d3drm_validate_image(D3DRMIMAGE *image)
     }
 
     return TRUE;
+}
+
+static BOOL d3drm_image_palettise(D3DRMIMAGE *image, unsigned char *src_data,
+        SIZE_T w, SIZE_T h, BOOL flip)
+{
+    unsigned char *dst_data, *src_ptr, *dst_ptr;
+    SIZE_T src_pitch, dst_pitch, i, x, y;
+    D3DRMPALETTEENTRY *palette, *entry;
+    unsigned int colour_count = 0;
+
+    if (w > (~(SIZE_T)0 - 3) / h)
+        return FALSE;
+
+    src_pitch = flip ? -w * 3 : w * 3;
+    dst_pitch = (w + 3) & ~3;
+
+    if (!(dst_data = heap_alloc(dst_pitch * h)))
+    {
+        WARN("Failed to allocate image buffer.\n");
+        return FALSE;
+    }
+    memset(dst_data, 0xff, dst_pitch * h);
+
+    if (!(palette = heap_alloc(256 * sizeof(*palette))))
+    {
+        WARN("Failed to allocate palette.\n");
+        heap_free(dst_data);
+        return FALSE;
+    }
+
+    src_ptr = flip ? &src_data[(h - 1) * w * 3] : src_data;
+    dst_ptr = dst_data;
+
+    for (y = 0; y < h; ++y)
+    {
+        for (x = 0; x < w; ++x)
+        {
+            for (i = 0; i < colour_count; ++i)
+            {
+                entry = &palette[i];
+                if (entry->red == src_ptr[x * 3 + 0]
+                        && entry->green == src_ptr[x * 3 + 1]
+                        && entry->blue == src_ptr[x * 3 + 2])
+                    break;
+            }
+
+            if (i == colour_count)
+            {
+                if (colour_count == 256)
+                {
+                    heap_free(dst_data);
+                    heap_free(palette);
+                    return FALSE;
+                }
+
+                entry = &palette[colour_count++];
+                entry->red = src_ptr[x * 3 + 0];
+                entry->green = src_ptr[x * 3 + 1];
+                entry->blue = src_ptr[x * 3 + 2];
+                entry->flags = D3DRMPALETTE_READONLY;
+            }
+
+            dst_ptr[x] = i;
+        }
+
+        src_ptr += src_pitch;
+        dst_ptr += dst_pitch;
+    }
+
+    image->depth = 8;
+    image->rgb = 0;
+    image->bytes_per_line = dst_pitch;
+    image->buffer1 = dst_data;
+    image->red_mask = 0xff;
+    image->green_mask = 0xff;
+    image->blue_mask = 0xff;
+    image->palette_size = colour_count;
+    if (!(image->palette = heap_realloc(palette, colour_count * sizeof(*palette))))
+        image->palette = palette;
+
+    return TRUE;
+}
+
+static HRESULT d3drm_image_load_32(D3DRMIMAGE *image, unsigned char *src_data,
+        LONGLONG src_data_size, SIZE_T w, SIZE_T h, BOOL flip)
+{
+    unsigned char *dst_data, *src_ptr, *dst_ptr;
+    SIZE_T src_pitch, dst_pitch, x, y;
+
+    if (d3drm_image_palettise(image, src_data, w, h, flip))
+        return D3DRM_OK;
+
+    if (w > (~(SIZE_T)0 / 4) / h)
+        return D3DRMERR_BADALLOC;
+
+    src_pitch = flip ? -w * 3 : w * 3;
+    dst_pitch = w * 4;
+
+    if (!(dst_data = heap_alloc(dst_pitch * h)))
+    {
+        WARN("Failed to allocate image buffer.\n");
+        return D3DRMERR_BADALLOC;
+    }
+
+    src_ptr = flip ? &src_data[(h - 1) * w * 3] : src_data;
+    dst_ptr = dst_data;
+
+    for (y = 0; y < h; ++y)
+    {
+        for (x = 0; x < w; ++x)
+        {
+            dst_ptr[x * 4 + 0] = src_ptr[x * 3 + 0];
+            dst_ptr[x * 4 + 1] = src_ptr[x * 3 + 1];
+            dst_ptr[x * 4 + 2] = src_ptr[x * 3 + 2];
+            dst_ptr[x * 4 + 3] = 0xff;
+        }
+
+        src_ptr += src_pitch;
+        dst_ptr += dst_pitch;
+    }
+
+    image->depth = 32;
+    image->rgb = 1;
+    image->bytes_per_line = dst_pitch;
+    image->buffer1 = dst_data;
+    image->red_mask = 0xff0000;
+    image->green_mask = 0x00ff00;
+    image->blue_mask = 0x0000ff;
+    image->palette_size = 0;
+    image->palette = NULL;
+
+    return D3DRM_OK;
+}
+
+static HRESULT d3drm_image_load_8(D3DRMIMAGE *image, const RGBQUAD *palette,
+        unsigned char *src_data, LONGLONG src_data_size, SIZE_T w, SIZE_T h, BOOL flip)
+{
+    unsigned char *dst_data;
+    SIZE_T i;
+
+    if (w > ~(SIZE_T)0 / h)
+        return D3DRMERR_BADALLOC;
+
+    if (!(dst_data = heap_alloc(w * h)))
+    {
+        WARN("Failed to allocate image buffer.\n");
+        return D3DRMERR_BADALLOC;
+    }
+
+    if (!(image->palette = heap_alloc(256 * sizeof(*image->palette))))
+    {
+        WARN("Failed to allocate palette.\n");
+        heap_free(dst_data);
+        return D3DRMERR_BADALLOC;
+    }
+
+    memcpy(image->palette, palette, 256 * sizeof(*image->palette));
+    for (i = 0; i < 256; ++i)
+    {
+        image->palette[i].flags = D3DRMPALETTE_READONLY;
+    }
+
+    if (flip)
+    {
+        for (i = 0; i < h; ++i)
+        {
+            memcpy(&dst_data[i * w], &src_data[(h - 1 - i) * w], w);
+        }
+    }
+    else
+    {
+        memcpy(dst_data, src_data, w * h);
+    }
+
+    image->depth = 8;
+    image->rgb = 0;
+    image->bytes_per_line = w;
+    image->buffer1 = dst_data;
+    image->red_mask = 0xff;
+    image->green_mask = 0xff;
+    image->blue_mask = 0xff;
+    image->palette_size = 256;
+
+    return D3DRM_OK;
+}
+
+static void CDECL destroy_image_callback(IDirect3DRMObject *obj, void *arg)
+{
+    D3DRMIMAGE *image = arg;
+
+    TRACE("texture object %p, image %p.\n", obj, image);
+
+    heap_free(image->buffer1);
+    heap_free(image);
+}
+
+static HRESULT d3drm_texture_load(struct d3drm_texture *texture,
+        const char *path, BOOL flip, D3DRMIMAGE **image_out)
+{
+    BITMAPFILEHEADER *header;
+    unsigned int w, h, bpp;
+    HANDLE file, mapping;
+    LARGE_INTEGER size;
+    D3DRMIMAGE *image;
+    BITMAPINFO *info;
+    LONGLONG rem;
+    HRESULT hr;
+
+    if ((file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0)) == INVALID_HANDLE_VALUE)
+        return D3DRMERR_BADOBJECT;
+
+    mapping = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    CloseHandle(file);
+    if (!mapping || mapping == INVALID_HANDLE_VALUE)
+        return D3DRMERR_BADVALUE;
+
+    if (!GetFileSizeEx(mapping, &size))
+    {
+        CloseHandle(mapping);
+        return D3DRMERR_BADVALUE;
+    }
+    rem = size.QuadPart;
+
+    header = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(mapping);
+    if (!header)
+        return D3DRMERR_BADVALUE;
+
+    hr = D3DRMERR_BADALLOC;
+    if (!(image = heap_alloc_zero(sizeof(*image))))
+        goto fail;
+
+    hr = D3DRMERR_BADFILE;
+    if (rem < sizeof(*header) || header->bfType != 0x4d42 /* BM */)
+        goto fail;
+    rem -= sizeof(*header);
+
+    info = (BITMAPINFO *)&header[1];
+    /* Only allow version 1 DIB's (BITMAPINFOHEADER) to be loaded. */
+    if (rem < sizeof(info->bmiHeader) || info->bmiHeader.biSize != sizeof(info->bmiHeader))
+        goto fail;
+    rem -= sizeof(info->bmiHeader);
+
+    w = info->bmiHeader.biWidth;
+    h = abs(info->bmiHeader.biHeight);
+    bpp = info->bmiHeader.biBitCount == 24 ? 32 : info->bmiHeader.biBitCount;
+    if (bpp != 8 && bpp != 32)
+        goto fail;
+
+    image->width = w;
+    image->height = h;
+    image->aspectx = 1;
+    image->aspecty = 1;
+    if (bpp == 8)
+    {
+        rem -= 256 * sizeof(*info->bmiColors);
+        if (w > rem / h)
+            goto fail;
+        hr = d3drm_image_load_8(image, info->bmiColors, (unsigned char *)&info->bmiColors[256], rem, w, h, flip);
+    }
+    else
+    {
+        if (w > (rem / 3) / h)
+            goto fail;
+        hr = d3drm_image_load_32(image, (unsigned char *)&info->bmiColors, rem, w, h, flip);
+    }
+    if (FAILED(hr))
+        goto fail;
+
+    /* Use an internal destroy callback to destroy the image struct. */
+    hr = IDirect3DRMObject_AddDestroyCallback(&texture->IDirect3DRMTexture3_iface, destroy_image_callback, image);
+
+    *image_out = image;
+
+    UnmapViewOfFile(header);
+
+    return hr;
+
+fail:
+    heap_free(image);
+    UnmapViewOfFile(header);
+
+    return hr;
 }
 
 static HRESULT WINAPI d3drm_texture1_QueryInterface(IDirect3DRMTexture *iface, REFIID riid, void **out)
@@ -171,9 +455,16 @@ static HRESULT WINAPI d3drm_texture1_GetClassName(IDirect3DRMTexture *iface, DWO
 
 static HRESULT WINAPI d3drm_texture1_InitFromFile(IDirect3DRMTexture *iface, const char *filename)
 {
-    FIXME("iface %p, filename %s stub!\n", iface, debugstr_a(filename));
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture(iface);
+    D3DRMIMAGE *image;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("iface %p, filename %s.\n", iface, debugstr_a(filename));
+
+    if (FAILED(hr = d3drm_texture_load(texture, filename, FALSE, &image)))
+        return hr;
+
+    return IDirect3DRMTexture3_InitFromImage(&texture->IDirect3DRMTexture3_iface, image);
 }
 
 static HRESULT WINAPI d3drm_texture1_InitFromSurface(IDirect3DRMTexture *iface,
@@ -473,9 +764,11 @@ static HRESULT WINAPI d3drm_texture2_GetClassName(IDirect3DRMTexture2 *iface, DW
 
 static HRESULT WINAPI d3drm_texture2_InitFromFile(IDirect3DRMTexture2 *iface, const char *filename)
 {
-    FIXME("iface %p, filename %s stub!\n", iface, debugstr_a(filename));
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture2(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, filename %s.\n", iface, debugstr_a(filename));
+
+    return IDirect3DRMTexture3_InitFromFile(&texture->IDirect3DRMTexture3_iface, filename);
 }
 
 static HRESULT WINAPI d3drm_texture2_InitFromSurface(IDirect3DRMTexture2 *iface,
@@ -833,9 +1126,16 @@ static HRESULT WINAPI d3drm_texture3_GetClassName(IDirect3DRMTexture3 *iface, DW
 
 static HRESULT WINAPI d3drm_texture3_InitFromFile(IDirect3DRMTexture3 *iface, const char *filename)
 {
-    FIXME("iface %p, filename %s stub!\n", iface, debugstr_a(filename));
+    struct d3drm_texture *texture = impl_from_IDirect3DRMTexture3(iface);
+    D3DRMIMAGE *image;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("iface %p, filename %s.\n", iface, debugstr_a(filename));
+
+    if (FAILED(hr = d3drm_texture_load(texture, filename, TRUE, &image)))
+        return hr;
+
+    return IDirect3DRMTexture3_InitFromImage(iface, image);
 }
 
 static HRESULT WINAPI d3drm_texture3_InitFromSurface(IDirect3DRMTexture3 *iface,
