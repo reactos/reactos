@@ -1646,6 +1646,22 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
    return TRUE;
 }
 
+/* Notify WM_USER + 377 to Shell_TrayWnd */
+VOID FASTCALL IntNotifyUser377ToTrayWnd(VOID)
+{
+    UNICODE_STRING WindowName = {0};
+    static UNICODE_STRING ClassName = RTL_CONSTANT_STRING(L"Shell_TrayWnd");
+    HWND hTrayWnd, hwndDesktop = IntGetDesktopWindow();
+    PWND pwndDesktop = ValidateHwndNoErr(hwndDesktop);
+    RTL_ATOM ClassAtom = 0;
+    if (IntGetAtomFromStringOrAtom(&ClassName, &ClassAtom))
+    {
+        hTrayWnd = IntFindWindow(pwndDesktop, NULL, ClassAtom, &WindowName);
+        if (hTrayWnd)
+            co_IntSendMessage(hTrayWnd, WM_USER + 377, 0, 0);
+    }
+}
+
 /* x and y are always screen relative */
 BOOLEAN FASTCALL
 co_WinPosSetWindowPos(
@@ -1832,6 +1848,7 @@ co_WinPosSetWindowPos(
       Window->style &= ~WS_VISIBLE; //IntSetStyle( Window, 0, WS_VISIBLE );
       Window->head.pti->cVisWindows--;
       IntNotifyWinEvent(EVENT_OBJECT_HIDE, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+      IntNotifyUser377ToTrayWnd();
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
@@ -1844,6 +1861,7 @@ co_WinPosSetWindowPos(
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
       IntNotifyWinEvent(EVENT_OBJECT_SHOW, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+      IntNotifyUser377ToTrayWnd();
    }
 
    if (Window->hrgnUpdate != NULL && Window->hrgnUpdate != HRGN_WINDOW)
