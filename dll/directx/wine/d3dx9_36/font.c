@@ -134,7 +134,7 @@ static HRESULT WINAPI ID3DXFontImpl_GetDescA(ID3DXFont *iface, D3DXFONT_DESCA *d
 
     if( !desc ) return D3DERR_INVALIDCALL;
     memcpy(desc, &This->desc, FIELD_OFFSET(D3DXFONT_DESCA, FaceName));
-    WideCharToMultiByte(CP_ACP, 0, This->desc.FaceName, -1, desc->FaceName, sizeof(desc->FaceName) / sizeof(CHAR), NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, This->desc.FaceName, -1, desc->FaceName, ARRAY_SIZE(desc->FaceName), NULL, NULL);
 
     return D3D_OK;
 }
@@ -483,8 +483,7 @@ HRESULT WINAPI D3DXCreateFontIndirectA(IDirect3DDevice9 *device, const D3DXFONT_
     /* Copy everything but the last structure member. This requires the
        two D3DXFONT_DESC structures to be equal until the FaceName member */
     memcpy(&widedesc, desc, FIELD_OFFSET(D3DXFONT_DESCA, FaceName));
-    MultiByteToWideChar(CP_ACP, 0, desc->FaceName, -1,
-                        widedesc.FaceName, sizeof(widedesc.FaceName)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, desc->FaceName, -1, widedesc.FaceName, ARRAY_SIZE(widedesc.FaceName));
     return D3DXCreateFontIndirectW(device, &widedesc, font);
 }
 
