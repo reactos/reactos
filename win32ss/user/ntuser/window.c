@@ -1100,6 +1100,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
       EngSetLastError(ERROR_INVALID_PARAMETER);
       ret = NULL;
    }
+   IntNotifyUserMessageToTrayWnd(377);
 Error:
    UserDereferenceObject(Wnd);
    return ret;
