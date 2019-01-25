@@ -20,6 +20,7 @@ add_library(dinput SHARED
     ${SOURCE}
     data_formats.c
     dinput.rc
+    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
 
 add_library(dinput_data_formats data_formats.c)

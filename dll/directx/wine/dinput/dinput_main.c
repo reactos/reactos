@@ -93,7 +93,7 @@ static const struct dinput_device *dinput_devices[] =
     &joystick_osx_device
 };
 
-static HINSTANCE DINPUT_instance = NULL;
+HINSTANCE DINPUT_instance;
 
 static BOOL check_hook_thread(void);
 static CRITICAL_SECTION dinput_hook_crit;
@@ -282,7 +282,7 @@ static void _dump_EnumDevices_dwFlags(DWORD dwFlags)
 	    TRACE("DIEDFL_ALLDEVICES\n");
 	    return;
 	}
-	for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
+	for (i = 0; i < ARRAY_SIZE(flags); i++)
 	    if (flags[i].mask & dwFlags)
 		TRACE("%s ",flags[i].name);
     }
@@ -1090,7 +1090,7 @@ static HRESULT WINAPI IDirectInput8AImpl_EnumDevicesBySemantics(
     /* Add keyboard and mouse to remaining device count */
     if (!(dwFlags & DIEDBSFL_FORCEFEEDBACK))
     {
-        for (i = 0; i < sizeof(guids) / sizeof(guids[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(guids); i++)
         {
             if (should_enumerate_device(username_w, dwFlags, &This->device_players, guids[i]))
                 remain++;
@@ -1119,7 +1119,7 @@ static HRESULT WINAPI IDirectInput8AImpl_EnumDevicesBySemantics(
     }
 
     /* Enumerate keyboard and mouse */
-    for(i=0; i < sizeof(guids)/sizeof(guids[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(guids); i++)
     {
         if (should_enumerate_device(username_w, dwFlags, &This->device_players, guids[i]))
         {
@@ -1191,7 +1191,7 @@ static HRESULT WINAPI IDirectInput8WImpl_EnumDevicesBySemantics(
     /* Add keyboard and mouse to remaining device count */
     if (!(dwFlags & DIEDBSFL_FORCEFEEDBACK))
     {
-        for (i = 0; i < sizeof(guids) / sizeof(guids[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(guids); i++)
         {
             if (should_enumerate_device(ptszUserName, dwFlags, &This->device_players, guids[i]))
                 remain++;
@@ -1215,7 +1215,7 @@ static HRESULT WINAPI IDirectInput8WImpl_EnumDevicesBySemantics(
     if (dwFlags & DIEDBSFL_FORCEFEEDBACK) return DI_OK;
 
     /* Enumerate keyboard and mouse */
-    for(i=0; i < sizeof(guids)/sizeof(guids[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(guids); i++)
     {
         if (should_enumerate_device(ptszUserName, dwFlags, &This->device_players, guids[i]))
         {
@@ -1747,12 +1747,10 @@ static DWORD WINAPI hook_thread_proc(void *param)
                 {
                     if (!dev->acquired || !dev->event_proc) continue;
 
-                    if (IsEqualGUID( &dev->guid, &GUID_SysKeyboard ) ||
-                        IsEqualGUID( &dev->guid, &DInput_Wine_Keyboard_GUID ))
+                    if (IsEqualGUID( &dev->guid, &GUID_SysKeyboard ))
                         kbd_cnt++;
                     else
-                        if (IsEqualGUID( &dev->guid, &GUID_SysMouse ) ||
-                            IsEqualGUID( &dev->guid, &DInput_Wine_Mouse_GUID ))
+                        if (IsEqualGUID( &dev->guid, &GUID_SysMouse ))
                             mice_cnt++;
                 }
                 LeaveCriticalSection( &dinput->crit );

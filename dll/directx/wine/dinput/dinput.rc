@@ -18,18 +18,9 @@
 
 #include "resource.h"
 
-1 WINE_REGISTRY dinput_classes.rgs
-
-#define WINE_FILEDESCRIPTION_STR "Wine DirectInput"
-#define WINE_FILENAME_STR "dinput.dll"
-#define WINE_FILEVERSION 5,1,2600,881
-#define WINE_FILEVERSION_STR "5.1.2600.881"
-#define WINE_PRODUCTVERSION 5,1,2600,881
-#define WINE_PRODUCTVERSION_STR "5.1"
-
-#include "wine/wine_common_ver.rc"
-
 #pragma makedep po
+
+1 WINE_REGISTRY dinput_classes.rgs
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 

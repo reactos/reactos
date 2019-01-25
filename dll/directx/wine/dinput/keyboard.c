@@ -145,10 +145,6 @@ static int KeyboardCallback( LPDIRECTINPUTDEVICE8A iface, WPARAM wparam, LPARAM 
     return ret;
 }
 
-const GUID DInput_Wine_Keyboard_GUID = { /* 0ab8648a-7735-11d2-8c73-71df54a96441 */
-    0x0ab8648a, 0x7735, 0x11d2, {0x8c, 0x73, 0x71, 0xdf, 0x54, 0xa9, 0x64, 0x41}
-};
-
 static DWORD get_keyboard_subtype(void)
 {
     DWORD kbd_type, kbd_subtype, dev_subtype;
@@ -179,7 +175,7 @@ static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD ver
 
     ddi.dwSize = dwSize;
     ddi.guidInstance = GUID_SysKeyboard;/* DInput's GUID */
-    ddi.guidProduct = DInput_Wine_Keyboard_GUID; /* Vendor's GUID */
+    ddi.guidProduct = GUID_SysKeyboard;
     if (version >= 0x0800)
         ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (subtype << 8);
     else
@@ -203,7 +199,7 @@ static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
  
     ddi.dwSize = dwSize;
     ddi.guidInstance = GUID_SysKeyboard;/* DInput's GUID */
-    ddi.guidProduct = DInput_Wine_Keyboard_GUID; /* Vendor's GUID */
+    ddi.guidProduct = GUID_SysKeyboard;
     if (version >= 0x0800)
         ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (subtype << 8);
     else
@@ -308,8 +304,7 @@ static HRESULT keyboarddev_create_device(IDirectInputImpl *dinput, REFGUID rguid
     TRACE("%p %s %s %p %i\n", dinput, debugstr_guid(rguid), debugstr_guid(riid), pdev, unicode);
     *pdev = NULL;
 
-    if (IsEqualGUID(&GUID_SysKeyboard, rguid) ||        /* Generic Keyboard */
-        IsEqualGUID(&DInput_Wine_Keyboard_GUID, rguid)) /* Wine Keyboard */
+    if (IsEqualGUID(&GUID_SysKeyboard, rguid)) /* Wine Keyboard */
     {
         SysKeyboardImpl *This;
 
@@ -508,7 +503,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface
 
     scan = map_dik_to_scan(DIDFT_GETINSTANCE(pdidoi->dwType), This->subtype);
     if (!GetKeyNameTextW((scan & 0x80) << 17 | (scan & 0x7f) << 16,
-                         pdidoi->tszName, sizeof(pdidoi->tszName)/sizeof(pdidoi->tszName[0])))
+                         pdidoi->tszName, ARRAY_SIZE(pdidoi->tszName)))
         return DIERR_OBJECTNOTFOUND;
 
     _dump_OBJECTINSTANCEW(pdidoi);

@@ -80,7 +80,7 @@ static void _dump_cooperativelevel_DI(DWORD dwFlags) {
 #undef FE
 	};
 	TRACE(" cooperative level : ");
-	for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
+	for (i = 0; i < ARRAY_SIZE(flags); i++)
 	    if (flags[i].mask & dwFlags)
 		TRACE("%s ",flags[i].name);
 	TRACE("\n");
@@ -106,7 +106,7 @@ static void _dump_ObjectDataFormat_flags(DWORD dwFlags) {
     TRACE("Flags:");
 
     /* First the flags */
-    for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(flags); i++) {
         if (flags[i].mask & dwFlags)
         TRACE(" %s",flags[i].name);
     }
@@ -153,7 +153,7 @@ static void _dump_EnumObjects_flags(DWORD dwFlags) {
 	if (type == DIDFT_ALL) {
 	    TRACE(" DIDFT_ALL");
 	} else {
-	    for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++) {
+	    for (i = 0; i < ARRAY_SIZE(flags); i++) {
 		if (flags[i].mask & type) {
 		    type &= ~flags[i].mask;
 		    TRACE(" %s",flags[i].name);
@@ -230,7 +230,7 @@ const char *_dump_dinput_GUID(const GUID *guid) {
     };
     if (guid == NULL)
 	return "null GUID";
-    for (i = 0; i < (sizeof(guids) / sizeof(guids[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(guids); i++) {
 	if (IsEqualGUID(guids[i].guid, guid)) {
 	    return guids[i].name;
 	}
@@ -916,7 +916,7 @@ HRESULT _set_action_map(LPDIRECTINPUTDEVICE8W iface, LPDIACTIONFORMATW lpdiaf, L
     if (dwFlags & DIDSAM_NOUSER)
         dps.wsz[0] = '\0';
     else
-        lstrcpynW(dps.wsz, username, sizeof(dps.wsz)/sizeof(WCHAR));
+        lstrcpynW(dps.wsz, username, ARRAY_SIZE(dps.wsz));
     IDirectInputDevice8_SetProperty(iface, DIPROP_USERNAME, &dps.diph);
 
     /* Save the settings to disk */
@@ -1323,7 +1323,7 @@ HRESULT WINAPI IDirectInputDevice2WImpl_GetProperty(LPDIRECTINPUTDEVICE8W iface,
                 {
                     if (*device_player->username)
                     {
-                        lstrcpynW(ps->wsz, device_player->username, sizeof(ps->wsz)/sizeof(WCHAR));
+                        lstrcpynW(ps->wsz, device_player->username, ARRAY_SIZE(ps->wsz));
                         return DI_OK;
                     }
                     else break;
@@ -1428,8 +1428,7 @@ HRESULT WINAPI IDirectInputDevice2WImpl_SetProperty(
                 device_player->instance_guid = This->guid;
             }
             if (device_player)
-                lstrcpynW(device_player->username, ps->wsz,
-                    sizeof(device_player->username)/sizeof(WCHAR));
+                lstrcpynW(device_player->username, ps->wsz, ARRAY_SIZE(device_player->username));
             break;
         }
         default:

@@ -114,9 +114,6 @@ typedef struct
     LPDIRECTINPUTEFFECT ref;
 } effect_list_item;
 
-extern const GUID DInput_Wine_Keyboard_GUID DECLSPEC_HIDDEN;
-extern const GUID DInput_Wine_Mouse_GUID DECLSPEC_HIDDEN;
-
 /* Various debug tools */
 extern void _dump_DIPROPHEADER(LPCDIPROPHEADER diph)  DECLSPEC_HIDDEN;
 extern void _dump_OBJECTINSTANCEA(const DIDEVICEOBJECTINSTANCEA *ddoi)  DECLSPEC_HIDDEN;

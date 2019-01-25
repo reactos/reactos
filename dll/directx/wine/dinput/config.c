@@ -86,7 +86,6 @@ static BOOL CALLBACK collect_devices(LPCDIDEVICEINSTANCEW lpddi, IDirectInputDev
  */
 static void init_listview_columns(HWND dialog)
 {
-    HINSTANCE hinstance = (HINSTANCE) GetWindowLongPtrW(dialog, GWLP_HINSTANCE);
     LVCOLUMNW listColumn;
     RECT viewRect;
     int width;
@@ -95,7 +94,7 @@ static void init_listview_columns(HWND dialog)
     GetClientRect(GetDlgItem(dialog, IDC_DEVICEOBJECTSLIST), &viewRect);
     width = (viewRect.right - viewRect.left)/2;
 
-    LoadStringW(hinstance, IDS_OBJECTCOLUMN, column, sizeof(column)/sizeof(column[0]));
+    LoadStringW(DINPUT_instance, IDS_OBJECTCOLUMN, column, ARRAY_SIZE(column));
     listColumn.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
     listColumn.pszText = column;
     listColumn.cchTextMax = lstrlenW(listColumn.pszText);
@@ -103,7 +102,7 @@ static void init_listview_columns(HWND dialog)
 
     SendDlgItemMessageW (dialog, IDC_DEVICEOBJECTSLIST, LVM_INSERTCOLUMNW, 0, (LPARAM) &listColumn);
 
-    LoadStringW(hinstance, IDS_ACTIONCOLUMN, column, sizeof(column)/sizeof(column[0]));
+    LoadStringW(DINPUT_instance, IDS_ACTIONCOLUMN, column, ARRAY_SIZE(column));
     listColumn.cx = width;
     listColumn.pszText = column;
     listColumn.cchTextMax = lstrlenW(listColumn.pszText);
@@ -453,7 +452,8 @@ HRESULT _configure_devices(IDirectInput8W *iface,
 
     InitCommonControls();
 
-    DialogBoxParamW(GetModuleHandleA("dinput.dll"), (LPCWSTR) MAKEINTRESOURCE(IDD_CONFIGUREDEVICES), lpdiCDParams->hwnd, ConfigureDevicesDlgProc, (LPARAM) &data);
+    DialogBoxParamW(DINPUT_instance, (const WCHAR *)MAKEINTRESOURCE(IDD_CONFIGUREDEVICES),
+            lpdiCDParams->hwnd, ConfigureDevicesDlgProc, (LPARAM)&data);
 
     return DI_OK;
 }
