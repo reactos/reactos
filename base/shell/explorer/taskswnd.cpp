@@ -1987,3 +1987,15 @@ HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tr
 {
     return ShellObjectCreatorInit<CTaskSwitchWnd>(hWndParent, Tray, riid, ppv);
 }
+
+HRESULT RefreshTaskSwitch(HWND hwndTaskSwitch)
+{
+    CTaskSwitchWnd *pTaskSwitch = ...;
+    if (pTaskSwitch)
+    {
+        pTaskSwitch->RefreshWindowList();
+        pTaskSwitch->UpdateButtonsSize(FALSE);
+        return S_OK;
+    }
+    return E_FAIL;
+}

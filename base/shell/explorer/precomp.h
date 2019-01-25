@@ -354,4 +354,6 @@ Tray_OnStartMenuDismissed(ITrayWindow* Tray);
 HRESULT
 IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);
 
+HRESULT RefreshTaskSwitch(HWND hwndTaskSwitch);
+
 #endif /* _EXPLORER_PRECOMP__H_ */

@@ -2807,6 +2807,13 @@ HandleTrayContextMenu:
         return (LRESULT)m_TaskSwitch;
     }
 
+    LRESULT OnUser377(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        RefreshTaskSwitch(m_TaskSwitch);
+        return 0;
+    }
+
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);
@@ -3126,6 +3133,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(TWM_GETTASKSWITCH, OnGetTaskSwitch)
+        MESSAGE_HANDLER(WM_USER + 377, OnUser377)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
