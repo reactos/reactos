@@ -1450,7 +1450,7 @@ public:
         UpdateButtonsSize(FALSE);
 
 #if DUMP_TASKS != 0
-        SetTimer(1, 5000, NULL);
+        SetTimer(hwnd, 1, 5000, NULL);
 #endif
         return TRUE;
     }
@@ -1886,14 +1886,14 @@ public:
 
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+#if DUMP_TASKS != 0
         switch (wParam)
         {
-#if DUMP_TASKS != 0
         case 1:
             DumpTasks();
             break;
-#endif
         }
+#endif
         return TRUE;
     }
 
