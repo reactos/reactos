@@ -218,45 +218,60 @@ static LRESULT WINAPI wnd_proc_sub(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
 static void test_subclass(void)
 {
+    BOOL ret;
     HWND hwnd = CreateWindowExA(0, "TestSubclass", "Test subclass", WS_OVERLAPPEDWINDOW,
                            100, 100, 200, 200, 0, 0, 0, NULL);
     ok(hwnd != NULL, "failed to create test subclass wnd\n");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 2, 0);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 2, 0);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 0);
     SendMessageA(hwnd, WM_USER, 2, 0);
     ok_sequence(Sub_BasicTest, "Basic");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 2, DELETE_SELF);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 2, DELETE_SELF);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 1);
     ok_sequence(Sub_DeletedTest, "Deleted");
 
     SendMessageA(hwnd, WM_USER, 1, 0);
     ok_sequence(Sub_AfterDeletedTest, "After Deleted");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 2, 0);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 2, 0);
+    ok(ret == TRUE, "Expected TRUE\n");
     orig_proc_3 = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)wnd_proc_3);
     SendMessageA(hwnd, WM_USER, 1, 0);
     SendMessageA(hwnd, WM_USER, 2, 0);
     ok_sequence(Sub_OldAfterNewTest, "Old after New");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 4, 0);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 4, 0);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 0);
     ok_sequence(Sub_MixTest, "Mix");
 
     /* Now the fun starts */
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 4, SEND_NEST);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 4, SEND_NEST);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 1);
     ok_sequence(Sub_MixAndNestTest, "Mix and nest");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 4, SEND_NEST | DELETE_SELF);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 4, SEND_NEST | DELETE_SELF);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 1);
     ok_sequence(Sub_MixNestDelTest, "Mix, nest, del");
 
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 4, 0);
-    pSetWindowSubclass(hwnd, wnd_proc_sub, 5, DELETE_PREV);
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 4, 0);
+    ok(ret == TRUE, "Expected TRUE\n");
+    ret = pSetWindowSubclass(hwnd, wnd_proc_sub, 5, DELETE_PREV);
+    ok(ret == TRUE, "Expected TRUE\n");
     SendMessageA(hwnd, WM_USER, 1, 1);
     ok_sequence(Sub_MixDelPrevTest, "Mix and del prev");
+
+    ret = pSetWindowSubclass(NULL, wnd_proc_sub, 1, 0);
+    ok(ret == FALSE, "Expected FALSE\n");
+
+    ret = pSetWindowSubclass(hwnd, NULL, 1, 0);
+    ok(ret == FALSE, "Expected FALSE\n");
 
     DestroyWindow(hwnd);
 }

@@ -183,7 +183,7 @@ static void test_customdraw(void) {
    GetCursorPos(&orig_pos);
 
    for (iterationNumber = 0;
-        iterationNumber < sizeof(expectedResults)/sizeof(expectedResults[0]);
+        iterationNumber < ARRAY_SIZE(expectedResults);
         iterationNumber++) {
 
        HWND parent, hwndTip;
@@ -821,7 +821,7 @@ static void test_longtextW(void)
     toolinfoW.hinst = GetModuleHandleW(NULL);
     toolinfoW.uFlags = 0;
     toolinfoW.uId = 0x1234ABCD;
-    MultiByteToWideChar(CP_ACP, 0, longtextA, -1, bufW, sizeof(bufW)/sizeof(bufW[0]));
+    MultiByteToWideChar(CP_ACP, 0, longtextA, -1, bufW, ARRAY_SIZE(bufW));
     lenW = lstrlenW(bufW);
     toolinfoW.lpszText = bufW;
     toolinfoW.lParam = 0xdeadbeef;

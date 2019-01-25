@@ -1130,7 +1130,7 @@ static void test_hdm_index_messages(HWND hParent)
          ok_sequence(sequences, PARENT_SEQ_INDEX, add_header_to_parent_seq,
                                      "adder header control to parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    for (i = 0; i < sizeof(item_texts)/sizeof(item_texts[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(item_texts); i++)
     {
         hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
         hdItem.pszText = (char*)item_texts[i];
@@ -1170,7 +1170,7 @@ static void test_hdm_index_messages(HWND hParent)
 
     hdItem.mask = HDI_TEXT | HDI_WIDTH;
     hdItem.pszText = buffA;
-    hdItem.cchTextMax = sizeof(buffA)/sizeof(buffA[0]);
+    hdItem.cchTextMax = ARRAY_SIZE(buffA);
     retVal = SendMessageA(hChild, HDM_GETITEMA, 0, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Getting the 1st header item should return TRUE, got %d\n", retVal);
 

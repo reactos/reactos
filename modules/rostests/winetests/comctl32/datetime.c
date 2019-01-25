@@ -721,6 +721,46 @@ static void test_dtm_set_and_get_systemtime_with_limits(void)
     DestroyWindow(hWnd);
 }
 
+static void test_dtm_get_ideal_size(void)
+{
+    HWND hwnd;
+    HDC hdc;
+    HFONT hfont;
+    LOGFONTA lf;
+    TEXTMETRICA tm;
+    SIZE size;
+    BOOL r;
+
+    hwnd = create_datetime_control(0);
+    r = SendMessageA(hwnd, DTM_GETIDEALSIZE, 0, (LPARAM)&size);
+    if (!r)
+    {
+        win_skip("DTM_GETIDEALSIZE is not available\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    /* Set font so that the test is consistent on Wine and Windows */
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfWeight = FW_NORMAL;
+    lf.lfHeight = 20;
+    lstrcpyA(lf.lfFaceName, "Tahoma");
+    hfont = CreateFontIndirectA(&lf);
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)TRUE);
+
+    hdc = GetDC(hwnd);
+    GetTextMetricsA(hdc, &tm);
+    ReleaseDC(hwnd, hdc);
+
+    r = SendMessageA(hwnd, DTM_GETIDEALSIZE, 0, (LPARAM)&size);
+    ok(r, "Expect DTM_GETIDEALSIZE message to return true\n");
+    ok(size.cx > 0 && size.cy >= tm.tmHeight,
+       "Expect size.cx > 0 and size.cy >= %d, got cx:%d cy:%d\n", tm.tmHeight, size.cx, size.cy);
+
+    DestroyWindow(hwnd);
+    DeleteObject(hfont);
+}
+
 static void test_wm_set_get_text(void)
 {
     static const CHAR a_str[] = "a";
@@ -821,6 +861,7 @@ START_TEST(datetime)
     test_dtm_set_and_get_mccolor();
     test_dtm_set_and_get_mcfont();
     test_dtm_get_monthcal();
+    test_dtm_get_ideal_size();
     test_wm_set_get_text();
     test_dts_shownone();
 

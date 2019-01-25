@@ -280,7 +280,6 @@ static void test_disableowner(void)
     psh.pfnCallback = disableowner_callback;
 
     p = pPropertySheetA(&psh);
-    todo_wine
     ok(p == 0, "Expected 0, got %ld\n", p);
     ok(IsWindowEnabled(parenthwnd) != 0, "parent window should be enabled\n");
     DestroyWindow(parenthwnd);
@@ -1147,6 +1146,46 @@ static void test_CreatePropertySheetPage(void)
     }
 }
 
+static void test_bad_control_class(void)
+{
+    PROPSHEETPAGEA psp;
+    PROPSHEETHEADERA psh;
+    HPROPSHEETPAGE hpsp;
+    INT_PTR ret;
+
+    memset(&psp, 0, sizeof(psp));
+    psp.dwSize = sizeof(psp);
+    psp.hInstance = GetModuleHandleA(NULL);
+    U(psp).pszTemplate = (LPCSTR)MAKEINTRESOURCE(IDD_PROP_PAGE_BAD_CONTROL);
+    psp.pfnDlgProc = page_dlg_proc;
+
+    hpsp = pCreatePropertySheetPageA(&psp);
+    ok(hpsp != 0, "CreatePropertySheetPage failed\n");
+
+    memset(&psh, 0, sizeof(psh));
+    psh.dwSize = PROPSHEETHEADERA_V1_SIZE;
+    psh.nPages = 1;
+    psh.hwndParent = GetDesktopWindow();
+    U3(psh).phpage = &hpsp;
+
+#ifndef __REACTOS__ /* FIXME: Inspect why this causes a hang */
+    ret = pPropertySheetA(&psh);
+    ok(ret == 0, "got %ld\n", ret);
+#endif
+
+    /* Need to recreate hpsp otherwise the test fails under Windows */
+    hpsp = pCreatePropertySheetPageA(&psp);
+    ok(hpsp != 0, "CreatePropertySheetPage failed\n");
+    U3(psh).phpage = &hpsp;
+
+    psh.dwFlags = PSH_MODELESS;
+    ret = pPropertySheetA(&psh);
+    ok(ret != 0, "got %ld\n", ret);
+
+    ok(IsWindow((HWND)ret), "bad window handle %#lx\n", ret);
+    DestroyWindow((HWND)ret);
+}
+
 static void init_functions(void)
 {
     HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
@@ -1172,6 +1211,7 @@ START_TEST(propsheet)
 
     init_functions();
 
+    test_bad_control_class();
     test_title();
     test_nopage();
     test_disableowner();

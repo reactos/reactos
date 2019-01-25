@@ -258,7 +258,7 @@ static void test_PBM_STEPIT(void)
     HWND progress;
     int i, j;
 
-    for (i = 0; i < sizeof(stepit_tests)/sizeof(stepit_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(stepit_tests); i++)
     {
         struct stepit_test *test = &stepit_tests[i];
         LRESULT ret;

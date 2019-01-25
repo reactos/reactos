@@ -50,12 +50,12 @@ static void test_get_set_text(void)
     }
 
     /* check text just after creation */
-    r = GetWindowTextA(hwnd, ip, sizeof(ip)/sizeof(CHAR));
+    r = GetWindowTextA(hwnd, ip, ARRAY_SIZE(ip));
     expect(7, r);
     ok(strcmp(ip, "0.0.0.0") == 0, "Expected null IP address, got %s\n", ip);
 
     SendMessageA(hwnd, IPM_SETADDRESS, 0, MAKEIPADDRESS(127, 0, 0, 1));
-    r = GetWindowTextA(hwnd, ip, sizeof(ip)/sizeof(CHAR));
+    r = GetWindowTextA(hwnd, ip, ARRAY_SIZE(ip));
     expect(9, r);
     ok(strcmp(ip, "127.0.0.1") == 0, "Expected 127.0.0.1, got %s\n", ip);
 

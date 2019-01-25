@@ -264,7 +264,7 @@ static void test_comboex_WM_LBUTTONDOWN(void)
             WS_VISIBLE|WS_CHILD|CBS_DROPDOWN, 0, 0, 200, 150,
             hComboExParentWnd, NULL, hMainHinst, NULL);
 
-    for (i = 0; i < sizeof(choices)/sizeof(UINT); i++){
+    for (i = 0; i < ARRAY_SIZE(choices); i++){
         COMBOBOXEXITEMW cbexItem;
         wsprintfW(buffer, stringFormat, choices[i]);
 
@@ -1165,11 +1165,11 @@ static void test_combo_dropdown_size(DWORD style)
         int limit;
     } info_height[] = {
         {33, 50, -1},
-        {35, 50, 40},
+        {35, 100, 40},
         {15, 50, 3},
     };
 
-    for (test = 0; test < sizeof(info_height) / sizeof(info_height[0]); test++)
+    for (test = 0; test < ARRAY_SIZE(info_height); test++)
     {
         const struct list_size_info *info_test = &info_height[test];
         int height_item; /* Height of a list item */
@@ -1182,7 +1182,6 @@ static void test_combo_dropdown_size(DWORD style)
                 info_test->height_combo, hMainWnd, (HMENU)COMBO_ID, NULL, 0);
 
         min_visible_expected = SendMessageA(hCombo, CB_GETMINVISIBLE, 0, 0);
-        todo_wine
         ok(min_visible_expected == 30, "Unexpected number of items %d.\n", min_visible_expected);
 
         cbInfo.cbSize = sizeof(COMBOBOXINFO);
@@ -1202,10 +1201,8 @@ static void test_combo_dropdown_size(DWORD style)
             min_visible_expected = info_test->limit;
 
             ret = SendMessageA(hCombo, CB_SETMINVISIBLE, min_visible_expected, 0);
-            todo_wine
             ok(ret, "Failed to set visible limit.\n");
             min_visible_actual = SendMessageA(hCombo, CB_GETMINVISIBLE, 0, 0);
-            todo_wine
             ok(min_visible_expected == min_visible_actual, "test %d: unexpected number of items %d.\n",
                     test, min_visible_actual);
         }
@@ -1242,7 +1239,6 @@ static void test_combo_dropdown_size(DWORD style)
             if (expected_height_list < 0)
                 expected_height_list = 0;
 
-            todo_wine
             ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
                     test, expected_height_list, height_list);
         }
@@ -1250,7 +1246,6 @@ static void test_combo_dropdown_size(DWORD style)
         {
             expected_height_list = min(info_test->num_items, min_visible_expected) * height_item;
 
-            todo_wine
             ok(expected_height_list == height_list, "Test %d, expected list height to be %d, got %d\n",
                     test, expected_height_list, height_list);
         }

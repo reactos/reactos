@@ -118,7 +118,7 @@ static LSTATUS mru_RegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
     dwMaxSubkeyLen++;
     dwMaxValueLen++;
     dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf)/sizeof(CHAR))
+    if (dwMaxLen > ARRAY_SIZE(szNameBuf))
     {
         /* Name too big: alloc a buffer for it */
         if (!(lpszName = heap_alloc(dwMaxLen * sizeof(CHAR))))
@@ -480,7 +480,7 @@ static void test_CreateMRUListLazyA(void)
         return;
     }
 
-    for (i = 0; i < sizeof(create_lazyA)/sizeof(create_lazya_t); i++)
+    for (i = 0; i < ARRAY_SIZE(create_lazyA); i++)
     {
         const create_lazya_t *ptr = &create_lazyA[i];
         HANDLE hMRU;

@@ -269,8 +269,7 @@ static void test_LoadIconWithScaleDown(void)
 
     /* non-existing filename */
     hr = pLoadIconMetric(NULL, nonexisting_fileW, LIM_LARGE, &icon);
-    todo_wine
-    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND) || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) /* Win7 */,
        "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
 
     hr = pLoadIconWithScaleDown(NULL, nonexisting_fileW, 32, 32, &icon);
@@ -343,23 +342,32 @@ static void test_LoadIconWithScaleDown(void)
     FreeLibrary(hinst);
 }
 
-static void check_class( const char *name, int must_exist, UINT style, UINT ignore )
+static void check_class( const char *name, int must_exist, UINT style, UINT ignore, BOOL v6 )
 {
     WNDCLASSA wc;
 
     if (GetClassInfoA( 0, name, &wc ))
     {
-todo_wine_if(strcmp(name, "Button") &&
-                strcmp(name, "ComboBox") &&
-                strcmp(name, "Edit") &&
-                strcmp(name, "Static") &&
-                strcmp(name, "ListBox") &&
-                strcmp(name, "ComboLBox"))
+        char buff[64];
+        HWND hwnd;
+
+todo_wine_if(!strcmp(name, "SysLink") && !must_exist && !v6)
+        ok( must_exist, "System class %s should %sexist\n", name, must_exist ? "" : "NOT " );
+        if (!must_exist) return;
+
+todo_wine_if(!strcmp(name, "ScrollBar") || (!strcmp(name, "tooltips_class32") && v6))
         ok( !(~wc.style & style & ~ignore), "System class %s is missing bits %x (%08x/%08x)\n",
             name, ~wc.style & style, wc.style, style );
+todo_wine_if((!strcmp(name, "tooltips_class32") && v6) || !strcmp(name, "SysLink"))
         ok( !(wc.style & ~style), "System class %s has extra bits %x (%08x/%08x)\n",
             name, wc.style & ~style, wc.style, style );
         ok( !wc.hInstance, "System class %s has hInstance %p\n", name, wc.hInstance );
+
+        hwnd = CreateWindowA(name, 0, 0, 0, 0, 0, 0, 0, NULL, GetModuleHandleA(NULL), 0);
+        ok( hwnd != NULL, "Failed to create window for class %s.\n", name );
+        GetClassNameA(hwnd, buff, ARRAY_SIZE(buff));
+        ok( !strcmp(name, buff), "Unexpected class name %s, expected %s.\n", buff, name );
+        DestroyWindow(hwnd);
     }
     else
         ok( !must_exist, "System class %s does not exist\n", name );
@@ -369,13 +377,40 @@ todo_wine_if(strcmp(name, "Button") &&
 static void test_builtin_classes(void)
 {
     /* check style bits */
-    check_class( "Button",     1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
-    check_class( "ComboBox",   1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
-    check_class( "Edit",       1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
-    check_class( "ListBox",    1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
-    check_class( "ScrollBar",  1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
-    check_class( "Static",     1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
-    check_class( "ComboLBox",  1, CS_SAVEBITS | CS_DBLCLKS | CS_DROPSHADOW | CS_GLOBALCLASS, CS_DROPSHADOW );
+    check_class( "Button",     1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "ComboBox",   1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "Edit",       1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "ListBox",    1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "ScrollBar",  1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "Static",     1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE );
+    check_class( "ComboLBox",  1, CS_SAVEBITS | CS_DBLCLKS | CS_DROPSHADOW | CS_GLOBALCLASS, CS_DROPSHADOW, FALSE );
+}
+
+static void test_comctl32_classes(BOOL v6)
+{
+    check_class(ANIMATE_CLASSA,      1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_COMBOBOXEXA,      1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(DATETIMEPICK_CLASSA, 1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_HEADERA,          1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    check_class(HOTKEY_CLASSA,       1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_IPADDRESSA,       1, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_LISTVIEWA,        1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    check_class(MONTHCAL_CLASSA,     1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_NATIVEFONTCTLA,   1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_PAGESCROLLERA,    1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(PROGRESS_CLASSA,     1, CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE);
+    check_class(REBARCLASSNAMEA,     1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    check_class(STATUSCLASSNAMEA,    1, CS_DBLCLKS | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_TABCONTROLA,      1, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE);
+    check_class(TOOLBARCLASSNAMEA,   1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    if (v6)
+        check_class(TOOLTIPS_CLASSA, 1, CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS | CS_DROPSHADOW, CS_SAVEBITS | CS_HREDRAW | CS_VREDRAW /* XP */, TRUE);
+    else
+        check_class(TOOLTIPS_CLASSA, 1, CS_DBLCLKS | CS_GLOBALCLASS | CS_SAVEBITS, CS_HREDRAW | CS_VREDRAW /* XP */, FALSE);
+    check_class(TRACKBAR_CLASSA,     1, CS_GLOBALCLASS, 0, FALSE);
+    check_class(WC_TREEVIEWA,        1, CS_DBLCLKS | CS_GLOBALCLASS, 0, FALSE);
+    check_class(UPDOWN_CLASSA,       1, CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0, FALSE);
+    check_class("SysLink", v6, CS_GLOBALCLASS, 0, FALSE);
 }
 
 START_TEST(misc)
@@ -389,9 +424,12 @@ START_TEST(misc)
     test_GetPtrAW();
     test_Alloc();
 
+    test_comctl32_classes(FALSE);
+
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
 
+    test_comctl32_classes(TRUE);
     test_builtin_classes();
     test_LoadIconWithScaleDown();
 

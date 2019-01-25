@@ -78,6 +78,13 @@ FONT 8, "MS Shell Dlg"
 {
 }
 
+IDD_PROP_PAGE_BAD_CONTROL DIALOG 0, 0, 100, 100
+STYLE WS_POPUP | WS_CAPTION | WS_CLIPSIBLINGS | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", -1, "invalid class", 0, 0, 0, 0, 0
+}
+
 STRINGTABLE 
 {
     IDS_TBADD1           "abc"

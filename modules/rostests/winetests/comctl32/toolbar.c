@@ -56,7 +56,6 @@ static BOOL g_ResetDispTextPtr;
 
 static const struct message ttgetdispinfo_parent_seq[] = {
     { WM_NOTIFY, sent|id, 0, 0, TBN_GETINFOTIPA },
-    /* next line is todo, currently TTN_GETDISPINFOW is raised here */
     { WM_NOTIFY, sent|id, 0, 0, TTN_GETDISPINFOA },
     { 0 }
 };
@@ -388,7 +387,7 @@ static void basic_test(void)
         WS_CHILD | TBSTYLE_LIST,
         100,
         0, NULL, 0,
-        buttons, sizeof(buttons)/sizeof(buttons[0]),
+        buttons, ARRAY_SIZE(buttons),
         0, 0, 20, 16, sizeof(TBBUTTON));
     ok(hToolbar != NULL, "Toolbar creation\n");
     SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"test\000");
@@ -1316,7 +1315,7 @@ static DWORD tbsize_alt_numtests = 0;
         compare(buttonCount, res->nButtons, "%d"); \
         for (i=0; i<min(buttonCount, res->nButtons); i++) { \
             ok(SendMessageA(hToolbar, TB_GETITEMRECT, i, (LPARAM)&rc) == 1, "TB_GETITEMRECT\n"); \
-            if (broken(tbsize_alt_numtests < sizeof(tbsize_alt_results)/sizeof(tbsize_alt_results[0]) && \
+            if (broken(tbsize_alt_numtests < ARRAY_SIZE(tbsize_alt_results) && \
                        EqualRect(&rc, &tbsize_alt_results[tbsize_alt_numtests].rcButton))) { \
                 win_skip("Alternate rect found\n"); \
                 tbsize_alt_numtests++; \
@@ -1940,13 +1939,13 @@ static void test_setrows(void)
         | CCS_NOMOVEY | CCS_TOP,
         0,
         0, NULL, 0,
-        buttons, sizeof(buttons)/sizeof(buttons[0]),
+        buttons, ARRAY_SIZE(buttons),
         20, 20, 0, 0, sizeof(TBBUTTON));
     ok(hToolbar != NULL, "Toolbar creation\n");
     ok(SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0) == 0, "TB_AUTOSIZE failed\n");
 
     /* test setting rows to each of 1-10 with bLarger true and false */
-    for (i=0; i<(sizeof(tbrows_results) / sizeof(tbrows_result_t)); i++) {
+    for (i=0; i<ARRAY_SIZE(tbrows_results); i++) {
         RECT rc;
         int rows;
 
@@ -2026,7 +2025,7 @@ static void test_tooltip(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
     ok_sequence(sequences, PARENT_SEQ_INDEX, ttgetdispinfo_parent_seq,
-                "dispinfo from tooltip", TRUE);
+                "dispinfo from tooltip", FALSE);
 
     g_ResetDispTextPtr = TRUE;
     SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
@@ -2059,7 +2058,7 @@ static void test_get_set_style(void)
         WS_CHILD | TBSTYLE_LIST,
         100,
         0, NULL, 0,
-        buttons, sizeof(buttons)/sizeof(buttons[0]),
+        buttons, ARRAY_SIZE(buttons),
         0, 0, 20, 16, sizeof(TBBUTTON));
     ok(hToolbar != NULL, "Toolbar creation\n");
     SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"test\000");
@@ -2277,7 +2276,7 @@ static void test_TB_GET_SET_EXTENDEDSTYLE(void)
         return;
     }
 
-    for (i = 0; i < sizeof(extended_style_test)/sizeof(extended_style_t); i++)
+    for (i = 0; i < ARRAY_SIZE(extended_style_test); i++)
     {
         ptr = &extended_style_test[i];
 
@@ -2398,7 +2397,7 @@ static void test_save(void)
     params.pszValueName = value;
 
     rebuild_toolbar_with_buttons( &wnd );
-    SendMessageW( wnd, TB_ADDBUTTONSW, sizeof(more_btns) / sizeof(more_btns[0]), (LPARAM)more_btns );
+    SendMessageW(wnd, TB_ADDBUTTONSW, ARRAY_SIZE(more_btns), (LPARAM)more_btns);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     res = SendMessageW( wnd, TB_SAVERESTOREW, TRUE, (LPARAM)&params );
@@ -2424,7 +2423,7 @@ static void test_save(void)
     ok( res, "restoring failed\n" );
     ok_sequence(sequences, PARENT_SEQ_INDEX, restore_parent_seq, "restore", FALSE);
     count = SendMessageW( wnd, TB_BUTTONCOUNT, 0, 0 );
-    ok( count == sizeof(expect_btns) / sizeof(expect_btns[0]), "got %d\n", count );
+    ok( count == ARRAY_SIZE(expect_btns), "got %d\n", count );
 
     for (i = 0; i < count; i++)
     {

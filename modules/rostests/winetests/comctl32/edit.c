@@ -2969,7 +2969,7 @@ static void test_EM_GETLINE(void)
     hwnd[0] = create_editcontrol(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     hwnd[1] = create_editcontrolW(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
 
-    for (i = 0; i < sizeof(hwnd)/sizeof(hwnd[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(hwnd); i++)
     {
         static const WCHAR strW[] = {'t','e','x','t',0};
         static const char *str = "text";
@@ -2994,13 +2994,13 @@ static void test_EM_GETLINE(void)
         ok(!strcmp(buff, str), "Unexpected line data %s.\n", buff);
 
         memset(buffW, 0, sizeof(buffW));
-        *(WORD *)buffW = sizeof(buffW)/sizeof(buffW[0]);
+        *(WORD *)buffW = ARRAY_SIZE(buffW);
         r = SendMessageW(hwnd[i], EM_GETLINE, 0, (LPARAM)buffW);
         ok(r == lstrlenW(strW), "Failed to get a line %d.\n", r);
         ok(!lstrcmpW(buffW, strW), "Unexpected line data %s.\n", wine_dbgstr_w(buffW));
 
         memset(buffW, 0, sizeof(buffW));
-        *(WORD *)buffW = sizeof(buffW)/sizeof(buffW[0]);
+        *(WORD *)buffW = ARRAY_SIZE(buffW);
         r = SendMessageW(hwnd[i], EM_GETLINE, 1, (LPARAM)buffW);
         ok(r == lstrlenW(strW), "Failed to get a line %d.\n", r);
         ok(!lstrcmpW(buffW, strW), "Unexpected line data %s.\n", wine_dbgstr_w(buffW));
@@ -3060,6 +3060,83 @@ static const struct message killfocus_combined_seq[] =
     { WM_NCPAINT,      sent|id|defwinproc|optional, 0, 0,              EDIT_ID   },
     { 0 }
 };
+
+static void test_cue_banner(void)
+{
+    HWND hwnd_edit;
+    BOOL ret;
+    static WCHAR getcuetestW[5] = {'T',0};
+    static const WCHAR testcmp1W[] = {'T','e','s','t',0};
+    static const WCHAR testcmp2W[] = {'T','e','s',0};
+    static const WCHAR emptyW[] = {0};
+
+    hwnd_edit = create_editcontrolW(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
+    if (lstrcmpW(getcuetestW, emptyW) != 0)
+    {
+        win_skip("skipping for Win XP and 2003 Server.\n");
+        DestroyWindow(hwnd_edit);
+        return;
+    }
+    ok(lstrcmpW(getcuetestW, emptyW) == 0, "First char is %c\n", getcuetestW[0]);
+    ok(ret == FALSE, "EM_GETCUEBANNER should have returned FALSE.\n");
+
+    lstrcpyW(getcuetestW, testcmp1W);
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 0);
+    ok(lstrcmpW(getcuetestW, testcmp1W) == 0, "String was %s.\n", wine_dbgstr_w(getcuetestW));
+    ok(ret == FALSE, "EM_GETCUEBANNER should have returned FALSE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, 0, 0);
+    ok(ret == FALSE, "EM_GETCUEBANNER should have returned FALSE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, 0);
+    ok(ret == FALSE, "EM_SETCUEBANNER should have returned FALSE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, 0, 0);
+    ok(ret == FALSE, "EM_GETCUEBANNER should have returned FALSE.\n");
+
+    lstrcpyW(getcuetestW, testcmp1W);
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)getcuetestW);
+    ok(ret == TRUE, "EM_SETCUEBANNER should have returned TRUE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, 0, 5);
+    ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
+    ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
+    ok(lstrcmpW(getcuetestW, testcmp1W) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
+
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)emptyW);
+    ok(ret == TRUE, "EM_SETCUEBANNER should have returned TRUE.\n");
+
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
+    ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
+    ok(lstrcmpW(getcuetestW, emptyW) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
+
+    /* EM_GETCUEBANNER's buffer size includes null char */
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)testcmp1W);
+    ok(ret == TRUE, "EM_SETCUEBANNER should have returned TRUE.\n");
+    memset(getcuetestW, 0, lstrlenW(testcmp1W)*sizeof(WCHAR));
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, (LPARAM)lstrlenW(testcmp1W)+1);
+    ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
+    ok(lstrcmpW(getcuetestW, testcmp1W) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
+    memset(getcuetestW, 0, lstrlenW(testcmp1W)*sizeof(WCHAR));
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, (LPARAM)lstrlenW(testcmp1W));
+    ok(lstrcmpW(getcuetestW, testcmp2W) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
+    DestroyWindow(hwnd_edit);
+
+    /* setting cue banner fails for multi-line edit controls */
+    hwnd_edit = create_editcontrolW(ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE, 0);
+    lstrcpyW(getcuetestW, testcmp1W);
+    ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
+    ok(ret == FALSE, "EM_SETCUEBANNER.\n");
+    ok(lstrcmpW(getcuetestW, testcmp1W) == 0, "String was %s.\n", wine_dbgstr_w(getcuetestW));
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)getcuetestW);
+    ok(ret == FALSE, "EM_SETCUEBANNER.\n");
+
+    DestroyWindow(hwnd_edit);
+}
 
 static void test_change_focus(void)
 {
@@ -3138,6 +3215,7 @@ START_TEST(edit)
     test_EM_GETLINE();
     test_wordbreak_proc();
     test_change_focus();
+    test_cue_banner();
 
     UnregisterWindowClasses();
 

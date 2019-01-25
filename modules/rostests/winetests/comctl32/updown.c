@@ -697,13 +697,13 @@ static void test_updown_base(void)
     r = SendMessageA(updown, UDM_SETPOS, 0, 10);
     expect(50, r);
 
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     ok(lstrcmpA(text, "10") == 0, "Expected '10', got '%s'\n", text);
 
     r = SendMessageA(updown, UDM_SETBASE, 16, 0);
     expect(10, r);
 
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     /* FIXME: currently hex output isn't properly formatted, but for this
        test only change from initial text matters */
     ok(lstrcmpA(text, "10") != 0, "Expected '0x000A', got '%s'\n", text);
@@ -837,20 +837,20 @@ static void test_UDS_SETBUDDYINT(void)
     style = GetWindowLongA(updown, GWL_STYLE);
     ok(style & UDS_SETBUDDYINT, "Expected UDS_SETBUDDY to be set\n");
     SendMessageA(updown, UDM_SETPOS, 0, 20);
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     ok(lstrlenA(text) == 0, "Expected empty string\n");
     DestroyWindow(updown);
 
     /* creating with UDS_SETBUDDYINT */
     updown = create_updown_control(UDS_SETBUDDYINT | UDS_ALIGNRIGHT, g_edit);
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     /* 50 is initial value here */
     ok(lstrcmpA(text, "50") == 0, "Expected '50', got '%s'\n", text);
     /* now remove style flag */
     style = GetWindowLongA(updown, GWL_STYLE);
     SetWindowLongA(updown, GWL_STYLE, style & ~UDS_SETBUDDYINT);
     SendMessageA(updown, UDM_SETPOS, 0, 20);
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     ok(lstrcmpA(text, "20") == 0, "Expected '20', got '%s'\n", text);
     /* set edit text directly, check position */
     strcpy(text, "10");
@@ -872,7 +872,7 @@ static void test_UDS_SETBUDDYINT(void)
     style = GetWindowLongA(updown, GWL_STYLE);
     SetWindowLongA(updown, GWL_STYLE, style | UDS_SETBUDDYINT);
     SendMessageA(updown, UDM_SETPOS, 0, 30);
-    GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
+    GetWindowTextA(g_edit, text, ARRAY_SIZE(text));
     ok(lstrcmpA(text, "30") == 0, "Expected '30', got '%s'\n", text);
     DestroyWindow(updown);
 }

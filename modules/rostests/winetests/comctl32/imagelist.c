@@ -922,7 +922,6 @@ static void check_ilhead_data(const ILHEAD *ilh, INT cx, INT cy, INT cur, INT ma
     }
     else
     {
-        grow = (WORD)(grow + 3) & ~3;
         ok(ilh->cMaxImage == max, "wrong cMaxImage %d (expected %d)\n", ilh->cMaxImage, max);
         ok(ilh->cGrow == grow_aligned, "Unexpected cGrow %d, expected %d\n", ilh->cGrow, grow_aligned);
     }
@@ -1100,7 +1099,7 @@ static void image_list_init(HIMAGELIST himl, INT grow)
 
     check_iml_data(himl, BMP_CX, BMP_CX, 0, 2, grow, ILC_COLOR24, "total 0");
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         image_list_add_bitmap(himl, td[i].grey, i + 1);
         check_iml_data(himl, td[i].cx, td[i].cy, td[i].cur, td[i].max, grow, td[i].bpp, td[i].comment);
@@ -2029,7 +2028,11 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
 {
     IMAGEINFO info;
     INT ret;
+#ifdef __REACTOS__
     char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
+#else
+    char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     int i, depth = ilc & 0xfe;
 
@@ -2061,7 +2064,11 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
 
 static void get_default_color_table(HDC hdc, int bpp, RGBQUAD *table)
 {
+#ifdef __REACTOS__
     char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
+#else
+    char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     HBITMAP tmp;
     int i;
@@ -2109,7 +2116,11 @@ static void test_color_table(UINT ilc)
 {
     HIMAGELIST himl;
     INT ret;
+#ifdef __REACTOS__
     char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
+#else
+    char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
+#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     HDC hdc = CreateCompatibleDC(0);
     HBITMAP dib4, dib8, dib32;

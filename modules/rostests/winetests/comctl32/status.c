@@ -127,7 +127,7 @@ static int CALLBACK check_height_font_enumproc(ENUMLOGFONTEXA *enumlf, NEWTEXTME
     if (type != TRUETYPE_FONTTYPE)
         facename = enumlf->elfLogFont.lfFaceName;
 
-    for (i = 0; i < sizeof(sizes)/sizeof(sizes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(sizes); i++)
     {
         HFONT hFont;
         TEXTMETRICA tm;
@@ -586,6 +586,131 @@ static void test_notify(void)
     ok(g_got_contextmenu, "WM_RBUTTONUP did not activate the context menu!\n");
 }
 
+static void test_sizegrip(void)
+{
+    HWND hwndStatus;
+    LONG style;
+    RECT rc, rcClient;
+    POINT pt;
+    int width, r;
+
+    hwndStatus = CreateWindowA(SUBCLASS_NAME, "", WS_CHILD|WS_VISIBLE|SBARS_SIZEGRIP,
+      0, 0, 100, 100, g_hMainWnd, NULL, NULL, NULL);
+
+    style = GetWindowLongPtrA(g_hMainWnd, GWL_STYLE);
+    width = GetSystemMetrics(SM_CXVSCROLL);
+
+    GetClientRect(hwndStatus, &rcClient);
+
+    pt.x = rcClient.right;
+    pt.y = rcClient.top;
+    ClientToScreen(hwndStatus, &pt);
+    rc.left = pt.x - width;
+    rc.right = pt.x;
+    rc.top = pt.y;
+
+    pt.y = rcClient.bottom;
+    ClientToScreen(hwndStatus, &pt);
+    rc.bottom = pt.y;
+
+    /* check bounds when not maximized */
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top));
+    expect(HTBOTTOMRIGHT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left - 1, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top - 1));
+    expect(HTBOTTOMRIGHT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom));
+    expect(HTBOTTOMRIGHT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right + 1, rc.bottom));
+    expect(HTBOTTOMRIGHT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom + 1));
+    expect(HTBOTTOMRIGHT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right - 1, rc.bottom - 1));
+    expect(HTBOTTOMRIGHT, r);
+
+    /* not maximized and right-to-left */
+    SetWindowLongA(hwndStatus, GWL_EXSTYLE, WS_EX_LAYOUTRTL);
+
+    pt.x = rcClient.right;
+    ClientToScreen(hwndStatus, &pt);
+    rc.left = pt.x + width;
+    rc.right = pt.x;
+
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top));
+    expect(HTBOTTOMLEFT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left + 1, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top - 1));
+    expect(HTBOTTOMLEFT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom));
+    expect(HTBOTTOMLEFT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right - 1, rc.bottom));
+    expect(HTBOTTOMLEFT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom + 1));
+    expect(HTBOTTOMLEFT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right + 1, rc.bottom - 1));
+    expect(HTBOTTOMLEFT, r);
+
+    /* maximize with left-to-right */
+    SetWindowLongA(g_hMainWnd, GWL_STYLE, style|WS_MAXIMIZE);
+    SetWindowLongA(hwndStatus, GWL_EXSTYLE, 0);
+
+    GetClientRect(hwndStatus, &rcClient);
+
+    pt.x = rcClient.right;
+    pt.y = rcClient.top;
+    ClientToScreen(hwndStatus, &pt);
+    rc.left = pt.x - width;
+    rc.right = pt.x;
+    rc.top = pt.y;
+
+    pt.y = rcClient.bottom;
+    ClientToScreen(hwndStatus, &pt);
+    rc.bottom = pt.y;
+
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left - 1, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top - 1));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right + 1, rc.bottom));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom + 1));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right - 1, rc.bottom - 1));
+    expect(HTCLIENT, r);
+
+    /* maximized with right-to-left */
+    SetWindowLongA(hwndStatus, GWL_EXSTYLE, WS_EX_LAYOUTRTL);
+
+    pt.x = rcClient.right;
+    ClientToScreen(hwndStatus, &pt);
+    rc.left = pt.x + width;
+    rc.right = pt.x;
+
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left + 1, rc.top));
+    expect(HTCLIENT, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.left, rc.top - 1));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right - 1, rc.bottom));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right, rc.bottom + 1));
+    expect(HTNOWHERE, r);
+    r = SendMessageA(hwndStatus, WM_NCHITTEST, 0, MAKELPARAM(rc.right + 1, rc.bottom - 1));
+    expect(HTCLIENT, r);
+
+    SetWindowLongA(g_hMainWnd, GWL_STYLE, style);
+    DestroyWindow(hwndStatus);
+}
+
 static void init_functions(void)
 {
     HMODULE hComCtl32 = LoadLibraryA("comctl32.dll");
@@ -620,4 +745,5 @@ START_TEST(status)
     test_status_ownerdraw();
     test_gettext();
     test_notify();
+    test_sizegrip();
 }

@@ -828,7 +828,7 @@ static DWORD resize_numtests = 0;
         RECT r; \
         int value; \
         const rbresize_test_result_t *res = &resize_results[resize_numtests++]; \
-        assert(resize_numtests <= sizeof(resize_results)/sizeof(resize_results[0])); \
+        assert(resize_numtests <= ARRAY_SIZE(resize_results)); \
         GetWindowRect(hRebar, &r); \
         MapWindowPoints(HWND_DESKTOP, hMainWnd, (LPPOINT)&r, 2); \
         if ((dwStyles[i] & (CCS_NOPARENTALIGN|CCS_NODIVIDER)) == CCS_NOPARENTALIGN) {\
@@ -855,7 +855,7 @@ static void test_resize(void)
         CCS_TOP | WS_BORDER, CCS_NOPARENTALIGN | CCS_NODIVIDER | WS_BORDER, CCS_NORESIZE | WS_BORDER,
         CCS_NOMOVEY | WS_BORDER};
 
-    const int styles_count = sizeof(dwStyles) / sizeof(dwStyles[0]);
+    const int styles_count = ARRAY_SIZE(dwStyles);
     int i;
 
     for (i = 0; i < styles_count; i++)
