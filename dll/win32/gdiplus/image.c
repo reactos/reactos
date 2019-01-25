@@ -3955,6 +3955,39 @@ static GpStatus decode_image_jpeg(IStream* stream, GpImage **image)
     return decode_image_wic(stream, &GUID_ContainerFormatJpeg, NULL, image);
 }
 
+static BOOL has_png_transparency_chunk(IStream *pIStream)
+{
+    LARGE_INTEGER seek;
+    BOOL has_tRNS = FALSE;
+    HRESULT hr;
+    BYTE header[8];
+
+    seek.QuadPart = 8;
+    do
+    {
+        ULARGE_INTEGER chunk_start;
+        ULONG bytesread, chunk_size;
+
+        hr = IStream_Seek(pIStream, seek, STREAM_SEEK_SET, &chunk_start);
+        if (FAILED(hr)) break;
+
+        hr = IStream_Read(pIStream, header, 8, &bytesread);
+        if (FAILED(hr) || bytesread < 8) break;
+
+        chunk_size = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+        if (!memcmp(&header[4], "tRNS", 4))
+        {
+            has_tRNS = TRUE;
+            break;
+        }
+
+        seek.QuadPart = chunk_start.QuadPart + chunk_size + 12; /* skip data and CRC */
+    } while (memcmp(&header[4], "IDAT", 4) && memcmp(&header[4], "IEND", 4));
+
+    TRACE("has_tRNS = %d\n", has_tRNS);
+    return has_tRNS;
+}
+
 static GpStatus decode_image_png(IStream* stream, GpImage **image)
 {
     IWICBitmapDecoder *decoder;
@@ -3976,6 +4009,14 @@ static GpStatus decode_image_png(IStream* stream, GpImage **image)
         {
             if (IsEqualGUID(&format, &GUID_WICPixelFormat8bppGray))
                 force_conversion = TRUE;
+            else if ((IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed) ||
+                      IsEqualGUID(&format, &GUID_WICPixelFormat4bppIndexed) ||
+                      IsEqualGUID(&format, &GUID_WICPixelFormat2bppIndexed) ||
+                      IsEqualGUID(&format, &GUID_WICPixelFormat1bppIndexed) ||
+                      IsEqualGUID(&format, &GUID_WICPixelFormat24bppBGR)) &&
+                     has_png_transparency_chunk(stream))
+                force_conversion = TRUE;
+
             status = decode_frame_wic(decoder, force_conversion, 0, png_metadata_reader, image);
         }
         else

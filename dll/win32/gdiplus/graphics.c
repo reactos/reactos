@@ -5434,7 +5434,7 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
     RectF scaled_rect;
     REAL margin_x;
 
-    TRACE("(%p %s %d %p %s %p %d %p)\n", graphics, debugstr_w(string),
+    TRACE("(%p %s %d %p %s %p %d %p)\n", graphics, debugstr_wn(string, length),
             length, font, debugstr_rectf(layoutRect), stringFormat, regionCount, regions);
 
     if (!(graphics && string && font && layoutRect && stringFormat && regions))
