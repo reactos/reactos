@@ -25,6 +25,11 @@ static FAST_IO_DISPATCH TestFastIoDispatch;
 static UNICODE_STRING InitOnCreate = RTL_CONSTANT_STRING(L"\\InitOnCreate");
 static UNICODE_STRING InitOnRW = RTL_CONSTANT_STRING(L"\\InitOnRW");
 static UNICODE_STRING InvalidInit = RTL_CONSTANT_STRING(L"\\InvalidInit");
+/*
+static UNICODE_STRING MmSection_txt = RTL_CONSTANT_STRING(L"\\MmSection.txt");
+static UNICODE_STRING MmSection_dll = RTL_CONSTANT_STRING(L"\\MmSection.dll");
+*/
+
 
 static
 BOOLEAN
