@@ -41,8 +41,8 @@ static const WCHAR quote[] = {'\"',0};
 
 static BOOL get_temp_ini_path(LPWSTR name)
 {
+    static const WCHAR prefix[] = {'a','v','p',0};
     WCHAR tmp_dir[MAX_PATH];
-    WCHAR prefix[] = {'a','v','p',0};
 
     if(!GetTempPathW(ARRAY_SIZE(tmp_dir), tmp_dir))
        return FALSE;
