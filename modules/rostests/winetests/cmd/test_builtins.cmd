@@ -179,6 +179,8 @@ if exist foo (type foo) else echo not supported
 echo --- redirections within IF statements
 if 1==1 echo foo1>bar
 type bar & del bar
+if 1==1 echo foo2>>bar
+type bar & del bar
 echo -----
 if 1==1 (echo foo2>bar) else echo baz2>bar
 type bar & del bar
@@ -418,6 +420,7 @@ if 1==1 (echo n1) else echo n2|echo n3
 if 1==1 (echo o1) else echo o2&&echo o3
 if 1==1 (echo p1) else echo p2||echo p3
 if 1==1 (echo q1) else echo q2&echo q3
+echo ---
 echo --- chain else (if false)
 if 1==0 echo a1 else echo a2
 if 1==0 echo b1|echo b2 else echo b3
@@ -506,6 +509,65 @@ rem Only the final quote ends the string
 set "WINE_FOO=apple"banana"grape"orange
 echo '%WINE_FOO%'
 set WINE_FOO=
+rem set PATH must work with quotes
+set PATH_BACKUP=%PATH%
+mkdir folder
+mkdir "fol;der"
+echo echo I'm here! > "fol;der\sub1.bat"
+echo echo I'm here! > folder\sub1.bat
+set PATH=nothing;"fol;der"
+call sub1
+set PATH="folder
+call sub1
+set PATH=folder"
+call sub1
+del "fol;der\sub1.bat"
+del folder\sub1.bat
+rmdir "fol;der"
+rmdir folder
+PATH=%PATH_BACKUP%
+
+echo ------------ Testing 'choice' ------------
+
+rem Windows XP and Windows 2000 do not come with choice
+rem echo is used for @or_broken@ formatting
+choice /C:ABC /M "Example message" /D A /T:0
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+choice /C ABC "/M:Example message" /D:B /T 0
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+choice /C def /D:f /T:0
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+REM If a pipe fails due to a nonexistent command
+REM it will stop the whole program's execution
+if %ERRORLEVEL% NEQ 9009 (
+  echo Y | choice /C ABCXYZ /D A /T 2
+)
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+choice /C ABC /N /D A /T 0
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+choice /C abcABC /CS /D:A /T:0
+if %ERRORLEVEL% EQU 9009 (
+  echo choice unavailable
+)
+echo %ERRORLEVEL%
+rem intentional error
+choice /C abcABC /D:A /T:0 >NUL 2>NUL
+echo %ERRORLEVEL%
 
 echo ------------ Testing variable expansion ------------
 call :setError 0
@@ -666,6 +728,15 @@ goto :eof
 echo '%~xs1'
 goto :eof
 :endEchoFuns
+
+echo ------------ Testing parameter zero ------------
+call :func parm1 parm2
+goto :endParm0
+:func
+echo %~0 %~1
+echo [%0] [%~d0] [%~p0] [%~n0] [%~x0] [%~s0]
+goto :EOF
+:endParm0
 
 echo ------------ Testing variable delayed expansion ------------
 rem NT4 doesn't support this
@@ -907,6 +978,13 @@ if %elseIF% == 1 (
 ) else (
   echo else if seems to be broken
 )
+if "x" == "a" (
+  echo broken1
+) else (
+  echo expected1
+  if "y" == "b" echo broken2
+  echo expected post-embedded if
+)
 echo --- case sensitivity with and without /i option
 if bar==BAR echo if does not default to case sensitivity
 if not bar==BAR echo if seems to default to case sensitivity
@@ -979,6 +1057,69 @@ for %%i in (%WINE_STR_PARMS%) do (
 for %%i in (%WINE_STR_PARMS%) do (
     for %%j in (%WINE_STR_PARMS%) do (
         call :GTRtest %%i %%j))
+
+echo ------------ Testing if/exist ------------
+mkdir subdir
+echo something>subdir\bar
+echo something else>foo
+if exist foo (
+   echo exist explicit works
+) else (
+   echo ERROR exist explicit broken
+)
+if exist bar (
+   echo ERROR exist explicit unknown file broken
+) else (
+   echo exist explicit unknown file works
+)
+if exist subdir\bar (
+   echo exist explicit in subdir works
+) else (
+   echo ERROR exist explicit in subdir broken
+)
+if exist fo* (
+   echo exist simple wildcard works
+) else (
+   echo ERROR exist simple wildcard broken
+)
+if exist subdir\ba* (
+   echo exist wildcard works
+) else (
+   echo ERROR exist wildcard broken
+)
+if not exist subdir\ba* (
+   echo ERROR negate exist wildcard broken
+) else (
+   echo negate exist wildcard works
+)
+if exist idontexist\ba* (
+   echo ERROR exist wildcard bad subdir broken
+) else (
+   echo exist wildcard bad subdir broken works
+)
+if exist subdir (
+   echo exist subdir ok
+) else (
+   echo ERROR exist subdir not working
+)
+if exist subdir\. (
+   echo exist subdir with . ok
+) else (
+   echo ERROR exist subdir with . not working
+)
+if exist subdir\ (
+   echo exist subdir with \ ok
+) else (
+   echo ERROR exist subdir with \ not working
+)
+if exist "subdir\" (
+   echo exist subdir with \ and quotes ok
+) else (
+   echo ERROR exist subdir with \ and quotes not working
+)
+del foo subdir\bar
+rd subdir
+
 echo ------ for numbers
 if -1 LSS 1 (echo negative numbers handled)
 if not -1 LSS -10 (echo negative numbers handled)
@@ -1112,9 +1253,16 @@ mkdir foobar & cd foobar
 mkdir foo
 mkdir bar
 mkdir baz
+mkdir pop
 echo > bazbaz
 echo --- basic wildcards
 for %%i in (ba*) do echo %%i
+echo --- wildcards in subdirs
+echo something>pop\bar1
+echo something>pop\bar2.txt
+echo something>pop\bar3
+for %%f in (pop\ba*) do ( call echo %%f )
+rmdir /s/q pop
 echo --- for /d
 for /d %%i in (baz foo bar) do echo %%i 2>&1
 rem Confirm we don't match files:
@@ -1320,6 +1468,45 @@ rem Test zero iteration skips the body of the for
 for /L %%i in (2,2,1) do (
   echo %%i
   echo FAILED
+)
+echo --- rems inside for loops
+for /f %%i IN ("hello") DO (
+   REM foo|echo ERROR unexpected execution 1
+   @REM foo|echo ERROR unexpected execution 2
+   @     REM foo|echo ERROR unexpected execution 3
+)
+echo --- ifs inside for loops
+for %%i in (test) do (
+    echo a1
+    if 1==1 (
+        echo b1
+    ) else (
+        echo c1
+    )
+    echo d1
+)
+for %%i in (test) do (
+    echo a2
+    if 1==1 (
+        echo b2
+    ) else echo c2
+    echo d2
+)
+for %%i in (test) do (
+    echo a3
+    if 1==0 (
+        echo b3
+    ) else echo c3
+    echo d3
+)
+for %%i in (test) do (
+    echo a4
+    if 1==0 (
+        echo b4
+    ) else (
+        echo c4
+    )
+    echo d4
 )
 echo --- set /a
 goto :testseta
@@ -1563,7 +1750,10 @@ mkdir foobar & cd foobar
 echo ------ string argument
 rem NT4 does not support usebackq
 for /F %%i in ("a b c") do echo %%i
+for /F %%i in (  "a b c"    ) do echo X%%iX
 for /f usebackq %%i in ('a b c') do echo %%i>output_file
+if not exist output_file (echo no output) else (type output_file & del output_file)
+for /f usebackq %%i in (   'a b c'   ) do echo X%%iX>output_file
 if not exist output_file (echo no output) else (type output_file & del output_file)
 for /f %%i in ("a ") do echo %%i
 for /f usebackq %%i in ('a ') do echo %%i>output_file
@@ -1614,9 +1804,13 @@ if "%CD%"=="" goto :SkipFORFcmdNT4
 for /f %%i in ('echo.Passed1') do echo %%i
 for /f "usebackq" %%i in (`echo.Passed2`) do echo %%i
 for /f usebackq %%i in (`echo.Passed3`) do echo %%i
+for /f "usebackq" %%i in (`"c:\windows\system32\cmd.exe" /C echo Passed4`) do echo %%i
+for /f "usebackq" %%i in (`""c:\windows\system32\cmd.exe" /C echo Passed5"`) do echo %%i
+for /f %%i in (  'echo.Passed6'  ) do echo %%i
+for /f "usebackq" %%i in (   `echo.Passed7` ) do echo %%i
 goto :ContinueFORF
 :SkipFORFcmdNT4
-for /l %%i in (1,1,3) do echo Missing functionality - Broken%%i
+for /l %%i in (1,1,7) do echo Missing functionality - Broken%%i
 :ContinueFORF
 rem FIXME: Rest not testable right now in wine: not implemented and would need
 rem preliminary grep-like program implementation (e.g. like findstr or fc) even
@@ -1694,6 +1888,13 @@ for /f "tokens=1,2,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k 
 for /f "tokens=1,1,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o
 for /f "tokens=2,2,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o
 for /f "tokens=3,2,3*" %%i in ("a b c d e f g") do echo h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o
+rem Special case tokens=* or tokens=n,*
+echo 3.14>testfile
+FOR /F "tokens=*"  %%A IN (testfile) DO @echo 1:%%A,%%B
+FOR /F "tokens=1*" %%A IN (testfile) DO @echo 2:%%A,%%B
+FOR /F "tokens=2*" %%A IN (testfile) DO @echo 3:%%A,%%B
+FOR /F "tokens=1,* delims=." %%A IN (testfile) DO @echo 4:%%A,%%B
+del testfile
 cd ..
 rd /s/q foobar
 echo ------ parameter splitting
@@ -1706,6 +1907,12 @@ goto :forFParameterSplittingEnd
 echo %~0 %~1 %~2 %~3 %~4 %~5
 goto :eof
 :forFParameterSplittingEnd
+echo 3.14>testfile
+FOR /F "delims=. tokens=*"  %%A IN (testfile) DO @echo 4:%%A,%%B
+FOR /F "delims=. tokens=1*" %%A IN (testfile) DO @echo 5:%%A,%%B
+FOR /F "delims=. tokens=2*" %%A IN (testfile) DO @echo 6:%%A,%%B
+FOR /F "delims=. tokens=3*" %%A IN (testfile) DO @echo 7:%%A,%%B
+del testfile
 
 echo ------------ Testing del ------------
 echo abc > file
@@ -2977,6 +3184,57 @@ echo FAILURE at dest 10
 :dest10:this is also ignored
 echo Correctly ignored trailing information
 
+rem Testing which label is reached when there are many options
+echo Begin:
+set nextlabel=
+call :sub
+set nextlabel=middle
+goto :sub
+
+:sub
+echo ..First sub
+if not "%nextlabel%"=="" goto :%nextlabel%
+goto :EOF
+
+:sub
+echo ..Second sub
+if not "%nextlabel%"=="" goto :%nextlabel%
+goto :EOF
+
+:middle
+echo Middle:
+set nextlabel=
+call :sub
+set nextlabel=nearend
+goto :sub
+
+:sub
+echo ..Third sub
+if not "%nextlabel%"=="" goto :%nextlabel%
+goto :EOF
+
+:nearend
+echo Near end:
+set nextlabel=
+call :sub
+set nextlabel=end
+goto :sub
+
+:sub
+echo ..Fourth sub
+if not "%nextlabel%"=="" goto :%nextlabel%
+goto :EOF
+
+:end
+echo At end:
+set nextlabel=
+call :sub
+set nextlabel=done
+goto :sub
+
+:done
+echo Finished
+
 echo ------------ Testing PATH ------------
 set WINE_backup_path=%path%
 set path=original
@@ -2987,6 +3245,45 @@ path=try3
 path
 set path=%WINE_backup_path%
 set WINE_backup_path=
+
+echo ------------ Testing start /W ------------
+echo start /W failed to wait>foobar.txt
+start /W "" cmd /C "ping -n1 & echo start /W seems to really wait>foobar.txt"& type foobar.txt& del foobar.txt
+
+echo ------------ Testing changing the drive letter ----------
+pushd C:\
+
+echo Normal:
+call :setError 0
+C:
+if errorlevel 1 echo Normal drive change failed
+
+echo Normal+space
+call :setError 0
+C:@space@
+if errorlevel 1 echo Normal+space drive change failed
+
+echo Normal+space+garbage
+call :setError 0
+C: garbage
+if errorlevel 1 echo Normal+space+garbage drive change failed
+
+call :setError 0
+echo Quoted should fail
+"C:"
+if not errorlevel 1 echo quoted drive change unexpectedly worked
+
+echo Normal+tab
+call :setError 0
+C:@tab@
+if errorlevel 1 echo Normal+tab drive change failed
+
+echo Normal+tab+garbage
+call :setError 0
+C:@tab@garbagetab
+if errorlevel 1 echo Normal+tab+garbage drive change failed
+
+popd
 
 echo ------------ Testing combined CALLs/GOTOs ------------
 echo @echo off>foo.cmd

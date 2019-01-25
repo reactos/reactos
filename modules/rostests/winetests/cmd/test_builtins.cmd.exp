@@ -205,7 +205,8 @@ food21
 @todo_wine@foo7@space@@space@@or_broken@not supported@space@
 @todo_wine@foo@or_broken@not supported
 --- redirections within IF statements
-@todo_wine@foo1
+foo1
+foo2
 -----
 foo2
 foo3
@@ -428,8 +429,9 @@ n1
 o1
 p1
 q1
+@todo_wine@---
 --- chain else (if false)
-@todo_wine@j3
+j3
 ---
 k3
 l3
@@ -474,6 +476,23 @@ foo
 'jim fred'
 'jim'
 'apple"banana"grape'
+I'm here!@space@
+I'm here!@space@
+I'm here!@space@
+------------ Testing 'choice' ------------
+@todo_wine@Example message [A,B,C]?A@or_broken@choice unavailable
+@todo_wine@1@or_broken@9009
+@todo_wine@Example message [A,B,C]?B@or_broken@choice unavailable
+@todo_wine@2@or_broken@9009
+@todo_wine@[D,E,F]?F@or_broken@choice unavailable
+@todo_wine@3@or_broken@9009
+@todo_wine@[A,B,C,X,Y,Z]?Y@or_broken@choice unavailable
+@todo_wine@5@or_broken@9009
+@todo_wine@A@or_broken@choice unavailable
+@todo_wine@1@or_broken@9009
+@todo_wine@[a,b,c,A,B,C]?A@or_broken@choice unavailable
+@todo_wine@4@or_broken@9009
+@todo_wine@255@or_broken@9009
 ------------ Testing variable expansion ------------
 ~p0 should be path containing batch file
 @path@
@@ -526,9 +545,9 @@ N
 '.OOL'
 '.TABC'
 ''
-@todo_wine@'@drive@@shortpath@R S'@or_broken@''
-@todo_wine@'@drive@@shortpath@T'@or_broken@''
-@todo_wine@'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
+'@drive@@shortpath@R S'@or_broken@''
+'@drive@@shortpath@T'@or_broken@''
+'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
 ''@or_broken@'%~ai'
 ''@or_broken@'%~ai'
 '--a------'@or_broken@'--a--------'@or_broken@'--a--c---'@or_broken@'%~ai'
@@ -562,9 +581,9 @@ N
 '.OOL'
 '.TABC'
 ''
-@todo_wine@'@drive@@shortpath@R S'@or_broken@''
-@todo_wine@'@drive@@shortpath@T'@or_broken@''
-@todo_wine@'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
+'@drive@@shortpath@R S'@or_broken@''
+'@drive@@shortpath@T'@or_broken@''
+'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
 @drive@@path@
 @drive@@path@
 @drive@
@@ -573,6 +592,9 @@ N
 @drive@
 ''
 '.eh'@or_broken@''
+------------ Testing parameter zero ------------
+:func parm1
+[:func] [@drive@] [@path@] [test] [.cmd] [@drive@@shortpath@test.cmd]
 ------------ Testing variable delayed expansion ------------
 --- default mode (load-time expansion)
 foo
@@ -657,6 +679,8 @@ if seems not to detect /c as parameter
 else if seems to work
 else if seems to work
 else if seems to work
+expected1
+expected post-embedded if
 --- case sensitivity with and without /i option
 if seems to default to case sensitivity
 if /i seems to work
@@ -768,6 +792,18 @@ BA GTR B
 BA GTR AB
 BA GTR AA
 AA GTR A
+------------ Testing if/exist ------------
+exist explicit works
+exist explicit unknown file works
+exist explicit in subdir works
+exist simple wildcard works
+exist wildcard works
+negate exist wildcard works
+exist wildcard bad subdir broken works
+exist subdir ok
+exist subdir with . ok
+exist subdir with \ ok
+exist subdir with \ and quotes ok
 ------ for numbers
 negative numbers handled
 negative numbers handled
@@ -909,6 +945,10 @@ B C
 B D
 --- basic wildcards
 bazbaz
+--- wildcards in subdirs
+pop\bar1@space@
+pop\bar2.txt@space@
+pop\bar3@space@
 --- for /d
 baz@space@
 foo@space@
@@ -970,6 +1010,20 @@ ErrorLevel 0
 -1
 1
 3
+--- rems inside for loops
+--- ifs inside for loops
+a1
+b1
+d1
+a2
+b2
+d2
+a3
+c3
+d3
+a4
+c4
+d4
 --- set /a
 ------ individual operations
 WINE_foo correctly 3
@@ -1141,7 +1195,9 @@ WINE_bar correctly 6@or_broken@ERROR: WINE_bar incorrectly 5 [6]
 --- for /F
 ------ string argument
 a
+XaX
 a@or_broken@no output
+XaX@or_broken@no output
 a
 a@or_broken@no output
 a
@@ -1177,6 +1233,10 @@ c
 Passed1@or_broken@Missing functionality - Broken1
 Passed2@or_broken@Missing functionality - Broken2
 Passed3@or_broken@Missing functionality - Broken3
+Passed4@or_broken@Missing functionality - Broken4
+Passed5@or_broken@Missing functionality - Broken5
+Passed6@or_broken@Missing functionality - Broken6
+Passed7@or_broken@Missing functionality - Broken7
 ------ eol option
 and@or_broken@Broken NT4 functionality1
 Line@or_broken@Broken NT4 functionality2
@@ -1222,9 +1282,15 @@ h=%h i=a j=b k=c l=d e f g m=%m n=%n o=%o@or_broken@h=%h i=a j=b k=c l=d e f g m
 h=%h i=a j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=a j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
 h=%h i=b j=c k= l= m=%m n=%n o=%o@or_broken@h=%h i=b j=c k= l= m= n=%n o=%o
+1:3.14,%B
+2:3.14,
+4:3,14
 ------ parameter splitting
 :forFParameterSplittingFunc myparam1=myvalue1 myparam2=myparam2 mytest@space@@space@@space@
 :forFParameterSplittingFunc myparam1=myvalue1 myparam2=myparam2 mytest@space@@space@@space@
+4:3.14,%B
+5:3,14
+6:14,
 ------------ Testing del ------------
 deleting 'file'
 errorlevel is 0, good
@@ -1340,22 +1406,22 @@ bar\baz removed
 @drive@@path@foobar
 @pwd@
 ------------ Testing attrib ------------
-A            @drive@@path@foobar\foo@or_broken@A          @drive@@path@foobar\foo@or_broken@A       I    @drive@@path@foobar\foo
+A@spaces@@drive@@path@foobar\foo@or_broken@A       I@spaces@@drive@@path@foobar\foo
 --- read-only attribute
-A    R       @drive@@path@foobar\foo@or_broken@A    R     @drive@@path@foobar\foo@or_broken@A    R  I    @drive@@path@foobar\foo
+A    R@spaces@@drive@@path@foobar\foo@or_broken@A    R  I@spaces@@drive@@path@foobar\foo
 foo
 foo original contents
 Read-only file not deleted
 Read-only file forcibly deleted
 --- recursive behaviour
-A            @drive@@path@foobar\baz\level2@or_broken@A          @drive@@path@foobar\baz\level2@or_broken@A       I    @drive@@path@foobar\baz\level2
-A    R       @drive@@path@foobar\level1@or_broken@A    R     @drive@@path@foobar\level1@or_broken@A    R  I    @drive@@path@foobar\level1
-A    R       @drive@@path@foobar\baz\level2@or_broken@A    R     @drive@@path@foobar\baz\level2@or_broken@A    R  I    @drive@@path@foobar\baz\level2
-A            @drive@@path@foobar\bar@or_broken@A          @drive@@path@foobar\bar@or_broken@A       I    @drive@@path@foobar\bar
+A@spaces@@drive@@path@foobar\baz\level2@or_broken@A       I@spaces@@drive@@path@foobar\baz\level2
+A    R@spaces@@drive@@path@foobar\level1@or_broken@A    R  I@spaces@@drive@@path@foobar\level1
+A    R@spaces@@drive@@path@foobar\baz\level2@or_broken@A    R  I@spaces@@drive@@path@foobar\baz\level2
+A@spaces@@drive@@path@foobar\bar@or_broken@A       I@spaces@@drive@@path@foobar\bar
 --- folders processing
-             @drive@@path@foobar@or_broken@           @drive@@path@foobar@or_broken@        I    @drive@@path@foobar
-@todo_wine@     R       @drive@@path@foobar\baz@or_broken@     R     @drive@@path@foobar\baz@or_broken@           @drive@@path@foobar\baz@or_broken@     R  I    @drive@@path@foobar\baz
-A            @drive@@path@foobar\baz\toto@or_broken@A          @drive@@path@foobar\baz\toto@or_broken@A       I    @drive@@path@foobar\baz\toto
+@spaces@@drive@@path@foobar@or_broken@        I@spaces@@drive@@path@foobar
+@todo_wine@     R@spaces@@drive@@path@foobar\baz@or_broken@@spaces@@drive@@path@foobar\baz@or_broken@     R  I@spaces@@drive@@path@foobar\baz
+A@spaces@@drive@@path@foobar\baz\toto@or_broken@A       I@spaces@@drive@@path@foobar\baz\toto
 toto
 lulu
 file created in read-only dir
@@ -1570,10 +1636,32 @@ goto with redirections worked
 Ignoring double colons worked
 label with mixed whitespace and no echo worked
 Correctly ignored trailing information
+Begin:
+..First sub
+..First sub
+Middle:
+..Third sub
+..Third sub
+Near end:
+..Fourth sub
+..Fourth sub
+At end:
+..First sub
+..First sub
+Finished
 ------------ Testing PATH ------------
 PATH=original
 PATH=try2
 PATH=try3
+------------ Testing start /W ------------
+start /W seems to really wait
+------------ Testing changing the drive letter ----------
+Normal:
+Normal+space
+Normal+space+garbage
+Quoted should fail
+Normal+tab
+Normal+tab+garbage
 ------------ Testing combined CALLs/GOTOs ------------
 world
 cheball
