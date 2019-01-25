@@ -426,7 +426,7 @@ static void fill_filename_from_selection(FileDialogImpl *This)
                 (!(This->options & FOS_PICKFOLDERS) &&  (attr & SFGAO_FOLDER))))
                 continue;
 
-            hr = IShellItem_GetDisplayName(psi, SIGDN_PARENTRELATIVEPARSING, &names[valid_count]);
+            hr = IShellItem_GetDisplayName(psi, (This->options & FOS_PICKFOLDERS) ? SIGDN_FILESYSPATH : SIGDN_PARENTRELATIVEPARSING, &names[valid_count]);
             if(SUCCEEDED(hr))
             {
                 len_total += lstrlenW(names[valid_count]) + 3;

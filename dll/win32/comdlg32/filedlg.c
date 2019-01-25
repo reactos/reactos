@@ -661,7 +661,7 @@ void COMDLG32_GetCanonicalPath(PCIDLIST_ABSOLUTE pidlAbsCurrent,
   }
   PathAddBackslashW(lpstrPathAndFile);
 
-  TRACE("current directory=%s\n", debugstr_w(lpstrPathAndFile));
+  TRACE("current directory=%s, file=%s\n", debugstr_w(lpstrPathAndFile), debugstr_w(lpstrFile));
 
   /* if the user specified a fully qualified path use it */
   if(PathIsRelativeW(lpstrFile))

@@ -2618,9 +2618,9 @@ static WCHAR get_decimal_sep(void)
 
 static void size2str(const pagesetup_data *data, DWORD size, LPWSTR strout)
 {
-    WCHAR integer_fmt[] = {'%','d',0};
-    WCHAR hundredths_fmt[] = {'%','d','%','c','%','0','2','d',0};
-    WCHAR thousandths_fmt[] = {'%','d','%','c','%','0','3','d',0};
+    static const WCHAR integer_fmt[] = {'%','d',0};
+    static const WCHAR hundredths_fmt[] = {'%','d','%','c','%','0','2','d',0};
+    static const WCHAR thousandths_fmt[] = {'%','d','%','c','%','0','3','d',0};
 
     /* FIXME use LOCALE_SDECIMAL when the edit parsing code can cope */
 
