@@ -304,8 +304,8 @@ static void test_typelib(void)
     FreeLibrary(inst);
 
     len = SysStringLen(path);
-    ok(len > sizeof(scrrun_dll_suffixW)/sizeof(WCHAR)
-       && lstrcmpiW(path+len-sizeof(scrrun_dll_suffixW)/sizeof(WCHAR), scrrun_dll_suffixW),
+    ok(len > ARRAY_SIZE(scrrun_dll_suffixW)
+       && lstrcmpiW(path+len-ARRAY_SIZE(scrrun_dll_suffixW), scrrun_dll_suffixW),
        "unexpected path %s\n", wine_dbgstr_w(path));
     SysFreeString(path);
     ok(typelib != NULL, "typelib == NULL\n");
@@ -320,8 +320,8 @@ static void test_typelib(void)
     FreeLibrary(inst);
 
     len = SysStringLen(path);
-    ok(len > sizeof(mshtml_tlb_suffixW)/sizeof(WCHAR)
-       && lstrcmpiW(path+len-sizeof(mshtml_tlb_suffixW)/sizeof(WCHAR), mshtml_tlb_suffixW),
+    ok(len > ARRAY_SIZE(mshtml_tlb_suffixW)
+       && lstrcmpiW(path+len-ARRAY_SIZE(mshtml_tlb_suffixW), mshtml_tlb_suffixW),
        "unexpected path %s\n", wine_dbgstr_w(path));
     SysFreeString(path);
     ok(typelib != NULL, "typelib == NULL\n");
@@ -964,6 +964,8 @@ static void test_AtlAxCreateControl(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(container != NULL, "returned %p!\n", container);
     ok(control != NULL, "returned %p\n", control);
+    IUnknown_Release(container);
+    IUnknown_Release(control);
     DestroyWindow(hwnd);
 
     container = NULL;
