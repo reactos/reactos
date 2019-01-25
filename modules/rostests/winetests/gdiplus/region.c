@@ -814,7 +814,8 @@ static void test_isinfinite(void)
 
     status = GdipCreateFromHDC(hdc, &graphics);
     expect(Ok, status);
-    GdipCreateRegion(&region);
+    status = GdipCreateRegion(&region);
+    expect(Ok, status);
 
     GdipCreateMatrix2(3.0, 0.0, 0.0, 1.0, 20.0, 30.0, &m);
 
@@ -860,7 +861,8 @@ static void test_isempty(void)
 
     status = GdipCreateFromHDC(hdc, &graphics);
     expect(Ok, status);
-    GdipCreateRegion(&region);
+    status = GdipCreateRegion(&region);
+    expect(Ok, status);
 
     /* NULL arguments */
     status = GdipIsEmptyRegion(NULL, NULL, NULL);
@@ -1779,7 +1781,8 @@ static void test_getbounds(void)
     ok(rectf.Height == 100.0, "Expected height = 0.0, got %.2f\n", rectf.Height);
 
     /* the world and page transforms are ignored */
-    GdipScaleWorldTransform(graphics, 2.0, 2.0, MatrixOrderPrepend);
+    status = GdipScaleWorldTransform(graphics, 2.0, 2.0, MatrixOrderPrepend);
+    ok(status == Ok, "status %08x\n", status);
     GdipSetPageUnit(graphics, UnitInch);
     GdipSetPageScale(graphics, 2.0);
     status = GdipGetRegionBounds(region, graphics, &rectf);

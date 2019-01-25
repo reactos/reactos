@@ -347,7 +347,8 @@ static void test_save_restore(void)
     log_state(state_a, &state_log);
 
     /* A state created by BeginContainer cannot be restored with RestoreGraphics. */
-    GdipCreateFromHDC(hdc, &graphics1);
+    stat = GdipCreateFromHDC(hdc, &graphics1);
+    expect(Ok, stat);
     GdipSetInterpolationMode(graphics1, InterpolationModeBilinear);
     stat = GdipBeginContainer2(graphics1, &state_a);
     expect(Ok, stat);
@@ -703,7 +704,8 @@ static void test_BeginContainer2(void)
     GdipGetTextContrast(graphics, &contrast);
     ok(defContrast == contrast, "Expected Text Contrast to be restored to %d, got %d\n", defContrast, contrast);
 
-    GdipGetTextRenderingHint(graphics, &texthint);
+    status = GdipGetTextRenderingHint(graphics, &texthint);
+    expect(Ok, status);
     ok(defTexthint == texthint, "Expected Text Hint to be restored to %d, got %d\n", defTexthint, texthint);
 
     /* test world transform */
@@ -722,7 +724,8 @@ static void test_BeginContainer2(void)
 
     status = GdipCreateMatrix2(10, 20, 30, 40, 50, 60, &transform);
     expect(Ok, status);
-    GdipSetWorldTransform(graphics, transform);
+    status = GdipSetWorldTransform(graphics, transform);
+    expect(Ok, status);
     GdipDeleteMatrix(transform);
     transform = NULL;
 
@@ -731,7 +734,8 @@ static void test_BeginContainer2(void)
 
     status = GdipCreateMatrix(&transform);
     expect(Ok, status);
-    GdipGetWorldTransform(graphics, transform);
+    status = GdipGetWorldTransform(graphics, transform);
+    expect(Ok, status);
     status = GdipGetMatrixElements(transform, elems);
     expect(Ok, status);
     ok(fabs(defTrans[0] - elems[0]) < 0.0001 &&
@@ -753,12 +757,14 @@ static void test_BeginContainer2(void)
     status = GdipBeginContainer2(graphics, &cont1);
     expect(Ok, status);
 
-    GdipSetClipRect(graphics, defClip[0], defClip[1], defClip[2], defClip[3], CombineModeReplace);
+    status = GdipSetClipRect(graphics, defClip[0], defClip[1], defClip[2], defClip[3], CombineModeReplace);
+    expect(Ok, status);
 
     status = GdipBeginContainer2(graphics, &cont2);
     expect(Ok, status);
 
-    GdipSetClipRect(graphics, 2, 4, 6, 8, CombineModeReplace);
+    status = GdipSetClipRect(graphics, 2, 4, 6, 8, CombineModeReplace);
+    expect(Ok, status);
 
     status = GdipEndContainer(graphics, cont2);
     expect(Ok, status);
@@ -6572,12 +6578,18 @@ static void test_GdipFillRectanglesOnBitmapTextureBrush(void)
     GdipDeleteBrush((GpBrush*)brush);
     GdipDeleteGraphics(graphics);
 
-    GdipBitmapGetPixel(dst_img.bitmap, 0, 0, &color[0]);
-    GdipBitmapGetPixel(dst_img.bitmap, 0, 1, &color[1]);
-    GdipBitmapGetPixel(dst_img.bitmap, 1, 0, &color[2]);
-    GdipBitmapGetPixel(dst_img.bitmap, width/2, 0, &color[3]);
-    GdipBitmapGetPixel(dst_img.bitmap, width/2, height/2, &color[4]);
-    GdipBitmapGetPixel(dst_img.bitmap, 0, height/2, &color[5]);
+    status = GdipBitmapGetPixel(dst_img.bitmap, 0, 0, &color[0]);
+    expect(Ok, status);
+    status = GdipBitmapGetPixel(dst_img.bitmap, 0, 1, &color[1]);
+    expect(Ok, status);
+    status = GdipBitmapGetPixel(dst_img.bitmap, 1, 0, &color[2]);
+    expect(Ok, status);
+    status = GdipBitmapGetPixel(dst_img.bitmap, width/2, 0, &color[3]);
+    expect(Ok, status);
+    status = GdipBitmapGetPixel(dst_img.bitmap, width/2, height/2, &color[4]);
+    expect(Ok, status);
+    status = GdipBitmapGetPixel(dst_img.bitmap, 0, height/2, &color[5]);
+    expect(Ok, status);
 
     ok(is_blue_color(color[0]) && is_blue_color(color[1]) && is_blue_color(color[2]) &&
        color[3] == 0 && color[4] == 0 && color[5] == 0,

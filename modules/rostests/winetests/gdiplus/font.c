@@ -159,7 +159,8 @@ static void test_createfont(void)
         expect(Ok, stat);
         GdipGetFontSize (font, &size);
         ok (size == 24, "Expected 24, got %f (with unit: %d)\n", size, i);
-        GdipGetFontUnit (font, &unit);
+        stat = GdipGetFontUnit (font, &unit);
+        ok (stat == Ok, "Failed to get font unit, %d.\n", stat);
         expect (i, unit);
         GdipDeleteFont(font);
     }
@@ -1238,6 +1239,27 @@ static void test_GdipGetFontCollectionFamilyList(void)
     GdipDeleteFontFamily(family2);
 }
 
+static void test_GdipGetFontCollectionFamilyCount(void)
+{
+    GpFontCollection *collection;
+    GpStatus status;
+    INT count;
+
+    status = GdipGetFontCollectionFamilyCount(NULL, NULL);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+
+    count = 123;
+    status = GdipGetFontCollectionFamilyCount(NULL, &count);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+    ok(count == 123, "Unexpected family count %d.\n", count);
+
+    status = GdipNewInstalledFontCollection(&collection);
+    ok(status == Ok, "Failed to get system collection, status %d.\n", status);
+
+    status = GdipGetFontCollectionFamilyCount(collection, NULL);
+    ok(status == InvalidParameter, "Unexpected status %d.\n", status);
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1269,6 +1291,7 @@ START_TEST(font)
     test_installedfonts();
     test_heightgivendpi();
     test_GdipGetFontCollectionFamilyList();
+    test_GdipGetFontCollectionFamilyCount();
 
     GdiplusShutdown(gdiplusToken);
 }
