@@ -46,6 +46,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(cryptui);
 
 static HINSTANCE hInstance;
 
+static const WCHAR empty[] = {0};
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
@@ -60,6 +62,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
     }
     return TRUE;
+}
+
+static WCHAR *strdupAtoW( const char *str )
+{
+    DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    WCHAR *ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    if (ret) MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    return ret;
 }
 
 #define MAX_STRING_LEN 512
@@ -796,8 +806,6 @@ static LRESULT CALLBACK cert_mgr_advanced_dlg_proc(HWND hwnd, UINT msg,
 
 static void cert_mgr_clear_cert_selection(HWND hwnd)
 {
-    WCHAR empty[] = { 0 };
-
     EnableWindow(GetDlgItem(hwnd, IDC_MGR_EXPORT), FALSE);
     EnableWindow(GetDlgItem(hwnd, IDC_MGR_REMOVE), FALSE);
     EnableWindow(GetDlgItem(hwnd, IDC_MGR_VIEW), FALSE);
@@ -837,10 +845,8 @@ static void show_selected_cert(HWND hwnd, int index)
     }
 }
 
-static void cert_mgr_show_cert_usages(HWND hwnd, int index)
+static void get_cert_usages(PCCERT_CONTEXT cert, LPWSTR *str)
 {
-    HWND text = GetDlgItem(hwnd, IDC_MGR_PURPOSES);
-    PCCERT_CONTEXT cert = cert_mgr_index_to_cert(hwnd, index);
     PCERT_ENHKEY_USAGE usage;
     DWORD size;
 
@@ -879,7 +885,7 @@ static void cert_mgr_show_cert_usages(HWND hwnd, int index)
         {
             static const WCHAR commaSpace[] = { ',',' ',0 };
             DWORD i, len = 1;
-            LPWSTR str, ptr;
+            LPWSTR ptr;
 
             for (i = 0; i < usage->cUsageIdentifier; i++)
             {
@@ -895,10 +901,10 @@ static void cert_mgr_show_cert_usages(HWND hwnd, int index)
                 if (i < usage->cUsageIdentifier - 1)
                     len += strlenW(commaSpace);
             }
-            str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-            if (str)
+            *str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            if (*str)
             {
-                for (i = 0, ptr = str; i < usage->cUsageIdentifier; i++)
+                for (i = 0, ptr = *str; i < usage->cUsageIdentifier; i++)
                 {
                     PCCRYPT_OID_INFO info =
                      CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY,
@@ -925,25 +931,37 @@ static void cert_mgr_show_cert_usages(HWND hwnd, int index)
                     }
                 }
                 *ptr = 0;
-                SendMessageW(text, WM_SETTEXT, 0, (LPARAM)str);
-                HeapFree(GetProcessHeap(), 0, str);
             }
             HeapFree(GetProcessHeap(), 0, usage);
         }
         else
         {
-            WCHAR buf[MAX_STRING_LEN];
-
-            LoadStringW(hInstance, IDS_ALLOWED_PURPOSE_NONE, buf, ARRAY_SIZE(buf));
-            SendMessageW(text, WM_SETTEXT, 0, (LPARAM)buf);
+            size = MAX_STRING_LEN * sizeof(WCHAR);
+            *str = HeapAlloc(GetProcessHeap(), 0, size);
+            if (*str)
+                LoadStringW(hInstance, IDS_ALLOWED_PURPOSE_NONE, *str, size);
         }
     }
     else
     {
-        WCHAR buf[MAX_STRING_LEN];
+        size = MAX_STRING_LEN * sizeof(WCHAR);
+        *str = HeapAlloc(GetProcessHeap(), 0, size);
+        if (*str)
+            LoadStringW(hInstance, IDS_ALLOWED_PURPOSE_ALL, *str, size);
+    }
+}
 
-        LoadStringW(hInstance, IDS_ALLOWED_PURPOSE_ALL, buf, ARRAY_SIZE(buf));
-        SendMessageW(text, WM_SETTEXT, 0, (LPARAM)buf);
+static void cert_mgr_show_cert_usages(HWND hwnd, int index)
+{
+    HWND text = GetDlgItem(hwnd, IDC_MGR_PURPOSES);
+    PCCERT_CONTEXT cert = cert_mgr_index_to_cert(hwnd, index);
+    LPWSTR str = NULL;
+
+    get_cert_usages(cert, &str);
+    if (str)
+    {
+        SendMessageW(text, WM_SETTEXT, 0, (LPARAM)str);
+        HeapFree(GetProcessHeap(), 0, str);
     }
 }
 
@@ -1148,7 +1166,6 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             break;
         case LVN_ITEMCHANGED:
         {
-            WCHAR empty[] = { 0 };
             NMITEMACTIVATE *nm = (NMITEMACTIVATE*)lp;
             HWND lv = GetDlgItem(hwnd, IDC_MGR_CERTS);
             int numSelected = SendMessageW(lv, LVM_GETSELECTEDCOUNT, 0, 0);
@@ -3480,7 +3497,7 @@ static void set_general_cert_properties(HWND hwnd, struct edit_cert_data *data)
 static void set_cert_string_property(PCCERT_CONTEXT cert, DWORD prop,
  LPWSTR str)
 {
-    if (str && strlenW(str))
+    if (str && *str)
     {
         CRYPT_DATA_BLOB blob;
 
@@ -4887,7 +4904,7 @@ static const WCHAR filter_cms[] = { '*','.','s','p','c',';','*','.',
  'p','7','b',0 };
 static const WCHAR filter_all[] = { '*','.','*',0 };
 
-static struct StringToFilter
+static const struct
 {
     int     id;
     DWORD   allowFlags;
@@ -6983,16 +7000,550 @@ BOOL WINAPI CryptUIDlgViewSignerInfoA(CRYPTUI_VIEWSIGNERINFO_STRUCTA *pcvsi)
     return FALSE;
 }
 
+static void init_columns(HWND lv, DWORD flags)
+{
+    WCHAR buf[MAX_STRING_LEN];
+    LVCOLUMNW column;
+    DWORD i = 0;
+
+    SendMessageW(lv, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
+    column.mask = LVCF_WIDTH | LVCF_TEXT;
+    column.cx = 90;
+    column.pszText = buf;
+    if (!(flags & CRYPTUI_SELECT_ISSUEDTO_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_SUBJECT_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+    if (!(flags & CRYPTUI_SELECT_ISSUEDBY_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_ISSUER_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+    if (!(flags & CRYPTUI_SELECT_INTENDEDUSE_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_INTENDED_USE_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+    if (!(flags & CRYPTUI_SELECT_FRIENDLYNAME_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_FRIENDLY_NAME_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+    if (!(flags & CRYPTUI_SELECT_EXPIRATION_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_EXPIRATION_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+    if (!(flags & CRYPTUI_SELECT_LOCATION_COLUMN))
+    {
+        LoadStringW(hInstance, IDS_LOCATION_COLUMN, buf, ARRAY_SIZE(buf));
+        SendMessageW(lv, LVM_INSERTCOLUMNW, i++, (LPARAM)&column);
+    }
+}
+
+static void add_cert_to_list(HWND lv, PCCERT_CONTEXT cert, DWORD flags, DWORD *allocatedLen,
+ LPWSTR *str)
+{
+    DWORD len;
+    LVITEMW item;
+    WCHAR dateFmt[80]; /* sufficient for LOCALE_SSHORTDATE */
+    WCHAR buf[80];
+    SYSTEMTIME sysTime;
+    LPWSTR none, usages;
+
+    item.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_TEXT;
+    item.iItem = SendMessageW(lv, LVM_GETITEMCOUNT, 0, 0);
+    item.iSubItem = 0;
+    item.iImage = 0;
+    item.lParam = (LPARAM)CertDuplicateCertificateContext(cert);
+    if (!item.iItem)
+    {
+        item.mask |= LVIF_STATE;
+        item.state = LVIS_SELECTED;
+        item.stateMask = -1;
+    }
+    if (!(flags & CRYPTUI_SELECT_ISSUEDTO_COLUMN))
+    {
+        len = CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL, NULL, 0);
+        if (len > *allocatedLen)
+        {
+            HeapFree(GetProcessHeap(), 0, *str);
+            *str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            if (*str)
+                *allocatedLen = len;
+        }
+        if (*str)
+        {
+            CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL, *str, len);
+            item.pszText = *str;
+            SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+        }
+        item.mask = LVIF_TEXT;
+        ++item.iSubItem;
+    }
+    if (!(flags & CRYPTUI_SELECT_ISSUEDBY_COLUMN))
+    {
+        len = CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL,
+         NULL, 0);
+        if (len > *allocatedLen)
+        {
+            HeapFree(GetProcessHeap(), 0, *str);
+            *str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            if (*str)
+                *allocatedLen = len;
+        }
+        if (*str)
+        {
+            CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, CERT_NAME_ISSUER_FLAG, NULL,
+             *str, len);
+            item.pszText = *str;
+            if (!item.iSubItem)
+                SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+            else
+                SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
+        }
+        item.mask = LVIF_TEXT;
+        ++item.iSubItem;
+    }
+    if (!(flags & CRYPTUI_SELECT_INTENDEDUSE_COLUMN))
+    {
+        get_cert_usages(cert, &usages);
+        if (usages)
+        {
+            item.pszText = usages;
+            if (!item.iSubItem)
+                SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+            else
+                SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
+            HeapFree(GetProcessHeap(), 0, usages);
+        }
+        item.mask = LVIF_TEXT;
+        ++item.iSubItem;
+    }
+    if (!(flags & CRYPTUI_SELECT_FRIENDLYNAME_COLUMN))
+    {
+        if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID, NULL, &len))
+            len = LoadStringW(hInstance, IDS_FRIENDLY_NAME_NONE, (LPWSTR)&none, 0);
+        if (len > *allocatedLen)
+        {
+            HeapFree(GetProcessHeap(), 0, *str);
+            *str = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            if (*str)
+                *allocatedLen = len;
+        }
+        if (*str)
+        {
+            if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID, *str, &len))
+                item.pszText = none;
+            else
+                item.pszText = *str;
+            if (!item.iSubItem)
+                SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+            else
+                SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
+        }
+        item.mask = LVIF_TEXT;
+        ++item.iSubItem;
+    }
+    if (!(flags & CRYPTUI_SELECT_EXPIRATION_COLUMN))
+    {
+        GetLocaleInfoW(LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, dateFmt, ARRAY_SIZE(dateFmt));
+        FileTimeToSystemTime(&cert->pCertInfo->NotAfter, &sysTime);
+        GetDateFormatW(LOCALE_SYSTEM_DEFAULT, 0, &sysTime, dateFmt, buf, ARRAY_SIZE(buf));
+        item.pszText = buf;
+        if (!item.iSubItem)
+            SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+        else
+            SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
+        item.mask = LVIF_TEXT;
+        ++item.iSubItem;
+    }
+    if (!(flags & CRYPTUI_SELECT_LOCATION_COLUMN))
+    {
+        static int show_fixme;
+        if (!show_fixme++)
+            FIXME("showing location is not implemented\n");
+        LoadStringW(hInstance, IDS_NO_IMPL, buf, ARRAY_SIZE(buf));
+        if (!item.iSubItem)
+            SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+        else
+            SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
+    }
+}
+
+static void add_store_certs(HWND lv, HCERTSTORE store, DWORD flags, PFNCFILTERPROC filter,
+ void *callback_data)
+{
+    PCCERT_CONTEXT cert = NULL;
+    BOOL select = FALSE;
+    DWORD allocatedLen = 0;
+    LPWSTR str = NULL;
+
+    do {
+        cert = CertEnumCertificatesInStore(store, cert);
+        if (cert && (!filter || filter(cert, &select, callback_data)))
+            add_cert_to_list(lv, cert, flags, &allocatedLen, &str);
+    } while (cert);
+    HeapFree(GetProcessHeap(), 0, str);
+}
+
+static PCCERT_CONTEXT select_cert_get_selected(HWND hwnd, int selection)
+{
+    HWND lv = GetDlgItem(hwnd, IDC_SELECT_CERTS);
+    PCCERT_CONTEXT cert = NULL;
+    LVITEMW item;
+
+    if (selection < 0)
+        selection = SendMessageW(lv, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+    if (selection < 0)
+        return NULL;
+    item.mask = LVIF_PARAM;
+    item.iItem = selection;
+    item.iSubItem = 0;
+    if (SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item))
+        cert = (PCCERT_CONTEXT)item.lParam;
+    return cert;
+}
+
+static void select_cert_update_view_button(HWND hwnd)
+{
+    HWND lv = GetDlgItem(hwnd, IDC_SELECT_CERTS);
+    int numSelected = SendMessageW(lv, LVM_GETSELECTEDCOUNT, 0, 0);
+
+    EnableWindow(GetDlgItem(hwnd, IDC_SELECT_VIEW_CERT), numSelected == 1);
+}
+
+struct SelectCertData
+{
+    PCCERT_CONTEXT *cert;
+    DWORD dateColumn;
+    HIMAGELIST imageList;
+    LPCWSTR title;
+    DWORD cStores;
+    HCERTSTORE *rghStores;
+    DWORD cPropSheetPages;
+    LPCPROPSHEETPAGEW rgPropSheetPages;
+    PFNCCERTDISPLAYPROC displayProc;
+    void *callbackData;
+};
+
+static void select_cert_view(HWND hwnd, PCCERT_CONTEXT cert, struct SelectCertData *data)
+{
+    CRYPTUI_VIEWCERTIFICATE_STRUCTW viewInfo;
+
+    if (data->displayProc && data->displayProc(cert, hwnd, data->callbackData))
+        return;
+    memset(&viewInfo, 0, sizeof(viewInfo));
+    viewInfo.dwSize = sizeof(viewInfo);
+    viewInfo.hwndParent = hwnd;
+    viewInfo.pCertContext = cert;
+    viewInfo.cStores = data->cStores;
+    viewInfo.rghStores = data->rghStores;
+    viewInfo.cPropSheetPages = data->cPropSheetPages;
+    viewInfo.rgPropSheetPages = data->rgPropSheetPages;
+    /* FIXME: this should be modal */
+    CryptUIDlgViewCertificateW(&viewInfo, NULL);
+}
+
+struct SortData
+{
+    HWND hwnd;
+    int column;
+};
+
+static int CALLBACK select_cert_sort_by_text(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    struct SortData *data = (struct SortData *)lp;
+    return cert_mgr_sort_by_text(data->hwnd, data->column, lp1, lp2);
+}
+
+struct SelectCertParam
+{
+    PCCRYPTUI_SELECTCERTIFICATE_STRUCTW pcsc;
+    PCCERT_CONTEXT cert;
+};
+
+static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    struct SelectCertData *data;
+
+    switch (msg)
+    {
+    case WM_INITDIALOG:
+    {
+        struct SelectCertParam *param = (struct SelectCertParam *)lp;
+        PCCRYPTUI_SELECTCERTIFICATE_STRUCTW pcsc = param->pcsc;
+        HWND lv = GetDlgItem(hwnd, IDC_SELECT_CERTS);
+        DWORD i = 0;
+
+        data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
+        if (!data)
+            return 0;
+        data->cert = &param->cert;
+        data->dateColumn = 4 -
+         ((pcsc->dwDontUseColumn & CRYPTUI_SELECT_ISSUEDTO_COLUMN) ? 1 : 0) -
+         ((pcsc->dwDontUseColumn & CRYPTUI_SELECT_ISSUEDBY_COLUMN) ? 1 : 0) -
+         ((pcsc->dwDontUseColumn & CRYPTUI_SELECT_INTENDEDUSE_COLUMN) ? 1 : 0) -
+         ((pcsc->dwDontUseColumn & CRYPTUI_SELECT_FRIENDLYNAME_COLUMN) ? 1 : 0);
+        data->imageList = ImageList_Create(16, 16, ILC_COLOR4 | ILC_MASK, 2, 0);
+        if (data->imageList)
+        {
+            HBITMAP bmp;
+            COLORREF backColor = RGB(255, 0, 255);
+
+            bmp = LoadBitmapW(hInstance, MAKEINTRESOURCEW(IDB_SMALL_ICONS));
+            ImageList_AddMasked(data->imageList, bmp, backColor);
+            DeleteObject(bmp);
+            ImageList_SetBkColor(data->imageList, CLR_NONE);
+            SendMessageW(GetDlgItem(hwnd, IDC_SELECT_CERTS), LVM_SETIMAGELIST, LVSIL_SMALL,
+             (LPARAM)data->imageList);
+        }
+        data->title = pcsc->szTitle;
+        data->cStores = pcsc->cStores;
+        data->rghStores = pcsc->rghStores;
+        data->cPropSheetPages = pcsc->cPropSheetPages;
+        data->rgPropSheetPages = pcsc->rgPropSheetPages;
+        data->displayProc = pcsc->pDisplayCallback;
+        data->callbackData = pcsc->pvCallbackData;
+        SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)data);
+
+        if (pcsc->szTitle)
+            SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)pcsc->szTitle);
+        if (pcsc->szDisplayString)
+            SendMessageW(GetDlgItem(hwnd, IDC_SELECT_DISPLAY_STRING), WM_SETTEXT, 0,
+             (LPARAM)pcsc->szDisplayString);
+        init_columns(lv, pcsc->dwDontUseColumn);
+        while (i < pcsc->cDisplayStores)
+            add_store_certs(lv, pcsc->rghDisplayStores[i++], pcsc->dwDontUseColumn,
+             pcsc->pFilterCallback, pcsc->pvCallbackData);
+        select_cert_update_view_button(hwnd);
+        break;
+    }
+    case WM_NOTIFY:
+    {
+        NMHDR *hdr = (NMHDR *)lp;
+
+        switch (hdr->code)
+        {
+        case NM_DBLCLK:
+        {
+            PCCERT_CONTEXT cert = select_cert_get_selected(hwnd, ((NMITEMACTIVATE *)lp)->iItem);
+
+            data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+            if (cert)
+                select_cert_view(hwnd, cert, data);
+            break;
+        }
+        case LVN_COLUMNCLICK:
+        {
+            NMLISTVIEW *nmlv = (NMLISTVIEW *)lp;
+            HWND lv = GetDlgItem(hwnd, IDC_SELECT_CERTS);
+
+            /* FIXME: doesn't support swapping sort order between ascending and descending. */
+            data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+            if (nmlv->iSubItem == data->dateColumn)
+                SendMessageW(lv, LVM_SORTITEMS, 0, (LPARAM)cert_mgr_sort_by_date);
+            else
+            {
+                struct SortData sortData;
+
+                sortData.hwnd = lv;
+                sortData.column = nmlv->iSubItem;
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)&sortData,
+                 (LPARAM)select_cert_sort_by_text);
+            }
+            break;
+        }
+        }
+        break;
+    }
+    case WM_COMMAND:
+        switch (wp)
+        {
+        case IDOK:
+        {
+            PCCERT_CONTEXT cert = select_cert_get_selected(hwnd, -1);
+
+            data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+            if (!cert)
+            {
+                WCHAR buf[40], title[40];
+
+                LoadStringW(hInstance, IDS_SELECT_CERT, buf, ARRAY_SIZE(buf));
+                if (!data->title)
+                    LoadStringW(hInstance, IDS_SELECT_CERT_TITLE, title, ARRAY_SIZE(title));
+                MessageBoxW(hwnd, buf, data->title ? data->title : title, MB_OK | MB_ICONWARNING);
+                break;
+            }
+            *data->cert = CertDuplicateCertificateContext(cert);
+            free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
+            ImageList_Destroy(data->imageList);
+            HeapFree(GetProcessHeap(), 0, data);
+            EndDialog(hwnd, IDOK);
+            break;
+        }
+        case IDCANCEL:
+            data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+            free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
+            ImageList_Destroy(data->imageList);
+            HeapFree(GetProcessHeap(), 0, data);
+            EndDialog(hwnd, IDCANCEL);
+            break;
+        case IDC_SELECT_VIEW_CERT:
+        {
+            PCCERT_CONTEXT cert = select_cert_get_selected(hwnd, -1);
+
+            data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+            if (cert)
+                select_cert_view(hwnd, cert, data);
+            break;
+        }
+        }
+        break;
+    }
+    return 0;
+}
+
 PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateW(PCCRYPTUI_SELECTCERTIFICATE_STRUCTW pcsc)
 {
-    FIXME("%p: stub\n", pcsc);
+    struct SelectCertParam param;
+
+    TRACE("%p\n", pcsc);
+
+    if (pcsc->dwSize != sizeof(*pcsc) && pcsc->dwSize != sizeof(*pcsc) - sizeof(HCERTSTORE))
+    {
+        WARN("unexpected size %d\n", pcsc->dwSize);
+        SetLastError(E_INVALIDARG);
+        return NULL;
+    }
+    if (pcsc->dwFlags & CRYPTUI_SELECTCERT_MULTISELECT)
+        FIXME("ignoring CRYPTUI_SELECTCERT_MULTISELECT\n");
+    param.pcsc = pcsc;
+    param.cert = NULL;
+    DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_SELECT_CERT), pcsc->hwndParent,
+     select_cert_dlg_proc, (LPARAM)&param);
+    return param.cert;
+}
+
+static void free_prop_sheet_pages(PROPSHEETPAGEW *pages, DWORD num)
+{
+    DWORD i;
+
+    for (i = 0; i < num; i++)
+    {
+        if (!(pages[i].dwFlags & PSP_DLGINDIRECT) && !IS_INTRESOURCE(pages[i].u.pszTemplate))
+            HeapFree(GetProcessHeap(), 0, (void *)pages[i].u.pszTemplate);
+        if ((pages[i].dwFlags & PSP_USEICONID) && !IS_INTRESOURCE(pages[i].u2.pszIcon))
+            HeapFree(GetProcessHeap(), 0, (void *)pages[i].u2.pszIcon);
+        if ((pages[i].dwFlags & PSP_USETITLE) && !IS_INTRESOURCE(pages[i].pszTitle))
+            HeapFree(GetProcessHeap(), 0, (void *)pages[i].pszTitle);
+        if ((pages[i].dwFlags & PSP_USEHEADERTITLE) && !IS_INTRESOURCE(pages[i].pszHeaderTitle))
+            HeapFree(GetProcessHeap(), 0, (void *)pages[i].pszHeaderTitle);
+        if ((pages[i].dwFlags & PSP_USEHEADERSUBTITLE) &&
+         !IS_INTRESOURCE(pages[i].pszHeaderSubTitle))
+            HeapFree(GetProcessHeap(), 0, (void *)pages[i].pszHeaderSubTitle);
+    }
+    HeapFree(GetProcessHeap(), 0, pages);
+}
+
+static PROPSHEETPAGEW *prop_sheet_pages_AtoW(LPCPROPSHEETPAGEA pages, DWORD num)
+{
+    PROPSHEETPAGEW *psp;
+    DWORD i, size = sizeof(*psp) * num;
+
+    psp = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!psp)
+        return NULL;
+    memcpy(psp, pages, size);
+    for (i = 0; i < num; i++)
+    {
+        if (!(pages[i].dwFlags & PSP_DLGINDIRECT) && !IS_INTRESOURCE(pages[i].u.pszTemplate))
+            psp[i].u.pszTemplate = NULL;
+        if ((pages[i].dwFlags & PSP_USEICONID) && !IS_INTRESOURCE(pages[i].u2.pszIcon))
+            psp[i].u2.pszIcon = NULL;
+        if ((pages[i].dwFlags & PSP_USETITLE) && !IS_INTRESOURCE(pages[i].pszTitle))
+            psp[i].pszTitle = NULL;
+        if (pages[i].dwFlags & PSP_USECALLBACK)
+            psp[i].pfnCallback = NULL;
+        if ((pages[i].dwFlags & PSP_USEHEADERTITLE) && !IS_INTRESOURCE(pages[i].pszHeaderTitle))
+            psp[i].pszHeaderTitle = NULL;
+        if ((pages[i].dwFlags & PSP_USEHEADERSUBTITLE) &&
+         !IS_INTRESOURCE(pages[i].pszHeaderSubTitle))
+            psp[i].pszHeaderSubTitle = NULL;
+    }
+    for (i = 0; i < num; i++)
+    {
+        if (!(pages[i].dwFlags & PSP_DLGINDIRECT) && !IS_INTRESOURCE(pages[i].u.pszTemplate))
+        {
+            if (!(psp[i].u.pszTemplate = strdupAtoW( pages[i].u.pszTemplate ))) goto error;
+        }
+        if ((pages[i].dwFlags & PSP_USEICONID) && !IS_INTRESOURCE(pages[i].u2.pszIcon))
+        {
+            if (!(psp[i].u2.pszIcon = strdupAtoW( pages[i].u2.pszIcon ))) goto error;
+        }
+        if ((pages[i].dwFlags & PSP_USETITLE) && !IS_INTRESOURCE(pages[i].pszTitle))
+        {
+            if (!(psp[i].pszTitle = strdupAtoW( pages[i].pszTitle ))) goto error;
+        }
+        if (pages[i].dwFlags & PSP_USECALLBACK)
+            FIXME("ignoring pfnCallback\n");
+        if ((pages[i].dwFlags & PSP_USEHEADERTITLE) && !IS_INTRESOURCE(pages[i].pszHeaderTitle))
+        {
+            if (!(psp[i].pszHeaderTitle = strdupAtoW( pages[i].pszHeaderTitle ))) goto error;
+        }
+        if ((pages[i].dwFlags & PSP_USEHEADERSUBTITLE) &&
+         !IS_INTRESOURCE(pages[i].pszHeaderSubTitle))
+        {
+            if (!(psp[i].pszHeaderSubTitle = strdupAtoW( pages[i].pszHeaderSubTitle ))) goto error;
+        }
+    }
+    return psp;
+error:
+    free_prop_sheet_pages(psp, num);
     return NULL;
 }
 
 PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateA(PCCRYPTUI_SELECTCERTIFICATE_STRUCTA pcsc)
 {
-    FIXME("%p: stub\n", pcsc);
-    return NULL;
+    PCCERT_CONTEXT cert = NULL;
+    CRYPTUI_SELECTCERTIFICATE_STRUCTW selCertInfo;
+    LPWSTR title = NULL, display_str = NULL;
+    PROPSHEETPAGEW *pages = NULL;
+
+    TRACE("%p\n", pcsc);
+
+    if (pcsc->dwSize != sizeof(*pcsc) && pcsc->dwSize != sizeof(*pcsc) - sizeof(HCERTSTORE))
+    {
+        WARN("unexpected size %d\n", pcsc->dwSize);
+        SetLastError(E_INVALIDARG);
+        return NULL;
+    }
+    memcpy(&selCertInfo, pcsc, pcsc->dwSize);
+    if (pcsc->szTitle)
+    {
+        if (!(title = strdupAtoW( pcsc->szTitle ))) goto error;
+        selCertInfo.szTitle = title;
+    }
+    if (pcsc->szDisplayString)
+    {
+        if (!(display_str = strdupAtoW( pcsc->szDisplayString ))) goto error;
+        selCertInfo.szDisplayString = display_str;
+    }
+    if (pcsc->cPropSheetPages)
+    {
+        pages = prop_sheet_pages_AtoW(pcsc->rgPropSheetPages, pcsc->cPropSheetPages);
+        if (!pages)
+            goto error;
+        selCertInfo.rgPropSheetPages = pages;
+    }
+    cert = CryptUIDlgSelectCertificateW(&selCertInfo);
+error:
+    HeapFree(GetProcessHeap(), 0, title);
+    HeapFree(GetProcessHeap(), 0, display_str);
+    if (pcsc->cPropSheetPages)
+        free_prop_sheet_pages(pages, pcsc->cPropSheetPages);
+    return cert;
 }
 
 PCCERT_CONTEXT WINAPI CryptUIDlgSelectCertificateFromStore(HCERTSTORE hCertStore, HWND hwnd, LPCWSTR pwszTitle,
