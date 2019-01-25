@@ -541,7 +541,7 @@ static void testStoresInCollection(void)
     cert2 = CertCreateCertificateContext(X509_ASN_ENCODING, signedBigCert, sizeof(signedBigCert));
     ok (cert2 != NULL, "Failed to create cert context %x\n", GetLastError());
     ret = CertAddCertificateContextToStore(collection, cert2, CERT_STORE_ADD_REPLACE_EXISTING, NULL);
-    ok (ret, "Failed to add cert3 to the store %x\n",GetLastError());
+    ok (ret, "Failed to add cert2 to the store %x\n",GetLastError());
 
     /** checking certificates in the stores */
     tcert1 = CertEnumCertificatesInStore(ro_store, 0);
@@ -2834,6 +2834,8 @@ static void testEmptyStore(void)
     ok(res, "CertDeleteCertificateContextFromStore failed\n");
     ok(cert3->hCertStore == cert->hCertStore, "Unexpected hCertStore\n");
 
+    CertFreeCertificateContext(cert3);
+
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
     ok(store != NULL, "CertOpenStore failed\n");
 
@@ -2847,6 +2849,7 @@ static void testEmptyStore(void)
     ok(cert3->hCertStore == store, "Unexpected hCertStore\n");
 
     CertCloseStore(store, 0);
+    CertFreeCertificateContext(cert3);
 
     res = CertCloseStore(cert->hCertStore, CERT_CLOSE_STORE_CHECK_FLAG);
     ok(!res && GetLastError() == E_UNEXPECTED, "CertCloseStore returned: %x(%x)\n", res, GetLastError());

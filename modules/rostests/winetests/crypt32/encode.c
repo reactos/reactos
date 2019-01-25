@@ -1017,7 +1017,7 @@ static void compareNameValues(const CERT_NAME_VALUE *expected,
 static void compareRDNAttrs(const CERT_RDN_ATTR *expected,
  const CERT_RDN_ATTR *got)
 {
-    if (expected->pszObjId && strlen(expected->pszObjId))
+    if (expected->pszObjId && *expected->pszObjId)
     {
         ok(got->pszObjId != NULL, "Expected OID %s, got NULL\n",
          expected->pszObjId);
@@ -8435,7 +8435,7 @@ static void testImportPublicKey(HCRYPTPROV csp, PCERT_PUBLIC_KEY_INFO info)
     ok(ret, "CryptImportPublicKeyInfoEx failed: %08x\n", GetLastError());
 
     dwSize = sizeof(ai);
-    CryptGetKeyParam(key, KP_ALGID, (LPVOID)&ai, &dwSize, 0);
+    ret = CryptGetKeyParam(key, KP_ALGID, (LPVOID)&ai, &dwSize, 0);
     ok(ret, "CryptGetKeyParam failed: %08x\n", GetLastError());
     if(ret)
     {
@@ -8451,7 +8451,7 @@ static void testImportPublicKey(HCRYPTPROV csp, PCERT_PUBLIC_KEY_INFO info)
     ok(ret, "CryptImportPublicKeyInfoEx failed: %08x\n", GetLastError());
 
     dwSize = sizeof(ai);
-    CryptGetKeyParam(key, KP_ALGID, (LPVOID)&ai, &dwSize, 0);
+    ret = CryptGetKeyParam(key, KP_ALGID, (LPVOID)&ai, &dwSize, 0);
     ok(ret, "CryptGetKeyParam failed: %08x\n", GetLastError());
     if(ret)
     {

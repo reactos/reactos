@@ -3196,9 +3196,12 @@ static void testComparePublicKeyInfo(void)
     static BYTE bits1[] = { 1, 0 };
     static BYTE bits2[] = { 0 };
     static BYTE bits3[] = { 1 };
-    static BYTE bits4[] = { 0x30,8, 2,1,0x81, 2,3,1,0,1 };
-    static BYTE bits5[] = { 0x30,9, 2,2,0,0x81, 2,3,1,0,1 };
-    static BYTE bits6[] = { 0x30,9, 2,2,0,0x82, 2,3,1,0,1 };
+    static BYTE bits4[] = { 0x30,8, 2,1,0x81, 2,3,1,0,1 }; /* ASN_SEQUENCE */
+    static BYTE bits5[] = { 0x30,9, 2,2,0,0x81, 2,3,1,0,1 }; /* ASN_SEQUENCE */
+    static BYTE bits6[] = { 0x30,9, 2,2,0,0x82, 2,3,1,0,1 }; /* ASN_SEQUENCE */
+    static BYTE bits7[] = { 0x04,8, 2,1,0x81, 2,3,1,0,1 }; /* ASN_OCTETSTRING */
+    static BYTE bits8[] = { 0x04,9, 2,2,0,0x81, 2,3,1,0,1 }; /* ASN_OCTETSTRING */
+    static BYTE bits9[] = { 0x04,9, 2,2,0,0x82, 2,3,1,0,1 }; /* ASN_OCTETSTRING */
 
     /* crashes
     ret = CertComparePublicKeyInfo(0, NULL, NULL);
@@ -3206,14 +3209,23 @@ static void testComparePublicKeyInfo(void)
     /* Empty public keys compare */
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+
     /* Different OIDs appear to compare */
     info1.Algorithm.pszObjId = oid_rsa_rsa;
     info2.Algorithm.pszObjId = oid_rsa_sha1rsa;
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+
     info2.Algorithm.pszObjId = oid_x957_dsa;
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+
     info1.PublicKey.cbData = sizeof(bits1);
     info1.PublicKey.pbData = bits1;
     info1.PublicKey.cUnusedBits = 0;
@@ -3222,6 +3234,9 @@ static void testComparePublicKeyInfo(void)
     info2.PublicKey.cUnusedBits = 0;
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(ret, "CertComparePublicKeyInfo failed: %08x\n", GetLastError());
+
     info2.Algorithm.pszObjId = oid_rsa_rsa;
     info1.PublicKey.cbData = sizeof(bits4);
     info1.PublicKey.pbData = bits4;
@@ -3232,15 +3247,12 @@ static void testComparePublicKeyInfo(void)
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(!ret, "CertComparePublicKeyInfo: as raw binary: keys should be unequal\n");
     ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
-    ok(ret ||
-     broken(!ret), /* win9x */
-     "CertComparePublicKeyInfo: as ASN.1 encoded: keys should be equal\n");
+    ok(ret, "CertComparePublicKeyInfo: as ASN.1 encoded: keys should be equal\n");
+
     info1.PublicKey.cUnusedBits = 1;
     info2.PublicKey.cUnusedBits = 5;
     ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
-    ok(ret ||
-     broken(!ret), /* win9x */
-     "CertComparePublicKeyInfo: ASN.1 encoding should ignore cUnusedBits\n");
+    ok(ret, "CertComparePublicKeyInfo: ASN.1 encoding should ignore cUnusedBits\n");
     info1.PublicKey.cUnusedBits = 0;
     info2.PublicKey.cUnusedBits = 0;
     info1.PublicKey.cbData--; /* kill one byte, make ASN.1 encoded data invalid */
@@ -3256,17 +3268,52 @@ static void testComparePublicKeyInfo(void)
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     /* Simple (non-comparing) case */
     ok(!ret, "Expected keys not to compare\n");
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(!ret, "Expected keys not to compare\n");
+
     info2.PublicKey.cbData = sizeof(bits1);
     info2.PublicKey.pbData = bits1;
     info2.PublicKey.cUnusedBits = 0;
     ret = CertComparePublicKeyInfo(0, &info1, &info2);
     ok(!ret, "Expected keys not to compare\n");
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(!ret, "Expected keys not to compare\n");
+
+    info1.PublicKey.cbData = sizeof(bits7);
+    info1.PublicKey.pbData = bits7;
+    info1.PublicKey.cUnusedBits = 0;
+    info2.PublicKey.cbData = sizeof(bits8);
+    info2.PublicKey.pbData = bits8;
+    info2.PublicKey.cUnusedBits = 0;
+    ret = CertComparePublicKeyInfo(0, &info1, &info2);
+    ok(!ret, "CertComparePublicKeyInfo: as raw binary: keys should be unequal\n");
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(!ret, "CertComparePublicKeyInfo: as ASN.1 encoded: keys should be unequal\n");
+
+    ret = CertComparePublicKeyInfo(0, &info1, &info1);
+    ok(ret, "CertComparePublicKeyInfo: as raw binary: keys should be equal\n");
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info1);
+    ok(ret, "CertComparePublicKeyInfo: as ASN.1 encoded: keys should be equal\n");
+    info1.PublicKey.cbData--; /* kill one byte, make ASN.1 encoded data invalid */
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info1);
+    ok(ret, "CertComparePublicKeyInfo: as ASN.1 encoded: keys should be equal\n");
+
     /* ASN.1 encoded non-comparing case */
     info1.PublicKey.cbData = sizeof(bits5);
     info1.PublicKey.pbData = bits5;
     info1.PublicKey.cUnusedBits = 0;
     info2.PublicKey.cbData = sizeof(bits6);
     info2.PublicKey.pbData = bits6;
+    info2.PublicKey.cUnusedBits = 0;
+    ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
+    ok(!ret, "CertComparePublicKeyInfo: different keys should be unequal\n");
+
+    /* ASN.1 encoded non-comparing case */
+    info1.PublicKey.cbData = sizeof(bits8);
+    info1.PublicKey.pbData = bits8;
+    info1.PublicKey.cUnusedBits = 0;
+    info2.PublicKey.cbData = sizeof(bits9);
+    info2.PublicKey.pbData = bits9;
     info2.PublicKey.cUnusedBits = 0;
     ret = CertComparePublicKeyInfo(X509_ASN_ENCODING, &info1, &info2);
     ok(!ret, "CertComparePublicKeyInfo: different keys should be unequal\n");

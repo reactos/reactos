@@ -2,6 +2,7 @@
  * Unit test suite for crypt32.dll's OID support functions.
  *
  * Copyright 2005 Juan Lang
+ * Copyright 2018 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -614,6 +615,97 @@ static void test_findOIDInfo(void)
         win_skip("Host does not support ECDSA_SHA256, skipping test\n");
 }
 
+static void test_registerOIDInfo(void)
+{
+    static const WCHAR winetestW[] = { 'w','i','n','e','t','e','s','t',0 };
+    static char test_oid[] = "1.2.3.4.5.6.7.8.9.10";
+    CRYPT_OID_INFO info1;
+    const CRYPT_OID_INFO *info2;
+    HKEY key;
+    DWORD ret, size, type, value;
+    char buf[256];
+
+    SetLastError(0xdeadbeef);
+    ret = CryptUnregisterOIDInfo(NULL);
+    ok(!ret, "should fail\n");
+    ok(GetLastError() == E_INVALIDARG, "got %#x\n", GetLastError());
+
+    memset(&info1, 0, sizeof(info1));
+    SetLastError(0xdeadbeef);
+    ret = CryptUnregisterOIDInfo(&info1);
+    ok(!ret, "should fail\n");
+    ok(GetLastError() == E_INVALIDARG, "got %#x\n", GetLastError());
+
+    info1.cbSize = sizeof(info1);
+    SetLastError(0xdeadbeef);
+    ret = CryptUnregisterOIDInfo(&info1);
+    ok(!ret, "should fail\n");
+    ok(GetLastError() == E_INVALIDARG, "got %#x\n", GetLastError());
+
+    info1.pszOID = test_oid;
+    SetLastError(0xdeadbeef);
+    ret = CryptUnregisterOIDInfo(&info1);
+    ok(!ret, "should fail\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "got %u\n", GetLastError());
+
+    info2 = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY, (void *)test_oid, 0);
+    ok(!info2, "should fail\n");
+
+    SetLastError(0xdeadbeef);
+    /* While it succeeds, the next call does not write anything to the
+     * registry on Windows because dwGroupId == 0.
+     */
+    ret = CryptRegisterOIDInfo(&info1, 0);
+    ok(ret, "got %u\n", GetLastError());
+
+    ret = RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo\\1.2.3.4.5.6.7.8.9.10!1", &key);
+    ok(ret == ERROR_FILE_NOT_FOUND, "got %u\n", ret);
+
+    info2 = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY, (void *)test_oid, 0);
+    ok(!info2, "should fail\n");
+
+    info1.pwszName = winetestW;
+    info1.dwGroupId = CRYPT_HASH_ALG_OID_GROUP_ID;
+    SetLastError(0xdeadbeef);
+    ret = CryptRegisterOIDInfo(&info1, CRYPT_INSTALL_OID_INFO_BEFORE_FLAG);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("Need admin rights\n");
+        return;
+    }
+    ok(ret, "got %u\n", GetLastError());
+
+    /* It looks like crypt32 reads the OID info from registry only on load,
+     * and CryptFindOIDInfo will find the registered OID on next run
+     */
+    info2 = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY, (void *)test_oid, 0);
+    ok(!info2, "should fail\n");
+
+    ret = RegCreateKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo\\1.2.3.4.5.6.7.8.9.10!1", &key);
+    ok(!ret, "got %u\n", ret);
+
+    memset(buf, 0, sizeof(buf));
+    size = sizeof(buf);
+    ret = RegQueryValueExA(key, "Name", NULL, &type, (BYTE *)buf, &size);
+    ok(!ret, "got %u\n", ret);
+    ok(type == REG_SZ, "got %u\n", type);
+    ok(!strcmp(buf, "winetest"), "got %s\n", buf);
+
+    value = 0xdeadbeef;
+    size = sizeof(value);
+    ret = RegQueryValueExA(key, "Flags", NULL, &type, (BYTE *)&value, &size);
+    ok(!ret, "got %u\n", ret);
+    ok(type == REG_DWORD, "got %u\n", type);
+    ok(value == 1, "got %u\n", value);
+
+    RegCloseKey(key);
+
+    CryptUnregisterOIDInfo(&info1);
+
+    ret = RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo\\1.2.3.4.5.6.7.8.9.10!1", &key);
+    ok(ret == ERROR_FILE_NOT_FOUND, "got %u\n", ret);
+}
+
 START_TEST(oid)
 {
     HMODULE hCrypt32 = GetModuleHandleA("crypt32.dll");
@@ -623,6 +715,7 @@ START_TEST(oid)
     testAlgIDToOID();
     test_enumOIDInfo();
     test_findOIDInfo();
+    test_registerOIDInfo();
     test_oidFunctionSet();
     test_installOIDFunctionAddress();
     test_registerOIDFunction();
