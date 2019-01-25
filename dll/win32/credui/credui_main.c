@@ -89,7 +89,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             HeapFree(GetProcessHeap(), 0, entry->pszTargetName);
             HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-            ZeroMemory(entry->pszPassword, (strlenW(entry->pszPassword) + 1) * sizeof(WCHAR));
+            SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
             HeapFree(GetProcessHeap(), 0, entry->pszPassword);
             HeapFree(GetProcessHeap(), 0, entry);
         }
@@ -160,20 +160,27 @@ static void CredDialogFillUsernameCombo(HWND hwndUsername, const struct cred_dia
         DWORD j;
         BOOL duplicate = FALSE;
 
+        if (!credentials[i]->UserName)
+            continue;
+
         if (params->dwFlags & CREDUI_FLAGS_GENERIC_CREDENTIALS)
         {
-            if ((credentials[i]->Type != CRED_TYPE_GENERIC) || !credentials[i]->UserName)
+            if (credentials[i]->Type != CRED_TYPE_GENERIC)
+            {
+                credentials[i]->UserName = NULL;
                 continue;
+            }
         }
-        else
+        else if (credentials[i]->Type == CRED_TYPE_GENERIC)
         {
-            if (credentials[i]->Type == CRED_TYPE_GENERIC)
-                continue;
+            credentials[i]->UserName = NULL;
+            continue;
         }
 
         /* don't add another item with the same name if we've already added it */
         for (j = 0; j < i; j++)
-            if (!strcmpW(credentials[i]->UserName, credentials[j]->UserName))
+            if (credentials[j]->UserName
+                && !strcmpW(credentials[i]->UserName, credentials[j]->UserName))
             {
                 duplicate = TRUE;
                 break;
@@ -673,7 +680,7 @@ DWORD WINAPI CredUIPromptForCredentialsW(PCREDUI_INFOW pUIInfo,
                 {
                     found = TRUE;
                     HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-                    ZeroMemory(entry->pszPassword, (strlenW(entry->pszPassword) + 1) * sizeof(WCHAR));
+                    SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
                     HeapFree(GetProcessHeap(), 0, entry->pszPassword);
                 }
 
@@ -733,7 +740,7 @@ DWORD WINAPI CredUIConfirmCredentialsW(PCWSTR pszTargetName, BOOL bConfirm)
 
             HeapFree(GetProcessHeap(), 0, entry->pszTargetName);
             HeapFree(GetProcessHeap(), 0, entry->pszUsername);
-            ZeroMemory(entry->pszPassword, (strlenW(entry->pszPassword) + 1) * sizeof(WCHAR));
+            SecureZeroMemory(entry->pszPassword, strlenW(entry->pszPassword) * sizeof(WCHAR));
             HeapFree(GetProcessHeap(), 0, entry->pszPassword);
             HeapFree(GetProcessHeap(), 0, entry);
 
