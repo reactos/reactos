@@ -123,7 +123,7 @@ if (0) /* crashes on native */
     /* Oddly enough, this "succeeds," even though the OID is clearly
      * unsupported.
      */
-    vars[0].name.idLength = sizeof(bogus) / sizeof(bogus[0]);
+    vars[0].name.idLength = ARRAY_SIZE(bogus);
     vars[0].name.ids = bogus;
     vars[0].value.asnType = 0;
     list.len = 1;
@@ -146,7 +146,7 @@ if (0) /* crashes on native */
         "expected 1.2.3.4, got %s\n", SnmpUtilOidToA(&vars[0].name));
 
     /* The table is not an accessible variable, so it fails */
-    vars[0].name.idLength = sizeof(mib2IfTable) / sizeof(mib2IfTable[0]);
+    vars[0].name.idLength = ARRAY_SIZE(mib2IfTable);
     vars[0].name.ids = mib2IfTable;
     SetLastError(0xdeadbeef);
     error = 0xdeadbeef;
@@ -161,13 +161,11 @@ if (0) /* crashes on native */
     /* A Get fails on something that specifies a table (but not a particular
      * entry in it)...
      */
-    vars[0].name.idLength = sizeof(mib2IfDescr) / sizeof(mib2IfDescr[0]);
+    vars[0].name.idLength = ARRAY_SIZE(mib2IfDescr);
     vars[0].name.ids = mib2IfDescr;
-    vars[1].name.idLength =
-        sizeof(mib2IfAdminStatus) / sizeof(mib2IfAdminStatus[0]);
+    vars[1].name.idLength = ARRAY_SIZE(mib2IfAdminStatus);
     vars[1].name.ids = mib2IfAdminStatus;
-    vars[2].name.idLength =
-        sizeof(mib2IfOperStatus) / sizeof(mib2IfOperStatus[0]);
+    vars[2].name.idLength = ARRAY_SIZE(mib2IfOperStatus);
     vars[2].name.ids = mib2IfOperStatus;
     list.len = 3;
     SetLastError(0xdeadbeef);
@@ -270,7 +268,7 @@ if (0) /* crashes on native */
      * variables, on recent systems (at least Win2k) the first variable it
      * returns a value for is the first interface.
      */
-    vars[0].name.idLength = sizeof(mib2System) / sizeof(mib2System[0]);
+    vars[0].name.idLength = ARRAY_SIZE(mib2System);
     vars[0].name.ids = mib2System;
     SnmpUtilOidCpy(&vars2[0].name, &vars[0].name);
     vars2[0].value.asnType = 0;
@@ -282,7 +280,7 @@ if (0) /* crashes on native */
     ok(error == SNMP_ERRORSTATUS_NOERROR,
         "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
     ok(index == 0, "expected index 0, got %d\n", index);
-    vars3[0].name.idLength = sizeof(mib2If) / sizeof(mib2If[0]);
+    vars3[0].name.idLength = ARRAY_SIZE(mib2If);
     vars3[0].name.ids = mib2If;
     ok(!SnmpUtilOidNCmp(&vars2[0].name, &vars[0].name, vars[0].name.idLength) ||
        !SnmpUtilOidNCmp(&vars2[0].name, &vars3[0].name, vars3[0].name.idLength),
@@ -291,7 +289,7 @@ if (0) /* crashes on native */
     SnmpUtilVarBindFree(&vars2[0]);
 
     /* Check the type and OIDs of the IP address table */
-    vars[0].name.idLength = sizeof(mib2IpAddr) / sizeof(mib2IpAddr[0]);
+    vars[0].name.idLength = ARRAY_SIZE(mib2IpAddr);
     vars[0].name.ids = mib2IpAddr;
     SnmpUtilOidCpy(&vars2[0].name, &vars[0].name);
     vars2[0].value.asnType = 0;
