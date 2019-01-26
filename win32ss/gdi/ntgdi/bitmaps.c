@@ -483,7 +483,7 @@ NtGdiGetBitmapDimension(
 }
 
 
-VOID
+LONG
 FASTCALL
 UnsafeGetBitmapBits(
     PSURFACE psurf,
@@ -492,10 +492,10 @@ UnsafeGetBitmapBits(
 {
     PUCHAR pjDst, pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG nWidth, nHeight, cBitsPixel;
+    ULONG Y, iSrc, iDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = psurf->SurfObj.sizlBitmap.cy;
+    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
     /* Get pointers */
@@ -503,14 +503,33 @@ UnsafeGetBitmapBits(
     pjDst = pvBits;
     lDeltaSrc = psurf->SurfObj.lDelta;
     lDeltaDst = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
+    NT_ASSERT(labs(lDeltaSrc) >= lDeltaDst);
 
-    while (nHeight--)
+    cbSrc = nHeight * labs(lDeltaSrc);
+    cbDst = nHeight * lDeltaDst;
+    Bytes = min(Bytes, cbDst);
+
+    iSrc = iDst = 0;
+    for (Y = 0; Y < nHeight; Y++)
     {
+        if (iSrc + labs(lDeltaSrc) > cbSrc || iDst + lDeltaDst > Bytes)
+        {
+            LONG lDelta = min(cbSrc - iSrc, Bytes - iDst);
+            NT_ASSERT(lDelta >= 0);
+            RtlCopyMemory(pjDst, pjSrc, lDelta);
+            iDst += lDelta;
+            break;
+        }
+
         /* Copy one line */
         RtlCopyMemory(pjDst, pjSrc, lDeltaDst);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
+        iSrc += labs(lDeltaSrc);
+        iDst += lDeltaDst;
     }
+
+    return iDst;
 }
 
 LONG
@@ -557,8 +576,7 @@ NtGdiGetBitmapBits(
     _SEH2_TRY
     {
         ProbeForWrite(pUnsafeBits, cjBuffer, 1);
-        UnsafeGetBitmapBits(psurf, cjBuffer, pUnsafeBits);
-        ret = cjBuffer;
+        ret = UnsafeGetBitmapBits(psurf, cjBuffer, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
