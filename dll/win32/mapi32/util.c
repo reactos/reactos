@@ -903,7 +903,7 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
             char lcid_ver[20];
             UINT i;
 
-            for (i = 0; i < sizeof(fmt)/sizeof(fmt[0]); i++)
+            for (i = 0; i < ARRAY_SIZE(fmt); i++)
             {
                 /* FIXME: what's the correct behaviour here? */
                 if (!qualifier || qualifier == lcid_ver)
