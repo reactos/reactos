@@ -66,7 +66,7 @@ static void run_for_each_device(device_test *test)
     data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data) + detail_size);
     data->cbSize = sizeof(*data);
 
-    info_set = SetupDiGetClassDevsW(&hid_guid, NULL, NULL, DIGCF_DEVICEINTERFACE);
+    info_set = SetupDiGetClassDevsW(&hid_guid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
     while (SetupDiEnumDeviceInterfaces(info_set, NULL, &hid_guid, index, &interface_data))
     {
         index ++;
@@ -74,11 +74,13 @@ static void run_for_each_device(device_test *test)
         if (SetupDiGetDeviceInterfaceDetailW(info_set, &interface_data, data, sizeof(*data) + detail_size, NULL, NULL))
         {
             HANDLE file = CreateFileW(data->DevicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
-            if (file == INVALID_HANDLE_VALUE)
+            if (file == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED)
             {
-                trace("Failed to access device %s, likely not plugged in or access is denied.\n", wine_dbgstr_w(data->DevicePath));
+                trace("Not enough permissions to read device %s.\n", wine_dbgstr_w(data->DevicePath));
                 continue;
             }
+            ok(file != INVALID_HANDLE_VALUE, "Failed to open %s, error %u.\n",
+                wine_dbgstr_w(data->DevicePath), GetLastError());
 
             test(file);
 
@@ -108,7 +110,7 @@ static HANDLE get_device(USHORT page, USHORT usages[], UINT usage_count, DWORD a
     data = HeapAlloc(GetProcessHeap(), 0 , sizeof(*data) + detail_size);
     data->cbSize = sizeof(*data);
 
-    info_set = SetupDiGetClassDevsW(&hid_guid, NULL, NULL, DIGCF_DEVICEINTERFACE);
+    info_set = SetupDiGetClassDevsW(&hid_guid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
     while (SetupDiEnumDeviceInterfaces(info_set, NULL, &hid_guid, index, &interface_data))
     {
         index ++;
@@ -118,11 +120,13 @@ static HANDLE get_device(USHORT page, USHORT usages[], UINT usage_count, DWORD a
             PHIDP_PREPARSED_DATA ppd;
             HIDP_CAPS Caps;
             HANDLE file = CreateFileW(data->DevicePath, access, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
-            if (file == INVALID_HANDLE_VALUE)
+            if (file == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED)
             {
-                trace("Failed to access device %s, likely not plugged in or access is denied.\n", wine_dbgstr_w(data->DevicePath));
+                trace("Not enough permissions to read device %s.\n", wine_dbgstr_w(data->DevicePath));
                 continue;
             }
+            ok(file != INVALID_HANDLE_VALUE, "got error %u\n", GetLastError());
+
             rc = HidD_GetPreparsedData(file, &ppd);
             ok(rc, "Failed to get preparsed data(0x%x)\n", GetLastError());
             status = HidP_GetCaps(ppd, &Caps);
