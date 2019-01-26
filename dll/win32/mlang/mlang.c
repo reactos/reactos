@@ -494,35 +494,35 @@ static const struct mlang_data
     SCRIPT_ID sid;
 } mlang_data[] =
 {
-    { "Arabic",1256,sizeof(arabic_cp)/sizeof(arabic_cp[0]),arabic_cp,
+    { "Arabic", 1256, ARRAY_SIZE(arabic_cp), arabic_cp,
       "Simplified Arabic Fixed","Simplified Arabic", sidArabic },
-    { "Baltic",1257,sizeof(baltic_cp)/sizeof(baltic_cp[0]),baltic_cp,
+    { "Baltic",  1257, ARRAY_SIZE(baltic_cp), baltic_cp,
       "Courier New","Arial", sidAsciiLatin },
-    { "Chinese Simplified",936,sizeof(chinese_simplified_cp)/sizeof(chinese_simplified_cp[0]),chinese_simplified_cp,
+    { "Chinese Simplified", 936, ARRAY_SIZE(chinese_simplified_cp), chinese_simplified_cp,
       "Simsun","Simsun", sidHan },
-    { "Chinese Traditional",950,sizeof(chinese_traditional_cp)/sizeof(chinese_traditional_cp[0]),chinese_traditional_cp,
+    { "Chinese Traditional", 950, ARRAY_SIZE(chinese_traditional_cp), chinese_traditional_cp,
       "MingLiu","New MingLiu", sidBopomofo },
-    { "Central European",1250,sizeof(central_european_cp)/sizeof(central_european_cp[0]),central_european_cp,
+    { "Central European", 1250, ARRAY_SIZE(central_european_cp), central_european_cp,
       "Courier New","Arial", sidAsciiLatin },
-    { "Cyrillic",1251,sizeof(cyrillic_cp)/sizeof(cyrillic_cp[0]),cyrillic_cp,
+    { "Cyrillic", 1251, ARRAY_SIZE(cyrillic_cp), cyrillic_cp,
       "Courier New","Arial", sidCyrillic },
-    { "Greek",1253,sizeof(greek_cp)/sizeof(greek_cp[0]),greek_cp,
+    { "Greek", 1253, ARRAY_SIZE(greek_cp), greek_cp,
       "Courier New","Arial", sidGreek },
-    { "Hebrew",1255,sizeof(hebrew_cp)/sizeof(hebrew_cp[0]),hebrew_cp,
+    { "Hebrew", 1255, ARRAY_SIZE(hebrew_cp), hebrew_cp,
       "Miriam Fixed","David", sidHebrew },
-    { "Japanese",932,sizeof(japanese_cp)/sizeof(japanese_cp[0]),japanese_cp,
+    { "Japanese", 932, ARRAY_SIZE(japanese_cp), japanese_cp,
       "MS Gothic","MS PGothic", sidKana },
-    { "Korean",949,sizeof(korean_cp)/sizeof(korean_cp[0]),korean_cp,
+    { "Korean", 949, ARRAY_SIZE(korean_cp), korean_cp,
       "GulimChe","Gulim", sidHangul },
-    { "Thai",874,sizeof(thai_cp)/sizeof(thai_cp[0]),thai_cp,
+    { "Thai", 874, ARRAY_SIZE(thai_cp), thai_cp,
       "Tahoma","Tahoma", sidThai },
-    { "Turkish",1254,sizeof(turkish_cp)/sizeof(turkish_cp[0]),turkish_cp,
+    { "Turkish", 1254, ARRAY_SIZE(turkish_cp), turkish_cp,
       "Courier New","Arial", sidAsciiLatin },
-    { "Vietnamese",1258,sizeof(vietnamese_cp)/sizeof(vietnamese_cp[0]),vietnamese_cp,
+    { "Vietnamese", 1258, ARRAY_SIZE(vietnamese_cp), vietnamese_cp,
       "Courier New","Arial", sidAsciiLatin },
-    { "Western European",1252,sizeof(western_cp)/sizeof(western_cp[0]),western_cp,
+    { "Western European", 1252, ARRAY_SIZE(western_cp), western_cp,
       "Courier New","Arial", sidAsciiLatin },
-    { "Unicode",CP_UNICODE,sizeof(unicode_cp)/sizeof(unicode_cp[0]),unicode_cp,
+    { "Unicode", CP_UNICODE, ARRAY_SIZE(unicode_cp), unicode_cp,
       "Courier New","Arial" }
 };
 
@@ -1163,7 +1163,7 @@ static HRESULT GetFamilyCodePage(
 
     if (!puiFamilyCodePage) return S_FALSE;
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -1560,13 +1560,13 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	 && ! IsEqualGUID( &IID_IUnknown, iid) )
 	return E_NOINTERFACE;
 
-    for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(object_creation); i++)
     {
 	if (IsEqualGUID(object_creation[i].clsid, rclsid))
 	    break;
     }
 
-    if (i == sizeof(object_creation)/sizeof(object_creation[0]))
+    if (i == ARRAY_SIZE(object_creation))
     {
 	FIXME("%s: no class found.\n", debugstr_guid(rclsid));
 	return CLASS_E_CLASSNOTAVAILABLE;
@@ -1767,7 +1767,7 @@ static HRESULT EnumCodePage_create( MLang_impl* mlang, DWORD grfFlags,
     ecp->ref = 1;
     ecp->pos = 0;
     ecp->total = 0;
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -1780,7 +1780,7 @@ static HRESULT EnumCodePage_create( MLang_impl* mlang, DWORD grfFlags,
                             sizeof(MIMECPINFO) * ecp->total);
     cpinfo = ecp->cpinfo;
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -1944,7 +1944,7 @@ static HRESULT EnumScript_create( MLang_impl* mlang, DWORD dwFlags,
     es->ref = 1;
     es->pos = 0;
     /* do not enumerate unicode flavours */
-    es->total = sizeof(mlang_data)/sizeof(mlang_data[0]) - 1;
+    es->total = ARRAY_SIZE(mlang_data) - 1;
     es->script_info = HeapAlloc(GetProcessHeap(), 0, sizeof(SCRIPTINFO) * es->total);
 
     for (i = 0; i < es->total; i++)
@@ -2140,7 +2140,7 @@ static HRESULT WINAPI fnIMultiLanguage_GetCodePageInfo(
 
     TRACE("%p, %u, %p\n", This, uiCodePage, pCodePageInfo);
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -2669,18 +2669,18 @@ static void fill_cp_info(const struct mlang_data *ml_data, UINT index, MIMECPINF
     mime_cp_info->uiCodePage = ml_data->mime_cp_info[index].cp;
     mime_cp_info->uiFamilyCodePage = ml_data->family_codepage;
     MultiByteToWideChar(CP_ACP, 0, ml_data->mime_cp_info[index].description, -1,
-                        mime_cp_info->wszDescription, sizeof(mime_cp_info->wszDescription)/sizeof(WCHAR));
+                        mime_cp_info->wszDescription, ARRAY_SIZE(mime_cp_info->wszDescription));
     MultiByteToWideChar(CP_ACP, 0, ml_data->mime_cp_info[index].web_charset, -1,
-                        mime_cp_info->wszWebCharset, sizeof(mime_cp_info->wszWebCharset)/sizeof(WCHAR));
+                        mime_cp_info->wszWebCharset, ARRAY_SIZE(mime_cp_info->wszWebCharset));
     MultiByteToWideChar(CP_ACP, 0, ml_data->mime_cp_info[index].header_charset, -1,
-                        mime_cp_info->wszHeaderCharset, sizeof(mime_cp_info->wszHeaderCharset)/sizeof(WCHAR));
+                        mime_cp_info->wszHeaderCharset, ARRAY_SIZE(mime_cp_info->wszHeaderCharset));
     MultiByteToWideChar(CP_ACP, 0, ml_data->mime_cp_info[index].body_charset, -1,
-                        mime_cp_info->wszBodyCharset, sizeof(mime_cp_info->wszBodyCharset)/sizeof(WCHAR));
+                        mime_cp_info->wszBodyCharset, ARRAY_SIZE(mime_cp_info->wszBodyCharset));
 
     MultiByteToWideChar(CP_ACP, 0, ml_data->fixed_font, -1,
-        mime_cp_info->wszFixedWidthFont, sizeof(mime_cp_info->wszFixedWidthFont)/sizeof(WCHAR));
+        mime_cp_info->wszFixedWidthFont, ARRAY_SIZE(mime_cp_info->wszFixedWidthFont));
     MultiByteToWideChar(CP_ACP, 0, ml_data->proportional_font, -1,
-        mime_cp_info->wszProportionalFont, sizeof(mime_cp_info->wszProportionalFont)/sizeof(WCHAR));
+        mime_cp_info->wszProportionalFont, ARRAY_SIZE(mime_cp_info->wszProportionalFont));
 
     TRACE("%08x %u %u %s %s %s %s %s %s %d\n",
           mime_cp_info->dwFlags, mime_cp_info->uiCodePage,
@@ -2705,7 +2705,7 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCodePageInfo(
 
     TRACE("%p, %u, %04x, %p\n", This, uiCodePage, LangId, pCodePageInfo);
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -2753,7 +2753,7 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCharsetInfo(
 
     if (!pCharsetInfo) return E_FAIL;
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -2782,7 +2782,7 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCharsetInfo(
      * them in our database as a primary (web_charset) encoding this loop
      * does an attempt to 'approximate' charset name by header_charset.
      */
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -3120,7 +3120,7 @@ static HRESULT WINAPI fnIMultiLanguage3_GetCodePageDescription(
     unsigned int i,n;
 
     TRACE ("%u, %04x, %p, %d\n", uiCodePage, lcid, lpWideCharStr, cchWideChar);
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
         {
@@ -3198,7 +3198,7 @@ static HRESULT WINAPI fnIMultiLanguage3_ValidateCodePageEx(
         return S_OK;
 
     /* check for mlang supported code pages */
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         UINT n;
         for (n = 0; n < mlang_data[i].number_of_cp; n++)
@@ -3339,7 +3339,7 @@ static HRESULT WINAPI fnIMLangFontLink2_GetCharCodePages( IMLangFontLink2* iface
 
     *ret_codepages = 0;
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         BOOL used_dc;
         CHAR buf;
@@ -3559,7 +3559,7 @@ static HRESULT WINAPI fnIMLangFontLink2_GetScriptFontInfo(IMLangFontLink2* This,
 
     if (!dwFlags) dwFlags = SCRIPTCONTF_PROPORTIONAL_FONT;
 
-    for (i = 0, j = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0, j = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         if (sid == mlang_data[i].sid)
         {
@@ -3595,7 +3595,7 @@ static HRESULT WINAPI fnIMLangFontLink2_CodePageToScriptID(IMLangFontLink2* This
 
     if (uiCodePage == CP_UNICODE) return E_FAIL;
 
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
     {
         if (uiCodePage == mlang_data[i].family_codepage)
         {
@@ -3884,11 +3884,11 @@ static HRESULT MultiLanguage_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     mlang->IMLangLineBreakConsole_iface.lpVtbl = &IMLangLineBreakConsole_vtbl;
 
     mlang->total_cp = 0;
-    for (i = 0; i < sizeof(mlang_data)/sizeof(mlang_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(mlang_data); i++)
         mlang->total_cp += mlang_data[i].number_of_cp;
 
     /* do not enumerate unicode flavours */
-    mlang->total_scripts = sizeof(mlang_data)/sizeof(mlang_data[0]) - 1;
+    mlang->total_scripts = ARRAY_SIZE(mlang_data) - 1;
 
     mlang->ref = 1;
     *ppObj = &mlang->IMultiLanguage_iface;
@@ -3928,12 +3928,65 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return dll_count == 0 ? S_OK : S_FALSE;
 }
 
+static BOOL register_codepages(void)
+{
+    const struct mlang_data *family;
+    const MIME_CP_INFO *info;
+    HKEY db_key, key;
+    WCHAR buf[32];
+    LSTATUS status;
+
+    static const WCHAR db_key_nameW[] = {
+        'M','I','M','E',
+        '\\','D','a','t','a','b','a','s','e',
+        '\\','C','o','d','e','p','a','g','e',0};
+    static const WCHAR familyW[] = {'F','a','m','i','l','y',0};
+    static const WCHAR formatW[] = {'%','u',0};
+
+    status = RegCreateKeyW(HKEY_CLASSES_ROOT, db_key_nameW, &db_key);
+    if (status != ERROR_SUCCESS)
+        return FALSE;
+
+    for (family = mlang_data; family < mlang_data + ARRAY_SIZE(mlang_data); family++)
+    {
+        for (info = family->mime_cp_info; info < family->mime_cp_info + family->number_of_cp; info++)
+        {
+            sprintfW(buf, formatW, info->cp);
+            status = RegCreateKeyW(db_key, buf, &key);
+            if (status != ERROR_SUCCESS)
+                continue;
+
+            RegSetValueExA(key, "BodyCharset", 0, REG_SZ, (BYTE*)info->body_charset,
+                           strlen(info->body_charset) + 1);
+
+            if (info->cp == family->family_codepage)
+            {
+                RegSetValueExA(key, "FixedWidthFont", 0, REG_SZ, (BYTE*)family->fixed_font,
+                               strlen(family->fixed_font) + 1);
+                RegSetValueExA(key, "ProportionalFont", 0, REG_SZ, (BYTE*)family->proportional_font,
+                               strlen(family->proportional_font) + 1);
+            }
+            else
+            {
+                RegSetValueExW(key, familyW, 0, REG_DWORD, (BYTE*)&family->family_codepage,
+                               sizeof(family->family_codepage));
+            }
+
+            RegCloseKey(key);
+        }
+    }
+
+    RegCloseKey(db_key);
+    return TRUE;
+}
 
 /***********************************************************************
  *		DllRegisterServer (MLANG.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
+    if(!register_codepages())
+        return E_FAIL;
     return __wine_register_resources( instance );
 }
 
