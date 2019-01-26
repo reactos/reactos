@@ -310,7 +310,7 @@ START_TEST(localui)
     while (((lpt_present == NULL) || (lpt_absent == NULL)) && id < 9) {
         id++;
         sprintf(bufferA, fmt_lptA, id);
-        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, ARRAY_SIZE(bufferW));
         pi2 = find_portinfo2(bufferW);
         if (pi2 && (lpt_present == NULL)) lpt_present = pi2;
         if (!pi2 && (lpt_absent == NULL)) lpt_absent = strdupW(bufferW);
@@ -321,7 +321,7 @@ START_TEST(localui)
     while (((com_present == NULL) || (com_absent == NULL)) && id < 9) {
         id++;
         sprintf(bufferA, fmt_comA, id);
-        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, ARRAY_SIZE(bufferW));
         pi2 = find_portinfo2(bufferW);
         if (pi2 && (com_present == NULL)) com_present = pi2;
         if (!pi2 && (com_absent == NULL)) com_absent = strdupW(bufferW);
