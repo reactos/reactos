@@ -338,7 +338,7 @@ static MMDevice *MMDevice_Create(WCHAR *name, GUID *id, EDataFlow flow, DWORD st
     cur->state = state;
     cur->devguid = *id;
 
-    StringFromGUID2(&cur->devguid, guidstr, sizeof(guidstr)/sizeof(*guidstr));
+    StringFromGUID2(&cur->devguid, guidstr, ARRAY_SIZE(guidstr));
 
     if (flow == eRender)
         root = key_render;
@@ -429,7 +429,7 @@ static HRESULT load_devices_from_reg(void)
         DWORD len;
         PROPVARIANT pv = { VT_EMPTY };
 
-        len = sizeof(guidvalue)/sizeof(guidvalue[0]);
+        len = ARRAY_SIZE(guidvalue);
         ret = RegEnumKeyExW(cur, i++, guidvalue, &len, NULL, NULL, NULL, NULL);
         if (ret == ERROR_NO_MORE_ITEMS)
         {
@@ -1395,7 +1395,7 @@ static HRESULT WINAPI MMDevPropStore_GetCount(IPropertyStore *iface, DWORD *npro
         return hr;
     *nprops = 0;
     do {
-        DWORD len = sizeof(buffer)/sizeof(*buffer);
+        DWORD len = ARRAY_SIZE(buffer);
         if (RegEnumValueW(propkey, i, buffer, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
         i++;
@@ -1410,7 +1410,7 @@ static HRESULT WINAPI MMDevPropStore_GetAt(IPropertyStore *iface, DWORD prop, PR
 {
     MMDevPropStore *This = impl_from_IPropertyStore(iface);
     WCHAR buffer[50];
-    DWORD len = sizeof(buffer)/sizeof(*buffer);
+    DWORD len = ARRAY_SIZE(buffer);
     HRESULT hr;
     HKEY propkey;
 
@@ -1530,7 +1530,7 @@ static HRESULT WINAPI PB_Read(IPropertyBag *iface, LPCOLESTR name, VARIANT *var,
     if (!lstrcmpW(name, dsguid))
     {
         WCHAR guidstr[39];
-        StringFromGUID2(&This->devguid, guidstr,sizeof(guidstr)/sizeof(*guidstr));
+        StringFromGUID2(&This->devguid, guidstr,ARRAY_SIZE(guidstr));
         var->n1.n2.vt = VT_BSTR;
         var->n1.n2.n3.bstrVal = SysAllocString(guidstr);
         return S_OK;

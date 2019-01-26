@@ -295,7 +295,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         return E_NOINTERFACE;
     }
 
-    for (i = 0; i < sizeof(MMDEVAPI_CF)/sizeof(MMDEVAPI_CF[0]); ++i)
+    for (i = 0; i < ARRAY_SIZE(MMDEVAPI_CF); ++i)
     {
         if (IsEqualGUID(rclsid, MMDEVAPI_CF[i].rclsid)) {
             IClassFactory_AddRef(&MMDEVAPI_CF[i].IClassFactory_iface);
