@@ -42,7 +42,7 @@ GreSetBitmapOwner(
     return GreSetObjectOwner(hbmp, ulOwner);
 }
 
-BOOL
+LONG
 NTAPI
 UnsafeSetBitmapBits(
     _Inout_ PSURFACE psurf,
@@ -52,34 +52,46 @@ UnsafeSetBitmapBits(
     PUCHAR pjDst;
     const UCHAR *pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG nWidth, nHeight, cBitsPixel;
+    ULONG Y, ibSrc, ibDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
+
     NT_ASSERT(psurf->flags & API_BITMAP);
     NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = psurf->SurfObj.sizlBitmap.cy;
+    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
-    /* Get pointers */
     pjDst = psurf->SurfObj.pvScan0;
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
     NT_ASSERT(lDeltaSrc <= abs(lDeltaDst));
 
-    /* Make sure the buffer is large enough*/
-    if (cjBits < (lDeltaSrc * nHeight))
-        return FALSE;
+    cbDst = labs(lDeltaDst) * nHeight;
+    cbSrc = lDeltaSrc * nHeight;
+    cjBits = min(cjBits, cbSrc);
 
-    while (nHeight--)
+    ibSrc = ibDst = 0;
+    for (Y = 0; Y < nHeight; ++Y)
     {
+        if (ibSrc + lDeltaSrc > cjBits || ibDst + labs(lDeltaDst) > cbDst)
+        {
+            LONG lDelta = min(cjBits - ibSrc, cbDst - ibDst);
+            NT_ASSERT(lDelta >= 0);
+            RtlCopyMemory(pjDst, pjSrc, lDelta);
+            ibSrc += lDelta;
+            break;
+        }
+
         /* Copy one line */
-        memcpy(pjDst, pjSrc, lDeltaSrc);
+        RtlCopyMemory(pjDst, pjSrc, lDeltaSrc);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
+        ibSrc += lDeltaSrc;
+        ibDst += labs(lDeltaDst);
     }
 
-    return TRUE;
+    return ibSrc;
 }
 
 HBITMAP
@@ -483,7 +495,7 @@ NtGdiGetBitmapDimension(
 }
 
 
-VOID
+LONG
 FASTCALL
 UnsafeGetBitmapBits(
     PSURFACE psurf,
@@ -492,10 +504,10 @@ UnsafeGetBitmapBits(
 {
     PUCHAR pjDst, pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG nWidth, nHeight, cBitsPixel;
+    ULONG Y, ibSrc, ibDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = psurf->SurfObj.sizlBitmap.cy;
+    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
     /* Get pointers */
@@ -503,14 +515,33 @@ UnsafeGetBitmapBits(
     pjDst = pvBits;
     lDeltaSrc = psurf->SurfObj.lDelta;
     lDeltaDst = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
+    NT_ASSERT(abs(lDeltaSrc) >= lDeltaDst);
 
-    while (nHeight--)
+    cbSrc = nHeight * labs(lDeltaSrc);
+    cbDst = nHeight * lDeltaDst;
+    Bytes = min(Bytes, cbDst);
+
+    ibSrc = ibDst = 0;
+    for (Y = 0; Y < nHeight; ++Y)
     {
+        if (ibSrc + labs(lDeltaSrc) > cbSrc || ibDst + lDeltaDst > Bytes)
+        {
+            LONG lDelta = min(cbSrc - ibSrc, Bytes - ibDst);
+            NT_ASSERT(lDelta >= 0);
+            RtlCopyMemory(pjDst, pjSrc, lDelta);
+            ibDst += lDelta;
+            break;
+        }
+
         /* Copy one line */
         RtlCopyMemory(pjDst, pjSrc, lDeltaDst);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
+        ibSrc += labs(lDeltaSrc);
+        ibDst += lDeltaDst;
     }
+
+    return ibDst;
 }
 
 LONG
@@ -557,8 +588,7 @@ NtGdiGetBitmapBits(
     _SEH2_TRY
     {
         ProbeForWrite(pUnsafeBits, cjBuffer, 1);
-        UnsafeGetBitmapBits(psurf, cjBuffer, pUnsafeBits);
-        ret = cjBuffer;
+        ret = UnsafeGetBitmapBits(psurf, cjBuffer, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -581,7 +611,7 @@ NtGdiSetBitmapBits(
     LONG ret;
     PSURFACE psurf;
 
-    if (pUnsafeBits == NULL || Bytes == 0)
+    if (pUnsafeBits == NULL || Bytes == 0 || Bytes >= 0x10000)
     {
         return 0;
     }
@@ -611,7 +641,9 @@ NtGdiSetBitmapBits(
 
     _SEH2_TRY
     {
-        ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD));
+        /* NOTE: Win2k3 doesn't check alignment. */
+        ProbeForRead(pUnsafeBits, Bytes, 1);
+        /* ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD)); */
         ret = UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
