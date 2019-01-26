@@ -53,7 +53,7 @@ UnsafeSetBitmapBits(
     PUCHAR pjDst;
     const UCHAR *pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG Y, ibSrc, ibDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
+    ULONG Y, iSrc, iDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
 
     NT_ASSERT(psurf->flags & API_BITMAP);
     NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
@@ -66,21 +66,21 @@ UnsafeSetBitmapBits(
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
-    NT_ASSERT(lDeltaSrc <= abs(lDeltaDst));
+    NT_ASSERT(lDeltaSrc <= labs(lDeltaDst));
 
     cbDst = labs(lDeltaDst) * nHeight;
     cbSrc = lDeltaSrc * nHeight;
     cjBits = min(cjBits, cbSrc);
 
-    ibSrc = ibDst = 0;
-    for (Y = 0; Y < nHeight; ++Y)
+    iSrc = iDst = 0;
+    for (Y = 0; Y < nHeight; Y++)
     {
-        if (ibSrc + lDeltaSrc > cjBits || ibDst + labs(lDeltaDst) > cbDst)
+        if (iSrc + lDeltaSrc > cjBits || iDst + labs(lDeltaDst) > cbDst)
         {
-            LONG lDelta = min(cjBits - ibSrc, cbDst - ibDst);
+            LONG lDelta = min(cjBits - iSrc, cbDst - iDst);
             NT_ASSERT(lDelta >= 0);
             RtlCopyMemory(pjDst, pjSrc, lDelta);
-            ibSrc += lDelta;
+            iSrc += lDelta;
             break;
         }
 
@@ -88,11 +88,11 @@ UnsafeSetBitmapBits(
         RtlCopyMemory(pjDst, pjSrc, lDeltaSrc);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
-        ibSrc += lDeltaSrc;
-        ibDst += labs(lDeltaDst);
+        iSrc += lDeltaSrc;
+        iDst += labs(lDeltaDst);
     }
 
-    return ibSrc;
+    return iSrc;
 }
 
 HBITMAP
@@ -505,7 +505,7 @@ UnsafeGetBitmapBits(
 {
     PUCHAR pjDst, pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG Y, ibSrc, ibDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
+    ULONG Y, iSrc, iDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
     nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
@@ -516,21 +516,21 @@ UnsafeGetBitmapBits(
     pjDst = pvBits;
     lDeltaSrc = psurf->SurfObj.lDelta;
     lDeltaDst = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
-    NT_ASSERT(abs(lDeltaSrc) >= lDeltaDst);
+    NT_ASSERT(labs(lDeltaSrc) >= lDeltaDst);
 
     cbSrc = nHeight * labs(lDeltaSrc);
     cbDst = nHeight * lDeltaDst;
     Bytes = min(Bytes, cbDst);
 
-    ibSrc = ibDst = 0;
-    for (Y = 0; Y < nHeight; ++Y)
+    iSrc = iDst = 0;
+    for (Y = 0; Y < nHeight; Y++)
     {
-        if (ibSrc + labs(lDeltaSrc) > cbSrc || ibDst + lDeltaDst > Bytes)
+        if (iSrc + labs(lDeltaSrc) > cbSrc || iDst + lDeltaDst > Bytes)
         {
-            LONG lDelta = min(cbSrc - ibSrc, Bytes - ibDst);
+            LONG lDelta = min(cbSrc - iSrc, Bytes - iDst);
             NT_ASSERT(lDelta >= 0);
             RtlCopyMemory(pjDst, pjSrc, lDelta);
-            ibDst += lDelta;
+            iDst += lDelta;
             break;
         }
 
@@ -538,11 +538,11 @@ UnsafeGetBitmapBits(
         RtlCopyMemory(pjDst, pjSrc, lDeltaDst);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
-        ibSrc += labs(lDeltaSrc);
-        ibDst += lDeltaDst;
+        iSrc += labs(lDeltaSrc);
+        iDst += lDeltaDst;
     }
 
-    return ibDst;
+    return iDst;
 }
 
 LONG
@@ -644,7 +644,6 @@ NtGdiSetBitmapBits(
     {
         /* NOTE: Win2k3 doesn't check alignment here. */
         ProbeForRead(pUnsafeBits, Bytes, 1);
-        /* ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD)); */
         ret = UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
