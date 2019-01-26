@@ -54,7 +54,6 @@ static const unsigned int win_formats[][4] = {
     {48000,  8, 1},   {48000,  8, 2},   {48000, 16, 1},   {48000, 16, 2},
     {96000,  8, 1},   {96000,  8, 2},   {96000, 16, 1},   {96000, 16, 2}
 };
-#define NB_WIN_FORMATS (sizeof(win_formats)/sizeof(*win_formats))
 
 #define NULL_PTR_ERR MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, RPC_X_NULL_REF_POINTER)
 
@@ -387,7 +386,7 @@ static void test_formats(AUDCLNT_SHAREMODE mode)
     fmt.wFormatTag = WAVE_FORMAT_PCM;
     fmt.cbSize = 0;
 
-    for(i = 0; i < NB_WIN_FORMATS; i++) {
+    for(i = 0; i < ARRAY_SIZE(win_formats); i++) {
         hr = IMMDevice_Activate(dev, &IID_IAudioClient, CLSCTX_INPROC_SERVER,
                 NULL, (void**)&ac);
         ok(hr == S_OK, "Activation failed with %08x\n", hr);
@@ -951,9 +950,8 @@ static void test_clock(int share)
     ok(gbsize == bufsize,
        "BufferSize %u at rate %u\n", gbsize, pwfx->nSamplesPerSec);
     else
-        todo_wine
-        ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
-           "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
+    ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
+       "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
 
     /* In shared mode, GetCurrentPadding decreases in multiples of
      * fragment size (i.e. updated only at period ticks), whereas
