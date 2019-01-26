@@ -480,6 +480,20 @@ ok(obj3.prop1 === 1, "obj3.prop1 is not 1");
 ok(obj3.prop2 === "boolean", "obj3.prop2 is not \"boolean\"");
 ok(obj3.constructor === Object, "unexpected obj3.constructor");
 
+if(invokeVersion >= 2) {
+    eval("tmp = {prop: 'value',}");
+    ok(tmp.prop === "value", "tmp.prop = " + tmp.prop);
+    eval("tmp = {prop: 'value',second:2,}");
+    ok(tmp.prop === "value", "tmp.prop = " + tmp.prop);
+}else {
+    try {
+        eval("tmp = {prop: 'value',}");
+    }catch(e) {
+        tmp = true;
+    }
+    ok(tmp === true, "exception not fired");
+}
+
 {
     var blockVar = 1;
     blockVar = 2;
@@ -1146,6 +1160,27 @@ case 3:
     })();
     expect(ret, "ret");
     expect(x, "try,try2,finally2,finally,ret");
+
+    ret = (function() {
+        try {
+            return "try";
+            unreachable();
+        }catch(e) {
+            unreachable();
+        }finally {
+            new Object();
+            var tmp = (function() {
+                var s = new String();
+                try {
+                    s.length;
+                }finally {
+                    return 1;
+                }
+            })();
+        }
+        unreachable();
+    })();
+    expect(ret, "try");
 })();
 
 tmp = eval("1");
@@ -1796,6 +1831,8 @@ ok(tmp, "tmp = " + tmp);
     }
     ok(x === undefined, "x = " + x);
 })();
+
+var get, set;
 
 /* NoNewline rule parser tests */
 while(true) {

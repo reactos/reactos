@@ -1316,7 +1316,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
     case DISPID_GLOBAL_TESTARGTYPES: {
         VARIANT args[8], v;
-        DISPPARAMS dp = {args, NULL, sizeof(args)/sizeof(*args), 0};
+        DISPPARAMS dp = {args, NULL, ARRAY_SIZE(args), 0};
         HRESULT hres;
 
         CHECK_EXPECT(global_testargtypes_i);

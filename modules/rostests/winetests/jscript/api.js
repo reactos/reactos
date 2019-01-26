@@ -618,6 +618,28 @@ ok(r[0] === "1", "r[0] = " + r[0]);
 ok(r[1] === "2", "r[1] = " + r[1]);
 ok(r[2] === "3", "r[1] = " + r[1]);
 
+r = "1,2,3".split(undefined);
+ok(typeof(r) === "object", "typeof(r) = " + typeof(r));
+ok(r.length === 1, "r.length = " + r.length);
+ok(r[0] === "1,2,3", "r[0] = " + r[0]);
+
+r = "1,undefined2undefined,3".split(undefined);
+ok(typeof(r) === "object", "typeof(r) = " + typeof(r));
+ok(r.length === 3, "r.length = " + r.length);
+ok(r[0] === "1,", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(r[2] === ",3", "r[2] = " + r[2]);
+
+r = "1,undefined2undefined,3".split();
+ok(typeof(r) === "object", "typeof(r) = " + typeof(r));
+ok(r.length === 1, "r.length = " + r.length);
+ok(r[0] === "1,undefined2undefined,3", "r[0] = " + r[0]);
+
+r = "".split();
+ok(typeof(r) === "object", "typeof(r) = " + typeof(r));
+ok(r.length === 1, "r.length = " + r.length);
+ok(r[0] === "", "r[0] = " + r[0]);
+
 tmp = "abcd".indexOf("bc",0);
 ok(tmp === 1, "indexOf = " + tmp);
 tmp = "abcd".indexOf("bc",1);
