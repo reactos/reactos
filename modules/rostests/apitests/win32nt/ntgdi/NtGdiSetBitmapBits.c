@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for NtGdiSetBitmapBits
- * PROGRAMMERS:
+ * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32nt.h>
@@ -11,6 +11,9 @@ START_TEST(NtGdiSetBitmapBits)
 {
 	BYTE Bits[50] = {0,1,2,3,4,5,6,7,8,9};
 	HBITMAP hBitmap;
+    HDC hDC;
+    BITMAPINFO bmi;
+    LPVOID pvBits;
 
 	SetLastError(ERROR_SUCCESS);
 	ok_long(NtGdiSetBitmapBits(0, 0, 0), 0);
@@ -65,4 +68,141 @@ START_TEST(NtGdiSetBitmapBits)
 	ok_long(GetLastError(), ERROR_SUCCESS);
 
 	DeleteObject(hBitmap);
+
+    /* ------------------------- */
+
+    hBitmap = CreateBitmap(16, 16, 1, 1, NULL);
+    ok(hBitmap != NULL, "hBitmap was NULL.\n");
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 0, Bits), 0);
+    ok_int(Bits[0], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 1, Bits), 1);
+    ok_int(Bits[0], 0);
+    ok_int(Bits[1], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0);
+    ok_int(Bits[1], 0);
+    ok_int(Bits[2], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x33);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 10, Bits), 10);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 1, Bits), 1);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 1, Bits), 1);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0x33);
+    ok_int(Bits[2], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 2, Bits), 2);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 3, Bits), 3);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0x33);
+    ok_int(Bits[3], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 3, Bits), 3);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 3, Bits), 3);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0xAA);
+    ok_int(Bits[3], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 4, Bits), 4);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0xAA);
+    ok_int(Bits[3], 0x33);
+    ok_int(Bits[4], 0x55);
+
+    DeleteObject(hBitmap);
+
+    /* ------------------------- */
+
+    hDC = CreateCompatibleDC(NULL);
+
+    ZeroMemory(&bmi, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = 15;
+    bmi.bmiHeader.biHeight = 15;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 24;
+    hBitmap = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    ok(hBitmap != NULL, "hBitmap was NULL.\n");
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 0, Bits), 0);
+    ok_int(Bits[0], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 1, Bits), 1);
+    ok_int(Bits[0], 0);
+    ok_int(Bits[1], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0);
+    ok_int(Bits[1], 0);
+    ok_int(Bits[2], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0x33);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 10, Bits), 10);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 1, Bits), 1);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 1, Bits), 1);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0x33);
+    ok_int(Bits[2], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 2, Bits), 2);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 2, Bits), 2);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 3, Bits), 3);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0x33);
+    ok_int(Bits[3], 0x55);
+
+    FillMemory(Bits, sizeof(Bits), 0xAA);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 3, Bits), 3);
+    FillMemory(Bits, sizeof(Bits), 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 3, Bits), 3);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0xAA);
+    ok_int(Bits[3], 0x55);
+    ok_long(NtGdiGetBitmapBits(hBitmap, 4, Bits), 4);
+    ok_int(Bits[0], 0xAA);
+    ok_int(Bits[1], 0xAA);
+    ok_int(Bits[2], 0xAA);
+    ok_int(Bits[3], 0x33);
+    ok_int(Bits[4], 0x55);
+
+    DeleteObject(hBitmap);
+    DeleteDC(hDC);
 }
