@@ -822,16 +822,21 @@ static void empty_param_list(struct list *list)
     }
 }
 
+static void free_header(header_t *header)
+{
+    list_remove(&header->entry);
+    PropVariantClear(&header->value);
+    empty_param_list(&header->params);
+    heap_free(header);
+}
+
 static void empty_header_list(struct list *list)
 {
     header_t *header, *cursor2;
 
     LIST_FOR_EACH_ENTRY_SAFE(header, cursor2, list, header_t, entry)
     {
-        list_remove(&header->entry);
-        PropVariantClear(&header->value);
-        empty_param_list(&header->params);
-        HeapFree(GetProcessHeap(), 0, header);
+        free_header(header);
     }
 }
 
@@ -1235,8 +1240,7 @@ static HRESULT WINAPI MimeBody_DeleteProp(
 
         if(found)
         {
-             list_remove(&cursor->entry);
-             HeapFree(GetProcessHeap(), 0, cursor);
+             free_header(cursor);
              return S_OK;
         }
     }
