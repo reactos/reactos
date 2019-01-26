@@ -229,7 +229,7 @@ static const struct expected_blob b1[] = {
     {FILE_TOTAL-FILE_IDATA-FIELD_OFFSET(struct Imports, ibn),
         &bin.idata_section.ibn}
 };
-static const struct expected_update_accum a1 = { sizeof(b1) / sizeof(b1[0]), b1, TRUE };
+static const struct expected_update_accum a1 = { ARRAY_SIZE(b1), b1, TRUE };
 
 static const struct expected_blob b2[] = {
     {FILE_PE_START,  &bin},
@@ -239,7 +239,7 @@ static const struct expected_blob b2[] = {
     {FILE_IDATA-FILE_TEXT, &bin.text_section},
     {FILE_TOTAL-FILE_IDATA, &bin.idata_section}
 };
-static const struct expected_update_accum a2 = { sizeof(b2) / sizeof(b2[0]), b2, FALSE };
+static const struct expected_update_accum a2 = { ARRAY_SIZE(b2), b2, FALSE };
 
 /* Creates a test file and returns a handle to it.  The file's path is returned
  * in temp_file, which must be at least MAX_PATH characters in length.
