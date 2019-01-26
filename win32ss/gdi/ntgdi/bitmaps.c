@@ -611,7 +611,8 @@ NtGdiSetBitmapBits(
 
     _SEH2_TRY
     {
-        ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD));
+        /* NOTE: Win2k3 doesn't check WORD alignment here. */
+        ProbeForRead(pUnsafeBits, Bytes, 1);
         ret = UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
