@@ -20,6 +20,9 @@
  */
 
 #define COBJMACROS
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#endif
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -577,7 +580,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 
     memset(bufW, 'x', sizeof(bufW));
     lenA = 0;
-    lenW = sizeof(bufW)/sizeof(bufW[0]);
+    lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, bufW, &lenW);
     ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
     ok(lenA == 0, "expected lenA 0, got %u\n", lenA);
@@ -585,12 +588,12 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 
     memset(bufW, 'x', sizeof(bufW));
     lenA = -1;
-    lenW = sizeof(bufW)/sizeof(bufW[0]);
+    lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, 1252, stringA, &lenA, bufW, &lenW);
     ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
     ok(lenW == lstrlenW(stringW), "expected lenW %u, got %u\n", lstrlenW(stringW), lenW);
-    if (lenW < sizeof(bufW)/sizeof(bufW[0])) {
+    if (lenW < ARRAY_SIZE(bufW)) {
        /* can only happen if the convert call fails */
        ok(bufW[lenW] != 0, "buf should not be 0 terminated\n");
        bufW[lenW] = 0; /* -1 doesn't include 0 terminator */
@@ -608,7 +611,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 
     memset(bufW, 'x', sizeof(bufW));
     lenA = -1;
-    lenW = sizeof(bufW)/sizeof(bufW[0]);
+    lenW = ARRAY_SIZE(bufW);
     ret = IMultiLanguage2_ConvertStringToUnicode(iML2, NULL, CP_UNICODE, stringA, &lenA, bufW, &lenW);
     ok(ret == S_OK, "IMultiLanguage2_ConvertStringToUnicode failed: %08x\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
@@ -628,7 +631,7 @@ static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 
     memset(bufW, 'x', sizeof(bufW));
     lenA = lstrlenA(stringA);
-    lenW = sizeof(bufW)/sizeof(bufW[0]);
+    lenW = ARRAY_SIZE(bufW);
     ret = pConvertINetMultiByteToUnicode(NULL, 1252, stringA, (INT *)&lenA, NULL, (INT *)&lenW);
     ok(ret == S_OK, "ConvertINetMultiByteToUnicode failed: %08x\n", ret);
     ok(lenA == lstrlenA(stringA), "expected lenA %u, got %u\n", lstrlenA(stringA), lenA);
@@ -1039,7 +1042,7 @@ static void test_GetCharsetInfo_other(IMultiLanguage *ml)
     HRESULT hr;
     int i;
 
-    for (i = 0; i < sizeof(other)/sizeof(*other); i++)
+    for (i = 0; i < ARRAY_SIZE(other); i++)
     {
         hr = IMultiLanguage_GetCharsetInfo(ml, other[i].charset, &info);
 
@@ -1356,7 +1359,7 @@ static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
     static WCHAR english[] = { 'e','n','g','l','i','s','h',0 };
 
 
-    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(lcid_table); i++) {
         lcid = -1;
         MultiByteToWideChar(CP_ACP, 0, lcid_table[i].rfc1766, -1, rfc1766W, MAX_RFC1766_NAME);
         ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, rfc1766W);
@@ -1410,7 +1413,7 @@ static void test_Rfc1766ToLcid(void)
     HRESULT ret;
     DWORD i;
 
-    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(lcid_table); i++) {
         lcid = -1;
         ret = pRfc1766ToLcidA(&lcid, lcid_table[i].rfc1766);
 
@@ -1454,7 +1457,7 @@ static void test_GetRfc1766FromLcid(IMultiLanguage2 *iML2)
     HRESULT hr;
     BSTR rfcstr;
 
-    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(lcid_table); i++) {
         buffer[0] = '\0';
 
         rfcstr = NULL;
@@ -1488,7 +1491,7 @@ static void test_LcidToRfc1766(void)
     HRESULT hr;
     DWORD i;
 
-    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(lcid_table); i++) {
 
         memset(buffer, '#', sizeof(buffer)-1);
         buffer[sizeof(buffer)-1] = '\0';
@@ -1542,7 +1545,7 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
     HRESULT ret;
     DWORD i;
 
-    for(i = 0; i < sizeof(info_table) / sizeof(info_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(info_table); i++) {
         memset(buffer, 'x', sizeof(RFC1766INFO) + 2);
         buffer[sizeof(buffer) -1] = 0;
         buffer[sizeof(buffer) -2] = 0;
@@ -2167,7 +2170,7 @@ static void test_CodePageToScriptID(IMLangFontLink2 *font_link)
         {CP_UNICODE, 0, E_FAIL}
     };
 
-    for (i = 0; i < sizeof(cp_sid)/sizeof(cp_sid[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(cp_sid); i++)
     {
         hr = IMLangFontLink2_CodePageToScriptID(font_link, cp_sid[i].cp, &sid);
         ok(hr == cp_sid[i].hr, "%u CodePageToScriptID failed 0x%08x %u\n", i, hr, GetLastError());
@@ -2429,7 +2432,7 @@ static HRESULT WINAPI stream_Clone(IStream *iface, IStream **stream)
     return E_NOTIMPL;
 }
 
-static /* const */ IStreamVtbl stream_vtbl =
+static const IStreamVtbl stream_vtbl =
 {
     stream_QueryInterface,
     stream_AddRef,
@@ -2460,21 +2463,21 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
     ok(hr == E_INVALIDARG, "got %08x\n", hr);
 
     nb_detected = 1;
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), NULL, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), NULL, &nb_detected, NULL);
     ok(hr == E_INVALIDARG, "got %08x\n", hr);
 
     nb_detected = 1;
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(nb_detected == 1, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
@@ -2483,7 +2486,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
     ok(hr == S_OK, "got %08x\n", hr);
     todo_wine ok(nb_detected == 2, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
@@ -2493,7 +2496,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
     ok(hr == S_OK, "got %08x\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
@@ -2504,7 +2507,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred,
-        sizeof(preferred)/sizeof(preferred[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred), detected, &nb_detected, NULL);
     ok(hr == S_OK, "got %08x\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
@@ -2516,7 +2519,7 @@ static void test_DetectOutboundCodePageInIStream(IMultiLanguage3 *ml)
     memset(detected, 0, sizeof(detected));
     hr = IMultiLanguage3_DetectOutboundCodePageInIStream(ml,
         MLDETECTF_PRESERVE_ORDER, &test_stream, preferred2,
-        sizeof(preferred2)/sizeof(preferred2[0]), detected, &nb_detected, NULL);
+        ARRAY_SIZE(preferred2), detected, &nb_detected, NULL);
     ok(hr == S_OK, "got %08x\n", hr);
     todo_wine ok(nb_detected == 3, "got %u\n", nb_detected);
     ok(detected[0] == 65001, "got %u\n", detected[0]);
@@ -2536,7 +2539,7 @@ static void test_GetCodePageInfo(IMultiLanguage2 *iML2)
     HRESULT ret;
 
     test_data = iml2_cpinfo_data;
-    test_data_num = sizeof(iml2_cpinfo_data) / sizeof(iml2_cpinfo_data[0]);
+    test_data_num = ARRAY_SIZE(iml2_cpinfo_data);
     for (i = 0; i < test_data_num; i++)
     {
         ret = IMultiLanguage2_GetCodePageInfo(iML2, test_data[i].cpinfo.uiCodePage, LANG_NEUTRAL, &cpinfo);
