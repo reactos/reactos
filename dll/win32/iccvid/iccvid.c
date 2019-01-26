@@ -957,8 +957,8 @@ static LRESULT ICCVID_GetInfo( ICCVID_Info *info, ICINFO *icinfo, DWORD dwSize )
     icinfo->dwVersion = ICVERSION;
     icinfo->dwVersionICM = ICVERSION;
 
-    LoadStringW(ICCVID_hModule, IDS_NAME, icinfo->szName, sizeof(icinfo->szName)/sizeof(WCHAR));
-    LoadStringW(ICCVID_hModule, IDS_DESCRIPTION, icinfo->szDescription, sizeof(icinfo->szDescription)/sizeof(WCHAR));
+    LoadStringW(ICCVID_hModule, IDS_NAME, icinfo->szName, ARRAY_SIZE(icinfo->szName));
+    LoadStringW(ICCVID_hModule, IDS_DESCRIPTION, icinfo->szDescription, ARRAY_SIZE(icinfo->szDescription));
     /* msvfw32 will fill icinfo->szDriver for us */
 
     return sizeof(ICINFO);
