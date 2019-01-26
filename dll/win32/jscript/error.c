@@ -144,7 +144,7 @@ static const builtin_prop_t Error_props[] = {
 static const builtin_info_t Error_info = {
     JSCLASS_ERROR,
     {NULL, Error_value, 0},
-    sizeof(Error_props)/sizeof(*Error_props),
+    ARRAY_SIZE(Error_props),
     Error_props,
     NULL,
     NULL
@@ -348,7 +348,7 @@ HRESULT init_error_constr(script_ctx_t *ctx, jsdisp_t *object_prototype)
     jsstr_t *str;
     HRESULT hres;
 
-    for(i=0; i < sizeof(names)/sizeof(names[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(names); i++) {
         hres = alloc_error(ctx, i==0 ? object_prototype : NULL, NULL, &err);
         if(FAILED(hres))
             return hres;
@@ -385,7 +385,7 @@ static HRESULT throw_error(script_ctx_t *ctx, HRESULT error, const WCHAR *str, j
         return error;
 
     buf[0] = '\0';
-    LoadStringW(jscript_hinstance, HRESULT_CODE(error),  buf, sizeof(buf)/sizeof(WCHAR));
+    LoadStringW(jscript_hinstance, HRESULT_CODE(error), buf, ARRAY_SIZE(buf));
 
     if(str) pos = strchrW(buf, '|');
     if(pos) {

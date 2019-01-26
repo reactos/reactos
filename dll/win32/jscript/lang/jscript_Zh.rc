@@ -65,6 +65,10 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "精度是超出范围"
     IDS_INVALID_LENGTH      "数组长度必须为一个有限的正整数"
     IDS_ARRAY_EXPECTED      "预期的数组对象"
+    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
+    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
+    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
+    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
 }
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -112,4 +116,8 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "精度是超出範圍"
     IDS_INVALID_LENGTH      "陣列長度必須為一個有限的正整數"
     IDS_ARRAY_EXPECTED      "預期的陣列物件"
+    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
+    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
+    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
+    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
 }

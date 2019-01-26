@@ -1290,7 +1290,7 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
         dp.rgdispidNamedArgs = NULL;
     }
 
-    if(dp.cArgs > sizeof(buf)/sizeof(*buf)) {
+    if(dp.cArgs > ARRAY_SIZE(buf)) {
         dp.rgvarg = heap_alloc(dp.cArgs*sizeof(VARIANT));
         if(!dp.rgvarg) {
             if(dispex)

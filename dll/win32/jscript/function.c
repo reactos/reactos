@@ -304,12 +304,12 @@ static HRESULT function_to_string(FunctionInstance *function, jsstr_t **ret)
         WCHAR *ptr;
 
         name_len = strlenW(function->name);
-        str = jsstr_alloc_buf((sizeof(native_prefixW)+sizeof(native_suffixW))/sizeof(WCHAR) + name_len, &ptr);
+        str = jsstr_alloc_buf(ARRAY_SIZE(native_prefixW) + ARRAY_SIZE(native_suffixW) + name_len, &ptr);
         if(!str)
             return E_OUTOFMEMORY;
 
         memcpy(ptr, native_prefixW, sizeof(native_prefixW));
-        memcpy(ptr += sizeof(native_prefixW)/sizeof(WCHAR), function->name, name_len*sizeof(WCHAR));
+        memcpy(ptr += ARRAY_SIZE(native_prefixW), function->name, name_len*sizeof(WCHAR));
         memcpy(ptr + name_len, native_suffixW, sizeof(native_suffixW));
     }else {
         str = jsstr_alloc_len(function->func_code->source, function->func_code->source_len);
@@ -593,7 +593,7 @@ static const builtin_prop_t Function_props[] = {
 static const builtin_info_t Function_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(Function_props)/sizeof(*Function_props),
+    ARRAY_SIZE(Function_props),
     Function_props,
     Function_destructor,
     NULL
@@ -607,7 +607,7 @@ static const builtin_prop_t FunctionInst_props[] = {
 static const builtin_info_t FunctionInst_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(FunctionInst_props)/sizeof(*FunctionInst_props),
+    ARRAY_SIZE(FunctionInst_props),
     FunctionInst_props,
     Function_destructor,
     NULL
@@ -764,11 +764,11 @@ static HRESULT construct_function(script_ctx_t *ctx, unsigned argc, jsval_t *arg
     }
 
     if(SUCCEEDED(hres)) {
-        len += (sizeof(function_anonymousW) + sizeof(function_beginW) + sizeof(function_endW)) / sizeof(WCHAR);
+        len += ARRAY_SIZE(function_anonymousW) + ARRAY_SIZE(function_beginW) + ARRAY_SIZE(function_endW);
         str = heap_alloc(len*sizeof(WCHAR));
         if(str) {
             memcpy(str, function_anonymousW, sizeof(function_anonymousW));
-            ptr = str + sizeof(function_anonymousW)/sizeof(WCHAR);
+            ptr = str + ARRAY_SIZE(function_anonymousW);
             if(argc > 1) {
                 while(1) {
                     ptr += jsstr_flush(params[j], ptr);
@@ -779,7 +779,7 @@ static HRESULT construct_function(script_ctx_t *ctx, unsigned argc, jsval_t *arg
                 }
             }
             memcpy(ptr, function_beginW, sizeof(function_beginW));
-            ptr += sizeof(function_beginW)/sizeof(WCHAR);
+            ptr += ARRAY_SIZE(function_beginW);
             if(argc)
                 ptr += jsstr_flush(params[argc-1], ptr);
             memcpy(ptr, function_endW, sizeof(function_endW));

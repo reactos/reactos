@@ -61,4 +61,8 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "Duyarlılık aralık dışında."
     IDS_INVALID_LENGTH      "Dizi büyüklüğü bir sonlu artı tam sayı olmalı."
     IDS_ARRAY_EXPECTED      "Dizi nesnesi bekleniyordu."
+    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
+    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
+    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
+    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
 }

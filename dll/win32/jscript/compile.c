@@ -609,7 +609,7 @@ static HRESULT compile_new_expression(compiler_ctx_t *ctx, call_expression_t *ex
     if(FAILED(hres))
         return hres;
 
-    return push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
+    return push_instr(ctx, OP_push_acc) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *expr, BOOL emit_ret)
@@ -651,7 +651,7 @@ static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *e
     if(FAILED(hres))
         return hres;
 
-    return !emit_ret || push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
+    return !emit_ret || push_instr(ctx, OP_push_acc) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_delete_expression(compiler_ctx_t *ctx, unary_expression_t *expr)
@@ -693,7 +693,7 @@ static HRESULT compile_delete_expression(compiler_ctx_t *ctx, unary_expression_t
     case EXPR_IDENT:
         return push_instr_bstr(ctx, OP_delete_ident, ((identifier_expression_t*)expr->expression)->identifier);
     default: {
-        const WCHAR fixmeW[] = {'F','I','X','M','E',0};
+        static const WCHAR fixmeW[] = {'F','I','X','M','E',0};
 
         WARN("invalid delete, unimplemented exception message\n");
 
@@ -888,8 +888,7 @@ static HRESULT compile_array_literal(compiler_ctx_t *ctx, array_literal_expressi
 
 static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expression_t *expr)
 {
-    prop_val_t *iter;
-    unsigned instr;
+    property_definition_t *iter;
     BSTR name;
     HRESULT hres;
 
@@ -905,11 +904,9 @@ static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expres
         if(FAILED(hres))
             return hres;
 
-        instr = push_instr(ctx, OP_obj_prop);
-        if(!instr)
-            return E_OUTOFMEMORY;
-
-        instr_ptr(ctx, instr)->u.arg->bstr = name;
+        hres = push_instr_bstr_uint(ctx, OP_obj_prop, name, iter->type);
+        if(FAILED(hres))
+            return hres;
     }
 
     return S_OK;
@@ -1999,7 +1996,7 @@ static HRESULT visit_expression(compiler_ctx_t *ctx, expression_t *expr)
         hres = visit_expression(ctx, ((member_expression_t*)expr)->expression);
         break;
     case EXPR_PROPVAL: {
-        prop_val_t *iter;
+        property_definition_t *iter;
         for(iter = ((property_value_expression_t*)expr)->property_list; iter; iter = iter->next) {
             hres = visit_expression(ctx, iter->value);
             if(FAILED(hres))

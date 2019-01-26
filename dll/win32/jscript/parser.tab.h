@@ -57,39 +57,41 @@ extern int parser_debug;
     kIF = 267,
     kFINALLY = 268,
     kFOR = 269,
-    kIN = 270,
-    kINSTANCEOF = 271,
-    kNEW = 272,
-    kNULL = 273,
-    kRETURN = 274,
-    kSWITCH = 275,
-    kTHIS = 276,
-    kTHROW = 277,
-    kTRUE = 278,
-    kFALSE = 279,
-    kTRY = 280,
-    kTYPEOF = 281,
-    kVAR = 282,
-    kVOID = 283,
-    kWHILE = 284,
-    kWITH = 285,
-    tANDAND = 286,
-    tOROR = 287,
-    tINC = 288,
-    tDEC = 289,
-    tHTMLCOMMENT = 290,
-    kDIVEQ = 291,
-    kDCOL = 292,
-    tIdentifier = 293,
-    tAssignOper = 294,
-    tEqOper = 295,
-    tShiftOper = 296,
-    tRelOper = 297,
-    tNumericLiteral = 298,
-    tBooleanLiteral = 299,
-    tStringLiteral = 300,
-    tEOF = 301,
-    LOWER_THAN_ELSE = 302
+    kGET = 270,
+    kIN = 271,
+    kSET = 272,
+    kINSTANCEOF = 273,
+    kNEW = 274,
+    kNULL = 275,
+    kRETURN = 276,
+    kSWITCH = 277,
+    kTHIS = 278,
+    kTHROW = 279,
+    kTRUE = 280,
+    kFALSE = 281,
+    kTRY = 282,
+    kTYPEOF = 283,
+    kVAR = 284,
+    kVOID = 285,
+    kWHILE = 286,
+    kWITH = 287,
+    tANDAND = 288,
+    tOROR = 289,
+    tINC = 290,
+    tDEC = 291,
+    tHTMLCOMMENT = 292,
+    kDIVEQ = 293,
+    kDCOL = 294,
+    tIdentifier = 295,
+    tAssignOper = 296,
+    tEqOper = 297,
+    tShiftOper = 298,
+    tRelOper = 299,
+    tNumericLiteral = 300,
+    tBooleanLiteral = 301,
+    tStringLiteral = 302,
+    tEOF = 303,
+    LOWER_THAN_ELSE = 304
   };
 #endif
 
@@ -98,7 +100,7 @@ extern int parser_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 145 "parser.y" /* yacc.c:1909  */
+#line 147 "parser.y" /* yacc.c:1909  */
 
     int                     ival;
     const WCHAR             *srcptr;
@@ -113,13 +115,14 @@ union YYSTYPE
     const WCHAR            *identifier;
     struct _parameter_list_t *parameter_list;
     struct _property_list_t *property_list;
+    property_definition_t   *property_definition;
     source_elements_t       *source_elements;
     statement_t             *statement;
     struct _statement_list_t *statement_list;
     struct _variable_list_t *variable_list;
     variable_declaration_t  *variable_declaration;
 
-#line 123 "parser.tab.h" /* yacc.c:1909  */
+#line 126 "parser.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

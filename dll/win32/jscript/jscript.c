@@ -69,6 +69,7 @@ void script_release(script_ctx_t *ctx)
     if(--ctx->ref)
         return;
 
+    jsval_release(ctx->acc);
     clear_ei(ctx);
     if(ctx->cc)
         release_cc(ctx->cc);
@@ -715,6 +716,7 @@ static HRESULT WINAPI JScriptParse_InitNew(IActiveScriptParse *iface)
     ctx->version = This->version;
     ctx->html_mode = This->html_mode;
     ctx->ei.val = jsval_undefined();
+    ctx->acc = jsval_undefined();
     heap_pool_init(&ctx->tmp_heap);
 
     hres = create_jscaller(ctx);

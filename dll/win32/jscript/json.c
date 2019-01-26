@@ -487,7 +487,7 @@ static HRESULT json_quote(stringify_ctx_t *ctx, const WCHAR *ptr, size_t len)
             break;
         default:
             if(*ptr < ' ') {
-                const WCHAR formatW[] = {'\\','u','%','0','4','x',0};
+                static const WCHAR formatW[] = {'\\','u','%','0','4','x',0};
                 WCHAR buf[7];
                 sprintfW(buf, formatW, *ptr);
                 if(!append_string(ctx, buf))
@@ -836,7 +836,7 @@ static const builtin_prop_t JSON_props[] = {
 static const builtin_info_t JSON_info = {
     JSCLASS_JSON,
     {NULL, NULL, 0},
-    sizeof(JSON_props)/sizeof(*JSON_props),
+    ARRAY_SIZE(JSON_props),
     JSON_props,
     NULL,
     NULL

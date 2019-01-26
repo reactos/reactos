@@ -65,4 +65,8 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
     IDS_INVALID_LENGTH      "Довжиною масиву повинне бути скінченне додатнє ціле число"
     IDS_ARRAY_EXPECTED      "Очікується об'єкт Array"
+    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
+    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
+    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
+    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
 }

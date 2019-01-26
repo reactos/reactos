@@ -92,10 +92,12 @@ extern HINSTANCE jscript_hinstance DECLSPEC_HIDDEN;
 
 #define PROPF_ARGMASK       0x00ff
 #define PROPF_METHOD        0x0100
-#define PROPF_ENUMERABLE    0x0200
-#define PROPF_CONSTR        0x0400
+#define PROPF_CONSTR        0x0200
+
+#define PROPF_ENUMERABLE    0x0400
 #define PROPF_WRITABLE      0x0800
 #define PROPF_CONFIGURABLE  0x1000
+#define PROPF_ALL           (PROPF_ENUMERABLE | PROPF_WRITABLE | PROPF_CONFIGURABLE)
 
 #define PROPF_VERSION_MASK  0x01ff0000
 #define PROPF_VERSION_SHIFT 16
@@ -424,6 +426,7 @@ struct _script_ctx_t {
     jsval_t *stack;
     unsigned stack_size;
     unsigned stack_top;
+    jsval_t acc;
 
     jsstr_t *last_match;
     match_result_t match_parens[9];

@@ -65,4 +65,8 @@ STRINGTABLE
     IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
     IDS_INVALID_LENGTH      "배열 길이는 반드시  한정된 양의 정수이어야 합니다"
     IDS_ARRAY_EXPECTED      "배열 객체가 필요합니다"
+    IDS_INVALID_WRITABLE_PROP_DESC "'writable' attribute on the property descriptor cannot be set to 'true' on this object"
+    IDS_NONCONFIGURABLE_REDEFINED  "Cannot redefine non-configurable property '|'"
+    IDS_NONWRITABLE_MODIFIED       "Cannot modify non-writable property '|'"
+    IDS_PROP_DESC_MISMATCH         "Property cannot have both accessors and a value"
 }

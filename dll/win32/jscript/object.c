@@ -252,7 +252,7 @@ static const builtin_prop_t Object_props[] = {
 static const builtin_info_t Object_info = {
     JSCLASS_OBJECT,
     {NULL, NULL,0, Object_get_value},
-    sizeof(Object_props)/sizeof(*Object_props),
+    ARRAY_SIZE(Object_props),
     Object_props,
     Object_destructor,
     NULL
@@ -493,23 +493,23 @@ static HRESULT Object_getOwnPropertyDescriptor(script_ctx_t *ctx, vdisp_t *jsthi
         return hres;
 
     if(prop_desc.explicit_getter || prop_desc.explicit_setter) {
-        hres = jsdisp_propput_name(desc_obj, getW, prop_desc.getter
-                                   ? jsval_obj(prop_desc.getter) : jsval_undefined());
+        hres = jsdisp_define_data_property(desc_obj, getW, PROPF_ALL,
+                prop_desc.getter ? jsval_obj(prop_desc.getter) : jsval_undefined());
         if(SUCCEEDED(hres))
-            hres = jsdisp_propput_name(desc_obj, setW, prop_desc.setter
-                                       ? jsval_obj(prop_desc.setter) : jsval_undefined());
+            hres = jsdisp_define_data_property(desc_obj, setW, PROPF_ALL,
+                    prop_desc.setter ? jsval_obj(prop_desc.setter) : jsval_undefined());
     }else {
         hres = jsdisp_propput_name(desc_obj, valueW, prop_desc.value);
         if(SUCCEEDED(hres))
-            hres = jsdisp_propput_name(desc_obj, writableW,
-                                       jsval_bool(!!(prop_desc.flags & PROPF_WRITABLE)));
+            hres = jsdisp_define_data_property(desc_obj, writableW, PROPF_ALL,
+                    jsval_bool(!!(prop_desc.flags & PROPF_WRITABLE)));
     }
     if(SUCCEEDED(hres))
-        hres = jsdisp_propput_name(desc_obj, enumerableW,
-                                   jsval_bool(!!(prop_desc.flags & PROPF_ENUMERABLE)));
+        hres = jsdisp_define_data_property(desc_obj, enumerableW, PROPF_ALL,
+                jsval_bool(!!(prop_desc.flags & PROPF_ENUMERABLE)));
     if(SUCCEEDED(hres))
-        hres = jsdisp_propput_name(desc_obj, configurableW,
-                                   jsval_bool(!!(prop_desc.flags & PROPF_CONFIGURABLE)));
+        hres = jsdisp_define_data_property(desc_obj, configurableW, PROPF_ALL,
+                jsval_bool(!!(prop_desc.flags & PROPF_CONFIGURABLE)));
 
     release_property_descriptor(&prop_desc);
     if(SUCCEEDED(hres) && r)
@@ -528,7 +528,7 @@ static const builtin_prop_t ObjectConstr_props[] = {
 static const builtin_info_t ObjectConstr_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(ObjectConstr_props)/sizeof(*ObjectConstr_props),
+    ARRAY_SIZE(ObjectConstr_props),
     ObjectConstr_props,
     NULL,
     NULL

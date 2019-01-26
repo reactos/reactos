@@ -526,8 +526,8 @@ static HRESULT str_to_number(jsstr_t *str, double *ret)
         ptr++;
     }
 
-    if(!strncmpW(ptr, infinityW, sizeof(infinityW)/sizeof(WCHAR))) {
-        ptr += sizeof(infinityW)/sizeof(WCHAR);
+    if(!strncmpW(ptr, infinityW, ARRAY_SIZE(infinityW))) {
+        ptr += ARRAY_SIZE(infinityW);
         while(*ptr && isspaceW(*ptr))
             ptr++;
 
@@ -701,7 +701,7 @@ static jsstr_t *int_to_string(int i)
         i = -i;
     }
 
-    p = buf + sizeof(buf)/sizeof(*buf)-1;
+    p = buf + ARRAY_SIZE(buf)-1;
     *p-- = 0;
     while(i) {
         *p-- = i%10 + '0';
@@ -718,7 +718,7 @@ static jsstr_t *int_to_string(int i)
 
 HRESULT double_to_string(double n, jsstr_t **str)
 {
-    const WCHAR InfinityW[] = {'-','I','n','f','i','n','i','t','y',0};
+    static const WCHAR InfinityW[] = {'-','I','n','f','i','n','i','t','y',0};
 
     if(isnan(n)) {
         *str = jsstr_nan();
@@ -748,9 +748,9 @@ HRESULT double_to_string(double n, jsstr_t **str)
 /* ECMA-262 3rd Edition    9.8 */
 HRESULT to_string(script_ctx_t *ctx, jsval_t val, jsstr_t **str)
 {
-    const WCHAR nullW[] = {'n','u','l','l',0};
-    const WCHAR trueW[] = {'t','r','u','e',0};
-    const WCHAR falseW[] = {'f','a','l','s','e',0};
+    static const WCHAR nullW[] = {'n','u','l','l',0};
+    static const WCHAR trueW[] = {'t','r','u','e',0};
+    static const WCHAR falseW[] = {'f','a','l','s','e',0};
 
     switch(jsval_type(val)) {
     case JSV_UNDEFINED:

@@ -523,10 +523,10 @@ static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, 
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
         week[0] = 0;
-        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(time)], week, sizeof(week)/sizeof(*week));
+        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(time)], week, ARRAY_SIZE(week));
 
         month[0] = 0;
-        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(time)], month, sizeof(month)/sizeof(*month));
+        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(time)], month, ARRAY_SIZE(month));
 
         year = year_from_time(time);
         if(year<0) {
@@ -732,10 +732,10 @@ static inline HRESULT create_utc_string(script_ctx_t *ctx, vdisp_t *jsthis, jsva
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
         week[0] = 0;
-        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(date->time)], week, sizeof(week)/sizeof(*week));
+        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(date->time)], week, ARRAY_SIZE(week));
 
         month[0] = 0;
-        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(date->time)], month, sizeof(month)/sizeof(*month));
+        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(date->time)], month, ARRAY_SIZE(month));
 
         year = year_from_time(date->time);
         if(year<0) {
@@ -809,10 +809,10 @@ static HRESULT dateobj_to_date_string(DateInstance *date, jsval_t *r)
         lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
         week[0] = 0;
-        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(time)], week, sizeof(week)/sizeof(*week));
+        GetLocaleInfoW(lcid_en, week_ids[(int)week_day(time)], week, ARRAY_SIZE(week));
 
         month[0] = 0;
-        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(time)], month, sizeof(month)/sizeof(*month));
+        GetLocaleInfoW(lcid_en, month_ids[(int)month_from_time(time)], month, ARRAY_SIZE(month));
 
         year = year_from_time(time);
         if(year<0) {
@@ -1983,7 +1983,7 @@ static const builtin_prop_t Date_props[] = {
 static const builtin_info_t Date_info = {
     JSCLASS_DATE,
     {NULL, NULL,0, Date_get_value},
-    sizeof(Date_props)/sizeof(*Date_props),
+    ARRAY_SIZE(Date_props),
     Date_props,
     NULL,
     NULL
@@ -2037,7 +2037,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
         LOCALE_SMONTHNAME1, LOCALE_SDAYNAME7, LOCALE_SDAYNAME1,
         LOCALE_SDAYNAME2, LOCALE_SDAYNAME3, LOCALE_SDAYNAME4,
         LOCALE_SDAYNAME5, LOCALE_SDAYNAME6 };
-    WCHAR *strings[sizeof(string_ids)/sizeof(DWORD)];
+    WCHAR *strings[ARRAY_SIZE(string_ids)];
     WCHAR *parse;
     int input_len, parse_len = 0, nest_level = 0, i, size;
     int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
@@ -2088,7 +2088,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
 
     /* FIXME: Cache strings */
     lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-    for(i=0; i<sizeof(string_ids)/sizeof(DWORD); i++) {
+    for(i=0; i<ARRAY_SIZE(string_ids); i++) {
         size = GetLocaleInfoW(lcid_en, string_ids[i], NULL, 0);
         strings[i] = heap_alloc((size+1)*sizeof(WCHAR));
         if(!strings[i]) {
@@ -2269,7 +2269,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 for(size=i; parse[size]>='A' && parse[size]<='Z'; size++);
                 size -= i;
 
-                for(j=0; j<sizeof(string_ids)/sizeof(DWORD); j++)
+                for(j=0; j<ARRAY_SIZE(string_ids); j++)
                     if(!strncmpiW(&parse[i], strings[j], size)) break;
 
                 if(j < 12) {
@@ -2277,7 +2277,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                     set_month = TRUE;
                     month = 11-j;
                 }
-                else if(j == sizeof(string_ids)/sizeof(DWORD)) break;
+                else if(j == ARRAY_SIZE(string_ids)) break;
 
                 i += size;
             }
@@ -2302,7 +2302,7 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
         *ret = NAN;
     }
 
-    for(i=0; i<sizeof(string_ids)/sizeof(DWORD); i++)
+    for(i=0; i<ARRAY_SIZE(string_ids); i++)
         heap_free(strings[i]);
     heap_free(parse);
 
@@ -2522,7 +2522,7 @@ static const builtin_prop_t DateConstr_props[] = {
 static const builtin_info_t DateConstr_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(DateConstr_props)/sizeof(*DateConstr_props),
+    ARRAY_SIZE(DateConstr_props),
     DateConstr_props,
     NULL,
     NULL

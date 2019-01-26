@@ -96,7 +96,7 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp,
     }
 
     if(!(rem_flags & REM_NO_CTX_UPDATE)) {
-        DWORD i, n = min(sizeof(ctx->match_parens)/sizeof(ctx->match_parens[0]), ret->paren_count);
+        DWORD i, n = min(ARRAY_SIZE(ctx->match_parens), ret->paren_count);
 
         for(i=0; i < n; i++) {
             if(ret->parens[i].index == -1) {
@@ -108,7 +108,7 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp,
             }
         }
 
-        if(n < sizeof(ctx->match_parens)/sizeof(ctx->match_parens[0]))
+        if(n < ARRAY_SIZE(ctx->match_parens))
             memset(ctx->match_parens+n, 0, sizeof(ctx->match_parens) - n*sizeof(ctx->match_parens[0]));
     }
 
@@ -595,7 +595,7 @@ static const builtin_prop_t RegExp_props[] = {
 static const builtin_info_t RegExp_info = {
     JSCLASS_REGEXP,
     {NULL, RegExp_value, 0},
-    sizeof(RegExp_props)/sizeof(*RegExp_props),
+    ARRAY_SIZE(RegExp_props),
     RegExp_props,
     RegExp_destructor,
     NULL
@@ -612,7 +612,7 @@ static const builtin_prop_t RegExpInst_props[] = {
 static const builtin_info_t RegExpInst_info = {
     JSCLASS_REGEXP,
     {NULL, RegExp_value, 0},
-    sizeof(RegExpInst_props)/sizeof(*RegExpInst_props),
+    ARRAY_SIZE(RegExpInst_props),
     RegExpInst_props,
     RegExp_destructor,
     NULL
@@ -995,7 +995,7 @@ static const builtin_prop_t RegExpConstr_props[] = {
 static const builtin_info_t RegExpConstr_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(RegExpConstr_props)/sizeof(*RegExpConstr_props),
+    ARRAY_SIZE(RegExpConstr_props),
     RegExpConstr_props,
     NULL,
     NULL

@@ -36,6 +36,7 @@ typedef struct {
 
 static const WCHAR lengthW[] = {'l','e','n','g','t','h',0};
 static const WCHAR concatW[] = {'c','o','n','c','a','t',0};
+static const WCHAR forEachW[] = {'f','o','r','E','a','c','h',0};
 static const WCHAR joinW[] = {'j','o','i','n',0};
 static const WCHAR popW[] = {'p','o','p',0};
 static const WCHAR pushW[] = {'p','u','s','h',0};
@@ -950,6 +951,47 @@ static HRESULT Array_toLocaleString(script_ctx_t *ctx, vdisp_t *vthis, WORD flag
     return E_NOTIMPL;
 }
 
+static HRESULT Array_forEach(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    jsval_t value, args[3], res;
+    jsdisp_t *jsthis;
+    unsigned length, i;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    /* FIXME: Check IsCallable */
+    if(argc != 1 || !is_object_instance(argv[0])) {
+        FIXME("Unsupported arguments\n");
+        return E_NOTIMPL;
+    }
+
+    hres = get_length(ctx, vthis, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+
+    for(i = 0; i < length; i++) {
+        hres = jsdisp_get_idx(jsthis, i, &value);
+        if(hres == DISP_E_UNKNOWNNAME)
+            continue;
+        if(FAILED(hres))
+            return hres;
+
+        args[0] = value;
+        args[1] = jsval_number(i);
+        args[2] = jsval_obj(jsthis);
+        hres = disp_call_value(ctx, get_object(argv[0]), NULL, DISPATCH_METHOD, ARRAY_SIZE(args), args, &res);
+        jsval_release(value);
+        if(FAILED(hres))
+            return hres;
+        jsval_release(res);
+    }
+
+    if(r) *r = jsval_undefined();
+    return S_OK;
+}
+
 static HRESULT Array_indexOf(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
@@ -1023,7 +1065,7 @@ static HRESULT Array_unshift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsi
         return hres;
 
     if(argc) {
-        buf_end = buf + sizeof(buf)/sizeof(WCHAR)-1;
+        buf_end = buf + ARRAY_SIZE(buf)-1;
         *buf_end-- = 0;
         i = length;
 
@@ -1103,7 +1145,8 @@ static void Array_on_put(jsdisp_t *dispex, const WCHAR *name)
 
 static const builtin_prop_t Array_props[] = {
     {concatW,                Array_concat,               PROPF_METHOD|1},
-    {indexOfW,               Array_indexOf,              PROPF_ES5|PROPF_METHOD|1},
+    {forEachW,               Array_forEach,              PROPF_METHOD|PROPF_ES5|1},
+    {indexOfW,               Array_indexOf,              PROPF_METHOD|PROPF_ES5|1},
     {joinW,                  Array_join,                 PROPF_METHOD|1},
     {lengthW,                NULL,0,                     Array_get_length, Array_set_length},
     {popW,                   Array_pop,                  PROPF_METHOD},
@@ -1121,7 +1164,7 @@ static const builtin_prop_t Array_props[] = {
 static const builtin_info_t Array_info = {
     JSCLASS_ARRAY,
     {NULL, NULL,0, Array_get_value},
-    sizeof(Array_props)/sizeof(*Array_props),
+    ARRAY_SIZE(Array_props),
     Array_props,
     Array_destructor,
     Array_on_put
@@ -1134,7 +1177,7 @@ static const builtin_prop_t ArrayInst_props[] = {
 static const builtin_info_t ArrayInst_info = {
     JSCLASS_ARRAY,
     {NULL, NULL,0, Array_get_value},
-    sizeof(ArrayInst_props)/sizeof(*ArrayInst_props),
+    ARRAY_SIZE(ArrayInst_props),
     ArrayInst_props,
     Array_destructor,
     Array_on_put
@@ -1241,7 +1284,7 @@ static const builtin_prop_t ArrayConstr_props[] = {
 static const builtin_info_t ArrayConstr_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(ArrayConstr_props)/sizeof(*ArrayConstr_props),
+    ARRAY_SIZE(ArrayConstr_props),
     ArrayConstr_props,
     NULL,
     NULL

@@ -943,7 +943,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
             }else {
                 static const WCHAR undefinedW[] = {'u','n','d','e','f','i','n','e','d'};
 
-                hres = strbuf_append(&ret, undefinedW, sizeof(undefinedW)/sizeof(WCHAR));
+                hres = strbuf_append(&ret, undefinedW, ARRAY_SIZE(undefinedW));
                 if(FAILED(hres))
                     break;
             }
@@ -1140,16 +1140,31 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
 
     TRACE("\n");
 
-    if(argc != 1 && argc != 2) {
-        FIXME("unsupported argc %u\n", argc);
-        return E_NOTIMPL;
-    }
-
     hres = get_string_flat_val(ctx, jsthis, &jsstr, &str);
     if(FAILED(hres))
         return hres;
 
     length = jsstr_length(jsstr);
+
+    if(!argc || (is_undefined(argv[0]) && ctx->version >= SCRIPTLANGUAGEVERSION_ES5)) {
+        if(!r)
+            return S_OK;
+
+        hres = create_array(ctx, 0, &array);
+        if(FAILED(hres))
+            return hres;
+
+        /* NOTE: according to spec, we should respect limit argument here (if provided).
+         * We have a test showing that it's broken in native IE. */
+        hres = jsdisp_propput_idx(array, 0, jsval_string(jsstr));
+        if(FAILED(hres)) {
+            jsdisp_release(array);
+            return hres;
+        }
+
+        *r = jsval_obj(array);
+        return S_OK;
+    }
 
     if(argc > 1 && !is_undefined(argv[1])) {
         hres = to_uint32(ctx, argv[1], &limit);
@@ -1595,7 +1610,7 @@ static const builtin_prop_t String_props[] = {
 static const builtin_info_t String_info = {
     JSCLASS_STRING,
     {NULL, NULL,0, String_get_value},
-    sizeof(String_props)/sizeof(*String_props),
+    ARRAY_SIZE(String_props),
     String_props,
     String_destructor,
     NULL
@@ -1608,7 +1623,7 @@ static const builtin_prop_t StringInst_props[] = {
 static const builtin_info_t StringInst_info = {
     JSCLASS_STRING,
     {NULL, NULL,0, String_get_value},
-    sizeof(StringInst_props)/sizeof(*StringInst_props),
+    ARRAY_SIZE(StringInst_props),
     StringInst_props,
     String_destructor,
     NULL,
@@ -1726,7 +1741,7 @@ static const builtin_prop_t StringConstr_props[] = {
 static const builtin_info_t StringConstr_info = {
     JSCLASS_FUNCTION,
     DEFAULT_FUNCTION_VALUE,
-    sizeof(StringConstr_props)/sizeof(*StringConstr_props),
+    ARRAY_SIZE(StringConstr_props),
     StringConstr_props,
     NULL,
     NULL
