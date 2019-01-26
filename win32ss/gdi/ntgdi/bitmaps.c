@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Bitmap functions
  * FILE:             win32ss/gdi/ntgdi/bitmaps.c
- * PROGRAMER:        Timo Kreuzer <timo.kreuzer@reactos.org>
+ * PROGRAMERS:       Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                   Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
