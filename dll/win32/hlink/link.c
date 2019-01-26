@@ -52,6 +52,12 @@ typedef struct
     IHlinkSite          *Site;
     DWORD               SiteData;
     BOOL                absolute;
+
+    IBindStatusCallback IBindStatusCallback_iface;
+    IBindStatusCallback *bind_callback;
+    IBindCtx *async_bind_ctx;
+    DWORD async_flags;
+    IHlinkBrowseContext *async_browse_ctx;
 } HlinkImpl;
 
 static inline HlinkImpl *impl_from_IHlink(IHlink *iface)
@@ -472,32 +478,47 @@ static HRESULT WINAPI IHlink_fnGetMiscStatus(IHlink* iface, DWORD* pdwStatus)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
-        IBindStatusCallback *pbsc, IHlinkBrowseContext *phbc)
+static HRESULT WINAPI IHlink_fnNavigate(IHlink *iface, DWORD flags, IBindCtx *user_bind_ctx,
+        IBindStatusCallback *bind_callback, IHlinkBrowseContext *browse_ctx)
 {
-    HlinkImpl  *This = impl_from_IHlink(iface);
+    HlinkImpl *This = impl_from_IHlink(iface);
     IMoniker *mon = NULL;
     HRESULT r;
 
-    FIXME("Semi-Stub:(%p)->(%i %p %p %p)\n", This, grfHLNF, pbc, pbsc, phbc);
+    TRACE("hlink %p, flags %#x, user_bind_ctx %p, bind_callback %p, browse_ctx %p.\n",
+            This, flags, user_bind_ctx, bind_callback, browse_ctx);
+
+    if (This->async_bind_ctx)
+        return E_UNEXPECTED;
 
     r = __GetMoniker(This, &mon, HLINKGETREF_ABSOLUTE);
     TRACE("Moniker %p\n", mon);
 
     if (SUCCEEDED(r))
     {
-        IBindCtx *bcxt = NULL;
+        IBindCtx *bind_ctx = NULL;
         IUnknown *unk = NULL;
         IHlinkTarget *target;
 
-        if (phbc)
+        if (browse_ctx)
         {
-            r = IHlinkBrowseContext_GetObject(phbc, mon, TRUE, &unk);
+            r = IHlinkBrowseContext_GetObject(browse_ctx, mon, TRUE, &unk);
             if (r != S_OK)
             {
-                CreateBindCtx(0, &bcxt);
-                RegisterBindStatusCallback(bcxt, pbsc, NULL, 0);
-                r = IMoniker_BindToObject(mon, bcxt, NULL, &IID_IUnknown, (void**)&unk);
+                CreateBindCtx(0, &bind_ctx);
+                RegisterBindStatusCallback(bind_ctx, &This->IBindStatusCallback_iface, NULL, 0);
+                This->bind_callback = bind_callback;
+                r = IMoniker_BindToObject(mon, bind_ctx, NULL, &IID_IUnknown, (void**)&unk);
+                if (r == MK_S_ASYNCHRONOUS)
+                {
+                    This->async_bind_ctx = bind_ctx;
+                    This->async_flags = flags;
+                    if (bind_callback)
+                        IBindStatusCallback_AddRef(bind_callback);
+                    IHlinkBrowseContext_AddRef(This->async_browse_ctx = browse_ctx);
+                    IMoniker_Release(mon);
+                    return r;
+                }
             }
             if (r == S_OK)
             {
@@ -506,13 +527,13 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
             }
             if (r == S_OK)
             {
-                if (bcxt) IHlinkTarget_SetBrowseContext(target, phbc);
-                r = IHlinkTarget_Navigate(target, grfHLNF, This->Location);
+                if (bind_ctx) IHlinkTarget_SetBrowseContext(target, browse_ctx);
+                r = IHlinkTarget_Navigate(target, flags, This->Location);
                 IHlinkTarget_Release(target);
             }
 
-            RevokeBindStatusCallback(bcxt, pbsc);
-            if (bcxt) IBindCtx_Release(bcxt);
+            RevokeBindStatusCallback(bind_ctx, &This->IBindStatusCallback_iface);
+            if (bind_ctx) IBindCtx_Release(bind_ctx);
         }
         else
         {
@@ -948,6 +969,165 @@ static const IPersistStreamVtbl psvt =
     IPersistStream_fnGetSizeMax,
 };
 
+static HlinkImpl *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
+{
+    return CONTAINING_RECORD(iface, HlinkImpl, IBindStatusCallback_iface);
+}
+
+static HRESULT WINAPI bind_callback_QueryInterface(IBindStatusCallback *iface, REFIID iid, void **out)
+{
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IBindStatusCallback))
+    {
+        IBindStatusCallback_AddRef(*out = iface);
+        return S_OK;
+    }
+
+    WARN("No interface for %s.\n", debugstr_guid(iid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI bind_callback_AddRef(IBindStatusCallback *iface)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+    return IHlink_AddRef(&hlink->IHlink_iface);
+}
+
+static ULONG WINAPI bind_callback_Release(IBindStatusCallback *iface)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+    return IHlink_Release(&hlink->IHlink_iface);
+}
+
+static HRESULT WINAPI bind_callback_OnStartBinding(IBindStatusCallback *iface,
+        DWORD reserved, IBinding *binding)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+
+    TRACE("hlink %p, reserved %#x, binding %p.\n", hlink, reserved, binding);
+
+    if (hlink->bind_callback)
+        return IBindStatusCallback_OnStartBinding(hlink->bind_callback, reserved, binding);
+    return S_OK;
+}
+
+static HRESULT WINAPI bind_callback_GetPriority(IBindStatusCallback *iface, LONG *priority)
+{
+    FIXME("iface %p, priority %p, stub!\n", iface, priority);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI bind_callback_OnLowResource(IBindStatusCallback *iface, DWORD reserved)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+
+    TRACE("hlink %p, reserved %#x.\n", hlink, reserved);
+
+    if (hlink->bind_callback)
+        return IBindStatusCallback_OnLowResource(hlink->bind_callback, reserved);
+    return S_OK;
+}
+
+static HRESULT WINAPI bind_callback_OnProgress(IBindStatusCallback *iface,
+        ULONG progress, ULONG max, ULONG status, const WCHAR *text)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+
+    TRACE("hlink %p, progress %u, max %u, status %u, text %s.\n",
+            hlink, progress, max, status, debugstr_w(text));
+
+    if (hlink->bind_callback)
+        return IBindStatusCallback_OnProgress(hlink->bind_callback, progress, max, status, text);
+    return S_OK;
+}
+
+static HRESULT WINAPI bind_callback_OnStopBinding(IBindStatusCallback *iface,
+        HRESULT hr, const WCHAR *error)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+
+    TRACE("hlink %p, hr %#x, error %s.\n", hlink, hr, debugstr_w(error));
+
+    if (hlink->bind_callback)
+        IBindStatusCallback_OnStopBinding(hlink->bind_callback, hr, error);
+
+    if (hlink->async_bind_ctx)
+    {
+        if (hlink->bind_callback)
+            IBindStatusCallback_Release(hlink->bind_callback);
+        RevokeBindStatusCallback(hlink->async_bind_ctx, iface);
+        IBindCtx_Release(hlink->async_bind_ctx);
+        IHlinkBrowseContext_Release(hlink->async_browse_ctx);
+        hlink->async_bind_ctx = NULL;
+    }
+    return S_OK;
+}
+
+static HRESULT WINAPI bind_callback_GetBindInfo(IBindStatusCallback *iface,
+        DWORD *bind_flags, BINDINFO *bind_info)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+
+    TRACE("hlink %p, bind_flags %p, bind_info %p.\n", hlink, bind_flags, bind_info);
+
+    if (hlink->bind_callback)
+        return IBindStatusCallback_GetBindInfo(hlink->bind_callback, bind_flags, bind_info);
+    return S_OK;
+}
+
+static HRESULT WINAPI bind_callback_OnDataAvailable(IBindStatusCallback *iface,
+        DWORD flags, DWORD size, FORMATETC *formatetc, STGMEDIUM *stgmed)
+{
+    FIXME("iface %p, flags %#x, size %d, formatetc %p, stgmed %p, stub!\n",
+            iface, flags, size, formatetc, stgmed);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI bind_callback_OnObjectAvailable(IBindStatusCallback *iface,
+        REFIID iid, IUnknown *unk)
+{
+    HlinkImpl *hlink = impl_from_IBindStatusCallback(iface);
+    IHlinkTarget *target;
+    HRESULT hr;
+
+    TRACE("hlink %p, iid %s, unk %p.\n", hlink, debugstr_guid(iid), unk);
+
+    if (hlink->bind_callback)
+        IBindStatusCallback_OnObjectAvailable(hlink->bind_callback, iid, unk);
+
+    if (hlink->async_bind_ctx)
+    {
+        hr = IUnknown_QueryInterface(unk, &IID_IHlinkTarget, (void **)&target);
+        if (FAILED(hr))
+            return hr;
+
+        IHlinkTarget_SetBrowseContext(target, hlink->async_browse_ctx);
+        hr = IHlinkTarget_Navigate(target, hlink->async_flags, hlink->Location);
+        IHlinkTarget_Release(target);
+
+        if (hlink->Site)
+            IHlinkSite_OnNavigationComplete(hlink->Site, hlink->SiteData, 0, hr, NULL);
+
+        return hr;
+    }
+
+    return S_OK;
+}
+
+static const IBindStatusCallbackVtbl bind_callback_vtbl =
+{
+    bind_callback_QueryInterface,
+    bind_callback_AddRef,
+    bind_callback_Release,
+    bind_callback_OnStartBinding,
+    bind_callback_GetPriority,
+    bind_callback_OnLowResource,
+    bind_callback_OnProgress,
+    bind_callback_OnStopBinding,
+    bind_callback_GetBindInfo,
+    bind_callback_OnDataAvailable,
+    bind_callback_OnObjectAvailable,
+};
+
 HRESULT HLink_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     HlinkImpl * hl;
@@ -966,6 +1146,7 @@ HRESULT HLink_Constructor(IUnknown *pUnkOuter, REFIID riid, void **ppv)
     hl->IHlink_iface.lpVtbl = &hlvt;
     hl->IPersistStream_iface.lpVtbl = &psvt;
     hl->IDataObject_iface.lpVtbl = &dovt;
+    hl->IBindStatusCallback_iface.lpVtbl = &bind_callback_vtbl;
 
     *ppv = hl;
     return S_OK;

@@ -389,9 +389,9 @@ HRESULT WINAPI HlinkParseDisplayName(LPBC pibc, LPCWSTR pwzDisplayName, BOOL fNo
     if(fNoForceAbs)
         FIXME("Unsupported fNoForceAbs\n");
 
-    if(!strncmpiW(pwzDisplayName, file_colonW, sizeof(file_colonW)/sizeof(WCHAR))) {
-        pwzDisplayName += sizeof(file_colonW)/sizeof(WCHAR);
-        eaten += sizeof(file_colonW)/sizeof(WCHAR);
+    if(!strncmpiW(pwzDisplayName, file_colonW, ARRAY_SIZE(file_colonW))) {
+        pwzDisplayName += ARRAY_SIZE(file_colonW);
+        eaten += ARRAY_SIZE(file_colonW);
 
         while(*pwzDisplayName == '/') {
             pwzDisplayName++;
