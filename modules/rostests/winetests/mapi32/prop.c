@@ -135,7 +135,7 @@ static void test_PropCopyMore(void)
         return;
     }
 
-    for (i = 0; i < sizeof(ptTypes)/sizeof(ptTypes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ptTypes); i++)
     {
         lpSrc->ulPropTag = ptTypes[i];
 
@@ -453,11 +453,11 @@ static void test_FPropCompareProp(void)
     lbuffw[1] = '\0';
     rbuffw[1] = '\0';
 
-    for (i = 0; i < sizeof(ptTypes)/sizeof(ptTypes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ptTypes); i++)
     {
         pvLeft.ulPropTag = pvRight.ulPropTag = ptTypes[i];
 
-        for (j = 0; j < sizeof(FPCProp_Results)/sizeof(FPCProp_Results[0]); j++)
+        for (j = 0; j < ARRAY_SIZE(FPCProp_Results); j++)
         {
             SHORT lVal = FPCProp_Results[j].lVal;
             SHORT rVal = FPCProp_Results[j].rVal;
@@ -583,11 +583,11 @@ static void test_LPropCompareProp(void)
     lbuffw[1] = '\0';
     rbuffw[1] = '\0';
 
-    for (i = 0; i < sizeof(ptTypes)/sizeof(ptTypes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ptTypes); i++)
     {
         pvLeft.ulPropTag = pvRight.ulPropTag = ptTypes[i];
 
-        for (j = 0; j < sizeof(LPCProp_Results)/sizeof(LPCProp_Results[0]); j++)
+        for (j = 0; j < ARRAY_SIZE(LPCProp_Results); j++)
         {
             SHORT lVal = LPCProp_Results[j].lVal;
             SHORT rVal = LPCProp_Results[j].rVal;
@@ -684,7 +684,7 @@ static void test_PpropFindProp(void)
         return;
     }
 
-    for (i = 0; i < sizeof(ptTypes)/sizeof(ptTypes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ptTypes); i++)
     {
         pvProp.ulPropTag = ptTypes[i];
 
@@ -923,7 +923,7 @@ static void test_LpValFindProp(void)
         return;
     }
 
-    for (i = 0; i < sizeof(ptTypes)/sizeof(ptTypes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ptTypes); i++)
     {
         pvProp.ulPropTag = PROP_TAG(ptTypes[i], 1u);
 
