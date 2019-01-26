@@ -83,9 +83,6 @@ static const Format ADPCM_Formats[] =
     {1,  4, 22050}, {2,	4, 22050},  {1,  4, 44100}, {2,	 4, 44100},
 };
 
-#define	NUM_PCM_FORMATS		(sizeof(PCM_Formats) / sizeof(PCM_Formats[0]))
-#define	NUM_ADPCM_FORMATS	(sizeof(ADPCM_Formats) / sizeof(ADPCM_Formats[0]))
-
 static int MS_Delta[] =
 {
     230, 230, 230, 230, 307, 409, 512, 614,
@@ -109,11 +106,11 @@ static	DWORD	ADPCM_GetFormatIndex(const WAVEFORMATEX* wfx)
     switch (wfx->wFormatTag)
     {
     case WAVE_FORMAT_PCM:
-	hi = NUM_PCM_FORMATS;
+	hi = ARRAY_SIZE(PCM_Formats);
 	fmts = PCM_Formats;
 	break;
     case WAVE_FORMAT_ADPCM:
-	hi = NUM_ADPCM_FORMATS;
+	hi = ARRAY_SIZE(ADPCM_Formats);
 	fmts = ADPCM_Formats;
 	break;
     default:
@@ -389,13 +386,13 @@ static	LRESULT ADPCM_DriverDetails(PACMDRIVERDETAILSW add)
     add->cFilterTags = 0;
     add->hicon = NULL;
     MultiByteToWideChar( CP_ACP, 0, "MS-ADPCM", -1,
-                         add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
+                         add->szShortName, ARRAY_SIZE( add->szShortName ));
     MultiByteToWideChar( CP_ACP, 0, "Wine MS ADPCM converter", -1,
-                         add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
+                         add->szLongName, ARRAY_SIZE( add->szLongName ));
     MultiByteToWideChar( CP_ACP, 0, "Brought to you by the Wine team...", -1,
-                         add->szCopyright, sizeof(add->szCopyright)/sizeof(WCHAR) );
+                         add->szCopyright, ARRAY_SIZE( add->szCopyright ));
     MultiByteToWideChar( CP_ACP, 0, "Refer to LICENSE file", -1,
-                         add->szLicensing, sizeof(add->szLicensing)/sizeof(WCHAR) );
+                         add->szLicensing, ARRAY_SIZE( add->szLicensing ));
     add->szFeatures[0] = 0;
 
     return MMSYSERR_NOERROR;
@@ -441,13 +438,13 @@ static	LRESULT	ADPCM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
     case 0:
 	aftd->dwFormatTag = WAVE_FORMAT_PCM;
 	aftd->cbFormatSize = sizeof(PCMWAVEFORMAT);
-	aftd->cStandardFormats = NUM_PCM_FORMATS;
+	aftd->cStandardFormats = ARRAY_SIZE(PCM_Formats);
         lstrcpyW(aftd->szFormatTag, szPcm);
         break;
     case 1:
 	aftd->dwFormatTag = WAVE_FORMAT_ADPCM;
 	aftd->cbFormatSize = sizeof(ADPCMWAVEFORMAT) + (7 - 1) * sizeof(ADPCMCOEFSET);
-	aftd->cStandardFormats = NUM_ADPCM_FORMATS;
+	aftd->cStandardFormats = ARRAY_SIZE(ADPCM_Formats);
         lstrcpyW(aftd->szFormatTag, szMsAdPcm);
 	break;
     }
@@ -470,7 +467,7 @@ static	LRESULT	ADPCM_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	switch (afd->dwFormatTag)
         {
 	case WAVE_FORMAT_PCM:
-	    if (afd->dwFormatIndex >= NUM_PCM_FORMATS) return ACMERR_NOTPOSSIBLE;
+	    if (afd->dwFormatIndex >= ARRAY_SIZE(PCM_Formats)) return ACMERR_NOTPOSSIBLE;
 	    afd->pwfx->nChannels = PCM_Formats[afd->dwFormatIndex].nChannels;
 	    afd->pwfx->nSamplesPerSec = PCM_Formats[afd->dwFormatIndex].rate;
 	    afd->pwfx->wBitsPerSample = PCM_Formats[afd->dwFormatIndex].nBits;
@@ -483,7 +480,7 @@ static	LRESULT	ADPCM_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 		afd->pwfx->nSamplesPerSec * afd->pwfx->nBlockAlign;
 	    break;
 	case WAVE_FORMAT_ADPCM:
-	    if (afd->dwFormatIndex >= NUM_ADPCM_FORMATS) return ACMERR_NOTPOSSIBLE;
+	    if (afd->dwFormatIndex >= ARRAY_SIZE(ADPCM_Formats)) return ACMERR_NOTPOSSIBLE;
             if (afd->cbwfx < sizeof(ADPCMWAVEFORMAT) + (7 - 1) * sizeof(ADPCMCOEFSET))
                 return ACMERR_NOTPOSSIBLE;
 	    afd->pwfx->nChannels = ADPCM_Formats[afd->dwFormatIndex].nChannels;
