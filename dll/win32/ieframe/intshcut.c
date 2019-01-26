@@ -456,11 +456,11 @@ static HRESULT get_profile_string(LPCWSTR lpAppName, LPCWSTR lpKeyName,
 
 static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileName, DWORD dwMode)
 {
+    static const WCHAR str_header[] = {'I','n','t','e','r','n','e','t','S','h','o','r','t','c','u','t',0};
+    static const WCHAR str_URL[] = {'U','R','L',0};
+    static const WCHAR str_iconfile[] = {'i','c','o','n','f','i','l','e',0};
+    static const WCHAR str_iconindex[] = {'i','c','o','n','i','n','d','e','x',0};
     InternetShortcut *This = impl_from_IPersistFile(pFile);
-    static WCHAR str_header[] = {'I','n','t','e','r','n','e','t','S','h','o','r','t','c','u','t',0};
-    static WCHAR str_URL[] = {'U','R','L',0};
-    static WCHAR str_iconfile[] = {'i','c','o','n','f','i','l','e',0};
-    static WCHAR str_iconindex[] = {'i','c','o','n','i','n','d','e','x',0};
     WCHAR *filename = NULL;
     WCHAR *url;
     HRESULT hr;
@@ -573,12 +573,12 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *pFile, LPCOLESTR pszFileNam
         file = CreateFileW(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {
+            static const char str_header[] = "[InternetShortcut]";
+            static const char str_URL[] = "URL=";
+            static const char str_ICONFILE[] = "ICONFILE=";
+            static const char str_eol[] = "\r\n";
             DWORD bytesWritten;
             char *iconfile;
-            char str_header[] = "[InternetShortcut]";
-            char str_URL[] = "URL=";
-            char str_ICONFILE[] = "ICONFILE=";
-            char str_eol[] = "\r\n";
             IPropertyStorage *pPropStgRead;
             PROPSPEC ps[2];
             PROPVARIANT pvread[2];
@@ -587,11 +587,11 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *pFile, LPCOLESTR pszFileNam
             ps[1].ulKind = PRSPEC_PROPID;
             ps[1].u.propid = PID_IS_ICONINDEX;
 
-            WriteFile(file, str_header, lstrlenA(str_header), &bytesWritten, NULL);
-            WriteFile(file, str_eol, lstrlenA(str_eol), &bytesWritten, NULL);
-            WriteFile(file, str_URL, lstrlenA(str_URL), &bytesWritten, NULL);
+            WriteFile(file, str_header, ARRAY_SIZE(str_header) - 1, &bytesWritten, NULL);
+            WriteFile(file, str_eol, ARRAY_SIZE(str_eol) - 1, &bytesWritten, NULL);
+            WriteFile(file, str_URL, ARRAY_SIZE(str_URL) - 1, &bytesWritten, NULL);
             WriteFile(file, url, lstrlenA(url), &bytesWritten, NULL);
-            WriteFile(file, str_eol, lstrlenA(str_eol), &bytesWritten, NULL);
+            WriteFile(file, str_eol, ARRAY_SIZE(str_eol) - 1, &bytesWritten, NULL);
 
             hr = IPropertySetStorage_Open(This->property_set_storage, &FMTID_Intshcut, STGM_READ|STGM_SHARE_EXCLUSIVE, &pPropStgRead);
             if (SUCCEEDED(hr))
