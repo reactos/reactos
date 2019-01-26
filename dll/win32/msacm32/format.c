@@ -503,9 +503,9 @@ MMRESULT WINAPI acmFormatDetailsW(HACMDRIVER had, PACMFORMATDETAILSW pafd, DWORD
 	    wsprintfW(pafd->szFormat + lstrlenW(pafd->szFormat), fmt2,
 		      pafd->pwfx->wBitsPerSample);
 	}
-        MultiByteToWideChar( CP_ACP, 0, (pafd->pwfx->nChannels == 1) ? "; Mono" : "; Stereo", -1,
-                             pafd->szFormat + strlenW(pafd->szFormat),
-                             sizeof(pafd->szFormat)/sizeof(WCHAR) - strlenW(pafd->szFormat) );
+        MultiByteToWideChar(CP_ACP, 0, (pafd->pwfx->nChannels == 1) ? "; Mono" : "; Stereo", -1,
+                            pafd->szFormat + strlenW(pafd->szFormat),
+                            ARRAY_SIZE(pafd->szFormat) - strlenW(pafd->szFormat));
     }
 
     TRACE("=> %d\n", mmr);
@@ -929,8 +929,8 @@ MMRESULT WINAPI acmFormatTagDetailsW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd
 
     if (mmr == MMSYSERR_NOERROR &&
 	paftd->dwFormatTag == WAVE_FORMAT_PCM && paftd->szFormatTag[0] == 0)
-        MultiByteToWideChar( CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
-                             sizeof(paftd->szFormatTag)/sizeof(WCHAR) );
+        MultiByteToWideChar(CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
+                            ARRAY_SIZE(paftd->szFormatTag));
 
     return mmr;
 }
@@ -1036,8 +1036,8 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
                 (LPARAM)paftd, ACM_FORMATTAGDETAILSF_INDEX) == MMSYSERR_NOERROR) {
                 if (paftd->dwFormatTag == WAVE_FORMAT_PCM) {
                     if (paftd->szFormatTag[0] == 0)
-                        MultiByteToWideChar( CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
-                                            sizeof(paftd->szFormatTag)/sizeof(WCHAR) );
+                        MultiByteToWideChar(CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
+                                            ARRAY_SIZE(paftd->szFormatTag));
                     /* (WS) I'm preserving this PCM hack since it seems to be
                      * correct. Please notice this block was borrowed from
                      * below.
@@ -1062,8 +1062,8 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
                         (LPARAM)paftd, ACM_FORMATTAGDETAILSF_INDEX) == MMSYSERR_NOERROR) {
                         if (paftd->dwFormatTag == WAVE_FORMAT_PCM) {
                             if (paftd->szFormatTag[0] == 0)
-                                MultiByteToWideChar( CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
-                                                     sizeof(paftd->szFormatTag)/sizeof(WCHAR) );
+                                MultiByteToWideChar(CP_ACP, 0, "PCM", -1, paftd->szFormatTag,
+                                                    ARRAY_SIZE(paftd->szFormatTag));
                             /* FIXME (EPP): I'm not sure this is the correct
                              * algorithm (should make more sense to apply the same
                              * for all already loaded formats, but this will do

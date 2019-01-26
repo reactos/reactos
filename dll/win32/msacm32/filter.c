@@ -361,8 +361,8 @@ MMRESULT WINAPI acmFilterTagDetailsW(HACMDRIVER had, PACMFILTERTAGDETAILSW paftd
 
     if (mmr == MMSYSERR_NOERROR &&
 	paftd->dwFilterTag == WAVE_FORMAT_PCM && paftd->szFilterTag[0] == 0)
-        MultiByteToWideChar( CP_ACP, 0, "PCM", -1, paftd->szFilterTag,
-                             sizeof(paftd->szFilterTag)/sizeof(WCHAR) );
+        MultiByteToWideChar(CP_ACP, 0, "PCM", -1, paftd->szFilterTag,
+                            ARRAY_SIZE(paftd->szFilterTag));
 
     return mmr;
 }
