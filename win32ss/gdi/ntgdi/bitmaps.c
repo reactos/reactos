@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Bitmap functions
  * FILE:             win32ss/gdi/ntgdi/bitmaps.c
- * PROGRAMER:        Timo Kreuzer <timo.kreuzer@reactos.org>
+ * PROGRAMERS:       Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                   Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include <win32k.h>
@@ -42,7 +43,7 @@ GreSetBitmapOwner(
     return GreSetObjectOwner(hbmp, ulOwner);
 }
 
-BOOL
+LONG
 NTAPI
 UnsafeSetBitmapBits(
     _Inout_ PSURFACE psurf,
@@ -52,34 +53,46 @@ UnsafeSetBitmapBits(
     PUCHAR pjDst;
     const UCHAR *pjSrc;
     LONG lDeltaDst, lDeltaSrc;
-    ULONG nWidth, nHeight, cBitsPixel;
+    ULONG Y, iSrc, iDst, cbSrc, cbDst, nWidth, nHeight, cBitsPixel;
+
     NT_ASSERT(psurf->flags & API_BITMAP);
     NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
-    nHeight = psurf->SurfObj.sizlBitmap.cy;
+    nHeight = labs(psurf->SurfObj.sizlBitmap.cy);
     cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
 
-    /* Get pointers */
     pjDst = psurf->SurfObj.pvScan0;
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
-    NT_ASSERT(lDeltaSrc <= abs(lDeltaDst));
+    NT_ASSERT(lDeltaSrc <= labs(lDeltaDst));
 
-    /* Make sure the buffer is large enough*/
-    if (cjBits < (lDeltaSrc * nHeight))
-        return FALSE;
+    cbDst = labs(lDeltaDst) * nHeight;
+    cbSrc = lDeltaSrc * nHeight;
+    cjBits = min(cjBits, cbSrc);
 
-    while (nHeight--)
+    iSrc = iDst = 0;
+    for (Y = 0; Y < nHeight; Y++)
     {
+        if (iSrc + lDeltaSrc > cjBits || iDst + labs(lDeltaDst) > cbDst)
+        {
+            LONG lDelta = min(cjBits - iSrc, cbDst - iDst);
+            NT_ASSERT(lDelta >= 0);
+            RtlCopyMemory(pjDst, pjSrc, lDelta);
+            iSrc += lDelta;
+            break;
+        }
+
         /* Copy one line */
-        memcpy(pjDst, pjSrc, lDeltaSrc);
+        RtlCopyMemory(pjDst, pjSrc, lDeltaSrc);
         pjSrc += lDeltaSrc;
         pjDst += lDeltaDst;
+        iSrc += lDeltaSrc;
+        iDst += labs(lDeltaDst);
     }
 
-    return TRUE;
+    return iSrc;
 }
 
 HBITMAP

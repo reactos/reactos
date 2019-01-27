@@ -46,13 +46,6 @@ GreCreateDIBitmapInternal(
 
 BOOL
 NTAPI
-UnsafeSetBitmapBits(
-    _Inout_ PSURFACE psurf,
-    _In_ ULONG cjBits,
-    _In_ const VOID *pvBits);
-
-BOOL
-NTAPI
 GreGetBitmapDimension(
     _In_ HBITMAP hBitmap,
     _Out_ LPSIZE psizDim);
