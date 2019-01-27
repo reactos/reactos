@@ -83,6 +83,26 @@ START_TEST(NtGdiSetBitmapBits)
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100, Bits), 0xC);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0xC);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x7FFF, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x8000, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
     ok_long(NtGdiSetBitmapBits(hBitmap, 0xFFFF, Bits), 0);
     ok_long(GetLastError(), 0xDEADFACE);
 
