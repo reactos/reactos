@@ -14,6 +14,7 @@ START_TEST(NtGdiSetBitmapBits)
     HDC hDC;
     BITMAPINFO bmi;
     LPVOID pvBits;
+    LPBYTE LargeBits;
 
     SetLastError(0xDEADFACE);
     ok_long(NtGdiSetBitmapBits(0, 0, 0), 0);
@@ -77,57 +78,32 @@ START_TEST(NtGdiSetBitmapBits)
     ok_long(NtGdiSetBitmapBits(hBitmap, 100, Bits), 12);
     ok_long(GetLastError(), 0xDEADFACE);
 
-    /* Test huge bytes count */
+    /* Test large byte counts */
+    LargeBits = VirtualAlloc(NULL, 0x100000 + PAGE_SIZE, MEM_RESERVE, PAGE_NOACCESS);
+    VirtualAlloc(LargeBits, 0x100000, MEM_COMMIT, PAGE_READWRITE);
+    CopyMemory(LargeBits, Bits, sizeof(Bits));
+
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 12345678, Bits), 0);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100, LargeBits), 0xC);
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100, Bits), 0xC);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x1000, LargeBits), 0xC);
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0xC);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x10000, LargeBits), 0xC);
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    {
-        BYTE dummy[256] = { 1 };
-
-        SetLastError(0xDEADFACE);
-        ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0xC);
-        ok_long(GetLastError(), 0xDEADFACE);
-
-        SetLastError(0xDEADFACE);
-        ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
-        ok_long(GetLastError(), 0xDEADFACE);
-
-        ok_int(dummy[0], 1);
-    }
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0x7FFF, Bits), 0);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100000, LargeBits), 0xC);
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0x8000, Bits), 0);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100001, LargeBits), 0x0);
     ok_long(GetLastError(), 0xDEADFACE);
 
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0xFFFF, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0x10000, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    /* Test negative bytes count */
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, -5, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
+    VirtualFree(LargeBits, 0, MEM_RELEASE);
 
     DeleteObject(hBitmap);
 
@@ -143,7 +119,7 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[0], 0x55);
 
     FillMemory(Bits, sizeof(Bits), 0x55);
-    
+
     SetLastError(0xDEADFACE);
     ok_long(NtGdiGetBitmapBits(hBitmap, 1, Bits), 1);
     ok_long(GetLastError(), 0xDEADFACE);
@@ -219,14 +195,6 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[2], 0xAA);
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x20);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
 
     DeleteObject(hBitmap);
 
@@ -326,14 +294,6 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
 
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x234);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
-
     DeleteObject(hBitmap);
     DeleteDC(hDC);
 
@@ -432,14 +392,6 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[2], 0xAA);
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x234);
-    ok_long(GetLastError(), 0xDEADFACE);
-
-    SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
-    ok_long(GetLastError(), 0xDEADFACE);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
