@@ -1,0 +1,27 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nUtilizare: arping [-t] [-n număr] -s ip-sursă calculator-destinație\n\n\
+Opțiuni:\n\
+    -t             Transmite către destinație până la oprire manuală.\n\
+                   Pentru oprire utilizați combinația de taste «Ctrl+C».\n\
+    -n număr       Specifică numărul de semnale care urmează a fi trimise.\n\
+    -s             Specifică o adresă IP ca soursă.\n\n\0"
+    IDS_BAD_OPTION_FORMAT "Format eronat de opțiune %1.\n\0"
+    IDS_BAD_OPTION "Opțiune eronată %1.\n\0"
+    IDS_BAD_PARAMETER "Parametru eronat %1.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Este necesară specificarea numelui sau a adresei IP a destinației.\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "Eșec la inițializarea winsock dll.\n\0"
+    IDS_UNKNOWN_HOST "Destinație neidentificată: %1.\n\0"
+    IDS_SRC_MUST_BE_SPECIFIED "Este necesară specificarea adresei IP a sursei.\n\0"
+    IDS_BAD_VALUE_OPTION_N "Valoare eronată pentru opțiunea -n, domeniul valid este de la 1 la %1!u!.\n\0"
+    IDS_ARPING_TO_FROM "ARPING %1 din %2\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+    IDS_REPLY_FROM "Răspuns de tip unicast de la %1 [%2]  %3%4\n\0"
+    IDS_ARPING_STATISTICS "%1!u! semnale trimise\n\
+%2!u! recepționate\n\0"
+END
