@@ -139,7 +139,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         8,
         23,
-        "\x07  Ap\343sa\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
+        "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -215,13 +215,13 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         8,
         19,
-        "\x07  Ap\343sa\376i ENTER pentru a instala ReactOS.",
+        "\x07  Tasta\376i ENTER pentru a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Ap\343sa\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
+        "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -521,13 +521,13 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         8,
         19,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina principal\343.",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina principal\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Ap\343sa\376i ENTER pentru a reporni calculatorul.",
+        "\x07  Tasta\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -643,7 +643,7 @@ static MUI_ENTRY roROComputerPageEntries[] =
     {
         8,
         13,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -735,7 +735,7 @@ static MUI_ENTRY roROQuitPageEntries[] =
     {
         10,
         11,
-        "Ap\343sa\376i ENTER pentru a reporni calculatorul.",
+        "Tasta\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -780,7 +780,7 @@ static MUI_ENTRY roRODisplayPageEntries[] =
     {
         8,
         13,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -832,7 +832,7 @@ static MUI_ENTRY roROSuccessPageEntries[] =
     {
         10,
         11,
-        "Ap\343sa\376i ENTER pentru a reporni calculatorul.",
+        "Tasta\376i ENTER pentru a reporni calculatorul.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -925,7 +925,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Ap\343sa\376i ENTER pentru a instala pe parti\376ia selectat\343.",
+        "\x07  Tasta\376i ENTER pentru a instala pe parti\376ia selectat\343.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1001,13 +1001,13 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         14,
-        "\252terge\376i o parti\376ie de sistem doar c\342nd sunte\376i siguri c\343 nu exist\343 a\272a",
+        "\252terge\376i o parti\376ie de sistem doar c\342nd fie ave\376i siguran\376a c\343 nu ve\376i",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programe pe parti\376ie, sau c\342nd sunte\376i siguri c\343 dori\376i s\343 le \272terge\376i.",
+        "\272terge accidental a\272a programe pe parti\376ie, fie dori\376i s\343 le \272terge\376i.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1025,7 +1025,7 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         20,
-        "\x07  Ap\343sa\376i ENTER pentru a \272terge parti\376ia de sistem. Vi se va",
+        "\x07  Tasta\376i ENTER pentru a \272terge parti\376ia de sistem. Vi se va",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1037,7 +1037,7 @@ static MUI_ENTRY roROConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         24,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343. Parti\376ia",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343. Parti\376ia",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1077,7 +1077,7 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         10,
-        "Ap\343sa\376i ENTER pentru a continua.",
+        "Tasta\376i ENTER pentru a continua.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1261,7 +1261,7 @@ static MUI_ENTRY roROKeyboardSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1313,7 +1313,7 @@ static MUI_ENTRY roROLayoutSettingsEntries[] =
     {
         8,
         13,
-        "\x07  Ap\343sa\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
+        "\x07  Tasta\376i ESC pentru a reveni la pagina precedent\343 f\343r\343",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1395,13 +1395,13 @@ static MUI_ENTRY roROSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Ap\343sa\376i ENTER pentru a formata parti\376ia.",
+        "\x07  Tasta\376i ENTER pentru a formata parti\376ia.",
         0
     },
     {
         8,
         21,
-        "\x07  Ap\343sa\376i ESC pentru a alege o alt\343 parti\376ie.",
+        "\x07  Tasta\376i ESC pentru a alege o alt\343 parti\376ie.",
         0
     },
     {
@@ -1448,7 +1448,7 @@ static MUI_ENTRY roRODeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Ap\343sa\376i ESC pentru a anula.",
+        "\x07  Tasta\376i ESC pentru a anula.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1506,8 +1506,8 @@ MUI_ERROR roROErrorEntries[] =
         "Dac\343 abandona\376i instalarea acum, alt\343 dat\343, pentru a\n"
         "instala ReactOS, va fi nevoie s\343 repeta\376i to\376i pa\272ii.\n"
         "\n"
-        "  \x07  Ap\343sa\376i ENTER pentru a continua instalarea.\n"
-        "  \x07  Ap\343sa\376i F3 pentru a abandona instalarea.",
+        "  \x07  Tasta\376i ENTER pentru a continua instalarea.\n"
+        "  \x07  Tasta\376i F3 pentru a abandona instalarea.",
         "F3 = Ie\272ire  ENTER = Continuare"
     },
     {
@@ -1579,8 +1579,8 @@ MUI_ERROR roROErrorEntries[] =
         "Crearea sau \272tergerea de parti\376ii poate astfel cauza\n"
         "distrugerea tabelei de parti\376ii."
         "\n"
-        "  \x07  Ap\343sa\376i F3 pentru a abandona instalarea.\n"
-        "  \x07  Ap\343sa\376i ENTER pentru a continua.",
+        "  \x07  Tasta\376i F3 pentru a abandona instalarea.\n"
+        "  \x07  Tasta\376i ENTER pentru a continua.",
         "F3 = Ie\272ire  ENTER = Continuare"
     },
     {
