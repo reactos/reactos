@@ -175,7 +175,7 @@ AddDialogControl(
             /* Vertical trackbar: Volume */
 
             /* set up range */
-            SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, VOLUME_STEPS));
+            SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
 
             /* set up page size */
             SendMessage(hwnd, TBM_SETPAGESIZE, 0, (LPARAM)VOLUME_PAGE_SIZE);
@@ -184,10 +184,10 @@ AddDialogControl(
             SendMessage(hwnd, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)0);
 
             /* Calculate and set ticks */
-            nSteps = (VOLUME_STEPS / (VOLUME_TICKS + 1));
-            if (VOLUME_STEPS % (VOLUME_TICKS + 1) != 0)
+            nSteps = (VOLUME_MAX / (VOLUME_TICKS + 1));
+            if (VOLUME_MAX % (VOLUME_TICKS + 1) != 0)
                 nSteps++;
-            for (i = nSteps; i < VOLUME_STEPS; i += nSteps)
+            for (i = nSteps; i < VOLUME_MAX; i += nSteps)
                 SendMessage(hwnd, TBM_SETTIC, 0, (LPARAM)i);
         }
         else
@@ -449,7 +449,7 @@ EnumConnectionsCallback(
               if (SndMixerQueryControls(Mixer, &ControlCount, Line, &Control) != FALSE)
               {
                   /* now go through all controls and update their states */
-                  for(Index = 0; Index < Line->cControls; Index++)
+                  for (Index = 0; Index < Line->cControls; Index++)
                   {
                       if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
                       {
@@ -483,11 +483,10 @@ EnumConnectionsCallback(
                           if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
                           {
                               /* update dialog control */
-                              DWORD Position;
-                              DWORD Step = 0x10000 / VOLUME_STEPS;
+                              DWORD Position, Step;
 
-                              /* FIXME: give me granularity */
-                              Position = VOLUME_STEPS - (Details.dwValue / Step);
+                              Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+                              Position = (Details.dwValue - Control[Index].Bounds.dwMinimum) / Step;
 
                               /* FIXME support left - right slider */
                               wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
@@ -502,7 +501,7 @@ EnumConnectionsCallback(
                                   if (OldPosition != Position)
                                   {
                                       /* update control state */
-                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
+                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, VOLUME_MAX - Position);
                                   }
                               }
                           }

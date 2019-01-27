@@ -657,11 +657,10 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
         {
             if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
             {
-                /* FIXME: give me granularity */
-                DWORD Step = 0x10000 / VOLUME_STEPS;
+                DWORD Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
 
                 /* set up details */
-                uDetails.dwValue = 0x10000 - Step * Context->SliderPos;
+                uDetails.dwValue = ((VOLUME_MAX - Context->SliderPos) * Step) + Control[Index].Bounds.dwMinimum;
 
                 /* set volume */
                 SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&uDetails);
@@ -745,14 +744,13 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                 if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
                 {
                     /* update dialog control */
-                    DWORD Position;
-                    DWORD Step = 0x10000 / VOLUME_STEPS;
+                    DWORD Position, Step;
 
-                    /* FIXME: give me granularity */
-                    Position = VOLUME_STEPS - (Details.dwValue / Step);
+                    Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+                    Position = (Details.dwValue - Control[Index].Bounds.dwMinimum) / Step;
 
                     /* update volume control slider */
-                    UpdateDialogLineSliderControl(&Preferences, Line, Control[Index].dwControlID, IDC_LINE_SLIDER_VERT, Position);
+                    UpdateDialogLineSliderControl(&Preferences, Line, Control[Index].dwControlID, IDC_LINE_SLIDER_VERT, VOLUME_MAX - Position);
                 }
             }
             break;

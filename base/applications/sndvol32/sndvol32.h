@@ -14,7 +14,8 @@
 
 #include "resources.h"
 
-#define VOLUME_STEPS       500
+#define VOLUME_MIN           0
+#define VOLUME_MAX         500
 #define VOLUME_TICKS         5
 #define VOLUME_PAGE_SIZE   100
 #define BALANCE_STEPS       64

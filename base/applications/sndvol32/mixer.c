@@ -484,7 +484,7 @@ SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDet
         MixerDetails.cbDetails = cbDetails;
         MixerDetails.paDetails = paDetails;
 
-        if (mixerSetControlDetails((HMIXEROBJ)Mixer->hmx, &MixerDetails, MIXER_GETCONTROLDETAILSF_VALUE | MIXER_OBJECTF_HMIXER) == MMSYSERR_NOERROR)
+        if (mixerSetControlDetails((HMIXEROBJ)Mixer->hmx, &MixerDetails, MIXER_SETCONTROLDETAILSF_VALUE | MIXER_OBJECTF_HMIXER) == MMSYSERR_NOERROR)
         {
             return 1;
         }
