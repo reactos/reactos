@@ -14,14 +14,14 @@ STRINGTABLE
 
 STRINGTABLE
 {
-3000, "Normal"
+3000, "Normală"
 3001, "Mare"
 3002, "Foarte mare"
 }
 
 STRINGTABLE
 {
-4000, "Normal"
+4000, "Normală"
 4001, "Mare"
 4002, "Foarte mare"
 }
