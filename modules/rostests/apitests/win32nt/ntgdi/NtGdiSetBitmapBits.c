@@ -94,6 +94,20 @@ START_TEST(NtGdiSetBitmapBits)
     ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
     ok_long(GetLastError(), 0xDEADFACE);
 
+    {
+        BYTE dummy[256] = { 1 };
+
+        SetLastError(0xDEADFACE);
+        ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0xC);
+        ok_long(GetLastError(), 0xDEADFACE);
+
+        SetLastError(0xDEADFACE);
+        ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
+        ok_long(GetLastError(), 0xDEADFACE);
+
+        ok_int(dummy[0], 1);
+    }
+
     SetLastError(0xDEADFACE);
     ok_long(NtGdiSetBitmapBits(hBitmap, 0x7FFF, Bits), 0);
     ok_long(GetLastError(), 0xDEADFACE);
@@ -206,6 +220,14 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
 
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x20);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
+
     DeleteObject(hBitmap);
 
     /* ------------------------- */
@@ -303,6 +325,14 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[2], 0xAA);
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x234);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
@@ -402,6 +432,14 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[2], 0xAA);
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 564, Bits), 0x234);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 565, Bits), 0);
+    ok_long(GetLastError(), 0xDEADFACE);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
