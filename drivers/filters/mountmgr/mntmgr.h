@@ -176,6 +176,7 @@ extern UNICODE_STRING Volume;
 extern KEVENT UnloadEvent;
 extern LONG Unloading;
 
+INIT_FUNCTION
 DRIVER_INITIALIZE DriverEntry;
 
 VOID
