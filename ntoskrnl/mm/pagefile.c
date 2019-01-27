@@ -368,10 +368,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PWSTR Buffer;
     DEVICE_TYPE DeviceType;
 
-    DPRINT("NtCreatePagingFile(FileName %wZ, MinimumSize %I64d)\n",
-           FileName, MinimumSize->QuadPart);
-
     PAGED_CODE();
+
+    DPRINT("NtCreatePagingFile(FileName: '%wZ', MinimumSize: %I64d, MaximumSize: %I64d)\n",
+           FileName, MinimumSize->QuadPart, MaximumSize->QuadPart);
 
     if (MmNumberOfPagingFiles >= MAX_PAGING_FILES)
     {
@@ -391,10 +391,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         {
             SafeMinimumSize = ProbeForReadLargeInteger(MinimumSize);
             SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
-
-            PageFileName.Length = FileName->Length;
-            PageFileName.MaximumLength = FileName->MaximumLength;
-            PageFileName.Buffer = FileName->Buffer;
+            PageFileName = ProbeForReadUnicodeString(FileName);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -407,14 +404,14 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         SafeMinimumSize = *MinimumSize;
         SafeMaximumSize = *MaximumSize;
-
-        PageFileName.Length = FileName->Length;
-        PageFileName.MaximumLength = FileName->MaximumLength;
-        PageFileName.Buffer = FileName->Buffer;
+        PageFileName = *FileName;
     }
 
-    /* Pagefiles can't be larger than 4GB and ofcourse the minimum should be
-       smaller than the maximum */
+    /*
+     * Pagefiles can't be larger than 4GB and of course
+     * the minimum should be smaller than the maximum.
+     */
+    // TODO: Actually validate the lower bound of these sizes!
     if (0 != SafeMinimumSize.u.HighPart)
     {
         return STATUS_INVALID_PARAMETER_2;
@@ -428,31 +425,28 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_INVALID_PARAMETER_MIX;
     }
 
-    /* Validate name length */
-    if (PageFileName.Length > 128 * sizeof(WCHAR))
+    /* Validate the name length */
+    if ((PageFileName.Length == 0) ||
+        (PageFileName.Length > 128 * sizeof(WCHAR)))
     {
         return STATUS_OBJECT_NAME_INVALID;
     }
 
-    /* We won't care about any potential UNICODE_NULL */
+    /* We don't care about any potential UNICODE_NULL */
     PageFileName.MaximumLength = PageFileName.Length;
-    /* Allocate a buffer to keep name copy */
+    /* Allocate a buffer to keep the name copy */
     Buffer = ExAllocatePoolWithTag(PagedPool, PageFileName.Length, TAG_MM);
     if (Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Copy name */
+    /* Copy the name */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
-            if (PageFileName.Length != 0)
-            {
-                ProbeForRead(PageFileName.Buffer, PageFileName.Length, sizeof(WCHAR));
-            }
-
+            ProbeForRead(PageFileName.Buffer, PageFileName.Length, sizeof(WCHAR));
             RtlCopyMemory(Buffer, PageFileName.Buffer, PageFileName.Length);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -469,7 +463,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         RtlCopyMemory(Buffer, PageFileName.Buffer, PageFileName.Length);
     }
 
-    /* Erase caller's buffer with ours */
+    /* Replace caller's buffer with ours */
     PageFileName.Buffer = Buffer;
 
     /* Create the security descriptor for the page file */
