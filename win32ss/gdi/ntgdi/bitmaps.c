@@ -617,12 +617,6 @@ NtGdiSetBitmapBits(
         return 0;
     }
 
-    /* 565 is confirmed value in Win2k3 */
-    if (Bytes >= 565)
-    {
-        return 0;
-    }
-
     if (GDI_HANDLE_IS_STOCKOBJ(hBitmap))
     {
         return 0;
