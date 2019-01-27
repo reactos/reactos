@@ -1,7 +1,7 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* ªtefan Fulea (stefan dot fulea at mail dot com) */
+/* È˜tefan Fulea (stefan dot fulea at mail dot com) */
 #pragma once
 
 static MUI_ENTRY roROSetupInitPageEntries[] =
@@ -15,19 +15,21 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        /* "A\272tepta\376i ini\376ializarea programului de instalare \272i", */
+        "Asteptati initializarea programului de instalare si",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "identificarea dispozitivelor din calculator...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         0,
-        "Please wait...",
+        /* "A\272tepta\376i...", */
+        "Asteptati...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -119,7 +121,7 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         8,
         16,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Tasta\376i ENTER pentru a instala sau actualiza ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -553,55 +555,55 @@ static MUI_ENTRY roROUpgradePageEntries[] =
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "Programul de Instalare ReactOS ofer\343 actualizarea urm\343toarelor instal\343ri",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "existente, sau, dac\343 o instalare este deteriorat\343, programul de instalare",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "can attempt to repair it.",
+        "poate \356ncerca s\343 o repare.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "Func\376ionalitatea de reparare \356nc\343 nu este complet implementat\343.",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press UP or DOWN to select an OS installation.",
+        "\x07  Tasta\376i SUS sau JOS pentru a selecta o instalare existent\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press U for upgrading the selected OS installation.",
+        "\x07  Tasta\376i U pentru a actualiza instalarea selectat\343.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to continue with a new installation.",
+        "\x07  Tasta\376i ESC pentru a continua cu o nou\343 instalare.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Tasta\376i F3 pentru a ie\272i f\343r\343 a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        "U = Actualizare   ESC = Evitare actualizare   F3 = Ie\272ire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1906,11 +1908,11 @@ MUI_STRING roROStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Repornire calculator"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   Copiere fi\272ier: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   Mutare fi\272ier: %S to: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   Redenumire fi\272ier: %S to: %S"},
     {STRING_COPYING,
      "   Fi\272ierul curent: %S"},
     {STRING_SETUPCOPYINGFILES,

@@ -68,7 +68,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Decupează", IDM_CUT
         MENUITEM "&Copiază", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "&Lipește", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Crează sc&urtătură", IDM_CREATELINK
         MENUITEM "Șt&erge", IDM_DELETE
@@ -82,11 +82,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Copiază aici", IDM_COPYHERE
+        MENUITEM "&Mută aici", IDM_MOVEHERE
+        MENUITEM "Crea&ză scurtătură aici", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Anulează", 0
     END
 END
 
@@ -801,9 +801,9 @@ BEGIN
     IDS_SHUTDOWN_PROMPT "Doriți să închideți calculatorul?"
     
     /* Format Dialog Strings */
-    IDS_FORMAT_TITLE "Format Local Disk"
-    IDS_FORMAT_WARNING "WARNING: Formatting will erase ALL data on this disk.\nTo format the disk, click OK. To quit, click CANCEL."
-    IDS_FORMAT_COMPLETE "Format Complete."
+    IDS_FORMAT_TITLE "Formatare disc local"
+    IDS_FORMAT_WARNING "AVERTISMENT: Formatarea va șterge TOATE datele de pe acest disc.\nConfirmați pentru a formata, anulați pentru a ieși."
+    IDS_FORMAT_COMPLETE "Formatare completă."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "„Executare fișier” nu a putut fi deschis (eroare internă)"
