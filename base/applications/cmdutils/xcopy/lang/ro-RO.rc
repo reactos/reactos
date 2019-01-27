@@ -49,7 +49,7 @@ XCOPY sursă [destinație] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/A]  Copiază numai fișierele cu atributul de arhivă activat.\n\
 [/M]  Copiază numai fișierele cu atributul de arhivă activat, dezactivează\n\
 \tapoi atributul.\n\
-[/K]  Copy file attributes, without this attributes are not preserved.\n\
+[/K]  Copiază atributele de fișier, altfel acestea sunt desconsiderate.\n\
 [/D | /D:m-d-y] Copiază fișierele noi sau pe cele modificate după data\n\
 \t\tspecificată. Dacă nu este specificată nici o dată, copiază\n\
 \t\tnumai dacă fișierul destinație este mai vechi decât fișierul\n\

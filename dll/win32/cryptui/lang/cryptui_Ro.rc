@@ -174,11 +174,11 @@ STRINGTABLE
     IDS_EXPORT_PASSWORD_MISMATCH "Parolele nu se potrivesc."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Notă: Cheia privată pentru acest certificat nu a putut fi deschisă."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Notă: Cheia privată pentru acest certificat nu este exportabilă."
-    IDS_INTENDED_USE_COLUMN "Intended Use"
-    IDS_LOCATION_COLUMN "Location"
-    IDS_SELECT_CERT_TITLE "Select Certificate"
-    IDS_SELECT_CERT "Select a certificate"
-    IDS_NO_IMPL "Not yet implemented"
+    IDS_INTENDED_USE_COLUMN "Scopul utilizării"
+    IDS_LOCATION_COLUMN "Locație"
+    IDS_SELECT_CERT_TITLE "Selectare certificat"
+    IDS_SELECT_CERT "Selectați un certificat"
+    IDS_NO_IMPL "Neimplementat încă"
 }
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
@@ -467,13 +467,13 @@ BEGIN
 END
 
 IDD_SELECT_CERT DIALOG 0,0,278,157
-CAPTION "Select Certificate"
+CAPTION "Selectare certificat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Select a certificate you want to use", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
+  LTEXT "Selectați un certificat dorit", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
   CONTROL "", IDC_SELECT_CERTS, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 7,40,264,89
-  PUSHBUTTON "OK", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 149,136,51,14
-  PUSHBUTTON "&View Certificate", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
+  PUSHBUTTON "Con&firmă", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "A&nulare", IDCANCEL, 149,136,51,14
+  PUSHBUTTON "&Afișează certificat", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
 END

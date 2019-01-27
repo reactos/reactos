@@ -288,7 +288,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Înapoi la %s"
     IDS_FORWARD "Înainte la %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_FOLDER_OPTIONS "Opțiuni de dosar"
 END
 
 STRINGTABLE
@@ -298,7 +298,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "Alegeți un dosar"
+    IDS_TOOLBAR_ERR_TITLE "Bară de instrumente"
+    IDS_TOOLBAR_ERR_TEXT "Eșec la crearea barei de instrumente."
 END

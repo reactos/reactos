@@ -41,8 +41,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARITY "Even,Odd,None,Mark,Space"
+    IDS_PARITY "par,impar,nespecificat,marcaj,spațiu"
     IDS_STOPBITS "1,1.5,2"
-    IDS_FLOWCONTROL "Xon / Xoff,Hardware,None"
-    IDS_PORT_IN_USE " (in use)"
+    IDS_FLOWCONTROL "Xact / Xinact,fizic,nespecificat"
+    IDS_PORT_IN_USE " (în uz)"
 END

@@ -84,7 +84,7 @@ BEGIN
     LTEXT           "secunde", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "&Permanenizează configurația de inițializare", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
-    PUSHBUTTON      "Ș&terge", IDC_BTN_DELETE, 295, 68, 66, 14
+    PUSHBUTTON      "Șt&erge", IDC_BTN_DELETE, 295, 68, 66, 14
 END
 
 IDD_SERVICES_PAGE DIALOGEX 0, 0, 366, 175
