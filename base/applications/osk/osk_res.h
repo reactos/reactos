@@ -29,7 +29,26 @@
 #define IDI_RIGHT               213
 #define IDI_BOTTOM              214
 
+#define IDR_OSK_MENU            600
+#define IDM_EXIT                601
+#define IDM_STANDARD_KB         602
+#define IDM_ENCHANCED_KB        603
+#define IDM_REG_LAYOUT          604
+#define IDM_BLOCK_LAYOUT        605
+#define IDM_101_KEYS            606
+#define IDM_102_KEYS            607
+#define IDM_106_KEYS            608
+#define IDM_ON_TOP              609
+#define IDM_CLICK_SOUND         610
+#define IDM_TYPE_MODE           611
+#define IDM_FONT                612
+#define IDM_HELP_TOPICS         613
+#define IDM_ABOUT               614
+
 #define IDD_WARNINGDIALOG_OSK   215
+
+#define STRING_OSK              500
+#define STRING_AUTHORS          501
 
 #define IDC_STATIC              -1
 
