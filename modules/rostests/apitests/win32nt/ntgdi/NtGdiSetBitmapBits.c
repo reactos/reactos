@@ -294,6 +294,8 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
 
+    ok_long(*(LPDWORD)pvBits, 0);
+
     DeleteObject(hBitmap);
     DeleteDC(hDC);
 
@@ -392,6 +394,8 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[2], 0xAA);
     ok_int(Bits[3], 0x33);
     ok_int(Bits[4], 0x55);
+
+    ok_long(*(LPDWORD)pvBits, 0x33AAAAAA);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
