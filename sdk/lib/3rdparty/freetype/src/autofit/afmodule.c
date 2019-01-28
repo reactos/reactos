@@ -552,6 +552,11 @@
 #ifdef __REACTOS__
     AF_GlyphHintsRec *hints = malloc(sizeof(AF_GlyphHintsRec));
     AF_LoaderRec *loader = malloc(sizeof(AF_LoaderRec));
+    if (!hints || !loader)
+    {
+        error =  FT_Err_Out_Of_Memory;
+        goto Exit;
+    }
 #else
     AF_GlyphHintsRec  hints[1];
     AF_LoaderRec      loader[1];
@@ -570,6 +575,7 @@
     af_glyph_hints_done( hints );
 
 #ifdef __REACTOS__
+Exit:
     free(hints);
     free(loader);
 #endif

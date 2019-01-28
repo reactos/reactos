@@ -3208,6 +3208,12 @@
 #ifdef __REACTOS__
     worker = malloc(sizeof(black_TWorker));
     buffer = malloc(FT_MAX(FT_RENDER_POOL_SIZE, 2048));
+    if (!worker || !buffer)
+    {
+      free(worker);
+      free(buffer);
+      return FT_THROW( Out_Of_Memory );
+    }
 #endif
 
     ras.outline = *outline;

@@ -1757,6 +1757,10 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifdef __REACTOS__
     buffer = malloc(FT_MAX(FT_RENDER_POOL_SIZE, 2048));
+    if (!buffer)
+    {
+      return 1;
+    }
 #endif
 
     /* set up vertical bands */

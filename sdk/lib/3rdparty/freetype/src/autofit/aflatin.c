@@ -64,6 +64,7 @@
     /* scan the array of segments in each direction */
 #ifdef __REACTOS__
     AF_GlyphHintsRec *hints = malloc(sizeof(AF_GlyphHintsRec));
+    if (!hints) return;
 #else
     AF_GlyphHintsRec  hints[1];
 #endif
@@ -86,6 +87,9 @@
       int                 dim;
 #ifdef __REACTOS__
       AF_LatinMetricsRec *dummy = malloc(sizeof(AF_LatinMetricsRec));
+      if (!dummy)
+        goto Exit;
+      {
 #else
       AF_LatinMetricsRec  dummy[1];
 #endif
@@ -267,6 +271,7 @@
       }
 #ifdef __REACTOS__
       free(dummy);
+      }
 #endif
     }
 
