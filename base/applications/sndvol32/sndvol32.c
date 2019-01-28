@@ -924,33 +924,75 @@ MainWindowProc(HWND hwnd,
         }
 
         case WM_VSCROLL:
-        {
-            if (LOWORD(wParam) == TB_THUMBTRACK)
+            switch (LOWORD(wParam))
             {
-                /* get dialog item ctrl */
-                CtrlID = GetDlgCtrlID((HWND)lParam);
+                case TB_THUMBTRACK:
+                    /* get dialog item ctrl */
+                    CtrlID = GetDlgCtrlID((HWND)lParam);
 
-                /* get line index */
-                LineOffset = CtrlID / IDC_LINE_SLIDER_VERT;
+                    /* get line index */
+                    LineOffset = CtrlID / IDC_LINE_SLIDER_VERT;
 
-                /* compute window id of line name static control */
-                CtrlID = LineOffset * IDC_LINE_NAME;
+                    /* compute window id of line name static control */
+                    CtrlID = LineOffset * IDC_LINE_NAME;
 
-                /* get line name */
-                if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
-                {
-                    /* setup context */
-                    Context.SliderPos = HIWORD(wParam);
-                    Context.bVertical = TRUE;
-                    Context.bSwitch = FALSE;
+                    /* get line name */
+                    if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                    {
+                        /* setup context */
+                        Context.SliderPos = HIWORD(wParam);
+                        Context.bVertical = TRUE;
+                        Context.bSwitch = FALSE;
 
-                    /* set volume */
-                    SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
-                }
+                        /* set volume */
+                        SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                    }
+                    break;
+
+                case TB_ENDTRACK:
+                    MixerWindow = GetWindowData(hwnd,
+                                                MIXER_WINDOW);
+
+                    /* get dialog item ctrl */
+                    CtrlID = GetDlgCtrlID((HWND)lParam);
+
+                    /* get line index */
+                    LineOffset = CtrlID / IDC_LINE_SLIDER_VERT;
+
+                    if (LineOffset == 1 && MixerWindow->Mixer->MixerId == 0)
+                        PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);
+                    break;
+
+                default:
+                    break;
             }
-
             break;
-        }
+
+        case WM_HSCROLL:
+            switch (LOWORD(wParam))
+            {
+                case TB_THUMBTRACK:
+                    /* FIXME */
+                    break;
+
+                case TB_ENDTRACK:
+                    MixerWindow = GetWindowData(hwnd,
+                                                MIXER_WINDOW);
+
+                    /* get dialog item ctrl */
+                    CtrlID = GetDlgCtrlID((HWND)lParam);
+
+                    /* get line index */
+                    LineOffset = CtrlID / IDC_LINE_SLIDER_HORZ;
+
+                    if (LineOffset == 1 && MixerWindow->Mixer->MixerId == 0)
+                        PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
 
 
         case WM_CREATE:
