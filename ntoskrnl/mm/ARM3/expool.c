@@ -47,6 +47,7 @@ KSPIN_LOCK ExpLargePoolTableLock;
 ULONG ExpPoolBigEntriesInUse;
 ULONG ExpPoolFlags;
 ULONG ExPoolFailures;
+ULONGLONG MiLastPoolDumpTime;
 
 /* Pool block/header/list access macros */
 #define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
@@ -1937,11 +1938,14 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // Out of memory, display current consumption
             // Let's consider that if the caller wanted more
             // than a hundred pages, that's a bogus caller
-            // and we are not out of memory
+            // and we are not out of memory. Dump at most
+            // once a second to avoid spamming the log.
             //
-            if (NumberOfBytes < 100 * PAGE_SIZE)
+            if (NumberOfBytes < 100 * PAGE_SIZE &&
+                KeQueryInterruptTime() >= MiLastPoolDumpTime + 10000000)
             {
                 MiDumpPoolConsumers(FALSE, 0, 0, 0);
+                MiLastPoolDumpTime = KeQueryInterruptTime();
             }
 #endif
 
@@ -2276,11 +2280,14 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         // Out of memory, display current consumption
         // Let's consider that if the caller wanted more
         // than a hundred pages, that's a bogus caller
-        // and we are not out of memory
+        // and we are not out of memory. Dump at most
+        // once a second to avoid spamming the log.
         //
-        if (NumberOfBytes < 100 * PAGE_SIZE)
+        if (NumberOfBytes < 100 * PAGE_SIZE &&
+            KeQueryInterruptTime() >= MiLastPoolDumpTime + 10000000)
         {
             MiDumpPoolConsumers(FALSE, 0, 0, 0);
+            MiLastPoolDumpTime = KeQueryInterruptTime();
         }
 #endif
 
