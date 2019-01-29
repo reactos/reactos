@@ -543,8 +543,8 @@ static LRESULT CRAM_GetInfo( const Msvideo1Context *info, ICINFO *icinfo, DWORD 
     icinfo->dwVersion = ICVERSION;
     icinfo->dwVersionICM = ICVERSION;
 
-    LoadStringW(MSVIDC32_hModule, IDS_NAME, icinfo->szName, sizeof(icinfo->szName)/sizeof(WCHAR));
-    LoadStringW(MSVIDC32_hModule, IDS_DESCRIPTION, icinfo->szDescription, sizeof(icinfo->szDescription)/sizeof(WCHAR));
+    LoadStringW(MSVIDC32_hModule, IDS_NAME, icinfo->szName, ARRAY_SIZE(icinfo->szName));
+    LoadStringW(MSVIDC32_hModule, IDS_DESCRIPTION, icinfo->szDescription, ARRAY_SIZE(icinfo->szDescription));
     /* msvfw32 will fill icinfo->szDriver for us */
 
     return sizeof(ICINFO);
