@@ -31,6 +31,7 @@
 /**********************************************************************/
 
 static void * (__cdecl *pMSVCRTD_operator_new_dbg)(size_t, int, const char *, int) = NULL;
+static void * (__cdecl *pMSVCRTD_operator_delete)(void *) = NULL;
 
 /* Some exports are only available in later versions */
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hModule,y)
@@ -46,9 +47,15 @@ static BOOL init_functions(void)
   }
 
   if (sizeof(void *) > sizeof(int))  /* 64-bit has a different mangled name */
+  {
       SET(pMSVCRTD_operator_new_dbg, "??2@YAPEAX_KHPEBDH@Z");
+      SET(pMSVCRTD_operator_delete, "??3@YAXPEAX@Z");
+  }
   else
+  {
       SET(pMSVCRTD_operator_new_dbg, "??2@YAPAXIHPBDH@Z");
+      SET(pMSVCRTD_operator_delete, "??3@YAXPAX@Z");
+  }
 
   if (pMSVCRTD_operator_new_dbg == NULL)
     return FALSE;
@@ -64,7 +71,11 @@ static void test_new(void)
 
   mem = pMSVCRTD_operator_new_dbg(42, _NORMAL_BLOCK, __FILE__, __LINE__);
   ok(mem != NULL, "memory not allocated\n");
-  HeapFree(GetProcessHeap(), 0, mem);
+  pMSVCRTD_operator_delete(mem);
+
+  mem = pMSVCRTD_operator_new_dbg(42, _CRT_BLOCK, __FILE__, __LINE__);
+  ok(mem != NULL, "memory not allocated\n");
+  pMSVCRTD_operator_delete(mem);
 }
 
 /**********************************************************************/
