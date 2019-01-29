@@ -171,6 +171,9 @@ static void test_SQLWritePrivateProfileString(void)
    {
         HKEY hkey;
 
+        ret = SQLWritePrivateProfileString("wineodbc", "testing" , NULL, "odbc.ini");
+        ok(ret, "SQLWritePrivateProfileString failed\n");
+
         reg_ret = RegOpenKeyExW(HKEY_CURRENT_USER, odbc_key, 0, KEY_READ, &hkey);
         ok(reg_ret == ERROR_SUCCESS, "RegOpenKeyExW failed\n");
         if(reg_ret == ERROR_SUCCESS)
@@ -618,11 +621,19 @@ static void test_SQLGetInstalledDrivers(void)
 {
     char buffer[1000], *p;
     WORD written, len;
+    BOOL ret, sql_ret;
+    DWORD error_code;
     int found = 0;
-    BOOL ret;
 
-    SQLInstallDriverEx("Wine test\0Driver=test.dll\0\0", NULL, buffer,
-                       sizeof(buffer), &written, ODBC_INSTALL_COMPLETE, NULL);
+    ret = SQLInstallDriverEx("Wine test\0Driver=test.dll\0\0", NULL, buffer,
+        sizeof(buffer), &written, ODBC_INSTALL_COMPLETE, NULL);
+    ok(ret, "SQLInstallDriverEx failed: %d\n", ret);
+    sql_ret = SQLInstallerErrorW(1, &error_code, NULL, 0, NULL);
+    if (sql_ret && error_code == ODBC_ERROR_WRITING_SYSINFO_FAILED)
+    {
+        skip("not enough privileges\n");
+        return;
+    }
 
     ret = SQLGetInstalledDrivers(NULL, sizeof(buffer), &written);
     ok(!ret, "got %d\n", ret);
@@ -671,6 +682,65 @@ static void test_SQLGetInstalledDrivers(void)
     SQLRemoveDriver("Wine test", TRUE, NULL);
 }
 
+static void test_SQLValidDSN(void)
+{
+    static const char *invalid = "[]{}(),;?*=!@\\";
+    char str[10];
+    int i;
+    BOOL ret;
+
+    strcpy(str, "wine10");
+    for(i = 0; i < strlen(invalid); i++)
+    {
+        str[4] = invalid[i];
+        ret = SQLValidDSN(str);
+        ok(!ret, "got %d\n", ret);
+    }
+
+    /* Too large */
+    ret = SQLValidDSN("Wine123456789012345678901234567890");
+    ok(!ret, "got %d\n", ret);
+
+    /* Valid with a space */
+    ret = SQLValidDSN("Wine Vinegar");
+    ok(ret, "got %d\n", ret);
+
+    /* Max DSN name value */
+    ret = SQLValidDSN("12345678901234567890123456789012");
+    ok(ret, "got %d\n", ret);
+}
+
+static void test_SQLValidDSNW(void)
+{
+    static const WCHAR invalid[] = {'[',']','{','}','(',')',',',';','?','*','=','!','@','\\',0};
+    static const WCHAR value[] = { 'w','i','n','e','1','0',0};
+    static const WCHAR too_large[] = { 'W','i','n','e','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5',
+                                   '6','7','8','9','0','1','2','3','4','5','6','7','8','9','0', 0};
+    static const WCHAR with_space[] = { 'W','i','n','e',' ','V','i','n','e','g','a','r', 0};
+    static const WCHAR max_dsn[] = { '1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9','0',
+                                   '1','2','3','4','5','6','7','8','9','0','1','2', 0};
+    WCHAR str[10];
+    int i;
+    BOOL ret;
+
+    lstrcpyW(str, value);
+    for(i = 0; i < lstrlenW(invalid); i++)
+    {
+        str[4] = invalid[i];
+        ret = SQLValidDSNW(str);
+        ok(!ret, "got %d\n", ret);
+    }
+
+    ret = SQLValidDSNW(too_large);
+    ok(!ret, "got %d\n", ret);
+
+    ret = SQLValidDSNW(with_space);
+    ok(ret, "got %d\n", ret);
+
+    ret = SQLValidDSNW(max_dsn);
+    ok(ret, "got %d\n", ret);
+}
+
 START_TEST(misc)
 {
     test_SQLConfigMode();
@@ -682,4 +752,6 @@ START_TEST(misc)
     test_SQLInstallDriverEx();
     test_SQLInstallTranslatorEx();
     test_SQLGetInstalledDrivers();
+    test_SQLValidDSN();
+    test_SQLValidDSNW();
 }
