@@ -25,7 +25,6 @@ list(APPEND SOURCE
     olepropframe.c
     recinfo.c
     safearray.c
-    tmarshal.c
     typelib.c
     usrmarshal.c
     varformat.c

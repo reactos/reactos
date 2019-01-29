@@ -449,8 +449,7 @@ static inline const BYTE *VARIANT_GetNamedFormat(LPCWSTR lpszFormat)
   LPCNAMED_FORMAT fmt;
 
   key.name = lpszFormat;
-  fmt = bsearch(&key, VARIANT_NamedFormats,
-                                 sizeof(VARIANT_NamedFormats)/sizeof(NAMED_FORMAT),
+  fmt = bsearch(&key, VARIANT_NamedFormats, ARRAY_SIZE(VARIANT_NamedFormats),
                                  sizeof(NAMED_FORMAT), FormatCompareFn);
   return fmt ? fmt->format : NULL;
 }
@@ -764,7 +763,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
       TRACE("time sep\n");
     }
     else if ((*pFormat == 'a' || *pFormat == 'A') &&
-              !strncmpiW(pFormat, szAMPM, sizeof(szAMPM)/sizeof(WCHAR)))
+              !strncmpiW(pFormat, szAMPM, ARRAY_SIZE(szAMPM)))
     {
       /* Date formats: System AM/PM designation
        * Other formats: Literal
@@ -772,8 +771,8 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
        */
       header->type = FMT_TYPE_DATE;
       NEED_SPACE(sizeof(BYTE));
-      pFormat += sizeof(szAMPM)/sizeof(WCHAR);
-      if (!strncmpW(pFormat, szampm, sizeof(szampm)/sizeof(WCHAR)))
+      pFormat += ARRAY_SIZE(szAMPM);
+      if (!strncmpW(pFormat, szampm, ARRAY_SIZE(szampm)))
         *pOut++ = FMT_DATE_AMPM_SYS2;
       else
         *pOut++ = FMT_DATE_AMPM_SYS1;
@@ -811,8 +810,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
         *pLastHours = *pLastHours + 2;
       TRACE("A/P\n");
     }
-    else if (*pFormat == 'a' &&
-              !strncmpW(pFormat, szamSlashpm, sizeof(szamSlashpm)/sizeof(WCHAR)))
+    else if (*pFormat == 'a' && !strncmpW(pFormat, szamSlashpm, ARRAY_SIZE(szamSlashpm)))
     {
       /* Date formats: lowercase AM or PM designation
        * Other formats: Literal
@@ -820,14 +818,13 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
        */
       header->type = FMT_TYPE_DATE;
       NEED_SPACE(sizeof(BYTE));
-      pFormat += sizeof(szamSlashpm)/sizeof(WCHAR);
+      pFormat += ARRAY_SIZE(szamSlashpm);
       *pOut++ = FMT_DATE_AMPM_LOWER;
       if (pLastHours)
         *pLastHours = *pLastHours + 2;
       TRACE("AM/PM\n");
     }
-    else if (*pFormat == 'A' &&
-              !strncmpW(pFormat, szAMSlashPM, sizeof(szAMSlashPM)/sizeof(WCHAR)))
+    else if (*pFormat == 'A' && !strncmpW(pFormat, szAMSlashPM, ARRAY_SIZE(szAMSlashPM)))
     {
       /* Date formats: Uppercase AM or PM designation
        * Other formats: Literal
@@ -835,7 +832,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
        */
       header->type = FMT_TYPE_DATE;
       NEED_SPACE(sizeof(BYTE));
-      pFormat += sizeof(szAMSlashPM)/sizeof(WCHAR);
+      pFormat += ARRAY_SIZE(szAMSlashPM);
       *pOut++ = FMT_DATE_AMPM_UPPER;
       TRACE("AM/PM\n");
     }
@@ -847,7 +844,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
        */
       header->type = FMT_TYPE_DATE;
       NEED_SPACE(sizeof(BYTE));
-      pFormat += sizeof(szAMSlashPM)/sizeof(WCHAR);
+      pFormat += ARRAY_SIZE(szAMSlashPM);
       *pOut++ = FMT_DATE_GENERAL;
       TRACE("gen date\n");
     }
@@ -989,14 +986,14 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
       fmt_state &= ~FMT_STATE_OPEN_COPY;
     }
     else if ((*pFormat == 't' || *pFormat == 'T') &&
-              !strncmpiW(pFormat, szTTTTT, sizeof(szTTTTT)/sizeof(WCHAR)))
+              !strncmpiW(pFormat, szTTTTT, ARRAY_SIZE(szTTTTT)))
     {
       /* Date formats: System time specifier
        * Other formats: Literal
        * Types the format if found
        */
       header->type = FMT_TYPE_DATE;
-      pFormat += sizeof(szTTTTT)/sizeof(WCHAR);
+      pFormat += ARRAY_SIZE(szTTTTT);
       NEED_SPACE(sizeof(BYTE));
       *pOut++ = FMT_DATE_TIME_SYS;
       fmt_state &= ~FMT_STATE_OPEN_COPY;
@@ -1316,8 +1313,7 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
 
   if (numHeader->flags & FMT_FLAG_THOUSANDS)
   {
-    if (!GetLocaleInfoW(lcid, LOCALE_STHOUSAND, thousandSeparator,
-                        sizeof(thousandSeparator)/sizeof(WCHAR)))
+    if (!GetLocaleInfoW(lcid, LOCALE_STHOUSAND, thousandSeparator, ARRAY_SIZE(thousandSeparator)))
     {
       thousandSeparator[0] = ',';
       thousandSeparator[1] = 0;
@@ -1555,8 +1551,7 @@ VARIANT_FormatNumber_Bool:
     }
     if (localeValue)
     {
-      if (GetLocaleInfoW(lcid, localeValue, pBuff, 
-                         sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
+      if (GetLocaleInfoW(lcid, localeValue, pBuff, ARRAY_SIZE(buff)-(pBuff-buff)))
       {
         TRACE("added %s\n", debugstr_w(pBuff));
         while (*pBuff)
@@ -1875,8 +1870,7 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     if (localeValue)
     {
       *pBuff = '\0';
-      if (GetLocaleInfoW(lcid, localeValue, pBuff,
-          sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
+      if (GetLocaleInfoW(lcid, localeValue, pBuff, ARRAY_SIZE(buff)-(pBuff-buff)))
       {
         TRACE("added %s\n", debugstr_w(pBuff));
         while (*pBuff)
@@ -1892,9 +1886,8 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     {
       WCHAR fmt_buff[80];
 
-      if (!GetLocaleInfoW(lcid, dwFmt, fmt_buff, sizeof(fmt_buff)/sizeof(WCHAR)) ||
-          !get_date_format(lcid, 0, &udate.st, fmt_buff, pBuff,
-                          sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
+      if (!GetLocaleInfoW(lcid, dwFmt, fmt_buff, ARRAY_SIZE(fmt_buff)) ||
+          !get_date_format(lcid, 0, &udate.st, fmt_buff, pBuff, ARRAY_SIZE(buff)-(pBuff-buff)))
       {
         hRes = E_INVALIDARG;
         goto VARIANT_FormatDate_Exit;
@@ -2293,8 +2286,7 @@ HRESULT WINAPI VarFormatNumber(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT 
     {
       WCHAR grouping[16];
       grouping[2] = '\0';
-      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, grouping,
-                     sizeof(grouping)/sizeof(WCHAR));
+      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, grouping, ARRAY_SIZE(grouping));
       numfmt.Grouping = grouping[2] == '2' ? 32 : grouping[0] - '0';
     }
     else if (nGrouping == -1)
@@ -2310,14 +2302,11 @@ HRESULT WINAPI VarFormatNumber(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT 
       numfmt.NegativeOrder = 1; /* 1 = "-xxx" */
 
     numfmt.lpDecimalSep = decimal;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal,
-                   sizeof(decimal)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, ARRAY_SIZE(decimal));
     numfmt.lpThousandSep = thousands;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousands,
-                   sizeof(thousands)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousands, ARRAY_SIZE(thousands));
 
-    if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt,
-                         buff, sizeof(buff)/sizeof(WCHAR)))
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt, buff, ARRAY_SIZE(buff)))
     {
       *pbstrOut = SysAllocString(buff);
       if (!*pbstrOut)
@@ -2473,8 +2462,7 @@ HRESULT WINAPI VarFormatCurrency(LPVARIANT pVarIn, INT nDigits, INT nLeading,
     {
       WCHAR grouping[16];
       grouping[2] = '\0';
-      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, grouping,
-                     sizeof(grouping)/sizeof(WCHAR));
+      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, grouping, ARRAY_SIZE(grouping));
       numfmt.Grouping = grouping[2] == '2' ? 32 : grouping[0] - '0';
     }
     else if (nGrouping == -1)
@@ -2492,18 +2480,14 @@ HRESULT WINAPI VarFormatCurrency(LPVARIANT pVarIn, INT nDigits, INT nLeading,
     GETLOCALENUMBER(LOCALE_ICURRENCY, PositiveOrder);
 
     numfmt.lpDecimalSep = decimal;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal,
-                   sizeof(decimal)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal, ARRAY_SIZE(decimal));
     numfmt.lpThousandSep = thousands;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, thousands,
-                   sizeof(thousands)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, thousands, ARRAY_SIZE(thousands));
     numfmt.lpCurrencySymbol = currency;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, currency,
-                   sizeof(currency)/sizeof(WCHAR));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, currency, ARRAY_SIZE(currency));
 
     /* use NLS as per VarFormatNumber() */
-    if (GetCurrencyFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt,
-                           buff, sizeof(buff)/sizeof(WCHAR)))
+    if (GetCurrencyFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt, buff, ARRAY_SIZE(buff)))
     {
       *pbstrOut = SysAllocString(buff);
       if (!*pbstrOut)

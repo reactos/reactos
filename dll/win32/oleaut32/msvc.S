@@ -49,6 +49,11 @@ cm1:
     pop esi
     pop ebp
     ret
+
+PUBLIC _call_double_method
+_call_double_method:
+    jmp _call_method
+
 #endif
 
     END

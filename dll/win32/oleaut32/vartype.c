@@ -95,7 +95,7 @@ static HRESULT VARIANT_NumberFromBstr(OLECHAR* pStrIn, LCID lcid, ULONG ulFlags,
   BYTE rgb[1024];
 
   /* Use VarParseNumFromStr/VarNumFromParseNum as MSDN indicates */
-  np.cDig = sizeof(rgb) / sizeof(BYTE);
+  np.cDig = ARRAY_SIZE(rgb);
   np.dwInFlags = NUMPRS_STD;
 
   hRet = VarParseNumFromStr(pStrIn, lcid, ulFlags, &np, rgb);
@@ -3781,7 +3781,7 @@ HRESULT WINAPI VarCyFromUI8(ULONG64 ullIn, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyAdd(const CY cyLeft, const CY cyRight, CY* pCyOut)
+HRESULT WINAPI VarCyAdd(CY cyLeft, CY cyRight, CY* pCyOut)
 {
   double l,r;
   _VarR8FromCy(cyLeft, &l);
@@ -3804,7 +3804,7 @@ HRESULT WINAPI VarCyAdd(const CY cyLeft, const CY cyRight, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyMul(const CY cyLeft, CY cyRight, CY* pCyOut)
+HRESULT WINAPI VarCyMul(CY cyLeft, CY cyRight, CY* pCyOut)
 {
   double l,r;
   _VarR8FromCy(cyLeft, &l);
@@ -3827,7 +3827,7 @@ HRESULT WINAPI VarCyMul(const CY cyLeft, CY cyRight, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyMulI4(const CY cyLeft, LONG lRight, CY* pCyOut)
+HRESULT WINAPI VarCyMulI4(CY cyLeft, LONG lRight, CY* pCyOut)
 {
   double d;
 
@@ -3850,7 +3850,7 @@ HRESULT WINAPI VarCyMulI4(const CY cyLeft, LONG lRight, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCySub(const CY cyLeft, const CY cyRight, CY* pCyOut)
+HRESULT WINAPI VarCySub(CY cyLeft, CY cyRight, CY* pCyOut)
 {
   double l,r;
   _VarR8FromCy(cyLeft, &l);
@@ -3872,7 +3872,7 @@ HRESULT WINAPI VarCySub(const CY cyLeft, const CY cyRight, CY* pCyOut)
  *  Success: S_OK. pCyOut contains the absolute value.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyAbs(const CY cyIn, CY* pCyOut)
+HRESULT WINAPI VarCyAbs(CY cyIn, CY* pCyOut)
 {
   if (cyIn.s.Hi == (int)0x80000000 && !cyIn.s.Lo)
     return DISP_E_OVERFLOW;
@@ -3898,7 +3898,7 @@ HRESULT WINAPI VarCyAbs(const CY cyIn, CY* pCyOut)
  *  - The difference between this function and VarCyInt() is that VarCyInt() rounds
  *    negative numbers away from 0, while this function rounds them towards zero.
  */
-HRESULT WINAPI VarCyFix(const CY cyIn, CY* pCyOut)
+HRESULT WINAPI VarCyFix(CY cyIn, CY* pCyOut)
 {
   pCyOut->int64 = cyIn.int64 / CY_MULTIPLIER;
   pCyOut->int64 *= CY_MULTIPLIER;
@@ -3922,7 +3922,7 @@ HRESULT WINAPI VarCyFix(const CY cyIn, CY* pCyOut)
  *  - The difference between this function and VarCyFix() is that VarCyFix() rounds
  *    negative numbers towards 0, while this function rounds them away from zero.
  */
-HRESULT WINAPI VarCyInt(const CY cyIn, CY* pCyOut)
+HRESULT WINAPI VarCyInt(CY cyIn, CY* pCyOut)
 {
   pCyOut->int64 = cyIn.int64 / CY_MULTIPLIER;
   pCyOut->int64 *= CY_MULTIPLIER;
@@ -3947,7 +3947,7 @@ HRESULT WINAPI VarCyInt(const CY cyIn, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyNeg(const CY cyIn, CY* pCyOut)
+HRESULT WINAPI VarCyNeg(CY cyIn, CY* pCyOut)
 {
   if (cyIn.s.Hi == (int)0x80000000 && !cyIn.s.Lo)
     return DISP_E_OVERFLOW;
@@ -3970,7 +3970,7 @@ HRESULT WINAPI VarCyNeg(const CY cyIn, CY* pCyOut)
  *  Success: S_OK.
  *  Failure: E_INVALIDARG, if cDecimals is less than 0.
  */
-HRESULT WINAPI VarCyRound(const CY cyIn, int cDecimals, CY* pCyOut)
+HRESULT WINAPI VarCyRound(CY cyIn, int cDecimals, CY* pCyOut)
 {
   if (cDecimals < 0)
     return E_INVALIDARG;
@@ -4008,7 +4008,7 @@ HRESULT WINAPI VarCyRound(const CY cyIn, int cDecimals, CY* pCyOut)
  *           compare is less, equal or greater than source respectively.
  *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
-HRESULT WINAPI VarCyCmp(const CY cyLeft, const CY cyRight)
+HRESULT WINAPI VarCyCmp(CY cyLeft, CY cyRight)
 {
   HRESULT hRet;
   CY result;
@@ -4042,7 +4042,7 @@ HRESULT WINAPI VarCyCmp(const CY cyLeft, const CY cyRight)
  *           less than, equal to or greater than cyLeft respectively.
  *  Failure: DISP_E_OVERFLOW, if overflow occurs during the comparison
  */
-HRESULT WINAPI VarCyCmpR8(const CY cyLeft, double dblRight)
+HRESULT WINAPI VarCyCmpR8(CY cyLeft, double dblRight)
 {
   HRESULT hRet;
   CY cyRight;
@@ -4069,7 +4069,7 @@ HRESULT WINAPI VarCyCmpR8(const CY cyLeft, double dblRight)
  *  Success: S_OK.
  *  Failure: DISP_E_OVERFLOW, if the value will not fit in the destination
  */
-HRESULT WINAPI VarCyMulI8(const CY cyLeft, LONG64 llRight, CY* pCyOut)
+HRESULT WINAPI VarCyMulI8(CY cyLeft, LONG64 llRight, CY* pCyOut)
 {
   double d;
 
@@ -4496,15 +4496,15 @@ static HRESULT VARIANT_DecScale(const DECIMAL** ppDecLeft,
 
   di.scale -= i;
   remainder = 0;
-  while (i-- > 0 && !VARIANT_int_iszero(di.bitsnum, sizeof(di.bitsnum)/sizeof(DWORD)))
+  while (i-- > 0 && !VARIANT_int_iszero(di.bitsnum, ARRAY_SIZE(di.bitsnum)))
   {
-    remainder = VARIANT_int_divbychar(di.bitsnum, sizeof(di.bitsnum)/sizeof(DWORD), 10);
+    remainder = VARIANT_int_divbychar(di.bitsnum, ARRAY_SIZE(di.bitsnum), 10);
     if (remainder > 0) WARN("losing significant digits (remainder %u)...\n", remainder);
   }
 
   /* round up the result - native oleaut32 does this */
   if (remainder >= 5) {
-      for (remainder = 1, i = 0; i < sizeof(di.bitsnum)/sizeof(DWORD) && remainder; i++) {
+      for (remainder = 1, i = 0; i < ARRAY_SIZE(di.bitsnum) && remainder; i++) {
           ULONGLONG digit = di.bitsnum[i] + 1;
           remainder = (digit > 0xFFFFFFFF) ? 1 : 0;
           di.bitsnum[i] = digit & 0xFFFFFFFF;
@@ -4743,7 +4743,7 @@ static int VARIANT_DI_mul(const VARIANT_DI * a, const VARIANT_DI * b, VARIANT_DI
     memset(running, 0, sizeof(running));
 
     /* count number of leading zero-bytes in operand A */
-    for (mulstart = sizeof(a->bitsnum)/sizeof(DWORD) - 1; mulstart >= 0 && !a->bitsnum[mulstart]; mulstart--);
+    for (mulstart = ARRAY_SIZE(a->bitsnum) - 1; mulstart >= 0 && !a->bitsnum[mulstart]; mulstart--);
     if (mulstart < 0) {
         /* result is 0, because operand A is 0 */
         result->scale = 0;
@@ -4757,7 +4757,7 @@ static int VARIANT_DI_mul(const VARIANT_DI * a, const VARIANT_DI * b, VARIANT_DI
             ULONG iOverflowMul;
             int iB;
             
-            for (iOverflowMul = 0, iB = 0; iB < sizeof(b->bitsnum)/sizeof(DWORD); iB++) {
+            for (iOverflowMul = 0, iB = 0; iB < ARRAY_SIZE(b->bitsnum); iB++) {
                 ULONG iRV;
                 int iR;
                 
@@ -4789,11 +4789,10 @@ static int VARIANT_DI_mul(const VARIANT_DI * a, const VARIANT_DI * b, VARIANT_DI
            This operation *will* lose significant digits of the result because
            all the factors of 10 were consumed by the previous operation.
         */
-        while (result->scale > 0 && !VARIANT_int_iszero(
-            running + sizeof(result->bitsnum) / sizeof(DWORD),
-            (sizeof(running) - sizeof(result->bitsnum)) / sizeof(DWORD))) {
-            
-            remainder = VARIANT_int_divbychar(running, sizeof(running) / sizeof(DWORD), 10);
+        while (result->scale > 0 && !VARIANT_int_iszero(running + ARRAY_SIZE(result->bitsnum),
+            ARRAY_SIZE(running) - ARRAY_SIZE(result->bitsnum))) {
+
+            remainder = VARIANT_int_divbychar(running, ARRAY_SIZE(running), 10);
             if (remainder > 0) WARN("losing significant digits (remainder %u)...\n", remainder);
             result->scale--;
         }
@@ -4801,7 +4800,7 @@ static int VARIANT_DI_mul(const VARIANT_DI * a, const VARIANT_DI * b, VARIANT_DI
         /* round up the result - native oleaut32 does this */
         if (remainder >= 5) {
             unsigned int i;
-            for (remainder = 1, i = 0; i < sizeof(running)/sizeof(DWORD) && remainder; i++) {
+            for (remainder = 1, i = 0; i < ARRAY_SIZE(running) && remainder; i++) {
                 ULONGLONG digit = running[i] + 1;
                 remainder = (digit > 0xFFFFFFFF) ? 1 : 0;
                 running[i] = digit & 0xFFFFFFFF;
@@ -4811,9 +4810,8 @@ static int VARIANT_DI_mul(const VARIANT_DI * a, const VARIANT_DI * b, VARIANT_DI
         /* Signal overflow if scale == 0 and 256-bit result still overflows,
            and copy result bits into result structure
         */
-        r_overflow = !VARIANT_int_iszero(
-            running + sizeof(result->bitsnum)/sizeof(DWORD), 
-            (sizeof(running) - sizeof(result->bitsnum))/sizeof(DWORD));
+        r_overflow = !VARIANT_int_iszero(running + ARRAY_SIZE(result->bitsnum),
+            ARRAY_SIZE(running) - ARRAY_SIZE(result->bitsnum));
         memcpy(result->bitsnum, running, sizeof(result->bitsnum));
     }
     return r_overflow;
@@ -4831,7 +4829,7 @@ static BOOL VARIANT_DI_tostringW(const VARIANT_DI * a, WCHAR * s, unsigned int n
     unsigned int i;
 
     /* place negative sign */
-    if (!VARIANT_int_iszero(a->bitsnum, sizeof(a->bitsnum) / sizeof(DWORD)) && a->sign) {
+    if (!VARIANT_int_iszero(a->bitsnum, ARRAY_SIZE(a->bitsnum)) && a->sign) {
         if (n > 0) {
             *s++ = '-';
             n--;
@@ -4849,8 +4847,8 @@ static BOOL VARIANT_DI_tostringW(const VARIANT_DI * a, WCHAR * s, unsigned int n
 
     i = 0;
     memcpy(quotient, a->bitsnum, sizeof(a->bitsnum));
-    while (!overflow && !VARIANT_int_iszero(quotient, sizeof(quotient) / sizeof(DWORD))) {
-        remainder = VARIANT_int_divbychar(quotient, sizeof(quotient) / sizeof(DWORD), 10);
+    while (!overflow && !VARIANT_int_iszero(quotient, ARRAY_SIZE(quotient))) {
+        remainder = VARIANT_int_divbychar(quotient, ARRAY_SIZE(quotient), 10);
         if (i + 2 > n) {
             overflow = TRUE;
         } else {
@@ -4859,7 +4857,7 @@ static BOOL VARIANT_DI_tostringW(const VARIANT_DI * a, WCHAR * s, unsigned int n
         }
     }
 
-    if (!overflow && !VARIANT_int_iszero(a->bitsnum, sizeof(a->bitsnum) / sizeof(DWORD))) {
+    if (!overflow && !VARIANT_int_iszero(a->bitsnum, ARRAY_SIZE(a->bitsnum))) {
 
         /* reverse order of digits */
         WCHAR * x = s; WCHAR * y = s + i - 1;
@@ -5175,10 +5173,10 @@ static HRESULT VARIANT_DI_div(const VARIANT_DI * dividend, const VARIANT_DI * di
 {
     HRESULT r_overflow = S_OK;
 
-    if (VARIANT_int_iszero(divisor->bitsnum, sizeof(divisor->bitsnum)/sizeof(DWORD))) {
+    if (VARIANT_int_iszero(divisor->bitsnum, ARRAY_SIZE(divisor->bitsnum))) {
         /* division by 0 */
         r_overflow = DISP_E_DIVBYZERO;
-    } else if (VARIANT_int_iszero(dividend->bitsnum, sizeof(dividend->bitsnum)/sizeof(DWORD))) {
+    } else if (VARIANT_int_iszero(dividend->bitsnum, ARRAY_SIZE(dividend->bitsnum))) {
         VARIANT_DI_clear(quotient);
     } else {
         int quotientscale, remainderscale, tempquotientscale;
@@ -5208,17 +5206,14 @@ static HRESULT VARIANT_DI_div(const VARIANT_DI * dividend, const VARIANT_DI * di
         memset(remainderplusquotient, 0, sizeof(remainderplusquotient));
         memcpy(remainderplusquotient, dividend->bitsnum, sizeof(dividend->bitsnum));
         do {
-            VARIANT_int_div(
-                remainderplusquotient, 4,
-                divisor->bitsnum, sizeof(divisor->bitsnum)/sizeof(DWORD));
-            underflow = VARIANT_int_addlossy(
-                quotient->bitsnum, &quotientscale, sizeof(quotient->bitsnum) / sizeof(DWORD),
-                remainderplusquotient, &tempquotientscale, 4);
+            VARIANT_int_div(remainderplusquotient, 4, divisor->bitsnum, ARRAY_SIZE(divisor->bitsnum));
+            underflow = VARIANT_int_addlossy( quotient->bitsnum, &quotientscale,
+                ARRAY_SIZE(quotient->bitsnum), remainderplusquotient, &tempquotientscale, 4);
             if (round_remainder) {
                 if(remainderplusquotient[4] >= 5){
                     unsigned int i;
                     unsigned char remainder = 1;
-                    for (i = 0; i < sizeof(quotient->bitsnum) / sizeof(DWORD) && remainder; i++) {
+                    for (i = 0; i < ARRAY_SIZE(quotient->bitsnum) && remainder; i++) {
                         ULONGLONG digit = quotient->bitsnum[i] + 1;
                         remainder = (digit > 0xFFFFFFFF) ? 1 : 0;
                         quotient->bitsnum[i] = digit & 0xFFFFFFFF;
@@ -5239,9 +5234,9 @@ static HRESULT VARIANT_DI_div(const VARIANT_DI * dividend, const VARIANT_DI * di
         while (r_overflow == S_OK && quotientscale < 0) {
             memset(remainderplusquotient, 0, sizeof(remainderplusquotient));
             memcpy(remainderplusquotient, quotient->bitsnum, sizeof(quotient->bitsnum));
-            VARIANT_int_mulbychar(remainderplusquotient, sizeof(remainderplusquotient)/sizeof(DWORD), 10);
-            if (VARIANT_int_iszero(remainderplusquotient + sizeof(quotient->bitsnum)/sizeof(DWORD),
-                (sizeof(remainderplusquotient) - sizeof(quotient->bitsnum))/sizeof(DWORD))) {
+            VARIANT_int_mulbychar(remainderplusquotient, ARRAY_SIZE(remainderplusquotient), 10);
+            if (VARIANT_int_iszero(remainderplusquotient + ARRAY_SIZE(quotient->bitsnum),
+                ARRAY_SIZE(remainderplusquotient) - ARRAY_SIZE(quotient->bitsnum))) {
                 quotientscale++;
                 memcpy(quotient->bitsnum, remainderplusquotient, sizeof(quotient->bitsnum));
             } else r_overflow = DISP_E_OVERFLOW;
@@ -5562,9 +5557,9 @@ static HRESULT VARIANT_do_division(const DECIMAL *pDecLeft, const DECIMAL *pDecR
         WARN("result scale is %u, scaling (with loss of significant digits)...\n",
             di_result.scale);
         while (di_result.scale > DEC_MAX_SCALE && 
-               !VARIANT_int_iszero(di_result.bitsnum, sizeof(di_result.bitsnum) / sizeof(DWORD)))
+               !VARIANT_int_iszero(di_result.bitsnum, ARRAY_SIZE(di_result.bitsnum)))
         {
-            remainder = VARIANT_int_divbychar(di_result.bitsnum, sizeof(di_result.bitsnum) / sizeof(DWORD), 10);
+            remainder = VARIANT_int_divbychar(di_result.bitsnum, ARRAY_SIZE(di_result.bitsnum), 10);
             di_result.scale--;
         }
         if (di_result.scale > DEC_MAX_SCALE)
@@ -5576,7 +5571,7 @@ static HRESULT VARIANT_do_division(const DECIMAL *pDecLeft, const DECIMAL *pDecR
         else if (remainder >= 5)    /* round up result - native oleaut32 does this */
         {
             unsigned int i;
-            for (remainder = 1, i = 0; i < sizeof(di_result.bitsnum) / sizeof(DWORD) && remainder; i++) {
+            for (remainder = 1, i = 0; i < ARRAY_SIZE(di_result.bitsnum) && remainder; i++) {
                 ULONGLONG digit = di_result.bitsnum[i] + 1;
                 remainder = (digit > 0xFFFFFFFF) ? 1 : 0;
                 di_result.bitsnum[i] = digit & 0xFFFFFFFF;
@@ -5648,9 +5643,9 @@ HRESULT WINAPI VarDecMul(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
       WARN("result scale is %u, scaling (with loss of significant digits)...\n",
           di_result.scale);
       while (di_result.scale > DEC_MAX_SCALE && 
-            !VARIANT_int_iszero(di_result.bitsnum, sizeof(di_result.bitsnum)/sizeof(DWORD)))
+            !VARIANT_int_iszero(di_result.bitsnum, ARRAY_SIZE(di_result.bitsnum)))
       {
-        VARIANT_int_divbychar(di_result.bitsnum, sizeof(di_result.bitsnum)/sizeof(DWORD), 10);
+        VARIANT_int_divbychar(di_result.bitsnum, ARRAY_SIZE(di_result.bitsnum), 10);
         di_result.scale--;
       }
       if (di_result.scale > DEC_MAX_SCALE)
@@ -6357,9 +6352,8 @@ static BSTR VARIANT_MakeBstr(LCID lcid, DWORD dwFlags, WCHAR *szOut)
   {
     /* Format the number for the locale */
     szConverted[0] = '\0';
-    GetNumberFormatW(lcid,
-                     dwFlags & LOCALE_NOUSEROVERRIDE,
-                     szOut, NULL, szConverted, sizeof(szConverted)/sizeof(WCHAR));
+    GetNumberFormatW(lcid, dwFlags & LOCALE_NOUSEROVERRIDE,
+                     szOut, NULL, szConverted, ARRAY_SIZE(szConverted));
     szOut = szConverted;
   }
   return SysAllocStringByteLen((LPCSTR)szOut, strlenW(szOut) * sizeof(WCHAR));
@@ -6368,7 +6362,7 @@ static BSTR VARIANT_MakeBstr(LCID lcid, DWORD dwFlags, WCHAR *szOut)
 /* Create a (possibly localised) BSTR from a UI8 and sign */
 static HRESULT VARIANT_BstrFromUInt(ULONG64 ulVal, LCID lcid, DWORD dwFlags, BSTR *pbstrOut)
 {
-  WCHAR szBuff[64], *szOut = szBuff + sizeof(szBuff)/sizeof(WCHAR) - 1;
+  WCHAR szBuff[64], *szOut = szBuff + ARRAY_SIZE(szBuff) - 1;
 
   if (!pbstrOut)
     return E_INVALIDARG;
@@ -6453,7 +6447,7 @@ HRESULT WINAPI VarBstrFromI4(LONG lIn, LCID lcid, ULONG dwFlags, BSTR* pbstrOut)
 
   if (lIn < 0)
   {
-    ul64 = (ULONG)-lIn;
+    ul64 = -(LONG64)lIn;
     dwFlags |= VAR_NEGATIVE;
   }
   return VARIANT_BstrFromUInt(ul64, lcid, dwFlags, pbstrOut);
@@ -6472,7 +6466,7 @@ static BSTR VARIANT_BstrReplaceDecimal(const WCHAR * buff, LCID lcid, ULONG dwFl
      appropriate NUMBERFMTW structure to do the job via GetNumberFormatW().
    */
   GetLocaleInfoW(lcid, LOCALE_SDECIMAL | (dwFlags & LOCALE_NOUSEROVERRIDE),
-                 lpDecimalSep, sizeof(lpDecimalSep) / sizeof(WCHAR));
+                 lpDecimalSep, ARRAY_SIZE(lpDecimalSep));
   if (lpDecimalSep[0] == '.' && lpDecimalSep[1] == '\0')
   {
     /* locale is compatible with English - return original string */
@@ -6497,7 +6491,7 @@ static BSTR VARIANT_BstrReplaceDecimal(const WCHAR * buff, LCID lcid, ULONG dwFl
     if (p) minFormat.NumDigits = strlenW(p + 1);
 
     numbuff[0] = '\0';
-    if (!GetNumberFormatW(lcid, 0, buff, &minFormat, numbuff, sizeof(numbuff) / sizeof(WCHAR)))
+    if (!GetNumberFormatW(lcid, 0, buff, &minFormat, numbuff, ARRAY_SIZE(numbuff)))
     {
       WARN("GetNumberFormatW() failed, returning raw number string instead\n");
       bstrOut = SysAllocString(buff);
@@ -6528,7 +6522,7 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
    */
   if (buff[0] == '-')
   {
-    const WCHAR szAccept[] = {'0', '.', '\0'};
+    static const WCHAR szAccept[] = {'0', '.', '\0'};
     if (strlenW(buff + 1) == strspnW(buff + 1, szAccept))
     { buff[0] = '0'; buff[1] = '\0'; }
   }
@@ -6541,7 +6535,7 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
     /* Format the number for the locale */
     numbuff[0] = '\0';
     GetNumberFormatW(lcid, dwFlags & LOCALE_NOUSEROVERRIDE,
-                     buff, NULL, numbuff, sizeof(numbuff) / sizeof(WCHAR));
+                     buff, NULL, numbuff, ARRAY_SIZE(numbuff));
     TRACE("created NLS string %s\n", debugstr_w(numbuff));
     *pbstrOut = SysAllocString(numbuff);
   }
@@ -6632,7 +6626,7 @@ HRESULT WINAPI VarBstrFromCy(CY cyIn, LCID lcid, ULONG dwFlags, BSTR *pbstrOut)
     VARIANT_int_add(decVal.bitsnum, 3, &one, 1);
   }
   decVal.bitsnum[2] = 0;
-  VARIANT_DI_tostringW(&decVal, buff, sizeof(buff)/sizeof(buff[0]));
+  VARIANT_DI_tostringW(&decVal, buff, ARRAY_SIZE(buff));
 
   if (dwFlags & LOCALE_USE_NLS)
   {
@@ -6641,7 +6635,7 @@ HRESULT WINAPI VarBstrFromCy(CY cyIn, LCID lcid, ULONG dwFlags, BSTR *pbstrOut)
     /* Format the currency for the locale */
     cybuff[0] = '\0';
     GetCurrencyFormatW(lcid, dwFlags & LOCALE_NOUSEROVERRIDE,
-                       buff, NULL, cybuff, sizeof(cybuff) / sizeof(WCHAR));
+                       buff, NULL, cybuff, ARRAY_SIZE(cybuff));
     *pbstrOut = SysAllocString(cybuff);
   }
   else
@@ -6814,8 +6808,8 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
   if (dwFlags & VAR_TIMEVALUEONLY)
     date[0] = '\0';
   else
-    if (!GetLocaleInfoW(lcid, LOCALE_SSHORTDATE, fmt_buff, sizeof(fmt_buff)/sizeof(WCHAR)) ||
-        !get_date_format(lcid, dwFlags, &st, fmt_buff, date, sizeof(date)/sizeof(WCHAR)))
+    if (!GetLocaleInfoW(lcid, LOCALE_SSHORTDATE, fmt_buff, ARRAY_SIZE(fmt_buff)) ||
+        !get_date_format(lcid, dwFlags, &st, fmt_buff, date, ARRAY_SIZE(date)))
       return E_INVALIDARG;
 
   if (!(dwFlags & VAR_DATEVALUEONLY))
@@ -6823,8 +6817,7 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
     time = date + strlenW(date);
     if (time != date)
       *time++ = ' ';
-    if (!GetTimeFormatW(lcid, dwFormatFlags, &st, NULL, time,
-                        sizeof(date)/sizeof(WCHAR)-(time-date)))
+    if (!GetTimeFormatW(lcid, dwFormatFlags, &st, NULL, time, ARRAY_SIZE(date)-(time-date)))
       return E_INVALIDARG;
   }
 
@@ -7012,7 +7005,7 @@ HRESULT WINAPI VarBstrFromDec(DECIMAL* pDecIn, LCID lcid, ULONG dwFlags, BSTR* p
     /* Format the number for the locale */
     numbuff[0] = '\0';
     GetNumberFormatW(lcid, dwFlags & LOCALE_NOUSEROVERRIDE,
-                     buff, NULL, numbuff, sizeof(numbuff) / sizeof(WCHAR));
+                     buff, NULL, numbuff, ARRAY_SIZE(numbuff));
     TRACE("created NLS string %s\n", debugstr_w(numbuff));
     *pbstrOut = SysAllocString(numbuff);
   }
@@ -7625,7 +7618,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     1,2,3,4,5,6,7,8,9,10,11,12,13
   };
   unsigned int i;
-  BSTR tokens[sizeof(ParseDateTokens)/sizeof(ParseDateTokens[0])];
+  BSTR tokens[ARRAY_SIZE(ParseDateTokens)];
   DATEPARSE dp;
   DWORD dwDateSeps = 0, iDate = 0;
   HRESULT hRet = S_OK;
@@ -7648,7 +7641,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
   TRACE("iDate is %d\n", iDate);
 
   /* Get the month/day/am/pm tokens for this locale */
-  for (i = 0; i < sizeof(tokens)/sizeof(tokens[0]); i++)
+  for (i = 0; i < ARRAY_SIZE(tokens); i++)
   {
     WCHAR buff[128];
     LCTYPE lctype =  ParseDateTokens[i] | (dwFlags & LOCALE_NOUSEROVERRIDE);
@@ -7657,7 +7650,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
      *        GetAltMonthNames(). We should really cache these strings too.
      */
     buff[0] = '\0';
-    GetLocaleInfoW(lcid, lctype, buff, sizeof(buff)/sizeof(WCHAR));
+    GetLocaleInfoW(lcid, lctype, buff, ARRAY_SIZE(buff));
     tokens[i] = SysAllocString(buff);
     TRACE("token %d is %s\n", i, debugstr_w(tokens[i]));
   }
@@ -7680,7 +7673,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     {
       BOOL bFound = FALSE;
 
-      for (i = 0; i < sizeof(tokens)/sizeof(tokens[0]); i++)
+      for (i = 0; i < ARRAY_SIZE(tokens); i++)
       {
         DWORD dwLen = strlenW(tokens[i]);
         if (dwLen && !strncmpiW(strIn, tokens[i], dwLen))
@@ -7940,7 +7933,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     }
   }
 
-  for (i = 0; i < sizeof(tokens)/sizeof(tokens[0]); i++)
+  for (i = 0; i < ARRAY_SIZE(tokens); i++)
     SysFreeString(tokens[i]);
   return hRet;
 }

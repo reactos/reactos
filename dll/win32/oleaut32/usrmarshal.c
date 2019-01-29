@@ -227,6 +227,9 @@ unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
     case VT_INT:
     case VT_UINT:
         return sizeof(INT);
+    case VT_I8:
+    case VT_UI8:
+        return sizeof(LONGLONG);
     case VT_R4:
         return sizeof(FLOAT);
     case VT_R8:
@@ -644,7 +647,8 @@ void WINAPI VARIANT_UserFree(ULONG *pFlags, VARIANT *pvar)
       break;
     case VT_UNKNOWN | VT_BYREF:
     case VT_DISPATCH | VT_BYREF:
-      IUnknown_Release(*V_UNKNOWNREF(pvar));
+      if (*V_UNKNOWNREF(pvar))
+        IUnknown_Release(*V_UNKNOWNREF(pvar));
       break;
     }
   }

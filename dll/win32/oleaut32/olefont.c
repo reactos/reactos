@@ -591,7 +591,7 @@ static void realize_font(OLEFontImpl *This)
     if(This->gdiFont)
     {
         old_font = SelectObject(hdc, This->gdiFont);
-        GetTextFaceW(hdc, sizeof(text_face) / sizeof(text_face[0]), text_face);
+        GetTextFaceW(hdc, ARRAY_SIZE(text_face), text_face);
         SelectObject(hdc, old_font);
         dec_int_ref(This->gdiFont);
         This->gdiFont = 0;
@@ -645,7 +645,7 @@ static void realize_font(OLEFontImpl *This)
     /* Fixup the name and charset properties so that they match the
        selected font */
     old_font = SelectObject(get_dc(), This->gdiFont);
-    GetTextFaceW(hdc, sizeof(text_face) / sizeof(text_face[0]), text_face);
+    GetTextFaceW(hdc, ARRAY_SIZE(text_face), text_face);
     if(lstrcmpiW(text_face, This->description.lpstrName))
     {
         HeapFree(GetProcessHeap(), 0, This->description.lpstrName);

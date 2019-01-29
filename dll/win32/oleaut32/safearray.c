@@ -289,7 +289,7 @@ static HRESULT SAFEARRAY_DestroyData(SAFEARRAY *psa, ULONG ulStartCell)
     ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
 
     if (ulStartCell > ulCellCount) {
-      FIXME("unexpted ulcellcount %d, start %d\n",ulCellCount,ulStartCell);
+      FIXME("unexpected ulCellCount %d, start %d\n",ulCellCount,ulStartCell);
       return E_UNEXPECTED;
     }
 

@@ -287,9 +287,10 @@ static void OLEPictureImpl_SetEMF(OLEPictureImpl *This)
  * The caller of this method must release the object when it's
  * done with it.
  */
-static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
+static HRESULT OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn, OLEPictureImpl **pict)
 {
-  OLEPictureImpl* newObject = 0;
+  OLEPictureImpl *newObject;
+  HRESULT hr;
 
   if (pictDesc)
       TRACE("(%p) type = %d\n", pictDesc, pictDesc->picType);
@@ -298,9 +299,8 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
    * Allocate space for the object.
    */
   newObject = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(OLEPictureImpl));
-
-  if (newObject==0)
-    return newObject;
+  if (!newObject)
+    return E_OUTOFMEMORY;
 
   /*
    * Initialize the virtual function table.
@@ -311,12 +311,12 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
   newObject->IConnectionPointContainer_iface.lpVtbl = &OLEPictureImpl_IConnectionPointContainer_VTable;
 
   newObject->pCP = NULL;
-  CreateConnectionPoint((IUnknown*)&newObject->IPicture_iface, &IID_IPropertyNotifySink,
+  hr = CreateConnectionPoint((IUnknown*)&newObject->IPicture_iface, &IID_IPropertyNotifySink,
                         &newObject->pCP);
-  if (!newObject->pCP)
+  if (hr != S_OK)
   {
     HeapFree(GetProcessHeap(), 0, newObject);
-    return NULL;
+    return hr;
   }
 
   /*
@@ -365,16 +365,17 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
         break;
 
       default:
-	FIXME("Unsupported type %d\n", pictDesc->picType);
-	newObject->himetricWidth = newObject->himetricHeight = 0;
-	break;
+        WARN("Unsupported type %d\n", pictDesc->picType);
+        IPicture_Release(&newObject->IPicture_iface);
+        return E_UNEXPECTED;
       }
   } else {
       newObject->desc.picType = PICTYPE_UNINITIALIZED;
   }
 
   TRACE("returning %p\n", newObject);
-  return newObject;
+  *pict = newObject;
+  return S_OK;
 }
 
 /************************************************************************
@@ -565,37 +566,19 @@ static HRESULT WINAPI OLEPictureImpl_get_Handle(IPicture *iface,
 static HRESULT WINAPI OLEPictureImpl_get_hPal(IPicture *iface,
 					      OLE_HANDLE *phandle)
 {
-  OLEPictureImpl *This = impl_from_IPicture(iface);
-  HRESULT hres;
-  TRACE("(%p)->(%p)\n", This, phandle);
+    OLEPictureImpl *This = impl_from_IPicture(iface);
 
-  if (!phandle)
-    return E_POINTER;
+    TRACE("(%p)->(%p)\n", This, phandle);
 
-  switch (This->desc.picType) {
-    case (UINT)PICTYPE_UNINITIALIZED:
-    case PICTYPE_NONE:
-      *phandle = 0;
-      hres = S_FALSE;
-      break;
-    case PICTYPE_BITMAP:
-      *phandle = HandleToUlong(This->desc.u.bmp.hpal);
-      hres = S_OK;
-      break;
-    case PICTYPE_METAFILE:
-      hres = E_FAIL;
-      break;
-    case PICTYPE_ICON:
-    case PICTYPE_ENHMETAFILE:
-    default:
-      FIXME("unimplemented for type %d. Returning 0 palette.\n",
-           This->desc.picType);
-      *phandle = 0;
-      hres = S_OK;
-  }
+    if (!phandle) return E_POINTER;
 
-  TRACE("returning 0x%08x, palette handle %08x\n", hres, *phandle);
-  return hres;
+    if (This->desc.picType == PICTYPE_BITMAP)
+    {
+        *phandle = HandleToUlong(This->desc.u.bmp.hpal);
+        return S_OK;
+    }
+
+    return E_FAIL;
 }
 
 /************************************************************************
@@ -638,6 +621,48 @@ static HRESULT WINAPI OLEPictureImpl_get_Height(IPicture *iface,
   return S_OK;
 }
 
+static void render_masked_bitmap(OLEPictureImpl *This, HDC hdc,
+    LONG x, LONG y, LONG cx, LONG cy, OLE_XPOS_HIMETRIC xSrc, OLE_YPOS_HIMETRIC ySrc,
+    OLE_XSIZE_HIMETRIC cxSrc, OLE_YSIZE_HIMETRIC cySrc, HBITMAP hbmMask, HBITMAP hbmXor)
+{
+    HDC hdcBmp;
+
+    /* Set a mapping mode that maps bitmap pixels into HIMETRIC units.
+     * NB y-axis gets flipped
+     */
+
+    hdcBmp = CreateCompatibleDC(0);
+    SetMapMode(hdcBmp, MM_ANISOTROPIC);
+    SetWindowOrgEx(hdcBmp, 0, 0, NULL);
+    SetWindowExtEx(hdcBmp, This->himetricWidth, This->himetricHeight, NULL);
+    SetViewportOrgEx(hdcBmp, 0, This->origHeight, NULL);
+    SetViewportExtEx(hdcBmp, This->origWidth, -This->origHeight, NULL);
+
+    if (hbmMask)
+    {
+        SetBkColor(hdc, RGB(255, 255, 255));
+        SetTextColor(hdc, RGB(0, 0, 0));
+
+        SelectObject(hdcBmp, hbmMask);
+        StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCAND);
+
+        if (hbmXor)
+        {
+            SelectObject(hdcBmp, hbmXor);
+            StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCPAINT);
+        }
+        else StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc - This->himetricHeight,
+                        cxSrc, cySrc, SRCPAINT);
+    }
+    else
+    {
+        SelectObject(hdcBmp, hbmXor);
+        StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCCOPY);
+    }
+
+    DeleteDC(hdcBmp);
+}
+
 /************************************************************************
  * OLEPictureImpl_Render
  */
@@ -671,52 +696,37 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
     /* nothing to do */
     return S_OK;
   case PICTYPE_BITMAP:
+  {
+    HBITMAP hbmMask, hbmXor;
+
+    if (This->hbmMask)
     {
-      HBITMAP hbmpOld;
-      HDC hdcBmp;
-
-      /* Set a mapping mode that maps bitmap pixels into HIMETRIC units.
-         NB y-axis gets flipped */
-
-      hdcBmp = CreateCompatibleDC(0);
-      SetMapMode(hdcBmp, MM_ANISOTROPIC);
-      SetWindowOrgEx(hdcBmp, 0, 0, NULL);
-      SetWindowExtEx(hdcBmp, This->himetricWidth, This->himetricHeight, NULL);
-      SetViewportOrgEx(hdcBmp, 0, This->origHeight, NULL);
-      SetViewportExtEx(hdcBmp, This->origWidth, -This->origHeight, NULL);
-
-      if (This->hbmMask) {
-	  HDC hdcMask = CreateCompatibleDC(0);
-	  HBITMAP hOldbm = SelectObject(hdcMask, This->hbmMask);
-
-          hbmpOld = SelectObject(hdcBmp, This->hbmXor);
-
-	  SetMapMode(hdcMask, MM_ANISOTROPIC);
-	  SetWindowOrgEx(hdcMask, 0, 0, NULL);
-	  SetWindowExtEx(hdcMask, This->himetricWidth, This->himetricHeight, NULL);
-	  SetViewportOrgEx(hdcMask, 0, This->origHeight, NULL);
-	  SetViewportExtEx(hdcMask, This->origWidth, -This->origHeight, NULL);
-	  
-	  SetBkColor(hdc, RGB(255, 255, 255));    
-	  SetTextColor(hdc, RGB(0, 0, 0));        
-	  StretchBlt(hdc, x, y, cx, cy, hdcMask, xSrc, ySrc, cxSrc, cySrc, SRCAND); 
-	  StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCPAINT);
-
-	  SelectObject(hdcMask, hOldbm);
-	  DeleteDC(hdcMask);
-      } else {
-          hbmpOld = SelectObject(hdcBmp, This->desc.u.bmp.hbitmap);
-	  StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCCOPY);
-      }
-
-      SelectObject(hdcBmp, hbmpOld);
-      DeleteDC(hdcBmp);
+        hbmMask = This->hbmMask;
+        hbmXor = This->hbmXor;
     }
+    else
+    {
+        hbmMask = 0;
+        hbmXor = This->desc.u.bmp.hbitmap;
+    }
+
+    render_masked_bitmap(This, hdc, x, y, cx, cy, xSrc, ySrc, cxSrc, cySrc, hbmMask, hbmXor);
     break;
+  }
+
   case PICTYPE_ICON:
-    FIXME("Not quite correct implementation of rendering icons...\n");
-    DrawIconEx(hdc, x, y, This->desc.u.icon.hicon, cx, cy, 0, NULL, DI_NORMAL);
+  {
+    ICONINFO info;
+
+    if (!GetIconInfo(This->desc.u.icon.hicon, &info))
+        return E_FAIL;
+
+    render_masked_bitmap(This, hdc, x, y, cx, cy, xSrc, ySrc, cxSrc, cySrc, info.hbmMask, info.hbmColor);
+
+    DeleteObject(info.hbmMask);
+    if (info.hbmColor) DeleteObject(info.hbmColor);
     break;
+  }
 
   case PICTYPE_METAFILE:
   {
@@ -767,10 +777,18 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 static HRESULT WINAPI OLEPictureImpl_set_hPal(IPicture *iface,
 					      OLE_HANDLE hpal)
 {
-  OLEPictureImpl *This = impl_from_IPicture(iface);
-  FIXME("(%p)->(%08x): stub\n", This, hpal);
-  OLEPicture_SendNotify(This,DISPID_PICT_HPAL);
-  return E_NOTIMPL;
+    OLEPictureImpl *This = impl_from_IPicture(iface);
+
+    TRACE("(%p)->(%08x)\n", This, hpal);
+
+    if (This->desc.picType == PICTYPE_BITMAP)
+    {
+        This->desc.u.bmp.hpal = ULongToHandle(hpal);
+        OLEPicture_SendNotify(This,DISPID_PICT_HPAL);
+        return S_OK;
+    }
+
+    return E_FAIL;
 }
 
 /************************************************************************
@@ -2310,10 +2328,8 @@ HRESULT WINAPI OleCreatePictureIndirect(LPPICTDESC lpPictDesc, REFIID riid,
 
   *ppvObj = NULL;
 
-  newPict = OLEPictureImpl_Construct(lpPictDesc, Own);
-
-  if (newPict == NULL)
-    return E_OUTOFMEMORY;
+  hr = OLEPictureImpl_Construct(lpPictDesc, Own, &newPict);
+  if (hr != S_OK) return hr;
 
   /*
    * Make sure it supports the interface required by the caller.
@@ -2509,7 +2525,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
   if (strncmpW(szURLorPath, file, 5) == 0) {
       DWORD size;
       hRes = CoInternetParseUrl(szURLorPath, PARSE_PATH_FROM_URL, 0, path_buf,
-                                sizeof(path_buf)/sizeof(WCHAR), &size, 0);
+                                ARRAY_SIZE(path_buf), &size, 0);
       if (FAILED(hRes))
           return hRes;
 

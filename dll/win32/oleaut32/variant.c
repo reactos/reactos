@@ -648,7 +648,7 @@ HRESULT VARIANT_ClearInd(VARIANTARG *pVarg)
  *  Success: S_OK. Any previous value in pVarg is freed and its type is set to VT_EMPTY.
  *  Failure: DISP_E_BADVARTYPE, if the variant is not a valid variant type.
  */
-HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
+HRESULT WINAPI DECLSPEC_HOTPATCH VariantClear(VARIANTARG* pVarg)
 {
   HRESULT hres;
 
@@ -962,8 +962,8 @@ VariantCopyInd_Return:
  *  The LCID used for the conversion is LOCALE_USER_DEFAULT.
  *  See VariantChangeTypeEx.
  */
-HRESULT WINAPI VariantChangeType(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
-                                 USHORT wFlags, VARTYPE vt)
+HRESULT WINAPI DECLSPEC_HOTPATCH VariantChangeType(VARIANTARG* pvargDest, VARIANTARG* pvargSrc,
+                                                   USHORT wFlags, VARTYPE vt)
 {
   return VariantChangeTypeEx( pvargDest, pvargSrc, LOCALE_USER_DEFAULT, wFlags, vt );
 }
@@ -1549,7 +1549,7 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
 
   /* Local currency symbols are often 2 characters */
   lpChars->cCurrencyLocal2 = '\0';
-  switch(GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, buff, sizeof(buff)/sizeof(WCHAR)))
+  switch(GetLocaleInfoW(lcid, lctype|LOCALE_SCURRENCY, buff, ARRAY_SIZE(buff)))
   {
     case 3: lpChars->cCurrencyLocal2 = buff[1]; /* Fall through */
     case 2: lpChars->cCurrencyLocal  = buff[0];
@@ -1610,7 +1610,7 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
   VARIANT_NUMBER_CHARS chars;
   BYTE rgbTmp[1024];
   DWORD dwState = B_EXPONENT_START|B_INEXACT_ZEROS;
-  int iMaxDigits = sizeof(rgbTmp) / sizeof(BYTE);
+  int iMaxDigits = ARRAY_SIZE(rgbTmp);
   int cchUsed = 0;
 
   TRACE("(%s,%d,0x%08x,%p,%p)\n", debugstr_w(lpszStr), lcid, dwFlags, pNumprs, rgbDig);
@@ -5134,7 +5134,21 @@ HRESULT WINAPI VarRound(LPVARIANT pVarIn, int deci, LPVARIANT pVarOut)
 	}
 	V_VT(pVarOut) = V_VT(pVarIn);
 	break;
+    case VT_DECIMAL:
+    {
+        double dbl;
 
+        VarR8FromDec(&V_DECIMAL(pVarIn), &dbl);
+
+        if (dbl>0.0f)
+            dbl = floor(dbl*pow(10,deci)+0.5);
+        else
+            dbl = ceil(dbl*pow(10,deci)-0.5);
+
+        V_VT(pVarOut)=VT_DECIMAL;
+        VarDecFromR8(dbl, &V_DECIMAL(pVarOut));
+        break;
+    }
     /* cases we don't know yet */
     default:
 	FIXME("unimplemented part, V_VT(pVarIn) == 0x%X, deci == %d\n",
