@@ -74,7 +74,7 @@ static BOOL init_access_tests(void)
     BOOL rc;
 
     user_name[0] = 0;
-    dwSize = sizeof(user_name)/sizeof(WCHAR);
+    dwSize = ARRAY_SIZE(user_name);
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
@@ -84,7 +84,7 @@ static BOOL init_access_tests(void)
     ok(rc, "User Name Retrieved\n");
 
     computer_name[0] = 0;
-    dwSize = sizeof(computer_name)/sizeof(WCHAR);
+    dwSize = ARRAY_SIZE(computer_name);
     ok(GetComputerNameW(computer_name, &dwSize), "Computer Name Retrieved\n");
     return TRUE;
 }
@@ -521,7 +521,7 @@ static void test_DavGetHTTPFromUNCPath(void)
     ok( ret == ERROR_INSUFFICIENT_BUFFER, "got %u\n", ret );
     ok( size == 12, "got %u\n", size );
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         buf[0] = 0;
         size = tests[i].size;
@@ -685,7 +685,7 @@ static void test_DavGetUNCFromHTTPPath(void)
     ok( ret == ERROR_INSUFFICIENT_BUFFER, "got %u\n", ret );
     ok( size == 25, "got %u\n", size );
 
-    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         buf[0] = 0;
         size = tests[i].size;
