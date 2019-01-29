@@ -27,9 +27,6 @@
 #include "windef.h"
 #include "winbase.h"
 #define USE_COM_CONTEXT_DEF
-#ifndef __REACTOS__
-#include "initguid.h"
-#endif
 #include "objbase.h"
 #include "shlguid.h"
 #include "urlmon.h" /* for CLSID_FileProtocol */
@@ -39,10 +36,7 @@
 #include "ctxtcall.h"
 
 #include "wine/test.h"
-
-#ifdef __REACTOS__
-#include <initguid.h>
-#endif
+#include "initguid.h"
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -101,9 +95,7 @@ static const GUID IID_Testiface5 = { 0x62222222, 0x1234, 0x1234, { 0x12, 0x34, 0
 static const GUID IID_Testiface6 = { 0x72222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 static const GUID IID_TestPS = { 0x66666666, 0x8888, 0x7777, { 0x66, 0x66, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 } };
 
-DEFINE_GUID(CLSID_InProcFreeMarshaler, 0x0000033a,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_testclsid, 0xacd014c7,0x9535,0x4fac,0x8b,0x53,0xa4,0x8c,0xa7,0xf4,0xd7,0x26);
-DEFINE_GUID(CLSID_GlobalOptions, 0x0000034b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
 static const WCHAR stdfont[] = {'S','t','d','F','o','n','t',0};
 static const WCHAR wszNonExistent[] = {'N','o','n','E','x','i','s','t','e','n','t',0};
@@ -203,7 +195,7 @@ static BOOL create_manifest_file(const char *filename, const char *manifest)
     WCHAR path[MAX_PATH];
 
     MultiByteToWideChar( CP_ACP, 0, filename, -1, path, MAX_PATH );
-    GetFullPathNameW(path, sizeof(manifest_path)/sizeof(WCHAR), manifest_path, NULL);
+    GetFullPathNameW(path, ARRAY_SIZE(manifest_path), manifest_path, NULL);
 
     manifest_len = strlen(manifest);
     file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
@@ -2340,7 +2332,7 @@ static void test_OleRegGetUserType(void)
     }
 
     /* test using registered CLSID */
-    StringFromGUID2(&CLSID_non_existent, clsidW, sizeof(clsidW)/sizeof(clsidW[0]));
+    StringFromGUID2(&CLSID_non_existent, clsidW, ARRAY_SIZE(clsidW));
 
     ret = RegCreateKeyExW(HKEY_CLASSES_ROOT, clsidkeyW, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &clsidhkey, &disposition);
     if (!ret)
@@ -2528,7 +2520,7 @@ static void flush_messages(void)
 
 static LRESULT CALLBACK cowait_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    if(cowait_msgs_last < sizeof(cowait_msgs)/sizeof(*cowait_msgs))
+    if(cowait_msgs_last < ARRAY_SIZE(cowait_msgs))
         cowait_msgs[cowait_msgs_last++] = msg;
     if(msg == WM_DDE_FIRST)
         return 6;

@@ -29,7 +29,6 @@
 #include "winbase.h"
 #include "objbase.h"
 #include "ocidl.h"
-#include "initguid.h"
 #include "comcat.h"
 #include "olectl.h"
 
@@ -38,7 +37,6 @@
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
 #define ok_no_locks() ok(cLocks == 0, "Number of locks should be 0, but actually is %d\n", cLocks)
 #define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08x\n", hr)
-#define COUNTOF(x) (sizeof(x) / sizeof(x[0]))
 
 #define CHECK_EXPECTED_METHOD(method_name) \
 do { \
@@ -905,7 +903,7 @@ static void test_MkParseDisplayName(void)
     hr = CreateBindCtx(0, &pbc);
     ok_ole_success(hr, CreateBindCtx);
 
-    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(invalid_parameters); i++)
     {
         eaten = 0xdeadbeef;
         pmk = (IMoniker *)0xdeadbeef;
@@ -947,7 +945,7 @@ static void test_MkParseDisplayName(void)
     pmk = NULL;
     hr = MkParseDisplayName(pbc, wszDisplayName, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
-    ok(eaten == sizeof(wszDisplayName)/sizeof(WCHAR) - 1,
+    ok(eaten == ARRAY_SIZE(wszDisplayName) - 1,
         "Processed character count should have been 43 instead of %u\n", eaten);
     if (pmk)
     {
@@ -969,7 +967,7 @@ static void test_MkParseDisplayName(void)
     pmk = NULL;
     hr = MkParseDisplayName(pbc, wszDisplayNameRunning, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
-    ok(eaten == sizeof(wszDisplayNameRunning)/sizeof(WCHAR) - 1,
+    ok(eaten == ARRAY_SIZE(wszDisplayNameRunning) - 1,
         "Processed character count should have been 15 instead of %u\n", eaten);
     if (pmk)
     {
@@ -987,7 +985,7 @@ static void test_MkParseDisplayName(void)
     expected_display_name = wszDisplayNameProgId1;
     hr = MkParseDisplayName(pbc, wszDisplayNameProgId1, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
-    ok(eaten == sizeof(wszDisplayNameProgId1)/sizeof(WCHAR) - 1,
+    ok(eaten == ARRAY_SIZE(wszDisplayNameProgId1) - 1,
         "Processed character count should have been 8 instead of %u\n", eaten);
     if (pmk)
     {
@@ -999,7 +997,7 @@ static void test_MkParseDisplayName(void)
     expected_display_name = wszDisplayNameProgId2;
     hr = MkParseDisplayName(pbc, wszDisplayNameProgId2, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
-    ok(eaten == sizeof(wszDisplayNameProgId2)/sizeof(WCHAR) - 1,
+    ok(eaten == ARRAY_SIZE(wszDisplayNameProgId2) - 1,
         "Processed character count should have been 8 instead of %u\n", eaten);
     if (pmk)
     {
@@ -1021,7 +1019,8 @@ static void test_MkParseDisplayName(void)
 
     GetSystemDirectoryA(szDisplayNameFile, sizeof(szDisplayNameFile));
     strcat(szDisplayNameFile, "\\kernel32.dll");
-    len = MultiByteToWideChar(CP_ACP, 0, szDisplayNameFile, -1, wszDisplayNameFile, sizeof(wszDisplayNameFile)/sizeof(wszDisplayNameFile[0]));
+    len = MultiByteToWideChar(CP_ACP, 0, szDisplayNameFile, -1, wszDisplayNameFile,
+        ARRAY_SIZE(wszDisplayNameFile));
     hr = MkParseDisplayName(pbc, wszDisplayNameFile, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
     ok(eaten == len - 1, "Processed character count should have been %d instead of %u\n", len - 1, eaten);
@@ -1034,7 +1033,8 @@ static void test_MkParseDisplayName(void)
 
     hr = MkParseDisplayName(pbc, wszDisplayName, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
-    ok(eaten == sizeof(wszDisplayName)/sizeof(WCHAR) - 1, "Processed character count should have been 43 instead of %u\n", eaten);
+    ok(eaten == ARRAY_SIZE(wszDisplayName) - 1,
+        "Processed character count should have been 43 instead of %u\n", eaten);
 
     if (pmk)
     {
@@ -1550,7 +1550,7 @@ static void test_file_monikers(void)
 
     trace("ACP is %u\n", GetACP());
 
-    for (i = 0; i < COUNTOF(wszFile); ++i)
+    for (i = 0; i < ARRAY_SIZE(wszFile); ++i)
     {
         int j ;
         if (i == 2)

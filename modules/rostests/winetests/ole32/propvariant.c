@@ -189,7 +189,7 @@ static void test_validtypes(void)
     ok(U(propvar).uhVal.QuadPart == 0, "expected 0, got %#x/%#x\n",
        U(propvar).uhVal.u.LowPart, U(propvar).uhVal.u.HighPart);
 
-    for (i = 0; i < sizeof(valid_types)/sizeof(valid_types[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(valid_types); i++)
     {
         VARTYPE vt;
 

@@ -1067,7 +1067,7 @@ static void test_marshal_SNB(void)
     ok(*(ULONG*)wiresnb->rgString == wiresnb->ulCntStr, "got %u\n", *(ULONG*)wiresnb->rgString);
     dataW = &wiresnb->rgString[2];
     ok(!lstrcmpW(dataW, str1W), "marshalled string 0: %s\n", wine_dbgstr_w(dataW));
-    dataW += sizeof(str1W)/sizeof(WCHAR);
+    dataW += ARRAY_SIZE(str1W);
     ok(!lstrcmpW(dataW, str2W), "marshalled string 1: %s\n", wine_dbgstr_w(dataW));
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);

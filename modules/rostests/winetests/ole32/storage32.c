@@ -21,7 +21,9 @@
 #include <stdio.h>
 
 #define COBJMACROS
-#ifndef __REACTOS__
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#else
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #endif
@@ -222,7 +224,7 @@ static HRESULT WINAPI TestLockBytes_Stat(ILockBytes *iface,
     return S_OK;
 }
 
-static /* const */ ILockBytesVtbl TestLockBytes_Vtbl = {
+static const ILockBytesVtbl TestLockBytes_Vtbl = {
     TestLockBytes_QueryInterface,
     TestLockBytes_AddRef,
     TestLockBytes_Release,
@@ -2086,9 +2088,9 @@ static void _test_file_access(LPCSTR file, const struct access_res *ares, DWORD 
 {
     int i, j, idx = 0;
 
-    for (i = 0; i < sizeof(access_modes)/sizeof(access_modes[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(access_modes); i++)
     {
-        for (j = 0; j < sizeof(share_modes)/sizeof(share_modes[0]); j++)
+        for (j = 0; j < ARRAY_SIZE(share_modes); j++)
         {
             DWORD lasterr;
             HANDLE hfile;
@@ -3492,7 +3494,7 @@ static void test_locking(void)
     IStorage *stg;
     HRESULT hr;
 
-    for (i=0; i<sizeof(lock_tests)/sizeof(lock_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(lock_tests); i++)
     {
         const struct lock_test *current = &lock_tests[i];
         BOOL any_failure = FALSE;

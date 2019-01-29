@@ -30,9 +30,6 @@
 
 #include <initguid.h>
 DEFINE_GUID(CLSID_WineTestObject, 0xdeadbeef,0xdead,0xbeef,0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef);
-#ifndef CLSID_IdentityUnmarshal
-DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-#endif
 DEFINE_GUID(CLSID_UnknownUnmarshal,0x4c1e39e1,0xe3e3,0x4296,0xaa,0x86,0xec,0x93,0x8d,0x89,0x6e,0x92);
 
 struct winetest_info
@@ -69,7 +66,7 @@ static const char *debugstr_guid(const GUID *guid)
 
     if (!guid) return "(null)";
 
-    for (i = 0; i < sizeof(guid_name)/sizeof(guid_name[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(guid_name); i++)
     {
         if (IsEqualIID(guid, guid_name[i].guid))
             return guid_name[i].name;

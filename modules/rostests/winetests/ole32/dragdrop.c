@@ -701,7 +701,7 @@ static void test_DoDragDrop(void)
     GetWindowRect(hwnd, &rect);
     ok(SetCursorPos(rect.left+50, rect.top+50), "SetCursorPos failed\n");
 
-    for (seq = 0; seq < sizeof(call_lists) / sizeof(call_lists[0]); seq++)
+    for (seq = 0; seq < ARRAY_SIZE(call_lists); seq++)
     {
         DWORD effect_in;
         trace("%d\n", seq);
