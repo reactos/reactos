@@ -1427,9 +1427,10 @@ NtMakePermanentObject(IN HANDLE ObjectHandle)
     PAGED_CODE();
 
     /* Make sure that the caller has SeCreatePermanentPrivilege */
-    Status = SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
-                                    PreviousMode);
-    if (!NT_SUCCESS(Status)) return STATUS_PRIVILEGE_NOT_HELD;
+    if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege, PreviousMode))
+    {
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
 
     /* Reference the object */
     Status = ObReferenceObjectByHandle(ObjectHandle,
