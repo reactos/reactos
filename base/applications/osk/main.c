@@ -143,8 +143,19 @@ int OSK_DlgInitDialog(HWND hDlg)
     /* Save handle */
     Globals.hMainWnd = hDlg;
 
-    /* Load the settings from the registry hive */
-    LoadDataFromRegistry();
+    /* Check the checked menu item before displaying the modal box */
+    if (Globals.bIsEnhancedKeyboard)
+    {
+        /* Enhanced keyboard dialog chosen, set the respective menu item as checked */
+        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
+    }
+    else
+    {
+        /* Standard keyboard dialog chosen, set the respective menu item as checked */
+        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+    }
 
     /* Set the application's icon */
     hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
@@ -196,12 +207,6 @@ int OSK_DlgInitDialog(HWND hDlg)
 
     /* Set a timer for periodics tasks */
     Globals.iTimer = SetTimer(hDlg, 0, 200, NULL);
-
-    /* If the member of the struct (bShowWarning) is set then display the dialog box */
-    if (Globals.bShowWarning)
-    {
-        DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
-    }
 
     return TRUE;
 }
@@ -441,6 +446,58 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
                 }
 
+                case IDM_ENHANCED_KB:
+                {
+                    if (!Globals.bIsEnhancedKeyboard)
+                    {
+                        /* 
+                            The user attempted to switch to enhanced keyboard dialog type.
+                            Set the member value as TRUE, destroy the dialog and save the data configuration into the registry.
+                        */
+                        Globals.bIsEnhancedKeyboard = TRUE;
+                        EndDialog(hDlg, FALSE);
+                        SaveDataToRegistry();
+
+                        /* Change the condition of enhanced keyboard item menu to checked */
+                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_CHECKED);
+                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_UNCHECKED);
+
+                        /* Finally, display the dialog modal box with the enhanced keyboard dialog */
+                        DialogBoxW(Globals.hInstance,
+                                   MAKEINTRESOURCEW(MAIN_DIALOG_ENHANCED_KB),
+                                   GetDesktopWindow(),
+                                   OSK_DlgProc);
+                    }
+
+                    break;
+                }
+
+                case IDM_STANDARD_KB:
+                {
+                    if (Globals.bIsEnhancedKeyboard)
+                    {
+                        /*
+                            The user attempted to switch to standard keyboard dialog type.
+                            Set the member value as FALSE, destroy the dialog and save the data configuration into the registry.
+                        */
+                        Globals.bIsEnhancedKeyboard = FALSE;
+                        EndDialog(hDlg, FALSE);
+                        SaveDataToRegistry();
+
+                        /* Change the condition of standard keyboard item menu to checked */
+                        CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
+                        CheckMenuItem(GetMenu(hDlg), IDM_STANDARD_KB, MF_BYCOMMAND | MF_CHECKED);
+
+                        /* Finally, display the dialog modal box with the standard keyboard dialog */
+                        DialogBoxW(Globals.hInstance,
+                                   MAKEINTRESOURCEW(MAIN_DIALOG_STANDARD_KB),
+                                   GetDesktopWindow(),
+                                   OSK_DlgProc);
+                    }
+
+                    break;
+                }
+
                 case IDM_ABOUT:
                 {
                     OSK_About();
@@ -471,6 +528,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
                     int show)
 {
     HANDLE hMutex;
+    INT LayoutResource;
 
     UNREFERENCED_PARAMETER(prev);
     UNREFERENCED_PARAMETER(cmdline);
@@ -478,6 +536,25 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
+
+    /* Load the settings from the registry hive */
+    LoadDataFromRegistry();
+
+    /* If the member of the struct (bShowWarning) is set then display the dialog box */
+    if (Globals.bShowWarning)
+    {
+        DialogBoxW(Globals.hInstance, MAKEINTRESOURCEW(IDD_WARNINGDIALOG_OSK), Globals.hMainWnd, OSK_WarningProc);
+    }
+
+    /* Before initializing the dialog execution, check if the chosen keyboard type is standard or enhanced */
+    if (Globals.bIsEnhancedKeyboard)
+    {
+        LayoutResource = MAIN_DIALOG_ENHANCED_KB;
+    }
+    else
+    {
+        LayoutResource = MAIN_DIALOG_STANDARD_KB;
+    }
 
     /* Rry to open a mutex for a single instance */
     hMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, L"osk");
@@ -487,8 +564,9 @@ int WINAPI wWinMain(HINSTANCE hInstance,
         /* Mutex doesn’t exist. This is the first instance so create the mutex. */
         hMutex = CreateMutexW(NULL, FALSE, L"osk");
 
+        /* Create the modal box based on the configuration registry */
         DialogBoxW(hInstance,
-                   MAKEINTRESOURCEW(MAIN_DIALOG),
+                   MAKEINTRESOURCEW(LayoutResource),
                    GetDesktopWindow(),
                    OSK_DlgProc);
 

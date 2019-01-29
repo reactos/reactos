@@ -24,6 +24,7 @@ typedef struct
     /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     HWND       hActiveWnd;
     BOOL       bShowWarning;
+    BOOL       bIsEnhancedKeyboard;
 } OSK_GLOBALS;
 
 /* DEFINES ********************************************************************/
