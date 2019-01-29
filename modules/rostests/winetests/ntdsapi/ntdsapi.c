@@ -45,39 +45,39 @@ static void test_DsMakeSpn(void)
 
     spn[0] = '\0';
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(NULL, NULL, NULL, 0, NULL, &spn_length, spn);
     ok(ret == ERROR_INVALID_PARAMETER, "DsMakeSpnW should have failed with ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(NULL, wszServiceHost, NULL, 0, NULL, &spn_length, spn);
     ok(ret == ERROR_INVALID_PARAMETER, "DsMakeSpnW should have failed with ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(wszServiceClass, wszServiceHost, NULL, 0, NULL, &spn_length, spn);
     ok(ret == ERROR_SUCCESS, "DsMakeSpnW should have succeeded instead of failing with %d\n", ret);
     ok(!lstrcmpW(spn, wszSpn1), "DsMakeSpnW returned unexpected SPN %s\n", wine_dbgstr_w(spn));
     ok(spn_length == lstrlenW(wszSpn1) + 1, "DsMakeSpnW should have returned spn_length of %d instead of %d\n", lstrlenW(wszSpn1) + 1, spn_length);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(wszServiceClass, wszServiceHost, wszInstanceName, 0, NULL, &spn_length, spn);
     ok(ret == ERROR_SUCCESS, "DsMakeSpnW should have succeeded instead of failing with %d\n", ret);
     ok(!lstrcmpW(spn, wszSpn2), "DsMakeSpnW returned unexpected SPN %s\n", wine_dbgstr_w(spn));
     ok(spn_length == lstrlenW(wszSpn2) + 1, "DsMakeSpnW should have returned spn_length of %d instead of %d\n", lstrlenW(wszSpn2) + 1, spn_length);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(wszServiceClass, wszServiceHost, wszInstanceName, 555, NULL, &spn_length, spn);
     ok(ret == ERROR_SUCCESS, "DsMakeSpnW should have succeeded instead of failing with %d\n", ret);
     ok(!lstrcmpW(spn, wszSpn3), "DsMakeSpnW returned unexpected SPN %s\n", wine_dbgstr_w(spn));
     ok(spn_length == lstrlenW(wszSpn3) + 1, "DsMakeSpnW should have returned spn_length of %d instead of %d\n", lstrlenW(wszSpn3) + 1, spn_length);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(wszServiceClass, wszServiceHost, wszInstanceName, 555, wszReferrer, &spn_length, spn);
     ok(ret == ERROR_SUCCESS, "DsMakeSpnW should have succeeded instead of failing with %d\n", ret);
     ok(!lstrcmpW(spn, wszSpn4), "DsMakeSpnW returned unexpected SPN %s\n", wine_dbgstr_w(spn));
     ok(spn_length == lstrlenW(wszSpn4) + 1, "DsMakeSpnW should have returned spn_length of %d instead of %d\n", lstrlenW(wszSpn4) + 1, spn_length);
 
-    spn_length = sizeof(spn)/sizeof(spn[0]);
+    spn_length = ARRAY_SIZE(spn);
     ret = DsMakeSpnW(wszServiceClass, wszServiceHost, NULL, 555, wszReferrer, &spn_length, spn);
     ok(ret == ERROR_SUCCESS, "DsMakeSpnW should have succeeded instead of failing with %d\n", ret);
     ok(!lstrcmpW(spn, wszSpn5), "DsMakeSpnW returned unexpected SPN %s\n", wine_dbgstr_w(spn));
@@ -106,7 +106,7 @@ static void test_DsClientMakeSpnForTargetServer(void)
     ok( ret == ERROR_BUFFER_OVERFLOW, "got %u\n", ret );
     ok( len == lstrlenW(resultW) + 1, "got %u\n", len );
 
-    len = sizeof(buf)/sizeof(buf[0]);
+    len = ARRAY_SIZE(buf);
     buf[0] = 0;
     ret = DsClientMakeSpnForTargetServerW( classW, hostW, &len, buf );
     ok( ret == ERROR_SUCCESS, "got %u\n", ret );
