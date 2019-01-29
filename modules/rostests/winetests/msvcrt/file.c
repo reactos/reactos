@@ -144,7 +144,7 @@ static void test_fileops( void )
     write (fd, outbuffer, sizeof (outbuffer));
     close (fd);
 
-    for (bufmode=0; bufmode < sizeof(bufmodes)/sizeof(bufmodes[0]); bufmode++)
+    for (bufmode=0; bufmode < ARRAY_SIZE(bufmodes); bufmode++)
     {
         fd = open ("fdopen.tst", O_RDONLY | O_BINARY);
         file = fdopen (fd, "rb");
@@ -195,13 +195,13 @@ static void test_fileops( void )
     }
     fd = open ("fdopen.tst", O_RDONLY | O_TEXT);
     file = fdopen (fd, "rt"); /* open in TEXT mode */
-    ok(fgetws(wbuffer,sizeof(wbuffer)/sizeof(wbuffer[0]),file) !=0,"fgetws failed unexpected\n");
-    ok(fgetws(wbuffer,sizeof(wbuffer)/sizeof(wbuffer[0]),file) ==0,"fgetws didn't signal EOF\n");
+    ok(fgetws(wbuffer,ARRAY_SIZE(wbuffer),file) !=0,"fgetws failed unexpected\n");
+    ok(fgetws(wbuffer,ARRAY_SIZE(wbuffer),file) ==0,"fgetws didn't signal EOF\n");
     ok(feof(file) !=0,"feof doesn't signal EOF\n");
     rewind(file);
     ok(fgetws(wbuffer,strlen(outbuffer),file) !=0,"fgetws failed unexpected\n");
     ok(lstrlenW(wbuffer) == (lstrlenA(outbuffer) -1),"fgetws didn't read right size\n");
-    ok(fgetws(wbuffer,sizeof(outbuffer)/sizeof(outbuffer[0]),file) !=0,"fgets failed unexpected\n");
+    ok(fgetws(wbuffer,ARRAY_SIZE(outbuffer),file) !=0,"fgets failed unexpected\n");
     ok(lstrlenW(wbuffer) == 1,"fgets dropped chars\n");
     fclose (file);
 
@@ -624,7 +624,7 @@ static void test_flsbuf( void )
   static const int bufmodes[] = {_IOFBF,_IONBF};
 
   tempf=_tempnam(".","wne");
-  for (bufmode=0; bufmode < sizeof(bufmodes)/sizeof(bufmodes[0]); bufmode++)
+  for (bufmode=0; bufmode < ARRAY_SIZE(bufmodes); bufmode++)
   {
     tempfh = fopen(tempf,"wb");
     setvbuf(tempfh,NULL,bufmodes[bufmode],2048);
@@ -878,8 +878,7 @@ static void test_fgetwc_locale(const char* text, const char* locale, int codepag
     {
         /* mbstowcs rejects invalid multibyte sequence,
            so we use MultiByteToWideChar here. */
-        ret = MultiByteToWideChar(codepage, 0, text, -1,
-                                  wtextW, sizeof(wtextW)/sizeof(wtextW[0]));
+        ret = MultiByteToWideChar(codepage, 0, text, -1, wtextW, ARRAY_SIZE(wtextW));
         ok(ret > 0, "MultiByteToWideChar failed\n");
     }
     else
@@ -910,7 +909,7 @@ static void test_fgetwc_locale(const char* text, const char* locale, int codepag
 
     tempfh = fopen(tempfile, "rb");
     ok(tempfh != NULL, "can't open tempfile\n");
-    for (i = 0; i < sizeof(wchar_text)/sizeof(wchar_text[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(wchar_text); i++)
     {
         ch = fgetwc(tempfh);
         ok(ch == wchar_text[i], "got %04hx, expected %04x (cp%d[%d])\n", ch, wchar_text[i], codepage, i);
@@ -946,7 +945,7 @@ static void test_fgetwc_unicode(void)
 
     tempfh = fopen(tempfile, "rt,ccs=unicode");
     ok(tempfh != NULL, "can't open tempfile\n");
-    for (i = 1; i < sizeof(wchar_text)/sizeof(wchar_text[0]); i++)
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
     {
         ch = fgetwc(tempfh);
         ok(ch == wchar_text[i],
@@ -958,7 +957,7 @@ static void test_fgetwc_unicode(void)
 
     tempfh = fopen(tempfile, "wb");
     ok(tempfh != NULL, "can't open tempfile\n");
-    ret = WideCharToMultiByte(CP_UTF8, 0, wchar_text, sizeof(wchar_text)/sizeof(wchar_text[0]),
+    ret = WideCharToMultiByte(CP_UTF8, 0, wchar_text, ARRAY_SIZE(wchar_text),
                               utf8_text, sizeof(utf8_text), NULL, NULL);
     ok(ret > 0, "utf-8 conversion failed\n");
     fwrite(utf8_text, sizeof(char), ret, tempfh);
@@ -966,7 +965,7 @@ static void test_fgetwc_unicode(void)
 
     tempfh = fopen(tempfile, "rt, ccs=UTF-8");
     ok(tempfh != NULL, "can't open tempfile\n");
-    for (i = 1; i < sizeof(wchar_text)/sizeof(wchar_text[0]); i++)
+    for (i = 1; i < ARRAY_SIZE(wchar_text); i++)
     {
         ch = fgetwc(tempfh);
         ok(ch == wchar_text[i],
@@ -2659,5 +2658,5 @@ START_TEST(file)
     /* Wait for the (_P_NOWAIT) spawned processes to finish to make sure the report
      * file contains lines in the correct order
      */
-    WaitForMultipleObjects(sizeof(proc_handles)/sizeof(proc_handles[0]), proc_handles, TRUE, 5000);
+    WaitForMultipleObjects(ARRAY_SIZE(proc_handles), proc_handles, TRUE, 5000);
 }

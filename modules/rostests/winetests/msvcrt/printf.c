@@ -841,7 +841,7 @@ static void test_snprintf (void)
     const int bufsiz = sizeof buffer;
     unsigned int i;
 
-    for (i = 0; i < sizeof tests / sizeof tests[0]; i++) {
+    for (i = 0; i < ARRAY_SIZE(tests); i++) {
         const char *fmt  = tests[i].format;
         const int expect = tests[i].expected;
         const int n      = _snprintf (buffer, bufsiz, fmt);
@@ -1215,7 +1215,7 @@ static void test_vsnwprintf(void)
     wchar_t str[32];
     char buf[32];
 
-    ret = _vsnwprintf_wrapper( str, sizeof(str)/sizeof(str[0]), format, one, two, three );
+    ret = _vsnwprintf_wrapper( str, ARRAY_SIZE(str), format, one, two, three );
 
     ok( ret == 11, "got %d expected 11\n", ret );
     WideCharToMultiByte( CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL );

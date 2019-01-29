@@ -170,7 +170,7 @@ static void test_I10_OUTPUT(void)
     if (j != 12)
         trace("sizeof(long double) = %d on this machine\n", j);
 
-    for(i=0; i<sizeof(I10_OUTPUT_tests)/sizeof(I10_OUTPUT_test); i++) {
+    for(i=0; i<ARRAY_SIZE(I10_OUTPUT_tests); i++) {
         memset(out.str, '#', sizeof(out.str));
 
         if (sizeof(long double) == 12)
@@ -627,7 +627,7 @@ static void test__lfind_s(void)
     }
 
     key = 1234;
-    num = sizeof(tests)/sizeof(tests[0]);
+    num = ARRAY_SIZE(tests);
 
     errno = 0xdeadbeef;
     found = p_lfind_s(NULL, tests, &num, sizeof(int), _lfind_s_comp, NULL);

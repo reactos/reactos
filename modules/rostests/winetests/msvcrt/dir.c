@@ -97,7 +97,7 @@ static void test_makepath(void)
 
     unsigned int i, n;
 
-    for (i = 0; i < sizeof(makepath_cases)/sizeof(makepath_cases[0]); ++i)
+    for (i = 0; i < ARRAY_SIZE(makepath_cases); ++i)
     {
         const makepath_case* p = &makepath_cases[i];
 
@@ -253,7 +253,7 @@ static void test_makepath_s(void)
     ok(errno == EINVAL, "Expected errno to be EINVAL, got %d\n", errno);
 
     /* Test with the normal _makepath cases. */
-    for (i = 0; i < sizeof(makepath_cases)/sizeof(makepath_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(makepath_cases); i++)
     {
         const makepath_case *p = makepath_cases + i;
 
@@ -296,7 +296,7 @@ static void test_makepath_s(void)
     }
 
     /* Try insufficient length cases. */
-    for (i = 0; i < sizeof(makepath_s_cases)/sizeof(makepath_s_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(makepath_s_cases); i++)
     {
         const makepath_s_case *p = makepath_s_cases + i;
 
@@ -457,12 +457,12 @@ static void test_searchenv(void)
     ok(path_len, "GetTempPath failed\n");
     memcpy(path, tmppath, path_len);
 
-    for(i=0; i<sizeof(dirs)/sizeof(*dirs); i++) {
+    for (i=0; i<ARRAY_SIZE(dirs); i++) {
         strcpy(path+path_len, dirs[i]);
 	ok(!mkdir(path), "mkdir failed (dir = %s)\n", path);
     }
 
-    for(i=0; i<sizeof(files)/sizeof(*files); i++) {
+    for (i=0; i<ARRAY_SIZE(files); i++) {
         strcpy(path+path_len, files[i]);
         tmp_file = fopen(path, "wb");
 	ok(tmp_file != NULL, "fopen failed (file = %s)\n", path);
@@ -471,7 +471,7 @@ static void test_searchenv(void)
 
     strcpy(env1, "TEST_PATH=");
     strcpy(env2, "TEST_PATH=;");
-    for(i=1; i<sizeof(dirs)/sizeof(*dirs); i++) {
+    for (i=1; i<ARRAY_SIZE(dirs); i++) {
         strcat(env1, tmppath);
         strcat(env1, dirs[i]);
         strcat(env1, ";");
@@ -599,12 +599,12 @@ static void test_searchenv(void)
 
     putenv("TEST_PATH=");
 
-    for(i=sizeof(files)/sizeof(*files)-1; i>=0; i--) {
+    for (i=ARRAY_SIZE(files)-1; i>=0; i--) {
         strcpy(path+path_len, files[i]);
         ok(!remove(path), "remove failed (file = %s)\n", path);
     }
 
-    for(i=sizeof(dirs)/sizeof(*dirs)-1; i>=0; i--) {
+    for (i=ARRAY_SIZE(dirs)-1; i>=0; i--) {
         strcpy(path+path_len, dirs[i]);
         ok(!rmdir(path), "rmdir failed (dir = %s)\n", path);
     }

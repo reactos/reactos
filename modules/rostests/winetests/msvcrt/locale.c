@@ -144,12 +144,10 @@ static void test_setlocale(void)
         || broken(!strcmp(ret, "Chinese_Taiwan.950")), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "Chinese_China.936");
-todo_wine
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
     {
         trace("Chinese_China.936=%s\n", ret);
-todo_wine
         ok(!strcmp(ret, "Chinese (Simplified)_People's Republic of China.936") /* Vista - Win7 */
         || !strcmp(ret, "Chinese (Simplified)_China.936") /* Win8 - Win10 */
         || broken(!strcmp(ret, "Chinese_People's Republic of China.936")), "ret = %s\n", ret);
@@ -158,12 +156,14 @@ todo_wine
     ret = setlocale(LC_ALL, "csy");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Czech_Czech Republic.1250"), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Czech_Czech Republic.1250")
+        || !strcmp(ret, "Czech_Czechia.1250"), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "czech");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Czech_Czech Republic.1250"), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Czech_Czech Republic.1250")
+        || !strcmp(ret, "Czech_Czechia.1250"), "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "dan");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
@@ -614,6 +614,9 @@ todo_wine
 
     ret = setlocale(LC_ALL, "English_United States.UTF8");
     ok(ret == NULL, "ret != NULL\n");
+
+    ret = setlocale(LC_ALL, "en-US");
+    ok(ret == NULL || broken (ret != NULL), "ret != NULL\n"); /* XP & 2003 */
 }
 
 static void test_crtGetStringTypeW(void)
@@ -640,7 +643,7 @@ static void test_crtGetStringTypeW(void)
         return;
     }
 
-    for(i=0; i<sizeof(str)/sizeof(*str); i++) {
+    for(i=0; i<ARRAY_SIZE(str); i++) {
         ret_crt = p__crtGetStringTypeW(0, CT_CTYPE1, str[i], 1, &out_crt);
         ret = GetStringTypeW(CT_CTYPE1, str[i], 1, &out);
         ok(ret == ret_crt, "%d) ret_crt = %d\n", i, (int)ret_crt);
@@ -705,7 +708,7 @@ static void test__Gettnames(void)
     else
         ok(size==0x164 || broken(size==0xb8), "structure size: %x\n", size);
 
-    for (i = 0; i < sizeof(time_data)/sizeof(time_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(time_data); i++)
     {
         size = GetLocaleInfoA(MAKELCID(LANG_ENGLISH, SORT_DEFAULT),
                               time_data[i], buf, sizeof(buf));
@@ -719,7 +722,7 @@ static void test__Gettnames(void)
         return;
 
     ret = _Gettnames();
-    for (i = 0; i < sizeof(time_data)/sizeof(time_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(time_data); i++)
     {
         size = GetLocaleInfoA(MAKELCID(LANG_GERMAN, SORT_DEFAULT),
                               time_data[i], buf, sizeof(buf));

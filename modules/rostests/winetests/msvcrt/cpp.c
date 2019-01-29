@@ -1108,8 +1108,8 @@ static void test_demangle_datatype(void)
 	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$01@@@", FALSE},
 /*	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@",FALSE}, */
     };
-    int i, num_test = (sizeof(demangle)/sizeof(struct _demangle));
-    
+    int i, num_test = ARRAY_SIZE(demangle);
+
     for (i = 0; i < num_test; i++)
     {
 	name = p__unDName(0, demangle[i].mangled, 0, pmalloc, pfree, 0x2800);
@@ -1326,7 +1326,7 @@ static void test_demangle(void)
 /* 130 */ {"??_E?$TStrArray@$$BY0BAA@D$0BA@@@UAEPAXI@Z",
            "public: virtual void * __thiscall TStrArray<char [256],16>::`vector deleting destructor'(unsigned int)"},
     };
-    int i, num_test = (sizeof(test)/sizeof(test[0]));
+    int i, num_test = ARRAY_SIZE(test);
     char* name;
 
     for (i = 0; i < num_test; i++)
