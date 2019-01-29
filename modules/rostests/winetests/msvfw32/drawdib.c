@@ -138,7 +138,7 @@ static void test_DrawDib_sizeimage(void)
     hdd = DrawDibOpen();
     ok(hdd != NULL, "DrawDibOpen failed\n");
 
-    for (i = 0; i < sizeof(test_data)/sizeof(test_data[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(test_data); i++) {
         char *hash;
         memset(dst_bits, 0xff, dst_dib_size);
         init_bmi(&src_info, test_data[i].width, test_data[i].height, test_data[i].size);
