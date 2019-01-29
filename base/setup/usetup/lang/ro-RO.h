@@ -15,7 +15,6 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         20,
-        /* "A\272tepta\376i ini\376ializarea programului de instalare \272i", */
         "Asteptati initializarea programului de instalare si",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
@@ -28,7 +27,6 @@ static MUI_ENTRY roROSetupInitPageEntries[] =
     {
         0,
         0,
-        /* "A\272tepta\376i...", */
         "Asteptati...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
