@@ -329,7 +329,7 @@ static void init_library(struct sltg_typelib *sltg)
     sltg->library.name = add_name(sltg, sltg->typelib->name);
     sltg->library.helpstring = NULL;
     sltg->library.helpcontext = 0;
-    sltg->library.syskind = typelib_kind;
+    sltg->library.syskind = (pointer_size == 8) ? SYS_WIN64 : SYS_WIN32;
     sltg->library.lcid = 0x0409;
     sltg->library.libflags = 0;
     sltg->library.version = 0;
@@ -719,7 +719,7 @@ static int get_element_size(type_t *type)
 
     case VT_INT:
     case VT_UINT:
-        return typelib_kind == SYS_WIN16 ? 2 : 4;
+        return /* typelib_kind == SYS_WIN16 ? 2 : */ 4;
 
     case VT_UI2:
     case VT_I2:
@@ -1824,7 +1824,6 @@ static void save_all_changes(struct sltg_typelib *typelib)
             sprintf(typelib_id, "#%d", expr->cval);
         add_output_to_resources("TYPELIB", typelib_id);
         output_typelib_regscript(typelib->typelib);
-        flush_output_resources(typelib_name);
     }
     else flush_output_buffer(typelib_name);
 }
@@ -1835,8 +1834,6 @@ int create_sltg_typelib(typelib_t *typelib)
     const statement_t *stmt;
     void *library_block;
     int library_block_size, library_block_index;
-
-    pointer_size = (typelib_kind == SYS_WIN64) ? 8 : 4;
 
     sltg.typelib = typelib;
     sltg.typeinfo_count = 0;

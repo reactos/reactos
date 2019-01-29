@@ -43,14 +43,10 @@
 #include "wine/wpp.h"
 #include "header.h"
 
-/* future options to reserve characters for: */
-/* A = ACF input filename */
-/* J = do not search standard include path */
-/* w = select win16/win32 output (?) */
-
 static const char usage[] =
 "Usage: widl [options...] infile.idl\n"
 "   or: widl [options...] --dlldata-only name1 [name2...]\n"
+"   --acf=file         Use ACF file\n"
 "   -app_config        Ignored, present for midl compatibility\n"
 "   -b arch            Set the target architecture\n"
 "   -c                 Generate client stub\n"
@@ -62,7 +58,7 @@ static const char usage[] =
 "   -H file            Name of header file (default is infile.h)\n"
 "   -I path            Set include search dir to path (multiple -I allowed)\n"
 "   --local-stubs=file Write empty stubs for call_as/local methods to file\n"
-"   -m32, -m64         Set the kind of typelib to build (Win32 or Win64)\n"
+"   -m32, -m64         Set the target architecture (Win32 or Win64)\n"
 "   -N                 Do not preprocess input\n"
 "   --oldnames         Use old naming conventions\n"
 "   --oldtlb           Use old typelib (SLTG) format\n"
@@ -73,6 +69,7 @@ static const char usage[] =
 "   --prefix-client=p  Prefix names of client stubs with 'p'\n"
 "   --prefix-server=p  Prefix names of server functions with 'p'\n"
 "   -r                 Generate registration script\n"
+"   -robust            Ignored, present for midl compatibility\n"
 "   --winrt            Enable Windows Runtime mode\n"
 "   --ns_prefix        Prefix namespaces with ABI namespace\n"
 "   -s                 Generate server stub\n"
@@ -80,8 +77,7 @@ static const char usage[] =
 "   -u                 Generate interface identifiers file\n"
 "   -V                 Print version and exit\n"
 "   -W                 Enable pedantic warnings\n"
-"   --win32            Only generate 32-bit code\n"
-"   --win64            Only generate 64-bit code\n"
+"   --win32, --win64   Set the target architecture (Win32 or Win64)\n"
 "   --win32-align n    Set win32 structure alignment to 'n'\n"
 "   --win64-align n    Set win64 structure alignment to 'n'\n"
 "Debug level 'n' is a bitmask with following meaning:\n"
@@ -95,6 +91,20 @@ static const char usage[] =
 
 static const char version_string[] = "Wine IDL Compiler version " PACKAGE_VERSION "\n"
 			"Copyright 2002 Ove Kaaven\n";
+
+#ifdef __i386__
+enum target_cpu target_cpu = CPU_x86;
+#elif defined(__x86_64__)
+enum target_cpu target_cpu = CPU_x86_64;
+#elif defined(__powerpc__)
+enum target_cpu target_cpu = CPU_POWERPC;
+#elif defined(__arm__)
+enum target_cpu target_cpu = CPU_ARM;
+#elif defined(__aarch64__)
+enum target_cpu target_cpu = CPU_ARM64;
+#else
+#error Unsupported CPU
+#endif
 
 int debuglevel = DEBUGLEVEL_NONE;
 int parser_debug, yy_flex_debug;
@@ -113,8 +123,6 @@ int do_idfile = 0;
 int do_dlldata = 0;
 static int no_preprocess = 0;
 int old_names = 0;
-int do_win32 = 1;
-int do_win64 = 1;
 int win32_packing = 8;
 int win64_packing = 8;
 int winrt_mode = 0;
@@ -123,6 +131,7 @@ static enum stub_mode stub_mode = MODE_Os;
 
 char *input_name;
 char *input_idl_name;
+char *acf_name;
 char *header_name;
 char *local_stubs_name;
 char *header_token;
@@ -146,49 +155,53 @@ int line_number = 1;
 static FILE *idfile;
 
 unsigned int pointer_size = 0;
-syskind_t typelib_kind = sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32;
 
 time_t now;
 
 enum {
     OLDNAMES_OPTION = CHAR_MAX + 1,
+    ACF_OPTION,
+    APP_CONFIG_OPTION,
     DLLDATA_OPTION,
     DLLDATA_ONLY_OPTION,
     LOCAL_STUBS_OPTION,
+    OLD_TYPELIB_OPTION,
     PREFIX_ALL_OPTION,
     PREFIX_CLIENT_OPTION,
     PREFIX_SERVER_OPTION,
     PRINT_HELP,
     RT_NS_PREFIX,
     RT_OPTION,
+    ROBUST_OPTION,
     WIN32_OPTION,
     WIN64_OPTION,
     WIN32_ALIGN_OPTION,
-    WIN64_ALIGN_OPTION,
-    APP_CONFIG_OPTION,
-    OLD_TYPELIB_OPTION
+    WIN64_ALIGN_OPTION
 };
 
 static const char short_options[] =
     "b:cC:d:D:EhH:I:m:No:O:pP:rsS:tT:uU:VW";
 static const struct option long_options[] = {
+    { "acf", 1, NULL, ACF_OPTION },
+    { "app_config", 0, NULL, APP_CONFIG_OPTION },
     { "dlldata", 1, NULL, DLLDATA_OPTION },
     { "dlldata-only", 0, NULL, DLLDATA_ONLY_OPTION },
     { "help", 0, NULL, PRINT_HELP },
     { "local-stubs", 1, NULL, LOCAL_STUBS_OPTION },
     { "ns_prefix", 0, NULL, RT_NS_PREFIX },
     { "oldnames", 0, NULL, OLDNAMES_OPTION },
+    { "oldtlb", 0, NULL, OLD_TYPELIB_OPTION },
     { "output", 0, NULL, 'o' },
     { "prefix-all", 1, NULL, PREFIX_ALL_OPTION },
     { "prefix-client", 1, NULL, PREFIX_CLIENT_OPTION },
     { "prefix-server", 1, NULL, PREFIX_SERVER_OPTION },
+    { "robust", 0, NULL, ROBUST_OPTION },
+    { "target", 0, NULL, 'b' },
     { "winrt", 0, NULL, RT_OPTION },
     { "win32", 0, NULL, WIN32_OPTION },
     { "win64", 0, NULL, WIN64_OPTION },
     { "win32-align", 1, NULL, WIN32_ALIGN_OPTION },
     { "win64-align", 1, NULL, WIN64_ALIGN_OPTION },
-    { "app_config", 0, NULL, APP_CONFIG_OPTION },
-    { "oldtlb", 0, NULL, OLD_TYPELIB_OPTION },
     { NULL, 0, NULL, 0 }
 };
 
@@ -265,20 +278,24 @@ static void set_target( const char *target )
 {
     static const struct
     {
-        const char *name;
-        syskind_t   kind;
+        const char     *name;
+        enum target_cpu cpu;
     } cpu_names[] =
     {
-        { "i386",    SYS_WIN32 },
-        { "i486",    SYS_WIN32 },
-        { "i586",    SYS_WIN32 },
-        { "i686",    SYS_WIN32 },
-        { "i786",    SYS_WIN32 },
-        { "amd64",   SYS_WIN64 },
-        { "x86_64",  SYS_WIN64 },
-        { "powerpc", SYS_WIN32 },
-        { "arm",     SYS_WIN32 },
-        { "aarch64", SYS_WIN64 }
+        { "i386",    CPU_x86 },
+        { "i486",    CPU_x86 },
+        { "i586",    CPU_x86 },
+        { "i686",    CPU_x86 },
+        { "i786",    CPU_x86 },
+        { "amd64",   CPU_x86_64 },
+        { "x86_64",  CPU_x86_64 },
+        { "powerpc", CPU_POWERPC },
+        { "arm",     CPU_ARM },
+        { "armv5",   CPU_ARM },
+        { "armv6",   CPU_ARM },
+        { "armv7",   CPU_ARM },
+        { "arm64",   CPU_ARM64 },
+        { "aarch64", CPU_ARM64 },
     };
 
     unsigned int i;
@@ -292,7 +309,7 @@ static void set_target( const char *target )
     {
         if (!strcmp( cpu_names[i].name, spec ))
         {
-            typelib_kind = cpu_names[i].kind;
+            target_cpu = cpu_names[i].cpu;
             free( spec );
             return;
         }
@@ -487,6 +504,11 @@ static void write_id_data_stmts(const statement_list_t *stmts)
         uuid = get_attrp(type->attrs, ATTR_UUID);
         write_id_guid(idfile, "IID", is_attr(type->attrs, ATTR_DISPINTERFACE) ? "DIID" : "IID",
                    type->name, uuid);
+        if (type->details.iface->async_iface)
+        {
+          uuid = get_attrp(type->details.iface->async_iface->attrs, ATTR_UUID);
+          write_id_guid(idfile, "IID", "IID", type->details.iface->async_iface->name, uuid);
+        }
       }
       else if (type_get_type(type) == TYPE_COCLASS)
       {
@@ -537,10 +559,15 @@ void write_id_data(const statement_list_t *stmts)
   fprintf(idfile, "#define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \\\n");
   fprintf(idfile, "    DEFINE_GUID(name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8)\n\n");
 
+  fprintf(idfile, "#elif defined(__cplusplus)\n\n");
+
+  fprintf(idfile, "#define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \\\n");
+  fprintf(idfile, "    EXTERN_C const type DECLSPEC_SELECTANY name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}\n\n");
+
   fprintf(idfile, "#else\n\n");
 
   fprintf(idfile, "#define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \\\n");
-  fprintf(idfile, "    const type name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}\n\n");
+  fprintf(idfile, "    const type DECLSPEC_SELECTANY name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}\n\n");
 
   fprintf(idfile, "#endif\n\n");
   start_cplusplus_guard(idfile);
@@ -605,12 +632,10 @@ int main(int argc,char *argv[])
       use_abi_namespace = 1;
       break;
     case WIN32_OPTION:
-      do_win32 = 1;
-      do_win64 = 0;
+      pointer_size = 4;
       break;
     case WIN64_OPTION:
-      do_win32 = 0;
-      do_win64 = 1;
+      pointer_size = 8;
       break;
     case WIN32_ALIGN_OPTION:
       win32_packing = strtol(optarg, NULL, 0);
@@ -622,9 +647,15 @@ int main(int argc,char *argv[])
       if(win64_packing != 2 && win64_packing != 4 && win64_packing != 8)
           error("Packing must be one of 2, 4 or 8\n");
       break;
+    case ACF_OPTION:
+      acf_name = xstrdup(optarg);
+      break;
     case APP_CONFIG_OPTION:
       /* widl does not distinguish between app_mode and default mode,
          but we ignore this option for midl compatibility */
+      break;
+    case ROBUST_OPTION:
+        /* FIXME: Support robust option */
         break;
     case 'b':
       set_target( optarg );
@@ -657,8 +688,8 @@ int main(int argc,char *argv[])
       wpp_add_include_path(optarg);
       break;
     case 'm':
-      if (!strcmp( optarg, "32" )) typelib_kind = SYS_WIN32;
-      else if (!strcmp( optarg, "64" )) typelib_kind = SYS_WIN64;
+      if (!strcmp( optarg, "32" )) pointer_size = 4;
+      else if (!strcmp( optarg, "64" )) pointer_size = 8;
       break;
     case 'N':
       no_preprocess = 1;
@@ -724,6 +755,26 @@ int main(int argc,char *argv[])
 #ifdef DEFAULT_INCLUDE_DIR
   wpp_add_include_path(DEFAULT_INCLUDE_DIR);
 #endif
+
+  switch (target_cpu)
+  {
+  case CPU_x86:
+      if (pointer_size == 8) target_cpu = CPU_x86_64;
+      else pointer_size = 4;
+      break;
+  case CPU_x86_64:
+      if (pointer_size == 4) target_cpu = CPU_x86;
+      else pointer_size = 8;
+      break;
+  case CPU_ARM64:
+      if (pointer_size == 4) error( "Cannot build 32-bit code for this CPU\n" );
+      pointer_size = 8;
+      break;
+  default:
+      if (pointer_size == 8) error( "Cannot build 64-bit code for this CPU\n" );
+      pointer_size = 4;
+      break;
+  }
 
   /* if nothing specified, try to guess output type from the output file name */
   if (output_name && do_everything && !do_header && !do_typelib && !do_proxies &&

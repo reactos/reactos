@@ -764,6 +764,8 @@ static int cbufalloc = 0;
 static int kw_token(const char *kw);
 static int attr_token(const char *kw);
 
+static void switch_to_acf(void);
+
 static warning_list_t *disabled_warnings = NULL;
 
 #define MAX_IMPORT_DEPTH 20
@@ -813,7 +815,7 @@ UUID *parse_uuid(const char *u)
  * The flexer starts here
  **************************************************************************
  */
-#line 817 "parser.yy.c"
+#line 819 "parser.yy.c"
 
 #define INITIAL 0
 #define QUOTE 1
@@ -1010,9 +1012,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 130 "parser.l"
+#line 132 "parser.l"
 
-#line 1016 "parser.yy.c"
+#line 1018 "parser.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -1094,17 +1096,17 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 131 "parser.l"
+#line 133 "parser.l"
 yy_push_state(PP_PRAGMA);
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 132 "parser.l"
+#line 134 "parser.l"
 yy_push_state(PP_LINE);
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 133 "parser.l"
+#line 135 "parser.l"
 {
                             int lineno;
                             char *cptr, *fname;
@@ -1126,12 +1128,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 151 "parser.l"
+#line 153 "parser.l"
 yyless(9); yy_pop_state(); return tCPPQUOTE;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 152 "parser.l"
+#line 154 "parser.l"
 {
                             if(import_stack_ptr) {
                                 if(!winrt_mode)
@@ -1151,22 +1153,22 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 168 "parser.l"
+#line 170 "parser.l"
 parser_lval.str = xstrdup(parser_text); yy_pop_state(); return aPRAGMA;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 169 "parser.l"
+#line 171 "parser.l"
 return tPRAGMA_WARNING;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 170 "parser.l"
+#line 172 "parser.l"
 yy_push_state(QUOTE); cbufidx = 0;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 171 "parser.l"
+#line 173 "parser.l"
 {
 				yy_pop_state();
 				parser_lval.str = get_buffered_cstring();
@@ -1175,12 +1177,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 176 "parser.l"
+#line 178 "parser.l"
 yy_push_state(WSTRQUOTE); cbufidx = 0;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 177 "parser.l"
+#line 179 "parser.l"
 {
 				yy_pop_state();
 				parser_lval.str = get_buffered_cstring();
@@ -1189,12 +1191,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 182 "parser.l"
+#line 184 "parser.l"
 yy_push_state(SQUOTE); cbufidx = 0;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 183 "parser.l"
+#line 185 "parser.l"
 {
 				yy_pop_state();
 				parser_lval.str = get_buffered_cstring();
@@ -1202,45 +1204,45 @@ YY_RULE_SETUP
 			}
 	YY_BREAK
 case 14:
-#line 189 "parser.l"
+#line 191 "parser.l"
 case 15:
 YY_RULE_SETUP
-#line 189 "parser.l"
+#line 191 "parser.l"
 addcchar(parser_text[1]);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 190 "parser.l"
+#line 192 "parser.l"
 addcchar(parser_text[1]);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 191 "parser.l"
+#line 193 "parser.l"
 addcchar('\\'); addcchar(parser_text[1]);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 192 "parser.l"
+#line 194 "parser.l"
 addcchar(parser_text[0]);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 193 "parser.l"
+#line 195 "parser.l"
 yy_push_state(ATTR); return '[';
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 194 "parser.l"
+#line 196 "parser.l"
 yy_pop_state(); return ']';
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 195 "parser.l"
+#line 197 "parser.l"
 return attr_token(parser_text);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 196 "parser.l"
+#line 198 "parser.l"
 {
 				parser_lval.uuid = parse_uuid(parser_text);
 				return aUUID;
@@ -1248,7 +1250,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 200 "parser.l"
+#line 202 "parser.l"
 {
 				parser_lval.num = xstrtoul(parser_text, NULL, 0);
 				return aHEXNUM;
@@ -1256,7 +1258,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 204 "parser.l"
+#line 206 "parser.l"
 {
 				parser_lval.num = xstrtoul(parser_text, NULL, 0);
 				return aNUM;
@@ -1264,7 +1266,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 208 "parser.l"
+#line 210 "parser.l"
 {
 				parser_lval.dbl = strtod(parser_text, NULL);
 				return aDOUBLE;
@@ -1275,78 +1277,78 @@ case 26:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up parser_text again */
 YY_RULE_SETUP
-#line 212 "parser.l"
+#line 214 "parser.l"
 return tSAFEARRAY;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 213 "parser.l"
+#line 215 "parser.l"
 return kw_token(parser_text);
 	YY_BREAK
 case 28:
 /* rule 28 can match eol */
 YY_RULE_SETUP
-#line 214 "parser.l"
+#line 216 "parser.l"
 line_number++;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 215 "parser.l"
+#line 217 "parser.l"
 
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 216 "parser.l"
+#line 218 "parser.l"
 return SHL;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 217 "parser.l"
+#line 219 "parser.l"
 return SHR;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 218 "parser.l"
+#line 220 "parser.l"
 return MEMBERPTR;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 219 "parser.l"
+#line 221 "parser.l"
 return EQUALITY;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 220 "parser.l"
+#line 222 "parser.l"
 return INEQUALITY;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 221 "parser.l"
+#line 223 "parser.l"
 return GREATEREQUAL;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 222 "parser.l"
+#line 224 "parser.l"
 return LESSEQUAL;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 223 "parser.l"
+#line 225 "parser.l"
 return LOGICALOR;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 224 "parser.l"
+#line 226 "parser.l"
 return LOGICALAND;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 225 "parser.l"
+#line 227 "parser.l"
 return ELLIPSIS;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 226 "parser.l"
+#line 228 "parser.l"
 return parser_text[0];
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -1356,19 +1358,24 @@ case YY_STATE_EOF(ATTR):
 case YY_STATE_EOF(PP_LINE):
 case YY_STATE_EOF(PP_PRAGMA):
 case YY_STATE_EOF(SQUOTE):
-#line 227 "parser.l"
+#line 229 "parser.l"
 {
-				if (import_stack_ptr)
-					return aEOF;
-				else yyterminate();
+                            if (import_stack_ptr)
+                                return aEOF;
+                            if (acf_name)
+                            {
+                                switch_to_acf();
+                                return aACF;
+                            }
+                            yyterminate();
 			}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 232 "parser.l"
+#line 239 "parser.l"
 ECHO;
 	YY_BREAK
-#line 1372 "parser.yy.c"
+#line 1379 "parser.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2367,7 +2374,7 @@ void parser_free (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 231 "parser.l"
+#line 238 "parser.l"
 
 
 
@@ -2390,6 +2397,7 @@ static const struct keyword keywords[] = {
 	{"TRUE",			tTRUE},
 	{"__cdecl",			tCDECL},
 	{"__fastcall",			tFASTCALL},
+	{"__int32",			tINT32},
 	{"__int3264",			tINT3264},
 	{"__int64",			tINT64},
 	{"__pascal",			tPASCAL},
@@ -2700,6 +2708,38 @@ void abort_import(void)
 
 	for (ptr=0; ptr<import_stack_ptr; ptr++)
 		unlink(import_stack[ptr].temp_name);
+}
+
+static void switch_to_acf(void)
+{
+    int ptr = import_stack_ptr;
+    int ret, fd;
+    char *name;
+    FILE *f;
+
+    assert(import_stack_ptr == 0);
+
+    input_name = acf_name;
+    acf_name = NULL;
+    line_number = 1;
+
+    name = xstrdup( "widl.XXXXXX" );
+    if((fd = mkstemps( name, 0 )) == -1)
+        error("Could not generate a temp name from %s\n", name);
+
+    temp_name = name;
+    if (!(f = fdopen(fd, "wt")))
+        error("Could not open fd %s for writing\n", name);
+
+    ret = wpp_parse(input_name, f);
+    fclose(f);
+    if (ret) exit(1);
+
+    if((f = fopen(temp_name, "r")) == NULL)
+        error_loc("Unable to open %s\n", temp_name);
+
+    import_stack[ptr].state = YY_CURRENT_BUFFER;
+    parser__switch_to_buffer(parser__create_buffer(f,YY_BUF_SIZE));
 }
 
 static void warning_disable(int warning)

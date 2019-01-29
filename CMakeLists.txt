@@ -83,7 +83,7 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(MSVC)
         if(ARCH STREQUAL "i386")
-            add_definitions(/D_X86_ /DWIN32 /D_WINDOWS)
+            add_definitions(/D_X86_ /D__i386__ /DWIN32 /D_WINDOWS)
         endif()
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)

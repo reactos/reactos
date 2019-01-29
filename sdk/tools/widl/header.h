@@ -48,12 +48,13 @@ extern int need_proxy_delegation(const statement_list_t *stmts);
 extern int need_inline_stubs_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
 extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
-extern void write_array(FILE *h, array_dims_t *v, int field);
 extern const type_t* get_explicit_generic_handle_type(const var_t* var);
 extern const var_t *get_func_handle_var( const type_t *iface, const var_t *func,
                                          unsigned char *explicit_fc, unsigned char *implicit_fc );
 extern int has_out_arg_or_return(const var_t *func);
 extern int is_const_decl(const var_t *var);
+
+extern void write_serialize_functions(FILE *file, const type_t *type, const type_t *iface);
 
 static inline int is_ptr(const type_t *t)
 {

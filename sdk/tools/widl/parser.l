@@ -76,6 +76,8 @@ static int cbufalloc = 0;
 static int kw_token(const char *kw);
 static int attr_token(const char *kw);
 
+static void switch_to_acf(void);
+
 static warning_list_t *disabled_warnings = NULL;
 
 #define MAX_IMPORT_DEPTH 20
@@ -225,9 +227,14 @@ SAFEARRAY{ws}*/\(	return tSAFEARRAY;
 <INITIAL,ATTR>\.\.\.	return ELLIPSIS;
 <INITIAL,ATTR>.		return yytext[0];
 <<EOF>>			{
-				if (import_stack_ptr)
-					return aEOF;
-				else yyterminate();
+                            if (import_stack_ptr)
+                                return aEOF;
+                            if (acf_name)
+                            {
+                                switch_to_acf();
+                                return aACF;
+                            }
+                            yyterminate();
 			}
 %%
 
@@ -250,6 +257,7 @@ static const struct keyword keywords[] = {
 	{"TRUE",			tTRUE},
 	{"__cdecl",			tCDECL},
 	{"__fastcall",			tFASTCALL},
+	{"__int32",			tINT32},
 	{"__int3264",			tINT3264},
 	{"__int64",			tINT64},
 	{"__pascal",			tPASCAL},
@@ -560,6 +568,38 @@ void abort_import(void)
 
 	for (ptr=0; ptr<import_stack_ptr; ptr++)
 		unlink(import_stack[ptr].temp_name);
+}
+
+static void switch_to_acf(void)
+{
+    int ptr = import_stack_ptr;
+    int ret, fd;
+    char *name;
+    FILE *f;
+
+    assert(import_stack_ptr == 0);
+
+    input_name = acf_name;
+    acf_name = NULL;
+    line_number = 1;
+
+    name = xstrdup( "widl.XXXXXX" );
+    if((fd = mkstemps( name, 0 )) == -1)
+        error("Could not generate a temp name from %s\n", name);
+
+    temp_name = name;
+    if (!(f = fdopen(fd, "wt")))
+        error("Could not open fd %s for writing\n", name);
+
+    ret = wpp_parse(input_name, f);
+    fclose(f);
+    if (ret) exit(1);
+
+    if((f = fopen(temp_name, "r")) == NULL)
+        error_loc("Unable to open %s\n", temp_name);
+
+    import_stack[ptr].state = YY_CURRENT_BUFFER;
+    yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
 }
 
 static void warning_disable(int warning)

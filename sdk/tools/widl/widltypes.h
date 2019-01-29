@@ -24,7 +24,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "guiddef.h"
-#include "wine/rpcfc.h"
+#include "ndrtypes.h"
 #include "wine/list.h"
 
 #ifndef UUID_DEFINED
@@ -59,7 +59,6 @@ typedef struct list expr_list_t;
 typedef struct list var_list_t;
 typedef struct list declarator_list_t;
 typedef struct list ifref_list_t;
-typedef struct list array_dims_t;
 typedef struct list user_type_list_t;
 typedef struct list context_handle_list_t;
 typedef struct list generic_handle_list_t;
@@ -266,6 +265,7 @@ enum type_basic_type
     TYPE_BASIC_INT64,
     TYPE_BASIC_INT,
     TYPE_BASIC_INT3264,
+    TYPE_BASIC_LONG,
     TYPE_BASIC_CHAR,
     TYPE_BASIC_HYPER,
     TYPE_BASIC_BYTE,
@@ -343,6 +343,8 @@ struct iface_details
   var_list_t *disp_methods;
   var_list_t *disp_props;
   struct _type_t *inherit;
+  struct _type_t *disp_inherit;
+  struct _type_t *async_iface;
 };
 
 struct module_details
@@ -464,7 +466,6 @@ struct _declarator_t {
   var_t *var;
   type_t *type;
   type_t *func_type;
-  array_dims_t *array;
   expr_t *bits;
 
   /* parser-internal */
@@ -552,7 +553,6 @@ typedef enum {
     SYS_WIN64
 } syskind_t;
 
-extern syskind_t typelib_kind;
 extern user_type_list_t user_type_list;
 extern context_handle_list_t context_handle_list;
 extern generic_handle_list_t generic_handle_list;

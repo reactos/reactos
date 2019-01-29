@@ -176,6 +176,13 @@ static inline var_list_t *type_dispiface_get_methods(const type_t *type)
     return type->details.iface->disp_methods;
 }
 
+static inline type_t *type_dispiface_get_inherit(const type_t *type)
+{
+    type = type_get_real_type(type);
+    assert(type_get_type(type) == TYPE_INTERFACE);
+    return type->details.iface->disp_inherit;
+}
+
 static inline int type_is_defined(const type_t *type)
 {
     return type->defined;

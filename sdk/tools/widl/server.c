@@ -104,7 +104,7 @@ static void write_function_stub(const type_t *iface, const var_t *func, unsigned
 
     write_parameters_init(server, indent, func, "__frame->");
 
-    if (explicit_fc == RPC_FC_BIND_PRIMITIVE)
+    if (explicit_fc == FC_BIND_PRIMITIVE)
     {
         print_server("__frame->%s = _pRpcMessage->Handle;\n", handle_var->name);
         fprintf(server, "\n");
@@ -544,26 +544,6 @@ void write_server(const statement_list_t *stmts)
     if (!server)
         return;
 
-    if (do_win32 && do_win64)
-    {
-        fprintf(server, "#ifndef _WIN64\n\n");
-        pointer_size = 4;
-        write_server_routines( stmts );
-        fprintf(server, "\n#else /* _WIN64 */\n\n");
-        pointer_size = 8;
-        write_server_routines( stmts );
-        fprintf(server, "\n#endif /* _WIN64 */\n");
-    }
-    else if (do_win32)
-    {
-        pointer_size = 4;
-        write_server_routines( stmts );
-    }
-    else if (do_win64)
-    {
-        pointer_size = 8;
-        write_server_routines( stmts );
-    }
-
+    write_server_routines( stmts );
     fclose(server);
 }
