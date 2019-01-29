@@ -188,7 +188,7 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
     {
         int i;
 
-        for (i = 0; i < sizeof(This->contextStack)/sizeof(This->contextStack[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(This->contextStack); i++)
             if (This->contextStack[i])
             {
                 ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink, This->contextStack[i]);
