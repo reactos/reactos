@@ -125,13 +125,13 @@ static	LRESULT GSM_DriverDetails(PACMDRIVERDETAILSW add)
     add->cFilterTags = 0;
     add->hicon = NULL;
     MultiByteToWideChar( CP_ACP, 0, "Microsoft GSM 6.10", -1,
-                         add->szShortName, sizeof(add->szShortName)/sizeof(WCHAR) );
+                         add->szShortName, ARRAY_SIZE( add->szShortName ));
     MultiByteToWideChar( CP_ACP, 0, "Wine GSM 6.10 libgsm codec", -1,
-                         add->szLongName, sizeof(add->szLongName)/sizeof(WCHAR) );
+                         add->szLongName, ARRAY_SIZE( add->szLongName ));
     MultiByteToWideChar( CP_ACP, 0, "Brought to you by the Wine team...", -1,
-                         add->szCopyright, sizeof(add->szCopyright)/sizeof(WCHAR) );
+                         add->szCopyright, ARRAY_SIZE( add->szCopyright ));
     MultiByteToWideChar( CP_ACP, 0, "Refer to LICENSE file", -1,
-                         add->szLicensing, sizeof(add->szLicensing)/sizeof(WCHAR) );
+                         add->szLicensing, ARRAY_SIZE( add->szLicensing ));
     add->szFeatures[0] = 0;
     return MMSYSERR_NOERROR;
 }
@@ -199,7 +199,6 @@ static BOOL GSM_FormatValidate(const WAVEFORMATEX *wfx)
 }
 
 static const DWORD gsm_rates[] = { 8000, 11025, 22050, 44100, 48000, 96000 };
-#define NUM_RATES (sizeof(gsm_rates)/sizeof(*gsm_rates))
 
 /***********************************************************************
  *           GSM_FormatTagDetails
@@ -241,13 +240,13 @@ static	LRESULT	GSM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
     case 0:
 	aftd->dwFormatTag = WAVE_FORMAT_PCM;
 	aftd->cbFormatSize = sizeof(PCMWAVEFORMAT);
-	aftd->cStandardFormats = NUM_RATES;
+	aftd->cStandardFormats = ARRAY_SIZE(gsm_rates);
         lstrcpyW(aftd->szFormatTag, szPcm);
         break;
     case 1:
 	aftd->dwFormatTag = WAVE_FORMAT_GSM610;
 	aftd->cbFormatSize = sizeof(GSM610WAVEFORMAT);
-	aftd->cStandardFormats = NUM_RATES;
+	aftd->cStandardFormats = ARRAY_SIZE(gsm_rates);
         lstrcpyW(aftd->szFormatTag, szGsm);
 	break;
     }
@@ -270,7 +269,7 @@ static	LRESULT	GSM_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	switch (afd->dwFormatTag)
         {
 	case WAVE_FORMAT_PCM:
-	    if (afd->dwFormatIndex >= NUM_RATES) return ACMERR_NOTPOSSIBLE;
+	    if (afd->dwFormatIndex >= ARRAY_SIZE(gsm_rates)) return ACMERR_NOTPOSSIBLE;
 	    afd->pwfx->nChannels = 1;
 	    afd->pwfx->nSamplesPerSec = gsm_rates[afd->dwFormatIndex];
 	    afd->pwfx->wBitsPerSample = 16;
@@ -278,7 +277,7 @@ static	LRESULT	GSM_FormatDetails(PACMFORMATDETAILSW afd, DWORD dwQuery)
 	    afd->pwfx->nAvgBytesPerSec = afd->pwfx->nSamplesPerSec * afd->pwfx->nBlockAlign;
 	    break;
 	case WAVE_FORMAT_GSM610:
-            if (afd->dwFormatIndex >= NUM_RATES) return ACMERR_NOTPOSSIBLE;
+	    if (afd->dwFormatIndex >= ARRAY_SIZE(gsm_rates)) return ACMERR_NOTPOSSIBLE;
 	    afd->pwfx->nChannels = 1;
 	    afd->pwfx->nSamplesPerSec = gsm_rates[afd->dwFormatIndex];
 	    afd->pwfx->wBitsPerSample = 0;
