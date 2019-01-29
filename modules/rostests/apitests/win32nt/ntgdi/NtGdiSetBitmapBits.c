@@ -78,7 +78,7 @@ START_TEST(NtGdiSetBitmapBits)
     ok_long(NtGdiSetBitmapBits(hBitmap, 100, Bits), 12);
     ok_long(GetLastError(), 0xDEADFACE);
 
-    /* Test large byte counts */
+    /* Test large byte counts (with PAGE_NOACCESS) */
     LargeBits = VirtualAlloc(NULL, 0x100000 + PAGE_SIZE, MEM_RESERVE, PAGE_NOACCESS);
     VirtualAlloc(LargeBits, 0x100000, MEM_COMMIT, PAGE_READWRITE);
     CopyMemory(LargeBits, Bits, sizeof(Bits));
@@ -88,7 +88,26 @@ START_TEST(NtGdiSetBitmapBits)
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
-    ok_long(NtGdiSetBitmapBits(hBitmap, 0x1000, LargeBits), 0xC);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x10000, LargeBits), 0xC);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100000, LargeBits), 0xC);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100001, LargeBits), 0x0);
+    ok_long(GetLastError(), 0xDEADFACE);
+
+    VirtualFree(LargeBits, 0, MEM_RELEASE);
+
+    /* Test large byte counts (with PAGE_READONLY) */
+    LargeBits = VirtualAlloc(NULL, 0x100000 + PAGE_SIZE, MEM_RESERVE, PAGE_READONLY);
+    VirtualAlloc(LargeBits, 0x100000, MEM_COMMIT, PAGE_READWRITE);
+    CopyMemory(LargeBits, Bits, sizeof(Bits));
+
+    SetLastError(0xDEADFACE);
+    ok_long(NtGdiSetBitmapBits(hBitmap, 0x100, LargeBits), 0xC);
     ok_long(GetLastError(), 0xDEADFACE);
 
     SetLastError(0xDEADFACE);
@@ -295,6 +314,7 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[4], 0x55);
 
     ok_long(*(LPDWORD)pvBits, 0);
+    ok_long(((LPDWORD)pvBits)[1], 0);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
@@ -396,6 +416,7 @@ START_TEST(NtGdiSetBitmapBits)
     ok_int(Bits[4], 0x55);
 
     ok_long(*(LPDWORD)pvBits, 0x33AAAAAA);
+    ok_long(((LPDWORD)pvBits)[1], 0x33333333);
 
     DeleteObject(hBitmap);
     DeleteDC(hDC);
