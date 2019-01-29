@@ -129,7 +129,7 @@ static void test_raw_decompress(void)
     outbits = HeapAlloc(GetProcessHeap(), 0, bih->biSizeImage);
     ok(outbits != NULL, "Expected non-NULL value\n");
 
-    for (i = 0; i < sizeof(codecs) / sizeof(codecs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(codecs); i++)
     {
         memset(bits, i + 0xAF, bih->biSizeImage);
 
