@@ -1058,11 +1058,13 @@ static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
     UINT codepage, void* (__thiscall_wrapper *allocate)(void *this, ULONG size), void *allocate_data)
 {
     HRESULT hr = S_OK;
+    DWORD vt;
 
     assert(prop);
     assert(data);
-    StorageUtl_ReadDWord(data, 0, (DWORD *)&prop->vt);
+    StorageUtl_ReadDWord(data, 0, &vt);
     data += sizeof(DWORD);
+    prop->vt = vt;
     switch (prop->vt)
     {
     case VT_EMPTY:

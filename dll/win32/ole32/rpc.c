@@ -109,6 +109,7 @@ typedef struct
     OXID                   oxid; /* apartment in which the channel is valid */
     DWORD                  server_pid; /* id of server process */
     HANDLE                 event; /* cached event handle */
+    IID                    iid; /* IID of the proxy this belongs to */
 } ClientRpcChannelBuffer;
 
 struct dispatch_params
@@ -650,7 +651,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     cif->Length = sizeof(RPC_CLIENT_INTERFACE);
     /* RPC interface ID = COM interface ID */
-    cif->InterfaceId.SyntaxGUID = *riid;
+    cif->InterfaceId.SyntaxGUID = This->iid;
     /* COM objects always have a version of 0.0 */
     cif->InterfaceId.SyntaxVersion.MajorVersion = 0;
     cif->InterfaceId.SyntaxVersion.MinorVersion = 0;
@@ -1096,7 +1097,7 @@ static const IRpcChannelBufferVtbl ServerRpcChannelBufferVtbl =
 
 /* returns a channel buffer for proxies */
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
-                                const OXID_INFO *oxid_info,
+                                const OXID_INFO *oxid_info, const IID *iid,
                                 DWORD dest_context, void *dest_context_data,
                                 IRpcChannelBuffer **chan, APARTMENT *apt)
 {
@@ -1155,6 +1156,7 @@ HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
     apartment_getoxid(apt, &This->oxid);
     This->server_pid = oxid_info->dwPid;
     This->event = NULL;
+    This->iid = *iid;
 
     *chan = &This->super.IRpcChannelBuffer_iface;
 
@@ -1658,7 +1660,7 @@ static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
     static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
     HKEY                key;
     HRESULT             hres;
-    WCHAR               command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
+    WCHAR               command[MAX_PATH+ARRAY_SIZE(embedding)];
     DWORD               size = (MAX_PATH+1) * sizeof(WCHAR);
     STARTUPINFOW        sinfo;
     PROCESS_INFORMATION pinfo;
@@ -1799,7 +1801,7 @@ static void get_localserver_pipe_name(WCHAR *pipefn, REFCLSID rclsid)
 {
     static const WCHAR wszPipeRef[] = {'\\','\\','.','\\','p','i','p','e','\\',0};
     strcpyW(pipefn, wszPipeRef);
-    StringFromGUID2(rclsid, pipefn + sizeof(wszPipeRef)/sizeof(wszPipeRef[0]) - 1, CHARS_IN_GUID);
+    StringFromGUID2(rclsid, pipefn + ARRAY_SIZE(wszPipeRef) - 1, CHARS_IN_GUID);
 }
 
 /* FIXME: should call to rpcss instead */

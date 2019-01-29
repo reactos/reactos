@@ -536,14 +536,14 @@ static HRESULT WINAPI ClassMoniker_GetDisplayName(IMoniker* iface,
 
     *ppszDisplayName = CoTaskMemAlloc(sizeof(wszClsidPrefix) + (CHARS_IN_GUID-2) * sizeof(WCHAR));
 
-    StringFromGUID2(&This->clsid, *ppszDisplayName+sizeof(wszClsidPrefix)/sizeof(WCHAR)-2, CHARS_IN_GUID);
+    StringFromGUID2(&This->clsid, *ppszDisplayName+ARRAY_SIZE(wszClsidPrefix)-2, CHARS_IN_GUID);
 
     /* note: this overwrites the opening curly bracket of the CLSID string generated above */
     memcpy(*ppszDisplayName, wszClsidPrefix, sizeof(wszClsidPrefix)-sizeof(WCHAR));
 
     /* note: this overwrites the closing curly bracket of the CLSID string generated above */
-    (*ppszDisplayName)[sizeof(wszClsidPrefix)/sizeof(WCHAR)-2+CHARS_IN_GUID-2] = ':';
-    (*ppszDisplayName)[sizeof(wszClsidPrefix)/sizeof(WCHAR)-2+CHARS_IN_GUID-1] = '\0';
+    (*ppszDisplayName)[ARRAY_SIZE(wszClsidPrefix)-2+CHARS_IN_GUID-2] = ':';
+    (*ppszDisplayName)[ARRAY_SIZE(wszClsidPrefix)-2+CHARS_IN_GUID-1] = '\0';
 
     TRACE("string is %s\n", debugstr_w(*ppszDisplayName));
     return S_OK;

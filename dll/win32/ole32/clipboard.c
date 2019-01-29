@@ -1197,7 +1197,7 @@ static HRESULT get_priv_data(ole_priv_data **data)
         for(cf = 0; (cf = EnumClipboardFormats(cf)) != 0; count++)
         {
             WCHAR buf[256];
-            if (GetClipboardFormatNameW(cf, buf, sizeof(buf) / sizeof(WCHAR)))
+            if (GetClipboardFormatNameW(cf, buf, ARRAY_SIZE(buf)))
                 TRACE("cf %04x %s\n", cf, debugstr_w(buf));
             else
                 TRACE("cf %04x\n", cf);
@@ -1294,6 +1294,14 @@ static HRESULT get_stgmed_for_storage(HGLOBAL h, STGMEDIUM *med)
     {
         GlobalFree(dst);
         return hr;
+    }
+
+    hr = StgIsStorageILockBytes(lbs);
+    if(hr!=S_OK)
+    {
+        ILockBytes_Release(lbs);
+        GlobalFree(dst);
+        return SUCCEEDED(hr) ? E_FAIL : hr;
     }
 
     hr = StgOpenStorageOnILockBytes(lbs, NULL,  STGM_SHARE_EXCLUSIVE | STGM_READWRITE, NULL, 0, &med->u.pstg);
@@ -1402,12 +1410,19 @@ static HRESULT WINAPI snapshot_GetData(IDataObject *iface, FORMATETC *fmt,
     if(This->data)
     {
         hr = IDataObject_GetData(This->data, fmt, med);
-        CloseClipboard();
-        return hr;
+        if(SUCCEEDED(hr))
+        {
+            CloseClipboard();
+            return hr;
+        }
+    }
+    if(fmt->lindex != -1)
+    {
+        hr = DV_E_FORMATETC;
+        goto end;
     }
 
-    h = GetClipboardData(fmt->cfFormat);
-    if(!h)
+    if(!IsClipboardFormatAvailable(fmt->cfFormat))
     {
         hr = DV_E_FORMATETC;
         goto end;
@@ -1425,17 +1440,31 @@ static HRESULT WINAPI snapshot_GetData(IDataObject *iface, FORMATETC *fmt,
             goto end;
         }
         mask = fmt->tymed & entry->fmtetc.tymed;
-        if(!mask) mask = fmt->tymed & (TYMED_ISTREAM | TYMED_HGLOBAL);
+        if(!mask && (entry->fmtetc.tymed & (TYMED_ISTREAM | TYMED_HGLOBAL | TYMED_ISTORAGE)))
+            mask = fmt->tymed & (TYMED_ISTREAM | TYMED_HGLOBAL | TYMED_ISTORAGE);
     }
     else /* non-Ole format */
-        mask = fmt->tymed & TYMED_HGLOBAL;
+        mask = fmt->tymed & get_tymed_from_nonole_cf(fmt->cfFormat);
 
-    if(mask & TYMED_ISTORAGE)
-        hr = get_stgmed_for_storage(h, med);
-    else if(mask & TYMED_HGLOBAL)
+    if(!mask)
+    {
+        hr = DV_E_TYMED;
+        goto end;
+    }
+
+    h = GetClipboardData(fmt->cfFormat);
+    if(!h)
+    {
+        hr = DV_E_FORMATETC;
+        goto end;
+    }
+
+    if(mask & TYMED_HGLOBAL)
         hr = get_stgmed_for_global(h, med);
     else if(mask & TYMED_ISTREAM)
         hr = get_stgmed_for_stream(h, med);
+    else if(mask & TYMED_ISTORAGE)
+        hr = get_stgmed_for_storage(h, med);
     else if(mask & TYMED_ENHMF)
         hr = get_stgmed_for_emf((HENHMETAFILE)h, med);
     else if(mask & TYMED_GDI)

@@ -2667,7 +2667,7 @@ static HRESULT WINAPI DataCache_UpdateCache( IOleCache2 *iface, IDataObject *dat
         }
         else
         {
-            for (i = 0; i < sizeof(view_list) / sizeof(view_list[0]); i++)
+            for (i = 0; i < ARRAY_SIZE(view_list); i++)
             {
                 fmt.cfFormat = view_list[i];
                 fmt.tymed = tymed_from_cf( fmt.cfFormat );

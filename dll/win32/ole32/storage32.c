@@ -5057,7 +5057,7 @@ static HRESULT StorageImpl_LockOne(StorageImpl *This, ULONG start, ULONG end)
 
     if (SUCCEEDED(hr))
     {
-        for (j=0; j<sizeof(This->locked_bytes)/sizeof(This->locked_bytes[0]); j++)
+        for (j = 0; j < ARRAY_SIZE(This->locked_bytes); j++)
         {
             if (This->locked_bytes[j] == 0)
             {
@@ -5200,10 +5200,10 @@ static void StorageImpl_Destroy(StorageBaseImpl* iface)
   BlockChainStream_Destroy(This->rootBlockChain);
   BlockChainStream_Destroy(This->smallBlockDepotChain);
 
-  for (i=0; i<BLOCKCHAIN_CACHE_SIZE; i++)
+  for (i = 0; i < BLOCKCHAIN_CACHE_SIZE; i++)
     BlockChainStream_Destroy(This->blockChainCache[i]);
 
-  for (i=0; i<sizeof(This->locked_bytes)/sizeof(This->locked_bytes[0]); i++)
+  for (i = 0; i < ARRAY_SIZE(This->locked_bytes); i++)
   {
     ULARGE_INTEGER offset, cb;
     cb.QuadPart = 1;
@@ -9369,8 +9369,7 @@ HRESULT WINAPI WriteFmtUserTypeStg(
     /* get the clipboard format name */
     if( cf )
     {
-        n = GetClipboardFormatNameW( cf, szwClipName,
-                sizeof(szwClipName)/sizeof(szwClipName[0]) );
+        n = GetClipboardFormatNameW(cf, szwClipName, ARRAY_SIZE(szwClipName));
         szwClipName[n]=0;
     }
 
@@ -10035,8 +10034,8 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
     static const WCHAR wstrStreamName[] = {1,'C', 'o', 'm', 'p', 'O', 'b', 'j', 0};
     WCHAR bufferW[OLESTREAM_MAX_STR_LEN];
 
-    BYTE pCompObjUnknown1[] = {0x01, 0x00, 0xFE, 0xFF, 0x03, 0x0A, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
-    BYTE pCompObjUnknown2[] = {0xF4, 0x39, 0xB2, 0x71};
+    static const BYTE pCompObjUnknown1[] = {0x01, 0x00, 0xFE, 0xFF, 0x03, 0x0A, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
+    static const BYTE pCompObjUnknown2[] = {0xF4, 0x39, 0xB2, 0x71};
 
     /* Initialize the CompObj structure */
     memset(&IStorageCompObj, 0, sizeof(IStorageCompObj));
@@ -10134,7 +10133,7 @@ static void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, 
     HRESULT hRes;
     IStream *pStream;
     static const WCHAR wstrStreamName[] = {2, 'O', 'l', 'e', 'P', 'r', 'e', 's', '0', '0', '0', 0};
-    BYTE pOlePresStreamHeader [] =
+    static const BYTE pOlePresStreamHeader[] =
     {
         0xFF, 0xFF, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00,
         0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
@@ -10142,7 +10141,7 @@ static void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, 
         0x00, 0x00, 0x00, 0x00
     };
 
-    BYTE pOlePresStreamHeaderEmpty [] =
+    static const BYTE pOlePresStreamHeaderEmpty[] =
     {
         0x00, 0x00, 0x00, 0x00,
         0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,

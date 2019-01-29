@@ -40,8 +40,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-extern const CLSID CLSID_DfMarshal;
-
 /* number of refs given out for normal marshaling */
 #define NORMALEXTREFS 5
 
@@ -362,12 +360,7 @@ static const IMultiQIVtbl ClientIdentity_Vtbl =
     ClientIdentity_QueryMultipleInterfaces
 };
 
-/* FIXME: remove these */
-static HRESULT WINAPI StdMarshalImpl_GetUnmarshalClass(LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, CLSID* pCid);
-static HRESULT WINAPI StdMarshalImpl_GetMarshalSizeMax(LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, DWORD* pSize);
-static HRESULT WINAPI StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv);
-static HRESULT WINAPI StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm);
-static HRESULT WINAPI StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved);
+static HRESULT StdMarshalImpl_Construct(REFIID, DWORD, void*, void**);
 
 static HRESULT WINAPI Proxy_QueryInterface(IMarshal *iface, REFIID riid, void **ppvObject)
 {
@@ -385,6 +378,33 @@ static ULONG WINAPI Proxy_Release(IMarshal *iface)
 {
     struct proxy_manager *This = impl_from_IMarshal( iface );
     return IMultiQI_Release(&This->IMultiQI_iface);
+}
+
+static HRESULT WINAPI Proxy_GetUnmarshalClass(
+    IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags, CLSID* pCid)
+{
+    *pCid = CLSID_StdMarshal;
+    return S_OK;
+}
+
+static HRESULT WINAPI Proxy_GetMarshalSizeMax(
+    IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags, DWORD* pSize)
+{
+    *pSize = FIELD_OFFSET(OBJREF, u_objref.u_standard.saResAddr.aStringArray);
+    return S_OK;
+}
+
+static void fill_std_objref(OBJREF *objref, const GUID *iid, STDOBJREF *std)
+{
+    objref->signature = OBJREF_SIGNATURE;
+    objref->flags = OBJREF_STANDARD;
+    objref->iid = *iid;
+    if(std)
+        objref->u_objref.u_standard.std = *std;
+    memset(&objref->u_objref.u_standard.saResAddr, 0,
+            sizeof(objref->u_objref.u_standard.saResAddr));
 }
 
 static HRESULT WINAPI Proxy_MarshalInterface(
@@ -450,12 +470,16 @@ static HRESULT WINAPI Proxy_MarshalInterface(
 
         if (SUCCEEDED(hr))
         {
+            OBJREF objref;
+
             TRACE("writing stdobjref: flags = %04x cPublicRefs = %d oxid = %s oid = %s ipid = %s\n",
                 stdobjref.flags, stdobjref.cPublicRefs,
                 wine_dbgstr_longlong(stdobjref.oxid),
                 wine_dbgstr_longlong(stdobjref.oid),
                 debugstr_guid(&stdobjref.ipid));
-            hr = IStream_Write(pStm, &stdobjref, sizeof(stdobjref), NULL);
+            fill_std_objref(&objref, riid, &stdobjref);
+            hr = IStream_Write(pStm, &objref, FIELD_OFFSET(OBJREF,
+                        u_objref.u_standard.saResAddr.aStringArray), NULL);
         }
     }
     else
@@ -481,7 +505,11 @@ static HRESULT WINAPI Proxy_MarshalInterface(
                                                1, &iid, &qiresults);
             if (SUCCEEDED(hr))
             {
-                hr = IStream_Write(pStm, &qiresults->std, sizeof(qiresults->std), NULL);
+                OBJREF objref;
+
+                fill_std_objref(&objref, riid, &qiresults->std);
+                hr = IStream_Write(pStm, &objref, FIELD_OFFSET(OBJREF,
+                            u_objref.u_standard.saResAddr.aStringArray), NULL);
                 if (FAILED(hr))
                 {
                     REMINTERFACEREF rif;
@@ -501,17 +529,72 @@ static HRESULT WINAPI Proxy_MarshalInterface(
     return hr;
 }
 
+static HRESULT WINAPI Proxy_UnmarshalInterface(
+        IMarshal *iface, IStream *pStm, REFIID riid, void **ppv)
+{
+    struct proxy_manager *This = impl_from_IMarshal( iface );
+    IMarshal *marshal;
+    HRESULT hr;
+
+    TRACE("(%p, %p, %s, %p)\n", This, pStm, wine_dbgstr_guid(riid), ppv);
+
+    hr = StdMarshalImpl_Construct(&IID_IMarshal, This->dest_context,
+            This->dest_context_data, (void**)&marshal);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IMarshal_UnmarshalInterface(marshal, pStm, riid, ppv);
+    IMarshal_Release(marshal);
+    return hr;
+}
+
+static HRESULT WINAPI Proxy_ReleaseMarshalData(IMarshal *iface, IStream *pStm)
+{
+    struct proxy_manager *This = impl_from_IMarshal( iface );
+    IMarshal *marshal;
+    HRESULT hr;
+
+    TRACE("(%p, %p)\n", This, pStm);
+
+    hr = StdMarshalImpl_Construct(&IID_IMarshal, This->dest_context,
+            This->dest_context_data, (void**)&marshal);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IMarshal_ReleaseMarshalData(marshal, pStm);
+    IMarshal_Release(marshal);
+    return hr;
+}
+
+static HRESULT WINAPI Proxy_DisconnectObject(IMarshal *iface, DWORD dwReserved)
+{
+    struct proxy_manager *This = impl_from_IMarshal( iface );
+    IMarshal *marshal;
+    HRESULT hr;
+
+    TRACE("(%p, %x)\n", This, dwReserved);
+
+    hr = StdMarshalImpl_Construct(&IID_IMarshal, This->dest_context,
+            This->dest_context_data, (void**)&marshal);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IMarshal_DisconnectObject(marshal, dwReserved);
+    IMarshal_Release(marshal);
+    return hr;
+}
+
 static const IMarshalVtbl ProxyMarshal_Vtbl =
 {
     Proxy_QueryInterface,
     Proxy_AddRef,
     Proxy_Release,
-    StdMarshalImpl_GetUnmarshalClass,
-    StdMarshalImpl_GetMarshalSizeMax,
+    Proxy_GetUnmarshalClass,
+    Proxy_GetMarshalSizeMax,
     Proxy_MarshalInterface,
-    StdMarshalImpl_UnmarshalInterface,
-    StdMarshalImpl_ReleaseMarshalData,
-    StdMarshalImpl_DisconnectObject
+    Proxy_UnmarshalInterface,
+    Proxy_ReleaseMarshalData,
+    Proxy_DisconnectObject
 };
 
 static HRESULT WINAPI ProxyCliSec_QueryInterface(IClientSecurity *iface, REFIID riid, void **ppvObject)
@@ -1204,7 +1287,7 @@ StdMarshalImpl_GetUnmarshalClass(
     IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags, CLSID* pCid)
 {
-    *pCid = CLSID_DfMarshal;
+    *pCid = CLSID_StdMarshal;
     return S_OK;
 }
 
@@ -1213,7 +1296,7 @@ StdMarshalImpl_GetMarshalSizeMax(
     IMarshal *iface, REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags, DWORD* pSize)
 {
-    *pSize = sizeof(STDOBJREF);
+    *pSize = FIELD_OFFSET(OBJREF, u_objref.u_standard.saResAddr.aStringArray);
     return S_OK;
 }
 
@@ -1222,10 +1305,10 @@ StdMarshalImpl_MarshalInterface(
     IMarshal *iface, IStream *pStm,REFIID riid, void* pv, DWORD dest_context,
     void* dest_context_data, DWORD mshlflags)
 {
-    STDOBJREF             stdobjref;
     ULONG                 res;
     HRESULT               hres;
     APARTMENT *apt;
+    OBJREF objref;
 
     TRACE("(...,%s,...)\n", debugstr_guid(riid));
 
@@ -1238,7 +1321,9 @@ StdMarshalImpl_MarshalInterface(
     /* make sure this apartment can be reached from other threads / processes */
     RPC_StartRemoting(apt);
 
-    hres = marshal_object(apt, &stdobjref, riid, pv, dest_context, dest_context_data, mshlflags);
+    fill_std_objref(&objref, riid, NULL);
+    hres = marshal_object(apt, &objref.u_objref.u_standard.std, riid,
+            pv, dest_context, dest_context_data, mshlflags);
     apartment_release(apt);
     if (hres != S_OK)
     {
@@ -1246,7 +1331,8 @@ StdMarshalImpl_MarshalInterface(
         return hres;
     }
 
-    return IStream_Write(pStm, &stdobjref, sizeof(stdobjref), &res);
+    return IStream_Write(pStm, &objref,
+            FIELD_OFFSET(OBJREF, u_objref.u_standard.saResAddr.aStringArray), &res);
 }
 
 /* helper for StdMarshalImpl_UnmarshalInterface - does the unmarshaling with
@@ -1290,7 +1376,7 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
         {
             IRpcChannelBuffer *chanbuf;
             hr = RPC_CreateClientChannel(&stdobjref->oxid, &stdobjref->ipid,
-                                         &proxy_manager->oxid_info,
+                                         &proxy_manager->oxid_info, riid,
                                          proxy_manager->dest_context,
                                          proxy_manager->dest_context_data,
                                          &chanbuf, apt);
@@ -1321,12 +1407,11 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
     return hr;
 }
 
-static HRESULT WINAPI
-StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, void **ppv)
+static HRESULT std_unmarshal_interface(MSHCTX dest_context, void *dest_context_data,
+        IStream *pStm, REFIID riid, void **ppv)
 {
-    StdMarshalImpl *This = impl_from_StdMarshal(iface);
     struct stub_manager *stubmgr = NULL;
-    STDOBJREF stdobjref;
+    struct OR_STANDARD obj;
     ULONG res;
     HRESULT hres;
     APARTMENT *apt;
@@ -1343,7 +1428,7 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
     }
 
     /* read STDOBJREF from wire */
-    hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
+    hres = IStream_Read(pStm, &obj, FIELD_OFFSET(struct OR_STANDARD, saResAddr.aStringArray), &res);
     if (hres != S_OK)
     {
         apartment_release(apt);
@@ -1357,8 +1442,14 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
         return hres;
     }
 
+    if (obj.saResAddr.wNumEntries)
+    {
+        ERR("unsupported size of DUALSTRINGARRAY\n");
+        return E_NOTIMPL;
+    }
+
     /* check if we're marshalling back to ourselves */
-    if ((oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
+    if ((oxid == obj.std.oxid) && (stubmgr = get_stub_manager(apt, obj.std.oid)))
     {
         TRACE("Unmarshalling object marshalled in same apartment for iid %s, "
               "returning original object %p\n", debugstr_guid(riid), stubmgr->object);
@@ -1366,8 +1457,8 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
         hres = IUnknown_QueryInterface(stubmgr->object, riid, ppv);
       
         /* unref the ifstub. FIXME: only do this on success? */
-        if (!stub_manager_is_table_marshaled(stubmgr, &stdobjref.ipid))
-            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, stdobjref.flags & SORFP_TABLEWEAK, FALSE);
+        if (!stub_manager_is_table_marshaled(stubmgr, &obj.std.ipid))
+            stub_manager_ext_release(stubmgr, obj.std.cPublicRefs, obj.std.flags & SORFP_TABLEWEAK, FALSE);
 
         stub_manager_int_release(stubmgr);
         apartment_release(apt);
@@ -1379,28 +1470,28 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
      * ignore table marshaling and normal marshaling rules regarding number of
      * unmarshals, etc, but if you abuse these rules then your proxy could end
      * up returning RPC_E_DISCONNECTED. */
-    if ((stub_apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
+    if ((stub_apt = apartment_findfromoxid(obj.std.oxid, TRUE)))
     {
-        if ((stubmgr = get_stub_manager(stub_apt, stdobjref.oid)))
+        if ((stubmgr = get_stub_manager(stub_apt, obj.std.oid)))
         {
-            if (!stub_manager_notify_unmarshal(stubmgr, &stdobjref.ipid))
+            if (!stub_manager_notify_unmarshal(stubmgr, &obj.std.ipid))
                 hres = CO_E_OBJNOTCONNECTED;
         }
         else
         {
             WARN("Couldn't find object for OXID %s, OID %s, assuming disconnected\n",
-                wine_dbgstr_longlong(stdobjref.oxid),
-                wine_dbgstr_longlong(stdobjref.oid));
+                wine_dbgstr_longlong(obj.std.oxid),
+                wine_dbgstr_longlong(obj.std.oid));
             hres = CO_E_OBJNOTCONNECTED;
         }
     }
     else
         TRACE("Treating unmarshal from OXID %s as inter-process\n",
-            wine_dbgstr_longlong(stdobjref.oxid));
+            wine_dbgstr_longlong(obj.std.oxid));
 
     if (hres == S_OK)
-        hres = unmarshal_object(&stdobjref, apt, This->dest_context,
-                                This->dest_context_data, riid,
+        hres = unmarshal_object(&obj.std, apt, dest_context,
+                                dest_context_data, riid,
                                 stubmgr ? &stubmgr->oxid_info : NULL, ppv);
 
     if (stubmgr) stub_manager_int_release(stubmgr);
@@ -1414,45 +1505,110 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
 }
 
 static HRESULT WINAPI
-StdMarshalImpl_ReleaseMarshalData(IMarshal *iface, IStream *pStm)
+StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, void **ppv)
 {
-    STDOBJREF            stdobjref;
+    StdMarshalImpl *This = impl_from_StdMarshal(iface);
+    OBJREF objref;
+    HRESULT hr;
+    ULONG res;
+
+    hr = IStream_Read(pStm, &objref, FIELD_OFFSET(OBJREF, u_objref), &res);
+    if (hr != S_OK || (res != FIELD_OFFSET(OBJREF, u_objref)))
+    {
+        ERR("Failed to read common OBJREF header, 0x%08x\n", hr);
+        return STG_E_READFAULT;
+    }
+
+    if (objref.signature != OBJREF_SIGNATURE)
+    {
+        ERR("Bad OBJREF signature 0x%08x\n", objref.signature);
+        return RPC_E_INVALID_OBJREF;
+    }
+
+    if (!(objref.flags & OBJREF_STANDARD))
+    {
+        FIXME("unsupported objref.flags = %x\n", objref.flags);
+        return E_NOTIMPL;
+    }
+
+    return std_unmarshal_interface(This->dest_context,
+            This->dest_context_data, pStm, riid, ppv);
+}
+
+static HRESULT std_release_marshal_data(IStream *pStm)
+{
+    struct OR_STANDARD   obj;
     ULONG                res;
     HRESULT              hres;
     struct stub_manager *stubmgr;
     APARTMENT           *apt;
 
-    TRACE("iface=%p, pStm=%p\n", iface, pStm);
-    
-    hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
+    hres = IStream_Read(pStm, &obj, FIELD_OFFSET(struct OR_STANDARD, saResAddr.aStringArray), &res);
     if (hres != S_OK) return STG_E_READFAULT;
 
-    TRACE("oxid = %s, oid = %s, ipid = %s\n",
-        wine_dbgstr_longlong(stdobjref.oxid),
-        wine_dbgstr_longlong(stdobjref.oid),
-        wine_dbgstr_guid(&stdobjref.ipid));
+    if (obj.saResAddr.wNumEntries)
+    {
+        ERR("unsupported size of DUALSTRINGARRAY\n");
+        return E_NOTIMPL;
+    }
 
-    if (!(apt = apartment_findfromoxid(stdobjref.oxid, TRUE)))
+    TRACE("oxid = %s, oid = %s, ipid = %s\n",
+        wine_dbgstr_longlong(obj.std.oxid),
+        wine_dbgstr_longlong(obj.std.oid),
+        wine_dbgstr_guid(&obj.std.ipid));
+
+    if (!(apt = apartment_findfromoxid(obj.std.oxid, TRUE)))
     {
         WARN("Could not map OXID %s to apartment object\n",
-            wine_dbgstr_longlong(stdobjref.oxid));
+            wine_dbgstr_longlong(obj.std.oxid));
         return RPC_E_INVALID_OBJREF;
     }
 
-    if (!(stubmgr = get_stub_manager(apt, stdobjref.oid)))
+    if (!(stubmgr = get_stub_manager(apt, obj.std.oid)))
     {
         apartment_release(apt);
         ERR("could not map object ID to stub manager, oxid=%s, oid=%s\n",
-            wine_dbgstr_longlong(stdobjref.oxid), wine_dbgstr_longlong(stdobjref.oid));
+            wine_dbgstr_longlong(obj.std.oxid), wine_dbgstr_longlong(obj.std.oid));
         return RPC_E_INVALID_OBJREF;
     }
 
-    stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs, &stdobjref.ipid, stdobjref.flags & SORFP_TABLEWEAK);
+    stub_manager_release_marshal_data(stubmgr, obj.std.cPublicRefs, &obj.std.ipid, obj.std.flags & SORFP_TABLEWEAK);
 
     stub_manager_int_release(stubmgr);
     apartment_release(apt);
 
     return S_OK;
+}
+
+static HRESULT WINAPI
+StdMarshalImpl_ReleaseMarshalData(IMarshal *iface, IStream *pStm)
+{
+    OBJREF objref;
+    HRESULT hr;
+    ULONG res;
+
+    TRACE("iface=%p, pStm=%p\n", iface, pStm);
+
+    hr = IStream_Read(pStm, &objref, FIELD_OFFSET(OBJREF, u_objref), &res);
+    if (hr != S_OK || (res != FIELD_OFFSET(OBJREF, u_objref)))
+    {
+        ERR("Failed to read common OBJREF header, 0x%08x\n", hr);
+        return STG_E_READFAULT;
+    }
+
+    if (objref.signature != OBJREF_SIGNATURE)
+    {
+        ERR("Bad OBJREF signature 0x%08x\n", objref.signature);
+        return RPC_E_INVALID_OBJREF;
+    }
+
+    if (!(objref.flags & OBJREF_STANDARD))
+    {
+        FIXME("unsupported objref.flags = %x\n", objref.flags);
+        return E_NOTIMPL;
+    }
+
+    return std_release_marshal_data(pStm);
 }
 
 static HRESULT WINAPI
@@ -1588,7 +1744,8 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     if (objref.flags & OBJREF_STANDARD)
     {
         TRACE("Using standard unmarshaling\n");
-        hr = StdMarshalImpl_Construct(&IID_IMarshal, 0, NULL, (LPVOID*)marshal);
+        *marshal = NULL;
+        return S_FALSE;
     }
     else if (objref.flags & OBJREF_CUSTOM)
     {
@@ -1647,29 +1804,25 @@ HRESULT WINAPI CoGetMarshalSizeMax(ULONG *pulSize, REFIID riid, IUnknown *pUnk,
 {
     HRESULT hr;
     LPMARSHAL pMarshal;
-    CLSID marshaler_clsid;
+    BOOL std_marshal = FALSE;
 
-    hr = get_marshaler(riid, pUnk, dwDestContext, pvDestContext, mshlFlags, &pMarshal);
-    if (hr != S_OK)
-        return hr;
+    if(!pUnk)
+        return E_POINTER;
 
-    hr = IMarshal_GetUnmarshalClass(pMarshal, riid, pUnk, dwDestContext,
-                                    pvDestContext, mshlFlags, &marshaler_clsid);
+    hr = IUnknown_QueryInterface(pUnk, &IID_IMarshal, (void**)&pMarshal);
     if (hr != S_OK)
     {
-        ERR("IMarshal::GetUnmarshalClass failed, 0x%08x\n", hr);
-        IMarshal_Release(pMarshal);
-        return hr;
+        std_marshal = TRUE;
+        hr = CoGetStandardMarshal(riid, pUnk, dwDestContext, pvDestContext,
+                                  mshlFlags, &pMarshal);
     }
+    if (hr != S_OK)
+        return hr;
 
     hr = IMarshal_GetMarshalSizeMax(pMarshal, riid, pUnk, dwDestContext,
                                     pvDestContext, mshlFlags, pulSize);
-    if (IsEqualCLSID(&marshaler_clsid, &CLSID_DfMarshal))
-        /* add on the size of the common header */
-        *pulSize += FIELD_OFFSET(OBJREF, u_objref);
-    else
-        /* custom marshaling: add on the size of the whole OBJREF structure
-         * like native does */
+    if (!std_marshal)
+        /* add on the size of the whole OBJREF structure like native does */
         *pulSize += sizeof(OBJREF);
 
     IMarshal_Release(pMarshal);
@@ -1727,7 +1880,6 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
 {
     HRESULT	hr;
     CLSID marshaler_clsid;
-    OBJREF objref;
     LPMARSHAL pMarshal;
 
     TRACE("(%p, %s, %p, %x, %p, ", pStream, debugstr_guid(riid), pUnk,
@@ -1737,9 +1889,6 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
 
     if (!pUnk || !pStream)
         return E_INVALIDARG;
-
-    objref.signature = OBJREF_SIGNATURE;
-    objref.iid = *riid;
 
     /* get the marshaler for the specified interface */
     hr = get_marshaler(riid, pUnk, dwDestContext, pvDestContext, mshlFlags, &pMarshal);
@@ -1758,22 +1907,17 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
     }
 
     /* FIXME: implement handler marshaling too */
-    if (IsEqualCLSID(&marshaler_clsid, &CLSID_DfMarshal))
+    if (IsEqualCLSID(&marshaler_clsid, &CLSID_StdMarshal))
     {
         TRACE("Using standard marshaling\n");
-        objref.flags = OBJREF_STANDARD;
-
-        /* write the common OBJREF header to the stream */
-        hr = IStream_Write(pStream, &objref, FIELD_OFFSET(OBJREF, u_objref), NULL);
-        if (hr != S_OK)
-        {
-            ERR("Failed to write OBJREF header to stream, 0x%08x\n", hr);
-            goto cleanup;
-        }
     }
     else
     {
+        OBJREF objref;
+
         TRACE("Using custom marshaling\n");
+        objref.signature = OBJREF_SIGNATURE;
+        objref.iid = *riid;
         objref.flags = OBJREF_CUSTOM;
         objref.u_objref.u_custom.clsid = marshaler_clsid;
         objref.u_objref.u_custom.cbExtension = 0;
@@ -1848,13 +1992,20 @@ HRESULT WINAPI CoUnmarshalInterface(IStream *pStream, REFIID riid, LPVOID *ppv)
         return E_INVALIDARG;
 
     hr = get_unmarshaler_from_stream(pStream, &pMarshal, &iid);
-    if (hr != S_OK)
-        return hr;
-
-    /* call the helper object to do the actual unmarshaling */
-    hr = IMarshal_UnmarshalInterface(pMarshal, pStream, &iid, (LPVOID*)&object);
-    if (hr != S_OK)
-        ERR("IMarshal::UnmarshalInterface failed, 0x%08x\n", hr);
+    if (hr == S_FALSE)
+    {
+        hr = std_unmarshal_interface(0, NULL, pStream, &iid, (void**)&object);
+        if (hr != S_OK)
+            ERR("StdMarshal UnmarshalInterface failed, 0x%08x\n", hr);
+    }
+    else if (hr == S_OK)
+    {
+        /* call the helper object to do the actual unmarshaling */
+        hr = IMarshal_UnmarshalInterface(pMarshal, pStream, &iid, (LPVOID*)&object);
+        IMarshal_Release(pMarshal);
+        if (hr != S_OK)
+            ERR("IMarshal::UnmarshalInterface failed, 0x%08x\n", hr);
+    }
 
     if (hr == S_OK)
     {
@@ -1873,8 +2024,6 @@ HRESULT WINAPI CoUnmarshalInterface(IStream *pStream, REFIID riid, LPVOID *ppv)
             *ppv = object;
         }
     }
-
-    IMarshal_Release(pMarshal);
 
     TRACE("completed with hr 0x%x\n", hr);
     
@@ -1912,6 +2061,13 @@ HRESULT WINAPI CoReleaseMarshalData(IStream *pStream)
     TRACE("(%p)\n", pStream);
 
     hr = get_unmarshaler_from_stream(pStream, &pMarshal, NULL);
+    if (hr == S_FALSE)
+    {
+        hr = std_release_marshal_data(pStream);
+        if (hr != S_OK)
+            ERR("StdMarshal ReleaseMarshalData failed with error 0x%08x\n", hr);
+        return hr;
+    }
     if (hr != S_OK)
         return hr;
 

@@ -135,7 +135,7 @@ static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf, BOOL 
 
     if (other_fmts)
     {
-        for (i = 0; i < sizeof(fmt_id)/sizeof(fmt_id[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(fmt_id); i++)
         {
             init_fmtetc(&fmt, fmt_id[i], TYMED_ISTORAGE);
             hr = IDataObject_QueryGetData(data, &fmt);
@@ -232,9 +232,102 @@ HRESULT WINAPI OleCreateStaticFromData(IDataObject *data, REFIID iid,
                                        IOleClientSite *client_site, IStorage *stg,
                                        void **obj)
 {
-    FIXME("%p,%s,%08x,%p,%p,%p,%p: semi-stub\n",
+    HRESULT hr;
+    CLSID clsid;
+    IOleObject * ole_object = NULL;
+    IOleCache2 *ole_cache = NULL;
+    IPersistStorage *persist = NULL;
+    DWORD connection;
+    STGMEDIUM stgmedium;
+    LPOLESTR ole_typename;
+
+    TRACE("(%p, %s, 0x%08x, %p, %p, %p, %p)\n",
           data, debugstr_guid(iid), renderopt, fmt, client_site, stg, obj);
-    return OleCreateFromData(data, iid, renderopt, fmt, client_site, stg, obj);
+
+    if (!obj || !stg)
+        return E_INVALIDARG;
+
+    if (renderopt != OLERENDER_FORMAT)
+    {
+        FIXME("semi-stub\n");
+        return OleCreateFromData(data, iid, renderopt, fmt, client_site, stg, obj);
+    }
+
+    if (!fmt)
+        return E_INVALIDARG;
+
+    hr = IDataObject_GetData(data, fmt, &stgmedium);
+    if (FAILED(hr)) return hr;
+
+    switch (fmt->cfFormat)
+    {
+        case CF_BITMAP:
+        case CF_DIB:
+            clsid = CLSID_Picture_Dib;
+            break;
+        case CF_ENHMETAFILE:
+            clsid = CLSID_Picture_EnhMetafile;
+            break;
+        case CF_METAFILEPICT:
+            clsid = CLSID_Picture_Metafile;
+            break;
+        default:
+            ReleaseStgMedium(&stgmedium);
+            return DV_E_CLIPFORMAT;
+    }
+    hr = OleCreateDefaultHandler(&clsid, NULL, &IID_IOleObject, (void **)&ole_object);
+    if (FAILED(hr)) goto end;
+
+    if (client_site)
+    {
+        hr = IOleObject_SetClientSite(ole_object, client_site);
+        if (FAILED(hr)) goto end;
+    }
+
+    hr = IOleObject_QueryInterface(ole_object, &IID_IOleCache2, (void **)&ole_cache);
+    if (FAILED(hr)) goto end;
+
+    hr = IOleObject_QueryInterface(ole_object, &IID_IPersistStorage, (void **)&persist);
+    if (FAILED(hr)) goto end;
+
+    hr = WriteClassStg(stg, &clsid);
+    if (FAILED(hr)) goto end;
+
+    hr = IPersistStorage_InitNew(persist, stg);
+    if (FAILED(hr)) goto end;
+
+    hr = IOleCache2_Cache(ole_cache, fmt, ADVF_PRIMEFIRST, &connection);
+    if (FAILED(hr)) goto end;
+
+    hr = IOleCache2_SetData(ole_cache, fmt, &stgmedium, TRUE);
+    if (FAILED(hr)) goto end;
+    stgmedium.tymed = TYMED_NULL;
+
+    hr = IOleObject_GetUserType(ole_object, USERCLASSTYPE_FULL, &ole_typename);
+    if(FAILED(hr))
+        ole_typename = NULL;
+    hr = WriteFmtUserTypeStg(stg, fmt->cfFormat, ole_typename);
+    CoTaskMemFree(ole_typename);
+    if (FAILED(hr)) goto end;
+
+    hr = IPersistStorage_Save(persist, stg, TRUE);
+    if (FAILED(hr)) goto end;
+
+    hr = IPersistStorage_SaveCompleted(persist, NULL);
+    if (FAILED(hr)) goto end;
+
+    hr = IOleObject_QueryInterface(ole_object, iid, obj);
+
+end:
+    if (stgmedium.tymed == TYMED_NULL)
+        ReleaseStgMedium(&stgmedium);
+    if (persist)
+        IPersistStorage_Release(persist);
+    if (ole_cache)
+        IOleCache2_Release(ole_cache);
+    if (ole_object)
+        IOleObject_Release(ole_object);
+    return hr;
 }
 
 /******************************************************************************

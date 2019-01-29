@@ -210,7 +210,7 @@ struct dispatch_params;
 
 void    RPC_StartRemoting(struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
-                                const OXID_INFO *oxid_info,
+                                const OXID_INFO *oxid_info, const IID *iid,
                                 DWORD dest_context, void *dest_context_data,
                                 IRpcChannelBuffer **chan, APARTMENT *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;

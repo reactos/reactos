@@ -116,7 +116,7 @@ ULONG __RPC_USER CLIPFORMAT_UserSize(ULONG *pFlags, ULONG size, CLIPFORMAT *pCF)
         /* urg! this function is badly designed because it won't tell us how
          * much space is needed without doing a dummy run of storing the
          * name into a buffer */
-        ret = GetClipboardFormatNameW(*pCF, format, sizeof(format)/sizeof(format[0])-1);
+        ret = GetClipboardFormatNameW(*pCF, format, ARRAY_SIZE(format)-1);
         if (!ret)
             RaiseException(DV_E_CLIPFORMAT, 0, 0, NULL);
         size += (ret + 1) * sizeof(WCHAR);
@@ -161,7 +161,7 @@ unsigned char * __RPC_USER CLIPFORMAT_UserMarshal(ULONG *pFlags, unsigned char *
         *(DWORD *)pBuffer = *pCF;
         pBuffer += 4;
 
-        len = GetClipboardFormatNameW(*pCF, format, sizeof(format)/sizeof(format[0])-1);
+        len = GetClipboardFormatNameW(*pCF, format, ARRAY_SIZE(format)-1);
         if (!len)
             RaiseException(DV_E_CLIPFORMAT, 0, 0, NULL);
         len += 1;
