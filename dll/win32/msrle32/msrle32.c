@@ -1183,8 +1183,8 @@ static LRESULT GetInfo(const CodecInfo *pi, ICINFO *icinfo, DWORD dwSize)
   icinfo->dwVersion    = ICVERSION;
   icinfo->dwVersionICM = ICVERSION;
 
-  LoadStringW(MSRLE32_hModule, IDS_NAME, icinfo->szName, sizeof(icinfo->szName)/sizeof(WCHAR));
-  LoadStringW(MSRLE32_hModule, IDS_DESCRIPTION, icinfo->szDescription, sizeof(icinfo->szDescription)/sizeof(WCHAR));
+  LoadStringW(MSRLE32_hModule, IDS_NAME, icinfo->szName, ARRAY_SIZE(icinfo->szName));
+  LoadStringW(MSRLE32_hModule, IDS_DESCRIPTION, icinfo->szDescription, ARRAY_SIZE(icinfo->szDescription));
 
   return sizeof(ICINFO);
 }
@@ -1206,8 +1206,8 @@ static LRESULT About(CodecInfo *pi, HWND hWnd)
   /* pre-condition */
   assert(MSRLE32_hModule != 0);
 
-  LoadStringW(MSRLE32_hModule, IDS_NAME, szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
-  LoadStringW(MSRLE32_hModule, IDS_ABOUT, szAbout, sizeof(szAbout)/sizeof(szAbout[0]));
+  LoadStringW(MSRLE32_hModule, IDS_NAME, szTitle, ARRAY_SIZE(szTitle));
+  LoadStringW(MSRLE32_hModule, IDS_ABOUT, szAbout, ARRAY_SIZE(szAbout));
 
   MessageBoxW(hWnd, szAbout, szTitle, MB_OK|MB_ICONINFORMATION);
 
