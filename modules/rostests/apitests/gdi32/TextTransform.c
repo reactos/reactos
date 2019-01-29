@@ -99,6 +99,21 @@ static BOOL SaveBitmapToFile(LPCTSTR pszFileName, HBITMAP hbm)
 }
 #endif
 
+
+static VOID
+setXFORM(XFORM *pxform,
+         FLOAT eM11, FLOAT eM12,
+         FLOAT eM21, FLOAT eM22,
+         FLOAT eDx, FLOAT eDy)
+{
+    pxform->eM11 = eM11;
+    pxform->eM12 = eM12;
+    pxform->eM21 = eM21;
+    pxform->eM22 = eM22;
+    pxform->eDx = eDx;
+    pxform->eDy = eDy;
+}
+
 START_TEST(TextTransform)
 {
     HDC hDC;
@@ -170,12 +185,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = 2;
-    xform.eM12 = 0;
-    xform.eM21 = 0;
-    xform.eM22 = 1;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, 2, 0, 0, 1, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -188,12 +198,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = 1;
-    xform.eM12 = 1;
-    xform.eM21 = 1;
-    xform.eM22 = 1;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, 1, 1, 1, 1, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), FALSE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -206,12 +211,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = -1;
-    xform.eM12 = 0;
-    xform.eM21 = 0;
-    xform.eM22 = 1;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, -1, 0, 0, 1, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -224,12 +224,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = 0;
-    xform.eM12 = 1;
-    xform.eM21 = 1;
-    xform.eM22 = 0;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, 0, 1, 1, 0, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -242,12 +237,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = 0;
-    xform.eM12 = -1;
-    xform.eM21 = 1;
-    xform.eM22 = 0;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, 0, -1, 1, 0, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -260,12 +250,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = 0;
-    xform.eM12 = 1;
-    xform.eM21 = -1;
-    xform.eM22 = 0;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, 0, 1, -1, 0, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
@@ -278,12 +263,7 @@ START_TEST(TextTransform)
 
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
     FillRect(hDC, &rc, hWhiteBrush);
-    xform.eM11 = -1;
-    xform.eM12 = 0;
-    xform.eM21 = 0.5;
-    xform.eM22 = -1;
-    xform.eDx = 0;
-    xform.eDy = 0;
+    setXFORM(&xform, -1, 0, 0.5, -1, 0, 0);
     ok_int(SetWorldTransform(hDC, &xform), TRUE);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
