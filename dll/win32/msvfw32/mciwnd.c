@@ -1006,8 +1006,7 @@ end_of_mci_open:
                 cmdW = (LPWSTR)lParam;
 
             mwi->lasterror = mciSendStringW(cmdW, mwi->return_string,
-                                            sizeof(mwi->return_string)/sizeof(mwi->return_string[0]),
-                                            0);
+                                            ARRAY_SIZE(mwi->return_string), 0);
             if (mwi->lasterror)
                 MCIWND_notify_error(mwi);
 
