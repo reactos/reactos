@@ -1550,9 +1550,7 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
 
     /* Since WM_ERASEBKGND does nothing, first prepare background */
     if (action == ODA_SELECT) FillRect( hDC, &rbox, hBrush );
-#ifndef __REACTOS__
     if (action == ODA_DRAWENTIRE) FillRect( hDC, &client, hBrush );
-#endif
 
     /* Draw label */
     client = rtext;
@@ -1617,15 +1615,6 @@ static void CB_Paint( const BUTTON_INFO *infoPtr, HDC hDC, UINT action )
 
     if (action == ODA_DRAWENTIRE)
         BUTTON_DrawLabel(infoPtr, hDC, dtFlags, &rtext);
-
-#ifdef __REACTOS__
-    if (action == ODA_DRAWENTIRE)
-    {
-        ExcludeClipRect(hDC, rbox.left, rbox.top, rbox.right, rbox.bottom);
-        ExcludeClipRect(hDC, rtext.left, rtext.top + 1, rtext.right, rtext.bottom - 1);
-        FillRect( hDC, &client, hBrush );
-    }
-#endif
 
     /* ... and focus */
     if (action == ODA_FOCUS || (state & BST_FOCUS))
