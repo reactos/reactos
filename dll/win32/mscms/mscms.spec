@@ -3,6 +3,20 @@
 @ stdcall CheckBitmapBits(ptr ptr ptr long long long ptr ptr long)
 @ stdcall CheckColors(ptr ptr long long ptr)
 @ stdcall CloseColorProfile(ptr)
+@ stub CloseDisplay
+@ stub ColorCplGetDefaultProfileScope
+@ stub ColorCplGetDefaultRenderingIntentScope
+@ stub ColorCplGetProfileProperties
+@ stub ColorCplHasSystemWideAssociationListChanged
+@ stub ColorCplInitialize
+@ stub ColorCplLoadAssociationList
+@ stub ColorCplMergeAssociationLists
+@ stub ColorCplOverwritePerUserAssociationList
+@ stub ColorCplReleaseProfileProperties
+@ stub ColorCplResetSystemWideAssociationListChangedWarning
+@ stub ColorCplSaveAssociationList
+@ stub ColorCplSetUsePerUserProfiles
+@ stub ColorCplUninitialize
 @ stdcall ConvertColorNameToIndex(ptr ptr ptr long)
 @ stdcall ConvertIndexToColorName(ptr ptr ptr long)
 @ stdcall CreateColorTransformA(ptr ptr ptr long)
@@ -11,9 +25,17 @@
 @ stdcall CreateMultiProfileTransform(ptr long ptr long long long)
 @ stdcall CreateProfileFromLogColorSpaceA(ptr ptr)
 @ stdcall CreateProfileFromLogColorSpaceW(ptr ptr)
+@ stub DccwCreateDisplayProfileAssociationList
+@ stub DccwGetDisplayProfileAssociationList
+@ stub DccwGetGamutSize
+@ stub DccwReleaseDisplayProfileAssociationList
+@ stub DccwSetDisplayProfileAssociationList
 @ stdcall DeleteColorTransform(ptr)
+@ stub DeviceRenameEvent
 @ stdcall DisassociateColorProfileFromDeviceA(str str str)
 @ stdcall DisassociateColorProfileFromDeviceW(wstr wstr wstr)
+#@ stub DllCanUnloadNow
+#@ stub DllGetClassObject
 @ stdcall EnumColorProfilesA(str ptr ptr ptr ptr)
 @ stdcall EnumColorProfilesW(wstr ptr ptr ptr ptr)
 @ stdcall GenerateCopyFilePaths(wstr wstr ptr long ptr ptr ptr ptr long)
@@ -38,11 +60,14 @@
 @ stub InternalGetPS2ColorRenderingDictionary
 @ stub InternalGetPS2ColorSpaceArray
 @ stub InternalGetPS2PreviewCRD
+@ stub InternalRefreshCalibration
 @ stub InternalSetDeviceConfig
+@ stub InternalWcsAssociateColorProfileWithDevice
 @ stdcall IsColorProfileTagPresent(ptr long ptr)
 @ stdcall IsColorProfileValid(ptr ptr)
 @ stdcall OpenColorProfileA(ptr long long long)
 @ stdcall OpenColorProfileW(ptr long long long)
+@ stub OpenDisplay
 @ stdcall RegisterCMMA(str long str)
 @ stdcall RegisterCMMW(wstr long wstr)
 @ stdcall SelectCMM(long)
@@ -59,3 +84,22 @@
 @ stdcall UninstallColorProfileW(wstr wstr long)
 @ stdcall UnregisterCMMA(str long)
 @ stdcall UnregisterCMMW(wstr long)
+@ stub WcsAssociateColorProfileWithDevice
+@ stub WcsCheckColors
+@ stub WcsCreateIccProfile
+@ stub WcsDisassociateColorProfileFromDevice
+@ stub WcsEnumColorProfiles
+@ stdcall WcsEnumColorProfilesSize(long ptr ptr)
+@ stub WcsGetCalibrationManagementState
+@ stub WcsGetDefaultColorProfile
+@ stub WcsGetDefaultColorProfileSize
+@ stub WcsGetDefaultRenderingIntent
+@ stdcall WcsGetUsePerUserProfiles(wstr long ptr)
+@ stub WcsGpCanInstallOrUninstallProfiles
+@ stub WcsOpenColorProfileA
+@ stub WcsOpenColorProfileW
+@ stub WcsSetCalibrationManagementState
+@ stub WcsSetDefaultColorProfile
+@ stub WcsSetDefaultRenderingIntent
+@ stub WcsSetUsePerUserProfiles
+@ stub WcsTranslateColors
