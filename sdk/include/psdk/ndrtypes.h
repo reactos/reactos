@@ -168,7 +168,112 @@ typedef enum
     FC_SMVARRAY, /* 0x1f */ /* small (<64k) varying array */
     FC_LGVARRAY, /* 0x20 */ /* large (>= 64k) varying array */
     FC_BOGUS_ARRAY, /* 0x21 */ /* complex array */
+
+    FC_C_CSTRING, /* 0x22 */ /* conformant char string */
+    FC_C_BSTRING, /* 0x23 */
+    FC_C_SSTRING, /* 0x24 */
+    FC_C_WSTRING, /* 0x25 */ /* conformant wchar string */
+    FC_CSTRING, /* 0x26 */ /* non-conformant char string */
+    FC_BSTRING, /* 0x27 */
+    FC_SSTRING, /* 0x28 */
+    FC_WSTRING, /* 0x29 */ /* non-conformant wchar string */
+
+    FC_ENCAPSULATED_UNION, /* 0x2a */
+    FC_NON_ENCAPSULATED_UNION, /* 0x2b */
+
+    FC_BYTE_COUNT_POINTER, /* 0x2c */ /* [byte_count] ACF attribute */
+
+    FC_TRANSMIT_AS, /* 0x2d */
+    FC_REPRESENT_AS, /* 0x2e */
+
+    FC_IP, /* 0x2f */ /* interface pointer */
+
+    FC_BIND_CONTEXT, /* 0x30 */
+
+    FC_BIND_GENERIC, /* 0x31 */
+    FC_BIND_PRIMITIVE, /* 0x32 */
+    FC_AUTO_HANDLE, /* 0x33 */
+    FC_CALLBACK_HANDLE, /* 0x34 */
+
+    FC_UNUSED1, /* 0x35 */
+
+    FC_POINTER, /* 0x36 */
+
+    FC_ALIGNM2, /* 0x37 */
+    FC_ALIGNM4, /* 0x38 */
+    FC_ALIGNM8, /* 0x39 */
+
+    FC_UNUSED2, /* 0x3a */
+    FC_UNUSED3, /* 0x3b */
+    FC_UNUSED4, /* 0x3c */
+
+    FC_STRUCTPAD1, /* 0x3d */
+    FC_STRUCTPAD2, /* 0x3e */
+    FC_STRUCTPAD3, /* 0x3f */
+    FC_STRUCTPAD4, /* 0x40 */
+    FC_STRUCTPAD5, /* 0x41 */
+    FC_STRUCTPAD6, /* 0x42 */
+    FC_STRUCTPAD7, /* 0x43 */
+
+    FC_STRING_SIZED, /* 0x44 */
+
+    FC_UNUSED5, /* 0x45 */
+
+    FC_NO_REPEAT, /* 0x46 */
+    FC_FIXED_REPEAT, /* 0x47 */
+    FC_VARIABLE_REPEAT, /* 0x48 */
+    FC_FIXED_OFFSET, /* 0x49 */
+    FC_VARIABLE_OFFSET, /* 0x4a */
+
+    FC_PP, /* 0x4b */ /* pointer layout */
+/* FC_PP: FC_PAD layouts */
+/* layouts: FC_NO_REPEAT FC_PAD instance */
+/* instance: NdrFcShort(memofs), NdrFcShort(bufofs), desc */
+
+    FC_EMBEDDED_COMPLEX, /* 0x4c */
+
+    FC_IN_PARAM, /* 0x4d */
+    FC_IN_PARAM_BASETYPE, /* 0x4e */
+    FC_IN_PARAM_NO_FREE_INST, /* 0x4f */
+    FC_IN_OUT_PARAM, /* 0x50 */
+    FC_OUT_PARAM, /* 0x51 */
+    FC_RETURN_PARAM, /* 0x52 */
+    FC_RETURN_PARAM_BASETYPE, /* 0x53 */
+
+    FC_DEREFERENCE, /* 0x54 */
+    FC_DIV_2, /* 0x55 */
+    FC_MULT_2, /* 0x56 */
+    FC_ADD_1, /* 0x57 */
+    FC_SUB_1, /* 0x58 */
+
+    FC_CALLBACK, /* 0x59 */
+
+    FC_CONSTANT_IID, /* 0x5a */
+
+    FC_END, /* 0x5b */
+    FC_PAD, /* 0x5c */
+
+    FC_HARD_STRUCT = 0xb1,
+
+    FC_TRANSMIT_AS_PTR, /* 0xb2 */
+    FC_REPRESENT_AS_PTR, /* 0xb3 */
+
+    FC_USER_MARSHAL, /* 0xb4 */
+
+    FC_PIPE, /* 0xb5 */
+    FC_BLKHOLE, /* 0xb6 */
+
+    FC_RANGE, /* 0xb7 */
+
+    FC_INT3264, /* 0xb8 */
+    FC_UINT3264, /* 0xb9 */
 } FORMAT_CHARACTER;
+
+#define FC_ALLOCATE_ALL_NODES   0x01
+#define FC_DONT_FREE            0x02
+#define FC_ALLOCED_ON_STACK     0x04
+#define FC_SIMPLE_POINTER       0x08
+#define FC_POINTER_DEREF        0x10
 
 /* flags for all handle types */
 #define HANDLE_PARAM_IS_VIA_PTR 0x80
@@ -181,5 +286,24 @@ typedef enum
 #define NDR_CONTEXT_HANDLE_NOSERIALIZE      0x04
 #define NDR_CONTEXT_HANDLE_SERIALIZE        0x02
 #define NDR_CONTEXT_HANDLE_CANNOT_BE_NULL   0x01
+
+#define Oi_FULL_PTR_USED            0x01
+#define Oi_RPCSS_ALLOC_USED         0x02
+#define Oi_OBJECT_PROC              0x04
+#define Oi_HAS_RPCFLAGS             0x08
+#define Oi_OBJ_USE_V2_INTERPRETER   0x20
+#define Oi_HAS_COMM_OR_FAULT        0x20
+#define Oi_USE_NEW_INIT_ROUTINES    0x40
+
+#define FC_NORMAL_CONFORMANCE           (unsigned char) 0x00
+#define FC_POINTER_CONFORMANCE          (unsigned char) 0x10
+#define FC_TOP_LEVEL_CONFORMANCE        (unsigned char) 0x20
+#define FC_CONSTANT_CONFORMANCE         (unsigned char) 0x40
+#define FC_TOP_LEVEL_MULTID_CONFORMANCE (unsigned char) 0x80
+
+#define USER_MARSHAL_UNIQUE     0x80
+#define USER_MARSHAL_REF        0x40
+#define USER_MARSHAL_POINTER    0xc0
+#define USER_MARSHAL_IID        0x20
 
 #endif
