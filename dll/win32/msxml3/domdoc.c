@@ -73,6 +73,7 @@ static const WCHAR PropValueXSLPatternW[] = {'X','S','L','P','a','t','t','e','r'
 static const WCHAR PropertyResolveExternalsW[] = {'R','e','s','o','l','v','e','E','x','t','e','r','n','a','l','s',0};
 static const WCHAR PropertyAllowXsltScriptW[] = {'A','l','l','o','w','X','s','l','t','S','c','r','i','p','t',0};
 static const WCHAR PropertyAllowDocumentFunctionW[] = {'A','l','l','o','w','D','o','c','u','m','e','n','t','F','u','n','c','t','i','o','n',0};
+static const WCHAR PropertyNormalizeAttributeValuesW[] = {'N','o','r','m','a','l','i','z','e','A','t','t','r','i','b','u','t','e','V','a','l','u','e','s',0};
 
 /* Anything that passes the test_get_ownerDocument()
  * tests can go here (data shared between all instances).
@@ -393,6 +394,11 @@ xmlNodePtr xmldoc_unlink_xmldecl(xmlDocPtr doc)
         node = NULL;
 
     return node;
+}
+
+MSXML_VERSION xmldoc_version(xmlDocPtr doc)
+{
+    return properties_from_xmlDocPtr(doc)->version;
 }
 
 BOOL is_preserving_whitespace(xmlNodePtr node)
@@ -2286,8 +2292,8 @@ static HRESULT WINAPI domdoc_load(
 
     if ( filename )
     {
+        IUri *uri = NULL;
         IMoniker *mon;
-        IUri *uri;
 
         if (This->properties->uri)
         {
@@ -2304,14 +2310,18 @@ static HRESULT WINAPI domdoc_load(
             IMoniker_Release(mon);
         }
 
-        if ( FAILED(hr) )
-            This->error = E_FAIL;
-        else
+        if (SUCCEEDED(hr))
         {
             get_doc(This)->name = (char *)xmlchar_from_wcharn(filename, -1, TRUE);
             This->properties->uri = uri;
             hr = This->error = S_OK;
             *isSuccessful = VARIANT_TRUE;
+        }
+        else
+        {
+            if (uri)
+                IUri_Release(uri);
+            This->error = E_FAIL;
         }
     }
 
@@ -3108,6 +3118,7 @@ static HRESULT WINAPI domdoc_setProperty(
              lstrcmpiW(p, PropertyNewParserW) == 0 ||
              lstrcmpiW(p, PropertyResolveExternalsW) == 0 ||
              lstrcmpiW(p, PropertyAllowXsltScriptW) == 0 ||
+             lstrcmpiW(p, PropertyNormalizeAttributeValuesW) == 0 ||
              lstrcmpiW(p, PropertyAllowDocumentFunctionW) == 0)
     {
         /* Ignore */

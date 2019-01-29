@@ -2271,7 +2271,7 @@ IXMLDOMNode *create_node( xmlNodePtr node )
         pUnk = create_element( node );
         break;
     case XML_ATTRIBUTE_NODE:
-        pUnk = create_attribute( node );
+        pUnk = create_attribute( node, FALSE );
         break;
     case XML_TEXT_NODE:
         pUnk = create_text( node );

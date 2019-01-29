@@ -50,6 +50,7 @@ typedef struct _domattr
     xmlnode node;
     IXMLDOMAttribute IXMLDOMAttribute_iface;
     LONG ref;
+    BOOL floating;
 } domattr;
 
 static const tid_t domattr_se_tids[] = {
@@ -116,6 +117,11 @@ static ULONG WINAPI domattr_Release(
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
+        if ( This->floating )
+        {
+            xmlFreeNs( This->node.node->ns );
+            xmlFreeNode( This->node.node );
+        }
         heap_free( This );
     }
 
@@ -543,6 +549,8 @@ static HRESULT WINAPI domattr_get_namespaceURI(
     IXMLDOMAttribute *iface,
     BSTR* p)
 {
+    static const WCHAR w3xmlns[] = { 'h','t','t','p',':','/','/', 'w','w','w','.','w','3','.',
+        'o','r','g','/','2','0','0','0','/','x','m','l','n','s','/',0 };
     domattr *This = impl_from_IXMLDOMAttribute( iface );
     xmlNsPtr ns = This->node.node->ns;
 
@@ -559,7 +567,12 @@ static HRESULT WINAPI domattr_get_namespaceURI(
         if (xmlStrEqual(This->node.node->name, xmlns))
             *p = bstr_from_xmlChar(xmlns);
         else if (xmlStrEqual(ns->prefix, xmlns))
-            *p = SysAllocStringLen(NULL, 0);
+        {
+            if (xmldoc_version(This->node.node->doc) == MSXML6)
+                *p = SysAllocString(w3xmlns);
+            else
+                *p = SysAllocStringLen(NULL, 0);
+        }
         else if (ns->href)
             *p = bstr_from_xmlChar(ns->href);
     }
@@ -709,7 +722,7 @@ static dispex_static_data_t domattr_dispex = {
     domattr_iface_tids
 };
 
-IUnknown* create_attribute( xmlNodePtr attribute )
+IUnknown* create_attribute( xmlNodePtr attribute, BOOL floating )
 {
     domattr *This;
 
@@ -719,6 +732,7 @@ IUnknown* create_attribute( xmlNodePtr attribute )
 
     This->IXMLDOMAttribute_iface.lpVtbl = &domattr_vtbl;
     This->ref = 1;
+    This->floating = floating;
 
     init_xmlnode(&This->node, attribute, (IXMLDOMNode*)&This->IXMLDOMAttribute_iface, &domattr_dispex);
 
