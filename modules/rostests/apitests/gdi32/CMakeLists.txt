@@ -73,6 +73,7 @@ list(APPEND SOURCE
     SetSysColors.c
     SetWindowExtEx.c
     SetWorldTransform.c
+    TextTransform.c
     init.c
     precomp.h)
 
