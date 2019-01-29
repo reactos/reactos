@@ -29,7 +29,11 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "winnls.h"
+#include "sqlext.h"
 #include "wine/unicode.h"
+#ifdef __REACTOS__
+#undef TRACE_ON
+#endif
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -71,7 +75,7 @@ static const WCHAR odbc_error_invalid_keyword[] = {'I','n','v','a','l','i','d','
 /* Push an error onto the error stack, taking care of ranges etc. */
 static void push_error(int code, LPCWSTR msg)
 {
-    if (num_errors < sizeof error_code/sizeof error_code[0])
+    if (num_errors < ARRAY_SIZE(error_code))
     {
         error_code[num_errors] = code;
         error_msg[num_errors] = msg;
@@ -259,19 +263,25 @@ static HMODULE load_config_driver(const WCHAR *driver)
         if ((ret = RegOpenKeyW(hkey, driver, &hkeydriver)) == ERROR_SUCCESS)
         {
             ret = RegGetValueW(hkeydriver, NULL, reg_driver, RRF_RT_REG_SZ, &type, NULL, &size);
-            if(ret == ERROR_MORE_DATA)
+            if(ret != ERROR_SUCCESS || type != REG_SZ)
             {
-                filename = HeapAlloc(GetProcessHeap(), 0, size);
-                if(!filename)
-                {
-                    RegCloseKey(hkeydriver);
-                    RegCloseKey(hkey);
-                    push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+                RegCloseKey(hkeydriver);
+                RegCloseKey(hkey);
+                push_error(ODBC_ERROR_INVALID_DSN, odbc_error_invalid_dsn);
 
-                    return NULL;
-                }
-                ret = RegGetValueW(hkeydriver, NULL, driver, RRF_RT_REG_SZ, &type, filename, &size);
+                return NULL;
             }
+
+            filename = HeapAlloc(GetProcessHeap(), 0, size);
+            if(!filename)
+            {
+                RegCloseKey(hkeydriver);
+                RegCloseKey(hkey);
+                push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+
+                return NULL;
+            }
+            ret = RegGetValueW(hkeydriver, NULL, reg_driver, RRF_RT_REG_SZ, &type, filename, &size);
 
             RegCloseKey(hkeydriver);
         }
@@ -572,7 +582,10 @@ BOOL WINAPI SQLGetInstalledDrivers(char *buf, WORD size, WORD *sizeout)
 
     ret = SQLGetInstalledDriversW(wbuf, size, &written);
     if (!ret)
+    {
+        heap_free(wbuf);
         return FALSE;
+    }
 
     *sizeout = WideCharToMultiByte(CP_ACP, 0, wbuf, written, NULL, 0, NULL, NULL);
     WideCharToMultiByte(CP_ACP, 0, wbuf, written, buf, size, NULL, NULL);
@@ -1505,34 +1518,44 @@ BOOL WINAPI SQLSetConfigMode(UWORD wConfigMode)
 
 BOOL WINAPI SQLValidDSNW(LPCWSTR lpszDSN)
 {
+    static const WCHAR invalid[] = {'[',']','{','}','(',')',',',';','?','*','=','!','@','\\',0};
     clear_errors();
-    FIXME("%s\n", debugstr_w(lpszDSN));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    TRACE("%s\n", debugstr_w(lpszDSN));
+
+    if(strlenW(lpszDSN) > SQL_MAX_DSN_LENGTH || strpbrkW(lpszDSN, invalid) != NULL)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOL WINAPI SQLValidDSN(LPCSTR lpszDSN)
 {
+    static const char *invalid = "[]{}(),;?*=!@\\";
     clear_errors();
-    FIXME("%s\n", debugstr_a(lpszDSN));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    TRACE("%s\n", debugstr_a(lpszDSN));
+
+    if(strlen(lpszDSN) > SQL_MAX_DSN_LENGTH || strpbrk(lpszDSN, invalid) != NULL)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOL WINAPI SQLWriteDSNToIniW(LPCWSTR lpszDSN, LPCWSTR lpszDriver)
 {
     clear_errors();
     FIXME("%s %s\n", debugstr_w(lpszDSN), debugstr_w(lpszDriver));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return TRUE;
 }
 
 BOOL WINAPI SQLWriteDSNToIni(LPCSTR lpszDSN, LPCSTR lpszDriver)
 {
     clear_errors();
     FIXME("%s %s\n", debugstr_a(lpszDSN), debugstr_a(lpszDriver));
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return TRUE;
 }
 
 BOOL WINAPI SQLWriteFileDSNW(LPCWSTR lpszFileName, LPCWSTR lpszAppName,
@@ -1558,6 +1581,7 @@ BOOL WINAPI SQLWriteFileDSN(LPCSTR lpszFileName, LPCSTR lpszAppName,
 BOOL WINAPI SQLWritePrivateProfileStringW(LPCWSTR lpszSection, LPCWSTR lpszEntry,
                LPCWSTR lpszString, LPCWSTR lpszFilename)
 {
+    static const WCHAR empty[] = {0};
     LONG ret;
     HKEY hkey;
 
@@ -1581,7 +1605,10 @@ BOOL WINAPI SQLWritePrivateProfileStringW(LPCWSTR lpszSection, LPCWSTR lpszEntry
 
               if ((ret = RegCreateKeyW(hkeyfilename, lpszSection, &hkey_section)) == ERROR_SUCCESS)
               {
-                  ret = RegSetValueExW(hkey_section, lpszEntry, 0, REG_SZ, (BYTE*)lpszString, (lstrlenW(lpszString)+1)*sizeof(WCHAR));
+                  if(lpszString)
+                      ret = RegSetValueExW(hkey_section, lpszEntry, 0, REG_SZ, (BYTE*)lpszString, (lstrlenW(lpszString)+1)*sizeof(WCHAR));
+                  else
+                      ret = RegSetValueExW(hkey_section, lpszEntry, 0, REG_SZ, (BYTE*)empty, sizeof(empty));
                   RegCloseKey(hkey_section);
               }
 
