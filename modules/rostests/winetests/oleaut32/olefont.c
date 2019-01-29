@@ -420,7 +420,7 @@ static void test_font_events_disp(void)
     hr = IFont_QueryInterface(pFont, &IID_IFontDisp, (void **)&pFontDisp);
     EXPECT_HR(hr, S_OK);
 
-    for (i = 0; i < sizeof(font_dispids)/sizeof(font_dispids[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(font_dispids); i++)
     {
         switch (font_dispids[i].dispid)
         {

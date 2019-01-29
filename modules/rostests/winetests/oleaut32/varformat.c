@@ -80,7 +80,7 @@ static void test_VarFormatNumber(void)
 
   CHECKPTR(VarFormatNumber);
 
-  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, sizeof(buff)/sizeof(char));
+  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, ARRAY_SIZE(buff));
   if (buff[0] != '.' || buff[1])
   {
     skip("Skipping VarFormatNumber tests as decimal separator is '%s'\n", buff);
@@ -127,7 +127,7 @@ static const char *szVarFmtFail = "VT %d|0x%04x Format %s: expected 0x%08x, '%s'
 #define VARFMT(vt,v,val,fmt,ret,str) do { \
   out = NULL; \
   V_VT(&in) = (vt); v(&in) = val; \
-  if (fmt) MultiByteToWideChar(CP_ACP, 0, fmt, -1, buffW, sizeof(buffW)/sizeof(WCHAR)); \
+  if (fmt) MultiByteToWideChar(CP_ACP, 0, fmt, -1, buffW, ARRAY_SIZE(buffW)); \
   hres = pVarFormat(&in,fmt ? buffW : NULL,fd,fw,flags,&out); \
   if (SUCCEEDED(hres)) WideCharToMultiByte(CP_ACP, 0, out, -1, buff, sizeof(buff),0,0); \
   else buff[0] = '\0'; \
@@ -224,7 +224,7 @@ static const FMTDATERES VarFormat_namedtime_results[] =
 };
 
 #define VNUMFMT(vt,v) \
-  for (i = 0; i < sizeof(VarFormat_results)/sizeof(FMTRES); i++) \
+  for (i = 0; i < ARRAY_SIZE(VarFormat_results); i++) \
   { \
     VARFMT(vt,v,1,VarFormat_results[i].fmt,S_OK,VarFormat_results[i].one_res); \
     VARFMT(vt,v,0,VarFormat_results[i].fmt,S_OK,VarFormat_results[i].zero_res); \
@@ -256,13 +256,13 @@ static void test_VarFormat(void)
     skip("Skipping VarFormat tests for non English language\n");
     return;
   }
-  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, sizeof(buff)/sizeof(char));
+  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, ARRAY_SIZE(buff));
   if (buff[0] != '.' || buff[1])
   {
     skip("Skipping VarFormat tests as decimal separator is '%s'\n", buff);
     return;
   }
-  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IDIGITS, buff, sizeof(buff)/sizeof(char));
+  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_IDIGITS, buff, ARRAY_SIZE(buff));
   if (buff[0] != '2' || buff[1])
   {
     skip("Skipping VarFormat tests as decimal places is '%s'\n", buff);
@@ -296,7 +296,7 @@ static void test_VarFormat(void)
   VARFMT(VT_BOOL|VT_BYREF,V_BOOLREF,&bFalse,"True/False",S_OK,"False");
 
   /* Dates */
-  for (i = 0; i < sizeof(VarFormat_date_results)/sizeof(FMTDATERES); i++)
+  for (i = 0; i < ARRAY_SIZE(VarFormat_date_results); i++)
   {
     if (i < 7)
       fd = i + 1; /* Test first day */
@@ -308,14 +308,14 @@ static void test_VarFormat(void)
   }
 
   /* Named time formats */
-  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, buff, sizeof(buff)/sizeof(char));
+  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, buff, ARRAY_SIZE(buff));
   if (strcmp(buff, "h:mm:ss tt"))
   {
     skip("Skipping named time tests as time format is '%s'\n", buff);
   }
   else
   {
-    for (i = 0; i < sizeof(VarFormat_namedtime_results)/sizeof(FMTDATERES); i++)
+    for (i = 0; i < ARRAY_SIZE(VarFormat_namedtime_results); i++)
     {
       fd = 0;
       VARFMT(VT_DATE,V_DATE,VarFormat_namedtime_results[i].val,

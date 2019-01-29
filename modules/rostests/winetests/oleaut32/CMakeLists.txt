@@ -1,5 +1,10 @@
 
-add_definitions(-DUSE_WINE_TODOS)
+add_definitions(
+    -D__WINESRC__
+    -DUSE_WINE_TODOS
+    -DWINETEST_USE_DBGSTR_LONGLONG
+    -D_USE_MATH_DEFINES)
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_typelib(test_reg.idl test_tlb.idl tmarshal.idl)
 add_idl_Headers(oleaut32_idlheaders test_reg.idl test_tlb.idl tmarshal.idl)

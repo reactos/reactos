@@ -567,7 +567,7 @@ static void test_safearray(void)
 	hres = SafeArrayDestroy(a);
 	ok(hres == S_OK,"SAD failed with hres %x\n", hres);
 
-	for (i=0;i<sizeof(vttypes)/sizeof(vttypes[0]);i++) {
+        for (i = 0; i < ARRAY_SIZE(vttypes); i++) {
 	if ((i == VT_I8 || i == VT_UI8) && has_i8)
 	{
 	  vttypes[i].elemsize = sizeof(LONG64);
@@ -704,7 +704,7 @@ static void test_safearray(void)
     if (!pSafeArrayAllocDescriptorEx)
         return;
 
-    for (i = 0; i < sizeof(vttypes)/sizeof(vttypes[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vttypes); i++) {
 		a = NULL;
 		hres = pSafeArrayAllocDescriptorEx(vttypes[i].vt,1,&a);
 		ok(hres == S_OK, "SafeArrayAllocDescriptorEx gave hres 0x%x\n", hres);
@@ -765,7 +765,7 @@ static void test_SafeArrayAllocDestroyDescriptor(void)
 {
   SAFEARRAY *sa;
   HRESULT hres;
-  int i;
+  UINT i;
 
   /* Failure cases */
   hres = SafeArrayAllocDescriptor(0, &sa);
@@ -789,7 +789,7 @@ static void test_SafeArrayAllocDestroyDescriptor(void)
 
     if (hres == S_OK)
     {
-      ok(SafeArrayGetDim(sa) == (UINT)i, "Dimension is %d; should be %d\n",
+      ok(SafeArrayGetDim(sa) == i, "Dimension is %d; should be %d\n",
          SafeArrayGetDim(sa), i);
 
       hres = SafeArrayDestroyDescriptor(sa);
@@ -828,11 +828,9 @@ static void test_SafeArrayCreateLockDestroy(void)
   SAFEARRAY *sa;
   HRESULT hres;
   VARTYPE vt;
-  int dimension;
+  UINT dimension;
 
-#define NUM_DIMENSIONS (int)(sizeof(sab) / sizeof(sab[0]))
-
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
   {
     sab[dimension].lLbound = 0;
     sab[dimension].cElements = 8;
@@ -850,7 +848,7 @@ static void test_SafeArrayCreateLockDestroy(void)
 
   /* Don't test 0 sized dimensions, as Windows has a bug which allows this */
 
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
     sab[dimension].cElements = 8;
 
   /* Test all VARTYPES in 1-4 dimensions */
@@ -870,7 +868,7 @@ static void test_SafeArrayCreateLockDestroy(void)
 
       if (sa)
       {
-        ok(SafeArrayGetDim(sa) == (UINT)dimension,
+        ok(SafeArrayGetDim(sa) == dimension,
            "VARTYPE %d (@%d dimensions) cDims is %d, expected %d\n",
            vt, dimension, SafeArrayGetDim(sa), dimension);
         ok(SafeArrayGetElemsize(sa) == dwLen || vt == VT_R8,
@@ -1007,13 +1005,13 @@ static void test_LockUnlock(void)
   hres = SafeArrayUnlock(NULL);
   ok(hres == E_INVALIDARG, "Lock NULL array hres 0x%x\n", hres);
 
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
   {
     sab[dimension].lLbound = 0;
     sab[dimension].cElements = 8;
   }
 
-  sa = SafeArrayCreate(VT_UI1, NUM_DIMENSIONS, sab);
+  sa = SafeArrayCreate(VT_UI1, ARRAY_SIZE(sab), sab);
 
   /* Test maximum locks */
 test_LockUnlock_Vector:
@@ -1054,27 +1052,27 @@ test_LockUnlock_Vector:
 static void test_SafeArrayGetPutElement(void)
 {
   SAFEARRAYBOUND sab[4];
-  LONG indices[NUM_DIMENSIONS], index;
+  LONG indices[ARRAY_SIZE(sab)], index;
   SAFEARRAY *sa;
   HRESULT hres;
   int value = 0, gotvalue, dimension;
   IRecordInfoImpl *irec;
   unsigned int x,y,z,a;
 
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
   {
     sab[dimension].lLbound = dimension * 2 + 1;
     sab[dimension].cElements = dimension * 3 + 1;
   }
 
-  sa = SafeArrayCreate(VT_INT, NUM_DIMENSIONS, sab);
+  sa = SafeArrayCreate(VT_INT, ARRAY_SIZE(sab), sab);
   if (!sa)
     return; /* Some early versions can't handle > 3 dims */
 
   ok(sa->cbElements == sizeof(value), "int size mismatch\n");
 
   /* Failure cases */
-  for (x = 0; x < NUM_DIMENSIONS; x++)
+  for (x = 0; x < ARRAY_SIZE(sab); x++)
   {
     indices[0] = sab[0].lLbound;
     indices[1] = sab[1].lLbound;
@@ -1384,16 +1382,16 @@ static void test_SafeArrayCopyData(void)
     return;
   }
 
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
   {
     sab[dimension].lLbound = dimension * 2 + 2;
     sab[dimension].cElements = dimension * 3 + 1;
     size *= sab[dimension].cElements;
   }
 
-  sa = SafeArrayCreate(VT_INT, NUM_DIMENSIONS, sab);
+  sa = SafeArrayCreate(VT_INT, ARRAY_SIZE(sab), sab);
   ok(sa != NULL, "Copy test couldn't create array\n");
-  sacopy = SafeArrayCreate(VT_INT, NUM_DIMENSIONS, sab);
+  sacopy = SafeArrayCreate(VT_INT, ARRAY_SIZE(sab), sab);
   ok(sacopy != NULL, "Copy test couldn't create copy array\n");
 
   if (!sa || !sacopy)
@@ -1453,11 +1451,11 @@ static void test_SafeArrayCopyData(void)
   hres = SafeArrayDestroy(sacopy);
   ok(hres == S_OK, "got 0x%08x\n", hres);
 
-  sacopy = SafeArrayCreate(VT_INT, NUM_DIMENSIONS, sab);
+  sacopy = SafeArrayCreate(VT_INT, ARRAY_SIZE(sab), sab);
   ok(sacopy != NULL, "Copy test couldn't create copy array\n");
   ok(sacopy->fFeatures == FADF_HAVEVARTYPE, "0x%04x\n", sacopy->fFeatures);
 
-  for (i = 0; i < sizeof(ignored_copy_features)/sizeof(USHORT); i++)
+  for (i = 0; i < ARRAY_SIZE(ignored_copy_features); i++)
   {
       USHORT feature = ignored_copy_features[i];
       USHORT orig = sacopy->fFeatures;
@@ -1491,7 +1489,7 @@ static void test_SafeArrayCopyData(void)
      "got 0x%04x\n", sacopy->fFeatures);
   SafeArrayDestroy(sacopy);
 
-  sacopy = SafeArrayCreate(VT_UI1, NUM_DIMENSIONS, sab);
+  sacopy = SafeArrayCreate(VT_UI1, ARRAY_SIZE(sab), sab);
   ok(sacopy != NULL, "Copy test couldn't create copy array\n");
   ok(sacopy->fFeatures == FADF_HAVEVARTYPE, "0x%04x\n", sacopy->fFeatures);
   hres = SafeArrayCopyData(sa, sacopy);
@@ -1507,7 +1505,7 @@ static void test_SafeArrayCreateEx(void)
   SAFEARRAYBOUND sab[4];
   SAFEARRAY *sa;
   HRESULT hres;
-  int dimension;
+  UINT dimension;
 
   if (!pSafeArrayCreateEx)
   {
@@ -1515,7 +1513,7 @@ static void test_SafeArrayCreateEx(void)
     return;
   }
 
-  for (dimension = 0; dimension < NUM_DIMENSIONS; dimension++)
+  for (dimension = 0; dimension < ARRAY_SIZE(sab); dimension++)
   {
     sab[dimension].lLbound = 0;
     sab[dimension].cElements = 8;
@@ -1765,7 +1763,7 @@ static void test_SafeArrayCopy(void)
   ok(sa->fFeatures == 0, "got src features 0x%04x\n", sa->fFeatures);
   sa->cbElements = 16;
 
-  for (i = 0; i < sizeof(ignored_copy_features)/sizeof(USHORT); i++)
+  for (i = 0; i < ARRAY_SIZE(ignored_copy_features); i++)
   {
       USHORT feature = ignored_copy_features[i];
 
@@ -2020,9 +2018,10 @@ static void test_SafeArrayDestroyData (void)
   ok(hres == S_OK, "got 0x%08x\n", hres);
 todo_wine
   ok(sa->fFeatures == FADF_HAVEVARTYPE, "got 0x%x\n", sa->fFeatures);
-  ok(sa->pvData != NULL, "got %p\n", sa->pvData);
-  /* There seems to be a bug on windows, especially visible on 64bit systems,
-     probably double-free of similar issue. */
+todo_wine
+  ok(sa->pvData == NULL || broken(sa->pvData != NULL), "got %p\n", sa->pvData);
+  /* There was a bug on windows, especially visible on 64bit systems,
+     probably double-free or similar issue. */
   sa->pvData = NULL;
   SafeArrayDestroy(sa);
 }
