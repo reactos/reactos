@@ -90,7 +90,7 @@ static int alloced_bstrs_count;
 
 static BSTR _bstr_(const char *str)
 {
-    assert(alloced_bstrs_count < sizeof(alloced_bstrs)/sizeof(alloced_bstrs[0]));
+    assert(alloced_bstrs_count < ARRAY_SIZE(alloced_bstrs));
     alloced_bstrs[alloced_bstrs_count] = alloc_str_from_narrow(str);
     return alloced_bstrs[alloced_bstrs_count++];
 }
@@ -144,7 +144,7 @@ static void test_saxstr(const char *file, unsigned line, BSTR str, const char *e
     /* exit earlier on length mismatch */
     if (lenexp != len) return;
 
-    MultiByteToWideChar(CP_ACP, 0, expected, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, expected, -1, buf, ARRAY_SIZE(buf));
 
     cmp = memcmp(str, buf, lenexp*sizeof(WCHAR));
     if (cmp && todo)
@@ -2952,7 +2952,7 @@ static void test_mxwriter_handlers(void)
 
     EXPECT_REF(writer, 1);
 
-    for (i = 0; i < sizeof(riids)/sizeof(REFIID); i++)
+    for (i = 0; i < ARRAY_SIZE(riids); i++)
     {
         IUnknown *handler;
         IMXWriter *writer2;
@@ -3976,7 +3976,7 @@ static void test_mxwriter_characters(void)
     hr = ISAXContentHandler_characters(content, chardataW, 0);
     EXPECT_HR(hr, S_OK);
 
-    hr = ISAXContentHandler_characters(content, chardataW, sizeof(chardataW)/sizeof(WCHAR) - 1);
+    hr = ISAXContentHandler_characters(content, chardataW, ARRAY_SIZE(chardataW) - 1);
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;
@@ -4166,7 +4166,7 @@ static void test_mxwriter_stream(void)
     IStream *stream;
     LARGE_INTEGER pos;
     ULARGE_INTEGER pos2;
-    DWORD test_count = sizeof(mxwriter_stream_tests)/sizeof(mxwriter_stream_tests[0]);
+    DWORD test_count = ARRAY_SIZE(mxwriter_stream_tests);
 
     for(current_stream_test_index = 0; current_stream_test_index < test_count; ++current_stream_test_index) {
         const mxwriter_stream_test *test = mxwriter_stream_tests+current_stream_test_index;
@@ -4640,7 +4640,7 @@ static void test_mxwriter_comment(void)
     ok(!lstrcmpW(_bstr_("<!---->\r\n"), V_BSTR(&dest)), "got wrong content %s\n", wine_dbgstr_w(V_BSTR(&dest)));
     VariantClear(&dest);
 
-    hr = ISAXLexicalHandler_comment(lexical, commentW, sizeof(commentW)/sizeof(WCHAR)-1);
+    hr = ISAXLexicalHandler_comment(lexical, commentW, ARRAY_SIZE(commentW) - 1);
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;
@@ -4865,16 +4865,16 @@ static void test_mxwriter_dtd(void)
     hr = IVBSAXLexicalHandler_startDTD(vblexical, NULL, NULL, NULL);
     EXPECT_HR(hr, E_POINTER);
 
-    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, pubW, sizeof(pubW)/sizeof(WCHAR), NULL, 0);
+    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, pubW, ARRAY_SIZE(pubW), NULL, 0);
     EXPECT_HR(hr, E_INVALIDARG);
 
-    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, NULL, 0, sysW, sizeof(sysW)/sizeof(WCHAR));
+    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, NULL, 0, sysW, ARRAY_SIZE(sysW));
     EXPECT_HR(hr, E_INVALIDARG);
 
-    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, pubW, sizeof(pubW)/sizeof(WCHAR), sysW, sizeof(sysW)/sizeof(WCHAR));
+    hr = ISAXLexicalHandler_startDTD(lexical, NULL, 0, pubW, ARRAY_SIZE(pubW), sysW, ARRAY_SIZE(sysW));
     EXPECT_HR(hr, E_INVALIDARG);
 
-    hr = ISAXLexicalHandler_startDTD(lexical, nameW, sizeof(nameW)/sizeof(WCHAR), NULL, 0, NULL, 0);
+    hr = ISAXLexicalHandler_startDTD(lexical, nameW, ARRAY_SIZE(nameW), NULL, 0, NULL, 0);
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;
@@ -4885,11 +4885,11 @@ static void test_mxwriter_dtd(void)
     VariantClear(&dest);
 
     /* system id is required if public is present */
-    hr = ISAXLexicalHandler_startDTD(lexical, nameW, sizeof(nameW)/sizeof(WCHAR), pubW, sizeof(pubW)/sizeof(WCHAR), NULL, 0);
+    hr = ISAXLexicalHandler_startDTD(lexical, nameW, ARRAY_SIZE(nameW), pubW, ARRAY_SIZE(pubW), NULL, 0);
     EXPECT_HR(hr, E_INVALIDARG);
 
-    hr = ISAXLexicalHandler_startDTD(lexical, nameW, sizeof(nameW)/sizeof(WCHAR),
-        pubW, sizeof(pubW)/sizeof(WCHAR), sysW, sizeof(sysW)/sizeof(WCHAR));
+    hr = ISAXLexicalHandler_startDTD(lexical, nameW, ARRAY_SIZE(nameW),
+        pubW, ARRAY_SIZE(pubW), sysW, ARRAY_SIZE(sysW));
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;
@@ -4926,10 +4926,10 @@ static void test_mxwriter_dtd(void)
     hr = IVBSAXDeclHandler_elementDecl(vbdecl, NULL, NULL);
     EXPECT_HR(hr, E_POINTER);
 
-    hr = ISAXDeclHandler_elementDecl(decl, nameW, sizeof(nameW)/sizeof(WCHAR), NULL, 0);
+    hr = ISAXDeclHandler_elementDecl(decl, nameW, ARRAY_SIZE(nameW), NULL, 0);
     EXPECT_HR(hr, E_INVALIDARG);
 
-    hr = ISAXDeclHandler_elementDecl(decl, nameW, sizeof(nameW)/sizeof(WCHAR), contentW, sizeof(contentW)/sizeof(WCHAR));
+    hr = ISAXDeclHandler_elementDecl(decl, nameW, ARRAY_SIZE(nameW), contentW, ARRAY_SIZE(contentW));
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;
@@ -4944,7 +4944,7 @@ static void test_mxwriter_dtd(void)
     hr = IMXWriter_put_output(writer, dest);
     EXPECT_HR(hr, S_OK);
 
-    hr = ISAXDeclHandler_elementDecl(decl, nameW, sizeof(nameW)/sizeof(WCHAR), contentW, 0);
+    hr = ISAXDeclHandler_elementDecl(decl, nameW, ARRAY_SIZE(nameW), contentW, 0);
     EXPECT_HR(hr, S_OK);
 
     V_VT(&dest) = VT_EMPTY;

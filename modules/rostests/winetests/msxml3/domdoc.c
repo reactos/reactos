@@ -102,7 +102,7 @@ static void get_class_support_data(struct msxmlsupported_data_t *table)
         HRESULT hr;
         int i;
 
-        for (i = 0; i < sizeof(table->ifaces)/sizeof(table->ifaces[0]) && table->ifaces[i] != NULL; i++)
+        for (i = 0; i < ARRAY_SIZE(table->ifaces) && table->ifaces[i] != NULL; i++)
         {
             hr = CoCreateInstance(table->clsid, NULL, CLSCTX_INPROC_SERVER, table->ifaces[i], (void**)&unk);
             if (hr == S_OK) IUnknown_Release(unk);
@@ -124,7 +124,7 @@ static BOOL is_clsid_supported(const GUID *clsid, REFIID riid)
         {
             int i;
 
-            for (i = 0; i < sizeof(table->ifaces)/sizeof(table->ifaces[0]) && table->ifaces[i] != NULL; i++)
+            for (i = 0; i < ARRAY_SIZE(table->ifaces) && table->ifaces[i] != NULL; i++)
                 if (table->ifaces[i] == riid) return table->supported[i];
         }
 
@@ -1243,7 +1243,7 @@ static int alloced_bstrs_count;
 
 static BSTR _bstr_(const char *str)
 {
-    assert(alloced_bstrs_count < sizeof(alloced_bstrs)/sizeof(alloced_bstrs[0]));
+    assert(alloced_bstrs_count < ARRAY_SIZE(alloced_bstrs));
     alloced_bstrs[alloced_bstrs_count] = alloc_str_from_narrow(str);
     return alloced_bstrs[alloced_bstrs_count++];
 }
@@ -10869,13 +10869,13 @@ static void test_mxnamespacemanager_override(void)
         &IID_IMXNamespaceManager, (void**)&nsmgr);
     EXPECT_HR(hr, S_OK);
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 0, buffW, &len);
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(buffW, _bstr_("xml")), "got prefix %s\n", wine_dbgstr_w(buffW));
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 1, buffW, &len);
     EXPECT_HR(hr, E_FAIL);
@@ -10894,7 +10894,7 @@ static void test_mxnamespacemanager_override(void)
     hr = IMXNamespaceManager_declarePrefix(nsmgr, NULL, _bstr_("ns0 uri"));
     EXPECT_HR(hr, S_OK);
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getURI(nsmgr, _bstr_(""), NULL, buffW, &len);
     EXPECT_HR(hr, S_OK);
@@ -10903,19 +10903,19 @@ static void test_mxnamespacemanager_override(void)
     hr = IMXNamespaceManager_declarePrefix(nsmgr, _bstr_("ns0"), _bstr_("ns0 uri"));
     EXPECT_HR(hr, S_OK);
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 0, buffW, &len);
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(buffW, _bstr_("xml")), "got prefix %s\n", wine_dbgstr_w(buffW));
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 1, buffW, &len);
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(buffW, _bstr_("ns0")), "got prefix %s\n", wine_dbgstr_w(buffW));
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 2, buffW, &len);
     EXPECT_HR(hr, S_OK);
@@ -10925,7 +10925,7 @@ static void test_mxnamespacemanager_override(void)
     hr = IMXNamespaceManager_declarePrefix(nsmgr, _bstr_("ns1"), _bstr_("ns1 uri"));
     EXPECT_HR(hr, S_OK);
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 1, buffW, &len);
     EXPECT_HR(hr, S_OK);
@@ -10946,13 +10946,13 @@ static void test_mxnamespacemanager_override(void)
     hr = IMXNamespaceManager_declarePrefix(nsmgr, NULL, _bstr_("ns0 uri override"));
     EXPECT_HR(hr, S_FALSE);
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getURI(nsmgr, _bstr_(""), NULL, buffW, &len);
     EXPECT_HR(hr, S_OK);
     ok(!lstrcmpW(buffW, _bstr_("ns0 uri override")), "got uri %s\n", wine_dbgstr_w(buffW));
 
-    len = sizeof(buffW)/sizeof(WCHAR);
+    len = ARRAY_SIZE(buffW);
     buffW[0] = 0;
     hr = IMXNamespaceManager_getDeclaredPrefix(nsmgr, 3, buffW, &len);
     EXPECT_HR(hr, S_OK);
@@ -12827,6 +12827,212 @@ static void test_transformNodeToObject(void)
     free_bstrs();
 }
 
+static void test_normalize_attribute_values(void)
+{
+    IXMLDOMDocument2 *doc;
+    VARIANT var;
+    HRESULT hr;
+
+    if (!is_clsid_supported(&CLSID_DOMDocument60, &IID_IXMLDOMDocument2))
+    {
+        win_skip("NormalizeAttributeValues is not supported.\n");
+        return;
+    }
+
+    doc = create_document_version(60, &IID_IXMLDOMDocument2);
+
+    V_VT(&var) = VT_I2;
+    V_I2(&var) = 10;
+    hr = IXMLDOMDocument2_getProperty(doc, _bstr_("NormalizeAttributeValues"), &var);
+todo_wine {
+    ok(hr == S_OK, "Failed to get property value, hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_BOOL, "Unexpected property value type, vt %d.\n", V_VT(&var));
+    ok(V_BOOL(&var) == VARIANT_FALSE, "Unexpected property value.\n");
+}
+    V_VT(&var) = VT_BOOL;
+    V_BOOL(&var) = VARIANT_TRUE;
+    hr = IXMLDOMDocument2_setProperty(doc, _bstr_("NormalizeAttributeValues"), var);
+    ok(hr == S_OK, "Failed to set property, hr %#x.\n", hr);
+
+    V_VT(&var) = VT_I2;
+    V_I2(&var) = 10;
+    hr = IXMLDOMDocument2_getProperty(doc, _bstr_("NormalizeAttributeValues"), &var);
+todo_wine {
+    ok(hr == S_OK, "Failed to get property value, hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_BOOL, "Unexpected property value type, vt %d.\n", V_VT(&var));
+    ok(V_BOOL(&var) == VARIANT_TRUE, "Unexpected property value.\n");
+}
+    IXMLDOMDocument2_Release(doc);
+}
+
+typedef struct _namespace_as_attribute_t {
+    const GUID *guid;
+    const char *clsid;
+    const char *xmlns_uri;
+} namespace_as_attribute_t;
+
+static const namespace_as_attribute_t namespace_as_attribute_test_data[] = {
+    { &CLSID_DOMDocument,   "CLSID_DOMDocument",   "" },
+    { &CLSID_DOMDocument2,  "CLSID_DOMDocument2",  "" },
+    { &CLSID_DOMDocument26, "CLSID_DOMDocument26", "" },
+    { &CLSID_DOMDocument30, "CLSID_DOMDocument30", "" },
+    { &CLSID_DOMDocument40, "CLSID_DOMDocument40", "" },
+    { &CLSID_DOMDocument60, "CLSID_DOMDocument60", "http://www.w3.org/2000/xmlns/" },
+    { 0 }
+};
+
+static void test_namespaces_as_attributes(void)
+{
+    const namespace_as_attribute_t *entry = namespace_as_attribute_test_data;
+    struct test {
+        const char *xml;
+        int explen;
+        const char *names[3];
+        const char *prefixes[3];
+        const char *basenames[3];
+        const char *uris[3];
+        const char *texts[3];
+    };
+    static const struct test tests[] = {
+        {
+            "<a ns:b=\"b attr\" d=\"d attr\" xmlns:ns=\"nshref\" />", 3,
+            { "ns:b",   "d",     "xmlns:ns" },  /* nodeName */
+            { "ns",     NULL,     "xmlns" },    /* prefix */
+            { "b",      "d",      "ns" },       /* baseName */
+            { "nshref", NULL,     "" },         /* namespaceURI */
+            { "b attr", "d attr", "nshref" },   /* text */
+        },
+        /* property only */
+        {
+            "<a d=\"d attr\" />", 1,
+            { "d" },        /* nodeName */
+            { NULL },       /* prefix */
+            { "d" },        /* baseName */
+            { NULL },       /* namespaceURI */
+            { "d attr" },   /* text */
+        },
+        /* namespace only */
+        {
+            "<a xmlns:ns=\"nshref\" />", 1,
+            { "xmlns:ns" }, /* nodeName */
+            { "xmlns" },    /* prefix */
+            { "ns" },       /* baseName */
+            { "" },         /* namespaceURI */
+            { "nshref" },   /* text */
+        },
+        /* no properties or namespaces */
+        {
+            "<a />", 0,
+        },
+
+        { NULL }
+    };
+    const struct test *test;
+    IXMLDOMNamedNodeMap *map;
+    IXMLDOMNode *node, *item;
+    IXMLDOMDocument *doc;
+    VARIANT_BOOL b;
+    LONG len, i;
+    HRESULT hr;
+    BSTR str;
+
+    while (entry->guid)
+    {
+        if (!is_clsid_supported(entry->guid, &IID_IXMLDOMDocument2))
+        {
+            entry++;
+            continue;
+        }
+
+        test = tests;
+        while (test->xml) {
+            hr = CoCreateInstance(entry->guid, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (void **)&doc);
+            ok(SUCCEEDED(hr), "Failed to create document %s, hr %#x.\n", wine_dbgstr_guid(entry->guid), hr);
+
+            hr = IXMLDOMDocument_loadXML(doc, _bstr_(test->xml), &b);
+            ok(hr == S_OK, "Failed to load xml, hr %#x.\n", hr);
+
+            node = NULL;
+            hr = IXMLDOMDocument_selectSingleNode(doc, _bstr_("a"), &node);
+            ok(SUCCEEDED(hr), "Failed to select a node, hr %#x.\n", hr);
+
+            hr = IXMLDOMNode_get_attributes(node, &map);
+            ok(SUCCEEDED(hr), "Failed to get attributes, hr %#x.\n", hr);
+
+            len = -1;
+            hr = IXMLDOMNamedNodeMap_get_length(map, &len);
+            ok(SUCCEEDED(hr), "Failed to get map length, hr %#x.\n", hr);
+            ok(len == test->explen, "got %d\n", len);
+
+            item = NULL;
+            hr = IXMLDOMNamedNodeMap_get_item(map, test->explen+1, &item);
+            ok(hr == S_FALSE, "Failed to get item, hr %#x.\n", hr);
+            ok(!item, "Item should be NULL\n");
+
+            for (i = 0; i < len; i++)
+            {
+                item = NULL;
+                hr = IXMLDOMNamedNodeMap_get_item(map, i, &item);
+                ok(SUCCEEDED(hr), "Failed to get item, hr %#x.\n", hr);
+
+                str = NULL;
+                hr = IXMLDOMNode_get_nodeName(item, &str);
+                ok(SUCCEEDED(hr), "Failed to get node name, hr %#x.\n", hr);
+                ok(!lstrcmpW(str, _bstr_(test->names[i])), "got %s\n", wine_dbgstr_w(str));
+                SysFreeString(str);
+
+                str = NULL;
+                hr = IXMLDOMNode_get_prefix(item, &str);
+                if (test->prefixes[i])
+                {
+                    ok(hr == S_OK, "Failed to get node name, hr %#x.\n", hr);
+                    ok(!lstrcmpW(str, _bstr_(test->prefixes[i])), "got %s\n", wine_dbgstr_w(str));
+                    SysFreeString(str);
+                }
+                else
+                    ok(hr == S_FALSE, "Failed to get node name, hr %#x.\n", hr);
+
+                str = NULL;
+                hr = IXMLDOMNode_get_baseName(item, &str);
+                ok(SUCCEEDED(hr), "Failed to get base name, hr %#x.\n", hr);
+                ok(!lstrcmpW(str, _bstr_(test->basenames[i])), "got %s\n", wine_dbgstr_w(str));
+                SysFreeString(str);
+
+                str = NULL;
+                hr = IXMLDOMNode_get_namespaceURI(item, &str);
+                if (test->uris[i])
+                {
+                    ok(hr == S_OK, "Failed to get node name, hr %#x.\n", hr);
+                    if (test->prefixes[i] && !strcmp(test->prefixes[i], "xmlns"))
+                        ok(!lstrcmpW(str, _bstr_(entry->xmlns_uri)), "got %s\n", wine_dbgstr_w(str));
+                    else
+                        ok(!lstrcmpW(str, _bstr_(test->uris[i])), "got %s\n", wine_dbgstr_w(str));
+                    SysFreeString(str);
+                }
+                else
+                    ok(hr == S_FALSE, "Failed to get node name, hr %#x.\n", hr);
+
+                str = NULL;
+                hr = IXMLDOMNode_get_text(item, &str);
+                ok(SUCCEEDED(hr), "Failed to get node text, hr %#x.\n", hr);
+                ok(!lstrcmpW(str, _bstr_(test->texts[i])), "got %s\n", wine_dbgstr_w(str));
+                SysFreeString(str);
+
+                IXMLDOMNode_Release(item);
+            }
+
+            IXMLDOMNamedNodeMap_Release(map);
+            IXMLDOMNode_Release(node);
+            IXMLDOMDocument_Release(doc);
+
+            test++;
+        }
+
+        entry++;
+    }
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
     HRESULT hr;
@@ -12910,6 +13116,8 @@ START_TEST(domdoc)
     test_url();
     test_merging_text();
     test_transformNodeToObject();
+    test_normalize_attribute_values();
+    test_namespaces_as_attributes();
 
     test_xsltemplate();
     test_xsltext();
