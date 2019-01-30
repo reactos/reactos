@@ -11,7 +11,7 @@ typedef struct tagBITMAPINFOEX
 {
     BITMAPINFOHEADER bmiHeader;
     RGBQUAD          bmiColors[256];
-} BITMAPINFOEX, FAR * LPBITMAPINFOEX;
+} BITMAPINFOEX, FAR *LPBITMAPINFOEX;
 
 #if 1
     #define SaveBitmapToFile(f, h)
