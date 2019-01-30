@@ -128,9 +128,8 @@ START_TEST(TextTransform)
     POINT pt;
     XFORM xform;
     HBRUSH hWhiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
-
-#define BLACK RGB(0, 0, 0)
-#define WHITE RGB(255, 255, 255)
+    const COLORREF BLACK = RGB(0, 0, 0);
+    const COLORREF WHITE = RGB(255, 255, 255);
 
     hDC = CreateCompatibleDC(NULL);
     ok(hDC != NULL, "hDC was NULL.\n");
