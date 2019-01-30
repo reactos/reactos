@@ -14,26 +14,24 @@ typedef struct tagBITMAPINFOEX
 } BITMAPINFOEX, FAR * LPBITMAPINFOEX;
 
 #if 1
-    #define SaveBitmapToFile(pszFileName, hbm)
+    #define SaveBitmapToFile(f, h)
 #else
-static BOOL SaveBitmapToFile(LPCTSTR pszFileName, HBITMAP hbm)
+static BOOL SaveBitmapToFile(LPCWSTR pszFileName, HBITMAP hbm)
 {
     BOOL f;
     BITMAPFILEHEADER bf;
-    BITMAPINFOEX bi;
+    BITMAPINFOEX bmi;
     BITMAPINFOHEADER *pbmih;
-    DWORD cb;
-    DWORD cColors, cbColors;
+    DWORD cb, cbColors;
     HDC hDC;
     HANDLE hFile;
     LPVOID pBits;
     BITMAP bm;
-    DWORD dwError = 0;
 
-    if (!GetObject(hbm, sizeof(BITMAP), &bm))
+    if (!GetObjectW(hbm, sizeof(BITMAP), &bm))
         return FALSE;
 
-    pbmih = &bi.bmiHeader;
+    pbmih = &bmi.bmiHeader;
     ZeroMemory(pbmih, sizeof(BITMAPINFOHEADER));
     pbmih->biSize             = sizeof(BITMAPINFOHEADER);
     pbmih->biWidth            = bm.bmWidth;
@@ -44,10 +42,9 @@ static BOOL SaveBitmapToFile(LPCTSTR pszFileName, HBITMAP hbm)
     pbmih->biSizeImage        = bm.bmWidthBytes * bm.bmHeight;
 
     if (bm.bmBitsPixel < 16)
-        cColors = 1 << bm.bmBitsPixel;
+        cbColors = (1 << bm.bmBitsPixel) * sizeof(RGBQUAD);
     else
-        cColors = 0;
-    cbColors = cColors * sizeof(RGBQUAD);
+        cbColors = 0;
 
     bf.bfType = 0x4d42;
     bf.bfReserved1 = 0;
@@ -61,40 +58,30 @@ static BOOL SaveBitmapToFile(LPCTSTR pszFileName, HBITMAP hbm)
         return FALSE;
 
     f = FALSE;
-    hDC = GetDC(NULL);
-    if (hDC != NULL)
+    hDC = CreateCompatibleDC(NULL);
+    if (hDC)
     {
-        if (GetDIBits(hDC, hbm, 0, bm.bmHeight, pBits, (BITMAPINFO*)&bi,
-            DIB_RGB_COLORS))
+        if (GetDIBits(hDC, hbm, 0, bm.bmHeight, pBits, (BITMAPINFO *)&bmi,
+                      DIB_RGB_COLORS))
         {
-            hFile = CreateFile(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL |
-                               FILE_FLAG_WRITE_THROUGH, NULL);
+            hFile = CreateFileW(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL |
+                                FILE_FLAG_WRITE_THROUGH, NULL);
             if (hFile != INVALID_HANDLE_VALUE)
             {
                 f = WriteFile(hFile, &bf, sizeof(BITMAPFILEHEADER), &cb, NULL) &&
-                    WriteFile(hFile, &bi, sizeof(BITMAPINFOHEADER), &cb, NULL) &&
-                    WriteFile(hFile, bi.bmiColors, cbColors, &cb, NULL) &&
+                    WriteFile(hFile, &bmi, sizeof(BITMAPINFOHEADER), &cb, NULL) &&
+                    WriteFile(hFile, bmi.bmiColors, cbColors, &cb, NULL) &&
                     WriteFile(hFile, pBits, pbmih->biSizeImage, &cb, NULL);
-                if (!f)
-                    dwError = GetLastError();
                 CloseHandle(hFile);
 
                 if (!f)
-                    DeleteFile(pszFileName);
+                    DeleteFileW(pszFileName);
             }
-            else
-                dwError = GetLastError();
         }
-        else
-            dwError = GetLastError();
-        ReleaseDC(NULL, hDC);
+        DeleteDC(hDC);
     }
-    else
-        dwError = GetLastError();
-
     HeapFree(GetProcessHeap(), 0, pBits);
-    SetLastError(dwError);
     return f;
 }
 #endif
@@ -164,7 +151,7 @@ START_TEST(TextTransform)
     SetRect(&rc, -siz.cx / 2, -siz.cy / 2, siz.cx / 2, siz.cy / 2);
 
     FillRect(hDC, &rc, hWhiteBrush);
-    SaveBitmapToFile(TEXT("1.bmp"), hbm);
+    SaveBitmapToFile(L"1.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
@@ -173,7 +160,7 @@ START_TEST(TextTransform)
     FillRect(hDC, &rc, hWhiteBrush);
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
-    SaveBitmapToFile(TEXT("2.bmp"), hbm);
+    SaveBitmapToFile(L"2.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
@@ -188,7 +175,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("3.bmp"), hbm);
+    SaveBitmapToFile(L"3.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
@@ -201,7 +188,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("4.bmp"), hbm);
+    SaveBitmapToFile(L"4.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), BLACK);
@@ -214,7 +201,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("5.bmp"), hbm);
+    SaveBitmapToFile(L"5.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
@@ -227,7 +214,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("6.bmp"), hbm);
+    SaveBitmapToFile(L"6.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), BLACK);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
@@ -240,7 +227,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("7.bmp"), hbm);
+    SaveBitmapToFile(L"7.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
@@ -253,7 +240,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("8.bmp"), hbm);
+    SaveBitmapToFile(L"8.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), BLACK);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
@@ -266,7 +253,7 @@ START_TEST(TextTransform)
     SetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
     TextOutW(hDC, 0, 0, &chBlackBox, 1);
     ok_int(ModifyWorldTransform(hDC, NULL, MWT_IDENTITY), TRUE);
-    SaveBitmapToFile(TEXT("9.bmp"), hbm);
+    SaveBitmapToFile(L"9.bmp", hbm);
     ok_long(GetPixel(hDC, +siz.cx / 4, +siz.cy / 4), WHITE);
     ok_long(GetPixel(hDC, -siz.cx / 4, +siz.cy / 4), BLACK);
     ok_long(GetPixel(hDC, +siz.cx / 4, -siz.cy / 4), WHITE);
