@@ -99,7 +99,6 @@ static BOOL SaveBitmapToFile(LPCTSTR pszFileName, HBITMAP hbm)
 }
 #endif
 
-
 static VOID
 setXFORM(XFORM *pxform,
          FLOAT eM11, FLOAT eM12,
