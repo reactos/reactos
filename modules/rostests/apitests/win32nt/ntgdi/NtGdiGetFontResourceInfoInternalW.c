@@ -9,34 +9,34 @@
 
 START_TEST(NtGdiGetFontResourceInfoInternalW)
 {
-	BOOL bRet;
-	DWORD dwBufSize;
-	LOGFONTW logfont;
-	UNICODE_STRING NtFileName;
+    BOOL bRet;
+    DWORD dwBufSize;
+    LOGFONTW logfont;
+    UNICODE_STRING NtFileName;
 
-	ASSERT(RtlDosPathNameToNtPathName_U(L".\\test.otf",
-	                                    &NtFileName,
-	                                    NULL,
-	                                    NULL));
+    ASSERT(RtlDosPathNameToNtPathName_U(L".\\test.otf",
+                                        &NtFileName,
+                                        NULL,
+                                        NULL));
 
-	dwBufSize = sizeof(logfont);
-	memset(&logfont, 0x0, dwBufSize);
+    dwBufSize = sizeof(logfont);
+    memset(&logfont, 0x0, dwBufSize);
 
-	bRet = NtGdiGetFontResourceInfoInternalW(
-		NtFileName.Buffer,
-		(NtFileName.Length / sizeof(WCHAR)) +1,
-		1,
-		dwBufSize,
-		&dwBufSize,
-		&logfont,
-		2);
+    bRet = NtGdiGetFontResourceInfoInternalW(
+        NtFileName.Buffer,
+        (NtFileName.Length / sizeof(WCHAR)) +1,
+        1,
+        dwBufSize,
+        &dwBufSize,
+        &logfont,
+        2);
 
-	ok(bRet != FALSE, "bRet was FALSE.\n");
+    ok(bRet != FALSE, "bRet was FALSE.\n");
 
-	printf("lfHeight = %ld\n", logfont.lfHeight);
-	printf("lfWidth = %ld\n", logfont.lfWidth);
-	printf("lfFaceName = %ls\n", logfont.lfFaceName);
+    printf("lfHeight = %ld\n", logfont.lfHeight);
+    printf("lfWidth = %ld\n", logfont.lfWidth);
+    printf("lfFaceName = %ls\n", logfont.lfFaceName);
 
-//	RemoveFontResourceW(szFullFileName);
+//  RemoveFontResourceW(szFullFileName);
 
 }

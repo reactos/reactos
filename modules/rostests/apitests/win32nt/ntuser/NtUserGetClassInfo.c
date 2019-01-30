@@ -10,32 +10,32 @@
 START_TEST(NtUserGetClassInfo)
 {
     HINSTANCE hinst = GetModuleHandle(NULL);
-	WNDCLASSEXW wclex, wclex2 = {0};
-	UNICODE_STRING us;
-	PWSTR pwstr = NULL;
+    WNDCLASSEXW wclex, wclex2 = {0};
+    UNICODE_STRING us;
+    PWSTR pwstr = NULL;
 
-	us.Length = 8;
-	us.MaximumLength = 8;
-	us.Buffer = L"test";
+    us.Length = 8;
+    us.MaximumLength = 8;
+    us.Buffer = L"test";
 
-	wclex.cbSize = sizeof(WNDCLASSEXW);
-	wclex.style = 0;
-	wclex.lpfnWndProc = NULL;
-	wclex.cbClsExtra = 2;
-	wclex.cbWndExtra = 4;
-	wclex.hInstance = hinst;
-	wclex.hIcon = NULL;
-	wclex.hCursor = NULL;
-	wclex.hbrBackground = CreateSolidBrush(RGB(4,7,5));
-	wclex.lpszMenuName = L"MyMenu";
-	wclex.lpszClassName = us.Buffer;
-	wclex.hIconSm = NULL;
+    wclex.cbSize = sizeof(WNDCLASSEXW);
+    wclex.style = 0;
+    wclex.lpfnWndProc = NULL;
+    wclex.cbClsExtra = 2;
+    wclex.cbWndExtra = 4;
+    wclex.hInstance = hinst;
+    wclex.hIcon = NULL;
+    wclex.hCursor = NULL;
+    wclex.hbrBackground = CreateSolidBrush(RGB(4,7,5));
+    wclex.lpszMenuName = L"MyMenu";
+    wclex.lpszClassName = us.Buffer;
+    wclex.hIconSm = NULL;
 
-	ASSERT(RegisterClassExW(&wclex) != 0);
+    ASSERT(RegisterClassExW(&wclex) != 0);
 
-	TEST(GetClassInfoExW(hinst, us.Buffer, &wclex) != 0);
-	wclex2.cbSize = sizeof(WNDCLASSEXW);
-	TEST(NtUserGetClassInfo(hinst, &us, &wclex2, &pwstr, 0) != 0);
+    TEST(GetClassInfoExW(hinst, us.Buffer, &wclex) != 0);
+    wclex2.cbSize = sizeof(WNDCLASSEXW);
+    TEST(NtUserGetClassInfo(hinst, &us, &wclex2, &pwstr, 0) != 0);
 
     TEST(pwstr == wclex.lpszMenuName);
     TEST(wclex2.cbSize == wclex.cbSize);

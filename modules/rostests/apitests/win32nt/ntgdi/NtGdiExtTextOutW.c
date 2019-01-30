@@ -33,11 +33,11 @@ START_TEST(NtGdiExtTextOutW)
     ULONG len;
     INT Dx[10] = {10, -5, 10, 5, 10, -10, 10, 5, 10, 5};
 
-	/* Create a window */
-	hWnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-	                    CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
-	                    NULL, NULL, hinst, 0);
-	hDC = GetDC(hWnd);
+    /* Create a window */
+    hWnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                        CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
+                        NULL, NULL, hinst, 0);
+    hDC = GetDC(hWnd);
 
     lpstr = L"Hallo";
     len = wcslen(lpstr);

@@ -9,38 +9,38 @@
 
 START_TEST(NtGdiEnumFontOpen)
 {
-	HDC hDC;
-	ULONG_PTR idEnum;
-	ULONG ulCount;
-	PENTRY pEntry;
+    HDC hDC;
+    ULONG_PTR idEnum;
+    ULONG ulCount;
+    PENTRY pEntry;
 
-	hDC = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
+    hDC = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
 
-	// FIXME: We should load the font first
+    // FIXME: We should load the font first
 
-	idEnum = NtGdiEnumFontOpen(hDC, 2, 0, 32, L"Courier", ANSI_CHARSET, &ulCount);
-	ok(idEnum != 0, "idEnum was 0.\n");
-	if (idEnum == 0)
-	{
-		skip("idEnum == 0");
-		return;
-	}
+    idEnum = NtGdiEnumFontOpen(hDC, 2, 0, 32, L"Courier", ANSI_CHARSET, &ulCount);
+    ok(idEnum != 0, "idEnum was 0.\n");
+    if (idEnum == 0)
+    {
+        skip("idEnum == 0");
+        return;
+    }
 
-	/* we should have a gdi handle here */
-	ok_int((int)GDI_HANDLE_GET_TYPE(idEnum), (int)GDI_OBJECT_TYPE_ENUMFONT);
-	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
-	ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
-	ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
-	ok_ptr(pEntry->pUser, NULL);
-	ok_int(pEntry->FullUnique, (idEnum >> 16));
-	ok_int(pEntry->Objt, GDI_OBJECT_TYPE_ENUMFONT >> 16);
-	ok_int(pEntry->Flags, 0);
+    /* we should have a gdi handle here */
+    ok_int((int)GDI_HANDLE_GET_TYPE(idEnum), (int)GDI_OBJECT_TYPE_ENUMFONT);
+    pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
+    ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
+    ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
+    ok_ptr(pEntry->pUser, NULL);
+    ok_int(pEntry->FullUnique, (idEnum >> 16));
+    ok_int(pEntry->Objt, GDI_OBJECT_TYPE_ENUMFONT >> 16);
+    ok_int(pEntry->Flags, 0);
 
-	/* We should not be able to use DeleteObject() on the handle */
-	ok_int(DeleteObject((HGDIOBJ)idEnum), FALSE);
+    /* We should not be able to use DeleteObject() on the handle */
+    ok_int(DeleteObject((HGDIOBJ)idEnum), FALSE);
 
-	NtGdiEnumFontClose(idEnum);
+    NtGdiEnumFontClose(idEnum);
 
-	// Test no logfont (NULL): should word
-	// Test empty lfFaceName string: should not work
+    // Test no logfont (NULL): should word
+    // Test empty lfFaceName string: should not work
 }

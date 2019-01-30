@@ -38,10 +38,10 @@ START_TEST(NtGdiSaveDC)
     TEST(NtGdiSaveDC(hdc) == 2);
     DeleteDC(hdc);
 
-	/* Create a window */
-	hwnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-	                    10, 10, 100, 100,
-	                    NULL, NULL, hinst, 0);
+    /* Create a window */
+    hwnd = CreateWindowW(L"BUTTON", L"TestWindow", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                        10, 10, 100, 100,
+                        NULL, NULL, hinst, 0);
     hdc = GetDC(hwnd);
     TEST(hdc != NULL);
     TEST(NtGdiSaveDC(hdc) == 1);

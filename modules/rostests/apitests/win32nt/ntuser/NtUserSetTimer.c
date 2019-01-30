@@ -11,8 +11,8 @@ START_TEST(NtUserSetTimer)
 {
 
 
-	// check valid argument
-	// check for replacement / new timers
-	// check when expiries are handled (msgs and calls)
+    // check valid argument
+    // check for replacement / new timers
+    // check when expiries are handled (msgs and calls)
 
 }
