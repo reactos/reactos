@@ -742,9 +742,9 @@ op_vol_accs_dnd:
 
         // we should check appropriate privilege if OpenForBackup requested
         if(OpenForBackup) {
-            RC = SeSinglePrivilegeCheck(SeExports->SeBackupPrivilege, UserMode);
-            if(!NT_SUCCESS(RC))
-                try_return(RC);
+            if (!SeSinglePrivilegeCheck(SeExports->SeBackupPrivilege, UserMode)) {
+                try_return(RC = STATUS_PRIVILEGE_NOT_HELD);
+            }
         }
 
         // The FSD might wish to implement the open-by-id option. The "id"
