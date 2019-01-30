@@ -1,3 +1,4 @@
+add_definitions(-D__WINESRC__)
 
 add_rpc_files(server
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine/epm.idl

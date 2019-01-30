@@ -2560,9 +2560,13 @@ typedef struct _RTL_CRITICAL_SECTION_DEBUG {
   LIST_ENTRY ProcessLocksList;
   DWORD EntryCount;
   DWORD ContentionCount;
+#ifdef __WINESRC__
+  DWORD_PTR Spare[8/sizeof(DWORD_PTR)];/* in Wine they store a string here */
+#else
   DWORD Flags;
   WORD CreatorBackTraceIndexHigh;
   WORD SpareWORD;
+#endif
 } RTL_CRITICAL_SECTION_DEBUG, *PRTL_CRITICAL_SECTION_DEBUG, RTL_RESOURCE_DEBUG, *PRTL_RESOURCE_DEBUG;
 
 #include "pshpack8.h"

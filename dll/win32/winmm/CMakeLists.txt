@@ -4,7 +4,6 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winmm.dll winmm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    driver.c
     joystick.c
     lolvldrv.c
     mci.c
@@ -15,13 +14,18 @@ list(APPEND SOURCE
     winmm.c
     winemm.h
     ${CMAKE_CURRENT_BINARY_DIR}/winmm_stubs.c)
+    
+list(APPEND WINE_SOURCE
+    driver.c)    
 
 add_library(winmm SHARED
     ${SOURCE}
+    ${WINE_SOURCE}
     winmm_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
 
 set_module_type(winmm win32dll)
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 target_link_libraries(winmm wine ${PSEH_LIB})
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(winmm winemm.h SOURCE)

@@ -6,7 +6,6 @@ spec2def(secur32.dll secur32.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     dllmain.c
     lsalpc.c
-    sspi.c
     stubs.c
     thunks.c
     wrapper.c
@@ -18,14 +17,19 @@ list(APPEND SOURCE
     wine/ntlm.c
     wine/util.c
     precomp.h)
+    
+list(APPEND WINE_SOURCE
+    sspi.c)    
 
 add_library(secur32 SHARED
     ${SOURCE}
+    ${WINE_SOURCE}
     secur32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/secur32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/secur32.def)
 
 set_module_type(secur32 win32dll UNICODE)
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 target_link_libraries(secur32 lsalib wine)
 add_importlibs(secur32 advapi32 netapi32 msvcrt kernel32 ntdll)
 add_pch(secur32 precomp.h SOURCE)

@@ -219,7 +219,6 @@ list(APPEND CRT_SOURCE
     stdio/_flsbuf.c
     stdio/_flswbuf.c
     stdio/access.c
-    stdio/file.c
     stdio/find.c
     stdio/find64.c
     stdio/findi64.c
@@ -364,6 +363,9 @@ list(APPEND CRT_SOURCE
     wine/heap.c
     wine/undname.c)
 
+list(APPEND CRT_WINE_SOURCE
+    stdio/file.c)    
+    
 if(ARCH STREQUAL "i386")
     list(APPEND CRT_ASM_SOURCE
         except/i386/chkesp.s
@@ -589,7 +591,8 @@ if(USE_CLANG_CL)
     set_property(SOURCE stdlib/rot.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
 endif()
 
-add_library(crt ${CRT_SOURCE} ${crt_asm})
+add_library(crt ${CRT_SOURCE} ${CRT_WINE_SOURCE} ${crt_asm})
+set_source_files_properties(${CRT_WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 target_link_libraries(crt chkstk)
 add_target_compile_definitions(crt
     __MINGW_IMPORT=extern

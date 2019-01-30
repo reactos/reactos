@@ -22,7 +22,6 @@ list(APPEND SOURCE
     driver.c
     install.c
     interface.c
-    misc.c
     parser.c
     query.c
     queue.c
@@ -32,14 +31,19 @@ list(APPEND SOURCE
     rpc.c
     setupapi_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/pnp_c.c)
+    
+list(APPEND WINE_SOURCE
+    misc.c)    
 
 add_library(setupapi SHARED
     ${SOURCE}
+    ${WINE_SOURCE}
     setupapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
 
 set_module_type(setupapi win32dll UNICODE)
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 target_link_libraries(setupapi uuid wine ${PSEH_LIB})
 add_delay_importlibs(setupapi comdlg32 shell32 winspool.drv wintrust)
 add_importlibs(setupapi gdi32 comctl32 advapi32 user32 rpcrt4 version msvcrt kernel32 ntdll)
