@@ -23,8 +23,6 @@
 #include "rpc_assoc.h"
 #include "rpcndr.h"
 
-#include "wine/rpcfc.h"
-
 #include "wine/debug.h"
 #include "wine/list.h"
 

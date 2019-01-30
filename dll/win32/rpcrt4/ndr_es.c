@@ -32,7 +32,6 @@
 #include "ndr_stubless.h"
 
 #include "wine/debug.h"
-#include "wine/rpcfc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -424,7 +423,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     client_interface = pStubDesc->RpcInterfaceInformation;
     pEsMsg->InterfaceId = client_interface->InterfaceId;
 
-    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
+    if (pProcHeader->Oi_flags & Oi_HAS_RPCFLAGS)
     {
         const NDR_PROC_HEADER_RPC *header_rpc = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
         stack_size = header_rpc->stack_size;
@@ -438,17 +437,17 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
         pFormat += sizeof(NDR_PROC_HEADER);
     }
 
-    if (pProcHeader->handle_type == RPC_FC_BIND_EXPLICIT)
+    if (pProcHeader->handle_type == 0)
     {
         switch (*pFormat) /* handle_type */
         {
-        case RPC_FC_BIND_PRIMITIVE: /* explicit primitive */
+        case FC_BIND_PRIMITIVE: /* explicit primitive */
             pFormat += sizeof(NDR_EHD_PRIMITIVE);
             break;
-        case RPC_FC_BIND_GENERIC: /* explicit generic */
+        case FC_BIND_GENERIC: /* explicit generic */
             pFormat += sizeof(NDR_EHD_GENERIC);
             break;
-        case RPC_FC_BIND_CONTEXT: /* explicit context */
+        case FC_BIND_CONTEXT: /* explicit context */
             pFormat += sizeof(NDR_EHD_CONTEXT);
             break;
         default:
@@ -467,7 +466,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
     pEsMsg->StubMsg.pfnFree = pStubDesc->pfnFree;
 
     /* create the full pointer translation tables, if requested */
-    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
+    if (pProcHeader->Oi_flags & Oi_FULL_PTR_USED)
         pEsMsg->StubMsg.FullPtrXlatTables = NdrFullPointerXlatInit(0,XLAT_CLIENT);
 
     TRACE("Oi_flags = 0x%02x\n", pProcHeader->Oi_flags);
@@ -510,7 +509,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
         return;
     }
     /* free the full pointer translation tables */
-    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
+    if (pProcHeader->Oi_flags & Oi_FULL_PTR_USED)
         NdrFullPointerXlatFree(pEsMsg->StubMsg.FullPtrXlatTables);
 }
 

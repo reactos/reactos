@@ -28,16 +28,16 @@
 typedef struct _NDR_PROC_HEADER
 {
     /* type of handle to use:
-     * RPC_FC_BIND_EXPLICIT = 0 - Explicit handle.
+     * 0 - Explicit handle.
      *   Handle is passed as a parameter to the function.
      *   Indicates that explicit handle information follows the header,
      *   which actually describes the handle.
-     * RPC_FC_BIND_GENERIC = 31 - Implicit handle with custom binding routines
+     * FC_BIND_GENERIC = 31 - Implicit handle with custom binding routines
      *   (MIDL_STUB_DESC::IMPLICIT_HANDLE_INFO::pGenericBindingInfo)
-     * RPC_FC_BIND_PRIMITIVE = 32 - Implicit handle using handle_t created by
+     * FC_BIND_PRIMITIVE = 32 - Implicit handle using handle_t created by
      *   calling application
-     * RPC_FC_AUTO_HANDLE = 33 - Automatic handle
-     * RPC_FC_CALLBACK_HANDLE = 34 - Implicit handle used for a callback: current handle
+     * FC_AUTO_HANDLE = 33 - Automatic handle
+     * FC_CALLBACK_HANDLE = 34 - Implicit handle used for a callback: current handle
      *   from last remote call
      */
     unsigned char handle_type;
@@ -97,13 +97,11 @@ typedef struct _NDR_PROC_HEADER_RPC
 typedef struct _NDR_PROC_PARTIAL_OIF_HEADER
 {
     /* the pre-computed client buffer size so that interpreter can skip all
-     * or some (if the flag RPC_FC_PROC_OI2F_CLTMUSTSIZE is specified) of the
-     * sizing pass */
+     * or some (if the flag ClientMustSize is specified) of the sizing pass */
     unsigned short constant_client_buffer_size;
 
     /* the pre-computed server buffer size so that interpreter can skip all
-     * or some (if the flag RPC_FC_PROC_OI2F_SRVMUSTSIZE is specified) of the
-     * sizing pass */
+     * or some (if the flag ServerMustSize is specified) of the sizing pass */
     unsigned short constant_server_buffer_size;
 
     INTERPRETER_OPT_FLAGS Oi2Flags;

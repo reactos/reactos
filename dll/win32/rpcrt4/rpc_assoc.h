@@ -43,6 +43,7 @@ typedef struct _RpcAssoc
     /* client-only */
     /* connections available to be used (protected by cs) */
     struct list free_connection_pool;
+    LONG connection_cnt;
 
     /* server-only */
     struct list context_handle_list; /* protected by cs */
@@ -51,7 +52,7 @@ typedef struct _RpcAssoc
 RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAssoc **assoc) DECLSPEC_HIDDEN;
 RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc, const RPC_SYNTAX_IDENTIFIER *InterfaceId,
     const RPC_SYNTAX_IDENTIFIER *TransferSyntax, RpcAuthInfo *AuthInfo, RpcQualityOfService *QOS,
-    LPCWSTR CookieAuth, RpcConnection **Connection) DECLSPEC_HIDDEN;
+    LPCWSTR CookieAuth, RpcConnection **Connection, BOOL *from_cache) DECLSPEC_HIDDEN;
 void RpcAssoc_ReleaseIdleConnection(RpcAssoc *assoc, RpcConnection *Connection) DECLSPEC_HIDDEN;
 ULONG RpcAssoc_Release(RpcAssoc *assoc) DECLSPEC_HIDDEN;
 RPC_STATUS RpcServerAssoc_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, ULONG assoc_gid, RpcAssoc **assoc_out) DECLSPEC_HIDDEN;
@@ -61,3 +62,4 @@ RPC_STATUS RpcServerAssoc_UpdateContextHandle(RpcAssoc *assoc, NDR_SCONTEXT SCon
 unsigned int RpcServerAssoc_ReleaseContextHandle(RpcAssoc *assoc, NDR_SCONTEXT SContext, BOOL release_lock) DECLSPEC_HIDDEN;
 void RpcContextHandle_GetUuid(NDR_SCONTEXT SContext, UUID *uuid) DECLSPEC_HIDDEN;
 BOOL RpcContextHandle_IsGuardCorrect(NDR_SCONTEXT SContext, void *CtxGuard) DECLSPEC_HIDDEN;
+void RpcAssoc_ConnectionReleased(RpcAssoc *assoc) DECLSPEC_HIDDEN;

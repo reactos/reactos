@@ -272,13 +272,13 @@ RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding)
 
 RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
                               const RPC_SYNTAX_IDENTIFIER *TransferSyntax,
-                              const RPC_SYNTAX_IDENTIFIER *InterfaceId)
+                              const RPC_SYNTAX_IDENTIFIER *InterfaceId, BOOL *from_cache)
 {
   TRACE("(Binding == ^%p)\n", Binding);
 
   if (!Binding->server) {
      return RpcAssoc_GetClientConnection(Binding->Assoc, InterfaceId,
-         TransferSyntax, Binding->AuthInfo, Binding->QOS, Binding->CookieAuth, Connection);
+         TransferSyntax, Binding->AuthInfo, Binding->QOS, Binding->CookieAuth, Connection, from_cache);
   } else {
     /* we already have a connection with acceptable binding, so use it */
     if (Binding->FromConn) {

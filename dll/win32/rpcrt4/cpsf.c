@@ -279,7 +279,7 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
   /* register clsid to point to module */
   strcpyW( keyname, clsidW );
   strcatW( keyname, clsid );
-  len = GetModuleFileNameW(hDll, module, sizeof(module)/sizeof(WCHAR));
+  len = GetModuleFileNameW(hDll, module, ARRAY_SIZE(module));
   if (len && len < sizeof(module)) {
       TRACE("registering CLSID %s => %s\n", debugstr_w(clsid), debugstr_w(module));
       if (RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key) == ERROR_SUCCESS) {

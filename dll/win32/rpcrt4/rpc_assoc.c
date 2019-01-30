@@ -80,6 +80,7 @@ static RPC_STATUS RpcAssoc_Alloc(LPCSTR Protseq, LPCSTR NetworkAddr,
     assoc->Endpoint = RPCRT4_strdupA(Endpoint);
     assoc->NetworkOptions = NetworkOptions ? RPCRT4_strdupW(NetworkOptions) : NULL;
     assoc->assoc_group_id = 0;
+    assoc->connection_cnt = 0;
     UuidCreate(&assoc->http_uuid);
     list_init(&assoc->entry);
     *assoc_out = assoc;
@@ -390,14 +391,18 @@ static RpcConnection *RpcAssoc_GetIdleConnection(RpcAssoc *assoc,
 RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
                                         const RPC_SYNTAX_IDENTIFIER *InterfaceId,
                                         const RPC_SYNTAX_IDENTIFIER *TransferSyntax, RpcAuthInfo *AuthInfo,
-                                        RpcQualityOfService *QOS, LPCWSTR CookieAuth, RpcConnection **Connection)
+                                        RpcQualityOfService *QOS, LPCWSTR CookieAuth,
+                                        RpcConnection **Connection, BOOL *from_cache)
 {
     RpcConnection *NewConnection;
     RPC_STATUS status;
 
     *Connection = RpcAssoc_GetIdleConnection(assoc, InterfaceId, TransferSyntax, AuthInfo, QOS);
-    if (*Connection)
+    if (*Connection) {
+        TRACE("return idle connection %p for association %p\n", *Connection, assoc);
+        if (from_cache) *from_cache = TRUE;
         return RPC_S_OK;
+    }
 
     /* create a new connection */
     status = RPCRT4_CreateConnection(&NewConnection, FALSE /* is this a server connection? */,
@@ -422,8 +427,11 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
         return status;
     }
 
-    *Connection = NewConnection;
+    InterlockedIncrement(&assoc->connection_cnt);
 
+    TRACE("return new connection %p for association %p\n", *Connection, assoc);
+    *Connection = NewConnection;
+    if (from_cache) *from_cache = FALSE;
     return RPC_S_OK;
 }
 
@@ -435,6 +443,15 @@ void RpcAssoc_ReleaseIdleConnection(RpcAssoc *assoc, RpcConnection *Connection)
     if (!assoc->assoc_group_id) assoc->assoc_group_id = Connection->assoc_group_id;
     list_add_head(&assoc->free_connection_pool, &Connection->conn_pool_entry);
     LeaveCriticalSection(&assoc->cs);
+}
+
+void RpcAssoc_ConnectionReleased(RpcAssoc *assoc)
+{
+    if (InterlockedDecrement(&assoc->connection_cnt))
+        return;
+
+    TRACE("Last %p connection released\n", assoc);
+    assoc->assoc_group_id = 0;
 }
 
 RPC_STATUS RpcServerAssoc_AllocateContextHandle(RpcAssoc *assoc, void *CtxGuard,

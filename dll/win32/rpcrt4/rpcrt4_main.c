@@ -854,9 +854,10 @@ LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
 }
 
 /******************************************************************************
+ * RpcExceptionFilter     (rpcrt4.@)
  * I_RpcExceptionFilter   (rpcrt4.@)
  */
-int WINAPI I_RpcExceptionFilter(ULONG ExceptionCode)
+int WINAPI RpcExceptionFilter(ULONG ExceptionCode)
 {
     TRACE("0x%x\n", ExceptionCode);
     switch (ExceptionCode)

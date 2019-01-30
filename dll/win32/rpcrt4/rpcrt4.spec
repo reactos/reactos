@@ -44,7 +44,7 @@
 44 stub I_RpcConnectionSetSockBuffSize
 45 stub I_RpcDeleteMutex
 46 stub I_RpcEnableWmiTrace
-47 stdcall I_RpcExceptionFilter(long)
+47 stdcall I_RpcExceptionFilter(long) RpcExceptionFilter
 48 stdcall I_RpcFree(ptr)
 49 stdcall I_RpcFreeBuffer(ptr)
 50 stub I_RpcFreePipeBuffer

@@ -38,6 +38,7 @@
 #include "rpc_binding.h"
 #include "rpc_defs.h"
 #include "rpc_message.h"
+#include "rpc_assoc.h"
 #include "ncastatus.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
@@ -62,8 +63,8 @@ DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
     0, 0, sizeof(Header->auth3), 0, 0, 0, sizeof(Header->http)
   };
   ULONG ret = 0;
-  
-  if (Header->common.ptype < sizeof(header_sizes) / sizeof(header_sizes[0])) {
+
+  if (Header->common.ptype < ARRAY_SIZE(header_sizes)) {
     ret = header_sizes[Header->common.ptype];
     if (ret == 0)
       FIXME("unhandled packet type %u\n", Header->common.ptype);
@@ -690,7 +691,7 @@ RPC_STATUS RPCRT4_default_secure_packet(RpcConnection *Connection,
     SECURITY_STATUS sec_status;
 
     message.ulVersion = SECBUFFER_VERSION;
-    message.cBuffers = sizeof(buffers)/sizeof(buffers[0]);
+    message.cBuffers = ARRAY_SIZE(buffers);
     message.pBuffers = buffers;
 
     buffers[0].cbBuffer = hdr_size;
@@ -1598,7 +1599,7 @@ RPC_STATUS WINAPI I_RpcNegotiateTransferSyntax(PRPC_MESSAGE pMsg)
     }
 
     status = RPCRT4_OpenBinding(bind, &conn, &cif->TransferSyntax,
-                                &cif->InterfaceId);
+                                &cif->InterfaceId, NULL);
 
     if (status == RPC_S_OK)
     {
@@ -1789,26 +1790,39 @@ static DWORD WINAPI async_notifier_proc(LPVOID p)
 RPC_STATUS WINAPI I_RpcSend(PRPC_MESSAGE pMsg)
 {
   RpcBinding* bind = pMsg->Handle;
+  RPC_CLIENT_INTERFACE *cif;
   RpcConnection* conn;
   RPC_STATUS status;
   RpcPktHdr *hdr;
+  BOOL from_cache = TRUE;
 
   TRACE("(%p)\n", pMsg);
   if (!bind || bind->server || !pMsg->ReservedForRuntime) return RPC_S_INVALID_BINDING;
 
-  conn = pMsg->ReservedForRuntime;
+  for (;;)
+  {
+      conn = pMsg->ReservedForRuntime;
+      hdr = RPCRT4_BuildRequestHeader(pMsg->DataRepresentation,
+                                      pMsg->BufferLength,
+                                      pMsg->ProcNum & ~RPC_FLAGS_VALID_BIT,
+                                      &bind->ObjectUuid);
+      if (!hdr)
+          return ERROR_OUTOFMEMORY;
 
-  hdr = RPCRT4_BuildRequestHeader(pMsg->DataRepresentation,
-                                  pMsg->BufferLength,
-                                  pMsg->ProcNum & ~RPC_FLAGS_VALID_BIT,
-                                  &bind->ObjectUuid);
-  if (!hdr)
-    return ERROR_OUTOFMEMORY;
-  hdr->common.call_id = conn->NextCallId++;
+      hdr->common.call_id = conn->NextCallId++;
+      status = RPCRT4_Send(conn, hdr, pMsg->Buffer, pMsg->BufferLength);
+      RPCRT4_FreeHeader(hdr);
+      if (status == RPC_S_OK || conn->server || !from_cache)
+          break;
 
-  status = RPCRT4_Send(conn, hdr, pMsg->Buffer, pMsg->BufferLength);
-
-  RPCRT4_FreeHeader(hdr);
+      WARN("Send failed, trying to reconnect\n");
+      cif = pMsg->RpcInterfaceInformation;
+      RPCRT4_ReleaseConnection(conn);
+      pMsg->ReservedForRuntime = NULL;
+      status = RPCRT4_OpenBinding(bind, &conn, &cif->TransferSyntax, &cif->InterfaceId, &from_cache);
+      if (status != RPC_S_OK) break;
+      pMsg->ReservedForRuntime = conn;
+  }
 
   if (status == RPC_S_OK && pMsg->RpcFlags & RPC_BUFFER_ASYNC)
   {
