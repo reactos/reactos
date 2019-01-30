@@ -31,9 +31,9 @@
 
 typedef struct
 {
-	LPWSTR lpszFunction;
-	INT nSyscallNum;
-	INT nParams;
+    LPWSTR lpszFunction;
+    INT nSyscallNum;
+    INT nParams;
 } SYCALL_ENTRY, *PSYSCALL_ENTRY;
 
 extern HINSTANCE g_hInstance;

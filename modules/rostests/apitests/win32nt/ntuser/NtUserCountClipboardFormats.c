@@ -10,6 +10,6 @@
 
 START_TEST(NtUserCountClipboardFormats)
 {
-	RTEST(NtUserCountClipboardFormats() < 1000);
+    RTEST(NtUserCountClipboardFormats() < 1000);
 }
 

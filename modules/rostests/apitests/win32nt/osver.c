@@ -16,35 +16,35 @@ ASPI gHWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID = {-1,-1,0x51,-1,0x52};
 
 BOOL InitOsVersion()
 {
-	g_OsVer.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	GetVersionExW((LPOSVERSIONINFOW)&g_OsVer);
-	if (g_OsVer.dwMajorVersion == 4)
-	{
-		g_OsIdx = 0;
-		return TRUE;
-	}
-	else if (g_OsVer.dwMajorVersion == 5)
-	{
-		if (g_OsVer.dwMinorVersion == 0)
-		{
-			g_OsIdx = 1;
-			return TRUE;
-		}
-		else if (g_OsVer.dwMinorVersion == 1)
-		{
-			g_OsIdx = 2;
-			return TRUE;
-		}
-		else if (g_OsVer.dwMinorVersion == 2)
-		{
-			g_OsIdx = 3;
-			return TRUE;
-		}
-	}
-	else if (g_OsVer.dwMajorVersion == 6)
-	{
-		g_OsIdx = 4;
-		return TRUE;
-	}
-	return FALSE;
+    g_OsVer.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    GetVersionExW((LPOSVERSIONINFOW)&g_OsVer);
+    if (g_OsVer.dwMajorVersion == 4)
+    {
+        g_OsIdx = 0;
+        return TRUE;
+    }
+    else if (g_OsVer.dwMajorVersion == 5)
+    {
+        if (g_OsVer.dwMinorVersion == 0)
+        {
+            g_OsIdx = 1;
+            return TRUE;
+        }
+        else if (g_OsVer.dwMinorVersion == 1)
+        {
+            g_OsIdx = 2;
+            return TRUE;
+        }
+        else if (g_OsVer.dwMinorVersion == 2)
+        {
+            g_OsIdx = 3;
+            return TRUE;
+        }
+    }
+    else if (g_OsVer.dwMajorVersion == 6)
+    {
+        g_OsIdx = 4;
+        return TRUE;
+    }
+    return FALSE;
 }
