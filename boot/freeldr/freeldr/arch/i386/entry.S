@@ -65,8 +65,6 @@ ContinueAddress:
 
 _FrldrStartup:
 
-ASSUME /*CS:_TEXT,*/ DS:_DATA, ES:_DATA, FS:_DATA, GS:_DATA, SS:_DATA
-
     /* Store BootDrive and BootPartition */
     mov byte ptr ds:[_FrldrBootDrive], dl
     xor eax, eax
