@@ -153,7 +153,7 @@ _Reboot:
 PUBLIC _ChainLoadBiosBootSectorCode
 _ChainLoadBiosBootSectorCode:
     /* Set the boot drive */
-    mov dl, byte ptr [_FrldrBootDrive]
+    mov dl, byte ptr ds:[_FrldrBootDrive]
 
     /* Set the function ID */
     mov bx, FNID_ChainLoadBiosBootSectorCode
@@ -165,7 +165,7 @@ _ChainLoadBiosBootSectorCode:
 PUBLIC i386CallRealMode
 i386CallRealMode:
     /* Set continue address and switch to real mode */
-    mov dword ptr [ContinueAddress], offset i386CallRealMode_return
+    mov dword ptr ds:[ContinueAddress], offset i386CallRealMode_return
     jmp SwitchToReal
 i386CallRealMode_return:
     ret
