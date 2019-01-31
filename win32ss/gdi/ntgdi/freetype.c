@@ -703,11 +703,11 @@ FtMatrixFromMx(FT_Matrix *pmat, PMATRIX pmx)
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->xx = FLOATOBJ_GetLong(&ef);
 
-    ef = pmx->efM12;
+    ef = pmx->efM21;
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->xy = FLOATOBJ_GetLong(&ef);
 
-    ef = pmx->efM21;
+    ef = pmx->efM12;
     FLOATOBJ_MulLong(&ef, 0x00010000);
     pmat->yx = FLOATOBJ_GetLong(&ef);
 
@@ -5531,7 +5531,7 @@ GreExtTextOutW(
     FT_Face face;
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
-    LONGLONG TextLeft64, TextTop64, TextWidth64, RealXStart64;
+    LONGLONG TextLeft64, TextTop64, DeltaX64, DeltaY64, XStart64, YStart64;
     ULONG previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
@@ -5555,10 +5555,8 @@ GreExtTextOutW(
     BOOL EmuBold, EmuItalic;
     int thickness;
     BOOL bResult;
-    INT DY1, DY2;
-    FT_Matrix mat1, mat2 = identityMat;
+    FT_Matrix mat = identityMat, matWidth, matEscape, matWorld;
     FT_Vector vecs[9];
-    POINT pts[9];
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
@@ -5618,10 +5616,6 @@ GreExtTextOutW(
         Start.x = XStart;
         Start.y = YStart;
     }
-
-    IntLPtoDP(dc, &Start, 1);
-    RealXStart64 = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
-    YStart = Start.y + dc->ptlDCOrig.y;
 
     SourcePoint.x = 0;
     SourcePoint.y = 0;
@@ -5720,55 +5714,39 @@ GreExtTextOutW(
     }
 
     /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
+    DC_vUpdateWorldToDevice(dc);
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
     }
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
-        FtSetCoordinateTransform(face, pmxWorldToDevice);
     }
 
-    /*
-     * Process the vertical alignment and determine DY1 and DY2.
-     */
-#define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
-    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
-    {
-        DY1 = FontGDI->tmAscent;
-        DY2 = FontGDI->tmDescent;
-    }
-    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
-    {
-        DY1 = FontGDI->tmHeight;
-        DY2 = 0;
-    }
-    else /* TA_TOP */
-    {
-        DY1 = 0;
-        DY2 = FontGDI->tmHeight;
-    }
-#undef VALIGN_MASK
+    IntWidthMatrix(face, &matWidth, lfWidth);
+    FT_Matrix_Multiply(&matWidth, &mat);
 
-    IntWidthMatrix(face, &mat1, lfWidth);
-    FT_Matrix_Multiply(&mat1, &mat2);
-    FT_Set_Transform(face, &mat2, NULL);
+    IntEscapeMatrix(&matEscape, lfEscapement);
+    FT_Matrix_Multiply(&matEscape, &mat);
 
-    /*
-     * Calculate width of the text.
-     */
-    TextWidth64 = 0;
+    FtMatrixFromMx(&matWorld, pmxWorldToDevice);
+    matWorld.yx = -matWorld.yx;
+    matWorld.xy = -matWorld.xy;
+    FT_Matrix_Multiply(&matWorld, &mat);
+
+    FT_Set_Transform(face, &mat, NULL);
+
+    // Calculate displacement of the text.
+    DeltaX64 = DeltaY64 = 0;
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
     if ((fuOptions & ETO_OPAQUE) ||
         (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)) ||
-        lfEscapement || plf->lfUnderline || plf->lfStrikeOut)
+        memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
+        plf->lfUnderline || plf->lfStrikeOut)
     {
-        TextLeft64 = RealXStart64;
-        TextTop64 = YStart << 6;
         for (i = 0; i < Count; ++i)
         {
             glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
@@ -5802,50 +5780,52 @@ GreExtTextOutW(
             {
                 FT_Vector delta;
                 FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft64 += delta.x;
+                DeltaX64 += delta.x;
+                DeltaY64 -= delta.y;
             }
 
             if (Dx == NULL)
             {
-                TextLeft64 += realglyph->root.advance.x >> 10;
+                DeltaX64 += realglyph->root.advance.x >> 10;
+                DeltaY64 -= realglyph->root.advance.y >> 10;
             }
             else
             {
-                // FIXME this should probably be a matrix transform with TextTop64 as well.
+                // FIXME this should probably be a matrix transform with DeltaY64 as well.
                 Scale = pdcattr->mxWorldToDevice.efM11;
                 if (FLOATOBJ_Equal0(&Scale))
                     FLOATOBJ_Set1(&Scale);
 
                 /* do the shift before multiplying to preserve precision */
                 FLOATOBJ_MulLong(&Scale, Dx[i << DxShift] << 6);
-                TextLeft64 += FLOATOBJ_GetLong(&Scale);
+                DeltaX64 += FLOATOBJ_GetLong(&Scale);
             }
 
             if (DxShift)
             {
-                TextTop64 -= Dx[2 * i + 1] << 6;
+                DeltaY64 -= Dx[2 * i + 1] << 6;
             }
 
             previous = glyph_index;
 
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
-
-        TextWidth64 = TextLeft64 - RealXStart64;
     }
 
-    /*
-     * Process the horizontal alignment and modify XStart accordingly.
-     */
+    // Process the X and Y alignments.
     if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
     {
-        RealXStart64 -= TextWidth64 / 2;
+        XStart64 = -DeltaX64 / 2;
+        YStart64 = -DeltaY64 / 2;
     }
     else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
     {
-        RealXStart64 -= TextWidth64;
-        if (((RealXStart64 + TextWidth64 + 32) >> 6) <= Start.x + dc->ptlDCOrig.x)
-            RealXStart64 += 1 << 6;
+        XStart64 = -DeltaX64;
+        YStart64 = -DeltaY64;
+    }
+    else
+    {
+        XStart64 = YStart64 = 0;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5866,23 +5846,30 @@ GreExtTextOutW(
             thickness = 1;
     }
 
-    IntEscapeMatrix(&mat1, lfEscapement);
-    FT_Matrix_Multiply(&mat1, &mat2);
-    FT_Set_Transform(face, &mat2, NULL);
-
-    // background rectangle
-    vecs[0].x = 0;
-    vecs[0].y = (DY1 - FontGDI->tmHeight) << 16;    // Top Left
-    vecs[1].x = TextWidth64 << 10;
-    vecs[1].y = (DY1 - FontGDI->tmHeight) << 16;    // Top Right
-    vecs[2].x = TextWidth64 << 10;
-    vecs[2].y = DY1 << 16;                          // Bottom Right
-    vecs[3].x = 0;
-    vecs[3].y = DY1 << 16;                          // Bottom Left
-
-    // the starting point
-    vecs[4].x = 0;
-    vecs[4].y = (DY1 - FontGDI->tmAscent) << 16;
+    /* Process the vertical alignment */
+#define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
+    RtlZeroMemory(vecs, sizeof(vecs));
+    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
+    {
+        vecs[1].y = -FontGDI->tmAscent << 16;   // upper left
+        vecs[4].y = 0;                          // baseline
+        vecs[0].y = FontGDI->tmDescent << 16;   // lower left
+    }
+    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
+    {
+        vecs[1].y = -FontGDI->tmHeight << 16;   // upper left
+        vecs[4].y = -FontGDI->tmDescent << 16;  // baseline
+        vecs[0].y = 0;                          // lower left
+    }
+    else /* TA_TOP */
+    {
+        vecs[1].y = 0;                          // upper left
+        vecs[4].y = FontGDI->tmAscent << 16;    // baseline
+        vecs[0].y = FontGDI->tmHeight << 16;    // lower left
+    }
+    vecs[2] = vecs[1];      // upper right
+    vecs[3] = vecs[0];      // lower right
+#undef VALIGN_MASK
 
     // underline
     if (plf->lfUnderline)
@@ -5893,65 +5880,62 @@ GreExtTextOutW(
             position = face->underline_position *
                 face->size->metrics.y_ppem / face->units_per_EM;
         }
-        vecs[5].x = 0;
-        vecs[5].y = (DY1 - FontGDI->tmAscent + position) << 16;
-        vecs[6].x = TextWidth64 << 10;
-        vecs[6].y = (DY1 - FontGDI->tmAscent + position) << 16;
+        vecs[5].y = vecs[6].y = vecs[4].y - (position << 16);
     }
 
     // strike through
     if (plf->lfStrikeOut)
     {
-        vecs[7].x = 0;
-        vecs[7].y = (DY1 - FontGDI->tmAscent + (FontGDI->tmAscent / 3)) << 16;
-        vecs[8].x = TextWidth64 << 10;
-        vecs[8].y = (DY1 - FontGDI->tmAscent + (FontGDI->tmAscent / 3)) << 16;
+        vecs[7].y = vecs[8].y = vecs[4].y - ((FontGDI->tmAscent / 3) << 16);
     }
 
-    // convert vecs to pts
+    // invert y axis
+    IntEscapeMatrix(&matEscape, -lfEscapement);
+
+    // convert vecs
     for (i = 0; i < 9; ++i)
     {
-        FT_Vector_Transform(&vecs[i], &mat1);
-        pts[i].x = (RealXStart64 >> 6) + (vecs[i].x >> 16);
-        pts[i].y = YStart - (vecs[i].y >> 16);
+        POINT pt;
+        FT_Vector_Transform(&vecs[i], &matWidth);
+        FT_Vector_Transform(&vecs[i], &matEscape);
+        vecs[i].x += (Start.x << 16) + (XStart64 << 10);
+        vecs[i].y += (Start.y << 16) + (YStart64 << 10);
+        pt.x = vecs[i].x >> 16;
+        pt.y = vecs[i].y >> 16;
+        IntLPtoDP(dc, &pt, 1);
+        vecs[i].x = pt.x + dc->ptlDCOrig.x;
+        vecs[i].y = pt.y + dc->ptlDCOrig.y;
     }
+    vecs[2].x += DeltaX64 >> 6;
+    vecs[2].y += DeltaY64 >> 6;     // upper right
+    vecs[3].x += DeltaX64 >> 6;
+    vecs[3].y += DeltaY64 >> 6;     // lower right
+    vecs[6].x += DeltaX64 >> 6;
+    vecs[6].y += DeltaY64 >> 6;     // underline right
+    vecs[8].x += DeltaX64 >> 6;
+    vecs[8].y += DeltaY64 >> 6;     // strike through right
 
     if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
         RECTL Rect;
-        INT X1 = ((RealXStart64 + 32) >> 6);
+        RtlZeroMemory(&Rect, sizeof(Rect));
 
-        switch (lfEscapement)
+        if ((mat.xy == 0 && mat.yx == 0) || (mat.xx == 0 && mat.yy == 0))
         {
-        case 0:
-            Rect.left = X1;
-            Rect.top = ((TextTop64 + 32) >> 6) - DY1;
-            Rect.right = (RealXStart64 + TextWidth64 + 32) >> 6;
-            Rect.bottom = ((TextTop64 + 32) >> 6) + DY2;
-            break;
-        case 90 * 10:
-            Rect.left = X1 - DY1;
-            Rect.top = ((TextTop64 - TextWidth64 + 32) >> 6);
-            Rect.right = X1 + DY2;
-            Rect.bottom = ((TextTop64 + 32) >> 6);
-            break;
-        case 180 * 10:
-            Rect.left = (RealXStart64 - TextWidth64 + 32) >> 6;
-            Rect.top = ((TextTop64 + 32) >> 6) - DY2;
-            Rect.right = X1;
-            Rect.bottom = ((TextTop64 + 32) >> 6) + DY1;
-            break;
-        case 270 * 10:
-            Rect.left = X1 - DY2;
-            Rect.top = ((TextTop64 + 32) >> 6);
-            Rect.right = X1 + DY1;
-            Rect.bottom = ((TextTop64 + TextWidth64 + 32) >> 6);
-            break;
-        default:
-            DPRINT1("FIXME: Not implemented lfEscapement\n");
-            RtlZeroMemory(&Rect, sizeof(Rect));
-            // FIXME: Use pts[0] ... pts[3] and EngFillPath
+            Rect.left = Rect.top = MAXLONG;
+            Rect.right = Rect.bottom = MINLONG;
+            for (i = 0; i < 4; ++i)
+            {
+                Rect.left = min(Rect.left, vecs[i].x);
+                Rect.top = min(Rect.top, vecs[i].y);
+                Rect.right = max(Rect.right, vecs[i].x);
+                Rect.bottom = max(Rect.bottom, vecs[i].y);
+            }
+        }
+        else
+        {
+            // FIXME: Use vecs[0] ... vecs[3] and EngFillPath
         }
 
         if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
@@ -5988,18 +5972,18 @@ GreExtTextOutW(
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-    /*
-     * The main rendering loop.
-     */
+    // The main rendering loop.
     bResult = TRUE;
-    TextLeft64 = pts[4].x << 6;
-    TextTop64 = pts[4].y << 6;
+    TextLeft64 = vecs[4].x << 6;
+    TextTop64 = vecs[4].y << 6;
     previous = 0;
     for (i = 0; i < Count; ++i)
     {
+        BOOL bNeedCache = (!EmuBold && !EmuItalic &&
+                           memcmp(&mat, &identityMat, sizeof(mat)) == 0);
         glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
         realglyph = NULL;
-        if (!EmuBold && !EmuItalic && !lfEscapement)
+        if (bNeedCache)
         {
             realglyph = ftGdiGlyphCacheGet(face, glyph_index, plf->lfHeight,
                                            RenderMode, pmxWorldToDevice);
@@ -6013,17 +5997,8 @@ GreExtTextOutW(
                 bResult = FALSE;
                 break;
             }
-
             glyph = face->glyph;
-            if (EmuBold || EmuItalic || lfEscapement)
-            {
-                if (EmuBold)
-                    FT_GlyphSlot_Embolden(glyph);
-                if (EmuItalic)
-                    FT_GlyphSlot_Oblique(glyph);
-                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            }
-            else
+            if (bNeedCache)
             {
                 realglyph = ftGdiGlyphCacheSet(face,
                                                glyph_index,
@@ -6031,6 +6006,14 @@ GreExtTextOutW(
                                                pmxWorldToDevice,
                                                glyph,
                                                RenderMode);
+            }
+            else
+            {
+                if (EmuBold)
+                    FT_GlyphSlot_Embolden(glyph);
+                if (EmuItalic)
+                    FT_GlyphSlot_Oblique(glyph);
+                realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
             }
             if (!realglyph)
             {
@@ -6046,6 +6029,7 @@ GreExtTextOutW(
             FT_Vector delta;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft64 += delta.x;
+            TextTop64 -= delta.y;
         }
         DPRINT("TextLeft64: %I64d\n", TextLeft64);
         DPRINT("TextTop64: %I64d\n", TextTop64);
@@ -6155,6 +6139,7 @@ GreExtTextOutW(
             TextLeft64 += realglyph->root.advance.x >> 10;
             TextTop64 -= realglyph->root.advance.y >> 10;
             DPRINT("New TextLeft64: %I64d\n", TextLeft64);
+            DPRINT("New TextTop64: %I64d\n", TextTop64);
         }
         else
         {
@@ -6177,7 +6162,7 @@ GreExtTextOutW(
         previous = glyph_index;
 
         /* No cache, so clean up */
-        if (EmuBold || EmuItalic || lfEscapement)
+        if (!bNeedCache)
         {
             FT_Done_Glyph((FT_Glyph)realglyph);
         }
@@ -6185,43 +6170,26 @@ GreExtTextOutW(
 
     if (plf->lfUnderline || plf->lfStrikeOut)
     {
-        INT x0, y0, x1, y1;
-        if (pts[0].x < pts[2].x)
-        {
-            x0 = pts[0].x;
-            x1 = pts[2].x;
-        }
-        else
-        {
-            x0 = pts[2].x;
-            x1 = pts[0].x;
-        }
-        if (pts[0].y < pts[2].y)
-        {
-            y0 = pts[0].y;
-            y1 = pts[2].y;
-        }
-        else
-        {
-            y0 = pts[2].y;
-            y1 = pts[0].y;
-        }
+        INT x0 = min(vecs[0].x, vecs[2].x);
+        INT y0 = min(vecs[0].y, vecs[2].y);
+        INT x1 = max(vecs[0].x, vecs[2].x);
+        INT y1 = max(vecs[0].y, vecs[2].y);
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, x0, y0, x1, y1);
     }
 
     if (plf->lfUnderline)
     {
-        INT i, nEscape = lfEscapement % (180 * 10);
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            if (nEscape < 45 * 10 || nEscape > (180 - 45) * 10)
+            LONG dx = (LONG)(DeltaX64 >> 6), dy = (LONG)(DeltaY64 >> 6);
+            if (labs(dx) > labs(dy))
             {
                 // move vertical
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          pts[5].x, pts[5].y + i,
-                          pts[6].x, pts[6].y + i,
+                          vecs[5].x, vecs[5].y + i,
+                          vecs[6].x, vecs[6].y + i,
                           NULL, ROP2_TO_MIX(R2_COPYPEN));
             }
             else
@@ -6229,8 +6197,8 @@ GreExtTextOutW(
                 // move horizontal
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          pts[5].x + i, pts[5].y,
-                          pts[6].x + i, pts[6].y,
+                          vecs[5].x + i, vecs[5].y,
+                          vecs[6].x + i, vecs[6].y,
                           NULL, ROP2_TO_MIX(R2_COPYPEN));
             }
         }
@@ -6238,16 +6206,16 @@ GreExtTextOutW(
 
     if (plf->lfStrikeOut)
     {
-        INT i, nEscape = lfEscapement % (180 * 10);
         for (i = -thickness / 2; i < -thickness / 2 + thickness; ++i)
         {
-            if (nEscape < 45 * 10 || nEscape > (180 - 45) * 10)
+            LONG dx = (LONG)(DeltaX64 >> 6), dy = (LONG)(DeltaY64 >> 6);
+            if (labs(dx) > labs(dy))
             {
                 // move vertical
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          pts[7].x, pts[7].y + i,
-                          pts[8].x, pts[8].y + i,
+                          vecs[7].x, vecs[7].y + i,
+                          vecs[8].x, vecs[8].y + i,
                           NULL, ROP2_TO_MIX(R2_COPYPEN));
             }
             else
@@ -6255,10 +6223,9 @@ GreExtTextOutW(
                 // move horizontal
                 EngLineTo(SurfObj, (CLIPOBJ *)&dc->co,
                           &dc->eboText.BrushObject,
-                          pts[7].x + i, pts[7].y,
-                          pts[8].x + i, pts[8].y,
-                          NULL,
-                          ROP2_TO_MIX(R2_COPYPEN));
+                          vecs[7].x + i, vecs[7].y,
+                          vecs[8].x + i, vecs[8].y,
+                          NULL, ROP2_TO_MIX(R2_COPYPEN));
             }
         }
     }
