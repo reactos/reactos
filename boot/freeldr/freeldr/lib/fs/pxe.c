@@ -32,7 +32,7 @@ static CHAR _OpenFileName[128];
 static ULONG _FileSize = 0;
 static ULONG _FilePosition = 0;
 static ULONG _PacketPosition = 0;
-static UCHAR _Packet[4096];
+static UCHAR _Packet[1024]; // Should be a value which can be transferred well in one packet over the network
 static UCHAR* _CachedFile = NULL;
 static ULONG _CachedLength = 0;
 
