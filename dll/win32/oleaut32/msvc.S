@@ -17,6 +17,10 @@ call_method:
     int 2ch
     ret
 
+PUBLIC call_double_method
+call_double_method:
+    jmp call_method
+
 #else
 
 #include <asm.inc>
