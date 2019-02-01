@@ -77,7 +77,8 @@ AddDialogControl(
 {
     RECT rect;
     LPWORD Offset;
-    LPWSTR ClassName, WindowName = NULL;
+    LPWSTR ClassName, WindowName;
+    WCHAR WindowIdBuf[sizeof("#65535")];
     HWND hwnd;
     DWORD wID;
     INT nSteps, i;
@@ -109,32 +110,42 @@ AddDialogControl(
         {
             case 0x80:
                 ClassName = L"button";
-                WindowName = (LPWSTR)(Offset + 1);
                 break ;
             case 0x82:
                 ClassName = L"static";
-                WindowName = (LPWSTR)(Offset + 1);
                 break;
             default:
                /* FIXME */
                assert(0);
                ClassName = NULL;
         }
+        Offset++;
     }
     else
     {
         /* class name is encoded as string */
-        ClassName = (LPWSTR)Offset;
+        ClassName = (LPWSTR)(Offset);
 
         /* move offset to the end of class string */
-        Offset += wcslen(ClassName);
-
-        /* get window name */
-        WindowName = (LPWSTR)(Offset + 1);
+        Offset += wcslen(ClassName) + 1;
     }
-    
-    /* move offset past class type/string */
-    Offset++;
+
+    if (*Offset == 0xFFFF)
+    {
+        /* Window name is encoded as ordinal */
+        Offset++;
+        wsprintf(WindowIdBuf, L"#%u", (DWORD)*Offset);
+        WindowName = WindowIdBuf;
+        Offset++;
+    }
+    else
+    {
+        /* window name is encoded as string */
+        WindowName = (LPWSTR)(Offset);
+
+        /* move offset to the end of class string */
+        Offset += wcslen(WindowName) + 1;
+    }
 
     if (DialogItem->id == MAXWORD)
     {
@@ -242,11 +253,6 @@ AddDialogControl(
         SendMessageW(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    if (WindowName != NULL)
-    {
-        /* move offset past window name */
-        Offset += wcslen(WindowName) + 1;
-    }
 
     /* check if there is additional data */
     if (*Offset == 0)

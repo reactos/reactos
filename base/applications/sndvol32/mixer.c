@@ -610,3 +610,41 @@ SndMixerIsDisplayControl(PSND_MIXER Mixer,
 
     return FALSE;
 }
+
+LPMIXERLINE
+SndMixerGetLineByName(PSND_MIXER Mixer,
+                      DWORD LineID,
+                      LPWSTR LineName)
+{
+    PSND_MIXER_DESTINATION Line;
+    PSND_MIXER_CONNECTION Connection;
+
+    if (Mixer->hmx == 0)
+        return NULL;
+
+    for (Line = Mixer->Lines; Line != NULL; Line = Line->Next)
+    {
+        if (Line->Info.dwLineID == LineID)
+        {
+            if (Line->DisplayControls != 0)
+            {
+                if (wcsicmp(Line->Info.szName, LineName) == 0)
+                {
+                    return &Line->Info;
+                }
+            }
+
+            for (Connection = Line->Connections; Connection != NULL; Connection = Connection->Next)
+            {
+                if (wcsicmp(Connection->Info.szName, LineName) == 0)
+                {
+                    return &Connection->Info;
+                }
+            }
+
+            return NULL;
+        }
+    }
+
+    return NULL;
+}

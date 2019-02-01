@@ -1,0 +1,234 @@
+/* Translated by Luo Yufan 2019 <njlyf2011@hotmail.com> */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME   "ImageSoft"
+  IDS_VERSION   "v0.1"
+END
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "文件(&F)"
+  BEGIN
+    MENUITEM "新建(&N)...",             ID_NEW
+    MENUITEM "打开(&O)...",            ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "关闭(&C)\tCtrl+F4",     ID_CLOSE,   GRAYED
+    MENUITEM "全部关闭(&L)",          ID_CLOSEALL,GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "保存(&S)",               ID_SAVE,    GRAYED
+    MENUITEM "另存为(&A)...",         ID_SAVEAS,  GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "打印预览(&V)",      ID_PRINTPRE,GRAYED
+    MENUITEM "打印(&P)...",           ID_PRINT,   GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "属性(&O)...",      ID_PROP,    GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "退出(&X)\tAlt+F4",       ID_EXIT
+  END
+  POPUP "编辑(&E)"
+  BEGIN
+    MENUITEM "撤销(&U)",               ID_UNDO,    GRAYED
+    MENUITEM "重做(&R)",               ID_REDO,    GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "剪切(&T)",                ID_CUT,     GRAYED
+    MENUITEM "复制(&C)",               ID_COPY,    GRAYED
+    MENUITEM "粘贴(&P)",              ID_PASTE,   GRAYED
+    MENUITEM "粘贴为新图像(&I)", ID_PASTENEWIMAGE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "全选(&A)",         ID_SELALL,  GRAYED
+  END
+  POPUP "视图(&V)"
+  BEGIN
+    MENUITEM "工具(&T)",              ID_TOOLS
+    MENUITEM "颜色(&C)",             ID_COLOR
+    MENUITEM "历史(&H)",            ID_HISTORY
+    MENUITEM "状态栏(&S)",         ID_STATUSBAR
+  END
+  POPUP "调整(&A)"
+  BEGIN
+    MENUITEM "亮度...",       ID_BRIGHTNESS
+    MENUITEM "对比度...",         ID_CONTRAST
+    MENUITEM "色调/对比度...",   -1, GRAYED
+    POPUP "颜色"
+    BEGIN
+      MENUITEM "黑白",   ID_BLACKANDWHITE
+      MENUITEM "反色",     ID_INVERTCOLORS
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "模糊",                ID_BLUR
+    MENUITEM "锐化",             ID_SHARPEN
+    MENUITEM "平滑边缘",        -1, GRAYED
+    MENUITEM "添加阴影",          -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "图像大小...",       -1, GRAYED
+    MENUITEM "翻转",                -1, GRAYED
+    MENUITEM "镜像",              -1, GRAYED
+    MENUITEM "旋转",              -1, GRAYED
+
+  END
+  POPUP "颜色(&C)"
+  BEGIN
+    MENUITEM "编辑颜色(&E)...", ID_EDITCOLOURS
+  END
+  POPUP "窗口(&W)"
+  BEGIN
+    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
+    MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
+    MENUITEM "Tile &Vertically",   ID_WINDOW_TILE_VERT
+    MENUITEM "&Arrange Icons",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Nex&t\tCtrl+F6",     ID_WINDOW_NEXT
+  END
+  POPUP "帮助(&H)"
+  BEGIN
+    MENUITEM "关于(&A)...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM SEPARATOR
+  END
+END
+
+
+IDD_BRIGHTNESS DIALOGEX 6, 5, 193, 120
+CAPTION "亮度"
+FONT 9,"宋体", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT      "", IDC_PICPREVIEW, 0, 1, 132, 96, SS_OWNERDRAW | SS_SUNKEN
+  LTEXT      "Color form:", IDC_STATIC, 135, 5, 36, 9
+  GROUPBOX   "", IDC_BRI_GROUP, 138 ,30, 50, 48
+  CONTROL    "Full (RGB)", IDC_BRI_FULL, "Button", BS_AUTORADIOBUTTON, 138, 18, 46, 9
+  CONTROL    "Red", IDC_BRI_RED, "Button", BS_AUTORADIOBUTTON, 142, 38, 42, 9
+  CONTROL    "Green", IDC_BRI_GREEN, "Button", BS_AUTORADIOBUTTON, 142, 51, 42, 9
+  CONTROL    "Blue", IDC_BRI_BLUE, "Button", BS_AUTORADIOBUTTON, 142, 64, 42, 9
+  EDITTEXT   IDC_BRI_EDIT, 98, 103, 28, 13
+  CONTROL    "", IDC_BRI_TRACKBAR, "msctls_trackbar32", TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 2, 105, 90, 11
+  PUSHBUTTON "OK", IDOK, 142, 88, 48, 13
+  PUSHBUTTON "Cancel", IDCANCEL, 142, 105, 48, 13
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,210,182
+CAPTION "关于 ImageSoft"
+FONT 9,"宋体",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+//EXSTYLE WS_EX_LAYERED
+BEGIN
+  LTEXT      "ImageSoft v0.1\nCopyright (C) 2006\nThomas Weidenmueller (w3seek@reactos.org)\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "关闭", IDOK, 75, 162, 44, 15
+  ICON       IDI_IMAGESOFTICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT   IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+IDD_IMAGE_PROP DIALOGEX 6, 5, 156, 163
+CAPTION "图像属性"
+FONT 9,"宋体",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT      "名称:", IDC_STATIC, 12, 5, 38, 9
+  EDITTEXT   IDC_IMAGE_NAME_EDIT,  58, 3, 94, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  GROUPBOX   "画布属性", IDC_STATIC, 4, 22, 148, 98
+  LTEXT      "图像类型:", IDC_STATIC, 12, 36, 42, 9
+  CONTROL    "", IDC_IMAGETYPE, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 35, 88, 54
+  LTEXT      "宽度:", IDC_STATIC, 12, 51, 42, 9
+  EDITTEXT   IDC_WIDTH_EDIT, 58, 49, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
+  LTEXT      "", IDC_WIDTH_STAT, 94, 51, 40, 9
+  LTEXT      "高度:", IDC_STATIC, 12, 68, 42, 9
+  EDITTEXT   IDC_HEIGHT_EDIT, 58, 66, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
+  LTEXT      "", IDC_HEIGHT_STAT, 94, 68, 40, 9
+  LTEXT      "分辨率:", IDC_STATIC, 12, 84, 42, 9
+  EDITTEXT   IDC_RES_EDIT, 58, 83, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
+  LTEXT      "", IDC_RES_STAT, 94, 84, 40, 9
+  LTEXT      "单元:", IDC_STATIC, 12, 99, 42, 9
+  CONTROL    "", IDC_UNIT, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 99, 54, 50
+  LTEXT      "图像大小:", IDC_STATIC, 12, 125, 42, 9
+  LTEXT      "", IDC_IMAGE_SIZE, 58, 125, 54, 9
+  PUSHBUTTON "确定", IDOK, 50, 144, 48, 13
+  PUSHBUTTON "取消", IDCANCEL, 102, 144, 48, 13
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "本程序为自由软件; 您可以根据自由软件基金会发布的 GNU 通用公共许可证的第 2 版，或（根据您的选择）任何更高版本的条款进行重新分发和修改它。\r\n\r\n本程序的发布是希望它有用，但没有任何担保; 甚至没有适销性或特定用途适用性的暗示保证。 有关详细信息，请参阅 GNU 通用公共许可证。\r\n\r\n您应该已收到 GNU 通用公共许可证的副本以及本程序; 如果没有，请写信给 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA。"
+  IDS_READY             " 准备就绪。"
+  IDS_TOOLBAR_STANDARD  "标准"
+  IDS_TOOLBAR_TEST      "Test"
+  IDS_IMAGE_NAME        "图像 %1!u!"
+  IDS_FLT_TOOLS         "工具"
+  IDS_FLT_COLORS        "颜色"
+  IDS_FLT_HISTORY       "历史"
+END
+
+/* imageprop.c */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_IMAGE_MONOCHROME  "Monochrome (1 bit)"
+  IDS_IMAGE_GREYSCALE   "Grayscale (8 bit)"
+  IDS_IMAGE_PALETTE     "Palette or 256 color (8 bit)"
+  IDS_IMAGE_TRUECOLOR   "True color (24 bit)"
+
+  IDS_UNIT_PIXELS       "Pixels"
+  IDS_UNIT_CM           "Cm"
+  IDS_UNIT_INCHES       "Inches"
+  IDS_UNIT_DOTSCM       "Dots / Cm"
+  IDS_UNIT_DPI          "DPI"
+  IDS_UNIT_KB           "%d KB"
+  IDS_UNIT_MB           "%d MB"
+END
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "新建"
+  IDS_TOOLTIP_OPEN      "打开"
+  IDS_TOOLTIP_SAVE      "保存"
+  IDS_TOOLTIP_PRINTPRE  "打印预览"
+  IDS_TOOLTIP_PRINT     "打印"
+  IDS_TOOLTIP_CUT       "剪切"
+  IDS_TOOLTIP_COPY      "复制"
+  IDS_TOOLTIP_PASTE     "粘贴"
+  IDS_TOOLTIP_UNDO      "撤销"
+  IDS_TOOLTIP_REDO      "重做"
+END
+
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " 创建一个新文档。"
+  IDS_HINT_OPEN         " 打开现有文档。"
+  IDS_HINT_CLOSE        " 关闭此窗口。"
+  IDS_HINT_CLOSEALL     " 关闭所有窗口。"
+  IDS_HINT_SAVE         " 保存活动文档。"
+  IDS_HINT_SAVEAS       " 使用新名称保存活动文档。"
+  IDS_HINT_PRINTPRE     " 预览要被打印的文档。"
+  IDS_HINT_PRINT        " 打印活动文档。"
+  IDS_HINT_PROP         " 显示活动图像的属性。"
+  IDS_HINT_EXIT         " 退出此应用程序。"
+
+  IDS_HINT_TOOLS        " 显示或隐藏工具浮动窗口。"
+  IDS_HINT_COLORS       " 显示或隐藏颜色浮动窗口。"
+  IDS_HINT_HISTORY      " 显示或隐藏历史浮动窗口。"
+  IDS_HINT_STATUS       " 显示或隐藏状态栏。"
+
+  IDS_HINT_CASCADE      " Arrange windows so they overlap."
+  IDS_HINT_TILE_HORZ    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_TILE_VERT    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_ARRANGE      " Arrange icons at the bottom of the window."
+  IDS_HINT_NEXT         " Activates the next window."
+
+  IDS_HINT_SYS_RESTORE  " 将此窗口恢复为正常大小。"
+  IDS_HINT_SYS_MOVE     " 移动此窗口。"
+  IDS_HINT_SYS_SIZE     " 调整此窗口的大小。"
+  IDS_HINT_SYS_MINIMIZE " 将此窗口折叠为图标。"
+  IDS_HINT_SYS_MAXIMIZE " 展开此窗口以填充此屏幕。"
+END

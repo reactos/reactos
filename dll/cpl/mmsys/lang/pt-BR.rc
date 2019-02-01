@@ -10,8 +10,8 @@ BEGIN
     GROUPBOX "Device volume", -1, 7, 30, 230, 100, WS_GROUP
     CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
     CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 20
-    LTEXT "Low", -1, 62, 66, 30, 9
-    LTEXT "High", -1, 195, 66, 30, 9
+    LTEXT "Low", IDC_VOLUME_LOW, 62, 66, 30, 9
+    LTEXT "High", IDC_VOLUME_HIGH, 195, 66, 30, 9
     AUTOCHECKBOX "&Mute", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     AUTOCHECKBOX "Place volume &icon in the taskbar", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "Ad&vanced...", IDC_ADVANCED_BTN, 150, 105, 75, 15

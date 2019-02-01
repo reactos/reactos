@@ -25,7 +25,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "網際網路設定"
+    IDS_CPL_NAME        "網際網路選項"
     IDS_CPL_INFO        "配置 Wine 網際網路瀏覽器和相關的設定"
     IDS_SEC_SETTINGS    "區域的安全設定: "
     IDS_SEC_LEVEL0      "自訂"

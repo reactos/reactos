@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Application compatibility module
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Registry layer manipulation functions
- * COPYRIGHT:   Copyright 2015-2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #define WIN32_NO_STATUS
@@ -176,7 +176,7 @@ BOOL SdbpResolvePath(PSDB_TMP_STR LongPath, PCWSTR wszPath)
 }
 
 static ACCESS_MASK g_QueryFlag = 0xffffffff;
-ACCESS_MASK QueryFlag(void)
+ACCESS_MASK Wow64QueryFlag(void)
 {
     if (g_QueryFlag == 0xffffffff)
     {
@@ -216,7 +216,7 @@ NTSTATUS SdbpOpenKey(PUNICODE_STRING FullPath, BOOL bMachine, ACCESS_MASK Access
         RtlFreeUnicodeString(&BasePath);
     RtlAppendUnicodeToString(FullPath, LayersKey);
 
-    Status = NtOpenKey(KeyHandle, Access | QueryFlag(), &ObjectLayer);
+    Status = NtOpenKey(KeyHandle, Access | Wow64QueryFlag(), &ObjectLayer);
     if (!NT_SUCCESS(Status))
     {
         SHIM_ERR("Unable to open Key  \"%wZ\" Status 0x%lx\n", FullPath, Status);

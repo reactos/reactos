@@ -175,11 +175,20 @@ PnpRegSzToString(IN PWCHAR RegSzData,
     PWCHAR p, pp;
 
     /* Find the end */
-    pp = RegSzData + RegSzLength;
-    for (p = RegSzData; p < pp; p++) if (!*p) break;
+    pp = RegSzData + RegSzLength / sizeof(WCHAR);
+    for (p = RegSzData; p < pp; p++)
+    {
+        if (!*p)
+        {
+            break;
+        }
+    }
 
-    /* Return it */
-    if (StringLength) *StringLength = (USHORT)(p - RegSzData) * sizeof(WCHAR);
+    /* Return the length. Truncation can happen but is of no consequence. */
+    if (StringLength)
+    {
+        *StringLength = (USHORT)(p - RegSzData) * sizeof(WCHAR);
+    }
     return TRUE;
 }
 

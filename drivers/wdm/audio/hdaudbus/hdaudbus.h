@@ -64,8 +64,9 @@ typedef struct
 {
 	BOOLEAN IsFDO;
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	PUCHAR RegBase;
+	SIZE_T RegLength;
 	PKINTERRUPT Interrupt;
 
 	ULONG CorbLength;
@@ -83,6 +84,7 @@ typedef struct
 typedef struct
 {
 	BOOLEAN IsFDO;
+	BOOLEAN ReportedMissing;
 	PHDA_CODEC_ENTRY Codec;
 	PHDA_CODEC_AUDIO_GROUP AudioGroup;
 	PDEVICE_OBJECT FDO;
@@ -128,6 +130,12 @@ HDA_FDOStartDevice(
 
 NTSTATUS
 NTAPI
+HDA_FDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp);
+
+NTSTATUS
+NTAPI
 HDA_FDOQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
@@ -141,6 +149,10 @@ HDA_SendVerbs(
     IN ULONG Count);
 
 /* pdo.cpp*/
+
+NTSTATUS
+HDA_PDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 HDA_PDOQueryBusInformation(
@@ -170,12 +182,3 @@ NTSTATUS
 HDA_PDOHandleQueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
-
-/* hdaudbus.cpp*/
-
-NTSTATUS
-NTAPI
-HDA_SyncForwardIrp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-

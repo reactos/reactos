@@ -31,6 +31,11 @@ typedef struct _DLG_DATA
 {
     PGINA_CONTEXT pgContext;
     HBITMAP hBitmap;
+    HBITMAP hBarBitmap;
+    UINT_PTR TimerID;
+    DWORD BarCounter;
+    DWORD BarWidth;
+    DWORD BarHeight;
 } DLG_DATA, *PDLG_DATA;
 
 static BOOL
@@ -111,7 +116,10 @@ StatusDialogProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
+
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -127,6 +135,82 @@ StatusDialogProc(
                 SetWindowTextW(hwndDlg, msg->pTitle);
             SetDlgItemTextW(hwndDlg, IDC_STATUS_MESSAGE, msg->pMessage);
             SetEvent(msg->StartupEvent);
+
+            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+
+            if (pDlgData == NULL)
+                return FALSE;
+
+            /* Load the bar bitmap */
+            pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            if (pDlgData->hBarBitmap)
+            {
+                BITMAP bm;
+
+                GetObject(pDlgData->hBarBitmap, sizeof(BITMAP), &bm);
+                pDlgData->BarWidth = bm.bmWidth;
+                pDlgData->BarHeight = bm.bmHeight;
+                pDlgData->TimerID = SetTimer(hwndDlg, -1, 20, NULL);
+            }
+            return TRUE;
+        }
+
+        case WM_TIMER:
+        {
+            if (pDlgData)
+            {
+                /*
+                 * Default rotation bar image width is 413 (same as logo)
+                 * We can divide 413 by 7 without remainder
+                 */
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
+                InvalidateRect(hwndDlg, NULL, FALSE);
+                UpdateWindow(hwndDlg);
+            }
+            return TRUE;
+        }
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
+
+            if (lpDis->CtlID != IDC_BAR)
+            {
+                return FALSE;
+            }
+
+            if (pDlgData && pDlgData->hBarBitmap)
+            {
+                HDC hdcMem;
+                HGDIOBJ hOld;
+                DWORD off = pDlgData->BarCounter;
+                DWORD iw = pDlgData->BarWidth;
+                DWORD ih = pDlgData->BarHeight;
+
+                hdcMem = CreateCompatibleDC(lpDis->hDC);
+                hOld = SelectObject(hdcMem, pDlgData->hBarBitmap);
+                BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
+                BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
+                SelectObject(hdcMem, hOld);
+                DeleteDC(hdcMem);
+
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        case WM_DESTROY:
+        {
+            if (pDlgData)
+            {
+                if (pDlgData->hBarBitmap)
+                {
+                    KillTimer(hwndDlg, pDlgData->TimerID);
+                    DeleteObject(pDlgData->hBarBitmap);
+                }
+                HeapFree(GetProcessHeap(), 0, pDlgData);
+            }
             return TRUE;
         }
     }

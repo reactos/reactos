@@ -232,6 +232,16 @@ typedef struct _PROTOCOL_ENUM_CONTEXT
     INT ErrorCode;
 } PROTOCOL_ENUM_CONTEXT, *PPROTOCOL_ENUM_CONTEXT;
 
+typedef struct _PROVIDER_ENUM_CONTEXT
+{
+    GUID ProviderId;
+    LPWSTR ProviderDllPath;
+    INT ProviderDllPathLen;
+    DWORD FoundPathLen;
+    DWORD Found;
+    INT ErrorCode;
+} PROVIDER_ENUM_CONTEXT, *PPROVIDER_ENUM_CONTEXT;
+
 typedef struct _WS_BUFFER
 {
     ULONG_PTR Position;

@@ -309,23 +309,29 @@ BasepCheckBadapp(IN HANDLE FileHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-VOID
+BOOL
 WINAPI
 BaseDumpAppcompatCache(VOID)
 {
-    STUB;
+    NTSTATUS Status;
+
+    Status = NtApphelpCacheControl(ApphelpCacheServiceDump, NULL);
+    return NT_SUCCESS(Status);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-VOID
+BOOL
 WINAPI
 BaseFlushAppcompatCache(VOID)
 {
-    STUB;
+    NTSTATUS Status;
+
+    Status = NtApphelpCacheControl(ApphelpCacheServiceFlush, NULL);
+    return NT_SUCCESS(Status);
 }
 
 /*

@@ -882,7 +882,7 @@ typedef struct _DEVICE_NODE
     LIST_ENTRY LegacyBusListEntry;
     ULONG DriverUnloadRetryCount;
     struct _DEVICE_NODE *PreviousParent;
-    ULONG DeletedChidren;
+    ULONG DeletedChildren;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG NumaNodeIndex;
 #endif

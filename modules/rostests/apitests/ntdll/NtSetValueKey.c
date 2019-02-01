@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for NtSetValueKey
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Test for NtSetValueKey
+ * COPYRIGHT:   Copyright 2016-2019 Thomas Faber (thomas.faber@reactos.org)
  */
 
 #include "precomp.h"
@@ -24,6 +24,9 @@ START_TEST(NtSetValueKey)
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
     ULONG PartialInfoLength;
     ULONG ResultLength;
+    ULONG DataLength;
+    PWCHAR LargeBuffer;
+    ULONG LargeBufferLength;
     const struct
     {
         ULONG Type;
@@ -89,14 +92,20 @@ START_TEST(NtSetValueKey)
         return;
     }
 
-    PartialInfoLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[128]);
-    PartialInfo = HeapAlloc(GetProcessHeap(), 0, PartialInfoLength);
-    if (PartialInfo == NULL)
+    LargeBufferLength = 0x20000;
+    LargeBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, LargeBufferLength);
+
+    PartialInfoLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[LargeBufferLength]);
+    PartialInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, PartialInfoLength);
+
+    if (LargeBuffer == NULL || PartialInfo == NULL)
     {
+        RtlFreeHeap(GetProcessHeap(), 0, LargeBuffer);
+        RtlFreeHeap(GetProcessHeap(), 0, PartialInfo);
         NtDeleteKey(KeyHandle);
         NtClose(KeyHandle);
         NtClose(ParentKeyHandle);
-        skip("No key handle\n");
+        skip("Could not allocate buffers\n");
         return;
     }
 
@@ -194,7 +203,32 @@ START_TEST(NtSetValueKey)
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, PartialInfo);
+    /* String value larger than MAXUSHORT */
+    {
+    const ULONG DataLengths[] = { 0x10000, 0x10002, 0x20000 };
+
+    RtlInitUnicodeString(&ValueName, L"ExistingValue");
+    for (i = 0; i < RTL_NUMBER_OF(DataLengths); i++)
+    {
+        DataLength = DataLengths[i];
+        RtlFillMemoryUlong(LargeBuffer, DataLength, '\0B\0A');
+        LargeBuffer[DataLength / sizeof(WCHAR) - 2] = L'C';
+        LargeBuffer[DataLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        Status = NtSetValueKey(KeyHandle, &ValueName, 0, REG_SZ, LargeBuffer, DataLength);
+        ok(Status == STATUS_SUCCESS, "[0x%lx] NtSetValueKey failed with %lx", DataLength, Status);
+
+        RtlZeroMemory(PartialInfo, PartialInfoLength);
+        Status = NtQueryValueKey(KeyHandle, &ValueName, KeyValuePartialInformation, PartialInfo, PartialInfoLength, &ResultLength);
+        ok(Status == STATUS_SUCCESS, "[0x%lx] NtQueryValueKey failed with %lx\n", DataLength, Status);
+        ok(PartialInfo->TitleIndex == 0, "[0x%lx] TitleIndex = %lu\n", DataLength, PartialInfo->TitleIndex);
+        ok(PartialInfo->Type == REG_SZ, "[0x%lx] Type = %lu\n", DataLength, PartialInfo->Type);
+        ok(PartialInfo->DataLength == DataLength, "[0x%lx] DataLength = %lu\n", DataLength, PartialInfo->DataLength);
+        ok(!memcmp(PartialInfo->Data, LargeBuffer, DataLength), "[0x%lx] Data does not match set value\n", DataLength);
+    }
+    }
+
+    RtlFreeHeap(GetProcessHeap(), 0, LargeBuffer);
+    RtlFreeHeap(GetProcessHeap(), 0, PartialInfo);
     Status = NtDeleteKey(KeyHandle);
     ok(Status == STATUS_SUCCESS, "NtDeleteKey returned %lx\n", Status);
     Status = NtClose(KeyHandle);

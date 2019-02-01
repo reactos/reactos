@@ -72,6 +72,20 @@ typedef struct tagSDBQUERYRESULT {
     GUID   rgGuidDB[SDB_MAX_SDBS];
 } SDBQUERYRESULT, *PSDBQUERYRESULT;
 
+
+#define DB_INFO_FLAGS_VALID_GUID    1
+
+typedef struct _DB_INFORMATION
+{
+    DWORD dwFlags;
+    DWORD dwMajor;
+    DWORD dwMinor;
+    LPCWSTR Description;
+    GUID Id;
+    /* Win10+ has an extra field here */
+} DB_INFORMATION, *PDB_INFORMATION;
+
+
 #ifndef APPHELP_NOSDBPAPI
 #include "sdbpapi.h"
 #endif
@@ -91,6 +105,8 @@ HRESULT WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
 LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid);
 TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData);
+BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information);
+VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information);
 
 
 /* sdbread.c */
