@@ -869,11 +869,12 @@ UniAtaAhciValidateVersion(
     case 0x00010100:
     case 0x00010200:
     case 0x00010300:
+    case 0x00010301:
         break;
     default:
         KdPrint2((PRINT_PREFIX "  Unknown AHCI revision\n"));
         if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"CheckAhciRevision", Strict)) {
-            KdPrint(("  AHCI revision excluded\n"));
+            KdPrint(("  AHCI revision excluded %#x\n", version));
             return FALSE;
         }
     }
@@ -966,7 +967,7 @@ UniataAhciDetect(
 
     CAP = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP);
     CAP2 = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP2);
-    KdPrint2((PRINT_PREFIX "  AHCI CAP %#x, CAP2 %#x\n", CAP, CAP2));
+    KdPrint2((PRINT_PREFIX "  AHCI CAP %#x, CAP2 %#x, ver %#x\n", CAP, CAP2, version));
     if(CAP & AHCI_CAP_S64A) {
         KdPrint2((PRINT_PREFIX "  64bit"));
         //deviceExtension->Host64 = TRUE; // this is just DETECT, do not update anything
