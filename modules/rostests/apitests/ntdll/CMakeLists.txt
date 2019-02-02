@@ -15,6 +15,7 @@ list(APPEND SOURCE
     NtCreateKey.c
     NtCreateThread.c
     NtDeleteKey.c
+    NtDuplicateObject.c
     NtFreeVirtualMemory.c
     NtLoadUnloadKey.c
     NtMapViewOfSection.c
