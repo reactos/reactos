@@ -570,6 +570,19 @@ HRESULT WINAPI InitPropVariantFromBuffer(const VOID *pv, UINT cb, PROPVARIANT *p
     return S_OK;
 }
 
+HRESULT WINAPI InitPropVariantFromCLSID(REFCLSID clsid, PROPVARIANT *ppropvar)
+{
+    TRACE("(%s %p)\n", debugstr_guid(clsid), ppropvar);
+
+    ppropvar->u.puuid = CoTaskMemAlloc(sizeof(*ppropvar->u.puuid));
+    if(!ppropvar->u.puuid)
+        return E_OUTOFMEMORY;
+
+    ppropvar->vt = VT_CLSID;
+    memcpy(ppropvar->u.puuid, clsid, sizeof(*ppropvar->u.puuid));
+    return S_OK;
+}
+
 HRESULT WINAPI InitVariantFromBuffer(const VOID *pv, UINT cb, VARIANT *pvar)
 {
     SAFEARRAY *arr;

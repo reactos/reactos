@@ -30,7 +30,7 @@
 @ stdcall -private DllUnregisterServer()
 @ stub InitPropVariantFromBooleanVector
 @ stdcall InitPropVariantFromBuffer(ptr long ptr)
-@ stub InitPropVariantFromCLSID
+@ stdcall InitPropVariantFromCLSID(ptr ptr)
 @ stub InitPropVariantFromDoubleVector
 @ stub InitPropVariantFromFileTime
 @ stub InitPropVariantFromFileTimeVector
