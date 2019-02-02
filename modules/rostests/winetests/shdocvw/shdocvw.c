@@ -207,7 +207,7 @@ static void test_ParseURLFromOutsideSourceA(void)
         return;
     }
 
-    for(i = 0; i < sizeof(ParseURL_table)/sizeof(ParseURL_table[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(ParseURL_table); i++) {
         memset(buffer, '#', sizeof(buffer)-1);
         buffer[sizeof(buffer)-1] = '\0';
         len = sizeof(buffer);
@@ -306,7 +306,7 @@ static void test_ParseURLFromOutsideSourceW(void)
     MultiByteToWideChar(CP_ACP, 0, bufferA, -1, bufferW, INTERNET_MAX_URL_LENGTH);
 
     /* len is in characters */
-    len = sizeof(bufferW)/sizeof(bufferW[0]);
+    len = ARRAY_SIZE(bufferW);
     dummy = 0;
     /* on success, 1 is returned for unicode version */
     res = pParseURLFromOutsideSourceW(urlW, bufferW, &len, &dummy);
