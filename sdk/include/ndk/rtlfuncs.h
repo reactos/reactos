@@ -2777,8 +2777,8 @@ NTSTATUS
 NTAPI
 RtlComputePrivatizedDllName_U(
     _In_ PUNICODE_STRING DllName,
-    _Out_ PUNICODE_STRING RealName,
-    _Out_ PUNICODE_STRING LocalName
+    _Inout_ PUNICODE_STRING RealName,
+    _Inout_ PUNICODE_STRING LocalName
 );
 
 NTSYSAPI

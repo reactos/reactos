@@ -47,6 +47,11 @@ const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
 const UNICODE_STRING RtlpDoubleSlashPrefix   = RTL_CONSTANT_STRING(L"\\\\");
 
+static const UNICODE_STRING RtlpDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
+static const UNICODE_STRING RtlpDotLocal = RTL_CONSTANT_STRING(L".Local\\");
+static const UNICODE_STRING RtlpPathDividers = RTL_CONSTANT_STRING(L"\\/");
+
+
 PRTLP_CURDIR_REF RtlpCurDirRef;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -459,12 +464,150 @@ RtlGetLengthWithoutLastFullDosOrNtPathElement(IN ULONG Flags,
 
 NTSTATUS
 NTAPI
-RtlComputePrivatizedDllName_U(IN PUNICODE_STRING DllName,
-                              IN PUNICODE_STRING a2,
-                              IN PUNICODE_STRING a3)
+RtlComputePrivatizedDllName_U(
+    _In_ PUNICODE_STRING DllName,
+    _Inout_ PUNICODE_STRING RealName,
+    _Inout_ PUNICODE_STRING LocalName)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    static const UNICODE_STRING ExtensionChar = RTL_CONSTANT_STRING(L".");
+
+    USHORT Position;
+    UNICODE_STRING ImagePathName, DllNameOnly, CopyRealName, CopyLocalName;
+    BOOLEAN HasExtension;
+    ULONG RequiredSize;
+    NTSTATUS Status;
+    C_ASSERT(sizeof(UNICODE_NULL) == sizeof(WCHAR));
+
+    CopyRealName = *RealName;
+    CopyLocalName = *LocalName;
+
+
+    /* Get the image path */
+    ImagePathName = RtlGetCurrentPeb()->ProcessParameters->ImagePathName;
+
+    /* Check if it's not normalized */
+    if (!(RtlGetCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_NORMALIZED))
+    {
+        /* Normalize it */
+        ImagePathName.Buffer = (PWSTR)((ULONG_PTR)ImagePathName.Buffer + (ULONG_PTR)RtlGetCurrentPeb()->ProcessParameters);
+    }
+
+
+    if (!NT_SUCCESS(RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END,
+                                               DllName, &RtlpPathDividers, &Position)))
+    {
+        DllNameOnly = *DllName;
+    }
+    else
+    {
+        /* Just keep the dll name, ignore path components */
+        Position += sizeof(WCHAR);
+        DllNameOnly.Buffer = DllName->Buffer + Position / sizeof(WCHAR);
+        DllNameOnly.Length = DllName->Length - Position;
+        DllNameOnly.MaximumLength = DllName->MaximumLength - Position;
+    }
+
+    if (!NT_SUCCESS(RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END,
+                                               &DllNameOnly, &ExtensionChar, &Position)))
+    {
+        Position = 0;
+    }
+
+    HasExtension = Position > 1;
+
+    /* First we create the c:\path\processname.exe.Local\something.dll path */
+    RequiredSize = ImagePathName.Length + RtlpDotLocal.Length + DllNameOnly.Length +
+        (HasExtension ? 0 : RtlpDefaultExtension.Length) + sizeof(UNICODE_NULL);
+
+    /* This is not going to work out */
+    if (RequiredSize > UNICODE_STRING_MAX_BYTES)
+        return STATUS_NAME_TOO_LONG;
+
+    /* We need something extra */
+    if (RequiredSize > CopyLocalName.MaximumLength)
+    {
+        CopyLocalName.Buffer = RtlpAllocateStringMemory(RequiredSize, TAG_USTR);
+        if (CopyLocalName.Buffer == NULL)
+            return STATUS_NO_MEMORY;
+        CopyLocalName.MaximumLength = RequiredSize;
+    }
+    /* Now build the entire path */
+    CopyLocalName.Length = 0;
+    Status = RtlAppendUnicodeStringToString(&CopyLocalName, &ImagePathName);
+    ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAppendUnicodeStringToString(&CopyLocalName, &RtlpDotLocal);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    if (NT_SUCCESS(Status))
+    {
+        Status = RtlAppendUnicodeStringToString(&CopyLocalName, &DllNameOnly);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    /* Do we need to append an extension? */
+    if (NT_SUCCESS(Status) && !HasExtension)
+    {
+        Status = RtlAppendUnicodeStringToString(&CopyLocalName, &RtlpDefaultExtension);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        /* then we create the c:\path\something.dll path */
+        if (NT_SUCCESS(RtlFindCharInUnicodeString(RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END,
+                                                  &ImagePathName, &RtlpPathDividers, &Position)))
+        {
+            ImagePathName.Length = Position + sizeof(WCHAR);
+        }
+
+        RequiredSize = ImagePathName.Length + DllNameOnly.Length +
+            (HasExtension ? 0 : RtlpDefaultExtension.Length) + sizeof(UNICODE_NULL);
+
+        if (RequiredSize >= UNICODE_STRING_MAX_BYTES)
+        {
+            Status = STATUS_NAME_TOO_LONG;
+        }
+        else
+        {
+            if (RequiredSize > CopyRealName.MaximumLength)
+            {
+                CopyRealName.Buffer = RtlpAllocateStringMemory(RequiredSize, TAG_USTR);
+                if (CopyRealName.Buffer == NULL)
+                    Status = STATUS_NO_MEMORY;
+                CopyRealName.MaximumLength = RequiredSize;
+            }
+            CopyRealName.Length = 0;
+            if (NT_SUCCESS(Status))
+            {
+                Status = RtlAppendUnicodeStringToString(&CopyRealName, &ImagePathName);
+                ASSERT(NT_SUCCESS(Status));
+            }
+            if (NT_SUCCESS(Status))
+            {
+                Status = RtlAppendUnicodeStringToString(&CopyRealName, &DllNameOnly);
+                ASSERT(NT_SUCCESS(Status));
+            }
+            if (NT_SUCCESS(Status) && !HasExtension)
+            {
+                Status = RtlAppendUnicodeStringToString(&CopyRealName, &RtlpDefaultExtension);
+                ASSERT(NT_SUCCESS(Status));
+            }
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (CopyRealName.Buffer && CopyRealName.Buffer != RealName->Buffer)
+            RtlpFreeStringMemory(CopyRealName.Buffer, TAG_USTR);
+        if (CopyLocalName.Buffer && CopyLocalName.Buffer != LocalName->Buffer)
+            RtlpFreeStringMemory(CopyLocalName.Buffer, TAG_USTR);
+        return Status;
+    }
+
+    *RealName = CopyRealName;
+    *LocalName = CopyLocalName;
+    return STATUS_SUCCESS;
 }
 
 ULONG
