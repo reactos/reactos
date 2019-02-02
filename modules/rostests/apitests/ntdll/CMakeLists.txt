@@ -38,6 +38,7 @@ list(APPEND SOURCE
     NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c
+    RtlComputePrivatizedDllName_U.c
     RtlCopyMappedMemory.c
     RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
