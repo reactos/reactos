@@ -165,7 +165,7 @@ static void test_drvCommConfigDialogW(void)
     /* test ports "com1" - "com4" */
     for (i = 1; i < 5 ; i++) {
         sprintf(bufferA, fmt_comA, i);
-        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+        MultiByteToWideChar(CP_ACP, 0, bufferA, -1, bufferW, ARRAY_SIZE(bufferW));
         len = sizeof(pCC);
         ZeroMemory(pCC, sizeof(pCC));
         SetLastError(0xdeadbeef);
@@ -346,7 +346,7 @@ static void test_drvGetDefaultCommConfigW(void)
     /* test ports "com0" - "com10" */
     for (i = 0; i < 11 ; i++) {
         sprintf(bufferA, fmt_comA, i);
-        MultiByteToWideChar( CP_ACP, 0, bufferA, -1, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+        MultiByteToWideChar(CP_ACP, 0, bufferA, -1, bufferW, ARRAY_SIZE(bufferW));
         len = sizeof(pCC);
         ZeroMemory(pCC, sizeof(pCC));
         SetLastError(0xdeadbeef);
