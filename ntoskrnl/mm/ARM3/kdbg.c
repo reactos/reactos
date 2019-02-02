@@ -219,7 +219,7 @@ VOID
 ExpKdbgExtPoolFindLargePool(
     ULONG Tag,
     ULONG Mask,
-    VOID (NTAPI* FoundCallback)(PVOID, PVOID),
+    VOID (NTAPI* FoundCallback)(PPOOL_TRACKER_BIG_PAGES, PVOID),
     PVOID CallbackContext)
 {
     ULONG i;
@@ -238,7 +238,7 @@ ExpKdbgExtPoolFindLargePool(
         {
             if (FoundCallback != NULL)
             {
-                FoundCallback(PoolBigPageTable[i].Va, CallbackContext);
+                FoundCallback(&PoolBigPageTable[i], CallbackContext);
             }
             else
             {
