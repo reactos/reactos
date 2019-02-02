@@ -518,7 +518,7 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
     uc.lpszPassword      = NULL;
     uc.dwPasswordLength  = 0;
     uc.lpszHostName      = host;
-    uc.dwHostNameLength  = sizeof(host)/sizeof(host[0]);
+    uc.dwHostNameLength  = ARRAY_SIZE(host);
     uc.nPort             = 0;
     uc.lpszUrlPath       = NULL;
     uc.dwUrlPathLength   = ~0u;
