@@ -219,6 +219,7 @@ typedef struct tagME_Paragraph
   struct para_num para_num;
   ME_Run *eop_run; /* ptr to the end-of-para run */
   struct tagME_DisplayItem *prev_para, *next_para;
+  struct tagME_DisplayItem *prev_marked, *next_marked;
 } ME_Paragraph;
 
 typedef struct tagME_Cell /* v4.1 */
@@ -396,6 +397,7 @@ typedef struct tagME_TextEditor
   int nTotalWidth, nLastTotalWidth;
   int nAvailWidth; /* 0 = wrap to client area, else wrap width in twips */
   int nUDArrowX;
+  int total_rows;
   COLORREF rgbBackColor;
   HBRUSH hbrBackground;
   BOOL bCaretAtEnd;
@@ -432,6 +434,7 @@ typedef struct tagME_TextEditor
   int imeStartIndex;
   DWORD selofs; /* The size of the selection bar on the left side of control */
   ME_SelectionType nSelectionType;
+  ME_DisplayItem *first_marked_para;
 
   /* Track previous notified selection */
   CHARRANGE notified_cr;

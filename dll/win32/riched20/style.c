@@ -33,7 +33,7 @@ static int all_refs = 0;
  *   sizeof(char[AW])
  */
 
-CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
+BOOL cfany_to_cf2w(CHARFORMAT2W *to, const CHARFORMAT2W *from)
 {
   if (from->cbSize == sizeof(CHARFORMATA))
   {
@@ -41,9 +41,9 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(to, f, FIELD_OFFSET(CHARFORMATA, szFaceName));
     to->cbSize = sizeof(CHARFORMAT2W);
     if (f->dwMask & CFM_FACE) {
-      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
+      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, ARRAY_SIZE(to->szFaceName));
     }
-    return to;
+    return TRUE;
   }
   if (from->cbSize == sizeof(CHARFORMATW))
   {
@@ -52,7 +52,7 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     /* theoretically, we don't need to zero the remaining memory */
     ZeroMemory(&to->wWeight, sizeof(CHARFORMAT2W)-FIELD_OFFSET(CHARFORMAT2W, wWeight));
     to->cbSize = sizeof(CHARFORMAT2W);
-    return to;
+    return TRUE;
   }
   if (from->cbSize == sizeof(CHARFORMAT2A))
   {
@@ -61,17 +61,22 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(to, f, FIELD_OFFSET(CHARFORMATA, szFaceName));
     /* convert face name */
     if (f->dwMask & CFM_FACE)
-      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
+      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, ARRAY_SIZE(to->szFaceName));
     /* copy the rest of the 2A structure to 2W */
     CopyMemory(&to->wWeight, &f->wWeight, sizeof(CHARFORMAT2A)-FIELD_OFFSET(CHARFORMAT2A, wWeight));
     to->cbSize = sizeof(CHARFORMAT2W);
-    return to;
+    return TRUE;
+  }
+  if (from->cbSize == sizeof(CHARFORMAT2W))
+  {
+    CopyMemory(to, from, sizeof(CHARFORMAT2W));
+    return TRUE;
   }
 
-  return (from->cbSize >= sizeof(CHARFORMAT2W)) ? from : NULL;
+  return FALSE;
 }
 
-static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
+BOOL cf2w_to_cfany(CHARFORMAT2W *to, const CHARFORMAT2W *from)
 {
   assert(from->cbSize == sizeof(CHARFORMAT2W));
   if (to->cbSize == sizeof(CHARFORMATA))
@@ -80,14 +85,14 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(t, from, FIELD_OFFSET(CHARFORMATA, szFaceName));
     WideCharToMultiByte(CP_ACP, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), NULL, NULL);
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
-    return to;
+    return TRUE;
   }
   if (to->cbSize == sizeof(CHARFORMATW))
   {
     CHARFORMATW *t = (CHARFORMATW *)to;
     CopyMemory(t, from, sizeof(*t));
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
-    return to;
+    return TRUE;
   }
   if (to->cbSize == sizeof(CHARFORMAT2A))
   {
@@ -99,16 +104,14 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
     /* copy the rest of the 2A structure to 2W */
     CopyMemory(&t->wWeight, &from->wWeight, sizeof(CHARFORMAT2W)-FIELD_OFFSET(CHARFORMAT2W,wWeight));
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
-    return to;
+    return TRUE;
   }
-  assert(to->cbSize >= sizeof(CHARFORMAT2W));
-  return from;
-}
-
-void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
-{
-  if (ME_ToCFAny(to, from) == from)
-    CopyMemory(to, from, to->cbSize);
+  if (to->cbSize == sizeof(CHARFORMAT2W))
+  {
+    CopyMemory(to, from, sizeof(CHARFORMAT2W));
+    return TRUE;
+  }
+  return FALSE;
 }
 
 ME_Style *ME_MakeStyle(CHARFORMAT2W *style)

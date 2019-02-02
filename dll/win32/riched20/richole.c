@@ -46,6 +46,7 @@ DEFINE_GUID(IID_ITextServices, 0x8d33f740, 0xcf58, 0x11ce, 0xa8, 0x9d, 0x00, 0xa
 DEFINE_GUID(IID_ITextHost, 0x13e670f4,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);
 DEFINE_GUID(IID_ITextHost2, 0x13e670f5,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0xb6,0x5e,0xa1);
 DEFINE_GUID(IID_ITextDocument, 0x8cc497c0, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+DEFINE_GUID(IID_ITextDocument2Old, 0x01c25500, 0x4268, 0x11d1, 0x88, 0x3a, 0x3c, 0x8b, 0x00, 0xc1, 0x00, 0x00);
 DEFINE_GUID(IID_ITextRange, 0x8cc497c2, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 DEFINE_GUID(IID_ITextSelection, 0x8cc497c1, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 DEFINE_GUID(IID_ITextFont, 0x8cc497c3, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
@@ -97,7 +98,7 @@ void release_typelib(void)
     if (!typelib)
         return;
 
-    for (i = 0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
+    for (i = 0; i < ARRAY_SIZE(typeinfos); i++)
         if (typeinfos[i])
             ITypeInfo_Release(typeinfos[i]);
 
@@ -208,7 +209,7 @@ enum range_update_op {
 typedef struct IRichEditOleImpl {
     IUnknown IUnknown_inner;
     IRichEditOle IRichEditOle_iface;
-    ITextDocument ITextDocument_iface;
+    ITextDocument2Old ITextDocument2Old_iface;
     IUnknown *outer_unk;
     LONG ref;
 
@@ -267,9 +268,9 @@ static inline IRichEditOleImpl *impl_from_IRichEditOle(IRichEditOle *iface)
     return CONTAINING_RECORD(iface, IRichEditOleImpl, IRichEditOle_iface);
 }
 
-static inline IRichEditOleImpl *impl_from_ITextDocument(ITextDocument *iface)
+static inline IRichEditOleImpl *impl_from_ITextDocument2Old(ITextDocument2Old *iface)
 {
-    return CONTAINING_RECORD(iface, IRichEditOleImpl, ITextDocument_iface);
+    return CONTAINING_RECORD(iface, IRichEditOleImpl, ITextDocument2Old_iface);
 }
 
 static inline IRichEditOleImpl *impl_from_IUnknown(IUnknown *iface)
@@ -633,7 +634,7 @@ static void textrange_set_font(ITextRange *range, ITextFont *font)
 
     if (ITextFont_GetName(font, &str) == S_OK) {
         fmt.dwMask |= CFM_FACE;
-        lstrcpynW(fmt.szFaceName, str, sizeof(fmt.szFaceName)/sizeof(WCHAR));
+        lstrcpynW(fmt.szFaceName, str, ARRAY_SIZE(fmt.szFaceName));
         SysFreeString(str);
     }
 
@@ -817,7 +818,7 @@ static HRESULT set_textfont_prop(ITextFontImpl *font, enum textfont_prop_id prop
         fmt.wWeight = value->l;
         break;
     case FONT_NAME:
-        lstrcpynW(fmt.szFaceName, value->str, sizeof(fmt.szFaceName)/sizeof(WCHAR));
+        lstrcpynW(fmt.szFaceName, value->str, ARRAY_SIZE(fmt.szFaceName));
         break;
     default:
         FIXME("unhandled font property %d\n", propid);
@@ -943,8 +944,8 @@ static HRESULT WINAPI IRichEditOleImpl_inner_fnQueryInterface(IUnknown *iface, R
         *ppvObj = &This->IUnknown_inner;
     else if (IsEqualGUID(riid, &IID_IRichEditOle))
         *ppvObj = &This->IRichEditOle_iface;
-    else if (IsEqualGUID(riid, &IID_ITextDocument))
-        *ppvObj = &This->ITextDocument_iface;
+    else if (IsEqualGUID(riid, &IID_ITextDocument) || IsEqualGUID(riid, &IID_ITextDocument2Old))
+        *ppvObj = &This->ITextDocument2Old_iface;
     if (*ppvObj)
     {
         IUnknown_AddRef((IUnknown *)*ppvObj);
@@ -4114,43 +4115,38 @@ static HRESULT create_textpara(ITextRange *range, ITextPara **ret)
 }
 
 /* ITextDocument */
-static HRESULT WINAPI
-ITextDocument_fnQueryInterface(ITextDocument* me, REFIID riid,
-    void** ppvObject)
+static HRESULT WINAPI ITextDocument2Old_fnQueryInterface(ITextDocument2Old* iface, REFIID riid,
+                                                         void **ppvObject)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     return IRichEditOle_QueryInterface(&This->IRichEditOle_iface, riid, ppvObject);
 }
 
-static ULONG WINAPI
-ITextDocument_fnAddRef(ITextDocument* me)
+static ULONG WINAPI ITextDocument2Old_fnAddRef(ITextDocument2Old *iface)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     return IRichEditOle_AddRef(&This->IRichEditOle_iface);
 }
 
-static ULONG WINAPI
-ITextDocument_fnRelease(ITextDocument* me)
+static ULONG WINAPI ITextDocument2Old_fnRelease(ITextDocument2Old *iface)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     return IRichEditOle_Release(&This->IRichEditOle_iface);
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetTypeInfoCount(ITextDocument* me,
-    UINT* pctinfo)
+static HRESULT WINAPI ITextDocument2Old_fnGetTypeInfoCount(ITextDocument2Old *iface,
+                                                           UINT *pctinfo)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     TRACE("(%p)->(%p)\n", This, pctinfo);
     *pctinfo = 1;
     return S_OK;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetTypeInfo(ITextDocument* me, UINT iTInfo, LCID lcid,
-    ITypeInfo** ppTInfo)
+static HRESULT WINAPI ITextDocument2Old_fnGetTypeInfo(ITextDocument2Old *iface, UINT iTInfo, LCID lcid,
+                                                      ITypeInfo **ppTInfo)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     HRESULT hr;
 
     TRACE("(%p)->(%u,%d,%p)\n", This, iTInfo, lcid, ppTInfo);
@@ -4161,11 +4157,11 @@ ITextDocument_fnGetTypeInfo(ITextDocument* me, UINT iTInfo, LCID lcid,
     return hr;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetIDsOfNames(ITextDocument* me, REFIID riid,
-    LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId)
+static HRESULT WINAPI ITextDocument2Old_fnGetIDsOfNames(ITextDocument2Old *iface, REFIID riid,
+                                                        LPOLESTR *rgszNames, UINT cNames,
+                                                        LCID lcid, DISPID *rgDispId)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     ITypeInfo *ti;
     HRESULT hr;
 
@@ -4178,12 +4174,12 @@ ITextDocument_fnGetIDsOfNames(ITextDocument* me, REFIID riid,
     return hr;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnInvoke(ITextDocument* me, DISPID dispIdMember,
-    REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams,
-    VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr)
+static HRESULT WINAPI ITextDocument2Old_fnInvoke(ITextDocument2Old *iface, DISPID dispIdMember,
+                                                 REFIID riid, LCID lcid, WORD wFlags,
+                                                 DISPPARAMS *pDispParams, VARIANT *pVarResult,
+                                                 EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     ITypeInfo *ti;
     HRESULT hr;
 
@@ -4193,24 +4189,22 @@ ITextDocument_fnInvoke(ITextDocument* me, DISPID dispIdMember,
 
     hr = get_typeinfo(ITextDocument_tid, &ti);
     if (SUCCEEDED(hr))
-        hr = ITypeInfo_Invoke(ti, me, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(ti, iface, dispIdMember, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
     return hr;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetName(ITextDocument* me, BSTR* pName)
+static HRESULT WINAPI ITextDocument2Old_fnGetName(ITextDocument2Old *iface, BSTR *pName)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetSelection(ITextDocument *me, ITextSelection **selection)
+static HRESULT WINAPI ITextDocument2Old_fnGetSelection(ITextDocument2Old *iface, ITextSelection **selection)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
 
-    TRACE("(%p)->(%p)\n", me, selection);
+    TRACE("(%p)->(%p)\n", iface, selection);
 
     if (!selection)
       return E_INVALIDARG;
@@ -4228,125 +4222,110 @@ ITextDocument_fnGetSelection(ITextDocument *me, ITextSelection **selection)
     return S_OK;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetStoryCount(ITextDocument* me, LONG* pCount)
+static HRESULT WINAPI ITextDocument2Old_fnGetStoryCount(ITextDocument2Old *iface, LONG *pCount)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetStoryRanges(ITextDocument* me,
-    ITextStoryRanges** ppStories)
+static HRESULT WINAPI ITextDocument2Old_fnGetStoryRanges(ITextDocument2Old *iface,
+                                                         ITextStoryRanges **ppStories)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetSaved(ITextDocument* me, LONG* pValue)
+static HRESULT WINAPI ITextDocument2Old_fnGetSaved(ITextDocument2Old *iface, LONG *pValue)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnSetSaved(ITextDocument* me, LONG Value)
+static HRESULT WINAPI ITextDocument2Old_fnSetSaved(ITextDocument2Old *iface, LONG Value)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnGetDefaultTabStop(ITextDocument* me, float* pValue)
+static HRESULT WINAPI ITextDocument2Old_fnGetDefaultTabStop(ITextDocument2Old *iface, float *pValue)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnSetDefaultTabStop(ITextDocument* me, float Value)
+static HRESULT WINAPI ITextDocument2Old_fnSetDefaultTabStop(ITextDocument2Old *iface, float Value)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnNew(ITextDocument* me)
+static HRESULT WINAPI ITextDocument2Old_fnNew(ITextDocument2Old *iface)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnOpen(ITextDocument* me, VARIANT* pVar, LONG Flags,
-    LONG CodePage)
+static HRESULT WINAPI ITextDocument2Old_fnOpen(ITextDocument2Old *iface, VARIANT *pVar,
+                                               LONG Flags, LONG CodePage)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnSave(ITextDocument* me, VARIANT* pVar, LONG Flags,
-    LONG CodePage)
+static HRESULT WINAPI ITextDocument2Old_fnSave(ITextDocument2Old *iface, VARIANT *pVar,
+                                               LONG Flags, LONG CodePage)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnFreeze(ITextDocument* me, LONG* pCount)
+static HRESULT WINAPI ITextDocument2Old_fnFreeze(ITextDocument2Old *iface, LONG *pCount)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnUnfreeze(ITextDocument* me, LONG* pCount)
+static HRESULT WINAPI ITextDocument2Old_fnUnfreeze(ITextDocument2Old *iface, LONG *pCount)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnBeginEditCollection(ITextDocument* me)
+static HRESULT WINAPI ITextDocument2Old_fnBeginEditCollection(ITextDocument2Old *iface)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnEndEditCollection(ITextDocument* me)
+static HRESULT WINAPI ITextDocument2Old_fnEndEditCollection(ITextDocument2Old *iface)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnUndo(ITextDocument* me, LONG Count, LONG* prop)
+static HRESULT WINAPI ITextDocument2Old_fnUndo(ITextDocument2Old *iface, LONG Count, LONG *prop)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnRedo(ITextDocument* me, LONG Count, LONG* prop)
+static HRESULT WINAPI ITextDocument2Old_fnRedo(ITextDocument2Old *iface, LONG Count, LONG *prop)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
@@ -4367,11 +4346,10 @@ static HRESULT CreateITextRange(IRichEditOleImpl *reOle, LONG start, LONG end, I
     return S_OK;
 }
 
-static HRESULT WINAPI
-ITextDocument_fnRange(ITextDocument* me, LONG cp1, LONG cp2,
-    ITextRange** ppRange)
+static HRESULT WINAPI ITextDocument2Old_fnRange(ITextDocument2Old *iface, LONG cp1, LONG cp2,
+                                                ITextRange **ppRange)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
 
     TRACE("%p %p %d %d\n", This, ppRange, cp1, cp2);
     if (!ppRange)
@@ -4381,42 +4359,247 @@ ITextDocument_fnRange(ITextDocument* me, LONG cp1, LONG cp2,
     return CreateITextRange(This, cp1, cp2, ppRange);
 }
 
-static HRESULT WINAPI
-ITextDocument_fnRangeFromPoint(ITextDocument* me, LONG x, LONG y,
-    ITextRange** ppRange)
+static HRESULT WINAPI ITextDocument2Old_fnRangeFromPoint(ITextDocument2Old *iface, LONG x, LONG y,
+                                                         ITextRange **ppRange)
 {
-    IRichEditOleImpl *This = impl_from_ITextDocument(me);
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
     FIXME("stub %p\n",This);
     return E_NOTIMPL;
 }
 
-static const ITextDocumentVtbl tdvt = {
-    ITextDocument_fnQueryInterface,
-    ITextDocument_fnAddRef,
-    ITextDocument_fnRelease,
-    ITextDocument_fnGetTypeInfoCount,
-    ITextDocument_fnGetTypeInfo,
-    ITextDocument_fnGetIDsOfNames,
-    ITextDocument_fnInvoke,
-    ITextDocument_fnGetName,
-    ITextDocument_fnGetSelection,
-    ITextDocument_fnGetStoryCount,
-    ITextDocument_fnGetStoryRanges,
-    ITextDocument_fnGetSaved,
-    ITextDocument_fnSetSaved,
-    ITextDocument_fnGetDefaultTabStop,
-    ITextDocument_fnSetDefaultTabStop,
-    ITextDocument_fnNew,
-    ITextDocument_fnOpen,
-    ITextDocument_fnSave,
-    ITextDocument_fnFreeze,
-    ITextDocument_fnUnfreeze,
-    ITextDocument_fnBeginEditCollection,
-    ITextDocument_fnEndEditCollection,
-    ITextDocument_fnUndo,
-    ITextDocument_fnRedo,
-    ITextDocument_fnRange,
-    ITextDocument_fnRangeFromPoint
+/* ITextDocument2Old methods */
+static HRESULT WINAPI ITextDocument2Old_fnAttachMsgFilter(ITextDocument2Old *iface, IUnknown *filter)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, filter);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnSetEffectColor(ITextDocument2Old *iface, LONG index, COLORREF cr)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d, 0x%x): stub\n", This, index, cr);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetEffectColor(ITextDocument2Old *iface, LONG index, COLORREF *cr)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d, %p): stub\n", This, index, cr);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetCaretType(ITextDocument2Old *iface, LONG *type)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, type);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnSetCaretType(ITextDocument2Old *iface, LONG type)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d): stub\n", This, type);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetImmContext(ITextDocument2Old *iface, LONG *context)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, context);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnReleaseImmContext(ITextDocument2Old *iface, LONG context)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d): stub\n", This, context);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetPreferredFont(ITextDocument2Old *iface, LONG cp, LONG charrep,
+                                                           LONG options, LONG current_charrep, LONG current_fontsize,
+                                                           BSTR *bstr, LONG *pitch_family, LONG *new_fontsize)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d, %d, %d, %d, %d, %p, %p, %p): stub\n", This, cp, charrep, options, current_charrep,
+          current_fontsize, bstr, pitch_family, new_fontsize);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetNotificationMode(ITextDocument2Old *iface, LONG *mode)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, mode);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnSetNotificationMode(ITextDocument2Old *iface, LONG mode)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(0x%x): stub\n", This, mode);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetClientRect(ITextDocument2Old *iface, LONG type, LONG *left, LONG *top,
+                                                        LONG *right, LONG *bottom)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d, %p, %p, %p, %p): stub\n", This, type, left, top, right, bottom);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetSelectionEx(ITextDocument2Old *iface, ITextSelection **selection)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, selection);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetWindow(ITextDocument2Old *iface, LONG *hwnd)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, hwnd);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnGetFEFlags(ITextDocument2Old *iface, LONG *flags)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%p): stub\n", This, flags);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnUpdateWindow(ITextDocument2Old *iface)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p): stub\n", This);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnCheckTextLimit(ITextDocument2Old *iface, LONG cch, LONG *exceed)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d, %p): stub\n", This, cch, exceed);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnIMEInProgress(ITextDocument2Old *iface, LONG mode)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(0x%x): stub\n", This, mode);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnSysBeep(ITextDocument2Old *iface)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p): stub\n", This);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnUpdate(ITextDocument2Old *iface, LONG mode)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(0x%x): stub\n", This, mode);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextDocument2Old_fnNotify(ITextDocument2Old *iface, LONG notify)
+{
+    IRichEditOleImpl *This = impl_from_ITextDocument2Old(iface);
+
+    FIXME("(%p)->(%d): stub\n", This, notify);
+
+    return E_NOTIMPL;
+}
+
+static const ITextDocument2OldVtbl tdvt = {
+    ITextDocument2Old_fnQueryInterface,
+    ITextDocument2Old_fnAddRef,
+    ITextDocument2Old_fnRelease,
+    ITextDocument2Old_fnGetTypeInfoCount,
+    ITextDocument2Old_fnGetTypeInfo,
+    ITextDocument2Old_fnGetIDsOfNames,
+    ITextDocument2Old_fnInvoke,
+    ITextDocument2Old_fnGetName,
+    ITextDocument2Old_fnGetSelection,
+    ITextDocument2Old_fnGetStoryCount,
+    ITextDocument2Old_fnGetStoryRanges,
+    ITextDocument2Old_fnGetSaved,
+    ITextDocument2Old_fnSetSaved,
+    ITextDocument2Old_fnGetDefaultTabStop,
+    ITextDocument2Old_fnSetDefaultTabStop,
+    ITextDocument2Old_fnNew,
+    ITextDocument2Old_fnOpen,
+    ITextDocument2Old_fnSave,
+    ITextDocument2Old_fnFreeze,
+    ITextDocument2Old_fnUnfreeze,
+    ITextDocument2Old_fnBeginEditCollection,
+    ITextDocument2Old_fnEndEditCollection,
+    ITextDocument2Old_fnUndo,
+    ITextDocument2Old_fnRedo,
+    ITextDocument2Old_fnRange,
+    ITextDocument2Old_fnRangeFromPoint,
+    /* ITextDocument2Old methods */
+    ITextDocument2Old_fnAttachMsgFilter,
+    ITextDocument2Old_fnSetEffectColor,
+    ITextDocument2Old_fnGetEffectColor,
+    ITextDocument2Old_fnGetCaretType,
+    ITextDocument2Old_fnSetCaretType,
+    ITextDocument2Old_fnGetImmContext,
+    ITextDocument2Old_fnReleaseImmContext,
+    ITextDocument2Old_fnGetPreferredFont,
+    ITextDocument2Old_fnGetNotificationMode,
+    ITextDocument2Old_fnSetNotificationMode,
+    ITextDocument2Old_fnGetClientRect,
+    ITextDocument2Old_fnGetSelectionEx,
+    ITextDocument2Old_fnGetWindow,
+    ITextDocument2Old_fnGetFEFlags,
+    ITextDocument2Old_fnUpdateWindow,
+    ITextDocument2Old_fnCheckTextLimit,
+    ITextDocument2Old_fnIMEInProgress,
+    ITextDocument2Old_fnSysBeep,
+    ITextDocument2Old_fnUpdate,
+    ITextDocument2Old_fnNotify
 };
 
 /* ITextSelection */
@@ -5517,7 +5700,7 @@ LRESULT CreateIRichEditOle(IUnknown *outer_unk, ME_TextEditor *editor, LPVOID *p
 
     reo->IUnknown_inner.lpVtbl = &reo_unk_vtbl;
     reo->IRichEditOle_iface.lpVtbl = &revt;
-    reo->ITextDocument_iface.lpVtbl = &tdvt;
+    reo->ITextDocument2Old_iface.lpVtbl = &tdvt;
     reo->ref = 1;
     reo->editor = editor;
     reo->txtSel = NULL;
@@ -5750,8 +5933,8 @@ void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags)
     }
 }
 
-void ME_GetITextDocumentInterface(IRichEditOle *iface, LPVOID *ppvObj)
+void ME_GetITextDocument2OldInterface(IRichEditOle *iface, LPVOID *ppvObj)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(iface);
-    *ppvObj = &This->ITextDocument_iface;
+    *ppvObj = &This->ITextDocument2Old_iface;
 }

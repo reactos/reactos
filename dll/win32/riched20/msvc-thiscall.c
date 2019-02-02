@@ -3,7 +3,7 @@
 #define DEFINE_THISCALL_WRAPPER(func,args) \
     typedef struct {int x[args/4];} _tag_##func; \
     void __stdcall func(_tag_##func p1); \
-    __declspec(naked) void __stdcall __thiscall_##func(_tag_##func p1) \
+    __declspec(naked) void __thiscall_##func(_tag_##func p1) \
     { \
         __asm pop eax \
         __asm push ecx \
@@ -52,7 +52,7 @@ DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmReleaseContext,8)
 DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth,8)
 
 #define DEFINE_STDCALL_WRAPPER(num,func,args) \
-    __declspec(naked) void __stdcall __stdcall_##func(_tag_##func p1) \
+    __declspec(naked) void __stdcall_##func(_tag_##func p1) \
     { \
         __asm pop eax \
         __asm pop ecx \

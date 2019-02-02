@@ -63,8 +63,8 @@ void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style) DECLSPEC_HIDDEN;
 void ME_ClearTempStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]) DECLSPEC_HIDDEN;
 void ME_DumpStyle(ME_Style *s) DECLSPEC_HIDDEN;
-CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from) DECLSPEC_HIDDEN;
-void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from) DECLSPEC_HIDDEN;
+BOOL cfany_to_cf2w(CHARFORMAT2W *to, const CHARFORMAT2W *from) DECLSPEC_HIDDEN;
+BOOL cf2w_to_cfany(CHARFORMAT2W *to, const CHARFORMAT2W *from) DECLSPEC_HIDDEN;
 void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc) DECLSPEC_HIDDEN; /* only works with 2W structs */
 void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt) DECLSPEC_HIDDEN; /* ditto */
 
@@ -79,6 +79,7 @@ ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass
 ME_DisplayItem *ME_MakeDI(ME_DIType type) DECLSPEC_HIDDEN;
 void ME_DestroyDisplayItem(ME_DisplayItem *item) DECLSPEC_HIDDEN;
 void ME_DumpDocument(ME_TextBuffer *buffer) DECLSPEC_HIDDEN;
+void destroy_para(ME_TextEditor *editor, ME_DisplayItem *item) DECLSPEC_HIDDEN;
 
 /* string.c */
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars) DECLSPEC_HIDDEN;
@@ -203,6 +204,11 @@ void ME_MarkAllForWrapping(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 void para_num_init( ME_Context *c, ME_Paragraph *para ) DECLSPEC_HIDDEN;
 void para_num_clear( struct para_num *pn ) DECLSPEC_HIDDEN;
+int get_total_width(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void mark_para_rewrap(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
+ME_DisplayItem *get_di_from_para(ME_Paragraph *para) DECLSPEC_HIDDEN;
+void add_marked_para(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
+void remove_marked_para(ME_TextEditor *editor, ME_DisplayItem *para) DECLSPEC_HIDDEN;
 
 /* paint.c */
 void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate) DECLSPEC_HIDDEN;
@@ -235,7 +241,7 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run* run, BOOL selected) DECLSPE
 void ME_GetOLEObjectSize(const ME_Context *c, ME_Run *run, SIZE *pSize) DECLSPEC_HIDDEN;
 void ME_CopyReObject(REOBJECT *dst, const REOBJECT *src, DWORD flags) DECLSPEC_HIDDEN;
 void ME_DeleteReObject(struct re_object *re_object) DECLSPEC_HIDDEN;
-void ME_GetITextDocumentInterface(IRichEditOle *iface, LPVOID *ppvObj) DECLSPEC_HIDDEN;
+void ME_GetITextDocument2OldInterface(IRichEditOle *iface, LPVOID *ppvObj) DECLSPEC_HIDDEN;
 
 /* editor.c */
 ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10) DECLSPEC_HIDDEN;

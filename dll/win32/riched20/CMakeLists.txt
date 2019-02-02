@@ -18,32 +18,27 @@ list(APPEND SOURCE
     string.c
     style.c
     table.c
+    txthost.c
+    txtsrv.c
     undo.c
     wrap.c
     writer.c
     precomp.h)
 
-if(MSVC)
-    if(ARCH STREQUAL "i386")
-        list(APPEND SOURCE msvc-thiscall.c)
-    endif()
-    set_source_files_properties(txthost.c txtsrv.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
-    list(APPEND ADDITIONAL_SOURCE txthost.c txtsrv.c)
-else()
-    list(APPEND SOURCE txthost.c txtsrv.c)
+if(MSVC AND (ARCH STREQUAL "i386"))
+    list(APPEND SOURCE msvc-thiscall.c)
 endif()
-
-list(APPEND ADDITIONAL_SOURCE
-    version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
 list(APPEND riched20_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/riched_tom.rgs
     ${CMAKE_CURRENT_BINARY_DIR}/riched_tom.tlb)
-
 set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${riched20_rc_deps}")
 
-add_library(riched20 SHARED ${SOURCE} ${ADDITIONAL_SOURCE})
+add_library(riched20 SHARED
+    ${SOURCE}
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
+
 add_typelib(riched_tom.idl)
 add_dependencies(riched20 stdole2)
 set_module_type(riched20 win32dll)

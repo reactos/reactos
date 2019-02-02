@@ -760,7 +760,7 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
       { CFE_STRIKEOUT,   "\\strike",   "\\strike0"   },
   };
 
-  for (i = 0; i < sizeof(effects) / sizeof(effects[0]); i++)
+  for (i = 0; i < ARRAY_SIZE( effects ); i++)
   {
       if ((old_fmt->dwEffects ^ fmt->dwEffects) & effects[i].effect)
           strcat( props, fmt->dwEffects & effects[i].effect ? effects[i].on : effects[i].off );

@@ -341,7 +341,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, struct undo_item *undo)
     add_undo_set_para_fmt( editor, &para->member.para );
     para->member.para.fmt = undo->u.set_para_fmt.fmt;
     para->member.para.border = undo->u.set_para_fmt.border;
-    para->member.para.nFlags |= MEPF_REWRAP;
+    mark_para_rewrap(editor, para);
     break;
   }
   case undo_set_char_fmt:

@@ -501,10 +501,10 @@ DECLSPEC_HIDDEN HRESULT WINAPI ITextHostImpl_TxGetSelectionBarWidth(ITextHost *i
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
-#define THISCALL(func) __thiscall_ ## func
+#define THISCALL(func) (void *) __thiscall_ ## func
 #define DEFINE_THISCALL_WRAPPER(func,args) \
-   extern typeof(func) THISCALL(func); \
-   __ASM_STDCALL_FUNC(__thiscall_ ## func, args, \
+   extern HRESULT __thiscall_ ## func(void); \
+   __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
                    "popl %eax\n\t" \
                    "pushl %ecx\n\t" \
                    "pushl %eax\n\t" \
@@ -559,10 +559,10 @@ DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth,8)
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
-#define STDCALL(func) __stdcall_ ## func
+#define STDCALL(func) (void *) __stdcall_ ## func
 #define DEFINE_STDCALL_WRAPPER(num,func,args) \
-   extern typeof(func) __stdcall_ ## func; \
-   __ASM_STDCALL_FUNC(__stdcall_ ## func, args, \
+   extern HRESULT __stdcall_ ## func(void); \
+   __ASM_GLOBAL_FUNC(__stdcall_ ## func, \
                    "popl %eax\n\t" \
                    "popl %ecx\n\t" \
                    "pushl %eax\n\t" \
@@ -613,45 +613,45 @@ const ITextHostVtbl itextHostStdcallVtbl = {
     NULL,
     NULL,
     NULL,
-    __stdcall_ITextHostImpl_TxGetDC,
-    __stdcall_ITextHostImpl_TxReleaseDC,
-    __stdcall_ITextHostImpl_TxShowScrollBar,
-    __stdcall_ITextHostImpl_TxEnableScrollBar,
-    __stdcall_ITextHostImpl_TxSetScrollRange,
-    __stdcall_ITextHostImpl_TxSetScrollPos,
-    __stdcall_ITextHostImpl_TxInvalidateRect,
-    __stdcall_ITextHostImpl_TxViewChange,
-    __stdcall_ITextHostImpl_TxCreateCaret,
-    __stdcall_ITextHostImpl_TxShowCaret,
-    __stdcall_ITextHostImpl_TxSetCaretPos,
-    __stdcall_ITextHostImpl_TxSetTimer,
-    __stdcall_ITextHostImpl_TxKillTimer,
-    __stdcall_ITextHostImpl_TxScrollWindowEx,
-    __stdcall_ITextHostImpl_TxSetCapture,
-    __stdcall_ITextHostImpl_TxSetFocus,
-    __stdcall_ITextHostImpl_TxSetCursor,
-    __stdcall_ITextHostImpl_TxScreenToClient,
-    __stdcall_ITextHostImpl_TxClientToScreen,
-    __stdcall_ITextHostImpl_TxActivate,
-    __stdcall_ITextHostImpl_TxDeactivate,
-    __stdcall_ITextHostImpl_TxGetClientRect,
-    __stdcall_ITextHostImpl_TxGetViewInset,
-    __stdcall_ITextHostImpl_TxGetCharFormat,
-    __stdcall_ITextHostImpl_TxGetParaFormat,
-    __stdcall_ITextHostImpl_TxGetSysColor,
-    __stdcall_ITextHostImpl_TxGetBackStyle,
-    __stdcall_ITextHostImpl_TxGetMaxLength,
-    __stdcall_ITextHostImpl_TxGetScrollBars,
-    __stdcall_ITextHostImpl_TxGetPasswordChar,
-    __stdcall_ITextHostImpl_TxGetAcceleratorPos,
-    __stdcall_ITextHostImpl_TxGetExtent,
-    __stdcall_ITextHostImpl_OnTxCharFormatChange,
-    __stdcall_ITextHostImpl_OnTxParaFormatChange,
-    __stdcall_ITextHostImpl_TxGetPropertyBits,
-    __stdcall_ITextHostImpl_TxNotify,
-    __stdcall_ITextHostImpl_TxImmGetContext,
-    __stdcall_ITextHostImpl_TxImmReleaseContext,
-    __stdcall_ITextHostImpl_TxGetSelectionBarWidth,
+    STDCALL(ITextHostImpl_TxGetDC),
+    STDCALL(ITextHostImpl_TxReleaseDC),
+    STDCALL(ITextHostImpl_TxShowScrollBar),
+    STDCALL(ITextHostImpl_TxEnableScrollBar),
+    STDCALL(ITextHostImpl_TxSetScrollRange),
+    STDCALL(ITextHostImpl_TxSetScrollPos),
+    STDCALL(ITextHostImpl_TxInvalidateRect),
+    STDCALL(ITextHostImpl_TxViewChange),
+    STDCALL(ITextHostImpl_TxCreateCaret),
+    STDCALL(ITextHostImpl_TxShowCaret),
+    STDCALL(ITextHostImpl_TxSetCaretPos),
+    STDCALL(ITextHostImpl_TxSetTimer),
+    STDCALL(ITextHostImpl_TxKillTimer),
+    STDCALL(ITextHostImpl_TxScrollWindowEx),
+    STDCALL(ITextHostImpl_TxSetCapture),
+    STDCALL(ITextHostImpl_TxSetFocus),
+    STDCALL(ITextHostImpl_TxSetCursor),
+    STDCALL(ITextHostImpl_TxScreenToClient),
+    STDCALL(ITextHostImpl_TxClientToScreen),
+    STDCALL(ITextHostImpl_TxActivate),
+    STDCALL(ITextHostImpl_TxDeactivate),
+    STDCALL(ITextHostImpl_TxGetClientRect),
+    STDCALL(ITextHostImpl_TxGetViewInset),
+    STDCALL(ITextHostImpl_TxGetCharFormat),
+    STDCALL(ITextHostImpl_TxGetParaFormat),
+    STDCALL(ITextHostImpl_TxGetSysColor),
+    STDCALL(ITextHostImpl_TxGetBackStyle),
+    STDCALL(ITextHostImpl_TxGetMaxLength),
+    STDCALL(ITextHostImpl_TxGetScrollBars),
+    STDCALL(ITextHostImpl_TxGetPasswordChar),
+    STDCALL(ITextHostImpl_TxGetAcceleratorPos),
+    STDCALL(ITextHostImpl_TxGetExtent),
+    STDCALL(ITextHostImpl_OnTxCharFormatChange),
+    STDCALL(ITextHostImpl_OnTxParaFormatChange),
+    STDCALL(ITextHostImpl_TxGetPropertyBits),
+    STDCALL(ITextHostImpl_TxNotify),
+    STDCALL(ITextHostImpl_TxImmGetContext),
+    STDCALL(ITextHostImpl_TxImmReleaseContext),
+    STDCALL(ITextHostImpl_TxGetSelectionBarWidth),
 };
 
 #endif /* __i386__ */

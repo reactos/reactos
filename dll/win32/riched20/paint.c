@@ -536,7 +536,7 @@ int ME_GetParaBorderWidth(const ME_Context* c, int flags)
   int idx = (flags >> 8) & 0xF;
   int width;
 
-  if (idx >= sizeof(border_details) / sizeof(border_details[0]))
+  if (idx >= ARRAY_SIZE(border_details))
   {
       FIXME("Unsupported border value %d\n", idx);
       return 0;
@@ -989,7 +989,7 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
         }
         if (me_debug)
         {
-          const WCHAR wszRowDebug[] = {'r','o','w','[','%','d',']',0};
+          static const WCHAR wszRowDebug[] = {'r','o','w','[','%','d',']',0};
           WCHAR buf[128];
           POINT pt = c->pt;
           wsprintfW(buf, wszRowDebug, no);
@@ -1017,7 +1017,7 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
                      c->pt.y + para->pt.y + run->pt.y + baseline, p, para);
         if (me_debug)
         {
-          const WCHAR wszRunDebug[] = {'[','%','d',':','%','x',']',' ','%','l','s',0};
+          static const WCHAR wszRunDebug[] = {'[','%','d',':','%','x',']',' ','%','l','s',0};
           WCHAR buf[2560];
           POINT pt;
           pt.x = c->pt.x + run->pt.x;
