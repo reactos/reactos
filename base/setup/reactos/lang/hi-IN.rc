@@ -1,0 +1,144 @@
+﻿/*
+ * PROJECT:     ReactOS GUI First Stage Setup 
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hindi Translation Of First Stage Setup
+ * COPYRIGHT:   Copyright 2018 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "रिऐक्ट ओएस सेटअप विज़ार्ड में आपका स्वागत है।", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "आप अभी तक इस सीडी से सीधे रिऐक्ट ओएस इंस्टॉल नहीं कर सकते हैं! कृपया अपने कंप्यूटर को रिऐक्ट ओएस इंस्टॉल करने के लिए इस सीडी से रीस्टॉर्ट करें।", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "सेटअप से बाहर निकलने के लिए समाप्त क्लिक करें।", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "रिऐक्ट ओएस इंस्टॉल करें", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक नई कापी इन्स्टॉल करें। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम नहीं रखता है। आप डिस्क और विभाजन में परिवर्तन कर सकते हैं।", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "रिऐक्ट ओएस की अद्यतन या मरम्मत करे। ", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक स्थापित कापी अद्यतन या मरम्मत करे। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम रखता है। यह विकल्प केवल तभी उपलब्ध होता है जब इस कंप्यूटर पर रिऐक्ट ओएस पहले से इंस्टॉल हो।", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "जारी रखने के लिए आगे दबाएँ।", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "कंप्यूटर:", IDC_STATIC, 20, 15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    LTEXT "डिस्प्ले:", IDC_STATIC, 20, 35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    LTEXT "कीबोर्ड:", IDC_STATIC, 20, 55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    LTEXT "डिवाइस की इन्स्टलेशन का सेटअप के लिए आगे क्लिक करें।", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "&बनाएं", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&डिलीट", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "&ड्राइवर", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&उन्नत विकल्प...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+/*    LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8 */
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 145, 90
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "विभाजन बनाएं"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
+    CONTROL "विभाजन बनाएं और फ़ॉर्मेट करें", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    LTEXT "साइज़:", IDC_STATIC, 13, 24, 27, 9
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
+    LTEXT "फाइल सिस्टम:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    PUSHBUTTON "&ओके", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&रद्द करे", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "उन्नत विभाजन सेटिंग्स"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "इन्स्टलेशन फ़ोल्डर", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
+    CONTROL "बूट लोडर इन्स्टलेशन", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "हार्ड डिस्क पर बूट लोडर इंस्टॉल करें (MBR और VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "हार्ड डिस्क पर बूट लोडर इंस्टॉल करें (केवल VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "बूटलोडर की कोई इन्स्टलेशन नहीं", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    PUSHBUTTON "&ओके", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&रद्द करे", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "इन्स्टलेशन प्रक्रिया शुरू करने के लिए आगे क्लिक करें।", IDC_STATIC, 7, 128, 303, 8
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "फाइलें इंस्टॉल करें...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
+END
+
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप को पूरा करना"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "आपने रिऐक्ट ओएस सेटअप का पहला चरण सफलतापूर्वक पूरा कर लिया है।", IDC_STATIC, 115, 50, 195, 10
+    LTEXT "जब आप समाप्त क्लिक करते हैं, तो आपका कंप्यूटर रीस्टॉर्ट होगा।", IDC_STATIC, 115, 80, 195, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "यदि ड्राइव में सीडी है, तो इसे हटा दें। फिर, अपने कंप्यूटर को पुनरारंभ करने के लिए, समाप्त क्लिक करें।", IDC_STATIC, 115, 169, 195, 17
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TYPETITLE "रिऐक्ट ओएस सेटअप में आपका स्वागत है"
+    IDS_TYPESUBTITLE "सेटअप प्रकार चुनें।"
+    IDS_DEVICETITLE "बुनियादी डिवाइसों को सेटअप करें"
+    IDS_DEVICESUBTITLE "डिस्प्ले और कीबोर्ड की सेटिंग्स सेट करें।"
+    IDS_DRIVETITLE "इन्स्टलेशन विभाजन और सिस्टम फ़ोल्डर सेटअप करें"
+    IDS_DRIVESUBTITLE "इन्स्टलेशन विभाजन, सिस्टम फ़ोल्डर और बूट लोडर तैयार करें।"
+    IDS_PROCESSTITLE "सेटअप विभाजन, कॉपी फ़ाइलें और सेटअप सिस्टम"
+    IDS_PROCESSSUBTITLE "विभाजन बनाएं और फ़ॉर्मेट करें, फ़ाइलें कॉपी करें, बूट लोडर को इंस्टॉल करें और सेटअप करें"
+    IDS_RESTARTTITLE "सेटअप का पहला चरण समाप्त हो गया"
+    IDS_RESTARTSUBTITLE "सेटअप का पहला चरण पूरा हो गया है, दूसरे चरण के साथ जारी रखने के लिए रीस्टॉर्ट करें"
+    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
+    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
+    IDS_ABORTSETUP "रिऐक्ट ओएस आपके कंप्यूटर पर पूरी तरह से इंस्टॉल नहीं है। अगर आप अभी सेटअप को छोड़ देते हैं, तो आपको रिऐक्ट ओएस इंस्टॉल करने के लिए सेटअप को फिर से चलाने की आवश्यकता होगी। आपको वास्तव में छोड़ना है?"
+    IDS_ABORTSETUP2 "इन्स्टलेशन रद्द करें?"
+    IDS_NO_TXTSETUP_SIF "'txtsetup.sif' खोजने में असमर्थ \nसेटअप जारी रखने में असमर्थ है "
+    IDS_CAPTION "रिऐक्ट ओएस सेटअप"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "नाम"
+    IDS_PARTITION_SIZE "साइज़"
+    IDS_PARTITION_TYPE "प्रकार"
+END
