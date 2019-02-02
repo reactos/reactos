@@ -59,7 +59,8 @@ static const char tmpfilename[] = ".\\tmp.inf";
              "aaaaaaaaaaaaaaaa" A256
 #define A1200 A400 A400 A400
 #define A511 A255 A256
-#define A4097 "a" A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256
+#define A4096 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256 A256
+#define A4097 "a" A4096
 
 #define STD_HEADER "[Version]\r\nSignature=\"$CHICAGO$\"\r\n"
 
@@ -154,7 +155,7 @@ static void test_invalid_files(void)
     HINF hinf;
     DWORD err;
 
-    for (i = 0; i < sizeof(invalid_files)/sizeof(invalid_files[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(invalid_files); i++)
     {
         SetLastError( 0xdeadbeef );
         err_line = 0xdeadbeef;
@@ -229,7 +230,7 @@ static void test_section_names(void)
     DWORD err;
     LONG ret;
 
-    for (i = 0; i < sizeof(section_names)/sizeof(section_names[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(section_names); i++)
     {
         SetLastError( 0xdeadbeef );
         hinf = test_file_contents( section_names[i].data, &err_line );
@@ -418,7 +419,7 @@ static void test_key_names(void)
     BOOL ret;
     INFCONTEXT context;
 
-    for (i = 0; i < sizeof(key_names)/sizeof(key_names[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(key_names); i++)
     {
         strcpy( buffer, STD_HEADER "[Test]\n" );
         strcat( buffer, key_names[i].data );
@@ -450,6 +451,11 @@ static void test_key_names(void)
                     if (i == 49)
                         ok( !strcmp( field, key_names[i].fields[index] ) ||
                             !strcmp( field, A1200), /* Vista, W2K8 */
+                            "line %u: bad field %s/%s\n",
+                            i, field, key_names[i].fields[index] );
+                    else if (i == 52)
+                        ok( !strcmp( field, key_names[i].fields[index] ) ||
+                            !strcmp( field, A4096), /* Win10 >= 1709 */
                             "line %u: bad field %s/%s\n",
                             i, field, key_names[i].fields[index] );
                     else  /* don't compare drive letter of paths */
@@ -622,7 +628,7 @@ static void test_SetupGetIntField(void)
     };
     unsigned int i;
 
-    for (i = 0; i < sizeof(keys)/sizeof(keys[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(keys); i++)
     {
         HINF hinf;
         char buffer[MAX_INF_STRING_LENGTH];

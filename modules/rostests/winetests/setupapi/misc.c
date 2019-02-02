@@ -594,7 +594,7 @@ static void test_SetupDecompressOrCopyFile(void)
 
     create_source_file(source, uncompressed, sizeof(uncompressed));
 
-    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(invalid_parameters); i++)
     {
         type = FILE_COMPRESSION_NONE;
         ret = SetupDecompressOrCopyFileA(invalid_parameters[i].source,
@@ -697,7 +697,7 @@ static void test_SetupDecompressOrCopyFile(void)
 
     p = strrchr(target, '\\');
 
-    for (i = 0; i < sizeof(zip_multi_tests)/sizeof(zip_multi_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(zip_multi_tests); i++)
     {
         lstrcpyA(p + 1, zip_multi_tests[i].filename);
 

@@ -174,6 +174,45 @@ static void test_registry(void)
     ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
+static void test_install_from(void)
+{
+    char path[MAX_PATH];
+    HINF infhandle;
+    HKEY key;
+    LONG res;
+    BOOL ret;
+
+    /* First create a registry structure we would like to be deleted */
+    ok(!RegCreateKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
+        "Expected RegCreateKeyA to succeed\n");
+
+    /* Doublecheck if the registry key is present */
+    ok(!RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
+        "Expected registry key to exist\n");
+
+    create_inf_file(inffile, cmdline_inf_reg);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallFromInfSectionA(NULL, infhandle, "DefaultInstall", SPINST_REGISTRY, key,
+        "A:\\", 0, NULL, NULL, NULL, NULL);
+    ok(ret, "Unexpected failure\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+
+    /* Check if the registry key is recursively deleted */
+    res = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest", &key);
+    ok(res == ERROR_FILE_NOT_FOUND, "Didn't expect the registry key to exist\n");
+    /* Just in case */
+    if (res == ERROR_SUCCESS)
+    {
+        RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest");
+        RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
+    }
+
+    SetupCloseInfFile(infhandle);
+    DeleteFileA(inffile);
+}
+
 static void test_install_svc_from(void)
 {
     char inf[2048];
@@ -742,6 +781,7 @@ START_TEST(install)
 
     test_cmdline();
     test_registry();
+    test_install_from();
     test_install_svc_from();
     test_driver_install();
     test_dirid();
