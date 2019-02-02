@@ -237,6 +237,97 @@ interface ITextDocument : IDispatch
     HRESULT RangeFromPoint([in]LONG x, [in]LONG y, [retval, out]ITextRange **ppRange);
 }
 
+[
+  object,
+  uuid(01c25500-4268-11d1-883a-3c8b00c10000)
+]
+interface ITextDocument2Old : ITextDocument
+{
+    HRESULT AttachMsgFilter([in]IUnknown *filter);
+    HRESULT SetEffectColor([in]LONG index, [in]COLORREF cr);
+    HRESULT GetEffectColor([in]LONG index, [out]COLORREF *cr);
+    HRESULT GetCaretType([retval, out]LONG *type);
+    HRESULT SetCaretType([in]LONG type);
+    HRESULT GetImmContext([retval, out]LONG *context);
+    HRESULT ReleaseImmContext([in]LONG context);
+    HRESULT GetPreferredFont([in]LONG cp, [in]LONG codepage, [in]LONG option, [in]LONG current_codepage, [in]LONG current_fontsize,
+                             [out]BSTR *bstr, [out]LONG *pitch_family, [out]LONG *new_fontsize);
+    HRESULT GetNotificationMode([retval, out]LONG *mode);
+    HRESULT SetNotificationMode([in]LONG mode);
+    HRESULT GetClientRect([in]LONG type, [out]LONG *left, [out]LONG *top, [out]LONG *right, [out]LONG *bottom);
+    HRESULT GetSelectionEx([retval, out]ITextSelection **selection);
+    HRESULT GetWindow([out]LONG *hwnd);
+    HRESULT GetFEFlags([out]LONG *flags);
+    HRESULT UpdateWindow();
+    HRESULT CheckTextLimit([in]LONG cch, [out]LONG  *exceed);
+    HRESULT IMEInProgress([in]LONG mode);
+    HRESULT SysBeep();
+    HRESULT Update([in]LONG mode);
+    HRESULT Notify([in]LONG notify);
+}
+
+interface ITextDisplays;
+interface ITextFont2;
+interface ITextPara2;
+interface ITextRange2;
+interface ITextSelection2;
+interface ITextStory;
+interface ITextStoryRanges2;
+interface ITextStrings;
+
+[
+  object,
+  uuid(c241f5e0-7206-11d8-a2c7-00a0d1d6c6b3)
+]
+interface ITextDocument2 : ITextDocument
+{
+    HRESULT GetCaretType([retval, out]LONG *value);
+    HRESULT SetCaretType([in]LONG value);
+    HRESULT GetDisplays([retval, out]ITextDisplays **displays);
+    HRESULT GetDocumentFont([retval, out]ITextFont2 **font);
+    HRESULT SetDocumentFont([in]ITextFont2 *font);
+    HRESULT GetDocumentPara([retval, out]ITextPara2 **para);
+    HRESULT SetDocumentPara([in]ITextPara2 *para);
+    HRESULT GetEastAsianFlags([retval, out]LONG *flags);
+    HRESULT GetGenerator([retval, out]BSTR *bstr);
+    HRESULT SetIMEInProgress([in]LONG value);
+    HRESULT GetNotificationMode([retval, out]LONG *mode);
+    HRESULT SetNotificationMode([in]LONG mode);
+    HRESULT GetSelection2([retval, out]ITextSelection2 **selection);
+    HRESULT GetStoryRanges2([retval, out]ITextStoryRanges2 **stories);
+    HRESULT GetTypographyOptions([retval, out]LONG *options);
+    HRESULT GetVersion([retval, out]LONG *value);
+    HRESULT GetWindow([retval, out]LONG *hwnd);
+    HRESULT AttachMsgFilter([in]IUnknown *filter);
+    HRESULT CheckTextLimit([in]LONG cch, [out]LONG  *exceed);
+    HRESULT GetCallManager([retval, out]IUnknown **manager);
+    HRESULT GetClientRect([in]LONG type, [out]LONG *left, [out]LONG *top, [out]LONG *right, [out]LONG *bottom);
+    HRESULT GetEffectColor([in]LONG index, [out]COLORREF *cr);
+    HRESULT GetImmContext([retval, out]LONG *context);
+    HRESULT GetPreferredFont([in]LONG cp, [in]LONG codepage, [in]LONG option, [in]LONG current_codepage, [in]LONG current_fontsize,
+                             [out]BSTR *bstr, [out]LONG *pitch_family, [out]LONG *new_fontsize);
+    HRESULT GetProperty([in]LONG type, [out]LONG *value);
+    HRESULT GetStrings([out]ITextStrings **strings);
+    HRESULT Notify([in]LONG notify);
+    HRESULT Range2([in]LONG cp_active, [in]LONG cp_anchor, [retval, out]ITextRange2 **range);
+    HRESULT RangeFromPoint2([in]LONG x, [in]LONG y, [in]LONG type, [retval, out]ITextRange2 **range);
+    HRESULT ReleaseCallManager([in]IUnknown *manager);
+    HRESULT ReleaseImmContext([in]LONG context);
+    HRESULT SetEffectColor([in]LONG index, [in]LONG value);
+    HRESULT SetProperty([in]LONG type, [in]LONG value);
+    HRESULT SetTypographyOptions([in]LONG options, [in]LONG mask);
+    HRESULT SysBeep();
+    HRESULT Update([in]LONG value);
+    HRESULT UpdateWindow();
+    HRESULT GetMathProperties([out]LONG *options);
+    HRESULT SetMathProperties([in]LONG options, [in]LONG mask);
+    HRESULT GetActiveStory([retval, out]ITextStory **story);
+    HRESULT SetActiveStory([in]ITextStory *story);
+    HRESULT GetMainStory([retval, out]ITextStory **story);
+    HRESULT GetNewStory([retval, out]ITextStory **story);
+    HRESULT GetStory([in]LONG index, [retval, out]ITextStory **story);
+}
+
 interface ITextFont;
 interface ITextPara;
 
