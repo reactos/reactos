@@ -141,7 +141,7 @@
 @ stdcall PdhValidatePathExA(ptr str)
 @ stdcall PdhValidatePathExW(ptr wstr)
 @ stdcall PdhValidatePathW(wstr)
-@ stub PdhVbAddCounter
+@ stdcall PdhVbAddCounter(ptr str ptr)
 @ stub PdhVbCreateCounterPathList
 @ stub PdhVbGetCounterPathElements
 @ stub PdhVbGetCounterPathFromList
