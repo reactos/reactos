@@ -133,7 +133,7 @@ static void test_PSStringFromPropertyKey(void)
 
     int i;
 
-    for (i = 0; i < sizeof(testcases)/sizeof(testcases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(testcases); i++)
     {
         if (testcases[i].psz)
             memcpy(testcases[i].psz, fillerW, PKEYSTR_MAX * sizeof(WCHAR));
@@ -413,7 +413,7 @@ static void test_PSPropertyKeyFromString(void)
 
     int i;
 
-    for (i = 0; i < sizeof(testcases)/sizeof(testcases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(testcases); i++)
     {
         if (testcases[i].pkey)
             *testcases[i].pkey = out_init;
@@ -480,7 +480,7 @@ static void test_InitPropVariantFromGUIDAsString(void)
         InitVariantFromGUIDAsString(&IID_NULL, NULL);
     }
 
-    for(i=0; i<sizeof(testcases)/sizeof(testcases[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(testcases); i++) {
         memset(&propvar, 0, sizeof(PROPVARIANT));
         hres = InitPropVariantFromGUIDAsString(testcases[i].guid, &propvar);
         ok(hres == S_OK, "%d) InitPropVariantFromGUIDAsString returned %x\n", i, hres);
@@ -1230,6 +1230,24 @@ static void test_PropVariantChangeType_LPWSTR(void)
     PropVariantClear(&src);
 }
 
+static void test_InitPropVariantFromCLSID(void)
+{
+    PROPVARIANT propvar;
+    GUID clsid;
+    HRESULT hr;
+
+    memset(&propvar, 0, sizeof(propvar));
+    propvar.vt = VT_I4;
+    propvar.u.lVal = 15;
+
+    memset(&clsid, 0xcc, sizeof(clsid));
+    hr = InitPropVariantFromCLSID(&clsid, &propvar);
+    ok(hr == S_OK, "Unexpected hr %#x.\n", hr);
+    ok(propvar.vt == VT_CLSID, "Unexpected type %d.\n", propvar.vt);
+    ok(IsEqualGUID(propvar.u.puuid, &clsid), "Unexpected puuid value.\n");
+    PropVariantClear(&propvar);
+}
+
 START_TEST(propsys)
 {
     test_PSStringFromPropertyKey();
@@ -1244,4 +1262,5 @@ START_TEST(propsys)
     test_PropVariantChangeType_LPWSTR();
     test_PropVariantToBoolean();
     test_PropVariantToStringWithDefault();
+    test_InitPropVariantFromCLSID();
 }

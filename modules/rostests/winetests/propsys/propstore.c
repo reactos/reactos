@@ -214,6 +214,7 @@ static void test_persistserialized(void)
 
     if (FAILED(hr))
     {
+        IPropertyStore_Release(propstore);
         skip("IPersistSerializedPropStorage not supported\n");
         return;
     }
