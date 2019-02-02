@@ -202,6 +202,7 @@ static void test_supported_protocols(CredHandle *handle, unsigned exprots)
     X(SP_PROT_TLS1_0_CLIENT, "TLS 1.0 client");
     X(SP_PROT_TLS1_1_CLIENT, "TLS 1.1 client");
     X(SP_PROT_TLS1_2_CLIENT, "TLS 1.2 client");
+    X(SP_PROT_TLS1_3_CLIENT, "TLS 1.3 client");
 #undef X
 
     if(protocols.grbitProtocol)
@@ -560,11 +561,11 @@ static void test_remote_cert(PCCERT_CONTEXT remote_cert)
         cert_cnt++;
     }
 
-    ok(cert_cnt == 2 || cert_cnt == 3, "cert_cnt = %u\n", cert_cnt);
+    ok(cert_cnt == 4, "cert_cnt = %u\n", cert_cnt);
     ok(incl_remote, "context does not contain cert itself\n");
 }
 
-static const char http_request[] = "HEAD /test.html HTTP/1.1\r\nHost: www.winehq.org\r\nConnection: close\r\n\r\n";
+static const char http_request[] = "HEAD /test.html HTTP/1.1\r\nHost: test.winehq.org\r\nConnection: close\r\n\r\n";
 
 static void init_buffers(SecBufferDesc *desc, unsigned count, unsigned size)
 {
@@ -690,7 +691,7 @@ static void test_communication(void)
 
     SecBufferDesc buffers[2];
     SecBuffer *buf;
-    unsigned buf_size = 4000;
+    unsigned buf_size = 8192;
     unsigned char *data;
     unsigned data_size;
 
@@ -700,7 +701,7 @@ static void test_communication(void)
         return;
     }
 
-    /* Create a socket and connect to www.winehq.org */
+    /* Create a socket and connect to test.winehq.org */
     ret = WSAStartup(0x0202, &wsa_data);
     if (ret)
     {
@@ -708,10 +709,10 @@ static void test_communication(void)
         return;
     }
 
-    host = gethostbyname("www.winehq.org");
+    host = gethostbyname("test.winehq.org");
     if (!host)
     {
-        skip("Can't resolve www.winehq.org\n");
+        skip("Can't resolve test.winehq.org\n");
         return;
     }
 
@@ -728,7 +729,7 @@ static void test_communication(void)
     ret = connect(sock, (struct sockaddr *)&addr, sizeof(addr));
     if (ret == SOCKET_ERROR)
     {
-        skip("Can't connect to www.winehq.org\n");
+        skip("Can't connect to test.winehq.org\n");
         return;
     }
 
@@ -806,7 +807,7 @@ todo_wine
     ok(buffers[0].pBuffers[0].cbBuffer == buf_size, "Output buffer size changed.\n");
     ok(buffers[0].pBuffers[0].BufferType == SECBUFFER_TOKEN, "Output buffer type changed.\n");
 
-    buffers[1].cBuffers = 4;
+    buffers[1].cBuffers = 1;
     buffers[1].pBuffers[0].cbBuffer = 0;
 
     status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
@@ -865,10 +866,9 @@ todo_wine
     }
 
     ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
-    ok(status == SEC_E_OK || broken(status == SEC_E_INVALID_TOKEN) /* WinNT */,
-        "InitializeSecurityContext failed: %08x\n", status);
+    ok(status == SEC_E_OK, "InitializeSecurityContext failed: %08x\n", status);
     if(status != SEC_E_OK) {
-        win_skip("Handshake failed\n");
+        skip("Handshake failed\n");
         return;
     }
 

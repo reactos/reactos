@@ -67,7 +67,7 @@ static void testGetComputerObjectNameA(void)
     BOOLEAN rc;
     UINT i;
 
-    for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(formats); i++) {
         size = 0;
         SetLastError(0xdeadbeef);
         rc = pGetComputerObjectNameA(formats[i], NULL, &size);
@@ -112,7 +112,7 @@ static void testGetComputerObjectNameW(void)
     BOOLEAN rc;
     UINT i;
 
-    for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(formats); i++) {
         size = 0;
         SetLastError(0xdeadbeef);
         rc = pGetComputerObjectNameW(formats[i], NULL, &size);
@@ -134,7 +134,7 @@ static void testGetComputerObjectNameW(void)
 
         if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) continue;
 
-        size = sizeof(nameW)/sizeof(nameW[0]);
+        size = ARRAY_SIZE(nameW);
         SetLastError(0xdeadbeef);
         rc = pGetComputerObjectNameW(formats[i], nameW, &size);
         switch (formats[i])
@@ -158,7 +158,7 @@ static void testGetUserNameExA(void)
     BOOLEAN rc;
     UINT i;
 
-    for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(formats); i++) {
         size = sizeof(name);
         ZeroMemory(name, sizeof(name));
         rc = pGetUserNameExA(formats[i], name, &size);
@@ -205,7 +205,7 @@ static void testGetUserNameExW(void)
     BOOLEAN rc;
     UINT i;
 
-    for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
+    for (i = 0; i < ARRAY_SIZE(formats); i++) {
         size = sizeof(nameW);
         ZeroMemory(nameW, sizeof(nameW));
         rc = pGetUserNameExW(formats[i], nameW, &size);
