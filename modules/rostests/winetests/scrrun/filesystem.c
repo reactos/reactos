@@ -375,7 +375,7 @@ static void test_GetFileVersion(void)
     BSTR path, version;
     HRESULT hr;
 
-    GetSystemDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    GetSystemDirectoryW(pathW, ARRAY_SIZE(pathW));
 
     lstrcpyW(filenameW, pathW);
     lstrcatW(filenameW, k32W);
@@ -438,7 +438,7 @@ static void test_GetParentFolderName(void)
     hr = IFileSystem3_GetParentFolderName(fs3, NULL, NULL);
     ok(hr == E_POINTER, "GetParentFolderName returned %x, expected E_POINTER\n", hr);
 
-    for(i=0; i<sizeof(tests)/sizeof(tests[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(tests); i++) {
         result = (BSTR)0xdeadbeef;
         path = tests[i].path ? SysAllocString(tests[i].path) : NULL;
         hr = IFileSystem3_GetParentFolderName(fs3, path, &result);
@@ -481,7 +481,7 @@ static void test_GetFileName(void)
     hr = IFileSystem3_GetFileName(fs3, NULL, NULL);
     ok(hr == E_POINTER, "GetFileName returned %x, expected E_POINTER\n", hr);
 
-    for(i=0; i<sizeof(tests)/sizeof(tests[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(tests); i++) {
         result = (BSTR)0xdeadbeef;
         path = tests[i].path ? SysAllocString(tests[i].path) : NULL;
         hr = IFileSystem3_GetFileName(fs3, path, &result);
@@ -527,7 +527,7 @@ static void test_GetBaseName(void)
     hr = IFileSystem3_GetBaseName(fs3, NULL, NULL);
     ok(hr == E_POINTER, "GetBaseName returned %x, expected E_POINTER\n", hr);
 
-    for(i=0; i<sizeof(tests)/sizeof(tests[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(tests); i++) {
         result = (BSTR)0xdeadbeef;
         path = tests[i].path ? SysAllocString(tests[i].path) : NULL;
         hr = IFileSystem3_GetBaseName(fs3, path, &result);
@@ -1521,7 +1521,7 @@ static void test_CreateTextFile(void)
     /* File was created in Unicode mode, it contains 0xfffe BOM. Opening it in non-Unicode mode
        treats BOM like a valuable data with appropriate CP_ACP -> WCHAR conversion. */
     buffW[0] = 0;
-    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, sizeof(buffW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, ARRAY_SIZE(buffW));
 
     hr = IFileSystem3_OpenTextFile(fs3, nameW, ForReading, VARIANT_FALSE, TristateFalse, &stream);
     ok(hr == S_OK, "got 0x%08x\n", hr);
@@ -1569,7 +1569,7 @@ static void test_WriteLine(void)
     ret = ReadFile(file, buffA, sizeof(buffA), &r, NULL);
     ok(ret && r, "read %d, got %d, %d\n", r, ret, GetLastError());
 
-    len = MultiByteToWideChar(CP_ACP, 0, buffA, r, buffW, sizeof(buffW)/sizeof(WCHAR));
+    len = MultiByteToWideChar(CP_ACP, 0, buffA, r, buffW, ARRAY_SIZE(buffW));
     buffW[len] = 0;
     lstrcpyW(buff2W, nameW);
     lstrcatW(buff2W, crlfW);
@@ -1655,7 +1655,7 @@ static void test_ReadAll(void)
     hr = ITextStream_ReadAll(stream, &str);
     ok(hr == S_FALSE || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
     buffW[0] = 0;
-    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, sizeof(buffW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, ARRAY_SIZE(buffW));
     ok(str[0] == buffW[0] && str[1] == buffW[1], "got %s, %d\n", wine_dbgstr_w(str), SysStringLen(str));
     SysFreeString(str);
     ITextStream_Release(stream);
@@ -1801,7 +1801,7 @@ static void test_Read(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
     buffW[0] = 0;
-    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, sizeof(buffW)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, utf16bom, -1, buffW, ARRAY_SIZE(buffW));
 
     ok(!lstrcmpW(str, buffW), "got %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(buffW));
     ok(SysStringLen(str) == 2, "got %d\n", SysStringLen(str));
@@ -2151,7 +2151,7 @@ static void test_GetExtensionName(void)
     HRESULT hr;
     int i;
 
-    for (i = 0; i < sizeof(extension_tests)/sizeof(extension_tests[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(extension_tests); i++) {
 
        path = SysAllocString(extension_tests[i].path);
        ext = NULL;
@@ -2190,7 +2190,7 @@ static void test_GetSpecialFolder(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     hr = IFolder_get_Path(folder, &path);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    GetWindowsDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    GetWindowsDirectoryW(pathW, ARRAY_SIZE(pathW));
     ok(!lstrcmpiW(pathW, path), "got %s, expected %s\n", wine_dbgstr_w(path), wine_dbgstr_w(pathW));
     SysFreeString(path);
     IFolder_Release(folder);
@@ -2199,7 +2199,7 @@ static void test_GetSpecialFolder(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     hr = IFolder_get_Path(folder, &path);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    GetSystemDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    GetSystemDirectoryW(pathW, ARRAY_SIZE(pathW));
     ok(!lstrcmpiW(pathW, path), "got %s, expected %s\n", wine_dbgstr_w(path), wine_dbgstr_w(pathW));
     SysFreeString(path);
     IFolder_Release(folder);
@@ -2208,7 +2208,7 @@ static void test_GetSpecialFolder(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     hr = IFolder_get_Path(folder, &path);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    ret = GetTempPathW(sizeof(pathW)/sizeof(WCHAR), pathW);
+    ret = GetTempPathW(ARRAY_SIZE(pathW), pathW);
     if (ret && pathW[ret-1] == '\\')
         pathW[ret-1] = 0;
 
