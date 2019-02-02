@@ -627,3 +627,17 @@ SetupDiOpenDeviceInterfaceRegKey(
 
     return hKey;
 }
+
+/***********************************************************************
+ *		SetupDiDeleteDeviceInterfaceData (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiDeleteDeviceInterfaceData(
+    HDEVINFO DeviceInfoSet,
+    PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
+{
+    FIXME("SetupDiDeleteDeviceInterfaceData(%p %p) stub\n",
+          DeviceInfoSet, DeviceInterfaceData);
+    return TRUE;
+}
