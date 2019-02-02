@@ -23,13 +23,17 @@ list(APPEND SOURCE
     NtOpenProcessToken.c
     NtOpenThreadToken.c
     NtProtectVirtualMemory.c
+    NtQueryInformationFile.c
     NtQueryInformationProcess.c
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
+    NtQuerySystemInformation.c
     NtQueryVolumeInformationFile.c
     NtReadFile.c
     NtSaveKey.c
+    NtSetInformationFile.c
     NtSetValueKey.c
+    NtSetVolumeInformationFile.c
     NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c

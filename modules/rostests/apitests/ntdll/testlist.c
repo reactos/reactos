@@ -21,13 +21,17 @@ extern void func_NtOpenKey(void);
 extern void func_NtOpenProcessToken(void);
 extern void func_NtOpenThreadToken(void);
 extern void func_NtProtectVirtualMemory(void);
+extern void func_NtQueryInformationFile(void);
 extern void func_NtQueryInformationProcess(void);
 extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
+extern void func_NtQuerySystemInformation(void);
 extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtReadFile(void);
 extern void func_NtSaveKey(void);
+extern void func_NtSetInformationFile(void);
 extern void func_NtSetValueKey(void);
+extern void func_NtSetVolumeInformationFile(void);
 extern void func_NtSystemInformation(void);
 extern void func_NtWriteFile(void);
 extern void func_RtlAllocateHeap(void);
@@ -81,13 +85,17 @@ const struct test winetest_testlist[] =
     { "NtOpenProcessToken",             func_NtOpenProcessToken },
     { "NtOpenThreadToken",              func_NtOpenThreadToken },
     { "NtProtectVirtualMemory",         func_NtProtectVirtualMemory },
+    { "NtQueryInformationFile",         func_NtQueryInformationFile },
     { "NtQueryInformationProcess",      func_NtQueryInformationProcess },
     { "NtQueryKey",                     func_NtQueryKey },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
+    { "NtQuerySystemInformation",       func_NtQuerySystemInformation },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
     { "NtReadFile",                     func_NtReadFile },
     { "NtSaveKey",                      func_NtSaveKey},
+    { "NtSetInformationFile",           func_NtSetInformationFile },
     { "NtSetValueKey",                  func_NtSetValueKey},
+    { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
     { "NtWriteFile",                    func_NtWriteFile },
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
