@@ -393,4 +393,7 @@ cpp_quote("#endif")
   } ipu_t;
 
   void ip_test([in] ipu_t *a);
+
+  int sum_ptr_array([in] int *a[2]);
+  int sum_array_ptr([in] int (*a)[2]);
 }

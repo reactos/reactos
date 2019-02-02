@@ -3,13 +3,15 @@ remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
 add_definitions(
     -DUSE_WINE_TODOS
-    -DWINETEST_USE_DBGSTR_LONGLONG)
+    -DWINETEST_USE_DBGSTR_LONGLONG
+    -DPROXY_DELEGATION)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
 unset(IDL_FLAGS)
+add_rpcproxy_files(cstub.idl)
 
 list(APPEND SOURCE
     cstub.c
@@ -19,6 +21,8 @@ list(APPEND SOURCE
     rpc_async.c
     server.c
     testlist.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cstub_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_s.c)
 

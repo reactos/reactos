@@ -25,9 +25,6 @@
 #include <rpc.h>
 #include <rpcasync.h>
 
-static RPC_STATUS (RPC_ENTRY *pRpcAsyncInitializeHandle)(PRPC_ASYNC_STATE,unsigned int);
-static RPC_STATUS (RPC_ENTRY *pRpcAsyncGetCallStatus)(PRPC_ASYNC_STATE);
-
 static void test_RpcAsyncInitializeHandle(void)
 {
     char buffer[256];
@@ -36,15 +33,15 @@ static void test_RpcAsyncInitializeHandle(void)
     int i;
     void *unset_ptr;
 
-    status = pRpcAsyncInitializeHandle((PRPC_ASYNC_STATE)buffer, sizeof(buffer));
+    status = RpcAsyncInitializeHandle((PRPC_ASYNC_STATE)buffer, sizeof(buffer));
     ok(status == ERROR_INVALID_PARAMETER, "RpcAsyncInitializeHandle with large Size should have returned ERROR_INVALID_PARAMETER instead of %d\n", status);
 
-    status = pRpcAsyncInitializeHandle(&async, sizeof(async) - 1);
+    status = RpcAsyncInitializeHandle(&async, sizeof(async) - 1);
     ok(status == ERROR_INVALID_PARAMETER, "RpcAsyncInitializeHandle with small Size should have returned ERROR_INVALID_PARAMETER instead of %d\n", status);
 
     memset(&async, 0xcc, sizeof(async));
     memset(&unset_ptr, 0xcc, sizeof(unset_ptr));
-    status = pRpcAsyncInitializeHandle(&async, sizeof(async));
+    status = RpcAsyncInitializeHandle(&async, sizeof(async));
     ok(status == RPC_S_OK, "RpcAsyncInitializeHandle failed with error %d\n", status);
 
     ok(async.Size == sizeof(async), "async.Size wrong: %d\n", async.Size);
@@ -65,29 +62,21 @@ static void test_RpcAsyncGetCallStatus(void)
     RPC_ASYNC_STATE async;
     RPC_STATUS status;
 
-    status = pRpcAsyncInitializeHandle(&async, sizeof(async));
+    status = RpcAsyncInitializeHandle(&async, sizeof(async));
     ok(status == RPC_S_OK, "RpcAsyncInitializeHandle failed with error %d\n", status);
 
-    status = pRpcAsyncGetCallStatus(&async);
+    status = RpcAsyncGetCallStatus(&async);
     todo_wine
     ok(status == RPC_S_INVALID_BINDING, "RpcAsyncGetCallStatus should have returned RPC_S_INVALID_BINDING instead of %d\n", status);
 
     memset(&async, 0, sizeof(async));
-    status = pRpcAsyncGetCallStatus(&async);
+    status = RpcAsyncGetCallStatus(&async);
     todo_wine
     ok(status == RPC_S_INVALID_BINDING, "RpcAsyncGetCallStatus should have returned RPC_S_INVALID_BINDING instead of %d\n", status);
 }
 
 START_TEST( rpc_async )
 {
-    HMODULE hRpcRt4 = GetModuleHandleA("rpcrt4.dll");
-    pRpcAsyncInitializeHandle = (void *)GetProcAddress(hRpcRt4, "RpcAsyncInitializeHandle");
-    pRpcAsyncGetCallStatus = (void *)GetProcAddress(hRpcRt4, "RpcAsyncGetCallStatus");
-    if (!pRpcAsyncInitializeHandle || !pRpcAsyncGetCallStatus)
-    {
-        win_skip("asynchronous functions not available\n");
-        return;
-    }
     test_RpcAsyncInitializeHandle();
     test_RpcAsyncGetCallStatus();
 }

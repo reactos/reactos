@@ -19,11 +19,13 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
-#define PROXY_DELEGATION
 #define COBJMACROS
+#ifdef __REACTOS__
+#define CONST_VTABLE
+#endif
 
-#include "wine/test.h"
 #include <windef.h>
 #include <winbase.h>
 #include <winnt.h>
@@ -35,10 +37,22 @@
 #include "rpcdce.h"
 #include "rpcproxy.h"
 
+#include "wine/heap.h"
+#include "wine/test.h"
+
+#include "cstub_p.h"
+
 static CStdPSFactoryBuffer PSFactoryBuffer;
 
-CSTDSTUBBUFFERRELEASE(&PSFactoryBuffer)
-CSTDSTUBBUFFER2RELEASE(&PSFactoryBuffer)
+static ULONG WINAPI test_CStdStubBuffer_Release(IRpcStubBuffer *This)
+{
+    return NdrCStdStubBuffer_Release(This, (IPSFactoryBuffer *)&PSFactoryBuffer);
+}
+
+static ULONG WINAPI test_CStdStubBuffer2_Release(IRpcStubBuffer *This)
+{
+    return NdrCStdStubBuffer2_Release(This, (IPSFactoryBuffer *)&PSFactoryBuffer);
+}
 
 static GUID IID_if1 = {0x12345678, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if2 = {0x12345679, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
@@ -186,7 +200,18 @@ static CInterfaceStubVtbl if1_stub_vtbl =
         5,
         &if1_table[-3]
     },
-    { CStdStubBuffer_METHODS }
+    {
+        CStdStubBuffer_QueryInterface,
+        CStdStubBuffer_AddRef,
+        test_CStdStubBuffer_Release,
+        CStdStubBuffer_Connect,
+        CStdStubBuffer_Disconnect,
+        CStdStubBuffer_Invoke,
+        CStdStubBuffer_IsIIDSupported,
+        CStdStubBuffer_CountRefs,
+        CStdStubBuffer_DebugServerQueryInterface,
+        CStdStubBuffer_DebugServerRelease
+    }
 };
 
 static CINTERFACE_PROXY_VTABLE(13) if2_proxy_vtbl =
@@ -257,7 +282,7 @@ static CInterfaceStubVtbl if2_stub_vtbl =
         13,
         &if2_table[-3]
     },
-    { CStdStubBuffer_DELEGATING_METHODS }
+    { 0, 0, test_CStdStubBuffer2_Release, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 static CINTERFACE_PROXY_VTABLE(5) if3_proxy_vtbl =
@@ -596,7 +621,7 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
 #undef VTBL_PROXY_TEST
 #undef VTBL_PROXY_TEST_NOT_ZERO
 
-    for (i = 0; i < sizeof(interfaces)/sizeof(interfaces[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(interfaces); i++)
         ok( proxy_vtbl[i]->header.piid == interfaces[i],
             "wrong proxy %u iid %p/%p\n", i, proxy_vtbl[i]->header.piid, interfaces[i] );
 
@@ -1194,9 +1219,217 @@ static void test_NdrDllRegisterProxy( void )
     }
 }
 
+static HANDLE create_process(const char *arg)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si = {0};
+    char cmdline[200];
+    char **argv;
+    BOOL ret;
+
+    si.cb = sizeof(si);
+    winetest_get_mainargs(&argv);
+    sprintf(cmdline, "\"%s\" %s %s", argv[0], argv[1], arg);
+    ret = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    ok(ret, "CreateProcess failed: %u\n", GetLastError());
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
+DEFINE_GUID(CLSID_test1,0xdeadf00d,0x0001,0x44c7,0x85,0x0f,0x2a,0x0f,0x46,0x5c,0x0c,0x6c);
+
+static HRESULT WINAPI test1_QueryInterface(ITest1 *iface, REFIID iid, void **out)
+{
+    if (winetest_debug > 1) trace("%s\n", wine_dbgstr_guid(iid));
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_ITest1))
+    {
+        *out = iface;
+        return S_OK;
+    }
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI test1_AddRef(ITest1 *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI test1_Release(ITest1 *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI test1_GetClassID(ITest1 *iface, CLSID *clsid)
+{
+    *clsid = CLSID_test1;
+    return S_OK;
+}
+
+static int WINAPI test1_square(ITest1 *iface, int x)
+{
+    return x * x;
+}
+
+static const ITest1Vtbl test1_vtbl =
+{
+    test1_QueryInterface,
+    test1_AddRef,
+    test1_Release,
+    test1_GetClassID,
+    test1_square,
+};
+
+static HRESULT WINAPI test_cf_QueryInterface(IClassFactory *iface, REFIID iid, void **out)
+{
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IClassFactory))
+    {
+        *out = iface;
+        return S_OK;
+    }
+    *out = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI test_cf_AddRef(IClassFactory *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI test_cf_Release(IClassFactory *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI test_cf_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID iid, void **out)
+{
+    ITest1 *obj = heap_alloc(sizeof(*obj));
+
+    obj->lpVtbl = &test1_vtbl;
+
+    return ITest1_QueryInterface(obj, iid, out);
+}
+
+static HRESULT WINAPI test_cf_LockServer(IClassFactory *iface, BOOL lock)
+{
+    return S_OK;
+}
+
+static const IClassFactoryVtbl test_cf_vtbl =
+{
+    test_cf_QueryInterface,
+    test_cf_AddRef,
+    test_cf_Release,
+    test_cf_CreateInstance,
+    test_cf_LockServer,
+};
+
+static IClassFactory test_cf = { &test_cf_vtbl };
+
+extern CStdPSFactoryBuffer gPFactory;
+extern const ProxyFileInfo * aProxyFileList;
+
+static void local_server_proc(void)
+{
+    DWORD obj_cookie, ps_cookie, index;
+    HANDLE stop_event, ready_event;
+    IPSFactoryBuffer *ps;
+    HRESULT hr;
+
+    stop_event = OpenEventA(EVENT_ALL_ACCESS, FALSE, "wine_cstub_test_server_stop");
+    ready_event = OpenEventA(EVENT_ALL_ACCESS, FALSE, "wine_cstub_test_server_ready");
+
+    CoInitialize(NULL);
+
+    hr = CoRegisterClassObject(&CLSID_test1, (IUnknown *)&test_cf,
+        CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &obj_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = NdrDllGetClassObject(&CLSID_test_ps, &IID_IPSFactoryBuffer, (void **)&ps,
+        &aProxyFileList, &CLSID_test_ps, &gPFactory);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoRegisterClassObject(&CLSID_test_ps, (IUnknown *)ps,
+        CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &ps_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoRegisterPSClsid(&IID_ITest1, &CLSID_test_ps);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    SetEvent(ready_event);
+
+    hr = CoWaitForMultipleHandles(0, 1000, 1, &stop_event, &index);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(!index, "got %u\n", index);
+
+    hr = CoRevokeClassObject(ps_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoRevokeClassObject(obj_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    CoUninitialize();
+    ExitProcess(0);
+}
+
+static void test_delegated_methods(void)
+{
+    HANDLE process, stop_event, ready_event;
+    IPSFactoryBuffer *ps;
+    ITest1 *test_obj;
+    DWORD ps_cookie;
+    CLSID clsid;
+    HRESULT hr;
+    int ret;
+
+    stop_event = CreateEventA(NULL, TRUE, FALSE, "wine_cstub_test_server_stop");
+    ready_event = CreateEventA(NULL, TRUE, FALSE, "wine_cstub_test_server_ready");
+
+    process = create_process("server");
+    ok(!WaitForSingleObject(ready_event, 1000), "wait failed\n");
+
+    hr = NdrDllGetClassObject(&CLSID_test_ps, &IID_IPSFactoryBuffer, (void **)&ps,
+        &aProxyFileList, &CLSID_test_ps, &gPFactory);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoRegisterClassObject(&CLSID_test_ps, (IUnknown *)ps,
+        CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &ps_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoRegisterPSClsid(&IID_ITest1, &CLSID_test_ps);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    hr = CoCreateInstance(&CLSID_test1, NULL, CLSCTX_LOCAL_SERVER, &IID_ITest1, (void **)&test_obj);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    ret = ITest1_square(test_obj, 3);
+    ok(ret == 9, "got %d\n", ret);
+
+    hr = ITest1_GetClassID(test_obj, &clsid);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(IsEqualGUID(&clsid, &CLSID_test1), "got %s\n", wine_dbgstr_guid(&clsid));
+
+    ITest1_Release(test_obj);
+
+    SetEvent(stop_event);
+    ok(!WaitForSingleObject(process, 1000), "wait failed\n");
+
+    hr = CoRevokeClassObject(ps_cookie);
+    ok(hr == S_OK, "got %#x\n", hr);
+}
+
 START_TEST( cstub )
 {
     IPSFactoryBuffer *ppsf;
+    int argc;
+    char **argv;
+
+    argc = winetest_get_mainargs( &argv );
+    if (argc > 2 && !strcmp(argv[2], "server"))
+    {
+        local_server_proc();
+        return;
+    }
 
     OleInitialize(NULL);
 
@@ -1209,6 +1442,7 @@ START_TEST( cstub )
     test_Release(ppsf);
     test_delegating_Invoke(ppsf);
     test_NdrDllRegisterProxy();
+    test_delegated_methods();
 
     OleUninitialize();
 }
