@@ -385,7 +385,7 @@ static void test_OleUIAddVerbMenu(void)
     info.cbSize = sizeof(info);
     info.fMask = MIIM_STATE|MIIM_ID|MIIM_STRING|MIIM_SUBMENU;
     info.dwTypeData = buffW;
-    info.cch = sizeof(buffW)/sizeof(WCHAR);
+    info.cch = ARRAY_SIZE(buffW);
     ret = GetMenuItemInfoW(hMenu, 3, TRUE, &info);
     ok(ret, "got %d\n", ret);
     ok(info.fState == MF_GRAYED, "got state 0x%08x\n", info.fState);
@@ -406,7 +406,7 @@ static void test_OleUIAddVerbMenu(void)
     info.cbSize = sizeof(info);
     info.fMask = MIIM_STRING|MIIM_STATE|MIIM_SUBMENU;
     info.dwTypeData = buffW;
-    info.cch = sizeof(buffW)/sizeof(WCHAR);
+    info.cch = ARRAY_SIZE(buffW);
     ret = GetMenuItemInfoW(hMenu, 4, TRUE, &info);
     ok(ret, "got %d\n", ret);
     /* Item string contains verb, usertype and localized string for 'Object' word,
@@ -462,7 +462,7 @@ static void test_OleUIAddVerbMenu(void)
     ok(ret, "got %d\n", ret);
 
     buffW[0] = 0;
-    GetMenuStringW(hMenu, 0, buffW, sizeof(buffW)/sizeof(buffW[0]), MF_BYPOSITION);
+    GetMenuStringW(hMenu, 0, buffW, ARRAY_SIZE(buffW), MF_BYPOSITION);
     ok(!lstrcmpW(buffW, cadabraW), "got %s\n", wine_dbgstr_w(buffW));
 
     verbmenu = NULL;
@@ -475,7 +475,7 @@ static void test_OleUIAddVerbMenu(void)
     info.fMask = MIIM_STRING|MIIM_STATE;
     buffW[0] = 0;
     info.dwTypeData = buffW;
-    info.cch = sizeof(buffW)/sizeof(WCHAR);
+    info.cch = ARRAY_SIZE(buffW);
     ret = GetMenuItemInfoW(hMenu, 0, TRUE, &info);
     ok(ret, "got %d\n", ret);
     ok(lstrcmpW(buffW, cadabraW), "got %s\n", wine_dbgstr_w(buffW));
