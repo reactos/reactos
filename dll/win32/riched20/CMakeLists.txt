@@ -25,10 +25,6 @@ list(APPEND SOURCE
     writer.c
     precomp.h)
 
-if(MSVC AND (ARCH STREQUAL "i386"))
-    list(APPEND SOURCE msvc-thiscall.c)
-endif()
-
 list(APPEND riched20_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/riched_tom.rgs
     ${CMAKE_CURRENT_BINARY_DIR}/riched_tom.tlb)

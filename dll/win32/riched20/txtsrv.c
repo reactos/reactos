@@ -36,6 +36,16 @@
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
 #define THISCALL(func) (void *) __thiscall_ ## func
+#ifdef _MSC_VER
+#define DEFINE_THISCALL_WRAPPER(func,args) \
+    __declspec(naked) HRESULT __thiscall_##func(void) \
+    { \
+        __asm pop eax \
+        __asm push ecx \
+        __asm push eax \
+        __asm jmp func \
+    }
+#else /* _MSC_VER */
 #define DEFINE_THISCALL_WRAPPER(func,args) \
    extern HRESULT __thiscall_ ## func(void); \
    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
@@ -43,6 +53,8 @@
                    "pushl %ecx\n\t" \
                    "pushl %eax\n\t" \
                    "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#endif /* _MSC_VER */
+
 #else /* __i386__ */
 
 #define THISCALL(func) func
