@@ -35,6 +35,8 @@ static SERVICE_STATUS_HANDLE service_handle;
 /* Service process global variables */
 static HANDLE service_stop_event;
 
+static int monitor_count;
+
 static void send_msg(const char *type, const char *msg)
 {
     DWORD written = 0;
@@ -127,6 +129,51 @@ static void test_create_window(void)
     service_ok(r, "DestroyWindow failed: %08x\n", GetLastError());
 }
 
+static BOOL CALLBACK monitor_enum_proc(HMONITOR hmon, HDC hdc, LPRECT lprc, LPARAM lparam)
+{
+    BOOL r;
+    MONITORINFOEXA mi;
+
+    service_ok(hmon != NULL, "Unexpected hmon=%#x\n", hmon);
+
+    monitor_count++;
+
+    mi.cbSize = sizeof(mi);
+
+    SetLastError(0xdeadbeef);
+    r = GetMonitorInfoA(NULL, (MONITORINFO*)&mi);
+    service_ok(GetLastError() == ERROR_INVALID_MONITOR_HANDLE, "Unexpected GetLastError: %#x.\n", GetLastError());
+    service_ok(!r, "GetMonitorInfo with NULL HMONITOR succeeded.\n");
+
+    r = GetMonitorInfoA(hmon, (MONITORINFO*)&mi);
+    service_ok(r, "GetMonitorInfo failed.\n");
+
+    service_ok(mi.rcMonitor.left == 0 && mi.rcMonitor.top == 0 && mi.rcMonitor.right >= 640 && mi.rcMonitor.bottom >= 480,
+               "Unexpected monitor rcMonitor values: {%d,%d,%d,%d}\n",
+               mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
+
+    service_ok(mi.rcWork.left == 0 && mi.rcWork.top == 0 && mi.rcWork.right >= 640 && mi.rcWork.bottom >= 480,
+               "Unexpected monitor rcWork values: {%d,%d,%d,%d}\n",
+               mi.rcWork.left, mi.rcWork.top, mi.rcWork.right, mi.rcWork.bottom);
+
+    service_ok(!strcmp(mi.szDevice, "WinDisc") || !strcmp(mi.szDevice, "\\\\.\\DISPLAY1"),
+               "Unexpected szDevice received: %s\n", mi.szDevice);
+
+    service_ok(mi.dwFlags == MONITORINFOF_PRIMARY, "Unexpected secondary monitor info.\n");
+
+    return TRUE;
+}
+
+/* query monitor information, even in non-interactive services */
+static void test_monitors(void)
+{
+    BOOL r;
+
+    r = EnumDisplayMonitors(0, 0, monitor_enum_proc, 0);
+    service_ok(r, "EnumDisplayMonitors failed.\n");
+    service_ok(monitor_count == 1, "Callback got called less or more than once. %d\n", monitor_count);
+}
+
 static DWORD WINAPI service_handler(DWORD ctrl, DWORD event_type, void *event_data, void *context)
 {
     SERVICE_STATUS status;
@@ -151,6 +198,7 @@ static DWORD WINAPI service_handler(DWORD ctrl, DWORD event_type, void *event_da
     case 128:
         test_winstation();
         test_create_window();
+        test_monitors();
         service_event("CUSTOM");
         return 0xdeadbeef;
     default:
@@ -541,7 +589,7 @@ static void test_runner(void (*p_run_test)(void))
     sprintf(named_pipe_name, "\\\\.\\pipe\\%s_pipe", service_name);
 
     pipe_handle = CreateNamedPipeA(named_pipe_name, PIPE_ACCESS_INBOUND,
-                                   PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_WAIT, 10, 2048, 2048, 10000, NULL);
+                                   PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE|PIPE_WAIT, 10, 2048, 2048, 10000, NULL);
     ok(pipe_handle != INVALID_HANDLE_VALUE, "CreateNamedPipe failed: %u\n", GetLastError());
     if(pipe_handle == INVALID_HANDLE_VALUE)
         return;
