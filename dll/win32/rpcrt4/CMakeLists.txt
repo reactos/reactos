@@ -14,9 +14,10 @@ spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
 add_rpc_files(client epm.idl)
 add_idl_headers(ndr_types_header ndr_types.idl)
 
+set(OLD_IDL_FLAGS ${IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} -Oicf)
 add_rpcproxy_files(ndr_types.idl)
-unset(IDL_FLAGS)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
 
 list(APPEND SOURCE
     cproxy.c

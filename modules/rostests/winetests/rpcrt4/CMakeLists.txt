@@ -7,10 +7,11 @@ add_definitions(
     -DPROXY_DELEGATION)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+set(OLD_IDL_FLAGS ${IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
-unset(IDL_FLAGS)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
 add_rpcproxy_files(cstub.idl)
 
 list(APPEND SOURCE
