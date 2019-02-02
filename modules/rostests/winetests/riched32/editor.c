@@ -104,7 +104,7 @@ static void test_WM_SETTEXT(void)
    * for line breaking (only \n adds a line break)
    */
 
-  for (i = 0; i < sizeof(testitems)/sizeof(testitems[0]); i++) {
+  for (i = 0; i < ARRAY_SIZE(testitems); i++) {
 
     char buf[1024] = {0};
     LRESULT result;
@@ -410,7 +410,7 @@ static void test_EM_GETLINE(void)
   }
 
   memset(origdest, 0xBB, nBuf);
-  for (i = 0; i < sizeof(gl)/sizeof(struct getline_s); i++)
+  for (i = 0; i < ARRAY_SIZE(gl); i++)
   {
     int nCopied, expected_nCopied, expected_bytes_written;
     char gl_text[1024];
@@ -504,7 +504,7 @@ static void test_EM_LINELENGTH(void)
   }
   ok(result == 9, "Incorrect line count of %ld\n", result);
 
-  for (i = 0; i < sizeof(offset_test)/sizeof(offset_test[0]); i++) {
+  for (i = 0; i < ARRAY_SIZE(offset_test); i++) {
     result = SendMessageA(hwndRichEdit, EM_LINELENGTH, offset_test[i][0], 0);
     ok(result == offset_test[i][1], "Length of line at offset %d is %ld, expected %d\n",
        offset_test[i][0], result, offset_test[i][1]);
@@ -525,7 +525,7 @@ static void test_EM_LINELENGTH(void)
            {16, 4}, /* Line 3: |wine */
     };
     SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text1);
-    for (i = 0; i < sizeof(offset_test1)/sizeof(offset_test1[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(offset_test1); i++) {
       result = SendMessageA(hwndRichEdit, EM_LINELENGTH, offset_test1[i][0], 0);
       todo_wine_if (offset_test1[i][2])
           ok(result == offset_test1[i][1], "Length of line at offset %d is %ld, expected %d\n",
@@ -781,20 +781,17 @@ static void test_EM_FINDTEXT(void)
   HWND hwndRichEdit = new_richedit(NULL);
 
   /* Empty rich edit control */
-  run_tests_EM_FINDTEXT(hwndRichEdit, "1", find_tests,
-      sizeof(find_tests)/sizeof(struct find_s));
+  run_tests_EM_FINDTEXT(hwndRichEdit, "1", find_tests, ARRAY_SIZE(find_tests));
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)haystack);
 
   /* Haystack text */
-  run_tests_EM_FINDTEXT(hwndRichEdit, "2", find_tests2,
-      sizeof(find_tests2)/sizeof(struct find_s));
+  run_tests_EM_FINDTEXT(hwndRichEdit, "2", find_tests2, ARRAY_SIZE(find_tests2));
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)haystack2);
 
   /* Haystack text 2 (with EOL characters) */
-  run_tests_EM_FINDTEXT(hwndRichEdit, "3", find_tests3,
-      sizeof(find_tests3)/sizeof(struct find_s));
+  run_tests_EM_FINDTEXT(hwndRichEdit, "3", find_tests3, ARRAY_SIZE(find_tests3));
 
   DestroyWindow(hwndRichEdit);
 }
@@ -1152,12 +1149,21 @@ static void simulate_typing_characters(HWND hwnd, const char* szChars)
     }
 }
 
+static void format_test_result(char *target, const char *src)
+{
+    int i;
+    for (i = 0; i < strlen(src); i++)
+        sprintf(target + 2*i, "%02x", src[i] & 0xFF);
+    target[2*i] = 0;
+}
+
 /*
  * This test attempts to show the effect of enter on a richedit
  * control v1.0 inserts CRLF whereas for higher versions it only
  * inserts CR. If shows that EM_GETTEXTEX with GT_USECRLF == WM_GETTEXT
  * and also shows that GT_USECRLF has no effect in richedit 1.0, but
  * does for higher. The same test is cloned in riched32 and riched20.
+ * Also shows the difference between WM_CHAR/WM_KEYDOWN in v1.0 and higher versions
  */
 static void test_enter(void)
 {
@@ -1176,15 +1182,14 @@ static void test_enter(void)
   char expectedbuf[1024];
   char resultbuf[1024];
   HWND hwndRichEdit = new_richedit(NULL);
-  UINT i,j;
+  UINT i;
+  char buf[1024] = {0};
+  GETTEXTEX getText = {sizeof(buf)};
+  LRESULT result;
+  const char *expected;
 
-  for (i = 0; i < sizeof(testenteritems)/sizeof(testenteritems[0]); i++) {
-
-    char buf[1024] = {0};
-    LRESULT result;
-    GETTEXTEX getText;
-    const char *expected;
-
+  for (i = 0; i < ARRAY_SIZE(testenteritems); i++)
+  {
     /* Set the text to the initial text */
     result = SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)testenteritems[i].initialtext);
     ok (result == 1, "[%d] WM_SETTEXT returned %ld instead of 1\n", i, result);
@@ -1198,12 +1203,8 @@ static void test_enter(void)
     result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buf);
     expected = testenteritems[i].expectedtext;
 
-    resultbuf[0]=0x00;
-    for (j = 0; j < (UINT)result; j++)
-      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
-    expectedbuf[0] = '\0';
-    for (j = 0; j < strlen(expected); j++)
-      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+    format_test_result(resultbuf, buf);
+    format_test_result(expectedbuf, expected);
 
     result = strcmp(expected, buf);
     ok (result == 0,
@@ -1211,21 +1212,14 @@ static void test_enter(void)
         i, resultbuf, expectedbuf);
 
     /* 2. Retrieve with EM_GETTEXTEX, GT_DEFAULT */
-    getText.cb = sizeof(buf);
     getText.flags = GT_DEFAULT;
-    getText.codepage      = CP_ACP;
-    getText.lpDefaultChar = NULL;
-    getText.lpUsedDefChar = NULL;
+    getText.codepage = CP_ACP;
     buf[0] = 0x00;
     result = SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
     expected = testenteritems[i].expectedtext;
 
-    resultbuf[0]=0x00;
-    for (j = 0; j < (UINT)result; j++)
-      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
-    expectedbuf[0] = '\0';
-    for (j = 0; j < strlen(expected); j++)
-      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+    format_test_result(resultbuf, buf);
+    format_test_result(expectedbuf, expected);
 
     result = strcmp(expected, buf);
     ok (result == 0 || broken(buf[0]==0x00 /* WinNT4 */),
@@ -1233,27 +1227,48 @@ static void test_enter(void)
         i, resultbuf, expectedbuf);
 
     /* 3. Retrieve with EM_GETTEXTEX, GT_USECRLF */
-    getText.cb = sizeof(buf);
     getText.flags = GT_USECRLF;
-    getText.codepage      = CP_ACP;
-    getText.lpDefaultChar = NULL;
-    getText.lpUsedDefChar = NULL;
+    getText.codepage = CP_ACP;
     buf[0] = 0x00;
     result = SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
     expected = testenteritems[i].expectedtext;
 
-    resultbuf[0]=0x00;
-    for (j = 0; j < (UINT)result; j++)
-      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
-    expectedbuf[0] = '\0';
-    for (j = 0; j < strlen(expected); j++)
-      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+    format_test_result(resultbuf, buf);
+    format_test_result(expectedbuf, expected);
 
     result = strcmp(expected, buf);
     ok (result == 0 || broken(buf[0]==0x00 /* WinNT4 */),
         "[%d] EM_GETTEXTEX, GT_USECRLF unexpected '%s', expected '%s'\n",
         i, resultbuf, expectedbuf);
   }
+
+  /* Show that WM_CHAR is handled differently from WM_KEYDOWN */
+  getText.flags    = GT_DEFAULT;
+  getText.codepage = CP_ACP;
+
+  result = SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"");
+  ok (result == 1, "[%d] WM_SETTEXT returned %ld instead of 1\n", i, result);
+  SendMessageW(hwndRichEdit, WM_CHAR, 'T', 0);
+  SendMessageW(hwndRichEdit, WM_KEYDOWN, VK_RETURN, 0);
+
+  result = SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
+  ok(result == 1, "Got %d\n", (int)result);
+  format_test_result(resultbuf, buf);
+  format_test_result(expectedbuf, "T");
+  result = strcmp(resultbuf, expectedbuf);
+  ok (result == 0, "[%d] EM_GETTEXTEX, GT_DEFAULT unexpected '%s', expected '%s'\n", i, resultbuf, expectedbuf);
+
+  result = SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"");
+  ok (result == 1, "[%d] WM_SETTEXT returned %ld instead of 1\n", i, result);
+  SendMessageW(hwndRichEdit, WM_CHAR, 'T', 0);
+  SendMessageW(hwndRichEdit, WM_CHAR, '\r', 0);
+
+  SendMessageA(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM)buf);
+  ok(result == 1, "Got %d\n", (int)result);
+  format_test_result(resultbuf, buf);
+  format_test_result(expectedbuf, "T\r\n");
+  result = strcmp(resultbuf, expectedbuf);
+  ok (result == 0, "[%d] EM_GETTEXTEX, GT_DEFAULT unexpected '%s', expected '%s'\n", i, resultbuf, expectedbuf);
 
   DestroyWindow(hwndRichEdit);
 }
@@ -1321,7 +1336,7 @@ static void test_EM_EXSETSEL(void)
 {
     HWND hwndRichEdit = new_richedit(NULL);
     int i;
-    const int num_tests = sizeof(exsetsel_tests)/sizeof(struct exsetsel_s);
+    const int num_tests = ARRAY_SIZE(exsetsel_tests);
 
     /* sending some text to the window */
     SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"testing selection");
@@ -1378,7 +1393,7 @@ static void test_EM_SETSEL(void)
     char buffA[32] = {0};
     HWND hwndRichEdit = new_richedit(NULL);
     int i;
-    const int num_tests = sizeof(exsetsel_tests)/sizeof(struct exsetsel_s);
+    const int num_tests = ARRAY_SIZE(exsetsel_tests);
 
     /* sending some text to the window */
     SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"testing selection");
