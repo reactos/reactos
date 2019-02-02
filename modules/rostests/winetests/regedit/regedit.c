@@ -1638,6 +1638,22 @@ static void test_invalid_import(void)
     verify_reg_nonexist(hkey, "Wine32a");
     verify_reg_nonexist(hkey, "Wine32b");
 
+    /* Test with embedded null characters */
+    exec_import_str("REGEDIT4\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                    "\"Wine33a\"=\"\\0\n"
+                    "\"Wine33b\"=\"\\0\\0\n"
+                    "\"Wine33c\"=\"Value1\\0\n"
+                    "\"Wine33d\"=\"Value2\\0\\0\\0\\0\n"
+                    "\"Wine33e\"=\"Value3\\0Value4\n"
+                    "\"Wine33f\"=\"\\0Value4\n\n");
+    verify_reg_nonexist(hkey, "Wine33a");
+    verify_reg_nonexist(hkey, "Wine33b");
+    verify_reg_nonexist(hkey, "Wine33c");
+    verify_reg_nonexist(hkey, "Wine33d");
+    verify_reg_nonexist(hkey, "Wine33e");
+    verify_reg_nonexist(hkey, "Wine33f");
+
     RegCloseKey(hkey);
 
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
@@ -2133,6 +2149,22 @@ static void test_invalid_import_unicode(void)
                      "  65,00,6e,00,61,00,74,00,69,00,6f,00,6e,00,00,00,00,00\n\n");
     verify_reg_nonexist(hkey, "Wine32a");
     verify_reg_nonexist(hkey, "Wine32b");
+
+    /* Test with embedded null characters */
+    exec_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                     "\"Wine33a\"=\"\\0\n"
+                     "\"Wine33b\"=\"\\0\\0\n"
+                     "\"Wine33c\"=\"Value1\\0\n"
+                     "\"Wine33d\"=\"Value2\\0\\0\\0\\0\n"
+                     "\"Wine33e\"=\"Value3\\0Value4\n"
+                     "\"Wine33f\"=\"\\0Value4\n\n");
+    verify_reg_nonexist(hkey, "Wine33a");
+    verify_reg_nonexist(hkey, "Wine33b");
+    verify_reg_nonexist(hkey, "Wine33c");
+    verify_reg_nonexist(hkey, "Wine33d");
+    verify_reg_nonexist(hkey, "Wine33e");
+    verify_reg_nonexist(hkey, "Wine33f");
 
     RegCloseKey(hkey);
 
@@ -3483,6 +3515,18 @@ static void test_export(void)
         "\"Wine3b\"=hex:12,34,56,78\r\n"
         "\"Wine3c\"=dword:10203040\r\n\r\n";
 
+    const char *embedded_null_test =
+        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+        "\"Wine4a\"=dword:00000005\r\n"
+        "\"Wine4b\"=\"\"\r\n"
+        "\"Wine4c\"=\"Value\"\r\n"
+        "\"Wine4d\"=\"\"\r\n"
+        "\"Wine4e\"=dword:00000100\r\n"
+        "\"Wine4f\"=\"\"\r\n"
+        "\"Wine4g\"=\"Value2\"\r\n"
+        "\"Wine4h\"=\"abc\"\r\n\r\n";
+
     lr = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
     ok(lr == ERROR_SUCCESS || lr == ERROR_FILE_NOT_FOUND, "RegDeleteKeyA failed: %d\n", lr);
 
@@ -3600,6 +3644,7 @@ static void test_export(void)
 
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 
+    /* Test registry export with embedded null characters */
     exec_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
                      "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
                      "\"Wine3a\"=hex(1):56,00,61,00,6c,00,75,00,65,00,00,00\n"
@@ -3615,6 +3660,35 @@ static void test_export(void)
 
     run_regedit_exe("regedit.exe /e file.reg HKEY_CURRENT_USER\\" KEY_BASE);
     ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
+
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    exec_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                     "\"Wine4a\"=dword:00000005\n"
+                     "\"Wine4b\"=hex(1):00,00,00,00,00,00,00,00\n"
+                     "\"Wine4c\"=\"Value\"\n"
+                     "\"Wine4d\"=hex(1):00,00,61,00,62,00,63,00\n"
+                     "\"Wine4e\"=dword:00000100\n"
+                     "\"Wine4f\"=hex(1):00,00,56,00,61,00,6c,00,75,00,65,00,00,00\n"
+                     "\"Wine4g\"=\"Value2\"\n"
+                     "\"Wine4h\"=hex(1):61,00,62,00,63,00,00,00, \\\n"
+                     "  64,00,65,00,66,00,00,00\n\n");
+    open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
+    dword = 0x5;
+    verify_reg(hkey, "Wine4a", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine4b", REG_SZ, "\0\0\0\0\0\0\0", 4, 0);
+    verify_reg(hkey, "Wine4c", REG_SZ, "Value", 6, 0);
+    verify_reg(hkey, "Wine4d", REG_SZ, "\0abc", 5, 0);
+    dword = 0x100;
+    verify_reg(hkey, "Wine4e", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine4f", REG_SZ, "\0Value", 7, 0);
+    verify_reg(hkey, "Wine4g", REG_SZ, "Value2", 7, 0);
+    verify_reg(hkey, "Wine4h", REG_SZ, "abc\0def", 8, 0);
+    RegCloseKey(hkey);
+
+    run_regedit_exe("regedit.exe /e file.reg HKEY_CURRENT_USER\\" KEY_BASE);
+    ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
 
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }
