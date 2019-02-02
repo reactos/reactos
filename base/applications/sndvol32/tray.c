@@ -20,6 +20,8 @@ typedef struct _DIALOG_DATA
     DWORD maxChannel;
     PMIXERCONTROLDETAILS_UNSIGNED volumeInitValues;
     PMIXERCONTROLDETAILS_UNSIGNED volumeCurrentValues;
+
+    DWORD muteControlID;
 } DIALOG_DATA, *PDIALOG_DATA;
 
 
@@ -54,9 +56,6 @@ OnTrayInitDialog(
         x = ptCursor.x;
 
     SetWindowPos(hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE);
-
-    /* Disable the controls for now */
-    EnableWindow(GetDlgItem(hwnd, IDC_LINE_SWITCH), FALSE);
 }
 
 
@@ -70,6 +69,7 @@ OnTrayInitMixer(
     MIXERCONTROL mxc;
     MIXERLINECONTROLS mxlctrl;
     MIXERCONTROLDETAILS mxcd;
+    MIXERCONTROLDETAILS_BOOLEAN mxcdBool;
     DWORD i;
 
     /* Open the mixer */
@@ -140,6 +140,63 @@ OnTrayInitMixer(
     SendDlgItemMessage(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_SETRANGE, TRUE, MAKELONG(VOLUME_MIN, VOLUME_MAX));
     SendDlgItemMessage(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_SETPAGESIZE, 0, VOLUME_PAGE_SIZE);
     SendDlgItemMessage(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_SETPOS, TRUE, VOLUME_MAX -(pDialogData->maxVolume - pDialogData->volumeMinimum) / pDialogData->volumeStep);
+
+    /* Retrieve the mute control information */
+    mxlctrl.cbStruct = sizeof(MIXERLINECONTROLS);
+    mxlctrl.dwLineID = mxln.dwLineID;
+    mxlctrl.dwControlType = MIXERCONTROL_CONTROLTYPE_MUTE;
+    mxlctrl.cControls = 1;
+    mxlctrl.cbmxctrl = sizeof(MIXERCONTROL);
+    mxlctrl.pamxctrl = &mxc;
+
+    if (mixerGetLineControls((HMIXEROBJ)pDialogData->hMixer, &mxlctrl, MIXER_OBJECTF_HMIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE) != MMSYSERR_NOERROR)
+        return;
+
+    pDialogData->muteControlID = mxc.dwControlID;
+
+    /* Retrieve the mute value */
+    mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
+    mxcd.dwControlID = mxc.dwControlID;
+    mxcd.cChannels = 1;
+    mxcd.cMultipleItems = 0;
+    mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_BOOLEAN);
+    mxcd.paDetails = &mxcdBool;
+
+    if (mixerGetControlDetails((HMIXEROBJ)pDialogData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
+        return;
+
+    /* Initialize the mute checkbox */
+    SendDlgItemMessage(hwndDlg, IDC_LINE_SWITCH, BM_SETCHECK, (WPARAM)(mxcdBool.fValue ? BST_CHECKED : BST_UNCHECKED), 0);
+}
+
+
+static
+VOID
+OnCommand(
+    PDIALOG_DATA pDialogData,
+    HWND hwndDlg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    MIXERCONTROLDETAILS mxcd;
+    MIXERCONTROLDETAILS_BOOLEAN mxcdMute;
+
+    if ((LOWORD(wParam) == IDC_LINE_SWITCH) &&
+        (HIWORD(wParam) == BN_CLICKED))
+    {
+        mxcd.cbStruct = sizeof(MIXERCONTROLDETAILS);
+        mxcd.dwControlID = pDialogData->muteControlID;
+        mxcd.cChannels = 1;
+        mxcd.cMultipleItems = 0;
+        mxcd.cbDetails = sizeof(MIXERCONTROLDETAILS_BOOLEAN);
+        mxcd.paDetails = &mxcdMute;
+
+        mxcdMute.fValue = (SendMessage((HWND)lParam, BM_GETCHECK, 0, 0) == BST_CHECKED);
+
+        mixerSetControlDetails((HMIXEROBJ)pDialogData->hMixer,
+                               &mxcd,
+                               MIXER_OBJECTF_HMIXER | MIXER_SETCONTROLDETAILSF_VALUE);
+    }
 }
 
 
@@ -219,6 +276,11 @@ TrayDlgProc(
 
             if (pDialogData)
                 OnTrayInitMixer(pDialogData, hwndDlg);
+            break;
+
+        case WM_COMMAND:
+            if (pDialogData)
+                OnCommand(pDialogData, hwndDlg, wParam, lParam);
             break;
 
         case WM_VSCROLL:
