@@ -181,7 +181,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
     if (object)
         IOleObject_EnumVerbs(object, &enumverbs);
 
-    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT, resstrW, ARRAY_SIZE(resstrW));
     /* no object, or object without enumeration support */
     if (!object || !enumverbs) {
         RemoveMenu(hMenu, uPos, MF_BYPOSITION);
@@ -202,7 +202,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
     singleverb = get_next_insertable_verb(enumverbs, idmin, idmax, &verb) != S_OK;
 
     if (singleverb && !addConvert) {
-        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_SINGLEVERB_OBJECT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_SINGLEVERB_OBJECT, resstrW, ARRAY_SIZE(resstrW));
 
         args[0] = (DWORD_PTR)firstverb.lpszVerbName;
         args[1] = (DWORD_PTR)objecttype;
@@ -235,7 +235,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
 
     /* convert verb is at the bottom of a popup, separated from verbs */
     if (addConvert) {
-        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_CONVERT, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+        LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_CONVERT, resstrW, ARRAY_SIZE(resstrW));
         InsertMenuW(submenu, ~0, MF_BYPOSITION|MF_SEPARATOR, 0, NULL);
         InsertMenuW(submenu, ~0, MF_BYPOSITION|MF_STRING, idConvert, resstrW);
     }
@@ -244,7 +244,7 @@ BOOL WINAPI OleUIAddVerbMenuW(IOleObject *object, LPCWSTR shorttype,
         *ret_submenu = submenu;
 
     /* now submenu is ready, add root entry to original menu, attach submenu */
-    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT_WITH_NAME, resstrW, sizeof(resstrW)/sizeof(WCHAR));
+    LoadStringW(OLEDLG_hInstance, IDS_VERBMENU_OBJECT_WITH_NAME, resstrW, ARRAY_SIZE(resstrW));
 
     args[0] = (DWORD_PTR)objecttype;
     FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_ARGUMENT_ARRAY,

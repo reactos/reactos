@@ -350,7 +350,7 @@ static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
 
   RegOpenKeyExW(HKEY_CLASSES_ROOT, szClsid, 0, KEY_READ, &hkclsids);
 
-  while (ERROR_SUCCESS == (ret = RegEnumKeyW(hkclsids, index, szclsid, sizeof(szclsid)/sizeof(szclsid[0]))))
+  while (ERROR_SUCCESS == (ret = RegEnumKeyW(hkclsids, index, szclsid, ARRAY_SIZE(szclsid))))
   {
     index++;
 
