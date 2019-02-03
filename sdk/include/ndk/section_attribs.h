@@ -18,7 +18,7 @@ Author:
 
 #pragma once
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__clang__)
 
 #define INIT_SECTION  __attribute__((section ("INIT")))
 #define INIT_FUNCTION __attribute__((section ("INIT")))
