@@ -207,7 +207,7 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define _CRT_UNUSED(x) (void)x
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 #define ATTRIB_NORETURN
 #define _DECLSPEC_INTRIN_TYPE __declspec(intrin_type)
 #else
