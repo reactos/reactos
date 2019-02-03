@@ -941,6 +941,11 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         BOOL ret = FALSE;
         SIZE* pSize = (SIZE*)lParam;
 
+        if (!pSize)
+        {
+            return FALSE;
+        }
+
         if (btn_type == BS_PUSHBUTTON || 
             btn_type == BS_DEFPUSHBUTTON ||
             btn_type == BS_USERBUTTON)
