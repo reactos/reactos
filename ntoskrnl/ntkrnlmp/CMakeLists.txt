@@ -16,6 +16,7 @@ add_executable(ntkrnlmp
     ${REACTOS_SOURCE_DIR}/ntoskrnl/guid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
+set_property(TARGET ntkrnlmp PROPERTY ENABLE_EXPORTS TRUE)
 
 add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
 
