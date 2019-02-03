@@ -2180,28 +2180,36 @@ BOOLEAN NTAPI RtlFreeHeap(
     if (RtlpHeapIsSpecial(Flags))
         return RtlDebugFreeHeap(Heap, Flags, Ptr);
 
+    /* Get pointer to the heap entry */
+    HeapEntry = (PHEAP_ENTRY)Ptr - 1;
+
+    /* Protect with SEH in case the pointer is not valid */
+    _SEH2_TRY
+    {
+        /* Check this entry, fail if it's invalid */
+        if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY) ||
+            (((ULONG_PTR)Ptr & 0x7) != 0) ||
+            (HeapEntry->SegmentOffset >= HEAP_SEGMENTS))
+        {
+            /* This is an invalid block */
+            DPRINT1("HEAP: Trying to free an invalid address %p!\n", Ptr);
+            RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+            _SEH2_YIELD(return FALSE);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* The pointer was invalid */
+        DPRINT1("HEAP: Trying to free an invalid address %p!\n", Ptr);
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+        _SEH2_YIELD(return FALSE);
+    }
+
     /* Lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
         RtlEnterHeapLock(Heap->LockVariable, TRUE);
         Locked = TRUE;
-    }
-
-    /* Get pointer to the heap entry */
-    HeapEntry = (PHEAP_ENTRY)Ptr - 1;
-
-    /* Check this entry, fail if it's invalid */
-    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY) ||
-        (((ULONG_PTR)Ptr & 0x7) != 0) ||
-        (HeapEntry->SegmentOffset >= HEAP_SEGMENTS))
-    {
-        /* This is an invalid block */
-        DPRINT1("HEAP: Trying to free an invalid address %p!\n", Ptr);
-        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
-
-        /* Release the heap lock */
-        if (Locked) RtlLeaveHeapLock(Heap->LockVariable);
-        return FALSE;
     }
 
     if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
