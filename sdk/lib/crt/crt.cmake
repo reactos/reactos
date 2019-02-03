@@ -441,6 +441,10 @@ if(ARCH STREQUAL "i386")
         list(APPEND CRT_ASM_SOURCE
             except/i386/cpp.s)
     endif()
+    if(USE_CLANG_CL)
+        list(APPEND CRT_ASM_SOURCE
+            stdlib/clang-alias.s)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND CRT_ASM_SOURCE
         except/amd64/seh.s
