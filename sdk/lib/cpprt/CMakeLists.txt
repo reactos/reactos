@@ -8,6 +8,7 @@ include_directories(
 list(APPEND SOURCE
     ehvec.cpp
     new_nothrow.cpp
+    terminate.cpp
     typeinfo.cpp)
 
 if(ARCH STREQUAL "i386")
