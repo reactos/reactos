@@ -164,7 +164,7 @@ static void test_IWbemLocator(void)
     }
     ok( hr == S_OK, "failed to create IWbemLocator interface %08x\n", hr );
 
-    for (i = 0; i < sizeof(test) / sizeof(test[0]); i++)
+    for (i = 0; i < ARRAY_SIZE( test ); i++)
     {
         resource = SysAllocString( test[i].path );
         hr = IWbemLocator_ConnectServer( locator, resource, NULL, NULL, NULL, 0, NULL, NULL, &services );
