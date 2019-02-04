@@ -249,6 +249,22 @@ MACRO(TRAP_ENTRY, Trap, Flags)
     .ENDP
 ENDM
 
+MACRO(TASK_ENTRY, Trap, Flags)
+    // EXTERN @&Trap&Handler@0 :PROC
+    EXTERN _&Trap&Handler :PROC
+    PUBLIC _&Trap
+    .PROC _&Trap
+        /* Generate proper debugging symbols */
+        FPO 0, 0, 0, 0, 0, FRAME_TSS
+
+        // /* Common code to create the trap frame */
+        // KiEnterTrap Flags
+
+        /* Call the C handler */
+        KiCallHandler _&Trap&Handler // @&Trap&Handler@0
+    .ENDP
+ENDM
+
 #define KI_RESTORE_EAX        HEX(0001)
 #define KI_RESTORE_ECX_EDX    HEX(0002)
 #define KI_RESTORE_FS         HEX(0004)

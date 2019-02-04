@@ -458,7 +458,7 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 DECLSPEC_NORETURN
 VOID
 __cdecl
-KiTrap02(VOID)
+KiTrap02Handler(VOID)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
@@ -829,11 +829,53 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 
 DECLSPEC_NORETURN
 VOID
-FASTCALL
-KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
+__cdecl
+KiTrap08Handler(VOID)
 {
-    /* FIXME: Not handled */
-    KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
+    PKTSS Tss, DfTss;
+    PKTHREAD Thread;
+    PKPROCESS Process;
+    PKGDTENTRY TssGdt;
+
+    /* For sanity's sake, make sure interrupts are disabled */
+    _disable();
+
+    /* Get the current TSS, thread, and process */
+    Tss = KeGetPcr()->TSS;
+    Thread = ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+    Process = Thread->ApcState.Process;
+
+    /* Save data usually not present in the TSS */
+    Tss->CR3 = Process->DirectoryTableBase[0];
+    Tss->IoMapBase = Process->IopmOffset;
+    Tss->LDT = Process->LdtDescriptor.LimitLow ? KGDT_LDT : 0;
+
+    /* Now get the base address of the double-fault TSS */
+    TssGdt = &((PKIPCR)KeGetPcr())->GDT[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    DfTss  = (PKTSS)(ULONG_PTR)(TssGdt->BaseLow |
+                                TssGdt->HighWord.Bytes.BaseMid << 16 |
+                                TssGdt->HighWord.Bytes.BaseHi << 24);
+
+    /*
+     * Switch to it and activate it, masking off the nested flag.
+     *
+     * Note that in reality, we are already on the double-fault TSS
+     * -- we just need to update the PCR to reflect this.
+     */
+    KeGetPcr()->TSS = DfTss;
+    __writeeflags(__readeflags() &~ EFLAGS_NESTED_TASK);
+    TssGdt->HighWord.Bits.Dpl = 0;
+    TssGdt->HighWord.Bits.Pres = 1;
+    // TssGdt->HighWord.Bits.Type &= ~0x2; /* I386_ACTIVE_TSS --> I386_TSS */
+    TssGdt->HighWord.Bits.Type = I386_TSS; // Busy bit cleared in the TSS selector.
+
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     EXCEPTION_DOUBLE_FAULT,
+                     (ULONG_PTR)Tss,
+                     0,
+                     0,
+                     NULL);
 }
 
 DECLSPEC_NORETURN
