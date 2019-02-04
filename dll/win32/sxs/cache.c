@@ -103,7 +103,7 @@ static unsigned int build_sxs_path( WCHAR *path )
     unsigned int len = GetWindowsDirectoryW( path, MAX_PATH );
 
     memcpy( path + len, winsxsW, sizeof(winsxsW) );
-    return len + sizeof(winsxsW) / sizeof(winsxsW[0]) - 1;
+    return len + ARRAY_SIZE(winsxsW) - 1;
 }
 
 static WCHAR *build_assembly_name( const WCHAR *arch, const WCHAR *name, const WCHAR *token,
@@ -111,7 +111,7 @@ static WCHAR *build_assembly_name( const WCHAR *arch, const WCHAR *name, const W
 {
     static const WCHAR fmtW[] =
         {'%','s','_','%','s','_','%','s','_','%','s','_','n','o','n','e','_','d','e','a','d','b','e','e','f',0};
-    unsigned int buflen = sizeof(fmtW) / sizeof(fmtW[0]);
+    unsigned int buflen = ARRAY_SIZE(fmtW);
     WCHAR *ret, *p;
 
     buflen += strlenW( arch );
@@ -133,7 +133,7 @@ static WCHAR *build_manifest_path( const WCHAR *arch, const WCHAR *name, const W
     unsigned int len;
 
     if (!(path = build_assembly_name( arch, name, token, version, &len ))) return NULL;
-    len += sizeof(fmtW) / sizeof(fmtW[0]);
+    len += ARRAY_SIZE(fmtW);
     len += build_sxs_path( sxsdir );
     if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
     {
@@ -150,7 +150,7 @@ static WCHAR *build_policy_name( const WCHAR *arch, const WCHAR *name, const WCH
 {
     static const WCHAR fmtW[] =
         {'%','s','_','%','s','_','%','s','_','n','o','n','e','_','d','e','a','d','b','e','e','f',0};
-    unsigned int buflen = sizeof(fmtW) / sizeof(fmtW[0]);
+    unsigned int buflen = ARRAY_SIZE(fmtW);
     WCHAR *ret, *p;
 
     buflen += strlenW( arch );
@@ -171,7 +171,7 @@ static WCHAR *build_policy_path( const WCHAR *arch, const WCHAR *name, const WCH
     unsigned int len;
 
     if (!(path = build_policy_name( arch, name, token, &len ))) return NULL;
-    len += sizeof(fmtW) / sizeof(fmtW[0]);
+    len += ARRAY_SIZE(fmtW);
     len += build_sxs_path( sxsdir );
     len += strlenW( version );
     if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
@@ -501,9 +501,9 @@ static WCHAR *build_policy_filename( const WCHAR *arch, const WCHAR *name, const
 
     if (!(fullname = build_policy_name( arch, name, token, &len ))) return NULL;
     len += build_sxs_path( sxsdir );
-    len += sizeof(policiesW) / sizeof(policiesW[0]) - 1;
+    len += ARRAY_SIZE(policiesW) - 1;
     len += strlenW( version );
-    len += sizeof(suffixW) / sizeof(suffixW[0]) - 1;
+    len += ARRAY_SIZE(suffixW) - 1;
     if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) )))
     {
         HeapFree( GetProcessHeap(), 0, fullname );
@@ -572,8 +572,8 @@ static WCHAR *build_manifest_filename( const WCHAR *arch, const WCHAR *name, con
 
     if (!(fullname = build_assembly_name( arch, name, token, version, &len ))) return NULL;
     len += build_sxs_path( sxsdir );
-    len += sizeof(manifestsW) / sizeof(manifestsW[0]) - 1;
-    len += sizeof(suffixW) / sizeof(suffixW[0]) - 1;
+    len += ARRAY_SIZE(manifestsW) - 1;
+    len += ARRAY_SIZE(suffixW) - 1;
     if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) )))
     {
         HeapFree( GetProcessHeap(), 0, fullname );
