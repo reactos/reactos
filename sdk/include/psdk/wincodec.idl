@@ -859,7 +859,9 @@ interface IWICFastMetadataEncoder : IUnknown
         [out] IWICMetadataQueryWriter **ppIMetadataQueryWriter);
 }
 
-cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")
+cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory,  0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")
+cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory1, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")
+cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory2, 0x317d06e8,0x5f24,0x433d,0xbd,0xf7,0x79,0xce,0x68,0xd8,0xab,0xc2);")
 
 [
     object,
@@ -985,6 +987,15 @@ interface IWICImagingFactory : IUnknown
         [in] IWICMetadataQueryReader *pIQueryReader,
         [in, unique] const GUID *pguidVendor,
         [out] IWICMetadataQueryWriter **ppIQueryWriter);
+}
+
+[
+   object,
+   uuid(7b816b45-1996-4476-b132-de9e247c8af0),
+   local
+]
+interface IWICImagingFactory2 : IWICImagingFactory
+{
 }
 
 [
