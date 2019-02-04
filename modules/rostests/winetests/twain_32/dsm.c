@@ -663,7 +663,7 @@ static void test_single_source(TW_IDENTITY *appid, TW_IDENTITY *source)
                 UINT16 *u = (UINT16 *) a->ItemList;
                 trace("%d Capabilities:\n", a->NumItems);
                 for (i = 0; i < a->NumItems; i++)
-                    if (u[i] < sizeof(capabilities) / sizeof(capabilities[0]))
+                    if (u[i] < ARRAY_SIZE(capabilities))
                     {
                         capabilities[u[i]] = 1;
                         trace("  %d: 0x%x\n", i, u[i]);
