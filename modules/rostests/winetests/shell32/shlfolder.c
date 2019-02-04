@@ -63,6 +63,10 @@ static HRESULT (WINAPI *pSHGetItemFromObject)(IUnknown*,REFIID,void**);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFIID,void**);
 static BOOL (WINAPI *pSHGetPathFromIDListEx)(PCIDLIST_ABSOLUTE,WCHAR*,DWORD,GPFIDL_FLAGS);
+#ifdef __REACTOS__
+typedef SHFOLDERCUSTOMSETTINGSW SHFOLDERCUSTOMSETTINGS, *LPSHFOLDERCUSTOMSETTINGS;
+#endif
+static HRESULT (WINAPI *pSHGetSetFolderCustomSettings)(LPSHFOLDERCUSTOMSETTINGS,PCWSTR,DWORD);
 
 static WCHAR *make_wstr(const char *str)
 {
@@ -116,6 +120,7 @@ static void init_function_pointers(void)
     MAKEFUNC(SHGetItemFromObject);
     MAKEFUNC(SHCreateDefaultContextMenu);
     MAKEFUNC(SHGetPathFromIDListEx);
+    MAKEFUNC(SHGetSetFolderCustomSettings);
 #undef MAKEFUNC
 
     /* test named exports */
@@ -172,108 +177,103 @@ static LPWSTR myPathAddBackslashW( LPWSTR lpszPath )
   return lpszPath;
 }
 
+static struct
+{
+    WCHAR path[MAX_PATH];
+    HRESULT hr;
+    int todo;
+} parse_tests[] = {
+    {{'c',':','\\',0}, S_OK},
+    {{'c',':','\\','\\',0}, E_INVALIDARG, 1},
+    {{'c',':','\\','f','a','k','e',0}, 0x80070002}, /* ERROR_FILE_NOT_FOUND */
+    {{'c',':','f','a','k','e',0}, E_INVALIDARG, 1},
+    {{'c',':','/',0}, E_INVALIDARG, 1},
+    {{'c',':','\\','w','i','n','d','o','w','s',0}, S_OK},
+    {{'c',':','\\','w','i','n','d','o','w','s','\\',0}, S_OK},
+    {{'c',':','\\','w','i','n','d','o','w','s','\\','.',0}, E_INVALIDARG, 1},
+    {{'c',':','\\','w','i','n','d','o','w','s','\\','.','.',0}, E_INVALIDARG, 1},
+    {{'.',0}, E_INVALIDARG, 1},
+    {{'.','.',0}, E_INVALIDARG, 1},
+    {{'t','e','s','t',0}, 0x80070002},
+    {{'t','e','s','t','\\',0}, 0x80070002},
+    {{'s','u','b','\\','d','i','r',0}, 0x80070002},
+    {{'s','u','b','/','d','i','r',0}, E_INVALIDARG, 1},
+    {{'h','t','t','p',':',0}, S_OK, 1},
+    {{'h','t','t','p',':','t','e','s','t',0}, S_OK, 1},
+    {{'h','t','t','p',':','\\','t','e','s','t',0}, S_OK, 1},
+    {{'x','x',':',0}, S_OK, 1},
+};
+
 static void test_ParseDisplayName(void)
 {
+    static WCHAR testdirW[] = {'p','a','r','s','e','t','e','s','t',0};
+    static WCHAR backslashW[] = {'\\',0};
+    WCHAR buffer[MAX_PATH], buffer2[MAX_PATH];
+    IShellFolder *desktop;
+    ITEMIDLIST *pidl;
     HRESULT hr;
-    IShellFolder *IDesktopFolder;
-    static const char *cNonExistDir1A = "c:\\nonexist_subdir";
-    static const char *cNonExistDir2A = "c:\\\\nonexist_subdir";
-    static const char *cInetTestA = "http:\\yyy";
-    static const char *cInetTest2A = "xx:yyy";
-    DWORD res;
-    WCHAR cTestDirW [MAX_PATH] = {0};
-    ITEMIDLIST *newPIDL;
     BOOL bRes;
+    int i;
 
-    hr = SHGetDesktopFolder(&IDesktopFolder);
+    hr = SHGetDesktopFolder(&desktop);
     ok(hr == S_OK, "Expected SHGetDesktopFolder to return S_OK, got 0x%08x\n", hr);
-    if(hr != S_OK) return;
 
-    if (pSHCreateShellItem)
+    hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, NULL, NULL, &pidl, NULL);
+    ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+    for (i = 0; i < ARRAY_SIZE(parse_tests); i++)
     {
-        if (0)
-        {
-            /* null name and pidl, crashes on Windows 8 */
-            hr = IShellFolder_ParseDisplayName(IDesktopFolder, NULL, NULL,
-                                               NULL, NULL, NULL, 0);
-            ok(hr == E_INVALIDARG, "returned %08x, expected E_INVALIDARG\n", hr);
-        }
-
-        /* null name */
-        newPIDL = (ITEMIDLIST*)0xdeadbeef;
-        hr = IShellFolder_ParseDisplayName(IDesktopFolder,
-            NULL, NULL, NULL, NULL, &newPIDL, 0);
-        ok(newPIDL == 0, "expected null, got %p\n", newPIDL);
-        ok(hr == E_INVALIDARG, "returned %08x, expected E_INVALIDARG\n", hr);
+        hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, parse_tests[i].path, NULL, &pidl, NULL);
+todo_wine_if(parse_tests[i].todo)
+        ok(hr == parse_tests[i].hr, "%s: expected %#x, got %#x\n",
+            wine_dbgstr_w(parse_tests[i].path), parse_tests[i].hr, hr);
+        if (SUCCEEDED(hr))
+            CoTaskMemFree(pidl);
     }
-    else
-        win_skip("SHCreateShellItem requires XP SP1 or later\n");
-
-    MultiByteToWideChar(CP_ACP, 0, cInetTestA, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder, NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    todo_wine ok(hr == S_OK, "ParseDisplayName returned %08x, expected SUCCESS\n", hr);
-    if (hr == S_OK)
-    {
-        ok(ILFindLastID(newPIDL)->mkid.abID[0] == 0x61, "Last pidl should be of type "
-           "PT_IESPECIAL1, but is: %02x\n", ILFindLastID(newPIDL)->mkid.abID[0]);
-        IMalloc_Free(ppM, newPIDL);
-    }
-
-    MultiByteToWideChar(CP_ACP, 0, cInetTest2A, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder,
-        NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    todo_wine ok(hr == S_OK, "ParseDisplayName returned %08x, expected SUCCESS\n", hr);
-    if (hr == S_OK)
-    {
-        ok(ILFindLastID(newPIDL)->mkid.abID[0] == 0x61, "Last pidl should be of type "
-           "PT_IESPECIAL1, but is: %02x\n", ILFindLastID(newPIDL)->mkid.abID[0]);
-        IMalloc_Free(ppM, newPIDL);
-    }
-
-    res = GetFileAttributesA(cNonExistDir1A);
-    if(res != INVALID_FILE_ATTRIBUTES)
-    {
-        skip("Test directory unexpectedly exists\n");
-        goto finished;
-    }
-
-    MultiByteToWideChar(CP_ACP, 0, cNonExistDir1A, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder,
-        NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-        "ParseDisplayName returned %08x, expected 0x80070002\n", hr);
-
-    res = GetFileAttributesA(cNonExistDir2A);
-    if(res != INVALID_FILE_ATTRIBUTES)
-    {
-        skip("Test directory unexpectedly exists\n");
-        goto finished;
-    }
-
-    MultiByteToWideChar(CP_ACP, 0, cNonExistDir2A, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder,
-        NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    todo_wine ok(hr == E_INVALIDARG, "ParseDisplayName returned %08x, expected E_INVALIDARG\n", hr);
 
     /* I thought that perhaps the DesktopFolder's ParseDisplayName would recognize the
      * path corresponding to CSIDL_PERSONAL and return a CLSID_MyDocuments PIDL. Turns
      * out it doesn't. The magic seems to happen in the file dialogs, then. */
 
-    bRes = SHGetSpecialFolderPathW(NULL, cTestDirW, CSIDL_PERSONAL, FALSE);
+    bRes = SHGetSpecialFolderPathW(NULL, buffer, CSIDL_PERSONAL, FALSE);
     ok(bRes, "SHGetSpecialFolderPath(CSIDL_PERSONAL) failed! %u\n", GetLastError());
-    if (!bRes) goto finished;
 
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder, NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
+    hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, buffer, NULL, &pidl, 0);
     ok(hr == S_OK, "DesktopFolder->ParseDisplayName failed. hr = %08x.\n", hr);
-    if (hr != S_OK) goto finished;
 
-    ok(ILFindLastID(newPIDL)->mkid.abID[0] == 0x31,
+    ok(ILFindLastID(pidl)->mkid.abID[0] == 0x31,
        "Last pidl should be of type PT_FOLDER, but is: %02x\n",
-       ILFindLastID(newPIDL)->mkid.abID[0]);
-    IMalloc_Free(ppM, newPIDL);
+       ILFindLastID(pidl)->mkid.abID[0]);
+    CoTaskMemFree(pidl);
 
-finished:
-    IShellFolder_Release(IDesktopFolder);
+    /* Relative paths are interpreted relative to the desktop. */
+    GetTempPathW(ARRAY_SIZE(buffer), buffer);
+    GetLongPathNameW(buffer, buffer, ARRAY_SIZE(buffer));
+    SetCurrentDirectoryW(buffer);
+    CreateDirectoryW(testdirW, NULL);
+
+    hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, testdirW, NULL, &pidl, NULL);
+    ok(hr == 0x80070002, "got %#x\n", hr);
+
+    RemoveDirectoryW(testdirW);
+
+    hr = SHGetSpecialFolderPathW(NULL, buffer, CSIDL_DESKTOP, FALSE);
+    ok(hr == S_FALSE, "got %#x\n", hr);
+    SetCurrentDirectoryW(buffer);
+    CreateDirectoryW(testdirW, NULL);
+
+    hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, testdirW, NULL, &pidl, NULL);
+    ok(hr == S_OK, "got %#x\n", hr);
+
+    ok(SHGetPathFromIDListW(pidl, buffer2), "SHGetPathFromIDList failed\n");
+    lstrcatW(buffer, backslashW);
+    lstrcatW(buffer, testdirW);
+    ok(!lstrcmpW(buffer, buffer2), "expected %s, got %s\n", wine_dbgstr_w(buffer), wine_dbgstr_w(buffer2));
+
+    RemoveDirectoryW(testdirW);
+    CoTaskMemFree(pidl);
+
+    IShellFolder_Release(desktop);
 }
 
 /* creates a file with the specified name for tests */
@@ -1962,7 +1962,7 @@ static void test_LocalizedNames(void)
     hr = IShellFolder_GetDisplayNameOf(testIShellFolder, newPIDL, SHGDN_INFOLDER, &strret);
     ok(hr == S_OK, "GetDisplayNameOf failed %08x\n", hr);
 
-    hr = StrRetToBufW(&strret, newPIDL, tempbufW, sizeof(tempbufW)/sizeof(WCHAR));
+    hr = StrRetToBufW(&strret, newPIDL, tempbufW, ARRAY_SIZE(tempbufW));
     ok (hr == S_OK, "StrRetToBufW failed! hr = %08x\n", hr);
     todo_wine
     ok (!lstrcmpiW(tempbufW, folderdisplayW), "GetDisplayNameOf returned %s\n", wine_dbgstr_w(tempbufW));
@@ -1971,7 +1971,7 @@ static void test_LocalizedNames(void)
     hr = IShellFolder_GetDisplayNameOf(testIShellFolder, newPIDL, SHGDN_INFOLDER|SHGDN_FOREDITING, &strret);
     ok(hr == S_OK, "GetDisplayNameOf failed %08x\n", hr);
 
-    hr = StrRetToBufW(&strret, newPIDL, tempbufW, sizeof(tempbufW)/sizeof(WCHAR));
+    hr = StrRetToBufW(&strret, newPIDL, tempbufW, ARRAY_SIZE(tempbufW));
     ok (hr == S_OK, "StrRetToBufW failed! hr = %08x\n", hr);
     todo_wine
     ok (!lstrcmpiW(tempbufW, folderdisplayW), "GetDisplayNameOf returned %s\n", wine_dbgstr_w(tempbufW));
@@ -1980,7 +1980,7 @@ static void test_LocalizedNames(void)
     hr = IShellFolder_GetDisplayNameOf(testIShellFolder, newPIDL, SHGDN_INFOLDER|SHGDN_FORPARSING, &strret);
     ok(hr == S_OK, "GetDisplayNameOf failed %08x\n", hr);
 
-    hr = StrRetToBufW(&strret, newPIDL, tempbufW, sizeof(tempbufW)/sizeof(WCHAR));
+    hr = StrRetToBufW(&strret, newPIDL, tempbufW, ARRAY_SIZE(tempbufW));
     ok (hr == S_OK, "StrRetToBufW failed! hr = %08x\n", hr);
     ok (!lstrcmpiW(tempbufW, foldernameW), "GetDisplayNameOf returned %s\n", wine_dbgstr_w(tempbufW));
 
@@ -4978,7 +4978,8 @@ static void test_SHChangeNotify(BOOL test_new_delivery)
             SHCNE_ALLEVENTS, WM_USER_NOTIFY, 1, entries);
     ok(notifyID != 0, "Failed to register a window for change notifications\n");
 
-    for(i = 0; i < sizeof(chnotify_tests) / sizeof(*chnotify_tests); ++i){
+    for (i = 0; i < ARRAY_SIZE(chnotify_tests); ++i)
+    {
         exp_data = chnotify_tests + i;
 
         exp_data->missing_events = exp_data->notify_count;
@@ -5170,7 +5171,7 @@ static void test_GetDefaultColumn(void)
 
     CoInitialize(NULL);
 
-    for (i = 0; i < sizeof(folders)/sizeof(folders[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(folders); i++)
     {
         IShellFolder2 *folder;
         ULONG sort, display;
@@ -5199,6 +5200,8 @@ static void test_GetDefaultColumn(void)
         hr = IShellFolder2_GetDefaultColumn(folder, 0, &sort, NULL);
         ok(hr == E_NOTIMPL, "Unexpected hr %#x.\n", hr);
         ok(sort == 123, "Unexpected default column.\n");
+
+        IShellFolder2_Release(folder);
     }
 
     CoUninitialize();
@@ -5221,7 +5224,7 @@ static void test_GetDefaultSearchGUID(void)
 
     CoInitialize(NULL);
 
-    for (i = 0; i < sizeof(folders)/sizeof(folders[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(folders); i++)
     {
         IShellFolder2 *folder;
         GUID guid;
@@ -5250,6 +5253,86 @@ static void test_GetDefaultSearchGUID(void)
     }
 
     CoUninitialize();
+}
+
+static void test_SHLimitInputEdit(void)
+{
+    IShellFolder *desktop;
+    HRESULT hr;
+    HWND hwnd;
+
+    hr = SHGetDesktopFolder(&desktop);
+    ok(hr == S_OK, "Failed to get desktop folder, hr %#x.\n", hr);
+
+    hr = SHLimitInputEdit(NULL, desktop);
+todo_wine
+    ok(hr == E_FAIL, "Unexpected hr %#x.\n", hr);
+
+    hwnd = CreateWindowA("EDIT", NULL, WS_VISIBLE, 0, 0, 100, 30, NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "Failed to create Edit control.\n");
+
+    hr = SHLimitInputEdit(hwnd, desktop);
+todo_wine
+    ok(hr == S_OK, "Failed to set input limits, hr %#x.\n", hr);
+
+    hr = SHLimitInputEdit(hwnd, desktop);
+todo_wine
+    ok(hr == S_OK, "Failed to set input limits, hr %#x.\n", hr);
+
+    DestroyWindow(hwnd);
+    IShellFolder_Release(desktop);
+}
+
+static void test_SHGetSetFolderCustomSettings(void)
+{
+    HRESULT hr;
+    SHFOLDERCUSTOMSETTINGS fcs;
+    WCHAR pathW[MAX_PATH];
+    WCHAR bufferW[MAX_PATH];
+    WCHAR iconpathW[MAX_PATH];
+    static const WCHAR somedirW[] = {'s','o','m','e','_','d','i','r',0};
+    static const WCHAR iconW[] = {'\\','s','o','m','e','_','i','c','o','n','.','i','c','o',0};
+    static const WCHAR desktop_iniW[] = {'\\','D','e','s','k','t','o','p','.','i','n','i',0};
+
+    if (!pSHGetSetFolderCustomSettings)
+    {
+        win_skip("SHGetSetFolderCustomSetting not exported by name (only by ordinal) for version XP/win2003\n");
+        return;
+    }
+
+    GetTempPathW(MAX_PATH, pathW);
+    lstrcatW(pathW, somedirW);
+    CreateDirectoryW(pathW, NULL);
+
+    lstrcpyW(iconpathW, pathW);
+    lstrcatW(iconpathW, iconW);
+
+    memset(&fcs, 0, sizeof(fcs));
+    fcs.dwSize = sizeof(fcs);
+    fcs.dwMask = FCSM_ICONFILE;
+    fcs.pszIconFile = iconpathW;
+
+    hr = pSHGetSetFolderCustomSettings(&fcs, pathW, FCS_FORCEWRITE); /*creates and writes to a Desktop.ini*/
+    ok(hr == S_OK, "Expected S_OK, got %#x\n", hr);
+
+    memset(&fcs, 0, sizeof(fcs));
+    fcs.dwSize = sizeof(fcs);
+    fcs.dwMask = FCSM_ICONFILE;
+    fcs.cchIconFile = MAX_PATH;
+    fcs.pszIconFile = bufferW;
+    bufferW[0] = 0;
+
+    hr = pSHGetSetFolderCustomSettings(&fcs, pathW, FCS_READ);
+    todo_wine ok(hr == S_OK, "Expected S_OK, got %#x\n", hr);
+    todo_wine ok(!lstrcmpiW(iconpathW, fcs.pszIconFile), "Expected %s, got %s\n", wine_dbgstr_w(iconpathW), wine_dbgstr_w(fcs.pszIconFile));
+
+    hr = pSHGetSetFolderCustomSettings(&fcs, NULL, FCS_READ);
+    ok(hr == E_FAIL, "Expected E_FAIL, got %#x\n", hr);
+
+    lstrcpyW(bufferW, pathW);
+    lstrcatW(bufferW, desktop_iniW);
+    DeleteFileW(bufferW);
+    RemoveDirectoryW(pathW);
 }
 
 START_TEST(shlfolder)
@@ -5293,6 +5376,8 @@ START_TEST(shlfolder)
     test_DataObject();
     test_GetDefaultColumn();
     test_GetDefaultSearchGUID();
+    test_SHLimitInputEdit();
+    test_SHGetSetFolderCustomSettings();
 
     OleUninitialize();
 }

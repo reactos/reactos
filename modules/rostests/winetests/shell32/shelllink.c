@@ -977,6 +977,7 @@ static void test_shdefextracticon(void)
 
 static void test_GetIconLocation(void)
 {
+    IShellLinkW *slW;
     IShellLinkA *sl;
     const char *str;
     char buffer[INFOTIPSIZE], mypath[MAX_PATH];
@@ -1030,8 +1031,34 @@ static void test_GetIconLocation(void)
     r = IShellLinkA_GetIconLocation(sl, buffer, sizeof(buffer), &i);
     ok(r == S_OK, "GetIconLocation failed (0x%08x)\n", r);
     ok(lstrcmpiA(buffer,str) == 0, "GetIconLocation returned '%s'\n", buffer);
-    ok(i == 0xbabecafe, "GetIconLocation returned %d'\n", i);
+    ok(i == 0xbabecafe, "GetIconLocation returned %#x.\n", i);
 
+    r = IShellLinkA_SetIconLocation(sl, NULL, 0xcafefe);
+    ok(r == S_OK, "SetIconLocation failed (0x%08x)\n", r);
+
+    i = 0xdeadbeef;
+    r = IShellLinkA_GetIconLocation(sl, buffer, sizeof(buffer), &i);
+    ok(r == S_OK, "GetIconLocation failed (0x%08x)\n", r);
+    ok(!*buffer, "GetIconLocation returned '%s'\n", buffer);
+    ok(i == 0xcafefe, "GetIconLocation returned %#x.\n", i);
+
+    r = IShellLinkA_QueryInterface(sl, &IID_IShellLinkW, (void **)&slW);
+    ok(SUCCEEDED(r), "Failed to get IShellLinkW, hr %#x.\n", r);
+
+    str = "c:\\nonexistent\\file";
+    r = IShellLinkA_SetIconLocation(sl, str, 0xbabecafe);
+    ok(r == S_OK, "SetIconLocation failed (0x%08x)\n", r);
+
+    r = IShellLinkA_SetIconLocation(sl, NULL, 0xcafefe);
+    ok(r == S_OK, "SetIconLocation failed (0x%08x)\n", r);
+
+    i = 0xdeadbeef;
+    r = IShellLinkA_GetIconLocation(sl, buffer, sizeof(buffer), &i);
+    ok(r == S_OK, "GetIconLocation failed (0x%08x)\n", r);
+    ok(!*buffer, "GetIconLocation returned '%s'\n", buffer);
+    ok(i == 0xcafefe, "GetIconLocation returned %#x.\n", i);
+
+    IShellLinkW_Release(slW);
     IShellLinkA_Release(sl);
 }
 
@@ -1116,6 +1143,21 @@ static void test_SHGetStockIconInfo(void)
     /* there is a NULL check for the struct  */
     hr = pSHGetStockIconInfo(SIID_FOLDER, SHGSI_ICONLOCATION, NULL);
     ok(hr == E_INVALIDARG, "NULL: got 0x%x\n", hr);
+
+    for(i = 0; i < 140; i++)  /* highest on wvista, i > 140 gives E_INVALIDARG, win7 can go higher */
+    {
+        memset(buffer, 0, sizeof(buffer));
+        sii->cbSize = sizeof(SHSTOCKICONINFO);
+        hr = pSHGetStockIconInfo(i, SHGSI_ICON | SHGSI_SMALLICON, sii);
+        ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
+        ok(sii->hIcon != NULL, "got NULL, expected an icon handle\n");
+        ok(sii->iIcon != 0, "got unexpected 0 for SIID %d\n", i); /* howto find out exact sii->iIcon value??? */
+        ok(sii->iSysImageIndex == -1, "got %d (expected -1)\n", sii->iSysImageIndex);
+        ok(DestroyIcon(sii->hIcon), "DestroyIcon failed\n");
+        if (winetest_debug > 1)
+            trace("%3d: got iSysImageIndex %3d, iIcon %3d and %s\n", i, sii->iSysImageIndex,
+            sii->iIcon, wine_dbgstr_w(sii->szPath));
+    }
 }
 
 static void test_SHExtractIcons(void)
@@ -1291,7 +1333,7 @@ if (0)
     ok(hicon == NULL, "Got icon %p\n", hicon);
 
     /* Create a temporary non-executable file */
-    GetTempPathW(sizeof(pathW)/sizeof(pathW[0]), pathW);
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
     lstrcatW(pathW, nameW);
     file = CreateFileW(pathW, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     ok(file != INVALID_HANDLE_VALUE, "Failed to create a test file\n");
@@ -1421,9 +1463,8 @@ static void test_SHGetImageList(void)
     for (i = 0; i <= SHIL_LAST; i++)
     {
         hr = SHGetImageList( i, &IID_IImageList, (void **)&list );
-        ok( hr == S_OK ||
-            broken( i == SHIL_JUMBO && hr == E_INVALIDARG ), /* XP and 2003 */
-            "%d: got %08x\n", i, hr );
+        ok( hr == S_OK || broken( i == SHIL_JUMBO && hr == E_INVALIDARG ), /* XP and 2003 */
+                "%d: got %08x\n", i, hr );
         if (FAILED(hr)) continue;
         IImageList_GetIconSize( list, &width, &height );
         switch (i)

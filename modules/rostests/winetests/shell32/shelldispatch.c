@@ -161,7 +161,7 @@ static void test_namespace(void)
     ok(folder == NULL, "expected NULL, got %p\n", folder);
 
     /* test valid folder ids */
-    for (i = 0; i < sizeof(special_folders)/sizeof(special_folders[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(special_folders); i++)
     {
         V_VT(&var) = VT_I4;
         V_I4(&var) = special_folders[i];
@@ -382,7 +382,7 @@ static void test_items(void)
     FolderItems3 *items3 = NULL;
     FolderItem *item = (FolderItem*)0xdeadbeef, *item2;
     FolderItemVerbs *verbs = (FolderItemVerbs*)0xdeadbeef;
-    VARIANT var, int_index, str_index, str_index2;
+    VARIANT var, var2, int_index, str_index, str_index2;
     IDispatch *disp, *disp2;
     LONG count = -1;
     IUnknown *unk;
@@ -474,7 +474,7 @@ static void test_items(void)
     ok(!item, "item is not null\n");
 
     /* create test files */
-    for (i = 0; i < sizeof(file_defs)/sizeof(file_defs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(file_defs); i++)
     {
         switch (file_defs[i].type)
         {
@@ -541,15 +541,16 @@ static void test_items(void)
     count = -1;
     r = FolderItems_get_Count(items, &count);
     ok(r == S_OK, "FolderItems::get_Count failed: %08x\n", r);
-    ok(count == sizeof(file_defs)/sizeof(file_defs[0]),
-       "expected %d files, got %d\n", (LONG)(sizeof(file_defs)/sizeof(file_defs[0])), count);
+    ok(count == ARRAY_SIZE(file_defs), "got %d files\n", count);
 
+    /* VT_EMPTY */
     V_VT(&var) = VT_EMPTY;
     item = (FolderItem*)0xdeadbeef;
     r = FolderItems_Item(items, var, &item);
     ok(r == E_NOTIMPL, "expected E_NOTIMPL, got %08x\n", r);
     ok(!item, "item is not null\n");
 
+    /* VT_I2 */
     V_VT(&var) = VT_I2;
     V_I2(&var) = 0;
 
@@ -572,6 +573,20 @@ static void test_items(void)
 
     FolderItem_Release(item);
 
+    /* VT_VARIANT | VT_BYREF */
+    V_VT(&var2) = VT_I2;
+    V_I2(&var2) = 0;
+
+    V_VT(&var) = VT_BYREF | VT_VARIANT;
+    V_VARIANTREF(&var) = &var2;
+
+    item = NULL;
+    r = FolderItems_Item(items, var, &item);
+    ok(r == S_OK, "FolderItems::Item failed: %08x\n", r);
+    ok(!!item, "item is null\n");
+    FolderItem_Release(item);
+
+    /* VT_I4 */
     V_VT(&var) = VT_I4;
     V_I4(&var) = 0;
     item = NULL;
@@ -606,7 +621,7 @@ static void test_items(void)
     V_VT(&int_index) = VT_I4;
 
     /* test the folder item corresponding to each file */
-    for (i = 0; i < sizeof(file_defs)/sizeof(file_defs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(file_defs); i++)
     {
         VARIANT_BOOL b;
         BSTR name;
@@ -730,7 +745,7 @@ static void test_items(void)
     }
 
     /* test that there are only as many folder items as there were files */
-    V_I4(&int_index) = sizeof(file_defs)/sizeof(file_defs[0]);
+    V_I4(&int_index) = ARRAY_SIZE(file_defs);
     item = (FolderItem*)0xdeadbeef;
     r = FolderItems_Item(items, int_index, &item);
     ok(r == S_FALSE, "expected S_FALSE, got %08x\n", r);
@@ -976,7 +991,7 @@ if (0) /* crashes on pre-vista */ {
     IShellView_Release(view);
 
     /* Try with some other folder, that's not a desktop */
-    GetTempPathW(sizeof(pathW)/sizeof(pathW[0]), pathW);
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
     hr = IShellFolder_ParseDisplayName(desktop, NULL, NULL, pathW, NULL, &pidl, NULL);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
@@ -1015,10 +1030,9 @@ static void test_ShellWindows(void)
     if (hr != S_OK)
         return;
 
-if (0) /* NULL out argument - currently crashes on Wine */ {
     hr = IShellWindows_Register(shellwindows, NULL, 0, SWC_EXPLORER, NULL);
     ok(hr == HRESULT_FROM_WIN32(RPC_X_NULL_REF_POINTER), "got 0x%08x\n", hr);
-}
+
     hr = IShellWindows_Register(shellwindows, NULL, 0, SWC_EXPLORER, &cookie);
 todo_wine
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
@@ -1096,9 +1110,6 @@ todo_wine {
         IUnknown *unk;
 
         ok(disp != NULL, "got %p\n", disp);
-
-        if (disp == NULL) goto skip_disp_tests;
-
         ok(ret != HandleToUlong(hwnd), "got %d\n", ret);
 
         /* IDispatch-related tests */
@@ -1176,7 +1187,6 @@ if (hr == S_OK) {
         IServiceProvider_Release(sp);
         IDispatch_Release(disp);
     }
-skip_disp_tests:
 
     disp = (void*)0xdeadbeef;
     ret = 0xdead;
@@ -1219,7 +1229,7 @@ static void test_ParseName(void)
         &IID_IShellDispatch, (void**)&sd);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
-    GetTempPathW(sizeof(pathW)/sizeof(pathW[0]), pathW);
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
     V_VT(&v) = VT_BSTR;
     V_BSTR(&v) = SysAllocString(pathW);
     hr = IShellDispatch_NameSpace(sd, v, &folder);
@@ -1288,7 +1298,7 @@ static void test_Verbs(void)
         &IID_IShellDispatch, (void**)&sd);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
-    GetTempPathW(sizeof(pathW)/sizeof(pathW[0]), pathW);
+    GetTempPathW(ARRAY_SIZE(pathW), pathW);
     V_VT(&v) = VT_BSTR;
     V_BSTR(&v) = SysAllocString(pathW);
     hr = IShellDispatch_NameSpace(sd, v, &folder);

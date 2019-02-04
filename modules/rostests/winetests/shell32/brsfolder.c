@@ -44,8 +44,8 @@ static int get_number_of_folders(LPCSTR path)
     WIN32_FIND_DATAA find_data;
     HANDLE find_handle;
 
-    lstrcpynA(path_search_string, path, MAX_PATH);
-    strncat(path_search_string, "*", 1);
+    lstrcpynA(path_search_string, path, MAX_PATH - 1);
+    strcat(path_search_string, "*");
 
     find_handle = FindFirstFileA(path_search_string, &find_data);
     if (find_handle == INVALID_HANDLE_VALUE)
@@ -186,9 +186,9 @@ static void test_click_make_new_folder_button(void)
     {
         skip("GetCurrentDirectoryA failed %u\n", GetLastError());
     }
-    strncat(test_folder_path, "\\", 1);
-    strncat(test_folder_path, title, MAX_PATH-1);
-    strncat(test_folder_path, "\\", 1);
+    strcat(test_folder_path, "\\");
+    strcat(test_folder_path, title);
+    strcat(test_folder_path, "\\");
 
     /* Avoid conflicts by creating a test folder. */
     if (!CreateDirectoryA(title, NULL))

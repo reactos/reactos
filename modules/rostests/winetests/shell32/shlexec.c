@@ -760,7 +760,7 @@ static LSTATUS myRegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
     dwMaxSubkeyLen++;
     dwMaxValueLen++;
     dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf)/sizeof(CHAR))
+    if (dwMaxLen > ARRAY_SIZE(szNameBuf))
     {
         /* Name too big: alloc a buffer for it */
         if (!(lpszName = heap_alloc(dwMaxLen*sizeof(CHAR))))
@@ -1331,7 +1331,7 @@ static BOOL test_one_cmdline(const cmdline_tests_t* test)
     int i, count;
 
     /* trace("----- cmd='%s'\n", test->cmd); */
-    MultiByteToWideChar(CP_ACP, 0, test->cmd, -1, cmdW, sizeof(cmdW)/sizeof(*cmdW));
+    MultiByteToWideChar(CP_ACP, 0, test->cmd, -1, cmdW, ARRAY_SIZE(cmdW));
     argsW = cl2a = CommandLineToArgvW(cmdW, &cl2a_count);
     if (argsW == NULL && cl2a_count == -1)
     {
@@ -1351,7 +1351,7 @@ static BOOL test_one_cmdline(const cmdline_tests_t* test)
     {
         if (i < count)
         {
-            MultiByteToWideChar(CP_ACP, 0, test->args[i], -1, argW, sizeof(argW)/sizeof(*argW));
+            MultiByteToWideChar(CP_ACP, 0, test->args[i], -1, argW, ARRAY_SIZE(argW));
             todo_wine_if(test->todo & (1 << (i+4)))
                 ok(!lstrcmpW(*argsW, argW), "%s: arg[%d] expected %s but got %s\n", test->cmd, i, wine_dbgstr_w(argW), wine_dbgstr_w(*argsW));
         }
@@ -1397,7 +1397,7 @@ static void test_commandline2argv(void)
        "expected NULL-terminated list of commandline arguments\n");
     if (numargs == 1)
     {
-        GetModuleFileNameW(NULL, strW, sizeof(strW)/sizeof(*strW));
+        GetModuleFileNameW(NULL, strW, ARRAY_SIZE(strW));
         ok(!lstrcmpW(args[0], strW), "wrong path to the current executable: %s instead of %s\n", wine_dbgstr_w(args[0]), wine_dbgstr_w(strW));
     }
     if (args) LocalFree(args);
@@ -1420,8 +1420,8 @@ typedef struct
     const char* verb;
     const char* params;
     int todo;
-    cmdline_tests_t cmd;
-    cmdline_tests_t broken;
+    const char *cmd;
+    const char *broken;
 } argify_tests_t;
 
 static const argify_tests_t argify_tests[] =
@@ -1431,33 +1431,28 @@ static const argify_tests_t argify_tests[] =
      * parameters string, including the trailing spaces, no matter what
      * arguments have already been used.
      */
-    {"Params232S", "p2 p3 p4 ", 0xc2,
-     {" p2 p3 \"p2\" \"p2 p3 p4 \"",
-      {"", "p2", "p3", "p2", "p2 p3 p4 ", NULL}, 0}},
+    {"Params232S", "p2 p3 p4 ", TRUE,
+     " p2 p3 \"p2\" \"p2 p3 p4 \""},
 
     /* Unquoted argument references like %2 don't automatically quote their
      * argument. Similarly, when they are quoted they don't escape the quotes
      * that their argument may contain.
      */
-    {"Params232S", "\"p two\" p3 p4  ", 0x3f3,
-     {" p two p3 \"p two\" \"\"p two\" p3 p4  \"",
-      {"", "p", "two", "p3", "p two", "p", "two p3 p4  ", NULL}, 0}},
+    {"Params232S", "\"p two\" p3 p4  ", TRUE,
+     " p two p3 \"p two\" \"\"p two\" p3 p4  \""},
 
     /* Only single digits are supported so only %1 to %9. Shown here with %20
      * because %10 is a pain.
      */
-    {"Params20", "p", 0,
-     {" \"p0\"",
-      {"", "p0", NULL}, 0}},
+    {"Params20", "p", FALSE,
+     " \"p0\""},
 
     /* Only (double-)quotes have a special meaning. */
-    {"Params23456", "'p2 p3` p4\\ $even", 0x40,
-     {" \"'p2\" \"p3`\" \"p4\\\" \"$even\" \"\"",
-      {"", "'p2", "p3`", "p4\" $even \"", NULL}, 0}},
+    {"Params23456", "'p2 p3` p4\\ $even", FALSE,
+     " \"'p2\" \"p3`\" \"p4\\\" \"$even\" \"\""},
 
-    {"Params23456", "p=2 p-3 p4\tp4\rp4\np4", 0x1c2,
-     {" \"p=2\" \"p-3\" \"p4\tp4\rp4\np4\" \"\" \"\"",
-      {"", "p=2", "p-3", "p4\tp4\rp4\np4", "", "", NULL}, 0}},
+    {"Params23456", "p=2 p-3 p4\tp4\rp4\np4", TRUE,
+     " \"p=2\" \"p-3\" \"p4\tp4\rp4\np4\" \"\" \"\""},
 
     /* In unquoted strings, quotes are treated are a parameter separator just
      * like spaces! However they can be doubled to get a literal quote.
@@ -1465,125 +1460,102 @@ static const argify_tests_t argify_tests[] =
      * 2n   quotes -> n quotes
      * 2n+1 quotes -> n quotes and a parameter separator
      */
-    {"Params23456789", "one\"quote \"p four\" one\"quote p7", 0xff3,
-     {" \"one\" \"quote\" \"p four\" \"one\" \"quote\" \"p7\" \"\" \"\"",
-      {"", "one", "quote", "p four", "one", "quote", "p7", "", "", NULL}, 0}},
+    {"Params23456789", "one\"quote \"p four\" one\"quote p7", TRUE,
+     " \"one\" \"quote\" \"p four\" \"one\" \"quote\" \"p7\" \"\" \"\""},
 
-    {"Params23456789", "two\"\"quotes \"p three\" two\"\"quotes p5", 0xf2,
-     {" \"two\"quotes\" \"p three\" \"two\"quotes\" \"p5\" \"\" \"\" \"\" \"\"",
-      {"", "twoquotes p", "three twoquotes", "p5", "", "", "", "", NULL}, 0}},
+    {"Params23456789", "two\"\"quotes \"p three\" two\"\"quotes p5", TRUE,
+     " \"two\"quotes\" \"p three\" \"two\"quotes\" \"p5\" \"\" \"\" \"\" \"\""},
 
-    {"Params23456789", "three\"\"\"quotes \"p four\" three\"\"\"quotes p6", 0xff3,
-     {" \"three\"\" \"quotes\" \"p four\" \"three\"\" \"quotes\" \"p6\" \"\" \"\"",
-      {"", "three\"", "quotes", "p four", "three\"", "quotes", "p6", "", "", NULL}, 0}},
+    {"Params23456789", "three\"\"\"quotes \"p four\" three\"\"\"quotes p6", TRUE,
+     " \"three\"\" \"quotes\" \"p four\" \"three\"\" \"quotes\" \"p6\" \"\" \"\""},
 
-    {"Params23456789", "four\"\"\"\"quotes \"p three\" four\"\"\"\"quotes p5", 0xf3,
-     {" \"four\"\"quotes\" \"p three\" \"four\"\"quotes\" \"p5\" \"\" \"\" \"\" \"\"",
-      {"", "four\"quotes p", "three fourquotes p5 \"", "", "", "", NULL}, 0}},
+    {"Params23456789", "four\"\"\"\"quotes \"p three\" four\"\"\"\"quotes p5", TRUE,
+     " \"four\"\"quotes\" \"p three\" \"four\"\"quotes\" \"p5\" \"\" \"\" \"\" \"\""},
 
     /* Quoted strings cannot be continued by tacking on a non space character
      * either.
      */
-    {"Params23456", "\"p two\"p3 \"p four\"p5 p6", 0x1f3,
-     {" \"p two\" \"p3\" \"p four\" \"p5\" \"p6\"",
-      {"", "p two", "p3", "p four", "p5", "p6", NULL}, 0}},
+    {"Params23456", "\"p two\"p3 \"p four\"p5 p6", TRUE,
+     " \"p two\" \"p3\" \"p four\" \"p5\" \"p6\""},
 
     /* In quoted strings, the quotes are halved and an odd number closes the
      * string. Specifically:
      * 2n   quotes -> n quotes
      * 2n+1 quotes -> n quotes and closes the string and hence the parameter
      */
-    {"Params23456789", "\"one q\"uote \"p four\" \"one q\"uote p7", 0xff3,
-     {" \"one q\" \"uote\" \"p four\" \"one q\" \"uote\" \"p7\" \"\" \"\"",
-      {"", "one q", "uote", "p four", "one q", "uote", "p7", "", "", NULL}, 0}},
+    {"Params23456789", "\"one q\"uote \"p four\" \"one q\"uote p7", TRUE,
+     " \"one q\" \"uote\" \"p four\" \"one q\" \"uote\" \"p7\" \"\" \"\""},
 
-    {"Params23456789", "\"two \"\" quotes\" \"p three\" \"two \"\" quotes\" p5", 0x1ff3,
-     {" \"two \" quotes\" \"p three\" \"two \" quotes\" \"p5\" \"\" \"\" \"\" \"\"",
-      {"", "two ", "quotes p", "three two", " quotes", "p5", "", "", "", "", NULL}, 0}},
+    {"Params23456789", "\"two \"\" quotes\" \"p three\" \"two \"\" quotes\" p5", TRUE,
+     " \"two \" quotes\" \"p three\" \"two \" quotes\" \"p5\" \"\" \"\" \"\" \"\""},
 
-    {"Params23456789", "\"three q\"\"\"uotes \"p four\" \"three q\"\"\"uotes p7", 0xff3,
-     {" \"three q\"\" \"uotes\" \"p four\" \"three q\"\" \"uotes\" \"p7\" \"\" \"\"",
-      {"", "three q\"", "uotes", "p four", "three q\"", "uotes", "p7", "", "", NULL}, 0}},
+    {"Params23456789", "\"three q\"\"\"uotes \"p four\" \"three q\"\"\"uotes p7", TRUE,
+     " \"three q\"\" \"uotes\" \"p four\" \"three q\"\" \"uotes\" \"p7\" \"\" \"\""},
 
-    {"Params23456789", "\"four \"\"\"\" quotes\" \"p three\" \"four \"\"\"\" quotes\" p5", 0xff3,
-     {" \"four \"\" quotes\" \"p three\" \"four \"\" quotes\" \"p5\" \"\" \"\" \"\" \"\"",
-      {"", "four \"", "quotes p", "three four", "", "quotes p5 \"", "", "", "", NULL}, 0}},
+    {"Params23456789", "\"four \"\"\"\" quotes\" \"p three\" \"four \"\"\"\" quotes\" p5", TRUE,
+     " \"four \"\" quotes\" \"p three\" \"four \"\" quotes\" \"p5\" \"\" \"\" \"\" \"\""},
 
     /* The quoted string rules also apply to consecutive quotes at the start
      * of a parameter but don't count the opening quote!
      */
-    {"Params23456789", "\"\"twoquotes \"p four\" \"\"twoquotes p7", 0xbf3,
-     {" \"\" \"twoquotes\" \"p four\" \"\" \"twoquotes\" \"p7\" \"\" \"\"",
-      {"", "", "twoquotes", "p four", "", "twoquotes", "p7", "", "", NULL}, 0}},
+    {"Params23456789", "\"\"twoquotes \"p four\" \"\"twoquotes p7", TRUE,
+     " \"\" \"twoquotes\" \"p four\" \"\" \"twoquotes\" \"p7\" \"\" \"\""},
 
-    {"Params23456789", "\"\"\"three quotes\" \"p three\" \"\"\"three quotes\" p5", 0x6f3,
-     {" \"\"three quotes\" \"p three\" \"\"three quotes\" \"p5\" \"\" \"\" \"\" \"\"",
-      {"", "three", "quotes p", "three \"three", "quotes p5 \"", "", "", "", NULL}, 0}},
+    {"Params23456789", "\"\"\"three quotes\" \"p three\" \"\"\"three quotes\" p5", TRUE,
+     " \"\"three quotes\" \"p three\" \"\"three quotes\" \"p5\" \"\" \"\" \"\" \"\""},
 
-    {"Params23456789", "\"\"\"\"fourquotes \"p four\" \"\"\"\"fourquotes p7", 0xbf3,
-     {" \"\"\" \"fourquotes\" \"p four\" \"\"\" \"fourquotes\" \"p7\" \"\" \"\"",
-      {"", "\"", "fourquotes", "p four", "\"", "fourquotes", "p7", "", "", NULL}, 0}},
+    {"Params23456789", "\"\"\"\"fourquotes \"p four\" \"\"\"\"fourquotes p7", TRUE,
+     " \"\"\" \"fourquotes\" \"p four\" \"\"\" \"fourquotes\" \"p7\" \"\" \"\""},
 
     /* An unclosed quoted string gets lost! */
-    {"Params23456", "p2 \"p3\" \"p4 is lost", 0x1c3,
-     {" \"p2\" \"p3\" \"\" \"\" \"\"",
-      {"", "p2", "p3", "", "", "", NULL}, 0},
-     {" \"p2\" \"p3\" \"p3\" \"\" \"\"",
-       {"", "p2", "p3", "p3", "", "", NULL}, 0}},
+    {"Params23456", "p2 \"p3\" \"p4 is lost", TRUE,
+     " \"p2\" \"p3\" \"\" \"\" \"\"",
+     " \"p2\" \"p3\" \"p3\" \"\" \"\""},    /* NT4/2k */
 
     /* Backslashes have no special meaning even when preceding quotes. All
      * they do is start an unquoted string.
      */
-    {"Params23456", "\\\"p\\three \"pfour\\\" pfive", 0x73,
-     {" \"\\\" \"p\\three\" \"pfour\\\" \"pfive\" \"\"",
-      {"", "\" p\\three pfour\"", "pfive", "", NULL}, 0}},
+    {"Params23456", "\\\"p\\three \"pfour\\\" pfive", TRUE,
+     " \"\\\" \"p\\three\" \"pfour\\\" \"pfive\" \"\""},
 
     /* Environment variables are left untouched. */
-    {"Params23456", "%TMPDIR% %t %c", 0,
-     {" \"%TMPDIR%\" \"%t\" \"%c\" \"\" \"\"",
-      {"", "%TMPDIR%", "%t", "%c", "", "", NULL}, 0}},
+    {"Params23456", "%TMPDIR% %t %c", FALSE,
+     " \"%TMPDIR%\" \"%t\" \"%c\" \"\" \"\""},
 
     /* %~2 is equivalent to %*. However %~3 and higher include the spaces
      * before the parameter!
      * (but not the previous parameter's closing quote fortunately)
      */
-    {"Params2345Etc", "p2  p3 \"p4\"  p5 p6 ", 0x3f3,
-     {" ~2=\"p2  p3 \"p4\"  p5 p6 \" ~3=\"  p3 \"p4\"  p5 p6 \" ~4=\" \"p4\"  p5 p6 \" ~5=  p5 p6 ",
-      {"", "~2=p2  p3 p4  p5 p6 ", "~3=  p3 p4  p5 p6 ", "~4= p4  p5 p6 ", "~5=", "p5", "p6", NULL}, 0}},
+    {"Params2345Etc", "p2  p3 \"p4\"  p5 p6 ", TRUE,
+     " ~2=\"p2  p3 \"p4\"  p5 p6 \" ~3=\"  p3 \"p4\"  p5 p6 \" ~4=\" \"p4\"  p5 p6 \" ~5=  p5 p6 "},
 
     /* %~n works even if there is no nth parameter. */
-    {"Params9Etc", "p2 p3 p4 p5 p6 p7 p8   ", 0x12,
-     {" ~9=\"   \"",
-      {"", "~9=   ", NULL}, 0}},
+    {"Params9Etc", "p2 p3 p4 p5 p6 p7 p8   ", TRUE,
+     " ~9=\"   \""},
 
-    {"Params9Etc", "p2 p3 p4 p5 p6 p7   ", 0x12,
-     {" ~9=\"\"",
-      {"", "~9=", NULL}, 0}},
+    {"Params9Etc", "p2 p3 p4 p5 p6 p7   ", TRUE,
+     " ~9=\"\""},
 
     /* The %~n directives also transmit the tenth parameter and beyond. */
-    {"Params9Etc", "p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 and beyond!", 0x12,
-     {" ~9=\" p9 p10 p11 and beyond!\"",
-      {"", "~9= p9 p10 p11 and beyond!", NULL}, 0}},
+    {"Params9Etc", "p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 and beyond!", TRUE,
+     " ~9=\" p9 p10 p11 and beyond!\""},
 
     /* Bad formatting directives lose their % sign, except those followed by
      * a tilde! Environment variables are not expanded but lose their % sign.
      */
-    {"ParamsBad", "p2 p3 p4 p5", 0x12,
-     {" \"% - %~ %~0 %~1 %~a %~* a b c TMPDIR\"",
-      {"", "% - %~ %~0 %~1 %~a %~* a b c TMPDIR", NULL}, 0}},
+    {"ParamsBad", "p2 p3 p4 p5", TRUE,
+     " \"% - %~ %~0 %~1 %~a %~* a b c TMPDIR\""},
 
-    {NULL, NULL, 0, {NULL, {NULL}, 0}}
+    {0}
 };
 
 static void test_argify(void)
 {
-    BOOL has_cl2a = TRUE;
     char fileA[MAX_PATH], params[2*MAX_PATH+12];
     INT_PTR rc;
     const argify_tests_t* test;
-    const cmdline_tests_t *bad;
+    const char *bad;
     const char* cmd;
-    unsigned i, count;
 
     /* Test with a long parameter */
     for (rc = 0; rc < MAX_PATH; rc++)
@@ -1616,20 +1588,10 @@ static void test_argify(void)
     test = argify_tests;
     while (test->params)
     {
-        bad = test->broken.cmd ? &test->broken : &test->cmd;
+        bad = test->broken ? test->broken : test->cmd;
 
-        /* trace("***** verb='%s' params='%s'\n", test->verb, test->params); */
         rc = shell_execute_ex(SEE_MASK_DOENVSUBST, test->verb, fileA, test->params, NULL, NULL);
         okShell(rc > 32, "failed: rc=%lu\n", rc);
-
-        count = 0;
-        while (test->cmd.args[count])
-            count++;
-        /* +4 for the shlexec arguments, -1 because of the added ""
-         * argument for the CommandLineToArgvW() tests.
-         */
-        todo_wine_if(test->todo & 0x1)
-            okChildInt("argcA", 4 + count - 1);
 
         cmd = getChildString("Child", "cmdlineA");
         /* Our commands are such that the verb immediately precedes the
@@ -1638,20 +1600,9 @@ static void test_argify(void)
         if (cmd) cmd = strstr(cmd, test->verb);
         if (cmd) cmd += strlen(test->verb);
         if (!cmd) cmd = "(null)";
-        todo_wine_if(test->todo & 0x2)
-            okShell(!strcmp(cmd, test->cmd.cmd) || broken(!strcmp(cmd, bad->cmd)),
-                    "the cmdline is '%s' instead of '%s'\n", cmd, test->cmd.cmd);
-
-        for (i = 0; i < count - 1; i++)
-        {
-            char argname[18];
-            sprintf(argname, "argvA%d", 4 + i);
-            todo_wine_if(test->todo & (1 << (i+4)))
-                okChildStringBroken(argname, test->cmd.args[i+1], bad->args[i+1]);
-        }
-
-        if (has_cl2a)
-            has_cl2a = test_one_cmdline(&(test->cmd));
+        todo_wine_if(test->todo)
+            okShell(!strcmp(cmd, test->cmd) || broken(!strcmp(cmd, bad)),
+                    "expected '%s', got '%s'\n", cmd, test->cmd);
         test++;
     }
 }
@@ -1861,7 +1812,7 @@ static void test_fileurls(void)
         return;
     }
 
-    get_long_path_name(tmpdir, longtmpdir, sizeof(longtmpdir)/sizeof(*longtmpdir));
+    get_long_path_name(tmpdir, longtmpdir, ARRAY_SIZE(longtmpdir));
     SetEnvironmentVariableA("urlprefix", "file:///");
 
     test=fileurl_tests;
@@ -2781,7 +2732,7 @@ static void init_test(void)
 
     /* Setup the test shortcuts */
     sprintf(filename, "%s\\test_shortcut_shlexec.lnk", tmpdir);
-    MultiByteToWideChar(CP_ACP, 0, filename, -1, lnkfile, sizeof(lnkfile)/sizeof(*lnkfile));
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, lnkfile, ARRAY_SIZE(lnkfile));
     desc.description=NULL;
     desc.workdir=NULL;
     sprintf(filename, "%s\\test file.shlexec", tmpdir);
@@ -2795,7 +2746,7 @@ static void init_test(void)
     create_lnk(lnkfile, &desc, 0);
 
     sprintf(filename, "%s\\test_shortcut_exe.lnk", tmpdir);
-    MultiByteToWideChar(CP_ACP, 0, filename, -1, lnkfile, sizeof(lnkfile)/sizeof(*lnkfile));
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, lnkfile, ARRAY_SIZE(lnkfile));
     desc.description=NULL;
     desc.workdir=NULL;
     desc.path=argv0;

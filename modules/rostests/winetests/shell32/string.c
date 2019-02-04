@@ -67,14 +67,14 @@ static void test_StrRetToStringNW(void)
     strret.uType = STRRET_WSTR;
     U(strret).pOleStr = CoDupStrW("Test");
     memset(buff, 0xff, sizeof(buff));
-    ret = pStrRetToStrNAW(buff, sizeof(buff)/sizeof(WCHAR), &strret, NULL);
+    ret = pStrRetToStrNAW(buff, ARRAY_SIZE(buff), &strret, NULL);
     ok(ret == TRUE && !strcmpW(buff, szTestW),
        "STRRET_WSTR: dup failed, ret=%d\n", ret);
 
     strret.uType = STRRET_CSTR;
     lstrcpyA(U(strret).cStr, "Test");
     memset(buff, 0xff, sizeof(buff));
-    ret = pStrRetToStrNAW(buff, sizeof(buff)/sizeof(WCHAR), &strret, NULL);
+    ret = pStrRetToStrNAW(buff, ARRAY_SIZE(buff), &strret, NULL);
     ok(ret == TRUE && !strcmpW(buff, szTestW),
        "STRRET_CSTR: dup failed, ret=%d\n", ret);
 
@@ -82,7 +82,7 @@ static void test_StrRetToStringNW(void)
     U(strret).uOffset = 1;
     strcpy((char*)&iidl, " Test");
     memset(buff, 0xff, sizeof(buff));
-    ret = pStrRetToStrNAW(buff, sizeof(buff)/sizeof(WCHAR), &strret, iidl);
+    ret = pStrRetToStrNAW(buff, ARRAY_SIZE(buff), &strret, iidl);
     ok(ret == TRUE && !strcmpW(buff, szTestW),
        "STRRET_OFFSET: dup failed, ret=%d\n", ret);
 
@@ -92,7 +92,7 @@ if (0)
     /* Invalid dest - should return FALSE, except NT4 does not, so we don't check. */
     strret.uType = STRRET_WSTR;
     U(strret).pOleStr = CoDupStrW("Test");
-    pStrRetToStrNAW(NULL, sizeof(buff)/sizeof(WCHAR), &strret, NULL);
+    pStrRetToStrNAW(NULL, ARRAY_SIZE(buff), &strret, NULL);
     trace("NULL dest: ret=%d\n", ret);
 }
 }

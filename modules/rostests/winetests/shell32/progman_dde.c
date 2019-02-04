@@ -166,7 +166,7 @@ static BOOL check_window_exists(const char *name)
 
     for (i = 0; i < 20; i++)
     {
-        Sleep(100);
+        Sleep(100 * i);
         if ((window = FindWindowA("ExplorerWClass", title)) ||
             (window = FindWindowA("CabinetWClass", title)))
         {
