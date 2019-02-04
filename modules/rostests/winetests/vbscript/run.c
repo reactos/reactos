@@ -2394,6 +2394,18 @@ static void run_tests(void)
     ok(FAILED(hres), "script didn't fail\n");
     todo_wine CHECK_CALLED(OnScriptError);
 
+    SET_EXPECT(global_success_d);
+    SET_EXPECT(global_success_i);
+    parse_script_a("' comment\r"
+                   "Sub testsub(arg)\r"
+                   "If arg = 1 Then\r\r"
+                   "Call reportSuccess()\n\n"
+                   "End If\r\n"
+                   "End Sub\n\r"
+                   "Call testsub(1)");
+    CHECK_CALLED(global_success_d);
+    CHECK_CALLED(global_success_i);
+
     run_from_res("lang.vbs");
     run_from_res("api.vbs");
     run_from_res("regexp.vbs");
