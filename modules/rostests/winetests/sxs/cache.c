@@ -155,12 +155,12 @@ static void test_QueryAssemblyInfo( void )
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
     info.pszCurrentAssemblyPathBuf = path;
-    info.cchBuf = sizeof(path)/sizeof(path[0]);
+    info.cchBuf = ARRAY_SIZE( path );
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, comctlW, &info );
     ok( hr == S_OK, "got %08x\n", hr );
     ok( info.dwAssemblyFlags == 1, "got %08x\n", info.dwAssemblyFlags );
     ok( !info.uliAssemblySizeInKB.u.LowPart, "got %u\n", info.uliAssemblySizeInKB.u.LowPart );
-    ok( info.cchBuf == sizeof(path)/sizeof(path[0]), "got %u\n", info.cchBuf );
+    ok( info.cchBuf == ARRAY_SIZE( path ), "got %u\n", info.cchBuf );
     ok( path[0], "empty path\n" );
 
     memset( &info, 0, sizeof(info) );
@@ -193,13 +193,13 @@ static void test_QueryAssemblyInfo( void )
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
     info.pszCurrentAssemblyPathBuf = path;
-    info.cchBuf = sizeof(path)/sizeof(path[0]);
+    info.cchBuf = ARRAY_SIZE( path );
     path[0] = 0;
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 2, comctlW, &info );
     ok( hr == E_INVALIDARG, "got %08x\n", hr );
     ok( !info.dwAssemblyFlags, "got %08x\n", info.dwAssemblyFlags );
     ok( !info.uliAssemblySizeInKB.u.LowPart, "got %u\n", info.uliAssemblySizeInKB.u.LowPart );
-    ok( info.cchBuf == sizeof(path)/sizeof(path[0]), "got %u\n", info.cchBuf );
+    ok( info.cchBuf == ARRAY_SIZE( path ), "got %u\n", info.cchBuf );
     ok( !path[0], "got %s\n", wine_dbgstr_w(path) );
 
     IAssemblyCache_Release( cache );
