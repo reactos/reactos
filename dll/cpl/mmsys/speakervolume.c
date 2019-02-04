@@ -151,7 +151,7 @@ OnHScroll(
     LPARAM lParam)
 {
     MIXERCONTROLDETAILS mxcd;
-    DWORD dwValue, dwPos;
+    DWORD dwValue, dwPosition;
     INT id, idx, i, j;
 
     id = (INT)GetWindowLongPtr((HWND)lParam, GWLP_ID);
@@ -161,8 +161,14 @@ OnHScroll(
     if ((id - 9475) % 4 != 0)
         return;
 
-    dwPos = (DWORD)SendDlgItemMessage(hwndDlg, id, TBM_GETPOS, 0, 0);
-    dwValue = (dwPos * pPageData->volumeStep) + pPageData->volumeMinimum;
+    dwPosition = (DWORD)SendDlgItemMessage(hwndDlg, id, TBM_GETPOS, 0, 0);
+
+    if (dwPosition == VOLUME_MIN)
+        dwValue = pPageData->volumeMinimum;
+    else if (dwPosition == VOLUME_MAX)
+        dwValue = pPageData->volumeMaximum;
+    else
+        dwValue = (dwPosition * pPageData->volumeStep) + pPageData->volumeMinimum;
 
     if (pPageData->volumeSync)
     {
@@ -170,7 +176,7 @@ OnHScroll(
         {
             j = 9475 + (i * 4);
             if (j != id)
-                SendDlgItemMessage(hwndDlg, j, TBM_SETPOS, (WPARAM)TRUE, dwPos);
+                SendDlgItemMessage(hwndDlg, j, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
 
             pPageData->volumeValues[i].dwValue = dwValue;
         }
