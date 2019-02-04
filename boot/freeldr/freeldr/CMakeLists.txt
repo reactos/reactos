@@ -34,7 +34,7 @@ function(add_linker_script _target _linker_script_file)
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
         DEPENDS ${_file_full_path})
     set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "ASM" GENERATED TRUE)
-    add_asm_files(freeldr_linker_file ${_generated_file})
+    add_asm_files(${_target}_freeldr_linker_file ${_generated_file})
 
     # Generate the C module containing extra sections specifications and layout,
     # as well as comment-type linker #pragma directives.
@@ -44,10 +44,10 @@ function(add_linker_script _target _linker_script_file)
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
         DEPENDS ${_file_full_path})
     set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "C" GENERATED TRUE)
-    list(APPEND freeldr_linker_file ${_generated_file})
+    list(APPEND ${_target}_freeldr_linker_file ${_generated_file})
 
     # Add both files to the sources of the target.
-    target_sources(${_target} PRIVATE ${freeldr_linker_file})
+    target_sources(${_target} PRIVATE "${${_target}_freeldr_linker_file}")
 
     # Create the additional linker response file.
     set(_generated_file "${_generated_file_path_prefix}.rsp")
