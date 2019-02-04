@@ -41,6 +41,8 @@ extern "C" {
 #include <shtypes.h>
 #include <shobjidl.h>
 
+#include <pshpack8.h>
+
 typedef struct
 {
     DWORD         dwSize;
@@ -78,6 +80,13 @@ typedef struct
     LPWSTR        pszLogo;
     DWORD         cchLogo;
 } SHFOLDERCUSTOMSETTINGSW, *LPSHFOLDERCUSTOMSETTINGSW;
+
+#include <poppack.h>
+
+#define FCS_READ       0x00000001
+#define FCS_FORCEWRITE 0x00000002
+
+#define FCSM_ICONFILE 0x00000010
 
 #ifndef HPSXA_DEFINED
 #define HPSXA_DEFINED
@@ -255,6 +264,7 @@ SHMapPIDLToSystemImageListIndex(
 HRESULT      WINAPI SHStartNetConnectionDialog(HWND,LPCSTR,DWORD);
 VOID         WINAPI SHUpdateImageA(_In_ LPCSTR, INT, UINT, INT);
 VOID         WINAPI SHUpdateImageW(_In_ LPCWSTR, INT, UINT, INT);
+#define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
 
 INT
 WINAPI
@@ -264,7 +274,12 @@ PickIconDlg(
   UINT cchIconPath,
   _Inout_opt_ int *);
 
-#define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
+HRESULT
+WINAPI
+SHLimitInputEdit(
+  _In_ HWND hwnd,
+  _In_ IShellFolder *folder);
+
 int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
 int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
 int          WINAPI DriveType(int);
