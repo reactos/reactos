@@ -1929,8 +1929,8 @@ static HRESULT WINAPI statusclb_OnStopBinding(IBindStatusCallbackEx *iface, HRES
     }
 
     if(test_protocol == HTTP_TEST && !emulate_protocol && http_cache_file[0]) {
-        HANDLE file = CreateFileW(http_cache_file, DELETE, FILE_SHARE_DELETE, NULL,
-                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE file = CreateFileW(http_cache_file, DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                  NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         ok(file == INVALID_HANDLE_VALUE, "expected INVALID_HANDLE_VALUE, got %p\n", file);
         ok(GetLastError() == ERROR_SHARING_VIOLATION, "expected ERROR_SHARING_VIOLATION, got %u\n", GetLastError());
         http_cache_file[0] = 0;
@@ -2912,7 +2912,7 @@ static void init_bind_test(int protocol, DWORD flags, DWORD t)
     }
 
     if(url_a)
-        MultiByteToWideChar(CP_ACP, 0, url_a, -1, current_url, sizeof(current_url)/sizeof(*current_url));
+        MultiByteToWideChar(CP_ACP, 0, url_a, -1, current_url, ARRAY_SIZE(current_url));
 
     test_redirect = (flags & BINDTEST_REDIRECT) != 0;
     use_cache_file = (flags & BINDTEST_USE_CACHE) != 0;

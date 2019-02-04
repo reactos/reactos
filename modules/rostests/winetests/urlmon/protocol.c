@@ -824,7 +824,7 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
 
     if (winetest_debug > 1)
     {
-        if (ulStatusCode < sizeof(status_names)/sizeof(status_names[0]))
+        if (ulStatusCode < ARRAY_SIZE(status_names))
             trace( "progress: %s %s\n", status_names[ulStatusCode], wine_dbgstr_w(szStatusText) );
         else
             trace( "progress: %u %s\n", ulStatusCode, wine_dbgstr_w(szStatusText) );
@@ -3057,55 +3057,55 @@ static void test_file_protocol(void) {
     test_file_protocol_url(index_url);
 
     memcpy(buf, wszFile, sizeof(wszFile));
-    len = sizeof(wszFile)/sizeof(WCHAR)-1;
-    len += GetCurrentDirectoryW(sizeof(buf)/sizeof(WCHAR)-len, buf+len);
+    len = ARRAY_SIZE(wszFile)-1;
+    len += GetCurrentDirectoryW(ARRAY_SIZE(buf)-len, buf+len);
     buf[len++] = '\\';
     memcpy(buf+len, wszIndexHtml, sizeof(wszIndexHtml));
 
-    file_name = buf + sizeof(wszFile)/sizeof(WCHAR)-1;
+    file_name = buf + ARRAY_SIZE(wszFile)-1;
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
     test_file_protocol_url(buf);
 
     memcpy(buf, wszFile2, sizeof(wszFile2));
-    len = GetCurrentDirectoryW(sizeof(file_name_buf)/sizeof(WCHAR), file_name_buf);
+    len = GetCurrentDirectoryW(ARRAY_SIZE(file_name_buf), file_name_buf);
     file_name_buf[len++] = '\\';
     memcpy(file_name_buf+len, wszIndexHtml, sizeof(wszIndexHtml));
-    lstrcpyW(buf+sizeof(wszFile2)/sizeof(WCHAR)-1, file_name_buf);
+    lstrcpyW(buf+ARRAY_SIZE(wszFile2)-1, file_name_buf);
     file_name = file_name_buf;
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
     test_file_protocol_url(buf);
 
-    buf[sizeof(wszFile2)/sizeof(WCHAR)] = '|';
+    buf[ARRAY_SIZE(wszFile2)] = '|';
     test_file_protocol_url(buf);
 
     memcpy(buf, wszFile3, sizeof(wszFile3));
-    len = sizeof(wszFile3)/sizeof(WCHAR)-1;
-    len += GetCurrentDirectoryW(sizeof(buf)/sizeof(WCHAR)-len, buf+len);
+    len = ARRAY_SIZE(wszFile3)-1;
+    len += GetCurrentDirectoryW(ARRAY_SIZE(buf)-len, buf+len);
     buf[len++] = '\\';
     memcpy(buf+len, wszIndexHtml, sizeof(wszIndexHtml));
 
-    file_name = buf + sizeof(wszFile3)/sizeof(WCHAR)-1;
+    file_name = buf + ARRAY_SIZE(wszFile3)-1;
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
     test_file_protocol_url(buf);
 
     memcpy(buf, wszFile4, sizeof(wszFile4));
-    len = GetCurrentDirectoryW(sizeof(file_name_buf)/sizeof(WCHAR), file_name_buf);
+    len = GetCurrentDirectoryW(ARRAY_SIZE(file_name_buf), file_name_buf);
     file_name_buf[len++] = '\\';
     memcpy(file_name_buf+len, wszIndexHtml, sizeof(wszIndexHtml));
-    lstrcpyW(buf+sizeof(wszFile4)/sizeof(WCHAR)-1, file_name_buf);
+    lstrcpyW(buf+ARRAY_SIZE(wszFile4)-1, file_name_buf);
     file_name = file_name_buf;
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
     test_file_protocol_url(buf);
 
-    buf[sizeof(wszFile4)/sizeof(WCHAR)] = '|';
+    buf[ARRAY_SIZE(wszFile4)] = '|';
     test_file_protocol_url(buf);
 
     /* Fragment part of URL is skipped if the file doesn't exist. */

@@ -224,7 +224,7 @@ static LONG myRegDeleteTreeA(HKEY hKey, LPCSTR lpszSubKey)
     dwMaxSubkeyLen++;
     dwMaxValueLen++;
     dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf)/sizeof(CHAR))
+    if (dwMaxLen > ARRAY_SIZE(szNameBuf))
     {
         /* Name too big: alloc a buffer for it */
         if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(CHAR))))
@@ -384,7 +384,7 @@ static void test_SecurityManager(void)
     if(FAILED(hres))
         return;
 
-    for(i=0; i < sizeof(secmgr_tests)/sizeof(secmgr_tests[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(secmgr_tests); i++) {
         zone = 100;
         hres = IInternetSecurityManager_MapUrlToZone(secmgr, secmgr_tests[i].url,
                                                      &zone, 0);
@@ -788,7 +788,7 @@ static BOOL register_zone_domains(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, szZoneMapDomainsKey, &domains);
     ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
 
-    for(i = 0; i < sizeof(zone_domain_mappings)/sizeof(zone_domain_mappings[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(zone_domain_mappings); ++i) {
         const zone_domain_mapping *test = zone_domain_mappings+i;
         HKEY domain;
 
@@ -833,7 +833,7 @@ static void unregister_zone_domains(void)
     res = RegOpenKeyA(HKEY_CURRENT_USER, szZoneMapDomainsKey, &domains);
     ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
 
-    for(i = 0; i < sizeof(zone_domain_mappings)/sizeof(zone_domain_mappings[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(zone_domain_mappings); ++i) {
         const zone_domain_mapping *test = zone_domain_mappings+i;
 
         /* FIXME: Uses the "cludge" approach to remove the test data from the registry!
@@ -939,7 +939,7 @@ static void test_zone_domain_mappings(void)
         RegCloseKey(domains);
     }
 
-    for(i = 0; i < sizeof(zone_mapping_tests)/sizeof(zone_mapping_tests[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(zone_mapping_tests); ++i) {
         const zone_mapping_test *test = zone_mapping_tests+i;
         LPWSTR urlW = a2w(test->url);
         zone = URLZONE_INVALID;
@@ -1363,7 +1363,7 @@ static void test_InternetGetSecurityUrl(void)
 
     trace("testing CoInternetGetSecurityUrl...\n");
 
-    for(i=0; i<sizeof(in)/sizeof(WCHAR*); i++) {
+    for(i = 0; i < ARRAY_SIZE(in); i++) {
         hres = pCoInternetGetSecurityUrl(in[i], &sec, PSU_DEFAULT, 0);
         ok(hres == S_OK, "(%d) CoInternetGetSecurityUrl returned: %08x\n", i, hres);
         if(hres == S_OK) {
@@ -1628,7 +1628,7 @@ static void test_InternetGetSecurityUrlEx(void)
     ok(hr == E_INVALIDARG, "CoInternetGetSecurityUrlEx returned 0x%08x, expected E_INVALIDARG\n", hr);
     ok(result == (void*) 0xdeadbeef, "'result' was %p\n", result);
 
-    for(i = 0; i < sizeof(sec_url_ex_tests)/sizeof(sec_url_ex_tests[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(sec_url_ex_tests); ++i) {
         LPWSTR uriW = a2w(sec_url_ex_tests[i].uri);
         uri = NULL;
 
@@ -1830,7 +1830,7 @@ static void test_SecurityManagerEx2(void)
 
     IUri_Release(uri);
 
-    for(i = 0; i < sizeof(sec_mgr_ex2_tests)/sizeof(sec_mgr_ex2_tests[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(sec_mgr_ex2_tests); ++i) {
         LPWSTR uriW = a2w(sec_mgr_ex2_tests[i].uri);
 
         uri = NULL;
@@ -1928,7 +1928,7 @@ static void test_CoInternetIsFeatureZoneElevationEnabled(void)
 
     trace("Testing CoInternetIsFeatureZoneElevationEnabled... (%x)\n", hres);
 
-    for(i=0; i<sizeof(testcases)/sizeof(testcases[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(testcases); i++) {
         if(hres==S_OK && testcases[i].flags == GET_FEATURE_FROM_PROCESS)
             testcases[i].policy_flags = URLPOLICY_ALLOW;
     }
@@ -1943,7 +1943,7 @@ static void test_CoInternetIsFeatureZoneElevationEnabled(void)
         return;
     }
 
-    for(i=0; i<sizeof(testcases)/sizeof(testcases[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(testcases); i++) {
         url_from = a2w(testcases[i].url_from);
         url_to = a2w(testcases[i].url_to);
 

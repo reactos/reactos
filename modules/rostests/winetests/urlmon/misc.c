@@ -85,7 +85,7 @@ static HRESULT (WINAPI *pIEInstallScope)(DWORD*);
 static int strcmp_wa(const WCHAR *strw, const char *stra)
 {
     WCHAR buf[512];
-    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, ARRAY_SIZE(buf));
     return lstrcmpW(strw, buf);
 }
 
@@ -367,23 +367,23 @@ static void test_CoInternetParseUrl(void)
             3, &size, 0);
     ok(hres == E_POINTER, "schema failed: %08x, expected E_POINTER\n", hres);
 
-    for(i=0; i < sizeof(parse_tests)/sizeof(parse_tests[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(parse_tests); i++) {
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_SECURITY_URL, 0, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == parse_tests[i].secur_hres, "[%d] security url failed: %08x, expected %08x\n",
                 i, hres, parse_tests[i].secur_hres);
 
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_ENCODE, 0, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == S_OK, "[%d] encoding failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].encoded_url), "[%d] wrong size\n", i);
         ok(!lstrcmpW(parse_tests[i].encoded_url, buf), "[%d] wrong encoded url\n", i);
 
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_PATH_FROM_URL, 0, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == parse_tests[i].path_hres, "[%d] path failed: %08x, expected %08x\n",
                 i, hres, parse_tests[i].path_hres);
         if(parse_tests[i].path) {
@@ -393,7 +393,7 @@ static void test_CoInternetParseUrl(void)
 
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_SCHEMA, 0, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == S_OK, "[%d] schema failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].schema), "[%d] wrong size\n", i);
         ok(!lstrcmpW(parse_tests[i].schema, buf), "[%d] wrong schema\n", i);
@@ -402,7 +402,7 @@ static void test_CoInternetParseUrl(void)
                 && memcmp(parse_tests[i].url, wszAbout, 5*sizeof(WCHAR))) {
             memset(buf, 0xf0, sizeof(buf));
             hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_DOMAIN, 0, buf,
-                    sizeof(buf)/sizeof(WCHAR), &size, 0);
+                    ARRAY_SIZE(buf), &size, 0);
             ok(hres == parse_tests[i].domain_hres, "[%d] domain failed: %08x\n", i, hres);
             if(parse_tests[i].domain)
                 ok(!lstrcmpW(parse_tests[i].domain, buf), "[%d] wrong domain, received %s\n", i, wine_dbgstr_w(buf));
@@ -410,7 +410,7 @@ static void test_CoInternetParseUrl(void)
 
         memset(buf, 0xf0, sizeof(buf));
         hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_ROOTDOCUMENT, 0, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == parse_tests[i].rootdocument_hres, "[%d] rootdocument failed: %08x\n", i, hres);
         if(parse_tests[i].rootdocument)
             ok(!lstrcmpW(parse_tests[i].rootdocument, buf), "[%d] wrong rootdocument, received %s\n", i, wine_dbgstr_w(buf));
@@ -451,7 +451,7 @@ static void test_CoInternetQueryInfo(void)
     DWORD cb, i;
     HRESULT hres;
 
-    for(i=0; i < sizeof(query_info_tests)/sizeof(query_info_tests[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(query_info_tests); i++) {
         cb = 0xdeadbeef;
         memset(buf, '?', sizeof(buf));
         hres = pCoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), &cb, 0);
@@ -724,7 +724,7 @@ static void test_FindMimeFromData(void)
     static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
     static const WCHAR text_plainW[] = {'t','e','x','t','/','p','l','a','i','n',0};
 
-    for(i=0; i<sizeof(mime_tests)/sizeof(mime_tests[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(mime_tests); i++) {
         mime = (LPWSTR)0xf0f0f0f0;
         url = a2w(mime_tests[i].url);
         hres = pFindMimeFromData(NULL, url, NULL, 0, NULL, 0, &mime, 0);
@@ -757,7 +757,7 @@ static void test_FindMimeFromData(void)
         heap_free(url);
     }
 
-    for(i=0; i < sizeof(mime_tests2)/sizeof(mime_tests2[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(mime_tests2); i++) {
         url = a2w(mime_tests2[i].url);
         proposed_mime = a2w(mime_tests2[i].proposed_mime);
         hres = pFindMimeFromData(NULL, url, mime_tests2[i].data, mime_tests2[i].size,
@@ -879,9 +879,9 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
 
     if(ParseAction == PARSE_SECURITY_URL) {
         if(pcchResult)
-            *pcchResult = sizeof(url1)/sizeof(WCHAR);
+            *pcchResult = ARRAY_SIZE(url1);
 
-        if(cchResult<sizeof(url1)/sizeof(WCHAR))
+        if(cchResult < ARRAY_SIZE(url1))
             return S_FALSE;
 
         memcpy(pwzResult, url1, sizeof(url1));
@@ -1032,8 +1032,7 @@ static void test_NameSpace(void)
     SET_EXPECT(CreateInstance);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1044,8 +1043,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1054,11 +1052,10 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_SECURITY_URL, 0, buf,
-            sizeof(buf)/sizeof(WCHAR), &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_SECURITY_URL, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
-    ok(size == sizeof(url1)/sizeof(WCHAR), "Size = %d\n", size);
-    if(size == sizeof(url1)/sizeof(WCHAR))
+    ok(size == ARRAY_SIZE(url1), "Size = %d\n", size);
+    if(size == ARRAY_SIZE(url1))
         ok(!memcmp(buf, url1, sizeof(url1)), "Encoded url = %s\n", wine_dbgstr_w(buf));
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1071,7 +1068,7 @@ static void test_NameSpace(void)
         hres = pCoInternetGetSecurityUrl(url8, &sec_url, PSU_SECURITY_URL_ONLY, 0);
         ok(hres == S_OK, "CoInternetGetSecurityUrl failed: %08x\n", hres);
         if(hres == S_OK) {
-            ok(lstrlenW(sec_url)>sizeof(wszFile)/sizeof(WCHAR) &&
+            ok(lstrlenW(sec_url) > ARRAY_SIZE(wszFile) &&
                     !memcmp(sec_url, wszFile, sizeof(wszFile)-sizeof(WCHAR)),
                     "Encoded url = %s\n", wine_dbgstr_w(sec_url));
             CoTaskMemFree(sec_url);
@@ -1084,8 +1081,7 @@ static void test_NameSpace(void)
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     hres = IInternetSession_RegisterNameSpace(session, &test_protocol_cf2, &IID_NULL,
@@ -1103,8 +1099,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1116,8 +1111,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1130,8 +1124,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
@@ -1149,8 +1142,7 @@ static void test_NameSpace(void)
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf2, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
-    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
-                              &size, 0);
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, ARRAY_SIZE(buf), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
     IInternetSession_Release(session);
@@ -1627,7 +1619,7 @@ static void test_MkParseDisplayNameEx(void)
 
     CreateBindCtx(0, &bctx);
 
-    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(invalid_parameters); i++)
     {
         eaten = 0xdeadbeef;
         mon = (IMoniker *)0xdeadbeef;
@@ -1643,7 +1635,7 @@ static void test_MkParseDisplayNameEx(void)
 
     hres = MkParseDisplayNameEx(bctx, url9, &eaten, &mon);
     ok(hres == S_OK, "MkParseDisplayNameEx failed: %08x\n", hres);
-    ok(eaten == sizeof(url9)/sizeof(WCHAR)-1, "eaten=%d\n", eaten);
+    ok(eaten == ARRAY_SIZE(url9)-1, "eaten=%d\n", eaten);
     ok(mon != NULL, "mon == NULL\n");
 
     hres = IMoniker_GetDisplayName(mon, NULL, 0, &name);
@@ -1659,7 +1651,7 @@ static void test_MkParseDisplayNameEx(void)
 
     hres = MkParseDisplayNameEx(bctx, clsid_nameW, &eaten, &mon);
     ok(hres == S_OK, "MkParseDisplayNameEx failed: %08x\n", hres);
-    ok(eaten == sizeof(clsid_nameW)/sizeof(WCHAR)-1, "eaten=%d\n", eaten);
+    ok(eaten == ARRAY_SIZE(clsid_nameW)-1, "eaten=%d\n", eaten);
     ok(mon != NULL, "mon == NULL\n");
 
     hres = IMoniker_IsSystemMoniker(mon, &issys);
@@ -1733,7 +1725,7 @@ static void test_internet_feature_defaults(void) {
     HRESULT hres;
     DWORD i;
 
-    for(i = 0; i < sizeof(default_feature_tests)/sizeof(default_feature_tests[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(default_feature_tests); ++i) {
         hres = pCoInternetIsFeatureEnabled(default_feature_tests[i].feature, default_feature_tests[i].get_flags);
         todo_wine_if (default_feature_tests[i].todo)
             ok(hres == default_feature_tests[i].expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
@@ -1880,7 +1872,7 @@ static void test_CoInternetSetFeatureEnabled(void) {
     hres = pCoInternetSetFeatureEnabled(FEATURE_ENTRY_COUNT,SET_FEATURE_ON_PROCESS,TRUE);
     ok(hres == E_FAIL, "CoInternetSetFeatureEnabled returned %08x, expected E_FAIL\n", hres);
 
-    for(i = 0; i < sizeof(internet_feature_tests)/sizeof(internet_feature_tests[0]); ++i) {
+    for(i = 0; i < ARRAY_SIZE(internet_feature_tests); ++i) {
         hres = pCoInternetSetFeatureEnabled(internet_feature_tests[i].feature, internet_feature_tests[i].set_flags,
                                             internet_feature_tests[i].enable);
         todo_wine_if (internet_feature_tests[i].set_todo)
