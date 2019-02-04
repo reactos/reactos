@@ -969,7 +969,7 @@ void *parser_alloc(parser_ctx_t *ctx, size_t size)
 
 HRESULT parse_script(parser_ctx_t *ctx, const WCHAR *code, const WCHAR *delimiter)
 {
-    const WCHAR html_delimiterW[] = {'<','/','s','c','r','i','p','t','>',0};
+    static const WCHAR html_delimiterW[] = {'<','/','s','c','r','i','p','t','>',0};
 
     ctx->code = ctx->ptr = code;
     ctx->end = ctx->code + strlenW(ctx->code);
