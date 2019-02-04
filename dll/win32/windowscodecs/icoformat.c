@@ -176,7 +176,7 @@ static HRESULT WINAPI IcoFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
     IcoFrameDecode *This = impl_from_IWICBitmapFrameDecode(iface);
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     return copy_pixels(32, This->bits, This->width, This->height, This->width * 4,
         prc, cbStride, cbBufferSize, pbBuffer);
@@ -511,6 +511,9 @@ static HRESULT WINAPI IcoDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     LARGE_INTEGER seek;
     HRESULT hr;
     ULONG bytesread;
+    STATSTG statstg;
+    unsigned int i;
+
     TRACE("(%p,%p,%x)\n", iface, pIStream, cacheOptions);
 
     EnterCriticalSection(&This->lock);
@@ -527,12 +530,39 @@ static HRESULT WINAPI IcoDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
 
     hr = IStream_Read(pIStream, &This->header, sizeof(ICONHEADER), &bytesread);
     if (FAILED(hr)) goto end;
-    if (bytesread != sizeof(ICONHEADER) ||
-        This->header.idReserved != 0 ||
+
+    if (bytesread != sizeof(ICONHEADER))
+    {
+        hr = WINCODEC_ERR_STREAMREAD;
+        goto end;
+    }
+
+    if (This->header.idReserved != 0 ||
         This->header.idType != 1)
     {
         hr = E_FAIL;
         goto end;
+    }
+
+    hr = IStream_Stat(pIStream, &statstg, STATFLAG_NONAME);
+    if (FAILED(hr))
+    {
+        WARN("Stat() failed, hr %#x.\n", hr);
+        goto end;
+    }
+
+    for (i = 0; i < This->header.idCount; i++)
+    {
+        ICONDIRENTRY direntry;
+
+        hr = IStream_Read(pIStream, &direntry, sizeof(direntry), &bytesread);
+        if (FAILED(hr)) goto end;
+
+        if (bytesread != sizeof(direntry) || (direntry.dwDIBSize + direntry.dwDIBOffset > statstg.cbSize.QuadPart))
+        {
+            hr = WINCODEC_ERR_BADIMAGE;
+            goto end;
+        }
     }
 
     This->initialized = TRUE;

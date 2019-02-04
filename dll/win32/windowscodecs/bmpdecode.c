@@ -321,7 +321,7 @@ static HRESULT WINAPI BmpFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
     BmpDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
     HRESULT hr=S_OK;
     UINT width, height;
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     EnterCriticalSection(&This->lock);
     if (!This->imagedata)

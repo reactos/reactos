@@ -99,9 +99,9 @@
 @ stdcall IWICPalette_InitializeFromBitmap_Proxy(ptr ptr long long) IWICPalette_InitializeFromBitmap_Proxy_W
 @ stdcall IWICPalette_InitializeFromPalette_Proxy(ptr ptr) IWICPalette_InitializeFromPalette_Proxy_W
 @ stdcall IWICPalette_InitializePredefined_Proxy(ptr long long) IWICPalette_InitializePredefined_Proxy_W
-@ stdcall IWICPixelFormatInfo_GetBitsPerPixel_Proxy(ptr ptr)
-@ stdcall IWICPixelFormatInfo_GetChannelCount_Proxy(ptr ptr)
-@ stdcall IWICPixelFormatInfo_GetChannelMask_Proxy(ptr long long ptr ptr)
+@ stdcall IWICPixelFormatInfo_GetBitsPerPixel_Proxy(ptr ptr) IWICPixelFormatInfo_GetBitsPerPixel_Proxy_W
+@ stdcall IWICPixelFormatInfo_GetChannelCount_Proxy(ptr ptr) IWICPixelFormatInfo_GetChannelCount_Proxy_W
+@ stdcall IWICPixelFormatInfo_GetChannelMask_Proxy(ptr long long ptr ptr) IWICPixelFormatInfo_GetChannelMask_Proxy_W
 @ stdcall IWICStream_InitializeFromIStream_Proxy(ptr ptr) IWICStream_InitializeFromIStream_Proxy_W
 @ stdcall IWICStream_InitializeFromMemory_Proxy(ptr ptr long) IWICStream_InitializeFromMemory_Proxy_W
 @ stdcall WICConvertBitmapSource(ptr ptr ptr)

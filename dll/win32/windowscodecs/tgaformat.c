@@ -890,7 +890,7 @@ static HRESULT WINAPI TgaDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
     TgaDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
     HRESULT hr;
 
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     hr = TgaDecoder_ReadImage(This);
 

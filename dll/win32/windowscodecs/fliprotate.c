@@ -161,7 +161,7 @@ static HRESULT WINAPI FlipRotator_CopyPixels(IWICBitmapFlipRotator *iface,
     WICRect rc;
     WICRect rect;
 
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     if (!This->source) return WINCODEC_ERR_WRONGSTATE;
 

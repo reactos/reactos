@@ -390,7 +390,7 @@ static HRESULT WINAPI IcnsFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
     IcnsFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
 
-    TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
+    TRACE("(%p,%p,%s)\n", iface, pIBitmapSource, debug_wic_rect(prc));
 
     if (!This->initialized)
         return WINCODEC_ERR_WRONGSTATE;

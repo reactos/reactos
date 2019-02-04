@@ -504,7 +504,7 @@ static HRESULT tiff_get_decode_info(TIFF *tiff, tiff_decode_info *decode_info)
             break;
         default:
             FIXME("unhandled indexed bit count %u\n", bps);
-            return E_FAIL;
+            return E_NOTIMPL;
         }
         break;
 
@@ -836,6 +836,7 @@ static HRESULT WINAPI TiffDecoder_GetFrame(IWICBitmapDecoder *iface,
             result->IWICMetadataBlockReader_iface.lpVtbl = &TiffFrameDecode_BlockVtbl;
             result->ref = 1;
             result->parent = This;
+            IWICBitmapDecoder_AddRef(iface);
             result->index = index;
             result->decode_info = decode_info;
             result->cached_tile_x = -1;
@@ -846,7 +847,7 @@ static HRESULT WINAPI TiffDecoder_GetFrame(IWICBitmapDecoder *iface,
             else
             {
                 hr = E_OUTOFMEMORY;
-                HeapFree(GetProcessHeap(), 0, result);
+                IWICBitmapFrameDecode_Release(&result->IWICBitmapFrameDecode_iface);
             }
         }
         else hr = E_OUTOFMEMORY;
@@ -921,6 +922,7 @@ static ULONG WINAPI TiffFrameDecode_Release(IWICBitmapFrameDecode *iface)
 
     if (ref == 0)
     {
+        IWICBitmapDecoder_Release(&This->parent->IWICBitmapDecoder_iface);
         HeapFree(GetProcessHeap(), 0, This->cached_tile);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -1286,7 +1288,7 @@ static HRESULT WINAPI TiffFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
     UINT bytesperrow;
     WICRect rect;
 
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     if (!prc)
     {
@@ -1308,7 +1310,7 @@ static HRESULT WINAPI TiffFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
     if (cbStride < bytesperrow)
         return E_INVALIDARG;
 
-    if ((cbStride * (prc->Height-1)) + ((prc->Width * This->decode_info.bpp) + 7)/8 > cbBufferSize)
+    if ((cbStride * (prc->Height-1)) + bytesperrow > cbBufferSize)
         return E_INVALIDARG;
 
     min_tile_x = prc->X / This->decode_info.tile_width;
@@ -1623,7 +1625,6 @@ static const struct tiff_encode_format formats[] = {
     {&GUID_WICPixelFormat64bppRGBA, 2, 16, 4, 64, 1, 2, 0},
     {&GUID_WICPixelFormat64bppPRGBA, 2, 16, 4, 64, 1, 1, 0},
     {&GUID_WICPixelFormat1bppIndexed, 3, 1, 1, 1, 0, 0, 0},
-    {&GUID_WICPixelFormat2bppIndexed, 3, 2, 1, 2, 0, 0, 0},
     {&GUID_WICPixelFormat4bppIndexed, 3, 4, 1, 4, 0, 0, 0},
     {&GUID_WICPixelFormat8bppIndexed, 3, 8, 1, 8, 0, 0, 0},
     {0}
@@ -1797,9 +1798,12 @@ static HRESULT WINAPI TiffFrameEncode_SetPixelFormat(IWICBitmapFrameEncode *ifac
         return WINCODEC_ERR_WRONGSTATE;
     }
 
+    if (IsEqualGUID(pPixelFormat, &GUID_WICPixelFormat2bppIndexed))
+        *pPixelFormat = GUID_WICPixelFormat4bppIndexed;
+
     for (i=0; formats[i].guid; i++)
     {
-        if (memcmp(formats[i].guid, pPixelFormat, sizeof(GUID)) == 0)
+        if (IsEqualGUID(formats[i].guid, pPixelFormat))
             break;
     }
 
@@ -1961,7 +1965,7 @@ static HRESULT WINAPI TiffFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
     TiffFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
 
-    TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
+    TRACE("(%p,%p,%s)\n", iface, pIBitmapSource, debug_wic_rect(prc));
 
     if (!This->initialized)
         return WINCODEC_ERR_WRONGSTATE;
@@ -2117,6 +2121,11 @@ exit:
 static HRESULT WINAPI TiffEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
     GUID *pguidContainerFormat)
 {
+    TRACE("(%p,%p)\n", iface, pguidContainerFormat);
+
+    if (!pguidContainerFormat)
+        return E_INVALIDARG;
+
     memcpy(pguidContainerFormat, &GUID_ContainerFormatTiff, sizeof(GUID));
     return S_OK;
 }
@@ -2202,7 +2211,7 @@ static HRESULT WINAPI TiffEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (ppIEncoderOptions && SUCCEEDED(hr))
     {
-        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
+        hr = CreatePropertyBag2(opts, ARRAY_SIZE(opts), ppIEncoderOptions);
         if (SUCCEEDED(hr))
         {
             VARIANT v;

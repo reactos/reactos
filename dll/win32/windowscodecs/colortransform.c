@@ -133,7 +133,7 @@ static HRESULT WINAPI ColorTransform_CopyPixels(IWICColorTransform *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
     ColorTransform *This = impl_from_IWICColorTransform(iface);
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     return IWICBitmapSource_CopyPixels(This->dst, prc, cbStride, cbBufferSize, pbBuffer);
 }

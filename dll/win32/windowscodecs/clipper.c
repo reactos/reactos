@@ -167,7 +167,7 @@ static HRESULT WINAPI BitmapClipper_CopyPixels(IWICBitmapClipper *iface,
     BitmapClipper *This = impl_from_IWICBitmapClipper(iface);
     WICRect rect;
 
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, rc, stride, buffer_size, buffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(rc), stride, buffer_size, buffer);
 
     if (!This->source)
         return WINCODEC_ERR_WRONGSTATE;
@@ -199,7 +199,7 @@ static HRESULT WINAPI BitmapClipper_Initialize(IWICBitmapClipper *iface,
     UINT width, height;
     HRESULT hr = S_OK;
 
-    TRACE("(%p,%p,%p)\n", iface, source, rc);
+    TRACE("(%p,%p,%s)\n", iface, source, debug_wic_rect(rc));
 
     EnterCriticalSection(&This->lock);
 

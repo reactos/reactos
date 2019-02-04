@@ -467,7 +467,7 @@ static HRESULT WINAPI JpegDecoder_CopyPalette(IWICBitmapDecoder *iface,
 static HRESULT WINAPI JpegDecoder_GetMetadataQueryReader(IWICBitmapDecoder *iface,
     IWICMetadataQueryReader **reader)
 {
-    FIXME("(%p,%p): stub\n", iface, reader);
+    TRACE("(%p,%p)\n", iface, reader);
 
     if (!reader) return E_INVALIDARG;
 
@@ -644,7 +644,7 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
 {
     JpegDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
 
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     return copy_pixels(This->bpp, This->image_data,
         This->cinfo.output_width, This->cinfo.output_height, This->stride,
@@ -1168,7 +1168,7 @@ static HRESULT WINAPI JpegEncoder_Frame_WriteSource(IWICBitmapFrameEncode *iface
 {
     JpegEncoder *This = impl_from_IWICBitmapFrameEncode(iface);
     HRESULT hr;
-    TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
+    TRACE("(%p,%p,%s)\n", iface, pIBitmapSource, debug_wic_rect(prc));
 
     if (!This->frame_initialized)
         return WINCODEC_ERR_WRONGSTATE;
@@ -1345,11 +1345,15 @@ static HRESULT WINAPI JpegEncoder_Initialize(IWICBitmapEncoder *iface,
     return S_OK;
 }
 
-static HRESULT WINAPI JpegEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
-    GUID *pguidContainerFormat)
+static HRESULT WINAPI JpegEncoder_GetContainerFormat(IWICBitmapEncoder *iface, GUID *format)
 {
-    FIXME("(%p,%s): stub\n", iface, debugstr_guid(pguidContainerFormat));
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, format);
+
+    if (!format)
+        return E_INVALIDARG;
+
+    memcpy(format, &GUID_ContainerFormatJpeg, sizeof(*format));
+    return S_OK;
 }
 
 static HRESULT WINAPI JpegEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
@@ -1438,7 +1442,7 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (ppIEncoderOptions)
     {
-        hr = CreatePropertyBag2(opts, sizeof(opts)/sizeof(opts[0]), ppIEncoderOptions);
+        hr = CreatePropertyBag2(opts, ARRAY_SIZE(opts), ppIEncoderOptions);
         if (FAILED(hr))
         {
             LeaveCriticalSection(&This->lock);

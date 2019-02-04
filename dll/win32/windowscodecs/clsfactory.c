@@ -43,7 +43,8 @@ typedef struct {
 } classinfo;
 
 static const classinfo wic_classes[] = {
-    {&CLSID_WICImagingFactory, ComponentFactory_CreateInstance},
+    {&CLSID_WICImagingFactory, ImagingFactory_CreateInstance},
+    {&CLSID_WICImagingFactory2, ImagingFactory_CreateInstance},
     {&CLSID_WICBmpDecoder, BmpDecoder_CreateInstance},
     {&CLSID_WICPngDecoder, PngDecoder_CreateInstance},
     {&CLSID_WICPngEncoder, PngEncoder_CreateInstance},

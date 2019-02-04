@@ -1583,7 +1583,7 @@ static HRESULT WINAPI FormatConverter_CopyPixels(IWICFormatConverter *iface,
     FormatConverter *This = impl_from_IWICFormatConverter(iface);
     WICRect rc;
     HRESULT hr;
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     if (This->source)
     {

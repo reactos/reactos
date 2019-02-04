@@ -21,6 +21,8 @@
 
 #include "wincodec.h"
 #include "wincodecsdk.h"
+
+#include "wine/debug.h"
 #include "wine/unicode.h"
 
 DEFINE_GUID(CLSID_WineTgaDecoder, 0xb11fc79a,0x67cc,0x43e6,0xa9,0xce,0xe3,0xd5,0x49,0x45,0xd3,0x04);
@@ -138,7 +140,7 @@ HRESULT create_instance(CLSID *clsid, const IID *iid, void **ppv) DECLSPEC_HIDDE
 
 typedef HRESULT(*class_constructor)(REFIID,void**);
 extern HRESULT FormatConverter_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
-extern HRESULT ComponentFactory_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
+extern HRESULT ImagingFactory_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT BmpDecoder_CreateInstance(REFIID riid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT PngDecoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 extern HRESULT PngEncoder_CreateInstance(REFIID iid, void** ppv) DECLSPEC_HIDDEN;
@@ -240,6 +242,12 @@ static inline WCHAR *heap_strdupW(const WCHAR *src)
     len = (strlenW(src) + 1) * sizeof(WCHAR);
     if ((dst = HeapAlloc(GetProcessHeap(), 0, len))) memcpy(dst, src, len);
     return dst;
+}
+
+static inline const char *debug_wic_rect(const WICRect *rect)
+{
+    if (!rect) return "(null)";
+    return wine_dbg_sprintf("(%u,%u)-(%u,%u)", rect->X, rect->Y, rect->Width, rect->Height);
 }
 
 #endif /* WINCODECS_PRIVATE_H */

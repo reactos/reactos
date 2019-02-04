@@ -164,7 +164,7 @@ static VARTYPE map_type(struct string_t *str)
 {
     UINT i;
 
-    for (i = 0; i < sizeof(str2vt)/sizeof(str2vt[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(str2vt); i++)
     {
         if (str2vt[i].len == str->len)
         {
@@ -589,7 +589,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
     PropVariantClear(&tk_id);
     PropVariantClear(&tk_schema);
 
-    if (hr == S_OK)
+    if (hr == S_OK && value)
         *value = new_value;
     else
         PropVariantClear(&new_value);
@@ -743,7 +743,7 @@ HRESULT WINAPI WICMapGuidToShortName(REFGUID guid, UINT len, WCHAR *name, UINT *
 
     if (!guid) return E_INVALIDARG;
 
-    for (i = 0; i < sizeof(guid2name)/sizeof(guid2name[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(guid2name); i++)
     {
         if (IsEqualGUID(guid, guid2name[i].guid))
         {
@@ -774,7 +774,7 @@ HRESULT WINAPI WICMapShortNameToGuid(PCWSTR name, GUID *guid)
 
     if (!name || !guid) return E_INVALIDARG;
 
-    for (i = 0; i < sizeof(guid2name)/sizeof(guid2name[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(guid2name); i++)
     {
         if (!lstrcmpiW(name, guid2name[i].name))
         {
@@ -884,7 +884,7 @@ static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *nam
         !IsEqualGUID(format, &GUID_MetadataFormatXMPStruct))
         return NULL;
 
-    for (i = 0; i < sizeof(name2schema)/sizeof(name2schema[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(name2schema); i++)
     {
         if (!lstrcmpW(name2schema[i].name, name))
             return name2schema[i].schema;
@@ -909,7 +909,7 @@ HRESULT WINAPI WICMapSchemaToName(REFGUID format, LPWSTR schema, UINT len, WCHAR
         !IsEqualGUID(format, &GUID_MetadataFormatXMPStruct))
         return WINCODEC_ERR_PROPERTYNOTFOUND;
 
-    for (i = 0; i < sizeof(name2schema)/sizeof(name2schema[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(name2schema); i++)
     {
         if (!lstrcmpW(name2schema[i].schema, schema))
         {

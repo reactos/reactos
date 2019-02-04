@@ -361,7 +361,7 @@ static HRESULT WINAPI BitmapImpl_CopyPixels(IWICBitmap *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
     BitmapImpl *This = impl_from_IWICBitmap(iface);
-    TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
+    TRACE("(%p,%s,%u,%u,%p)\n", iface, debug_wic_rect(prc), cbStride, cbBufferSize, pbBuffer);
 
     return copy_pixels(This->bpp, This->data, This->width, This->height,
         This->stride, prc, cbStride, cbBufferSize, pbBuffer);
@@ -374,7 +374,7 @@ static HRESULT WINAPI BitmapImpl_Lock(IWICBitmap *iface, const WICRect *prcLock,
     BitmapLockImpl *result;
     WICRect rc;
 
-    TRACE("(%p,%p,%x,%p)\n", iface, prcLock, flags, ppILock);
+    TRACE("(%p,%s,%x,%p)\n", iface, debug_wic_rect(prcLock), flags, ppILock);
 
     if (!(flags & (WICBitmapLockRead|WICBitmapLockWrite)) || !ppILock)
         return E_INVALIDARG;
@@ -568,7 +568,7 @@ static HRESULT WINAPI IMILBitmapImpl_GetPixelFormat(IMILBitmapSource *iface,
 
     *format = 0;
 
-    for (i = 0; i < sizeof(pixel_fmt_map)/sizeof(pixel_fmt_map[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(pixel_fmt_map); i++)
     {
         if (IsEqualGUID(pixel_fmt_map[i].WIC_format, &This->pixelformat))
         {
