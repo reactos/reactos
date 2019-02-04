@@ -306,6 +306,8 @@ static HRESULT create_decoder(const void *image_data, UINT image_size, IWICBitma
         refcount = IStream_Release(stream);
         ok(refcount > 0, "expected stream refcount > 0\n");
     }
+    else
+        IStream_Release(stream);
 
     return hr;
 }
@@ -539,6 +541,15 @@ static const char png_PLTE_tRNS[] = {
   0x00,0x00,0x00,0x00,'I','E','N','D',0xae,0x42,0x60,0x82
 };
 
+/* grayscale 16 bpp 1x1 pixel PNG image with tRNS chunk */
+static const char png_gray_tRNS[] = {
+  0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,
+  0x00,0x00,0x00,0x0d,'I','H','D','R',0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x10,0x00,0x00,0x00,0x00,0x6a,0xee,0x47,0x16,
+  0x00,0x00,0x00,0x02,'t','R','N','S',0x00,0x00,0x76,0x93,0xcd,0x38,
+  0x00,0x00,0x00,0x0b,'I','D','A','T',0x78,0x9c,0x63,0x60,0x60,0x00,0x00,0x00,0x03,0x00,0x01,0xb8,0xad,0x3a,0x63,
+  0x00,0x00,0x00,0x00,'I','E','N','D',0xae,0x42,0x60,0x82
+};
+
 static void test_png_palette(void)
 {
     HRESULT hr;
@@ -548,6 +559,7 @@ static void test_png_palette(void)
     GUID format;
     UINT count, ret;
     WICColor color[256];
+    char *buf;
 
     hr = create_decoder(png_PLTE_tRNS, sizeof(png_PLTE_tRNS), &decoder);
     ok(hr == S_OK, "Failed to load PNG image data %#x\n", hr);
@@ -576,6 +588,64 @@ static void test_png_palette(void)
     ok(color[0] == 0xff010203, "expected 0xff010203, got %#x\n", color[0]);
     ok(color[1] == 0x00040506, "expected 0x00040506, got %#x\n", color[1]);
 
+    IWICPalette_Release(palette);
+    IWICBitmapFrameDecode_Release(frame);
+    IWICBitmapDecoder_Release(decoder);
+
+    hr = create_decoder(png_gray_tRNS, sizeof(png_gray_tRNS), &decoder);
+    ok(hr == S_OK, "Failed to load PNG image data %#x\n", hr);
+    if (hr != S_OK) return;
+
+    hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+    ok(hr == S_OK, "GetFrame error %#x\n", hr);
+
+    hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_WICPixelFormat64bppRGBA),
+       "got wrong format %s\n", wine_dbgstr_guid(&format));
+
+    hr = IWICImagingFactory_CreatePalette(factory, &palette);
+    ok(hr == S_OK, "CreatePalette error %#x\n", hr);
+    hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
+    ok(hr == WINCODEC_ERR_PALETTEUNAVAILABLE, "CopyPalette error %#x\n", hr);
+
+    IWICPalette_Release(palette);
+    IWICBitmapFrameDecode_Release(frame);
+    IWICBitmapDecoder_Release(decoder);
+
+    /* test 8 bpp grayscale PNG image with tRNS chunk */
+    buf = HeapAlloc(GetProcessHeap(), 0, sizeof(png_gray_tRNS));
+    memcpy(buf, png_gray_tRNS, sizeof(png_gray_tRNS));
+    buf[24] = 8; /* override bit depth */
+
+    hr = create_decoder(buf, sizeof(png_gray_tRNS), &decoder);
+    ok(hr == S_OK, "Failed to load PNG image data %#x\n", hr);
+    if (hr != S_OK) return;
+
+    hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+    ok(hr == S_OK, "GetFrame error %#x\n", hr);
+
+    hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_WICPixelFormat8bppIndexed),
+       "got wrong format %s\n", wine_dbgstr_guid(&format));
+
+    hr = IWICImagingFactory_CreatePalette(factory, &palette);
+    ok(hr == S_OK, "CreatePalette error %#x\n", hr);
+    hr = IWICBitmapFrameDecode_CopyPalette(frame, palette);
+    ok(hr == S_OK, "CopyPalette error %#x\n", hr);
+
+    hr = IWICPalette_GetColorCount(palette, &count);
+    ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+    ok(count == 256, "expected 256, got %u\n", count);
+
+    hr = IWICPalette_GetColors(palette, 256, color, &ret);
+    ok(hr == S_OK, "GetColors error %#x\n", hr);
+    ok(ret == count, "expected %u, got %u\n", count, ret);
+    ok(color[0] == 0x00000000, "expected 0x00000000, got %#x\n", color[0]);
+    ok(color[1] == 0xff010101, "expected 0xff010101, got %#x\n", color[1]);
+
+    HeapFree(GetProcessHeap(), 0, buf);
     IWICPalette_Release(palette);
     IWICBitmapFrameDecode_Release(frame);
     IWICBitmapDecoder_Release(decoder);
@@ -624,23 +694,29 @@ static const char png_1x1_data[] = {
   0x00,0x00,0x00,0x00,'I','E','N','D',0xae,0x42,0x60,0x82
 };
 
+#define PNG_COLOR_TYPE_GRAY 0
+#define PNG_COLOR_TYPE_RGB 2
+#define PNG_COLOR_TYPE_PALETTE 3
+#define PNG_COLOR_TYPE_GRAY_ALPHA 4
+#define PNG_COLOR_TYPE_RGB_ALPHA 6
+
 static BOOL is_valid_png_type_depth(int color_type, int bit_depth, BOOL plte)
 {
     switch (color_type)
     {
-    case 0: /* Grayscale */
+    case PNG_COLOR_TYPE_GRAY:
         return bit_depth == 1 || bit_depth == 2 || bit_depth == 4 || bit_depth == 8 || bit_depth == 16;
 
-    case 2: /* True Color */
+    case PNG_COLOR_TYPE_RGB:
         return bit_depth == 8 || bit_depth == 16;
 
-    case 3: /* Indexed Color */
+    case PNG_COLOR_TYPE_PALETTE:
         return (bit_depth == 1 || bit_depth == 2 || bit_depth == 4 || bit_depth == 8) && plte;
 
-    case 4: /* Grayscale with alpha */
+    case PNG_COLOR_TYPE_GRAY_ALPHA:
         return bit_depth == 8 || bit_depth == 16;
 
-    case 6: /* True Color with alpha */
+    case PNG_COLOR_TYPE_RGB_ALPHA:
         return bit_depth == 8 || bit_depth == 16;
 
     default:
@@ -662,33 +738,44 @@ static void test_color_formats(void)
     } td[] =
     {
         /* 2 - PNG_COLOR_TYPE_RGB */
-        { 1, 2, NULL, NULL, NULL },
-        { 2, 2, NULL, NULL, NULL },
-        { 4, 2, NULL, NULL, NULL },
-        { 8, 2, &GUID_WICPixelFormat24bppBGR, &GUID_WICPixelFormat24bppBGR, &GUID_WICPixelFormat24bppBGR },
+        { 1, PNG_COLOR_TYPE_RGB, NULL, NULL, NULL },
+        { 2, PNG_COLOR_TYPE_RGB, NULL, NULL, NULL },
+        { 4, PNG_COLOR_TYPE_RGB, NULL, NULL, NULL },
+        { 8, PNG_COLOR_TYPE_RGB,
+          &GUID_WICPixelFormat24bppBGR, &GUID_WICPixelFormat24bppBGR, &GUID_WICPixelFormat24bppBGR },
         /* libpng refuses to load our test image complaining about extra compressed data,
          * but libpng is still able to load the image with other combination of type/depth
          * making RGB 16 bpp case special for some reason. Therefore todo = TRUE.
          */
-        { 16, 2, &GUID_WICPixelFormat48bppRGB, &GUID_WICPixelFormat48bppRGB, &GUID_WICPixelFormat48bppRGB, TRUE, TRUE },
-        { 24, 2, NULL, NULL, NULL },
-        { 32, 2, NULL, NULL, NULL },
+        { 16, PNG_COLOR_TYPE_RGB,
+          &GUID_WICPixelFormat48bppRGB, &GUID_WICPixelFormat48bppRGB, &GUID_WICPixelFormat48bppRGB, TRUE, TRUE },
+        { 24, PNG_COLOR_TYPE_RGB, NULL, NULL, NULL },
+        { 32, PNG_COLOR_TYPE_RGB, NULL, NULL, NULL },
         /* 0 - PNG_COLOR_TYPE_GRAY */
-        { 1, 0, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed },
-        { 2, 0, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed },
-        { 4, 0, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed },
-        { 8, 0, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed },
-        { 16, 0, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA },
-        { 24, 0, NULL, NULL, NULL },
-        { 32, 0, NULL, NULL, NULL },
+        { 1, PNG_COLOR_TYPE_GRAY,
+          &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormatBlackWhite, &GUID_WICPixelFormat1bppIndexed },
+        { 2, PNG_COLOR_TYPE_GRAY,
+          &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppGray, &GUID_WICPixelFormat2bppIndexed },
+        { 4, PNG_COLOR_TYPE_GRAY,
+          &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppGray, &GUID_WICPixelFormat4bppIndexed },
+        { 8, PNG_COLOR_TYPE_GRAY,
+          &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppGray, &GUID_WICPixelFormat8bppIndexed },
+        { 16, PNG_COLOR_TYPE_GRAY,
+          &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat16bppGray, &GUID_WICPixelFormat64bppRGBA },
+        { 24, PNG_COLOR_TYPE_GRAY, NULL, NULL, NULL },
+        { 32, PNG_COLOR_TYPE_GRAY, NULL, NULL, NULL },
         /* 3 - PNG_COLOR_TYPE_PALETTE */
-        { 1, 3, &GUID_WICPixelFormat1bppIndexed, &GUID_WICPixelFormat1bppIndexed, &GUID_WICPixelFormat1bppIndexed },
-        { 2, 3, &GUID_WICPixelFormat2bppIndexed, &GUID_WICPixelFormat2bppIndexed, &GUID_WICPixelFormat2bppIndexed },
-        { 4, 3, &GUID_WICPixelFormat4bppIndexed, &GUID_WICPixelFormat4bppIndexed, &GUID_WICPixelFormat4bppIndexed },
-        { 8, 3, &GUID_WICPixelFormat8bppIndexed, &GUID_WICPixelFormat8bppIndexed, &GUID_WICPixelFormat8bppIndexed },
-        { 16, 3, NULL, NULL, NULL },
-        { 24, 3,  NULL, NULL, NULL },
-        { 32, 3,  NULL, NULL, NULL },
+        { 1, PNG_COLOR_TYPE_PALETTE,
+          &GUID_WICPixelFormat1bppIndexed, &GUID_WICPixelFormat1bppIndexed, &GUID_WICPixelFormat1bppIndexed },
+        { 2, PNG_COLOR_TYPE_PALETTE,
+          &GUID_WICPixelFormat2bppIndexed, &GUID_WICPixelFormat2bppIndexed, &GUID_WICPixelFormat2bppIndexed },
+        { 4, PNG_COLOR_TYPE_PALETTE,
+          &GUID_WICPixelFormat4bppIndexed, &GUID_WICPixelFormat4bppIndexed, &GUID_WICPixelFormat4bppIndexed },
+        { 8, PNG_COLOR_TYPE_PALETTE,
+          &GUID_WICPixelFormat8bppIndexed, &GUID_WICPixelFormat8bppIndexed, &GUID_WICPixelFormat8bppIndexed },
+        { 16, PNG_COLOR_TYPE_PALETTE, NULL, NULL, NULL },
+        { 24, PNG_COLOR_TYPE_PALETTE, NULL, NULL, NULL },
+        { 32, PNG_COLOR_TYPE_PALETTE, NULL, NULL, NULL },
     };
     char buf[sizeof(png_1x1_data)];
     HRESULT hr;
@@ -717,7 +804,7 @@ static void test_color_formats(void)
      * with tEXt id.
      */
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         /* with the tRNS and PLTE chunks */
         memcpy(buf, png_1x1_data, sizeof(png_1x1_data));
@@ -829,6 +916,11 @@ todo_wine_if(td[i].todo)
         IWICBitmapDecoder_Release(decoder);
     }
 }
+#undef PNG_COLOR_TYPE_GRAY
+#undef PNG_COLOR_TYPE_RGB
+#undef PNG_COLOR_TYPE_PALETTE
+#undef PNG_COLOR_TYPE_GRAY_ALPHA
+#undef PNG_COLOR_TYPE_RGB_ALPHA
 
 START_TEST(pngformat)
 {

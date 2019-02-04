@@ -904,16 +904,6 @@ static void check_tiff_format(IStream *stream, const WICPixelFormatGUID *format)
         ok(samples == 1, "wrong samples %d\n", samples);
         ok(colormap == 6, "wrong colormap %d\n", colormap);
     }
-    else if (IsEqualGUID(format, &GUID_WICPixelFormat2bppIndexed))
-    {
-        ok(width == 32, "wrong width %u\n", width);
-        ok(height == 2, "wrong height %u\n", height);
-
-        ok(bps == 2, "wrong bps %d\n", bps);
-        ok(photo == 3, "wrong photometric %d\n", photo);
-        ok(samples == 1, "wrong samples %d\n", samples);
-        ok(colormap == 12, "wrong colormap %d\n", colormap);
-    }
     else if (IsEqualGUID(format, &GUID_WICPixelFormat4bppIndexed))
     {
         ok(width == 32, "wrong width %u\n", width);
@@ -973,18 +963,6 @@ static void check_bmp_format(IStream *stream, const WICPixelFormatGUID *format)
 
         ok(bih.bV5Planes == 1, "wrong Planes %d\n", bih.bV5Planes);
         ok(bih.bV5BitCount == 1, "wrong BitCount %d\n", bih.bV5BitCount);
-        ok(bih.bV5ClrUsed == 256, "wrong ClrUsed %d\n", bih.bV5ClrUsed);
-        ok(bih.bV5ClrImportant == 256, "wrong ClrImportant %d\n", bih.bV5ClrImportant);
-    }
-    else if (IsEqualGUID(format, &GUID_WICPixelFormat2bppIndexed))
-    {
-        ok(bfh.bfOffBits == 0x0436, "wrong bfOffBits %08x\n", bfh.bfOffBits);
-
-        ok(bih.bV5Width == 32, "wrong width %u\n", bih.bV5Width);
-        ok(bih.bV5Height == 2, "wrong height %u\n", bih.bV5Height);
-
-        ok(bih.bV5Planes == 1, "wrong Planes %d\n", bih.bV5Planes);
-        ok(bih.bV5BitCount == 2, "wrong BitCount %d\n", bih.bV5BitCount);
         ok(bih.bV5ClrUsed == 256, "wrong ClrUsed %d\n", bih.bV5ClrUsed);
         ok(bih.bV5ClrImportant == 256, "wrong ClrImportant %d\n", bih.bV5ClrImportant);
     }
@@ -1243,6 +1221,7 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
     const struct bitmap_data **dsts, const CLSID *clsid_decoder, WICRect *rc,
     const struct setting *settings, const char *name, IWICPalette *palette)
 {
+    const GUID *container_format = NULL;
     HRESULT hr;
     IWICBitmapEncoder *encoder;
     BitmapTestSrc *src_obj;
@@ -1253,6 +1232,7 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
     IWICBitmapDecoder *decoder;
     IWICBitmapFrameDecode *framedecode;
     WICPixelFormatGUID pixelformat;
+    GUID guid;
     int i;
 
     hr = CoCreateInstance(clsid_encoder, NULL, CLSCTX_INPROC_SERVER,
@@ -1261,6 +1241,28 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
     ok(SUCCEEDED(hr), "CreateStreamOnHGlobal failed, hr=%x\n", hr);
+
+    hr = IWICBitmapEncoder_GetContainerFormat(encoder, NULL);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#x.\n", hr);
+
+    if (IsEqualGUID(clsid_encoder, &CLSID_WICPngEncoder))
+        container_format = &GUID_ContainerFormatPng;
+    else if (IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder))
+        container_format = &GUID_ContainerFormatBmp;
+    else if (IsEqualGUID(clsid_encoder, &CLSID_WICTiffEncoder))
+        container_format = &GUID_ContainerFormatTiff;
+    else if (IsEqualGUID(clsid_encoder, &CLSID_WICJpegEncoder))
+        container_format = &GUID_ContainerFormatJpeg;
+    else
+        ok(0, "Unknown encoder %s.\n", wine_dbgstr_guid(clsid_encoder));
+
+    if (container_format)
+    {
+        memset(&guid, 0, sizeof(guid));
+        hr = IWICBitmapEncoder_GetContainerFormat(encoder, &guid);
+        ok(SUCCEEDED(hr), "Failed to get container format, hr %#x.\n", hr);
+        ok(IsEqualGUID(container_format, &guid), "Unexpected container format %s.\n", wine_dbgstr_guid(&guid));
+    }
 
     hr = IWICBitmapEncoder_Initialize(encoder, stream, WICBitmapEncoderNoCache);
     ok(SUCCEEDED(hr), "Initialize failed, hr=%x\n", hr);
@@ -1288,6 +1290,8 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
 
         if (hglobal && SUCCEEDED(hr))
         {
+            IWICBitmapEncoderInfo *info = NULL;
+
             if (palette)
             {
                 hr = IWICBitmapEncoder_SetPalette(encoder, palette);
@@ -1305,6 +1309,20 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
                 else
                     ok(hr == WINCODEC_ERR_UNSUPPORTEDOPERATION, "wrong error %#x\n", hr);
                 hr = S_OK;
+            }
+
+            hr = IWICBitmapEncoder_GetEncoderInfo(encoder, &info);
+            ok(hr == S_OK || hr == WINCODEC_ERR_COMPONENTNOTFOUND, "wrong error %#x\n", hr);
+            if (SUCCEEDED(hr))
+            {
+                CLSID clsid;
+
+                hr = IWICBitmapEncoderInfo_GetCLSID(info, &clsid);
+                ok(hr == S_OK, "wrong error %#x\n", hr);
+                ok(!IsEqualGUID(&clsid_encoder, &clsid), "wrong CLSID %s (%s)\n",
+                       wine_dbgstr_guid(clsid_encoder), wine_dbgstr_guid(&clsid));
+
+                IWICBitmapEncoderInfo_Release(info);
             }
 
             i=0;
@@ -1353,9 +1371,9 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
                     hr = IWICBitmapFrameEncode_SetPixelFormat(frameencode, &pixelformat);
                     ok(SUCCEEDED(hr), "SetPixelFormat failed, hr=%x\n", hr);
                     ok(IsEqualGUID(&pixelformat, dsts[i]->format) ||
-                       broken(IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder) && srcs[i]->bpp == 2 && IsEqualGUID(&pixelformat, &GUID_WICPixelFormat4bppIndexed)) ||
-                       broken(IsEqualGUID(clsid_encoder, &CLSID_WICTiffEncoder) && srcs[i]->bpp == 2 && IsEqualGUID(&pixelformat, &GUID_WICPixelFormat4bppIndexed)),
-                       "SetPixelFormat changed the format to %s (%s)\n", wine_dbgstr_guid(&pixelformat), name);
+                       (IsEqualGUID(clsid_encoder, &CLSID_WICTiffEncoder) && srcs[i]->bpp == 2 && IsEqualGUID(&pixelformat, &GUID_WICPixelFormat4bppIndexed)) ||
+                       (IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder) && srcs[i]->bpp == 2 && IsEqualGUID(&pixelformat, &GUID_WICPixelFormat4bppIndexed)),
+                        "SetPixelFormat changed the format to %s (%s)\n", wine_dbgstr_guid(&pixelformat), name);
 
                     hr = IWICBitmapFrameEncode_SetSize(frameencode, srcs[i]->width, srcs[i]->height);
                     ok(SUCCEEDED(hr), "SetSize failed, hr=%x\n", hr);
@@ -1390,8 +1408,8 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
                             ok(SUCCEEDED(hr), "WriteSource(%dx%d) failed, hr=%x (%s)\n", rc->Width, rc->Height, hr, name);
                         else
                             ok(hr == S_OK ||
-                               broken(hr == E_INVALIDARG && IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder) && srcs[i]->bpp == 2) /* XP */ ||
-                               broken(hr == E_INVALIDARG && IsEqualGUID(clsid_encoder, &CLSID_WICTiffEncoder) && srcs[i]->bpp == 2) /* XP */ ||
+                               (hr == E_NOTIMPL && IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder) && srcs[i]->bpp == 2) ||
+                               (hr == E_NOTIMPL && IsEqualGUID(clsid_encoder, &CLSID_WICTiffEncoder) && srcs[i]->bpp == 2) ||
                                broken(hr == E_INVALIDARG && IsEqualGUID(clsid_encoder, &CLSID_WICBmpEncoder) && IsEqualGUID(srcs[i]->format, &GUID_WICPixelFormatBlackWhite)) /* XP */,
                                "WriteSource(NULL) failed, hr=%x (%s)\n", hr, name);
                     }
@@ -1528,15 +1546,6 @@ static void test_multi_encoder(const struct bitmap_data **srcs, const CLSID* cls
                                     ok(colors[3] == 0xff444444, "got %08x (%s)\n", colors[3], name);
                                     ok(colors[4] == 0xff555555, "got %08x (%s)\n", colors[4], name);
                                     ok(colors[5] == 0xff000000, "got %08x (%s)\n", colors[5], name);
-                                }
-                                else if (IsEqualGUID(&pixelformat, &GUID_WICPixelFormat2bppIndexed))
-                                {
-                                    ok(count == 4, "expected 4, got %u (%s)\n", count, name);
-
-                                    ok(colors[0] == 0xff111111, "got %08x (%s)\n", colors[0], name);
-                                    ok(colors[1] == 0xff222222, "got %08x (%s)\n", colors[1], name);
-                                    ok(colors[2] == 0xff333333, "got %08x (%s)\n", colors[2], name);
-                                    ok(colors[3] == 0xff444444, "got %08x (%s)\n", colors[3], name);
                                 }
                                 else if (IsEqualGUID(&pixelformat, &GUID_WICPixelFormat4bppIndexed))
                                 {
@@ -1828,8 +1837,6 @@ START_TEST(converter)
                           &IID_IWICImagingFactory, (void **)&factory);
     ok(hr == S_OK, "failed to create factory: %#x\n", hr);
 
-    test_converter_8bppIndexed();
-
     test_conversion(&testdata_24bppRGB, &testdata_1bppIndexed, "24bppRGB -> 1bppIndexed", TRUE);
     test_conversion(&testdata_24bppRGB, &testdata_2bppIndexed, "24bppRGB -> 2bppIndexed", TRUE);
     test_conversion(&testdata_24bppRGB, &testdata_4bppIndexed, "24bppRGB -> 4bppIndexed", TRUE);
@@ -1870,6 +1877,7 @@ START_TEST(converter)
 
     test_invalid_conversion();
     test_default_converter();
+    test_converter_8bppIndexed();
 
     test_encoder(&testdata_8bppIndexed, &CLSID_WICGifEncoder,
                  &testdata_8bppIndexed, &CLSID_WICGifDecoder, "GIF encoder 8bppIndexed");
@@ -1897,7 +1905,7 @@ if (!strcmp(winetest_platform, "windows")) /* FIXME: enable once implemented in 
     test_encoder(&testdata_1bppIndexed, &CLSID_WICBmpEncoder,
                  &testdata_1bppIndexed, &CLSID_WICBmpDecoder, "BMP encoder 1bppIndexed");
     test_encoder(&testdata_2bppIndexed, &CLSID_WICBmpEncoder,
-                 &testdata_2bppIndexed, &CLSID_WICBmpDecoder, "BMP encoder 2bppIndexed");
+                 &testdata_4bppIndexed, &CLSID_WICBmpDecoder, "BMP encoder 2bppIndexed");
     test_encoder(&testdata_4bppIndexed, &CLSID_WICBmpEncoder,
                  &testdata_4bppIndexed, &CLSID_WICBmpDecoder, "BMP encoder 4bppIndexed");
     test_encoder(&testdata_8bppIndexed, &CLSID_WICBmpEncoder,
@@ -1910,7 +1918,7 @@ if (!strcmp(winetest_platform, "windows")) /* FIXME: enable once implemented in 
     test_encoder(&testdata_1bppIndexed, &CLSID_WICTiffEncoder,
                  &testdata_1bppIndexed, &CLSID_WICTiffDecoder, "TIFF encoder 1bppIndexed");
     test_encoder(&testdata_2bppIndexed, &CLSID_WICTiffEncoder,
-                 &testdata_2bppIndexed, &CLSID_WICTiffDecoder, "TIFF encoder 2bppIndexed");
+                 &testdata_4bppIndexed, &CLSID_WICTiffDecoder, "TIFF encoder 2bppIndexed");
     test_encoder(&testdata_4bppIndexed, &CLSID_WICTiffEncoder,
                  &testdata_4bppIndexed, &CLSID_WICTiffDecoder, "TIFF encoder 4bppIndexed");
     test_encoder(&testdata_8bppIndexed, &CLSID_WICTiffEncoder,

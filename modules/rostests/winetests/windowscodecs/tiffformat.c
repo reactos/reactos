@@ -26,6 +26,15 @@
 #include "wincodec.h"
 #include "wine/test.h"
 
+#define EXPECT_REF(obj,ref) _expect_ref((IUnknown*)obj, ref, __LINE__)
+static void _expect_ref(IUnknown* obj, ULONG ref, int line)
+{
+    ULONG rc;
+    IUnknown_AddRef(obj);
+    rc = IUnknown_Release(obj);
+    ok_(__FILE__,line)(rc == ref, "expected refcount %d, got %d\n", ref, rc);
+}
+
 #define IFD_BYTE 1
 #define IFD_ASCII 2
 #define IFD_SHORT 3
@@ -252,6 +261,46 @@ static struct tiff_resolution_image_data
     { 72, 1 }, /* value will be filled with test data */
     { 72, 1 }, /* value will be filled with test data */
     { 0x11, 0x22, 0x33, 0 }
+};
+
+static const struct tiff_24bpp_data
+{
+    USHORT byte_order;
+    USHORT version;
+    ULONG  dir_offset;
+    USHORT number_of_entries;
+    struct IFD_entry entry[13];
+    ULONG next_IFD;
+    struct IFD_rational res;
+    BYTE pixel_data[3];
+} tiff_24bpp_data =
+{
+#ifdef WORDS_BIGENDIAN
+    'M' | 'M' << 8,
+#else
+    'I' | 'I' << 8,
+#endif
+    42,
+    FIELD_OFFSET(struct tiff_1bpp_data, number_of_entries),
+    13,
+    {
+        { 0xff, IFD_SHORT, 1, 0 }, /* SUBFILETYPE */
+        { 0x100, IFD_LONG, 1, 1 }, /* IMAGEWIDTH */
+        { 0x101, IFD_LONG, 1, 1 }, /* IMAGELENGTH */
+        { 0x102, IFD_SHORT, 1, 8 }, /* BITSPERSAMPLE */
+        { 0x103, IFD_SHORT, 1, 1 }, /* COMPRESSION: XP doesn't accept IFD_LONG here */
+        { 0x106, IFD_SHORT, 1, 2 }, /* PHOTOMETRIC */
+        { 0x111, IFD_LONG, 1, FIELD_OFFSET(struct tiff_24bpp_data, pixel_data) }, /* STRIPOFFSETS */
+        { 0x115, IFD_SHORT, 1, 3 }, /* SAMPLESPERPIXEL */
+        { 0x116, IFD_LONG, 1, 1 }, /* ROWSPERSTRIP */
+        { 0x117, IFD_LONG, 1, 3 }, /* STRIPBYTECOUNT */
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_24bpp_data, res) }, /* XRESOLUTION */
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_24bpp_data, res) }, /* YRESOLUTION */
+        { 0x128, IFD_SHORT, 1, 2 }, /* RESOLUTIONUNIT */
+    },
+    0,
+    { 900, 3 },
+    { 0x11, 0x22, 0x33 }
 };
 #include "poppack.h"
 
@@ -517,8 +566,11 @@ static void test_tiff_8bpp_alpha(void)
     ok(hr == S_OK, "GetFrameCount error %#x\n", hr);
     ok(frame_count == 1, "expected 1, got %u\n", frame_count);
 
+    EXPECT_REF(decoder, 1);
     hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
     ok(hr == S_OK, "GetFrame error %#x\n", hr);
+    EXPECT_REF(decoder, 2);
+    IWICBitmapDecoder_Release(decoder);
 
     hr = IWICBitmapFrameDecode_GetSize(frame, &width, &height);
     ok(hr == S_OK, "GetSize error %#x\n", hr);
@@ -553,7 +605,6 @@ static void test_tiff_8bpp_alpha(void)
         ok(data[i] == expected_data[i], "%u: expected %02x, got %02x\n", i, expected_data[i], data[i]);
 
     IWICBitmapFrameDecode_Release(frame);
-    IWICBitmapDecoder_Release(decoder);
 }
 
 static void generate_tiff_palette(void *buf, unsigned count)
@@ -642,7 +693,7 @@ static void test_tiff_resolution(void)
     double dpi_x, dpi_y;
     int i;
 
-    for (i = 0; i < sizeof(tiff_resolution_test_data)/sizeof(tiff_resolution_test_data[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tiff_resolution_test_data); i++)
     {
         const struct tiff_resolution_test_data *test_data = &tiff_resolution_test_data[i];
         tiff_resolution_image_data.resx = test_data->resx;
@@ -684,6 +735,67 @@ static void test_tiff_resolution(void)
         IWICBitmapFrameDecode_Release(frame);
         IWICBitmapDecoder_Release(decoder);
     }
+}
+
+static void test_tiff_24bpp(void)
+{
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *frame;
+    UINT count, width, height, i, stride;
+    double dpi_x, dpi_y;
+    GUID format;
+    WICRect rc;
+    BYTE data[3];
+    static const BYTE expected_data[] = { 0x33,0x22,0x11 };
+
+    hr = create_decoder(&tiff_24bpp_data, sizeof(tiff_24bpp_data), &decoder);
+    ok(hr == S_OK, "got %#x\n", hr);
+    ok(decoder != NULL, "Failed to load TIFF image data\n");
+
+    hr = IWICBitmapDecoder_GetFrameCount(decoder, &count);
+    ok(hr == S_OK, "GetFrameCount error %#x\n", hr);
+    ok(count == 1, "got %u\n", count);
+
+    hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+    ok(hr == S_OK, "GetFrame error %#x\n", hr);
+
+    hr = IWICBitmapFrameDecode_GetSize(frame, &width, &height);
+    ok(hr == S_OK, "GetSize error %#x\n", hr);
+    ok(width == 1, "got %u\n", width);
+    ok(height == 1, "got %u\n", height);
+
+    hr = IWICBitmapFrameDecode_GetResolution(frame, &dpi_x, &dpi_y);
+    ok(hr == S_OK, "GetResolution error %#x\n", hr);
+    ok(dpi_x == 300.0, "got %f\n", dpi_x);
+    ok(dpi_y == 300.0, "got %f\n", dpi_y);
+
+    hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
+    ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_WICPixelFormat24bppBGR),
+       "got wrong format %s\n", wine_dbgstr_guid(&format));
+
+    for (stride = 0; stride <= 32; stride++)
+    {
+        memset(data, 0, sizeof(data));
+        rc.X = 0;
+        rc.Y = 0;
+        rc.Width = 1;
+        rc.Height = 1;
+        hr = IWICBitmapFrameDecode_CopyPixels(frame, &rc, stride, sizeof(data), data);
+        if (stride < 3)
+            ok(hr == E_INVALIDARG, "CopyPixels(%u) should fail: %#x\n", stride, hr);
+        else
+        {
+            ok(hr == S_OK, "CopyPixels(%u) error %#x\n", stride, hr);
+
+            for (i = 0; i < sizeof(data); i++)
+                ok(data[i] == expected_data[i], "%u: expected %02x, got %02x\n", i, expected_data[i], data[i]);
+        }
+    }
+
+    IWICBitmapFrameDecode_Release(frame);
+    IWICBitmapDecoder_Release(decoder);
 }
 
 #include "pshpack2.h"
@@ -1083,6 +1195,7 @@ START_TEST(tiffformat)
     test_QueryCapability();
     test_tiff_8bpp_alpha();
     test_tiff_resolution();
+    test_tiff_24bpp();
 
     IWICImagingFactory_Release(factory);
     CoUninitialize();

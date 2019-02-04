@@ -462,7 +462,7 @@ static void test_predefined_palette(void)
     ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
     IWICPalette_Release(palette);
 
-    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(td); i++)
     {
         hr = IWICImagingFactory_CreatePalette(factory, &palette);
         ok(hr == S_OK, "%u: CreatePalette error %#x\n", i, hr);
