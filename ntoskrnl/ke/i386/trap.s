@@ -18,7 +18,7 @@ idt _KiUnexpectedInterrupt&Vector, INT_32_DPL0
 ENDM
 
 MACRO(GENERATE_INT_HANDLER, Vector)
-//.func KiUnexpectedInterrupt&Number
+//.func KiUnexpectedInterrupt&Vector
 _KiUnexpectedInterrupt&Vector:
     /* This is a push instruction with 8bit operand. Since the instruction
        sign extends the value to 32 bits, we need to offset it */
