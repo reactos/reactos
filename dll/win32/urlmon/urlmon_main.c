@@ -409,7 +409,7 @@ static void init_session(void)
 {
     unsigned int i;
 
-    for(i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++) {
+    for(i = 0; i < ARRAY_SIZE(object_creation); i++) {
         if(object_creation[i].protocol)
             register_namespace(object_creation[i].cf, object_creation[i].clsid,
                                       object_creation[i].protocol, TRUE);
@@ -438,10 +438,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     unsigned int i;
     HRESULT hr;
-    
+
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    
-    for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+
+    for (i = 0; i < ARRAY_SIZE(object_creation); i++)
     {
 	if (IsEqualGUID(object_creation[i].clsid, rclsid))
 	    return IClassFactory_QueryInterface(object_creation[i].cf, riid, ppv);

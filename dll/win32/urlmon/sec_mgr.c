@@ -547,7 +547,7 @@ static HRESULT map_security_uri_to_zone(IUri *uri, DWORD *zone)
         else
             path_start = path;
 
-        if((ptr = strchrW(path_start, ':')) && ptr-path_start+1 < sizeof(root)/sizeof(WCHAR)) {
+        if((ptr = strchrW(path_start, ':')) && ptr-path_start+1 < ARRAY_SIZE(root)) {
             UINT type;
 
             memcpy(root, path_start, (ptr-path_start+1)*sizeof(WCHAR));
@@ -645,7 +645,7 @@ static HRESULT open_zone_key(HKEY parent_key, DWORD zone, HKEY *hkey)
 {
     static const WCHAR wszFormat[] = {'%','s','%','u',0};
 
-    WCHAR key_name[sizeof(wszZonesKey)/sizeof(WCHAR)+12];
+    WCHAR key_name[ARRAY_SIZE(wszZonesKey) + 12];
     DWORD res;
 
     wsprintfW(key_name, wszFormat, wszZonesKey, zone);
@@ -1307,7 +1307,7 @@ static LPDWORD build_zonemap_from_reg(void)
 
     while (!res) {
         name[0] = '\0';
-        len = sizeof(name) / sizeof(name[0]);
+        len = ARRAY_SIZE(name);
         res = RegEnumKeyExW(hkey, used, name, &len, NULL, NULL, NULL, NULL);
 
         if (!res) {
@@ -2052,7 +2052,7 @@ HRESULT WINAPI CoInternetGetSecurityUrlEx(IUri *pUri, IUri **ppSecUri, PSUACTION
         const WCHAR *tmp = ret_url;
 
         /* Check and see if a "//" is after the scheme name. */
-        tmp += sizeof(fileW)/sizeof(WCHAR);
+        tmp += ARRAY_SIZE(fileW);
         if(*tmp != '/' || *(tmp+1) != '/')
             hres = E_INVALIDARG;
     }

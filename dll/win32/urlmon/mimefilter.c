@@ -547,12 +547,12 @@ static BOOL is_known_mime_type(const WCHAR *mime)
 {
     unsigned i;
 
-    for(i=0; i < sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+    for(i=0; i < ARRAY_SIZE(mime_filters_any_pos); i++) {
         if(!strcmpW(mime, mime_filters_any_pos[i].mime))
             return TRUE;
     }
 
-    for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
+    for(i=0; i < ARRAY_SIZE(mime_filters); i++) {
         if(!strcmpW(mime, mime_filters[i].mime))
             return TRUE;
     }
@@ -585,7 +585,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
     if(proposed_mime) {
         ret = proposed_mime;
 
-        for(i=0; i < sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+        for(i=0; i < ARRAY_SIZE(mime_filters_any_pos); i++) {
             if(!strcmpW(proposed_mime, mime_filters_any_pos[i].mime)) {
                 any_pos_mime = i;
                 for(len=size; len>0; len--) {
@@ -598,8 +598,8 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
             }
         }
 
-        if(i == sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos)) {
-            for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
+        if(i == ARRAY_SIZE(mime_filters_any_pos)) {
+            for(i=0; i < ARRAY_SIZE(mime_filters); i++) {
                 if(!strcmpW(proposed_mime, mime_filters[i].mime)) {
                     if(!mime_filters[i].filter(buf, size))
                         ret = NULL;
@@ -613,7 +613,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
      * are not looked for if none of them was proposed */
     if(!proposed_mime || any_pos_mime!=-1) {
         for(len=size; !ret && len>0; len--) {
-            for(i=0; i<sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+            for(i=0; i<ARRAY_SIZE(mime_filters_any_pos); i++) {
                 if(mime_filters_any_pos[i].filter(buf+size-len, len)) {
                     ret = mime_filters_any_pos[i].mime;
                     break;
@@ -635,7 +635,7 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
         for(len=size; ret==app_octetstreamW && len>0; len--) {
             if(!is_text_plain_char(buf[size-len]))
                 break;
-            for(i=0; i<sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+            for(i=0; i<ARRAY_SIZE(mime_filters_any_pos); i++) {
                 if(mime_filters_any_pos[i].filter(buf+size-len, len)) {
                     ret = text_plainW;
                     break;

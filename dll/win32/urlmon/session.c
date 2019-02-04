@@ -86,7 +86,7 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
 
     wszKey = heap_alloc(sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
     memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
-    memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
+    memcpy(wszKey + ARRAY_SIZE(wszProtocolsKey), schema, (schema_len+1)*sizeof(WCHAR));
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
     heap_free(wszKey);
@@ -171,8 +171,7 @@ BOOL is_registered_protocol(LPCWSTR url)
     WCHAR schema[64];
     HRESULT hres;
 
-    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
-            &schema_len, 0);
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, ARRAY_SIZE(schema), &schema_len, 0);
     if(FAILED(hres))
         return FALSE;
 
@@ -188,8 +187,7 @@ IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
     DWORD schema_len;
     HRESULT hres;
 
-    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
-            &schema_len, 0);
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, ARRAY_SIZE(schema), &schema_len, 0);
     if(FAILED(hres) || !schema_len)
         return NULL;
 
@@ -578,7 +576,7 @@ static void ensure_useragent(void)
         DWORD value_len;
 
         while(1) {
-            value_len = sizeof(buf)/sizeof(WCHAR);
+            value_len = ARRAY_SIZE(buf);
             res = RegEnumValueW(key, idx, buf, &value_len, NULL, NULL, NULL, NULL);
             if(res != ERROR_SUCCESS)
                 break;

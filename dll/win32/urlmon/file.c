@@ -304,7 +304,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
 
     size = 0;
-    hres = CoInternetParseIUri(pUri, PARSE_PATH_FROM_URL, 0, path, sizeof(path)/sizeof(WCHAR), &size, 0);
+    hres = CoInternetParseIUri(pUri, PARSE_PATH_FROM_URL, 0, path, ARRAY_SIZE(path), &size, 0);
     if(FAILED(hres)) {
         WARN("CoInternetParseIUri failed: %08x\n", hres);
         return report_result(pOIProtSink, hres, 0);

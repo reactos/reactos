@@ -154,12 +154,12 @@ static void expand_command(install_ctx_t *ctx, const WCHAR *cmd, WCHAR *buf, siz
             memcpy(buf+len, prev_ptr, ptr-prev_ptr);
         len += ptr-prev_ptr;
 
-        if(!strncmpiW(ptr, expand_dirW, sizeof(expand_dirW)/sizeof(WCHAR))) {
+        if(!strncmpiW(ptr, expand_dirW, ARRAY_SIZE(expand_dirW))) {
             len2 = strlenW(ctx->tmp_dir);
             if(buf)
                 memcpy(buf+len, ctx->tmp_dir, len2*sizeof(WCHAR));
             len += len2;
-            ptr += sizeof(expand_dirW)/sizeof(WCHAR);
+            ptr += ARRAY_SIZE(expand_dirW);
         }else {
             FIXME("Can't expand %s\n", debugstr_w(ptr));
             if(buf)
@@ -185,7 +185,7 @@ static HRESULT process_hook_section(install_ctx_t *ctx, const WCHAR *sect_name)
 
     static const WCHAR runW[] = {'r','u','n',0};
 
-    len = GetPrivateProfileStringW(sect_name, NULL, NULL, buf, sizeof(buf)/sizeof(*buf), ctx->install_file);
+    len = GetPrivateProfileStringW(sect_name, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(!len)
         return S_OK;
 
@@ -194,7 +194,7 @@ static HRESULT process_hook_section(install_ctx_t *ctx, const WCHAR *sect_name)
             WCHAR *cmd;
             size_t size;
 
-            len = GetPrivateProfileStringW(sect_name, runW, NULL, val, sizeof(val)/sizeof(*val), ctx->install_file);
+            len = GetPrivateProfileStringW(sect_name, runW, NULL, val, ARRAY_SIZE(val), ctx->install_file);
 
             TRACE("Run %s\n", debugstr_w(val));
 
@@ -229,14 +229,14 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
     static const WCHAR setup_hooksW[] = {'S','e','t','u','p',' ','H','o','o','k','s',0};
     static const WCHAR add_codeW[] = {'A','d','d','.','C','o','d','e',0};
 
-    len = GetPrivateProfileStringW(setup_hooksW, NULL, NULL, buf, sizeof(buf)/sizeof(*buf), ctx->install_file);
+    len = GetPrivateProfileStringW(setup_hooksW, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(len) {
         default_install = FALSE;
 
         for(key = buf; *key; key += strlenW(key)+1) {
             TRACE("[Setup Hooks] key: %s\n", debugstr_w(key));
 
-            len = GetPrivateProfileStringW(setup_hooksW, key, NULL, sect_name, sizeof(sect_name)/sizeof(*sect_name),
+            len = GetPrivateProfileStringW(setup_hooksW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
                     ctx->install_file);
             if(!len) {
                 WARN("Could not get key value\n");
@@ -249,14 +249,14 @@ static HRESULT install_inf_file(install_ctx_t *ctx)
         }
     }
 
-    len = GetPrivateProfileStringW(add_codeW, NULL, NULL, buf, sizeof(buf)/sizeof(*buf), ctx->install_file);
+    len = GetPrivateProfileStringW(add_codeW, NULL, NULL, buf, ARRAY_SIZE(buf), ctx->install_file);
     if(len) {
         default_install = FALSE;
 
         for(key = buf; *key; key += strlenW(key)+1) {
             TRACE("[Add.Code] key: %s\n", debugstr_w(key));
 
-            len = GetPrivateProfileStringW(add_codeW, key, NULL, sect_name, sizeof(sect_name)/sizeof(*sect_name),
+            len = GetPrivateProfileStringW(add_codeW, key, NULL, sect_name, ARRAY_SIZE(sect_name),
                     ctx->install_file);
             if(!len) {
                 WARN("Could not get key value\n");
@@ -290,7 +290,7 @@ static HRESULT install_cab_file(install_ctx_t *ctx)
     DWORD i;
     HRESULT hres;
 
-    GetTempPathW(sizeof(tmp_path)/sizeof(WCHAR), tmp_path);
+    GetTempPathW(ARRAY_SIZE(tmp_path), tmp_path);
 
     for(i=0; !res && i < 100; i++) {
         GetTempFileNameW(tmp_path, NULL, GetTickCount() + i*17037, tmp_dir);
@@ -336,13 +336,13 @@ static void update_counter(install_ctx_t *ctx, HWND hwnd)
         HWND button_hwnd;
 
         KillTimer(hwnd, ctx->timer);
-        LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALL, text, sizeof(text)/sizeof(WCHAR));
+        LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALL, text, ARRAY_SIZE(text));
 
         button_hwnd = GetDlgItem(hwnd, ID_AXINSTALL_INSTALL_BTN);
         EnableWindow(button_hwnd, TRUE);
     }else {
         WCHAR buf[100];
-        LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALLN, buf, sizeof(buf)/sizeof(WCHAR));
+        LoadStringW(urlmon_instance, IDS_AXINSTALL_INSTALLN, buf, ARRAY_SIZE(buf));
         sprintfW(text, buf, ctx->counter);
     }
 
@@ -476,7 +476,7 @@ static void failure_msgbox(install_ctx_t *ctx, HRESULT hres)
 {
     WCHAR buf[1024], fmt[1024];
 
-    LoadStringW(urlmon_instance, IDS_AXINSTALL_FAILURE, fmt, sizeof(fmt)/sizeof(WCHAR));
+    LoadStringW(urlmon_instance, IDS_AXINSTALL_FAILURE, fmt, ARRAY_SIZE(fmt));
     sprintfW(buf, fmt, hres);
     MessageBoxW(ctx->hwnd, buf, NULL, MB_OK);
 }

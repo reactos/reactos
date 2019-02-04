@@ -588,7 +588,7 @@ static HRESULT load_process_feature(INTERNETFEATURELIST feature)
     BOOL check_hklm = FALSE;
     BOOL enabled;
 
-    if (!GetModuleFileNameW(NULL, module_name, sizeof(module_name)/sizeof(WCHAR))) {
+    if (!GetModuleFileNameW(NULL, module_name, ARRAY_SIZE(module_name))) {
         ERR("Failed to get module file name: %u\n", GetLastError());
         return E_UNEXPECTED;
     }

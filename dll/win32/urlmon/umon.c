@@ -627,7 +627,7 @@ HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker 
     if (!szURL || !ppmk)
         return E_INVALIDARG;
 
-    if(dwFlags >= sizeof(create_flags_map)/sizeof(*create_flags_map)) {
+    if(dwFlags >= ARRAY_SIZE(create_flags_map)) {
         FIXME("Unsupported flags %x\n", dwFlags);
         return E_INVALIDARG;
     }
@@ -680,7 +680,7 @@ HRESULT WINAPI CreateURLMonikerEx2(IMoniker *pmkContext, IUri *pUri, IMoniker **
     if (!pUri || !ppmk)
         return E_INVALIDARG;
 
-    if(dwFlags >= sizeof(create_flags_map)/sizeof(*create_flags_map)) {
+    if(dwFlags >= ARRAY_SIZE(create_flags_map)) {
         FIXME("Unsupported flags %x\n", dwFlags);
         return E_INVALIDARG;
     }

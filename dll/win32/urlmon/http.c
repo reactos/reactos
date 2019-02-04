@@ -342,7 +342,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         CoTaskMemFree(rootdoc_url);
     }
 
-    num = sizeof(accept_mimes)/sizeof(accept_mimes[0])-1;
+    num = ARRAY_SIZE(accept_mimes) - 1;
     hres = IInternetBindInfo_GetBindString(bind_info, BINDSTRING_ACCEPT_MIMES, accept_mimes, num, &num);
     if(hres == INET_E_USE_DEFAULT_SETTING) {
         static const WCHAR default_accept_mimeW[] = {'*','/','*',0};
@@ -428,7 +428,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, IUri *uri, DWORD reques
         WARN("IServiceProvider_QueryService IID_IHttpNegotiate2 failed: %08x\n", hres);
         /* No goto done as per native */
     }else {
-        len = sizeof(security_id)/sizeof(security_id[0]);
+        len = ARRAY_SIZE(security_id);
         hres = IHttpNegotiate2_GetRootSecurityId(http_negotiate2, security_id, &len, 0);
         IHttpNegotiate2_Release(http_negotiate2);
         if (hres != S_OK)

@@ -202,7 +202,7 @@ static LPWSTR get_mime_clsid(LPCWSTR mime, CLSID *clsid)
     len = strlenW(mime)+1;
     key_name = heap_alloc(sizeof(mime_keyW) + len*sizeof(WCHAR));
     memcpy(key_name, mime_keyW, sizeof(mime_keyW));
-    strcpyW(key_name + sizeof(mime_keyW)/sizeof(WCHAR), mime);
+    strcpyW(key_name + ARRAY_SIZE(mime_keyW), mime);
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, key_name, &hkey);
     heap_free(key_name);
