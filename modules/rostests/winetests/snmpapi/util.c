@@ -211,7 +211,7 @@ static void test_SnmpUtilOidCpyFree(void)
 {
     INT ret;
     static UINT ids[] = { 1, 3, 6, 1, 4, 1, 311 };
-    static AsnObjectIdentifier dst, src = { sizeof(ids) / sizeof(ids[0]), ids };
+    static AsnObjectIdentifier dst, src = { ARRAY_SIZE(ids), ids };
 
     /* These crashes under win98 */
     if(0)
