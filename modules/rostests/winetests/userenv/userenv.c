@@ -158,7 +158,7 @@ static void test_create_env(void)
     }
 
     /* Test for common environment variables (NT4 and higher) */
-    for (i = 0; i < sizeof(common_vars)/sizeof(common_vars[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(common_vars); i++)
     {
         for (j = 0; j < 4; j++)
         {
@@ -175,7 +175,7 @@ static void test_create_env(void)
     }
     else
     {
-        for (i = 0; i < sizeof(common_post_nt4_vars)/sizeof(common_post_nt4_vars[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(common_post_nt4_vars); i++)
         {
             for (j = 0; j < 4; j++)
             {
@@ -190,7 +190,7 @@ static void test_create_env(void)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);
     if (sizeof(void*)==8 || is_wow64)
     {
-        for (i = 0; i < sizeof(common_win64_vars)/sizeof(common_win64_vars[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(common_win64_vars); i++)
         {
             for (j=0; j<4; j++)
             {
@@ -215,7 +215,7 @@ static void test_create_env(void)
     expect(TRUE, r);
     if (r) HeapFree(GetProcessHeap(), 0, st);
 
-    for (i = 0; i < sizeof(env) / sizeof(env[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(env); i++)
     {
         r = DestroyEnvironmentBlock(env[i]);
         expect(TRUE, r);
