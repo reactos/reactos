@@ -548,7 +548,7 @@ static void test_VerQueryValueA(void)
     ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
-    for (i = 0; i < sizeof(value_name)/sizeof(value_name[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(value_name); i++)
     {
 	sprintf(buf, "\\StringFileInfo\\%08x\\%s", translation, value_name[i]);
         p = (char *)0xdeadbeef;
@@ -815,7 +815,7 @@ static void test_GetFileVersionInfoEx(void)
         return;
     }
 
-    for (i = 0; i < sizeof(test_flags)/sizeof(test_flags[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(test_flags); i++)
     {
         size = pGetFileVersionInfoSizeExW(test_flags[i], kernel32W, NULL);
         ok(size, "[%u] GetFileVersionInfoSizeEx(kernel32) error %u\n", i, GetLastError());
