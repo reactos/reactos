@@ -109,8 +109,8 @@ static HRESULT create_qualifier_enum( const WCHAR *class, const WCHAR *member, c
 
     if (!member) member = noneW;
     len = strlenW( class ) + strlenW( member );
-    if (name) len += strlenW( name ) + SIZEOF(fmtW);
-    else len += SIZEOF(fmt2W);
+    if (name) len += strlenW( name ) + ARRAY_SIZE(fmtW);
+    else len += ARRAY_SIZE(fmt2W);
 
     if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
     if (name) sprintfW( query, fmtW, class, member, name );

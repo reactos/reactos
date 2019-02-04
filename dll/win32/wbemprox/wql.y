@@ -559,18 +559,18 @@ static const WCHAR whereW[] = {'W','H','E','R','E'};
 
 static const struct keyword keyword_table[] =
 {
-  { andW,    SIZEOF(andW),    TK_AND },
-  { byW,     SIZEOF(byW),     TK_BY },
-  { falseW,  SIZEOF(falseW),  TK_FALSE },
-  { fromW,   SIZEOF(fromW),   TK_FROM },
-  { isW,     SIZEOF(isW),     TK_IS },
-  { likeW,   SIZEOF(likeW),   TK_LIKE },
-  { notW,    SIZEOF(notW),    TK_NOT },
-  { nullW,   SIZEOF(nullW),   TK_NULL },
-  { orW,     SIZEOF(orW),     TK_OR },
-  { selectW, SIZEOF(selectW), TK_SELECT },
-  { trueW,   SIZEOF(trueW),   TK_TRUE },
-  { whereW,  SIZEOF(whereW),  TK_WHERE }
+  { andW,    ARRAY_SIZE(andW),    TK_AND },
+  { byW,     ARRAY_SIZE(byW),     TK_BY },
+  { falseW,  ARRAY_SIZE(falseW),  TK_FALSE },
+  { fromW,   ARRAY_SIZE(fromW),   TK_FROM },
+  { isW,     ARRAY_SIZE(isW),     TK_IS },
+  { likeW,   ARRAY_SIZE(likeW),   TK_LIKE },
+  { notW,    ARRAY_SIZE(notW),    TK_NOT },
+  { nullW,   ARRAY_SIZE(nullW),   TK_NULL },
+  { orW,     ARRAY_SIZE(orW),     TK_OR },
+  { selectW, ARRAY_SIZE(selectW), TK_SELECT },
+  { trueW,   ARRAY_SIZE(trueW),   TK_TRUE },
+  { whereW,  ARRAY_SIZE(whereW),  TK_WHERE }
 };
 
 static int cmp_keyword( const void *arg1, const void *arg2 )
@@ -594,7 +594,7 @@ static int keyword_type( const WCHAR *str, unsigned int len )
     key.name = str;
     key.len  = len;
     key.type = 0;
-    ret = bsearch( &key, keyword_table, SIZEOF(keyword_table), sizeof(struct keyword), cmp_keyword );
+    ret = bsearch( &key, keyword_table, ARRAY_SIZE(keyword_table), sizeof(struct keyword), cmp_keyword );
     if (ret) return ret->type;
     return TK_ID;
 }

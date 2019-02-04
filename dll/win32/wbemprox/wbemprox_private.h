@@ -26,8 +26,6 @@
 IClientSecurity client_security DECLSPEC_HIDDEN;
 struct list *table_list DECLSPEC_HIDDEN;
 
-#define SIZEOF(array) (sizeof(array)/sizeof((array)[0]))
-
 enum param_direction
 {
     PARAM_OUT   = -1,
@@ -220,6 +218,7 @@ HRESULT EnumWbemClassObject_create(struct query *, LPVOID *) DECLSPEC_HIDDEN;
 HRESULT WbemQualifierSet_create(const WCHAR *, const WCHAR *, LPVOID *) DECLSPEC_HIDDEN;
 
 HRESULT process_get_owner(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
+HRESULT reg_create_key(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT reg_enum_key(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT reg_enum_values(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT reg_get_stringvalue(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
@@ -245,6 +244,7 @@ static const WCHAR class_systemsecurityW[] = {'_','_','S','y','s','t','e','m','S
 
 static const WCHAR prop_nameW[] = {'N','a','m','e',0};
 
+static const WCHAR method_createkeyW[] = {'C','r','e','a','t','e','K','e','y',0};
 static const WCHAR method_enumkeyW[] = {'E','n','u','m','K','e','y',0};
 static const WCHAR method_enumvaluesW[] = {'E','n','u','m','V','a','l','u','e','s',0};
 static const WCHAR method_getownerW[] = {'G','e','t','O','w','n','e','r',0};

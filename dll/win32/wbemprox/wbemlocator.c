@@ -91,7 +91,7 @@ static BOOL is_local_machine( const WCHAR *server )
     static const WCHAR dotW[] = {'.',0};
     static const WCHAR localhostW[] = {'l','o','c','a','l','h','o','s','t',0};
     WCHAR buffer[MAX_COMPUTERNAME_LENGTH + 1];
-    DWORD len = sizeof(buffer) / sizeof(buffer[0]);
+    DWORD len = ARRAY_SIZE( buffer );
 
     if (!server || !strcmpW( server, dotW ) || !strcmpiW( server, localhostW )) return TRUE;
     if (GetComputerNameW( buffer, &len ) && !strcmpiW( server, buffer )) return TRUE;
@@ -133,7 +133,7 @@ static HRESULT parse_resource( const WCHAR *resource, WCHAR **server, WCHAR **na
     p = q;
     while (*q && *q != '\\' && *q != '/') q++;
     len = q - p;
-    if (len >= sizeof(rootW) / sizeof(rootW[0]) && memicmpW( rootW, p, len )) goto done;
+    if (len >= ARRAY_SIZE( rootW ) && memicmpW( rootW, p, len )) goto done;
     if (!*q)
     {
         hr = S_OK;
@@ -141,8 +141,8 @@ static HRESULT parse_resource( const WCHAR *resource, WCHAR **server, WCHAR **na
     }
     q++;
     len = strlenW( q );
-    if ((len != sizeof(cimv2W) / sizeof(cimv2W[0]) || memicmpW( q, cimv2W, len )) &&
-        (len != sizeof(defaultW) / sizeof(defaultW[0]) || memicmpW( q, defaultW, len )))
+    if ((len != ARRAY_SIZE( cimv2W ) || memicmpW( q, cimv2W, len )) &&
+        (len != ARRAY_SIZE( defaultW ) || memicmpW( q, defaultW, len )))
         goto done;
     if (!(*namespace = heap_alloc( (len + 1) * sizeof(WCHAR) ))) hr = E_OUTOFMEMORY;
     else

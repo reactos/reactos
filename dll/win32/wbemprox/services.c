@@ -338,15 +338,46 @@ static HRESULT parse_path( const WCHAR *str, struct path **ret )
 
     if (!(path = heap_alloc_zero( sizeof(*path) ))) return E_OUTOFMEMORY;
 
+    if (*p == '\\')
+    {
+        static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2'};
+
+        WCHAR server[MAX_COMPUTERNAME_LENGTH+1];
+        DWORD server_len = ARRAY_SIZE(server);
+
+        p++;
+        if (*p != '\\') return WBEM_E_INVALID_OBJECT_PATH;
+        p++;
+
+        q = p;
+        while (*p && *p != '\\') p++;
+        if (!*p) return WBEM_E_INVALID_OBJECT_PATH;
+
+        len = p - q;
+        if (!GetComputerNameW( server, &server_len ) || server_len != len
+                || memcmp( q, server, server_len * sizeof(WCHAR) ))
+            return WBEM_E_NOT_SUPPORTED;
+
+        q = ++p;
+        while (*p && *p != ':') p++;
+        if (!*p) return WBEM_E_INVALID_OBJECT_PATH;
+
+        len = p - q;
+        if (len != ARRAY_SIZE(cimv2W) || memcmp( q, cimv2W, sizeof(cimv2W) ))
+            return WBEM_E_INVALID_NAMESPACE;
+        p++;
+    }
+
+    q = p;
     while (*p && *p != '.') p++;
 
-    len = p - str;
+    len = p - q;
     if (!(path->class = heap_alloc( (len + 1) * sizeof(WCHAR) )))
     {
         heap_free( path );
         return E_OUTOFMEMORY;
     }
-    memcpy( path->class, str, len * sizeof(WCHAR) );
+    memcpy( path->class, q, len * sizeof(WCHAR) );
     path->class[len] = 0;
     path->class_len = len;
 
@@ -389,13 +420,13 @@ static WCHAR *query_from_path( const struct path *path )
 
     if (path->filter)
     {
-        len = path->class_len + path->filter_len + SIZEOF(selectW);
+        len = path->class_len + path->filter_len + ARRAY_SIZE(selectW);
         if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
         sprintfW( query, selectW, path->class, path->filter );
     }
     else
     {
-        len = path->class_len + SIZEOF(select_allW);
+        len = path->class_len + ARRAY_SIZE(select_allW);
         if (!(query = heap_alloc( len * sizeof(WCHAR) ))) return NULL;
         strcpyW( query, select_allW );
         strcatW( query, path->class );

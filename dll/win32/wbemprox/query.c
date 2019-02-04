@@ -507,7 +507,7 @@ static BOOL is_system_prop( const WCHAR *name )
 static BSTR build_servername( const struct view *view )
 {
     WCHAR server[MAX_COMPUTERNAME_LENGTH + 1], *p;
-    DWORD len = sizeof(server)/sizeof(server[0]);
+    DWORD len = ARRAY_SIZE( server );
 
     if (view->proplist) return NULL;
 
@@ -668,50 +668,71 @@ static HRESULT get_system_propval( const struct view *view, UINT index, const WC
 
     if (!strcmpiW( name, classW ))
     {
-        V_VT( ret ) = VT_BSTR;
-        V_BSTR( ret ) = build_classname( view );
+        if (ret)
+        {
+            V_VT( ret ) = VT_BSTR;
+            V_BSTR( ret ) = build_classname( view );
+        }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
     if (!strcmpiW( name, genusW ))
     {
-        V_VT( ret ) = VT_I4;
-        V_I4( ret ) = WBEM_GENUS_INSTANCE; /* FIXME */
+        if (ret)
+        {
+            V_VT( ret ) = VT_I4;
+            V_I4( ret ) = WBEM_GENUS_INSTANCE; /* FIXME */
+        }
         if (type) *type = CIM_SINT32;
         return S_OK;
     }
     else if (!strcmpiW( name, namespaceW ))
     {
-        V_VT( ret ) = VT_BSTR;
-        V_BSTR( ret ) = build_namespace( view );
+        if (ret)
+        {
+            V_VT( ret ) = VT_BSTR;
+            V_BSTR( ret ) = build_namespace( view );
+        }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
     else if (!strcmpiW( name, pathW ))
     {
-        V_VT( ret ) = VT_BSTR;
-        V_BSTR( ret ) = build_path( view, index, name );
+        if (ret)
+        {
+            V_VT( ret ) = VT_BSTR;
+            V_BSTR( ret ) = build_path( view, index, name );
+        }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
     if (!strcmpiW( name, propcountW ))
     {
-        V_VT( ret ) = VT_I4;
-        V_I4( ret ) = count_selected_properties( view );
+        if (ret)
+        {
+            V_VT( ret ) = VT_I4;
+            V_I4( ret ) = count_selected_properties( view );
+        }
         if (type) *type = CIM_SINT32;
         return S_OK;
     }
     else if (!strcmpiW( name, relpathW ))
     {
-        V_VT( ret ) = VT_BSTR;
-        V_BSTR( ret ) = build_relpath( view, index, name );
+        if (ret)
+        {
+            V_VT( ret ) = VT_BSTR;
+            V_BSTR( ret ) = build_relpath( view, index, name );
+        }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
     else if (!strcmpiW( name, serverW ))
     {
-        V_VT( ret ) = VT_BSTR;
-        V_BSTR( ret ) = build_servername( view );
+        if (ret)
+        {
+            V_VT( ret ) = VT_BSTR;
+            V_BSTR( ret ) = build_servername( view );
+        }
         if (type) *type = CIM_STRING;
         return S_OK;
     }
@@ -835,6 +856,11 @@ HRESULT get_propval( const struct view *view, UINT index, const WCHAR *name, VAR
     hr = get_value( view->table, row, column, &val );
     if (hr != S_OK) return hr;
 
+    if (type) *type = view->table->columns[column].type & COL_TYPE_MASK;
+    if (flavor) *flavor = 0;
+
+    if (!ret) return S_OK;
+
     vartype = view->table->columns[column].vartype;
     if (view->table->columns[column].type & CIM_FLAG_ARRAY)
     {
@@ -843,8 +869,10 @@ HRESULT get_propval( const struct view *view, UINT index, const WCHAR *name, VAR
         val_ptr = to_safearray( (const struct array *)(INT_PTR)val, basetype );
         if (!val_ptr) vartype = VT_NULL;
         else if (!vartype) vartype = to_vartype( basetype ) | VT_ARRAY;
-        goto done;
+        set_variant( vartype, val, val_ptr, ret );
+        return S_OK;
     }
+
     switch (view->table->columns[column].type & COL_TYPE_MASK)
     {
     case CIM_BOOLEAN:
@@ -891,10 +919,7 @@ HRESULT get_propval( const struct view *view, UINT index, const WCHAR *name, VAR
         return WBEM_E_FAILED;
     }
 
-done:
     set_variant( vartype, val, val_ptr, ret );
-    if (type) *type = view->table->columns[column].type & COL_TYPE_MASK;
-    if (flavor) *flavor = 0;
     return S_OK;
 }
 

@@ -80,13 +80,74 @@ static HRESULT to_i4_array( DWORD *values, DWORD count, VARIANT *var )
     return S_OK;
 }
 
+static HRESULT create_key( HKEY root, const WCHAR *subkey, VARIANT *retval )
+{
+    LONG res;
+    HKEY hkey;
+
+    TRACE("%p, %s\n", root, debugstr_w(subkey));
+
+    res = RegCreateKeyExW( root, subkey, 0, NULL, 0, 0, NULL, &hkey, NULL );
+    set_variant( VT_UI4, res, NULL, retval );
+    if (!res)
+    {
+        RegCloseKey( hkey );
+        return S_OK;
+    }
+    return HRESULT_FROM_WIN32( res );
+}
+
+HRESULT reg_create_key( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
+{
+    VARIANT defkey, subkey, retval;
+    IWbemClassObject *sig, *out_params = NULL;
+    HRESULT hr;
+
+    TRACE("%p, %p\n", in, out);
+
+    hr = IWbemClassObject_Get( in, param_defkeyW, 0, &defkey, NULL, NULL );
+    if (hr != S_OK) return hr;
+    hr = IWbemClassObject_Get( in, param_subkeynameW, 0, &subkey, NULL, NULL );
+    if (hr != S_OK) return hr;
+
+    hr = create_signature( class_stdregprovW, method_createkeyW, PARAM_OUT, &sig );
+    if (hr != S_OK)
+    {
+        VariantClear( &subkey );
+        return hr;
+    }
+    if (out)
+    {
+        hr = IWbemClassObject_SpawnInstance( sig, 0, &out_params );
+        if (hr != S_OK)
+        {
+            VariantClear( &subkey );
+            IWbemClassObject_Release( sig );
+            return hr;
+        }
+    }
+    hr = create_key( (HKEY)(INT_PTR)V_I4(&defkey), V_BSTR(&subkey), &retval );
+    if (hr == S_OK && out_params)
+        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
+
+    VariantClear( &subkey );
+    IWbemClassObject_Release( sig );
+    if (hr == S_OK && out)
+    {
+        *out = out_params;
+        IWbemClassObject_AddRef( out_params );
+    }
+    if (out_params) IWbemClassObject_Release( out_params );
+    return hr;
+}
+
 static HRESULT enum_key( HKEY root, const WCHAR *subkey, VARIANT *names, VARIANT *retval )
 {
     HKEY hkey;
     HRESULT hr = S_OK;
     WCHAR buf[256];
     BSTR *strings, *tmp;
-    DWORD count = 2, len = sizeof(buf)/sizeof(buf[0]);
+    DWORD count = 2, len = ARRAY_SIZE( buf );
     LONG res, i = 0;
 
     TRACE("%p, %s\n", root, debugstr_w(subkey));
