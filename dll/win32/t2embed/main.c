@@ -136,7 +136,7 @@ LONG WINAPI TTIsEmbeddingEnabledForFacename(LPCSTR facename, BOOL *enabled)
         DWORD name_len, value_len, value, type;
         CHAR name[LF_FACESIZE];
 
-        name_len = sizeof(name)/sizeof(*name);
+        name_len = ARRAY_SIZE(name);
         value_len = sizeof(value);
         ret = RegEnumValueA(hkey, index++, name, &name_len, NULL, &type, (BYTE*)&value, &value_len);
         if (ret || type != REG_DWORD)
