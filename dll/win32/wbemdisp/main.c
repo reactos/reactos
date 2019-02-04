@@ -374,7 +374,7 @@ static HRESULT WINAPI WinMGMTS_ParseDisplayName(IParseDisplayName *iface, IBindC
         ULONG *pchEaten, IMoniker **ppmkOut)
 {
     static const WCHAR prefixW[] = {'w','i','n','m','g','m','t','s',':',0};
-    const DWORD prefix_len = sizeof(prefixW) / sizeof(prefixW[0]) - 1;
+    const DWORD prefix_len = ARRAY_SIZE(prefixW) - 1;
     ISWbemLocator *locator = NULL;
     ISWbemServices *services = NULL;
     ISWbemObject *obj = NULL;
