@@ -363,8 +363,7 @@ static void test_CList(void)
   if (hRet == S_OK)
   {
     /* 1 call for each element, + 1 for OK (use our null element for this) */
-    ok(streamobj.writecalls == sizeof(SHLWAPI_CLIST_items)/sizeof(SHLWAPI_CLIST),
-       "wrong call count\n");
+    ok(streamobj.writecalls == ARRAY_SIZE(SHLWAPI_CLIST_items), "wrong call count\n");
     ok(streamobj.readcalls == 0,"called Read() in write\n");
     ok(streamobj.seekcalls == 0,"called Seek() in write\n");
   }
@@ -430,8 +429,7 @@ static void test_CList(void)
   {
     ok(streamobj.readbeyondend == FALSE, "read beyond end\n");
     /* 2 calls per item, but only 1 for the terminator */
-    ok(streamobj.readcalls == sizeof(SHLWAPI_CLIST_items)/sizeof(SHLWAPI_CLIST)*2-1,
-       "wrong call count\n");
+    ok(streamobj.readcalls == ARRAY_SIZE(SHLWAPI_CLIST_items) * 2 - 1, "wrong call count\n");
     ok(streamobj.writecalls == 0, "called Write() from create\n");
     ok(streamobj.seekcalls == 0,"called Seek() from create\n");
 

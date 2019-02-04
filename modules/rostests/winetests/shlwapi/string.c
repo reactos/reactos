@@ -412,7 +412,7 @@ static void test_StrCpyW(void)
 
   while(result->value)
   {
-    MultiByteToWideChar(CP_ACP,0,result->byte_size_64,-1,szSrc,sizeof(szSrc)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->byte_size_64, -1, szSrc, ARRAY_SIZE(szSrc));
 
     lpRes = StrCpyW(szBuff, szSrc);
     ok(!StrCmpW(szSrc, szBuff) && lpRes == szBuff, "Copied string %s wrong\n", result->byte_size_64);
@@ -476,7 +476,7 @@ static void test_StrToIntW(void)
 
   while (result->string)
   {
-    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     return_val = StrToIntW(szBuff);
     ok(return_val == result->str_to_int, "converted '%s' wrong (%d)\n",
        result->string, return_val);
@@ -526,7 +526,7 @@ static void test_StrToIntExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = StrToIntExW(szBuff, 0, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -540,7 +540,7 @@ static void test_StrToIntExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = StrToIntExW(szBuff, STIF_SUPPORT_HEX, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -605,7 +605,7 @@ static void test_StrToInt64ExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = pStrToInt64ExW(szBuff, 0, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -619,7 +619,7 @@ static void test_StrToInt64ExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, result->string, -1, szBuff, ARRAY_SIZE(szBuff));
     bRet = pStrToInt64ExW(szBuff, STIF_SUPPORT_HEX, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -694,7 +694,7 @@ static void test_StrFormatKBSizeW(void)
   while(result->value)
   {
     pStrFormatKBSizeW(result->value, szBuffW, 256);
-    WideCharToMultiByte(CP_ACP,0,szBuffW,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR),NULL,NULL);
+    WideCharToMultiByte(CP_ACP, 0, szBuffW, -1, szBuff, ARRAY_SIZE(szBuff), NULL, NULL);
 
     ok(!strcmp(result->kb_size, szBuff), "Formatted %s wrong: got %s, expected %s\n",
        wine_dbgstr_longlong(result->value), szBuff, result->kb_size);
@@ -865,7 +865,7 @@ static void test_StrCpyNXA(void)
   }
 
   memset(dest, '\n', sizeof(dest));
-  lpszRes = pStrCpyNXA(dest, lpSrc, sizeof(dest)/sizeof(dest[0]));
+  lpszRes = pStrCpyNXA(dest, lpSrc, ARRAY_SIZE(dest));
   ok(lpszRes == dest + 5 && !memcmp(dest, "hello\0\n\n", sizeof(dest)),
        "StrCpyNXA: expected %p, \"hello\\0\\n\\n\", got %p, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
        dest + 5, lpszRes, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
@@ -886,7 +886,7 @@ static void test_StrCpyNXW(void)
   }
 
   memcpy(dest, lpInit, sizeof(lpInit));
-  lpszRes = pStrCpyNXW(dest, lpSrc, sizeof(dest)/sizeof(dest[0]));
+  lpszRes = pStrCpyNXW(dest, lpSrc, ARRAY_SIZE(dest));
   ok(lpszRes == dest + 5 && !memcmp(dest, lpRes, sizeof(dest)),
        "StrCpyNXW: expected %p, \"hello\\0\\n\\n\", got %p, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
        dest + 5, lpszRes, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
@@ -949,7 +949,7 @@ static void test_SHAnsiToAnsi(void)
   }
 
   memset(dest, '\n', sizeof(dest));
-  dwRet = pSHAnsiToAnsi("hello", dest, sizeof(dest)/sizeof(dest[0]));
+  dwRet = pSHAnsiToAnsi("hello", dest, ARRAY_SIZE(dest));
   ok(dwRet == 6 && !memcmp(dest, "hello\0\n\n", sizeof(dest)),
      "SHAnsiToAnsi: expected 6, \"hello\\0\\n\\n\", got %d, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
      dwRet, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
@@ -976,7 +976,7 @@ static void test_SHUnicodeToUnicode(void)
   }
 
   memcpy(dest, lpInit, sizeof(lpInit));
-  dwRet = pSHUnicodeToUnicode(lpSrc, dest, sizeof(dest)/sizeof(dest[0]));
+  dwRet = pSHUnicodeToUnicode(lpSrc, dest, ARRAY_SIZE(dest));
   ok(dwRet == 6 && !memcmp(dest, lpRes, sizeof(dest)),
      "SHUnicodeToUnicode: expected 6, \"hello\\0\\n\\n\", got %d, \"%d,%d,%d,%d,%d,%d,%d,%d\"\n",
      dwRet, dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
@@ -1158,7 +1158,7 @@ static void test_StrStrA(void)
     ret = StrStrA("", "");
     ok(!ret, "Expected StrStrA to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrA_cases)/sizeof(StrStrA_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrA_cases); i++)
     {
         ret = StrStrA(deadbeefA, StrStrA_cases[i].search);
         ok(ret == StrStrA_cases[i].expect,
@@ -1212,7 +1212,7 @@ static void test_StrStrW(void)
     ret = StrStrW(emptyW, emptyW);
     ok(!ret, "Expected StrStrW to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrW_cases)/sizeof(StrStrW_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrW_cases); i++)
     {
         ret = StrStrW(deadbeefW, StrStrW_cases[i].search);
         ok(ret == StrStrW_cases[i].expect,
@@ -1260,7 +1260,7 @@ static void test_StrStrIA(void)
     ret = StrStrIA("", "");
     ok(!ret, "Expected StrStrIA to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrIA_cases)/sizeof(StrStrIA_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrIA_cases); i++)
     {
         ret = StrStrIA(deadbeefA, StrStrIA_cases[i].search);
         ok(ret == StrStrIA_cases[i].expect,
@@ -1316,7 +1316,7 @@ static void test_StrStrIW(void)
     ret = StrStrIW(emptyW, emptyW);
     ok(!ret, "Expected StrStrIW to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrIW_cases)/sizeof(StrStrIW_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrIW_cases); i++)
     {
         ret = StrStrIW(deadbeefW, StrStrIW_cases[i].search);
         ok(ret == StrStrIW_cases[i].expect,
@@ -1343,13 +1343,13 @@ static void test_StrStrNW(void)
         const WCHAR *expect;
     } StrStrNW_cases[] =
     {
-        {emptyW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
-        {deadW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW},
-        {dead_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
-        {adbeW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 2},
-        {adbe_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
-        {beefW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 4},
-        {beef_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
+        {emptyW, ARRAY_SIZE(deadbeefW), NULL},
+        {deadW, ARRAY_SIZE(deadbeefW), deadbeefW},
+        {dead_lowerW, ARRAY_SIZE(deadbeefW), NULL},
+        {adbeW, ARRAY_SIZE(deadbeefW), deadbeefW + 2},
+        {adbe_lowerW, ARRAY_SIZE(deadbeefW), NULL},
+        {beefW, ARRAY_SIZE(deadbeefW), deadbeefW + 4},
+        {beef_lowerW, ARRAY_SIZE(deadbeefW), NULL},
         {beefW, 0, NULL},
         {beefW, 1, NULL},
         {beefW, 2, NULL},
@@ -1386,7 +1386,7 @@ static void test_StrStrNW(void)
     ret = pStrStrNW(emptyW, emptyW, 10);
     ok(!ret, "Expected StrStrNW to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrNW_cases)/sizeof(StrStrNW_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrNW_cases); i++)
     {
         ret = pStrStrNW(deadbeefW, StrStrNW_cases[i].search, StrStrNW_cases[i].count);
         ok(ret == StrStrNW_cases[i].expect,
@@ -1426,14 +1426,14 @@ static void test_StrStrNIW(void)
         const WCHAR *expect;
     } StrStrNIW_cases[] =
     {
-        {emptyW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
-        {deadW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW},
-        {dead_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW},
-        {adbeW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 2},
-        {adbe_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 2},
-        {beefW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 4},
-        {beef_lowerW, sizeof(deadbeefW)/sizeof(WCHAR), deadbeefW + 4},
-        {cafeW, sizeof(deadbeefW)/sizeof(WCHAR), NULL},
+        {emptyW, ARRAY_SIZE(deadbeefW), NULL},
+        {deadW, ARRAY_SIZE(deadbeefW), deadbeefW},
+        {dead_lowerW, ARRAY_SIZE(deadbeefW), deadbeefW},
+        {adbeW, ARRAY_SIZE(deadbeefW), deadbeefW + 2},
+        {adbe_lowerW, ARRAY_SIZE(deadbeefW), deadbeefW + 2},
+        {beefW, ARRAY_SIZE(deadbeefW), deadbeefW + 4},
+        {beef_lowerW, ARRAY_SIZE(deadbeefW), deadbeefW + 4},
+        {cafeW, ARRAY_SIZE(deadbeefW), NULL},
         {beefW, 0, NULL},
         {beefW, 1, NULL},
         {beefW, 2, NULL},
@@ -1480,7 +1480,7 @@ static void test_StrStrNIW(void)
     ret = pStrStrNIW(emptyW, emptyW, 10);
     ok(!ret, "Expected StrStrNIW to return NULL, got %p\n", ret);
 
-    for (i = 0; i < sizeof(StrStrNIW_cases)/sizeof(StrStrNIW_cases[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(StrStrNIW_cases); i++)
     {
         ret = pStrStrNIW(deadbeefW, StrStrNIW_cases[i].search, StrStrNIW_cases[i].count);
         ok(ret == StrStrNIW_cases[i].expect,

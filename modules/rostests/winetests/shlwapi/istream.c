@@ -191,6 +191,7 @@ static void test_stream_read_write(IStream *stream, DWORD mode)
     HRESULT ret;
     unsigned char buf[16];
     DWORD written, count;
+    STATSTG statstg;
 
     /* IStream_Read/Write from the COBJMACROS is undefined by shlwapi.h */
 
@@ -245,6 +246,38 @@ static void test_stream_read_write(IStream *stream, DWORD mode)
     ok(count == written, "expected %u, got %u\n", written, count);
     if (count)
         ok(buf[0] == 0x5e && buf[1] == 0xa7, "expected 5ea7, got %02x%02x\n", buf[0], buf[1]);
+
+    memset(&statstg, 0xff, sizeof(statstg));
+    ret = IStream_Stat(stream, &statstg, 0);
+    ok(ret == S_OK, "Stat failed, hr %#x.\n", ret);
+    ok(statstg.pwcsName != NULL, "Unexpected name %s.\n", wine_dbgstr_w(statstg.pwcsName));
+    CoTaskMemFree(statstg.pwcsName);
+
+    memset(&statstg, 0xff, sizeof(statstg));
+    ret = IStream_Stat(stream, &statstg, STATFLAG_NONAME);
+    ok(ret == S_OK, "Stat failed, hr %#x.\n", ret);
+    ok(statstg.pwcsName == NULL, "Unexpected name %s.\n", wine_dbgstr_w(statstg.pwcsName));
+}
+
+static void test_stream_qi(IStream *stream)
+{
+    IUnknown *unk;
+    HRESULT hr;
+
+    hr = IStream_QueryInterface(stream, &IID_IStream, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IStream interface, hr %#x.\n", hr);
+    IUnknown_Release(unk);
+
+    unk = NULL;
+    hr = IStream_QueryInterface(stream, &IID_ISequentialStream, (void **)&unk);
+todo_wine
+    ok(SUCCEEDED(hr) || broken(hr == E_NOINTERFACE) /* XP */, "Failed to get ISequentialStream interface, hr %#x.\n", hr);
+    if (unk)
+        IUnknown_Release(unk);
+
+    hr = IStream_QueryInterface(stream, &IID_IUnknown, (void **)&unk);
+    ok(SUCCEEDED(hr), "Failed to get IUnknown interface, hr %#x.\n", hr);
+    IUnknown_Release(unk);
 }
 
 static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
@@ -310,6 +343,7 @@ if (0) /* This test crashes on WinXP SP2 */
     ok(stream != NULL, "SHCreateStreamOnFileA: expected a valid IStream object, got NULL\n");
 
     if (stream) {
+        test_stream_qi(stream);
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
@@ -422,6 +456,7 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
     ok(stream != NULL, "SHCreateStreamOnFileW: expected a valid IStream object, got NULL\n");
 
     if (stream) {
+        test_stream_qi(stream);
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
@@ -551,6 +586,7 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
     ok(stream != NULL, "SHCreateStreamOnFileEx: expected a valid IStream object, got NULL\n");
 
     if (stream) {
+        test_stream_qi(stream);
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
@@ -697,6 +733,43 @@ static void test_SHCreateStreamOnFileEx_CopyTo(void)
     DeleteFileW( dstFileName );
 }
 
+static void test_SHCreateMemStream(void)
+{
+    static const BYTE initial[10];
+    IStream *stream, *stream2;
+    IUnknown *unk;
+    char buff[10];
+    HRESULT hr;
+
+    stream = SHCreateMemStream(initial, 0);
+    ok(stream != NULL, "Failed to create a stream.\n");
+    IStream_Release(stream);
+
+    stream = SHCreateMemStream(NULL, 10);
+    ok(stream != NULL, "Failed to create a stream.\n");
+    IStream_Release(stream);
+
+    stream = SHCreateMemStream(NULL, 0);
+    ok(stream != NULL, "Failed to create a stream.\n");
+
+    hr = IStream_QueryInterface(stream, &IID_ISequentialStream, (void **)&unk);
+todo_wine
+    ok(hr == S_OK || broken(hr == E_NOINTERFACE) /* WinXP */, "Failed to QI, hr %#x.\n", hr);
+    if (unk)
+        IUnknown_Release(unk);
+
+    hr = IStream_Read(stream, buff, sizeof(buff), NULL);
+todo_wine
+    ok(hr == S_FALSE || broken(hr == S_OK) /* WinXP */, "Unexpected hr %#x.\n", hr);
+
+    hr = IStream_Clone(stream, &stream2);
+todo_wine
+    ok(hr == S_OK || broken(hr == E_NOTIMPL) /* < Win8 */, "Failed to clone a stream, hr %#x.\n", hr);
+    if (hr == S_OK)
+        IStream_Release(stream2);
+
+    IStream_Release(stream);
+}
 
 START_TEST(istream)
 {
@@ -726,15 +799,16 @@ START_TEST(istream)
 
     int i, j, k;
 
-    for (i = 0; i != sizeof(stgm_access)/sizeof(stgm_access[0]); i++) {
-        for (j = 0; j != sizeof(stgm_sharing)/sizeof(stgm_sharing[0]); j ++) {
+    for (i = 0; i != ARRAY_SIZE(stgm_access); i++) {
+        for (j = 0; j != ARRAY_SIZE(stgm_sharing); j ++) {
             test_SHCreateStreamOnFileA(stgm_access[i], stgm_sharing[j]);
             test_SHCreateStreamOnFileW(stgm_access[i], stgm_sharing[j]);
 
-            for (k = 0; k != sizeof(stgm_flags)/sizeof(stgm_flags[0]); k++)
+            for (k = 0; k != ARRAY_SIZE(stgm_flags); k++)
                 test_SHCreateStreamOnFileEx(stgm_access[i], stgm_sharing[j] | stgm_flags[k]);
         }
     }
 
     test_SHCreateStreamOnFileEx_CopyTo();
+    test_SHCreateMemStream();
 }
