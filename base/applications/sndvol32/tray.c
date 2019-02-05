@@ -125,15 +125,13 @@ OnTrayInitMixer(
     if (mixerGetControlDetails((HMIXEROBJ)pDialogData->hMixer, &mxcd, MIXER_OBJECTF_HMIXER | MIXER_GETCONTROLDETAILSF_VALUE) != MMSYSERR_NOERROR)
         return;
 
-    pDialogData->maxVolume = pDialogData->volumeInitValues[0].dwValue;
-    pDialogData->maxChannel = 0;
-    for (i = 1; i < pDialogData->volumeChannels; i++)
+    pDialogData->maxVolume = 0;
+    for (i = 0; i < pDialogData->volumeChannels; i++)
     {
+        pDialogData->volumeCurrentValues[i].dwValue = pDialogData->volumeInitValues[i].dwValue;
+
         if (pDialogData->volumeInitValues[i].dwValue > pDialogData->maxVolume)
-        {
             pDialogData->maxVolume = pDialogData->volumeInitValues[i].dwValue;
-            pDialogData->maxChannel = i;
-        }
     }
 
     /* Initialize the volume trackbar */
@@ -209,18 +207,30 @@ OnVScroll(
     LPARAM lParam)
 {
     MIXERCONTROLDETAILS mxcd;
-    DWORD dwPos, dwVolume, i;
+    DWORD dwPosition, dwVolume, i;
 
     switch (LOWORD(wParam))
     {
-        case TB_THUMBTRACK:
+        case TB_THUMBPOSITION:
+            break;
 
-            dwPos = VOLUME_MAX - (DWORD)SendDlgItemMessage(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_GETPOS, 0, 0);
-            dwVolume = (dwPos * pDialogData->volumeStep) + pDialogData->volumeMinimum;
+        case TB_ENDTRACK:
+            PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);
+            break;
+
+        default:
+            dwPosition = VOLUME_MAX - (DWORD)SendDlgItemMessage(hwndDlg, IDC_LINE_SLIDER_VERT, TBM_GETPOS, 0, 0);
+
+            if (dwPosition == VOLUME_MIN)
+                dwVolume = pDialogData->volumeMinimum;
+            else if (dwPosition == VOLUME_MAX)
+                dwVolume = pDialogData->volumeMaximum;
+            else
+                dwVolume = (dwPosition * pDialogData->volumeStep) + pDialogData->volumeMinimum;
 
             for (i = 0; i < pDialogData->volumeChannels; i++)
             {
-                if (i == pDialogData->maxChannel)
+                if (pDialogData->volumeInitValues[i].dwValue == pDialogData->maxVolume)
                 {
                     pDialogData->volumeCurrentValues[i].dwValue = dwVolume;
                 }
@@ -241,13 +251,6 @@ OnVScroll(
             mixerSetControlDetails((HMIXEROBJ)pDialogData->hMixer,
                                    &mxcd,
                                    MIXER_OBJECTF_HMIXER | MIXER_SETCONTROLDETAILSF_VALUE);
-            break;
-
-        case TB_ENDTRACK:
-            PlaySound((LPCTSTR)SND_ALIAS_SYSTEMDEFAULT, NULL, SND_ASYNC | SND_ALIAS_ID);
-            break;
-
-        default:
             break;
     }
 }
