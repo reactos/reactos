@@ -1133,13 +1133,44 @@ FailurePath:
             /* Make sure the conversion was OK */
             if (NT_SUCCESS(Status))
             {
-                /* Load the forwarder, free the temp string */
-                Status = LdrpLoadDll(FALSE,
+                WCHAR StringBuffer[MAX_PATH];
+                UNICODE_STRING StaticString, *RedirectedImportName;
+                BOOLEAN Redirected = FALSE;
+
+                RtlInitEmptyUnicodeString(&StaticString, StringBuffer, sizeof(StringBuffer));
+
+                /* Check if the SxS Assemblies specify another file */
+                Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
+                                                                  &TempUString,
+                                                                  &LdrApiDefaultExtension,
+                                                                  &StaticString,
+                                                                  NULL,
+                                                                  &RedirectedImportName,
+                                                                  NULL,
+                                                                  NULL,
+                                                                  NULL);
+                if (NT_SUCCESS(Status))
+                {
+                    if (ShowSnaps)
+                    {
+                        DPRINT1("LDR: %Z got redirected to %wZ\n", &ForwarderName, RedirectedImportName);
+                    }
+                    /* Let Ldrp know */
+                    Redirected = TRUE;
+                }
+                else
+                {
+                    RedirectedImportName = &TempUString;
+                }
+
+                /* Load the forwarder */
+                Status = LdrpLoadDll(Redirected,
                                      NULL,
                                      NULL,
-                                     &TempUString,
+                                     RedirectedImportName,
                                      &ForwarderHandle,
                                      FALSE);
+
                 RtlFreeUnicodeString(&TempUString);
             }
 
