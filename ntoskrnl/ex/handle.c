@@ -1282,3 +1282,230 @@ ExEnumHandleTable(IN PHANDLE_TABLE HandleTable,
     KeLeaveCriticalRegion();
     return Result;
 }
+
+#if DBG && defined(KDBG)
+BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
+{
+    USHORT i;
+    char *endptr;
+    HANDLE ProcessId;
+    EXHANDLE ExHandle;
+    PLIST_ENTRY Entry;
+    PEPROCESS Process;
+    WCHAR KeyPath[MAX_PATH];
+    PFILE_OBJECT FileObject;
+    PHANDLE_TABLE HandleTable;
+    POBJECT_HEADER ObjectHeader;
+    PHANDLE_TABLE_ENTRY TableEntry;
+    ULONG NeededLength, NameLength;
+    PCM_KEY_CONTROL_BLOCK Kcb, CurrentKcb;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+
+    if (Argc > 1)
+    {
+        /* Get EPROCESS address or PID */
+        i = 0;
+        while (Argv[1][i])
+        {
+            if (!isdigit(Argv[1][i]))
+            {
+                i = 0;
+                break;
+            }
+        }
+
+        if (i == 0)
+        {
+            if (!KdbpGetHexNumber(Argv[1], (PVOID)&Process))
+            {
+                KdbpPrint("Invalid parameter: %s\n", Argv[1]);
+                return TRUE;
+            }
+
+            /* In the end, we always want a PID */
+            ProcessId = PsGetProcessId(Process);
+        }
+        else
+        {
+            ProcessId = (HANDLE)strtoul(Argv[1], &endptr, 10);
+            if (*endptr != '\0')
+            {
+                KdbpPrint("Invalid parameter: %s\n", Argv[1]);
+                return TRUE;
+            }
+        }
+    }
+    else
+    {
+        ProcessId = PsGetCurrentProcessId();
+    }
+
+    for (Entry = HandleTableListHead.Flink;
+         Entry != &HandleTableListHead;
+         Entry = Entry->Flink)
+    {
+        /* Only return matching PID
+         * 0 matches everything
+         */
+        HandleTable = CONTAINING_RECORD(Entry, HANDLE_TABLE, HandleTableList);
+        if (ProcessId != 0 && HandleTable->UniqueProcessId != ProcessId)
+        {
+            continue;
+        }
+
+        KdbpPrint("\n");
+
+        KdbpPrint("Handle table at %p with %d entries in use\n", HandleTable, HandleTable->HandleCount);
+
+        ExHandle.Value = 0;
+        while ((TableEntry = ExpLookupHandleTableEntry(HandleTable, ExHandle)))
+        {
+            if ((TableEntry->Object) &&
+                (TableEntry->NextFreeTableEntry != -2))
+            {
+                ObjectHeader = ObpGetHandleObject(TableEntry);
+
+                KdbpPrint("%p: Object: %p GrantedAccess: %x Entry: %p\n", ExHandle.Value, &ObjectHeader->Body, TableEntry->GrantedAccess, TableEntry);
+                KdbpPrint("Object: %p Type: (%x) ", &ObjectHeader->Body, ObjectHeader->Type);
+                if (ObjectHeader->Type == IoFileObjectType)
+                {
+                    KdbpPrint("File");
+                }
+                else if (ObjectHeader->Type == ExEventObjectType)
+                {
+                    KdbpPrint("Event");
+                }
+                else if (ObjectHeader->Type == ExEventPairObjectType)
+                {
+                    KdbpPrint("EventPair");
+                }
+                else if (ObjectHeader->Type == ExMutantObjectType)
+                {
+                    KdbpPrint("Mutant");
+                }
+                else if (ObjectHeader->Type == ExSemaphoreObjectType)
+                {
+                    KdbpPrint("Semaphore");
+                }
+                else if (ObjectHeader->Type == ExTimerType)
+                {
+                    KdbpPrint("Timer");
+                }
+                else if (ObjectHeader->Type == ExWindowStationObjectType)
+                {
+                    KdbpPrint("WindowStation");
+                }
+                else if (ObjectHeader->Type == ExDesktopObjectType)
+                {
+                    KdbpPrint("Desktop");
+                }
+                else if (ObjectHeader->Type == ObpDirectoryObjectType)
+                {
+                    KdbpPrint("Directory");
+                }
+                else if (ObjectHeader->Type == CmpKeyObjectType)
+                {
+                    KdbpPrint("Key");
+                }
+                else if (ObjectHeader->Type == MmSectionObjectType)
+                {
+                    KdbpPrint("Section");
+                }
+                else if (ObjectHeader->Type == PsThreadType)
+                {
+                    KdbpPrint("Thread");
+                }
+                else if (ObjectHeader->Type == LpcPortObjectType)
+                {
+                    KdbpPrint("ALPC Port");
+                }
+                KdbpPrint("\n");
+                KdbpPrint("\tObjectHeader: %p\n", ObjectHeader);
+                KdbpPrint("\t\tHandleCount: %u PointerCount: %u\n", ObjectHeader->HandleCount, ObjectHeader->PointerCount);
+
+                /* Specific objects debug prints */
+
+                /* For file, display path */
+                if (ObjectHeader->Type == IoFileObjectType)
+                {
+                    FileObject = (PFILE_OBJECT)&ObjectHeader->Body;
+
+                    KdbpPrint("\t\t\tName: %wZ\n", &FileObject->FileName);
+                }
+
+                /* For directory, and win32k objects, display object name */
+                else if (ObjectHeader->Type == ObpDirectoryObjectType ||
+                         ObjectHeader->Type == ExWindowStationObjectType ||
+                         ObjectHeader->Type == ExDesktopObjectType)
+                {
+                    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+                    if (ObjectNameInfo != NULL && ObjectNameInfo->Name.Buffer != NULL)
+                    {
+                        KdbpPrint("\t\t\tName: %wZ\n", &ObjectNameInfo->Name);
+                    }
+                }
+
+                /* For registry keys, display full path */
+                else if (ObjectHeader->Type == CmpKeyObjectType)
+                {
+                    Kcb = ((PCM_KEY_BODY)&ObjectHeader->Body)->KeyControlBlock;
+                    if (!Kcb->Delete)
+                    {
+                        CurrentKcb = Kcb;
+
+                        /* See: CmpQueryNameInformation() */
+
+                        while (CurrentKcb != NULL)
+                        {
+                            if (CurrentKcb->NameBlock->Compressed)
+                                NeededLength += CmpCompressedNameSize(CurrentKcb->NameBlock->Name, CurrentKcb->NameBlock->NameLength);
+                            else
+                                NeededLength += CurrentKcb->NameBlock->NameLength;
+
+                            NeededLength += sizeof(OBJ_NAME_PATH_SEPARATOR);
+
+                            CurrentKcb = CurrentKcb->ParentKcb;
+                        }
+
+                        if (NeededLength < MAX_PATH * sizeof(WCHAR))
+                        {
+                            CurrentKcb = Kcb;
+
+                            while (CurrentKcb != NULL)
+                            {
+                                if (CurrentKcb->NameBlock->Compressed)
+                                {
+                                    NameLength = CmpCompressedNameSize(CurrentKcb->NameBlock->Name, CurrentKcb->NameBlock->NameLength);
+                                    CmpCopyCompressedName(&KeyPath[(NeededLength - NameLength)/sizeof(WCHAR)],
+                                                          NameLength,
+                                                          CurrentKcb->NameBlock->Name,
+                                                          CurrentKcb->NameBlock->NameLength);
+                                }
+                                else
+                                {
+                                    NameLength = CurrentKcb->NameBlock->NameLength;
+                                    RtlCopyMemory(&KeyPath[(NeededLength - NameLength)/sizeof(WCHAR)],
+                                                  CurrentKcb->NameBlock->Name,
+                                                  NameLength);
+                                }
+
+                                NeededLength -= NameLength;
+                                NeededLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+                                KeyPath[NeededLength/sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
+
+                                CurrentKcb = CurrentKcb->ParentKcb;
+                            }
+                        }
+
+                        KdbpPrint("\t\t\tName: %S\n", KeyPath);
+                    }
+                }
+            }
+
+            ExHandle.Value += INDEX_TO_HANDLE_VALUE(1);
+        }
+    }
+
+    return TRUE;
+}
+#endif
