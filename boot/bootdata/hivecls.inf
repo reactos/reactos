@@ -76,6 +76,10 @@ HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
+; Certificate
+HKCR,".cer","",0x00000000,"cerfile"
+HKCR,"cerfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe cryptext.dll,CryptExtOpenCER %1"
+
 ; ReactOS Command Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
