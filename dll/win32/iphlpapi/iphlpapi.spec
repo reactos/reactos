@@ -136,22 +136,43 @@
 @ stdcall SetTcpEntry( ptr )
 @ stub SetTcpEntryToStack
 @ stdcall UnenableRouter( ptr ptr )
-@ stub _PfAddFiltersToInterface@24
-@ stub _PfAddGlobalFilterToInterface@8
-@ stub _PfBindInterfaceToIPAddress@12
-@ stub _PfBindInterfaceToIndex@16
-@ stub _PfCreateInterface@24
-@ stub _PfDeleteInterface@4
-@ stub _PfDeleteLog@0
-@ stub _PfGetInterfaceStatistics@16
-@ stub _PfMakeLog@4
-@ stub _PfRebindFilters@8
-@ stub _PfRemoveFilterHandles@12
-@ stub _PfRemoveFiltersFromInterface@20
-@ stub _PfRemoveGlobalFilterFromInterface@8
-@ stub _PfSetLogBuffer@28
-@ stub _PfTestPacket@20
-@ stub _PfUnBindInterface@4
+
+# These are actually stubs, but we need to forward them to preserve the decoration.
+@ stdcall -arch=i386 _PfAddFiltersToInterface@24() _PfAddFiltersToInterface@24
+@ stdcall -arch=i386 _PfAddGlobalFilterToInterface@8() _PfAddGlobalFilterToInterface@8
+@ stdcall -arch=i386 _PfBindInterfaceToIPAddress@12() _PfBindInterfaceToIPAddress@12
+@ stdcall -arch=i386 _PfBindInterfaceToIndex@16() _PfBindInterfaceToIndex@16
+@ stdcall -arch=i386 _PfCreateInterface@24() _PfCreateInterface@24
+@ stdcall -arch=i386 _PfDeleteInterface@4() _PfDeleteInterface@4
+@ stdcall -arch=i386 _PfDeleteLog@0() _PfDeleteLog@0
+@ stdcall -arch=i386 _PfGetInterfaceStatistics@16() _PfGetInterfaceStatistics@16
+@ stdcall -arch=i386 _PfMakeLog@4() _PfMakeLog@4
+@ stdcall -arch=i386 _PfRebindFilters@8() _PfRebindFilters@8
+@ stdcall -arch=i386 _PfRemoveFilterHandles@12() _PfRemoveFilterHandles@12
+@ stdcall -arch=i386 _PfRemoveFiltersFromInterface@20() _PfRemoveFiltersFromInterface@20
+@ stdcall -arch=i386 _PfRemoveGlobalFilterFromInterface@8() _PfRemoveGlobalFilterFromInterface@8
+@ stdcall -arch=i386 _PfSetLogBuffer@28() _PfSetLogBuffer@28
+@ stdcall -arch=i386 _PfTestPacket@20() _PfTestPacket@20
+@ stdcall -arch=i386 _PfUnBindInterface@4() _PfUnBindInterface@4
+
+# x64 does not use decoration in these names
+@ stdcall -arch=x86_64 _PfAddFiltersToInterface@24()
+@ stdcall -arch=x86_64 _PfAddGlobalFilterToInterface@8()
+@ stdcall -arch=x86_64 _PfBindInterfaceToIPAddress@12()
+@ stdcall -arch=x86_64 _PfBindInterfaceToIndex@16()
+@ stdcall -arch=x86_64 _PfCreateInterface@24()
+@ stdcall -arch=x86_64 _PfDeleteInterface@4()
+@ stdcall -arch=x86_64 _PfDeleteLog@0()
+@ stdcall -arch=x86_64 _PfGetInterfaceStatistics@16()
+@ stdcall -arch=x86_64 _PfMakeLog@4()
+@ stdcall -arch=x86_64 _PfRebindFilters@8()
+@ stdcall -arch=x86_64 _PfRemoveFilterHandles@12()
+@ stdcall -arch=x86_64 _PfRemoveFiltersFromInterface@20()
+@ stdcall -arch=x86_64 _PfRemoveGlobalFilterFromInterface@8()
+@ stdcall -arch=x86_64 _PfSetLogBuffer@28()
+@ stdcall -arch=x86_64 _PfTestPacket@20()
+@ stdcall -arch=x86_64 _PfUnBindInterface@4()
+
 @ stub do_echo_rep
 @ stub do_echo_req
 @ stub register_icmp

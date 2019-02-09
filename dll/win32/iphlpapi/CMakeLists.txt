@@ -25,6 +25,8 @@ list(APPEND SOURCE
 add_library(iphlpapi SHARED
     ${SOURCE}
     iphlpapi.rc
+    iphlpapi_fakestubs.c
+    iphlpapi.spec
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def)
 
 set_module_type(iphlpapi win32dll UNICODE)
