@@ -575,16 +575,43 @@ function(add_linker_script _target _linker_script_file)
     else()
         set(_no_std_includes_flag "/X")
     endif()
-    add_custom_command(
-        #OUTPUT ${_generated_file}
-        TARGET ${_target} PRE_LINK
-        COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
-        DEPENDS ${_file_full_path}
-        VERBATIM)
-    set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
-    add_target_link_flags(${_target} "@${_generated_file}")
+    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+        # MSBuild, via the VS IDE, uses response files when calling CL or LINK.
+        # We cannot specify a custom response file on the linker command-line,
+        # since specifying response files from within response files is forbidden.
+        # We therefore have to pre-process, at configuration time, the linker
+        # script so as to retrieve the custom linker options to be appended
+        # to the linker command-line.
+        execute_process(
+            COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}"
+            # OUTPUT_FILE "${_generated_file}"
+            OUTPUT_VARIABLE linker_options
+            ERROR_QUIET
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            RESULT_VARIABLE linker_rsp_result
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if(NOT linker_rsp_result EQUAL 0)
+            message(FATAL_ERROR "Generating pre-processed linker options for target '${_target}' failed with error ${linker_rsp_result}.")
+        endif()
+        # file(STRINGS ${_generated_file} linker_options NEWLINE_CONSUME)
+        string(REGEX REPLACE "[\r\n]+" " " linker_options "${linker_options}")
+        add_target_link_flags(${_target} ${linker_options})
+    else()
+        # Generate at compile-time a linker response file and append it
+        # to the linker command-line.
+        add_custom_command(
+            # OUTPUT ${_generated_file}
+            TARGET ${_target} PRE_LINK # PRE_BUILD
+            COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
+            DEPENDS ${_file_full_path}
+            VERBATIM)
+        set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
+        # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
+        # add_dependencies(${_target} "${_target}_${_file_name}")
+        add_target_link_flags(${_target} "@${_generated_file}")
 
-    # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
-    # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
-    add_target_property(${_target} LINK_DEPENDS ${_generated_file})
+        # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
+        # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
+        add_target_property(${_target} LINK_DEPENDS ${_generated_file})
+    endif()
 endfunction()
