@@ -1312,6 +1312,8 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
                 i = 0;
                 break;
             }
+
+            ++i;
         }
 
         if (i == 0)
