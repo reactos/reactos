@@ -592,7 +592,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     {
         if (GlobalSettings.FloppyDisks[i].Length != 0 &&
             GlobalSettings.FloppyDisks[i].Buffer      &&
-            GlobalSettings.FloppyDisks[i].Buffer != '\0')
+           *GlobalSettings.FloppyDisks[i].Buffer != L'\0')
         {
             if (!MountDisk(FLOPPY_DISK, i, GlobalSettings.FloppyDisks[i].Buffer, FALSE))
             {
@@ -611,7 +611,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     {
         if (GlobalSettings.HardDisks[i].Length != 0 &&
             GlobalSettings.HardDisks[i].Buffer      &&
-            GlobalSettings.HardDisks[i].Buffer != L'\0')
+           *GlobalSettings.HardDisks[i].Buffer != L'\0')
         {
             if (!MountDisk(HARD_DISK, i, GlobalSettings.HardDisks[i].Buffer, FALSE))
             {

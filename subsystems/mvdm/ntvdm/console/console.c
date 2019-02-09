@@ -169,7 +169,7 @@ UpdateVdmMenuDisks(VOID)
 
         if (GlobalSettings.FloppyDisks[i].Length != 0 &&
             GlobalSettings.FloppyDisks[i].Buffer      &&
-            GlobalSettings.FloppyDisks[i].Buffer != L'\0')
+           *GlobalSettings.FloppyDisks[i].Buffer != L'\0')
         {
             /* Update item text */
             _snwprintf(szMenuString2, ARRAYSIZE(szMenuString2), szMenuString1, i, GlobalSettings.FloppyDisks[i].Buffer);
