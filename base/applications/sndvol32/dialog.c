@@ -434,7 +434,13 @@ EnumConnectionsCallback(
           /* is it selected */
           if (Flags != 0x4)
           {
-              int dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_MASTER : IDD_NORMAL_MASTER;
+              int dlgId;
+
+              if ((Line->dwComponentType == MIXERLINE_COMPONENTTYPE_DST_SPEAKERS) ||
+                  (Line->dwComponentType == MIXERLINE_COMPONENTTYPE_DST_HEADPHONES))
+                  dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_MASTER : IDD_NORMAL_MASTER;
+              else
+                  dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_LINE : IDD_NORMAL_LINE;
 
               /* load dialog resource */
               LoadDialog(hAppInstance, PrefContext->MixerWindow, MAKEINTRESOURCE(dlgId), PrefContext->Count);
