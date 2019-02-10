@@ -8,7 +8,65 @@
 #include <classpnp.h>
 
 #define USB_STOR_TAG 'sbsu'
-#define USB_MAXCHILDREN              (16)
+#define USB_MAXCHILDREN (15)
+
+/*
+ * Ported from linux.
+ * Device and/or Interface Class codes
+ * as found in bDeviceClass or bInterfaceClass
+ * and defined by www.usb.org documents
+ */
+
+/* Storage class code */
+
+#define USB_CLASS_MASS_STORAGE  0x08
+
+/* Storage subclass codes */
+
+#define USB_SUBCLASS_RBC        0x01    /* Typically, flash devices */
+#define USB_SUBCLASS_8020       0x02    /* CD-ROM */
+#define USB_SUBCLASS_QIC        0x03    /* QIC-157 Tapes */
+#define USB_SUBCLASS_UFI        0x04    /* Floppy */
+#define USB_SUBCLASS_8070       0x05    /* Removable media */
+#define USB_SUBCLASS_SCSI       0x06    /* Transparent */
+#define USB_SUBCLASS_LOCKABLE   0x07    /* Password-protected */
+
+#define USB_SUBCLASS_ISD200     0xF0    /* ISD200 ATA */
+#define USB_SUBCLASS_CYP_ATACB  0xF1    /* Cypress ATACB */
+#define USB_SUBCLASS_VENDOR     0xFF    /* Use vendor specific */
+
+/* Storage protocol codes */
+
+#define USB_PROTOCOL_CBI          0x00    /* Control/Bulk/Interrupt */
+#define USB_PROTOCOL_CB           0x01    /* Control/Bulk w/o interrupt */
+#define USB_PROTOCOL_BULK         0x50    /* bulk only */
+#define USB_PROTOCOL_UAS          0x62    /* USB Attached SCSI */
+#define USB_PROTOCOL_USBAT        0x80    /* SCM-ATAPI bridge */
+#define USB_PROTOCOL_EUSB_SDDR09  0x81    /* SCM-SCSI bridge for SDDR-09 */
+#define USB_PROTOCOL_SDDR55       0x82    /* SDDR-55 (made up) */
+
+#define USB_PROTOCOL_DPCM_USB     0xF0    /* Combination CB/SDDR09 */
+#define USB_PROTOCOL_FREECOM      0xF1    /* Freecom */
+#define USB_PROTOCOL_DATAFAB      0xF2    /* Datafab chipsets */
+#define USB_PROTOCOL_JUMPSHOT     0xF3    /* Lexar Jumpshot */
+#define USB_PROTOCOL_ALAUDA       0xF4    /* Alauda chipsets */
+#define USB_PROTOCOL_KARMA        0xF5    /* Rio Karma */
+#define USB_PROTOCOL_VENDOR       0xFF    /* Use vendor specific */
+
+/* Corresponding constants from scsi.h - Inquiry defines, DeviceType field. */
+
+#define USBSTOR_SCSI_DEVICE_TYPE_DIRECT         0x00  /* disks */
+#define USBSTOR_SCSI_DEVICE_TYPE_SEQUENTIAL     0x01  /* tapes */
+#define USBSTOR_SCSI_DEVICE_TYPE_PRINTER        0x02  /* printers */
+#define USBSTOR_SCSI_DEVICE_TYPE_PROCESSOR      0x03  /* scanners, printers, etc */
+#define USBSTOR_SCSI_DEVICE_TYPE_WORM           0x04  /* worms */
+#define USBSTOR_SCSI_DEVICE_TYPE_CDROM          0x05  /* cdroms */
+#define USBSTOR_SCSI_DEVICE_TYPE_SCANNER        0x06  /* scanners */
+#define USBSTOR_SCSI_DEVICE_TYPE_OPTICAL        0x07  /* optical disks */
+#define USBSTOR_SCSI_DEVICE_TYPE_MEDIA_CHANGER  0x08  /* jukebox */
+#define USBSTOR_SCSI_DEVICE_TYPE_UNKNOWN        0x1F 
+
+#define USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH  0x10000
 
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
@@ -27,11 +85,83 @@
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 
+//
+// UFI INQUIRY command response
+//
+typedef struct
+{
+    UCHAR DeviceType;                                                // device type
+    UCHAR RMB;                                                       // removable media bit
+    UCHAR Version;                                                   // contains version 0x00
+    UCHAR Format;                                                    // response format
+    UCHAR Length;                                                    // additional length
+    UCHAR Reserved[3];                                               // reserved
+    UCHAR Vendor[8];                                                 // vendor identification string
+    UCHAR Product[16];                                               // product identification string
+    UCHAR Revision[4];                                               // product revision code
+} UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
+
+C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
+
+#include <pshpack1.h>
+
+#define CBW_SIGNATURE 0x43425355
+#define CSW_SIGNATURE 0x53425355
+
+typedef struct
+{
+   ULONG Signature;                                                 // CBW signature
+   ULONG Tag;                                                       // CBW Tag of operation
+   ULONG DataTransferLength;                                        // data transfer length
+   UCHAR Flags;                                                     // CBW Flags endpoint direction
+   UCHAR LUN;                                                       // lun unit
+   UCHAR CommandBlockLength;                                        // Command block length
+   UCHAR CommandBlock[16];
+} CBW, *PCBW;
+
+C_ASSERT(sizeof(CBW) == 31);
+
+#define CSW_STATUS_COMMAND_PASSED 0x00
+#define CSW_STATUS_COMMAND_FAILED 0x01
+#define CSW_STATUS_PHASE_ERROR    0x02
+
+typedef struct
+{
+    ULONG Signature;                                                 // CSW signature
+    ULONG Tag;                                                       // CSW tag
+    ULONG DataResidue;                                               // CSW data transfer diff
+    UCHAR Status;                                                    // CSW status
+} CSW, *PCSW;
+
+typedef union _USBSTOR_BULK_ONLY_BUFFER
+{
+    struct
+    {
+        CBW Cbw;
+        UCHAR Pad1[512 - sizeof(CBW)];
+    };
+    struct
+    {
+        CSW Csw;
+        UCHAR Pad2[512 - sizeof(CSW)];
+    };
+} USBSTOR_BULK_ONLY_BUFFER, *PUSBSTOR_BULK_ONLY_BUFFER;
+
+C_ASSERT(sizeof(USBSTOR_BULK_ONLY_BUFFER) == 512);
+
 typedef struct __COMMON_DEVICE_EXTENSION__
 {
     BOOLEAN IsFDO;
 
 }USBSTOR_COMMON_DEVICE_EXTENSION, *PUSBSTOR_COMMON_DEVICE_EXTENSION;
+
+#define USBSTOR_FDO_FLAGS_TRANSFER_FINISHED  0x00000002
+#define USBSTOR_FDO_FLAGS_NEED_SENSE_REQUEST 0x00000004
+#define USBSTOR_FDO_FLAGS_DEVICE_RESETTING   0x00000008
+#define USBSTOR_FDO_FLAGS_DEVICE_ERROR       0x00000010
+
+#define USBSTOR_DRIVER_FLAGS_BULKONLY        0x00000001
+#define USBSTOR_DRIVER_FLAGS_UNKNOWN         0x00000003
 
 typedef struct
 {
@@ -49,18 +179,34 @@ typedef struct
     UCHAR BulkInPipeIndex;                                                               // bulk in pipe index
     UCHAR BulkOutPipeIndex;                                                              // bulk out pipe index
     UCHAR MaxLUN;                                                                        // max lun for device
-    PDEVICE_OBJECT ChildPDO[16];                                                         // max 16 child pdo devices
+    PDEVICE_OBJECT ChildPDO[USB_MAXCHILDREN];                                            // max 15 child pdo devices
     KSPIN_LOCK IrpListLock;                                                              // irp list lock
     LIST_ENTRY IrpListHead;                                                              // irp list head
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
     BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
-    PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
+    PSCSI_REQUEST_BLOCK CurrentSrb;                                                       // stores the current active SRB
     KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
     PSCSI_REQUEST_BLOCK LastTimerActiveSrb;                                              // last timer tick active srb
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
     ULONG InstanceCount;                                                                 // pdo instance count
+    PIRP CurrentIrp;
+    struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
+    SCSI_REQUEST_BLOCK SenseSrb;
+    CDB CurrentCdb;
+    ULONG SrbTimeOutValue;
+    ULONG RetryCount;
+    USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
+    PIO_WORKITEM ResetDeviceWorkItem;
+    ULONG Flags;
+    ULONG DriverFlags;
+    KSPIN_LOCK StorSpinLock;
+    KEVENT TimeOutEvent;
+    SYSTEM_POWER_STATE SystemState;
+    DEVICE_POWER_STATE DeviceState;
+    PIRP CurrentPowerIrp;
+    KEVENT PowerEvent;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -68,7 +214,7 @@ typedef struct
     USBSTOR_COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
-    PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    UFI_INQUIRY_RESPONSE InquiryData;                                                    // USB SCSI inquiry data
     PUCHAR FormatData;                                                                   // USB SCSI Read Format Capacity Data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
@@ -85,33 +231,7 @@ typedef struct
 #define USB_BULK_GET_MAX_LUN             0xFE
 #define USB_BULK_RESET_DEVICE             0xFF
 
-#include <pshpack1.h>
-typedef struct
-{
-    ULONG Signature;                                                 // CBW signature
-    ULONG Tag;                                                       // CBW Tag of operation
-    ULONG DataTransferLength;                                        // data transfer length
-    UCHAR Flags;                                                     // CBW Flags endpoint direction
-    UCHAR LUN;                                                       // lun unit
-    UCHAR CommandBlockLength;                                        // Command block length
-    UCHAR CommandBlock[16];
-}CBW, *PCBW;
-
-C_ASSERT(sizeof(CBW) == 31);
-
-
-#define CBW_SIGNATURE 0x43425355
-#define CSW_SIGNATURE 0x53425355
-
 #define MAX_LUN 0xF
-
-typedef struct
-{
-    ULONG Signature;                                                 // CSW signature
-    ULONG Tag;                                                       // CSW tag
-    ULONG DataResidue;                                               // CSW data transfer diff
-    UCHAR Status;                                                    // CSW status
-}CSW, *PCSW;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -130,24 +250,6 @@ typedef struct
 C_ASSERT(sizeof(UFI_INQUIRY_CMD) == 12);
 
 #define UFI_INQUIRY_CMD_LEN 0x6
-
-//
-// UFI INQUIRY command response
-//
-typedef struct
-{
-    UCHAR DeviceType;                                                // device type
-    UCHAR RMB;                                                       // removable media bit
-    UCHAR Version;                                                   // contains version 0x00
-    UCHAR Format;                                                    // response format
-    UCHAR Length;                                                    // additional length
-    UCHAR Reserved[3];                                               // reserved
-    UCHAR Vendor[8];                                                 // vendor identification string
-    UCHAR Product[16];                                               // product identification string
-    UCHAR Revision[4];                                               // product revision code
-}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
-
-C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -348,6 +450,12 @@ USBSTOR_FdoHandlePnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp);
 
+NTSTATUS
+NTAPI
+USBSTOR_FdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
 //---------------------------------------------------------------------
 //
 // pdo.c routines
@@ -361,6 +469,12 @@ NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR LUN);
+
+NTSTATUS
+NTAPI
+USBSTOR_PdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 //---------------------------------------------------------------------
 //
@@ -405,7 +519,7 @@ USBSTOR_SyncForwardIrpCompletionRoutine(
     PVOID Context);
 
 NTSTATUS
-USBSTOR_ResetDevice(
+USBSTOR_BulkResetDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension);
 
@@ -437,7 +551,7 @@ USBSTOR_GetPipeHandles(
 //
 // scsi.c routines
 //
-NTSTATUS
+VOID
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -445,21 +559,15 @@ USBSTOR_HandleExecuteSCSI(
 
 NTSTATUS
 NTAPI
-USBSTOR_CSWCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Ctx);
+USBSTOR_CswTransfer(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    PIRP Irp);
 
 NTSTATUS
-USBSTOR_SendCBW(
-    PIRP_CONTEXT Context,
+NTAPI
+USBSTOR_IssueRequestSense(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension,
     PIRP Irp);
-
-VOID
-USBSTOR_SendCSW(
-    PIRP_CONTEXT Context,
-    PIRP Irp);
-
 
 //---------------------------------------------------------------------
 //
@@ -509,18 +617,6 @@ USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 VOID
-NTAPI
-ErrorHandlerWorkItemRoutine(
-	PVOID Context);
-
-VOID
-NTAPI
-ResetHandlerWorkItemRoutine(
-    PVOID Context);
-
-
-
-VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject);
 
@@ -531,12 +627,6 @@ USBSTOR_QueueTerminateRequest(
 
 /* error.c */
 NTSTATUS
-USBSTOR_GetEndpointStatus(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN UCHAR bEndpointAddress,
-    OUT PUSHORT Value);
-
-NTSTATUS
 USBSTOR_ResetPipeWithHandle(
     IN PDEVICE_OBJECT DeviceObject,
     IN USBD_PIPE_HANDLE PipeHandle);
@@ -545,6 +635,17 @@ VOID
 NTAPI
 USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
-     PVOID Context);
+    PVOID Context);
+
+VOID
+NTAPI
+USBSTOR_BulkQueueResetPipe(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension);
+
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension, 
+    PPDO_DEVICE_EXTENSION PDODeviceExtension);
 
 #endif /* _USBSTOR_H_ */

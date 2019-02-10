@@ -132,8 +132,9 @@ USBSTOR_FdoHandleRemoveDevice(
 
     DPRINT("Handling FDO removal %p\n", DeviceObject);
 
-    /* FIXME: wait for devices finished processing */
-    for(Index = 0; Index < 16; Index++)
+    //FIXME RemoveLock
+
+    for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (DeviceExtension->ChildPDO[Index] != NULL)
         {
@@ -144,6 +145,7 @@ USBSTOR_FdoHandleRemoveDevice(
 
     /* Send the IRP down the stack */
     IoSkipCurrentIrpStackLocation(Irp);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 
     /* Detach from the device stack */
@@ -164,6 +166,7 @@ USBSTOR_FdoHandleStartDevice(
     PUSB_INTERFACE_DESCRIPTOR InterfaceDesc;
     NTSTATUS Status;
     UCHAR Index = 0;
+    PIO_WORKITEM WorkItem;
 
     //
     // forward irp to lower device
@@ -176,6 +179,17 @@ USBSTOR_FdoHandleStartDevice(
         //
         DPRINT1("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);
         return Status;
+    }
+
+    if (!DeviceExtension->ResetDeviceWorkItem)
+    {
+        WorkItem = IoAllocateWorkItem(DeviceObject);
+        DeviceExtension->ResetDeviceWorkItem = WorkItem;
+
+        if (!WorkItem)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
     //
@@ -211,22 +225,33 @@ USBSTOR_FdoHandleStartDevice(
     //
     ASSERT(InterfaceDesc->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
+    ASSERT(InterfaceDesc->bInterfaceClass == USB_CLASS_MASS_STORAGE);
 
     DPRINT("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
-    if (InterfaceDesc->bInterfaceProtocol != 0x50)
-    {
-        DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
-        return STATUS_NOT_SUPPORTED;
-    }
 
-    if (InterfaceDesc->bInterfaceSubClass != 0x06)
+    if (InterfaceDesc->bInterfaceClass == USB_CLASS_MASS_STORAGE &&
+        InterfaceDesc->bInterfaceProtocol == USB_PROTOCOL_BULK &&
+        !DeviceExtension->DriverFlags)
     {
-        //
-        // FIXME: need to pad CDBs to 12 byte
-        // mode select commands must be translated from 1AH / 15h to 5AH / 55h
-        //
-        DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
-        return STATUS_NOT_IMPLEMENTED;
+        DeviceExtension->DriverFlags = USBSTOR_DRIVER_FLAGS_BULKONLY;
+    }
+    else
+    {
+        if (InterfaceDesc->bInterfaceProtocol != USB_PROTOCOL_BULK)
+        {
+            DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
+            return STATUS_NOT_SUPPORTED;
+        }
+
+        if (InterfaceDesc->bInterfaceSubClass != USB_SUBCLASS_SCSI)
+        {
+            //
+            // FIXME: need to pad CDBs to 12 byte
+            // mode select commands must be translated from 1AH / 15h to 5AH / 55h
+            //
+            DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
     }
 
     //
@@ -254,6 +279,11 @@ USBSTOR_FdoHandleStartDevice(
         DPRINT1("USBSTOR_FdoHandleStartDevice no pipe handles %x\n", Status);
         return Status;
     }
+
+    //
+    // start the timer
+    //
+    IoStartTimer(DeviceObject);
 
     //
     // get num of lun which are supported
@@ -312,13 +342,6 @@ USBSTOR_FdoHandleStartDevice(
         return Status;
     }
 #endif
-
-
-    //
-    // start the timer
-    //
-    //IoStartTimer(DeviceObject);
-
 
     //
     // fdo is now initialized
@@ -404,14 +427,18 @@ USBSTOR_FdoHandlePnp(
            // we can if nothing is pending
            //
            if (DeviceExtension->IrpPendingCount != 0 ||
-               DeviceExtension->ActiveSrb != NULL)
+               DeviceExtension->CurrentSrb != NULL)
 #else
            if (TRUE)
 #endif
            {
-               /* We have pending requests */
-               DPRINT1("Failing removal/stop request due to pending requests present\n");
-               Status = STATUS_UNSUCCESSFUL;
+               ///* We have pending requests */
+               //DPRINT1("Failing removal/stop request due to pending requests present\n");
+               //Status = STATUS_UNSUCCESSFUL;
+
+               Irp->IoStatus.Status = STATUS_SUCCESS;
+               IoSkipCurrentIrpStackLocation(Irp);
+               return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
            }
            else
            {
@@ -458,4 +485,156 @@ USBSTOR_FdoHandlePnp(
     // done processing
     //
     return Status;
+}
+
+VOID
+NTAPI
+USBSTOR_FdoSetPowerCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR MinorFunction,
+    IN POWER_STATE PowerState,
+    IN PVOID Context,
+    IN PIO_STATUS_BLOCK IoStatus)
+{
+    PDEVICE_OBJECT FdoDevice;
+    PFDO_DEVICE_EXTENSION FdoExtension;
+    PIRP CurrentPowerIrp;
+
+    FdoDevice = Context;
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    CurrentPowerIrp = FdoExtension->CurrentPowerIrp;
+    FdoExtension->CurrentPowerIrp = NULL;
+
+    PoStartNextPowerIrp(CurrentPowerIrp);
+
+    IoCopyCurrentIrpStackLocationToNext(CurrentPowerIrp);
+    IoMarkIrpPending(CurrentPowerIrp);
+
+    PoCallDriver(FdoExtension->LowerDeviceObject, CurrentPowerIrp);
+}
+
+NTSTATUS
+NTAPI
+USBSTOR_FdoSetD0Completion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    NTSTATUS Status;
+    KIRQL OldIrql;
+
+    Status = Irp->IoStatus.Status;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    IoStartNextPacket(DeviceObject, TRUE);
+    KeLowerIrql(OldIrql);
+
+    PoStartNextPowerIrp(Irp);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+USBSTOR_FdoSetPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PFDO_DEVICE_EXTENSION FdoExtension;
+    PIO_STACK_LOCATION IoStack;
+    POWER_STATE_TYPE Type;
+    POWER_STATE State;
+    POWER_STATE NewState;
+    POWER_STATE OldState;
+
+    DPRINT("USBSTOR_FdoSetPower: DeviceObject %p, Irp %p\n", DeviceObject, Irp);
+
+    FdoExtension = DeviceObject->DeviceExtension;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Type = IoStack->Parameters.Power.Type;
+    State = IoStack->Parameters.Power.State;
+
+    switch (Type)
+    {
+        case SystemPowerState:
+        {
+            FdoExtension->SystemState = State.SystemState;
+
+            if (State.SystemState == PowerSystemWorking)
+                NewState.DeviceState = PowerDeviceD0;
+            else
+                NewState.DeviceState = PowerDeviceD3;
+
+            if (FdoExtension->DeviceState != NewState.DeviceState)
+            {
+                FdoExtension->CurrentPowerIrp = Irp;
+
+                DPRINT("USBSTOR_FdoSetPower: State.SystemState - %x\n",
+                       State.SystemState);
+
+                return PoRequestPowerIrp(FdoExtension->PhysicalDeviceObject,
+                                         IRP_MN_SET_POWER,
+                                         NewState,
+                                         USBSTOR_FdoSetPowerCompletion,
+                                         DeviceObject,
+                                         NULL);
+            }
+
+            break;
+        }
+        case DevicePowerState:
+        {
+            OldState.DeviceState = FdoExtension->DeviceState;
+            FdoExtension->DeviceState = State.DeviceState;
+
+            DPRINT("USBSTOR_FdoSetPower: State.DeviceState - %x, OldState.DeviceState - %x\n",
+                   State.DeviceState,
+                   OldState.DeviceState);
+
+            if (OldState.DeviceState == PowerDeviceD0)
+            {
+                if (State.DeviceState > PowerDeviceD0)
+                {
+                    ULONG Key = 0;
+                    IoStartPacket(DeviceObject, Irp, &Key, NULL);
+
+                    KeWaitForSingleObject(&FdoExtension->PowerEvent,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                }
+            }
+            else
+            {
+                if (OldState.DeviceState > PowerDeviceD0 &&
+                    State.DeviceState == PowerDeviceD0)
+                {
+                    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+                    IoSetCompletionRoutine(Irp,
+                                           USBSTOR_FdoSetD0Completion,
+                                           NULL,
+                                           TRUE,
+                                           TRUE,
+                                           TRUE);
+
+                    return PoCallDriver(FdoExtension->LowerDeviceObject, Irp);
+                }
+            }
+
+            break;
+        }
+        default:
+        {
+            ASSERT(FALSE);
+            break;
+        }
+    }
+
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    return PoCallDriver(FdoExtension->LowerDeviceObject, Irp);
 }

@@ -14,6 +14,72 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOLEAN
+NTAPI
+IsRequestValid(PIRP Irp)
+{
+    ULONG TransferLength;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Srb;
+
+    DPRINT("IsRequestValid: ... \n");
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (Srb->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+    {
+        if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) ==
+                             SRB_FLAGS_UNSPECIFIED_DIRECTION)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
+            return FALSE;
+        }
+
+        TransferLength = Srb->DataTransferLength;
+
+        if (Irp->MdlAddress == NULL)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
+            return FALSE;
+        }
+
+        if (TransferLength == 0)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength == 0\n");
+            return FALSE;
+        }
+
+        if (TransferLength > USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Srb->DataTransferLength)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
+            return FALSE;
+        }
+
+        if (Srb->DataBuffer)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
+            return FALSE;
+        }
+
+        if (Irp->MdlAddress)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 NTSTATUS
 USBSTOR_HandleInternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
@@ -32,7 +98,7 @@ USBSTOR_HandleInternalDeviceControl(
     //
     // get request block
     //
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // sanity check
@@ -55,41 +121,28 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT("SRB_FUNCTION_EXECUTE_SCSI\n");
 
-            //
-            // check if request is valid
-            //
-            if (Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+            if (!IsRequestValid(Irp))
             {
-                //
-                // data is transferred with this irp
-                //
-                if ((Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) ||
-                    Request->DataTransferLength == 0 ||
-                    Irp->MdlAddress == NULL)
-                {
-                    //
-                    // invalid parameter
-                    //
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
+                DPRINT1("USBSTOR_HandleInternalDeviceControl: Bad Srb!\n");
+                Status = STATUS_INVALID_PARAMETER;
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
             }
-            else
+
+            if (Request->Cdb[0] == SCSIOP_MODE_SENSE)
             {
-                //
-                // sense buffer request
-                //
-                if (Request->DataTransferLength ||
-                    Request->DataBuffer ||
-                    Irp->MdlAddress)
-                {
-                    //
-                    // invalid parameter
-                    //
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
+                DPRINT("USBSTOR_Scsi: SRB_FUNCTION_EXECUTE_SCSI - FIXME SCSIOP_MODE_SENSE\n");
+                // FIXME Get from registry WriteProtect for StorageDevicePolicies;
+                // L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\StorageDevicePolicies"
+                // QueryTable[0].Name = L"WriteProtect"
             }
+
+            IoStack->Parameters.Others.Argument2 = PDODeviceExtension;
+
+            // mark irp pending
+            IoMarkIrpPending(Irp);
+            Request->SrbStatus = SRB_STATUS_PENDING;
 
             //
             // add the request
@@ -170,12 +223,25 @@ USBSTOR_HandleInternalDeviceControl(
             Status = STATUS_SUCCESS;
             break;
         }
-
         case SRB_FUNCTION_SHUTDOWN:
+        {
+            // handle this case only for current storage stack
+            // for proper storage stack it not need
+            DPRINT1("SRB_FUNCTION_SHUTDOWN - STATUS_SUCCESS FIXME\n");
+            Status = STATUS_SUCCESS;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            break;
+        }
         case SRB_FUNCTION_FLUSH:
+        {
+            DPRINT1("SRB_FUNCTION_FLUSH \n");
+            Status = STATUS_SUCCESS;
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+            break;
+        }
         case SRB_FUNCTION_FLUSH_QUEUE:
         {
-            DPRINT1("SRB_FUNCTION_FLUSH / SRB_FUNCTION_FLUSH_QUEUE / SRB_FUNCTION_SHUTDOWN\n");
+            DPRINT1("SRB_FUNCTION_FLUSH_QUEUE\n");
 
             // HACK: don't flush pending requests
 #if 0       // we really need a proper storage stack
@@ -329,7 +395,7 @@ USBSTOR_HandleQueryProperty(
         //
         // get inquiry data
         //
-        InquiryData = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        InquiryData = &PDODeviceExtension->InquiryData;
         ASSERT(InquiryData);
 
         //
@@ -502,8 +568,8 @@ USBSTOR_HandleQueryProperty(
         //
         AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
         AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = MAXULONG; //FIXME compute some sane value
-        AdapterDescriptor->MaximumPhysicalPages = 25; //FIXME compute some sane value
+        AdapterDescriptor->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+        AdapterDescriptor->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
         AdapterDescriptor->AlignmentMask = 0;
         AdapterDescriptor->AdapterUsesPio = FALSE;
         AdapterDescriptor->AdapterScansDown = FALSE;
@@ -594,8 +660,8 @@ USBSTOR_HandleDeviceControl(
 
         if (Capabilities)
         {
-            Capabilities->MaximumTransferLength = MAXULONG;
-            Capabilities->MaximumPhysicalPages = 25;
+            Capabilities->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+            Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
             Capabilities->SupportedAsynchronousEvents = 0;
             Capabilities->AlignmentMask = 0;
             Capabilities->TaggedQueuing = FALSE;
@@ -628,7 +694,7 @@ USBSTOR_HandleDeviceControl(
         //
         // get inquiry data
         //
-        UFIInquiryResponse = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        UFIInquiryResponse = &PDODeviceExtension->InquiryData;
         ASSERT(UFIInquiryResponse);
 
 
@@ -650,6 +716,8 @@ USBSTOR_HandleDeviceControl(
 
         /* Hack for IoReadPartitionTable call in disk.sys */
         ScsiInquiryData->RemovableMedia = ((ScsiInquiryData->DeviceType != DIRECT_ACCESS_DEVICE) ? ((UFIInquiryResponse->RMB & 0x80) ? 1 : 0) : 0);
+        // should be:
+        //ScsiInquiryData->RemovableMedia = ((ScsiInquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ? ((UFIInquiryResponse->RMB & 0x80) ? 1 : 0) : 0);
 
         ScsiInquiryData->Versions = 0x04;
         ScsiInquiryData->ResponseDataFormat = 0x02;
