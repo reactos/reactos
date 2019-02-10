@@ -1055,6 +1055,9 @@ MainWindowProc(HWND hwnd,
                                    (LPARAM)szProduct);
                     }
                 }
+
+                /* Disable the 'Advanced Controls' menu item */
+                EnableMenuItem(GetMenu(hwnd), IDC_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_GRAYED);
             }
             break;
         }
