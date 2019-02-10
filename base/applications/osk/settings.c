@@ -16,11 +16,12 @@ BOOL LoadDataFromRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwData;
+    DWORD dwShowWarningData, dwLayout;
     DWORD cbData = sizeof(DWORD);
 
-    /* Set the structure member to TRUE */
+    /* Set the structure members to TRUE */
     Globals.bShowWarning = TRUE;
+    Globals.bIsEnhancedKeyboard = TRUE;
 
     /* Open the key, so that we can query it */
     lResult = RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -40,7 +41,7 @@ BOOL LoadDataFromRegistry()
                                L"ShowWarning",
                                0,
                                0,
-                               (BYTE *)&dwData,
+                               (BYTE *)&dwShowWarningData,
                                &cbData);
 
     if (lResult != ERROR_SUCCESS)
@@ -51,7 +52,25 @@ BOOL LoadDataFromRegistry()
     }
 
     /* Load the data value (it can be either FALSE or TRUE depending on the data itself) */
-    Globals.bShowWarning = (dwData != 0);
+    Globals.bShowWarning = (dwShowWarningData != 0);
+
+    /* Query the key */
+    lResult = RegQueryValueExW(hKey,
+                               L"IsEnhancedKeyboard",
+                               0,
+                               0,
+                               (BYTE *)&dwLayout,
+                               &cbData);
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Load the dialog layout value */
+    Globals.bIsEnhancedKeyboard = (dwLayout != 0);
     
     /* If we're here then we succeed, close the key and return TRUE */
     RegCloseKey(hKey);
@@ -62,7 +81,7 @@ BOOL SaveDataToRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwData;
+    DWORD dwShowWarningData, dwLayout;
 
     /* If no key has been made, create one */
     lResult = RegCreateKeyExW(HKEY_CURRENT_USER,
@@ -82,14 +101,31 @@ BOOL SaveDataToRegistry()
     }
 
     /* The data value of the subkey will be appended to the warning dialog switch */
-    dwData = Globals.bShowWarning;
+    dwShowWarningData = Globals.bShowWarning;
 
     lResult = RegSetValueExW(hKey,
                              L"ShowWarning",
                              0,
                              REG_DWORD,
-                             (BYTE *)&dwData,
-                             sizeof(dwData));
+                             (BYTE *)&dwShowWarningData,
+                             sizeof(dwShowWarningData));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* The value will be appended to the layout dialog */
+    dwLayout = Globals.bIsEnhancedKeyboard;
+
+    lResult = RegSetValueExW(hKey,
+                             L"IsEnhancedKeyboard",
+                             0,
+                             REG_DWORD,
+                             (BYTE *)&dwLayout,
+                             sizeof(dwLayout));
 
     if (lResult != ERROR_SUCCESS)
     {
