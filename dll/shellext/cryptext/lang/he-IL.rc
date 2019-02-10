@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hebrew resource translation
+ * COPYRIGHT:   Copyright 2019 Baruch Rutman (peterooch at gmail dot com)
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "קובץ זה הוא לא קובץ אישורי הצפנה תקין."
+    IDS_CER_FILE "קובץ אישורי הצפנה"
+END

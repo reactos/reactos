@@ -13,6 +13,6 @@
 #include <wincrypt.h>
 #include <winuser.h>
 #include <cryptuiapi.h>
-
+#include "resource.h"
 
 #endif /* CRYPTEXT_PRECOMP_H */

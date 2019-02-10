@@ -8,6 +8,7 @@ list(APPEND SOURCE
 add_library(cryptext SHARED
     ${SOURCE}
     cryptext.spec
+    cryptext.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cryptext.def)
 
 set_module_type(cryptext win32dll UNICODE)
