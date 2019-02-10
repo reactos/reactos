@@ -632,7 +632,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
 {
     UINT ControlCount = 0, Index;
     LPMIXERCONTROL Control = NULL;
-    MIXERCONTROLDETAILS_UNSIGNED uDetails;
+    PMIXERCONTROLDETAILS_UNSIGNED puDetails = NULL;
     MIXERCONTROLDETAILS_BOOLEAN bDetails;
     PSET_VOLUME_CONTEXT Context = (PSET_VOLUME_CONTEXT)Ctx;
 
@@ -650,6 +650,10 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
         return FALSE;
     }
 
+    puDetails = HeapAlloc(GetProcessHeap(), 0, Line->cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
+    if (puDetails == NULL)
+        return FALSE;
+
     /* now go through all controls and compare control ids */
     for (Index = 0; Index < ControlCount; Index++)
     {
@@ -657,13 +661,63 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
         {
             if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
             {
-                DWORD Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+                DWORD LineOffset, volumePosition, balancePosition;
+                DWORD volumeStep, balanceStep;
 
-                /* set up details */
-                uDetails.dwValue = ((VOLUME_MAX - Context->SliderPos) * Step) + Control[Index].Bounds.dwMinimum;
+                LineOffset = Context->SliderPos;
+
+                volumePosition = (DWORD)SendDlgItemMessage(Preferences.MixerWindow->hWnd, LineOffset * IDC_LINE_SLIDER_VERT, TBM_GETPOS, 0, 0);
+                volumeStep = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+
+                if (Line->cChannels == 1)
+                {
+                    /* set up details */
+                    puDetails[0].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+                }
+                else if (Line->cChannels == 2)
+                {
+                    balancePosition = (DWORD)SendDlgItemMessage(Preferences.MixerWindow->hWnd, LineOffset * IDC_LINE_SLIDER_HORZ, TBM_GETPOS, 0, 0);
+                    if (balancePosition == BALANCE_CENTER)
+                    {
+                        puDetails[0].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+                        puDetails[1].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+                    }
+                    else if (balancePosition == BALANCE_LEFT)
+                    {
+                        puDetails[0].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+                        puDetails[1].dwValue = Control[Index].Bounds.dwMinimum;
+                    }
+                    else if (balancePosition == BALANCE_RIGHT)
+                    {
+                        puDetails[0].dwValue = Control[Index].Bounds.dwMinimum;
+                        puDetails[1].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+                    }
+                    else if (balancePosition < BALANCE_CENTER) // Left
+                    {
+                        puDetails[0].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+
+                        balanceStep = (puDetails[0].dwValue - Control[Index].Bounds.dwMinimum) / (BALANCE_STEPS / 2);
+
+                        puDetails[1].dwValue = (balancePosition * balanceStep) + Control[Index].Bounds.dwMinimum;
+                    }
+                    else if (balancePosition > BALANCE_CENTER) // Right
+                    {
+                        puDetails[1].dwValue = ((VOLUME_MAX - volumePosition) * volumeStep) + Control[Index].Bounds.dwMinimum;
+
+                        balanceStep = (puDetails[1].dwValue - Control[Index].Bounds.dwMinimum) / (BALANCE_STEPS / 2);
+
+                        puDetails[0].dwValue = ((BALANCE_RIGHT - balancePosition) * balanceStep) + Control[Index].Bounds.dwMinimum;
+                    }
+                }
+                else
+                {
+                    SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)puDetails);
+
+                    /* FIXME */
+                }
 
                 /* set volume */
-                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&uDetails);
+                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)puDetails);
 
                 /* done */
                 break;
@@ -683,12 +737,10 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
                 break;
             }
         }
-        else
-        {
-            /* FIXME: implement left - right channel switch support */
-            assert(0);
-        }
     }
+
+    if (puDetails != NULL)
+        HeapFree(GetProcessHeap(), 0, puDetails);
 
     /* free controls */
     HeapFree(GetProcessHeap(), 0, Control);
@@ -997,7 +1049,7 @@ MainWindowProc(HWND hwnd,
                     if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
                     {
                         /* setup context */
-                        Context.SliderPos = HIWORD(wParam);
+                        Context.SliderPos = LineOffset;
                         Context.bVertical = TRUE;
                         Context.bSwitch = FALSE;
 
@@ -1029,7 +1081,26 @@ MainWindowProc(HWND hwnd,
             switch (LOWORD(wParam))
             {
                 case TB_THUMBTRACK:
-                    /* FIXME */
+                    /* get dialog item ctrl */
+                    CtrlID = GetDlgCtrlID((HWND)lParam);
+
+                    /* get line index */
+                    LineOffset = CtrlID / IDC_LINE_SLIDER_HORZ;
+
+                    /* compute window id of line name static control */
+                    CtrlID = LineOffset * IDC_LINE_NAME;
+
+                    /* get line name */
+                    if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                    {
+                        /* setup context */
+                        Context.SliderPos = LineOffset;
+                        Context.bVertical = TRUE;
+                        Context.bSwitch = FALSE;
+
+                        /* set volume */
+                        SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                    }
                     break;
 
                 case TB_ENDTRACK:
