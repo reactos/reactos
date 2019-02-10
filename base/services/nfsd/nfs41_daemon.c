@@ -38,7 +38,8 @@
 #include "upcall.h"
 #include "util.h"
 
-#define MAX_NUM_THREADS 128
+//#define MAX_NUM_THREADS 128
+#define MAX_NUM_THREADS 1
 DWORD NFS41D_VERSION = 0;
 
 #ifndef __REACTOS__
@@ -123,6 +124,7 @@ static unsigned int WINAPI thread_main(void *args)
         }
 
         if (upcall.opcode == NFS41_SHUTDOWN) {
+            DbgPrint("Shutdown\n");
             printf("Shutting down..\n");
             exit(0);
         }
@@ -155,6 +157,7 @@ write_downcall:
 #ifndef STANDALONE_NFSD
 VOID ServiceStop()
 {
+   DbgPrint("Setting stop event\n");
    if (stop_event)
       SetEvent(stop_event);
 }
@@ -333,8 +336,17 @@ static int getdomainname()
                             (socklen_t)ptr->ai_addrlen, hostname, NI_MAXHOST, 
                             servInfo, NI_MAXSERV, NI_NAMEREQD);
                 if (status)
+#if 0
                     dprintf(1, "getnameinfo failed %d\n", WSAGetLastError());
                 else {
+#else
+                {
+                    dprintf(1, "getnameinfo failed %d, forcing name\n", WSAGetLastError());
+                    memcpy(hostname, "reactos.home", sizeof("reactos.home"));
+                    status = 0;
+                }
+                {
+#endif
                     size_t i, len = strlen(hostname);
                     char *p = hostname;
                     dprintf(1, "getdomainname: hostname %s %d\n", hostname, len);
@@ -486,6 +498,8 @@ VOID ServiceStart(DWORD argc, LPTSTR *argv)
     }
 
 #ifndef STANDALONE_NFSD
+    DbgPrint("WaitEvent\n");
+
     stop_event = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (stop_event == NULL)
       goto out_pipe;
@@ -504,6 +518,7 @@ VOID ServiceStart(DWORD argc, LPTSTR *argv)
     // report the status to the service control manager.
     if (!ReportStatusToSCMgr(SERVICE_RUNNING, NO_ERROR, 0))
         goto out_pipe;
+    DbgPrint("Starting wait\n");
     WaitForSingleObject(stop_event, INFINITE);
 #else
     //This can be changed to waiting on an array of handles and using waitformultipleobjects
