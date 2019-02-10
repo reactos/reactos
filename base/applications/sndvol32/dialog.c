@@ -573,7 +573,7 @@ UpdateDialogLineSwitchControl(
     WCHAR LineName[MIXER_LONG_NAME_CHARS];
 
     /* find the index of this line */
-    for(Index = 0; Index < PrefContext->Count; Index++)
+    for (Index = 0; Index < PrefContext->Count; Index++)
     {
         /* get id */
         wID = (Index + 1) * IDC_LINE_NAME;
@@ -621,7 +621,7 @@ UpdateDialogLineSliderControl(
     WCHAR LineName[MIXER_LONG_NAME_CHARS];
 
     /* find the index of this line */
-    for(Index = 0; Index < PrefContext->Count; Index++)
+    for (Index = 0; Index < PrefContext->Count; Index++)
     {
         /* get id */
         wID = (Index + 1) * IDC_LINE_NAME;

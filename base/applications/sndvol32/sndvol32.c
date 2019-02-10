@@ -94,7 +94,7 @@ PrefDlgAddLine(PSND_MIXER Mixer,
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
 
     UNREFERENCED_PARAMETER(Mixer);
-	UNREFERENCED_PARAMETER(DisplayControls);
+    UNREFERENCED_PARAMETER(DisplayControls);
 
     switch (Line->dwComponentType)
     {
@@ -174,7 +174,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
     UINT i;
 
     UNREFERENCED_PARAMETER(Mixer);
-	UNREFERENCED_PARAMETER(LineID);
+    UNREFERENCED_PARAMETER(LineID);
 
     if (Line->cControls != 0)
     {
@@ -877,23 +877,23 @@ MainWindowProc(HWND hwnd,
                     /* check if the message is from the line switch */
                     if (HIWORD(wParam) == BN_CLICKED && (CtrlID % IDC_LINE_SWITCH == 0))
                     {
-                         /* compute line offset */
-                         LineOffset = CtrlID / IDC_LINE_SWITCH;
+                        /* compute line offset */
+                        LineOffset = CtrlID / IDC_LINE_SWITCH;
 
                         /* compute window id of line name static control */
                         CtrlID = LineOffset * IDC_LINE_NAME;
 
-                       /* get line name */
-                       if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
-                       {
-                           /* setup context */
-                           Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-                           Context.bVertical = FALSE;
-                           Context.bSwitch = TRUE;
+                        /* get line name */
+                        if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                        {
+                            /* setup context */
+                            Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+                            Context.bVertical = FALSE;
+                            Context.bSwitch = TRUE;
 
-                           /* set volume */
-                           SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
-                       }
+                            /* set volume */
+                            SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                        }
                     }
                 }
 
