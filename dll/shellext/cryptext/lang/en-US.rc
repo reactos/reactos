@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     English (United States) resource translation
+ * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "This is not a valid certificate file."
+    IDS_CER_FILE "Certificate File"
+END

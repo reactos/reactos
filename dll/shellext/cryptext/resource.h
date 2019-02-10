@@ -1,0 +1,2 @@
+#define IDS_INVALIDFILE 100
+#define IDS_CER_FILE    101

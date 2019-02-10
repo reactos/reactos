@@ -7,12 +7,14 @@
 
 #include "precomp.h"
 
+HINSTANCE g_hInstance;
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
+        g_hInstance = hInstance;
         DisableThreadLibraryCalls(hInstance);
         break;
     }
@@ -29,15 +31,24 @@ VOID WINAPI CryptExtOpenCERW(HWND hWnd, HINSTANCE hInst, LPCWSTR file, DWORD nCm
         if (CryptQueryObject(CERT_QUERY_OBJECT_FILE, file, CERT_QUERY_CONTENT_FLAG_CERT, CERT_QUERY_FORMAT_FLAG_ALL,
                              0, NULL, NULL, NULL, NULL, NULL, (CONST VOID**)&pvContext))
         {
-            CRYPTUI_VIEWCERTIFICATE_STRUCT CertViewInfo = {0};
+            CRYPTUI_VIEWCERTIFICATE_STRUCTW CertViewInfo = {0};
             CertViewInfo.dwSize = sizeof(CertViewInfo);
             CertViewInfo.pCertContext = pvContext;
-            CryptUIDlgViewCertificate(&CertViewInfo, NULL);
+            CryptUIDlgViewCertificateW(&CertViewInfo, NULL);
             CertFreeCertificateContext(pvContext);
         }
         else
         {
-            MessageBoxW(NULL, L"This is not a valid certificate", NULL, MB_OK);
+            WCHAR Message[MAX_PATH];
+
+            if (LoadStringW(g_hInstance, IDS_INVALIDFILE, Message, MAX_PATH))
+            {
+                MessageBoxW(NULL, Message, NULL, MB_OK);
+            }
+            else
+            {
+                MessageBoxW(NULL, L"This is not a valid certificate file.", NULL, MB_OK);
+            }
         }
     }
 }
