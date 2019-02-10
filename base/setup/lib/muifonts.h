@@ -247,7 +247,6 @@ MUI_SUBFONT KoreanFonts[] =
     { L"Courier",         L"FreeMono" },
     { L"Courier New",     L"FreeMono" },
     { L"Fixedsys",        L"Fixedsys Excelsior 3.01-L2" },
-    { L"Franklin Gothic Medium", L"Droid Sans Fallback" },
     { L"Helv",            L"Droid Sans Fallback" },
     { L"Helvetica",       L"Liberation Sans" },
     { L"Lucida Console",  L"DejaVu Sans Mono" },
