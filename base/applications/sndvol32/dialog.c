@@ -414,23 +414,31 @@ EnumConnectionsCallback(
     UINT ControlCount = 0, Index;
     LPMIXERCONTROL Control = NULL;
     HWND hDlgCtrl;
+    PMIXERCONTROLDETAILS_UNSIGNED pVolumeDetails = NULL;
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
 
-    if (Line->cControls != 0)
-    {
-      /* get line name */
-      if (SndMixerGetLineName(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, TRUE) == -1)
-      {
-          /* failed to get line name */
-          LineName[0] = L'\0';
-      }
+    if (Line->cControls == 0)
+        return TRUE;
 
-      /* check if line is found in registry settings */
-      if (ReadLineConfig(PrefContext->DeviceName,
-                         LineName,
-                         Line->szName,
-                         &Flags))
-      {
+    /* get line name */
+    if (SndMixerGetLineName(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, LineName, MIXER_LONG_NAME_CHARS, TRUE) == -1)
+    {
+        /* failed to get line name */
+        LineName[0] = L'\0';
+    }
+
+    pVolumeDetails = HeapAlloc(GetProcessHeap(),
+                               0,
+                               Line->cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
+    if (pVolumeDetails == NULL)
+        goto done;
+
+    /* check if line is found in registry settings */
+    if (ReadLineConfig(PrefContext->DeviceName,
+                       LineName,
+                       Line->szName,
+                       &Flags))
+    {
           /* is it selected */
           if (Flags != 0x4)
           {
@@ -462,7 +470,7 @@ EnumConnectionsCallback(
                           MIXERCONTROLDETAILS_BOOLEAN Details;
 
                           /* get volume control details */
-                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
+                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
                           {
                               /* update dialog control */
                               wID = (PrefContext->Count + 1) * IDC_LINE_SWITCH;
@@ -483,18 +491,60 @@ EnumConnectionsCallback(
                       }
                       else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
                       {
-                          MIXERCONTROLDETAILS_UNSIGNED Details;
-
                           /* get volume control details */
-                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
+                          if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)pVolumeDetails) != -1)
                           {
                               /* update dialog control */
-                              DWORD Position, Step;
+                              DWORD volumePosition, volumeStep, maxVolume, i;
+                              DWORD balancePosition, balanceStep;
 
-                              Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
-                              Position = (Details.dwValue - Control[Index].Bounds.dwMinimum) / Step;
+                              volumeStep = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
 
-                              /* FIXME support left - right slider */
+                              maxVolume = 0;
+                              for (i = 0; i < Line->cChannels; i++)
+                              {
+                                  if (pVolumeDetails[i].dwValue > maxVolume)
+                                      maxVolume = pVolumeDetails[i].dwValue;
+                              }
+
+                              volumePosition = (maxVolume - Control[Index].Bounds.dwMinimum) / volumeStep;
+
+                              if (Line->cChannels == 1)
+                              {
+                                  balancePosition = BALANCE_CENTER;
+                              }
+                              else if (Line->cChannels == 2)
+                              {
+                                  if (pVolumeDetails[0].dwValue == pVolumeDetails[1].dwValue)
+                                  {
+                                      balancePosition = BALANCE_CENTER;
+                                  }
+                                  else if (pVolumeDetails[0].dwValue == Control[Index].Bounds.dwMinimum)
+                                  {
+                                      balancePosition = BALANCE_RIGHT;
+                                  }
+                                  else if (pVolumeDetails[1].dwValue == Control[Index].Bounds.dwMinimum)
+                                  {
+                                      balancePosition = BALANCE_LEFT;
+                                  }
+                                  else
+                                  {
+                                      balanceStep = (maxVolume - Control[Index].Bounds.dwMinimum) / (BALANCE_STEPS / 2);
+
+                                      if (pVolumeDetails[0].dwValue < pVolumeDetails[1].dwValue)
+                                      {
+                                          balancePosition = (pVolumeDetails[0].dwValue - Control[Index].Bounds.dwMinimum) / balanceStep;
+                                          balancePosition = BALANCE_RIGHT - balancePosition;
+                                      }
+                                      else if (pVolumeDetails[1].dwValue < pVolumeDetails[0].dwValue)
+                                      {
+                                          balancePosition = (pVolumeDetails[1].dwValue - Control[Index].Bounds.dwMinimum) / balanceStep;
+                                          balancePosition = BALANCE_LEFT + balancePosition;
+                                      }
+                                  }
+                              }
+
+                              /* Set the volume trackbar */
                               wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
 
                               /* get dialog control */
@@ -504,10 +554,29 @@ EnumConnectionsCallback(
                               {
                                   /* check state */
                                   LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
-                                  if (OldPosition != Position)
+
+                                  if (OldPosition != (VOLUME_MAX - volumePosition))
                                   {
                                       /* update control state */
-                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, VOLUME_MAX - Position);
+                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, VOLUME_MAX - volumePosition);
+                                  }
+                              }
+
+                              /* Set the balance trackbar */
+                              wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
+
+                              /* get dialog control */
+                              hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+                              if (hDlgCtrl != NULL)
+                              {
+                                  /* check state */
+                                  LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+
+                                  if (OldPosition != balancePosition)
+                                  {
+                                      /* update control state */
+                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, balancePosition);
                                   }
                               }
                           }
@@ -521,8 +590,13 @@ EnumConnectionsCallback(
               /* increment dialog count */
               PrefContext->Count++;
           }
-      }
     }
+
+done:
+    /* Free the volume details */
+    if (pVolumeDetails)
+        HeapFree(GetProcessHeap(), 0, pVolumeDetails);
+
     return TRUE;
 }
 
@@ -611,7 +685,6 @@ VOID
 UpdateDialogLineSliderControl(
     PPREFERENCES_CONTEXT PrefContext,
     LPMIXERLINE Line,
-    DWORD dwControlID,
     DWORD dwDialogID,
     DWORD Position)
 {
@@ -648,7 +721,7 @@ UpdateDialogLineSliderControl(
                 if (OldPosition != Position)
                 {
                     /* update control state */
-                    SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position + Index);
+                    SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, Position);
                 }
             }
             break;

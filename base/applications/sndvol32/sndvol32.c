@@ -663,7 +663,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
                 uDetails.dwValue = ((VOLUME_MAX - Context->SliderPos) * Step) + Control[Index].Bounds.dwMinimum;
 
                 /* set volume */
-                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&uDetails);
+                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&uDetails);
 
                 /* done */
                 break;
@@ -677,7 +677,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
                 bDetails.fValue = Context->SliderPos;
 
                 /* set volume */
-                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&bDetails);
+                SndMixerSetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&bDetails);
 
                 /* done */
                 break;
@@ -703,6 +703,7 @@ BOOL
 CALLBACK
 MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context)
 {
+    PMIXERCONTROLDETAILS_UNSIGNED pVolumeDetails = NULL;
     UINT ControlCount = 0, Index;
     LPMIXERCONTROL Control = NULL;
 
@@ -720,6 +721,12 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
         return FALSE;
     }
 
+    pVolumeDetails = HeapAlloc(GetProcessHeap(),
+                               0,
+                               Line->cChannels * sizeof(MIXERCONTROLDETAILS_UNSIGNED));
+    if (pVolumeDetails == NULL)
+        goto done;
+
     /* now go through all controls and compare control ids */
     for (Index = 0; Index < ControlCount; Index++)
     {
@@ -730,7 +737,7 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                 MIXERCONTROLDETAILS_BOOLEAN Details;
 
                 /* get volume control details */
-                if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
+                if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
                 {
                     /* update dialog control */
                     UpdateDialogLineSwitchControl(&Preferences, Line, Details.fValue);
@@ -738,24 +745,74 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
             }
             else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
             {
-                MIXERCONTROLDETAILS_UNSIGNED Details;
-
                 /* get volume control details */
-                if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&Details) != -1)
+                if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)pVolumeDetails) != -1)
                 {
                     /* update dialog control */
-                    DWORD Position, Step;
+                    DWORD volumePosition, volumeStep, maxVolume, i;
+                    DWORD balancePosition, balanceStep;
 
-                    Step = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
-                    Position = (Details.dwValue - Control[Index].Bounds.dwMinimum) / Step;
+                    volumeStep = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
 
-                    /* update volume control slider */
-                    UpdateDialogLineSliderControl(&Preferences, Line, Control[Index].dwControlID, IDC_LINE_SLIDER_VERT, VOLUME_MAX - Position);
+                    maxVolume = 0;
+                    for (i = 0; i < Line->cChannels; i++)
+                    {
+                        if (pVolumeDetails[i].dwValue > maxVolume)
+                            maxVolume = pVolumeDetails[i].dwValue;
+                    }
+
+                    volumePosition = (maxVolume - Control[Index].Bounds.dwMinimum) / volumeStep;
+
+                    if (Line->cChannels == 1)
+                    {
+                        balancePosition = BALANCE_CENTER;
+                    }
+                    else if (Line->cChannels == 2)
+                    {
+                        if (pVolumeDetails[0].dwValue == pVolumeDetails[1].dwValue)
+                        {
+                            balancePosition = BALANCE_CENTER;
+                        }
+                        else if (pVolumeDetails[0].dwValue == Control[Index].Bounds.dwMinimum)
+                        {
+                            balancePosition = BALANCE_RIGHT;
+                        }
+                        else if (pVolumeDetails[1].dwValue == Control[Index].Bounds.dwMinimum)
+                        {
+                            balancePosition = BALANCE_LEFT;
+                        }
+                        else
+                        {
+                            balanceStep = (maxVolume - Control[Index].Bounds.dwMinimum) / (BALANCE_STEPS / 2);
+
+                            if (pVolumeDetails[0].dwValue < pVolumeDetails[1].dwValue)
+                            {
+                                balancePosition = (pVolumeDetails[0].dwValue - Control[Index].Bounds.dwMinimum) / balanceStep;
+                                balancePosition = BALANCE_RIGHT - balancePosition;
+                            }
+                            else if (pVolumeDetails[1].dwValue < pVolumeDetails[0].dwValue)
+                            {
+                                balancePosition = (pVolumeDetails[1].dwValue - Control[Index].Bounds.dwMinimum) / balanceStep;
+                                balancePosition = BALANCE_LEFT + balancePosition;
+                            }
+                        }
+                    }
+
+                    /* Update the volume control slider */
+                    UpdateDialogLineSliderControl(&Preferences, Line, IDC_LINE_SLIDER_VERT, VOLUME_MAX - volumePosition);
+
+                    /* Update the balance control slider */
+                    UpdateDialogLineSliderControl(&Preferences, Line, IDC_LINE_SLIDER_HORZ, balancePosition);
                 }
             }
             break;
         }
     }
+
+done:
+    /* Free the volume details */
+    if (pVolumeDetails)
+        HeapFree(GetProcessHeap(), 0, pVolumeDetails);
 
     /* free controls */
     HeapFree(GetProcessHeap(), 0, Control);

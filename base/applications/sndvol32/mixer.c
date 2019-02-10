@@ -471,7 +471,7 @@ SndMixerEnumProducts(PSND_MIXER Mixer,
 }
 
 INT
-SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails)
+SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cChannels, DWORD cbDetails, LPVOID paDetails)
 {
     MIXERCONTROLDETAILS MixerDetails;
 
@@ -479,7 +479,7 @@ SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDet
     {
         MixerDetails.cbStruct = sizeof(MIXERCONTROLDETAILS);
         MixerDetails.dwControlID = dwControlID;
-        MixerDetails.cChannels = 1; //FIXME
+        MixerDetails.cChannels = cChannels;
         MixerDetails.cMultipleItems = 0;
         MixerDetails.cbDetails = cbDetails;
         MixerDetails.paDetails = paDetails;
@@ -495,7 +495,7 @@ SndMixerSetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDet
 
 
 INT
-SndMixerGetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDetails, LPVOID paDetails)
+SndMixerGetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cChannels, DWORD cbDetails, LPVOID paDetails)
 {
     MIXERCONTROLDETAILS MixerDetails;
 
@@ -503,7 +503,7 @@ SndMixerGetVolumeControlDetails(PSND_MIXER Mixer, DWORD dwControlID, DWORD cbDet
     {
         MixerDetails.cbStruct = sizeof(MIXERCONTROLDETAILS);
         MixerDetails.dwControlID = dwControlID;
-        MixerDetails.cChannels = 1; //FIXME
+        MixerDetails.cChannels = cChannels;
         MixerDetails.cMultipleItems = 0;
         MixerDetails.cbDetails = cbDetails;
         MixerDetails.paDetails = paDetails;
