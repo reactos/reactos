@@ -78,6 +78,7 @@ HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; Certificate
 HKCR,".cer","",0x00000000,"cerfile"
+HKCR,"cerfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\setupapi.dll,-40"
 HKCR,"cerfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe cryptext.dll,CryptExtOpenCER %1"
 
 ; ReactOS Command Script Files
