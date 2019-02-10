@@ -628,18 +628,29 @@ InitDestinationPaths(
     IN PPARTENTRY PartEntry)    // FIXME: HACK!
 {
     WCHAR PathBuffer[MAX_PATH];
-
-    //
-    // TODO: Check return status values of the functions!
-    //
+    NTSTATUS Status;
 
     /* Create 'pSetupData->DestinationRootPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"\\Device\\Harddisk%lu\\Partition%lu\\",
-            DiskEntry->DiskNumber,
-            PartEntry->PartitionNumber);
-    RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer);
+    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
+                     DiskEntry->DiskNumber,
+                     PartEntry->PartitionNumber);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = RtlCreateUnicodeString(&pSetupData->DestinationRootPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
     DPRINT("DestinationRootPath: %wZ\n", &pSetupData->DestinationRootPath);
 
     // FIXME! Which variable to choose?
@@ -649,23 +660,72 @@ InitDestinationPaths(
 /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     /* Create 'pSetupData->DestinationArcPath' */
     RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
-            DiskEntry->BiosDiskNumber,
-            PartEntry->OnDiskPartitionNumber);
-    ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
-    RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer);
+    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                     L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+                     DiskEntry->BiosDiskNumber,
+                     PartEntry->OnDiskPartitionNumber);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        return Status;
+    }
+
+    Status = ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallationDir);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ConcatPaths() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        return Status;
+    }
+
+    Status = RtlCreateUnicodeString(&pSetupData->DestinationArcPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        return Status;
+    }
 
 /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     /* Create 'pSetupData->DestinationPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationPath);
-    CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
-                 pSetupData->DestinationRootPath.Buffer, InstallationDir);
-    RtlCreateUnicodeString(&pSetupData->DestinationPath, PathBuffer);
+    Status = CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
+                          pSetupData->DestinationRootPath.Buffer, InstallationDir);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CombinePaths() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        return Status;
+    }
+
+    Status = RtlCreateUnicodeString(&pSetupData->DestinationPath, PathBuffer) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        return Status;
+    }
 
 /** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
     // FIXME: This is only temporary!! Must be removed later!
-    /***/RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir);/***/
+    Status = RtlCreateUnicodeString(&pSetupData->InstallPath, InstallationDir) ? STATUS_SUCCESS : STATUS_NO_MEMORY;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationPath);
+        return Status;
+    }
 
     return STATUS_SUCCESS;
 }

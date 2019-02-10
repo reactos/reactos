@@ -3238,7 +3238,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
-static VOID
+static NTSTATUS
 BuildInstallPaths(PWSTR InstallDir,
                   PDISKENTRY DiskEntry,
                   PPARTENTRY PartEntry)
@@ -3246,11 +3246,17 @@ BuildInstallPaths(PWSTR InstallDir,
     NTSTATUS Status;
 
     Status = InitDestinationPaths(&USetupData, InstallDir, DiskEntry, PartEntry);
-    // TODO: Check Status
-    UNREFERENCED_PARAMETER(Status);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("InitDestinationPaths() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     /* Initialize DestinationDriveLetter */
     DestinationDriveLetter = PartEntry->DriveLetter;
+
+    return STATUS_SUCCESS;
 }
 
 
