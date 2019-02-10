@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Russian resource translation
+ * COPYRIGHT:   Copyright 2019 Stanislav Motylkov (binarymaster@mail.ru)
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "Этот файл не является корректным файлом сертификата."
+    IDS_CER_FILE "Файл сертификата"
+END
