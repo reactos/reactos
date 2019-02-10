@@ -1633,8 +1633,6 @@ HRESULT RPC_ResolveOxid(OXID oxid, OXID_INFO *oxid_info)
  * IRemUnknown object */
 void RPC_StartRemoting(struct apartment *apt)
 {
-    ERR("Starting remoting: %d %p %p\n", apt->remoting_started, GetCurrentProcessId(), GetCurrentThreadId());
-
     if (!InterlockedExchange(&apt->remoting_started, TRUE))
     {
         WCHAR endpoint[200];

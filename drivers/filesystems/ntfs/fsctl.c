@@ -904,7 +904,7 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExt;
 
-    DPRINT("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
+    DPRINT1("NtfsUserFsRequest(%p, %p)\n", DeviceObject, Irp);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExt = DeviceObject->DeviceExtension;
@@ -966,7 +966,7 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext)
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("NtfsFileSystemControl() called\n");
+    DPRINT1("NtfsFileSystemControl() called\n");
 
     DeviceObject = IrpContext->DeviceObject;
     Irp = IrpContext->Irp;

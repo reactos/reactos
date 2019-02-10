@@ -139,8 +139,6 @@ void WINAPI service_main(DWORD dwArgc, LPTSTR *lpszArgv)
    if (!sshStatusHandle)
       goto cleanup;
 
-    DbgPrint("Starting service\n");
-
    // SERVICE_STATUS members that don't change in example
    //
    ssStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -155,13 +153,7 @@ void WINAPI service_main(DWORD dwArgc, LPTSTR *lpszArgv)
                            3000))                 // wait hint
       goto cleanup;
 
-    DbgPrint("Starting service 2\n");
-
-   SetConsoleCtrlHandler( ControlHandler, TRUE );
-
    ServiceStart( dwArgc, lpszArgv );
-
-    DbgPrint("Done\n");
 
    cleanup:
 
@@ -197,8 +189,6 @@ VOID WINAPI service_ctrl(DWORD dwCtrlCode)
    // Handle the requested control code.
    //
 
-    DbgPrint("service_ctrl called\n");
-
    switch (dwCtrlCode)
    {
    // Stop the service.
@@ -208,14 +198,9 @@ VOID WINAPI service_ctrl(DWORD dwCtrlCode)
    // ServiceStop().  This avoids a race condition
    // which may result in a 1053 - The Service did not respond...
    // error.
-#ifdef __REACTOS__
-   case SERVICE_CONTROL_SHUTDOWN:
-#endif
    case SERVICE_CONTROL_STOP:
-      DbgPrint("for stop\n");
       ReportStatusToSCMgr(SERVICE_STOP_PENDING, NO_ERROR, 0);
       ServiceStop();
-        DbgPrint("Done\n");
       return;
 
       // Update the service status.
@@ -265,11 +250,7 @@ BOOL ReportStatusToSCMgr(DWORD dwCurrentState,
       if (dwCurrentState == SERVICE_START_PENDING)
          ssStatus.dwControlsAccepted = 0;
       else
-#ifndef __REACTOS__
          ssStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-#else
-         ssStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-#endif
 
       ssStatus.dwCurrentState = dwCurrentState;
       ssStatus.dwWin32ExitCode = dwWin32ExitCode;
