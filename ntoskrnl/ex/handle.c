@@ -1438,7 +1438,8 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
                 /* For directory, and win32k objects, display object name */
                 else if (ObjectHeader->Type == ObpDirectoryObjectType ||
                          ObjectHeader->Type == ExWindowStationObjectType ||
-                         ObjectHeader->Type == ExDesktopObjectType)
+                         ObjectHeader->Type == ExDesktopObjectType ||
+                         ObjectHeader->Type == MmSectionObjectType)
                 {
                     ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
                     if (ObjectNameInfo != NULL && ObjectNameInfo->Name.Buffer != NULL)
