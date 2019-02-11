@@ -174,6 +174,7 @@ add_dependencies(kmtest_drivers
     ioreadwrite_drv
     kernel32_drv
     mmmaplockedpagesspecifycache_drv
+    mmsection_drv
     ntcreatesection_drv
     poirp_drv
     tcpip_drv

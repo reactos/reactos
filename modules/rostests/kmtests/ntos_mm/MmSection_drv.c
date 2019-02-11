@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test driver for NtCreateSection function
+ * PURPOSE:         Test driver for MmSection KM Tests
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
@@ -10,11 +10,82 @@
 #define NDEBUG
 #include <debug.h>
 
+static const struct
+{
+    IMAGE_DOS_HEADER dos;
+    IMAGE_NT_HEADERS nt;
+    IMAGE_SECTION_HEADER section;
+}
+dll_image =
+{
+    { IMAGE_DOS_SIGNATURE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0, { 0 }, sizeof(IMAGE_DOS_HEADER) },
+    {
+        IMAGE_NT_SIGNATURE, /* Signature */
+        {
+#if defined __i386__
+            IMAGE_FILE_MACHINE_I386, /* Machine */
+#elif defined __x86_64__
+            IMAGE_FILE_MACHINE_AMD64, /* Machine */
+#elif defined __powerpc__
+            IMAGE_FILE_MACHINE_POWERPC, /* Machine */
+#elif defined __arm__
+            IMAGE_FILE_MACHINE_ARMNT, /* Machine */
+#elif defined __aarch64__
+            IMAGE_FILE_MACHINE_ARM64, /* Machine */
+#else
+# error You must specify the machine type
+#endif
+            1, /* NumberOfSections */
+            0, /* TimeDateStamp */
+            0, /* PointerToSymbolTable */
+            0, /* NumberOfSymbols */
+            sizeof(IMAGE_OPTIONAL_HEADER), /* SizeOfOptionalHeader */
+            IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_DLL /* Characteristics */
+        },
+        { IMAGE_NT_OPTIONAL_HDR_MAGIC, /* Magic */
+          1, /* MajorLinkerVersion */
+          0, /* MinorLinkerVersion */
+          0, /* SizeOfCode */
+          0, /* SizeOfInitializedData */
+          0, /* SizeOfUninitializedData */
+          0, /* AddressOfEntryPoint */
+          0x1000, /* BaseOfCode */
+#ifndef _WIN64
+          0, /* BaseOfData */
+#endif
+          0x10000000, /* ImageBase */
+          0x1000, /* SectionAlignment */
+          0x1000, /* FileAlignment */
+          4, /* MajorOperatingSystemVersion */
+          0, /* MinorOperatingSystemVersion */
+          1, /* MajorImageVersion */
+          0, /* MinorImageVersion */
+          4, /* MajorSubsystemVersion */
+          0, /* MinorSubsystemVersion */
+          0, /* Win32VersionValue */
+          0x2000, /* SizeOfImage */
+          sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS), /* SizeOfHeaders */
+          0, /* CheckSum */
+          IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
+          0, /* DllCharacteristics */
+          0, /* SizeOfStackReserve */
+          0, /* SizeOfStackCommit */
+          0, /* SizeOfHeapReserve */
+          0, /* SizeOfHeapCommit */
+          0, /* LoaderFlags */
+          0, /* NumberOfRvaAndSizes */
+          { { 0 } } /* DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES] */
+        }
+    },
+    { ".rodata", { 0 }, 0x1000, 0x1000, 0, 0, 0, 0, 0, IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ }
+};
+
 typedef struct _TEST_FCB
 {
     FSRTL_ADVANCED_FCB_HEADER Header;
     SECTION_OBJECT_POINTERS SectionObjectPointers;
     FAST_MUTEX HeaderMutex;
+    BOOLEAN IsDll;
 } TEST_FCB, *PTEST_FCB;
 
 static PFILE_OBJECT TestFileObject;
@@ -22,9 +93,9 @@ static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static FAST_IO_DISPATCH TestFastIoDispatch;
 
-static UNICODE_STRING InitOnCreate = RTL_CONSTANT_STRING(L"\\InitOnCreate");
-static UNICODE_STRING InitOnRW = RTL_CONSTANT_STRING(L"\\InitOnRW");
-static UNICODE_STRING InvalidInit = RTL_CONSTANT_STRING(L"\\InvalidInit");
+static UNICODE_STRING MmSection_txt = RTL_CONSTANT_STRING(L"\\MmSection.txt");
+static UNICODE_STRING MmSection_dll = RTL_CONSTANT_STRING(L"\\MmSection.dll");
+static BOOLEAN txtCreated = FALSE;
 
 
 static
@@ -88,7 +159,7 @@ TestEntry(
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    *DeviceName = L"NtCreateSection";
+    *DeviceName = L"MmSection";
     *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE |
              TESTENTRY_BUFFERED_IO_DEVICE |
              TESTENTRY_NO_READONLY_DEVICE;
@@ -189,6 +260,99 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
+static
+NTSTATUS
+CreateTxtFile(
+    _In_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IoStack)
+{
+    PTEST_FCB Fcb;
+    ULONG RequestedDisposition = ((IoStack->Parameters.Create.Options >> 24) & 0xff);
+    ok(RequestedDisposition == FILE_CREATE || RequestedDisposition == FILE_OPEN || RequestedDisposition == FILE_SUPERSEDE,
+        "Invalid disposition: %lu\n", RequestedDisposition);
+
+    if (txtCreated)
+    {
+        if (RequestedDisposition == FILE_CREATE)
+        {
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+        else
+        {
+            Irp->IoStatus.Information = RequestedDisposition == FILE_SUPERSEDE ? FILE_SUPERSEDED : FILE_OPENED;
+        }
+    }
+    else
+    {
+        if (RequestedDisposition == FILE_OPEN)
+        {
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+        else
+        {
+            txtCreated = TRUE;
+            Irp->IoStatus.Information = FILE_CREATED;
+        }
+    }
+
+    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Fcb), 'FwrI');
+    RtlZeroMemory(Fcb, sizeof(*Fcb));
+    ExInitializeFastMutex(&Fcb->HeaderMutex);
+    FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
+
+    Fcb->Header.AllocationSize.QuadPart = 512;
+    Fcb->Header.FileSize.QuadPart = 512;
+    Fcb->Header.ValidDataLength.QuadPart = 512;
+
+    Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
+
+    DPRINT1("File: %wZ\n", &IoStack->FileObject->FileName);
+    Fcb->IsDll = FALSE;
+
+    IoStack->FileObject->FsContext = Fcb;
+    IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+
+    CcInitializeCacheMap(IoStack->FileObject,
+                      (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
+                      FALSE, &Callbacks, NULL);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+CreateDllFile(
+    _In_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IoStack)
+{
+    PTEST_FCB Fcb;
+    ULONG RequestedDisposition = ((IoStack->Parameters.Create.Options >> 24) & 0xff);
+    ok(RequestedDisposition == FILE_OPEN, "Invalid disposition: %lu\n", RequestedDisposition);
+
+    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Fcb), 'FwrI');
+    RtlZeroMemory(Fcb, sizeof(*Fcb));
+    ExInitializeFastMutex(&Fcb->HeaderMutex);
+    FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
+
+    Fcb->Header.AllocationSize.QuadPart = dll_image.nt.OptionalHeader.SizeOfImage;
+    Fcb->Header.FileSize.QuadPart = dll_image.nt.OptionalHeader.SizeOfImage;
+    Fcb->Header.ValidDataLength.QuadPart = dll_image.nt.OptionalHeader.SizeOfImage;
+
+    Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
+
+    DPRINT1("File: %wZ\n", &IoStack->FileObject->FileName);
+    Fcb->IsDll = TRUE;
+
+    IoStack->FileObject->FsContext = Fcb;
+    IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
+
+    CcInitializeCacheMap(IoStack->FileObject,
+                      (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
+                      FALSE, &Callbacks, NULL);
+
+    Irp->IoStatus.Information = FILE_OPENED;
+    return STATUS_SUCCESS;
+}
 
 static
 NTSTATUS
@@ -216,54 +380,24 @@ TestIrpHandler(
 
     if (IoStack->MajorFunction == IRP_MJ_CREATE)
     {
-        ULONG RequestedDisposition = ((IoStack->Parameters.Create.Options >> 24) & 0xff);
-        ok(RequestedDisposition == FILE_CREATE || RequestedDisposition == FILE_OPEN, "Invalid disposition: %lu\n", RequestedDisposition);
-
         if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR))
         {
             TestDeviceObject = DeviceObject;
             TestFileObject = IoStack->FileObject;
         }
-        Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Fcb), 'FwrI');
-        RtlZeroMemory(Fcb, sizeof(*Fcb));
-        ExInitializeFastMutex(&Fcb->HeaderMutex);
-        FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
 
-        /* Consider file/dir doesn't exist */
-        if (RequestedDisposition == FILE_CREATE)
+        if (RtlCompareUnicodeString(&IoStack->FileObject->FileName, &MmSection_txt, FALSE) == 0)
         {
-            Fcb->Header.AllocationSize.QuadPart = 0;
-            Fcb->Header.FileSize.QuadPart = 0;
-            Fcb->Header.ValidDataLength.QuadPart = 0;
+            Status = CreateTxtFile(Irp, IoStack);
+        }
+        else if (RtlCompareUnicodeString(&IoStack->FileObject->FileName, &MmSection_dll, FALSE) == 0)
+        {
+            Status = CreateDllFile(Irp, IoStack);
         }
         else
         {
-            Fcb->Header.AllocationSize.QuadPart = 512;
-            Fcb->Header.FileSize.QuadPart = 512;
-            Fcb->Header.ValidDataLength.QuadPart = 512;
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
         }
-        Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
-
-        DPRINT1("File: %wZ\n", &IoStack->FileObject->FileName);
-
-        IoStack->FileObject->FsContext = Fcb;
-        if (RtlCompareUnicodeString(&IoStack->FileObject->FileName, &InvalidInit, FALSE) != 0)
-        {
-            IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
-        }
-
-        if (IoStack->FileObject->FileName.Length == 0 ||
-            RtlCompareUnicodeString(&IoStack->FileObject->FileName, &InitOnCreate, FALSE) == 0)
-        {
-            DPRINT1("Init\n");
-
-            CcInitializeCacheMap(IoStack->FileObject, 
-                                 (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
-                                 FALSE, &Callbacks, NULL);
-        }
-
-        Irp->IoStatus.Information = (RequestedDisposition == FILE_CREATE) ? FILE_CREATED : FILE_OPENED;
-        Status = STATUS_SUCCESS;
     }
     else if (IoStack->MajorFunction == IRP_MJ_READ)
     {
@@ -296,14 +430,7 @@ TestIrpHandler(
 
                 _SEH2_TRY
                 {
-                    if (IoStack->FileObject->PrivateCacheMap == NULL)
-                    {
-                        DPRINT1("Init\n");
-                        ok_eq_ulong(RtlCompareUnicodeString(&IoStack->FileObject->FileName, &InitOnRW, FALSE), 0);
-                        CcInitializeCacheMap(IoStack->FileObject, 
-                                             (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
-                                             FALSE, &Callbacks, Fcb);
-                    }
+                    NT_ASSERT(IoStack->FileObject->PrivateCacheMap != NULL);
 
                     Ret = CcCopyRead(IoStack->FileObject, &Offset, Length, TRUE, Buffer,
                                      &Irp->IoStatus);
@@ -319,10 +446,34 @@ TestIrpHandler(
             }
             else
             {
-                ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
-                Buffer = MapAndLockUserBuffer(Irp, Length);
-                ok(Buffer != NULL, "Null pointer!\n");
-                RtlFillMemory(Buffer, Length, 0xBA);
+                if (Fcb->IsDll)
+                {
+                	Buffer = Irp->AssociatedIrp.SystemBuffer;
+                	ok(Buffer != NULL, "No System buffer allocated!\n");
+                    if (Offset.QuadPart > sizeof(dll_image))
+                    {
+                        RtlZeroMemory(Buffer, Length);
+                    }
+                    else
+                    {
+                        ULONG ToCopy = Length;
+                        const UCHAR* Data = (UCHAR*)&dll_image;
+
+                        if (Offset.QuadPart + Length > sizeof(dll_image))
+                        {
+                            ToCopy = sizeof(dll_image) - Offset.LowPart;
+                            RtlZeroMemory((UCHAR*)Buffer + ToCopy, Length - ToCopy);
+                        }
+                        RtlCopyMemory(Buffer, &Data[Offset.LowPart], ToCopy);
+                    }
+                }
+                else
+                {
+                	ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
+					Buffer = MapAndLockUserBuffer(Irp, Length);
+					ok(Buffer != NULL, "Null pointer!\n");
+                    RtlFillMemory(Buffer, Length, 0xBA);
+                }
 
                 Status = STATUS_SUCCESS;
             }
@@ -358,17 +509,10 @@ TestIrpHandler(
             {
                 Buffer = Irp->AssociatedIrp.SystemBuffer;
                 ok(Buffer != NULL, "Null pointer!\n");
+                ASSERT (IoStack->FileObject->PrivateCacheMap != NULL);
 
                 _SEH2_TRY
                 {
-                    if (IoStack->FileObject->PrivateCacheMap == NULL)
-                    {
-                        ok_eq_ulong(RtlCompareUnicodeString(&IoStack->FileObject->FileName, &InitOnRW, FALSE), 0);
-                        CcInitializeCacheMap(IoStack->FileObject,
-                                             (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
-                                             FALSE, &Callbacks, Fcb);
-                    }
-
                     Ret = CcCopyWrite(IoStack->FileObject, &Offset, Length, TRUE, Buffer);
                     ok_bool_true(Ret, "CcCopyWrite");
                 }
@@ -407,6 +551,8 @@ TestIrpHandler(
                         CcSetFileSizes(IoStack->FileObject, (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
                     }
                 }
+
+                Irp->IoStatus.Information = Length;
             }
         }
     }

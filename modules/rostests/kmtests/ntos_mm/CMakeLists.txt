@@ -30,3 +30,19 @@ add_importlibs(mmmaplockedpagesspecifycache_drv ntoskrnl hal)
 add_target_compile_definitions(mmmaplockedpagesspecifycache_drv KMT_STANDALONE_DRIVER)
 #add_pch(mmmaplockedpagesspecifycache_drv ../include/kmt_test.h)
 add_rostests_file(TARGET mmmaplockedpagesspecifycache_drv)
+
+#
+# MmSection
+#
+list(APPEND MMSECTION_DRV_SOURCE
+    ../kmtest_drv/kmtest_standalone.c
+    MmSection_drv.c)
+
+add_library(mmsection_drv SHARED ${MMSECTION_DRV_SOURCE})
+set_module_type(mmsection_drv kernelmodedriver)
+target_link_libraries(mmsection_drv kmtest_printf ${PSEH_LIB})
+add_importlibs(mmsection_drv ntoskrnl hal)
+add_target_compile_definitions(mmsection_drv KMT_STANDALONE_DRIVER)
+#add_pch(mmsection_drv ../include/kmt_test.h)
+add_rostests_file(TARGET mmsection_drv)
+

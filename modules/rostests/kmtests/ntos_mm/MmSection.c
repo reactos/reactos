@@ -820,15 +820,15 @@ START_TEST(MmSection)
     PFILE_OBJECT FileObject1 = NULL, FileObject2 = NULL;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING FileName1 = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\MmSection.txt");
-    UNICODE_STRING FileName2 = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\MmSection.dll");
+    UNICODE_STRING FileName1 = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-MmSection\\MmSection.txt");
+    UNICODE_STRING FileName2 = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-MmSection\\MmSection.dll");
     LARGE_INTEGER FileOffset;
     UCHAR FileData = 0;
 
     ok(ExGetPreviousMode() == UserMode, "Previous mode is kernel mode\n");
 
     /* Start our special-purpose driver */
-    Status = KmtStartDriver(L"NtCreateSection");
+    Status = KmtStartDriver(L"MmSection");
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* create a one-byte file that we can use */
@@ -891,7 +891,7 @@ START_TEST(MmSection)
     if (FileHandle1)
         ZwClose(FileHandle1);
 
-    Status = KmtStopDriver(L"NtCreateSection");
+    Status = KmtStopDriver(L"MmSection");
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     TestPhysicalMemorySection();
