@@ -27,7 +27,10 @@ typedef struct _DB {
     BYTE* data;
     TAGID stringtable;
     DWORD write_iter;
+    DWORD major;
+    DWORD minor;
     GUID database_id;
+    PCWSTR database_name;
     BOOL for_write;
     struct SdbStringHashTable* string_lookup;
     struct _DB* string_buffer;

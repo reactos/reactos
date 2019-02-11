@@ -47,7 +47,7 @@
 @ stub SdbFindNextStringIndexedTag
 @ stdcall SdbFindNextTag(ptr long long)
 @ stub SdbFindNextTagRef
-@ stub SdbFreeDatabaseInformation
+@ stdcall SdbFreeDatabaseInformation(ptr)
 @ stdcall SdbFreeFileAttributes(ptr)
 @ stub SdbFreeFileInfo
 @ stub SdbFreeFlagInfo
@@ -55,7 +55,7 @@
 @ stdcall SdbGetAppPatchDir(ptr wstr long)
 @ stdcall SdbGetBinaryTagData(ptr long)
 @ stdcall SdbGetDatabaseID(ptr ptr)
-@ stub SdbGetDatabaseInformation
+@ stdcall SdbGetDatabaseInformation(ptr ptr)
 @ stub SdbGetDatabaseInformationByName
 @ stub SdbGetDatabaseMatch
 @ stdcall SdbGetDatabaseVersion(wstr ptr ptr)
