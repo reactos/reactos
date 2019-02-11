@@ -562,21 +562,36 @@ EnumConnectionsCallback(
                                   }
                               }
 
-                              /* Set the balance trackbar */
-                              wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
-
-                              /* get dialog control */
-                              hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
-
-                              if (hDlgCtrl != NULL)
+                              if (Line->cChannels == 1)
                               {
-                                  /* check state */
-                                  LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+                                  /* Disable the balance trackbar for mono channels */
+                                  wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
 
-                                  if (OldPosition != balancePosition)
+                                  /* get dialog control */
+                                  hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+                                  if (hDlgCtrl != NULL)
                                   {
-                                      /* update control state */
-                                      SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, balancePosition);
+                                      EnableWindow(hDlgCtrl, FALSE);
+                                  }
+                              }
+                              else if (Line->cChannels == 2)
+                              {
+                                  /* Set the balance trackbar */
+                                  wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
+
+                                  /* get dialog control */
+                                  hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+
+                                  if (hDlgCtrl != NULL)
+                                  {
+                                      /* check state */
+                                      LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+
+                                      if (OldPosition != balancePosition)
+                                      {
+                                          /* update control state */
+                                          SendMessageW(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, balancePosition);
+                                      }
                                   }
                               }
                           }
