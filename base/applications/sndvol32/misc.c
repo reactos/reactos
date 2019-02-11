@@ -128,9 +128,9 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 }
 
 static const TCHAR AppRegSettings[] = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Volume Control");
-//static const TCHAR AppOptionsKey[] = TEXT("Options");
+static const TCHAR AppOptionsKey[] = TEXT("Options");
 static const TCHAR LineStatesValue[] = TEXT("LineStates");
-//static const TCHAR StyleValue[] = TEXT("Style");
+static const TCHAR StyleValue[] = TEXT("Style");
 
 HKEY hAppSettingsKey = NULL;
 
@@ -272,4 +272,30 @@ ExitClose:
     }
 
     return Ret;
+}
+
+DWORD
+GetStyleValue(VOID)
+{
+    HKEY hOptionsKey;
+    DWORD dwStyle = 0, dwSize;
+
+    if (RegOpenKeyEx(hAppSettingsKey,
+                     AppOptionsKey,
+                     0,
+                     KEY_READ,
+                     &hOptionsKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(DWORD);
+        RegQueryValueEx(hOptionsKey,
+                        StyleValue,
+                        NULL,
+                        NULL,
+                        (LPBYTE)&dwStyle,
+                        &dwSize);
+
+        RegCloseKey(hOptionsKey);
+    }
+
+    return dwStyle;
 }

@@ -185,6 +185,9 @@ WriteLineConfig(IN LPTSTR szDeviceName,
                 IN PSNDVOL_REG_LINESTATE LineState,
                 IN DWORD cbSize);
 
+DWORD
+GetStyleValue(VOID);
+
 /* tray.c */
 
 INT_PTR

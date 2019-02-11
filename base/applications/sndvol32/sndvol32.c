@@ -1322,13 +1322,14 @@ CreateApplicationWindow(
 static
 BOOL
 HandleCommandLine(LPTSTR cmdline,
+                  DWORD dwStyle,
                   PWINDOW_MODE pMode,
                   PUINT pMixerId)
 {
     TCHAR option;
 
     *pMixerId = 0;
-    *pMode = SMALL_MODE;
+    *pMode = (dwStyle & 0x20) ? SMALL_MODE : NORMAL_MODE;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
     {
@@ -1345,11 +1346,6 @@ HandleCommandLine(LPTSTR cmdline,
         {
             case 'd': /* Device */
             case 'D':
-                break;
-
-            case 'n': /* Normal size */
-            case 'N':
-                *pMode = NORMAL_MODE;
                 break;
 
             case 's': /* Small size */
@@ -1391,6 +1387,7 @@ _tWinMain(HINSTANCE hInstance,
     INITCOMMONCONTROLSEX Controls;
     WINDOW_MODE WindowMode = SMALL_MODE;
     UINT MixerId = 0;
+    DWORD dwStyle;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(nCmdShow);
@@ -1398,10 +1395,11 @@ _tWinMain(HINSTANCE hInstance,
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
 
-    HandleCommandLine(lpszCmdLine, &WindowMode, &MixerId);
-
     if (InitAppConfig())
     {
+        dwStyle = GetStyleValue();
+        HandleCommandLine(lpszCmdLine, dwStyle, &WindowMode, &MixerId);
+
         /* load the application title */
         if (!AllocAndLoadString(&lpAppTitle,
                                 hAppInstance,
