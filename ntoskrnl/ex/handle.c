@@ -1368,60 +1368,7 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
                 ObjectHeader = ObpGetHandleObject(TableEntry);
 
                 KdbpPrint("%p: Object: %p GrantedAccess: %x Entry: %p\n", ExHandle.Value, &ObjectHeader->Body, TableEntry->GrantedAccess, TableEntry);
-                KdbpPrint("Object: %p Type: (%x) ", &ObjectHeader->Body, ObjectHeader->Type);
-                if (ObjectHeader->Type == IoFileObjectType)
-                {
-                    KdbpPrint("File");
-                }
-                else if (ObjectHeader->Type == ExEventObjectType)
-                {
-                    KdbpPrint("Event");
-                }
-                else if (ObjectHeader->Type == ExEventPairObjectType)
-                {
-                    KdbpPrint("EventPair");
-                }
-                else if (ObjectHeader->Type == ExMutantObjectType)
-                {
-                    KdbpPrint("Mutant");
-                }
-                else if (ObjectHeader->Type == ExSemaphoreObjectType)
-                {
-                    KdbpPrint("Semaphore");
-                }
-                else if (ObjectHeader->Type == ExTimerType)
-                {
-                    KdbpPrint("Timer");
-                }
-                else if (ObjectHeader->Type == ExWindowStationObjectType)
-                {
-                    KdbpPrint("WindowStation");
-                }
-                else if (ObjectHeader->Type == ExDesktopObjectType)
-                {
-                    KdbpPrint("Desktop");
-                }
-                else if (ObjectHeader->Type == ObpDirectoryObjectType)
-                {
-                    KdbpPrint("Directory");
-                }
-                else if (ObjectHeader->Type == CmpKeyObjectType)
-                {
-                    KdbpPrint("Key");
-                }
-                else if (ObjectHeader->Type == MmSectionObjectType)
-                {
-                    KdbpPrint("Section");
-                }
-                else if (ObjectHeader->Type == PsThreadType)
-                {
-                    KdbpPrint("Thread");
-                }
-                else if (ObjectHeader->Type == LpcPortObjectType)
-                {
-                    KdbpPrint("ALPC Port");
-                }
-                KdbpPrint("\n");
+                KdbpPrint("Object: %p Type: (%x) %wZ\n", &ObjectHeader->Body, ObjectHeader->Type, &ObjectHeader->Type->Name);
                 KdbpPrint("\tObjectHeader: %p\n", ObjectHeader);
                 KdbpPrint("\t\tHandleCount: %u PointerCount: %u\n", ObjectHeader->HandleCount, ObjectHeader->PointerCount);
 
