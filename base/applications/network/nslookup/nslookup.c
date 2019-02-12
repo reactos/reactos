@@ -812,15 +812,16 @@ int main( int argc, char* argv[] )
 
             return -2;
         }
+
+        strncpy( State.domain, pNetInfo->DomainName, 255 );
+        strncpy( State.srchlist[0], pNetInfo->DomainName, 255 );
+        strncpy( State.DefaultServerAddress,
+                 pNetInfo->DnsServerList.IpAddress.String,
+                 15 );
+
+        HeapFree( ProcessHeap, 0, pNetInfo );
     }
 
-    strncpy( State.domain, pNetInfo->DomainName, 255 );
-    strncpy( State.srchlist[0], pNetInfo->DomainName, 255 );
-    strncpy( State.DefaultServerAddress,
-             pNetInfo->DnsServerList.IpAddress.String,
-             15 );
-
-    HeapFree( ProcessHeap, 0, pNetInfo );
 
     WSAStartup( MAKEWORD(2,2), &wsaData );
 
