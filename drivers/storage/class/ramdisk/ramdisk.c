@@ -133,7 +133,7 @@ NTAPI
 QueryParameters(IN PUNICODE_STRING RegistryPath)
 {
     ULONG MinView, DefView, MinViewLength, DefViewLength, MaxViewLength;
-    RTL_QUERY_REGISTRY_TABLE QueryTable[10];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[11];
 
     /* Set defaults */
     MaximumViewLength = 0x10000000u;
