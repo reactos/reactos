@@ -1478,6 +1478,21 @@ MUI_ERROR jaJPErrorEntries[] =
         "F3 = \301\255\263\274  ENTER = \277\336\257\272\263"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "\276\257\304\261\257\314\337\312 \312\260\304\336\303\336\250\275\270\246 \271\335\274\255\302 \303\336\267\317\276\335 \303\336\274\300\241\n",
         "ENTER = \272\335\313\337\255\260\300\311 \273\262\267\304\336\263"

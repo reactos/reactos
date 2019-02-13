@@ -1777,9 +1777,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 // &USetupData.SourceRootPath
                 if (RtlPrefixUnicodeString(&CurrentPartitionU, &USetupData.SourcePath, TRUE))
                 {
-                    PopupError("You cannot delete the partition containing the installation source!",
-                               MUIGetString(STRING_CONTINUE),
-                               Ir, POPUP_WAIT_ENTER);
+                    MUIDisplayError(ERROR_SOURCE_PATH, Ir, POPUP_WAIT_ENTER);
                     return SELECT_PARTITION_PAGE;
                 }
             }
@@ -3569,9 +3567,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
-            PopupError("Failed to build the installation paths for the ReactOS installation directory!",
-                       MUIGetString(STRING_CONTINUE),
-                       Ir, POPUP_WAIT_ENTER);
+            MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
 
@@ -3582,9 +3578,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
          */
         if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
         {
-            PopupError("You cannot install ReactOS within the installation source directory!",
-                       MUIGetString(STRING_CONTINUE),
-                       Ir, POPUP_WAIT_ENTER);
+            MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
             return INSTALL_DIRECTORY_PAGE;
         }
 
@@ -3677,9 +3671,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
-                PopupError("Failed to build the installation paths for the ReactOS installation directory!",
-                           MUIGetString(STRING_CONTINUE),
-                           Ir, POPUP_WAIT_ENTER);
+                MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
                 return QUIT_PAGE;
             }
 
@@ -3690,9 +3682,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
              */
             if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
             {
-                PopupError("You cannot install ReactOS within the installation source directory!",
-                           MUIGetString(STRING_CONTINUE),
-                           Ir, POPUP_WAIT_ENTER);
+                MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
                 return INSTALL_DIRECTORY_PAGE;
             }
 
