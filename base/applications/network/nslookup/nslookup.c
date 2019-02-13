@@ -792,26 +792,31 @@ int main( int argc, char* argv[] )
     /* We don't know how long of a buffer it will want to return. So we'll
        pass an empty one now and let it fail only once, instead of guessing. */
     Status = GetNetworkParams( pNetInfo, &NetBufLen );
-    if( Status == ERROR_BUFFER_OVERFLOW )
+
+    if( Status != ERROR_BUFFER_OVERFLOW )
     {
-        pNetInfo = (PFIXED_INFO)HeapAlloc( ProcessHeap, 0, NetBufLen );
-        if( pNetInfo == NULL )
-        {
-            _tprintf( _T("ERROR: Out of memory\n") );
+        _tprintf( _T("Error in GetNetworkParams call\n") );
 
-            return -1;
-        }
+        return -2;
+    }
 
-        /* For real this time. */
-        Status = GetNetworkParams( pNetInfo, &NetBufLen );
-        if( Status != NO_ERROR )
-        {
-            _tprintf( _T("Error in GetNetworkParams call\n") );
+    pNetInfo = (PFIXED_INFO)HeapAlloc( ProcessHeap, 0, NetBufLen );
+    if( pNetInfo == NULL )
+    {
+        _tprintf( _T("ERROR: Out of memory\n") );
 
-            HeapFree( ProcessHeap, 0, pNetInfo );
+        return -1;
+    }
 
-            return -2;
-        }
+    /* For real this time. */
+    Status = GetNetworkParams( pNetInfo, &NetBufLen );
+    if( Status != NO_ERROR )
+    {
+        _tprintf( _T("Error in GetNetworkParams call\n") );
+
+        HeapFree( ProcessHeap, 0, pNetInfo );
+
+        return -2;
     }
 
     strncpy( State.domain, pNetInfo->DomainName, 255 );
