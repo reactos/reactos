@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Italian (Neutral) resource translation
+ * COPYRIGHT:   Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "Il file del certificato non è valido."
+    IDS_CER_FILE "File certificato"
+END
