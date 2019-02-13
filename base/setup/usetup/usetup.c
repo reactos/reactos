@@ -3324,6 +3324,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     WCHAR InstallDir[MAX_PATH];
     WCHAR c;
     ULONG Length, Pos;
+    NTSTATUS Status;
 
     /* We do not need the filesystem list anymore */
     if (FileSystemList != NULL)
@@ -3360,9 +3361,17 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      */
     if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidPath(InstallDir))
     {
-        BuildInstallPaths(InstallDir,
-                          DiskEntry,
-                          PartEntry);
+        Status = BuildInstallPaths(InstallDir,
+                                   DiskEntry,
+                                   PartEntry);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
+            PopupError("Failed to build the installation paths for the ReactOS installation directory!",
+                       MUIGetString(STRING_CONTINUE),
+                       Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
 
         /*
          * Check whether the user attempts to install ReactOS within the
@@ -3462,9 +3471,17 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
                 return INSTALL_DIRECTORY_PAGE;
             }
 
-            BuildInstallPaths(InstallDir,
-                              DiskEntry,
-                              PartEntry);
+            Status = BuildInstallPaths(InstallDir,
+                                       DiskEntry,
+                                       PartEntry);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
+                PopupError("Failed to build the installation paths for the ReactOS installation directory!",
+                           MUIGetString(STRING_CONTINUE),
+                           Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
 
             /*
              * Check whether the user attempts to install ReactOS within the
