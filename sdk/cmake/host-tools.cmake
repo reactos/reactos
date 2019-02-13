@@ -1,6 +1,6 @@
 
-function(setup_host_tools)
-    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/host-tools)
+function(configure_host_tools HOST_TOOLS_DIR)
+    file(MAKE_DIRECTORY ${HOST_TOOLS_DIR})
 
     message(STATUS "Configuring host tools...")
     # cmake sets CC and CXX when those languages are enabled
@@ -13,7 +13,7 @@ function(setup_host_tools)
             -DARCH:STRING=${ARCH}
             ${USE_CLANG_CL_ARG}
             ${REACTOS_SOURCE_DIR}
-        WORKING_DIRECTORY ${REACTOS_BINARY_DIR}/host-tools
+        WORKING_DIRECTORY ${HOST_TOOLS_DIR}
         RESULT_VARIABLE _host_config_result
         OUTPUT_VARIABLE _host_config_log
         ERROR_VARIABLE  _host_config_log)
@@ -31,15 +31,30 @@ function(setup_host_tools)
     # custom target + symbolic output prevents cmake from running
     # the command multiple times per build
     add_custom_command(
-        COMMAND ${CMAKE_COMMAND} --build ${REACTOS_BINARY_DIR}/host-tools
+        COMMAND ${CMAKE_COMMAND} --build ${HOST_TOOLS_DIR}
         OUTPUT host_tools)
     add_custom_target(build-host-tools ALL DEPENDS host_tools)
 
-    include(${REACTOS_BINARY_DIR}/host-tools/ImportExecutables.cmake)
-    include(${REACTOS_BINARY_DIR}/host-tools/TargetList.cmake)
+    include(${HOST_TOOLS_DIR}/ImportExecutables.cmake)
+    include(${HOST_TOOLS_DIR}/TargetList.cmake)
 
     foreach(_target ${NATIVE_TARGETS})
         add_dependencies(native-${_target} build-host-tools)
     endforeach()
+
+endfunction()
+
+function(setup_host_tools)
+    if(WITH_HOST_TOOLS)
+        # Use pre-built tools, required for cross compiling with msvc
+        # as only one target architecture is available at a time
+        set(HOST_TOOLS_DIR ${WITH_HOST_TOOLS})
+        include(${HOST_TOOLS_DIR}/ImportExecutables.cmake)
+    else()
+        # Build host-tools. Changes to tool sources will rebuild targets
+        # using that tool
+        set(HOST_TOOLS_DIR ${REACTOS_BINARY_DIR}/host-tools)
+        configure_host_tools(${HOST_TOOLS_DIR})
+    endif()
 
 endfunction()
