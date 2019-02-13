@@ -1477,6 +1477,21 @@ MUI_ERROR deDEErrorEntries[] =
         "F3 = Beenden  EINGABETASTE = Fortsetzen"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "Es konnte keine Festplatte gefunden werden.\n",
         "EINGABETASTE = Computer neu starten"

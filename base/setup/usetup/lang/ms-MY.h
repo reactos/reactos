@@ -1374,6 +1374,21 @@ MUI_ERROR msMYErrorEntries[] =
         "F3 = Keluar  ENTER = Teruskan"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "Persediaan tidak dapat mencari cakera keras.\n",
         "ENTER = Memulakan semula komputer"

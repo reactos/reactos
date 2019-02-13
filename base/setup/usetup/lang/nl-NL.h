@@ -1496,6 +1496,21 @@ MUI_ERROR nlNLErrorEntries[] =
         "F3 = Afsluiten   ENTER = Doorgaan"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "Setup kan geen vaste schijf vinden.\n",
         "ENTER = Computer opnieuw opstarten"

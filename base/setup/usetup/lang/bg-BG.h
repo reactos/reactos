@@ -1485,6 +1485,21 @@ MUI_ERROR bgBGErrorEntries[] =
         "F3 = \210\247\345\256\244 ENTER = \217\340\256\244\352\253\246\240\242\240\255\245"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "\215\240\341\342\340\256\251\242\240\347\352\342 \255\245 \255\240\254\245\340\250 \342\242\352\340\244 \244\250\341\252.\n",
         "ENTER = \217\340\245\247\240\257\343\341\252\240\255\245 \255\240 \252\256\254\257\356\342\352\340\240"

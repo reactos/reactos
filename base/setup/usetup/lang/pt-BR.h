@@ -1508,6 +1508,21 @@ MUI_ERROR ptBRErrorEntries[] =
         "F3=Sair  ENTER=Continuar"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "N\306o foi poss\241vel localizar um disco r\241digo.\n",
         "ENTER=Reiniciar"

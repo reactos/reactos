@@ -1501,6 +1501,21 @@ MUI_ERROR elGRErrorEntries[] =
         "F3 = \200\247\246\256\351\250\236\251\236  ENTER = \221\254\244\342\256\234\240\230"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "\206 \234\232\241\230\253\341\251\253\230\251\236 \233\234 \243\247\346\250\234\251\234 \244\230 \231\250\234\240 \241\341\247\246\240\246\244 \251\241\242\236\250\346 \233\345\251\241\246.\n",
         "ENTER = \204\247\230\244\234\241\241\345\244\236\251\236 \254\247\246\242\246\232\240\251\253\343"

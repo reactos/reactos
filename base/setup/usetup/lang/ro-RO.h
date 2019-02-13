@@ -1509,6 +1509,21 @@ MUI_ERROR roROErrorEntries[] =
         "F3 = Ie\272ire  ENTER = Continuare"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "E\272ec la identificarea unit\343\376ilor interne de stocare.",
         "ENTER = Repornire calculator"

@@ -1483,6 +1483,21 @@ MUI_ERROR csCZErrorEntries[] =
         "F3 = Ukon\237it  ENTER = Pokra\237ovat"
     },
     {
+        // ERROR_NO_BUILD_PATH
+        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_PATH
+        "You cannot delete the partition containing the installation source!\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        // ERROR_SOURCE_DIR
+        "You cannot install ReactOS within the installation source directory!\n"
+        "ENTER = Reboot computer"
+    },
+    {
         // ERROR_NO_HDD
         "Instalace nedok\240zala naj\241t harddisk.\n",
         "ENTER = Restartovat po\237\241ta\237"
