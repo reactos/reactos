@@ -523,7 +523,7 @@ VfatCreateFile(
                                         Stack->Parameters.Create.ShareAccess,
                                         FileObject,
                                         &pFcb->FCBShareAccess,
-                                        FALSE);
+                                        TRUE);
             if (!NT_SUCCESS(Status))
             {
                 vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
