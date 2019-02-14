@@ -526,9 +526,17 @@ void lfn_check_orphaned(void)
     free(long_name);
     if (interactive)
 	printf("1: Delete.\n2: Leave it.\n");
+#ifdef __REACTOS__
+    else if (rw)
+#else
     else
+#endif
 	printf("  Auto-deleting.\n");
+#ifdef __REACTOS__
+    if ((!interactive && rw) || (interactive && get_key("12", "?") == '1')) {
+#else
     if (!interactive || get_key("12", "?") == '1') {
+#endif
 	clear_lfn_slots(0, lfn_parts - 1);
     }
     lfn_reset();
