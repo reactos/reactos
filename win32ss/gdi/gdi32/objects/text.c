@@ -296,6 +296,9 @@ GetTextExtentExPointW(
         DPRINT("nMaxExtent is invalid: %d\n", nMaxExtent);
     }
 
+    if (LoadLPK(LPK_GTEP))
+        return LpkGetTextExtentExPoint(hdc, lpszString, cchString, nMaxExtent, lpnFit, lpnDx, lpSize, 0, 0);
+
     return NtGdiGetTextExtentExW (
                hdc, (LPWSTR)lpszString, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)lpnDx, lpSize, 0 );
 }
@@ -308,14 +311,14 @@ BOOL
 WINAPI
 GetTextExtentExPointWPri(
     _In_ HDC hdc,
-    _In_reads_(cwc) LPWSTR lpwsz,
-    _In_ ULONG cwc,
-    _In_ ULONG dxMax,
-    _Out_opt_ ULONG *pcCh,
-    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
+    _In_reads_(cwc) LPCWSTR lpwsz,
+    _In_ INT cwc,
+    _In_ INT dxMax,
+    _Out_opt_ LPINT pcCh,
+    _Out_writes_to_opt_(cwc, *pcCh) LPINT pdxOut,
     _In_ LPSIZE psize)
 {
-    return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, dxMax, pcCh, pdxOut, psize, 0);
+    return NtGdiGetTextExtentExW(hdc, (LPWSTR)lpwsz, cwc, dxMax, (PULONG)pcCh, (PULONG)pdxOut, psize, 0);
 }
 
 /*

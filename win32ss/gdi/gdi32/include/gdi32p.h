@@ -51,9 +51,23 @@ typedef DWORD
     DWORD dwUnused
 );
 
+typedef BOOL
+(WINAPI* LPKGTEP)(
+    HDC hdc,
+    LPCWSTR lpString,
+    INT cString,
+    INT nMaxExtent,
+    LPINT lpnFit,
+    LPINT lpnDx,
+    LPSIZE lpSize,
+    DWORD dwUnused,
+    int unknown
+);
+
 extern HINSTANCE hLpk;
 extern LPKETO LpkExtTextOut;
 extern LPKGCP LpkGetCharacterPlacement;
+extern LPKGTEP LpkGetTextExtentExPoint;
 
 /* DEFINES *******************************************************************/
 
@@ -67,6 +81,7 @@ extern LPKGCP LpkGetCharacterPlacement;
 #define LPK_INIT 1
 #define LPK_ETO  2
 #define LPK_GCP  3
+#define LPK_GTEP 4
 
 /* MACRO ********************************************************************/
 

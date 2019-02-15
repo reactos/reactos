@@ -30,4 +30,15 @@ BOOL
 WINAPI
 GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS);
 
+BOOL
+WINAPI
+GetTextExtentExPointWPri(
+    HDC hdc,
+    LPCWSTR lpwsz, 
+    INT cwc,
+    INT dxMax, 
+    LPINT pcCh, 
+    LPINT pdxOut, 
+    LPSIZE psize);
+
 #endif

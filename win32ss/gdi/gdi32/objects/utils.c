@@ -4,6 +4,7 @@
 HINSTANCE hLpk = NULL;
 LPKETO LpkExtTextOut = NULL;
 LPKGCP LpkGetCharacterPlacement = NULL;
+LPKGTEP LpkGetTextExtentExPoint = NULL;
 
 /**
  * @name CalculateColorTableSize
@@ -417,7 +418,7 @@ EnumLogFontExW2A( LPENUMLOGFONTEXA fontA, CONST ENUMLOGFONTEXW *fontW )
 * LPK.DLL loader function
 * 
 * Returns TRUE if a valid parameter was passed and loading was successful,
-* retruns FALSE otherwise.
+* returns FALSE otherwise.
 */
 BOOL WINAPI LoadLPK(INT LpkFunctionID)
 {   
@@ -448,6 +449,18 @@ BOOL WINAPI LoadLPK(INT LpkFunctionID)
                     LpkGetCharacterPlacement = (LPKGCP) GetProcAddress(hLpk, "LpkGetCharacterPlacement");
 
                 if (!LpkGetCharacterPlacement)
+                {
+                    FreeLibrary(hLpk);
+                    return FALSE;
+                }
+
+                return TRUE;
+
+            case LPK_GTEP:
+                if (!LpkGetTextExtentExPoint) // Check if the function is already loaded
+                    LpkGetTextExtentExPoint = (LPKGTEP) GetProcAddress(hLpk, "LpkGetTextExtentExPoint");
+
+                if (!LpkGetTextExtentExPoint)
                 {
                     FreeLibrary(hLpk);
                     return FALSE;
