@@ -904,7 +904,7 @@ AcpiEvGpeDispatch (
             GpeDevice, GpeNumber,
             GpeEventInfo->Dispatch.Handler->Context);
 
-        /* If requested, clear (if level-triggered) and reenable the GPE */
+        /* If requested, clear (if level-triggered) and re-enable the GPE */
 
         if (ReturnValue & ACPI_REENABLE_GPE)
         {

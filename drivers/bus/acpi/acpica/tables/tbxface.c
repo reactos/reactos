@@ -155,7 +155,7 @@ AcpiInitializeTables (
     /*
      * Get the root table (RSDT or XSDT) and extract all entries to the local
      * Root Table Array. This array contains the information of the RSDT/XSDT
-     * in a common, more useable format.
+     * in a common, more usable format.
      */
     Status = AcpiTbParseRootTable (RsdpAddress);
     return_ACPI_STATUS (Status);
@@ -226,7 +226,7 @@ AcpiReallocateRootTable (
     {
         /*
          * Now it's safe to do full table validation. We can do deferred
-         * table initilization here once the flag is set.
+         * table initialization here once the flag is set.
          */
         AcpiGbl_EnableTableValidation = TRUE;
         for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)

@@ -237,7 +237,7 @@ sprintf (
 
 /*
  * NOTE: Currently we only need to update errno for file IOs. Other
- *       Clibrary invocations in ACPICA do not make descisions according to
+ *       Clibrary invocations in ACPICA do not make decisions according to
  *       the errno.
  */
 extern int errno;

@@ -291,7 +291,7 @@ strlen (
  * PARAMETERS:  String              - Null terminated string
  *              Delimiters          - Delimiters to match
  *
- * RETURN:      The first occurance in the string of any of the bytes in the
+ * RETURN:      The first occurrence in the string of any of the bytes in the
  *              delimiters
  *
  * DESCRIPTION: Search a string for any of a set of the delimiters
@@ -681,7 +681,7 @@ strstr (
  * FUNCTION:    strtoul
  *
  * PARAMETERS:  String          - Null terminated string
- *              Terminater      - Where a pointer to the terminating byte is
+ *              Terminator      - Where a pointer to the terminating byte is
  *                                returned
  *              Base            - Radix of the string
  *

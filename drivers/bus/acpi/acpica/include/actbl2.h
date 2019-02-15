@@ -195,7 +195,7 @@ typedef struct acpi_iort_memory_access
 typedef struct acpi_iort_its_group
 {
     UINT32                  ItsCount;
-    UINT32                  Identifiers[1];         /* GIC ITS identifier arrary */
+    UINT32                  Identifiers[1];         /* GIC ITS identifier array */
 
 } ACPI_IORT_ITS_GROUP;
 
@@ -765,7 +765,7 @@ typedef struct acpi_madt_local_x2apic_nmi
 } ACPI_MADT_LOCAL_X2APIC_NMI;
 
 
-/* 11: Generic Interrupt (ACPI 5.0 + ACPI 6.0 changes) */
+/* 11: Generic Interrupt - GICC (ACPI 5.0 + ACPI 6.0 + ACPI 6.3 changes) */
 
 typedef struct acpi_madt_generic_interrupt
 {
@@ -784,7 +784,8 @@ typedef struct acpi_madt_generic_interrupt
     UINT64                  GicrBaseAddress;
     UINT64                  ArmMpidr;
     UINT8                   EfficiencyClass;
-    UINT8                   Reserved2[3];
+    UINT8                   Reserved2[1];
+    UINT16                  SpeInterrupt;       /* ACPI 6.3 */
 
 } ACPI_MADT_GENERIC_INTERRUPT;
 
@@ -1629,6 +1630,7 @@ typedef struct acpi_pdtt_channel
 
 #define ACPI_PDTT_RUNTIME_TRIGGER           (1)
 #define ACPI_PDTT_WAIT_COMPLETION           (1<<1)
+#define ACPI_PDTT_TRIGGER_ORDER             (1<<2)
 
 
 /*******************************************************************************
@@ -1765,8 +1767,11 @@ typedef struct acpi_pptt_processor
 
 /* Flags */
 
-#define ACPI_PPTT_PHYSICAL_PACKAGE          (1)     /* Physical package */
-#define ACPI_PPTT_ACPI_PROCESSOR_ID_VALID   (2)     /* ACPI Processor ID valid */
+#define ACPI_PPTT_PHYSICAL_PACKAGE          (1)
+#define ACPI_PPTT_ACPI_PROCESSOR_ID_VALID   (1<<1)
+#define ACPI_PPTT_ACPI_PROCESSOR_IS_THREAD  (1<<2)  /* ACPI 6.3 */
+#define ACPI_PPTT_ACPI_LEAF_NODE            (1<<3)  /* ACPI 6.3 */
+#define ACPI_PPTT_ACPI_IDENTICAL            (1<<4)  /* ACPI 6.3 */
 
 
 /* 1: Cache Type Structure */

@@ -453,7 +453,7 @@ AcpiNsInternalizeName (
  *
  * FUNCTION:    AcpiNsExternalizeName
  *
- * PARAMETERS:  InternalNameLength  - Lenth of the internal name below
+ * PARAMETERS:  InternalNameLength  - Length of the internal name below
  *              InternalName        - Internal representation of name
  *              ConvertedNameLength - Where the length is returned
  *              ConvertedName       - Where the resulting external name

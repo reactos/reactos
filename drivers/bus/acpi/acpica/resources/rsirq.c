@@ -93,7 +93,7 @@ ACPI_RSCONVERT_INFO     AcpiRsGetIrq[9] =
                         AML_OFFSET (Irq.Flags),
                         3},
 
-    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Irq.Sharable),
+    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Irq.Shareable),
                         AML_OFFSET (Irq.Flags),
                         4},
 
@@ -133,7 +133,7 @@ ACPI_RSCONVERT_INFO     AcpiRsSetIrq[14] =
                         AML_OFFSET (Irq.Flags),
                         3},
 
-    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Irq.Sharable),
+    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.Irq.Shareable),
                         AML_OFFSET (Irq.Flags),
                         4},
 
@@ -180,7 +180,7 @@ ACPI_RSCONVERT_INFO     AcpiRsSetIrq[14] =
                         ACPI_ACTIVE_HIGH},
 
     {ACPI_RSC_EXIT_NE,  ACPI_RSC_COMPARE_VALUE,
-                        ACPI_RS_OFFSET (Data.Irq.Sharable),
+                        ACPI_RS_OFFSET (Data.Irq.Shareable),
                         ACPI_EXCLUSIVE},
 
     /* We can optimize to a 2-byte IrqNoFlags() descriptor */
@@ -221,7 +221,7 @@ ACPI_RSCONVERT_INFO     AcpiRsConvertExtIrq[10] =
                         AML_OFFSET (ExtendedIrq.Flags),
                         2},
 
-    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.ExtendedIrq.Sharable),
+    {ACPI_RSC_1BITFLAG, ACPI_RS_OFFSET (Data.ExtendedIrq.Shareable),
                         AML_OFFSET (ExtendedIrq.Flags),
                         3},
 

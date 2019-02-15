@@ -178,7 +178,7 @@
 
 /*
  * Maximal number of elements the Result Stack can contain,
- * it may be an arbitray value not exceeding the types of
+ * it may be an arbitrary value not exceeding the types of
  * ResultSize and ResultCount (now UINT8).
  */
 #define ACPI_RESULTS_OBJ_NUM_MAX        255

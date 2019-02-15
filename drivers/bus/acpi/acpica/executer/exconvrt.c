@@ -600,7 +600,7 @@ AcpiExConvertToString (
         {
             if (Base == 16)
             {
-                /* Emit 0x prefix for explict/implicit hex conversion */
+                /* Emit 0x prefix for explicit/implicit hex conversion */
 
                 *NewBuf++ = '0';
                 *NewBuf++ = 'x';

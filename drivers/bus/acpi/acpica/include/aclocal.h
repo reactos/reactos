@@ -997,7 +997,7 @@ typedef struct acpi_comment_addr_node
 
 /*
  * File node - used for "Include" operator file stack and
- * depdendency tree for the -ca option
+ * dependency tree for the -ca option
  */
 typedef struct acpi_file_node
 {

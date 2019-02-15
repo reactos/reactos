@@ -413,6 +413,7 @@ AcpiDsEvalRegionOperands (
     ACPI_OPERAND_OBJECT     *OperandDesc;
     ACPI_NAMESPACE_NODE     *Node;
     ACPI_PARSE_OBJECT       *NextOp;
+    ACPI_ADR_SPACE_TYPE     SpaceId;
 
 
     ACPI_FUNCTION_TRACE_PTR (DsEvalRegionOperands, Op);
@@ -422,11 +423,12 @@ AcpiDsEvalRegionOperands (
      * This is where we evaluate the address and length fields of the
      * OpRegion declaration
      */
-    Node =  Op->Common.Node;
+    Node = Op->Common.Node;
 
     /* NextOp points to the op that holds the SpaceID */
 
     NextOp = Op->Common.Value.Arg;
+    SpaceId = (ACPI_ADR_SPACE_TYPE) NextOp->Common.Value.Integer;
 
     /* NextOp points to address op */
 
@@ -463,6 +465,15 @@ AcpiDsEvalRegionOperands (
 
     ObjDesc->Region.Length = (UINT32) OperandDesc->Integer.Value;
     AcpiUtRemoveReference (OperandDesc);
+
+    /* A zero-length operation region is unusable. Just warn */
+
+    if (!ObjDesc->Region.Length && (SpaceId < ACPI_NUM_PREDEFINED_REGIONS))
+    {
+        ACPI_WARNING ((AE_INFO,
+            "Operation Region [%4.4s] has zero length (SpaceId %X)",
+            Node->Name.Ascii, SpaceId));
+    }
 
     /*
      * Get the address and save it

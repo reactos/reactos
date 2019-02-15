@@ -525,6 +525,7 @@ static const char           *AcpiGbl_GenericNotify[ACPI_GENERIC_NOTIFY_MAX + 1] 
     /* 0C */ "Reserved (was previously Shutdown Request)",  /* Reserved in ACPI 6.0 */
     /* 0D */ "System Resource Affinity Update",
     /* 0E */ "Heterogeneous Memory Attributes Update"       /* ACPI 6.2 */
+    /* 0F */ "Error Disconnect Recover"                     /* ACPI 6.3 */
 };
 
 static const char           *AcpiGbl_DeviceNotify[5] =
@@ -561,14 +562,14 @@ AcpiUtGetNotifyName (
     ACPI_OBJECT_TYPE        Type)
 {
 
-    /* 00 - 0D are "common to all object types" (from ACPI Spec) */
+    /* 00 - 0F are "common to all object types" (from ACPI Spec) */
 
     if (NotifyValue <= ACPI_GENERIC_NOTIFY_MAX)
     {
         return (AcpiGbl_GenericNotify[NotifyValue]);
     }
 
-    /* 0E - 7F are reserved */
+    /* 10 - 7F are reserved */
 
     if (NotifyValue <= ACPI_MAX_SYS_NOTIFY)
     {

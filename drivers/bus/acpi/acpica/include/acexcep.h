@@ -326,7 +326,7 @@ static const ACPI_EXCEPTION_INFO    AcpiGbl_ExceptionNames_Aml[] =
     EXCEP_TXT ("AE_AML_DIVIDE_BY_ZERO",         "During execution of AML Divide operator"),
     EXCEP_TXT ("AE_AML_BAD_NAME",               "An ACPI name contains invalid character(s)"),
     EXCEP_TXT ("AE_AML_NAME_NOT_FOUND",         "Could not resolve a named reference"),
-    EXCEP_TXT ("AE_AML_INTERNAL",               "An internal error within the interprete"),
+    EXCEP_TXT ("AE_AML_INTERNAL",               "An internal error within the interpreter"),
     EXCEP_TXT ("AE_AML_INVALID_SPACE_ID",       "An Operation Region SpaceID is invalid"),
     EXCEP_TXT ("AE_AML_STRING_LIMIT",           "String is longer than 200 characters"),
     EXCEP_TXT ("AE_AML_NO_RETURN_VALUE",        "A method did not return a required value"),

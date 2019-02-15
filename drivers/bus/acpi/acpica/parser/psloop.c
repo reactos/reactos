@@ -70,13 +70,6 @@ AcpiPsGetArguments (
     UINT8                   *AmlOpStart,
     ACPI_PARSE_OBJECT       *Op);
 
-static void
-AcpiPsLinkModuleCode (
-    ACPI_PARSE_OBJECT       *ParentOp,
-    UINT8                   *AmlStart,
-    UINT32                  AmlLength,
-    ACPI_OWNER_ID           OwnerId);
-
 
 /*******************************************************************************
  *
@@ -100,7 +93,6 @@ AcpiPsGetArguments (
 {
     ACPI_STATUS             Status = AE_OK;
     ACPI_PARSE_OBJECT       *Arg = NULL;
-    const ACPI_OPCODE_INFO  *OpInfo;
 
 
     ACPI_FUNCTION_TRACE_PTR (PsGetArguments, WalkState);
@@ -179,82 +171,6 @@ AcpiPsGetArguments (
             "Final argument count: %8.8X pass %u\n",
             WalkState->ArgCount, WalkState->PassNumber));
 
-        /*
-         * This case handles the legacy option that groups all module-level
-         * code blocks together and defers execution until all of the tables
-         * are loaded. Execute all of these blocks at this time.
-         * Execute any module-level code that was detected during the table
-         * load phase.
-         *
-         * Note: this option is deprecated and will be eliminated in the
-         * future. Use of this option can cause problems with AML code that
-         * depends upon in-order immediate execution of module-level code.
-         */
-        if (!AcpiGbl_ExecuteTablesAsMethods &&
-            (WalkState->PassNumber <= ACPI_IMODE_LOAD_PASS2) &&
-            ((WalkState->ParseFlags & ACPI_PARSE_DISASSEMBLE) == 0))
-        {
-            /*
-             * We want to skip If/Else/While constructs during Pass1 because we
-             * want to actually conditionally execute the code during Pass2.
-             *
-             * Except for disassembly, where we always want to walk the
-             * If/Else/While packages
-             */
-            switch (Op->Common.AmlOpcode)
-            {
-            case AML_IF_OP:
-            case AML_ELSE_OP:
-            case AML_WHILE_OP:
-                /*
-                 * Currently supported module-level opcodes are:
-                 * IF/ELSE/WHILE. These appear to be the most common,
-                 * and easiest to support since they open an AML
-                 * package.
-                 */
-                if (WalkState->PassNumber == ACPI_IMODE_LOAD_PASS1)
-                {
-                    AcpiPsLinkModuleCode (Op->Common.Parent, AmlOpStart,
-                        (UINT32) (WalkState->ParserState.PkgEnd - AmlOpStart),
-                        WalkState->OwnerId);
-                }
-
-                ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-                    "Pass1: Skipping an If/Else/While body\n"));
-
-                /* Skip body of if/else/while in pass 1 */
-
-                WalkState->ParserState.Aml = WalkState->ParserState.PkgEnd;
-                WalkState->ArgCount = 0;
-                break;
-
-            default:
-                /*
-                 * Check for an unsupported executable opcode at module
-                 * level. We must be in PASS1, the parent must be a SCOPE,
-                 * The opcode class must be EXECUTE, and the opcode must
-                 * not be an argument to another opcode.
-                 */
-                if ((WalkState->PassNumber == ACPI_IMODE_LOAD_PASS1) &&
-                    (Op->Common.Parent->Common.AmlOpcode == AML_SCOPE_OP))
-                {
-                    OpInfo = AcpiPsGetOpcodeInfo (Op->Common.AmlOpcode);
-                    if ((OpInfo->Class == AML_CLASS_EXECUTE) &&
-                        (!Arg))
-                    {
-                        ACPI_WARNING ((AE_INFO,
-                            "Unsupported module-level executable opcode "
-                            "0x%.2X at table offset 0x%.4X",
-                            Op->Common.AmlOpcode,
-                            (UINT32) (ACPI_PTR_DIFF (AmlOpStart,
-                                WalkState->ParserState.AmlStart) +
-                                sizeof (ACPI_TABLE_HEADER))));
-                    }
-                }
-                break;
-            }
-        }
-
         /* Special processing for certain opcodes */
 
         switch (Op->Common.AmlOpcode)
@@ -325,117 +241,6 @@ AcpiPsGetArguments (
     return_ACPI_STATUS (AE_OK);
 }
 
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiPsLinkModuleCode
- *
- * PARAMETERS:  ParentOp            - Parent parser op
- *              AmlStart            - Pointer to the AML
- *              AmlLength           - Length of executable AML
- *              OwnerId             - OwnerId of module level code
- *
- * RETURN:      None.
- *
- * DESCRIPTION: Wrap the module-level code with a method object and link the
- *              object to the global list. Note, the mutex field of the method
- *              object is used to link multiple module-level code objects.
- *
- * NOTE: In this legacy option, each block of detected executable AML
- * code that is outside of any control method is wrapped with a temporary
- * control method object and placed on a global list below.
- *
- * This function executes the module-level code for all tables only after
- * all of the tables have been loaded. It is a legacy option and is
- * not compatible with other ACPI implementations. See AcpiNsLoadTable.
- *
- * This function will be removed when the legacy option is removed.
- *
- ******************************************************************************/
-
-static void
-AcpiPsLinkModuleCode (
-    ACPI_PARSE_OBJECT       *ParentOp,
-    UINT8                   *AmlStart,
-    UINT32                  AmlLength,
-    ACPI_OWNER_ID           OwnerId)
-{
-    ACPI_OPERAND_OBJECT     *Prev;
-    ACPI_OPERAND_OBJECT     *Next;
-    ACPI_OPERAND_OBJECT     *MethodObj;
-    ACPI_NAMESPACE_NODE     *ParentNode;
-
-
-    ACPI_FUNCTION_TRACE (PsLinkModuleCode);
-
-
-    /* Get the tail of the list */
-
-    Prev = Next = AcpiGbl_ModuleCodeList;
-    while (Next)
-    {
-        Prev = Next;
-        Next = Next->Method.Mutex;
-    }
-
-    /*
-     * Insert the module level code into the list. Merge it if it is
-     * adjacent to the previous element.
-     */
-    if (!Prev ||
-       ((Prev->Method.AmlStart + Prev->Method.AmlLength) != AmlStart))
-    {
-        /* Create, initialize, and link a new temporary method object */
-
-        MethodObj = AcpiUtCreateInternalObject (ACPI_TYPE_METHOD);
-        if (!MethodObj)
-        {
-            return_VOID;
-        }
-
-        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-            "Create/Link new code block: %p\n", MethodObj));
-
-        if (ParentOp->Common.Node)
-        {
-            ParentNode = ParentOp->Common.Node;
-        }
-        else
-        {
-            ParentNode = AcpiGbl_RootNode;
-        }
-
-        MethodObj->Method.AmlStart = AmlStart;
-        MethodObj->Method.AmlLength = AmlLength;
-        MethodObj->Method.OwnerId = OwnerId;
-        MethodObj->Method.InfoFlags |= ACPI_METHOD_MODULE_LEVEL;
-
-        /*
-         * Save the parent node in NextObject. This is cheating, but we
-         * don't want to expand the method object.
-         */
-        MethodObj->Method.NextObject =
-            ACPI_CAST_PTR (ACPI_OPERAND_OBJECT, ParentNode);
-
-        if (!Prev)
-        {
-            AcpiGbl_ModuleCodeList = MethodObj;
-        }
-        else
-        {
-            Prev->Method.Mutex = MethodObj;
-        }
-    }
-    else
-    {
-        ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
-            "Appending to existing code block: %p\n", Prev));
-
-        Prev->Method.AmlLength += AmlLength;
-    }
-
-    return_VOID;
-}
 
 /*******************************************************************************
  *

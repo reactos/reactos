@@ -52,7 +52,7 @@
 #define DEBUGGER_THREADING          DEBUGGER_SINGLE_THREADED
 #endif /* !DEBUGGER_THREADING */
 
-/* EDK2 EFI environemnt */
+/* EDK2 EFI environment */
 
 #if defined(_EDK2_EFI)
 

@@ -304,6 +304,11 @@ AcpiUtDeleteInternalObj (
 
             AcpiUtDeleteObjectDesc (SecondDesc);
         }
+        if (Object->Field.InternalPccBuffer)
+        {
+            ACPI_FREE(Object->Field.InternalPccBuffer);
+        }
+
         break;
 
     case ACPI_TYPE_BUFFER_FIELD:

@@ -125,7 +125,7 @@ AcpiNsLoadTable (
         /*
          * On error, delete any namespace objects created by this table.
          * We cannot initialize these objects, so delete them. There are
-         * a couple of expecially bad cases:
+         * a couple of especially bad cases:
          * AE_ALREADY_EXISTS - namespace collision.
          * AE_NOT_FOUND - the target of a Scope operator does not
          * exist. This target of Scope must already exist in the

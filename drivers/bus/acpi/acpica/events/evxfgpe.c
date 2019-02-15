@@ -777,9 +777,9 @@ ACPI_EXPORT_SYMBOL (AcpiGetGpeStatus)
  *
  * RETURN:      Status
  *
- * DESCRIPTION: Clear and conditionally reenable a GPE. This completes the GPE
+ * DESCRIPTION: Clear and conditionally re-enable a GPE. This completes the GPE
  *              processing. Intended for use by asynchronous host-installed
- *              GPE handlers. The GPE is only reenabled if the EnableForRun bit
+ *              GPE handlers. The GPE is only re-enabled if the EnableForRun bit
  *              is set in the GPE info.
  *
  ******************************************************************************/
