@@ -46,7 +46,7 @@ static void PSM_PrepareToDraw(LPCWSTR str, INT count, LPWSTR new_str, LPINT new_
     {
         if (str[i] == PREFIX || (iswspace(str[i]) && str[i] != L' '))
         {
-            if(i < count - 1 && str[i + 1] == PREFIX)
+            if (i < count - 1 && str[i + 1] == PREFIX)
                 new_str[j++] = str[i++];
             else
                 i++;
@@ -239,15 +239,15 @@ LpkExtTextOut(
                                 (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
                                 reordered_str, uCount, NULL, &glyphs, &cGlyphs);
 
-        if (glyphs)
-        {
-            fuOptions |= ETO_GLYPH_INDEX;
-            uCount = cGlyphs;
-        }
-
         /* Now display the reordered text if any of the arrays is valid and if BIDI_Reorder succeeded */
         if ((glyphs || reordered_str) && bReorder) 
         {
+            if (glyphs)
+            {
+                fuOptions |= ETO_GLYPH_INDEX;
+                uCount = cGlyphs;
+            }
+
             bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc,
                                   glyphs ? (LPWSTR)glyphs : reordered_str, uCount, lpDx);
         }
@@ -424,4 +424,89 @@ INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, D
     HeapFree(GetProcessHeap(), 0, display_str);
 
     return size.cx;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+LpkGetTextExtentExPoint(
+    HDC hdc,
+    LPCWSTR lpString,
+    INT cString, 
+    INT nMaxExtent,
+    LPINT lpnFit,
+    LPINT lpnDx, 
+    LPSIZE lpSize,
+    DWORD dwUnused,
+    int unknown)
+{
+    SCRIPT_STRING_ANALYSIS ssa;
+    HRESULT hr;
+    const SIZE *pSize;
+    INT i, extent, *Dx;
+
+    UNREFERENCED_PARAMETER(dwUnused);
+    UNREFERENCED_PARAMETER(unknown);
+
+    if (cString < 0 || !lpSize)
+        return FALSE;
+
+    if (cString == 0)
+    {
+        lpSize->cx = 0;
+        lpSize->cy = 0;
+        return TRUE;
+    }
+
+    /* Check if any processing is required */
+    if (ScriptIsComplex(lpString, cString, SIC_COMPLEX) != S_OK)
+        return GetTextExtentExPointWPri(hdc, lpString, cString, nMaxExtent, lpnFit, lpnDx, lpSize);
+    
+    hr = ScriptStringAnalyse(hdc, lpString, cString, 3 * cString / 2 + 16, -1,
+                             SSA_GLYPHS, 0, NULL, NULL, NULL, NULL, NULL, &ssa);
+
+    if (hr != S_OK)
+        return FALSE;
+
+    pSize = ScriptString_pSize(ssa);
+
+    if (pSize)
+        *lpSize = *pSize;
+    else
+        GetTextExtentExPointWPri(hdc, lpString, cString, 0, NULL, NULL, lpSize);
+
+    /* Use logic from TextIntGetTextExtentPoint */
+    if (lpnDx || lpnFit)
+    {    
+        Dx = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(INT));
+
+        if (!Dx)
+        {
+            ScriptStringFree(&ssa);
+            return FALSE;
+        }
+
+        if (lpnFit)
+            *lpnFit = 0;
+
+        ScriptStringGetLogicalWidths(ssa, Dx);
+
+        for (i = 0, extent = 0; i < cString; i++)
+        {
+            extent += Dx[i];
+
+            if (extent <= nMaxExtent && lpnFit)
+                *lpnFit = i + 1;
+
+            if (lpnDx)
+                lpnDx[i] = extent;
+        }
+
+        HeapFree(GetProcessHeap(), 0, Dx);
+    }
+
+    ScriptStringFree(&ssa);
+    return TRUE;
 }
