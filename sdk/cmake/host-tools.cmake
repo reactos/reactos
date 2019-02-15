@@ -48,7 +48,12 @@ function(setup_host_tools)
     if(WITH_HOST_TOOLS)
         # Use pre-built tools, required for cross compiling with msvc
         # as only one target architecture is available at a time
-        set(HOST_TOOLS_DIR ${WITH_HOST_TOOLS})
+        find_path(HOST_TOOLS_DIR
+            NAMES ImportExecutables.cmake
+            HINTS ${WITH_HOST_TOOLS} ${REACTOS_SOURCE_DIR}/${WITH_HOST_TOOLS}
+            NO_CMAKE_PATH
+            NO_CMAKE_ENVIRONMENT_PATH)
+        message(STATUS "Using prebuilt host tools: ${HOST_TOOLS_DIR}")
         include(${HOST_TOOLS_DIR}/ImportExecutables.cmake)
     else()
         # Build host-tools. Changes to tool sources will rebuild targets
