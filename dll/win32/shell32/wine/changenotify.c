@@ -730,6 +730,12 @@ _NotificationCompletion(DWORD dwErrorCode, // completion code
         return;
     }
 
+    if (!item)
+    {
+        ERR("item == NULL\n");
+        return;
+    }
+
 #endif
 
     /* This likely means overflow, so force whole directory refresh. */
