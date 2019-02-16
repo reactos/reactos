@@ -2,11 +2,11 @@
  * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0.html)
  * PURPOSE:     An unofficial extension of <windowsx.h>
- * COPYRIGHT:   Copyright 2017-2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2017-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #ifndef _INC_WINXX
-#define _INC_WINXX
+#define _INC_WINXX      2   /* Version 2 */
 
 #pragma once
 
@@ -26,7 +26,7 @@
 #ifndef HANDLE_WM_NULL
 #define HANDLE_WM_NULL(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd)), 0L)
-#define FORWARD_WM_NULL(hwnd, compactRatio, fn) \
+#define FORWARD_WM_NULL(hwnd, fn) \
     (void)((fn)((hwnd), WM_NULL, 0, 0L), 0L)
 #endif
 
@@ -1043,5 +1043,55 @@
 /* BOOL ScrollBar_OnGetScrollBarInfo(HWND hwnd, LPSCROLLBARINFO lpsbi) */
 #define HANDLE_SBM_GETSCROLLBARINFO(hwnd, wParam, lParam, fn) \
     (LRESULT)(INT_PTR)(BOOL)(fn)((hwnd), (LPSCROLLBARINFO)(lParam))
+
+#ifdef _UNDOCUSER_H     /* UNDOCUMENTED */
+    /* LRESULT Cls_OnDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_DROPOBJECT
+    #define HANDLE_WM_DROPOBJECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_DROPOBJECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_DROPOBJECT, wParam, lParam))
+    #endif
+
+    /* LRESULT Cls_OnQueryDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_QUERYDROPOBJECT
+    #define HANDLE_WM_QUERYDROPOBJECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_QUERYDROPOBJECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_QUERYDROPOBJECT, wParam, lParam))
+    #endif
+
+    /* LRESULT Cls_OnBeginDrag(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_BEGINDRAG
+    #define HANDLE_WM_BEGINDRAG(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_BEGINDRAG(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_BEGINDRAG, wParam, lParam))
+    #endif
+
+    /* LRESULT Cls_OnDragLoop(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_DRAGLOOP
+    #define HANDLE_WM_DRAGLOOP(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_DRAGLOOP(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_DRAGLOOP, wParam, lParam))
+    #endif
+
+    /* LRESULT Cls_OnDragSelect(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_DRAGSELECT
+    #define HANDLE_WM_DRAGSELECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_DRAGSELECT(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_DRAGSELECT, wParam, lParam))
+    #endif
+
+    /* LRESULT Cls_OnDragMove(HWND hwnd, WPARAM wParam, LPARAM lParam) */
+    #ifndef HANDLE_WM_DRAGMOVE
+    #define HANDLE_WM_DRAGMOVE(hwnd, wParam, lParam, fn) \
+        (LRESULT)(fn)((hwnd), (wParam), (lParam))
+    #define FORWARD_WM_DRAGMOVE(hwnd, wParam, lParam, fn) \
+        (LRESULT)((fn)((hwnd), WM_DRAGMOVE, wParam, lParam))
+    #endif
+#endif
 
 #endif

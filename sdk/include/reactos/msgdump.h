@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP
+#define _INC_MSGDUMP    2   /* Version 2 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -14,7 +14,9 @@
  */
 #pragma once
 
-#include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
+#ifndef _INC_WINXX
+    #include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
+#endif
 #include <strsafe.h>
 
 #ifndef MSGDUMP_TPRINTF
@@ -937,6 +939,56 @@ MD_MDIGetActive(HWND hwnd)
                     MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
+
+#ifdef _UNDOCUSER_H
+    static __inline LRESULT MSGDUMP_API
+    MD_OnDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_DROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+
+    static __inline LRESULT MSGDUMP_API
+    MD_OnQueryDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_QUERYDROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+
+    static __inline LRESULT MSGDUMP_API
+    MD_OnBeginDrag(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_BEGINDRAG(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+
+    static __inline LRESULT MSGDUMP_API
+    MD_OnDragLoop(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGLOOP(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+
+    static __inline LRESULT MSGDUMP_API
+    MD_OnDragSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGSELECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+
+    static __inline LRESULT MSGDUMP_API
+    MD_OnDragMove(HWND hwnd, WPARAM wParam, LPARAM lParam)
+    {
+        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGMOVE(hwnd:%p, wParam:%p, lParam:%p)\n"),
+                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        return 0;
+    }
+#endif
 
 static __inline HMENU MSGDUMP_API
 MD_MDISetMenu(HWND hwnd, BOOL fRefresh, HMENU hmenuFrame, HMENU hmenuWindow)
@@ -2916,6 +2968,14 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_MDICASCADE, MD_MDICascade);
         HANDLE_MSG(hwnd, WM_MDIICONARRANGE, MD_MDIIconArrange);
         HANDLE_MSG(hwnd, WM_MDIGETACTIVE, MD_MDIGetActive);
+#ifdef _UNDOCUSER_H
+        HANDLE_MSG(hwnd, WM_DROPOBJECT, MD_OnDropObject);
+        HANDLE_MSG(hwnd, WM_QUERYDROPOBJECT, MD_OnQueryDropObject);
+        HANDLE_MSG(hwnd, WM_BEGINDRAG, MD_OnBeginDrag);
+        HANDLE_MSG(hwnd, WM_DRAGLOOP, MD_OnDragLoop);
+        HANDLE_MSG(hwnd, WM_DRAGSELECT, MD_OnDragSelect);
+        HANDLE_MSG(hwnd, WM_DRAGMOVE, MD_OnDragMove);
+#endif
         HANDLE_MSG(hwnd, WM_MDISETMENU, MD_MDISetMenu);
         HANDLE_MSG(hwnd, WM_ENTERSIZEMOVE, MD_OnEnterSizeMove);
         HANDLE_MSG(hwnd, WM_EXITSIZEMOVE, MD_OnExitSizeMove);
