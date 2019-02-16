@@ -2289,7 +2289,7 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
 static DWORD GetOwnerModuleFromPidEntry(DWORD OwningPid, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
 {
     HANDLE Process;
-    DWORD FileLen, PathLen;
+    DWORD FileLen, PathLen, Error;
     WCHAR File[MAX_PATH], Path[MAX_PATH];
     PTCPIP_OWNER_MODULE_BASIC_INFO BasicInfo;
 
@@ -2326,13 +2326,23 @@ static DWORD GetOwnerModuleFromPidEntry(DWORD OwningPid, TCPIP_OWNER_MODULE_INFO
         PathLen *= sizeof(WCHAR);
         FileLen *= sizeof(WCHAR);
     }
-    else if (GetLastError() == ERROR_PARTIAL_COPY)
+    else
     {
-        wcscpy(File, L"System");
-        wcscpy(Path, L"System");
+        Error = GetLastError();
 
-        PathLen = sizeof(L"System");
-        FileLen = sizeof(L"System");
+        if (Error == ERROR_PARTIAL_COPY)
+        {
+            wcscpy(File, L"System");
+            wcscpy(Path, L"System");
+
+            PathLen = sizeof(L"System");
+            FileLen = sizeof(L"System");
+        }
+        else
+        {
+            CloseHandle(Process);
+            return Error;
+        }
     }
 
     CloseHandle(Process);
