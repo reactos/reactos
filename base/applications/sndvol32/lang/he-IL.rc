@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "אפשרויות"
     BEGIN
-        MENUITEM "מאפיינים", IDC_PROPERTIES
-        MENUITEM "בקרים מתקדמים", IDC_ADVANCED_CONTROLS
+        MENUITEM "מאפיינים", IDM_PROPERTIES
+        MENUITEM "בקרים מתקדמים", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "יציאה", IDC_EXIT
+        MENUITEM "יציאה", IDM_EXIT
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "נושאי עזרה", IDC_HELP_TOPICS
+        MENUITEM "נושאי עזרה", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "אודות בקרת עוצמה", IDC_ABOUT
+        MENUITEM "אודות בקרת עוצמה", IDM_ABOUT
     END
 END
 

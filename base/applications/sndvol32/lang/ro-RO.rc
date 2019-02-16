@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opțiuni"
     BEGIN
-        MENUITEM "&Proprietăți", IDC_PROPERTIES
-        MENUITEM "Reglaje a&vansate", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Proprietăți", IDM_PROPERTIES
+        MENUITEM "Reglaje a&vansate", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", IDC_EXIT
+        MENUITEM "I&eșire", IDM_EXIT
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDC_HELP_TOPICS
+        MENUITEM "&Manual…", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDC_ABOUT
+        MENUITEM "&Despre…", IDM_ABOUT
     END
 END
 

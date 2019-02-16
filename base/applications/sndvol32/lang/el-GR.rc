@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "O&ptions"
     BEGIN
-        MENUITEM "Ι&διότητες", IDC_PROPERTIES
-        MENUITEM "&Advanced Controls", IDC_ADVANCED_CONTROLS
+        MENUITEM "Ι&διότητες", IDM_PROPERTIES
+        MENUITEM "&Advanced Controls", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος", IDC_EXIT
+        MENUITEM "Έ&ξοδος", IDM_EXIT
     END
     POPUP "&Βοήθεια"
     BEGIN
-        MENUITEM "&Θέματα Βοήθειας", IDC_HELP_TOPICS
+        MENUITEM "&Θέματα Βοήθειας", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετικά με τον έλεγχο έντασης", IDC_ABOUT
+        MENUITEM "&Σχετικά με τον έλεγχο έντασης", IDM_ABOUT
     END
 END
 

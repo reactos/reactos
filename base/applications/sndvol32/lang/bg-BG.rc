@@ -8,16 +8,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "Въз&можности"
     BEGIN
-        MENUITEM "С&войства", IDC_PROPERTIES
-        MENUITEM "&Разширени настройки", IDC_ADVANCED_CONTROLS
+        MENUITEM "С&войства", IDM_PROPERTIES
+        MENUITEM "&Разширени настройки", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход", IDC_EXIT
+        MENUITEM "Из&ход", IDM_EXIT
     END
     POPUP "&Помощ"
     BEGIN
-        MENUITEM "&Съдържание на помощта", IDC_HELP_TOPICS
+        MENUITEM "&Съдържание на помощта", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&За Сила на звука", IDC_ABOUT
+        MENUITEM "&За Сила на звука", IDM_ABOUT
     END
 END
 

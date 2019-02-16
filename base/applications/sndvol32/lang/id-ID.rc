@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "O&psi"
     BEGIN
-        MENUITEM "P&roperti", IDC_PROPERTIES
-        MENUITEM "Kontrol L&anjutan", IDC_ADVANCED_CONTROLS
+        MENUITEM "P&roperti", IDM_PROPERTIES
+        MENUITEM "Kontrol L&anjutan", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Keluar", IDC_EXIT
+        MENUITEM "&Keluar", IDM_EXIT
     END
     POPUP "&Bantuan"
     BEGIN
-        MENUITEM "Daftar Isi &Bantuan", IDC_HELP_TOPICS
+        MENUITEM "Daftar Isi &Bantuan", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang Kontrol Volume", IDC_ABOUT
+        MENUITEM "&Tentang Kontrol Volume", IDM_ABOUT
     END
 END
 

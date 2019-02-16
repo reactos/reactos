@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Možnosti"
     BEGIN
-        MENUITEM "&Vlastnosti", IDC_PROPERTIES
-        MENUITEM "Rozšírené &ovládanie", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Vlastnosti", IDM_PROPERTIES
+        MENUITEM "Rozšírené &ovládanie", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Skončiť", IDC_EXIT
+        MENUITEM "&Skončiť", IDM_EXIT
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "&Témy Pomocníka", IDC_HELP_TOPICS
+        MENUITEM "&Témy Pomocníka", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Č&o je Ovládanie hlasitosti", IDC_ABOUT
+        MENUITEM "Č&o je Ovládanie hlasitosti", IDM_ABOUT
     END
 END
 

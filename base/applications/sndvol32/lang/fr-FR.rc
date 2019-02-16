@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "O&ptions"
     BEGIN
-        MENUITEM "P&ropriétés", IDC_PROPERTIES
-        MENUITEM "&Contrôles avancés", IDC_ADVANCED_CONTROLS
+        MENUITEM "P&ropriétés", IDM_PROPERTIES
+        MENUITEM "&Contrôles avancés", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Q&uitter", IDC_EXIT
+        MENUITEM "Q&uitter", IDM_EXIT
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Aide", IDC_HELP_TOPICS
+        MENUITEM "&Aide", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "À &propos ...", IDC_ABOUT
+        MENUITEM "À &propos ...", IDM_ABOUT
     END
 END
 

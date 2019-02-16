@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "O&pties"
     BEGIN
-        MENUITEM "Eigenscha&ppen", IDC_PROPERTIES
-        MENUITEM "&Geavanceerde volumeregelingen", IDC_ADVANCED_CONTROLS
+        MENUITEM "Eigenscha&ppen", IDM_PROPERTIES
+        MENUITEM "&Geavanceerde volumeregelingen", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Afsluiten", IDC_EXIT
+        MENUITEM "&Afsluiten", IDM_EXIT
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Help-&onderwerpen", IDC_HELP_TOPICS
+        MENUITEM "Help-&onderwerpen", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Info", IDC_ABOUT
+        MENUITEM "&Info", IDM_ABOUT
     END
 END
 

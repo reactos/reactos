@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "オプション(&P)"
     BEGIN
-        MENUITEM "プロパティ(&R)", IDC_PROPERTIES
-        MENUITEM "トーン調整(&A)", IDC_ADVANCED_CONTROLS
+        MENUITEM "プロパティ(&R)", IDM_PROPERTIES
+        MENUITEM "トーン調整(&A)", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "ボリューム コントロールの終了(&X)", IDC_EXIT
+        MENUITEM "ボリューム コントロールの終了(&X)", IDM_EXIT
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "トピックの検索(&H)", IDC_HELP_TOPICS
+        MENUITEM "トピックの検索(&H)", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "バージョン情報(&A)...", IDC_ABOUT
+        MENUITEM "バージョン情報(&A)...", IDM_ABOUT
     END
 END
 

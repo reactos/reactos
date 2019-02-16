@@ -6,11 +6,11 @@
 #define IDI_SPEAKER_LEFT 302
 #define IDI_SPEAKER_RIGHT 303
 
-#define IDC_PROPERTIES        1001
-#define IDC_ADVANCED_CONTROLS 1002
-#define IDC_EXIT              1003
-#define IDC_HELP_TOPICS       1101
-#define IDC_ABOUT             1102
+#define IDM_PROPERTIES        1001
+#define IDM_ADVANCED_CONTROLS 1002
+#define IDM_EXIT              1003
+#define IDM_HELP_TOPICS       1101
+#define IDM_ABOUT             1102
 
 #define IDC_MIXERDEVICE      1001
 #define IDC_PLAYBACK         1002

@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Husûsiyetler...", IDC_PROPERTIES
-        MENUITEM "&Gelişmiş Denetimler", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Husûsiyetler...", IDM_PROPERTIES
+        MENUITEM "&Gelişmiş Denetimler", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış", IDC_EXIT
+        MENUITEM "&Çıkış", IDM_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları", IDC_HELP_TOPICS
+        MENUITEM "&Yardım Konuları", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Ses Düzeyi Denetimi Üzerine...", IDC_ABOUT
+        MENUITEM "&Ses Düzeyi Denetimi Üzerine...", IDM_ABOUT
     END
 END
 

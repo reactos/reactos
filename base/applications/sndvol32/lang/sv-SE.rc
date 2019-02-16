@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Alternativ"
     BEGIN
-        MENUITEM "&Inställningar", IDC_PROPERTIES
-        MENUITEM "A&vancerade kontroller", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Inställningar", IDM_PROPERTIES
+        MENUITEM "A&vancerade kontroller", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Avsluta", IDC_EXIT
+        MENUITEM "&Avsluta", IDM_EXIT
     END
     POPUP "&Hjälp"
     BEGIN
-        MENUITEM "&Hjälpavsnitt", IDC_HELP_TOPICS
+        MENUITEM "&Hjälpavsnitt", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Om ...", IDC_ABOUT
+        MENUITEM "&Om ...", IDM_ABOUT
     END
 END
 

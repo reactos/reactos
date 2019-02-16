@@ -12,16 +12,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Параметри"
     BEGIN
-        MENUITEM "&Властивості", IDC_PROPERTIES
-        MENUITEM "&Додаткові параметри", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Властивості", IDM_PROPERTIES
+        MENUITEM "&Додаткові параметри", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "В&ихід", IDC_EXIT
+        MENUITEM "В&ихід", IDM_EXIT
     END
     POPUP "До&відка"
     BEGIN
-        MENUITEM "&Зміст", IDC_HELP_TOPICS
+        MENUITEM "&Зміст", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Про регулятор гучності", IDC_ABOUT
+        MENUITEM "&Про регулятор гучності", IDM_ABOUT
     END
 END
 

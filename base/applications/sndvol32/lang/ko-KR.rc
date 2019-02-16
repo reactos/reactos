@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "옵션(&P)"
     BEGIN
-        MENUITEM "속성(&R)", IDC_PROPERTIES
-        MENUITEM "고급 컨트롤(&A)", IDC_ADVANCED_CONTROLS
+        MENUITEM "속성(&R)", IDM_PROPERTIES
+        MENUITEM "고급 컨트롤(&A)", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "종료(&X)", IDC_EXIT
+        MENUITEM "종료(&X)", IDM_EXIT
     END
     POPUP "도움말(&H)"
     BEGIN
-        MENUITEM "도움말 항목(&H)", IDC_HELP_TOPICS
+        MENUITEM "도움말 항목(&H)", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "볼륨 컨트롤 정보(&A)", IDC_ABOUT
+        MENUITEM "볼륨 컨트롤 정보(&A)", IDM_ABOUT
     END
 END
 

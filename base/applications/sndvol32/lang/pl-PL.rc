@@ -12,16 +12,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Opcje"
     BEGIN
-        MENUITEM "&Właściwości", IDC_PROPERTIES
-        MENUITEM "&Tryb zaawansowany", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Właściwości", IDM_PROPERTIES
+        MENUITEM "&Tryb zaawansowany", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Zakoń&cz", IDC_EXIT
+        MENUITEM "Zakoń&cz", IDM_EXIT
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Tematy pomocy", IDC_HELP_TOPICS
+        MENUITEM "&Tematy pomocy", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Regulacja głośności - informacje", IDC_ABOUT
+        MENUITEM "&Regulacja głośności - informacje", IDM_ABOUT
     END
 END
 

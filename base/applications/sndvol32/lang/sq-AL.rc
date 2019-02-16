@@ -8,16 +8,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "O&psione"
     BEGIN
-        MENUITEM "Tipare", IDC_PROPERTIES
-        MENUITEM "Kontroll i Avancum", IDC_ADVANCED_CONTROLS
+        MENUITEM "Tipare", IDM_PROPERTIES
+        MENUITEM "Kontroll i Avancum", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Dil", IDC_EXIT
+        MENUITEM "Dil", IDM_EXIT
     END
     POPUP "Ndihmë"
     BEGIN
-        MENUITEM "Ndihmë temë", IDC_HELP_TOPICS
+        MENUITEM "Ndihmë temë", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Rreth Kontrollit Volumit", IDC_ABOUT
+        MENUITEM "Rreth Kontrollit Volumit", IDM_ABOUT
     END
 END
 

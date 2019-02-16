@@ -894,7 +894,7 @@ MainWindowProc(HWND hwnd,
 
             switch (LOWORD(wParam))
             {
-                case IDC_PROPERTIES:
+                case IDM_PROPERTIES:
                 {
                     PREFERENCES_CONTEXT Pref;
 
@@ -961,13 +961,13 @@ MainWindowProc(HWND hwnd,
                     break;
                 }
 
-                case IDC_EXIT:
+                case IDM_EXIT:
                 {
                     PostQuitMessage(0);
                     break;
                 }
 
-                case IDC_ABOUT:
+                case IDM_ABOUT:
                 {
                     HICON hAppIcon = (HICON)GetClassLongPtrW(hwnd,
                                                              GCLP_HICON);
@@ -1185,7 +1185,7 @@ MainWindowProc(HWND hwnd,
                 }
 
                 /* Disable the 'Advanced Controls' menu item */
-                EnableMenuItem(GetMenu(hwnd), IDC_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_GRAYED);
+                EnableMenuItem(GetMenu(hwnd), IDM_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_GRAYED);
             }
             break;
         }

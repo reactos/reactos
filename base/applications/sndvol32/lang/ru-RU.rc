@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Параметры"
     BEGIN
-        MENUITEM "&Свойства", IDC_PROPERTIES
-        MENUITEM "&Дополнительные параметры", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Свойства", IDM_PROPERTIES
+        MENUITEM "&Дополнительные параметры", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDC_EXIT
+        MENUITEM "&Выход", IDM_EXIT
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&Вызов справки", IDC_HELP_TOPICS
+        MENUITEM "&Вызов справки", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе", IDC_ABOUT
+        MENUITEM "&О программе", IDM_ABOUT
     END
 END
 

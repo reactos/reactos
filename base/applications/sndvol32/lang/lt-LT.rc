@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Parametrai"
     BEGIN
-        MENUITEM "&Nustatymai", IDC_PROPERTIES
-        MENUITEM "Papildomi &valdymo elementai", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Nustatymai", IDM_PROPERTIES
+        MENUITEM "Papildomi &valdymo elementai", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Baigti", IDC_EXIT
+        MENUITEM "&Baigti", IDM_EXIT
     END
     POPUP "Pa&galba"
     BEGIN
-        MENUITEM "&Pagalba", IDC_HELP_TOPICS
+        MENUITEM "&Pagalba", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Apie garso valdiklį", IDC_ABOUT
+        MENUITEM "&Apie garso valdiklį", IDM_ABOUT
     END
 END
 

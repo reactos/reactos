@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "选项(&P)"
     BEGIN
-        MENUITEM "属性(&R)", IDC_PROPERTIES
-        MENUITEM "高级控制(&A)", IDC_ADVANCED_CONTROLS
+        MENUITEM "属性(&R)", IDM_PROPERTIES
+        MENUITEM "高级控制(&A)", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", IDC_EXIT
+        MENUITEM "退出(&X)", IDM_EXIT
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "帮助主题(&T)", IDC_HELP_TOPICS
+        MENUITEM "帮助主题(&T)", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "关于音量控制(&A)", IDC_ABOUT
+        MENUITEM "关于音量控制(&A)", IDM_ABOUT
     END
 END
 

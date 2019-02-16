@@ -4,16 +4,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "I&nnstillinger"
     BEGIN
-        MENUITEM "E&genskaper", IDC_PROPERTIES
-        MENUITEM "&Avansert Kontroller", IDC_ADVANCED_CONTROLS
+        MENUITEM "E&genskaper", IDM_PROPERTIES
+        MENUITEM "&Avansert Kontroller", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "A&vslutt", IDC_EXIT
+        MENUITEM "A&vslutt", IDM_EXIT
     END
     POPUP "&Hjelp"
     BEGIN
-        MENUITEM "&Emner i hjelp", IDC_HELP_TOPICS
+        MENUITEM "&Emner i hjelp", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Om Volumkontroll", IDC_ABOUT
+        MENUITEM "&Om Volumkontroll", IDM_ABOUT
     END
 END
 

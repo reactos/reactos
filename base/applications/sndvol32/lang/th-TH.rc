@@ -12,16 +12,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&ตัวเลือก"
     BEGIN
-        MENUITEM "&คุณสมบัติ", IDC_PROPERTIES
-        MENUITEM "ควบคุมแบบ&ขั้นสูง", IDC_ADVANCED_CONTROLS
+        MENUITEM "&คุณสมบัติ", IDM_PROPERTIES
+        MENUITEM "ควบคุมแบบ&ขั้นสูง", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&ออกจากโปรแกรม", IDC_EXIT
+        MENUITEM "&ออกจากโปรแกรม", IDM_EXIT
     END
     POPUP "&ช่วยเหลือ"
     BEGIN
-        MENUITEM "เ&นื้อหาในการช่วยเหลือ", IDC_HELP_TOPICS
+        MENUITEM "เ&นื้อหาในการช่วยเหลือ", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "เ&กี่ยวกับแผงควบคุมระบบเสียง", IDC_ABOUT
+        MENUITEM "เ&กี่ยวกับแผงควบคุมระบบเสียง", IDM_ABOUT
     END
 END
 

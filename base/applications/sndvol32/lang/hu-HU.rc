@@ -6,16 +6,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Beállítások"
     BEGIN
-        MENUITEM "&Tulajdonságok", IDC_PROPERTIES
-        MENUITEM "&Részletes beállítások", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Tulajdonságok", IDM_PROPERTIES
+        MENUITEM "&Részletes beállítások", IDM_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "&Kilépés", IDC_EXIT
+        MENUITEM "&Kilépés", IDM_EXIT
     END
     POPUP "&Súgó"
     BEGIN
-        MENUITEM "Súgó &témák", IDC_HELP_TOPICS
+        MENUITEM "Súgó &témák", IDM_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Névjegy ...", IDC_ABOUT
+        MENUITEM "&Névjegy ...", IDM_ABOUT
     END
 END
 
