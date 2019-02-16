@@ -2866,16 +2866,17 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
  * Display a popup menu.
  */
 static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT flags,
-                              INT x, INT y, INT xanchor, INT yanchor )
+                              INT x, INT y)
 {
     UINT width, height;
     POINT pt;
     PMONITOR monitor;
     PWND pWnd;
     USER_REFERENCE_ENTRY Ref;
+    BOOL bIsPopup = (flags & TPM_POPUPMENU) != 0;
 
-    TRACE("owner=%p menu=%p id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
-          pwndOwner, menu, id, x, y, xanchor, yanchor);
+    TRACE("owner=%p menu=%p id=0x%04x x=0x%04x y=0x%04x\n",
+          pwndOwner, menu, id, x, y);
 
     if (menu->iItem != NO_SELECTED_ITEM)
     {
@@ -2896,7 +2897,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     pt.y = y;
     monitor = UserMonitorFromPoint( pt, MONITOR_DEFAULTTONEAREST );
 
-    if (flags & TPM_LAYOUTRTL) 
+    if (flags & TPM_LAYOUTRTL)
         flags ^= TPM_RIGHTALIGN;
 
     if( flags & TPM_RIGHTALIGN ) x -= width;
@@ -2907,14 +2908,11 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
 
     if( x + width > monitor->rcMonitor.right)
     {
-        if( xanchor && x >= width - xanchor )
-            x -= width - xanchor;
-
         if( x + width > monitor->rcMonitor.right)
         {
             /* If we would flip around our origin, would we go off screen on the other side?
                Or is our origin itself too far to the right already? */
-            if (x - width < monitor->rcMonitor.left || x > monitor->rcMonitor.right)
+            if (!bIsPopup || x - width < monitor->rcMonitor.left || x > monitor->rcMonitor.right)
                 x = monitor->rcMonitor.right - width;
             else
                 x -= width;
@@ -2923,7 +2921,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     if( x < monitor->rcMonitor.left )
     {
         /* If we would flip around our origin, would we go off screen on the other side? */
-        if (x + width > monitor->rcMonitor.right)
+        if (!bIsPopup || x + width > monitor->rcMonitor.right)
             x = monitor->rcMonitor.left;
         else
             x += width;
@@ -2931,14 +2929,11 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
 
     if( y + height > monitor->rcMonitor.bottom)
     {
-        if( yanchor && y >= height + yanchor )
-            y -= height + yanchor;
-
         if( y + height > monitor->rcMonitor.bottom)
         {
             /* If we would flip around our origin, would we go off screen on the other side?
                Or is our origin itself too far to the bottom already? */
-            if (y - height < monitor->rcMonitor.top || y > monitor->rcMonitor.bottom)
+            if (!bIsPopup || y - height < monitor->rcMonitor.top || y > monitor->rcMonitor.bottom)
                 y = monitor->rcMonitor.bottom - height;
             else
                 y -= height;
@@ -2947,7 +2942,7 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     if( y < monitor->rcMonitor.top )
     {
         /* If we would flip around our origin, would we go off screen on the other side? */
-        if (y + height > monitor->rcMonitor.bottom)
+        if (!bIsPopup || y + height > monitor->rcMonitor.bottom)
             y = monitor->rcMonitor.top;
         else
             y += height;
@@ -3310,7 +3305,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   MENU_InitPopup( WndOwner, Item->spSubMenu, Flags );
 
   MENU_ShowPopup( WndOwner, Item->spSubMenu, Menu->iItem, Flags,
-                Rect.left, Rect.top, Rect.right, Rect.bottom );
+                Rect.left, Rect.top);
   if (SelectFirst)
   {
       MENU_MoveSelection(WndOwner, Item->spSubMenu, ITEM_NEXT);
@@ -4452,7 +4447,7 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
        if (menu->fFlags & MNF_SYSMENU)
           MENU_InitSysMenuPopup( menu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
-       if (MENU_ShowPopup(pWnd, menu, 0, wFlags, x, y, 0, 0 ))
+       if (MENU_ShowPopup(pWnd, menu, 0, wFlags | TPM_POPUPMENU, x, y))
           ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd,
                                 lpTpm ? &lpTpm->rcExclude : NULL);
        else
