@@ -116,6 +116,9 @@ MiniportInitialize(
         return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
 
+    ResourceList = NULL;
+    ResourceListSize = 0;
+
     /* Allocate our adapter context */
     Status = NdisAllocateMemoryWithTag((PVOID*)&Adapter,
                                        sizeof(*Adapter),
@@ -155,10 +158,7 @@ MiniportInitialize(
         goto Cleanup;
     }
 
-
     /* Get our resources for IRQ and IO base information */
-    ResourceList = NULL;
-    ResourceListSize = 0;
     NdisMQueryAdapterResources(&Status,
                                WrapperConfigurationContext,
                                ResourceList,
