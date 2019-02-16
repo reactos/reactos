@@ -2293,6 +2293,12 @@ static DWORD GetOwnerModuleFromPidEntry(DWORD OwningPid, TCPIP_OWNER_MODULE_INFO
     WCHAR File[MAX_PATH], Path[MAX_PATH];
     PTCPIP_OWNER_MODULE_BASIC_INFO BasicInfo;
 
+    if (IsBadWritePtr(pdwSize, sizeof(DWORD)) ||
+        IsBadWritePtr(Buffer, *pdwSize))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     if (OwningPid == 0)
     {
         return ERROR_NOT_FOUND;
@@ -2362,6 +2368,12 @@ static DWORD GetOwnerModuleFromTagEntry(DWORD OwningPid, DWORD OwningTag, TCPIP_
         DWORD TagType;
         PWSTR Buffer;
     } ServiceQuery;
+
+    if (IsBadWritePtr(pdwSize, sizeof(DWORD)) ||
+        IsBadWritePtr(Buffer, *pdwSize))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     /* First, secure (avoid injections) load advapi32.dll */
     Size = GetSystemDirectoryW(SysDir, MAX_PATH);
