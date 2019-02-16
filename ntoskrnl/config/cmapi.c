@@ -1959,6 +1959,7 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         /* Don't touch the hive */
         CmpLockHiveFlusherExclusive(CmHive);
+
         ASSERT(CmHive->ViewLock);
         KeAcquireGuardedMutex(CmHive->ViewLock);
         CmHive->ViewLockOwner = KeGetCurrentThread();
@@ -1968,13 +1969,18 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         {
             /* I don't believe the current Hv does shrinking */
             ASSERT(FALSE);
+            // CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK_OR_LOADING(CmHive);
         }
         else
         {
             /* Now we can release views */
             ASSERT(CmHive->ViewLock);
-            CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK_OR_LOADING(CmHive);
-            ASSERT(KeGetCurrentThread() == CmHive->ViewLockOwner);
+            // CMP_ASSERT_VIEW_LOCK_OWNED(CmHive);
+            ASSERT((CmpSpecialBootCondition == TRUE) ||
+                   (CmHive->HiveIsLoading == TRUE) ||
+                   (CmHive->ViewLockOwner == KeGetCurrentThread()) ||
+                   (CmpTestRegistryLockExclusive() == TRUE));
+            CmHive->ViewLockOwner = NULL;
             KeReleaseGuardedMutex(CmHive->ViewLock);
         }
 
@@ -2240,6 +2246,9 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
     }
 
+    /* Set the loading flag */
+    CmHive->HiveIsLoading = TRUE;
+
     /* Flush the hive */
     CmFlushKey(Kcb, TRUE);
 
@@ -2248,8 +2257,13 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         DPRINT("CmpUnlinkHiveFromMaster() failed!\n");
 
-        /* Remove the unloading flag and return failure */
+        /* Remove the unloading flag */
         Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
+
+        /* Reset the loading flag */
+        CmHive->HiveIsLoading = FALSE;
+
+        /* Return failure */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 

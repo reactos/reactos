@@ -102,7 +102,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     Hive->NotifyList.Flink = NULL;
     Hive->NotifyList.Blink = NULL;
 
-    /* Set loading flag */
+    /* Set the loading flag */
     Hive->HiveIsLoading = TRUE;
 
     /* Set the current thread as creator */
@@ -212,6 +212,9 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
             return STATUS_REGISTRY_CORRUPT;
         }
     }
+
+    /* Reset the loading flag */
+    Hive->HiveIsLoading = FALSE;
 
     /* Lock the hive list */
     ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
