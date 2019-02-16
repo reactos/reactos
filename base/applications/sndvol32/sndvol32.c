@@ -1328,7 +1328,7 @@ HandleCommandLine(LPTSTR cmdline,
 {
     TCHAR option;
 
-    *pMixerId = 0;
+    *pMixerId = PLAY_MIXER;
     *pMode = (dwStyle & 0x20) ? SMALL_MODE : NORMAL_MODE;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
@@ -1348,6 +1348,11 @@ HandleCommandLine(LPTSTR cmdline,
             case 'D':
                 break;
 
+            case 'n': /* Small size */
+            case 'N':
+                *pMode = NORMAL_MODE;
+                break;
+
             case 's': /* Small size */
             case 'S':
                 *pMode = SMALL_MODE;
@@ -1360,12 +1365,12 @@ HandleCommandLine(LPTSTR cmdline,
 
             case 'p': /* Play mode */
             case 'P':
-                *pMixerId = 0;
+                *pMixerId = PLAY_MIXER;
                 break;
 
             case 'r': /* Record mode */
             case 'R':
-                *pMixerId = 1;
+                *pMixerId = RECORD_MIXER;
                 break;
 
             default:

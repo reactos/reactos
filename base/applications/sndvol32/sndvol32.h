@@ -25,6 +25,9 @@
 #define BALANCE_TICKS        1
 #define BALANCE_PAGE_SIZE   12
 
+#define PLAY_MIXER           0
+#define RECORD_MIXER         1
+
 typedef enum _WINDOW_MODE
 {
     NORMAL_MODE,

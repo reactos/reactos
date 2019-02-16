@@ -66,13 +66,14 @@ LoadDialogResource(
 LPWORD
 AddDialogControl(
     IN HWND hwndDialog,
-    IN HWND * OutWnd,
+    OUT HWND *OutWnd,
     IN LPRECT DialogOffset,
     IN PDLGITEMTEMPLATE DialogItem,
     IN DWORD DialogIdMultiplier,
     IN HFONT hFont,
-    UINT xBaseUnit,
-    UINT yBaseUnit)
+    IN UINT xBaseUnit,
+    IN UINT yBaseUnit,
+    IN UINT MixerId)
 {
     RECT rect;
     LPWORD Offset;
@@ -211,9 +212,23 @@ AddDialogControl(
                 SendMessage(hwnd, TBM_SETTIC, 0, (LPARAM)i);
         }
     }
-    else if (!wcsicmp(ClassName, L"static") || !wcsicmp(ClassName, L"button"))
+    else if (!wcsicmp(ClassName, L"static"))
     {
-        /* set font */
+        /* Set font */
+        SendMessageW(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    else if (!wcsicmp(ClassName, L"button"))
+    {
+        if (DialogItem->style & BS_AUTOCHECKBOX)
+        {
+            if (MixerId == PLAY_MIXER)
+            {
+                /* Disable checkboxes by default, if we are in play mode */
+                EnableWindow(hwnd, FALSE);
+            }
+        }
+
+        /* Set font */
         SendMessageW(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
@@ -275,7 +290,15 @@ LoadDialogControls(
     for (Index = 0; Index < ItemCount; Index++)
     {
         /* add controls */
-        Offset = AddDialogControl(MixerWindow->hWnd, &MixerWindow->Window[MixerWindow->WindowCount], DialogOffset, DialogItem, DialogIdMultiplier, MixerWindow->hFont, xBaseUnit, yBaseUnit);
+        Offset = AddDialogControl(MixerWindow->hWnd,
+                                  &MixerWindow->Window[MixerWindow->WindowCount],
+                                  DialogOffset,
+                                  DialogItem,
+                                  DialogIdMultiplier,
+                                  MixerWindow->hFont,
+                                  xBaseUnit,
+                                  yBaseUnit,
+                                  MixerWindow->MixerId);
 
         /* sanity check */
         assert(Offset);
@@ -480,6 +503,10 @@ EnumConnectionsCallback(
 
                               if (hDlgCtrl != NULL)
                               {
+                                  /* Enable the 'Mute' checkbox, if we are in play mode */
+                                  if (Mixer->MixerId == PLAY_MIXER)
+                                      EnableWindow(hDlgCtrl, TRUE);
+
                                   /* check state */
                                   if (SendMessageW(hDlgCtrl, BM_GETCHECK, 0, 0) != Details.fValue)
                                   {
