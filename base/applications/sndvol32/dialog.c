@@ -175,6 +175,9 @@ AddDialogControl(
         {
             /* Vertical trackbar: Volume */
 
+            /* Disable the volume trackbar by default */
+            EnableWindow(hwnd, FALSE);
+
             /* set up range */
             SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
 
@@ -194,6 +197,9 @@ AddDialogControl(
         else
         {
             /* Horizontal trackbar: Balance */
+
+            /* Disable the balance trackbar by default */
+            EnableWindow(hwnd, FALSE);
 
             /* set up range */
             SendMessage(hwnd, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, BALANCE_STEPS));
@@ -488,7 +494,7 @@ EnumConnectionsCallback(
                   /* now go through all controls and update their states */
                   for (Index = 0; Index < Line->cControls; Index++)
                   {
-                      if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
+                      if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
                       {
                           MIXERCONTROLDETAILS_BOOLEAN Details;
 
@@ -516,7 +522,7 @@ EnumConnectionsCallback(
                               }
                           }
                       }
-                      else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
+                      else if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
                       {
                           /* get volume control details */
                           if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)pVolumeDetails) != -1)
@@ -582,6 +588,9 @@ EnumConnectionsCallback(
                                   /* check state */
                                   LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
 
+                                  /* Enable the volume trackbar */
+                                  EnableWindow(hDlgCtrl, TRUE);
+
                                   if (OldPosition != (VOLUME_MAX - volumePosition))
                                   {
                                       /* update control state */
@@ -589,19 +598,7 @@ EnumConnectionsCallback(
                                   }
                               }
 
-                              if (Line->cChannels == 1)
-                              {
-                                  /* Disable the balance trackbar for mono channels */
-                                  wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
-
-                                  /* get dialog control */
-                                  hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
-                                  if (hDlgCtrl != NULL)
-                                  {
-                                      EnableWindow(hDlgCtrl, FALSE);
-                                  }
-                              }
-                              else if (Line->cChannels == 2)
+                              if (Line->cChannels == 2)
                               {
                                   /* Set the balance trackbar */
                                   wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
@@ -613,6 +610,9 @@ EnumConnectionsCallback(
                                   {
                                       /* check state */
                                       LRESULT OldPosition = SendMessageW(hDlgCtrl, TBM_GETPOS, 0, 0);
+
+                                      /* Enable the balance trackbar */
+                                      EnableWindow(hDlgCtrl, TRUE);
 
                                       if (OldPosition != balancePosition)
                                       {
