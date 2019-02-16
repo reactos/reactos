@@ -524,7 +524,6 @@ DWORD getNumArpEntries(void)
     }
 
     closeTcpFile( tcpFile );
-    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
     if( entitySet ) tdiFreeThingSet( entitySet );
     return totalNumber;
 }
@@ -649,7 +648,6 @@ DWORD getNumUdpEntries(void)
     }
 
     closeTcpFile( tcpFile );
-    if( IpUdpTable ) tdiFreeThingSet( IpUdpTable );
     if( entitySet ) tdiFreeThingSet( entitySet );
     return totalNumber;
 }
@@ -761,7 +759,6 @@ DWORD getNumTcpEntries(void)
     }
 
     closeTcpFile( tcpFile );
-    if( IpTcpTable ) tdiFreeThingSet( IpTcpTable );
     if( entitySet ) tdiFreeThingSet( entitySet );
     return totalNumber;
 }
