@@ -5,6 +5,7 @@
  * PURPOSE:     DLL entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Alex Ionescu (alex@relsoft.net)
+ *              Pierre Schweitzer (pierre@reactos.org)
  * REVISIONS:
  *              CSH 01/09-2000 Created
  *              Alex 16/07/2004 - Complete Rewrite
@@ -2466,7 +2467,61 @@ WSPIoctl(IN  SOCKET Handle,
             Ret = NO_ERROR;
             break;
         case SIO_GET_EXTENSION_FUNCTION_POINTER:
-            Errno = WSAEINVAL;
+            if (cbOutBuffer == 0)
+            {
+                cbRet = sizeof(PVOID);
+                Errno = WSAEFAULT;
+                break;
+            }
+
+            if (cbInBuffer < sizeof(GUID) ||
+                cbOutBuffer < sizeof(PVOID))
+            {
+                Errno = WSAEINVAL;
+                break;
+            }
+
+            {
+                GUID AcceptExGUID = WSAID_ACCEPTEX;
+                GUID ConnectExGUID = WSAID_CONNECTEX;
+                GUID DisconnectExGUID = WSAID_DISCONNECTEX;
+                GUID GetAcceptExSockaddrsGUID = WSAID_GETACCEPTEXSOCKADDRS;
+
+                if (IsEqualGUID(&AcceptExGUID, lpvInBuffer))
+                {
+                    *((PVOID *)lpvOutBuffer) = WSPAcceptEx;
+                    cbRet = sizeof(PVOID);
+                    Errno = NO_ERROR;
+                    Ret = NO_ERROR;
+                }
+                else if (IsEqualGUID(&ConnectExGUID, lpvInBuffer))
+                {
+                    *((PVOID *)lpvOutBuffer) = WSPConnectEx;
+                    cbRet = sizeof(PVOID);
+                    Errno = NO_ERROR;
+                    Ret = NO_ERROR;
+                }
+                else if (IsEqualGUID(&DisconnectExGUID, lpvInBuffer))
+                {
+                    *((PVOID *)lpvOutBuffer) = WSPDisconnectEx;
+                    cbRet = sizeof(PVOID);
+                    Errno = NO_ERROR;
+                    Ret = NO_ERROR;
+                }
+                else if (IsEqualGUID(&GetAcceptExSockaddrsGUID, lpvInBuffer))
+                {
+                    *((PVOID *)lpvOutBuffer) = WSPGetAcceptExSockaddrs;
+                    cbRet = sizeof(PVOID);
+                    Errno = NO_ERROR;
+                    Ret = NO_ERROR;
+                }
+                else
+                {
+                    ERR("Querying unknown extension function: %x\n", ((GUID*)lpvInBuffer)->Data1);
+                    Errno = WSAEOPNOTSUPP;
+                }
+            }
+
             break;
         case SIO_ADDRESS_LIST_QUERY:
             if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)

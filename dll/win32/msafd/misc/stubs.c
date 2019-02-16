@@ -53,4 +53,65 @@ WSPJoinLeaf(
     return (SOCKET)0;
 }
 
+BOOL
+WSPAPI
+WSPAcceptEx(
+    IN SOCKET sListenSocket,
+    IN SOCKET sAcceptSocket,
+    OUT PVOID lpOutputBuffer,
+    IN DWORD dwReceiveDataLength,
+    IN DWORD dwLocalAddressLength,
+    IN DWORD dwRemoteAddressLength,
+    OUT LPDWORD lpdwBytesReceived,
+    IN OUT LPOVERLAPPED lpOverlapped)
+{
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+BOOL
+WSPAPI
+WSPConnectEx(
+    IN SOCKET s,
+    IN const struct sockaddr *name,
+    IN int namelen,
+    IN PVOID lpSendBuffer,
+    IN DWORD dwSendDataLength,
+    OUT LPDWORD lpdwBytesSent,
+    IN OUT LPOVERLAPPED lpOverlapped)
+{
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+BOOL
+WSPAPI
+WSPDisconnectEx(
+  IN SOCKET hSocket,
+  IN LPOVERLAPPED lpOverlapped,
+  IN DWORD dwFlags,
+  IN DWORD reserved)
+{
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+VOID
+WSPAPI
+WSPGetAcceptExSockaddrs(
+    IN PVOID lpOutputBuffer,
+    IN DWORD dwReceiveDataLength,
+    IN DWORD dwLocalAddressLength,
+    IN DWORD dwRemoteAddressLength,
+    OUT struct sockaddr **LocalSockaddr,
+    OUT LPINT LocalSockaddrLength,
+    OUT struct sockaddr **RemoteSockaddr,
+    OUT LPINT RemoteSockaddrLength)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */
