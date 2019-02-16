@@ -286,10 +286,8 @@ Cleanup:
     {
         NdisFreeMemory(ResourceList, ResourceListSize, 0);
     }
-    if (Adapter != NULL)
-    {
-        MiniportHalt(Adapter);
-    }
+
+    MiniportHalt(Adapter);
 
     return Status;
 }
