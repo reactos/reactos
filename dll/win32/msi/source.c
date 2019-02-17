@@ -592,8 +592,11 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
                               0, 0, NULL, &size);
         if (rc != ERROR_SUCCESS)
         {
-            RegCloseKey(sourcekey);
-            return ERROR_SUCCESS;
+            static WCHAR szEmpty[1] = { '\0' };
+            rc = ERROR_SUCCESS;
+            source = NULL;
+            ptr = szEmpty;
+            goto output_out;
         }
 
         source = msi_alloc(size);
@@ -627,7 +630,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             else
                 ptr++;
         }
-
+output_out:
         if (szValue)
         {
             if (strlenW(ptr) < *pcchValue)
