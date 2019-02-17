@@ -18,7 +18,7 @@ BOOLEAN CMAPI
 HvpVerifyHiveHeader(
     IN PHBASE_BLOCK BaseBlock)
 {
-    if (BaseBlock->Signature != HV_SIGNATURE ||
+    if (BaseBlock->Signature != HV_HBLOCK_SIGNATURE ||
         BaseBlock->Major != HSYS_MAJOR ||
         BaseBlock->Minor < HSYS_MINOR ||
         BaseBlock->Type != HFILE_TYPE_PRIMARY ||
@@ -29,7 +29,7 @@ HvpVerifyHiveHeader(
     {
         DPRINT1("Verify Hive Header failed:\n");
         DPRINT1("    Signature: 0x%x, expected 0x%x; Major: 0x%x, expected 0x%x\n",
-                BaseBlock->Signature, HV_SIGNATURE, BaseBlock->Major, HSYS_MAJOR);
+                BaseBlock->Signature, HV_HBLOCK_SIGNATURE, BaseBlock->Major, HSYS_MAJOR);
         DPRINT1("    Minor: 0x%x expected to be >= 0x%x; Type: 0x%x, expected 0x%x\n",
                 BaseBlock->Minor, HSYS_MINOR, BaseBlock->Type, HFILE_TYPE_PRIMARY);
         DPRINT1("    Format: 0x%x, expected 0x%x; Cluster: 0x%x, expected 1\n",
@@ -172,7 +172,7 @@ HvpCreateHive(
     /* Clear it */
     RtlZeroMemory(BaseBlock, RegistryHive->BaseBlockAlloc);
 
-    BaseBlock->Signature = HV_SIGNATURE;
+    BaseBlock->Signature = HV_HBLOCK_SIGNATURE;
     BaseBlock->Major = HSYS_MAJOR;
     BaseBlock->Minor = HSYS_MINOR;
     BaseBlock->Type = HFILE_TYPE_PRIMARY;
@@ -270,7 +270,7 @@ HvpInitializeMemoryHive(
     for (BlockIndex = 0; BlockIndex < Hive->Storage[Stable].Length; )
     {
         Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HBLOCK_SIZE);
-        if (Bin->Signature != HV_BIN_SIGNATURE ||
+        if (Bin->Signature != HV_HBIN_SIGNATURE ||
            (Bin->Size % HBLOCK_SIZE) != 0)
         {
             DPRINT1("Invalid bin at BlockIndex %lu, Signature 0x%x, Size 0x%x\n",

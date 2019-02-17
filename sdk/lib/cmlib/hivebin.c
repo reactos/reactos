@@ -31,7 +31,7 @@ HvpAddBin(
         return NULL;
     RtlZeroMemory(Bin, BinSize);
 
-    Bin->Signature = HV_BIN_SIGNATURE;
+    Bin->Signature = HV_HBIN_SIGNATURE;
     Bin->FileOffset = RegistryHive->Storage[Storage].Length *
                       HBLOCK_SIZE;
     Bin->Size = (ULONG)BinSize;
