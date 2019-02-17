@@ -98,6 +98,7 @@ static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
         if (rc != ERROR_SUCCESS)
             rc = ERROR_BAD_CONFIGURATION;
     }
+    RegCloseKey(rootkey);
 
     return rc;
 }
