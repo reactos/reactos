@@ -873,78 +873,6 @@ done:
     return TRUE;
 }
 
-
-static VOID
-ResizeMixerWindow(
-    PMIXER_WINDOW MixerWindow)
-{
-    RECT statusRect;
-    HWND hDlgCtrl;
-    UINT i;
-    LONG dy;
-
-    if (MixerWindow->Mode != NORMAL_MODE)
-        return;
-
-    if (MixerWindow->bHasExtendedControls == FALSE)
-        return;
-
-    if (MixerWindow->hStatusBar)
-    {
-        GetWindowRect(MixerWindow->hStatusBar, &statusRect);
-    }
-
-    /* Height of the 'Advanced' button in dialog units plus 2 units bottom space */
-    #define BUTTON_HEIGHT 16
-    dy = MulDiv(BUTTON_HEIGHT, MixerWindow->baseUnit.cy, 8);
-
-    if (MixerWindow->bShowExtendedControls)
-        MixerWindow->rect.bottom += dy;
-    else
-        MixerWindow->rect.bottom -= dy;
-
-    SetWindowPos(MixerWindow->hWnd,
-                 HWND_TOP,
-                 MixerWindow->rect.left,
-                 MixerWindow->rect.top,
-                 MixerWindow->rect.right - MixerWindow->rect.left,
-                 MixerWindow->rect.bottom - MixerWindow->rect.top,
-                 SWP_NOMOVE | SWP_NOZORDER);
-
-    if (MixerWindow->hStatusBar)
-    {
-        SetWindowPos(MixerWindow->hStatusBar,
-                     HWND_TOP,
-                     statusRect.left,
-                     MixerWindow->rect.bottom - (statusRect.bottom - statusRect.top),
-                     MixerWindow->rect.right - MixerWindow->rect.left,
-                     statusRect.bottom - statusRect.top,
-                     SWP_NOZORDER);
-    }
-
-    for (i = 0; i < MixerWindow->DialogCount; i++)
-    {
-        hDlgCtrl = GetDlgItem(MixerWindow->hWnd, IDC_LINE_SEP * i);
-        if (hDlgCtrl != NULL)
-        {
-            GetWindowRect(hDlgCtrl, &statusRect);
-            if (MixerWindow->bShowExtendedControls)
-                statusRect.bottom += dy;
-            else
-                statusRect.bottom -= dy;
-
-            SetWindowPos(hDlgCtrl,
-                         HWND_TOP,
-                         0,
-                         0,
-                         statusRect.right - statusRect.left,
-                         statusRect.bottom - statusRect.top,
-                         SWP_NOMOVE | SWP_NOZORDER);
-        }
-    }
-}
-
-
 static LRESULT CALLBACK
 MainWindowProc(HWND hwnd,
                UINT uMsg,
@@ -1037,7 +965,7 @@ MainWindowProc(HWND hwnd,
                     CheckMenuItem(GetMenu(hwnd),
                                   IDM_ADVANCED_CONTROLS,
                                   MF_BYCOMMAND | (MixerWindow->bShowExtendedControls ? MF_CHECKED : MF_UNCHECKED));
-                    ResizeMixerWindow(MixerWindow);
+                    RebuildMixerWindowControls(&Preferences);
                     break;
 
                 case IDM_EXIT:
@@ -1063,28 +991,34 @@ MainWindowProc(HWND hwnd,
                     CtrlID = LOWORD(wParam);
 
                     /* check if the message is from the line switch */
-                    if (HIWORD(wParam) == BN_CLICKED && (CtrlID % IDC_LINE_SWITCH == 0))
+                    if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        /* compute line offset */
-                        LineOffset = CtrlID / IDC_LINE_SWITCH;
-
-                        /* compute window id of line name static control */
-                        CtrlID = LineOffset * IDC_LINE_NAME;
-
-                        /* get line name */
-                        if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                        if (CtrlID % IDC_LINE_SWITCH == 0)
                         {
-                            /* setup context */
-                            Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-                            Context.bVertical = FALSE;
-                            Context.bSwitch = TRUE;
+                            /* compute line offset */
+                            LineOffset = CtrlID / IDC_LINE_SWITCH;
 
-                            /* set volume */
-                            SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                            /* compute window id of line name static control */
+                            CtrlID = LineOffset * IDC_LINE_NAME;
+
+                            /* get line name */
+                            if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                            {
+                                /* setup context */
+                                Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+                                Context.bVertical = FALSE;
+                                Context.bSwitch = TRUE;
+
+                                /* set volume */
+                                SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                            }
+                        }
+                        else if (CtrlID % IDC_LINE_ADVANCED == 0)
+                        {
+
                         }
                     }
                 }
-
             }
             break;
         }

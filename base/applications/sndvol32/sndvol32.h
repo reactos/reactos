@@ -28,6 +28,8 @@
 #define PLAY_MIXER           0
 #define RECORD_MIXER         1
 
+#define ADVANCED_BUTTON_HEIGHT 16
+
 typedef enum _WINDOW_MODE
 {
     NORMAL_MODE,

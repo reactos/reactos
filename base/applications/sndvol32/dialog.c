@@ -631,7 +631,19 @@ EnumConnectionsCallback(
                       else
                       {
                           if (PrefContext->MixerWindow->Mode == NORMAL_MODE)
+                          {
                               PrefContext->MixerWindow->bHasExtendedControls = TRUE;
+
+                              wID = (PrefContext->MixerWindow->DialogCount + 1) * IDC_LINE_ADVANCED;
+
+                              /* get dialog control */
+                              hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
+                              if (hDlgCtrl != NULL)
+                              {
+                                  ShowWindow(hDlgCtrl,
+                                             PrefContext->MixerWindow->bShowExtendedControls ? SW_SHOWNORMAL : SW_HIDE);
+                              }
+                          }
                       }
                   }
 
@@ -658,25 +670,33 @@ LoadDialogCtrls(
 {
     HWND hDlgCtrl;
     RECT statusRect;
+    UINT i;
+    LONG dy;
 
     /* set dialog count to zero */
     PrefContext->MixerWindow->DialogCount = 0;
-
+    PrefContext->MixerWindow->bHasExtendedControls = FALSE;
     SetRectEmpty(&PrefContext->MixerWindow->rect);
 
     /* enumerate controls */
     SndMixerEnumConnections(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
 
-    if (PrefContext->MixerWindow->bHasExtendedControls)
-    {
-        EnableMenuItem(GetMenu(PrefContext->MixerWindow->hWnd), IDM_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_ENABLED);
-    }
+    /* Update the 'Advanced Controls' menu item */
+    EnableMenuItem(GetMenu(PrefContext->MixerWindow->hWnd),
+                   IDM_ADVANCED_CONTROLS,
+                   MF_BYCOMMAND | (PrefContext->MixerWindow->bHasExtendedControls ? MF_ENABLED : MF_GRAYED));
 
+    /* Add some height for the status bar */
     if (PrefContext->MixerWindow->hStatusBar)
     {
         GetWindowRect(PrefContext->MixerWindow->hStatusBar, &statusRect);
         PrefContext->MixerWindow->rect.bottom += (statusRect.bottom - statusRect.top);
     }
+
+    /* Add height of the 'Advanced' button */
+    dy = MulDiv(ADVANCED_BUTTON_HEIGHT, PrefContext->MixerWindow->baseUnit.cy, 8);
+    if (PrefContext->MixerWindow->bShowExtendedControls && PrefContext->MixerWindow->bHasExtendedControls)
+        PrefContext->MixerWindow->rect.bottom += dy;
 
     /* now move the window */
     AdjustWindowRect(&PrefContext->MixerWindow->rect, WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, TRUE);
@@ -694,8 +714,28 @@ LoadDialogCtrls(
                      SWP_NOZORDER);
     }
 
+    /* Resize the vertical line separators */
+    for (i = 0; i < PrefContext->MixerWindow->DialogCount; i++)
+    {
+        hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, (i + 1) * IDC_LINE_SEP);
+        if (hDlgCtrl != NULL)
+        {
+            GetWindowRect(hDlgCtrl, &statusRect);
+            if (PrefContext->MixerWindow->bShowExtendedControls && PrefContext->MixerWindow->bHasExtendedControls)
+                statusRect.bottom += dy;
+
+            SetWindowPos(hDlgCtrl,
+                         HWND_TOP,
+                         0,
+                         0,
+                         statusRect.right - statusRect.left,
+                         statusRect.bottom - statusRect.top,
+                         SWP_NOMOVE | SWP_NOZORDER);
+        }
+    }
+
     /* Hide the last line separator */
-    hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, IDC_LINE_SEP * PrefContext->MixerWindow->DialogCount /*PrefContext->Count*/);
+    hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, IDC_LINE_SEP * PrefContext->MixerWindow->DialogCount);
     if (hDlgCtrl != NULL)
     {
         ShowWindow(hDlgCtrl, SW_HIDE);
