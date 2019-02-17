@@ -874,6 +874,77 @@ done:
 }
 
 
+static VOID
+ResizeMixerWindow(
+    PMIXER_WINDOW MixerWindow)
+{
+    RECT statusRect;
+    HWND hDlgCtrl;
+    UINT i;
+    LONG dy;
+
+    if (MixerWindow->Mode != NORMAL_MODE)
+        return;
+
+    if (MixerWindow->bHasExtendedControls == FALSE)
+        return;
+
+    if (MixerWindow->hStatusBar)
+    {
+        GetWindowRect(MixerWindow->hStatusBar, &statusRect);
+    }
+
+    /* Height of the 'Advanced' button in dialog units plus 2 units bottom space */
+    #define BUTTON_HEIGHT 16
+    dy = MulDiv(BUTTON_HEIGHT, MixerWindow->baseUnit.cy, 8);
+
+    if (MixerWindow->bShowExtendedControls)
+        MixerWindow->rect.bottom += dy;
+    else
+        MixerWindow->rect.bottom -= dy;
+
+    SetWindowPos(MixerWindow->hWnd,
+                 HWND_TOP,
+                 MixerWindow->rect.left,
+                 MixerWindow->rect.top,
+                 MixerWindow->rect.right - MixerWindow->rect.left,
+                 MixerWindow->rect.bottom - MixerWindow->rect.top,
+                 SWP_NOMOVE | SWP_NOZORDER);
+
+    if (MixerWindow->hStatusBar)
+    {
+        SetWindowPos(MixerWindow->hStatusBar,
+                     HWND_TOP,
+                     statusRect.left,
+                     MixerWindow->rect.bottom - (statusRect.bottom - statusRect.top),
+                     MixerWindow->rect.right - MixerWindow->rect.left,
+                     statusRect.bottom - statusRect.top,
+                     SWP_NOZORDER);
+    }
+
+    for (i = 0; i < MixerWindow->DialogCount; i++)
+    {
+        hDlgCtrl = GetDlgItem(MixerWindow->hWnd, IDC_LINE_SEP * i);
+        if (hDlgCtrl != NULL)
+        {
+            GetWindowRect(hDlgCtrl, &statusRect);
+            if (MixerWindow->bShowExtendedControls)
+                statusRect.bottom += dy;
+            else
+                statusRect.bottom -= dy;
+
+            SetWindowPos(hDlgCtrl,
+                         HWND_TOP,
+                         0,
+                         0,
+                         statusRect.right - statusRect.left,
+                         statusRect.bottom - statusRect.top,
+                         SWP_NOMOVE | SWP_NOZORDER);
+        }
+    }
+}
+
+
 static LRESULT CALLBACK
 MainWindowProc(HWND hwnd,
                UINT uMsg,
@@ -938,9 +1009,6 @@ MainWindowProc(HWND hwnd,
                         /* use new selected mixer */
                         Preferences.MixerWindow->Mixer = Pref.Mixer;
 
-                        /* rebuild dialog controls */
-                        RebuildMixerWindowControls(&Preferences);
-
                         /* create status window */
                         if (MixerWindow->Mode == NORMAL_MODE)
                         {
@@ -957,9 +1025,20 @@ MainWindowProc(HWND hwnd,
                                     (LPARAM)szProduct);
                             }
                         }
+
+                        /* rebuild dialog controls */
+                        RebuildMixerWindowControls(&Preferences);
                     }
                     break;
                 }
+
+                case IDM_ADVANCED_CONTROLS:
+                    MixerWindow->bShowExtendedControls = !MixerWindow->bShowExtendedControls;
+                    CheckMenuItem(GetMenu(hwnd),
+                                  IDM_ADVANCED_CONTROLS,
+                                  MF_BYCOMMAND | (MixerWindow->bShowExtendedControls ? MF_CHECKED : MF_UNCHECKED));
+                    ResizeMixerWindow(MixerWindow);
+                    break;
 
                 case IDM_EXIT:
                 {
@@ -1160,13 +1239,8 @@ MainWindowProc(HWND hwnd,
                 /* copy product */
                 wcscpy(Preferences.DeviceName, szProduct);
 
-                if (!RebuildMixerWindowControls(&Preferences))
-                {
-                    DPRINT("Rebuilding mixer window controls failed!\n");
-                    SndMixerDestroy(MixerWindow->Mixer);
-                    MixerWindow->Mixer = NULL;
-                    Result = -1;
-                }
+                /* Disable the 'Advanced Controls' menu item */
+                EnableMenuItem(GetMenu(hwnd), IDM_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_GRAYED);
 
                 /* create status window */
                 if (MixerWindow->Mode == NORMAL_MODE)
@@ -1184,8 +1258,13 @@ MainWindowProc(HWND hwnd,
                     }
                 }
 
-                /* Disable the 'Advanced Controls' menu item */
-                EnableMenuItem(GetMenu(hwnd), IDM_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_GRAYED);
+                if (!RebuildMixerWindowControls(&Preferences))
+                {
+                    DPRINT("Rebuilding mixer window controls failed!\n");
+                    SndMixerDestroy(MixerWindow->Mixer);
+                    MixerWindow->Mixer = NULL;
+                    Result = -1;
+                }
             }
             break;
         }

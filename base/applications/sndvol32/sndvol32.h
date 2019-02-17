@@ -43,11 +43,15 @@ typedef struct _MIXER_WINDOW
   UINT SelectedLine;
   UINT WindowCount;
   HWND *Window;
+    UINT DialogCount;
 
     WINDOW_MODE Mode;
     UINT MixerId;
+    BOOL bHasExtendedControls;
+    BOOL bShowExtendedControls;
     RECT rect;
     HFONT hFont;
+    SIZE baseUnit;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
 extern HINSTANCE hAppInstance;
@@ -106,7 +110,6 @@ typedef struct _PREFERENCES_CONTEXT
     UINT OtherLines;
     TCHAR DeviceName[128];
 
-    DWORD Count;
     DWORD tmp;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 

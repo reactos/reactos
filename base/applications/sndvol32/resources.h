@@ -23,7 +23,8 @@
 #define IDC_LINE_SWITCH      1009
 #define IDC_LINE_SLIDER_HORZ 1010
 #define IDC_LINE_SLIDER_VERT 1011
-#define IDC_LINE_SEP         1012
+#define IDC_LINE_ADVANCED    1012
+#define IDC_LINE_SEP         1013
 
 #define IDS_SNDVOL32       100
 #define IDS_NOMIXERDEVICES 101

@@ -225,7 +225,7 @@ AddDialogControl(
     }
     else if (!wcsicmp(ClassName, L"button"))
     {
-        if (DialogItem->style & BS_AUTOCHECKBOX)
+        if (DialogItem->id == IDC_LINE_SWITCH)
         {
             if (MixerId == PLAY_MIXER)
             {
@@ -233,12 +233,14 @@ AddDialogControl(
                 EnableWindow(hwnd, FALSE);
             }
         }
+        else if (DialogItem->id == IDC_LINE_ADVANCED)
+        {
+            ShowWindow(hwnd, SW_HIDE);
+        }
 
         /* Set font */
         SendMessageW(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
-
-    //ShowWindow(hwnd, SW_SHOWNORMAL);
 
     if (WindowName != NULL)
     {
@@ -396,6 +398,9 @@ LoadDialog(
                 yBaseUnit = charSize.cy;
             }
             SelectObject(hDC, hOldFont);
+
+            MixerWindow->baseUnit.cx = charSize.cx;
+            MixerWindow->baseUnit.cy = charSize.cy;
         }
     }
 
@@ -480,10 +485,10 @@ EnumConnectionsCallback(
                   dlgId = (PrefContext->MixerWindow->Mode == SMALL_MODE) ? IDD_SMALL_LINE : IDD_NORMAL_LINE;
 
               /* load dialog resource */
-              LoadDialog(hAppInstance, PrefContext->MixerWindow, MAKEINTRESOURCE(dlgId), PrefContext->Count);
+              LoadDialog(hAppInstance, PrefContext->MixerWindow, MAKEINTRESOURCE(dlgId), PrefContext->MixerWindow->DialogCount);
 
               /* get id */
-              wID = (PrefContext->Count + 1) * IDC_LINE_NAME;
+              wID = (PrefContext->MixerWindow->DialogCount + 1) * IDC_LINE_NAME;
 
               /* set line name */
               SetDlgItemTextW(PrefContext->MixerWindow->hWnd, wID, Line->szName);
@@ -502,7 +507,7 @@ EnumConnectionsCallback(
                           if (SndMixerGetVolumeControlDetails(Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&Details) != -1)
                           {
                               /* update dialog control */
-                              wID = (PrefContext->Count + 1) * IDC_LINE_SWITCH;
+                              wID = (PrefContext->MixerWindow->DialogCount + 1) * IDC_LINE_SWITCH;
 
                               /* get dialog control */
                               hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
@@ -578,7 +583,7 @@ EnumConnectionsCallback(
                               }
 
                               /* Set the volume trackbar */
-                              wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_VERT;
+                              wID = (PrefContext->MixerWindow->DialogCount + 1) * IDC_LINE_SLIDER_VERT;
 
                               /* get dialog control */
                               hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
@@ -601,7 +606,7 @@ EnumConnectionsCallback(
                               if (Line->cChannels == 2)
                               {
                                   /* Set the balance trackbar */
-                                  wID = (PrefContext->Count + 1) * IDC_LINE_SLIDER_HORZ;
+                                  wID = (PrefContext->MixerWindow->DialogCount + 1) * IDC_LINE_SLIDER_HORZ;
 
                                   /* get dialog control */
                                   hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, wID);
@@ -623,6 +628,11 @@ EnumConnectionsCallback(
                               }
                           }
                       }
+                      else
+                      {
+                          if (PrefContext->MixerWindow->Mode == NORMAL_MODE)
+                              PrefContext->MixerWindow->bHasExtendedControls = TRUE;
+                      }
                   }
 
                   /* free controls */
@@ -630,7 +640,7 @@ EnumConnectionsCallback(
               }
 
               /* increment dialog count */
-              PrefContext->Count++;
+              PrefContext->MixerWindow->DialogCount++;
           }
     }
 
@@ -650,12 +660,17 @@ LoadDialogCtrls(
     RECT statusRect;
 
     /* set dialog count to zero */
-    PrefContext->Count = 0;
+    PrefContext->MixerWindow->DialogCount = 0;
 
     SetRectEmpty(&PrefContext->MixerWindow->rect);
 
     /* enumerate controls */
     SndMixerEnumConnections(PrefContext->MixerWindow->Mixer, PrefContext->SelectedLine, EnumConnectionsCallback, (PVOID)PrefContext);
+
+    if (PrefContext->MixerWindow->bHasExtendedControls)
+    {
+        EnableMenuItem(GetMenu(PrefContext->MixerWindow->hWnd), IDM_ADVANCED_CONTROLS, MF_BYCOMMAND | MF_ENABLED);
+    }
 
     if (PrefContext->MixerWindow->hStatusBar)
     {
@@ -667,12 +682,22 @@ LoadDialogCtrls(
     AdjustWindowRect(&PrefContext->MixerWindow->rect, WS_DLGFRAME | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, TRUE);
     SetWindowPos(PrefContext->MixerWindow->hWnd, HWND_TOP, PrefContext->MixerWindow->rect.left, PrefContext->MixerWindow->rect.top, PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left, PrefContext->MixerWindow->rect.bottom - PrefContext->MixerWindow->rect.top, SWP_NOMOVE | SWP_NOZORDER);
 
-    /* get last line separator */
-    hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, IDC_LINE_SEP * PrefContext->Count);
+    /* Move the status bar */
+    if (PrefContext->MixerWindow->hStatusBar)
+    {
+        SetWindowPos(PrefContext->MixerWindow->hStatusBar,
+                     HWND_TOP,
+                     statusRect.left,
+                     PrefContext->MixerWindow->rect.bottom - (statusRect.bottom - statusRect.top),
+                     PrefContext->MixerWindow->rect.right - PrefContext->MixerWindow->rect.left,
+                     statusRect.bottom - statusRect.top,
+                     SWP_NOZORDER);
+    }
 
+    /* Hide the last line separator */
+    hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, IDC_LINE_SEP * PrefContext->MixerWindow->DialogCount /*PrefContext->Count*/);
     if (hDlgCtrl != NULL)
     {
-        /* hide last separator */
         ShowWindow(hDlgCtrl, SW_HIDE);
     }
 }
@@ -689,7 +714,7 @@ UpdateDialogLineSwitchControl(
     WCHAR LineName[MIXER_LONG_NAME_CHARS];
 
     /* find the index of this line */
-    for (Index = 0; Index < PrefContext->Count; Index++)
+    for (Index = 0; Index < PrefContext->MixerWindow->DialogCount; Index++)
     {
         /* get id */
         wID = (Index + 1) * IDC_LINE_NAME;
@@ -736,7 +761,7 @@ UpdateDialogLineSliderControl(
     WCHAR LineName[MIXER_LONG_NAME_CHARS];
 
     /* find the index of this line */
-    for (Index = 0; Index < PrefContext->Count; Index++)
+    for (Index = 0; Index < PrefContext->MixerWindow->DialogCount; Index++)
     {
         /* get id */
         wID = (Index + 1) * IDC_LINE_NAME;
