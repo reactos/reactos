@@ -2204,6 +2204,7 @@ BOOLEAN NTAPI RtlFreeHeap(
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
         _SEH2_YIELD(return FALSE);
     }
+    _SEH2_END;
 
     /* Lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
