@@ -542,6 +542,7 @@ HvInitialize(
      */
 
     RtlZeroMemory(Hive, sizeof(HHIVE));
+    Hive->Signature = HV_HHIVE_SIGNATURE;
 
     Hive->Allocate = Allocate;
     Hive->Free = Free;

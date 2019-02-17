@@ -47,6 +47,7 @@
 //
 // Hive structure identifiers
 //
+#define HV_HHIVE_SIGNATURE              0xbee0bee0
 #define HV_HBLOCK_SIGNATURE             0x66676572  // "regf"
 #define HV_HBIN_SIGNATURE               0x6e696268  // "hbin"
 
