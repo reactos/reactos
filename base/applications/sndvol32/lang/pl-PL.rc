@@ -110,3 +110,27 @@ BEGIN
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_NOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 16, 15, 20, 50
     AUTOCHECKBOX "&Wycisz", IDC_LINE_SWITCH, 4, 70, 44, 8
 END
+
+IDD_ADVANCED DIALOGEX 0, 0, 255, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Controls for Volume Control"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32 
+    LTEXT "These settings can be used to make fine adjustments to your audio.", -1,  44, 7, 200, 32
+    GROUPBOX "Tone Controls", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80 
+    LTEXT "These settings control how the tone of your audio sounds.", -1, 17, 48, 200, 14 
+    LTEXT "&Bass:", -1, 17, 62, 50, 8 
+    LTEXT "Low", IDC_ADV_BASS_LOW, 77, 62, 20, 8 
+    LTEXT "High", IDC_ADV_BASS_HIGH, 182, 62, 20, 8 
+    CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20 
+    LTEXT "&Treble:", -1, 17, 90, 50, 8 
+    LTEXT "Low", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8 
+    LTEXT "High", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8 
+    CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20 
+    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66 
+    LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28 
+    AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14 
+    AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14 
+    DEFPUSHBUTTON "Close", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
