@@ -54,7 +54,7 @@ BEGIN
     LTEXT "Громкость", -1, 4, 58, 80, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 67, 30, 56
     AUTOCHECKBOX "В&ыкл. все", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Дополнительно", IDC_LINE_ADVANCED, 4, 138, 80, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 90, 1, 1, 137
 END
 
@@ -69,7 +69,7 @@ BEGIN
     LTEXT "Громкость", -1, 4, 58, 60, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 67, 30, 56
     AUTOCHECKBOX "В&ыкл. все", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 7, 138, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Дополнительно", IDC_LINE_ADVANCED, 5, 138, 60, 14, WS_TABSTOP
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 70, 25, 1, 113
 END
 
@@ -107,24 +107,24 @@ END
 
 IDD_ADVANCED DIALOGEX 0, 0, 255, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Controls for Volume Control"
+CAPTION "Дополнительные параметры громкости"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32 
-    LTEXT "These settings can be used to make fine adjustments to your audio.", -1,  44, 7, 200, 32
-    GROUPBOX "Tone Controls", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80 
-    LTEXT "These settings control how the tone of your audio sounds.", -1, 17, 48, 200, 14 
-    LTEXT "&Bass:", -1, 17, 62, 50, 8 
-    LTEXT "Low", IDC_ADV_BASS_LOW, 77, 62, 20, 8 
-    LTEXT "High", IDC_ADV_BASS_HIGH, 182, 62, 20, 8 
+    LTEXT "Данные параметры позволят произвести точную подстройку звучания.", -1,  44, 7, 200, 32
+    GROUPBOX "Настройка тональности", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80 
+    LTEXT "Эти настройки управляют тональностью аудио.", -1, 17, 48, 200, 14 
+    LTEXT "&Низкие частоты:", -1, 17, 62, 50, 16 
+    LTEXT "Слабее", IDC_ADV_BASS_LOW, 73, 62, 24, 8 
+    LTEXT "Сильнее", IDC_ADV_BASS_HIGH, 180, 62, 28, 8 
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20 
-    LTEXT "&Treble:", -1, 17, 90, 50, 8 
-    LTEXT "Low", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8 
-    LTEXT "High", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8 
+    LTEXT "&Высокие частоты:", -1, 17, 90, 50, 16 
+    LTEXT "Слабее", IDC_ADV_TREBLE_LOW, 73, 90, 24, 8 
+    LTEXT "Сильнее", IDC_ADV_TREBLE_HIGH, 180, 90, 28, 8 
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20 
-    GROUPBOX "Other Controls", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66 
-    LTEXT "These settings make other changes to how your audio sounds. See your hardware documentation for details.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28 
+    GROUPBOX "Другие настройки", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66 
+    LTEXT "Эти настройки управляют другими возможностями. Подробнее смотрите в документации вашего оборудования.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28 
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14 
     AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14 
-    DEFPUSHBUTTON "Close", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Закрыть", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
