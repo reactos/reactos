@@ -35,6 +35,9 @@ VideoPortCreateEvent(IN PVOID HwDeviceExtension,
                                      TAG_VIDEO_PORT);
     if (EngEvent)
     {
+        /* Zero flags */
+        EngEvent->fFlags = 0;
+
         /* Set KEVENT pointer */
         EngEvent->pKEvent = EngEvent + 1;
         
