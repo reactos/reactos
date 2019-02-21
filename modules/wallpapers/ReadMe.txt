@@ -15,3 +15,5 @@ ReactOS_CirclesBlue_2.jpg           | See above                                 
 ReactOS_CirclesGold_1.jpg           | See above                                      | See above
 ReactOS_CirclesGold_2.jpg           | See above                                      | See above
 ReactOS_Hexagons.jpg                | See above                                      | http://www.reactos.org/forum/viewtopic.php?p=109866#p109866
+reactos_silhouette_dark.png         | Jake Collins (polar@ever3st.com)               | https://ever3st.com/Graphics/Loot#reactos
+reactos_silhouette_light.png        | See above                                      | see above
