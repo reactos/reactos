@@ -25,6 +25,10 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Сила на звука"
     IDS_NOMIXERDEVICES "Не са открити работещи смесителни устройства! Приложението ще се затвори."
+    IDS_SELECT "&Select"
+    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_OTHER_CONTROLS1 "&1  %s"
+    IDS_OTHER_CONTROLS2 "&2  %s"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

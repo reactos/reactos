@@ -23,6 +23,10 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "볼륨 컨트롤"
     IDS_NOMIXERDEVICES "사용 가능한 믹서 장치가 없습니다! 이 프로그램은 종료됩니다."
+    IDS_SELECT "&Select"
+    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_OTHER_CONTROLS1 "&1  %s"
+    IDS_OTHER_CONTROLS2 "&2  %s"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

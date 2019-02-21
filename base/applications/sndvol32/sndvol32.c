@@ -591,56 +591,6 @@ DlgPreferencesProc(HWND hwndDlg,
     return 0;
 }
 
-
-static
-INT_PTR
-CALLBACK
-AdvancedDlgProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            /* FIXME: Update the dialog title */
-
-            /* Disable the tone controls */
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_BASS_LOW), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_BASS_HIGH), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_BASS_SLIDER), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_TREBLE_LOW), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_TREBLE_HIGH), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_ADV_TREBLE_SLIDER), FALSE);
-
-            /* Hide the other controls */
-            ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CONTROLS), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_TEXT), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CHECK1), SW_HIDE);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CHECK2), SW_HIDE);
-
-            /* FIXME */
-            return TRUE;
-
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                    EndDialog(hwndDlg, IDOK);
-                    break;
-            }
-            break;
-
-        case WM_CLOSE:
-            EndDialog(hwndDlg, IDCANCEL);
-            break;
-    }
-
-    return FALSE;
-}
-
-
 /******************************************************************************/
 
 static VOID
@@ -1064,13 +1014,29 @@ MainWindowProc(HWND hwnd,
                         }
                         else if (CtrlID % IDC_LINE_ADVANCED == 0)
                         {
-                            if (DialogBoxParam(hAppInstance,
-                                               MAKEINTRESOURCE(IDD_ADVANCED),
-                                               hwnd,
-                                               AdvancedDlgProc,
-                                               (LPARAM)NULL) == IDOK)
-                            {
+                            ADVANCED_CONTEXT AdvancedContext;
 
+                            /* compute line offset */
+                            LineOffset = CtrlID / IDC_LINE_ADVANCED;
+
+                            /* compute window id of line name static control */
+                            CtrlID = LineOffset * IDC_LINE_NAME;
+
+                            /* get line name */
+                            if (GetDlgItemTextW(hwnd, CtrlID, AdvancedContext.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                            {
+                                AdvancedContext.Mixer = Preferences.MixerWindow->Mixer;
+                                AdvancedContext.Line = SndMixerGetLineByName(Preferences.MixerWindow->Mixer,
+                                                                             Preferences.SelectedLine,
+                                                                             AdvancedContext.LineName);
+                                if (AdvancedContext.Line)
+                                {
+                                    DialogBoxParam(hAppInstance,
+                                                   MAKEINTRESOURCE(IDD_ADVANCED),
+                                                   hwnd,
+                                                   AdvancedDlgProc,
+                                                   (LPARAM)&AdvancedContext);
+                                }
                             }
                         }
                     }

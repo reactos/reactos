@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    advanced.c
     dialog.c
     misc.c
     mixer.c

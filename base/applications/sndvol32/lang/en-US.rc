@@ -21,6 +21,10 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Volume Control"
     IDS_NOMIXERDEVICES "There are no active mixer devices available! The application will now exit."
+    IDS_SELECT "&Select"
+    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_OTHER_CONTROLS1 "&1  %s"
+    IDS_OTHER_CONTROLS2 "&2  %s"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

@@ -27,6 +27,10 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Ovládání hlasitosti"
     IDS_NOMIXERDEVICES "Nejsou dostupná žádná směšovací zařízení! Aplikace se nyní ukončí."
+    IDS_SELECT "&Select"
+    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_OTHER_CONTROLS1 "&1  %s"
+    IDS_OTHER_CONTROLS2 "&2  %s"
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

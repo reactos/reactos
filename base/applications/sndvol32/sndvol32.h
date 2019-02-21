@@ -10,6 +10,7 @@
 #include <mmsystem.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <strsafe.h>
 #include <assert.h>
 
 #include "resources.h"
@@ -123,6 +124,14 @@ typedef struct _SET_VOLUME_CONTEXT
     BOOL bSwitch;
 } SET_VOLUME_CONTEXT, *PSET_VOLUME_CONTEXT;
 
+typedef struct _ADVANCED_CONTEXT
+{
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+    PSND_MIXER Mixer;
+    LPMIXERLINE Line;
+} ADVANCED_CONTEXT, *PADVANCED_CONTEXT;
+
+
 /* NOTE: do NOT modify SNDVOL_REG_LINESTATE for binary compatibility with XP! */
 typedef struct _SNDVOL_REG_LINESTATE
 {
@@ -150,6 +159,18 @@ BOOL SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Cont
 BOOL SndMixerEnumConnections(PSND_MIXER Mixer, DWORD LineID, PFNSNDMIXENUMCONNECTIONS EnumProc, PVOID Context);
 BOOL SndMixerIsDisplayControl(PSND_MIXER Mixer, LPMIXERCONTROL Control);
 BOOL SndMixerQueryControls(PSND_MIXER Mixer, PUINT DisplayControls, LPMIXERLINE LineInfo, LPMIXERCONTROL *Controls);
+LPMIXERLINE SndMixerGetLineByName(PSND_MIXER Mixer, DWORD LineID, LPWSTR LineName);
+
+/* advanced.c */
+
+INT_PTR
+CALLBACK
+AdvancedDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
+
 
 /*
  * dialog.c
