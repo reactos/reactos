@@ -14,18 +14,37 @@ OnInitDialog(
     PADVANCED_CONTEXT Context)
 {
     WCHAR szRawTitle[256], szCookedTitle[256];
+    MIXERCONTROLDETAILS_UNSIGNED UnsignedDetails;
     LPMIXERCONTROL Control = NULL;
-    UINT ControlCount = 0, Index, i;
+    UINT ControlCount = 0, Index;
+    DWORD i, dwStep, dwPosition;
 
     /* Set the dialog title */
     LoadStringW(hAppInstance, IDS_ADVANCED_CONTROLS, szRawTitle, ARRAYSIZE(szRawTitle));
-//    swprintf(szCookedTitle, szRawTitle, Context->LineName);
     StringCchPrintfW(szCookedTitle, ARRAYSIZE(szCookedTitle), szRawTitle, Context->LineName);
     SetWindowTextW(hwndDlg, szCookedTitle);
 
     /* Disable the tone controls */
     for (i = IDC_ADV_BASS_LOW; i<= IDC_ADV_TREBLE_SLIDER; i++)
         EnableWindow(GetDlgItem(hwndDlg, i), FALSE);
+
+    /* Initialize the bass and treble trackbars */
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_BASS_SLIDER, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_BASS_SLIDER, TBM_SETPAGESIZE, 0, (LPARAM)VOLUME_PAGE_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETPAGESIZE, 0, (LPARAM)VOLUME_PAGE_SIZE);
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_BASS_SLIDER, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)0);
+    SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)0);
+
+    /* Calculate and set ticks */
+    dwStep = (VOLUME_MAX / (VOLUME_TICKS + 1));
+    if (VOLUME_MAX % (VOLUME_TICKS + 1) != 0)
+        dwStep++;
+    for (i = dwStep; i < VOLUME_MAX; i += dwStep)
+    {
+        SendDlgItemMessageW(hwndDlg, IDC_ADV_BASS_SLIDER, TBM_SETTIC, 0, (LPARAM)i);
+        SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETTIC, 0, (LPARAM)i);
+    }
 
     /* Hide the other controls */
     for (i = IDC_ADV_OTHER_CONTROLS; i<= IDC_ADV_OTHER_CHECK2; i++)
@@ -37,15 +56,27 @@ OnInitDialog(
         {
             if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_BASS)
             {
-                for (i = IDC_ADV_BASS_LOW; i<= IDC_ADV_BASS_SLIDER; i++)
-                    EnableWindow(GetDlgItem(hwndDlg, i), TRUE);
+                if (SndMixerGetVolumeControlDetails(Context->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&UnsignedDetails) != -1)
+                {
+                    for (i = IDC_ADV_BASS_LOW; i<= IDC_ADV_BASS_SLIDER; i++)
+                        EnableWindow(GetDlgItem(hwndDlg, i), TRUE);
 
+                    dwStep = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+                    dwPosition = (UnsignedDetails.dwValue - Control[Index].Bounds.dwMinimum) / dwStep;
+                    SendDlgItemMessageW(hwndDlg, IDC_ADV_BASS_SLIDER, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
+                }
             }
             else if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_TREBLE)
             {
-                for (i = IDC_ADV_TREBLE_LOW; i<= IDC_ADV_TREBLE_SLIDER; i++)
-                    EnableWindow(GetDlgItem(hwndDlg, i), TRUE);
+                if (SndMixerGetVolumeControlDetails(Context->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&UnsignedDetails) != -1)
+                {
+                    for (i = IDC_ADV_TREBLE_LOW; i<= IDC_ADV_TREBLE_SLIDER; i++)
+                        EnableWindow(GetDlgItem(hwndDlg, i), TRUE);
 
+                    dwStep = (Control[Index].Bounds.dwMaximum - Control[Index].Bounds.dwMinimum) / (VOLUME_MAX - VOLUME_MIN);
+                    dwPosition = (UnsignedDetails.dwValue - Control[Index].Bounds.dwMinimum) / dwStep;
+                    SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
+                }
             }
             else if (Control[Index].dwControlType != MIXERCONTROL_CONTROLTYPE_VOLUME &&
                      Control[Index].dwControlType != MIXERCONTROL_CONTROLTYPE_MUTE)

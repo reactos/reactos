@@ -123,11 +123,11 @@ BEGIN
     LTEXT "&Tiefen:", -1, 17, 62, 50, 8 
     LTEXT "Niedrig", IDC_ADV_BASS_LOW, 70, 62, 23, 8 
     LTEXT "Hoch", IDC_ADV_BASS_HIGH, 182, 62, 20, 8 
-    CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20 
+    CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20 
     LTEXT "&Höhen:", -1, 17, 90, 50, 8 
     LTEXT "Niedrig", IDC_ADV_TREBLE_LOW, 70, 90, 23, 8 
     LTEXT "Hoch", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8 
-    CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20 
+    CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20 
     GROUPBOX "Andere Einstellungen", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66 
     LTEXT "Diese Einstellungen verändern zusätzlich die Audioeigenschaften. Weitere Informationen finden Sie in der Hardwaredokumentation.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28 
     AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14 
