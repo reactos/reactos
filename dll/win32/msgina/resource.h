@@ -55,9 +55,11 @@
 #define IDC_LEGALNOTICE_TEXT     2101
 
 #define IDC_ROSLOGO              1007
+#define IDC_BAR                  1008
 
 
 #define IDI_ROSLOGO         20000
+#define IDI_BAR             20001
 
 #define IDI_NOT_CONNECTED 13
 #define IDI_LOGOFF        21
