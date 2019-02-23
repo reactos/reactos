@@ -16,7 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Translation has been changed by Luo Yufan on 2018-12-03 (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan on 2018, 2019 (njlyf2011@hotmail.com) */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
@@ -46,7 +47,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "创建快捷方式(&T)", IDM_CREATESHORTCUT
-        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "添加到收藏夹(&F)", IDM_ADDFAVORITES
         MENUITEM "查看源代码(&V)", IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "语言编码(&E)", IDM_LANGUAGE
@@ -127,10 +128,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "剪下", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
-        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "复制快捷方式(&T)", IDM_COPYSHORTCUT
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "添加到收藏夹(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "属性(&R)", IDM_PROPERTIES
     }
@@ -154,10 +155,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "剪切(&T)", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
-        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "复制快捷方式(&T)", IDM_COPYSHORTCUT
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "添加到收藏夹(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "播放", IDM_DYNSRCPLAY
         MENUITEM "停止", IDM_DYNSRCSTOP
@@ -178,10 +179,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "剪切(&T)", IDM_CUT
         MENUITEM "复制(&C)", IDM_COPY
-        MENUITEM "复制捷径(&T)", IDM_COPYSHORTCUT
+        MENUITEM "复制快捷方式(&T)", IDM_COPYSHORTCUT
         MENUITEM "粘贴(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最爱(&F)", IDM_ADDFAVORITES
+        MENUITEM "添加到收藏夹(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "播放", IDM_IMGARTPLAY
         MENUITEM "停止", IDM_IMGARTSTOP
@@ -243,7 +244,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_MESSAGE_BOX_TITLE, "Wine 互聯網瀏覽器"
+    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
 STRINGTABLE
@@ -281,8 +282,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Image */
     {
-        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新視窗開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新視窗開啟連結(&N)", IDM_FOLLOWLINKN
         MENUITEM "將目標存為(&A)", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
@@ -364,8 +365,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口開啟連結(&N)", IDM_FOLLOWLINKN
         MENUITEM "將目標存為(&A)...", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
@@ -388,8 +389,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "開啟鏈接(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新窗口開啟鏈接(&N)", IDM_FOLLOWLINKN
+        MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
+        MENUITEM "在新窗口開啟連結(&N)", IDM_FOLLOWLINKN
         MENUITEM "將目標存為(&A)", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
