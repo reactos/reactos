@@ -7,7 +7,7 @@
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
 #include <ntndk.h>
 #include <atlbase.h>
 #include <strsafe.h>
