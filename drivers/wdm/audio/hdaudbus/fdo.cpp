@@ -581,7 +581,7 @@ HDA_FDOStartDevice(
                 FALSE);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("[HDAB] Failed to connect interrupt\n");
+                DPRINT1("[HDAB] Failed to connect interrupt. Status=%lx\n", Status);
                 break;
             }
 

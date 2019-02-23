@@ -7,11 +7,14 @@
 */
 #include "hdaudbus.h"
 
+DRIVER_DISPATCH HDA_Pnp;
+DRIVER_ADD_DEVICE HDA_AddDevice;
+extern "C" DRIVER_INITIALIZE DriverEntry;
 
 PVOID
 AllocateItem(
-    IN POOL_TYPE PoolType,
-    IN SIZE_T NumberOfBytes)
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes)
 {
     PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_HDA);
     if (!Item)
@@ -23,7 +26,7 @@ AllocateItem(
 
 VOID
 FreeItem(
-    IN PVOID Item)
+    __drv_freesMem(Mem) PVOID Item)
 {
     ExFreePool(Item);
 }
@@ -85,8 +88,8 @@ HDA_SyncForwardIrp(
 NTSTATUS
 NTAPI
 HDA_Pnp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
 {
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
     PIO_STACK_LOCATION IoStack;
@@ -207,18 +210,14 @@ HDA_Pnp(
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-
     return Status;
 }
-
-
-//PDRIVER_ADD_DEVICE HDA_AddDevice;
 
 NTSTATUS
 NTAPI
 HDA_AddDevice(
-IN PDRIVER_OBJECT DriverObject,
-IN PDEVICE_OBJECT PhysicalDeviceObject)
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
     PDEVICE_OBJECT DeviceObject;
     PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
@@ -250,8 +249,8 @@ extern "C"
 NTSTATUS
 NTAPI
 DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPathName)
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPathName)
 {
     DriverObject->DriverExtension->AddDevice = HDA_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_PNP] = HDA_Pnp;
