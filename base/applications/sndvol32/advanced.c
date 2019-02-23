@@ -109,7 +109,7 @@ OnInitDialog(
             }
         }
 
-        /* free controls */
+        /* Free controls */
         HeapFree(GetProcessHeap(), 0, Control);
     }
 
@@ -122,7 +122,7 @@ OnInitDialog(
         /* Resize the dialog */
         GetWindowRect(hwndDlg, &rect);
 
-        dy = MulDiv(73, Context->MixerWindow->baseUnit.cy, 8);
+        dy = MulDiv((dwOtherControls == 1) ? 73 : (73 + 15), Context->MixerWindow->baseUnit.cy, 8);
         rect.bottom += dy;
 
         SetWindowPos(hwndDlg, HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
@@ -135,6 +135,18 @@ OnInitDialog(
         rect.bottom += dy;
 
         SetWindowPos(GetDlgItem(hwndDlg, IDOK), HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOSIZE | SWP_NOZORDER);
+
+        if (dwOtherControls == 2)
+        {
+            /* Resize the 'Other Controls' groupbox */
+            GetWindowRect(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CONTROLS), &rect);
+            MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, 2);
+
+            dy = MulDiv(15, Context->MixerWindow->baseUnit.cy, 8);
+            rect.bottom += dy;
+
+            SetWindowPos(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CONTROLS), HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+        }
     }
 }
 
