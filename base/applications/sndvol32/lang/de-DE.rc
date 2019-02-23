@@ -116,21 +116,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Erweiterte Lautstärkeeinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32 
-    LTEXT "Mit diesen Einstellungen können Audioeigenschaften genauer eingestellt werden.", -1,  44, 7, 200, 32
-    GROUPBOX "Tonsteuerung", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80 
-    LTEXT "Diese Einstellungen bestimmen die Audioeigenschaften.", -1, 17, 48, 200, 14 
-    LTEXT "&Tiefen:", -1, 17, 62, 50, 8 
-    LTEXT "Niedrig", IDC_ADV_BASS_LOW, 70, 62, 23, 8 
-    LTEXT "Hoch", IDC_ADV_BASS_HIGH, 182, 62, 20, 8 
-    CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20 
-    LTEXT "&Höhen:", -1, 17, 90, 50, 8 
-    LTEXT "Niedrig", IDC_ADV_TREBLE_LOW, 70, 90, 23, 8 
-    LTEXT "Hoch", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8 
-    CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20 
-    GROUPBOX "Andere Einstellungen", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66 
-    LTEXT "Diese Einstellungen verändern zusätzlich die Audioeigenschaften. Weitere Informationen finden Sie in der Hardwaredokumentation.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28 
-    AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14 
-    AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14 
+    CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
+    LTEXT "Mit diesen Einstellungen können Audioeigenschaften genauer eingestellt werden.", -1, 44, 7, 200, 32
+    GROUPBOX "Tonsteuerung", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
+    LTEXT "Diese Einstellungen bestimmen die Audioeigenschaften.", -1, 17, 48, 200, 14
+    LTEXT "&Tiefen:", -1, 17, 62, 50, 8
+    LTEXT "Niedrig", IDC_ADV_BASS_LOW, 70, 62, 23, 8
+    LTEXT "Hoch", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
+    CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
+    LTEXT "&Höhen:", -1, 17, 90, 50, 8
+    LTEXT "Niedrig", IDC_ADV_TREBLE_LOW, 70, 90, 23, 8
+    LTEXT "Hoch", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
+    CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
+    GROUPBOX "Andere Einstellungen", IDC_ADV_OTHER_CONTROLS, 7, 119, 240, 66
+    LTEXT "Diese Einstellungen verändern zusätzlich die Audioeigenschaften. Weitere Informationen finden Sie in der Hardwaredokumentation.", IDC_ADV_OTHER_TEXT, 17, 135, 220, 28
+    AUTOCHECKBOX "&1 ", IDC_ADV_OTHER_CHECK1, 17, 159, 220, 14
+    AUTOCHECKBOX "&2 ", IDC_ADV_OTHER_CHECK2, 17, 174, 220, 14
     DEFPUSHBUTTON "Schließen", IDOK, 197, 120, 50, 14, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
