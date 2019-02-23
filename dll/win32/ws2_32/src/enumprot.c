@@ -350,52 +350,60 @@ WSCGetProviderPath(IN LPGUID lpProviderId,
     /* Get the catalog */
     Catalog = WsProcGetNsCatalog(Process);
 
-    /* Setup the context */
-    Context.ProviderId = *lpProviderId;
-    Context.ProviderDllPath = lpszProviderDllPath;
-    Context.ProviderDllPathLen = *lpProviderDllPathLen;
-    Context.FoundPathLen = 0;
-    Context.Found = 0;
-    Context.ErrorCode = ERROR_SUCCESS;
-
-    ErrorCode = ERROR_SUCCESS;
-
-    /* Enumerate the catalog */
-    WsNcEnumerateCatalogItems(Catalog, ProviderEnumerationProc, &Context);
-
-    /* Check the error code */
-    if (Context.ErrorCode == ERROR_SUCCESS)
+    _SEH2_TRY
     {
-        /* Check if provider was found */
-        if (Context.Found)
-        {
-            PathLen = Context.FoundPathLen;
+        /* Setup the context */
+        Context.ProviderId = *lpProviderId;
+        Context.ProviderDllPath = lpszProviderDllPath;
+        Context.ProviderDllPathLen = *lpProviderDllPathLen;
+        Context.FoundPathLen = 0;
+        Context.Found = 0;
+        Context.ErrorCode = ERROR_SUCCESS;
 
-            /* Check whether buffer is too small
-             * If it isn't, return length without null char
-             * (see ProviderEnumerationProc)
-             */
-            if (Context.FoundPathLen <= *lpProviderDllPathLen)
+        ErrorCode = ERROR_SUCCESS;
+
+        /* Enumerate the catalog */
+        WsNcEnumerateCatalogItems(Catalog, ProviderEnumerationProc, &Context);
+
+        /* Check the error code */
+        if (Context.ErrorCode == ERROR_SUCCESS)
+        {
+            /* Check if provider was found */
+            if (Context.Found)
             {
-                PathLen = Context.FoundPathLen - 1;
+                PathLen = Context.FoundPathLen;
+
+                /* Check whether buffer is too small
+                 * If it isn't, return length without null char
+                 * (see ProviderEnumerationProc)
+                 */
+                if (Context.FoundPathLen <= *lpProviderDllPathLen)
+                {
+                    PathLen = Context.FoundPathLen - 1;
+                }
+                else
+                {
+                    ErrorCode = WSAEFAULT;
+                }
+
+                /* Set returned/required length */
+                *lpProviderDllPathLen = PathLen;
             }
             else
             {
-                ErrorCode = WSAEFAULT;
+                ErrorCode = WSAEINVAL;
             }
-
-            /* Set returned/required length */
-            *lpProviderDllPathLen = PathLen;
         }
         else
         {
-            ErrorCode = WSAEINVAL;
+            ErrorCode = Context.ErrorCode;
         }
     }
-    else
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ErrorCode = Context.ErrorCode;
+        ErrorCode = WSAEFAULT;
     }
+    _SEH2_END;
 
     /* Do we have to return failure? */
     if (ErrorCode != ERROR_SUCCESS)
