@@ -1088,38 +1088,53 @@ WSPSelect(IN int nfds,
     FD_ZERO(&selectfds);
     if (readfds != NULL)
     {
+        TRACE("readfds->fd_count = %u\n", readfds->fd_count);
+
         for (i = 0; i < readfds->fd_count; i++)
         {
+            TRACE("readfds %x (%ul/%u)\n",
+                   readfds->fd_array[i], i + 1, readfds->fd_count);
+
             FD_SET(readfds->fd_array[i], &selectfds);
         }
     }
     if (writefds != NULL)
     {
+        TRACE("writefds->fd_count = %u\n", writefds->fd_count);
+
         for (i = 0; i < writefds->fd_count; i++)
         {
+            TRACE("writefds %x (%ul/%u)\n",
+                   writefds->fd_array[i], i + 1, writefds->fd_count);
+
             FD_SET(writefds->fd_array[i], &selectfds);
         }
     }
     if (exceptfds != NULL)
     {
+        TRACE("exceptfds->fd_count = %u\n", exceptfds->fd_count);
+
         for (i = 0; i < exceptfds->fd_count; i++)
         {
+            TRACE("exceptfds %x (%ul/%u)\n",
+                   exceptfds->fd_array[i], i + 1, exceptfds->fd_count);
+
             FD_SET(exceptfds->fd_array[i], &selectfds);
         }
     }
 
     HandleCount = selectfds.fd_count;
-
     if ( HandleCount == 0 )
     {
-        WARN("No handles! Returning SOCKET_ERROR\n", HandleCount);
+        WARN("No handles! Returning SOCKET_ERROR\n");
         if (lpErrno) *lpErrno = WSAEINVAL;
         return SOCKET_ERROR;
     }
 
     PollBufferSize = sizeof(*PollInfo) + ((HandleCount - 1) * sizeof(AFD_HANDLE));
 
-    TRACE("HandleCount: %u BufferSize: %u\n", HandleCount, PollBufferSize);
+    TRACE("HandleCount = %ul, PollBufferSize = %ul\n",
+          HandleCount, PollBufferSize);
 
     /* Convert Timeout to NT Format */
     if (timeout == NULL)
@@ -1180,7 +1195,7 @@ WSPSelect(IN int nfds,
     PollInfo->Exclusive = FALSE;
     PollInfo->Timeout = Timeout;
 
-    for (i = 0; i < selectfds.fd_count; i++)
+    for (i = 0; i < HandleCount; i++)
     {
         PollInfo->Handles[i].Handle = selectfds.fd_array[i];
     }
@@ -1194,7 +1209,8 @@ WSPSelect(IN int nfds,
             }
             if (j >= HandleCount)
             {
-                ERR("Error while counting readfds %ld > %ld\n", j, HandleCount);
+                ERR("Could not find readfds %x (%ul/%u) in PollInfo!\n",
+                    readfds->fd_array[i], i + 1, readfds->fd_count);
                 if (lpErrno) *lpErrno = WSAEFAULT;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1203,7 +1219,8 @@ WSPSelect(IN int nfds,
             Socket = GetSocketStructure(readfds->fd_array[i]);
             if (!Socket)
             {
-                ERR("Invalid socket handle provided in readfds %d\n", readfds->fd_array[i]);
+                ERR("Invalid socket handle provided in readfds %x\n",
+                    readfds->fd_array[i]);
                 if (lpErrno) *lpErrno = WSAENOTSOCK;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1229,7 +1246,8 @@ WSPSelect(IN int nfds,
             }
             if (j >= HandleCount)
             {
-                ERR("Error while counting writefds %ld > %ld\n", j, HandleCount);
+                ERR("Could not find writefds %x (%ul/%u) in PollInfo!\n",
+                    writefds->fd_array[i], i + 1, writefds->fd_count);
                 if (lpErrno) *lpErrno = WSAEFAULT;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1238,7 +1256,8 @@ WSPSelect(IN int nfds,
             Socket = GetSocketStructure(writefds->fd_array[i]);
             if (!Socket)
             {
-                ERR("Invalid socket handle provided in writefds %d\n", writefds->fd_array[i]);
+                ERR("Invalid socket handle provided in writefds %x\n",
+                    writefds->fd_array[i]);
                 if (lpErrno) *lpErrno = WSAENOTSOCK;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1259,9 +1278,10 @@ WSPSelect(IN int nfds,
                 if (PollInfo->Handles[j].Handle == exceptfds->fd_array[i])
                     break;
             }
-            if (j > HandleCount)
+            if (j >= HandleCount)
             {
-                ERR("Error while counting exceptfds %ld > %ld\n", j, HandleCount);
+                ERR("Could not find exceptfds %x (%ul/%u) in PollInfo!\n",
+                    exceptfds->fd_array[i], i + 1, exceptfds->fd_count);
                 if (lpErrno) *lpErrno = WSAEFAULT;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1270,7 +1290,8 @@ WSPSelect(IN int nfds,
             Socket = GetSocketStructure(exceptfds->fd_array[i]);
             if (!Socket)
             {
-                TRACE("Invalid socket handle provided in exceptfds %d\n", exceptfds->fd_array[i]);
+                ERR("Invalid socket handle provided in exceptfds %x\n",
+                    exceptfds->fd_array[i]);
                 if (lpErrno) *lpErrno = WSAENOTSOCK;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1299,7 +1320,7 @@ WSPSelect(IN int nfds,
                                    PollInfo,
                                    PollBufferSize);
 
-    TRACE("DeviceIoControlFile => %x\n", Status);
+    TRACE("NtDeviceIoControlFile returned 0x%08x\n", Status);
 
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
@@ -1329,7 +1350,7 @@ WSPSelect(IN int nfds,
             Socket = GetSocketStructure(Handle);
             if (!Socket)
             {
-                TRACE("Invalid socket handle found %d\n", Handle);
+                TRACE("Invalid socket handle found %x\n", Handle);
                 if (lpErrno) *lpErrno = WSAENOTSOCK;
                 HeapFree(GlobalHeap, 0, PollBuffer);
                 NtClose(SockEvent);
@@ -1408,7 +1429,7 @@ WSPSelect(IN int nfds,
                   (writefds && writefds != readfds ? writefds->fd_count : 0) +
                   (exceptfds && exceptfds != readfds && exceptfds != writefds ? exceptfds->fd_count : 0);
 
-    TRACE("%d events\n", HandleCount);
+    TRACE("HandleCount = %ul\n", HandleCount);
 
     return HandleCount;
 }
