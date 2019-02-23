@@ -13,16 +13,20 @@ OnInitDialog(
     HWND hwndDlg,
     PADVANCED_CONTEXT Context)
 {
-    WCHAR szRawTitle[256], szCookedTitle[256];
     MIXERCONTROLDETAILS_UNSIGNED UnsignedDetails;
+    MIXERCONTROLDETAILS_BOOLEAN BooleanDetails;
+    WCHAR szRawBuffer[256], szCookedBuffer[256];
     LPMIXERCONTROL Control = NULL;
     UINT ControlCount = 0, Index;
     DWORD i, dwStep, dwPosition;
+    DWORD dwOtherControls = 0;
+    RECT rect;
+    LONG dy;
 
     /* Set the dialog title */
-    LoadStringW(hAppInstance, IDS_ADVANCED_CONTROLS, szRawTitle, ARRAYSIZE(szRawTitle));
-    StringCchPrintfW(szCookedTitle, ARRAYSIZE(szCookedTitle), szRawTitle, Context->LineName);
-    SetWindowTextW(hwndDlg, szCookedTitle);
+    LoadStringW(hAppInstance, IDS_ADVANCED_CONTROLS, szRawBuffer, ARRAYSIZE(szRawBuffer));
+    StringCchPrintfW(szCookedBuffer, ARRAYSIZE(szCookedBuffer), szRawBuffer, Context->LineName);
+    SetWindowTextW(hwndDlg, szCookedBuffer);
 
     /* Disable the tone controls */
     for (i = IDC_ADV_BASS_LOW; i<= IDC_ADV_TREBLE_SLIDER; i++)
@@ -56,6 +60,8 @@ OnInitDialog(
         {
             if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_BASS)
             {
+                /* Bass control */
+
                 if (SndMixerGetVolumeControlDetails(Context->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&UnsignedDetails) != -1)
                 {
                     for (i = IDC_ADV_BASS_LOW; i<= IDC_ADV_BASS_SLIDER; i++)
@@ -68,6 +74,8 @@ OnInitDialog(
             }
             else if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_TREBLE)
             {
+                /* Treble control */
+
                 if (SndMixerGetVolumeControlDetails(Context->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)&UnsignedDetails) != -1)
                 {
                     for (i = IDC_ADV_TREBLE_LOW; i<= IDC_ADV_TREBLE_SLIDER; i++)
@@ -78,17 +86,55 @@ OnInitDialog(
                     SendDlgItemMessageW(hwndDlg, IDC_ADV_TREBLE_SLIDER, TBM_SETPOS, (WPARAM)TRUE, dwPosition);
                 }
             }
-            else if (Control[Index].dwControlType != MIXERCONTROL_CONTROLTYPE_VOLUME &&
-                     Control[Index].dwControlType != MIXERCONTROL_CONTROLTYPE_MUTE)
+            else if (((Control[Index].dwControlType & (MIXERCONTROL_CT_CLASS_MASK | MIXERCONTROL_CT_SUBCLASS_MASK | MIXERCONTROL_CT_UNITS_MASK)) == MIXERCONTROL_CONTROLTYPE_BOOLEAN) &&
+                     (Control[Index].dwControlType != MIXERCONTROL_CONTROLTYPE_MUTE))
             {
-                ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CONTROLS), SW_SHOWNORMAL);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_TEXT), SW_SHOWNORMAL);
+                /* All boolean controls but the Mute control (Maximum of 2) */
 
+                if (dwOtherControls < 2)
+                {
+                    if (SndMixerGetVolumeControlDetails(Context->Mixer, Control[Index].dwControlID, 1, sizeof(MIXERCONTROLDETAILS_BOOLEAN), (LPVOID)&BooleanDetails) != -1)
+                    {
+                        LoadStringW(hAppInstance, IDS_OTHER_CONTROLS1 + dwOtherControls, szRawBuffer, ARRAYSIZE(szRawBuffer));
+                        StringCchPrintfW(szCookedBuffer, ARRAYSIZE(szCookedBuffer), szRawBuffer, Control[Index].szName);
+                        SetWindowTextW(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CHECK1 + dwOtherControls), szCookedBuffer);
+
+                        ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CHECK1 + dwOtherControls), SW_SHOWNORMAL);
+
+                        SendDlgItemMessageW(hwndDlg, IDC_ADV_OTHER_CHECK1 + dwOtherControls, BM_SETCHECK, (WPARAM)BooleanDetails.fValue, 0);
+
+                        dwOtherControls++;
+                    }
+                }
             }
         }
 
         /* free controls */
         HeapFree(GetProcessHeap(), 0, Control);
+    }
+
+    if (dwOtherControls != 0)
+    {
+        /* Show the 'Other controls' groupbox and text */
+        ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_CONTROLS), SW_SHOWNORMAL);
+        ShowWindow(GetDlgItem(hwndDlg, IDC_ADV_OTHER_TEXT), SW_SHOWNORMAL);
+
+        /* Resize the dialog */
+        GetWindowRect(hwndDlg, &rect);
+
+        dy = MulDiv(73, Context->MixerWindow->baseUnit.cy, 8);
+        rect.bottom += dy;
+
+        SetWindowPos(hwndDlg, HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE | SWP_NOZORDER);
+
+        /* Move the 'Close' button down */
+        GetWindowRect(GetDlgItem(hwndDlg, IDOK), &rect);
+        MapWindowPoints(HWND_DESKTOP, hwndDlg, (LPPOINT)&rect, 2);
+
+        rect.top += dy;
+        rect.bottom += dy;
+
+        SetWindowPos(GetDlgItem(hwndDlg, IDOK), HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 

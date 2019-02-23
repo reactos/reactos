@@ -658,7 +658,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
     {
         if (Context->bVertical)
         {
-            if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
+            if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
             {
                 DWORD LineOffset, volumePosition, balancePosition;
                 DWORD volumeStep, balanceStep;
@@ -724,7 +724,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
         }
         else if (Context->bSwitch)
         {
-            if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
+            if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
             {
                 /* set up details */
                 bDetails.fValue = Context->SliderPos;
@@ -783,7 +783,7 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
     {
         if (Control[Index].dwControlID == PtrToUlong(Context))
         {
-            if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_SWITCH)
+            if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
             {
                 MIXERCONTROLDETAILS_BOOLEAN Details;
 
@@ -794,7 +794,7 @@ MixerControlChangeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVO
                     UpdateDialogLineSwitchControl(&Preferences, Line, Details.fValue);
                 }
             }
-            else if ((Control[Index].dwControlType & MIXERCONTROL_CT_CLASS_MASK) == MIXERCONTROL_CT_CLASS_FADER)
+            else if (Control[Index].dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
             {
                 /* get volume control details */
                 if (SndMixerGetVolumeControlDetails(Preferences.MixerWindow->Mixer, Control[Index].dwControlID, Line->cChannels, sizeof(MIXERCONTROLDETAILS_UNSIGNED), (LPVOID)pVolumeDetails) != -1)
@@ -1025,6 +1025,7 @@ MainWindowProc(HWND hwnd,
                             /* get line name */
                             if (GetDlgItemTextW(hwnd, CtrlID, AdvancedContext.LineName, MIXER_LONG_NAME_CHARS) != 0)
                             {
+                                AdvancedContext.MixerWindow = Preferences.MixerWindow;
                                 AdvancedContext.Mixer = Preferences.MixerWindow->Mixer;
                                 AdvancedContext.Line = SndMixerGetLineByName(Preferences.MixerWindow->Mixer,
                                                                              Preferences.SelectedLine,
