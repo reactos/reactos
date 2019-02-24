@@ -57,6 +57,7 @@ typedef struct _GLOBAL_DATA
     HIMAGELIST hSoundsImageList;
     PLABEL_MAP pLabelMap;
     PAPP_MAP pAppMap;
+    UINT NumWavOut;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -1107,10 +1108,10 @@ SoundsDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            UINT NumWavOut = waveOutGetNumDevs();
-
             pGlobalData = (PGLOBAL_DATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            pGlobalData->NumWavOut = waveOutGetNumDevs();
 
             SendMessage(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
                         BM_SETIMAGE,(WPARAM)IMAGE_ICON,
@@ -1126,14 +1127,6 @@ SoundsDlgProc(HWND hwndDlg,
             LoadSoundProfiles(pGlobalData, hwndDlg);
             LoadSoundFiles(hwndDlg);
             ShowSoundScheme(pGlobalData, hwndDlg);
-
-            if (!NumWavOut)
-            {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SAVEAS_BTN),   FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),   FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SCHEME_LIST),  FALSE);
-            }
 
             if (wParam == (WPARAM)GetDlgItem(hwndDlg, IDC_SOUND_SCHEME))
                 return TRUE;
@@ -1257,7 +1250,7 @@ SoundsDlgProc(HWND hwndDlg,
                                ///
                                _tcscpy(pLabelContext->szValue, (TCHAR*)lResult);
                             }
-                            if (_tcslen((TCHAR*)lResult) && lIndex != 0)
+                            if (_tcslen((TCHAR*)lResult) && lIndex != 0 && pGlobalData->NumWavOut != 0)
                             {
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
                             }
@@ -1322,7 +1315,8 @@ SoundsDlgProc(HWND hwndDlg,
                         break;
                     }
 
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
+                    if (pGlobalData->NumWavOut != 0)
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
 
                     lCount = ComboBox_GetCount(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
                     for (lIndex = 0; lIndex < lCount; lIndex++)
