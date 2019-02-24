@@ -2351,38 +2351,38 @@ InstallFatBootcodeToFloppy(
     IN PUNICODE_STRING SourceRootPath,
     IN PUNICODE_STRING DestinationArcPath)
 {
+    static const PCWSTR FloppyDevice = L"\\Device\\Floppy0\\";
+
     NTSTATUS Status;
-    PFILE_SYSTEM FatFS;
-    UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
     /* Verify that the floppy disk is accessible */
-    if (DoesDirExist(NULL, FloppyDevice.Buffer) == FALSE)
+    if (DoesDirExist(NULL, FloppyDevice) == FALSE)
         return STATUS_DEVICE_NOT_READY;
 
     /* Format the floppy disk */
-    FatFS = GetFileSystemByName(L"FAT");
-    if (!FatFS)
-    {
-        DPRINT1("FAT FS non existent on this system?!\n");
-        return STATUS_NOT_SUPPORTED;
-    }
-    Status = FatFS->FormatFunc(&FloppyDevice,
-                               FMIFS_FLOPPY,
-                               NULL,
-                               TRUE,
-                               0,
-                               NULL);
+    // FormatPartition(...)
+    Status = FormatFileSystem(FloppyDevice,
+                              L"FAT",
+                              FMIFS_FLOPPY,
+                              NULL,
+                              TRUE,
+                              0,
+                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("VfatFormat() failed (Status %lx)\n", Status);
+        if (Status == STATUS_NOT_SUPPORTED)
+            DPRINT1("FAT FS non existent on this system?!\n");
+        else
+            DPRINT1("VfatFormat() failed (Status %lx)\n", Status);
+
         return Status;
     }
 
     /* Copy FreeLoader to the boot partition */
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
-    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice.Buffer, L"freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath, FALSE);
@@ -2394,7 +2394,7 @@ InstallFatBootcodeToFloppy(
 
     /* Create new 'freeldr.ini' */
     DPRINT("Create new 'freeldr.ini'\n");
-    Status = CreateFreeLoaderIniForReactOS(FloppyDevice.Buffer, DestinationArcPath->Buffer);
+    Status = CreateFreeLoaderIniForReactOS(FloppyDevice, DestinationArcPath->Buffer);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
@@ -2403,7 +2403,7 @@ InstallFatBootcodeToFloppy(
 
     /* Install FAT12 boosector */
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
-    CombinePaths(DstPath, ARRAYSIZE(DstPath), 1, FloppyDevice.Buffer);
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 1, FloppyDevice);
 
     DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
     Status = InstallFat12BootCodeToFloppy(SrcPath, DstPath);

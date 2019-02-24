@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Partition list functions
- * COPYRIGHT:   Copyright 2003-2018 Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Copyright 2018-2019 Hermes Belusca-Maito
  */
 
 #pragma once
@@ -30,8 +31,6 @@ typedef enum _FORMATSTATE
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
 
-struct _FILE_SYSTEM;
-
 typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
@@ -52,12 +51,15 @@ typedef struct _PARTENTRY
 
     WCHAR DriveLetter;
     WCHAR VolumeLabel[20];
-    // CHAR FileSystemName[9];  // NOTE: Superseded by the FileSystem member
+    WCHAR FileSystem[MAX_PATH+1];
+    FORMATSTATE FormatState;
 
     BOOLEAN LogicalPartition;
 
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
+
+/** The following three properties may be replaced by flags **/
 
     /* Partition is new, table does not exist on disk yet */
     BOOLEAN New;
@@ -67,9 +69,6 @@ typedef struct _PARTENTRY
 
     /* Partition must be checked */
     BOOLEAN NeedsCheck;
-
-    FORMATSTATE FormatState;
-    struct _FILE_SYSTEM* FileSystem;
 
 } PARTENTRY, *PPARTENTRY;
 

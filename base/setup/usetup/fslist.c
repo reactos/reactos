@@ -34,8 +34,7 @@
 static VOID
 AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN PCWSTR FileSystemName, // Redundant, I need to check whether this is reaaaaally needed....
-    IN PFILE_SYSTEM FileSystem)
+    IN PCWSTR FileSystem)
 {
     PFILE_SYSTEM_ITEM Item;
 
@@ -43,7 +42,6 @@ AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystemName = FileSystemName;
     Item->FileSystem = FileSystem;
     Item->QuickFormat = TRUE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
@@ -55,7 +53,6 @@ AddProvider(
     if (!Item)
         return;
 
-    Item->FileSystemName = FileSystemName;
     Item->FileSystem = FileSystem;
     Item->QuickFormat = FALSE;
     InsertTailList(&List->ListHead, &Item->ListEntry);
@@ -63,19 +60,21 @@ AddProvider(
 
 static VOID
 InitializeFileSystemList(
-    IN PFILE_SYSTEM_LIST List)
+    IN PFILE_SYSTEM_LIST List,
+    IN BOOLEAN ForceFormat)
 {
-    ULONG Count;
-    PFILE_SYSTEM FileSystems;
+    ULONG Index = 0;
+    PCWSTR FileSystemName;
 
-    FileSystems = GetRegisteredFileSystems(&Count);
-    if (!FileSystems || Count == 0)
-        return;
-
-    while (Count--)
+    while (GetRegisteredFileSystems(Index++, &FileSystemName))
     {
-        AddProvider(List, FileSystems->FileSystemName, FileSystems);
-        ++FileSystems;
+        AddProvider(List, FileSystemName);
+    }
+
+    if (!ForceFormat)
+    {
+        /* Add the 'Keep existing filesystem' dummy provider */
+        AddProvider(List, NULL);
     }
 }
 
@@ -99,19 +98,14 @@ CreateFileSystemList(
     List->Selected = NULL;
     InitializeListHead(&List->ListHead);
 
-    InitializeFileSystemList(List);
-    if (!ForceFormat)
-    {
-        /* Add the 'Keep existing filesystem' dummy provider */
-        AddProvider(List, NULL, NULL);
-    }
+    InitializeFileSystemList(List, ForceFormat);
 
     /* Search for SelectFileSystem in list */
     ListEntry = List->ListHead.Flink;
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystemName && wcscmp(SelectFileSystem, Item->FileSystemName) == 0)
+        if (Item->FileSystem && wcsicmp(SelectFileSystem, Item->FileSystem) == 0)
         {
             List->Selected = Item;
             break;
@@ -171,12 +165,12 @@ DrawFileSystemList(
                                     coPos,
                                     &Written);
 
-        if (Item->FileSystemName)
+        if (Item->FileSystem)
         {
-            if (Item->QuickFormat)
-                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK1), Item->FileSystemName);
-            else
-                snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystemName);
+            snprintf(Buffer, sizeof(Buffer),
+                     MUIGetString(Item->QuickFormat ? STRING_FORMATDISK1
+                                                    : STRING_FORMATDISK2),
+                     Item->FileSystem);
         }
         else
         {
@@ -184,13 +178,17 @@ DrawFileSystemList(
         }
 
         if (ListEntry == &List->Selected->ListEntry)
+        {
             CONSOLE_SetInvertedTextXY(List->Left,
                                       List->Top + (SHORT)Index,
                                       Buffer);
+        }
         else
+        {
             CONSOLE_SetTextXY(List->Left,
                               List->Top + (SHORT)Index,
                               Buffer);
+        }
         Index++;
         ListEntry = ListEntry->Flink;
     }

@@ -29,6 +29,7 @@
 NTSTATUS
 FormatPartition(
     IN PUNICODE_STRING DriveRoot,
-    IN PFILE_SYSTEM_ITEM FileSystemItem);
+    IN PCWSTR FileSystemName,
+    IN BOOLEAN QuickFormat);
 
 /* EOF */

@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Partition list functions
- * COPYRIGHT:   Copyright 2003-2018 Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Copyright 2018-2019 Hermes Belusca-Maito
  */
 
 #include "precomp.h"
@@ -752,18 +753,19 @@ CreateInsertBlankRegion(
 
     NewPartEntry->DiskEntry = DiskEntry;
 
-    NewPartEntry->IsPartitioned = FALSE;
-    NewPartEntry->FormatState = Unformatted;
-    NewPartEntry->FileSystem  = NULL;
-
     NewPartEntry->StartSector.QuadPart = StartSector;
     NewPartEntry->SectorCount.QuadPart = SectorCount;
+
+    NewPartEntry->IsPartitioned = FALSE;
+    NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
+    NewPartEntry->FormatState = Unformatted;
+    NewPartEntry->FileSystem[0] = L'\0';
 
     DPRINT1("First Sector : %I64u\n", NewPartEntry->StartSector.QuadPart);
     DPRINT1("Last Sector  : %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
     DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
-    /* Insert the table into the list */
+    /* Insert the new entry into the list */
     InsertTailList(ListHead, &NewPartEntry->ListEntry);
 
     return NewPartEntry;
@@ -788,17 +790,8 @@ InitializePartitionEntry(
     {
         DPRINT1("Convert existing partition entry\n");
 
-        /* Convert current entry to 'new (unformatted)' */
-        PartEntry->IsPartitioned = TRUE;
-        PartEntry->New = TRUE;
-        PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-        PartEntry->FormatState = Unformatted;
-        PartEntry->FileSystem  = NULL;
-        PartEntry->AutoCreate = AutoCreate;
-        PartEntry->BootIndicator = FALSE;
-        PartEntry->LogicalPartition = FALSE;
-
         NewPartEntry = PartEntry;
+        NewPartEntry->AutoCreate = AutoCreate;
     }
     else
     {
@@ -811,19 +804,7 @@ InitializePartitionEntry(
         if (NewPartEntry == NULL)
             return NULL;
 
-        /* Insert the new entry into the list */
-        InsertTailList(&PartEntry->ListEntry,
-                       &NewPartEntry->ListEntry);
-
         NewPartEntry->DiskEntry = DiskEntry;
-
-        NewPartEntry->IsPartitioned = TRUE;
-        NewPartEntry->New = TRUE;
-        NewPartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
-        NewPartEntry->FormatState = Unformatted;
-        NewPartEntry->FileSystem  = NULL;
-        NewPartEntry->BootIndicator = FALSE;
-        NewPartEntry->LogicalPartition = FALSE;
 
         NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
         NewPartEntry->SectorCount.QuadPart = AlignDown(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
@@ -831,7 +812,23 @@ InitializePartitionEntry(
 
         PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
         PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
+
+        /* Insert the new entry into the list */
+        InsertTailList(&PartEntry->ListEntry, &NewPartEntry->ListEntry);
     }
+
+    /* Create entry as 'New (Unformatted)' */
+    NewPartEntry->New = TRUE;
+    NewPartEntry->IsPartitioned = TRUE;
+
+    NewPartEntry->PartitionType = FileSystemToPartitionType(L"RAW", &NewPartEntry->StartSector, &NewPartEntry->SectorCount);
+    ASSERT(NewPartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+    NewPartEntry->FormatState = Unformatted;
+    NewPartEntry->FileSystem[0] = L'\0';
+    // NewPartEntry->AutoCreate = AutoCreate;
+    NewPartEntry->BootIndicator = FALSE;
+    NewPartEntry->LogicalPartition = FALSE;
 
     DPRINT1("First Sector : %I64u\n", NewPartEntry->StartSector.QuadPart);
     DPRINT1("Last Sector  : %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
@@ -852,10 +849,10 @@ AddPartitionToDisk(
     NTSTATUS Status;
     PPARTITION_INFORMATION PartitionInfo;
     PPARTENTRY PartEntry;
-    HANDLE FileHandle;
+    HANDLE PartitionHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    WCHAR Buffer[MAX_PATH];
+    WCHAR PathBuffer[MAX_PATH];
     UNICODE_STRING Name;
     UCHAR LabelBuffer[sizeof(FILE_FS_VOLUME_INFORMATION) + 256 * sizeof(WCHAR)];
     PFILE_FS_VOLUME_INFORMATION LabelInfo = (PFILE_FS_VOLUME_INFORMATION)LabelBuffer;
@@ -889,10 +886,16 @@ AddPartitionToDisk(
     PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
     PartEntry->PartitionIndex = PartitionIndex;
 
+    /* Specify the partition as initially unformatted */
+    PartEntry->FormatState = Unformatted;
+    PartEntry->FileSystem[0] = L'\0';
+
+    /* Initialize the partition volume label */
+    RtlZeroMemory(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel));
+
     if (IsContainerPartition(PartEntry->PartitionType))
     {
         PartEntry->FormatState = Unformatted;
-        PartEntry->FileSystem  = NULL;
 
         if (LogicalPartition == FALSE && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
@@ -901,67 +904,81 @@ AddPartitionToDisk(
     {
         ASSERT(PartitionInfo->RecognizedPartition);
 
-        PartEntry->FileSystem = GetFileSystem(PartEntry);
-        if (PartEntry->FileSystem)
-            PartEntry->FormatState = Preformatted;
+        /* Open the volume, ignore any errors */
+        RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                            L"\\Device\\Harddisk%lu\\Partition%lu",
+                            DiskEntry->DiskNumber,
+                            PartEntry->PartitionNumber);
+        RtlInitUnicodeString(&Name, PathBuffer);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &Name,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+
+        PartitionHandle = NULL;
+        Status = NtOpenFile(&PartitionHandle,
+                            FILE_READ_DATA | SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            FILE_SYNCHRONOUS_IO_NONALERT);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        }
+
+        if (/* NT_SUCCESS(Status) && */ PartitionHandle)
+        {
+            /* We don't have a FS, try to guess one */
+            Status = InferFileSystemByHandle(PartitionHandle,
+                                             PartEntry->PartitionType,
+                                             PartEntry->FileSystem,
+                                             sizeof(PartEntry->FileSystem));
+            if (!NT_SUCCESS(Status))
+                DPRINT1("InferFileSystemByHandle() failed, Status 0x%08lx\n", Status);
+        }
+        if (*PartEntry->FileSystem)
+        {
+            if (wcsicmp(PartEntry->FileSystem, L"RAW") == 0)
+                PartEntry->FormatState = Unformatted;
+            else
+                PartEntry->FormatState = Preformatted;
+        }
         else
-            PartEntry->FormatState = Unformatted;
-        // PartEntry->FormatState = UnknownFormat;
+        {
+            PartEntry->FormatState = UnknownFormat;
+        }
+
+        /* Retrieve the partition volume label */
+        if (PartitionHandle)
+        {
+            Status = NtQueryVolumeInformationFile(PartitionHandle,
+                                                  &IoStatusBlock,
+                                                  &LabelBuffer,
+                                                  sizeof(LabelBuffer),
+                                                  FileFsVolumeInformation);
+            if (NT_SUCCESS(Status))
+            {
+                /* Copy the (possibly truncated) volume label and NULL-terminate it */
+                RtlStringCbCopyNW(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel),
+                                  LabelInfo->VolumeLabel, LabelInfo->VolumeLabelLength);
+            }
+            else
+            {
+                DPRINT1("NtQueryVolumeInformationFile() failed, Status 0x%08lx\n", Status);
+            }
+        }
+
+        /* Close the partition */
+        if (PartitionHandle)
+            NtClose(PartitionHandle);
     }
     else
     {
         /* Unknown partition, hence unknown partition format (may or may not be actually formatted) */
         PartEntry->FormatState = UnknownFormat;
-    }
-
-    /* Initialize the partition volume label */
-    RtlZeroMemory(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel));
-
-    /* Open the volume, ignore any errors */
-    RtlStringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                        L"\\Device\\Harddisk%lu\\Partition%lu",
-                        DiskEntry->DiskNumber,
-                        PartEntry->PartitionNumber);
-    RtlInitUnicodeString(&Name, Buffer);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        FILE_READ_DATA | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (NT_SUCCESS(Status))
-    {
-        /* Retrieve the partition volume label */
-        Status = NtQueryVolumeInformationFile(FileHandle,
-                                              &IoStatusBlock,
-                                              &LabelBuffer,
-                                              sizeof(LabelBuffer),
-                                              FileFsVolumeInformation);
-        /* Close the handle */
-        NtClose(FileHandle);
-
-        /* Check for success */
-        if (NT_SUCCESS(Status))
-        {
-            /* Copy the (possibly truncated) volume label and NULL-terminate it */
-            RtlStringCbCopyNW(PartEntry->VolumeLabel, sizeof(PartEntry->VolumeLabel),
-                              LabelInfo->VolumeLabel, LabelInfo->VolumeLabelLength);
-        }
-        else
-        {
-            DPRINT1("NtQueryVolumeInformationFile() failed, Status 0x%08lx\n", Status);
-        }
-    }
-    else
-    {
-        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
     }
 
     InsertDiskRegion(DiskEntry, PartEntry, LogicalPartition);
@@ -2784,7 +2801,7 @@ DismountVolume(
         IsContainerPartition(PartEntry->PartitionType)     ||
         !IsRecognizedPartition(PartEntry->PartitionType)   ||
         PartEntry->FormatState == Unformatted /* || PartEntry->FormatState == UnknownFormat */ ||
-        PartEntry->FileSystem == NULL ||
+        !*PartEntry->FileSystem ||
         PartEntry->PartitionNumber == 0)
     {
         /* The partition is not mounted, so just return success */
@@ -2981,7 +2998,7 @@ DeleteCurrentPartition(
         PartEntry->IsPartitioned = FALSE;
         PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
-        PartEntry->FileSystem  = NULL;
+        PartEntry->FileSystem[0] = L'\0';
         PartEntry->DriveLetter = 0;
         PartEntry->OnDiskPartitionNumber = 0;
         PartEntry->PartitionNumber = 0;
@@ -2993,6 +3010,84 @@ DeleteCurrentPartition(
     AssignDriveLetters(List);
 }
 
+static
+BOOLEAN
+IsSupportedActivePartition(
+    IN PPARTENTRY PartEntry)
+{
+    /* Check the type and the filesystem of this partition */
+
+    /*
+     * We do not support extended partition containers (on MBR disks) marked
+     * as active, and containing code inside their extended boot records.
+     */
+    if (IsContainerPartition(PartEntry->PartitionType))
+    {
+        DPRINT1("System partition %lu in disk %lu is an extended partition container?!\n",
+                PartEntry->PartitionNumber, PartEntry->DiskEntry->DiskNumber);
+        return FALSE;
+    }
+
+    /*
+     * ADDITIONAL CHECKS / BIG HACK:
+     *
+     * Retrieve its file system and check whether we have
+     * write support for it. If that is the case we are fine
+     * and we can use it directly. However if we don't have
+     * write support we will need to change the active system
+     * partition.
+     *
+     * NOTE that this is completely useless on architectures
+     * where a real system partition is required, as on these
+     * architectures the partition uses the FAT FS, for which
+     * we do have write support.
+     * NOTE also that for those architectures looking for a
+     * partition boot indicator is insufficient.
+     */
+    if ((PartEntry->FormatState == Unformatted ) ||
+        (PartEntry->FormatState == Preformatted) ||
+        (PartEntry->FormatState == Formatted   ))
+    {
+        ASSERT(*PartEntry->FileSystem);
+
+        /* NOTE: Please keep in sync with the RegisteredFileSystems list! */
+        if (wcsicmp(PartEntry->FileSystem, L"FAT")   == 0 ||
+            wcsicmp(PartEntry->FileSystem, L"FAT32") == 0 ||
+         // wcsicmp(PartEntry->FileSystem, L"NTFS")  == 0 ||
+            wcsicmp(PartEntry->FileSystem, L"BTRFS") == 0 ||
+            wcsicmp(PartEntry->FileSystem, L"RAW")   == 0)
+        {
+            return TRUE;
+        }
+        else
+        {
+            // WARNING: We cannot write on this FS yet!
+            DPRINT1("Recognized file system '%S' that doesn't have write support yet!\n",
+                    PartEntry->FileSystem);
+            return FALSE;
+        }
+    }
+    else // if (PartEntry->FormatState == UnknownFormat)
+    {
+        ASSERT(!*PartEntry->FileSystem);
+
+        DPRINT1("System partition %lu in disk %lu with no or unknown FS?!\n",
+                PartEntry->PartitionNumber, PartEntry->DiskEntry->DiskNumber);
+        return FALSE;
+    }
+
+    // HACK: WARNING: We cannot write on this FS yet!
+    // See fsutil.c:InferFileSystem()
+    if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        DPRINT1("Recognized file system '%S' that doesn't have write support yet!\n",
+                PartEntry->FileSystem);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 VOID
 CheckActiveSystemPartition(
     IN PPARTLIST List)
@@ -3000,8 +3095,6 @@ CheckActiveSystemPartition(
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     PLIST_ENTRY ListEntry;
-
-    PFILE_SYSTEM FileSystem;
 
     /* Check for empty disk list */
     if (IsListEmpty(&List->DiskListHead))
@@ -3154,36 +3247,9 @@ CheckActiveSystemPartition(
     /* Save it */
     List->OriginalSystemPartition = List->SystemPartition;
 
-    /*
-     * ADDITIONAL CHECKS / BIG HACK:
-     *
-     * Retrieve its file system and check whether we have
-     * write support for it. If that is the case we are fine
-     * and we can use it directly. However if we don't have
-     * write support we will need to change the active system
-     * partition.
-     *
-     * NOTE that this is completely useless on architectures
-     * where a real system partition is required, as on these
-     * architectures the partition uses the FAT FS, for which
-     * we do have write support.
-     * NOTE also that for those architectures looking for a
-     * partition boot indicator is insufficient.
-     */
-    FileSystem = GetFileSystem(List->OriginalSystemPartition);
-    if (FileSystem == NULL)
+    /* If we get a candidate active partition, validate it */
+    if (!IsSupportedActivePartition(List->OriginalSystemPartition))
     {
-        DPRINT1("System partition %lu in disk %lu with no FS?!\n",
-                List->OriginalSystemPartition->PartitionNumber,
-                List->OriginalSystemPartition->DiskEntry->DiskNumber);
-        goto FindAndUseAlternativeSystemPartition;
-    }
-    // HACK: WARNING: We cannot write on this FS yet!
-    // See fsutil.c:GetFileSystem()
-    if (List->OriginalSystemPartition->PartitionType == PARTITION_IFS)
-    {
-        DPRINT1("Recognized file system %S that doesn't support write support yet!\n",
-                FileSystem->FileSystemName);
         goto FindAndUseAlternativeSystemPartition;
     }
 

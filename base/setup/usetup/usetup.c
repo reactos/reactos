@@ -22,7 +22,7 @@
  * FILE:            base/setup/usetup/usetup.c
  * PURPOSE:         Text-mode setup
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include <usetup.h>
@@ -3071,7 +3071,8 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             if (SelectedFileSystem->FileSystem)
             {
                 Status = FormatPartition(&PartitionRootPath,
-                                         SelectedFileSystem);
+                                         SelectedFileSystem->FileSystem,
+                                         SelectedFileSystem->QuickFormat);
                 if (Status == STATUS_NOT_SUPPORTED)
                 {
                     sprintf(Buffer,
@@ -3079,7 +3080,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                             "\n"
                             "  \x07  Press ENTER to continue Setup.\n"
                             "  \x07  Press F3 to quit Setup.",
-                            SelectedFileSystem->FileSystem->FileSystemName);
+                            SelectedFileSystem->FileSystem);
 
                     PopupError(Buffer,
                                MUIGetString(STRING_QUITCONTINUE),
@@ -3147,7 +3148,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     NTSTATUS Status;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PFILE_SYSTEM CurrentFileSystem;
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
@@ -3163,6 +3163,20 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
         return INSTALL_DIRECTORY_PAGE;
     }
 
+    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
+
+    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystem: %S\n",
+            PartEntry->PartitionType, (*PartEntry->FileSystem ? PartEntry->FileSystem : L"n/a"));
+
+    /* HACK: Do not try to check a partition with an unknown filesystem */
+    if (!*PartEntry->FileSystem)
+    {
+        PartEntry->NeedsCheck = FALSE;
+        return CHECK_FILE_SYSTEM_PAGE;
+    }
+
     /* Set PartitionRootPath */
     RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
             L"\\Device\\Harddisk%lu\\Partition%lu",
@@ -3171,30 +3185,22 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
     DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-    CurrentFileSystem = PartEntry->FileSystem;
-    DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
-            PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
-
-    /* HACK: Do not try to check a partition with an unknown filesystem */
-    if (CurrentFileSystem == NULL)
-    {
-        PartEntry->NeedsCheck = FALSE;
-        return CHECK_FILE_SYSTEM_PAGE;
-    }
-
-    Status = ChkdskPartition(&PartitionRootPath, CurrentFileSystem);
+    /* Check the partition */
+    Status = ChkdskPartition(&PartitionRootPath, PartEntry->FileSystem);
     if (Status == STATUS_NOT_SUPPORTED)
     {
+        /*
+         * Partition checking is not supported with the current filesystem,
+         * so disable FS checks on it.
+         */
+        PartEntry->NeedsCheck = FALSE;
+
         sprintf(Buffer,
                 "Setup is currently unable to check a partition formatted in %S.\n"
                 "\n"
                 "  \x07  Press ENTER to continue Setup.\n"
                 "  \x07  Press F3 to quit Setup.",
-                CurrentFileSystem->FileSystemName);
+                PartEntry->FileSystem);
 
         PopupError(Buffer,
                    MUIGetString(STRING_QUITCONTINUE),
@@ -4204,7 +4210,7 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
     if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                        PartitionList->SystemPartition->FileSystem->FileSystemName);
+                        PartitionList->SystemPartition->FileSystem);
         return QUIT_PAGE;
     }
 
@@ -4241,7 +4247,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                        PartitionList->SystemPartition->FileSystem->FileSystemName);
+                        PartitionList->SystemPartition->FileSystem);
         return QUIT_PAGE;
     }
 
