@@ -17,7 +17,7 @@
  */
 
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan 2018, 2019 (njlyf2011@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -85,8 +85,8 @@ BEGIN
     END
     POPUP "工具(&T)", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "映射网络磁盘...(&N)", IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "断开网络磁盘...(&D)", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "映射网络驱动器...(&N)", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "断开网络驱动器...(&D)", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "同步...(&S)", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "文件夹选项...(&O)", IDM_TOOLS_FOLDEROPTIONS

@@ -56,7 +56,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這個嚮導可以搜索其他硬體併為您自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
+    LTEXT "這個精靈可以搜索其他硬體併為您自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
     LTEXT "您期望精靈做什麼?", -1, 23, 40, 275, 8
     AUTORADIOBUTTON "搜索並自動安裝硬體(推薦)(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "安裝我手動從清單選擇的硬體(進階)(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
@@ -84,7 +84,7 @@ END
 
 IDD_PROGRESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "添加硬體嚮導"
+CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "可能需要幾分鐘的時間來搜尋硬體。", -1, 21, 8, 275, 15
@@ -110,9 +110,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "正在完成添加硬體嚮導", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "正在完成新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "安裝了下列硬體:", -1, 114, 32, 193, 19
-    LTEXT "要關閉這個嚮導，請按 [完成]。", -1, 114, 166, 132, 8
+    LTEXT "要關閉這個精靈，請按 [完成]。", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
@@ -125,7 +125,7 @@ BEGIN
     LTEXT "這裡是您所選硬體的當前狀態:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "要啟用可以幫助您解決問題的疑難解答，請按 [完成]。", -1, 114, 136, 193, 16
-    LTEXT "要退出這個嚮導，請按 [取消]。", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "要退出這個精靈，請按 [取消]。", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -133,11 +133,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "無法繼續添加硬體嚮導", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "無法繼續新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "要繼續，請將這個硬體跟電腦連線。", -1, 114, 40, 193, 16
     AUTOCHECKBOX "點選 [完成] 時關閉電腦；這樣，我可以開啟電腦並連線硬體(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "在大多數情況下，ReactOS 在硬體和電腦連線後自動將其安裝。如果 ReactOS 找不到這個硬體，您可以重新開啟這個嚮導，安裝支援軟體。", -1, 114, 98, 193, 32
-    LTEXT "要關閉這個嚮導，請按 [完成]。", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "在大多數情況下，ReactOS 在硬體和電腦連線後自動將其安裝。如果 ReactOS 找不到這個硬體，您可以重新開啟這個精靈，安裝支援軟體。", -1, 114, 98, 193, 32
+    LTEXT "要關閉這個精靈，請按 [完成]。", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
