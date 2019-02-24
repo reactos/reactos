@@ -64,8 +64,9 @@ typedef struct
 {
 	BOOLEAN IsFDO;
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	PUCHAR RegBase;
+	SIZE_T RegLength;
 	PKINTERRUPT Interrupt;
 
 	ULONG CorbLength;
@@ -125,6 +126,12 @@ NTAPI
 HDA_FDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+HDA_FDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp);
 
 NTSTATUS
 NTAPI

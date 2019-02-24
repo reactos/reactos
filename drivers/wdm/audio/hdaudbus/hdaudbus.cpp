@@ -50,6 +50,12 @@ HDA_FdoPnp(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
+    case IRP_MN_REMOVE_DEVICE:
+        return HDA_FDORemoveDevice(DeviceObject, Irp);
+    case IRP_MN_QUERY_REMOVE_DEVICE:
+    case IRP_MN_CANCEL_REMOVE_DEVICE:
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        break;
     case IRP_MN_QUERY_DEVICE_RELATIONS:
         /* handle bus device relations */
         if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)

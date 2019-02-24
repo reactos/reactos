@@ -563,6 +563,7 @@ HDA_FDOStartDevice(
 
         if (Descriptor->Type == CmResourceTypeMemory)
         {
+            DeviceExtension->RegLength = Descriptor->u.Memory.Length;
             DeviceExtension->RegBase = (PUCHAR)MmMapIoSpace(Descriptor->u.Memory.Start, Descriptor->u.Memory.Length, MmNonCached);
             if (DeviceExtension->RegBase == NULL)
             {
@@ -631,6 +632,60 @@ HDA_FDOStartDevice(
             }
         }
     }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+HDA_FDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
+    ULONG CodecIndex, AFGIndex;
+    PHDA_CODEC_ENTRY CodecEntry;
+
+    /* get device extension */
+    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
+    ASSERT(DeviceExtension->IsFDO == TRUE);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+
+    IoDetachDevice(DeviceExtension->LowerDevice);
+
+    if (DeviceExtension->RegBase != NULL)
+    {
+        MmUnmapIoSpace(DeviceExtension->RegBase,
+                       DeviceExtension->RegLength);
+    }
+    if (DeviceExtension->Interrupt != NULL)
+    {
+        IoDisconnectInterrupt(DeviceExtension->Interrupt);
+    }
+    if (DeviceExtension->CorbBase != NULL)
+    {
+        MmFreeContiguousMemory(DeviceExtension->CorbBase);
+    }
+    for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
+    {
+        CodecEntry = DeviceExtension->Codecs[CodecIndex];
+        if (CodecEntry == NULL)
+        {
+            continue;
+        }
+
+        for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
+        {
+            FreeItem(CodecEntry->AudioGroups[AFGIndex]);
+        }
+        FreeItem(CodecEntry);
+    }
+
+    IoDeleteDevice(DeviceObject);
 
     return Status;
 }
