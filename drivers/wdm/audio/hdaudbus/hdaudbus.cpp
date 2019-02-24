@@ -32,60 +32,6 @@ FreeItem(
 }
 
 NTSTATUS
-NTAPI
-HDA_SyncForwardIrpCompletionRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    if (Irp->PendingReturned)
-    {
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    }
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-HDA_SyncForwardIrp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    /* Initialize event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Copy irp stack location */
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    /* Set completion routine */
-    IoSetCompletionRoutine(Irp,
-        HDA_SyncForwardIrpCompletionRoutine,
-        &Event,
-        TRUE,
-        TRUE,
-        TRUE);
-
-    /* Call driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-
-    /* Check if pending */
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for the request to finish */
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-        /* Copy status code */
-        Status = Irp->IoStatus.Status;
-    }
-
-    /* Done */
-    return Status;
-}
-
-NTSTATUS
 HDA_FdoPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)

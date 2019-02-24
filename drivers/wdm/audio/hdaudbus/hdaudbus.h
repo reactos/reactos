@@ -170,12 +170,3 @@ NTSTATUS
 HDA_PDOHandleQueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
-
-/* hdaudbus.cpp*/
-
-NTSTATUS
-NTAPI
-HDA_SyncForwardIrp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-

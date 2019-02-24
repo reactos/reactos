@@ -540,7 +540,12 @@ HDA_FDOStartDevice(
     ASSERT(DeviceExtension->IsFDO == TRUE);
 
     /* forward irp to lower device */
-    Status = HDA_SyncForwardIrp(DeviceExtension->LowerDevice, Irp);
+    if (!IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+    Status = Irp->IoStatus.Status;
     if (!NT_SUCCESS(Status))
     {
         // failed to start
