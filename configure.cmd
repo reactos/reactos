@@ -26,7 +26,7 @@ if /I "%1" == "arm_hosttools" (
     call %2 x86
 
     REM Configure host tools for x86.
-    cmake -G %3 -DARCH:STRING=i386 %~dp0
+    cmake -G %3 -A Win32 -DARCH:STRING=i386 %~dp0
     exit
 )
 
@@ -45,7 +45,7 @@ if %ERRORLEVEL% == 0 (
 
 REM Set default generator
 set CMAKE_GENERATOR="Ninja"
-set CMAKE_GENERATOR_HOST=!CMAKE_GENERATOR!
+set CMAKE_ARCH=
 
 REM Detect presence of cmake
 cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
@@ -140,48 +140,13 @@ REM Parse command line parameters
                 set VS_VERSION=%3
                 echo Visual Studio Environment set to !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
             )
-            if "!VS_VERSION!" == "10" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 10 Win64"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 10"
-                )
-            ) else if "!VS_VERSION!" == "11" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 11 Win64"
-                ) else if "!ARCH!" == "arm" (
-                    set CMAKE_GENERATOR="Visual Studio 11 ARM"
-                    set CMAKE_GENERATOR_HOST="Visual Studio 11"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 11"
-                )
-            ) else if "!VS_VERSION!" == "12" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 12 Win64"
-                ) else if "!ARCH!" == "arm" (
-                    set CMAKE_GENERATOR="Visual Studio 12 ARM"
-                    set CMAKE_GENERATOR_HOST="Visual Studio 12"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 12"
-                )
-            ) else if "!VS_VERSION!" == "14" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 14 Win64"
-                ) else if "!ARCH!" == "arm" (
-                    set CMAKE_GENERATOR="Visual Studio 14 ARM"
-                    set CMAKE_GENERATOR_HOST="Visual Studio 14"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 14"
-                )
-            ) else if "!VS_VERSION!" == "15" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 15 Win64"
-                ) else if "!ARCH!" == "arm" (
-                    set CMAKE_GENERATOR="Visual Studio 15 ARM"
-                    set CMAKE_GENERATOR_HOST="Visual Studio 15"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 15"
-                )
+            set CMAKE_GENERATOR="Visual Studio !VS_VERSION!"
+            if "!ARCH!" == "i386" (
+                set CMAKE_ARCH=-A Win32
+            ) else if "!ARCH!" == "amd64" (
+                set CMAKE_ARCH=-A x64
+            ) else if "!ARCH!" == "arm" (
+                set CMAKE_ARCH=-A ARM
             )
         ) else if /I "%1" == "RTC" (
             echo Runtime checks enabled
@@ -263,9 +228,9 @@ if "%NEW_STYLE_BUILD%"=="0" (
     REM Use x86 for ARM host tools
     if "%ARCH%" == "arm" (
         REM Launch new script instance for x86 host tools configuration
-        start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR_HOST%
+        start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
     ) else (
-        cmake -G %CMAKE_GENERATOR% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
+        cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DARCH:STRING=%ARCH% "%REACTOS_SOURCE_DIR%"
     )
 
     cd..
@@ -292,7 +257,7 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 ) else if %USE_CLANG_CL% == 1 (
         cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DUSE_CLANG_CL:BOOL=1 -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
+    cmake -G %CMAKE_GENERATOR% %CMAKE_ARCH% -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% -DRUNTIME_CHECKS:BOOL=%VS_RUNTIME_CHECKS% %* "%REACTOS_SOURCE_DIR%"
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (
