@@ -25,6 +25,7 @@ typedef struct
     HWND       hActiveWnd;
     BOOL       bShowWarning;
     BOOL       bIsEnhancedKeyboard;
+    BOOL       bSoundClick;
 } OSK_GLOBALS;
 
 /* DEFINES ********************************************************************/

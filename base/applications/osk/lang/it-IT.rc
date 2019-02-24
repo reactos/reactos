@@ -272,7 +272,7 @@ BEGIN
     BEGIN
         MENUITEM "Sempre in primo piano", IDM_ON_TOP, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Usa suono al click", IDM_CLICK_SOUND, GRAYED
+        MENUITEM "&Usa suono al click", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Modalità di scrittura...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
