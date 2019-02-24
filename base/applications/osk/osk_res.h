@@ -9,6 +9,8 @@
 #define MAIN_DIALOG_ENHANCED_KB             2000
 #define MAIN_DIALOG_STANDARD_KB             2001
 
+#define IDI_SOUNDCLICK                      50
+
 #define IDC_LED_NUM                         100
 #define IDC_LED_CAPS                        101
 #define IDC_LED_SCROLL                      102
