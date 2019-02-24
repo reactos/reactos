@@ -8,7 +8,10 @@
 #include "hdaudbus.h"
 
 DRIVER_DISPATCH HDA_Pnp;
+DRIVER_DISPATCH HDA_SystemControl;
+DRIVER_DISPATCH HDA_Power;
 DRIVER_ADD_DEVICE HDA_AddDevice;
+DRIVER_UNLOAD HDA_Unload;
 extern "C" DRIVER_INITIALIZE DriverEntry;
 
 PVOID
@@ -206,6 +209,55 @@ HDA_Pnp(
     }
 }
 
+NTSTATUS
+NTAPI
+HDA_SystemControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PHDA_FDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    FDODeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
+
+    if (FDODeviceExtension->IsFDO)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(FDODeviceExtension->LowerDevice, Irp);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+}
+
+NTSTATUS
+NTAPI
+HDA_Power(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PHDA_FDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    FDODeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
+
+    if (FDODeviceExtension->IsFDO)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(FDODeviceExtension->LowerDevice, Irp);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        PoStartNextPowerIrp(Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+}
 
 NTSTATUS
 NTAPI
@@ -238,6 +290,14 @@ HDA_AddDevice(
 
     return Status;
 }
+
+VOID
+NTAPI
+HDA_Unload(
+    _In_ PDRIVER_OBJECT DriverObject)
+{
+}
+
 extern "C"
 {
 NTSTATUS
@@ -246,7 +306,10 @@ DriverEntry(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPathName)
 {
+    DriverObject->DriverUnload = HDA_Unload;
     DriverObject->DriverExtension->AddDevice = HDA_AddDevice;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = HDA_Power;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HDA_SystemControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = HDA_Pnp;
 
     return STATUS_SUCCESS;
