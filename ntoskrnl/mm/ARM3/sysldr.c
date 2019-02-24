@@ -2389,7 +2389,7 @@ MiWriteProtectSystemImage(
     PMMPTE FirstPte, LastPte;
 
     /* Check if the registry setting is on or not */
-    if (MmEnforceWriteProtection)
+    if (MmEnforceWriteProtection == FALSE)
     {
         /* Ignore section protection */
         return;
