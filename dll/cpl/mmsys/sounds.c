@@ -1236,20 +1236,39 @@ SoundsDlgProc(HWND hwndDlg,
                             if (lResult == CB_ERR || lResult == 0)
                             {
                                 if (lIndex != pLabelContext->szValue[0])
+                                {
+                                    /* Update the tree view item image */
+                                    item.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+                                    item.iImage = IMAGE_SOUND_NONE;
+                                    item.iSelectedImage = IMAGE_SOUND_NONE;
+                                    TreeView_SetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item);
+
                                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 
+                                    EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
+                                }
+
                                 pLabelContext->szValue[0] = L'\0';
+
                                 break;
                             }
 
                             if (_tcsicmp(pLabelContext->szValue, (TCHAR*)lResult) || (lIndex != pLabelContext->szValue[0]))
                             {
+                                /* Update the tree view item image */
+                                item.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+                                item.iImage = IMAGE_SOUND_ASSIGNED;
+                                item.iSelectedImage = IMAGE_SOUND_ASSIGNED;
+                                TreeView_SetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item);
+
                                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                               ///
-                               /// Should store in current member
-                               ///
-                               _tcscpy(pLabelContext->szValue, (TCHAR*)lResult);
+
+                                ///
+                                /// Should store in current member
+                                ///
+                                _tcscpy(pLabelContext->szValue, (TCHAR*)lResult);
                             }
+
                             if (_tcslen((TCHAR*)lResult) && lIndex != 0 && pGlobalData->NumWavOut != 0)
                             {
                                 EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
