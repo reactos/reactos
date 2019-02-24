@@ -1499,12 +1499,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 if (PartitionList->CurrentPartition->LogicalPartition)
                 {
                     CreateLogicalPartition(PartitionList,
+                                           PartitionList->CurrentPartition,
                                            PartitionList->CurrentPartition->SectorCount.QuadPart,
                                            TRUE);
                 }
                 else
                 {
                     CreatePrimaryPartition(PartitionList,
+                                           PartitionList->CurrentPartition,
                                            PartitionList->CurrentPartition->SectorCount.QuadPart,
                                            TRUE);
                 }
@@ -1607,7 +1609,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             {
                 if (PartitionList->CurrentPartition->LogicalPartition)
                 {
-                    Error = LogicalPartitionCreationChecks(PartitionList);
+                    Error = LogicalPartitionCreationChecks(PartitionList->CurrentPartition);
                     if (Error != NOT_AN_ERROR)
                     {
                         MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1615,12 +1617,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     }
 
                     CreateLogicalPartition(PartitionList,
+                                           PartitionList->CurrentPartition,
                                            0ULL,
                                            TRUE);
                 }
                 else
                 {
-                    Error = PrimaryPartitionCreationChecks(PartitionList);
+                    Error = PrimaryPartitionCreationChecks(PartitionList->CurrentPartition);
                     if (Error != NOT_AN_ERROR)
                     {
                         MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1628,6 +1631,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     }
 
                     CreatePrimaryPartition(PartitionList,
+                                           PartitionList->CurrentPartition,
                                            0ULL,
                                            TRUE);
                 }
@@ -1646,7 +1650,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
             {
-                Error = PrimaryPartitionCreationChecks(PartitionList);
+                Error = PrimaryPartitionCreationChecks(PartitionList->CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1660,7 +1664,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
             {
-                Error = ExtendedPartitionCreationChecks(PartitionList);
+                Error = ExtendedPartitionCreationChecks(PartitionList->CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1674,7 +1678,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (PartitionList->CurrentPartition->LogicalPartition)
             {
-                Error = LogicalPartitionCreationChecks(PartitionList);
+                Error = LogicalPartitionCreationChecks(PartitionList->CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -2068,6 +2072,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
             DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
             CreatePrimaryPartition(PartitionList,
+                                   PartitionList->CurrentPartition,
                                    SectorCount,
                                    FALSE);
 
@@ -2231,6 +2236,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
             DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
             CreateExtendedPartition(PartitionList,
+                                    PartitionList->CurrentPartition,
                                     SectorCount);
 
             return SELECT_PARTITION_PAGE;
@@ -2393,6 +2399,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
             DPRINT("Partition size: %I64u bytes\n", PartSize);
 
             CreateLogicalPartition(PartitionList,
+                                   PartitionList->CurrentPartition,
                                    SectorCount,
                                    FALSE);
 
@@ -2736,6 +2743,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
     /* Adjust disk size */
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
     if (DiskSize >= 10 * GB) /* 10 GB */
@@ -2997,7 +3006,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
     PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
     SelectedFileSystem = FileSystemList->Selected;
+    ASSERT(SelectedFileSystem && SelectedFileSystem->FileSystem);
 
     while (TRUE)
     {
@@ -3162,6 +3174,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     {
         return INSTALL_DIRECTORY_PAGE;
     }
+
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
 
@@ -3929,6 +3943,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
     WCHAR PathBuffer[MAX_PATH];
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    ASSERT(PartitionList->SystemPartition->IsPartitioned && PartitionList->SystemPartition->PartitionNumber != 0);
 
     RtlFreeUnicodeString(&USetupData.SystemRootPath);
     RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),

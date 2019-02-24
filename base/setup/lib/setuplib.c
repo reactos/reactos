@@ -630,6 +630,8 @@ InitDestinationPaths(
     WCHAR PathBuffer[MAX_PATH];
     NTSTATUS Status;
 
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
     /* Create 'pSetupData->DestinationRootPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
     Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),

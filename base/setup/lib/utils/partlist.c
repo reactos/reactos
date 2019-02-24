@@ -342,9 +342,10 @@ AssignDriveLetters(
             if (PartEntry->IsPartitioned &&
                 !IsContainerPartition(PartEntry->PartitionType))
             {
+                ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
                 if (IsRecognizedPartition(PartEntry->PartitionType) ||
-                    (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
-                     PartEntry->SectorCount.QuadPart != 0LL))
+                    PartEntry->SectorCount.QuadPart != 0LL)
                 {
                     if (Letter <= L'Z')
                     {
@@ -373,9 +374,10 @@ AssignDriveLetters(
 
             if (PartEntry->IsPartitioned)
             {
+                ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
                 if (IsRecognizedPartition(PartEntry->PartitionType) ||
-                    (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED &&
-                     PartEntry->SectorCount.QuadPart != 0LL))
+                    PartEntry->SectorCount.QuadPart != 0LL)
                 {
                     if (Letter <= L'Z')
                     {
@@ -903,6 +905,7 @@ AddPartitionToDisk(
     else if (IsRecognizedPartition(PartEntry->PartitionType))
     {
         ASSERT(PartitionInfo->RecognizedPartition);
+        ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
         /* Open the volume, ignore any errors */
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
@@ -2384,7 +2387,7 @@ UpdateDiskLayout(
 
     if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
         return;
     }
 
@@ -2405,14 +2408,16 @@ UpdateDiskLayout(
 
         if (PartEntry->IsPartitioned)
         {
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
             PartEntry->PartitionIndex = Index;
 
-            /* Reset the current partition number only for newly-created partitions */
+            /* Reset the current partition number only for newly-created (unmounted) partitions */
             if (PartEntry->New)
                 PartEntry->PartitionNumber = 0;
 
-            PartEntry->OnDiskPartitionNumber = (!IsContainerPartition(PartEntry->PartitionType)) ? PartitionNumber : 0;
+            PartEntry->OnDiskPartitionNumber = (!IsContainerPartition(PartEntry->PartitionType) ? PartitionNumber : 0);
 
             if (!IsSamePrimaryLayoutEntry(PartitionInfo, DiskEntry, PartEntry))
             {
@@ -2447,16 +2452,18 @@ UpdateDiskLayout(
 
         if (PartEntry->IsPartitioned)
         {
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[Index];
             PartEntry->PartitionIndex = Index;
 
-            DPRINT1("Updating logical partition entry %lu\n", Index);
-
-            /* Reset the current partition number only for newly-created partitions */
+            /* Reset the current partition number only for newly-created (unmounted) partitions */
             if (PartEntry->New)
                 PartEntry->PartitionNumber = 0;
 
             PartEntry->OnDiskPartitionNumber = PartitionNumber;
+
+            DPRINT1("Updating logical partition entry %lu\n", Index);
 
             PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
             PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
@@ -2569,7 +2576,10 @@ GetPrevUnpartitionedEntry(
                                           PARTENTRY,
                                           ListEntry);
         if (PrevPartEntry->IsPartitioned == FALSE)
+        {
+            ASSERT(PrevPartEntry->PartitionType == PARTITION_ENTRY_UNUSED);
             return PrevPartEntry;
+        }
     }
 
     return NULL;
@@ -2601,7 +2611,10 @@ GetNextUnpartitionedEntry(
                                           PARTENTRY,
                                           ListEntry);
         if (NextPartEntry->IsPartitioned == FALSE)
+        {
+            ASSERT(NextPartEntry->PartitionType == PARTITION_ENTRY_UNUSED);
             return NextPartEntry;
+        }
     }
 
     return NULL;
@@ -2610,39 +2623,36 @@ GetNextUnpartitionedEntry(
 BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate)
 {
     ERROR_NUMBER Error;
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
     DPRINT1("CreatePrimaryPartition(%I64u)\n", SectorCount);
 
     if (List == NULL ||
-        List->CurrentDisk == NULL ||
-        List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned)
+        SelectedEntry == NULL ||
+        SelectedEntry->DiskEntry == NULL ||
+        SelectedEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = PrimaryPartitionCreationChecks(List);
+    Error = PrimaryPartitionCreationChecks(SelectedEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("PrimaryPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
-
     /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, AutoCreate);
+    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, AutoCreate);
     if (PartEntry == NULL)
         return FALSE;
 
-    UpdateDiskLayout(DiskEntry);
+    UpdateDiskLayout(PartEntry->DiskEntry);
 
     AssignDriveLetters(List);
 
@@ -2681,34 +2691,31 @@ AddLogicalDiskSpace(
 BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount)
 {
     ERROR_NUMBER Error;
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
     DPRINT1("CreateExtendedPartition(%I64u)\n", SectorCount);
 
     if (List == NULL ||
-        List->CurrentDisk == NULL ||
-        List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned)
+        SelectedEntry == NULL ||
+        SelectedEntry->DiskEntry == NULL ||
+        SelectedEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = ExtendedPartitionCreationChecks(List);
+    Error = ExtendedPartitionCreationChecks(SelectedEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("ExtendedPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
-
     /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, FALSE);
+    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, FALSE);
     if (PartEntry == NULL)
         return FALSE;
 
@@ -2727,11 +2734,11 @@ CreateExtendedPartition(
     PartEntry->New = FALSE;
     PartEntry->FormatState = Formatted;
 
-    DiskEntry->ExtendedPartition = PartEntry;
+    PartEntry->DiskEntry->ExtendedPartition = PartEntry;
 
-    AddLogicalDiskSpace(DiskEntry);
+    AddLogicalDiskSpace(PartEntry->DiskEntry);
 
-    UpdateDiskLayout(DiskEntry);
+    UpdateDiskLayout(PartEntry->DiskEntry);
 
     AssignDriveLetters(List);
 
@@ -2741,41 +2748,38 @@ CreateExtendedPartition(
 BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate)
 {
     ERROR_NUMBER Error;
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
     DPRINT1("CreateLogicalPartition(%I64u)\n", SectorCount);
 
     if (List == NULL ||
-        List->CurrentDisk == NULL ||
-        List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned)
+        SelectedEntry == NULL ||
+        SelectedEntry->DiskEntry == NULL ||
+        SelectedEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = LogicalPartitionCreationChecks(List);
+    Error = LogicalPartitionCreationChecks(SelectedEntry);
     if (Error != NOT_AN_ERROR)
     {
         DPRINT1("LogicalPartitionCreationChecks() failed with error %lu\n", Error);
         return FALSE;
     }
 
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
-
     /* Convert the current entry, or insert and initialize a new partition entry */
-    PartEntry = InitializePartitionEntry(DiskEntry, PartEntry, SectorCount, AutoCreate);
+    PartEntry = InitializePartitionEntry(SelectedEntry->DiskEntry, SelectedEntry, SectorCount, AutoCreate);
     if (PartEntry == NULL)
         return FALSE;
 
     PartEntry->LogicalPartition = TRUE;
 
-    UpdateDiskLayout(DiskEntry);
+    UpdateDiskLayout(PartEntry->DiskEntry);
 
     AssignDriveLetters(List);
 
@@ -2795,11 +2799,10 @@ DismountVolume(
     HANDLE PartitionHandle;
     WCHAR Buffer[MAX_PATH];
 
-    /* Check whether the partition is valid and may have been mounted in the system */
+    /* Check whether the partition is valid and was mounted by the system */
     if (!PartEntry->IsPartitioned ||
-        PartEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
-        IsContainerPartition(PartEntry->PartitionType)     ||
-        !IsRecognizedPartition(PartEntry->PartitionType)   ||
+        IsContainerPartition(PartEntry->PartitionType)   ||
+        !IsRecognizedPartition(PartEntry->PartitionType) ||
         PartEntry->FormatState == Unformatted /* || PartEntry->FormatState == UnknownFormat */ ||
         !*PartEntry->FileSystem ||
         PartEntry->PartitionNumber == 0)
@@ -2807,6 +2810,8 @@ DismountVolume(
         /* The partition is not mounted, so just return success */
         return STATUS_SUCCESS;
     }
+
+    ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
     /* Open the volume */
     RtlStringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
@@ -2888,32 +2893,37 @@ DismountVolume(
 }
 
 VOID
-DeleteCurrentPartition(
-    IN PPARTLIST List)
+DeletePartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY PartEntry)
 {
     PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
     PPARTENTRY PrevPartEntry;
     PPARTENTRY NextPartEntry;
     PPARTENTRY LogicalPartEntry;
     PLIST_ENTRY Entry;
 
     if (List == NULL ||
-        List->CurrentDisk == NULL ||
-        List->CurrentPartition == NULL ||
-        List->CurrentPartition->IsPartitioned == FALSE)
+        PartEntry == NULL ||
+        PartEntry->DiskEntry == NULL ||
+        PartEntry->IsPartitioned == FALSE)
     {
         return;
     }
 
-    /* Clear the system disk and partition pointers if the system partition is being deleted */
-    if (List->SystemPartition == List->CurrentPartition)
+    ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+    /* Clear the system partition pointers if it is being deleted */
+    if (List->SystemPartition == PartEntry)
     {
+        ASSERT(List->SystemPartition);
+
+        if (List->SystemPartition == List->OriginalSystemPartition)
+            List->OriginalSystemPartition = NULL;
         List->SystemPartition = NULL;
     }
 
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
+    DiskEntry = PartEntry->DiskEntry;
 
     /* Check which type of partition (primary/logical or extended) is being deleted */
     if (DiskEntry->ExtendedPartition == PartEntry)
@@ -2961,7 +2971,11 @@ DeleteCurrentPartition(
         RtlFreeHeap(ProcessHeap, 0, NextPartEntry);
 
         /* Update current partition */
-        List->CurrentPartition = PrevPartEntry;
+        if (List->CurrentPartition == PartEntry ||
+            List->CurrentPartition == NextPartEntry)
+        {
+            List->CurrentPartition = PrevPartEntry;
+        }
     }
     else if (PrevPartEntry != NULL && NextPartEntry == NULL)
     {
@@ -2975,7 +2989,10 @@ DeleteCurrentPartition(
         RtlFreeHeap(ProcessHeap, 0, PartEntry);
 
         /* Update current partition */
-        List->CurrentPartition = PrevPartEntry;
+        if (List->CurrentPartition == PartEntry)
+        {
+            List->CurrentPartition = PrevPartEntry;
+        }
     }
     else if (PrevPartEntry == NULL && NextPartEntry != NULL)
     {
@@ -2990,7 +3007,10 @@ DeleteCurrentPartition(
         RtlFreeHeap(ProcessHeap, 0, PartEntry);
 
         /* Update current partition */
-        List->CurrentPartition = NextPartEntry;
+        if (List->CurrentPartition == PartEntry)
+        {
+            List->CurrentPartition = NextPartEntry;
+        }
     }
     else
     {
@@ -3008,6 +3028,13 @@ DeleteCurrentPartition(
     UpdateDiskLayout(DiskEntry);
 
     AssignDriveLetters(List);
+}
+
+VOID
+DeleteCurrentPartition(
+    IN PPARTLIST List)
+{
+    DeletePartition(List, List->CurrentPartition);
 }
 
 static
@@ -3292,10 +3319,8 @@ SetSystemPartition:
     List->SystemPartition->DiskEntry->Dirty = TRUE;
 }
 
-static
 NTSTATUS
 WritePartitions(
-    IN PPARTLIST List,
     IN PDISKENTRY DiskEntry)
 {
     NTSTATUS Status;
@@ -3311,6 +3336,10 @@ WritePartitions(
     WCHAR DstPath[MAX_PATH];
 
     DPRINT("WritePartitions() Disk: %lu\n", DiskEntry->DiskNumber);
+
+    /* If the disk is not dirty, there is nothing to do */
+    if (!DiskEntry->Dirty)
+        return STATUS_SUCCESS;
 
     RtlStringCchPrintfW(DstPath, ARRAYSIZE(DstPath),
                         L"\\Device\\Harddisk%lu\\Partition0",
@@ -3394,6 +3423,7 @@ WritePartitions(
 
         if (PartEntry->IsPartitioned)
         {
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
             PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
         }
@@ -3408,6 +3438,7 @@ WritePartitions(
 
         if (PartEntry->IsPartitioned)
         {
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
             PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex];
             PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
         }
@@ -3423,7 +3454,8 @@ WritePartitions(
     // DiskEntry->NoMbr was TRUE (instead of NewDisk).
     //
 
-    // DiskEntry->Dirty = FALSE;
+    /* The layout has been successfully updated, the disk is not dirty anymore */
+    DiskEntry->Dirty = FALSE;
 
     return Status;
 }
@@ -3432,6 +3464,7 @@ BOOLEAN
 WritePartitionsToDisk(
     IN PPARTLIST List)
 {
+    NTSTATUS Status;
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
 
@@ -3452,8 +3485,12 @@ WritePartitionsToDisk(
 
         if (DiskEntry->Dirty != FALSE)
         {
-            WritePartitions(List, DiskEntry);
-            DiskEntry->Dirty = FALSE;
+            Status = WritePartitions(DiskEntry);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("WritePartitionsToDisk() failed to update disk %lu, Status 0x%08lx\n",
+                        DiskEntry->DiskNumber, Status);
+            }
         }
     }
 
@@ -3553,8 +3590,10 @@ SetMountedDeviceValues(
              Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned)
+            if (PartEntry->IsPartitioned) // && !IsContainerPartition(PartEntry->PartitionType)
             {
+                ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
                 /* Assign a "\DosDevices\#:" mount point to this partition */
                 if (PartEntry->DriveLetter)
                 {
@@ -3574,8 +3613,10 @@ SetMountedDeviceValues(
              Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned)
+            if (PartEntry->IsPartitioned) // && !IsContainerPartition(PartEntry->PartitionType)
             {
+                ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
                 /* Assign a "\DosDevices\#:" mount point to this partition */
                 if (PartEntry->DriveLetter)
                 {
@@ -3611,13 +3652,9 @@ SetPartitionType(
 
 ERROR_NUMBER
 PrimaryPartitionCreationChecks(
-    IN PPARTLIST List)
+    IN PPARTENTRY PartEntry)
 {
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
 
     if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
@@ -3638,13 +3675,9 @@ PrimaryPartitionCreationChecks(
 
 ERROR_NUMBER
 ExtendedPartitionCreationChecks(
-    IN PPARTLIST List)
+    IN PPARTENTRY PartEntry)
 {
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
 
     if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
@@ -3669,13 +3702,9 @@ ExtendedPartitionCreationChecks(
 
 ERROR_NUMBER
 LogicalPartitionCreationChecks(
-    IN PPARTLIST List)
+    IN PPARTENTRY PartEntry)
 {
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-
-    DiskEntry = List->CurrentDisk;
-    PartEntry = List->CurrentPartition;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
 
     if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
@@ -3778,7 +3807,7 @@ GetNextUncheckedPartition(
              Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->NeedsCheck == TRUE)
+            if (PartEntry->IsPartitioned && PartEntry->NeedsCheck)
             {
                 ASSERT(DiskEntry == PartEntry->DiskEntry);
                 if (pDiskEntry) *pDiskEntry = DiskEntry;
@@ -3792,7 +3821,7 @@ GetNextUncheckedPartition(
              Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->NeedsCheck == TRUE)
+            if (PartEntry->IsPartitioned && PartEntry->NeedsCheck)
             {
                 ASSERT(DiskEntry == PartEntry->DiskEntry);
                 if (pDiskEntry) *pDiskEntry = DiskEntry;

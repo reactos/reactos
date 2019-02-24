@@ -697,6 +697,8 @@ FindNTOSInstallations(
     ULONG Version;
     WCHAR PathBuffer[MAX_PATH];
 
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
     /* Set PartitionRootPath */
     RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                         L"\\Device\\Harddisk%lu\\Partition%lu\\",

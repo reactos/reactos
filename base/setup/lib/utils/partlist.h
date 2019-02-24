@@ -292,19 +292,27 @@ GetPrevPartition(
 BOOLEAN
 CreatePrimaryPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
 BOOLEAN
 CreateExtendedPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount);
 
 BOOLEAN
 CreateLogicalPartition(
     IN PPARTLIST List,
+    IN PPARTENTRY SelectedEntry,
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
+
+VOID
+DeletePartition(
+    IN PPARTLIST List,
+    IN PPARTENTRY PartEntry);
 
 VOID
 DeleteCurrentPartition(
@@ -313,6 +321,10 @@ DeleteCurrentPartition(
 VOID
 CheckActiveSystemPartition(
     IN PPARTLIST List);
+
+NTSTATUS
+WritePartitions(
+    IN PDISKENTRY DiskEntry);
 
 BOOLEAN
 WritePartitionsToDisk(
@@ -335,15 +347,15 @@ SetPartitionType(
 
 ERROR_NUMBER
 PrimaryPartitionCreationChecks(
-    IN PPARTLIST List);
+    IN PPARTENTRY PartEntry);
 
 ERROR_NUMBER
 ExtendedPartitionCreationChecks(
-    IN PPARTLIST List);
+    IN PPARTENTRY PartEntry);
 
 ERROR_NUMBER
 LogicalPartitionCreationChecks(
-    IN PPARTLIST List);
+    IN PPARTENTRY PartEntry);
 
 BOOLEAN
 GetNextUnformattedPartition(
