@@ -299,17 +299,16 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     MIXERCAPS mxc;
     TCHAR szNoDevices[256];
 
-    CheckDlgButton(hwndDlg,
-                   IDC_ICON_IN_TASKBAR,
-                   GetSystrayVolumeIconState() ? BST_CHECKED : BST_UNCHECKED);
-
     LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
 
     NumMixers = mixerGetNumDevs();
     if (!NumMixers)
     {
         EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_TRACKBAR), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_LOW),      FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_HIGH),     FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_MUTE_CHECKBOX),   FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_ICON_IN_TASKBAR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
@@ -330,6 +329,10 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         MessageBox(hwndDlg, _T("mixerGetDevCaps failed"), NULL, MB_OK);
         return;
     }
+
+    CheckDlgButton(hwndDlg,
+                   IDC_ICON_IN_TASKBAR,
+                   GetSystrayVolumeIconState() ? BST_CHECKED : BST_UNCHECKED);
 
     GetMuteControl(pGlobalData);
     GetMuteState(pGlobalData);
