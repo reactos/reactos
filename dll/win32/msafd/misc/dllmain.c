@@ -2870,6 +2870,17 @@ WSPSetSockOpt(
               ERR("Setting send buf to %x is not implemented yet\n", optval);
               return NO_ERROR;
 
+           case SO_RCVBUF:
+              if (optlen < sizeof(DWORD))
+              {
+                  if (lpErrno) *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+
+              /* TODO: The total per-socket buffer space reserved for receives */
+              ERR("Setting receive buf to %x is not implemented yet\n", optval);
+              return NO_ERROR;
+
            case SO_ERROR:
               if (optlen < sizeof(INT))
               {
