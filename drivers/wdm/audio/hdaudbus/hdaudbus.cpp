@@ -101,28 +101,26 @@ HDA_FdoPnp(
     {
     case IRP_MN_START_DEVICE:
         Status = HDA_FDOStartDevice(DeviceObject, Irp);
-        break;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
     case IRP_MN_QUERY_DEVICE_RELATIONS:
         /* handle bus device relations */
         if (IoStack->Parameters.QueryDeviceRelations.Type == BusRelations)
         {
             Status = HDA_FDOQueryBusRelations(DeviceObject, Irp);
+            Irp->IoStatus.Status = Status;
+            if (!NT_SUCCESS(Status))
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
         }
-        else
-        {
-            Status = Irp->IoStatus.Status;
-        }
-        break;
-    default:
-        /* get default status */
-        Status = Irp->IoStatus.Status;
         break;
     }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return Status;
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(FDODeviceExtension->LowerDevice, Irp);
 }
 
 NTSTATUS
