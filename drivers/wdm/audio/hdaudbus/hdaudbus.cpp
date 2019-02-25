@@ -39,6 +39,9 @@ HDA_FdoPnp(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PHDA_FDO_DEVICE_EXTENSION FDODeviceExtension;
+    ULONG CodecIndex, AFGIndex;
+    PHDA_CODEC_ENTRY CodecEntry;
+    PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
 
     FDODeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -52,6 +55,19 @@ HDA_FdoPnp(
         return Status;
     case IRP_MN_REMOVE_DEVICE:
         return HDA_FDORemoveDevice(DeviceObject, Irp);
+    case IRP_MN_SURPRISE_REMOVAL:
+        for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
+        {
+            CodecEntry = FDODeviceExtension->Codecs[CodecIndex];
+
+            for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
+            {
+                ChildDeviceExtension = static_cast<PHDA_PDO_DEVICE_EXTENSION>(CodecEntry->AudioGroups[AFGIndex]->ChildPDO->DeviceExtension);
+                ChildDeviceExtension->ReportedMissing = TRUE;
+            }
+        }
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        break;
     case IRP_MN_QUERY_REMOVE_DEVICE:
     case IRP_MN_CANCEL_REMOVE_DEVICE:
         Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -90,6 +106,13 @@ HDA_PdoPnp(
     {
     case IRP_MN_START_DEVICE:
         /* no op for pdo */
+        Status = STATUS_SUCCESS;
+        break;
+    case IRP_MN_REMOVE_DEVICE:
+        Status = HDA_PDORemoveDevice(DeviceObject);
+        break;
+    case IRP_MN_QUERY_REMOVE_DEVICE:
+    case IRP_MN_CANCEL_REMOVE_DEVICE:
         Status = STATUS_SUCCESS;
         break;
     case IRP_MN_QUERY_BUS_INFORMATION:

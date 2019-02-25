@@ -84,6 +84,7 @@ typedef struct
 typedef struct
 {
 	BOOLEAN IsFDO;
+	BOOLEAN ReportedMissing;
 	PHDA_CODEC_ENTRY Codec;
 	PHDA_CODEC_AUDIO_GROUP AudioGroup;
 	PDEVICE_OBJECT FDO;
@@ -148,6 +149,10 @@ HDA_SendVerbs(
     IN ULONG Count);
 
 /* pdo.cpp*/
+
+NTSTATUS
+HDA_PDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 HDA_PDOQueryBusInformation(

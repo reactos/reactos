@@ -248,6 +248,7 @@ HDA_InitCodec(
             /* init child pdo*/
             ChildDeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)AudioGroup->ChildPDO->DeviceExtension;
             ChildDeviceExtension->IsFDO = FALSE;
+            ChildDeviceExtension->ReportedMissing = FALSE;
             ChildDeviceExtension->Codec = Entry;
             ChildDeviceExtension->AudioGroup = AudioGroup;
             ChildDeviceExtension->FDO = DeviceObject;
@@ -646,6 +647,8 @@ HDA_FDORemoveDevice(
     PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
     ULONG CodecIndex, AFGIndex;
     PHDA_CODEC_ENTRY CodecEntry;
+    PDEVICE_OBJECT ChildPDO;
+    PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
 
     /* get device extension */
     DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
@@ -670,6 +673,7 @@ HDA_FDORemoveDevice(
     {
         MmFreeContiguousMemory(DeviceExtension->CorbBase);
     }
+
     for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
     {
         CodecEntry = DeviceExtension->Codecs[CodecIndex];
@@ -680,6 +684,16 @@ HDA_FDORemoveDevice(
 
         for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
         {
+            ChildPDO = CodecEntry->AudioGroups[AFGIndex]->ChildPDO;
+            if (ChildPDO != NULL)
+            {
+                ChildDeviceExtension = static_cast<PHDA_PDO_DEVICE_EXTENSION>(ChildPDO->DeviceExtension);
+                ChildDeviceExtension->Codec = NULL;
+                ChildDeviceExtension->AudioGroup = NULL;
+                ChildDeviceExtension->FDO = NULL;
+                ChildDeviceExtension->ReportedMissing = TRUE;
+                HDA_PDORemoveDevice(ChildPDO);
+            }
             FreeItem(CodecEntry->AudioGroups[AFGIndex]);
         }
         FreeItem(CodecEntry);
