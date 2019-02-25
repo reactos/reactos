@@ -3,6 +3,7 @@
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Utility function definitions for calling AFD
  * COPYRIGHT:   Copyright 2015-2018 Thomas Faber (thomas.faber@reactos.org)
+ *              Copyright 2019 Pierre Schweitzer (pierre@reactos.org)
  */
 
 #include "precomp.h"
@@ -379,6 +380,129 @@ AfdSendTo(
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, TransportAddress);
     NtClose(Event);
+
+    return Status;
+}
+
+NTSTATUS
+AfdSetInformation(
+    _In_ HANDLE SocketHandle,
+    _In_ ULONG InformationClass,
+    _In_opt_ PBOOLEAN Boolean,
+    _In_opt_ PULONG Ulong,
+    _In_opt_ PLARGE_INTEGER LargeInteger)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    AFD_INFO InfoData;
+    HANDLE Event;
+
+    Status = NtCreateEvent(&Event,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    InfoData.InformationClass = InformationClass;
+
+    if (Ulong != NULL)
+    {
+        InfoData.Information.Ulong = *Ulong;
+    }
+    if (LargeInteger != NULL)
+    {
+        InfoData.Information.LargeInteger = *LargeInteger;
+    }
+    if (Boolean != NULL)
+    {
+        InfoData.Information.Boolean = *Boolean;
+    }
+
+    Status = NtDeviceIoControlFile(SocketHandle,
+                                   Event,
+                                   NULL,
+                                   NULL,
+                                   &IoStatus,
+                                   IOCTL_AFD_SET_INFO,
+                                   &InfoData,
+                                   sizeof(InfoData),
+                                   NULL,
+                                   0);
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(Event, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+
+    NtClose(Event);
+
+    return Status;
+}
+
+NTSTATUS
+AfdGetInformation(
+    _In_ HANDLE SocketHandle,
+    _In_ ULONG InformationClass,
+    _In_opt_ PBOOLEAN Boolean,
+    _In_opt_ PULONG Ulong,
+    _In_opt_ PLARGE_INTEGER LargeInteger)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    AFD_INFO InfoData;
+    HANDLE Event;
+
+    Status = NtCreateEvent(&Event,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    InfoData.InformationClass = InformationClass;
+
+    Status = NtDeviceIoControlFile(SocketHandle,
+                                   Event,
+                                   NULL,
+                                   NULL,
+                                   &IoStatus,
+                                   IOCTL_AFD_GET_INFO,
+                                   &InfoData,
+                                   sizeof(InfoData),
+                                   &InfoData,
+                                   sizeof(InfoData));
+    if (Status == STATUS_PENDING)
+    {
+        NtWaitForSingleObject(Event, FALSE, NULL);
+        Status = IoStatus.Status;
+    }
+
+    NtClose(Event);
+
+    if (Status != STATUS_SUCCESS)
+    {
+        return Status;
+    }
+
+    if (Ulong != NULL)
+    {
+        *Ulong = InfoData.Information.Ulong;
+    }
+    if (LargeInteger != NULL)
+    {
+        *LargeInteger = InfoData.Information.LargeInteger;
+    }
+    if (Boolean != NULL)
+    {
+        *Boolean = InfoData.Information.Boolean;
+    }
 
     return Status;
 }
