@@ -3298,6 +3298,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose( SockEvent );
             return 0;
         }
         if (CompletionRoutine == NULL)
@@ -3315,6 +3316,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose( SockEvent );
                 return WSAEFAULT;
             }
             APCContext->lpCompletionRoutine = CompletionRoutine;
@@ -3346,6 +3348,8 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         Status = IOSB->Status;
     }
 
+    NtClose( SockEvent );
+
     TRACE("Status %x Information %d\n", Status, IOSB->Information);
 
     if (Status == STATUS_PENDING)
@@ -3370,8 +3374,6 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     {
         *Boolean = InfoData.Information.Boolean;
     }
-
-    NtClose( SockEvent );
 
     return NO_ERROR;
 
@@ -3437,6 +3439,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose( SockEvent );
             return 0;
         }
         if (CompletionRoutine == NULL)
@@ -3454,6 +3457,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose( SockEvent );
                 return WSAEFAULT;
             }
             APCContext->lpCompletionRoutine = CompletionRoutine;
