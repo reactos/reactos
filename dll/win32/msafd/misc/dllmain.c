@@ -2866,8 +2866,21 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              /* TODO: The total per-socket buffer space reserved for sends */
-              ERR("Setting send buf to %x is not implemented yet\n", optval);
+              SetSocketInformation(Socket,
+                                   AFD_INFO_SEND_WINDOW_SIZE,
+                                   NULL,
+                                   (PULONG)optval,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+              GetSocketInformation(Socket,
+                                   AFD_INFO_SEND_WINDOW_SIZE,
+                                   NULL,
+                                   &Socket->SharedData->SizeOfSendBuffer,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+
               return NO_ERROR;
 
            case SO_RCVBUF:
@@ -2877,8 +2890,21 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              /* TODO: The total per-socket buffer space reserved for receives */
-              ERR("Setting receive buf to %x is not implemented yet\n", optval);
+              SetSocketInformation(Socket,
+                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                   NULL,
+                                   (PULONG)optval,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+              GetSocketInformation(Socket,
+                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                   NULL,
+                                   &Socket->SharedData->SizeOfSendBuffer,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+
               return NO_ERROR;
 
            case SO_ERROR:
