@@ -285,19 +285,19 @@ HDA_InitCorbRirbPos(
     if ((corbSize & CORB_SIZE_CAP_256_ENTRIES) != 0) {
         DeviceExtension->CorbLength = 256;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & HDAC_CORB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_256_ENTRIES);
     }
     else if (corbSize & CORB_SIZE_CAP_16_ENTRIES) {
         DeviceExtension->CorbLength = 16;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & HDAC_CORB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_16_ENTRIES);
     }
     else if (corbSize & CORB_SIZE_CAP_2_ENTRIES) {
         DeviceExtension->CorbLength = 2;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & HDAC_CORB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_2_ENTRIES);
     }
 
@@ -306,19 +306,19 @@ HDA_InitCorbRirbPos(
     if (rirbSize & RIRB_SIZE_CAP_256_ENTRIES) {
         DeviceExtension->RirbLength = 256;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & HDAC_RIRB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_256_ENTRIES);
     }
     else if (rirbSize & RIRB_SIZE_CAP_16_ENTRIES) {
         DeviceExtension->RirbLength = 16;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & HDAC_RIRB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_16_ENTRIES);
     }
     else if (rirbSize & RIRB_SIZE_CAP_2_ENTRIES) {
         DeviceExtension->RirbLength = 2;
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & HDAC_RIRB_SIZE_MASK;
+        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
         WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_2_ENTRIES);
     }
 
@@ -349,7 +349,7 @@ HDA_InitCorbRirbPos(
     WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_LOWER), CorbPhysicalAddress.LowPart);
     WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_UPPER), CorbPhysicalAddress.HighPart);
 
-    value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS)) & HDAC_CORB_WRITE_POS_MASK;
+    value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS)) & ~HDAC_CORB_WRITE_POS_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), value);
 
     // Reset CORB read pointer. Preserve bits marked as RsvdP.
@@ -392,11 +392,11 @@ HDA_InitCorbRirbPos(
     }
 
     // Reset RIRB write pointer
-    rirbWritePointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) & RIRB_WRITE_POS_RESET;
+    rirbWritePointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) & ~RIRB_WRITE_POS_RESET;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS), rirbWritePointer | RIRB_WRITE_POS_RESET);
 
     // Generate interrupt for every response
-    interruptValue = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RESPONSE_INTR_COUNT)) & HDAC_RESPONSE_INTR_COUNT_MASK;
+    interruptValue = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RESPONSE_INTR_COUNT)) & ~HDAC_RESPONSE_INTR_COUNT_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RESPONSE_INTR_COUNT), interruptValue | 1);
 
     // Setup cached read/write indices
@@ -404,10 +404,10 @@ HDA_InitCorbRirbPos(
     DeviceExtension->CorbWritePos = 0;
 
     // Gentlemen, start your engines...
-    corbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_CONTROL)) &HDAC_CORB_CONTROL_MASK;
+    corbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_CONTROL)) & ~HDAC_CORB_CONTROL_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_CONTROL), corbControl | CORB_CONTROL_RUN | CORB_CONTROL_MEMORY_ERROR_INTR);
 
-    rirbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_CONTROL)) & HDAC_RIRB_CONTROL_MASK;
+    rirbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_CONTROL)) & ~HDAC_RIRB_CONTROL_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_CONTROL), rirbControl | RIRB_CONTROL_DMA_ENABLE | RIRB_CONTROL_OVERRUN_INTR | RIRB_CONTROL_RESPONSE_INTR);
 
     return STATUS_SUCCESS;
@@ -456,10 +456,10 @@ HDA_ResetController(
     }
 
     // stop DMA
-    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL) & HDAC_CORB_CONTROL_MASK;
+    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL) & ~HDAC_CORB_CONTROL_MASK;
     WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL, Control);
 
-    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL) & HDAC_RIRB_CONTROL_MASK;
+    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL) & ~HDAC_RIRB_CONTROL_MASK;
     WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL, Control);
 
     for (int timeout = 0; timeout < 10; timeout++) {
