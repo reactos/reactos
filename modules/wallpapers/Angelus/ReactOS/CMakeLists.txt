@@ -1,0 +1,8 @@
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Blue_16-9.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Blue_4-3.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Dark_16-9.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Dark_4-3.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Green_16-9.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Green_4-3.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Light_16-9.jpg DESTINATION reactos/Web/Wallpaper FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/Angelus.ReactOS7.Light_4-3.jpg DESTINATION reactos/Web/Wallpaper FOR all)

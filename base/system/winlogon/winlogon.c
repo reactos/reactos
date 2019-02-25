@@ -204,7 +204,7 @@ InitKeyboardLayouts(VOID)
     if (!bRet)
     {
         /* If we failed, load US keyboard layout */
-        if (LoadKeyboardLayoutW(L"00000409", 0x04090409))
+        if (LoadKeyboardLayoutW(L"00000409", KLF_ACTIVATE | KLF_SUBSTITUTE_OK | KLF_REPLACELANG | KLF_SETFORPROCESS))
             bRet = TRUE;
     }
 

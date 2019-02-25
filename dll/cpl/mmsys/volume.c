@@ -299,17 +299,20 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     MIXERCAPS mxc;
     TCHAR szNoDevices[256];
 
-    CheckDlgButton(hwndDlg,
-                   IDC_ICON_IN_TASKBAR,
-                   GetSystrayVolumeIconState() ? BST_CHECKED : BST_UNCHECKED);
-
     LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, _countof(szNoDevices));
+
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
+    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
 
     NumMixers = mixerGetNumDevs();
     if (!NumMixers)
     {
         EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_TRACKBAR), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_LOW),      FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME_HIGH),     FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_MUTE_CHECKBOX),   FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_ICON_IN_TASKBAR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED_BTN),    FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
@@ -331,6 +334,10 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         return;
     }
 
+    CheckDlgButton(hwndDlg,
+                   IDC_ICON_IN_TASKBAR,
+                   GetSystrayVolumeIconState() ? BST_CHECKED : BST_UNCHECKED);
+
     GetMuteControl(pGlobalData);
     GetMuteState(pGlobalData);
     if (pGlobalData->muteVal)
@@ -348,9 +355,6 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     GetVolumeValue(pGlobalData);
 
     SendDlgItemMessage(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, 0, (LPARAM)mxc.szPname);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(VOLUME_MIN, VOLUME_MAX));
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETTICFREQ, VOLUME_TICFREQ, 0);
-    SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPAGESIZE, 0, VOLUME_PAGESIZE);
     SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(pGlobalData->maxVolume - pGlobalData->volumeMinimum) / pGlobalData->volumeStep);
 }
 
