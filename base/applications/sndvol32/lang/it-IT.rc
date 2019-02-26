@@ -21,8 +21,8 @@ STRINGTABLE
 BEGIN
     IDS_SNDVOL32       "Controllo Volume"
     IDS_NOMIXERDEVICES "Non ci sono dispositivi mixer disponibili! Il programma si chiuderà."
-    IDS_SELECT "&Select"
-    IDS_ADVANCED_CONTROLS "Advanced Controls for %s"
+    IDS_SELECT "&Seleziona"
+    IDS_ADVANCED_CONTROLS "Controlli Avanzati per %s"
     IDS_OTHER_CONTROLS1 "&1  %s"
     IDS_OTHER_CONTROLS2 "&2  %s"
 END
