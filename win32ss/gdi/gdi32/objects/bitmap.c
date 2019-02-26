@@ -6,6 +6,34 @@
 // From Yuan, ScanLineSize = (Width * bitcount + 31)/32
 #define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
 
+DWORD vSAPCallback(PDC_ATTR dc)
+{
+    DWORD result;
+    DWORD ticks = GetTickCount();
+
+    // The callback happens roughly every 2.5 to 4 seconds (depending on the system timer resolution).
+    if (ticks - dc->LastTicks >= 250)
+    {
+        dc->LastTicks = ticks;
+
+        if (!dc->SAPCallback)
+        {
+            DPRINT1("SAPCallback is null! Bailing early.\n");
+            return ticks;
+        }
+
+        result = dc->SAPCallback(dc->pvLDC, 0);
+        if (!result)
+        {
+            CancelDC((HDC)dc->pvLDC);
+            // TODO: Implement AbortDC
+            //return AbortDC((HDC)dc->pvLDC);
+        }
+    }
+
+    return ticks;
+}
+
 /*
  *           DIB_BitmapInfoSize
  *
@@ -656,20 +684,42 @@ SetDIBitsToDevice(
     PDC_ATTR pDCAttr;
     BITMAPINFO* BmInfoConverted;
     UINT ConvertedInfoSize;
-    INT LinesCopied = 0;
+    INT LinesSet = 0;
     UINT ContentSize = 0;
     BOOL Hit = FALSE;
     VOID* SafeBits = (PVOID)lpvBits;
+    int EndScan;
+    UINT ActualLines;
 
     if (!cLines || !lpbmi || !lpvBits)
         return 0;
 
-    if (ColorUse && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_COLORS + 1)
+    if (ColorUse != DIB_RGB_COLORS && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_INDICES)
         return 0;
 
     BmInfoConverted = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize, FALSE);
     if (!BmInfoConverted)
         return 0;
+
+    // Calculate the final scanline (from the bottom).
+    EndScan = ySrc + h;
+
+    // Check for overflow.
+    if (ySrc > EndScan)
+        EndScan = ySrc;
+
+    if (EndScan < 0)
+        return 0;
+
+    // Cap the final scanline to the image height.
+    if (EndScan >= BmInfoConverted->bmiHeader.biHeight)
+        EndScan = BmInfoConverted->bmiHeader.biHeight;
+
+    ActualLines = EndScan - StartScan;
+
+    // If we're asked to draw more lines than we can, cap the amount we draw.
+    if (cLines >= ActualLines)
+        cLines = ActualLines;
 
     HANDLE_METADC(INT,
                   SetDIBitsToDevice,
@@ -686,6 +736,33 @@ SetDIBitsToDevice(
                   lpvBits,
                   lpbmi,
                   ColorUse);
+
+    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDCAttr))
+    {
+        GdiSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    if (pDCAttr->hbrush == (HBRUSH)(COLOR_BACKGROUND + 1))
+    {
+        DPRINT1("UNHANDLED: pDCAttr->hbrush == COLOR_BACKGROUND + 1\n");
+    }
+
+    if (pDCAttr->ulDirty_ & DIRTY_PTLCURRENT)
+    {
+        DPRINT1("DIRTY_PTLCURRENT!\n");
+        StartPage(hdc);
+    }
+
+    if (pDCAttr->ulDirty_ & SLOW_WIDTHS)
+        vSAPCallback(pDCAttr);
+
+    if (pDCAttr->ulDirty_ & DC_PRIMARY_DISPLAY)
+    {
+        // TODO: This happens when it shouldn't.
+        DPRINT1("DC_PRIMARY_DISPLAY dirty! It probably shouldn't be.\n");
+        //goto Cleanup;
+    }
 
     if ((BmInfoConverted->bmiHeader.biCompression == BI_RLE8) ||
         (BmInfoConverted->bmiHeader.biCompression == BI_RLE4))
@@ -720,11 +797,6 @@ SetDIBitsToDevice(
         DPRINT("SetDIBitsToDevice allocated lpvBits %u!!!\n", ContentSize);
     }
 
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDCAttr))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
     /*
     if (!pDCAttr || // DC is Public
         ColorUse == DIB_PAL_COLORS ||
@@ -732,7 +804,7 @@ SetDIBitsToDevice(
         (BmInfoConverted->bmiHeader.biCompression == BI_JPEG ||
          BmInfoConverted->bmiHeader.biCompression == BI_PNG)))*/
     {
-        LinesCopied = NtGdiSetDIBitsToDeviceInternal(hdc, xDest, yDest, w, h, xSrc, ySrc,
+        LinesSet = NtGdiSetDIBitsToDeviceInternal(hdc, xDest, yDest, w, h, xSrc, ySrc,
             StartScan, cLines, (BYTE*)SafeBits, (BITMAPINFO*)BmInfoConverted, ColorUse,
             ContentSize, ConvertedInfoSize,
             TRUE,
@@ -743,7 +815,7 @@ SetDIBitsToDevice(
     if (BmInfoConverted != lpbmi)
         RtlFreeHeap(RtlGetProcessHeap(), 0, BmInfoConverted);
 
-    return LinesCopied;
+    return LinesSet;
 }
 
 /*

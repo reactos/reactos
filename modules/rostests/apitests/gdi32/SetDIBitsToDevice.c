@@ -98,6 +98,40 @@ Test_SetDIBitsToDevice_Params()
     ok_dec(ret, 0);
     ok_err(0xdeadc0de);
 
+    // Test ySrc + h < 0
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            2, // dwHeight,
+                            0, // XSrc,
+                            -3, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 0);
+    ok_err(0xdeadc0de);
+
+    // Test ySrc + h overflow with ySrc < 0
+    SetLastError(0xdeadc0de);
+    ret = SetDIBitsToDevice(ghdcDIB32,
+                            0, // XDest,
+                            0, // YDest,
+                            2, // dwWidth,
+                            (DWORD)INT_MAX + 2, // dwHeight,
+                            0, // XSrc,
+                            -1, // YSrc,
+                            0, // uStartScan,
+                            2, // cScanLines,
+                            aulBits, // lpvBits,
+                            pbmi,
+                            DIB_RGB_COLORS);
+    ok_dec(ret, 0);
+    ok_err(0xdeadc0de);
+
     /* test unaligned buffer */
     SetLastError(0xdeadc0de);
     ret = SetDIBitsToDevice(ghdcDIB32,

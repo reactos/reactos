@@ -285,12 +285,21 @@ typedef struct _LDC
     HPEN PenColor;
 } LDC, *PLDC;
 
+typedef int(__stdcall* SAP_CALLBACK)(PVOID, DWORD);
+
 typedef struct _DC_ATTR
 {
     PVOID pvLDC;
     ULONG ulDirty_;
     HANDLE hbrush;
     HANDLE hpen;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+    DWORD Unknown1;
+    SAP_CALLBACK SAPCallback;
+    DWORD LastTicks;
+#endif
+
     COLORREF crBackgroundClr;
     ULONG ulBackgroundClr;
     COLORREF crForegroundClr;
