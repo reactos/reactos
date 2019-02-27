@@ -32,7 +32,7 @@
 
 /* GLOBALS ****************************************************************/
 
-static FAST_MUTEX UuidMutex;
+static FAST_MUTEX ExpUuidLock;
 static ULARGE_INTEGER UuidLastTime;
 static ULONG UuidSequence;
 static BOOLEAN UuidSequenceInitialized = FALSE;
@@ -49,7 +49,7 @@ INIT_FUNCTION
 NTAPI
 ExpInitUuids(VOID)
 {
-    ExInitializeFastMutex(&UuidMutex);
+    ExInitializeFastMutex(&ExpUuidLock);
 
     KeQuerySystemTime((PLARGE_INTEGER)&UuidLastTime);
     UuidLastTime.QuadPart += TICKS_15_OCT_1582_TO_1601;
@@ -351,7 +351,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
         _SEH2_END;
     }
 
-    ExAcquireFastMutex(&UuidMutex);
+    ExAcquireFastMutex(&ExpUuidLock);
 
     if (!UuidSequenceInitialized)
     {
@@ -374,7 +374,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
                             &UuidSequence);
     if (!NT_SUCCESS(Status))
     {
-        ExReleaseFastMutex(&UuidMutex);
+        ExReleaseFastMutex(&ExpUuidLock);
         return Status;
     }
 
@@ -385,7 +385,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
             UuidSequenceChanged = FALSE;
     }
 
-    ExReleaseFastMutex(&UuidMutex);
+    ExReleaseFastMutex(&ExpUuidLock);
 
     /* Write back UUIDs to caller */
     _SEH2_TRY
