@@ -97,7 +97,7 @@ SepInitializationPhase0(VOID)
 {
     PAGED_CODE();
 
-    ExpInitLuid();
+    if (!ExLuidInitialization()) return FALSE;
     if (!SepInitSecurityIDs()) return FALSE;
     if (!SepInitDACLs()) return FALSE;
     if (!SepInitSDs()) return FALSE;

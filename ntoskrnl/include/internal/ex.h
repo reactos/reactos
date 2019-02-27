@@ -236,9 +236,14 @@ NTAPI
 ExpInitializeCallbacks(VOID);
 
 INIT_FUNCTION
-VOID
+BOOLEAN
 NTAPI
-ExpInitUuids(VOID);
+ExpUuidInitialization(VOID);
+
+INIT_FUNCTION
+BOOLEAN
+NTAPI
+ExLuidInitialization(VOID);
 
 INIT_FUNCTION
 VOID
