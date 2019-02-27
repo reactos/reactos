@@ -41,6 +41,7 @@ static UCHAR UuidSeed[SEED_BUFFER_SIZE];
 static ULONG UuidCount;
 static LARGE_INTEGER LuidIncrement;
 static LARGE_INTEGER LuidValue;
+UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = { 0ULL, 0xFFFFFFFF, 0, 0, { 0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63 } };
 
 /* FUNCTIONS ****************************************************************/
 

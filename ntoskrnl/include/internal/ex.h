@@ -167,6 +167,15 @@ ExGetPoolTagInfo(
     IN OUT PULONG ReturnLength OPTIONAL
 );
 
+typedef struct _UUID_CACHED_VALUES_STRUCT
+{
+    ULONGLONG Time;
+    LONG AllocatedCount;
+    UCHAR ClockSeqHiAndReserved;
+    UCHAR ClockSeqLow;
+    UCHAR NodeId [ 6 ] ;
+} UUID_CACHED_VALUES_STRUCT, *PUUID_CACHED_VALUES_STRUCT;
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 INIT_FUNCTION
