@@ -24,6 +24,7 @@ list(APPEND SOURCE
     zippidl.cpp
     zippidl.hpp
     IZip.hpp
+    CConfirmReplace.cpp
     CExplorerCommand.cpp
     CEnumZipContents.cpp
     CFolderViewCB.cpp
