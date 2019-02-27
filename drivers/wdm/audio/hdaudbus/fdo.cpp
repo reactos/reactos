@@ -222,6 +222,11 @@ HDA_InitCodec(
         DPRINT1("NodeId %u GroupType %x\n", NodeId, GroupType);
 
         if ((GroupType & FUNCTION_GROUP_NODETYPE_MASK) == FUNCTION_GROUP_NODETYPE_AUDIO) {
+            if (Entry->AudioGroupCount >= HDA_MAX_AUDIO_GROUPS)
+            {
+                DPRINT1("Too many audio groups in node %u. Skipping.\n", NodeId);
+                break;
+            }
 
             AudioGroup = (PHDA_CODEC_AUDIO_GROUP)AllocateItem(NonPagedPool, sizeof(HDA_CODEC_AUDIO_GROUP));
             if (!AudioGroup)
@@ -682,6 +687,7 @@ HDA_FDORemoveDevice(
             continue;
         }
 
+        ASSERT(CodecEntry->AudioGroupCount <= HDA_MAX_AUDIO_GROUPS);
         for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
         {
             ChildPDO = CodecEntry->AudioGroups[AFGIndex]->ChildPDO;
@@ -743,6 +749,7 @@ HDA_FDOQueryBusRelations(
             continue;
 
         Codec = DeviceExtension->Codecs[CodecIndex];
+        ASSERT(Codec->AudioGroupCount <= HDA_MAX_AUDIO_GROUPS);
         for (AFGIndex = 0; AFGIndex < Codec->AudioGroupCount; AFGIndex++)
         {
             DeviceRelations->Objects[DeviceRelations->Count] = Codec->AudioGroups[AFGIndex]->ChildPDO;

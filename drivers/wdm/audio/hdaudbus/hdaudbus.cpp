@@ -63,6 +63,7 @@ HDA_FdoPnp(
         {
             CodecEntry = FDODeviceExtension->Codecs[CodecIndex];
 
+            ASSERT(CodecEntry->AudioGroupCount <= HDA_MAX_AUDIO_GROUPS);
             for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
             {
                 ChildDeviceExtension = static_cast<PHDA_PDO_DEVICE_EXTENSION>(CodecEntry->AudioGroups[AFGIndex]->ChildPDO->DeviceExtension);
