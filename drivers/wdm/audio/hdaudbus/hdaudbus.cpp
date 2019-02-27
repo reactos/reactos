@@ -284,6 +284,7 @@ HDA_AddDevice(
     /* init device extension*/
     DeviceExtension->IsFDO = TRUE;
     DeviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+    IoInitializeDpcRequest(DeviceObject, HDA_DpcForIsr);
     RtlZeroMemory(DeviceExtension->Codecs, sizeof(PHDA_CODEC_ENTRY) * (HDA_MAX_CODECS + 1));
 
     /* set device flags */

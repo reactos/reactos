@@ -116,11 +116,8 @@ FreeItem(
     IN PVOID Item);
 
 /* fdo.cpp */
-BOOLEAN
-NTAPI
-HDA_InterruptService(
-    IN PKINTERRUPT  Interrupt,
-    IN PVOID  ServiceContext);
+KSERVICE_ROUTINE HDA_InterruptService;
+IO_DPC_ROUTINE HDA_DpcForIsr;
 
 NTSTATUS
 NTAPI

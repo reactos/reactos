@@ -13,14 +13,14 @@ HDA_InterruptService(
     IN PKINTERRUPT  Interrupt,
     IN PVOID  ServiceContext)
 {
+    PDEVICE_OBJECT DeviceObject;
     PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG InterruptStatus, Response, ResponseFlags, Cad;
+    ULONG InterruptStatus;
     UCHAR RirbStatus, CorbStatus;
-    USHORT WritePos;
-    PHDA_CODEC_ENTRY Codec;
 
     /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)ServiceContext;
+    DeviceObject = static_cast<PDEVICE_OBJECT>(ServiceContext);
+    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
     ASSERT(DeviceExtension->IsFDO == TRUE);
 
     // Check if this interrupt is ours
@@ -46,38 +46,7 @@ HDA_InterruptService(
             }
 
             if ((RirbStatus & RIRB_STATUS_RESPONSE) != 0) {
-                WritePos = (READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) + 1) % DeviceExtension->RirbLength;
-
-                for (; DeviceExtension->RirbReadPos != WritePos; DeviceExtension->RirbReadPos = (DeviceExtension->RirbReadPos + 1) % DeviceExtension->RirbLength)
-                {
-
-                    Response = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].response;
-                    ResponseFlags = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].flags;
-                    Cad = ResponseFlags & RESPONSE_FLAGS_CODEC_MASK;
-                    DPRINT1("Response %lx ResponseFlags %lx Cad %lx\n", Response, ResponseFlags, Cad);
-
-                    /* get codec */
-                    Codec = DeviceExtension->Codecs[Cad];
-                    if (Codec == NULL)
-                    {
-                        DPRINT1("hda: response for unknown codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
-                        continue;
-                    }
-
-                    /* check response count */
-                    if (Codec->ResponseCount >= MAX_CODEC_RESPONSES)
-                    {
-                        DPRINT1("too many responses for codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
-                        continue;
-                    }
-
-                    // FIXME handle unsolicited responses
-                    ASSERT((ResponseFlags & RESPONSE_FLAGS_UNSOLICITED) == 0);
-
-                    /* store response */
-                    Codec->Responses[Codec->ResponseCount] = Response;
-                    Codec->ResponseCount++;
-                }
+                IoRequestDpc(DeviceObject, NULL, NULL);
             }
 
             if ((RirbStatus & RIRB_STATUS_OVERRUN) != 0)
@@ -111,6 +80,56 @@ HDA_InterruptService(
     }
 #endif
     return TRUE;
+}
+
+VOID
+NTAPI
+HDA_DpcForIsr(
+    _In_ PKDPC Dpc,
+    _In_opt_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp,
+    _In_opt_ PVOID Context)
+{
+    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
+    ULONG Response, ResponseFlags, Cad;
+    USHORT WritePos;
+    PHDA_CODEC_ENTRY Codec;
+
+    /* get device extension */
+    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
+    ASSERT(DeviceExtension->IsFDO == TRUE);
+
+    WritePos = (READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) + 1) % DeviceExtension->RirbLength;
+
+    for (; DeviceExtension->RirbReadPos != WritePos; DeviceExtension->RirbReadPos = (DeviceExtension->RirbReadPos + 1) % DeviceExtension->RirbLength)
+    {
+        Response = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].response;
+        ResponseFlags = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].flags;
+        Cad = ResponseFlags & RESPONSE_FLAGS_CODEC_MASK;
+        DPRINT1("Response %lx ResponseFlags %lx Cad %lx\n", Response, ResponseFlags, Cad);
+
+        /* get codec */
+        Codec = DeviceExtension->Codecs[Cad];
+        if (Codec == NULL)
+        {
+            DPRINT1("hda: response for unknown codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
+            continue;
+        }
+
+        /* check response count */
+        if (Codec->ResponseCount >= MAX_CODEC_RESPONSES)
+        {
+            DPRINT1("too many responses for codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
+            continue;
+        }
+
+        // FIXME handle unsolicited responses
+        ASSERT((ResponseFlags & RESPONSE_FLAGS_UNSOLICITED) == 0);
+
+        /* store response */
+        Codec->Responses[Codec->ResponseCount] = Response;
+        Codec->ResponseCount++;
+    }
 }
 
 
@@ -582,7 +601,7 @@ HDA_FDOStartDevice(
         {
             Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
                 HDA_InterruptService,
-                (PVOID)DeviceExtension,
+                DeviceObject,
                 NULL,
                 Descriptor->u.Interrupt.Vector,
                 Descriptor->u.Interrupt.Level,
