@@ -31,6 +31,7 @@ list(APPEND SOURCE
     CZipEnumerator.hpp
     CZipExtract.cpp
     CZipFolder.hpp
+    CZipPassword.cpp
     Debug.cpp
     zipfldr.spec
     precomp.h

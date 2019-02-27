@@ -41,6 +41,8 @@ extern LONG g_ModuleRefCnt;
 WCHAR* guid2string(REFCLSID iid);
 
 
+#define MINIZIP_PASSWORD_FLAG   1
+
 #include "minizip/unzip.h"
 #include "minizip/ioapi.h"
 
@@ -55,6 +57,25 @@ HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, const char* pre
 HRESULT _CExplorerCommandProvider_CreateInstance(IContextMenu* zipObject, REFIID riid, LPVOID * ppvOut);
 HRESULT _CFolderViewCB_CreateInstance(REFIID riid, LPVOID * ppvOut);
 void _CZipExtract_runWizard(PCWSTR Filename);
+
+enum eZipPasswordResponse
+{
+    eAbort,
+    eSkip,
+    eAccept,
+};
+
+eZipPasswordResponse _CZipAskPassword(HWND hDlg, const char* filename, CStringA& Password);
+
+enum eZipConfirmResponse
+{
+    eYes,
+    eYesToAll,
+    eNo,
+    eCancel
+};
+
+eZipConfirmResponse _CZipAskReplace(HWND hDlg, const char* FullPath);
 
 #include "CZipEnumerator.hpp"
 #include "CZipFolder.hpp"

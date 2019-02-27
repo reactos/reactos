@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Zip extraction
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -12,6 +12,7 @@ class CZipExtract :
 {
     CStringW m_Filename;
     CStringW m_Directory;
+    CStringA m_Password;
     bool m_DirectoryChanged;
     unzFile uf;
 public:
@@ -70,11 +71,13 @@ public:
     {
     private:
         CZipExtract* m_pExtract;
+        CStringA* m_pPassword;
 
     public:
-        CExtractSettingsPage(CZipExtract* extract)
+        CExtractSettingsPage(CZipExtract* extract, CStringA* password)
             :CPropertyPageImpl<CExtractSettingsPage>(MAKEINTRESOURCE(IDS_WIZ_TITLE))
             ,m_pExtract(extract)
+            ,m_pPassword(password)
         {
             m_psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_WIZ_DEST_TITLE);
             m_psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_WIZ_DEST_SUBTITLE);
@@ -85,7 +88,6 @@ public:
         {
             SetDlgItemTextW(IDC_DIRECTORY, m_pExtract->m_Directory);
             m_pExtract->m_DirectoryChanged = false;
-            ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);    /* Not supported for now */
             GetParent().CenterWindow(::GetDesktopWindow());
             SetWizardButtons(PSWIZB_NEXT);
             return 0;
@@ -108,7 +110,7 @@ public:
 
                 ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
-                ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);    /* Not supported for now */
+                ::EnableWindow(GetDlgItem(IDC_PASSWORD), TRUE);
                 SetWizardButtons(PSWIZB_NEXT);
 
                 return TRUE;
@@ -171,6 +173,11 @@ public:
 
         LRESULT OnPassword(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
         {
+            CStringA Password;
+            if (_CZipAskPassword(m_hWnd, NULL, Password) == eAccept)
+            {
+                *m_pPassword = Password;
+            }
             return 0;
         }
 
@@ -247,7 +254,7 @@ public:
         psh.dwFlags = PSH_WIZARD97 | PSH_HEADER;
         psh.hInstance = _AtlBaseModule.GetResourceInstance();
 
-        CExtractSettingsPage extractPage(this);
+        CExtractSettingsPage extractPage(this, &m_Password);
         CCompleteSettingsPage completePage(this);
         HPROPSHEETPAGE hpsp[] =
         {
@@ -288,6 +295,7 @@ public:
         BYTE Buffer[2048];
         CStringA BaseDirectory = m_Directory;
         CStringA Name;
+        CStringA Password = m_Password;
         unz_file_info64 Info;
         int CurrentFile = 0;
         bool bOverwriteAll = false;
@@ -310,9 +318,48 @@ public:
             if (is_dir)
                 continue;
 
-            const char* password = NULL;
-            /* FIXME: Process password, if required and not specified, prompt the user */
-            err = unzOpenCurrentFilePassword(uf, password);
+            if (Info.flag & MINIZIP_PASSWORD_FLAG)
+            {
+                eZipPasswordResponse Response = eAccept;
+                do
+                {
+                    /* If there is a password set, try it */
+                    if (!Password.IsEmpty())
+                    {
+                        err = unzOpenCurrentFilePassword(uf, Password);
+                        if (err == UNZ_OK)
+                        {
+                            /* Try to read some bytes, because unzOpenCurrentFilePassword does not return failure */
+                            char Buf[10];
+                            err = unzReadCurrentFile(uf, Buf, sizeof(Buf));
+                            unzCloseCurrentFile(uf);
+                            if (err >= UNZ_OK)
+                            {
+                                /* 're'-open the file so that we can begin to extract */
+                                err = unzOpenCurrentFilePassword(uf, Password);
+                                break;
+                            }
+                        }
+                    }
+                    Response = _CZipAskPassword(hDlg, Name, Password);
+                } while (Response == eAccept);
+
+                if (Response == eSkip)
+                {
+                    Progress.SendMessage(PBM_SETPOS, CurrentFile, 0);
+                    continue;
+                }
+                else if (Response == eAbort)
+                {
+                    Close();
+                    return false;
+                }
+            }
+            else
+            {
+                err = unzOpenCurrentFile(uf);
+            }
+
             if (err != UNZ_OK)
             {
                 DPRINT1("ERROR, unzOpenCurrentFilePassword: 0x%x\n", err);

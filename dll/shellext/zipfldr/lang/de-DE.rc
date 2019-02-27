@@ -37,11 +37,24 @@ CAPTION "Ersetzen von Dateien bestätigen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Ja",IDYES,6,36,62,14
-    PUSHBUTTON      "Abbrechen",IDCANCEL,204,36,62,14
     PUSHBUTTON      "Alle",IDYESALL,72,36,62,14
     PUSHBUTTON      "&Nein",IDNO,138,36,62,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,204,36,62,14
     ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
     LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Password needed"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
+    PUSHBUTTON      "Skip File",IDSKIP,186,24,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,186,42,50,14
+    LTEXT           "Static",IDC_MESSAGE,24,6,156,30
+    LTEXT           "Password:",IDC_STATIC,24,44,44,8
 END
 
 STRINGTABLE
@@ -64,6 +77,8 @@ BEGIN
     IDS_WIZ_BROWSE_TITLE "Wählen Sie ein Ziel zum Extrahieren der Dateien."
 
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei '%1'.\nMöchten Sie die existierende Datei ersetzen?"
+    IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
+    IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
 
     IDS_MENUITEM "&Alle Extrahieren..."
     IDS_HELPTEXT "Ordnerinhalt extrahieren"

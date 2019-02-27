@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     zip pidl handling
- * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -25,7 +25,7 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCSTR lpString, unz_file_info64& info)
         pidl->CompressedSize = info.compressed_size;
         pidl->UncompressedSize = info.uncompressed_size;
         pidl->DosDate = info.dosDate;
-        pidl->Password = info.flag & 1;
+        pidl->Password = info.flag & MINIZIP_PASSWORD_FLAG;
     }
 
     strcpy(pidl->Name, lpString);

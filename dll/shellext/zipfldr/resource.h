@@ -21,6 +21,9 @@
 #define IDC_EXCLAMATION_ICON        1205
 #define IDC_MESSAGE                 1206
 
+#define IDD_PASSWORD                1300
+#define IDSKIP                      1301
+
 
 /* Strings */
 #define IDS_COL_NAME        100
@@ -45,6 +48,8 @@
 
 /* Questions */
 #define IDS_OVERWRITEFILE_TEXT  9000
+#define IDS_PASSWORD_FILE_TEXT  9001
+#define IDS_PASSWORD_ZIP_TEXT   9002
 
 
 /* Context menu / ExplorerCommand strings */
