@@ -4,7 +4,7 @@
  * PURPOSE:     Sdb low level glue layer
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "ntndk.h"
@@ -145,7 +145,7 @@ void WINAPI SdbpFlush(PDB pdb)
     ASSERT(pdb->for_write);
     Status = NtWriteFile(pdb->file, NULL, NULL, NULL, &io,
         pdb->data, pdb->write_iter, NULL, NULL);
-    if( !NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
         SHIM_WARN("failed with 0x%lx\n", Status);
 }
 
@@ -266,7 +266,7 @@ BOOL WINAPI SdbpCheckTagIDType(PDB pdb, TAGID tagid, WORD type)
     return SdbpCheckTagType(tag, type);
 }
 
-PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
+PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type)
 {
     IO_STATUS_BLOCK io;
     FILE_STANDARD_INFORMATION fsi;
@@ -311,8 +311,8 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
         return NULL;
     }
 
-    *major = *(DWORD*)&header[0];
-    *minor = *(DWORD*)&header[4];
+    pdb->major = *(DWORD*)&header[0];
+    pdb->minor = *(DWORD*)&header[4];
 
     return pdb;
 }
@@ -329,13 +329,13 @@ PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
 {
     PDB pdb;
-    DWORD major, minor;
+    TAGID root, name;
 
-    pdb = SdbpOpenDatabase(path, type, &major, &minor);
+    pdb = SdbpOpenDatabase(path, type);
     if (!pdb)
         return NULL;
 
-    if (major != 2 && major != 3)
+    if (pdb->major != 2 && pdb->major != 3)
     {
         SdbCloseDatabase(pdb);
         SHIM_ERR("Invalid shim database version\n");
@@ -343,10 +343,25 @@ PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
     }
 
     pdb->stringtable = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
-    if(!SdbGetDatabaseID(pdb, &pdb->database_id))
+    if (!SdbGetDatabaseID(pdb, &pdb->database_id))
     {
         SHIM_INFO("Failed to get the database id\n");
     }
+
+    root = SdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    if (root != TAGID_NULL)
+    {
+        name = SdbFindFirstTag(pdb, root, TAG_NAME);
+        if (name != TAGID_NULL)
+        {
+            pdb->database_name = SdbGetStringTagPtr(pdb, name);
+        }
+    }
+    if (!pdb->database_name)
+    {
+        SHIM_INFO("Failed to get the database name\n");
+    }
+
     return pdb;
 }
 
@@ -397,7 +412,7 @@ BOOL WINAPI SdbGUIDFromString(PCWSTR GuidString, GUID *Guid)
 BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length)
 {
     UNICODE_STRING GuidString_u;
-    if(NT_SUCCESS(RtlStringFromGUID(Guid, &GuidString_u)))
+    if (NT_SUCCESS(RtlStringFromGUID(Guid, &GuidString_u)))
     {
         HRESULT hr = StringCchCopyNW(GuidString, Length, GuidString_u.Buffer, GuidString_u.Length / 2);
         RtlFreeUnicodeString(&GuidString_u);
@@ -445,7 +460,7 @@ BOOL WINAPI SdbGetStandardDatabaseGUID(DWORD Flags, GUID* Guid)
         SHIM_ERR("Cannot obtain database guid for databases other than main\n");
         return FALSE;
     }
-    if(Guid)
+    if (Guid)
     {
         memcpy(Guid, copy_from, sizeof(GUID));
     }
@@ -465,11 +480,53 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
 {
     PDB pdb;
 
-    pdb = SdbpOpenDatabase(database, DOS_PATH, VersionHi, VersionLo);
+    pdb = SdbpOpenDatabase(database, DOS_PATH);
     if (pdb)
+    {
+        *VersionHi = pdb->major;
+        *VersionLo = pdb->minor;
         SdbCloseDatabase(pdb);
+    }
 
     return TRUE;
+}
+
+/**
+ * @name SdbGetDatabaseInformation
+ * Get information about the database
+ *
+ * @param pdb           The database
+ * @param information   The returned information
+ * @return TRUE on success
+ */
+BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
+{
+    if (pdb && information)
+    {
+        information->dwFlags = 0;
+        information->dwMajor = pdb->major;
+        information->dwMinor = pdb->minor;
+        information->Description = pdb->database_name;
+        if (!SdbIsNullGUID(&pdb->database_id))
+        {
+            information->dwFlags |= DB_INFO_FLAGS_VALID_GUID;
+            information->Id = pdb->database_id;
+        }
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @name SdbFreeDatabaseInformation
+ * Free up resources allocated in SdbGetDatabaseInformation
+ *
+ * @param information   The information retrieved from SdbGetDatabaseInformation
+ */
+VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information)
+{
+    // No-op
 }
 
 

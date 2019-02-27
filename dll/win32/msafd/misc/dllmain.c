@@ -2866,8 +2866,21 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              /* TODO: The total per-socket buffer space reserved for sends */
-              ERR("Setting send buf to %x is not implemented yet\n", optval);
+              SetSocketInformation(Socket,
+                                   AFD_INFO_SEND_WINDOW_SIZE,
+                                   NULL,
+                                   (PULONG)optval,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+              GetSocketInformation(Socket,
+                                   AFD_INFO_SEND_WINDOW_SIZE,
+                                   NULL,
+                                   &Socket->SharedData->SizeOfSendBuffer,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+
               return NO_ERROR;
 
            case SO_RCVBUF:
@@ -2877,8 +2890,21 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              /* TODO: The total per-socket buffer space reserved for receives */
-              ERR("Setting receive buf to %x is not implemented yet\n", optval);
+              SetSocketInformation(Socket,
+                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                   NULL,
+                                   (PULONG)optval,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+              GetSocketInformation(Socket,
+                                   AFD_INFO_RECEIVE_WINDOW_SIZE,
+                                   NULL,
+                                   &Socket->SharedData->SizeOfSendBuffer,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+
               return NO_ERROR;
 
            case SO_ERROR:
@@ -3272,6 +3298,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose( SockEvent );
             return 0;
         }
         if (CompletionRoutine == NULL)
@@ -3289,6 +3316,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose( SockEvent );
                 return WSAEFAULT;
             }
             APCContext->lpCompletionRoutine = CompletionRoutine;
@@ -3320,6 +3348,8 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
         Status = IOSB->Status;
     }
 
+    NtClose( SockEvent );
+
     TRACE("Status %x Information %d\n", Status, IOSB->Information);
 
     if (Status == STATUS_PENDING)
@@ -3344,8 +3374,6 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     {
         *Boolean = InfoData.Information.Boolean;
     }
-
-    NtClose( SockEvent );
 
     return NO_ERROR;
 
@@ -3411,6 +3439,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
         {
             TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            NtClose( SockEvent );
             return 0;
         }
         if (CompletionRoutine == NULL)
@@ -3428,6 +3457,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
             if (!APCContext)
             {
                 ERR("Not enough memory for APC Context\n");
+                NtClose( SockEvent );
                 return WSAEFAULT;
             }
             APCContext->lpCompletionRoutine = CompletionRoutine;
