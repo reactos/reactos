@@ -396,162 +396,158 @@ GetDIBits(
 HBITMAP
 WINAPI
 CreateDIBitmap(
-    HDC hDC,
-    const BITMAPINFOHEADER *Header,
-    DWORD Init,
-    LPCVOID Bits,
-    const BITMAPINFO *Data,
-    UINT ColorUse)
+    HDC hdc,
+    const BITMAPINFOHEADER* pbmih,
+    DWORD flInit,
+    const VOID* pjBits,
+    const BITMAPINFO* pbmi,
+    UINT iUsage)
 {
     LONG Width, Height, Compression, DibSize;
     WORD Planes, BitsPerPixel;
-//  PDC_ATTR pDc_Attr;
-    UINT cjBmpScanSize = 0;
-    HBITMAP hBitmap = NULL;
-    PBITMAPINFO pbmiConverted;
-    UINT cjInfoSize;
+    UINT ContentSize = 0;
+    HBITMAP Bitmap = NULL;
+    BITMAPINFO* BmInfoConverted;
+    UINT BmInfoSize;
 
-    /* Convert the BITMAPINFO if it is a COREINFO */
-    pbmiConverted = ConvertBitmapInfo(Data, ColorUse, &cjInfoSize, FALSE);
+    // Convert the BITMAPINFO if it is a COREINFO
+    BmInfoConverted = ConvertBitmapInfo(pbmi, iUsage, &BmInfoSize, FALSE);
 
-    /* Check for CBM_CREATDIB */
-    if (Init & CBM_CREATDIB)
+    // Check for CBM_CREATDIB
+    if (flInit & CBM_CREATDIB)
     {
-        if (cjInfoSize == 0)
+        if (BmInfoSize == 0)
         {
             goto Exit;
         }
-        else if (Init & CBM_INIT)
+        else if (flInit & CBM_INIT)
         {
-            if (Bits == NULL)
+            if (pjBits == NULL)
             {
                 goto Exit;
             }
         }
         else
         {
-            Bits = NULL;
+            pjBits = NULL;
         }
 
-        /* CBM_CREATDIB needs Data. */
-        if (pbmiConverted == NULL)
+        // CBM_CREATDIB needs pbmi.
+        if (BmInfoConverted == NULL)
         {
             DPRINT1("CBM_CREATDIB needs a BITMAPINFO!\n");
             goto Exit;
         }
 
-        /* It only works with PAL or RGB */
-        if (ColorUse > DIB_PAL_COLORS)
+        // It only works with PAL or RGB
+        if (iUsage > DIB_PAL_COLORS)
         {
-            DPRINT1("Invalid ColorUse: %lu\n", ColorUse);
+            DPRINT1("Invalid iUsage: %lu\n", iUsage);
             GdiSetLastError(ERROR_INVALID_PARAMETER);
             goto Exit;
         }
 
-        /* Use the header from the data */
-        Header = &Data->bmiHeader;
+        // Use the header from the data
+        pbmih = &pbmi->bmiHeader;
     }
     else
     {
-        if (Init & CBM_INIT)
+        if (flInit & CBM_INIT)
         {
-            if (Bits != NULL)
+            if (pjBits != NULL)
             {
-                if (cjInfoSize == 0)
+                if (BmInfoSize == 0)
                 {
                     goto Exit;
                 }
             }
             else
             {
-                Init &= ~CBM_INIT;
+                flInit &= ~CBM_INIT;
             }
         }
     }
 
-    /* Header is required */
-    if (!Header)
+    // Header is required
+    if (!pbmih)
     {
         DPRINT1("Header is NULL\n");
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
     }
 
-    /* Get the bitmap format and dimensions */
-    if (DIB_GetBitmapInfo(Header, &Width, &Height, &Planes, &BitsPerPixel, &Compression, &DibSize) == -1)
+    // Get the bitmap format and dimensions
+    if (DIB_GetBitmapInfo(pbmih, &Width, &Height, &Planes, &BitsPerPixel, &Compression, &DibSize) == -1)
     {
         DPRINT1("DIB_GetBitmapInfo failed!\n");
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
     }
 
-    /* Check if the Compr is incompatible */
+    // Check if the Compr is incompatible
     if ((Compression == BI_JPEG) || (Compression == BI_PNG) || (Compression == BI_BITFIELDS))
     {
         DPRINT1("Invalid compression: %lu!\n", Compression);
         goto Exit;
     }
 
-    /* Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid. */
-    if (ColorUse > DIB_PAL_COLORS + 1)
+    // Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid.
+    if (iUsage > DIB_PAL_COLORS + 1)
     {
         DPRINT1("Invalid compression: %lu!\n", Compression);
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
     }
 
-    /* If some Bits are given, only DIB_PAL_COLORS and DIB_RGB_COLORS are valid */
-    if (Bits && (ColorUse > DIB_PAL_COLORS))
+    // If some pjBits are given, only DIB_PAL_COLORS and DIB_RGB_COLORS are valid
+    if (pjBits && (iUsage > DIB_PAL_COLORS))
     {
-        DPRINT1("Invalid ColorUse: %lu\n", ColorUse);
+        DPRINT1("Invalid iUsage: %lu\n", iUsage);
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
     }
 
-    /* Negative width is not allowed */
+    // Negative width is not allowed
     if (Width < 0)
     {
         DPRINT1("Negative width: %li\n", Width);
         goto Exit;
     }
 
-    /* Top-down DIBs have a negative height. */
+    // Top-down DIBs have a negative height.
     Height = abs(Height);
 
-// For Icm support.
-// GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
-
-    cjBmpScanSize = GdiGetBitmapBitsSize(pbmiConverted);
+    ContentSize = GdiGetBitmapBitsSize(BmInfoConverted);
 
     DPRINT("pBMI %p, Size bpp %u, dibsize %d, Conv %u, BSS %u\n",
-           Data, BitsPerPixel, DibSize, cjInfoSize, cjBmpScanSize);
+           pbmi, BitsPerPixel, DibSize, BmInfoSize, ContentSize);
 
     if (!Width || !Height)
     {
-        hBitmap = GetStockObject(DEFAULT_BITMAP);
+        Bitmap = GetStockObject(DEFAULT_BITMAP);
     }
     else
     {
-        hBitmap = NtGdiCreateDIBitmapInternal(hDC,
-                                              Width,
-                                              Height,
-                                              Init,
-                                              (LPBYTE)Bits,
-                                              (LPBITMAPINFO)pbmiConverted,
-                                              ColorUse,
-                                              cjInfoSize,
-                                              cjBmpScanSize,
-                                              0, 0);
+        Bitmap = NtGdiCreateDIBitmapInternal(hdc,
+                                             Width,
+                                             Height,
+                                             flInit,
+                                             (VOID*)pjBits,
+                                             BmInfoConverted,
+                                             iUsage,
+                                             BmInfoSize,
+                                             ContentSize,
+                                             0, 0);
     }
 
 Exit:
-    /* Cleanup converted BITMAPINFO */
-    if ((pbmiConverted != NULL) && (pbmiConverted != Data))
+    // Cleanup converted BITMAPINFO
+    if (BmInfoConverted && BmInfoConverted != pbmi)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pbmiConverted);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BmInfoConverted);
     }
 
-    return hBitmap;
+    return Bitmap;
 }
 
 /*
@@ -645,68 +641,68 @@ INT
 WINAPI
 SetDIBitsToDevice(
     HDC hdc,
-    int XDest,
-    int YDest,
-    DWORD Width,
-    DWORD Height,
-    int XSrc,
-    int YSrc,
+    int xDest,
+    int yDest,
+    DWORD w,
+    DWORD h,
+    int xSrc,
+    int ySrc,
     UINT StartScan,
-    UINT ScanLines,
-    CONST VOID *Bits,
-    CONST BITMAPINFO *lpbmi,
+    UINT cLines,
+    CONST VOID* lpvBits,
+    CONST BITMAPINFO* lpbmi,
     UINT ColorUse)
 {
-    PDC_ATTR pDc_Attr;
-    PBITMAPINFO pConvertedInfo;
+    PDC_ATTR pDCAttr;
+    BITMAPINFO* BmInfoConverted;
     UINT ConvertedInfoSize;
     INT LinesCopied = 0;
-    UINT cjBmpScanSize = 0;
+    UINT ContentSize = 0;
     BOOL Hit = FALSE;
-    PVOID pvSafeBits = (PVOID) Bits;
+    VOID* SafeBits = (PVOID)lpvBits;
 
-    if (!ScanLines || !lpbmi || !Bits)
+    if (!cLines || !lpbmi || !lpvBits)
         return 0;
 
     if (ColorUse && ColorUse != DIB_PAL_COLORS && ColorUse != DIB_PAL_COLORS + 1)
         return 0;
 
-    pConvertedInfo = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize, FALSE);
-    if (!pConvertedInfo)
+    BmInfoConverted = ConvertBitmapInfo(lpbmi, ColorUse, &ConvertedInfoSize, FALSE);
+    if (!BmInfoConverted)
         return 0;
 
     HANDLE_METADC(INT,
                   SetDIBitsToDevice,
                   0,
                   hdc,
-                  XDest,
-                  YDest,
-                  Width,
-                  Height,
-                  XSrc,
-                  YSrc,
+                  xDest,
+                  yDest,
+                  w,
+                  h,
+                  xSrc,
+                  ySrc,
                   StartScan,
-                  ScanLines,
-                  Bits,
+                  cLines,
+                  lpvBits,
                   lpbmi,
                   ColorUse);
 
-    if ((pConvertedInfo->bmiHeader.biCompression == BI_RLE8) ||
-            (pConvertedInfo->bmiHeader.biCompression == BI_RLE4))
+    if ((BmInfoConverted->bmiHeader.biCompression == BI_RLE8) ||
+        (BmInfoConverted->bmiHeader.biCompression == BI_RLE4))
     {
-        /* For compressed data, we must set the whole thing */
+        // For compressed data, we must set the whole thing
         StartScan = 0;
-        ScanLines = pConvertedInfo->bmiHeader.biHeight;
+        cLines = BmInfoConverted->bmiHeader.biHeight;
     }
 
-    cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO) lpbmi, ScanLines);
+    ContentSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, cLines);
 
-    pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
-    if (pvSafeBits)
+    SafeBits = RtlAllocateHeap(GetProcessHeap(), 0, ContentSize);
+    if (SafeBits)
     {
         _SEH2_TRY
         {
-            RtlCopyMemory(pvSafeBits, Bits, cjBmpScanSize);
+            RtlCopyMemory(SafeBits, lpvBits, ContentSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -716,36 +712,36 @@ SetDIBitsToDevice(
 
         if (Hit)
         {
-            // We don't die, we continue on with a allocated safe pointer to kernel
+            // We don't die, we continue on with ab allocated safe pointer to kernel
             // space.....
-            DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %p or Bits: %p & Size: %u\n",
-                pConvertedInfo, Bits, cjBmpScanSize);
+            DPRINT1("SetDIBitsToDevice failed to read BitMapInfo: %p or lpvBits: %p & Size: %u\n",
+                BmInfoConverted, lpvBits, ContentSize);
         }
-        DPRINT("SetDIBitsToDevice Allocate Bits %u!!!\n", cjBmpScanSize);
+        DPRINT("SetDIBitsToDevice allocated lpvBits %u!!!\n", ContentSize);
     }
 
-    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID) & pDc_Attr))
+    if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDCAttr))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
     /*
-     if ( !pDc_Attr || // DC is Public
-     ColorUse == DIB_PAL_COLORS ||
-     ((pConvertedInfo->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
-     (pConvertedInfo->bmiHeader.biCompression == BI_JPEG ||
-     pConvertedInfo->bmiHeader.biCompression  == BI_PNG )) )*/
+    if (!pDCAttr || // DC is Public
+        ColorUse == DIB_PAL_COLORS ||
+        ((BmInfoConverted->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
+        (BmInfoConverted->bmiHeader.biCompression == BI_JPEG ||
+         BmInfoConverted->bmiHeader.biCompression == BI_PNG)))*/
     {
-        LinesCopied = NtGdiSetDIBitsToDeviceInternal(hdc, XDest, YDest, Width, Height, XSrc, YSrc,
-            StartScan, ScanLines, (LPBYTE) pvSafeBits, (LPBITMAPINFO) pConvertedInfo, ColorUse,
-            cjBmpScanSize, ConvertedInfoSize,
+        LinesCopied = NtGdiSetDIBitsToDeviceInternal(hdc, xDest, yDest, w, h, xSrc, ySrc,
+            StartScan, cLines, (BYTE*)SafeBits, (BITMAPINFO*)BmInfoConverted, ColorUse,
+            ContentSize, ConvertedInfoSize,
             TRUE,
             NULL);
     }
-    if (Bits != pvSafeBits)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
-    if (lpbmi != pConvertedInfo)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
+    if (SafeBits != lpvBits)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SafeBits);
+    if (BmInfoConverted != lpbmi)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BmInfoConverted);
 
     return LinesCopied;
 }

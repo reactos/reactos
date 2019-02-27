@@ -1381,17 +1381,17 @@ W32KAPI
 HBITMAP
 APIENTRY
 NtGdiCreateDIBitmapInternal(
-    _In_ HDC hdc,
-    _In_ INT cx,
-    _In_ INT cy,
-    _In_ DWORD fInit,
-    _In_reads_bytes_opt_(cjMaxBits) LPBYTE pjInit,
-    _In_reads_bytes_opt_(cjMaxInitInfo) LPBITMAPINFO pbmi,
-    _In_ DWORD iUsage,
-    _In_ UINT cjMaxInitInfo,
-    _In_ UINT cjMaxBits,
-    _In_ FLONG f,
-    _In_ HANDLE hcmXform);
+    _In_ HDC hDC,
+    _In_ INT X,
+    _In_ INT Y,
+    _In_ DWORD InitFlags,
+    _In_reads_bytes_opt_(ContentSize) VOID* InitData,
+    _In_reads_bytes_opt_(BmInfoSize) const BITMAPINFO* BmInfo,
+    _In_ DWORD Usage,
+    _In_ UINT BmInfoSize,
+    _In_ UINT ContentSize,
+    _In_ FLONG Unused,
+    _In_ HANDLE XForm);
 
 __kernel_entry
 W32KAPI

@@ -3182,10 +3182,10 @@ WINAPI
 CreateDIBitmap(
     _In_ HDC hdc,
     _In_opt_ const BITMAPINFOHEADER* pbmih,
-    _In_ DWORD fdwInit,
-    _In_opt_ const VOID* pvInit,
+    _In_ DWORD flInit,
+    _In_opt_ const VOID* pjBits,
     _In_opt_ const BITMAPINFO* pbmi,
-    _In_ UINT uUsage);
+    _In_ UINT iUsage);
 
 HBRUSH
 WINAPI

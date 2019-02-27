@@ -1455,34 +1455,34 @@ IntCreateDIBitmap(
 HBITMAP
 APIENTRY
 NtGdiCreateDIBitmapInternal(
-    IN HDC hDc,
-    IN INT cx,
-    IN INT cy,
-    IN DWORD fInit,
-    IN OPTIONAL LPBYTE pjInit,
-    IN OPTIONAL LPBITMAPINFO pbmi,
-    IN DWORD iUsage,
-    IN UINT cjMaxInitInfo,
-    IN UINT cjMaxBits,
-    IN FLONG fl,
-    IN HANDLE hcmXform)
+    IN HDC hDC,
+    IN INT X,
+    IN INT Y,
+    IN DWORD InitFlags,
+    IN OPTIONAL VOID* InitData,
+    IN OPTIONAL const BITMAPINFO* BmInfo,
+    IN DWORD Usage,
+    IN UINT BmInfoSize,
+    IN UINT ContentSize,
+    IN FLONG Unused,
+    IN HANDLE XForm)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PBYTE safeBits = NULL;
+    PBYTE SafeInitData = NULL;
     HBITMAP hbmResult = NULL;
 
-    if (pjInit == NULL)
+    if (InitData == NULL)
     {
-        fInit &= ~CBM_INIT;
+        InitFlags &= ~CBM_INIT;
     }
 
-    if(pjInit && (fInit & CBM_INIT))
+    if(InitData && (InitFlags & CBM_INIT))
     {
-        if (cjMaxBits == 0) return NULL;
-        safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
-        if(!safeBits)
+        if (ContentSize == 0) return NULL;
+        SafeInitData = ExAllocatePoolWithTag(PagedPool, ContentSize, TAG_DIB);
+        if(!SafeInitData)
         {
-            DPRINT1("Failed to allocate %lu bytes\n", cjMaxBits);
+            DPRINT1("Failed to allocate %lu bytes\n", ContentSize);
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
@@ -1490,11 +1490,11 @@ NtGdiCreateDIBitmapInternal(
 
     _SEH2_TRY
     {
-        if(pbmi) ProbeForRead(pbmi, cjMaxInitInfo, 1);
-        if(pjInit && (fInit & CBM_INIT))
+        if(BmInfo) ProbeForRead(BmInfo, BmInfoSize, 1);
+        if(InitData && (InitFlags & CBM_INIT))
         {
-            ProbeForRead(pjInit, cjMaxBits, 1);
-            RtlCopyMemory(safeBits, pjInit, cjMaxBits);
+            ProbeForRead(InitData, ContentSize, 1);
+            RtlCopyMemory(SafeInitData, InitData, ContentSize);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1505,24 +1505,24 @@ NtGdiCreateDIBitmapInternal(
 
     if(!NT_SUCCESS(Status))
     {
-        DPRINT1("Got an exception! pjInit = %p\n", pjInit);
+        DPRINT1("Got an exception! InitData=%p\n", InitData);
         SetLastNtError(Status);
-        goto cleanup;
+        goto Cleanup;
     }
 
-    hbmResult =  GreCreateDIBitmapInternal(hDc,
-                                           cx,
-                                           cy,
-                                           fInit,
-                                           safeBits,
-                                           pbmi,
-                                           iUsage,
-                                           fl,
-                                           cjMaxBits,
-                                           hcmXform);
+    hbmResult = GreCreateDIBitmapInternal(hDC,
+                                          X,
+                                          Y,
+                                          InitFlags,
+                                          SafeInitData,
+                                          (BITMAPINFO*)BmInfo,
+                                          Usage,
+                                          0,
+                                          ContentSize,
+                                          XForm);
 
-cleanup:
-    if (safeBits) ExFreePoolWithTag(safeBits, TAG_DIB);
+Cleanup:
+    if (SafeInitData) ExFreePoolWithTag(SafeInitData, TAG_DIB);
     return hbmResult;
 }
 
