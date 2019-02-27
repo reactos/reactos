@@ -28,3 +28,4 @@ To include the module in your build folder, run the configure script with the fl
 # For UNIX users
 
     ./configure.sh -DENABLE_WALLPAPERS=1
+	
