@@ -129,6 +129,7 @@ HDA_DpcForIsr(
         /* store response */
         Codec->Responses[Codec->ResponseCount] = Response;
         Codec->ResponseCount++;
+        KeReleaseSemaphore(&Codec->ResponseSemaphore, IO_NO_INCREMENT, 1, FALSE);
     }
 }
 
@@ -167,15 +168,19 @@ HDA_SendVerbs(
 
             DeviceExtension->CorbBase[WritePosition] = Verbs[Sent++];
             DeviceExtension->CorbWritePos = WritePosition;
-
-            // FIXME HACK
-            // do proper synchronization
-            WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), DeviceExtension->CorbWritePos);
-            KeStallExecutionProcessor(30);
             Queued++;
         }
 
         WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), DeviceExtension->CorbWritePos);
+    }
+
+    while (Queued--)
+    {
+        KeWaitForSingleObject(&Codec->ResponseSemaphore,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
     }
 
     if (Responses != NULL) {
@@ -207,6 +212,7 @@ HDA_InitCodec(
 
     /* init codec */
     Entry->Addr = codecAddress;
+    KeInitializeSemaphore(&Entry->ResponseSemaphore, 0, MAX_CODEC_RESPONSES);
 
     /* get device extension */
     DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;

@@ -53,6 +53,7 @@ typedef struct
 
 	ULONG Responses[MAX_CODEC_RESPONSES];
 	ULONG ResponseCount;
+	KSEMAPHORE ResponseSemaphore;
 
 	PHDA_CODEC_AUDIO_GROUP AudioGroups[HDA_MAX_AUDIO_GROUPS];
 	ULONG AudioGroupCount;
