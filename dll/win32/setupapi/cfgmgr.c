@@ -1075,7 +1075,8 @@ CM_Add_Range(
     }
     else
     {
-
+        HeapFree(GetProcessHeap(), 0, pRange);
+        UNIMPLEMENTED;
     }
 
 done:
