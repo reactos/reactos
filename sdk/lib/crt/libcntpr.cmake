@@ -105,7 +105,8 @@ if(ARCH STREQUAL "i386")
         math/i386/cilog.c
         math/i386/cipow.c
         math/i386/cisin.c
-        math/i386/cisqrt.c)
+        math/i386/cisqrt.c
+        math/i386/ldexp.c)
     if(NOT MSVC)
         list(APPEND LIBCNTPR_SOURCE except/i386/chkstk_ms.s)
     endif()
