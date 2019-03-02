@@ -388,8 +388,8 @@ GdiAllocBatchCommand(
     }
 
     /* Get the size of the entry */
-    if      (Cmd == GdiBCPatBlt) cjSize = 0;
-    else if (Cmd == GdiBCPolyPatBlt) cjSize = 0;
+    if      (Cmd == GdiBCPatBlt) cjSize = sizeof(GDIBSPATBLT);
+    else if (Cmd == GdiBCPolyPatBlt) cjSize = sizeof(GDIBSPPATBLT);
     else if (Cmd == GdiBCTextOut) cjSize = 0;
     else if (Cmd == GdiBCExtTextOut) cjSize = 0;
     else if (Cmd == GdiBCSetBrushOrg) cjSize = sizeof(GDIBSSETBRHORG);
