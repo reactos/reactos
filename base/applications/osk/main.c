@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/main.c
  * PURPOSE:         On-screen keyboard.
- * PROGRAMMERS:     Denis ROBERT
+ * COPYRIGHT:       Denis ROBERT
+ *                  Copyright 2019 Bi»ôoc George (fraizeraust99 at gmail dot com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -138,7 +138,7 @@ int OSK_DlgInitDialog(HWND hDlg)
     HMONITOR monitor;
     MONITORINFO info;
     POINT Pt;
-    RECT rcWindow;
+    RECT rcWindow, rcDlgIntersect;
 
     /* Save handle */
     Globals.hMainWnd = hDlg;
@@ -178,17 +178,42 @@ int OSK_DlgInitDialog(HWND hDlg)
     monitor = MonitorFromPoint(Pt, MONITOR_DEFAULTTOPRIMARY);
     info.cbSize = sizeof(info);
     GetMonitorInfoW(monitor, &info);
-
-    /* Move the dialog on the bottom of main screen */
     GetWindowRect(hDlg, &rcWindow);
-    MoveWindow(hDlg,
-               (info.rcMonitor.left + info.rcMonitor.right) / 2 - // Center of screen
-                   (rcWindow.right - rcWindow.left) / 2,          // - half size of dialog
-               info.rcMonitor.bottom -               // Bottom of screen
-                   (rcWindow.bottom - rcWindow.top), // - size of window
-               rcWindow.right - rcWindow.left,     // Width
-               rcWindow.bottom - rcWindow.top,     // Height
-               TRUE);
+
+    /* 
+        If the coordination values are default then re-initialize using the specific formulas
+        to move the dialog at the bottom of the screen.
+    */
+    if (Globals.PosX == CW_USEDEFAULT && Globals.PosY == CW_USEDEFAULT)
+    {
+        Globals.PosX = (info.rcMonitor.left + info.rcMonitor.right - (rcWindow.right - rcWindow.left)) / 2;
+        Globals.PosY = info.rcMonitor.bottom - (rcWindow.bottom - rcWindow.top);
+    }
+
+    /*  
+        Calculate the intersection of two rectangle sources (dialog and work desktop area).
+        If such sources do not intersect, then the dialog is deemed as "off screen".
+    */
+    if (IntersectRect(&rcDlgIntersect, &rcWindow, &info.rcWork) == 0)
+    {
+        Globals.PosX = (info.rcMonitor.left + info.rcMonitor.right - (rcWindow.right - rcWindow.left)) / 2;
+        Globals.PosY = info.rcMonitor.bottom - (rcWindow.bottom - rcWindow.top);
+    }
+    else
+    {
+        /*
+            There's still some intersection but we're not for sure if it is sufficient (the dialog could also be partially hidden).
+            Therefore, check the remaining intersection if it's enough.
+        */
+        if (rcWindow.top < info.rcWork.top || rcWindow.left < info.rcWork.left || rcWindow.right > info.rcWork.right || rcWindow.bottom > info.rcWork.bottom)
+        {
+            Globals.PosX = (info.rcMonitor.left + info.rcMonitor.right - (rcWindow.right - rcWindow.left)) / 2;
+            Globals.PosY = info.rcMonitor.bottom - (rcWindow.bottom - rcWindow.top);
+        }
+    }
+
+    /* Move the dialog according to the placement coordination */
+    SetWindowPos(hDlg, HWND_TOP, Globals.PosX, Globals.PosY, 0, 0, SWP_NOSIZE);
 
     /* Set icon on visual buttons */
     OSK_SetImage(SCAN_CODE_15, IDI_BACK);
@@ -593,7 +618,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 
     if (!hMutex)
     {
-        /* Mutex doesnít exist. This is the first instance so create the mutex. */
+        /* Mutex doesn't exist. This is the first instance so create the mutex. */
         hMutex = CreateMutexW(NULL, FALSE, L"osk");
 
         /* Create the modal box based on the configuration registry */

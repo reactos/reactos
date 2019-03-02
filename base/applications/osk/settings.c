@@ -1,8 +1,8 @@
 ﻿/*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Settings file for warning dialog on startup
- * COPYRIGHT:       Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ * PURPOSE:         Configuration settings of the application
+ * COPYRIGHT:       Copyright 2018-2019 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -16,7 +16,7 @@ BOOL LoadDataFromRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop;
     DWORD cbData = sizeof(DWORD);
 
     /* Set the structure members to TRUE (and the bSoundClick member to FALSE) */
@@ -24,9 +24,13 @@ BOOL LoadDataFromRegistry()
     Globals.bIsEnhancedKeyboard = TRUE;
     Globals.bSoundClick = FALSE;
 
+    /* Set the coordinate values to default */
+    Globals.PosX = CW_USEDEFAULT;
+    Globals.PosY = CW_USEDEFAULT;
+
     /* Open the key, so that we can query it */
     lResult = RegOpenKeyExW(HKEY_CURRENT_USER,
-                            L"Software\\Microsoft\\osk",
+                            L"Software\\Microsoft\\Osk",
                             0,
                             KEY_READ,
                             &hKey);
@@ -75,7 +79,7 @@ BOOL LoadDataFromRegistry()
 
     /* Query the key */
     lResult = RegQueryValueExW(hKey,
-                               L"OnSoundClick",
+                               L"ClickSound",
                                0,
                                0,
                                (BYTE *)&dwSoundOnClick,
@@ -90,6 +94,41 @@ BOOL LoadDataFromRegistry()
 
     /* Load the sound on click value event */
     Globals.bSoundClick = (dwSoundOnClick != 0);
+
+    /* Query the key */
+    lResult = RegQueryValueExW(hKey,
+                               L"WindowLeft",
+                               0,
+                               0,
+                               (BYTE *)&dwPositionLeft,
+                               &cbData);
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Load the X value data of the dialog's coordinate */
+    Globals.PosX = dwPositionLeft;
+
+    lResult = RegQueryValueExW(hKey,
+                               L"WindowTop",
+                               0,
+                               0,
+                               (BYTE *)&dwPositionTop,
+                               &cbData);
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Load the Y value data of the dialog's coordinate */
+    Globals.PosY = dwPositionTop;
     
     /* If we're here then we succeed, close the key and return TRUE */
     RegCloseKey(hKey);
@@ -100,11 +139,16 @@ BOOL SaveDataToRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout, dwSoundOnClick;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick, dwPositionLeft, dwPositionTop;
+    WINDOWPLACEMENT wp;
+
+    /* Set the structure length and retrieve the dialog's placement */
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(Globals.hMainWnd, &wp);
 
     /* If no key has been made, create one */
     lResult = RegCreateKeyExW(HKEY_CURRENT_USER,
-                              L"Software\\Microsoft\\osk",
+                              L"Software\\Microsoft\\Osk",
                               0,
                               NULL,
                               0,
@@ -122,6 +166,7 @@ BOOL SaveDataToRegistry()
     /* The data value of the subkey will be appended to the warning dialog switch */
     dwShowWarningData = Globals.bShowWarning;
 
+    /* Welcome warning box value key */
     lResult = RegSetValueExW(hKey,
                              L"ShowWarning",
                              0,
@@ -139,6 +184,7 @@ BOOL SaveDataToRegistry()
     /* The value will be appended to the layout dialog */
     dwLayout = Globals.bIsEnhancedKeyboard;
 
+    /* Keyboard dialog switcher */
     lResult = RegSetValueExW(hKey,
                              L"IsEnhancedKeyboard",
                              0,
@@ -156,12 +202,49 @@ BOOL SaveDataToRegistry()
     /* The value will be appended to the sound on click event */
     dwSoundOnClick = Globals.bSoundClick;
 
+    /* "Sound on Click" switcher value key */
     lResult = RegSetValueExW(hKey,
-                             L"OnSoundClick",
+                             L"ClickSound",
                              0,
                              REG_DWORD,
                              (BYTE *)&dwSoundOnClick,
                              sizeof(dwSoundOnClick));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* The value will be appended to the X coordination dialog's placement */
+    dwPositionLeft = wp.rcNormalPosition.left;
+
+    /* Position X coordination of dialog's placement value key */
+    lResult = RegSetValueExW(hKey,
+                             L"WindowLeft",
+                             0,
+                             REG_DWORD,
+                             (BYTE *)&dwPositionLeft,
+                             sizeof(dwPositionLeft));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* The value will be appended to the Y coordination dialog's placement */
+    dwPositionTop = wp.rcNormalPosition.top;
+
+    /* Position Y coordination of dialog's placement value key */
+    lResult = RegSetValueExW(hKey,
+                             L"WindowTop",
+                             0,
+                             REG_DWORD,
+                             (BYTE *)&dwPositionTop,
+                             sizeof(dwPositionTop));
 
     if (lResult != ERROR_SUCCESS)
     {

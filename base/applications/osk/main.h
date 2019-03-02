@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/main.h
  * PURPOSE:         On screen keyboard.
- * PROGRAMMERS:     Denis ROBERT
+ * COPYRIGHT:       Denis ROBERT
+ *                  Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
  */
 
 #ifndef _OSKMAIN_H
@@ -26,6 +26,8 @@ typedef struct
     BOOL       bShowWarning;
     BOOL       bIsEnhancedKeyboard;
     BOOL       bSoundClick;
+    INT        PosX;
+    INT        PosY;
 } OSK_GLOBALS;
 
 /* DEFINES ********************************************************************/
