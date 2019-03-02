@@ -19,6 +19,7 @@ KMT_TESTFUNC Test_ExResource;
 KMT_TESTFUNC Test_ExSequencedList;
 KMT_TESTFUNC Test_ExSingleList;
 KMT_TESTFUNC Test_ExTimer;
+KMT_TESTFUNC Test_ExUuid;
 KMT_TESTFUNC Test_FsRtlDissect;
 KMT_TESTFUNC Test_FsRtlExpression;
 KMT_TESTFUNC Test_FsRtlLegal;
@@ -90,6 +91,7 @@ const KMT_TEST TestList[] =
     { "ExSequencedList",                    Test_ExSequencedList },
     { "ExSingleList",                       Test_ExSingleList },
     { "-ExTimer",                           Test_ExTimer },
+    { "ExUuid",                             Test_ExUuid },
     { "Example",                            Test_Example },
     { "FsRtlDissect",                       Test_FsRtlDissect },
     { "FsRtlExpression",                    Test_FsRtlExpression },
