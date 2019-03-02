@@ -45,7 +45,7 @@ BOOLEAN ExpUuidSequenceNumberNotSaved = FALSE;
 UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, 0, 0, { 0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}};
 BOOLEAN ExpUuidCacheValid = FALSE;
 ULONG ExpLuidIncrement = 1;
-LARGE_INTEGER ExpLuid = {.LowPart = 0x3e9, .HighPart = 0x0};
+LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
 
 /* FUNCTIONS ****************************************************************/
 
