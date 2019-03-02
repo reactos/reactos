@@ -261,7 +261,7 @@ ExpAllocateUuids(PULARGE_INTEGER Time,
     else
     {
         *Range = TIME_FRAME;
-        ClockDiff.QuadPart -= TIME_FRAME;
+        ClockDiff.QuadPart = TimeDiff.QuadPart - TIME_FRAME;
         --ClockDiff.HighPart;
     }
 
