@@ -25,6 +25,7 @@ static WCHAR ServiceName[] = L"dcomlaunch";
 
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
+static HANDLE ShutdownEvent;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -62,7 +63,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             DPRINT1("  SERVICE_CONTROL_STOP received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
+            SetEvent(ShutdownEvent);
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
@@ -83,7 +85,8 @@ ServiceControlHandler(DWORD dwControl,
 
         case SERVICE_CONTROL_SHUTDOWN:
             DPRINT1("  SERVICE_CONTROL_SHUTDOWN received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
+            SetEvent(ShutdownEvent);
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         default :
@@ -111,14 +114,14 @@ ServiceMain(DWORD argc, LPTSTR *argv)
         return;
     }
 
+    ShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+
     DealWithDeviceEvent();
 
     UpdateServiceStatus(SERVICE_RUNNING);
 
-    do
-    {
-        Sleep(1);
-    } while (1);
+    WaitForSingleObject(ShutdownEvent, INFINITE);
+    CloseHandle(ShutdownEvent);
 
     UpdateServiceStatus(SERVICE_STOPPED);
 }
