@@ -338,6 +338,13 @@ FDO_CloseConfiguration(
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
+    /* Nothing to do if we're not configured */
+    if (FDODeviceExtension->ConfigurationDescriptor == NULL ||
+        FDODeviceExtension->InterfaceList == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
     /* Now allocate the urb */
     Urb = USBD_CreateConfigurationRequestEx(FDODeviceExtension->ConfigurationDescriptor,
                                             FDODeviceExtension->InterfaceList);
