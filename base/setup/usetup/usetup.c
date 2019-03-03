@@ -419,6 +419,66 @@ PopupError(PCCH Text,
 }
 
 
+/** See also usetup:partlist.c!PrintDiskData() **/
+VOID
+PrettifySize1(
+    IN OUT PULONGLONG Size,
+    OUT PCSTR* Unit)
+{
+    ULONGLONG DiskSize = *Size;
+
+#if 0
+    if (DiskSize >= 10 * GB) /* 10 GB */
+    {
+        DiskSize = DiskSize / GB;
+        *Unit = MUIGetString(STRING_GB);
+    }
+    else
+#endif
+    {
+        DiskSize = DiskSize / MB;
+        if (DiskSize == 0)
+            DiskSize = 1;
+
+        *Unit = MUIGetString(STRING_MB);
+    }
+
+    *Size = DiskSize;
+}
+
+/** See also usetup:partlist.c!PrintPartitionData() **/
+VOID
+PrettifySize2(
+    IN OUT PULONGLONG Size,
+    OUT PCSTR* Unit)
+{
+    ULONGLONG PartSize = *Size;
+
+#if 0
+    if (PartSize >= 10 * GB) /* 10 GB */
+    {
+        PartSize = PartSize / GB;
+        *Unit = MUIGetString(STRING_GB);
+    }
+    else
+#endif
+    if (PartSize >= 10 * MB) /* 10 MB */
+    {
+        PartSize = PartSize / MB;
+        *Unit = MUIGetString(STRING_MB);
+    }
+    else
+    {
+        PartSize = PartSize / KB;
+        *Unit = MUIGetString(STRING_KB);
+    }
+
+    // if (PartSize == 0)
+        // PartSize = 1;
+    *Size = PartSize;
+}
+
+
 /*
  * Confirm quit setup
  * RETURNS
@@ -2081,21 +2141,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSENEWPARTITION));
 
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    {
-        DiskSize = DiskSize / MB;
-        if (DiskSize == 0)
-            DiskSize = 1;
-
-        Unit = MUIGetString(STRING_MB);
-    }
+    PrettifySize1(&DiskSize, &Unit);
 
     if (DiskEntry->DriverName.Length > 0)
     {
@@ -2243,21 +2289,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_EXTENDED_PARTITION));
 
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    {
-        DiskSize = DiskSize / MB;
-        if (DiskSize == 0)
-            DiskSize = 1;
-
-        Unit = MUIGetString(STRING_MB);
-    }
+    PrettifySize1(&DiskSize, &Unit);
 
     if (DiskEntry->DriverName.Length > 0)
     {
@@ -2404,21 +2436,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_LOGICAL_PARTITION));
 
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    {
-        DiskSize = DiskSize / MB;
-        if (DiskSize == 0)
-            DiskSize = 1;
-
-        Unit = MUIGetString(STRING_MB);
-    }
+    PrettifySize1(&DiskSize, &Unit);
 
     if (DiskEntry->DriverName.Length > 0)
     {
@@ -2606,24 +2624,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                                        ARRAYSIZE(PartTypeString));
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (PartSize >= 10 * GB) /* 10 GB */
-    {
-        PartSize = PartSize / GB;
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    if (PartSize >= 10 * MB) /* 10 MB */
-    {
-        PartSize = PartSize / MB;
-        Unit = MUIGetString(STRING_MB);
-    }
-    else
-    {
-        PartSize = PartSize / KB;
-        Unit = MUIGetString(STRING_KB);
-    }
+    PrettifySize2(&PartSize, &Unit);
 
     if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
     {
@@ -2647,21 +2648,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     }
 
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-#if 0
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    {
-        DiskSize = DiskSize / MB;
-        if (DiskSize == 0)
-            DiskSize = 1;
-
-        Unit = MUIGetString(STRING_MB);
-    }
+    PrettifySize1(&DiskSize, &Unit);
 
     if (DiskEntry->DriverName.Length > 0)
     {
@@ -3124,29 +3111,11 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     /* Adjust disk size */
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        DiskUnit = MUIGetString(STRING_GB);
-    }
-    else
-    {
-        DiskSize = DiskSize / MB;
-        DiskUnit = MUIGetString(STRING_MB);
-    }
+    PrettifySize1(&DiskSize, &DiskUnit);
 
     /* Adjust partition size */
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    if (PartSize >= 10 * GB) /* 10 GB */
-    {
-        PartSize = PartSize / GB;
-        PartUnit = MUIGetString(STRING_GB);
-    }
-    else
-    {
-        PartSize = PartSize / MB;
-        PartUnit = MUIGetString(STRING_MB);
-    }
+    PrettifySize2(&PartSize, &PartUnit);
 
     /* Adjust partition type */
     GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
