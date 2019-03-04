@@ -1012,19 +1012,22 @@ LsaApLogonTerminated(IN PLUID LogonId)
  */
 NTSTATUS
 NTAPI
-LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
-               IN SECURITY_LOGON_TYPE LogonType,
-               IN PVOID AuthenticationInformation,
-               IN PVOID ClientAuthenticationBase,
-               IN ULONG AuthenticationInformationLength,
-               OUT PVOID *ProfileBuffer,
-               OUT PULONG ProfileBufferLength,
-               OUT PLUID LogonId,
-               OUT PNTSTATUS SubStatus,
-               OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-               OUT PVOID *TokenInformation,
-               OUT PLSA_UNICODE_STRING *AccountName,
-               OUT PLSA_UNICODE_STRING *AuthenticatingAuthority)
+LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
+                  IN SECURITY_LOGON_TYPE LogonType,
+                  IN PVOID ProtocolSubmitBuffer,
+                  IN PVOID ClientBufferBase,
+                  IN ULONG SubmitBufferSize,
+                  OUT PVOID *ProfileBuffer,
+                  OUT PULONG ProfileBufferSize,
+                  OUT PLUID LogonId,
+                  OUT PNTSTATUS SubStatus,
+                  OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+                  OUT PVOID *TokenInformation,
+                  OUT PUNICODE_STRING *AccountName,
+                  OUT PUNICODE_STRING *AuthenticatingAuthority,
+                  OUT PUNICODE_STRING *MachineName,
+                  OUT PSECPKG_PRIMARY_CRED PrimaryCredentials,
+                  OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials)
 {
     PMSV1_0_INTERACTIVE_LOGON LogonInfo;
 
@@ -1048,11 +1051,11 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     TRACE("LsaApLogonUser()\n");
 
     TRACE("LogonType: %lu\n", LogonType);
-    TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
-    TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
+    TRACE("ProtocolSubmitBuffer: %p\n", ProtocolSubmitBuffer);
+    TRACE("SubmitBufferSize: %lu\n", SubmitBufferSize);
 
     *ProfileBuffer = NULL;
-    *ProfileBufferLength = 0;
+    *ProfileBufferSize = 0;
     *SubStatus = STATUS_SUCCESS;
     *AccountName = NULL;
     *AuthenticatingAuthority = NULL;
@@ -1063,10 +1066,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     {
         ULONG_PTR PtrOffset;
 
-        LogonInfo = (PMSV1_0_INTERACTIVE_LOGON)AuthenticationInformation;
+        LogonInfo = (PMSV1_0_INTERACTIVE_LOGON)ProtocolSubmitBuffer;
 
         /* Fix-up pointers in the authentication info */
-        PtrOffset = (ULONG_PTR)AuthenticationInformation - (ULONG_PTR)ClientAuthenticationBase;
+        PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
         LogonInfo->LogonDomainName.Buffer = FIXUP_POINTER(LogonInfo->LogonDomainName.Buffer, PtrOffset);
         LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
@@ -1319,7 +1322,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
                                            UserInfo,
                                            &LogonServer,
                                            (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
-                                           ProfileBufferLength);
+                                           ProfileBufferSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
@@ -1428,70 +1431,5 @@ done:
 
     return Status;
 }
-
-
-/*
- * @unimplemented
- */
-#if 0
-NTSTATUS
-NTAPI
-LsaApLogonUserEx(IN PLSA_CLIENT_REQUEST ClientRequest,
-                 IN SECURITY_LOGON_TYPE LogonType,
-                 IN PVOID AuthenticationInformation,
-                 IN PVOID ClientAuthenticationBase,
-                 IN ULONG AuthenticationInformationLength,
-                 OUT PVOID *ProfileBuffer,
-                 OUT PULONG ProfileBufferLength,
-                 OUT PLUID LogonId,
-                 OUT PNTSTATUS SubStatus,
-                 OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-                 OUT PVOID *TokenInformation,
-                 OUT PUNICODE_STRING *AccountName,
-                 OUT PUNICODE_STRING *AuthenticatingAuthority,
-                 OUT PUNICODE_STRING *MachineName)
-{
-    TRACE("()\n");
-
-    TRACE("LogonType: %lu\n", LogonType);
-    TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
-    TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
-                  IN SECURITY_LOGON_TYPE LogonType,
-                  IN PVOID ProtocolSubmitBuffer,
-                  IN PVOID ClientBufferBase,
-                  IN ULONG SubmitBufferSize,
-                  OUT PVOID *ProfileBuffer,
-                  OUT PULONG ProfileBufferSize,
-                  OUT PLUID LogonId,
-                  OUT PNTSTATUS SubStatus,
-                  OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-                  OUT PVOID *TokenInformation,
-                  OUT PUNICODE_STRING *AccountName,
-                  OUT PUNICODE_STRING *AuthenticatingAuthority,
-                  OUT PUNICODE_STRING *MachineName,
-                  OUT PSECPKG_PRIMARY_CRED PrimaryCredentials,
-                  OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials)
-{
-    TRACE("()\n");
-
-    TRACE("LogonType: %lu\n", LogonType);
-    TRACE("ProtocolSubmitBuffer: %p\n", ProtocolSubmitBuffer);
-    TRACE("SubmitBufferSize: %lu\n", SubmitBufferSize);
-
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-#endif
 
 /* EOF */
