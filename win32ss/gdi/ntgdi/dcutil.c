@@ -158,6 +158,11 @@ IntGdiSetTextAlign(HDC  hDC,
     pdcattr = dc->pdcattr;
     prevAlign = pdcattr->lTextAlign;
     pdcattr->lTextAlign = Mode;
+    if (pdcattr->dwLayout & LAYOUT_RTL)
+    {
+        if ((Mode & TA_CENTER) != TA_CENTER) Mode ^= TA_RIGHT;
+    }
+    pdcattr->flTextAlign = Mode & TA_MASK;
     DC_UnlockDc(dc);
     return  prevAlign;
 }
