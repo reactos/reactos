@@ -860,7 +860,7 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
     ULONG MessageType;
     NTSTATUS Status;
 
-    TRACE("()\n");
+    TRACE("LsaApCallPackage()\n");
 
     if (SubmitBufferLength < sizeof(MSV1_0_PROTOCOL_MESSAGE_TYPE))
         return STATUS_INVALID_PARAMETER;
@@ -920,7 +920,7 @@ LsaApCallPackagePassthrough(IN PLSA_CLIENT_REQUEST ClientRequest,
                             OUT PULONG ReturnBufferLength,
                             OUT PNTSTATUS ProtocolStatus)
 {
-    TRACE("()\n");
+    TRACE("LsaApCallPackagePassthrough()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -938,7 +938,7 @@ LsaApCallPackageUntrusted(IN PLSA_CLIENT_REQUEST ClientRequest,
                           OUT PULONG ReturnBufferLength,
                           OUT PNTSTATUS ProtocolStatus)
 {
-    TRACE("()\n");
+    TRACE("LsaApCallPackageUntrusted()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -957,7 +957,7 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     PANSI_STRING NameString;
     PCHAR NameBuffer;
 
-    TRACE("(%lu %p %p %p %p)\n",
+    TRACE("LsaApInitializePackage(%lu %p %p %p %p)\n",
           AuthenticationPackageId, LsaDispatchTable, Database,
           Confidentiality, AuthenticationPackageName);
 
@@ -1003,7 +1003,7 @@ VOID
 NTAPI
 LsaApLogonTerminated(IN PLUID LogonId)
 {
-    TRACE("()\n");
+    TRACE("LsaApLogonTerminated()\n");
 }
 
 
@@ -1054,6 +1054,8 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     *ProfileBuffer = NULL;
     *ProfileBufferLength = 0;
     *SubStatus = STATUS_SUCCESS;
+    *AccountName = NULL;
+    *AuthenticatingAuthority = NULL;
 
     if (LogonType == Interactive ||
         LogonType == Batch ||
@@ -1368,6 +1370,20 @@ done:
             (*AccountName)->MaximumLength = LogonInfo->UserName.Length +
                                             sizeof(UNICODE_NULL);
             RtlCopyUnicodeString(*AccountName, &LogonInfo->UserName);
+        }
+    }
+
+    /* Return the authenticating authority */
+    *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+    if (*AuthenticatingAuthority != NULL)
+    {
+        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->LogonDomainName.Length +
+                                                                           sizeof(UNICODE_NULL));
+        if ((*AuthenticatingAuthority)->Buffer != NULL)
+        {
+            (*AuthenticatingAuthority)->MaximumLength = LogonInfo->LogonDomainName.Length +
+                                                        sizeof(UNICODE_NULL);
+            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonInfo->LogonDomainName);
         }
     }
 
