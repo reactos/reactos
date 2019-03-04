@@ -632,6 +632,14 @@ DoEnvironmentSubstW(
     _Inout_updates_(cchSrc) LPWSTR pszSrc,
     UINT cchSrc);
 
+#if (_WIN32_IE >= 0x0601)
+BOOL
+WINAPI
+SHTestTokenMembership(
+    _In_opt_ HANDLE hToken,
+    _In_ ULONG ulRID);
+#endif
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
