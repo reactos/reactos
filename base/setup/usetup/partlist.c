@@ -73,6 +73,7 @@ VOID
 InitPartitionListUi(
     IN OUT PPARTLIST_UI ListUi,
     IN PPARTLIST List,
+    IN PPARTENTRY CurrentEntry OPTIONAL,
     IN SHORT Left,
     IN SHORT Top,
     IN SHORT Right,
@@ -91,6 +92,37 @@ InitPartitionListUi(
     ListUi->Offset = 0;
 
     // ListUi->Redraw = TRUE;
+
+    /* Search for first usable disk and partition */
+    if (!CurrentEntry)
+    {
+        ListUi->CurrentDisk = NULL;
+        ListUi->CurrentPartition = NULL;
+
+        if (!IsListEmpty(&List->DiskListHead))
+        {
+            ListUi->CurrentDisk = CONTAINING_RECORD(List->DiskListHead.Flink,
+                                                    DISKENTRY, ListEntry);
+
+            if (!IsListEmpty(&ListUi->CurrentDisk->PrimaryPartListHead))
+            {
+                ListUi->CurrentPartition = CONTAINING_RECORD(ListUi->CurrentDisk->PrimaryPartListHead.Flink,
+                                                             PARTENTRY, ListEntry);
+            }
+        }
+    }
+    else
+    {
+        /*
+         * The CurrentEntry must belong to the associated partition list,
+         * and the latter must therefore not be empty.
+         */
+        ASSERT(!IsListEmpty(&List->DiskListHead));
+        ASSERT(CurrentEntry->DiskEntry->PartList == List);
+
+        ListUi->CurrentPartition = CurrentEntry;
+        ListUi->CurrentDisk = CurrentEntry->DiskEntry;
+    }
 }
 
 static
@@ -134,7 +166,6 @@ PrintPartitionData(
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry)
 {
-    PPARTLIST List = ListUi->List;
     CHAR LineBuffer[128];
     COORD coPos;
     ULONG Written;
@@ -226,8 +257,8 @@ PrintPartitionData(
         }
     }
 
-    Attribute = (List->CurrentDisk == DiskEntry &&
-                 List->CurrentPartition == PartEntry) ?
+    Attribute = (ListUi->CurrentDisk == DiskEntry &&
+                 ListUi->CurrentPartition == PartEntry) ?
                  FOREGROUND_BLUE | BACKGROUND_WHITE :
                  FOREGROUND_WHITE | BACKGROUND_BLUE;
 
@@ -269,7 +300,6 @@ PrintDiskData(
     IN PPARTLIST_UI ListUi,
     IN PDISKENTRY DiskEntry)
 {
-    // PPARTLIST List = ListUi->List;
     PPARTENTRY PrimaryPartEntry, LogicalPartEntry;
     PLIST_ENTRY PrimaryEntry, LogicalEntry;
     CHAR LineBuffer[128];
@@ -432,7 +462,7 @@ DrawPartitionList(
         while (Entry2 != &DiskEntry->PrimaryPartListHead)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry == List->CurrentPartition)
+            if (PartEntry == ListUi->CurrentPartition)
             {
                 CurrentPartLineFound = TRUE;
             }
@@ -452,7 +482,7 @@ DrawPartitionList(
             while (Entry2 != &DiskEntry->LogicalPartListHead)
             {
                 PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-                if (PartEntry == List->CurrentPartition)
+                if (PartEntry == ListUi->CurrentPartition)
                 {
                     CurrentPartLineFound = TRUE;
                 }
@@ -467,7 +497,7 @@ DrawPartitionList(
             }
         }
 
-        if (DiskEntry == List->CurrentDisk)
+        if (DiskEntry == ListUi->CurrentDisk)
         {
             CurrentDiskLineFound = TRUE;
         }
@@ -642,16 +672,26 @@ VOID
 ScrollDownPartitionList(
     IN PPARTLIST_UI ListUi)
 {
-    if (GetNextPartition(ListUi->List))
+    PPARTENTRY NextPart = GetNextPartition(ListUi->List, ListUi->CurrentPartition);
+    if (NextPart)
+    {
+        ListUi->CurrentPartition = NextPart;
+        ListUi->CurrentDisk = NextPart->DiskEntry;
         DrawPartitionList(ListUi);
+    }
 }
 
 VOID
 ScrollUpPartitionList(
     IN PPARTLIST_UI ListUi)
 {
-    if (GetPrevPartition(ListUi->List))
+    PPARTENTRY PrevPart = GetPrevPartition(ListUi->List, ListUi->CurrentPartition);
+    if (PrevPart)
+    {
+        ListUi->CurrentPartition = PrevPart;
+        ListUi->CurrentDisk = PrevPart->DiskEntry;
         DrawPartitionList(ListUi);
+    }
 }
 
 /* EOF */

@@ -159,7 +159,6 @@ NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,
     IN PCWSTR InstallationDir,
-    IN PDISKENTRY DiskEntry,    // FIXME: HACK!
     IN PPARTENTRY PartEntry);   // FIXME: HACK!
 
 // NTSTATUS

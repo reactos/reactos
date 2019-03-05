@@ -45,6 +45,10 @@ BOOLEAN IsUnattendedSetup = FALSE;
 
 static USETUP_DATA USetupData;
 
+/* Partition where to perform the installation */
+static PPARTENTRY InstallPartition = NULL;
+// static PPARTENTRY SystemPartition = NULL;    // The system partition we will actually use (can be different from PartitionList->SystemPartition in case we install on removable disk)
+
 // FIXME: Is it really useful?? Just used for SetDefaultPagefile...
 static WCHAR DestinationDriveLetter;
 
@@ -60,7 +64,10 @@ static BOOLEAN RepairUpdateFlag = FALSE;
 /* Global partition list on the system */
 static PPARTLIST PartitionList = NULL;
 
-/* List of currently supported file systems for the partition to be formatted */
+/* Currently selected partition entry in the list */
+static PPARTENTRY CurrentPartition = NULL;
+
+/* List of supported file systems for the partition to be formatted */
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
 /* Machine state for the formatter */
@@ -1474,14 +1481,18 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
     if (RepairUpdateFlag)
     {
+        ASSERT(CurrentInstallation);
+
         /* Determine the selected installation disk & partition */
-        if (!SelectPartition(PartitionList,
-                             CurrentInstallation->DiskNumber,
-                             CurrentInstallation->PartitionNumber))
+        InstallPartition = SelectPartition(PartitionList,
+                                           CurrentInstallation->DiskNumber,
+                                           CurrentInstallation->PartitionNumber);
+        if (!InstallPartition)
         {
             DPRINT1("RepairUpdateFlag == TRUE, SelectPartition() returned FALSE, assert!\n");
             ASSERT(FALSE);
         }
+        ASSERT(!IsContainerPartition(InstallPartition->PartitionType));
 
         return SELECT_FILE_SYSTEM_PAGE;
     }
@@ -1489,52 +1500,62 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     MUIDisplayPage(SELECT_PARTITION_PAGE);
 
     InitPartitionListUi(&ListUi, PartitionList,
-                        2,
-                        23,
+                        CurrentPartition,
+                        2, 23,
                         xScreen - 3,
                         yScreen - 3);
     DrawPartitionList(&ListUi);
 
     if (IsUnattendedSetup)
     {
-        if (!SelectPartition(PartitionList,
-                             USetupData.DestinationDiskNumber,
-                             USetupData.DestinationPartitionNumber))
+        /* Determine the selected installation disk & partition */
+        InstallPartition = SelectPartition(PartitionList,
+                                           USetupData.DestinationDiskNumber,
+                                           USetupData.DestinationPartitionNumber);
+        if (!InstallPartition)
         {
+            CurrentPartition = ListUi.CurrentPartition;
+
             if (USetupData.AutoPartition)
             {
-                if (PartitionList->CurrentPartition->LogicalPartition)
+                ASSERT(CurrentPartition != NULL);
+                ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
+
+                if (CurrentPartition->LogicalPartition)
                 {
                     CreateLogicalPartition(PartitionList,
-                                           PartitionList->CurrentPartition,
-                                           PartitionList->CurrentPartition->SectorCount.QuadPart,
+                                           CurrentPartition,
+                                           CurrentPartition->SectorCount.QuadPart,
                                            TRUE);
                 }
                 else
                 {
                     CreatePrimaryPartition(PartitionList,
-                                           PartitionList->CurrentPartition,
-                                           PartitionList->CurrentPartition->SectorCount.QuadPart,
+                                           CurrentPartition,
+                                           CurrentPartition->SectorCount.QuadPart,
                                            TRUE);
                 }
 
 // FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-                if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+                if (!IsDiskSizeValid(CurrentPartition))
                 {
                     MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
                                     USetupData.RequiredPartitionDiskSpace);
                     return SELECT_PARTITION_PAGE; /* let the user select another partition */
                 }
 
+                InstallPartition = CurrentPartition;
                 return SELECT_FILE_SYSTEM_PAGE;
             }
         }
         else
         {
-            DrawPartitionList(&ListUi);
+            ASSERT(!IsContainerPartition(InstallPartition->PartitionType));
+
+            DrawPartitionList(&ListUi); // FIXME: Doesn't make much sense...
 
 // FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+            if (!IsDiskSizeValid(InstallPartition))
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
                                 USetupData.RequiredPartitionDiskSpace);
@@ -1547,14 +1568,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
     while (TRUE)
     {
+        CurrentPartition = ListUi.CurrentPartition;
+
         /* Update status text */
-        if (PartitionList->CurrentPartition == NULL)
+        if (CurrentPartition == NULL)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
         }
-        else if (PartitionList->CurrentPartition->LogicalPartition)
+        else if (CurrentPartition->LogicalPartition)
         {
-            if (PartitionList->CurrentPartition->IsPartitioned)
+            if (CurrentPartition->IsPartitioned)
             {
                 CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
             }
@@ -1565,9 +1588,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-            if (PartitionList->CurrentPartition->IsPartitioned)
+            if (CurrentPartition->IsPartitioned)
             {
-                if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
+                if (IsContainerPartition(CurrentPartition->PartitionType))
                 {
                     CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
                 }
@@ -1608,15 +1631,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
-            if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
+            ASSERT(CurrentPartition != NULL);
+
+            if (IsContainerPartition(CurrentPartition->PartitionType))
                 continue; // return SELECT_PARTITION_PAGE;
 
-            if (PartitionList->CurrentPartition == NULL ||
-                PartitionList->CurrentPartition->IsPartitioned == FALSE)
+            if (CurrentPartition->IsPartitioned == FALSE)
             {
-                if (PartitionList->CurrentPartition->LogicalPartition)
+                if (CurrentPartition->LogicalPartition)
                 {
-                    Error = LogicalPartitionCreationChecks(PartitionList->CurrentPartition);
+                    Error = LogicalPartitionCreationChecks(CurrentPartition);
                     if (Error != NOT_AN_ERROR)
                     {
                         MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1624,13 +1648,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     }
 
                     CreateLogicalPartition(PartitionList,
-                                           PartitionList->CurrentPartition,
+                                           CurrentPartition,
                                            0ULL,
                                            TRUE);
                 }
                 else
                 {
-                    Error = PrimaryPartitionCreationChecks(PartitionList->CurrentPartition);
+                    Error = PrimaryPartitionCreationChecks(CurrentPartition);
                     if (Error != NOT_AN_ERROR)
                     {
                         MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1638,26 +1662,29 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     }
 
                     CreatePrimaryPartition(PartitionList,
-                                           PartitionList->CurrentPartition,
+                                           CurrentPartition,
                                            0ULL,
                                            TRUE);
                 }
             }
 
-            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+            if (!IsDiskSizeValid(CurrentPartition))
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
                                 USetupData.RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
+            InstallPartition = CurrentPartition;
             return SELECT_FILE_SYSTEM_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'P')  /* P */
         {
-            if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
+            ASSERT(CurrentPartition != NULL);
+
+            if (CurrentPartition->LogicalPartition == FALSE)
             {
-                Error = PrimaryPartitionCreationChecks(PartitionList->CurrentPartition);
+                Error = PrimaryPartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1669,9 +1696,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
         {
-            if (PartitionList->CurrentPartition->LogicalPartition == FALSE)
+            ASSERT(CurrentPartition != NULL);
+
+            if (CurrentPartition->LogicalPartition == FALSE)
             {
-                Error = ExtendedPartitionCreationChecks(PartitionList->CurrentPartition);
+                Error = ExtendedPartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1683,9 +1712,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'L')  /* L */
         {
-            if (PartitionList->CurrentPartition->LogicalPartition)
+            ASSERT(CurrentPartition != NULL);
+
+            if (CurrentPartition->LogicalPartition)
             {
-                Error = LogicalPartitionCreationChecks(PartitionList->CurrentPartition);
+                Error = LogicalPartitionCreationChecks(CurrentPartition);
                 if (Error != NOT_AN_ERROR)
                 {
                     MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1697,33 +1728,36 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
         {
-            UNICODE_STRING CurrentPartition;
+            UNICODE_STRING CurrentPartitionU;
             WCHAR PathBuffer[MAX_PATH];
 
-            if (PartitionList->CurrentPartition->IsPartitioned == FALSE)
+            ASSERT(CurrentPartition != NULL);
+
+            if (CurrentPartition->IsPartitioned == FALSE)
             {
                 MUIDisplayError(ERROR_DELETE_SPACE, Ir, POPUP_WAIT_ANY_KEY);
                 return SELECT_PARTITION_PAGE;
             }
 
 // TODO: Do something similar before trying to format the partition?
-            if (!PartitionList->CurrentPartition->New &&
-                PartitionList->CurrentPartition->FormatState != Unformatted)
+            if (!CurrentPartition->New &&
+                !IsContainerPartition(CurrentPartition->PartitionType) &&
+                CurrentPartition->FormatState != Unformatted)
             {
-                ASSERT(PartitionList->CurrentPartition->PartitionNumber != 0);
+                ASSERT(CurrentPartition->PartitionNumber != 0);
 
                 RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                         L"\\Device\\Harddisk%lu\\Partition%lu\\",
-                        PartitionList->CurrentDisk->DiskNumber,
-                        PartitionList->CurrentPartition->PartitionNumber);
-                RtlInitUnicodeString(&CurrentPartition, PathBuffer);
+                        CurrentPartition->DiskEntry->DiskNumber,
+                        CurrentPartition->PartitionNumber);
+                RtlInitUnicodeString(&CurrentPartitionU, PathBuffer);
 
                 /*
                  * Check whether the user attempts to delete the partition on which
                  * the installation source is present. If so, fail with an error.
                  */
                 // &USetupData.SourceRootPath
-                if (RtlPrefixUnicodeString(&CurrentPartition, &USetupData.SourcePath, TRUE))
+                if (RtlPrefixUnicodeString(&CurrentPartitionU, &USetupData.SourcePath, TRUE))
                 {
                     PopupError("You cannot delete the partition containing the installation source!",
                                MUIGetString(STRING_CONTINUE),
@@ -1732,8 +1766,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 }
             }
 
-            if (PartitionList->CurrentPartition == PartitionList->SystemPartition ||
-                PartitionList->CurrentPartition->BootIndicator)
+// FIXME TODO: PartitionList->SystemPartition is not yet initialized!!!!
+            if (CurrentPartition == PartitionList->SystemPartition ||
+                CurrentPartition->BootIndicator)
             {
                 return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
             }
@@ -1947,8 +1982,8 @@ ShowPartitionSizeInputBox(SHORT Left,
 static PAGE_NUMBER
 CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
     WCHAR InputBuffer[50];
@@ -1958,16 +1993,14 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG SectorCount;
     PCHAR Unit;
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || CurrentPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->CurrentDisk;
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
+    DiskEntry = CurrentPartition->DiskEntry;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -2024,12 +2057,12 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        PartitionList->CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
+                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
 #endif
 
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
     while (TRUE)
     {
         MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
@@ -2086,7 +2119,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
             DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
             CreatePrimaryPartition(PartitionList,
-                                   PartitionList->CurrentPartition,
+                                   CurrentPartition,
                                    SectorCount,
                                    FALSE);
 
@@ -2111,8 +2144,8 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
     WCHAR InputBuffer[50];
@@ -2122,16 +2155,14 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG SectorCount;
     PCHAR Unit;
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || CurrentPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->CurrentDisk;
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
+    DiskEntry = CurrentPartition->DiskEntry;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -2188,12 +2219,12 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        PartitionList->CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
+                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
 #endif
 
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
     while (TRUE)
     {
         MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
@@ -2250,7 +2281,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
             DPRINT ("Partition size: %I64u bytes\n", PartSize);
 
             CreateExtendedPartition(PartitionList,
-                                    PartitionList->CurrentPartition,
+                                    CurrentPartition,
                                     SectorCount);
 
             return SELECT_PARTITION_PAGE;
@@ -2274,8 +2305,8 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
     WCHAR InputBuffer[50];
@@ -2285,16 +2316,14 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG SectorCount;
     PCHAR Unit;
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || CurrentPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->CurrentDisk;
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
+    DiskEntry = CurrentPartition->DiskEntry;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -2351,12 +2380,12 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 
 #if 0
     CONSOLE_PrintTextXY(8, 10, "Maximum size of the new partition is %I64u MB",
-                        PartitionList->CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
+                        CurrentPartition->SectorCount * DiskEntry->BytesPerSector / MB);
 #endif
 
     CONSOLE_SetStatusText(MUIGetString(STRING_CREATEPARTITION));
 
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
     while (TRUE)
     {
         MaxSize = (PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector) / MB;  /* in MBytes (rounded) */
@@ -2413,7 +2442,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
             DPRINT("Partition size: %I64u bytes\n", PartSize);
 
             CreateLogicalPartition(PartitionList,
-                                   PartitionList->CurrentPartition,
+                                   CurrentPartition,
                                    SectorCount,
                                    FALSE);
 
@@ -2479,23 +2508,21 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DeletePartitionPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR Unit;
     CHAR PartTypeString[32];
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || CurrentPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->CurrentDisk;
-    PartEntry = PartitionList->CurrentPartition;
+    PartEntry = CurrentPartition;
+    DiskEntry = CurrentPartition->DiskEntry;
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
@@ -2610,7 +2637,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
         {
-            DeleteCurrentPartition(PartitionList);
+            DeletePartition(PartitionList,
+                            CurrentPartition,
+                            &CurrentPartition);
             return SELECT_PARTITION_PAGE;
         }
     }
@@ -2650,8 +2679,8 @@ ResetFileSystemList(VOID)
 static PAGE_NUMBER
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR DiskUnit;
@@ -2662,9 +2691,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     DPRINT("SelectFileSystemPage()\n");
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || InstallPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
@@ -2674,7 +2701,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     if (FormatState == Start)
     {
         /* Find or set the active system partition */
-        CheckActiveSystemPartition(PartitionList);
+        CheckActiveSystemPartition(PartitionList,
+                                   FALSE,
+                                   InstallPartition->DiskEntry,
+                                   InstallPartition);
         if (PartitionList->SystemPartition == NULL)
         {
             /* FIXME: show an error dialog */
@@ -2720,8 +2750,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
          * we must perform a filesystem check of both the system and the
          * installation partitions.
          */
-        PartitionList->CurrentPartition->NeedsCheck = TRUE;
-        if (PartitionList->SystemPartition != PartitionList->CurrentPartition)
+        InstallPartition->NeedsCheck = TRUE;
+        if (PartitionList->SystemPartition != InstallPartition)
             PartitionList->SystemPartition->NeedsCheck = TRUE;
 
         /*
@@ -2755,7 +2785,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
             ASSERT(PartitionList->SystemPartition->IsPartitioned);
 
-            if ((PartitionList->SystemPartition != PartitionList->CurrentPartition) &&
+            if ((PartitionList->SystemPartition != InstallPartition) &&
                 (PartitionList->SystemPartition->FormatState == Unformatted))
             {
                 TempPartition = PartitionList->SystemPartition;
@@ -2770,10 +2800,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
             else
             {
-                TempPartition = PartitionList->CurrentPartition;
+                TempPartition = InstallPartition;
                 TempPartition->NeedsCheck = TRUE;
 
-                if (PartitionList->SystemPartition != PartitionList->CurrentPartition)
+                if (PartitionList->SystemPartition != InstallPartition)
                 {
                     /* The system partition is separate, so it had better be formatted! */
                     ASSERT((PartitionList->SystemPartition->FormatState == Preformatted) ||
@@ -2791,7 +2821,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         case FormatSystemPartition:
         {
-            TempPartition = PartitionList->CurrentPartition;
+            TempPartition = InstallPartition;
             TempPartition->NeedsCheck = TRUE;
 
             FormatState = FormatInstallPartition;
@@ -2843,7 +2873,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
 
     PartEntry = TempPartition;
-    DiskEntry = PartEntry->DiskEntry;
+    DiskEntry = TempPartition->DiskEntry;
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
@@ -3063,7 +3093,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                  * or the installation partition.
                  */
                 if (TempPartition != PartitionList->SystemPartition &&
-                    TempPartition != PartitionList->CurrentPartition)
+                    TempPartition != InstallPartition)
                 {
                     PartEntry->NeedsCheck = FALSE;
                 }
@@ -3093,7 +3123,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Sets PartitionList->CurrentPartition->FormatState
+ *  Sets InstallPartition->FormatState
  *  Sets USetupData.DestinationRootPath
  *
  * RETURNS
@@ -3103,8 +3133,8 @@ static PAGE_NUMBER
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
-    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PDISKENTRY DiskEntry;
     PFILE_SYSTEM_ITEM SelectedFileSystem;
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
@@ -3127,7 +3157,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
     }
 
     PartEntry = TempPartition;
-    DiskEntry = PartEntry->DiskEntry;
+    DiskEntry = TempPartition->DiskEntry;
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
@@ -3405,13 +3435,13 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
 
 static NTSTATUS
-BuildInstallPaths(PWSTR InstallDir,
-                  PDISKENTRY DiskEntry,
-                  PPARTENTRY PartEntry)
+BuildInstallPaths(
+    IN PCWSTR InstallDir,
+    IN PPARTENTRY PartEntry)
 {
     NTSTATUS Status;
 
-    Status = InitDestinationPaths(&USetupData, InstallDir, DiskEntry, PartEntry);
+    Status = InitDestinationPaths(&USetupData, InstallDir, PartEntry);
 
     if (!NT_SUCCESS(Status))
     {
@@ -3485,26 +3515,19 @@ IsValidPath(
 static PAGE_NUMBER
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-    WCHAR InstallDir[MAX_PATH];
-    WCHAR c;
-    ULONG Length, Pos;
     NTSTATUS Status;
+    ULONG Length, Pos;
+    WCHAR c;
+    WCHAR InstallDir[MAX_PATH];
 
     /* We do not need the filesystem list anymore */
     ResetFileSystemList();
 
-    if (PartitionList == NULL ||
-        PartitionList->CurrentDisk == NULL ||
-        PartitionList->CurrentPartition == NULL)
+    if (PartitionList == NULL || InstallPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
-
-    DiskEntry = PartitionList->CurrentDisk;
-    PartEntry = PartitionList->CurrentPartition;
 
     // if (IsUnattendedSetup)
     if (RepairUpdateFlag)
@@ -3523,9 +3546,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      */
     if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidPath(InstallDir))
     {
-        Status = BuildInstallPaths(InstallDir,
-                                   DiskEntry,
-                                   PartEntry);
+        Status = BuildInstallPaths(InstallDir, InstallPartition);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);
@@ -3633,9 +3654,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
                 return INSTALL_DIRECTORY_PAGE;
             }
 
-            Status = BuildInstallPaths(InstallDir,
-                                       DiskEntry,
-                                       PartEntry);
+            Status = BuildInstallPaths(InstallDir, InstallPartition);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("BuildInstallPaths() failed. Status code: 0x%lx", Status);

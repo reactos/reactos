@@ -89,6 +89,9 @@ typedef struct _DISKENTRY
 {
     LIST_ENTRY ListEntry;
 
+    /* The list of disks/partitions this disk belongs to */
+    struct _PARTLIST *PartList;
+
     /* Disk geometry */
 
     ULONGLONG Cylinders;
@@ -138,17 +141,6 @@ typedef struct _DISKENTRY
 
 typedef struct _PARTLIST
 {
-    /*
-     * Disk & Partition iterators.
-     *
-     * NOTE that when CurrentPartition != NULL, then CurrentPartition->DiskEntry
-     * must be the same as CurrentDisk. We should however keep the two members
-     * separated as we can have a current (selected) disk without any current
-     * partition, if the former does not contain any.
-     */
-    PDISKENTRY CurrentDisk;
-    PPARTENTRY CurrentPartition;
-
     /*
      * The system partition where the boot manager resides.
      * The corresponding system disk is obtained via:
@@ -275,7 +267,7 @@ GetDiskOrPartition(
     OUT PDISKENTRY* pDiskEntry,
     OUT PPARTENTRY* pPartEntry OPTIONAL);
 
-BOOLEAN
+PPARTENTRY
 SelectPartition(
     IN PPARTLIST List,
     IN ULONG DiskNumber,
@@ -283,11 +275,13 @@ SelectPartition(
 
 PPARTENTRY
 GetNextPartition(
-    IN PPARTLIST List);
+    IN PPARTLIST List,
+    IN PPARTENTRY CurrentPart OPTIONAL);
 
 PPARTENTRY
 GetPrevPartition(
-    IN PPARTLIST List);
+    IN PPARTLIST List,
+    IN PPARTENTRY CurrentPart OPTIONAL);
 
 BOOLEAN
 CreatePrimaryPartition(
@@ -309,18 +303,18 @@ CreateLogicalPartition(
     IN ULONGLONG SectorCount,
     IN BOOLEAN AutoCreate);
 
-VOID
+BOOLEAN
 DeletePartition(
     IN PPARTLIST List,
-    IN PPARTENTRY PartEntry);
-
-VOID
-DeleteCurrentPartition(
-    IN PPARTLIST List);
+    IN PPARTENTRY PartEntry,
+    OUT PPARTENTRY* FreeRegion OPTIONAL);
 
 VOID
 CheckActiveSystemPartition(
-    IN PPARTLIST List);
+    IN PPARTLIST List,
+    IN BOOLEAN ForceSelect,
+    IN PDISKENTRY AlternateDisk OPTIONAL,
+    IN PPARTENTRY AlternatePart OPTIONAL);
 
 NTSTATUS
 WritePartitions(

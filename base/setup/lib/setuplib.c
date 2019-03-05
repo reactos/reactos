@@ -624,11 +624,11 @@ NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,
     IN PCWSTR InstallationDir,
-    IN PDISKENTRY DiskEntry,    // FIXME: HACK!
     IN PPARTENTRY PartEntry)    // FIXME: HACK!
 {
-    WCHAR PathBuffer[MAX_PATH];
     NTSTATUS Status;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+    WCHAR PathBuffer[MAX_PATH];
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
