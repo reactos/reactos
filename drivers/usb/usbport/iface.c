@@ -804,7 +804,7 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
             DPRINT1("USB_BUS_INTERFACE_HUB_GUID version %x not supported!\n",
                     IoStack->Parameters.QueryInterface.Version);
 
-            return STATUS_NOT_SUPPORTED; // Version not supported
+            return Irp->IoStatus.Status; // Version not supported
         }
 
         /* Interface version 0 */
@@ -864,7 +864,7 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
             DPRINT1("USB_BUS_INTERFACE_USBDI_GUID version %x not supported!\n",
                     IoStack->Parameters.QueryInterface.Version);
 
-            return STATUS_NOT_SUPPORTED; // Version not supported
+            return Irp->IoStatus.Status; // Version not supported
         }
 
         /* Interface version 0 */
@@ -904,5 +904,5 @@ USBPORT_PdoQueryInterface(IN PDEVICE_OBJECT FdoDevice,
         }
     }
 
-    return STATUS_NOT_SUPPORTED;
+    return Irp->IoStatus.Status;
 }
