@@ -394,8 +394,9 @@ PrintDiskData(
     PrintEmptyLine(ListUi);
 
     /* Print partition lines */
-    PrimaryEntry = DiskEntry->PrimaryPartListHead.Flink;
-    while (PrimaryEntry != &DiskEntry->PrimaryPartListHead)
+    for (PrimaryEntry = DiskEntry->PrimaryPartListHead.Flink;
+         PrimaryEntry != &DiskEntry->PrimaryPartListHead;
+         PrimaryEntry = PrimaryEntry->Flink)
     {
         PrimaryPartEntry = CONTAINING_RECORD(PrimaryEntry, PARTENTRY, ListEntry);
 
@@ -405,20 +406,17 @@ PrintDiskData(
 
         if (IsContainerPartition(PrimaryPartEntry->PartitionType))
         {
-            LogicalEntry = DiskEntry->LogicalPartListHead.Flink;
-            while (LogicalEntry != &DiskEntry->LogicalPartListHead)
+            for (LogicalEntry = DiskEntry->LogicalPartListHead.Flink;
+                 LogicalEntry != &DiskEntry->LogicalPartListHead;
+                 LogicalEntry = LogicalEntry->Flink)
             {
                 LogicalPartEntry = CONTAINING_RECORD(LogicalEntry, PARTENTRY, ListEntry);
 
                 PrintPartitionData(ListUi,
                                    DiskEntry,
                                    LogicalPartEntry);
-
-                LogicalEntry = LogicalEntry->Flink;
             }
         }
-
-        PrimaryEntry = PrimaryEntry->Flink;
     }
 
     /* Print separator line */
@@ -435,6 +433,8 @@ DrawPartitionList(
     PPARTENTRY PartEntry = NULL;
     COORD coPos;
     ULONG Written;
+    USHORT Width;
+    USHORT Height;
     SHORT i;
     SHORT CurrentDiskLine;
     SHORT CurrentPartLine;
@@ -442,13 +442,17 @@ DrawPartitionList(
     BOOLEAN CurrentPartLineFound = FALSE;
     BOOLEAN CurrentDiskLineFound = FALSE;
 
+    Width = ListUi->Right - ListUi->Left - 1;
+    Height = ListUi->Bottom - ListUi->Top - 2;
+
     /* Calculate the line of the current disk and partition */
     CurrentDiskLine = 0;
     CurrentPartLine = 0;
     LastLine = 0;
 
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
@@ -458,8 +462,9 @@ DrawPartitionList(
             CurrentPartLine += 2;
         }
 
-        Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-        while (Entry2 != &DiskEntry->PrimaryPartListHead)
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry == ListUi->CurrentPartition)
@@ -467,7 +472,6 @@ DrawPartitionList(
                 CurrentPartLineFound = TRUE;
             }
 
-            Entry2 = Entry2->Flink;
             if (CurrentPartLineFound == FALSE)
             {
                 CurrentPartLine++;
@@ -478,8 +482,9 @@ DrawPartitionList(
 
         if (CurrentPartLineFound == FALSE)
         {
-            Entry2 = DiskEntry->LogicalPartListHead.Flink;
-            while (Entry2 != &DiskEntry->LogicalPartListHead)
+            for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+                 Entry2 != &DiskEntry->LogicalPartListHead;
+                 Entry2 = Entry2->Flink)
             {
                 PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
                 if (PartEntry == ListUi->CurrentPartition)
@@ -487,7 +492,6 @@ DrawPartitionList(
                     CurrentPartLineFound = TRUE;
                 }
 
-                Entry2 = Entry2->Flink;
                 if (CurrentPartLineFound == FALSE)
                 {
                     CurrentPartLine++;
@@ -502,12 +506,11 @@ DrawPartitionList(
             CurrentDiskLineFound = TRUE;
         }
 
-        Entry = Entry->Flink;
-        if (Entry != &List->DiskListHead)
+        if (Entry->Flink != &List->DiskListHead)
         {
             if (CurrentDiskLineFound == FALSE)
             {
-                CurrentPartLine ++;
+                CurrentPartLine++;
                 CurrentDiskLine = CurrentPartLine;
             }
 
@@ -524,12 +527,12 @@ DrawPartitionList(
     {
         ListUi->Offset = CurrentPartLine;
     }
-    else if (CurrentPartLine - ListUi->Offset > ListUi->Bottom - ListUi->Top - 2)
+    else if (CurrentPartLine - ListUi->Offset > Height)
     {
-        ListUi->Offset = CurrentPartLine - (ListUi->Bottom - ListUi->Top - 2);
+        ListUi->Offset = CurrentPartLine - Height;
     }
 
-    if (CurrentDiskLine < ListUi->Offset && CurrentPartLine - CurrentDiskLine < ListUi->Bottom - ListUi->Top - 2)
+    if (CurrentDiskLine < ListUi->Offset && CurrentPartLine - CurrentDiskLine < Height)
     {
         ListUi->Offset = CurrentDiskLine;
     }
@@ -550,7 +553,7 @@ DrawPartitionList(
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    ListUi->Right - ListUi->Left - 1,
+                                    Width,
                                     coPos,
                                     &Written);
     }
@@ -558,7 +561,7 @@ DrawPartitionList(
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    ListUi->Right - ListUi->Left - 5,
+                                    Width - 4,
                                     coPos,
                                     &Written);
         coPos.X = ListUi->Right - 5;
@@ -615,11 +618,11 @@ DrawPartitionList(
     /* Draw lower edge */
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Bottom;
-    if (LastLine - ListUi->Offset <= ListUi->Bottom - ListUi->Top - 2)
+    if (LastLine - ListUi->Offset <= Height)
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    ListUi->Right - ListUi->Left - 1,
+                                    Width,
                                     coPos,
                                     &Written);
     }
@@ -627,7 +630,7 @@ DrawPartitionList(
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    ListUi->Right - ListUi->Left - 5,
+                                    Width - 4,
                                     coPos,
                                     &Written);
         coPos.X = ListUi->Right - 5;
@@ -653,18 +656,17 @@ DrawPartitionList(
                                 coPos,
                                 &Written);
 
-    /* print list entries */
-    ListUi->Line = - ListUi->Offset;
+    /* Print list entries */
+    ListUi->Line = -ListUi->Offset;
 
-    Entry = List->DiskListHead.Flink;
-    while (Entry != &List->DiskListHead)
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
         /* Print disk entry */
         PrintDiskData(ListUi, DiskEntry);
-
-        Entry = Entry->Flink;
     }
 }
 
