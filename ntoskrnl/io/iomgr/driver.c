@@ -2092,15 +2092,11 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     /*
      * Check security privileges
      */
-
-    /* FIXME: Uncomment when privileges will be correctly implemented. */
-#if 0
     if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
     {
         DPRINT("Privilege not held\n");
         return STATUS_PRIVILEGE_NOT_HELD;
     }
-#endif
 
     Status = ProbeAndCaptureUnicodeString(&CapturedDriverServiceName,
                                           PreviousMode,
