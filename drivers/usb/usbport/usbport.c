@@ -2711,7 +2711,7 @@ USBPORT_Dispatch(IN PDEVICE_OBJECT DeviceObject,
                        IoStack->MajorFunction,
                        IoStack->MinorFunction);
 
-                Irp->IoStatus.Status = Status;
+                Status = Irp->IoStatus.Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
             }
             else
