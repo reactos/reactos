@@ -1252,6 +1252,7 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
 
         if (Endpoint->StateLast == USBPORT_ENDPOINT_ACTIVE)
         {
+            KeReleaseSpinLockFromDpcLevel(&Endpoint->StateChangeSpinLock);
             KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
 
             Packet->SetEndpointState(FdoExtension->MiniPortExt,
@@ -1260,8 +1261,11 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
 
             KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
         }
+        else
+        {
+            KeReleaseSpinLockFromDpcLevel(&Endpoint->StateChangeSpinLock);
+        }
 
-        KeReleaseSpinLockFromDpcLevel(&Endpoint->StateChangeSpinLock);
         KeReleaseSpinLock(&Endpoint->EndpointSpinLock, Endpoint->EndpointOldIrql);
     }
 
