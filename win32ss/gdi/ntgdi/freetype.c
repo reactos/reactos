@@ -50,16 +50,6 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
 FT_Library  g_FreeTypeLibrary;
 
-typedef struct
-{
-    FT_Int major;
-    FT_Int minor;
-    FT_Int patch;
-} FT_Version_t;
-static FT_Version_t FT_Version;
-static DWORD FT_SimpleVersion;
-#define FT_VERSION_VALUE(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
-
 /* special font names */
 static const UNICODE_STRING g_MarlettW = RTL_CONSTANT_STRING(L"Marlett");
 
@@ -650,13 +640,6 @@ InitFontSupport(VOID)
         DPRINT1("FT_Init_FreeType failed with error code 0x%x\n", ulError);
         return FALSE;
     }
-
-    FT_Library_Version(g_FreeTypeLibrary,&FT_Version.major,&FT_Version.minor,&FT_Version.patch);
-
-    DPRINT1("FreeType version is %d.%d.%d\n",FT_Version.major,FT_Version.minor,FT_Version.patch);
-    FT_SimpleVersion = ((FT_Version.major << 16) & 0xff0000) |
-                       ((FT_Version.minor <<  8) & 0x00ff00) |
-                       ((FT_Version.patch      ) & 0x0000ff);
 
     IntLoadSystemFonts();
     IntLoadFontSubstList(&g_FontSubstListHead);
@@ -1655,40 +1638,10 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
     } while (Entry);
 }
 
-static BOOL is_hinting_enabled(void)
-{
-    static int enabled = -1;
-
-    if (enabled == -1)
-    {
-        /* Use the >= 2.2.0 function if available */
-        FT_TrueTypeEngineType type = FT_Get_TrueType_Engine_Type(g_FreeTypeLibrary);
-        enabled = (type == FT_TRUETYPE_ENGINE_TYPE_PATENTED);
-
-        DPRINT1("hinting is %senabled\n", enabled ? "" : "NOT ");
-    }
-    return enabled;
-}
-
-static BOOL is_subpixel_rendering_enabled( void )
-{
-    static int enabled = -1;
-    if (enabled == -1)
-    {
-        /* FreeType >= 2.8.1 offers LCD-optimezed rendering without lcd filters. */
-        if (FT_SimpleVersion >= FT_VERSION_VALUE(2, 8, 1))
-            enabled = TRUE;
-        else enabled = FALSE;
-
-        DPRINT1("subpixel rendering is %senabled\n", enabled ? "" : "NOT ");
-    }
-    return enabled;
-}
-
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
 {
-    return is_hinting_enabled() && is_subpixel_rendering_enabled() && g_RenderingEnabled;
+    return (gpsi->BitsPixel > 8) && g_RenderingEnabled;
 }
 
 VOID FASTCALL
@@ -5616,7 +5569,6 @@ IntExtTextOutW(
                               String,
                               Count,
                               (const INT *)Dx);
-        DC_UnlockDc(dc);
         return bResult;
     }
 
