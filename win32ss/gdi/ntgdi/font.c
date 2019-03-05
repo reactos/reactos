@@ -410,7 +410,7 @@ IntGetFontLanguageInfo(PDC Dc)
   pdcattr = Dc->pdcattr;
 
   /* This might need a test for a HEBREW- or ARABIC_CHARSET as well */
-  if ( pdcattr->lTextAlign & TA_RTLREADING )
+  if ( pdcattr->flTextAlign & TA_RTLREADING )
      if( (fontsig.fsCsb[0]&GCP_REORDER_MASK)!=0 )
                     result|=GCP_REORDER;
 

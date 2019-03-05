@@ -50,6 +50,16 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
 FT_Library  g_FreeTypeLibrary;
 
+typedef struct
+{
+    FT_Int major;
+    FT_Int minor;
+    FT_Int patch;
+} FT_Version_t;
+static FT_Version_t FT_Version;
+static DWORD FT_SimpleVersion;
+#define FT_VERSION_VALUE(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
+
 /* special font names */
 static const UNICODE_STRING g_MarlettW = RTL_CONSTANT_STRING(L"Marlett");
 
@@ -640,6 +650,13 @@ InitFontSupport(VOID)
         DPRINT1("FT_Init_FreeType failed with error code 0x%x\n", ulError);
         return FALSE;
     }
+
+    FT_Library_Version(g_FreeTypeLibrary,&FT_Version.major,&FT_Version.minor,&FT_Version.patch);
+
+    DPRINT1("FreeType version is %d.%d.%d\n",FT_Version.major,FT_Version.minor,FT_Version.patch);
+    FT_SimpleVersion = ((FT_Version.major << 16) & 0xff0000) |
+                       ((FT_Version.minor <<  8) & 0x00ff00) |
+                       ((FT_Version.patch      ) & 0x0000ff);
 
     IntLoadSystemFonts();
     IntLoadFontSubstList(&g_FontSubstListHead);
@@ -1638,17 +1655,40 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
     } while (Entry);
 }
 
+static BOOL is_hinting_enabled(void)
+{
+    static int enabled = -1;
+
+    if (enabled == -1)
+    {
+        /* Use the >= 2.2.0 function if available */
+        FT_TrueTypeEngineType type = FT_Get_TrueType_Engine_Type(g_FreeTypeLibrary);
+        enabled = (type == FT_TRUETYPE_ENGINE_TYPE_PATENTED);
+
+        DPRINT1("hinting is %senabled\n", enabled ? "" : "NOT ");
+    }
+    return enabled;
+}
+
+static BOOL is_subpixel_rendering_enabled( void )
+{
+    static int enabled = -1;
+    if (enabled == -1)
+    {
+        /* FreeType >= 2.8.1 offers LCD-optimezed rendering without lcd filters. */
+        if (FT_SimpleVersion >= FT_VERSION_VALUE(2, 8, 1))
+            enabled = TRUE;
+        else enabled = FALSE;
+
+        DPRINT1("subpixel rendering is %senabled\n", enabled ? "" : "NOT ");
+    }
+    return enabled;
+}
+
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
 {
-    BOOL Ret = g_RenderingEnabled;
-    HDC hDC;
-
-    hDC = IntGetScreenDC();
-    if (hDC)
-        Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && g_RenderingEnabled;
-
-    return Ret;
+    return is_hinting_enabled() && is_subpixel_rendering_enabled() && g_RenderingEnabled;
 }
 
 VOID FASTCALL
@@ -5506,8 +5546,8 @@ IntNormalizeAngle(LONG nTenthAngle)
 
 BOOL
 APIENTRY
-GreExtTextOutW(
-    IN HDC hDC,
+IntExtTextOutW(
+    IN PDC dc,
     IN INT XStart,
     IN INT YStart,
     IN UINT fuOptions,
@@ -5523,7 +5563,6 @@ GreExtTextOutW(
      * appropriate)
      */
 
-    DC *dc;
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj;
     SURFACE *psurf = NULL;
@@ -5565,18 +5604,7 @@ GreExtTextOutW(
         return FALSE;
     }
 
-    /* NOTE: This function locks the screen DC, so it must never be called
-       with a DC already locked */
     Render = IntIsFontRenderingEnabled();
-
-    // TODO: Write test-cases to exactly match real Windows in different
-    // bad parameters (e.g. does Windows check the DC or the RECT first?).
-    dc = DC_LockDc(hDC);
-    if (!dc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -5608,7 +5636,7 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP)
+    if (pdcattr->flTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
@@ -5743,7 +5771,7 @@ GreExtTextOutW(
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
     if ((fuOptions & ETO_OPAQUE) ||
-        (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)) ||
+        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)) ||
         memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
         plf->lfUnderline || plf->lfStrikeOut)
     {
@@ -5813,12 +5841,12 @@ GreExtTextOutW(
     }
 
     // Process the X and Y alignments.
-    if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+    if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
     {
         XStart64 = -DeltaX64 / 2;
         YStart64 = -DeltaY64 / 2;
     }
-    else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
+    else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
     {
         XStart64 = -DeltaX64;
         YStart64 = -DeltaY64;
@@ -5849,13 +5877,13 @@ GreExtTextOutW(
     /* Process the vertical alignment */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
     RtlZeroMemory(vecs, sizeof(vecs));
-    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
+    if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
     {
         vecs[1].y = -FontGDI->tmAscent << 16;   // upper left
         vecs[4].y = 0;                          // baseline
         vecs[0].y = FontGDI->tmDescent << 16;   // lower left
     }
-    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
+    else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
         vecs[1].y = -FontGDI->tmHeight << 16;   // upper left
         vecs[4].y = -FontGDI->tmDescent << 16;  // baseline
@@ -6236,7 +6264,7 @@ GreExtTextOutW(
             MouseSafetyOnDrawEnd(dc->ppdev);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP) {
+    if (pdcattr->flTextAlign & TA_UPDATECP) {
         pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
     }
 
@@ -6251,6 +6279,45 @@ Cleanup:
 
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
+
+    return bResult;
+}
+
+
+BOOL
+APIENTRY
+GreExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL PRECTL lprc,
+    IN LPCWSTR String,
+    IN INT Count,
+    IN OPTIONAL LPINT Dx,
+    IN DWORD dwCodePage)
+{
+    BOOL bResult;
+    DC *dc;
+
+    // TODO: Write test-cases to exactly match real Windows in different
+    // bad parameters (e.g. does Windows check the DC or the RECT first?).
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    bResult = IntExtTextOutW( dc,
+                              XStart,
+                              YStart,
+                              fuOptions,
+                              lprc,
+                              String,
+                              Count,
+                              Dx,
+                              dwCodePage );
 
     DC_UnlockDc(dc);
 
