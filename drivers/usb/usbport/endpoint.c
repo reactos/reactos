@@ -1186,13 +1186,15 @@ USBPORT_ReopenPipe(IN PDEVICE_OBJECT FdoDevice,
         USBPORT_Wait(FdoDevice, 1);
     }
 
-    KeAcquireSpinLock(&FdoExtension->MiniportSpinLock, &MiniportOldIrql);
+    KeAcquireSpinLock(&Endpoint->EndpointSpinLock, &Endpoint->EndpointOldIrql);
+    KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
 
     Packet->SetEndpointState(FdoExtension->MiniPortExt,
                              Endpoint + 1,
                              USBPORT_ENDPOINT_REMOVE);
 
-    KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, MiniportOldIrql);
+    KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
+    KeReleaseSpinLock(&Endpoint->EndpointSpinLock, Endpoint->EndpointOldIrql);
 
     USBPORT_Wait(FdoDevice, 2);
 
