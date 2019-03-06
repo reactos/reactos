@@ -301,7 +301,7 @@ FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
     if (!(plfont->fl & TEXTOBJECT_INIT))
     {
         NTSTATUS Status;
-        DPRINT1("FontGetObject font not initialized!\n");
+        DPRINT("FontGetObject font not initialized!\n");
 
         Status = TextIntRealizeFont(plfont->BaseObject.hHmgr, plfont);
         if (!NT_SUCCESS(Status))
