@@ -1070,6 +1070,30 @@ PDO_HandleInternalDeviceControl(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+PDO_HandlePower(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (IoStack->MinorFunction)
+    {
+        case IRP_MN_SET_POWER:
+        case IRP_MN_QUERY_POWER:
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+    }
+
+    Status = Irp->IoStatus.Status;
+    PoStartNextPowerIrp(Irp);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
 
 NTSTATUS
 PDO_Dispatch(
@@ -1089,10 +1113,7 @@ PDO_Dispatch(
         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
             return PDO_HandleInternalDeviceControl(DeviceObject, Irp);
         case IRP_MJ_POWER:
-            PoStartNextPowerIrp(Irp);
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_SUCCESS;
+            return PDO_HandlePower(DeviceObject, Irp);
         default:
             DPRINT1("PDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             Status = Irp->IoStatus.Status;
