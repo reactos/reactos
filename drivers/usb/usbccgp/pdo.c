@@ -21,13 +21,31 @@ USBCCGP_PdoHandleQueryDeviceText(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     LPWSTR Buffer;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     LPWSTR GenericString = L"Composite USB Device";
+
+    //
+    // get current irp stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     //
     // get device extension
     //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // check if type is description
+    //
+    if (IoStack->Parameters.QueryDeviceText.DeviceTextType != DeviceTextDescription)
+    {
+        //
+        // we only handle description
+        //
+        return Irp->IoStatus.Status;
+    }
 
     //
     // is there a device description
