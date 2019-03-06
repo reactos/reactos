@@ -36,10 +36,10 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
 \n\
     Non ci sono argomenti o/? Visualizza aiuti.\n\
-    /i      Mostra l'interfaccia utente grafica (GUI). Questa opzione deve essere la \n\
+    /i      Mostra l'interfaccia grafica (GUI). Questa opzione deve essere la \n\
             prima.\n\
     /l      Disconnessione dal sistema locale. Non può essere utilizzata con /m or /d.\n\
-    /s      Chiusura del computer.\n\
+    /s      Spegnimento del computer.\n\
     /r      Riavvio del computer.\n\
     /g      Riavvio del computer e riavvio di tutte le applicazioni registrate.\n\
     /a      cancellare un arresto ritardato. Può essere utilizzato solo durante il periodo\n\
@@ -54,10 +54,10 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             30 è il valore di default.\n\
     /c ""comment"" Commento sul motivo per cui spegnere o riavviare.\n\
             512 caratteri massimi consentiti.\n\
-    /f      Forzare la chiusura delle applicazioni in esecuzione senza che avvertire gli utenti. Se\n\
-            non è specificato un'altro parametro, questa opzione è valida anche per la disconnessione.\n\
-    /d [p|u:]xx:yy  Indicare il codice motivo per l'arresto o il riavvio.\n\
-            p indica che l'arresto o il riavvio è previsto.\n\
+    /f      Forzare la chiusura delle applicazioni in esecuzione senza avvertire gli utenti. Se\n\
+            non è specificato un altro parametro, questa opzione è valida anche per la disconnessione.\n\
+    /d [p|u:]xx:yy  Indicare il codice del motivo per cui s'intende effettuare l'arresto o il riavvio.\n\
+            p indica che è previsto l'arresto o il riavvio.\n\
             u indica che il motivo è definito dall'utente.\n\
             Se nè p nè u vengono specificati, l'arresto o il riavvio non sono\n\
             pianificati.\n\
@@ -70,12 +70,12 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_LOGOFF "ERROR: Impossibile disconnettersi dal sistema \n"
     IDS_ERROR_SHUTDOWN "ERROR: Impossibile arrestare il sistema \n."
     IDS_ERROR_RESTART "ERROR: Impossibile riavviare il sistema \n."
-    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Lunghezza commento supera il limite massimo di caratteri impostato dal sistema \n"
-    IDS_ERROR_HIBERNATE "ERROR: Impossibile avviare il sistema in modalità di sospensione. \n"
-    IDS_ERROR_HIBERNATE_LOCAL "ERROR: Modalitài sospensione non può essere avviata in modalità remota \n"
-    IDS_ERROR_HIBERNATE_ENABLED "ERROR: Modalità di sospensione non è abilitata \n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: La lunghezza del commento supera il limite massimo di caratteri impostato dal sistema \n"
+    IDS_ERROR_HIBERNATE "ERROR: Impossibile avviare il sistema in modalità sospensione. \n"
+    IDS_ERROR_HIBERNATE_LOCAL "ERROR: La modalità sospensione non può essere avviata in modalità remota \n"
+    IDS_ERROR_HIBERNATE_ENABLED "ERROR: La modalità sospensione non è abilitata \n"
     IDS_ERROR_DIALOG_CAPTION "Arresto improviso"
-    IDS_ERROR_DIALOG_INIT "Impossibile visualizzare l'interfaccia utente grafica."
+    IDS_ERROR_DIALOG_INIT "Impossibile visualizzare l'interfaccia grafica."
 END
 
 /* Remote shutdown action strings */
@@ -83,7 +83,7 @@ STRINGTABLE
 BEGIN
     IDS_ACTION_SHUTDOWN "Esci dal sistema"
     IDS_ACTION_RESTART "Riavvia il sistema"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Arresto improviso"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Arresto improvviso"
 END
 
 /* Remote shutdown reason strings */
