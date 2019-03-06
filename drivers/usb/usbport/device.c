@@ -186,7 +186,7 @@ NTAPI
 USBPORT_ParseConfigurationDescriptor(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor,
                                      IN UCHAR InterfaceNumber,
                                      IN UCHAR Alternate,
-                                     OUT PUCHAR OutAlternate)
+                                     OUT PBOOLEAN HasAlternates)
 {
     PUSB_CONFIGURATION_DESCRIPTOR TmpDescriptor;
     PUSB_INTERFACE_DESCRIPTOR iDescriptor;
@@ -197,8 +197,8 @@ USBPORT_ParseConfigurationDescriptor(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc
 
     DPRINT("USBPORT_ParseConfigurationDescriptor ... \n");
 
-    if (OutAlternate)
-        *OutAlternate = 0;
+    if (HasAlternates)
+        *HasAlternates = FALSE;
 
     for (TmpDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)((ULONG_PTR)ConfigDescriptor + ConfigDescriptor->bLength);
          TmpDescriptor->bDescriptorType != USB_INTERFACE_DESCRIPTOR_TYPE && TmpDescriptor->bLength > 0;
@@ -235,8 +235,8 @@ USBPORT_ParseConfigurationDescriptor(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc
         ++ix;
     }
 
-    if ((ix > 1) && OutAlternate)
-        *OutAlternate = 1;
+    if ((ix > 1) && HasAlternates)
+        *HasAlternates = TRUE;
 
     return OutDescriptor;
 }
@@ -256,6 +256,7 @@ USBPORT_OpenInterface(IN PURB Urb,
     PUSBPORT_PIPE_HANDLE PipeHandle;
     PUSB_ENDPOINT_DESCRIPTOR Descriptor;
     PUSBD_PIPE_INFORMATION PipeInfo;
+    BOOLEAN HasAlternates;
     ULONG NumEndpoints;
     SIZE_T Length;
     SIZE_T HandleLength;
@@ -271,14 +272,14 @@ USBPORT_OpenInterface(IN PURB Urb,
     InterfaceDescriptor = USBPORT_ParseConfigurationDescriptor(ConfigHandle->ConfigurationDescriptor,
                                                                InterfaceInfo->InterfaceNumber,
                                                                InterfaceInfo->AlternateSetting,
-                                                               &InterfaceInfo->AlternateSetting);
+                                                               &HasAlternates);
 
     NumEndpoints = InterfaceDescriptor->bNumEndpoints;
 
     Length = FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) +
              NumEndpoints * sizeof(USBD_PIPE_INFORMATION);
 
-    if (InterfaceInfo->AlternateSetting && IsSetInterface)
+    if (HasAlternates && IsSetInterface)
     {
         DPRINT1("USBPORT_OpenInterface: InterfaceInfo->AlternateSetting && IsSetInterface !\n");
     }
@@ -491,7 +492,7 @@ USBPORT_InitInterfaceInfo(IN PUSBD_INTERFACE_INFORMATION InterfaceInfo,
     Descriptor = USBPORT_ParseConfigurationDescriptor(ConfigHandle->ConfigurationDescriptor,
                                                       InterfaceInfo->InterfaceNumber,
                                                       InterfaceInfo->AlternateSetting,
-                                                      &InterfaceInfo->AlternateSetting);
+                                                      NULL);
 
     Length = sizeof(USBD_INTERFACE_INFORMATION) +
              sizeof(USBD_PIPE_INFORMATION);
