@@ -4795,7 +4795,9 @@ USBH_PdoDispatch(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
         case IRP_MJ_SYSTEM_CONTROL:
             DPRINT1("USBH_PdoDispatch: USBH_SystemControl() UNIMPLEMENTED. FIXME\n");
-            Status = STATUS_NOT_SUPPORTED;//USBH_PortSystemControl(PortExtension, Irp);
+            //USBH_PortSystemControl(PortExtension, Irp);
+            Status = Irp->IoStatus.Status;
+            USBH_CompleteIrp(Irp, Status);
             break;
 
         default:
