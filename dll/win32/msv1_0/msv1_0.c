@@ -94,7 +94,7 @@ static
 NTSTATUS
 BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                               IN PSAMPR_USER_INFO_BUFFER UserInfo,
-                              IN PUNICODE_STRING LogonServer,
+                              IN PWSTR ComputerName,
                               OUT PMSV1_0_INTERACTIVE_PROFILE *ProfileBuffer,
                               OUT PULONG ProfileBufferLength)
 {
@@ -113,7 +113,7 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                    UserInfo->All.HomeDirectoryDrive.Length + sizeof(WCHAR) +
                    UserInfo->All.ScriptPath.Length + sizeof(WCHAR) +
                    UserInfo->All.ProfilePath.Length + sizeof(WCHAR) +
-                   LogonServer->Length + sizeof(WCHAR);
+                   ((wcslen(ComputerName) + 3) * sizeof(WCHAR));
 
     LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
     if (LocalBuffer == NULL)
@@ -204,12 +204,11 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->HomeDirectoryDrive.MaximumLength);
 
-    LocalBuffer->LogonServer.Length = LogonServer->Length;
-    LocalBuffer->LogonServer.MaximumLength = LogonServer->Length + sizeof(WCHAR);
+    LocalBuffer->LogonServer.Length = (wcslen(ComputerName) + 2) * sizeof(WCHAR);
+    LocalBuffer->LogonServer.MaximumLength = LocalBuffer->LogonServer.Length + sizeof(WCHAR);
     LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
-    memcpy(Ptr,
-           LogonServer->Buffer,
-           LogonServer->Length);
+    wcscpy(Ptr, L"\\");
+    wcscat(Ptr, ComputerName);
 
     LocalBuffer->UserFlags = 0;
 
@@ -844,6 +843,73 @@ done:
 }
 
 
+static
+BOOL
+MsvpCheckLogonHours(
+    _In_ PSAMPR_LOGON_HOURS LogonHours,
+    _In_ PLARGE_INTEGER LogonTime)
+{
+    LARGE_INTEGER LocalLogonTime;
+    TIME_FIELDS TimeFields;
+    USHORT MinutesPerUnit, Offset;
+
+    TRACE("MsvpCheckLogonHours(%p %p)\n", LogonHours, LogonTime);
+
+    if (LogonHours->UnitsPerWeek == 0 || LogonHours->LogonHours == NULL)
+        return TRUE;
+
+    RtlSystemTimeToLocalTime(LogonTime, &LocalLogonTime);
+    RtlTimeToTimeFields(&LocalLogonTime, &TimeFields);
+
+    TRACE("UnitsPerWeek: %u\n", LogonHours->UnitsPerWeek);
+    MinutesPerUnit = 10080 / LogonHours->UnitsPerWeek;
+
+    Offset = ((TimeFields.Weekday * 24 + TimeFields.Hour) * 60 + TimeFields.Minute) / MinutesPerUnit;
+
+    return (BOOL)(LogonHours->LogonHours[Offset / 8] & (1 << (Offset % 8)));
+}
+
+
+static
+BOOL
+MsvpCheckWorkstations(
+    _In_ PRPC_UNICODE_STRING WorkStations,
+    _In_ PWSTR ComputerName)
+{
+    PWSTR pStart, pEnd;
+    BOOL bFound = FALSE;
+
+    TRACE("MsvpCheckWorkstations(%wZ %S)\n", WorkStations, ComputerName);
+
+    if (WorkStations->Length == 0 || WorkStations->Buffer == NULL)
+        return TRUE;
+
+    pStart = WorkStations->Buffer;
+    for (;;)
+    {
+        pEnd = wcschr(pStart, L',');
+        if (pEnd != NULL)
+            *pEnd = UNICODE_NULL;
+
+        if (_wcsicmp(ComputerName, pStart) == 0)
+        {
+            bFound = TRUE;
+            if (pEnd != NULL)
+                *pEnd = L',';
+            break;
+        }
+
+        if (pEnd == NULL)
+            break;
+
+        *pEnd = L',';
+        pStart = pEnd + 1;
+    }
+
+    return bFound;
+}
+
+
 /*
  * @unimplemented
  */
@@ -860,7 +926,7 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
     ULONG MessageType;
     NTSTATUS Status;
 
-    TRACE("()\n");
+    TRACE("LsaApCallPackage()\n");
 
     if (SubmitBufferLength < sizeof(MSV1_0_PROTOCOL_MESSAGE_TYPE))
         return STATUS_INVALID_PARAMETER;
@@ -920,7 +986,7 @@ LsaApCallPackagePassthrough(IN PLSA_CLIENT_REQUEST ClientRequest,
                             OUT PULONG ReturnBufferLength,
                             OUT PNTSTATUS ProtocolStatus)
 {
-    TRACE("()\n");
+    TRACE("LsaApCallPackagePassthrough()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -938,13 +1004,13 @@ LsaApCallPackageUntrusted(IN PLSA_CLIENT_REQUEST ClientRequest,
                           OUT PULONG ReturnBufferLength,
                           OUT PNTSTATUS ProtocolStatus)
 {
-    TRACE("()\n");
+    TRACE("LsaApCallPackageUntrusted()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -957,7 +1023,7 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     PANSI_STRING NameString;
     PCHAR NameBuffer;
 
-    TRACE("(%lu %p %p %p %p)\n",
+    TRACE("LsaApInitializePackage(%lu %p %p %p %p)\n",
           AuthenticationPackageId, LsaDispatchTable, Database,
           Confidentiality, AuthenticationPackageName);
 
@@ -1003,31 +1069,34 @@ VOID
 NTAPI
 LsaApLogonTerminated(IN PLUID LogonId)
 {
-    TRACE("()\n");
+    TRACE("LsaApLogonTerminated()\n");
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
-               IN SECURITY_LOGON_TYPE LogonType,
-               IN PVOID AuthenticationInformation,
-               IN PVOID ClientAuthenticationBase,
-               IN ULONG AuthenticationInformationLength,
-               OUT PVOID *ProfileBuffer,
-               OUT PULONG ProfileBufferLength,
-               OUT PLUID LogonId,
-               OUT PNTSTATUS SubStatus,
-               OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-               OUT PVOID *TokenInformation,
-               OUT PLSA_UNICODE_STRING *AccountName,
-               OUT PLSA_UNICODE_STRING *AuthenticatingAuthority)
+LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
+                  IN SECURITY_LOGON_TYPE LogonType,
+                  IN PVOID ProtocolSubmitBuffer,
+                  IN PVOID ClientBufferBase,
+                  IN ULONG SubmitBufferSize,
+                  OUT PVOID *ProfileBuffer,
+                  OUT PULONG ProfileBufferSize,
+                  OUT PLUID LogonId,
+                  OUT PNTSTATUS SubStatus,
+                  OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+                  OUT PVOID *TokenInformation,
+                  OUT PUNICODE_STRING *AccountName,
+                  OUT PUNICODE_STRING *AuthenticatingAuthority,
+                  OUT PUNICODE_STRING *MachineName,
+                  OUT PSECPKG_PRIMARY_CRED PrimaryCredentials, /* Not supported yet */
+                  OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials) /* Not supported yet */
 {
     PMSV1_0_INTERACTIVE_LOGON LogonInfo;
-
+    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     SAMPR_HANDLE ServerHandle = NULL;
     SAMPR_HANDLE DomainHandle = NULL;
     SAMPR_HANDLE UserHandle = NULL;
@@ -1036,24 +1105,26 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
     SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
-    UNICODE_STRING LogonServer;
     BOOLEAN SessionCreated = FALSE;
     LARGE_INTEGER LogonTime;
     LARGE_INTEGER AccountExpires;
     LARGE_INTEGER PasswordMustChange;
     LARGE_INTEGER PasswordLastSet;
+    DWORD ComputerNameSize;
     BOOL SpecialAccount = FALSE;
     NTSTATUS Status;
 
     TRACE("LsaApLogonUser()\n");
 
     TRACE("LogonType: %lu\n", LogonType);
-    TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
-    TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
+    TRACE("ProtocolSubmitBuffer: %p\n", ProtocolSubmitBuffer);
+    TRACE("SubmitBufferSize: %lu\n", SubmitBufferSize);
 
     *ProfileBuffer = NULL;
-    *ProfileBufferLength = 0;
+    *ProfileBufferSize = 0;
     *SubStatus = STATUS_SUCCESS;
+    *AccountName = NULL;
+    *AuthenticatingAuthority = NULL;
 
     if (LogonType == Interactive ||
         LogonType == Batch ||
@@ -1061,10 +1132,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     {
         ULONG_PTR PtrOffset;
 
-        LogonInfo = (PMSV1_0_INTERACTIVE_LOGON)AuthenticationInformation;
+        LogonInfo = (PMSV1_0_INTERACTIVE_LOGON)ProtocolSubmitBuffer;
 
         /* Fix-up pointers in the authentication info */
-        PtrOffset = (ULONG_PTR)AuthenticationInformation - (ULONG_PTR)ClientAuthenticationBase;
+        PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
 
         LogonInfo->LogonDomainName.Buffer = FIXUP_POINTER(LogonInfo->LogonDomainName.Buffer, PtrOffset);
         LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
@@ -1073,8 +1144,6 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
         TRACE("User: %S\n", LogonInfo->UserName.Buffer);
         TRACE("Password: %S\n", LogonInfo->Password.Buffer);
-
-        RtlInitUnicodeString(&LogonServer, L"Testserver");
     }
     else
     {
@@ -1084,6 +1153,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     /* Get the logon time */
     NtQuerySystemTime(&LogonTime);
+
+    /* Get the computer name */
+    ComputerNameSize = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameW(ComputerName, &ComputerNameSize);
 
     /* Check for special accounts */
     if (_wcsicmp(LogonInfo->LogonDomainName.Buffer, L"NT AUTHORITY") == 0)
@@ -1286,9 +1359,23 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
                 goto done;
             }
 
-            /* FIXME: more checks */
-            // STATUS_INVALID_LOGON_HOURS;
-            // STATUS_INVALID_WORKSTATION;
+            /* Check logon hours */
+            if (!MsvpCheckLogonHours(&UserInfo->All.LogonHours, &LogonTime))
+            {
+                ERR("Invalid logon hours!\n");
+                *SubStatus = STATUS_INVALID_LOGON_HOURS;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
+
+            /* Check workstations */
+            if (!MsvpCheckWorkstations(&UserInfo->All.WorkStations, ComputerName))
+            {
+                ERR("Invalid workstation!\n");
+                *SubStatus = STATUS_INVALID_WORKSTATION;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
         }
     }
 
@@ -1315,9 +1402,9 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Build and fill the interactive profile buffer */
     Status = BuildInteractiveProfileBuffer(ClientRequest,
                                            UserInfo,
-                                           &LogonServer,
+                                           ComputerName,
                                            (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
-                                           ProfileBufferLength);
+                                           ProfileBufferSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
@@ -1371,6 +1458,33 @@ done:
         }
     }
 
+    /* Return the authenticating authority */
+    *AuthenticatingAuthority = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+    if (*AuthenticatingAuthority != NULL)
+    {
+        (*AuthenticatingAuthority)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->LogonDomainName.Length +
+                                                                           sizeof(UNICODE_NULL));
+        if ((*AuthenticatingAuthority)->Buffer != NULL)
+        {
+            (*AuthenticatingAuthority)->MaximumLength = LogonInfo->LogonDomainName.Length +
+                                                        sizeof(UNICODE_NULL);
+            RtlCopyUnicodeString(*AuthenticatingAuthority, &LogonInfo->LogonDomainName);
+        }
+    }
+
+    /* Return the machine name */
+    *MachineName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+    if (*MachineName != NULL)
+    {
+        (*MachineName)->Buffer = DispatchTable.AllocateLsaHeap((ComputerNameSize + 1) * sizeof(WCHAR));
+        if ((*MachineName)->Buffer != NULL)
+        {
+            (*MachineName)->MaximumLength = (ComputerNameSize + 1) * sizeof(WCHAR);
+            (*MachineName)->Length = ComputerNameSize * sizeof(WCHAR);
+            RtlCopyMemory((*MachineName)->Buffer, ComputerName, (*MachineName)->MaximumLength);
+        }
+    }
+
     if (!NT_SUCCESS(Status))
     {
         if (SessionCreated != FALSE)
@@ -1412,70 +1526,5 @@ done:
 
     return Status;
 }
-
-
-/*
- * @unimplemented
- */
-#if 0
-NTSTATUS
-NTAPI
-LsaApLogonUserEx(IN PLSA_CLIENT_REQUEST ClientRequest,
-                 IN SECURITY_LOGON_TYPE LogonType,
-                 IN PVOID AuthenticationInformation,
-                 IN PVOID ClientAuthenticationBase,
-                 IN ULONG AuthenticationInformationLength,
-                 OUT PVOID *ProfileBuffer,
-                 OUT PULONG ProfileBufferLength,
-                 OUT PLUID LogonId,
-                 OUT PNTSTATUS SubStatus,
-                 OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-                 OUT PVOID *TokenInformation,
-                 OUT PUNICODE_STRING *AccountName,
-                 OUT PUNICODE_STRING *AuthenticatingAuthority,
-                 OUT PUNICODE_STRING *MachineName)
-{
-    TRACE("()\n");
-
-    TRACE("LogonType: %lu\n", LogonType);
-    TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
-    TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
-                  IN SECURITY_LOGON_TYPE LogonType,
-                  IN PVOID ProtocolSubmitBuffer,
-                  IN PVOID ClientBufferBase,
-                  IN ULONG SubmitBufferSize,
-                  OUT PVOID *ProfileBuffer,
-                  OUT PULONG ProfileBufferSize,
-                  OUT PLUID LogonId,
-                  OUT PNTSTATUS SubStatus,
-                  OUT PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-                  OUT PVOID *TokenInformation,
-                  OUT PUNICODE_STRING *AccountName,
-                  OUT PUNICODE_STRING *AuthenticatingAuthority,
-                  OUT PUNICODE_STRING *MachineName,
-                  OUT PSECPKG_PRIMARY_CRED PrimaryCredentials,
-                  OUT PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials)
-{
-    TRACE("()\n");
-
-    TRACE("LogonType: %lu\n", LogonType);
-    TRACE("ProtocolSubmitBuffer: %p\n", ProtocolSubmitBuffer);
-    TRACE("SubmitBufferSize: %lu\n", SubmitBufferSize);
-
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-#endif
 
 /* EOF */

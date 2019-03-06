@@ -3,7 +3,7 @@
  * (NT uses Unicode strings, 95 uses ASCII strings)
  *
  * Copyright 1997 Marcus Meissner
- *           1998 Jürgen Schmied
+ *           1998 JÃ¼rgen Schmied
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1301,80 +1301,6 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 }
 
 /*************************************************************************
- * IsUserAnAdmin    [SHELL32.680] NT 4.0
- *
- * Checks whether the current user is a member of the Administrators group.
- *
- * PARAMS
- *     None
- *
- * RETURNS
- *     Success: TRUE
- *     Failure: FALSE
- */
-BOOL WINAPI IsUserAnAdmin(VOID)
-{
-    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
-    HANDLE hToken;
-    DWORD dwSize;
-    PTOKEN_GROUPS lpGroups;
-    PSID lpSid;
-    DWORD i;
-    BOOL bResult = FALSE;
-
-    TRACE("\n");
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-    {
-        return FALSE;
-    }
-
-    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
-    {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            CloseHandle(hToken);
-            return FALSE;
-        }
-    }
-
-    lpGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (lpGroups == NULL)
-    {
-        CloseHandle(hToken);
-        return FALSE;
-    }
-
-    if (!GetTokenInformation(hToken, TokenGroups, lpGroups, dwSize, &dwSize))
-    {
-        HeapFree(GetProcessHeap(), 0, lpGroups);
-        CloseHandle(hToken);
-        return FALSE;
-    }
-
-    CloseHandle(hToken);
-    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
-                                  &lpSid))
-    {
-        HeapFree(GetProcessHeap(), 0, lpGroups);
-        return FALSE;
-    }
-
-    for (i = 0; i < lpGroups->GroupCount; i++)
-    {
-        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
-        {
-            bResult = TRUE;
-            break;
-        }
-    }
-
-    FreeSid(lpSid);
-    HeapFree(GetProcessHeap(), 0, lpGroups);
-    return bResult;
-}
-
-/*************************************************************************
  * SetAppStartingCursor				[SHELL32.99]
  */
 HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
@@ -2149,3 +2075,70 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 	return hRes;
 }
 #endif
+
+
+/*************************************************************************
+ * SHTestTokenMembership    [SHELL32.245]
+ *
+ * Checks whether a given token is a mamber of a local group with the
+ * specified RID.
+ *
+ */
+EXTERN_C BOOL
+WINAPI
+SHTestTokenMembership(HANDLE TokenHandle, ULONG ulRID)
+{
+    SID_IDENTIFIER_AUTHORITY ntAuth = {SECURITY_NT_AUTHORITY};
+    DWORD nSubAuthority0, nSubAuthority1;
+    DWORD nSubAuthorityCount;
+    PSID SidToCheck;
+    BOOL IsMember = FALSE;
+
+    if ((ulRID == SECURITY_SERVICE_RID) || ulRID == SECURITY_LOCAL_SYSTEM_RID)
+    {
+        nSubAuthority0 = ulRID;
+        nSubAuthority1 = 0;
+        nSubAuthorityCount= 1;
+    }
+    else
+    {
+        nSubAuthority0 = SECURITY_BUILTIN_DOMAIN_RID;
+        nSubAuthority1 = ulRID;
+        nSubAuthorityCount= 2;
+    }
+
+    if (!AllocateAndInitializeSid(&ntAuth,
+                                  nSubAuthorityCount,
+                                  nSubAuthority0,
+                                  nSubAuthority1,
+                                  0, 0, 0, 0, 0, 0,
+                                  &SidToCheck))
+    {
+        return FALSE;
+    }
+
+    if (!CheckTokenMembership(TokenHandle, SidToCheck, &IsMember))
+    {
+        IsMember = FALSE;
+    }
+
+    FreeSid(SidToCheck);
+    return IsMember;
+}
+
+/*************************************************************************
+ * IsUserAnAdmin    [SHELL32.680] NT 4.0
+ *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
+BOOL WINAPI IsUserAnAdmin(VOID)
+{
+    return SHTestTokenMembership(NULL, DOMAIN_ALIAS_RID_ADMINS);
+}

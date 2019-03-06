@@ -1,33 +1,18 @@
-/* Math functions for i387.
-   Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
-   This file is part of the GNU C Library.
-   Contributed by John C. Bowman <bowman@ipp-garching.mpg.de>, 1995.
-
-   The GNU C Library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library; if not, write to the Free
-   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.
-*/
+/*
+ * PROJECT:     ReactOS CRT
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Implements the ldexp CRT function for IA-32 with Windows-compatible error codes.
+ * COPYRIGHT:   Copyright 2010 Timo Kreuzer (timo.kreuzer@reactos.org)
+ *              Copyright 2011 Pierre Schweitzer (pierre@reactos.org)
+ *              Copyright 2019 Colin Finck (colin@reactos.org)
+ */
 
 #include <precomp.h>
-#include <math.h>
-#include <float.h>
 
 double ldexp (double value, int exp)
 {
+#ifdef __GNUC__
     register double result;
-#ifndef __GNUC__
-    register double __dy = (double)exp;
 #endif
 
     /* Check for value correctness
@@ -43,15 +28,19 @@ double ldexp (double value, int exp)
          : "=t" (result)
          : "0" (value), "u" ((double)exp)
          : "1");
+    return result;
 #else /* !__GNUC__ */
     __asm
     {
-        fld __dy
+        fild exp
         fld value
         fscale
-        fstp result
+        fstp st(1)
     }
-#endif /* !__GNUC__ */
-    return result;
-}
 
+    /* "fstp st(1)" has copied st(0) to st(1), then popped the FPU stack,
+     * so that the value is again in st(0) now. Effectively, we have reduced
+     * the FPU stack by one element while preserving st(0).
+     * st(0) is also the register used for returning a double value. */
+#endif /* !__GNUC__ */
+}

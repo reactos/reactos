@@ -1000,16 +1000,28 @@ MainWindowProc(HWND hwnd,
                             /* compute window id of line name static control */
                             CtrlID = LineOffset * IDC_LINE_NAME;
 
-                            /* get line name */
-                            if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                            if (Preferences.MixerWindow->Mixer->MixerId == PLAY_MIXER)
                             {
-                                /* setup context */
-                                Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-                                Context.bVertical = FALSE;
-                                Context.bSwitch = TRUE;
+                                /* get line name */
+                                if (GetDlgItemTextW(hwnd, CtrlID, Context.LineName, MIXER_LONG_NAME_CHARS) != 0)
+                                {
+                                    /* setup context */
+                                    Context.SliderPos = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+                                    Context.bVertical = FALSE;
+                                    Context.bSwitch = TRUE;
 
-                                /* set volume */
-                                SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                                    /* set volume */
+                                    SndMixerEnumConnections(Preferences.MixerWindow->Mixer, Preferences.SelectedLine, SetVolumeCallback, (LPVOID)&Context);
+                                }
+                            }
+                            else if (Preferences.MixerWindow->Mixer->MixerId == RECORD_MIXER)
+                            {
+                                UINT i;
+
+                                for (i = 0; i < Preferences.MixerWindow->DialogCount; i++)
+                                {
+                                    SendDlgItemMessageW(hwnd, (i + 1) * IDC_LINE_SWITCH, BM_SETCHECK, (WPARAM)((i + 1) == LineOffset), 0);
+                                }
                             }
                         }
                         else if (CtrlID % IDC_LINE_ADVANCED == 0)

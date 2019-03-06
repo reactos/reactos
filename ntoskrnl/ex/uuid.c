@@ -5,6 +5,7 @@
  * PURPOSE:         UUID generator
  * PROGRAMMERS:     Eric Kohl
  *                  Thomas Weidenmueller
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -25,74 +26,81 @@
 #define SECS_15_OCT_1582_TO_1601  ((17 + 30 + 31 + 365 * 18 + 5) * SECSPERDAY)
 #define TICKS_15_OCT_1582_TO_1601 ((ULONGLONG)SECS_15_OCT_1582_TO_1601 * TICKSPERSEC)
 
+/* 10000 in 100-ns model = 0,1 microsecond */
+#define TIME_FRAME 10000
+
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitUuids)
+#pragma alloc_text(INIT, ExpUuidInitialization)
+#pragma alloc_text(INIT, ExLuidInitialization)
 #endif
 
 
 /* GLOBALS ****************************************************************/
 
-static FAST_MUTEX UuidMutex;
-static ULARGE_INTEGER UuidLastTime;
-static ULONG UuidSequence;
-static BOOLEAN UuidSequenceInitialized = FALSE;
-static BOOLEAN UuidSequenceChanged = FALSE;
-static UCHAR UuidSeed[SEED_BUFFER_SIZE];
-static ULONG UuidCount;
-static LARGE_INTEGER LuidIncrement;
-static LARGE_INTEGER LuidValue;
+FAST_MUTEX ExpUuidLock;
+LARGE_INTEGER ExpUuidLastTimeAllocated;
+ULONG ExpUuidSequenceNumber = 0;
+BOOLEAN ExpUuidSequenceNumberValid;
+BOOLEAN ExpUuidSequenceNumberNotSaved = FALSE;
+UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, 0, 0, { 0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}};
+BOOLEAN ExpUuidCacheValid = FALSE;
+ULONG ExpLuidIncrement = 1;
+LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
+/*
+ * @implemented
+ */
+BOOLEAN
 INIT_FUNCTION
 NTAPI
-ExpInitUuids(VOID)
+ExpUuidInitialization(VOID)
 {
-    ExInitializeFastMutex(&UuidMutex);
+    ExInitializeFastMutex(&ExpUuidLock);
 
-    KeQuerySystemTime((PLARGE_INTEGER)&UuidLastTime);
-    UuidLastTime.QuadPart += TICKS_15_OCT_1582_TO_1601;
+    ExpUuidSequenceNumberValid = FALSE;
+    KeQuerySystemTime(&ExpUuidLastTimeAllocated);
 
-    UuidCount = TICKS_PER_CLOCK_TICK;
-    RtlZeroMemory(UuidSeed, SEED_BUFFER_SIZE);
+    return TRUE;
 }
 
 
-#define VALUE_BUFFER_SIZE 256
-
+/*
+ * @implemented
+ */
+#define VALUE_BUFFER_SIZE 20
 static NTSTATUS
-ExpLoadUuidSequence(PULONG Sequence)
+ExpUuidLoadSequenceNumber(PULONG Sequence)
 {
     UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name;
+    UNICODE_STRING KeyName, ValueName;
     HANDLE KeyHandle;
     ULONG ValueLength;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name,
-        L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    PAGED_CODE();
+
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    RtlInitUnicodeString(&ValueName, L"UuidSequenceNumber");
+
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
-    Status = ZwOpenKey(&KeyHandle,
-                       KEY_QUERY_VALUE,
-                       &ObjectAttributes);
+    Status = ZwOpenKey(&KeyHandle, GENERIC_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
         return Status;
     }
 
-    RtlInitUnicodeString(&Name, L"UuidSequenceNumber");
-
     ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
     Status = ZwQueryValueKey(KeyHandle,
-                             &Name,
+                             &ValueName,
                              KeyValuePartialInformation,
                              ValueBuffer,
                              VALUE_BUFFER_SIZE,
@@ -104,6 +112,11 @@ ExpLoadUuidSequence(PULONG Sequence)
         return Status;
     }
 
+    if (ValueInfo->Type != REG_DWORD || ValueInfo->DataLength != sizeof(DWORD))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
     *Sequence = *((PULONG)ValueInfo->Data);
 
     DPRINT("Loaded sequence %lx\n", *Sequence);
@@ -112,24 +125,29 @@ ExpLoadUuidSequence(PULONG Sequence)
 }
 #undef VALUE_BUFFER_SIZE
 
-
+/*
+ * @implemented
+ */
 static NTSTATUS
-ExpSaveUuidSequence(PULONG Sequence)
+ExpUuidSaveSequenceNumber(PULONG Sequence)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name;
+    UNICODE_STRING KeyName, ValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name,
-        L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    PAGED_CODE();
+
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    RtlInitUnicodeString(&ValueName, L"UuidSequenceNumber");
+
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&KeyHandle,
-                       KEY_SET_VALUE,
+                       GENERIC_READ | GENERIC_WRITE,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -137,9 +155,8 @@ ExpSaveUuidSequence(PULONG Sequence)
         return Status;
     }
 
-    RtlInitUnicodeString(&Name, L"UuidSequenceNumber");
     Status = ZwSetValueKey(KeyHandle,
-                           &Name,
+                           &ValueName,
                            0,
                            REG_DWORD,
                            Sequence,
@@ -153,98 +170,196 @@ ExpSaveUuidSequence(PULONG Sequence)
     return Status;
 }
 
-
+/*
+ * @implemented
+ * Warning! This function must be called
+ * with ExpUuidLock held!
+ */
 static VOID
-ExpGetRandomUuidSequence(PULONG Sequence)
+ExpUuidSaveSequenceNumberIf(VOID)
 {
-    LARGE_INTEGER Counter;
-    LARGE_INTEGER Frequency;
-    ULONG Value;
+    NTSTATUS Status;
 
-    Counter = KeQueryPerformanceCounter(&Frequency);
-    Value = Counter.u.LowPart ^ Counter.u.HighPart;
+    PAGED_CODE();
 
-    *Sequence = *Sequence ^ Value;
-
-    DPRINT("Sequence %lx\n", *Sequence);
-}
-
-
-static NTSTATUS
-ExpCreateUuids(PULARGE_INTEGER Time,
-               PULONG Range,
-               PULONG Sequence)
-{
-    /*
-    * Generate time element of the UUID. Account for going faster
-    * than our clock as well as the clock going backwards.
-    */
-    while (1)
+    /* Only save sequence if it has to */
+    if (ExpUuidSequenceNumberNotSaved == TRUE)
     {
-        KeQuerySystemTime((PLARGE_INTEGER)Time);
-        Time->QuadPart += TICKS_15_OCT_1582_TO_1601;
-
-        if (Time->QuadPart > UuidLastTime.QuadPart)
+        Status = ExpUuidSaveSequenceNumber(&ExpUuidSequenceNumber);
+        if (NT_SUCCESS(Status))
         {
-            UuidCount = 0;
-            break;
-        }
-
-        if (Time->QuadPart < UuidLastTime.QuadPart)
-        {
-            (*Sequence)++;
-            UuidSequenceChanged = TRUE;
-            UuidCount = 0;
-            break;
-        }
-
-        if (UuidCount < TICKS_PER_CLOCK_TICK)
-        {
-            UuidCount++;
-            break;
+            ExpUuidSequenceNumberNotSaved = FALSE;
         }
     }
+}
 
-    UuidLastTime.QuadPart = Time->QuadPart;
-    Time->QuadPart += UuidCount;
+/*
+ * @implemented
+ * Warning! This function must be called
+ * with ExpUuidLock held!
+ */
+static NTSTATUS
+ExpAllocateUuids(PULARGE_INTEGER Time,
+                 PULONG Range,
+                 PULONG Sequence)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER Counter, Frequency, CurrentTime, TimeDiff, ClockDiff;
 
-    *Range = 10000; /* What does this mean? Ticks per millisecond?*/
+    PAGED_CODE();
+
+    /* Initialize sequence number */
+    if (!ExpUuidSequenceNumberValid)
+    {
+        /* Try to load sequence number */
+        Status = ExpUuidLoadSequenceNumber(&ExpUuidSequenceNumber);
+        if (NT_SUCCESS(Status))
+        {
+            ++ExpUuidSequenceNumber;
+        }
+        else
+        {
+            /* If we cannot, generate a "true" random */
+            Counter = KeQueryPerformanceCounter(&Frequency);
+            ExpUuidSequenceNumber ^= (ULONG_PTR)&Status ^ (ULONG_PTR)Sequence ^ Counter.LowPart ^ Counter.HighPart;
+        }
+
+        /* It's valid and to be saved */
+        ExpUuidSequenceNumberValid = TRUE;
+        ExpUuidSequenceNumberNotSaved = TRUE;
+    }
+
+    KeQuerySystemTime(&CurrentTime);
+    TimeDiff.QuadPart = CurrentTime.QuadPart - ExpUuidLastTimeAllocated.QuadPart;
+    /* If time went backwards, change sequence (see RFC example) */
+    if (TimeDiff.QuadPart < 0)
+    {
+        ++ExpUuidSequenceNumber;
+        TimeDiff.QuadPart = 2 * TIME_FRAME;
+
+        /* It's to be saved */
+        ExpUuidSequenceNumberNotSaved = TRUE;
+        ExpUuidLastTimeAllocated.QuadPart = CurrentTime.QuadPart - 2 * TIME_FRAME;
+    }
+
+    if (TimeDiff.QuadPart == 0)
+    {
+        return STATUS_RETRY;
+    }
+
+    /* If time diff > 0,1ms, squash it to reduce it to keep our clock resolution */
+    if (TimeDiff.HighPart > 0 || TimeDiff.QuadPart > TICKS_PER_CLOCK_TICK * TIME_FRAME)
+    {
+        TimeDiff.QuadPart = TICKS_PER_CLOCK_TICK * TIME_FRAME;
+    }
+
+    if (TimeDiff.HighPart < 0 || TimeDiff.QuadPart <= TIME_FRAME)
+    {
+        *Range = TimeDiff.QuadPart;
+        ClockDiff.QuadPart = 0LL;
+    }
+    else
+    {
+        *Range = TIME_FRAME;
+        ClockDiff.QuadPart = TimeDiff.QuadPart - TIME_FRAME;
+        --ClockDiff.HighPart;
+    }
+
+    Time->QuadPart = CurrentTime.QuadPart - *Range - ClockDiff.QuadPart;
+    ExpUuidLastTimeAllocated.QuadPart = CurrentTime.QuadPart - ClockDiff.QuadPart;
+    *Sequence = ExpUuidSequenceNumber;
 
     return STATUS_SUCCESS;
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitLuid(VOID)
+/*
+ * @implemented
+ * Warning! This function must be called
+ * with ExpUuidLock held!
+ */
+static NTSTATUS
+ExpUuidGetValues(PUUID_CACHED_VALUES_STRUCT CachedValues)
 {
-    LUID DummyLuidValue = SYSTEM_LUID;
+    NTSTATUS Status;
+    ULARGE_INTEGER Time;
+    ULONG Range;
+    ULONG Sequence;
 
-    LuidValue.u.HighPart = DummyLuidValue.HighPart;
-    LuidValue.u.LowPart = DummyLuidValue.LowPart;
-    LuidIncrement.QuadPart = 1;
+    PAGED_CODE();
+
+    /* Allocate UUIDs */
+    Status = ExpAllocateUuids(&Time, &Range, &Sequence);
+    if (Status == STATUS_RETRY)
+    {
+        return Status;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* We need at least one UUID */
+    ASSERT(Range != 0);
+
+    /* Set up our internal cache
+     * See format_uuid_v1 in RFC4122 for magic values
+     */
+    CachedValues->ClockSeqLow = Sequence;
+    CachedValues->ClockSeqHiAndReserved = (Sequence & 0x3F00) >> 8;
+    CachedValues->ClockSeqHiAndReserved |= 0x80;
+    CachedValues->AllocatedCount = Range;
+
+    /*
+     * Time is relative to UUID time
+     * And we set last time range for all the possibly
+     * returnable UUID
+     */
+    Time.QuadPart += TICKS_15_OCT_1582_TO_1601;
+    CachedValues->Time = Time.QuadPart + (Range - 1);
+
+    return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+ExLuidInitialization(VOID)
+{
+    return TRUE;
+}
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 ExAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-    LARGE_INTEGER NewLuid, PrevLuid;
+    LARGE_INTEGER PrevLuid;
+    LONGLONG NewLuid, CompLuid;
 
-    /* atomically increment the luid */
-    do
+    /* Atomically increment the luid */
+    PrevLuid.QuadPart = ExpLuid.QuadPart;
+    for (NewLuid = ExpLuid.QuadPart + ExpLuidIncrement; ;
+         NewLuid = PrevLuid.QuadPart + ExpLuidIncrement)
     {
-        PrevLuid = LuidValue;
-        NewLuid = RtlLargeIntegerAdd(PrevLuid,
-                                     LuidIncrement);
-    } while(ExInterlockedCompareExchange64(&LuidValue.QuadPart,
-                                           &NewLuid.QuadPart,
-                                           &PrevLuid.QuadPart,
-                                           NULL) != PrevLuid.QuadPart);
+        CompLuid = InterlockedCompareExchange64(&ExpLuid.QuadPart,
+                                                NewLuid,
+                                                PrevLuid.QuadPart);
+        if (CompLuid == PrevLuid.QuadPart)
+        {
+            break;
+        }
 
-    LocallyUniqueId->LowPart = NewLuid.u.LowPart;
-    LocallyUniqueId->HighPart = NewLuid.u.HighPart;
+        PrevLuid.QuadPart = CompLuid;
+    }
+
+    LocallyUniqueId->LowPart = PrevLuid.LowPart;
+    LocallyUniqueId->HighPart = PrevLuid.HighPart;
 }
 
 
@@ -255,9 +370,7 @@ NTSTATUS
 NTAPI
 NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
-    LUID NewLuid;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status;
     PAGED_CODE();
 
     /* Probe if user mode */
@@ -278,35 +391,91 @@ NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
     }
 
     /* Do the allocation */
-    ExAllocateLocallyUniqueId(&NewLuid);
-    Status = STATUS_SUCCESS;
-
-    /* Write back LUID to caller */
-    _SEH2_TRY
-    {
-        *LocallyUniqueId = NewLuid;
-    }
-    _SEH2_EXCEPT(ExSystemExceptionFilter())
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    return Status;
+    ExAllocateLocallyUniqueId(LocallyUniqueId);
+    return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 ExUuidCreate(OUT UUID *Uuid)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    NTSTATUS Status;
+    LONG AllocatedCount;
+    LARGE_INTEGER Time;
+    BOOLEAN Valid;
+
+    PAGED_CODE();
+
+    Status = STATUS_SUCCESS;
+    /* Loop until we have an UUID to return */
+    while (TRUE)
+    {
+        /* Try to gather node values */
+        do
+        {
+            Time.QuadPart = ExpUuidCachedValues.Time;
+
+            RtlCopyMemory(&Uuid->Data4[0],
+                          &ExpUuidCachedValues.NodeId[0],
+                          SEED_BUFFER_SIZE);
+            Valid = ExpUuidCacheValid;
+            AllocatedCount = InterlockedDecrement(&ExpUuidCachedValues.AllocatedCount);
+        }
+        /* Loop till we can do it without being disturbed */
+        while (Time.QuadPart != ExpUuidCachedValues.Time);
+
+        /* We have more than an allocated UUID left, that's OK to return! */
+        if (AllocatedCount >= 0)
+        {
+            break;
+        }
+
+        /*
+         * Here, we're out of UUIDs, we need to allocate more
+         * We need to be alone to do it, so lock the mutex
+         */
+        ExAcquireFastMutex(&ExpUuidLock);
+        if (Time.QuadPart == ExpUuidCachedValues.Time)
+        {
+            /* If allocation fails, bail out! */
+            Status = ExpUuidGetValues(&ExpUuidCachedValues);
+            if (Status != STATUS_SUCCESS)
+            {
+                ExReleaseFastMutex(&ExpUuidLock);
+                return Status;
+            }
+
+            /* Save our current sequence if changed */
+            ExpUuidSaveSequenceNumberIf();
+        }
+        ExReleaseFastMutex(&ExpUuidLock);
+    }
+
+    /*
+     * Once here, we've got an UUID to return
+     * But, if our init wasn't sane, then, make
+     * sure it's only used locally
+     */
+    if (!Valid)
+    {
+        Status = RPC_NT_UUID_LOCAL_ONLY;
+    }
+
+    /* Set our timestamp - see RFC4211 */
+    Time.QuadPart -= AllocatedCount;
+    Uuid->Data1 = Time.LowPart;
+    Uuid->Data2 = Time.HighPart;
+    /* We also set the bit for GUIDv1 */
+    Uuid->Data3 = ((Time.HighPart >> 16) & 0x0FFF) | 0x1000;
+
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -316,7 +485,7 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
                 OUT PUCHAR Seed)
 {
     ULARGE_INTEGER IntTime;
-    ULONG IntRange;
+    ULONG IntRange, IntSequence;
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode;
 
@@ -351,51 +520,33 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
         _SEH2_END;
     }
 
-    ExAcquireFastMutex(&UuidMutex);
+    /* During allocation we must be alone */
+    ExAcquireFastMutex(&ExpUuidLock);
 
-    if (!UuidSequenceInitialized)
-    {
-        Status = ExpLoadUuidSequence(&UuidSequence);
-        if (NT_SUCCESS(Status))
-        {
-            UuidSequence++;
-        }
-        else
-        {
-            ExpGetRandomUuidSequence(&UuidSequence);
-        }
-
-        UuidSequenceInitialized = TRUE;
-        UuidSequenceChanged = TRUE;
-    }
-
-    Status = ExpCreateUuids(&IntTime,
-                            &IntRange,
-                            &UuidSequence);
+    Status = ExpAllocateUuids(&IntTime,
+                              &IntRange,
+                              &IntSequence);
     if (!NT_SUCCESS(Status))
     {
-        ExReleaseFastMutex(&UuidMutex);
+        ExReleaseFastMutex(&ExpUuidLock);
         return Status;
     }
 
-    if (UuidSequenceChanged)
-    {
-        Status = ExpSaveUuidSequence(&UuidSequence);
-        if (NT_SUCCESS(Status))
-            UuidSequenceChanged = FALSE;
-    }
+    /* If sequence number was changed, save it */
+    ExpUuidSaveSequenceNumberIf();
 
-    ExReleaseFastMutex(&UuidMutex);
+    /* Allocation done, so we can release */
+    ExReleaseFastMutex(&ExpUuidLock);
 
     /* Write back UUIDs to caller */
     _SEH2_TRY
     {
         Time->QuadPart = IntTime.QuadPart;
         *Range = IntRange;
-        *Sequence = UuidSequence;
+        *Sequence = IntSequence;
 
         RtlCopyMemory(Seed,
-                      UuidSeed,
+                      &ExpUuidCachedValues.NodeId[0],
                       SEED_BUFFER_SIZE);
 
         Status = STATUS_SUCCESS;
@@ -452,7 +603,15 @@ NtSetUuidSeed(IN PUCHAR Seed)
 
         /* Check for buffer validity and then copy it to our seed */
         ProbeForRead(Seed, SEED_BUFFER_SIZE, sizeof(UCHAR));
-        RtlCopyMemory(UuidSeed, Seed, SEED_BUFFER_SIZE);
+        RtlCopyMemory(&ExpUuidCachedValues.NodeId[0], Seed, SEED_BUFFER_SIZE);
+
+        /*
+         * According to RFC 4122, UUID seed is based on MAC addresses
+         * If it is randomly set, then, it must have its multicast be set
+         * to be valid and avoid collisions
+         * Reflect it here
+         */
+        ExpUuidCacheValid = ~(*Seed >> 7) & 1;
 
         Status = STATUS_SUCCESS;
     }

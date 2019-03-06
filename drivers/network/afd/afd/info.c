@@ -124,61 +124,92 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->OobInline = InfoReq->Information.Boolean;
                 break;
             case AFD_INFO_RECEIVE_WINDOW_SIZE:
-                NewBuffer = ExAllocatePoolWithTag(PagedPool,
-                                                  InfoReq->Information.Ulong,
-                                                  TAG_AFD_DATA_BUFFER);
-
-                if (NewBuffer)
+                if (FCB->State == SOCKET_STATE_CONNECTED ||
+                    FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
-                    if (FCB->Recv.Content > InfoReq->Information.Ulong)
-                        FCB->Recv.Content = InfoReq->Information.Ulong;
-
-                    if (FCB->Recv.Window)
+                    /* FIXME: likely not right, check tcpip.sys for TDI_QUERY_MAX_DATAGRAM_INFO */
+                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF)
                     {
-                        RtlCopyMemory(NewBuffer,
-                                      FCB->Recv.Window,
-                                      FCB->Recv.Content);
+                        NewBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                          InfoReq->Information.Ulong,
+                                                          TAG_AFD_DATA_BUFFER);
 
-                        ExFreePoolWithTag(FCB->Recv.Window, TAG_AFD_DATA_BUFFER);
+                        if (NewBuffer)
+                        {
+                            if (FCB->Recv.Content > InfoReq->Information.Ulong)
+                                FCB->Recv.Content = InfoReq->Information.Ulong;
+
+                            if (FCB->Recv.Window)
+                            {
+                                RtlCopyMemory(NewBuffer,
+                                              FCB->Recv.Window,
+                                              FCB->Recv.Content);
+
+                                ExFreePoolWithTag(FCB->Recv.Window, TAG_AFD_DATA_BUFFER);
+                            }
+
+                            FCB->Recv.Size = InfoReq->Information.Ulong;
+                            FCB->Recv.Window = NewBuffer;
+
+                            Status = STATUS_SUCCESS;
+                        }
+                        else
+                        {
+                            Status = STATUS_NO_MEMORY;
+                        }
                     }
-
-                    FCB->Recv.Size = InfoReq->Information.Ulong;
-                    FCB->Recv.Window = NewBuffer;
-
-                    Status = STATUS_SUCCESS;
+                    else
+                    {
+                        Status = STATUS_SUCCESS;
+                    }
                 }
                 else
                 {
-                    Status = STATUS_NO_MEMORY;
+                    Status = STATUS_INVALID_PARAMETER;
                 }
                 break;
             case AFD_INFO_SEND_WINDOW_SIZE:
-                NewBuffer = ExAllocatePoolWithTag(PagedPool,
-                                                  InfoReq->Information.Ulong,
-                                                  TAG_AFD_DATA_BUFFER);
-
-                if (NewBuffer)
+                if (FCB->State == SOCKET_STATE_CONNECTED ||
+                    FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
-                    if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
-                        FCB->Send.BytesUsed = InfoReq->Information.Ulong;
-
-                    if (FCB->Send.Window)
+                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF)
                     {
-                        RtlCopyMemory(NewBuffer,
-                                      FCB->Send.Window,
-                                      FCB->Send.BytesUsed);
+                        NewBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                          InfoReq->Information.Ulong,
+                                                          TAG_AFD_DATA_BUFFER);
 
-                        ExFreePoolWithTag(FCB->Send.Window, TAG_AFD_DATA_BUFFER);
+                        if (NewBuffer)
+                        {
+                            if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
+                                FCB->Send.BytesUsed = InfoReq->Information.Ulong;
+
+                            if (FCB->Send.Window)
+                            {
+                                RtlCopyMemory(NewBuffer,
+                                              FCB->Send.Window,
+                                              FCB->Send.BytesUsed);
+
+                                ExFreePoolWithTag(FCB->Send.Window, TAG_AFD_DATA_BUFFER);
+                            }
+
+                            FCB->Send.Size = InfoReq->Information.Ulong;
+                            FCB->Send.Window = NewBuffer;
+
+                            Status = STATUS_SUCCESS;
+                        }
+                        else
+                        {
+                            Status = STATUS_NO_MEMORY;
+                        }
                     }
-
-                    FCB->Send.Size = InfoReq->Information.Ulong;
-                    FCB->Send.Window = NewBuffer;
-
-                    Status = STATUS_SUCCESS;
+                    else
+                    {
+                        Status = STATUS_SUCCESS;
+                    }
                 }
                 else
                 {
-                    Status = STATUS_NO_MEMORY;
+                    Status = STATUS_INVALID_PARAMETER;
                 }
                 break;
             default:

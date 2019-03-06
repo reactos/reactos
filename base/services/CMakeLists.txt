@@ -1,5 +1,6 @@
 
 add_subdirectory(audiosrv)
+add_subdirectory(dcomlaunch)
 add_subdirectory(dhcpcsvc)
 add_subdirectory(eventlog)
 add_subdirectory(nfsd)

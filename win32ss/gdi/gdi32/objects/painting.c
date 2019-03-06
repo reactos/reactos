@@ -456,9 +456,35 @@ PatBlt(
     _In_ INT nHeight,
     _In_ DWORD dwRop)
 {
+    PDC_ATTR pdcattr;
+
     HANDLE_METADC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
 
-    /* FIXME some part need be done in user mode */
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr && !(pdcattr->ulDirty_ & DC_DIBSECTION))
+    {
+        PGDIBSPATBLT pgO;
+
+        pgO = GdiAllocBatchCommand(hdc, GdiBCPatBlt);
+        if (pgO)
+        {
+            pgO->nXLeft  = nXLeft;
+            pgO->nYLeft  = nYLeft;
+            pgO->nWidth  = nWidth;
+            pgO->nHeight = nHeight;
+            pgO->dwRop   = dwRop;
+            /* Snapshot attributes */
+            pgO->hbrush          = pdcattr->hbrush;
+            pgO->crForegroundClr = pdcattr->crForegroundClr;
+            pgO->crBackgroundClr = pdcattr->crBackgroundClr;
+            pgO->crBrushClr      = pdcattr->crBrushClr;
+            pgO->ulForegroundClr = pdcattr->ulForegroundClr;
+            pgO->ulBackgroundClr = pdcattr->ulBackgroundClr;
+            pgO->ulBrushClr      = pdcattr->ulBrushClr;
+            return TRUE;
+        }
+    }
     return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
 }
 
@@ -474,6 +500,7 @@ PolyPatBlt(
     UINT i;
     BOOL bResult;
     HBRUSH hbrOld;
+    PDC_ATTR pdcattr;
 
     /* Handle meta DCs */
     if ((GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) ||
@@ -511,7 +538,37 @@ PolyPatBlt(
         return bResult;
     }
 
-    /* FIXME some part need be done in user mode */
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (nCount && pdcattr && !(pdcattr->ulDirty_ & DC_DIBSECTION))
+    {
+        PGDIBSPPATBLT pgO;
+        PTEB pTeb = NtCurrentTeb();
+
+        pgO = GdiAllocBatchCommand(hdc, GdiBCPolyPatBlt);
+        if (pgO)
+        {
+            USHORT cjSize = sizeof(GDIBSPPATBLT) + (nCount-1) * sizeof(PATRECT);
+
+            if ((pTeb->GdiTebBatch.Offset + cjSize) <= GDIBATCHBUFSIZE)
+            {
+                pgO->Count = nCount;
+                pgO->Mode  = dwMode;
+                pgO->rop4  = dwRop;
+                /* Snapshot attributes */
+                pgO->crForegroundClr = pdcattr->crForegroundClr;
+                pgO->crBackgroundClr = pdcattr->crBackgroundClr;
+                pgO->crBrushClr      = pdcattr->crBrushClr;
+                pgO->ulForegroundClr = pdcattr->ulForegroundClr;
+                pgO->ulBackgroundClr = pdcattr->ulBackgroundClr;
+                pgO->ulBrushClr      = pdcattr->ulBrushClr;
+                RtlCopyMemory(pgO->pRect, pPoly, nCount * sizeof(PATRECT));
+                // Recompute offset, remember one is already accounted for in the structure.
+                pTeb->GdiTebBatch.Offset += (nCount-1) * sizeof(PATRECT);
+                return TRUE;
+            }
+        }
+    }
     return NtGdiPolyPatBlt(hdc, dwRop, pPoly, nCount, dwMode);
 }
 

@@ -1319,17 +1319,6 @@ SHGetProcessDword(DWORD dwUnknown1, DWORD dwUnknown2)
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-SHTestTokenMembership(HANDLE TokenHandle, ULONG SidToCheck)
-{
-    FIXME("SHTestTokenMembership() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C LPVOID
 WINAPI
 SHGetUserSessionId(HANDLE hHandle)

@@ -674,6 +674,7 @@ VOID
 LoadDialogCtrls(
     PPREFERENCES_CONTEXT PrefContext)
 {
+    WCHAR szBuffer[64];
     HWND hDlgCtrl;
     RECT statusRect;
     UINT i;
@@ -720,9 +721,23 @@ LoadDialogCtrls(
                      SWP_NOZORDER);
     }
 
-    /* Resize the vertical line separators */
+    if (PrefContext->MixerWindow->MixerId == RECORD_MIXER)
+        LoadStringW(hAppInstance, IDS_SELECT, szBuffer, ARRAYSIZE(szBuffer));
+
     for (i = 0; i < PrefContext->MixerWindow->DialogCount; i++)
     {
+        if (PrefContext->MixerWindow->MixerId == RECORD_MIXER)
+        {
+            hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, (i + 1) * IDC_LINE_SWITCH);
+
+            /* Turn the autocheckbox into a checkbox */
+            SetWindowLongPtr(hDlgCtrl, GWL_STYLE, (GetWindowLongPtr(hDlgCtrl, GWL_STYLE) & ~BS_AUTOCHECKBOX) | BS_CHECKBOX);
+
+            /* Change text from 'Mute' to 'Select' */
+            SetWindowTextW(hDlgCtrl, szBuffer);
+        }
+
+        /* Resize the vertical line separator */
         hDlgCtrl = GetDlgItem(PrefContext->MixerWindow->hWnd, (i + 1) * IDC_LINE_SEP);
         if (hDlgCtrl != NULL)
         {

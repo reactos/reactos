@@ -1467,7 +1467,7 @@ HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FATX",0x00000000,"ufatx.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","EXT2",0x00000000,"uext2.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","BtrFS",0x00000000,"ubtrfs.dll"
 
-; Winlogon settings
+; Global Winlogon settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00020000,"%SystemRoot%\system32\cmd.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
@@ -1775,7 +1775,7 @@ HKLM,"SOFTWARE\Microsoft\Ole","EnableRemoteConnect",0x00000000,"N"
 
 ; SvcHost services
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","DcomLaunch",0x00010000,"PlugPlay"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","DcomLaunch",0x00010000,"DcomLaunch","PlugPlay"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"DHCP","BITS","lanmanserver","lanmanworkstation","Schedule","Themes","winmgmt"
 
 ; Win32 config

@@ -2254,8 +2254,8 @@ VOID NTAPI ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp)
     PUCHAR bufPtr = MmGetMdlVirtualAddress(Irp->MdlAddress);
     LARGE_INTEGER targetLocation = currentSp->Parameters.Read.ByteOffset;
     PTRANSFER_PACKET pkt;
-    SINGLE_LIST_ENTRY pktList;
-    PSINGLE_LIST_ENTRY slistEntry;
+    SLIST_ENTRY pktList;
+    PSLIST_ENTRY slistEntry;
     ULONG numPackets;
     //KIRQL oldIrql;
     ULONG i;

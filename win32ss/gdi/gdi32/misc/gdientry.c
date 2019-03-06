@@ -1409,7 +1409,7 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     RtlMoveMemory(&SurfaceMore.ddsCapsEx,
                   &pSurface->ddckCKDestBlt,
                   sizeof(DDSCAPSEX));
-    SurfaceMore.dwSurfaceHandle = (DWORD)pSurface->dbnOverlayNode.object_int->lpVtbl;
+    SurfaceMore.dwSurfaceHandle = pSurface->lpSurfMore->dwSurfaceHandle;
 
     /* Set up SurfaceGlobal struct */
     SurfaceGlobal.fpVidMem = pSurface->lpGbl->fpVidMem;

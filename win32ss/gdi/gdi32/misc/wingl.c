@@ -84,20 +84,20 @@ static BOOL OpenGLEnable(void)
                  thread-safe */
     }
 
-
-    if (!OpenGLInitFunction("wglChoosePixelFormat", &glChoosePixelFormat))
+    /* The cast is required on x64, because FARPROC has INT_PTR sized return */
+    if (!OpenGLInitFunction("wglChoosePixelFormat", (FARPROC*)&glChoosePixelFormat))
         Ret = FALSE;
 
-    if (!OpenGLInitFunction("wglSetPixelFormat", &glSetPixelFormat))
+    if (!OpenGLInitFunction("wglSetPixelFormat", (FARPROC*)&glSetPixelFormat))
         Ret = FALSE;
 
-    if (!OpenGLInitFunction("wglSwapBuffers", &glSwapBuffers))
+    if (!OpenGLInitFunction("wglSwapBuffers", (FARPROC*)&glSwapBuffers))
         Ret = FALSE;
 
-    if (!OpenGLInitFunction("wglDescribePixelFormat", &glDescribePixelFormat))
+    if (!OpenGLInitFunction("wglDescribePixelFormat", (FARPROC*)&glDescribePixelFormat))
         Ret = FALSE;
 
-    if (!OpenGLInitFunction("wglGetPixelFormat", &glGetPixelFormat))
+    if (!OpenGLInitFunction("wglGetPixelFormat", (FARPROC*)&glGetPixelFormat))
         Ret = FALSE;
 
     return Ret;

@@ -17,6 +17,12 @@ typedef enum _LSA_TOKEN_INFORMATION_TYPE
     LsaTokenInformationV1
 } LSA_TOKEN_INFORMATION_TYPE, *PLSA_TOKEN_INFORMATION_TYPE;
 
+typedef struct _LSA_TOKEN_INFORMATION_NULL
+{
+    LARGE_INTEGER ExpirationTime;
+    PTOKEN_GROUPS Groups;
+} LSA_TOKEN_INFORMATION_NULL, *PLSA_TOKEN_INFORMATION_NULL;
+
 typedef struct _LSA_TOKEN_INFORMATION_V1
 {
     LARGE_INTEGER ExpirationTime;
@@ -1365,6 +1371,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     SECURITY_QUALITY_OF_SERVICE Qos;
     LSA_TOKEN_INFORMATION_TYPE TokenInformationType;
     PVOID TokenInformation = NULL;
+    PLSA_TOKEN_INFORMATION_NULL TokenInfo0 = NULL;
     PLSA_TOKEN_INFORMATION_V1 TokenInfo1 = NULL;
     PUNICODE_STRING AccountName = NULL;
     PUNICODE_STRING AuthenticatingAuthority = NULL;
@@ -1549,9 +1556,50 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         goto done;
     }
 
-    if (TokenInformationType == LsaTokenInformationV1)
+    if (TokenInformationType == LsaTokenInformationNull)
     {
-        TOKEN_PRIVILEGES NoPrivilege = {0};
+        TOKEN_USER TokenUser;
+        TOKEN_PRIMARY_GROUP TokenPrimaryGroup;
+        TOKEN_GROUPS NoGroups = {0};
+        TOKEN_PRIVILEGES NoPrivileges = {0};
+
+        TokenInfo0 = (PLSA_TOKEN_INFORMATION_NULL)TokenInformation;
+
+        TokenUser.User.Sid = LsapWorldSid;
+        TokenUser.User.Attributes = 0;
+        TokenPrimaryGroup.PrimaryGroup = LsapWorldSid;
+
+        Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+        Qos.ImpersonationLevel = SecurityImpersonation;
+        Qos.ContextTrackingMode = SECURITY_STATIC_TRACKING;
+        Qos.EffectiveOnly = TRUE;
+
+        ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+        ObjectAttributes.RootDirectory = NULL;
+        ObjectAttributes.ObjectName = NULL;
+        ObjectAttributes.Attributes = 0;
+        ObjectAttributes.SecurityDescriptor = NULL;
+        ObjectAttributes.SecurityQualityOfService = &Qos;
+
+        /* Create the logon token */
+        Status = NtCreateToken(&TokenHandle,
+                               TOKEN_ALL_ACCESS,
+                               &ObjectAttributes,
+                               TokenImpersonation,
+                               &RequestMsg->LogonUser.Reply.LogonId,
+                               &TokenInfo0->ExpirationTime,
+                               &TokenUser,
+                               &NoGroups,
+                               &NoPrivileges,
+                               NULL,
+                               &TokenPrimaryGroup,
+                               NULL,
+                               &RequestMsg->LogonUser.Request.SourceContext);
+    }
+    else if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TOKEN_PRIVILEGES NoPrivileges = {0};
+
         TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
 
         Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
@@ -1575,8 +1623,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                &TokenInfo1->ExpirationTime,
                                &TokenInfo1->User,
                                TokenInfo1->Groups,
-                               TokenInfo1->Privileges ? TokenInfo1->Privileges
-                                                      : &NoPrivilege,
+                               TokenInfo1->Privileges ? TokenInfo1->Privileges : &NoPrivileges,
                                &TokenInfo1->Owner,
                                &TokenInfo1->PrimaryGroup,
                                &TokenInfo1->DefaultDacl,
@@ -1659,7 +1706,27 @@ done:
     /* Free the token information */
     if (TokenInformation != NULL)
     {
-        if (TokenInformationType == LsaTokenInformationV1)
+        if (TokenInformationType == LsaTokenInformationNull)
+        {
+            TokenInfo0 = (PLSA_TOKEN_INFORMATION_NULL)TokenInformation;
+
+            if (TokenInfo0 != NULL)
+            {
+                if (TokenInfo0->Groups != NULL)
+                {
+                    for (i = 0; i < TokenInfo0->Groups->GroupCount; i++)
+                    {
+                        if (TokenInfo0->Groups->Groups[i].Sid != NULL)
+                            LsapFreeHeap(TokenInfo0->Groups->Groups[i].Sid);
+                    }
+
+                    LsapFreeHeap(TokenInfo0->Groups);
+                }
+
+                LsapFreeHeap(TokenInfo0);
+            }
+        }
+        else if (TokenInformationType == LsaTokenInformationV1)
         {
             TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
 

@@ -72,6 +72,7 @@ typedef struct _NOTIFY_DATA
 typedef struct _INTERNAL_RANGE
 {
     LIST_ENTRY ListEntry;
+    struct _INTERNAL_RANGE_LIST *pRangeList;
     DWORDLONG ullStart;
     DWORDLONG ullEnd;
 } INTERNAL_RANGE, *PINTERNAL_RANGE;
@@ -1065,6 +1066,7 @@ CM_Add_Range(
         goto done;
     }
 
+    pRange->pRangeList = pRangeList;
     pRange->ullStart = ullStartValue;
     pRange->ullEnd = ullEndValue;
 
@@ -1075,7 +1077,8 @@ CM_Add_Range(
     }
     else
     {
-
+        HeapFree(GetProcessHeap(), 0, pRange);
+        UNIMPLEMENTED;
     }
 
 done:
@@ -5899,10 +5902,51 @@ CM_Next_Range(
     _Out_ PDWORDLONG pullEnd,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Next_Range(%p %p %p %lx)\n",
           preElement, pullStart, pullEnd, ulFlags);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pRange = (PINTERNAL_RANGE)preElement;
+
+    if (pRange == NULL || pRange->pRangeList == NULL)
+        return CR_FAILURE;
+
+    if (pullStart == NULL || pullEnd == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    pRangeList = pRange->pRangeList;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Fail, if we reached the end of the list */
+    if (pRange->ListEntry.Flink == &pRangeList->ListHead)
+    {
+        ret = CR_FAILURE;
+        goto done;
+    }
+
+    /* Get the next range */
+    ListEntry = pRangeList->ListHead.Flink;
+    pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+    /* Return the range data */
+    *pullStart = pRange->ullStart;
+    *pullEnd = pRange->ullEnd;
+    *preElement = (RANGE_ELEMENT)pRange;
+
+done:
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 

@@ -8,6 +8,28 @@
 #include "hdaudbus.h"
 
 NTSTATUS
+HDA_PDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = static_cast<PHDA_PDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
+    ASSERT(DeviceExtension->IsFDO == FALSE);
+
+    if (DeviceExtension->ReportedMissing)
+    {
+        if (DeviceExtension->AudioGroup != NULL)
+        {
+            DeviceExtension->AudioGroup->ChildPDO = NULL;
+        }
+        IoDeleteDevice(DeviceObject);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 HDA_PDOQueryBusInformation(
     IN PIRP Irp)
 {

@@ -1412,9 +1412,9 @@ CdRomStartIo(
         //
 
         ExInterlockedPushEntrySList(&(cdData->Mmc.DelayedIrps),
-                                    (PSINGLE_LIST_ENTRY)&(Irp->Tail.Overlay.DriverContext[0]),
+                                    (PSLIST_ENTRY)&(Irp->Tail.Overlay.DriverContext[0]), // ReactOS
                                     &(cdData->Mmc.DelayedLock));
-        
+
         queueDepth = ExQueryDepthSList(&(cdData->Mmc.DelayedIrps));
         if (queueDepth == 1) {
 

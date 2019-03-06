@@ -157,6 +157,12 @@ int OSK_DlgInitDialog(HWND hDlg)
         CheckMenuItem(GetMenu(hDlg), IDM_ENHANCED_KB, MF_BYCOMMAND | MF_UNCHECKED);
     }
 
+    /* Check if the "Click Sound" option was chosen before (and if so, then tick the menu item) */
+    if (Globals.bSoundClick)
+    {
+        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
+    }
+
     /* Set the application's icon */
     hIcon = LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IDI_OSK), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
     hIconSm = CopyImage(hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_COPYFROMRESOURCE);
@@ -347,6 +353,12 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
         SendInput(1, &Input, sizeof(Input));
     }
 
+    /* Play the sound during clicking event (only if "Use Click Sound" menu option is ticked) */
+    if (Globals.bSoundClick)
+    {
+        PlaySoundW(MAKEINTRESOURCEW(IDI_SOUNDCLICK), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC);
+    }
+
     return TRUE;
 }
 
@@ -493,6 +505,26 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                                    MAKEINTRESOURCEW(MAIN_DIALOG_STANDARD_KB),
                                    GetDesktopWindow(),
                                    OSK_DlgProc);
+                    }
+
+                    break;
+                }
+
+                case IDM_CLICK_SOUND:
+                {
+                    /*
+                        This case is triggered when the user attempts to click on the menu item. Before doing anything,
+                        we must check the condition state of such menu item so that we can tick/untick the menu item accordingly.
+                    */
+                    if (!Globals.bSoundClick)
+                    {
+                        Globals.bSoundClick = TRUE;
+                        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_CHECKED);
+                    }
+                    else
+                    {
+                        Globals.bSoundClick = FALSE;
+                        CheckMenuItem(GetMenu(hDlg), IDM_CLICK_SOUND, MF_BYCOMMAND | MF_UNCHECKED);
                     }
 
                     break;

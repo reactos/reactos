@@ -240,8 +240,8 @@ VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
          *  1.  Immediately snap down to our UPPER threshold.
          */
         if (fdoData->NumTotalTransferPackets > MaxWorkingSetTransferPackets){
-            SINGLE_LIST_ENTRY pktList;
-            PSINGLE_LIST_ENTRY slistEntry;
+            SLIST_ENTRY pktList;
+            PSLIST_ENTRY slistEntry;
             PTRANSFER_PACKET pktToDelete;
 
             DBGTRACE(ClassDebugTrace, ("Exiting stress, block freeing (%d-%d) packets.", fdoData->NumTotalTransferPackets, MaxWorkingSetTransferPackets));
@@ -324,7 +324,7 @@ PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN All
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PTRANSFER_PACKET pkt;
-    PSINGLE_LIST_ENTRY slistEntry;
+    PSLIST_ENTRY slistEntry;
     //KIRQL oldIrql;
 
     slistEntry = InterlockedPopEntrySList(&fdoData->FreeTransferPacketsList);

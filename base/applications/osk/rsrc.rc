@@ -21,7 +21,8 @@
 
 #include <reactos/version.rc>
 
-IDI_OSK       ICON "res/osk.ico"
+IDI_OSK             ICON "res/osk.ico"
+IDI_SOUNDCLICK      WAVE "res/click.wav"
 
 
 IDI_BACK      ICON "res/back.ico"

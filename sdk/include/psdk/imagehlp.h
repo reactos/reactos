@@ -18,6 +18,12 @@
 #ifndef _IMAGEHLP_H
 #define _IMAGEHLP_H
 
+#ifdef _WIN64
+#ifndef _IMAGEHLP64
+#define _IMAGEHLP64
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

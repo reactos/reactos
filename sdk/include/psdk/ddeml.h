@@ -114,7 +114,7 @@ extern "C" {
 #define     CBF_SKIP_DISCONNECTS         0x00200000
 #define     CBF_SKIP_ALLNOTIFICATIONS    0x003c0000
 
-#define     CBR_BLOCK                    ((HDDEDATA)~0UL)
+#define     CBR_BLOCK                    ((HDDEDATA)(LONG_PTR)-1)
 
 /*
  * Application command flags

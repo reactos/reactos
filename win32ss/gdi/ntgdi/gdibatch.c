@@ -4,6 +4,7 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL FASTCALL IntPatBlt( PDC,INT,INT,INT,INT,DWORD,PEBRUSHOBJ);
 
 //
 // Gdi Batch Flush support functions.
@@ -89,16 +90,171 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
   switch(Cmd)
   {
      case GdiBCPatBlt:
+     {
+        PGDIBSPATBLT pgDPB;
+        DWORD dwRop, flags;
+        HBRUSH hOrgBrush;
+        COLORREF crColor, crBkColor, crBrushClr;
+        ULONG ulForegroundClr, ulBackgroundClr, ulBrushClr;
+        if (!dc) break;
+        pgDPB = (PGDIBSPATBLT) pHdr;
+        /* Convert the ROP3 to a ROP4 */
+        dwRop = pgDPB->dwRop;
+        dwRop = MAKEROP4(dwRop & 0xFF0000, dwRop);
+        /* Check if the rop uses a source */
+        if (WIN32_ROP4_USES_SOURCE(dwRop))
+        {
+           /* This is not possible */
+           break;
+        }
+        /* Check if the DC has no surface (empty mem or info DC) */
+        if (dc->dclevel.pSurface == NULL)
+        {
+           /* Nothing to do */
+           break;
+        }
+        // Save current attributes and flags
+        crColor         = dc->pdcattr->crForegroundClr;
+        crBkColor       = dc->pdcattr->ulBackgroundClr;
+        crBrushClr      = dc->pdcattr->crBrushClr;
+        ulForegroundClr = dc->pdcattr->ulForegroundClr;
+        ulBackgroundClr = dc->pdcattr->ulBackgroundClr;
+        ulBrushClr      = dc->pdcattr->ulBrushClr;
+        hOrgBrush       = dc->pdcattr->hbrush;
+        flags = dc->pdcattr->ulDirty_ & (DIRTY_BACKGROUND | DIRTY_TEXT | DIRTY_FILL | DC_BRUSH_DIRTY);
+        // Set the attribute snapshot
+        dc->pdcattr->hbrush          = pgDPB->hbrush; 
+        dc->pdcattr->crForegroundClr = pgDPB->crForegroundClr;
+        dc->pdcattr->crBackgroundClr = pgDPB->crBackgroundClr;
+        dc->pdcattr->crBrushClr      = pgDPB->crBrushClr;
+        dc->pdcattr->ulForegroundClr = pgDPB->ulForegroundClr;
+        dc->pdcattr->ulBackgroundClr = pgDPB->ulBackgroundClr;
+        dc->pdcattr->ulBrushClr      = pgDPB->ulBrushClr;
+        // Process dirty attributes if any
+        if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+            DC_vUpdateFillBrush(dc);
+        if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+            DC_vUpdateTextBrush(dc);
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+        /* Call the internal function */
+        IntPatBlt(dc, pgDPB->nXLeft, pgDPB->nYLeft, pgDPB->nWidth, pgDPB->nHeight, dwRop, &dc->eboFill);
+        // Restore attributes and flags
+        dc->pdcattr->hbrush          = hOrgBrush;
+        dc->pdcattr->crForegroundClr = crColor;
+        dc->pdcattr->crBackgroundClr = crBkColor;
+        dc->pdcattr->crBrushClr      = crBrushClr;
+        dc->pdcattr->ulForegroundClr = ulForegroundClr;
+        dc->pdcattr->ulBackgroundClr = ulBackgroundClr;
+        dc->pdcattr->ulBrushClr      = ulBrushClr;
+        dc->pdcattr->ulDirty_ |= flags;
         break;
+     }
 
      case GdiBCPolyPatBlt:
-        break;
+     {
+        PGDIBSPPATBLT pgDPB;
+        EBRUSHOBJ eboFill;
+        PBRUSH pbrush;
+        PPATRECT pRects;
+        INT cRects, i;
+        DWORD dwRop, flags;
+        COLORREF crColor, crBkColor, crBrushClr;
+        ULONG ulForegroundClr, ulBackgroundClr, ulBrushClr;
+        if (!dc) break;
+        pgDPB = (PGDIBSPPATBLT) pHdr;
+        /* Convert the ROP3 to a ROP4 */
+        dwRop = pgDPB->rop4;
+        dwRop = MAKEROP4(dwRop & 0xFF0000, dwRop);
+        /* Check if the rop uses a source */
+        if (WIN32_ROP4_USES_SOURCE(dwRop))
+        {
+           /* This is not possible */
+           break;
+        }
+        /* Check if the DC has no surface (empty mem or info DC) */
+        if (dc->dclevel.pSurface == NULL)
+        {
+           /* Nothing to do */
+           break;
+        }
+        // Save current attributes and flags
+        crColor         = dc->pdcattr->crForegroundClr;
+        crBkColor       = dc->pdcattr->ulBackgroundClr;
+        crBrushClr      = dc->pdcattr->crBrushClr;
+        ulForegroundClr = dc->pdcattr->ulForegroundClr;
+        ulBackgroundClr = dc->pdcattr->ulBackgroundClr;
+        ulBrushClr      = dc->pdcattr->ulBrushClr;
+        flags = dc->pdcattr->ulDirty_ & (DIRTY_BACKGROUND | DIRTY_TEXT | DIRTY_FILL | DC_BRUSH_DIRTY);
+        // Set the attribute snapshot
+        dc->pdcattr->crForegroundClr = pgDPB->crForegroundClr;
+        dc->pdcattr->crBackgroundClr = pgDPB->crBackgroundClr;
+        dc->pdcattr->crBrushClr      = pgDPB->crBrushClr;
+        dc->pdcattr->ulForegroundClr = pgDPB->ulForegroundClr;
+        dc->pdcattr->ulBackgroundClr = pgDPB->ulBackgroundClr;
+        dc->pdcattr->ulBrushClr      = pgDPB->ulBrushClr;
+        // Process dirty attributes if any
+        if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+            DC_vUpdateTextBrush(dc);
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
 
+        DPRINT1("GdiBCPolyPatBlt Testing\n");
+        pRects = pgDPB->pRect;
+        cRects = pgDPB->Count;
+
+        for (i = 0; i < cRects; i++)
+        {
+            pbrush = BRUSH_ShareLockBrush(pRects->hBrush);
+
+            /* Check if we could lock the brush */
+            if (pbrush != NULL)
+            {
+                /* Initialize a brush object */
+                EBRUSHOBJ_vInitFromDC(&eboFill, pbrush, dc);
+
+                IntPatBlt(
+                    dc,
+                    pRects->r.left,
+                    pRects->r.top,
+                    pRects->r.right,
+                    pRects->r.bottom,
+                    dwRop,
+                    &eboFill);
+
+                /* Cleanup the brush object and unlock the brush */
+                EBRUSHOBJ_vCleanup(&eboFill);
+                BRUSH_ShareUnlockBrush(pbrush);
+            }
+            pRects++;
+        }
+
+        // Restore attributes and flags
+        dc->pdcattr->crForegroundClr = crColor;
+        dc->pdcattr->crBackgroundClr = crBkColor;
+        dc->pdcattr->crBrushClr      = crBrushClr;
+        dc->pdcattr->ulForegroundClr = ulForegroundClr;
+        dc->pdcattr->ulBackgroundClr = ulBackgroundClr;
+        dc->pdcattr->ulBrushClr      = ulBrushClr;
+        dc->pdcattr->ulDirty_ |= flags;
+        break;
+     } 
      case GdiBCTextOut:
         break;
 
      case GdiBCExtTextOut:
+     {
+        //GreExtTextOutW( hDC,
+        //                XStart,
+        //                YStart,
+        //                fuOptions,
+        //               &SafeRect,
+        //                SafeString,
+        //                Count,
+        //                SafeDx,
+        //                dwCodePage );
         break;
+     }
 
      case GdiBCSetBrushOrg:
      {

@@ -11,3 +11,4 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue.png DESTINATION r
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue_4x3.png DESTINATION reactos/Web/Wallpaper FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/ReactOS_Soft_Blue_16x9.png DESTINATION reactos/Web/Wallpaper FOR all)
 add_subdirectory(Angelus)
+add_subdirectory(Silhouette)

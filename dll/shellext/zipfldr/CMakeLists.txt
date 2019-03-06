@@ -24,12 +24,14 @@ list(APPEND SOURCE
     zippidl.cpp
     zippidl.hpp
     IZip.hpp
+    CConfirmReplace.cpp
     CExplorerCommand.cpp
     CEnumZipContents.cpp
     CFolderViewCB.cpp
     CZipEnumerator.hpp
     CZipExtract.cpp
     CZipFolder.hpp
+    CZipPassword.cpp
     Debug.cpp
     zipfldr.spec
     precomp.h

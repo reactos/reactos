@@ -1641,14 +1641,7 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
 BOOL FASTCALL
 IntIsFontRenderingEnabled(VOID)
 {
-    BOOL Ret = g_RenderingEnabled;
-    HDC hDC;
-
-    hDC = IntGetScreenDC();
-    if (hDC)
-        Ret = (NtGdiGetDeviceCaps(hDC, BITSPIXEL) > 8) && g_RenderingEnabled;
-
-    return Ret;
+    return (gpsi->BitsPixel > 8) && g_RenderingEnabled;
 }
 
 VOID FASTCALL
@@ -5506,8 +5499,8 @@ IntNormalizeAngle(LONG nTenthAngle)
 
 BOOL
 APIENTRY
-GreExtTextOutW(
-    IN HDC hDC,
+IntExtTextOutW(
+    IN PDC dc,
     IN INT XStart,
     IN INT YStart,
     IN UINT fuOptions,
@@ -5523,7 +5516,6 @@ GreExtTextOutW(
      * appropriate)
      */
 
-    DC *dc;
     PDC_ATTR pdcattr;
     SURFOBJ *SurfObj;
     SURFACE *psurf = NULL;
@@ -5565,18 +5557,7 @@ GreExtTextOutW(
         return FALSE;
     }
 
-    /* NOTE: This function locks the screen DC, so it must never be called
-       with a DC already locked */
     Render = IntIsFontRenderingEnabled();
-
-    // TODO: Write test-cases to exactly match real Windows in different
-    // bad parameters (e.g. does Windows check the DC or the RECT first?).
-    dc = DC_LockDc(hDC);
-    if (!dc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -5588,7 +5569,6 @@ GreExtTextOutW(
                               String,
                               Count,
                               (const INT *)Dx);
-        DC_UnlockDc(dc);
         return bResult;
     }
 
@@ -5608,7 +5588,7 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP)
+    if (pdcattr->flTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
@@ -5743,7 +5723,7 @@ GreExtTextOutW(
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
     if ((fuOptions & ETO_OPAQUE) ||
-        (pdcattr->lTextAlign & (TA_CENTER | TA_RIGHT)) ||
+        (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)) ||
         memcmp(&mat, &identityMat, sizeof(mat)) != 0 ||
         plf->lfUnderline || plf->lfStrikeOut)
     {
@@ -5813,12 +5793,12 @@ GreExtTextOutW(
     }
 
     // Process the X and Y alignments.
-    if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+    if ((pdcattr->flTextAlign & TA_CENTER) == TA_CENTER)
     {
         XStart64 = -DeltaX64 / 2;
         YStart64 = -DeltaY64 / 2;
     }
-    else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
+    else if ((pdcattr->flTextAlign & TA_RIGHT) == TA_RIGHT)
     {
         XStart64 = -DeltaX64;
         YStart64 = -DeltaY64;
@@ -5849,13 +5829,13 @@ GreExtTextOutW(
     /* Process the vertical alignment */
 #define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
     RtlZeroMemory(vecs, sizeof(vecs));
-    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
+    if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BASELINE)
     {
         vecs[1].y = -FontGDI->tmAscent << 16;   // upper left
         vecs[4].y = 0;                          // baseline
         vecs[0].y = FontGDI->tmDescent << 16;   // lower left
     }
-    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
+    else if ((pdcattr->flTextAlign & VALIGN_MASK) == TA_BOTTOM)
     {
         vecs[1].y = -FontGDI->tmHeight << 16;   // upper left
         vecs[4].y = -FontGDI->tmDescent << 16;  // baseline
@@ -6236,7 +6216,7 @@ GreExtTextOutW(
             MouseSafetyOnDrawEnd(dc->ppdev);
     }
 
-    if (pdcattr->lTextAlign & TA_UPDATECP) {
+    if (pdcattr->flTextAlign & TA_UPDATECP) {
         pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
     }
 
@@ -6251,6 +6231,45 @@ Cleanup:
 
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
+
+    return bResult;
+}
+
+
+BOOL
+APIENTRY
+GreExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL PRECTL lprc,
+    IN LPCWSTR String,
+    IN INT Count,
+    IN OPTIONAL LPINT Dx,
+    IN DWORD dwCodePage)
+{
+    BOOL bResult;
+    DC *dc;
+
+    // TODO: Write test-cases to exactly match real Windows in different
+    // bad parameters (e.g. does Windows check the DC or the RECT first?).
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    bResult = IntExtTextOutW( dc,
+                              XStart,
+                              YStart,
+                              fuOptions,
+                              lprc,
+                              String,
+                              Count,
+                              Dx,
+                              dwCodePage );
 
     DC_UnlockDc(dc);
 

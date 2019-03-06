@@ -343,7 +343,7 @@ typedef void *HANDLE, **PHANDLE;
  typedef char CHAR;
  typedef short SHORT;
 
- #if defined(__ROS_LONG64__) && !defined(_M_AMD64)
+ #if defined(__ROS_LONG64__)
   typedef int LONG;
  #else
   typedef long LONG;

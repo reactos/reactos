@@ -16,12 +16,13 @@ BOOL LoadDataFromRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick;
     DWORD cbData = sizeof(DWORD);
 
-    /* Set the structure members to TRUE */
+    /* Set the structure members to TRUE (and the bSoundClick member to FALSE) */
     Globals.bShowWarning = TRUE;
     Globals.bIsEnhancedKeyboard = TRUE;
+    Globals.bSoundClick = FALSE;
 
     /* Open the key, so that we can query it */
     lResult = RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -71,6 +72,24 @@ BOOL LoadDataFromRegistry()
 
     /* Load the dialog layout value */
     Globals.bIsEnhancedKeyboard = (dwLayout != 0);
+
+    /* Query the key */
+    lResult = RegQueryValueExW(hKey,
+                               L"OnSoundClick",
+                               0,
+                               0,
+                               (BYTE *)&dwSoundOnClick,
+                               &cbData);
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* Load the sound on click value event */
+    Globals.bSoundClick = (dwSoundOnClick != 0);
     
     /* If we're here then we succeed, close the key and return TRUE */
     RegCloseKey(hKey);
@@ -81,7 +100,7 @@ BOOL SaveDataToRegistry()
 {
     HKEY hKey;
     LONG lResult;
-    DWORD dwShowWarningData, dwLayout;
+    DWORD dwShowWarningData, dwLayout, dwSoundOnClick;
 
     /* If no key has been made, create one */
     lResult = RegCreateKeyExW(HKEY_CURRENT_USER,
@@ -126,6 +145,23 @@ BOOL SaveDataToRegistry()
                              REG_DWORD,
                              (BYTE *)&dwLayout,
                              sizeof(dwLayout));
+
+    if (lResult != ERROR_SUCCESS)
+    {
+        /* Bail out and return FALSE if we fail */
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    /* The value will be appended to the sound on click event */
+    dwSoundOnClick = Globals.bSoundClick;
+
+    lResult = RegSetValueExW(hKey,
+                             L"OnSoundClick",
+                             0,
+                             REG_DWORD,
+                             (BYTE *)&dwSoundOnClick,
+                             sizeof(dwSoundOnClick));
 
     if (lResult != ERROR_SUCCESS)
     {

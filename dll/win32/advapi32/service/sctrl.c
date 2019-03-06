@@ -174,7 +174,7 @@ ScServiceMainStubA(LPVOID Context)
 
     /* Set service tag */
     Teb = NtCurrentTeb();
-    Teb->SubProcessTag = (PVOID)ThreadParams->dwServiceTag;
+    Teb->SubProcessTag = UlongToPtr(ThreadParams->dwServiceTag);
 
     /* Call the main service routine and free the arguments vector */
     (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
@@ -203,7 +203,7 @@ ScServiceMainStubW(LPVOID Context)
 
     /* Set service tag */
     Teb = NtCurrentTeb();
-    Teb->SubProcessTag = (PVOID)ThreadParams->dwServiceTag;
+    Teb->SubProcessTag = UlongToPtr(ThreadParams->dwServiceTag);
 
     /* Call the main service routine and free the arguments vector */
     (ThreadParams->lpServiceMain)(ThreadParams->dwArgCount,
@@ -552,7 +552,7 @@ ScControlService(PACTIVE_SERVICE lpService,
     TRACE("Service: %S\n", (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset));
 
     /* Set service tag */
-    NtCurrentTeb()->SubProcessTag = (PVOID)lpService->dwServiceTag;
+    NtCurrentTeb()->SubProcessTag = UlongToPtr(lpService->dwServiceTag);
 
     if (lpService->HandlerFunction)
     {

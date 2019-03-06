@@ -440,7 +440,7 @@ ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunR
     PEX_RUNDOWN_REF RunRef;
     EX_RUNDOWN_WAIT_BLOCK WaitBlock;
     PEX_RUNDOWN_WAIT_BLOCK WaitBlockPointer;
-    ULONG ProcCount, Current, Value, OldValue, TotalCount;
+    ULONG_PTR ProcCount, Current, Value, OldValue, TotalCount;
 
     ProcCount = RunRefCacheAware->Number;
     /* No proc, nothing to do */
@@ -480,7 +480,7 @@ ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunR
     }
 
     /* Sanity check: we didn't overflow */
-    ASSERT((LONG)TotalCount >= 0);
+    ASSERT((LONG_PTR)TotalCount >= 0);
     if (TotalCount != 0)
     {
         /* Init the waitblock event */
@@ -490,8 +490,8 @@ ExfWaitForRundownProtectionReleaseCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunR
 
         /* Do we have to wait? If so, go ahead! */
         if (InterlockedExchangeAddSizeT(&WaitBlock.Count,
-                                        (LONG)TotalCount >> EX_RUNDOWN_COUNT_SHIFT) ==
-                                       -(LONG)(TotalCount >> EX_RUNDOWN_COUNT_SHIFT))
+                                        (LONG_PTR)TotalCount >> EX_RUNDOWN_COUNT_SHIFT) ==
+                                       -(LONG_PTR)(TotalCount >> EX_RUNDOWN_COUNT_SHIFT))
         {
             KeWaitForSingleObject(&WaitBlock.WakeEvent, Executive, KernelMode, FALSE, NULL);
         }

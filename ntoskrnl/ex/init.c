@@ -711,7 +711,11 @@ ExpInitSystemPhase1(VOID)
     }
 
     /* Initialize UUIDs */
-    ExpInitUuids();
+    if (ExpUuidInitialization() == FALSE)
+    {
+        DPRINT1("Executive: Uuid initialization failed\n");
+        return FALSE;
+    }
 
     /* Initialize keyed events */
     if (ExpInitializeKeyedEventImplementation() == FALSE)

@@ -53,6 +53,7 @@ typedef struct
 
 	ULONG Responses[MAX_CODEC_RESPONSES];
 	ULONG ResponseCount;
+	KSEMAPHORE ResponseSemaphore;
 
 	PHDA_CODEC_AUDIO_GROUP AudioGroups[HDA_MAX_AUDIO_GROUPS];
 	ULONG AudioGroupCount;
@@ -64,8 +65,9 @@ typedef struct
 {
 	BOOLEAN IsFDO;
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	PUCHAR RegBase;
+	SIZE_T RegLength;
 	PKINTERRUPT Interrupt;
 
 	ULONG CorbLength;
@@ -83,6 +85,7 @@ typedef struct
 typedef struct
 {
 	BOOLEAN IsFDO;
+	BOOLEAN ReportedMissing;
 	PHDA_CODEC_ENTRY Codec;
 	PHDA_CODEC_AUDIO_GROUP AudioGroup;
 	PDEVICE_OBJECT FDO;
@@ -114,17 +117,20 @@ FreeItem(
     IN PVOID Item);
 
 /* fdo.cpp */
-BOOLEAN
-NTAPI
-HDA_InterruptService(
-    IN PKINTERRUPT  Interrupt,
-    IN PVOID  ServiceContext);
+KSERVICE_ROUTINE HDA_InterruptService;
+IO_DPC_ROUTINE HDA_DpcForIsr;
 
 NTSTATUS
 NTAPI
 HDA_FDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+HDA_FDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp);
 
 NTSTATUS
 NTAPI
@@ -141,6 +147,10 @@ HDA_SendVerbs(
     IN ULONG Count);
 
 /* pdo.cpp*/
+
+NTSTATUS
+HDA_PDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS
 HDA_PDOQueryBusInformation(
@@ -170,12 +180,3 @@ NTSTATUS
 HDA_PDOHandleQueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
-
-/* hdaudbus.cpp*/
-
-NTSTATUS
-NTAPI
-HDA_SyncForwardIrp(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
-

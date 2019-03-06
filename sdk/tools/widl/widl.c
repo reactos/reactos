@@ -92,15 +92,16 @@ static const char usage[] =
 static const char version_string[] = "Wine IDL Compiler version " PACKAGE_VERSION "\n"
 			"Copyright 2002 Ove Kaaven\n";
 
-#ifdef __i386__
+// __REACTOS__!! We must use TARGET_ macros here!
+#ifdef TARGET_i386
 enum target_cpu target_cpu = CPU_x86;
-#elif defined(__x86_64__)
+#elif defined(TARGET_amd64)
 enum target_cpu target_cpu = CPU_x86_64;
-#elif defined(__powerpc__)
+#elif defined(TARGET_ppc)
 enum target_cpu target_cpu = CPU_POWERPC;
-#elif defined(__arm__)
+#elif defined(TARGET_arm)
 enum target_cpu target_cpu = CPU_ARM;
-#elif defined(__aarch64__)
+#elif defined(TARGET_arm64)
 enum target_cpu target_cpu = CPU_ARM64;
 #else
 #error Unsupported CPU

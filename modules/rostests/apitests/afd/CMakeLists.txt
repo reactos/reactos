@@ -5,6 +5,7 @@ include_directories(
 list(APPEND SOURCE
     AfdHelpers.c
     send.c
+    windowsize.c
     precomp.h)
 
 add_executable(afd_apitest ${SOURCE} testlist.c)
