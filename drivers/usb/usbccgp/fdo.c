@@ -119,7 +119,7 @@ FDO_DeviceRelations(
     if (IoStack->Parameters.QueryDeviceRelations.Type != BusRelations)
     {
         /* FDO always only handles bus relations */
-        return USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject, Irp);
+        return STATUS_SUCCESS;
     }
 
     /* Go through array and count device objects */
@@ -159,6 +159,7 @@ FDO_DeviceRelations(
 
     /* Store result */
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
 
     /* Request completed successfully */
     return STATUS_SUCCESS;
@@ -420,7 +421,14 @@ FDO_HandlePnp(
         {
             /* Handle device relations */
             Status = FDO_DeviceRelations(DeviceObject, Irp);
-            break;
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            /* Forward irp to next device object */
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
