@@ -1724,7 +1724,7 @@ UhciAbortNonIsoTransfer(IN PUHCI_EXTENSION UhciExtension,
     if (TD == UhciEndpoint->HeadTD)
         IsHeadTD = TRUE;
 
-    while (TD && TD->UhciTransfer == UhciTransfer);
+    while (TD && TD->UhciTransfer == UhciTransfer)
     {
         DPRINT_UHCI("UhciAbortNonIsoTransfer: TD - %p\n", TD);
 
