@@ -215,6 +215,10 @@
             <SHIM NAME="DisableThemes">
                 <DLLFILE>acgenral.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="ForceDXSetupSuccess">
+                <DLLFILE>aclayers.dll</DLLFILE>
+                <DESCRIPTION>Some application using an older version of DirectX may encounter problems when calling LoadLibrary or GetProcAddress to use DSETUP.DLL or DSETUP32.DLL</DESCRIPTION>
+            </SHIM>
             <SHIM NAME="IgnoreFreeLibrary">
                 <DLLFILE>acgenral.dll</DLLFILE>
             </SHIM>
@@ -239,10 +243,12 @@
 
         <LAYER NAME="WIN95">
             <SHIM_REF NAME="Win95VersionLie" />
+            <SHIM_REF NAME="ForceDXSetupSuccess" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN98">
             <SHIM_REF NAME="Win98VersionLie" />
+            <SHIM_REF NAME="ForceDXSetupSuccess" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="NT4SP5">
@@ -362,6 +368,9 @@
 
         <LAYER NAME="DisableThemes">
             <SHIM_REF NAME="DisableThemes" />
+        </LAYER>
+        <LAYER NAME="ForceDXSetupSuccess">
+            <SHIM_REF NAME="ForceDXSetupSuccess" />
         </LAYER>
         <LAYER NAME="VMHorizonSetup">
             <!-- ProductId: {7051C96D-AA61-4D83-AF37-646E82D616ED} -->

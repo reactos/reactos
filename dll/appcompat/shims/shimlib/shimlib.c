@@ -23,18 +23,20 @@ typedef struct UsedShim
 
 
 ULONG g_ShimEngDebugLevel = 0xffffffff;
+static HINSTANCE g_ShimLib_hInstance;
 static HANDLE g_ShimLib_Heap;
 static PSLIST_HEADER g_UsedShims;
 
 void ShimLib_Init(HINSTANCE hInstance)
 {
+    g_ShimLib_hInstance = hInstance;
     g_ShimLib_Heap = HeapCreate(0, 0x10000, 0);
 
     g_UsedShims = (PSLIST_HEADER)ShimLib_ShimMalloc(sizeof(SLIST_HEADER));
     RtlInitializeSListHead(g_UsedShims);
 }
 
-void ShimLib_Deinit()
+void ShimLib_Deinit(VOID)
 {
     // Is this a good idea?
     HeapDestroy(g_ShimLib_Heap);
@@ -48,6 +50,11 @@ PVOID ShimLib_ShimMalloc(SIZE_T dwSize)
 void ShimLib_ShimFree(PVOID pData)
 {
     HeapFree(g_ShimLib_Heap, 0, pData);
+}
+
+HINSTANCE ShimLib_Instance(VOID)
+{
+    return g_ShimLib_hInstance;
 }
 
 PCSTR ShimLib_StringNDuplicateA(PCSTR szString, SIZE_T stringLengthIncludingNullTerm)

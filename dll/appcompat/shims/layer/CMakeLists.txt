@@ -5,6 +5,7 @@ spec2def(aclayers.dll layer.spec)
 
 list(APPEND SOURCE
     dispmode.c
+    forcedxsetupsuccess.c
     versionlie.c
     vmhorizon.c
     main.c
