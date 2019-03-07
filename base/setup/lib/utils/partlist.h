@@ -316,6 +316,11 @@ GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
 
+PPARTENTRY
+GetAdjUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry,
+    _In_ BOOLEAN Direction);
+
 ERROR_NUMBER
 PartitionCreationChecks(
     _In_ PPARTENTRY PartEntry);

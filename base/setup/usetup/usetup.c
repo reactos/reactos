@@ -1718,7 +1718,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 PopupError("The disk you have selected for installing ReactOS\n"
                            "is not visible by the firmware of your computer,\n"
                            "and so may not be bootable.\n"
-                           "Press ENTER to continue nonetheless.",
+                           "Press ENTER to continue anyway.",
                            MUIGetString(STRING_CONTINUE),
                            Ir, POPUP_WAIT_ENTER);
                 // return SELECT_PARTITION_PAGE;
@@ -2101,8 +2101,8 @@ CreatePartitionPage(PINPUT_RECORD Ir)
 
         /*
          * If the input size, given in MB, specifies the maximum partition
-         * size, it may slightly under- or over-estimate it due to rounding
-         * error. In this case, use all of the unpartitioned disk space.
+         * size, it may slightly under- or over-estimate the latter due to
+         * rounding error. In this case, use all of the unpartitioned space.
          * Otherwise, directly convert the size to bytes.
          */
         if (PartSize == MaxSize)
@@ -2634,7 +2634,7 @@ FsVolCallback(
             // (e.g. floppy, USB drive, etc...)
             //
             PopupError("The ReactOS Setup could not find a supported system partition\n"
-                       "on your system or could not create a new one. Without such partition\n"
+                       "on your system or could not create a new one. Without such a partition\n"
                        "the Setup program cannot install ReactOS.\n"
                        "Press ENTER to return to the partition selection list.",
                        MUIGetString(STRING_CONTINUE),
