@@ -1,0 +1,508 @@
+ /*
+ * PROJECT:     Comdlg32 Hindi Translation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hindi translation of Comdlg32
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+STRINGTABLE
+{
+    IDS_FILENOTFOUND        "फाइल नहीं मिली"
+    IDS_VERIFYFILE          "कृपया सत्यापित करें कि सही फ़ाइल नाम दिया गया था"
+    IDS_CREATEFILE          "फाइल मौजूद नहीं है।\n\
+क्या आप फ़ाइल बनाना चाहते हैं?"
+    IDS_OVERWRITEFILE       "फ़ाइल पहले से ही मौजूद है।\n\
+क्या आप इसे बदलना चाहते हैं?"
+    IDS_INVALID_FILENAME_TITLE "पथ में अमान्य कैरेक्टर"
+    IDS_INVALID_FILENAME    "फ़ाइलनेम में निम्न में से कोई भी कैरेक्टर नहीं हो सकता है:\n\
+                          / : < > |"
+    IDS_PATHNOTEXISTING     "पथ मौजूद नहीं है"
+    IDS_FILENOTEXISTING     "फ़ाइल मौजूद नहीं है"
+    IDS_INVALID_FOLDERNAME  "चयन में एक गैर-फ़ोल्डर ऑब्जेक्ट है"
+}
+
+STRINGTABLE
+{
+    IDS_UPFOLDER         "एक स्तर ऊपर"
+    IDS_NEWFOLDER        "नया फ़ोल्डर बनाएँ"
+    IDS_LISTVIEW         "सूची"
+    IDS_REPORTVIEW       "विवरण"
+    IDS_TODESKTOP        "डेस्कटॉप पर ब्राउज़ करें"
+}
+
+STRINGTABLE
+{
+    PD32_PRINT_TITLE       "प्रिंट"
+
+    PD32_VALUE_UREADABLE                  "अपठनीय प्रविष्टि"
+    PD32_INVALID_PAGE_RANGE "यह मान पृष्ठ सीमा के भीतर नहीं है।\n\
+कृपया %1!d! और %2!d! के बीच एक मान दर्ज करें।"
+    PD32_FROM_NOT_ABOVE_TO                "'से' प्रविष्टि 'तक' प्रविष्टि से अधिक नहीं हो सकती।"
+    PD32_MARGINS_OVERLAP                  "मार्जिन ओवरलैप या पेपर सीमाओं के बाहर गिर जाते हैं।\n\
+कृपया मार्जिन पुनः दर्ज करें।"
+    PD32_NR_OF_COPIES_EMPTY               "'प्रतियों की संख्या' फ़ील्ड खाली नहीं हो सकती।"
+    PD32_TOO_LARGE_COPIES                 "बड़ी संख्या में प्रतियां आपके प्रिंटर द्वारा समर्थित नहीं हैं।\n\
+कृपया 1 और %d के बीच एक मान दर्ज करें।"
+    PD32_PRINT_ERROR                      "प्रिंटर त्रुटि हुई।"
+    PD32_NO_DEFAULT_PRINTER               "कोई डिफ़ॉल्ट प्रिंटर परिभाषित नहीं है।"
+    PD32_CANT_FIND_PRINTER                "प्रिंटर नहीं मिल रहा है।"
+    PD32_OUT_OF_MEMORY                    "मेमोरी खत्म।"
+    PD32_GENERIC_ERROR                    "एक त्रुटि पाई गई।"
+    PD32_DRIVER_UNKNOWN                   "अज्ञात प्रिंटर ड्राइवर।"
+    PD32_NO_DEVICES                       "इससे पहले कि आप प्रिंटर से संबंधित कार्य कर सकें जैसे कि पेज सेटअप या डॉक्यूमेंट प्रिंट करना, आपको प्रिंटर इंस्टॉल करना होगा। कृपया एक इंस्टॉल करें और पुनः प्रयास करें।"
+
+    PD32_DEFAULT_PRINTER                  "डिफ़ॉल्ट प्रिंटर; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "पंक्ति में %d दस्तावेज़ हैं"
+    PD32_MARGINS_IN_INCHES                "मार्जिन [इंच]"
+    PD32_MARGINS_IN_MILLIMETERS           "मार्जिन [mm]"
+    PD32_MILLIMETERS                      "mm"
+
+    PD32_PRINTER_STATUS_READY             "तैयार"
+    PD32_PRINTER_STATUS_PAUSED            "रोके गए; "
+    PD32_PRINTER_STATUS_ERROR             "त्रुटि; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "हटाने का काम लंबित; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "कागज जाम; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "कागज खत्म; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "फीड पेपर मैनुअल; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "कागज की समस्या; "
+    PD32_PRINTER_STATUS_OFFLINE           "प्रिंटर ऑफ़लाइन; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "आई/ओ एक्टिव; "
+    PD32_PRINTER_STATUS_BUSY              "व्यस्त; "
+    PD32_PRINTER_STATUS_PRINTING          "मुद्रण; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "आउटपुट ट्रे भरी हुई है; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "अनुपलब्ध; "
+    PD32_PRINTER_STATUS_WAITING           "इंतिज़ार; "
+    PD32_PRINTER_STATUS_PROCESSING        "प्रसंस्करण; "
+    PD32_PRINTER_STATUS_INITIALIZING      "इनिशलाइज़ करना; "
+    PD32_PRINTER_STATUS_WARMING_UP        "गरम करना; "
+    PD32_PRINTER_STATUS_TONER_LOW         "कम टोनर; "
+    PD32_PRINTER_STATUS_NO_TONER          "कोई टोनर नहीं; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "पेज पंट; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "उपयोगकर्ता द्वारा बाधित; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "मेमोरी खत्म; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "प्रिंटर का दरवाजा खुला है; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "प्रिंट सर्वर अज्ञात; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "बिजली बचाने की प्रणाली; "
+}
+
+STRINGTABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "नियमित"
+    IDS_FONT_BOLD          "बोल्ड"
+    IDS_FONT_ITALIC        "तिरछा"
+    IDS_FONT_BOLD_ITALIC   "बोल्ड तिरछा"
+}
+
+STRINGTABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "काला"
+    IDS_COLOR_MAROON    "मारून"
+    IDS_COLOR_GREEN     "हरा"
+    IDS_COLOR_OLIVE     "ओलिव"
+    IDS_COLOR_NAVY      "नेवी"
+    IDS_COLOR_PURPLE    "पर्पल"
+    IDS_COLOR_TEAL      "टील"
+    IDS_COLOR_GRAY      "ग्रे"
+    IDS_COLOR_SILVER    "चांदी"
+    IDS_COLOR_RED       "लाल"
+    IDS_COLOR_LIME      "लाइम्"
+    IDS_COLOR_YELLOW    "पीला"
+    IDS_COLOR_BLUE      "नीला"
+    IDS_COLOR_FUCHSIA   "फ्यूशिया"
+    IDS_COLOR_AQUA      "एक्वा"
+    IDS_COLOR_WHITE     "सफेद"
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SIZE   "%1!d और %2!d अंक के बीच एक फ़ॉन्ट साइज़ चुनें।"
+    IDS_SAVE_BUTTON "&सेव"
+    IDS_SAVE_IN     "सेव &इन:"
+    IDS_SAVE        "सेव"
+    IDS_SAVE_AS     "सेव इज़"
+    IDS_OPEN_FILE   "फाइल खोलो"
+    IDS_SELECT_FOLDER "फोल्डर का चयन करें"
+    IDS_FONT_SIZE_INPUT "फ़ॉन्ट का साइज़ एक संख्या होना चाहिए।"
+}
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+OPEN_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "खोलो"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "फ़ाइल का &नाम:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&डाइरेक्टरी:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&प्रकार की सूची फ़ाइलें:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&ड्राइव:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "खोलो", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&मदद", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&केवल पठीय", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG 36, 24, 275, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "सेव इज़..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "फ़ाइल का &नाम:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&डाइरेक्टर:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&प्रकार की सूची फ़ाइलें:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&ड्राइव:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "सेव इज़", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&मदद", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&केवल पठीय", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "प्रिंट"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "प्रिंटर:", stc1, 6, 6, 40, 9
+ LTEXT "", stc2, 60, 6, 150, 9
+ GROUPBOX "प्रिंट रेंज", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "&सब", rad1, 16, 45, 60, 12
+ RADIOBUTTON "&चुनाव", rad2, 16, 60, 60, 12
+ RADIOBUTTON "&पृष्ठों", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "प्रिंट", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&सेटअप", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "&से:", stc3, 60, 80, 30, 9
+ LTEXT "&तक:", stc4, 120, 80, 30, 9
+ LTEXT "प्रिंट की &गुणवत्ता:", stc5, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "&फाइल करने के लिए प्रिंट", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "घनीभूत", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG 36, 24, 264, 134
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "प्रिंट सेटअप"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "प्रिंटर", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "&डिफ़ॉल्ट प्रिंटर", rad1, 16, 16, 150, 12
+ LTEXT "[कुछ भी नहीं]", stc1, 35, 30, 120, 9
+ RADIOBUTTON "Specific &Printer", rad2, 16, 44, 150, 12
+ COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "ठीक", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&सेटअप", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "उन्मुखीकरण", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&पॉर्ट्रट", rad3, 50, 95, 50, 12
+ RADIOBUTTON "&लैन्ड्स्केप", rad4, 50, 110, 50, 12
+ ICON "लैन्ड्स्केप", stc10, 10, 95, 32, 32
+ ICON "पॉर्ट्रट", stc11, 10, 95, 32, 32
+ GROUPBOX "कागज़", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ LTEXT "&साइज़", stc2, 126, 95, 35, 9
+ LTEXT "&सॉर्स", stc3, 126, 110, 35, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG  13, 54, 274, 147
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "फ़ॉन्ट"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&फ़ॉन्ट:",stc1 ,6,3,90,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "फ़ॉन्ट &शैली:",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&साइज़:",stc3,179,3,32,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "ठीक",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "रद्द करें",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&लागू करें", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&मदद" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "प्रभाव",grp1,6,72,84,36,WS_GROUP
+    CHECKBOX	    "&स्ट्राइक आउट", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&रेखांकित", chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    LTEXT           "&रंग:", stc4 ,6,114,80,9
+    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "सैम्पल",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "&लिपि:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG 36, 24, 300, 185
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "रंग"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&मूल रंग:",   stc1, 4,    4,  140, 10
+ LTEXT "&कस्टम रंग:",  stc2, 4,   106, 140, 10
+ LTEXT "रंग | &ठोस",  stc3, 150, 151,  48, 10
+ LTEXT   "&लाल:", IDC_COLOR_RL /*1094*/,247,126,27,10
+ EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&हरा:", IDC_COLOR_GL /*1095*/,247,140,27,10
+ EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&नीला:", IDC_COLOR_BL /*1096*/,247,154,27,10
+ EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&ह्यू:" , IDC_COLOR_HL /*1091*/,200,126,24,10
+ EDITTEXT IDC_COLOR_EDIT_H, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&सैट:", IDC_COLOR_SL /*1092*/,200,140,24,10
+ EDITTEXT IDC_COLOR_EDIT_S, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&लूम:", IDC_COLOR_LL /*1093*/,200,154,24,10
+ EDITTEXT IDC_COLOR_EDIT_L, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" , IDC_COLOR_PREDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" , IDC_COLOR_USRDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" , IDC_COLOR_GRAPH, "STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" , IDC_COLOR_LUMBAR, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "ठीक",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "मदद", pshHelp,100,166, 44, 14
+ PUSHBUTTON "कस्टम रंग में &ऐड करे",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "कस्टम रंगों को &परिभाषित करें >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रंग | &ठोस", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
+}
+
+
+FINDDLGORD DIALOG 36, 24, 276, 62
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "खोज"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&क्या ढूँडो:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "केवल &पूर्ण शब्द मिलाएं", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&केस मिलाएँ", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "दिशाओं", grp1, 147, 21, 58, 38
+ CONTROL "&ऊपर", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "&नीचे", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+
+ DEFPUSHBUTTON "अगला &ढूंढो", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "रद्द करें", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&मदद", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG 36, 24, 276, 94
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "बदले"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "क्या &ढूँडो:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "&से बदलो:", -1, 4, 26, 52, 8
+ EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "केवल &पूर्ण शब्द मिलाएं", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&केस मिलाएँ", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "अगला &ढूंढो", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&बदले", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&सबको बदली करें", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "रद्द करें", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&मदद", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG  32, 32, 288, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "प्रिंट"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "ठीक",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "रद्द करें", IDCANCEL, 230,164, 50,14, WS_GROUP
+    PUSHBUTTON      "&मदद",  pshHelp,  50, 161, 50,14, WS_GROUP
+
+    GROUPBOX        "प्रिंटर",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "&फाइल करने के लिए प्रिंट", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "&गुण",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&नाम:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "स्थिति:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "प्रकार:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "कहा:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "टिप्पणी:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "प्रतियां",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "&प्रतियों की संख्या:",stc5,168,105,68,8
+    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "&कोलेट",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "प्रिंट रेंज",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&सब",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&पृष्ठों",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&चयन",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&से:",         stc2,  52,124,  20,8
+    RTEXT           "&तक:",           stc3,  99,124,  20,8
+}
+
+PRINT32_SETUP DIALOG  32, 32, 288, 178
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "प्रिंट सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "ठीक",IDOK,176,156,50,14,WS_GROUP
+    PUSHBUTTON      "रद्द करें",IDCANCEL,230,156,50,14
+/*    PUSHBUTTON      "नेटवर्क...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "प्रिंटर",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&गुण",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&नाम:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "स्थिति:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "प्रकार:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "कहा:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "टिप्पणी:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "कागज़",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&साइज़:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&सॉर्स:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "उन्मुखीकरण",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "&पोर्ट्रिट",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&लैंडस्केप",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG 32, 32, 240, 240
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "सेटअप पृष्ठ"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "कागज़", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&साइज़:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "&ट्रे:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "उन्मुखीकरण", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&पोर्ट्रिट", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&लैंडस्केप", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&बाएं:", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&दांए:", stc16, 159, 172, 30, 8
+  EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&टॉप:", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&तल:", stc18, 159, 192, 30, 8
+  EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "ठीक", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "रद्द करें", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "&प्रिंटर...", psh3, 182, 220, 50, 14
+END
+
+NEWFILEOPENORD DIALOG 0, 0, 280, 164
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "खोलो"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"&इसमें देखें:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"फ़ाइल का &नाम:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+    CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
+
+    LTEXT	"&प्रकार की फाइलें:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"केवल पठनीय के रूप में खोलें",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+
+    DEFPUSHBUTTON	"&खोलो",		 IDOK,222,110,54,14
+    PUSHBUTTON		"रद्द करें",		 IDCANCEL,222,128,54,14
+    PUSHBUTTON		"&मदद",		 pshHelp,222,145,54,14
+}
+
+NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "खोलो"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "&इसमें देखें:", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
+    COMBOBOX IDC_LOOKIN, 64, 3, 150, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT "" , IDC_TOOLBARSTATIC, 209, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 55, 208
+    LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT "फ़ाइल का &नाम:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
+    EDITTEXT IDC_FILENAME, 123, 180, 180, 12, ES_AUTOHSCROLL
+    CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 123, 180, 180, 150
+
+    LTEXT "&प्रकार की फाइलें:", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
+    COMBOBOX IDC_FILETYPE, 123, 198, 180, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL "केवल पठनीय के रूप में खोलें", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
+
+    DEFPUSHBUTTON "&खोलो", IDOK, 310, 180, 54, 14
+    PUSHBUTTON "रद्द करें", IDCANCEL, 310, 198, 54, 14
+    PUSHBUTTON "&मदद", pshHelp, 310, 215, 54, 14
+}
+
+NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+      WS_THICKFRAME
+CAPTION "खोलो"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "फ़ाइल का नाम:", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
+    EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_CLIPSIBLINGS | ES_AUTOHSCROLL
+
+    LTEXT           "प्रकार की फाइलें:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT | WS_CLIPSIBLINGS
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 60,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
+                    WS_CLIPSIBLINGS | CBS_HASSTRINGS | CBS_DROPDOWNLIST
+
+    DEFPUSHBUTTON   "&खोलो",  IDOK,     350, 240, 32, 14, WS_GROUP | WS_CLIPSIBLINGS
+
+    /* drop-down menu for open button */
+    CONTROL         "6", psh1, "Button", WS_CHILD | WS_CLIPSIBLINGS | WS_GROUP | WS_TABSTOP |
+                    BS_CHECKBOX | BS_PUSHLIKE, 342, 240, 8, 14
+
+    PUSHBUTTON      "रद्द करें", IDCANCEL, 395, 240, 40, 14, WS_CLIPSIBLINGS
+    PUSHBUTTON      "&मदद",  pshHelp,  350, 272, 40, 14, WS_CLIPSIBLINGS
+}
