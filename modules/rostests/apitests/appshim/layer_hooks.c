@@ -27,12 +27,24 @@ typedef struct expect_shim_data
 {
     const WCHAR* ShimName;
     DWORD MinVersion;
-    expect_shim_hook hooks[4];
+    expect_shim_hook hooks[6];
 } expect_shim_data;
 
 
 static expect_shim_data data[] =
 {
+    {
+        L"ForceDXSetupSuccess",
+        0,
+        {
+            { "KERNEL32.DLL", "LoadLibraryA" },
+            { "KERNEL32.DLL", "LoadLibraryW" },
+            { "KERNEL32.DLL", "LoadLibraryExA" },
+            { "KERNEL32.DLL", "LoadLibraryExW" },
+            { "KERNEL32.DLL", "GetProcAddress" },
+            { "KERNEL32.DLL", "FreeLibrary" },
+        }
+    },
     {
         L"VerifyVersionInfoLite",
         0,
