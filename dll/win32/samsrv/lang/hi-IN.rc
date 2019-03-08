@@ -1,0 +1,32 @@
+/*
+ * PROJECT:     SAMSRV Hindi Translation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Hindi translation of SAMSRV
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+ 
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "अंतर्निहित"
+    IDS_GROUP_NONE_NAME "कुछ भी नहीं"
+    IDS_GROUP_NONE_COMMENT "साधारण उपयोगकर्ता"
+    IDS_ALIAS_ADMINISTRATORS_NAME "एडमिनिस्ट्रेटर"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "एडमिनिस्ट्रेटर के पास कंप्यूटर या डोमेन तक अप्रतिबंधित पहुंच होती है।"
+    IDS_ALIAS_GUESTS_NAME "मेहमान"
+    IDS_ALIAS_GUESTS_COMMENT "डिफ़ॉल्ट रूप से मेहमान के पास उपयोगकर्ता समूह के सदस्यों के समान अधिकार हैं।"
+    IDS_ALIAS_POWER_USERS_NAME "पावर उपयोगकर्ता"
+    IDS_ALIAS_POWER_USERS_COMMENT "पावर उपयोगकर्ताओं के पास कुछ प्रतिबंधों के साथ अधिकांश प्रशासनिक अधिकार हैं।"
+    IDS_ALIAS_USERS_NAME "उपयोगकर्ता"
+    IDS_ALIAS_USERS_COMMENT "उपयोगकर्ताओं को सिस्टम-व्यापी परिवर्तन करने से रोका जाता है।"
+    /*
+     * ATTENTION: 
+     *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "एडमिनिस्ट्रेटर"
+    IDS_USER_ADMINISTRATOR_COMMENT "अंतर्निहित खाता कंप्यूटर या डोमेन का प्रशासन करने के लिए उपयोग किया जाता है।"
+    IDS_USER_GUEST_NAME "उपयोगकर्ता"
+    IDS_USER_GUEST_COMMENT "कंप्यूटर या डोमेन तक अतिथि पहुंच के लिए अंतर्निहित खाता।"
+END
