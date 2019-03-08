@@ -397,16 +397,15 @@ FDO_HandlePnp(
             FDO_CloseConfiguration(DeviceObject);
 
             /* Send the IRP down the stack */
-            Status = USBCCGP_SyncForwardIrp(FDODeviceExtension->NextDeviceObject,
-                                            Irp);
-            if (NT_SUCCESS(Status))
-            {
-                /* Detach from the device stack */
-                IoDetachDevice(FDODeviceExtension->NextDeviceObject);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(FDODeviceExtension->NextDeviceObject, Irp);
 
-                /* Delete the device object */
-                IoDeleteDevice(DeviceObject);
-            }
+            /* Detach from the device stack */
+            IoDetachDevice(FDODeviceExtension->NextDeviceObject);
+
+            /* Delete the device object */
+            IoDeleteDevice(DeviceObject);
 
             /* Request completed */
             break;
