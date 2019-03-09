@@ -306,6 +306,9 @@ NetGroupAdd(
     TRACE("NetGroupAdd(%s, %d, %p, %p)\n",
           debugstr_w(servername), level, buf, parm_err);
 
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
+
     /* Initialize the Server name*/
     if (servername != NULL)
         RtlInitUnicodeString(&ServerName, servername);

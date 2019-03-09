@@ -2060,6 +2060,9 @@ NetUserAdd(LPCWSTR servername,
 
     TRACE("(%s, %d, %p, %p)\n", debugstr_w(servername), level, bufptr, parm_err);
 
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
+
     /* Check the info level */
     switch (level)
     {
