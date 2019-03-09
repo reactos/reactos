@@ -637,14 +637,14 @@ cmdUser(
     NET_API_STATUS Status;
 
     i = 2;
-    if (argv[i][0] != L'/')
+    if ((i < argc) && (argv[i][0] != L'/'))
     {
         lpUserName = argv[i];
 //        ConPrintf(StdOut, L"User: %s\n", lpUserName);
         i++;
     }
 
-    if (argv[i][0] != L'/')
+    if ((i < argc) && (argv[i][0] != L'/'))
     {
         lpPassword = argv[i];
 //        ConPrintf(StdOut, L"Password: %s\n", lpPassword);

@@ -246,7 +246,10 @@ int wmain(int argc, WCHAR **argv)
 
 done:
     if (bRun == FALSE)
+    {
+        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
         PrintNetMessage(MSG_NET_SYNTAX);
+    }
 
     if (hModuleNetMsg != NULL)
         FreeLibrary(hModuleNetMsg);

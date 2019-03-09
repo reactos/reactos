@@ -13,13 +13,13 @@ INT cmdHelp(INT argc, WCHAR **argv)
 {
     ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
 
-/*
     if (argc != 3)
     {
-        ConResPuts(StdOut, IDS_HELP_SYNTAX);
+        PrintNetMessage(MSG_HELP_SYNTAX);
+        PrintNetMessage(MSG_HELP_HELP);
         return 0;
     }
-*/
+
     if (_wcsicmp(argv[2], L"ACCOUNTS") == 0)
     {
         PrintNetMessage(MSG_ACCOUNTS_SYNTAX);
