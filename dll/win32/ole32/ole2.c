@@ -2271,11 +2271,11 @@ static HRESULT WINAPI DefaultDrop(HWND hwndAccepter,
                 GlobalUnlock(hGlobal);
             }
 #endif
-            /* TODO: Send hGlobal to another process correctly */
+            /* TODO: Fix WM_COPYGLOBALDATA */
             if (IsWindowUnicode(hwndAccepter))
-                SendMessageW(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
+                PostMessageW(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
             else
-                SendMessageA(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
+                PostMessageA(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
         }
         ReleaseStgMedium(&stgm);
     }
