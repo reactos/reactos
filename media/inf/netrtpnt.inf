@@ -52,7 +52,7 @@ LoadOrderGroup = NDIS
 ReactOS = "ReactOS Team"
 
 RealtekMfg = "Realtek Semiconductor Co., Ltd."
-PCI\VEN_10EC&DEV_8029.DeviceDesc = "RTL-8029(AS)"
+PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 PCI Ethernet Adapter"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"

@@ -52,7 +52,7 @@ LoadOrderGroup = NDIS
 ReactOS = "ReactOS Team"
 
 GenericMfg = "(Generic network cards)"
-*PNP80D6.DeviceDesc = "NE2000 Compatible"
+*PNP80D6.DeviceDesc = "NE2000 Compatible ISA Ethernet Adapter"
 
 [Strings.0405]
 GenericMfg = "(Generické síťové karty)"
