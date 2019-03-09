@@ -59,7 +59,7 @@ LoadOrderGroup = NDIS
 ReactOS = "ReactOS Team"
 
 AMDMfg = "Advanced Micro Devices (AMD)"
-PCNET.DeviceDesc = "AMD 79c970 [PCnet32 LANCE]"
+PCNET.DeviceDesc = "AMD PCnet Am79C970 PCI Ethernet Adapter"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
