@@ -548,7 +548,8 @@ PolyPatBlt(
         pgO = GdiAllocBatchCommand(hdc, GdiBCPolyPatBlt);
         if (pgO)
         {
-            USHORT cjSize = sizeof(GDIBSPPATBLT) + (nCount-1) * sizeof(PATRECT);
+            USHORT cjSize = 0;
+            if (nCount > 1) cjSize = (nCount-1) * sizeof(PATRECT);
 
             if ((pTeb->GdiTebBatch.Offset + cjSize) <= GDIBATCHBUFSIZE)
             {
@@ -563,10 +564,14 @@ PolyPatBlt(
                 pgO->ulBackgroundClr = pdcattr->ulBackgroundClr;
                 pgO->ulBrushClr      = pdcattr->ulBrushClr;
                 RtlCopyMemory(pgO->pRect, pPoly, nCount * sizeof(PATRECT));
-                // Recompute offset, remember one is already accounted for in the structure.
-                pTeb->GdiTebBatch.Offset += (nCount-1) * sizeof(PATRECT);
+                // Recompute offset and return size, remember one is already accounted for in the structure.
+                pTeb->GdiTebBatch.Offset += cjSize;
+                ((PGDIBATCHHDR)pgO)->Size += cjSize;
                 return TRUE;
             }
+            // Reset offset and count then fall through
+            pTeb->GdiTebBatch.Offset -= sizeof(GDIBSPPATBLT);
+            pTeb->GdiBatchCount--;
         }
     }
     return NtGdiPolyPatBlt(hdc, dwRop, pPoly, nCount, dwMode);

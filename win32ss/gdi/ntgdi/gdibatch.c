@@ -5,6 +5,8 @@
 #include <debug.h>
 
 BOOL FASTCALL IntPatBlt( PDC,INT,INT,INT,INT,DWORD,PEBRUSHOBJ);
+BOOL APIENTRY IntExtTextOutW(IN PDC,IN INT,IN INT,IN UINT,IN OPTIONAL PRECTL,IN LPCWSTR,IN INT,IN OPTIONAL LPINT,IN DWORD);
+
 
 //
 // Gdi Batch Flush support functions.
@@ -40,7 +42,7 @@ DoDeviceSync( SURFOBJ *Surface, PRECTL Rect, FLONG fl)
 
 VOID
 FASTCALL
-SynchonizeDriver(FLONG Flags)
+SynchronizeDriver(FLONG Flags)
 {
   SURFOBJ *SurfObj;
   //PPDEVOBJ Device;
@@ -130,7 +132,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         dc->pdcattr->ulForegroundClr = pgDPB->ulForegroundClr;
         dc->pdcattr->ulBackgroundClr = pgDPB->ulBackgroundClr;
         dc->pdcattr->ulBrushClr      = pgDPB->ulBrushClr;
-        // Process dirty attributes if any
+        // Process dirty attributes if any.
         if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
             DC_vUpdateFillBrush(dc);
         if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
@@ -157,7 +159,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         EBRUSHOBJ eboFill;
         PBRUSH pbrush;
         PPATRECT pRects;
-        INT cRects, i;
+        INT i;
         DWORD dwRop, flags;
         COLORREF crColor, crBkColor, crBrushClr;
         ULONG ulForegroundClr, ulBackgroundClr, ulBrushClr;
@@ -200,10 +202,9 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
             DC_vUpdateBackgroundBrush(dc);
 
         DPRINT1("GdiBCPolyPatBlt Testing\n");
-        pRects = pgDPB->pRect;
-        cRects = pgDPB->Count;
+        pRects = &pgDPB->pRect[0];
 
-        for (i = 0; i < cRects; i++)
+        for (i = 0; i < pgDPB->Count; i++)
         {
             pbrush = BRUSH_ShareLockBrush(pRects->hBrush);
 
@@ -238,21 +239,141 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         dc->pdcattr->ulBrushClr      = ulBrushClr;
         dc->pdcattr->ulDirty_ |= flags;
         break;
-     } 
+     }
+
      case GdiBCTextOut:
+     {
+        PGDIBSTEXTOUT pgO;
+        COLORREF crColor = -1, crBkColor;
+        ULONG ulForegroundClr, ulBackgroundClr;
+        DWORD flags = 0, saveflags;
+        FLONG flTextAlign = -1;
+        HANDLE hlfntNew;
+        PRECTL lprc;
+        USHORT jBkMode;
+        LONG lBkMode;
+        if (!dc) break;
+        pgO = (PGDIBSTEXTOUT) pHdr;
+
+        // Save current attributes, flags and Set the attribute snapshots
+        saveflags = dc->pdcattr->ulDirty_ & (DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_TEXT|DIRTY_FILL|DC_BRUSH_DIRTY|DIRTY_CHARSET);
+
+        // In this instance check for differences and set the appropriate dirty flags.
+        if ( dc->pdcattr->crForegroundClr != pgO->crForegroundClr)
+        {
+            crColor = dc->pdcattr->crForegroundClr;
+            dc->pdcattr->crForegroundClr = pgO->crForegroundClr;
+            ulForegroundClr = dc->pdcattr->ulForegroundClr;
+            dc->pdcattr->ulForegroundClr = pgO->ulForegroundClr;
+            flags |= (DIRTY_FILL|DIRTY_LINE|DIRTY_TEXT);
+        }
+        if (dc->pdcattr->crBackgroundClr != pgO->crBackgroundClr)
+        {
+            crBkColor = dc->pdcattr->ulBackgroundClr;
+            dc->pdcattr->crBackgroundClr = pgO->crBackgroundClr;
+            ulBackgroundClr = dc->pdcattr->ulBackgroundClr;
+            dc->pdcattr->ulBackgroundClr = pgO->ulBackgroundClr;
+            flags |= (DIRTY_FILL|DIRTY_LINE|DIRTY_TEXT|DIRTY_BACKGROUND);
+        }
+        if (dc->pdcattr->flTextAlign != pgO->flTextAlign)
+        {
+            flTextAlign = dc->pdcattr->flTextAlign;
+            dc->pdcattr->flTextAlign = pgO->flTextAlign;
+        }
+        if (dc->pdcattr->hlfntNew != pgO->hlfntNew)
+        {
+            hlfntNew = dc->pdcattr->hlfntNew;
+            dc->pdcattr->hlfntNew = pgO->hlfntNew;
+            dc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+            flags |= DIRTY_CHARSET;
+        }
+
+        dc->pdcattr->ulDirty_ |= flags;
+
+        jBkMode = dc->pdcattr->jBkMode;
+        dc->pdcattr->jBkMode = pgO->lBkMode;
+        lBkMode = dc->pdcattr->lBkMode;
+        dc->pdcattr->lBkMode = pgO->lBkMode;
+
+        lprc = (pgO->Options & GDIBS_NORECT) ? NULL : &pgO->Rect;
+        pgO->Options &= ~GDIBS_NORECT;
+
+        IntExtTextOutW( dc,
+                        pgO->x,
+                        pgO->y,
+                        pgO->Options,
+                        lprc,
+                        (LPCWSTR)&pgO->String[pgO->Size/sizeof(WCHAR)],
+                        pgO->cbCount,
+                        pgO->Size ? (LPINT)&pgO->Buffer : NULL,
+                        pgO->iCS_CP );
+
+        // Restore attributes and flags
+        dc->pdcattr->jBkMode = jBkMode;
+        dc->pdcattr->lBkMode = lBkMode;
+
+        if (flags & DIRTY_TEXT && crColor != -1)
+        {
+            dc->pdcattr->crForegroundClr = crColor;
+            dc->pdcattr->ulForegroundClr = ulForegroundClr;
+        }
+        if (flags & DIRTY_BACKGROUND)
+        {
+            dc->pdcattr->crBackgroundClr = crBkColor;
+            dc->pdcattr->ulBackgroundClr = ulBackgroundClr;
+        }
+        if (flTextAlign != -1)
+        {
+            dc->pdcattr->flTextAlign = flTextAlign;
+        }
+
+        if (flags & DIRTY_CHARSET)
+        {
+           dc->pdcattr->hlfntNew = hlfntNew;
+           dc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        }
+        dc->pdcattr->ulDirty_ |= saveflags | flags;
         break;
+     }
 
      case GdiBCExtTextOut:
      {
-        //GreExtTextOutW( hDC,
-        //                XStart,
-        //                YStart,
-        //                fuOptions,
-        //               &SafeRect,
-        //                SafeString,
-        //                Count,
-        //                SafeDx,
-        //                dwCodePage );
+        PGDIBSEXTTEXTOUT pgO;
+        COLORREF crBkColor;
+        ULONG ulBackgroundClr;
+        DWORD flags = 0, saveflags;
+        if (!dc) break;
+        pgO = (PGDIBSEXTTEXTOUT) pHdr;
+
+        saveflags = dc->pdcattr->ulDirty_ & (DIRTY_BACKGROUND|DIRTY_TEXT|DIRTY_FILL|DC_BRUSH_DIRTY|DIRTY_CHARSET);
+
+        if (dc->pdcattr->crBackgroundClr != pgO->ulBackgroundClr)
+        {
+            crBkColor = dc->pdcattr->crBackgroundClr;
+            ulBackgroundClr = dc->pdcattr->ulBackgroundClr;
+            dc->pdcattr->crBackgroundClr = pgO->ulBackgroundClr;
+            dc->pdcattr->ulBackgroundClr = pgO->ulBackgroundClr;
+            flags |= (DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL);
+        }
+
+        dc->pdcattr->ulDirty_ |= flags;
+
+        IntExtTextOutW( dc,
+                        0,
+                        0,
+                        pgO->Options,
+                       &pgO->Rect,
+                        NULL,
+                        pgO->Count,
+                        NULL,
+                        0 );
+
+        if (flags & DIRTY_BACKGROUND)
+        {
+            dc->pdcattr->crBackgroundClr = crBkColor;
+            dc->pdcattr->ulBackgroundClr = ulBackgroundClr;
+        }
+        dc->pdcattr->ulDirty_ |= saveflags | flags;
         break;
      }
 
@@ -308,7 +429,7 @@ APIENTRY
 NtGdiFlush(
     VOID)
 {
-    SynchonizeDriver(GCAPS2_SYNCFLUSH);
+    SynchronizeDriver(GCAPS2_SYNCFLUSH);
     return STATUS_SUCCESS;
 }
 

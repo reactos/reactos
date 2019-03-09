@@ -5814,7 +5814,7 @@ IntExtTextOutW(
     if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;
 
-    if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+    if (dc->pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc) ;
 
     thickness = 1;

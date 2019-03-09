@@ -488,6 +488,8 @@ ExtTextOutW(
     _In_ UINT cwc,
     _In_reads_opt_(cwc) const INT *lpDx)
 {
+    PDC_ATTR pdcattr;
+
     HANDLE_METADC(BOOL,
                   ExtTextOut,
                   FALSE,
@@ -506,6 +508,101 @@ ExtTextOutW(
             return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
     }
 
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if ( pdcattr &&
+         !(pdcattr->ulDirty_ & DC_DIBSECTION) &&
+         !(pdcattr->lTextAlign & TA_UPDATECP))
+    {
+        if ( lprc && !cwc )
+        {
+            if ( fuOptions & ETO_OPAQUE )
+            {
+                PGDIBSEXTTEXTOUT pgO;
+
+                pgO = GdiAllocBatchCommand(hdc, GdiBCExtTextOut);
+                if (pgO)
+                {
+                    pgO->Count = cwc;
+                    pgO->Rect = *lprc;
+                    pgO->Options = fuOptions;
+                    /* Snapshot attribute */
+                    pgO->ulBackgroundClr = pdcattr->ulBackgroundClr;
+                    pgO->ptlViewportOrg  = pdcattr->ptlViewportOrg;
+                    return TRUE;
+                }
+            }
+            else // Do nothing, old explorer pops this off.
+            {
+                DPRINT1("GdiBCExtTextOut nothing\n");
+                return TRUE;
+            }
+        }         // Max 580 wchars, if offset 0
+        else if ( cwc <= ((GDIBATCHBUFSIZE - sizeof(GDIBSTEXTOUT)) / sizeof(WCHAR)) )
+        {
+            PGDIBSTEXTOUT pgO;
+            PTEB pTeb = NtCurrentTeb();
+
+            pgO = GdiAllocBatchCommand(hdc, GdiBCTextOut);
+            if (pgO)
+            {
+                USHORT cjSize = 0;
+                ULONG DxSize = 0;
+
+                if (cwc > 2) cjSize = (cwc * sizeof(WCHAR)) - sizeof(pgO->String);
+
+                /* Calculate buffer size for string and Dx values */
+                if (lpDx)
+                {
+                    /* If ETO_PDY is specified, we have pairs of INTs */
+                    DxSize = (cwc * sizeof(INT)) * (fuOptions & ETO_PDY ? 2 : 1);
+                    cjSize += DxSize;
+                    // The structure buffer holds 4 bytes. Store Dx data then string.
+                    // Result one wchar -> Buf[ Dx ]Str[wC], [4][2][X] one extra unused wchar
+                    // to assure alignment of 4.
+                }
+
+                if ((pTeb->GdiTebBatch.Offset + cjSize ) <= GDIBATCHBUFSIZE)
+                {
+                    pgO->cbCount = cwc;
+                    pgO->x = x;
+                    pgO->y = y;
+                    pgO->Options = fuOptions;
+                    pgO->iCS_CP = 0;
+
+                    if (lprc) pgO->Rect = *lprc;
+                    else
+                    {
+                       pgO->Options |= GDIBS_NORECT; // Tell the other side lprc is nill.
+                    }
+
+                    /* Snapshot attributes */
+                    pgO->crForegroundClr = pdcattr->crForegroundClr;
+                    pgO->crBackgroundClr = pdcattr->crBackgroundClr;
+                    pgO->ulForegroundClr = pdcattr->ulForegroundClr;
+                    pgO->ulBackgroundClr = pdcattr->ulBackgroundClr;
+                    pgO->lBkMode         = pdcattr->lBkMode == OPAQUE ? OPAQUE : TRANSPARENT;
+                    pgO->hlfntNew        = pdcattr->hlfntNew;
+                    pgO->flTextAlign     = pdcattr->flTextAlign;
+                    pgO->ptlViewportOrg  = pdcattr->ptlViewportOrg;
+
+                    pgO->Size = DxSize; // of lpDx then string after.
+                    /* Put the Dx before the String to assure alignment of 4 */
+                    if (lpDx) RtlCopyMemory( &pgO->Buffer, lpDx, DxSize);
+
+                    if (cwc) RtlCopyMemory( &pgO->String[DxSize/sizeof(WCHAR)], lpString, cwc * sizeof(WCHAR));
+
+                    // Recompute offset and return size
+                    pTeb->GdiTebBatch.Offset += cjSize;
+                    ((PGDIBATCHHDR)pgO)->Size += cjSize;
+                    return TRUE;
+                }
+                // Reset offset and count then fall through
+                pTeb->GdiTebBatch.Offset -= sizeof(GDIBSTEXTOUT);
+                pTeb->GdiBatchCount--;
+            }
+        }
+    }
     return NtGdiExtTextOutW(hdc,
                             x,
                             y,

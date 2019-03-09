@@ -495,12 +495,17 @@ typedef struct _GDIBSPPATBLT
   PATRECT pRect[1]; // POLYPATBLT
 } GDIBSPPATBLT, *PGDIBSPPATBLT;
 
+//
+// Both ExtSelectClipRgn and TextOut pass a nill RECT.
+//
+#define GDIBS_NORECT 0x80000000
+
 typedef struct _GDIBSTEXTOUT
 {
   GDIBATCHHDR gbHdr;
   COLORREF crForegroundClr;
   COLORREF crBackgroundClr;
-  LONG lmBkMode;
+  LONG lBkMode;
   ULONG ulForegroundClr;
   ULONG ulBackgroundClr;
   int x;
@@ -513,7 +518,10 @@ typedef struct _GDIBSTEXTOUT
   HANDLE hlfntNew;
   FLONG flTextAlign;
   POINTL ptlViewportOrg;
+  union {
   WCHAR String[2];
+  ULONG Buffer[1];
+  };
 } GDIBSTEXTOUT, *PGDIBSTEXTOUT;
 
 typedef struct _GDIBSEXTTEXTOUT
