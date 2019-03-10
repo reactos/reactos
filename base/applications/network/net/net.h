@@ -68,6 +68,7 @@ INT cmdPause(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStatistics(INT argc, WCHAR **argv);
 INT cmdStop(INT argc, WCHAR **argv);
+INT cmdSyntax(INT argc, WCHAR **argv);
 INT cmdUse(INT argc, WCHAR **argv);
 INT cmdUser(INT argc, WCHAR **argv);
 

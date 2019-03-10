@@ -186,12 +186,13 @@ INT cmdHelp(INT argc, WCHAR **argv)
     {
         return 0;
     }
+#endif
 
     if (_wcsicmp(argv[2], L"SYNTAX") == 0)
     {
+        PrintNetMessage(MSG_SYNTAX_HELP);
         return 0;
     }
-#endif
 
     PrintNetMessage(MSG_HELP_SYNTAX);
     PrintNetMessage(MSG_HELP_HELP);
@@ -199,3 +200,11 @@ INT cmdHelp(INT argc, WCHAR **argv)
     return 0;
 }
 
+
+INT
+cmdSyntax(INT argc, WCHAR **argv)
+{
+    ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+    PrintNetMessage(MSG_SYNTAX_HELP);
+    return 0;
+}

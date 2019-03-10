@@ -38,6 +38,7 @@ COMMAND cmds[] =
     {L"start",      cmdStart},
     {L"statistics", cmdStatistics},
     {L"stop",       cmdStop},
+    {L"syntax",     cmdSyntax},
     {L"time",       unimplemented},
     {L"use",        cmdUse},
     {L"user",       cmdUser},

@@ -1273,7 +1273,8 @@ Language=English
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
    Dostępne polecenia to:
@@ -1287,7 +1288,8 @@ Language=Polish
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
    Sunt disponibile următoarele comenzi:
@@ -1301,7 +1303,8 @@ Language=Romanian
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Russian
    Доступны следующие команды:
@@ -1315,7 +1318,8 @@ Language=Russian
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Spanish
    Éstos son los argumentos de línea de comandos disponibles:
@@ -1329,7 +1333,8 @@ Language=Spanish
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Turkish
    Aşağıdaki komutlar kullanılabilir:
@@ -1343,7 +1348,8 @@ Language=Turkish
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Chinese
    以下命令可用:
@@ -1357,7 +1363,8 @@ Language=Chinese
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Taiwanese
    以下命令是可用的:
@@ -1371,7 +1378,8 @@ Language=Taiwanese
    NET FILE                 NET SEND                 NET USER
    NET GROUP                NET SESSION              NET VIEW
 
-   ...
+   NET HELP SYNTAX explains how to read NET HELP syntax lines.
+   NET HELP command | MORE displays Help one screen at a time.
 .
 
 
@@ -2775,4 +2783,250 @@ Language=Taiwanese
 NET [ ACCOUNTS | COMPUTER | CONFIG | CONTINUE | FILE | GROUP | HELP |
       HELPMSG | LOCALGROUP | NAME | PAUSE | PRINT | SEND | SESSION |
       SHARE | START | STATISTICS | STOP | TIME | USE | USER | VIEW ]
+.
+
+
+MessageId=10047
+SymbolicName=MSG_SYNTAX_HELP
+Severity=Success
+Facility=System
+Language=English
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Polish
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Romanian
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Russian
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Spanish
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Turkish
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Chinese
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
+.
+Language=Taiwanese
+SYNTAX
+The following conventions are used to indicate command syntax:
+
+-  Capital letters represent words that must be typed as shown. Lower-
+   case letters represent names of items that may vary, such as filenames.
+
+-  The [ and ] characters surround optional items that can be supplied
+   with the command.
+
+-  The { and } characters surround lists of items. You must supply one
+   of the items with the command.
+
+-  The | character separates items in a list. Only one of the items can
+   be supplied with the command.
+
+   For example, in the following syntax, you must type NET COMMAND and
+   either SWITCH1 or SWITCH2. Supplying a name is optional.
+       NET COMMAND [name] {SWITCH1 | SWITCH2}
+
+-  The [...] characters mean you can repeat the previous item.
+   Separate items with spaces.
+
+-  The [,...] characters mean you can repeat the previous item, but
+   you must separate items with commas or semicolons, not spaces.
+
+-  When typed at the command prompt, service names of two words or 
+   more must be enclosed in quotation marks. For example, 
+   NET START "COMPUTER BROWSER" starts the computer browser service.
 .
