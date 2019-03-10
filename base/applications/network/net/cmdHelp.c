@@ -68,7 +68,6 @@ INT cmdHelp(INT argc, WCHAR **argv)
     {
         PrintNetMessage(MSG_GROUP_SYNTAX);
         PrintNetMessage(MSG_GROUP_HELP);
-        ConResPuts(StdOut, IDS_GENERIC_PAGE);
         return 0;
     }
 
@@ -83,7 +82,6 @@ INT cmdHelp(INT argc, WCHAR **argv)
     {
         PrintNetMessage(MSG_LOCALGROUP_SYNTAX);
         PrintNetMessage(MSG_LOCALGROUP_HELP);
-        ConResPuts(StdOut, IDS_GENERIC_PAGE);
         return 0;
     }
 

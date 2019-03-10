@@ -119,7 +119,6 @@ BEGIN
     IDS_GENERIC_LOCKED "Zablokowane"
     IDS_GENERIC_UNLIMITED "Bez ograniczeń"
     IDS_GENERIC_SYNTAX "Składnia tego polecenia jest następująca:\n\n"
-    IDS_GENERIC_PAGE "NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Opcja %s nie jest jeszcze obsługiwana.\n"
     IDS_ERROR_INVALID_OPTION_VALUE "Wprowadzono nieprawidłową wartość dla opcji %s.\n"

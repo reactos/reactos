@@ -122,7 +122,6 @@ BEGIN
     IDS_GENERIC_LOCKED "Заблокировано"
     IDS_GENERIC_UNLIMITED "Не ограничено"
     IDS_GENERIC_SYNTAX "Синтаксис данной команды:\n\n"
-    IDS_GENERIC_PAGE "NET HELP имя_команды | MORE - постраничный просмотр справки.\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Опция %s в данный момент не поддерживается.\n"
     IDS_ERROR_INVALID_OPTION_VALUE "Вы ввели неверный данные для данной опции %s.\n"

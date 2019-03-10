@@ -31,7 +31,6 @@ INT cmdContinue(INT argc, WCHAR **argv)
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
             PrintNetMessage(MSG_CONTINUE_SYNTAX);
             PrintNetMessage(MSG_CONTINUE_HELP);
-            ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 1;
         }
     }

@@ -201,7 +201,6 @@ cmdConfig(
                 ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
                 PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
                 PrintNetMessage(MSG_CONFIG_SERVER_HELP);
-                ConResPuts(StdOut, IDS_GENERIC_PAGE);
             }
             else
             {

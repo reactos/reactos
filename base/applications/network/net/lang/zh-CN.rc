@@ -122,7 +122,6 @@ BEGIN
     IDS_GENERIC_LOCKED "锁定"
     IDS_GENERIC_UNLIMITED "Unlimited"
     IDS_GENERIC_SYNTAX "The syntax of this command is:\n\n"
-    IDS_GENERIC_PAGE "NET HELP command | MORE displays one screen at a time.\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "尚不支持 %s 选项。\n"
     IDS_ERROR_INVALID_OPTION_VALUE "您输入了 %s 选项的无效的值。\n"

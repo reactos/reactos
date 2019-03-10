@@ -245,7 +245,6 @@ cmdLocalGroup(
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
             PrintNetMessage(MSG_LOCALGROUP_SYNTAX);
             PrintNetMessage(MSG_LOCALGROUP_HELP);
-            ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 0;
         }
         else if (_wcsicmp(argv[i], L"/add") == 0)

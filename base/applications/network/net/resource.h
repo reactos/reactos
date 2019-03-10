@@ -116,7 +116,6 @@
 #define IDS_GENERIC_LOCKED             605
 #define IDS_GENERIC_UNLIMITED          606
 #define IDS_GENERIC_SYNTAX             607
-#define IDS_GENERIC_PAGE               608
 
 #define IDS_ERROR_OPTION_NOT_SUPPORTED 700
 #define IDS_ERROR_INVALID_OPTION_VALUE 701

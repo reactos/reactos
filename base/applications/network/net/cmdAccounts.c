@@ -47,7 +47,6 @@ cmdAccounts(
             ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
             PrintNetMessage(MSG_ACCOUNTS_SYNTAX);
             PrintNetMessage(MSG_ACCOUNTS_HELP);
-            ConResPuts(StdOut, IDS_GENERIC_PAGE);
             return 0;
         }
 

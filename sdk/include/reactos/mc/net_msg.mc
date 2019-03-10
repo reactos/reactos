@@ -921,6 +921,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET CONTINUE wznawia działanie usługi, która została.
@@ -933,6 +935,8 @@ usługa              Wstrzymana usługa
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -944,6 +948,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -955,6 +961,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -966,6 +974,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -977,6 +987,7 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -988,6 +999,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET CONTINUE reactivates a service that has been suspended by NET PAUSE.
@@ -999,6 +1012,8 @@ service             Is the paused service
                     SCHEDULE
                     SERVER
                     WORKSTATION
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -1136,6 +1151,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET GROUP dodaje, wyświetla lub modyfikuje grupy globalne na serwerach.
@@ -1154,6 +1171,8 @@ nazwa_użytkownika[ ...]  Lista zawierająca nazwy jednego lub kilku
                          Rozdziel kolejne nazwy znakiem spacji.
 /ADD                     Dodaje grupę lub dodaje nazwę użytkownika do grupy.
 /DELETE                  Usuwa grupę lub usuwa nazwę użytkownika z grupy.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1171,6 +1190,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1188,6 +1209,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1205,6 +1228,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1222,6 +1247,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1239,6 +1266,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET GROUP adds, displays or modifies global groups on servers. When
@@ -1256,6 +1285,8 @@ username[ ...]   List one or more usernames to add to or remove from
                  a group. Separate multiple username entries with a space.
 /ADD             Adds a group, or adds a username to a group.
 /DELETE          Removes a group, or removes a username from a group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -1337,7 +1368,7 @@ Language=Polish
    NET GROUP                NET SESSION              NET VIEW
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
-   NET HELP command | MORE displays Help one screen at a time.
+   NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
    Sunt disponibile următoarele comenzi:
@@ -1352,7 +1383,7 @@ Language=Romanian
    NET GROUP                NET SESSION              NET VIEW
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
-   NET HELP command | MORE displays Help one screen at a time.
+   NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
    Доступны следующие команды:
@@ -1367,7 +1398,7 @@ Language=Russian
    NET GROUP                NET SESSION              NET VIEW
 
    NET HELP SYNTAX explains how to read NET HELP syntax lines.
-   NET HELP command | MORE displays Help one screen at a time.
+   NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
    Éstos son los argumentos de línea de comandos disponibles:
@@ -1603,6 +1634,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET LOCALGROUP dodaje, wyświetla, lub modyfikuje grupy lokalne na komputerach
@@ -1628,6 +1661,8 @@ nazwa[ ...]       Lista zawierająca nazwy jednego lub kilku użytkowników
                   poleceniem do grupy lokalnej należy wcześniej utworzyć
                   odpowiednie konto.
 /DELETE           Usuwa nazwę grupy lub użytkownika z grupy lokalnej.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1651,6 +1686,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1674,6 +1711,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1697,6 +1736,8 @@ name [ ...]      List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1720,6 +1761,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1743,6 +1786,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET LOCALGROUP adds, displays or modifies local groups on computers. When
@@ -1766,6 +1811,8 @@ name[ ...]       List one or more usernames or groupnams to add to or
                  must be established for users or global groups added to a
                  local group with this command.
 /DELETE          Removes a groupname or username from a local group.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -1875,40 +1922,56 @@ Language=English
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET PAUSE wstrzymuje usługę.
 
 usługa   Nazwa wstrzymywanej usługi.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 service   The name of the service to be paused.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET PAUSE suspends a service. Pausing a service puts it on hold.
 
 service   The name of the service to be paused.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -2226,6 +2289,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET START uruchamia usługi lub wyświetla uruchomione usługi.
@@ -2235,6 +2300,8 @@ usługa   Nazwa uruchamianej usługi.
 Nazwy usług mające dwa lub więcej słów wpisywane w.
 wierszu polecenia muszą być ujęte w cudzysłów. Przykładowo,
 NET START "NET LOGON" uruchamia usługę logowania w sieci.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET START starts services or lists running services.
@@ -2244,6 +2311,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET START starts services or lists running services.
@@ -2253,6 +2322,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET START starts services or lists running services.
@@ -2262,6 +2333,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET START starts services or lists running services.
@@ -2271,6 +2344,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET START starts services or lists running services.
@@ -2280,6 +2355,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET START starts services or lists running services.
@@ -2289,6 +2366,8 @@ service   The name of the service to be started.
 When typed at the command prompt, service name of two words or more must
 be enclosed in quotation marks. For example, NET START "NET LOGON"
 starts the net logon service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -2333,6 +2412,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET STATISTICS wyświetla dziennik statystyki dla lokalnej usługi
@@ -2341,6 +2422,8 @@ usługi dla których statystyka jest dostępna.
 
 SERVER        Wyświetla statystykę usługi Serwer.
 WORKSTATION   Wyświetla statystykę usługi Stacja robocza.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2349,6 +2432,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2357,6 +2442,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2365,6 +2452,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2373,6 +2462,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2381,6 +2472,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET STATISTICS displays the statisticslog for the local Workstation or
@@ -2389,6 +2482,8 @@ the services for which statistics are available.
 
 SERVER        Displays the Server service statistics.
 WORKSTATION   Displays the Workstation service statistics.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -2434,6 +2529,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET STOP zatrzymuje usługi.
@@ -2443,6 +2540,8 @@ usługa   Nazwa zatrzymywanej usługi.
 Zatrzymanie usługi rozłącza wszystkie połączenia sieciowe
 używane przez usługę. Niektóre usługi zależą od innych. Zatrzymanie jednej
 może też zatrzymać inne. Niektóre usługi nie mogą być zatrzymane.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET STOP stops services.
@@ -2452,6 +2551,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET STOP stops services.
@@ -2461,6 +2562,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET STOP stops services.
@@ -2470,6 +2573,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET STOP stops services.
@@ -2479,6 +2584,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET STOP stops services.
@@ -2488,6 +2595,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET STOP stops services.
@@ -2497,6 +2606,8 @@ service   The name of the service to be stopped.
 Stopping a service cancels any network connection the service is
 using. Also, some services are dependent on others. Stopping one
 service can stop others. Some services cannot be stopped.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -2758,7 +2869,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
 NET USER creates and modifies user accounts on computers. When used
@@ -2832,7 +2943,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
 NET USER creates and modifies user accounts on computers. When used
@@ -2906,7 +3017,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Russian
 NET USER creates and modifies user accounts on computers. When used
@@ -2980,7 +3091,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Spanish
 NET USER creates and modifies user accounts on computers. When used
@@ -3054,7 +3165,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Turkish
 NET USER creates and modifies user accounts on computers. When used
@@ -3128,7 +3239,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Chinese
 NET USER creates and modifies user accounts on computers. When used
@@ -3202,7 +3313,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Taiwanese
 NET USER creates and modifies user accounts on computers. When used
@@ -3276,7 +3387,7 @@ Options      Are as follows:
                               /WORKSTATIONS has no list or if the list is *,
                               the user can log on from any computer.
 
-   NET HELP command | MORE displays Help one screen at a time.
+NET HELP command | MORE displays Help one screen at a time.
 .
 
 

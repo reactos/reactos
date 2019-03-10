@@ -163,7 +163,8 @@ PrintNetMessage(
                    NULL);
     if (pBuffer)
     {
-        ConPrintf(StdOut, L"%s\n", pBuffer);
+        ConPuts(StdOut, pBuffer);
+        ConPuts(StdOut, L"\n");
         LocalFree(pBuffer);
         pBuffer = NULL;
     }
