@@ -30,6 +30,9 @@
 #include "nbnamecache.h"
 #include "netbios.h"
 
+extern LIST_ENTRY g_EnumContextListHead;
+extern CRITICAL_SECTION g_EnumContextListLock;
+
 NET_API_STATUS
 WINAPI
 NetpNtStatusToApiStatus(NTSTATUS Status);
