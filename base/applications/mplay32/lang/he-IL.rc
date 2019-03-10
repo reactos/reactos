@@ -14,7 +14,7 @@ BEGIN
         MENUITEM "נגינה/&השהייה\tCtrl+P", IDC_PLAY
         MENUITEM "&עצירה\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "&חזרה\tCtrl+T", IDM_REPEAT
+        MENUITEM "&ניגון חוזר\tCtrl+T", IDM_REPEAT
     END
     POPUP "&תצוגה"
     BEGIN

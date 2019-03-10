@@ -22,7 +22,7 @@ BEGIN
     LTEXT "שניה/ות", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
     GROUPBOX "מעקב אירועי כיבוי", IDC_STATIC, 5, 114, 224, 114
     LTEXT "סיבה:", IDC_STATIC, 16, 130, 27, 8
-    CHECKBOX "מתוכנן...", IDC_PLANNED, 175, 130, 43, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "מתוכנן", IDC_PLANNED, 175, 130, 43, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
     LTEXT "הערה:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
@@ -75,7 +75,7 @@ Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_HIBERNATE "ERROR: Unable to send system into hibernation mode.\n"
     IDS_ERROR_HIBERNATE_LOCAL "ERROR: Hibernation mode cannot be started remotely.\n"
     IDS_ERROR_HIBERNATE_ENABLED "ERROR: Hibernation mode is not enabled.\n"
-    IDS_ERROR_DIALOG_CAPTION "Remote Shutdown"
+    IDS_ERROR_DIALOG_CAPTION "כיבוי מרחוק"
     IDS_ERROR_DIALOG_INIT "Unable to display the graphical user interface."
 END
 
@@ -100,5 +100,5 @@ BEGIN
     IDS_REASON_APP_UNRESPONSIVE "יישום: לא מגיב"
     IDS_REASON_APP_UNSTABLE "יישום: לא יציב"
     IDS_REASON_SECURITY "בעיית בטיחות"
-    IDS_REASON_NETWORK "איבוד קישוריות רשת"
+    IDS_REASON_NETWORK "החיבור לרשת אבד"
 END
