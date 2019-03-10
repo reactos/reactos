@@ -53,87 +53,6 @@ INT WINAPI DirectXSetupGetVersion(DWORD *lpdwVersion, DWORD *lpdwMinorVersion)
     return TRUE;
 }
 
-
-static
-BOOLEAN
-IsCharInAnsiString(
-    IN CHAR Char,
-    IN const STRING* MatchString)
-{
-    USHORT i;
-
-    for (i = 0; i < MatchString->Length; i++)
-    {
-        if (Char == MatchString->Buffer[i])
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
-
-NTSTATUS
-NTAPI
-FindCharInAnsiString(
-    IN const STRING* SearchString,
-    IN const STRING* MatchString,
-    OUT PUSHORT Position)
-{
-    BOOLEAN Found;
-    ULONG i, Length;
-
-    *Position = 0;
-
-    /* Search */
-    Length = SearchString->Length;
-    for (i = Length - 1; (LONG)i >= 0; i--)
-    {
-        Found = IsCharInAnsiString(SearchString->Buffer[i], MatchString);
-        if (Found)
-        {
-            *Position = i;
-            return STATUS_SUCCESS;
-        }
-    }
-
-    return STATUS_NOT_FOUND;
-}
-
-
-static BOOL IsDxSetupA(const PSTRING LibraryPath)
-{
-    static const STRING DxSetupDlls[] = {
-        RTL_CONSTANT_STRING("dsetup.dll"),
-        RTL_CONSTANT_STRING("dsetup32.dll"),
-        RTL_CONSTANT_STRING("dsetup"),
-        RTL_CONSTANT_STRING("dsetup32"),
-    };
-    static const STRING PathDividerFind = RTL_CONSTANT_STRING("\\/");
-    STRING LibraryName;
-    USHORT PathDivider;
-    DWORD n;
-
-    if (!NT_SUCCESS(FindCharInAnsiString(LibraryPath, &PathDividerFind, &PathDivider)))
-        PathDivider = 0;
-
-    if (PathDivider)
-        PathDivider += sizeof(CHAR);
-
-    LibraryName.Buffer = LibraryPath->Buffer + PathDivider;
-    LibraryName.Length = LibraryPath->Length - PathDivider;
-    LibraryName.MaximumLength = LibraryPath->MaximumLength - PathDivider;
-
-    for (n = 0; n < ARRAYSIZE(DxSetupDlls); ++n)
-    {
-        if (RtlEqualString(&LibraryName, DxSetupDlls + n, TRUE))
-        {
-            SHIM_MSG("Found %Z\n", DxSetupDlls + n);
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
 static BOOL IsDxSetupW(PCUNICODE_STRING LibraryPath)
 {
     static const UNICODE_STRING DxSetupDlls[] = {
@@ -168,9 +87,23 @@ static BOOL IsDxSetupW(PCUNICODE_STRING LibraryPath)
     return FALSE;
 }
 
+static BOOL IsDxSetupA(PCANSI_STRING LibraryPath)
+{
+    BOOL bIsDxSetup;
+    UNICODE_STRING LibraryPathW;
+
+    if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&LibraryPathW, LibraryPath, TRUE)))
+    {
+        bIsDxSetup = IsDxSetupW(&LibraryPathW);
+        RtlFreeUnicodeString(&LibraryPathW);
+        return bIsDxSetup;
+    }
+    return FALSE;
+}
+
 HMODULE WINAPI SHIM_OBJ_NAME(APIHook_LoadLibraryA)(LPCSTR lpLibFileName)
 {
-    STRING Library;
+    ANSI_STRING Library;
 
     RtlInitAnsiString(&Library, lpLibFileName);
     if (IsDxSetupA(&Library))
@@ -192,7 +125,7 @@ HMODULE WINAPI SHIM_OBJ_NAME(APIHook_LoadLibraryW)(LPCWSTR lpLibFileName)
 
 HMODULE WINAPI SHIM_OBJ_NAME(APIHook_LoadLibraryExA)(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-    STRING Library;
+    ANSI_STRING Library;
 
     RtlInitAnsiString(&Library, lpLibFileName);
     if (IsDxSetupA(&Library))
