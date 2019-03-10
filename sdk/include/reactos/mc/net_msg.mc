@@ -117,6 +117,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET ACCOUNTS uaktualnia bazę kont użytkowników i zmienia hasło oraz wymagania
@@ -161,6 +163,8 @@ spełnione dwa warunki.
                                w bieżącej domenie. W innym wypadku,
                                operacje te są dokonywane na komputerze
                                lokalnym.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET ACCOUNTS actualizează baza de utilizatori și modifică parola și
@@ -202,6 +206,8 @@ NET ACCOUNTS să aibă efect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET ACCOUNTS updates the user accounts database and modifies password
@@ -243,6 +249,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET ACCOUNTS updates the user accounts database and modifies password
@@ -284,6 +292,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET ACCOUNTS updates the user accounts database and modifies password
@@ -325,6 +335,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET ACCOUNTS updates the user accounts database and modifies password
@@ -366,6 +378,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET ACCOUNTS updates the user accounts database and modifies password
@@ -407,6 +421,8 @@ NET ACCOUNTS to take effect.
                                controller of the current domain. Otherwise,
                                the operation is performed on the local
                                computer.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -562,6 +578,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET CONFIG wyświetla informacje o konfiguracji usług Stacja robocza lub
@@ -571,6 +589,8 @@ konfigurowania usługi, wpisz polecenie NET HELP CONFIG usługa.
 
 SERVER        Wyświetla informacje o konfiguracji usługi Serwer
 WORKSTATION   Wyświetla informacje o konfiguracji usługi Stacja robocza.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONFIG displays coniguration information of the Workstation or
@@ -582,6 +602,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET CONFIG displays coniguration information of the Workstation or
@@ -593,6 +615,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET CONFIG displays coniguration information of the Workstation or
@@ -604,6 +628,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET CONFIG displays coniguration information of the Workstation or
@@ -615,6 +641,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET CONFIG displays coniguration information of the Workstation or
@@ -626,6 +654,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET CONFIG displays coniguration information of the Workstation or
@@ -637,6 +667,8 @@ SERVER        Displays information about the configuration of the
               Server service.
 WORKSTATION   Displays information about the configuration of the
               Workstation service.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -699,6 +731,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Polish
 NET CONFIG SERVER wyświetla lub zmienia ustawienia usługi Serwer.
@@ -718,6 +752,8 @@ NET CONFIG SERVER wyświetla lub zmienia ustawienia usługi Serwer.
 
 Aby wyświetlić bieżącą konfigurację usługi Serwer,
 wpisz NET CONFIG SERVER bez parametrów.
+
+NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -736,6 +772,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP comandă | MORE (pentru afișare paginată).
 .
 Language=Russian
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -754,6 +792,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP имя_команды | MORE - постраничный просмотр справки.
 .
 Language=Spanish
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -772,6 +812,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Turkish
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -790,6 +832,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Chinese
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -808,6 +852,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP command | MORE displays one screen at a time.
 .
 Language=Taiwanese
 NET CONFIG SERVER displays or changes settings for the Server service.
@@ -826,6 +872,8 @@ NET CONFIG SERVER displays or changes settings for the Server service.
 
 To display the current configuration for the Server service,
 type NET CONFIG SERVER without parameters.
+
+NET HELP command | MORE displays one screen at a time.
 .
 
 
@@ -2639,36 +2687,596 @@ SymbolicName=MSG_USER_HELP
 Severity=Success
 Facility=System
 Language=English
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Russian
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Spanish
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Turkish
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Chinese
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Taiwanese
-USER
-...
+NET USER creates and modifies user accounts on computers. When used
+without switches, it lists the user accounts for the computer. The 
+user account information is stored in the user accounts database.
+
+username     Is the name of the user account to add, delete, modify, or 
+             view. The name of the user account can have as many as 
+             20 characters. 
+password     Assigns or changes a password for the user's account. 
+             A password must satisfy the minimum length set with the 
+             /MINPWLEN option of the NET ACCOUNTS command. It can have as 
+             many as 14 characters. 
+*            Produces a prompt for the password. The password is not 
+             displayed when you type it at a password prompt. 
+/DOMAIN      Performs the operation on a domain controller of 
+             the current domain. 
+/ADD         Adds a user account to the user accounts database. 
+/DELETE      Removes a user account from the user accounts database. 
+
+Options      Are as follows:
+
+   Options                    Description
+   --------------------------------------------------------------------
+   /ACTIVE:{YES | NO}         Activates or deactivates the account. If 
+                              the account is not active, the user cannot
+                              access the server. The default is YES.
+   /COMMENT:"text"            Provides a descriptive comment about the
+                              user's account.  Enclose the text in
+                              quotation marks. 
+   /COUNTRYCODE:nnn           Uses the operating system country code to
+                              implement the specified language files for a
+                              user's help and error messages. A value of
+                              0 signifies the default country code. 
+   /EXPIRES:{date | NEVER}    Causes the account to expire if date is
+                              set. NEVER sets no time limit on the
+                              account. An expiration date is in the
+                              form mm/dd/yy(yy). Months can be a number,
+                              spelled out, or abbreviated with three
+                              letters. Year can be two or four numbers.
+                              Use slashes(/) (no spaces) to separate
+                              parts of the date. 
+   /FULLNAME:"name"           Is a user's full name (rather than a 
+                              username). Enclose the name in quotation
+                              marks.
+   /HOMEDIR:pathname          Sets the path for the user's home directory. 
+                              The path must exist.
+   /PASSWORDCHG:{YES | NO}    Specifies whether users can change their
+                              own password. The default is YES.
+   /PASSWORDREQ:{YES | NO}    Specifies whether a user account must have
+                              a password. The default is YES.
+   /PROFILEPATH[:path]        Sets a path for the user's logon profile.
+   /SCRIPTPATH:pathname       Is the location of the user's logon
+                              script.
+   /TIMES:{times | ALL}       Is the logon hours. TIMES is expressed as
+                              day[-day][,day[-day]],time[-time][,time
+                              [-time]], limited to 1-hour increments.
+                              Days can be spelled out or abbreviated.
+                              Hours can be 12- or 24-hour notation. For
+                              12-hour notation, use am, pm, a.m., or
+                              p.m. ALL means a user can always log on,
+                              and a blank value means a user can never 
+                              log on. Separate day and time entries with 
+                              a comma, and separate multiple day and time
+                              entries with a semicolon.
+   /USERCOMMENT:"text"        Lets an administrator add or change the User 
+                              Comment for the account. 
+   /WORKSTATIONS:{computername[,...] | *}
+                              Lists as many as eight computers from
+                              which a user can log on to the network. If 
+                              /WORKSTATIONS has no list or if the list is *,
+                              the user can log on from any computer.
+
+   NET HELP command | MORE displays Help one screen at a time.
 .
 
 
