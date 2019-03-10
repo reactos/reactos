@@ -10,7 +10,41 @@
 
 #include "net.h"
 
+typedef struct _COUNTY_TABLE
+{
+    DWORD dwCountryCode;
+    DWORD dwMessageId;
+} COUNTRY_TABLE, *PCOUNTRY_TABLE;
+
+
 static WCHAR szPasswordChars[] = L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%_-+:";
+static COUNTRY_TABLE CountryTable[] =
+{ {  0, 5080},   // System Default
+  {  1, 5081},   // United States
+  {  2, 5082},   // Canada (French)
+  {  3, 5083},   // Latin America
+  { 31, 5084},   // Netherlands
+  { 32, 5085},   // Belgium
+  { 33, 5086},   // France
+  { 34, 5090},   // Spain
+  { 39, 5087},   // Italy
+  { 41, 5088},   // Switzerland
+  { 44, 5089},   // United Kingdom
+  { 45, 5091},   // Denmark
+  { 46, 5092},   // Sweden
+  { 47, 5093},   // Norway
+  { 49, 5094},   // Germany
+  { 61, 5095},   // Australia
+  { 81, 5096},   // Japan
+  { 82, 5097},   // Korea
+  { 86, 5098},   // China (PRC)
+  { 88, 5099},   // Taiwan
+  { 99, 5100},   // Asia
+  {351, 5101},   // Portugal
+  {358, 5102},   // Finland
+  {785, 5103},   // Arabic
+  {972, 5104} }; // Hebrew
+
 
 static
 int
@@ -131,6 +165,38 @@ GetTimeInSeconds(VOID)
 
 
 static
+BOOL
+GetCountryFromCountryCode(
+    _In_ DWORD dwCountryCode,
+    _In_ DWORD dwCountryLength,
+    _Out_ PWSTR szCountryBuffer)
+{
+    DWORD i;
+
+    for (i = 0; i < ARRAYSIZE(CountryTable); i++)
+    {
+        if (CountryTable[i].dwCountryCode == dwCountryCode)
+        {
+            if (szCountryBuffer != NULL && dwCountryLength > 0)
+            {
+                FormatMessageW(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS,
+                               hModuleNetMsg,
+                               CountryTable[i].dwMessageId,
+                               LANG_USER_DEFAULT,
+                               szCountryBuffer,
+                               dwCountryLength,
+                               NULL);
+            }
+
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
+static
 NET_API_STATUS
 DisplayUser(LPWSTR lpUserName)
 {
@@ -142,6 +208,7 @@ DisplayUser(LPWSTR lpUserName)
     DWORD dwGroupRead, dwGroupTotal;
     DWORD dwLastSet;
     DWORD i;
+    WCHAR szCountry[40];
     INT nPaddedLength = 29;
     NET_API_STATUS Status;
 
@@ -193,7 +260,9 @@ DisplayUser(LPWSTR lpUserName)
     ConPrintf(StdOut, L"%s\n", pUserInfo->usri4_usr_comment);
 
     PrintPaddedResourceString(IDS_USER_COUNTRY_CODE, nPaddedLength);
-    ConPrintf(StdOut, L"%03ld ()\n", pUserInfo->usri4_country_code);
+    GetCountryFromCountryCode(pUserInfo->usri4_country_code,
+                              ARRAYSIZE(szCountry), szCountry);
+    ConPrintf(StdOut, L"%03ld (%s)\n", pUserInfo->usri4_country_code, szCountry);
 
     PrintPaddedResourceString(IDS_USER_ACCOUNT_ACTIVE, nPaddedLength);
     if (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)
@@ -770,9 +839,9 @@ cmdUser(
                 goto done;
             }
 
-            /* FIXME: verify the country code */
-
-            pUserInfo->usri4_country_code = value;
+            /* Verify the country code */
+            if (GetCountryFromCountryCode(value, 0, NULL))
+                pUserInfo->usri4_country_code = value;
         }
         else if (_wcsnicmp(argv[j], L"/expires:", 9) == 0)
         {
@@ -786,9 +855,6 @@ cmdUser(
                 ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/EXPIRES");
                 result = 1;
                 goto done;
-
-                /* FIXME: Parse the date */
-//                ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/EXPIRES");
             }
         }
         else if (_wcsnicmp(argv[j], L"/fullname:", 10) == 0)
