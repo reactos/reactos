@@ -222,6 +222,9 @@
             <SHIM NAME="IgnoreFreeLibrary">
                 <DLLFILE>acgenral.dll</DLLFILE>
             </SHIM>
+            <SHIM NAME="IgnoreLoadLibrary">
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
             <SHIM NAME="VMHorizonSetup">
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
@@ -244,11 +247,13 @@
         <LAYER NAME="WIN95">
             <SHIM_REF NAME="Win95VersionLie" />
             <SHIM_REF NAME="ForceDXSetupSuccess" />
+            <SHIM_REF NAME="IgnoreLoadLibrary" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN98">
             <SHIM_REF NAME="Win98VersionLie" />
             <SHIM_REF NAME="ForceDXSetupSuccess" />
+            <SHIM_REF NAME="IgnoreLoadLibrary" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="NT4SP5">
