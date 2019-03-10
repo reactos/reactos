@@ -128,7 +128,8 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
                     /* FIXME: likely not right, check tcpip.sys for TDI_QUERY_MAX_DATAGRAM_INFO */
-                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF)
+                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF &&
+                        InfoReq->Information.Ulong != FCB->Recv.Size)
                     {
                         NewBuffer = ExAllocatePoolWithTag(PagedPool,
                                                           InfoReq->Information.Ulong,
@@ -172,7 +173,8 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 if (FCB->State == SOCKET_STATE_CONNECTED ||
                     FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
-                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF)
+                    if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF &&
+                        InfoReq->Information.Ulong != FCB->Send.Size)
                     {
                         NewBuffer = ExAllocatePoolWithTag(PagedPool,
                                                           InfoReq->Information.Ulong,
