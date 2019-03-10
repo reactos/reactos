@@ -26,6 +26,8 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
+            InitializeListHead(&g_EnumContextListHead);
+            InitializeCriticalSection(&g_EnumContextListLock);
             DisableThreadLibraryCalls(hinstDLL);
             NetBIOSInit();
             NetBTInit();

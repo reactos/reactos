@@ -36,6 +36,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 typedef struct _ENUM_CONTEXT
 {
+    LIST_ENTRY ListLink;
+    ULONG EnumHandle;
+
     SAM_HANDLE ServerHandle;
     SAM_HANDLE BuiltinDomainHandle;
     SAM_HANDLE AccountDomainHandle;
@@ -48,6 +51,9 @@ typedef struct _ENUM_CONTEXT
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
+LIST_ENTRY g_EnumContextListHead;
+CRITICAL_SECTION g_EnumContextListLock;
+LONG g_EnumContextHandle = 0;
 
 static
 ULONG
@@ -2423,6 +2429,86 @@ done:
     return ApiStatus;
 }
 
+static
+NET_API_STATUS
+AllocateEnumContext(
+    PENUM_CONTEXT *AllocatedEnumContext)
+{
+    NET_API_STATUS ApiStatus;
+    PENUM_CONTEXT EnumContext;
+
+    /* Allocate the context structure */
+    ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+    if (ApiStatus != NERR_Success)
+        return ApiStatus;
+
+    /* Initialize the fields */
+    EnumContext->EnumerationContext = 0;
+    EnumContext->Buffer = NULL;
+    EnumContext->Count = 0;
+    EnumContext->Index = 0;
+    EnumContext->BuiltinDone = FALSE;
+
+    /* Set a "unique" handle */
+    EnumContext->EnumHandle = InterlockedIncrement(&g_EnumContextHandle);
+    if (EnumContext->EnumHandle == 0)
+    {
+        EnumContext->EnumHandle = InterlockedIncrement(&g_EnumContextHandle);
+    }
+
+    /* Insert the context in the list */
+    EnterCriticalSection(&g_EnumContextListLock);
+    InsertTailList(&g_EnumContextListHead, &EnumContext->ListLink);
+    LeaveCriticalSection(&g_EnumContextListLock);
+
+    *AllocatedEnumContext = EnumContext;
+    return NERR_Success;
+}
+
+static
+VOID
+FreeEnumContext(
+    PENUM_CONTEXT EnumContext)
+
+{
+    /* Remove the context from the list */
+    EnterCriticalSection(&g_EnumContextListLock);
+    RemoveEntryList(&EnumContext->ListLink);
+    LeaveCriticalSection(&g_EnumContextListLock);
+
+    /* Free it */
+    NetApiBufferFree(EnumContext);
+}
+
+static
+PENUM_CONTEXT
+LookupEnumContext(
+    SAM_ENUMERATE_HANDLE EnumerationHandle)
+{
+    PENUM_CONTEXT FoundEnumContext = NULL;
+    PLIST_ENTRY ListEntry;
+
+    /* Acquire the list lock */
+    EnterCriticalSection(&g_EnumContextListLock);
+
+    /* Search the list for the handle */
+    for (ListEntry = g_EnumContextListHead.Flink;
+         ListEntry != &g_EnumContextListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PENUM_CONTEXT EnumContext = CONTAINING_RECORD(ListEntry, ENUM_CONTEXT, ListLink);
+        if (EnumContext->EnumHandle == EnumerationHandle)
+        {
+            FoundEnumContext = EnumContext;
+            break;
+        }
+    }
+
+    /* Release the list lock */
+    LeaveCriticalSection(&g_EnumContextListLock);
+
+    return FoundEnumContext;
+}
 
 /************************************************************
  * NetUserEnum  (NETAPI32.@)
@@ -2459,19 +2545,13 @@ NetUserEnum(LPCWSTR servername,
 
     if (resume_handle != NULL && *resume_handle != 0)
     {
-        EnumContext = (PENUM_CONTEXT)*resume_handle;
+        EnumContext = LookupEnumContext(*resume_handle);
     }
     else
     {
-        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        ApiStatus = AllocateEnumContext(&EnumContext);
         if (ApiStatus != NERR_Success)
             goto done;
-
-        EnumContext->EnumerationContext = 0;
-        EnumContext->Buffer = NULL;
-        EnumContext->Count = 0;
-        EnumContext->Index = 0;
-        EnumContext->BuiltinDone = FALSE;
 
         Status = SamConnect((servername != NULL) ? &ServerName : NULL,
                             &EnumContext->ServerHandle,
@@ -2614,7 +2694,7 @@ done:
                 SamFreeMemory(EnumContext->Buffer);
             }
 
-            NetApiBufferFree(EnumContext);
+            FreeEnumContext(EnumContext);
             EnumContext = NULL;
         }
     }
@@ -2623,7 +2703,7 @@ done:
         SamCloseHandle(UserHandle);
 
     if (resume_handle != NULL)
-        *resume_handle = (DWORD_PTR)EnumContext;
+        *resume_handle = EnumContext ? EnumContext->EnumHandle : 0;
 
     *bufptr = (LPBYTE)Buffer;
 
