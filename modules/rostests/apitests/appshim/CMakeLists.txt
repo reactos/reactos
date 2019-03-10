@@ -6,6 +6,7 @@ list(APPEND SOURCE
     forcedxsetup.c
     genral_hooks.c
     ignorefreelib.c
+    ignoreloadlib.c
     layer_hooks.c
     versionlie.c
     testlist.c
