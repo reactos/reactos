@@ -215,4 +215,34 @@ BuildSidFromSidAndRid(IN PSID SrcSid,
     return NERR_Success;
 }
 
+
+VOID
+CopySidFromSidAndRid(
+    _Out_ PSID DstSid,
+    _In_ PSID SrcSid,
+    _In_ ULONG RelativeId)
+{
+    UCHAR RidCount;
+    ULONG i;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount + 1);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
+    *q = RelativeId;
+}
+
 /* EOF */

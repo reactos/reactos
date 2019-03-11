@@ -39,6 +39,7 @@ typedef struct _ENUM_CONTEXT
     SAM_HANDLE ServerHandle;
     SAM_HANDLE BuiltinDomainHandle;
     SAM_HANDLE AccountDomainHandle;
+    PSID AccountDomainSid;
 
     SAM_ENUMERATE_HANDLE EnumerationContext;
     PSAM_RID_ENUMERATION Buffer;
@@ -400,6 +401,7 @@ FreeUserInfo(PUSER_ALL_INFORMATION UserInfo)
 static
 NET_API_STATUS
 BuildUserInfoBuffer(SAM_HANDLE UserHandle,
+                    PSID AccountDomainSid,
                     DWORD level,
                     ULONG RelativeId,
                     LPVOID *Buffer)
@@ -508,7 +510,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             if (UserInfo->LogonHours.UnitsPerWeek > 0)
                 Size += (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8;
 
-            /* FIXME: usri4_user_sid */
+            Size += RtlLengthSid(AccountDomainSid) + sizeof(ULONG);
             break;
 
         case 10:
@@ -547,7 +549,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
                    UserInfo->FullName.Length + sizeof(WCHAR) +
                    UserInfo->AdminComment.Length + sizeof(WCHAR);
 
-            /* FIXME: usri23_user_sid */
+            Size += RtlLengthSid(AccountDomainSid) + sizeof(ULONG);
             break;
 
         default:
@@ -993,7 +995,9 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo4->usri4_country_code = UserInfo->CountryCode;
             UserInfo4->usri4_code_page = UserInfo->CodePage;
 
-            /* FIXME: usri4_user_sid */
+            UserInfo4->usri4_user_sid = (PVOID)Ptr;
+            CopySidFromSidAndRid(UserInfo4->usri4_user_sid, AccountDomainSid, RelativeId);
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + RtlLengthSid(AccountDomainSid) + sizeof(ULONG));
 
             UserInfo4->usri4_primary_group_id = UserInfo->PrimaryGroupId;
 
@@ -1216,7 +1220,9 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo23->usri23_flags = GetAccountFlags(UserInfo->UserAccountControl,
                                                        Dacl);
 
-            /* FIXME: usri23_user_sid */
+            UserInfo23->usri23_user_sid = (PVOID)Ptr;
+            CopySidFromSidAndRid(UserInfo23->usri23_user_sid, AccountDomainSid, RelativeId);
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + RtlLengthSid(AccountDomainSid) + sizeof(ULONG));
             break;
     }
 
@@ -2484,13 +2490,24 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        Status = OpenAccountDomain(EnumContext->ServerHandle,
-                                   (servername != NULL) ? &ServerName : NULL,
-                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                                   &EnumContext->AccountDomainHandle);
+        /* Get the Account Domain SID */
+        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                     &EnumContext->AccountDomainSid);
         if (!NT_SUCCESS(Status))
         {
-            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the Account Domain */
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               EnumContext->AccountDomainSid,
+                               &EnumContext->AccountDomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
@@ -2567,6 +2584,7 @@ NetUserEnum(LPCWSTR servername,
         }
 
         ApiStatus = BuildUserInfoBuffer(UserHandle,
+                                        EnumContext->AccountDomainSid,
                                         level,
                                         CurrentUser->RelativeId,
                                         &Buffer);
@@ -2600,6 +2618,9 @@ done:
 
             if (EnumContext->AccountDomainHandle != NULL)
                 SamCloseHandle(EnumContext->AccountDomainHandle);
+
+            if (EnumContext->AccountDomainSid != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, EnumContext->AccountDomainSid);
 
             if (EnumContext->ServerHandle != NULL)
                 SamCloseHandle(EnumContext->ServerHandle);
@@ -2816,6 +2837,7 @@ NetUserGetInfo(LPCWSTR servername,
     PULONG RelativeIds = NULL;
     PSID_NAME_USE Use = NULL;
     LPVOID Buffer = NULL;
+    PSID AccountDomainSid = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2839,11 +2861,21 @@ NetUserGetInfo(LPCWSTR servername,
         goto done;
     }
 
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
     /* Open the Account Domain */
-    Status = OpenAccountDomain(ServerHandle,
-                               (servername != NULL) ? &ServerName : NULL,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                               &AccountDomainHandle);
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                           AccountDomainSid,
+                           &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
         ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
@@ -2890,6 +2922,7 @@ NetUserGetInfo(LPCWSTR servername,
     }
 
     ApiStatus = BuildUserInfoBuffer(UserHandle,
+                                    AccountDomainSid,
                                     level,
                                     RelativeIds[0],
                                     &Buffer);
@@ -2911,6 +2944,9 @@ done:
 
     if (AccountDomainHandle != NULL)
         SamCloseHandle(AccountDomainHandle);
+
+    if (AccountDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
 
     if (ServerHandle != NULL)
         SamCloseHandle(ServerHandle);

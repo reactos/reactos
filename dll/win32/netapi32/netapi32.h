@@ -58,6 +58,12 @@ BuildSidFromSidAndRid(IN PSID SrcSid,
                       IN ULONG RelativeId,
                       OUT PSID *DestSid);
 
+VOID
+CopySidFromSidAndRid(
+    _Out_ PSID DstSid,
+    _In_ PSID SrcSid,
+    _In_ ULONG RelativeId);
+
 /* wksta.c */
 
 BOOL
