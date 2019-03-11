@@ -1271,6 +1271,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1014 UserInfo1014;
     PUSER_INFO_1017 UserInfo1017;
     PUSER_INFO_1018 UserInfo1018;
+    PUSER_INFO_1020 UserInfo1020;
     PUSER_INFO_1024 UserInfo1024;
     PUSER_INFO_1025 UserInfo1025;
     PUSER_INFO_1051 UserInfo1051;
@@ -1432,8 +1433,9 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri2_max_storage ignored
 
-//          UserInfo2->usri2_units_per_week;
-//          UserInfo2->usri2_logon_hours;
+            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo2->usri2_units_per_week;
+            UserAllInfo.LogonHours.LogonHours = UserInfo2->usri2_logon_hours;
+            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
 
             // usri2_bad_pw_count ignored
             // usri2_num_logons ignored
@@ -1534,8 +1536,9 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri3_max_storage ignored
 
-//          UserInfo3->usri3_units_per_week;
-//          UserInfo3->usri3_logon_hours;
+            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo3->usri3_units_per_week;
+            UserAllInfo.LogonHours.LogonHours = UserInfo3->usri3_logon_hours;
+            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
 
             // usri3_bad_pw_count ignored
             // usri3_num_logons ignored
@@ -1658,8 +1661,9 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri4_max_storage ignored
 
-//          UserInfo4->usri4_units_per_week;
-//          UserInfo4->usri4_logon_hours;
+            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo4->usri4_units_per_week;
+            UserAllInfo.LogonHours.LogonHours = UserInfo4->usri4_logon_hours;
+            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
 
             // usri4_bad_pw_count ignored
             // usri4_num_logons ignored
@@ -1779,8 +1783,9 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             // usri22_max_storage ignored
 
-//          UserInfo22->usri22_units_per_week;
-//          UserInfo22->usri22_logon_hours;
+            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo22->usri22_units_per_week;
+            UserAllInfo.LogonHours.LogonHours = UserInfo22->usri22_logon_hours;
+            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
 
             // usri22_bad_pw_count ignored
             // usri22_num_logons ignored
@@ -1920,8 +1925,13 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             break;
 
-//        case 1020:
-//            break;
+        case 1020:
+            UserInfo1020 = (PUSER_INFO_1020)UserInfo;
+
+            UserAllInfo.LogonHours.UnitsPerWeek = UserInfo1020->usri1020_units_per_week;
+            UserAllInfo.LogonHours.LogonHours = UserInfo1020->usri1020_logon_hours;
+            UserAllInfo.WhichFields |= USER_ALL_LOGONHOURS;
+            break;
 
         case 1024:
             UserInfo1024 = (PUSER_INFO_1024)UserInfo;
@@ -1965,11 +1975,10 @@ SetUserInfo(SAM_HANDLE UserHandle,
                 UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORYDRIVE;
             }
             break;
-
-        default:
-            ERR("Unsupported level %lu!\n", Level);
-            return ERROR_INVALID_PARAMETER;
     }
+
+    if (ApiStatus != NERR_Success)
+        goto done;
 
     Status = SamSetInformationUser(UserHandle,
                                    UserAllInformation,
@@ -3656,7 +3665,7 @@ NetUserSetInfo(LPCWSTR servername,
         case 1014:
         case 1017:
         case 1018:
-//        case 1020:
+        case 1020:
         case 1024:
         case 1025:
         case 1051:
