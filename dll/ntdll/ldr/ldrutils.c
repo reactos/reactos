@@ -2696,7 +2696,8 @@ PVOID LdrpGetShimEngineFunction(PCSZ FunctionName)
     NTSTATUS Status;
     PVOID Address;
     RtlInitAnsiString(&Function, FunctionName);
-    Status = LdrGetProcedureAddress(g_pShimEngineModule, &Function, 0, &Address);
+    /* Skip Dll init */
+    Status = LdrpGetProcedureAddress(g_pShimEngineModule, &Function, 0, &Address, FALSE);
     return NT_SUCCESS(Status) ? Address : NULL;
 }
 
@@ -2725,6 +2726,40 @@ LdrpGetShimEngineInterface()
     }
 }
 
+VOID
+NTAPI
+LdrpRunShimEngineInitRoutine(IN ULONG Reason)
+{
+    PLIST_ENTRY ListHead, Next;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    Next = ListHead->Flink;
+    while (Next != ListHead)
+    {
+        LdrEntry = CONTAINING_RECORD(Next, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        if (g_pShimEngineModule == LdrEntry->DllBase)
+        {
+            if (LdrEntry->EntryPoint)
+            {
+                _SEH2_TRY
+                {
+                    LdrpCallInitRoutine(LdrEntry->EntryPoint, LdrEntry->DllBase, Reason, NULL);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    DPRINT1("WARNING: Exception 0x%x during LdrpRunShimEngineInitRoutine(%u)\n",
+                            _SEH2_GetExceptionCode(), Reason);
+                }
+                _SEH2_END;
+            }
+            return;
+        }
+
+        Next = Next->Flink;
+    }
+}
 
 VOID
 NTAPI
@@ -2734,10 +2769,13 @@ LdrpLoadShimEngine(IN PWSTR ImageName, IN PUNICODE_STRING ProcessImage, IN PVOID
     PVOID ShimLibrary;
     NTSTATUS Status;
     RtlInitUnicodeString(&ShimLibraryName, ImageName);
-    Status = LdrpLoadDll(FALSE, NULL, NULL, &ShimLibraryName, &ShimLibrary, TRUE);
+    /* We should NOT pass CallInit = TRUE!
+       If we do this, other init routines will be called before we get a chance to shim stuff.. */
+    Status = LdrpLoadDll(FALSE, NULL, NULL, &ShimLibraryName, &ShimLibrary, FALSE);
     if (NT_SUCCESS(Status))
     {
         g_pShimEngineModule = ShimLibrary;
+        LdrpRunShimEngineInitRoutine(DLL_PROCESS_ATTACH);
         LdrpGetShimEngineInterface();
         if (g_ShimsEnabled)
         {
@@ -2754,6 +2792,7 @@ LdrpUnloadShimEngine()
 {
     /* Make sure we do not call into the shim engine anymore */
     g_ShimsEnabled = FALSE;
+    LdrpRunShimEngineInitRoutine(DLL_PROCESS_DETACH);
     LdrUnloadDll(g_pShimEngineModule);
     g_pShimEngineModule = NULL;
 }
