@@ -1,0 +1,30 @@
+/* Translated by Luo Yufan in 2019 <njlyf2011@hotmail.com> */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "一般"
+FONT 9, "新細明體"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "轉譯器設定", -1, 5, 25, 230, 90
+    LTEXT "轉譯器(&R):", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "This will override the default settings for your graphics driver! Choose ""Default"" to go back to the original settings.", -1, 15, 60, 210, 40
+    GROUPBOX "偵錯", -1, 5, 125, 230, 90
+    LTEXT "偵錯頻道:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Enables/disables debug output from opengl32.\n\nWARNING: Choosing ""Set"" or ""Clear"" will overwrite the content of the DEBUGCHANNEL environment variable!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "系統預設值"
+    IDS_RENDERER_RSWR "ReactOS Software Implementation"
+    IDS_CPLNAME "OpenGL 設定"
+    IDS_CPLDESCRIPTION "設定 OpenGL 轉譯器。"
+    IDS_DEBUG_SET "Set"
+    IDS_DEBUG_CLEAR "Clear"
+    IDS_DEBUG_DNM "請勿修改"
+END

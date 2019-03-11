@@ -148,8 +148,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "控制檯"
-    IDS_CPLDESCRIPTION "配置控制檯屬性。"
+    IDS_CPLNAME "主控台"
+    IDS_CPLDESCRIPTION "配置主控台屬性。"
     IDS_APPLY_SHORTCUT_ALL "修改啟動此視窗的快捷方式(&S)"
     IDS_RASTERFONTS "Raster 字型"
     IDS_GROUPBOX_FONT_NAME "Selected Font: "

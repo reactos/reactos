@@ -7,7 +7,7 @@ BEGIN
     IDS_UsageMessage "%s\n\n用法：regsvr32 [/u] [/s] [/c] [/n] [/i[:命令列]] DLL名稱\n\
 /u -	登出服務\n\
 /s -	安靜模式；不顯示訊息框\n\
-/c -	控制檯輸出\n\
+/c -	主控台輸出\n\
 /i -	呼叫 DllInstall 並傳遞給它一個可選的 [命令列]；當使用 /u 時呼叫 DLL 解除安裝\n\
 /n -	不要呼叫 DllRegisterServer；這個選項必須和 /i 一起使用"
     IDS_NoDllSpecified "沒有 DLL 名稱被指定。"
