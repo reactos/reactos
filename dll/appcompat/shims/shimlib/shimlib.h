@@ -27,7 +27,7 @@ PVOID ShimLib_ShimMalloc(SIZE_T dwSize);
 VOID ShimLib_ShimFree(PVOID pData);
 PCSTR ShimLib_StringDuplicateA(PCSTR szString);
 PCSTR ShimLib_StringNDuplicateA(PCSTR szString, SIZE_T stringLength);
-BOOL ShimLib_StrAEqualsW(PCSTR szString, PCWSTR wszString);
+BOOL ShimLib_StrAEqualsWNC(PCSTR szString, PCWSTR wszString);
 HINSTANCE ShimLib_Instance(VOID);
 
 /* Forward events to generic handlers */

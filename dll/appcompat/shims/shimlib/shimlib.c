@@ -69,9 +69,9 @@ PCSTR ShimLib_StringDuplicateA(PCSTR szString)
     return ShimLib_StringNDuplicateA(szString, lstrlenA(szString) + 1);
 }
 
-BOOL ShimLib_StrAEqualsW(PCSTR szString, PCWSTR wszString)
+BOOL ShimLib_StrAEqualsWNC(PCSTR szString, PCWSTR wszString)
 {
-    while (*szString == *wszString)
+    while (toupper(*szString) == towupper(*wszString))
     {
         if (!*szString)
             return TRUE;
@@ -116,7 +116,7 @@ PHOOKAPI WINAPI ShimLib_GetHookAPIs(IN LPCSTR szCommandLine, IN LPCWSTR wszShimN
     {
         if (ps->GetHookAPIs != NULL && ps->ShimName != NULL)
         {
-            if (ShimLib_StrAEqualsW(ps->ShimName, wszShimName))
+            if (ShimLib_StrAEqualsWNC(ps->ShimName, wszShimName))
             {
                 pUsedShim shim = (pUsedShim)ShimLib_ShimMalloc(sizeof(UsedShim));
                 shim->pShim = ps;

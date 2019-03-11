@@ -19,7 +19,7 @@ typedef FARPROC(WINAPI* GETPROCADDRESSPROC)(HMODULE hModule, LPCSTR lpProcName);
 typedef BOOL   (WINAPI* FREELIBRARYPROC)(HINSTANCE hLibModule);
 
 
-#define SHIM_NS         ForceDxSetupSuccess
+#define SHIM_NS         ForceDXSetupSuccess
 #include <setup_shim.inl>
 
 

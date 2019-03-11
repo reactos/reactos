@@ -53,6 +53,15 @@ static expect_shim_data data[] =
             { "KERNEL32.DLL", "VerifyVersionInfoW" },
         }
     },
+    /* Show that it is not case sensitive */
+    {
+        L"VeRiFyVeRsIoNInFoLiTe",
+        0,
+        {
+            { "KERNEL32.DLL", "VerifyVersionInfoA" },
+            { "KERNEL32.DLL", "VerifyVersionInfoW" },
+        }
+    },
 };
 
 static DWORD count_shims(expect_shim_data* data)
