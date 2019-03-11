@@ -1,0 +1,30 @@
+/*
+ * PROJECT:     DESKMON Hindi Translation
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi translation of DESKMON
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+*/
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+IDD_MONITOR DIALOGEX 0, 0, 252, 226
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "मॉनिटर"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "मॉनिटर प्रकार", -1, 7, 3, 237, 52
+    ICON IDC_MONITORICO, IDC_MONITORICO, 13, 11, 21, 20, SS_ICON
+    LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
+    LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
+    PUSHBUTTON "&गुण", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    GROUPBOX "मॉनिटर सेटिंग्स", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&स्क्रीन रिफ़ेश दर:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
+    AUTOCHECKBOX "ऐसे मोड &छिपाएं जो यह मॉनिटर डिस्प्ले नहीं कर सकता है", IDC_PRUNINGCHECK, 13, 106, 225, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_USEDEFFRQUENCY "हार्डवेयर डिफ़ॉल्ट सेटिंग का उपयोग करें"
+    IDS_FREQFMT "%u हेटर्स"
+END

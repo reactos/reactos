@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     NTOPJSHEX Hindi Translation
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi translation of NTOPJSHEX
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+*/
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "एनटी ऑब्जेक्ट नाम स्थान"
+    IDS_REGISTRY_NAME "सिस्टम रजिस्ट्री"
+END

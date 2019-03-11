@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     CRYPTEXT Hindi Translation
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi translation of CRYPTEXT
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "यह एक मान्य प्रमाणपत्र फ़ाइल नहीं है।"
+    IDS_CER_FILE "प्रमाणपत्र फ़ाइल"
+END

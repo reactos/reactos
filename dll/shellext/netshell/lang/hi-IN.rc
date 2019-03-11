@@ -1,0 +1,183 @@
+/*
+ * PROJECT:     NETSHELL Hindi Translation
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi translation of NETSHELL
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+*/
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "सामान्य"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    LTEXT "का उपयोग कर कनेक्ट करें:", -1, 9, 9, 217, 8
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&कॉन्फ़िगर", IDC_CONFIGURE, 189, 38, 50, 14
+    LTEXT "चेक किए गए घटक इस कनेक्शन द्वारा उपयोग किए जाते हैं:", -1, 9, 59, 217, 8
+    PUSHBUTTON "&इंस्टॉल", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&अनइंस्टॉल", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&गुण", IDC_PROPERTIES, 174, 130, 65, 14
+    GROUPBOX "विवरण", -1, 9, 153, 230, 46, BS_GROUPBOX
+    LTEXT "कम्पोनन्ट विवरण यहाँ जाता है...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+    CHECKBOX "कनेक्ट होने पर टास्कबार में आइकन &दिखाएं", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "मुझे &सूचित करें जब यह कनेक्शन सीमित है या कोई कनेक्टिविटी नहीं है", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_STATUS DIALOGEX 0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "सामान्य"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "सामान्य"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "कनेक्शन", -1, 9, 8, 182, 58, BS_GROUPBOX
+    LTEXT "स्थिति:", -1, 19, 20, 60, 8
+    LTEXT "लंबाई:", -1, 19, 34, 60, 8
+    LTEXT "गति:", -1, 19, 48, 60, 8
+    GROUPBOX "कार्यकलाप", -1, 9, 74, 182, 70, BS_GROUPBOX
+    RTEXT "भेज दिया", -1, 26, 90, 60, 8
+    ICON "", IDC_NETSTAT, 110, 85, 32, 32
+    LTEXT "प्राप्त किया", -1, 149, 90, 37, 8
+    LTEXT "बाइट्स:", -1, 17, 115, 32, 8
+    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+    PUSHBUTTON "&गुण", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+    PUSHBUTTON "&डिसेबल", IDC_ENDISABLE, 66, 150, 50, 14
+    RTEXT "", IDC_STATUS, 83, 20, 98, 8
+    RTEXT "", IDC_DURATION, 83, 34, 98, 8
+    RTEXT "", IDC_SPEED, 83, 48, 98, 8
+END
+
+IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "समर्थन"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "कनेक्शन स्थिति", -1, 9, 8, 190, 88, BS_GROUPBOX
+    LTEXT "पता प्रकार:", -1, 22, 20, 80, 8
+    LTEXT "आईपी पता:", -1, 22, 34, 80, 8
+    LTEXT "सबनेट मास्क:", -1, 22, 48, 80, 8
+    LTEXT "डिफ़ॉल्ट गेटवे:", -1, 22, 62, 80, 8
+    RTEXT "एन/ए", IDC_DETAILSTYPE, 112, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 112, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 112, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 112, 62, 80, 8
+    PUSHBUTTON "&विवरण...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+IDD_LAN_NETSTATUSDETAILS DIALOGEX 0, 0, 190, 175
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME
+CAPTION "नेटवर्क कनेक्शन विवरण"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "नेटवर्क कनेक्शन &विवरण:", -1, 10, 4, 170, 12
+    CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
+    PUSHBUTTON "&बंद करे", IDC_CLOSE, 120, 155, 60, 14
+END
+
+IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "चुनें कि ठेठ या कस्टम सेटिंग्स का उपयोग करना है या नहीं:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "ठेठ सेटिंग्स", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "कस्टम सेटिंग्स", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "रिऐक्ट ओएस नेटवर्क के लिए क्लाइंट का उपयोग करके नेटवर्क कनेक्शन बनाता है, रिऐक्ट ओएस नेटवर्क के लिए फ़ाइल और प्रिंट शेयरिंग, और स्वचालित पते के साथ टीसीपी / आईपी परिवहन प्रोटोकॉल।", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "आपको नेटवर्क कम्पोनन्ट को मैन्युअल रूप से कॉन्फ़िगर करने की अनुमति देता है।", IDC_STATIC, 65, 90, 243, 20
+END
+
+IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "डिवाइस के लिए:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "एन/ए", IDC_NETWORK_DEVICE, 75, 2, 253, 20
+    LTEXT "चेक किए गए कम्पोनन्ट इस कनेक्शन द्वारा उपयोग किए जाते हैं:", IDC_STATIC, 33, 12, 253, 20
+    CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
+    PUSHBUTTON "&इंस्टॉल...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&अनइंस्टॉल", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&गुण", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "विवरण", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+END
+
+IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "रिऐक्ट ओएस सेटअप"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "क्या आप चाहते हैं कि यह कंप्यूटर किसी डोमेन का सदस्य हो?\n\
+(आप अपने नेटवर्क एडमिनिस्ट्रेटर से यह जानकारी प्राप्त कर सकते हैं।)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "नहीं, यह कंप्यूटर एक कार्यसमूह का हिस्सा होगा।", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "हां, यह कंप्यूटर एक डोमेन का हिस्सा होगा।", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "कार्यसमूह या डोमेन नाम:", IDC_STATIC, 33, 72, 126, 14
+    EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "नोट: यदि यह कंप्यूटर किसी नेटवर्क का हिस्सा नहीं है, तो आपके पास डोमेन से जुड़ने के लिए पर्याप्त अधिकार नहीं हैं, या आप नहीं जानते कि क्या दर्ज करना है, तो अभी के लिए कार्यसमूह चुनें। इन विकल्पों को बाद के समय में बदला जा सकता है।", IDC_STATIC, 33, 107, 263, 50
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PHYSICAL_ADDRESS "भौतिक पता"
+    IDS_IP_ADDRESS "आईपी पता"
+    IDS_SUBNET_MASK "सबनेट मास्क"
+    IDS_DEF_GATEWAY "डिफ़ॉल्ट गेटवे"
+    IDS_DHCP_SERVER "डीएचसीपी सर्वर"
+    IDS_LEASE_OBTAINED "लीज़ प्राप्त की"
+    IDS_LEASE_EXPIRES "लीज की समय सीमा समाप्त"
+    IDS_DNS_SERVERS "डीएनएस सर्वर"
+    IDS_WINS_SERVERS "विनस् सर्वर"
+    IDS_PROPERTY "संपत्ति"
+    IDS_VALUE "मूल्य"
+    IDS_NETWORKCONNECTION "नेटवर्क कनेक्शन"
+    IDS_SHV_COLUMN_NAME "नाम"
+    IDS_SHV_COLUMN_TYPE "प्रकार"
+    IDS_SHV_COLUMN_STATE "स्थिति"
+    IDS_SHV_COLUMN_DEVNAME "डिवाइस का नाम"
+    IDS_SHV_COLUMN_PHONE "फ़ोन # या होस्ट पता"
+    IDS_SHV_COLUMN_OWNER "मालिक"
+    IDS_TYPE_ETHERNET "लैन या हाई-स्पीड इंटरनेट"
+    IDS_STATUS_NON_OPERATIONAL "डिसेबल्ड"
+    IDS_STATUS_UNREACHABLE "कनिक्टिड नहीं हैं"
+    IDS_STATUS_DISCONNECTED "नेटवर्क केबल अनप्लग्ड"
+    IDS_STATUS_CONNECTING "नेटवर्क का पता प्राप्त कर रहा है"
+    IDS_STATUS_CONNECTED "कनिक्टिड"
+    IDS_STATUS_OPERATIONAL "कनिक्टिड"
+    IDS_NET_ACTIVATE "ऐनेबल"
+    IDS_NET_DEACTIVATE "डिसेबल"
+    IDS_NET_STATUS "स्थिति"
+    IDS_NET_REPAIR "मरम्मत"
+    IDS_NET_CREATELINK "शॉर्टकट बनाएं"
+    IDS_NET_DELETE "हटाए"
+    IDS_NET_RENAME "नाम बदलें"
+    IDS_NET_PROPERTIES "गुण"
+    IDS_FORMAT_BIT "%u बिट/सेकंड"
+    IDS_FORMAT_KBIT "%u किलोबिट/सेकंड"
+    IDS_FORMAT_MBIT "%u मेगाबिट/सेकंड"
+    IDS_FORMAT_GBIT "%u गीगाबिट/सेकंड"
+    IDS_DURATION_DAY "%d दिन %s"
+    IDS_DURATION_DAYS "%d दिन %s"
+    IDS_ASSIGNED_DHCP "डीएचसीपी द्वारा सौंपा गया"
+    IDS_ASSIGNED_MANUAL "मैन्युअल रूप से कॉन्फ़िगर किया गया"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORKSETTINGSTITLE "नेटवर्क सेटिंग"
+    IDS_NETWORKSETTINGSSUBTITLE "अन्य नेटवर्क, कंप्यूटर और इंटरनेट से कनेक्ट करने के लिए उपयोग किया जाने वाला नेटवर्क सॉफ़्टवेयर इंस्टॉल करता है।"
+    IDS_NETWORKCOMPONENTTITLE "नेटवर्क कम्पोनेन्ट"
+    IDS_NETWORKCOMPONENTSUBTITLE "निर्धारित करें कि आपके कंप्यूटर पर कौन से नेटवर्किंग कम्पोनेन्ट उपयोग किए जाते हैं। नए कम्पोनेन्ट को ऐड करने के लिए, इंस्टॉल पर क्लिक करें।"
+    IDS_NETWORKDOMAINTITLE "कार्यसमूह या नेटवर्क डोमेन"
+    IDS_NETWORKDOMAINSUBTITLE "निर्दिष्ट करें कि कंप्यूटर का उपयोग कैसे किया जाएगा - एक कार्यसमूह के भाग के रूप में या नेटवर्क डोमेन के भाग के रूप में।"
+    IDS_REACTOS_SETUP "रिऐक्ट ओएस सेटअप"
+    IDS_WZD_DOMAIN_NAME "जब तक आप अपने डोमेन या कार्यसमूह का\nनाम दर्ज नहीं करते तब तक सेटअप\nजारी नहीं रह सकता।"
+END

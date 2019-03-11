@@ -1,0 +1,48 @@
+/*
+ * PROJECT:     DEVCPUX Hindi Translation
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hindi translation of DEVCPUX
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+DLG_PROCESSORINFO DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_POPUP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "सीपीयू"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "विशेषताएं:", -1, 7, 23, 50, 8
+    LTEXT "परीक्षा", IDC_FEATURES, 57, 23, 181, 8
+    LTEXT "मॉडल:", -1, 7, 38, 50, 8
+    LTEXT "परीक्षा", IDC_MODEL, 57, 38, 181, 8
+    LTEXT "स्टिपिंग:", -1, 7, 53, 50, 51
+    LTEXT "परीक्षा", IDC_STEPPING, 57, 53, 181, 8
+    LTEXT "कोर गति:", -1, 7, 68, 50, 8
+    LTEXT "परीक्षा", IDC_CORESPEED, 57, 68, 181, 8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MEGAHERTZ "%ld मेगाहर्ट्ज"
+END
+
+/*
+DLG_PROCESSORINFO DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_POPUP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "सीपीयू"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "विशेषताएं:", -1, 7, 23, 50, 8
+    LTEXT "<परीक्षा>", IDC_FEATURES, 7, 34, 238, 8
+
+    LTEXT "मॉडल:", -1, 7, 49, 50, 8
+    LTEXT "<परीक्षा>", IDC_MODEL, 7, 60, 238, 8
+
+    LTEXT "स्टिपिंग:", -1, 7, 75, 50, 8
+    LTEXT "<परीक्षा>", IDC_STEPPING, 7, 86, 238, 8
+
+    LTEXT "कोर गति:", -1, 7, 101, 50, 8
+    LTEXT "<परीक्षा>", IDC_CORESPEED, 7, 112, 238, 8
+END
+*/
