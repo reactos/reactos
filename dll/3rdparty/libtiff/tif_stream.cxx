@@ -1,5 +1,3 @@
-/* $Id: tif_stream.cxx,v 1.13 2015-05-28 01:50:22 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1996 Sam Leffler
  * Copyright (c) 1991-1996 Silicon Graphics, Inc.
@@ -375,6 +373,9 @@ _tiffStreamOpen(const char* name, const char* mode, void *fd)
 				_tiffosSizeProc,
 				_tiffDummyMapProc,
                                 _tiffDummyUnmapProc);
+		if (!tif) {
+			delete data;
+		}
 	} else {
 		tiffis_data	*data = new tiffis_data;
 		data->stream = reinterpret_cast<istream *>(fd);
@@ -389,6 +390,9 @@ _tiffStreamOpen(const char* name, const char* mode, void *fd)
 				_tiffisSizeProc,
 				_tiffDummyMapProc,
                                 _tiffDummyUnmapProc);
+		if (!tif) {
+			delete data;
+		}
 	}
 
 	return (tif);

@@ -83,7 +83,7 @@ Used Version: 9c
 Website: http://www.ijg.org/
 
 Title: libtiff
-Used Version: 4.0.9
+Used Version: 4.0.10
 Website: http://www.simplesystems.org/libtiff/
 
 Title: mbed TLS

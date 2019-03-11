@@ -1,5 +1,3 @@
-/* $Id: tif_ojpeg.c,v 1.69 2017-04-27 17:29:26 erouault Exp $ */
-
 /* WARNING: The type of JPEG encapsulation defined by the TIFF Version 6.0
    specification is now totally obsolete and deprecated for new applications and
    images. This file was was created solely in order to read unconverted images
@@ -123,8 +121,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 
-#include <precomp.h>
-
+#include "tiffiop.h"
 #ifdef OJPEG_SUPPORT
 
 /* Configuration defines here are:

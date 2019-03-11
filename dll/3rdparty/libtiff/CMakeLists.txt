@@ -47,9 +47,11 @@ list(APPEND SOURCE
     tif_tile.c
     tif_version.c
     tif_warning.c
+    #tif_webp.c
     tif_win32.c
     tif_write.c
     tif_zip.c
+    #tif_zstd.c
     precomp.h)
 
 add_library(libtiff SHARED ${SOURCE} libtiff.def)
