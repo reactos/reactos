@@ -20,6 +20,9 @@
 FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName);
 BOOL WINAPI SE_IsShimDll(PVOID BaseAddress);
 
+static const UNICODE_STRING Ntdll = RTL_CONSTANT_STRING(L"ntdll.dll");
+static const UNICODE_STRING Kernel32 = RTL_CONSTANT_STRING(L"kernel32.dll");
+static const UNICODE_STRING Verifier = RTL_CONSTANT_STRING(L"verifier.dll");
 
 extern HMODULE g_hInstance;
 static UNICODE_STRING g_WindowsDirectory;
@@ -872,8 +875,9 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
     PBYTE DllBase = LdrEntry->DllBase;
 
-    if (SE_IsShimDll(DllBase) || g_hInstance == LdrEntry->DllBase ||
-        (g_LoadingShimDll.Buffer && RtlEqualUnicodeString(&g_LoadingShimDll, &LdrEntry->BaseDllName, TRUE)))
+    if (SE_IsShimDll(DllBase) ||
+        g_hInstance == LdrEntry->DllBase ||
+        RtlEqualUnicodeString(&g_LoadingShimDll, &LdrEntry->BaseDllName, TRUE))
     {
         SHIMENG_INFO("Skipping shim module 0x%p \"%wZ\"\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
         return;
@@ -1000,6 +1004,86 @@ VOID SeiInitPaths(VOID)
 #undef WINSXS
 }
 
+VOID SeiSetEntryProcessed(PPEB Peb)
+{
+    PLIST_ENTRY ListHead, Entry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    ListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+    Entry = ListHead->Flink;
+    while (Entry != ListHead)
+    {
+        LdrEntry = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
+        Entry = Entry->Flink;
+
+        if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Ntdll, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Kernel32, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Verifier, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &g_LoadingShimDll, TRUE) ||
+            SE_IsShimDll(LdrEntry->DllBase) ||
+            (LdrEntry->Flags & LDRP_ENTRY_PROCESSED))
+        {
+            SHIMENG_WARN("Don't mess with 0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+        }
+        else
+        {
+            SHIMENG_WARN("Touching        0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+            LdrEntry->Flags |= (LDRP_ENTRY_PROCESSED | LDRP_SHIMENG_SUPPRESSED_ENTRY);
+        }
+    }
+
+    ListHead = &NtCurrentPeb()->Ldr->InMemoryOrderModuleList;
+    Entry = ListHead->Flink;
+    SHIMENG_INFO("In memory:\n");
+    while (Entry != ListHead)
+    {
+        LdrEntry = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
+        Entry = Entry->Flink;
+
+        SHIMENG_INFO("    0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+    }
+
+    ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+    Entry = ListHead->Flink;
+    SHIMENG_INFO("In load:\n");
+    while (Entry != ListHead)
+    {
+        LdrEntry = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        Entry = Entry->Flink;
+
+        SHIMENG_INFO("    0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+    }
+}
+
+VOID SeiResetEntryProcessed(PPEB Peb)
+{
+    PLIST_ENTRY ListHead, Entry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    ListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+    Entry = ListHead->Flink;
+    while (Entry != ListHead)
+    {
+        LdrEntry = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
+        Entry = Entry->Flink;
+
+        if (SE_IsShimDll(LdrEntry->DllBase) ||
+            g_hInstance == LdrEntry->DllBase ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Ntdll, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Kernel32, TRUE) ||
+            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &Verifier, TRUE) ||
+            !(LdrEntry->Flags & LDRP_SHIMENG_SUPPRESSED_ENTRY))
+        {
+            SHIMENG_WARN("Don't mess with 0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+        }
+        else
+        {
+            SHIMENG_WARN("Resetting       0x%p '%wZ'\n", LdrEntry->DllBase, &LdrEntry->BaseDllName);
+            LdrEntry->Flags &= ~(LDRP_ENTRY_PROCESSED | LDRP_SHIMENG_SUPPRESSED_ENTRY);
+        }
+    }
+}
+
 VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
 {
     DWORD n;
@@ -1021,6 +1105,9 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     SeiInitPaths();
 
     SeiCheckComPlusImage(Peb->ImageBaseAddress);
+
+    /* Mark all modules loaded until now as 'LDRP_ENTRY_PROCESSED' so that their entrypoint is not called while we are loading shims */
+    SeiSetEntryProcessed(Peb);
 
     /* TODO:
     if (pQuery->trApphelp)
@@ -1164,6 +1251,9 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     SeiAddInternalHooks(dwTotalHooks);
     SeiResolveAPIs();
     PatchNewModules(Peb);
+
+    /* Remove the 'LDRP_ENTRY_PROCESSED' flag from entries we modified, so that the loader can continue to process them */
+    SeiResetEntryProcessed(Peb);
 }
 
 
