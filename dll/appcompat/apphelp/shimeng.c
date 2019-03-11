@@ -1142,10 +1142,13 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
             SHIMENG_INFO("Using SHIM \"%S!%S\"\n", DllName, ShimName);
 
             /* Ask this shim what hooks it needs (and pass along the commandline) */
+            dwHookCount = 0;
             pHookApi = pShimModuleInfo->pGetHookAPIs(AnsiCommandLine.Buffer, ShimName, &dwHookCount);
             SHIMENG_INFO("GetHookAPIs returns %d hooks for DLL \"%wZ\" SHIM \"%S\"\n", dwHookCount, &UnicodeDllName, ShimName);
-            if (dwHookCount)
+            if (dwHookCount && pHookApi)
                 pShimInfo = SeiAppendHookInfo(pShimModuleInfo, pHookApi, dwHookCount, ShimName);
+            else
+                dwHookCount = 0;
 
             /* If this shim has hooks, create the include / exclude lists */
             if (pShimInfo)
