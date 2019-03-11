@@ -72,25 +72,14 @@ typedef struct _PARTENTRY
 
 } PARTENTRY, *PPARTENTRY;
 
-
-typedef struct _BIOSDISKENTRY
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG Signature;
-    ULONG Checksum;
-    BOOLEAN Recognized;
-    CM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-    CM_INT13_DRIVE_PARAMETER Int13DiskData;
-} BIOSDISKENTRY, *PBIOSDISKENTRY;
-
-
 typedef struct _DISKENTRY
 {
     LIST_ENTRY ListEntry;
 
     /* The list of disks/partitions this disk belongs to */
     struct _PARTLIST *PartList;
+
+    MEDIA_TYPE MediaType;   /* FixedMedia or RemovableMedia */
 
     /* Disk geometry */
 
@@ -103,9 +92,12 @@ typedef struct _DISKENTRY
     ULONG SectorAlignment;
     ULONG CylinderAlignment;
 
-    /* BIOS parameters */
+    /* BIOS Firmware parameters */
     BOOLEAN BiosFound;
-    ULONG BiosDiskNumber;
+    ULONG HwAdapterNumber;
+    ULONG HwControllerNumber;
+    ULONG HwDiskNumber;         /* Disk number currently assigned on the system */
+    ULONG HwFixedDiskNumber;    /* Disk number on the system when *ALL* removable disks are not connected */
 //    ULONG Signature;  // Obtained from LayoutBuffer->Signature
 //    ULONG Checksum;
 
@@ -138,6 +130,18 @@ typedef struct _DISKENTRY
 
 } DISKENTRY, *PDISKENTRY;
 
+typedef struct _BIOSDISKENTRY
+{
+    LIST_ENTRY ListEntry;
+    ULONG AdapterNumber;
+    ULONG ControllerNumber;
+    ULONG DiskNumber;
+    ULONG Signature;
+    ULONG Checksum;
+    PDISKENTRY DiskEntry;   /* Corresponding recognized disk; is NULL if the disk is not recognized */ // RecognizedDiskEntry;
+    CM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
+    CM_INT13_DRIVE_PARAMETER Int13DiskData;
+} BIOSDISKENTRY, *PBIOSDISKENTRY;
 
 typedef struct _PARTLIST
 {
@@ -223,6 +227,10 @@ RoundingDivide(
    IN ULONGLONG Divisor);
 
 
+BOOLEAN
+IsSuperFloppy(
+    IN PDISKENTRY DiskEntry);
+
 
 PPARTLIST
 CreatePartitionList(VOID);
@@ -234,7 +242,7 @@ DestroyPartitionList(
 PDISKENTRY
 GetDiskByBiosNumber(
     IN PPARTLIST List,
-    IN ULONG BiosDiskNumber);
+    IN ULONG HwDiskNumber);
 
 PDISKENTRY
 GetDiskByNumber(

@@ -404,7 +404,8 @@ DiskIdentifierQueryRoutine(
     UNICODE_STRING NameU;
 
     if (ValueType == REG_SZ &&
-        ValueLength == 20 * sizeof(WCHAR))
+        ValueLength == 20 * sizeof(WCHAR) &&
+        ((PWCHAR)ValueData)[8] == L'-')
     {
         NameU.Buffer = (PWCHAR)ValueData;
         NameU.Length = NameU.MaximumLength = 8 * sizeof(WCHAR);
@@ -517,6 +518,7 @@ EnumerateBiosDiskEntries(
     RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     WCHAR Name[120];
     ULONG AdapterCount;
+    ULONG ControllerCount;
     ULONG DiskCount;
     NTSTATUS Status;
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
@@ -540,8 +542,7 @@ EnumerateBiosDiskEntries(
         return;
     }
 
-    AdapterCount = 0;
-    while (TRUE)
+    for (AdapterCount = 0; ; ++AdapterCount)
     {
         RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
                             L"%s\\%lu",
@@ -566,11 +567,11 @@ EnumerateBiosDiskEntries(
                                         NULL);
         if (NT_SUCCESS(Status))
         {
-            while (TRUE)
+            for (ControllerCount = 0; ; ++ControllerCount)
             {
                 RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
-                                    L"%s\\%lu\\DiskController\\0",
-                                    ROOT_NAME, AdapterCount);
+                                    L"%s\\%lu\\DiskController\\%lu",
+                                    ROOT_NAME, AdapterCount, ControllerCount);
                 Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                 Name,
                                                 &QueryTable[2],
@@ -583,8 +584,8 @@ EnumerateBiosDiskEntries(
                 }
 
                 RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
-                                    L"%s\\%lu\\DiskController\\0\\DiskPeripheral",
-                                    ROOT_NAME, AdapterCount);
+                                    L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral",
+                                    ROOT_NAME, AdapterCount, ControllerCount);
                 Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                 Name,
                                                 &QueryTable[2],
@@ -597,18 +598,18 @@ EnumerateBiosDiskEntries(
                     QueryTable[1].Name = L"Configuration Data";
                     QueryTable[1].QueryRoutine = DiskConfigurationDataQueryRoutine;
 
-                    DiskCount = 0;
-                    while (TRUE)
+                    for (DiskCount = 0; ; ++DiskCount)
                     {
                         BiosDiskEntry = (BIOSDISKENTRY*)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
                         if (BiosDiskEntry == NULL)
                         {
-                            break;
+                            RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+                            return;
                         }
 
                         RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
-                                            L"%s\\%lu\\DiskController\\0\\DiskPeripheral\\%lu",
-                                            ROOT_NAME, AdapterCount, DiskCount);
+                                            L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral\\%lu",
+                                            ROOT_NAME, AdapterCount, ControllerCount, DiskCount);
                         Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                         Name,
                                                         QueryTable,
@@ -617,11 +618,14 @@ EnumerateBiosDiskEntries(
                         if (!NT_SUCCESS(Status))
                         {
                             RtlFreeHeap(ProcessHeap, 0, BiosDiskEntry);
-                            break;
+                            RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+                            return;
                         }
 
+                        BiosDiskEntry->AdapterNumber = 0; // And NOT "AdapterCount" as it needs to be hardcoded for BIOS!
+                        BiosDiskEntry->ControllerNumber = ControllerCount;
                         BiosDiskEntry->DiskNumber = DiskCount;
-                        BiosDiskEntry->Recognized = FALSE;
+                        BiosDiskEntry->DiskEntry = NULL;
 
                         if (DiskCount < Int13Drives[0].NumberDrives)
                         {
@@ -629,11 +633,14 @@ EnumerateBiosDiskEntries(
                         }
                         else
                         {
-                            DPRINT1("Didn't find int13 drive datas for disk %u\n", DiskCount);
+                            DPRINT1("Didn't find Int13 drive data for disk %u\n", DiskCount);
                         }
 
                         InsertTailList(&PartList->BiosDiskListHead, &BiosDiskEntry->ListEntry);
 
+                        DPRINT("--->\n");
+                        DPRINT("AdapterNumber:     %lu\n", BiosDiskEntry->AdapterNumber);
+                        DPRINT("ControllerNumber:  %lu\n", BiosDiskEntry->ControllerNumber);
                         DPRINT("DiskNumber:        %lu\n", BiosDiskEntry->DiskNumber);
                         DPRINT("Signature:         %08lx\n", BiosDiskEntry->Signature);
                         DPRINT("Checksum:          %08lx\n", BiosDiskEntry->Checksum);
@@ -645,17 +652,11 @@ EnumerateBiosDiskEntries(
                         DPRINT("SectorsPerTrack:   %d\n", BiosDiskEntry->Int13DiskData.SectorsPerTrack);
                         DPRINT("MaxHeads:          %d\n", BiosDiskEntry->Int13DiskData.MaxHeads);
                         DPRINT("NumberDrives:      %d\n", BiosDiskEntry->Int13DiskData.NumberDrives);
-
-                        DiskCount++;
+                        DPRINT("<---\n");
                     }
                 }
-
-                RtlFreeHeap(ProcessHeap, 0, Int13Drives);
-                return;
             }
         }
-
-        AdapterCount++;
     }
 
     RtlFreeHeap(ProcessHeap, 0, Int13Drives);
@@ -663,6 +664,81 @@ EnumerateBiosDiskEntries(
 #undef ROOT_NAME
 }
 
+
+/*
+ * Detects whether a disk reports as a "super-floppy", i.e. an unpartitioned
+ * disk with a valid VBR, following the criteria used by IoReadPartitionTable()
+ * and IoWritePartitionTable():
+ * only one single partition starting at the beginning of the disk; the reported
+ * defaults are: partition number being zero and its type being FAT16 non-bootable.
+ * Note also that accessing \Device\HarddiskN\Partition0 or Partition1 returns
+ * the same data.
+ */
+// static
+BOOLEAN
+IsSuperFloppy(
+    IN PDISKENTRY DiskEntry)
+{
+    PPARTITION_INFORMATION PartitionInfo;
+    ULONGLONG PartitionLengthEstimate;
+
+    /* No layout buffer: we cannot say anything yet */
+    if (DiskEntry->LayoutBuffer == NULL)
+        return FALSE;
+
+    /* We must have only one partition */
+    if (DiskEntry->LayoutBuffer->PartitionCount != 1)
+        return FALSE;
+
+    /* Get the single partition entry */
+    PartitionInfo = DiskEntry->LayoutBuffer->PartitionEntry;
+
+    /* The single partition must start at the beginning of the disk */
+    if (!(PartitionInfo->StartingOffset.QuadPart == 0 &&
+          PartitionInfo->HiddenSectors == 0))
+    {
+        return FALSE;
+    }
+
+    /* The disk signature is usually set to one; warn in case it's not */
+    if (DiskEntry->LayoutBuffer->Signature != 1)
+    {
+        DPRINT1("Super-Floppy disk %lu signature %08x != 1!\n",
+                DiskEntry->DiskNumber, DiskEntry->LayoutBuffer->Signature);
+    }
+
+    /*
+     * The partition number must be zero or one, be recognized,
+     * have FAT16 type and report as non-bootable.
+     */
+    if ((PartitionInfo->PartitionNumber != 0 &&
+         PartitionInfo->PartitionNumber != 1) ||
+        PartitionInfo->RecognizedPartition != TRUE ||
+        PartitionInfo->PartitionType != PARTITION_FAT_16 ||
+        PartitionInfo->BootIndicator != FALSE)
+    {
+        DPRINT1("Super-Floppy disk %lu does not return default settings!\n"
+                "    PartitionNumber = %lu, expected 0\n"
+                "    RecognizedPartition = %s, expected TRUE\n"
+                "    PartitionType = 0x%02x, expected 0x04 (PARTITION_FAT_16)\n"
+                "    BootIndicator = %s, expected FALSE\n",
+                DiskEntry->DiskNumber,
+                PartitionInfo->PartitionNumber,
+                PartitionInfo->RecognizedPartition ? "TRUE" : "FALSE",
+                PartitionInfo->PartitionType,
+                PartitionInfo->BootIndicator ? "TRUE" : "FALSE");
+    }
+
+    /* The partition lengths should agree */
+    PartitionLengthEstimate = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    if (PartitionInfo->PartitionLength.QuadPart != PartitionLengthEstimate)
+    {
+        DPRINT1("PartitionLength = %I64u is different from PartitionLengthEstimate = %I64u\n",
+                PartitionInfo->PartitionLength.QuadPart, PartitionLengthEstimate);
+    }
+
+    return TRUE;
+}
 
 
 /*
@@ -1295,6 +1371,67 @@ UpdateDiskSignatures(
 
 static
 VOID
+UpdateHwDiskNumbers(
+    IN PPARTLIST List)
+{
+    PLIST_ENTRY ListEntry;
+    PBIOSDISKENTRY BiosDiskEntry;
+    PDISKENTRY DiskEntry;
+    ULONG HwAdapterNumber = 0;
+    ULONG HwControllerNumber = 0;
+    ULONG RemovableDiskCount = 0;
+
+    /*
+     * Enumerate the disks recognized by the BIOS and recompute the disk
+     * numbers on the system when *ALL* removable disks are not connected.
+     * The entries are inserted in increasing order of AdapterNumber,
+     * ControllerNumber and DiskNumber.
+     */
+    for (ListEntry = List->BiosDiskListHead.Flink;
+         ListEntry != &List->BiosDiskListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        BiosDiskEntry = CONTAINING_RECORD(ListEntry, BIOSDISKENTRY, ListEntry);
+        DiskEntry = BiosDiskEntry->DiskEntry;
+
+        /*
+         * If the adapter or controller numbers change, update them and reset
+         * the number of removable disks on this adapter/controller.
+         */
+        if (HwAdapterNumber != BiosDiskEntry->AdapterNumber ||
+            HwControllerNumber != BiosDiskEntry->ControllerNumber)
+        {
+            HwAdapterNumber = BiosDiskEntry->AdapterNumber;
+            HwControllerNumber = BiosDiskEntry->ControllerNumber;
+            RemovableDiskCount = 0;
+        }
+
+        /* Adjust the actual hardware disk number */
+        if (DiskEntry)
+        {
+            ASSERT(DiskEntry->HwDiskNumber == BiosDiskEntry->DiskNumber);
+
+            if (DiskEntry->MediaType == RemovableMedia)
+            {
+                /* Increase the number of removable disks and set the disk number to zero */
+                ++RemovableDiskCount;
+                DiskEntry->HwFixedDiskNumber = 0;
+            }
+            else // if (DiskEntry->MediaType == FixedMedia)
+            {
+                /* Adjust the fixed disk number, offset by the number of removable disks found before this one */
+                DiskEntry->HwFixedDiskNumber = BiosDiskEntry->DiskNumber - RemovableDiskCount;
+            }
+        }
+        else
+        {
+            DPRINT1("BIOS disk %lu is not recognized by NTOS!\n", BiosDiskEntry->DiskNumber);
+        }
+    }
+}
+
+static
+VOID
 AddDiskToList(
     IN HANDLE FileHandle,
     IN ULONG DiskNumber,
@@ -1394,7 +1531,9 @@ AddDiskToList(
     Checksum = ~Checksum + 1;
 
     RtlStringCchPrintfW(Identifier, ARRAYSIZE(Identifier),
-                        L"%08x-%08x-A", Checksum, Signature);
+                        L"%08x-%08x-%c",
+                        Checksum, Signature,
+                        (Mbr->Magic == PARTITION_MAGIC) ? L'A' : L'X');
     DPRINT("Identifier: %S\n", Identifier);
 
     DiskEntry = RtlAllocateHeap(ProcessHeap,
@@ -1408,6 +1547,37 @@ AddDiskToList(
     }
 
     DiskEntry->PartList = List;
+
+#if 0
+    {
+        FILE_FS_DEVICE_INFORMATION FileFsDevice;
+
+        /* Query the device for its type */
+        Status = NtQueryVolumeInformationFile(FileHandle,
+                                              &Iosb,
+                                              &FileFsDevice,
+                                              sizeof(FileFsDevice),
+                                              FileFsDeviceInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Couldn't detect device type for disk %lu of identifier '%S'...\n", DiskNumber, Identifier);
+        }
+        else
+        {
+            DPRINT1("Disk %lu : DeviceType: 0x%08x ; Characteristics: 0x%08x\n", DiskNumber, FileFsDevice.DeviceType, FileFsDevice.Characteristics);
+        }
+    }
+    // NOTE: We may also use NtQueryVolumeInformationFile(FileFsDeviceInformation).
+#endif
+    DiskEntry->MediaType = DiskGeometry.MediaType;
+    if (DiskEntry->MediaType == RemovableMedia)
+    {
+        DPRINT1("Disk %lu of identifier '%S' is removable\n", DiskNumber, Identifier);
+    }
+    else // if (DiskEntry->MediaType == FixedMedia)
+    {
+        DPRINT1("Disk %lu of identifier '%S' is fixed\n", DiskNumber, Identifier);
+    }
 
 //    DiskEntry->Checksum = Checksum;
 //    DiskEntry->Signature = Signature;
@@ -1459,33 +1629,41 @@ AddDiskToList(
          */
         if (BiosDiskEntry->Signature == Signature &&
             BiosDiskEntry->Checksum == Checksum &&
-            !BiosDiskEntry->Recognized)
+            BiosDiskEntry->DiskEntry == NULL)
         {
             if (!DiskEntry->BiosFound)
             {
-                DiskEntry->BiosDiskNumber = BiosDiskEntry->DiskNumber;
+                DiskEntry->HwAdapterNumber = BiosDiskEntry->AdapterNumber;
+                DiskEntry->HwControllerNumber = BiosDiskEntry->ControllerNumber;
+                DiskEntry->HwDiskNumber = BiosDiskEntry->DiskNumber;
+
+                if (DiskEntry->MediaType == RemovableMedia)
+                {
+                    /* Set the removable disk number to zero */
+                    DiskEntry->HwFixedDiskNumber = 0;
+                }
+                else // if (DiskEntry->MediaType == FixedMedia)
+                {
+                    /* The fixed disk number will later be adjusted using the number of removable disks */
+                    DiskEntry->HwFixedDiskNumber = BiosDiskEntry->DiskNumber;
+                }
+
                 DiskEntry->BiosFound = TRUE;
-                BiosDiskEntry->Recognized = TRUE;
+                BiosDiskEntry->DiskEntry = DiskEntry;
+                break;
             }
             else
             {
                 // FIXME: What to do?
+                DPRINT1("Disk %lu of identifier '%S' has already been found?!\n", DiskNumber, Identifier);
             }
         }
     }
 
     if (!DiskEntry->BiosFound)
     {
-#if 0
-        RtlFreeHeap(ProcessHeap, 0, DiskEntry);
-        return;
-#else
-        DPRINT1("WARNING: Setup could not find a matching BIOS disk entry. Disk %d is not be bootable by the BIOS!\n", DiskNumber);
-#endif
+        DPRINT1("WARNING: Setup could not find a matching BIOS disk entry. Disk %lu may not be bootable by the BIOS!\n", DiskNumber);
     }
-
-    InitializeListHead(&DiskEntry->PrimaryPartListHead);
-    InitializeListHead(&DiskEntry->LogicalPartListHead);
 
     DiskEntry->Cylinders = DiskGeometry.Cylinders.QuadPart;
     DiskEntry->TracksPerCylinder = DiskGeometry.TracksPerCylinder;
@@ -1529,6 +1707,9 @@ AddDiskToList(
      *
      * See examples in https://git.reactos.org/?p=reactos.git;a=blob;f=reactos/ntoskrnl/io/iomgr/error.c;hb=2f3a93ee9cec8322a86bf74b356f1ad83fc912dc#l267
      */
+
+    InitializeListHead(&DiskEntry->PrimaryPartListHead);
+    InitializeListHead(&DiskEntry->LogicalPartListHead);
 
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
@@ -1601,6 +1782,9 @@ AddDiskToList(
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
 #endif
+
+    if (IsSuperFloppy(DiskEntry))
+        DPRINT1("Disk %lu is a super-floppy\n", DiskNumber);
 
     if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
         DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
@@ -1723,7 +1907,7 @@ CreatePartitionList(VOID)
     }
 
     UpdateDiskSignatures(List);
-
+    UpdateHwDiskNumbers(List);
     AssignDriveLetters(List);
 
     return List;
@@ -1789,7 +1973,7 @@ DestroyPartitionList(
 PDISKENTRY
 GetDiskByBiosNumber(
     IN PPARTLIST List,
-    IN ULONG BiosDiskNumber)
+    IN ULONG HwDiskNumber)
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
@@ -1801,7 +1985,7 @@ GetDiskByBiosNumber(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->BiosDiskNumber == BiosDiskNumber)
+        if (DiskEntry->HwDiskNumber == HwDiskNumber)
         {
             /* Disk found */
             return DiskEntry;
@@ -2879,6 +3063,7 @@ DeletePartition(
     if (List->SystemPartition == PartEntry)
     {
         ASSERT(List->SystemPartition);
+        ASSERT(List->SystemPartition->DiskEntry->MediaType != RemovableMedia);
 
         if (List->SystemPartition == List->OriginalSystemPartition)
             List->OriginalSystemPartition = NULL;
@@ -3604,7 +3789,7 @@ WritePartitions(
     //
     // NOTE: Originally (see r40437), we used to install here also a new MBR
     // for this disk (by calling InstallMbrBootCodeToDisk), only if:
-    // DiskEntry->NewDisk == TRUE and DiskEntry->BiosDiskNumber == 0.
+    // DiskEntry->NewDisk == TRUE and DiskEntry->HwDiskNumber == 0.
     // Then after that, both DiskEntry->NewDisk and DiskEntry->NoMbr were set
     // to FALSE. In the other place (in usetup.c) where InstallMbrBootCodeToDisk
     // was called too, the installation test was modified by checking whether
@@ -3823,6 +4008,10 @@ PrimaryPartitionCreationChecks(
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
 
+    /* Only one primary partition is allowed on super-floppy */
+    if (IsSuperFloppy(DiskEntry))
+        return ERROR_PARTITION_TABLE_FULL;
+
     /* Fail if there are already 4 primary partitions in the list */
     if (GetPrimaryPartitionCount(DiskEntry) >= 4)
         return ERROR_PARTITION_TABLE_FULL;
@@ -3845,6 +4034,10 @@ ExtendedPartitionCreationChecks(
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
+
+    /* Only one primary partition is allowed on super-floppy */
+    if (IsSuperFloppy(DiskEntry))
+        return ERROR_PARTITION_TABLE_FULL;
 
     /* Fail if there are already 4 primary partitions in the list */
     if (GetPrimaryPartitionCount(DiskEntry) >= 4)
@@ -3872,6 +4065,10 @@ LogicalPartitionCreationChecks(
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
+
+    /* Only one primary partition is allowed on super-floppy */
+    if (IsSuperFloppy(DiskEntry))
+        return ERROR_PARTITION_TABLE_FULL;
 
     return ERROR_SUCCESS;
 }

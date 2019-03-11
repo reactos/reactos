@@ -1636,6 +1636,23 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (IsContainerPartition(CurrentPartition->PartitionType))
                 continue; // return SELECT_PARTITION_PAGE;
 
+            /*
+             * Check whether the user wants to install ReactOS on a disk that
+             * is not recognized by the computer's firmware and if so, display
+             * a warning since such disks may not be bootable.
+             */
+            if (CurrentPartition->DiskEntry->MediaType == FixedMedia &&
+                !CurrentPartition->DiskEntry->BiosFound)
+            {
+                PopupError("The disk you have selected for installing ReactOS\n"
+                           "is not visible by the firmware of your computer,\n"
+                           "and so may not be bootable.\n"
+                           "Press ENTER to continue nonetheless.",
+                           MUIGetString(STRING_CONTINUE),
+                           Ir, POPUP_WAIT_ENTER);
+                // return SELECT_PARTITION_PAGE;
+            }
+
             if (CurrentPartition->IsPartitioned == FALSE)
             {
                 if (CurrentPartition->LogicalPartition)
@@ -4428,18 +4445,21 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Step 2: Write the MBR */
-    RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-            L"\\Device\\Harddisk%d\\Partition0",
-            PartitionList->SystemPartition->DiskEntry->DiskNumber);
-    Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
-                                      &USetupData.SourceRootPath,
-                                      DestinationDevicePathBuffer);
-    if (!NT_SUCCESS(Status))
+    /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
+    if (!IsSuperFloppy(PartitionList->SystemPartition->DiskEntry))
     {
-        DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
-        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
-        return QUIT_PAGE;
+        RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+                L"\\Device\\Harddisk%d\\Partition0",
+                PartitionList->SystemPartition->DiskEntry->DiskNumber);
+        Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
+                                          &USetupData.SourceRootPath,
+                                          DestinationDevicePathBuffer);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n", Status);
+            MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
+            return QUIT_PAGE;
+        }
     }
 
     return SUCCESS_PAGE;

@@ -791,7 +791,8 @@ DisableWizNext:
                     DISKENTRY DiskEntry;
                     PARTENTRY PartEntry;
                     DiskEntry.DiskNumber = 0;
-                    DiskEntry.BiosDiskNumber = 0;
+                    DiskEntry.HwDiskNumber = 0;
+                    DiskEntry.HwFixedDiskNumber = 0;
                     PartEntry.DiskEntry = &DiskEntry;
                     PartEntry.PartitionNumber = 1; // 4;
                     /****/

@@ -662,10 +662,54 @@ InitDestinationPaths(
 /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     /* Create 'pSetupData->DestinationArcPath' */
     RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
-    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                     L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
-                     DiskEntry->BiosDiskNumber,
-                     PartEntry->OnDiskPartitionNumber);
+
+    if (DiskEntry->MediaType == FixedMedia)
+    {
+        if (DiskEntry->BiosFound)
+        {
+#if 1
+            Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                             L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+                             DiskEntry->HwFixedDiskNumber,
+                             PartEntry->OnDiskPartitionNumber);
+#else
+            Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                             L"multi(%lu)disk(%lu)rdisk(%lu)partition(%lu)\\",
+                             DiskEntry->HwAdapterNumber,
+                             DiskEntry->HwControllerNumber,
+                             DiskEntry->HwFixedDiskNumber,
+                             PartEntry->OnDiskPartitionNumber);
+#endif
+            DPRINT1("Fixed disk found by BIOS, using MULTI ARC path '%S'\n", PathBuffer);
+        }
+        else
+        {
+            Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                             L"scsi(%u)disk(%u)rdisk(%u)partition(%lu)\\",
+                             DiskEntry->Port,
+                             DiskEntry->Bus,
+                             DiskEntry->Id,
+                             PartEntry->OnDiskPartitionNumber);
+            DPRINT1("Fixed disk not found by BIOS, using SCSI ARC path '%S'\n", PathBuffer);
+        }
+    }
+    else // if (DiskEntry->MediaType == RemovableMedia)
+    {
+#if 1
+        Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                         L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+                         0, 1);
+        DPRINT1("Removable disk, using MULTI ARC path '%S'\n", PathBuffer);
+#else
+        Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                         L"signature(%08x)disk(%u)rdisk(%u)partition(%lu)\\",
+                         DiskEntry->LayoutBuffer->Signature,
+                         DiskEntry->Bus,
+                         DiskEntry->Id,
+                         PartEntry->OnDiskPartitionNumber);
+        DPRINT1("Removable disk, using SIGNATURE ARC path '%S'\n", PathBuffer);
+#endif
+    }
 
     if (!NT_SUCCESS(Status))
     {
@@ -701,8 +745,8 @@ InitDestinationPaths(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CombinePaths() failed with status 0x%08lx\n", Status);
-        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         return Status;
     }
 
@@ -711,8 +755,8 @@ InitDestinationPaths(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
-        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         return Status;
     }
 
@@ -723,9 +767,9 @@ InitDestinationPaths(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlCreateUnicodeString() failed with status 0x%08lx\n", Status);
-        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
-        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
         RtlFreeUnicodeString(&pSetupData->DestinationPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationArcPath);
+        RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
         return Status;
     }
 
