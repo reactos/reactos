@@ -1,4 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -71,8 +72,8 @@ CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
   /T:bf        設定前景/背景顏色 (參見 COLOR 命令)。\n"
     STRING_COLOR_HELP1 "設定默認前景和背景顏色。\n\n\
 COLOR [屬性 [/-F]]\n\n\
-  屬性          指定控制檯輸出的顏色屬性。\n\
-  /-F           不要使用顏色填充控制檯的空白區域。\n\n\
+  屬性          指定主控台輸出的顏色屬性。\n\
+  /-F           不要使用顏色填充主控台的空白區域。\n\n\
 有3種方法指定顏色：\n\
 1) [bright] 名稱 on [bright] 名稱 (僅需要開頭的3個字母)\n\
 2) 十進位制 on 十進位制\n\
@@ -434,14 +435,14 @@ listing of credits."
     STRING_VOL_HELP2 " 驅動器 %c 中的卷沒有卷標。\n"
     STRING_VOL_HELP3 " 卷序列號是 %04X-%04X\n"
     STRING_VOL_HELP4 "顯示磁碟卷標和序列號，如果存在。\n\nVOL [驅動器:]"
-    STRING_WINDOW_HELP1 "改變控制檯視窗投影\n\n\
+    STRING_WINDOW_HELP1 "改變主控台視窗投影\n\n\
 WINDOW [/POS[=]左,上,寬度,高度]\n\
               [MIN|MAX|RESTORE] ['標題']\n\n\
 /POS          指定視窗的位置\n\
 MIN           最小化視窗\n\
 MAX           最大化視窗\n\
 RESTORE       恢復視窗"
-    STRING_WINDOW_HELP2 "改變控制檯視窗投影\n\n\
+    STRING_WINDOW_HELP2 "改變主控台視窗投影\n\n\
 ACTIVATE '視窗' [/POS[=]左,上,寬度,高度]\n\
               [MIN|MAX|RESTORE] ['標題']\n\n\
 視窗          要執行動作的視窗標題\n\
