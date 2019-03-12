@@ -3,6 +3,7 @@
 
 #include <wine/config.h>
 
+#include <limits.h>
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

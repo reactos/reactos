@@ -1251,7 +1251,8 @@ static
 NET_API_STATUS
 SetUserInfo(SAM_HANDLE UserHandle,
             LPBYTE UserInfo,
-            DWORD Level)
+            DWORD Level,
+            PDWORD parm_err)
 {
     USER_ALL_INFORMATION UserAllInfo;
     PUSER_INFO_0 UserInfo0;
@@ -1431,7 +1432,21 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            // usri2_max_storage ignored
+            if (UserInfo2->usri2_max_storage != USER_MAXSTORAGE_UNLIMITED)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_MAX_STORAGE_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
+
+            if (UserInfo2->usri2_units_per_week > USHRT_MAX)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
 
             UserAllInfo.LogonHours.UnitsPerWeek = UserInfo2->usri2_units_per_week;
             UserAllInfo.LogonHours.LogonHours = UserInfo2->usri2_logon_hours;
@@ -1534,7 +1549,21 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            // usri3_max_storage ignored
+            if (UserInfo3->usri3_max_storage != USER_MAXSTORAGE_UNLIMITED)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_MAX_STORAGE_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
+
+            if (UserInfo3->usri3_units_per_week > USHRT_MAX)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
 
             UserAllInfo.LogonHours.UnitsPerWeek = UserInfo3->usri3_units_per_week;
             UserAllInfo.LogonHours.LogonHours = UserInfo3->usri3_logon_hours;
@@ -1659,7 +1688,21 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            // usri4_max_storage ignored
+            if (UserInfo4->usri4_max_storage != USER_MAXSTORAGE_UNLIMITED)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_MAX_STORAGE_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
+
+            if (UserInfo4->usri4_units_per_week > USHRT_MAX)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
 
             UserAllInfo.LogonHours.UnitsPerWeek = UserInfo4->usri4_units_per_week;
             UserAllInfo.LogonHours.LogonHours = UserInfo4->usri4_logon_hours;
@@ -1781,7 +1824,21 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-            // usri22_max_storage ignored
+            if (UserInfo22->usri22_max_storage != USER_MAXSTORAGE_UNLIMITED)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_MAX_STORAGE_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
+
+            if (UserInfo22->usri22_units_per_week > USHRT_MAX)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
 
             UserAllInfo.LogonHours.UnitsPerWeek = UserInfo22->usri22_units_per_week;
             UserAllInfo.LogonHours.LogonHours = UserInfo22->usri22_logon_hours;
@@ -1920,13 +1977,22 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo1018->usri1018_max_storage != USER_MAXSTORAGE_UNLIMITED)
             {
-                // FIXME: Report error
-                return ERROR_INVALID_PARAMETER;
+                if (parm_err != NULL)
+                    *parm_err = USER_MAX_STORAGE_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
             }
             break;
 
         case 1020:
             UserInfo1020 = (PUSER_INFO_1020)UserInfo;
+
+            if (UserInfo1020->usri1020_units_per_week > USHRT_MAX)
+            {
+                if (parm_err != NULL)
+                    *parm_err = USER_UNITS_PER_WEEK_PARMNUM;
+                ApiStatus = ERROR_INVALID_PARAMETER;
+                break;
+            }
 
             UserAllInfo.LogonHours.UnitsPerWeek = UserInfo1020->usri1020_units_per_week;
             UserAllInfo.LogonHours.LogonHours = UserInfo1020->usri1020_logon_hours;
@@ -2140,7 +2206,8 @@ NetUserAdd(LPCWSTR servername,
     /* Set user information */
     ApiStatus = SetUserInfo(UserHandle,
                             bufptr,
-                            level);
+                            level,
+                            parm_err);
     if (ApiStatus != NERR_Success)
     {
         ERR("SetUserInfo failed (Status %lu)\n", ApiStatus);
@@ -3720,7 +3787,8 @@ NetUserSetInfo(LPCWSTR servername,
     /* Set user information */
     ApiStatus = SetUserInfo(UserHandle,
                             buf,
-                            level);
+                            level,
+                            parm_err);
     if (ApiStatus != NERR_Success)
     {
         ERR("SetUserInfo failed (Status %lu)\n", ApiStatus);
