@@ -57,6 +57,24 @@ Descriptions of section entries used here:
 	   this area
 	C: Comments
 
+3rd Party File Format Libraries
+	M: ThFabba, Thomas Faber
+	S: Upstream
+	F: dll/3rdparty/libjpeg/
+	F: dll/3rdparty/libpng/
+	F: dll/3rdparty/libtiff/
+	F: dll/3rdparty/libxslt/
+	F: sdk/include/reactos/libs/libjpeg/
+	F: sdk/include/reactos/libs/libmpg123/
+	F: sdk/include/reactos/libs/libpng/
+	F: sdk/include/reactos/libs/libtiff/
+	F: sdk/include/reactos/libs/libxml/
+	F: sdk/include/reactos/libs/libxslt/
+	F: sdk/lib/3rdparty/libmpg123/
+	F: sdk/lib/3rdparty/libsamplerate/
+	F: sdk/lib/3rdparty/libxml2/
+	C: See media/doc/3rd Party Files.txt
+
 ACPI
 	M:
 	R: ThFabba, Thomas Faber
@@ -132,6 +150,13 @@ Kernel
 	R: ThFabba, Thomas Faber
 	S: Maintained
 	F: ntoskrnl/
+
+mbed TLS
+	M: ThFabba, Thomas Faber
+	S: Upstream
+	F: dll/3rdparty/mbedtls/
+	F: sdk/include/reactos/libs/mbedtls/
+	C: See media/doc/3rd Party Files.txt
 
 Network Drivers
 	M:
@@ -237,3 +262,10 @@ Wine Tests
 	R: ThFabba, Thomas Faber
 	S: Upstream
 	F: modules/rostests/winetests/
+
+zlib
+	M: ThFabba, Thomas Faber
+	S: Upstream
+	F: sdk/include/reactos/libs/zlib/
+	F: sdk/lib/3rdparty/zlib/
+	C: See media/doc/3rd Party Files.txt
