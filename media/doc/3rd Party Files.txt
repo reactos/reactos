@@ -43,15 +43,15 @@ Used Version: 1.0.6
 Website: http://www.bzip.org
 
 Title: LibXML
-Used Version: 2.9.4
+Used Version: 2.9.8
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
 
 Title: Libxslt
-Used Version: 1.1.29
+Used Version: 1.1.33
 Website: http://xmlsoft.org
 
 Title: ZLib
-Used Version: 1.2.8
+Used Version: 1.2.11
 Website: http://www.zlib.net
 
 Title: GNU FreeFont
@@ -63,11 +63,11 @@ Used Version: 2005-07-14
 Website: http://www.catch22.net/tuts/cardlib
 
 Title:  libsamplerate
-Used Version: 0.1.8
+Used Version: 0.1.9
 Website: http://www.mega-nerd.com/SRC/download.html
 
 Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.22.4
+Used Version: 1.25.10
 Website: http://www.mpg123.de/
 
 Title:  STLport
@@ -79,13 +79,21 @@ Used Version: git commit 8765259
 Website: https://github.com/win-iconv/win-iconv
 
 Title: libjpeg
-Used Version: 9a
+Used Version: 9c
 Website: http://www.ijg.org/
 
+Title: libtiff
+Used Version: 4.0.9
+Website: http://www.simplesystems.org/libtiff/
+
 Title: mbed TLS
-Used Version: 2.3.0
+Used Version: 2.7.9
 Website: https://tls.mbed.org/
 
 Title: libpng
-Used Version: 1.6.21
+Used Version: 1.6.36
 Website: http://libpng.sourceforge.net/
+
+Title: ACPICA
+Used Version: 20190215
+Website: https://acpica.org/
