@@ -2460,8 +2460,6 @@ retry:
         ret = -3;
     }
 
-    if (ret >= 0) output += ret;
-
     /*
      * Attempt to handle error cases
      */

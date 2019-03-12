@@ -1084,7 +1084,7 @@ static const char * const htmlStartClose[] = {
 "menu",		"p", "head", "ul", NULL,
 "p",		"p", "head", "h1", "h2", "h3", "h4", "h5", "h6", FONTSTYLE, NULL,
 "div",		"p", "head", NULL,
-"noscript",	"p", NULL,
+"noscript",	"script", NULL,
 "center",	"font", "b", "i", "p", "head", NULL,
 "a",		"a", "head", NULL,
 "caption",	"p", NULL,
@@ -3635,13 +3635,13 @@ htmlCheckEncodingDirect(htmlParserCtxtPtr ctxt, const xmlChar *encoding) {
 	     */
 	    processed = ctxt->input->cur - ctxt->input->base;
 	    xmlBufShrink(ctxt->input->buf->buffer, processed);
-	    nbchars = xmlCharEncInput(ctxt->input->buf, 0);
+	    nbchars = xmlCharEncInput(ctxt->input->buf, 1);
+            xmlBufResetInput(ctxt->input->buf->buffer, ctxt->input);
 	    if (nbchars < 0) {
 		htmlParseErr(ctxt, XML_ERR_INVALID_ENCODING,
 		             "htmlCheckEncoding: encoder error\n",
 			     NULL, NULL);
 	    }
-            xmlBufResetInput(ctxt->input->buf->buffer, ctxt->input);
 	}
     }
 }

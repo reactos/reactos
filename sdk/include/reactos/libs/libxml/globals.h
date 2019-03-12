@@ -17,7 +17,6 @@
 #include <libxml/xmlversion.h>
 #include <libxml/parser.h>
 #include <libxml/xmlerror.h>
-#include <libxml/SAX.h>
 #include <libxml/SAX2.h>
 #include <libxml/xmlmemory.h>
 

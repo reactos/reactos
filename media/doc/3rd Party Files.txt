@@ -43,7 +43,7 @@ Used Version: 1.0.6
 Website: http://www.bzip.org
 
 Title: LibXML
-Used Version: 2.9.8
+Used Version: 2.9.9
 Website: http://xmlsoft.org | ftp://xmlsoft.org/libxml2/
 
 Title: Libxslt

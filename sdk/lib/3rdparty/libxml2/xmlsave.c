@@ -1123,9 +1123,6 @@ xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur) {
         cur->encoding = BAD_CAST ctxt->encoding;
     } else if (cur->encoding != NULL) {
 	encoding = cur->encoding;
-    } else if (cur->charset != XML_CHAR_ENCODING_UTF8) {
-	encoding = (const xmlChar *)
-		     xmlGetCharEncodingName((xmlCharEncoding) cur->charset);
     }
 
     if (((cur->type == XML_HTML_DOCUMENT_NODE) &&

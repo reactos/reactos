@@ -1798,15 +1798,6 @@ xmlC14NNewCtx(xmlDocPtr doc,
     }
 
     /*
-     *  Validate the XML document encoding value, if provided.
-     */
-    if (doc->charset != XML_CHAR_ENCODING_UTF8) {
-        xmlC14NErr(ctx, (xmlNodePtr) doc, XML_C14N_REQUIRES_UTF8,
-		   "xmlC14NNewCtx: source document not in UTF8\n");
-        return (NULL);
-    }
-
-    /*
      * Allocate a new xmlC14NCtxPtr and fill the fields.
      */
     ctx = (xmlC14NCtxPtr) xmlMalloc(sizeof(xmlC14NCtx));

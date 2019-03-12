@@ -1214,7 +1214,7 @@ xmlSwitchInputEncodingInt(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
                 /*
                  * convert as much as possible of the buffer
                  */
-                nbchars = xmlCharEncInput(input->buf, 0);
+                nbchars = xmlCharEncInput(input->buf, 1);
             } else {
                 /*
                  * convert just enough to get
@@ -1240,8 +1240,18 @@ xmlSwitchInputEncodingInt(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
 	 * size to be able to convert the buffer.
 	 */
 	xmlErrInternal(ctxt, "switching encoding : no input\n", NULL);
+        /*
+         * Callers assume that the input buffer takes ownership of the
+         * encoding handler. xmlCharEncCloseFunc frees unregistered
+         * handlers and avoids a memory leak.
+         */
+        xmlCharEncCloseFunc(handler);
 	return (-1);
     }
+    /*
+     * We should actually raise an error here, see issue #34.
+     */
+    xmlCharEncCloseFunc(handler);
     return (0);
 }
 

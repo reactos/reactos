@@ -562,6 +562,10 @@ xz_decomp(xz_statep state)
                          "internal error: inflate stream corrupt");
                 return -1;
             }
+            /*
+             * FIXME: Remapping a couple of error codes and falling through
+             * to the LZMA error handling looks fragile.
+             */
             if (ret == Z_MEM_ERROR)
                 ret = LZMA_MEM_ERROR;
             if (ret == Z_DATA_ERROR)
@@ -585,6 +589,11 @@ xz_decomp(xz_statep state)
         }
         if (ret == LZMA_PROG_ERROR) {
             xz_error(state, LZMA_PROG_ERROR, "compression error");
+            return -1;
+        }
+        if ((state->how != GZIP) &&
+            (ret != LZMA_OK) && (ret != LZMA_STREAM_END)) {
+            xz_error(state, ret, "lzma error");
             return -1;
         }
     } while (strm->avail_out && ret != LZMA_STREAM_END);
