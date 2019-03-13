@@ -2220,16 +2220,6 @@ static HRESULT WINAPI DefaultDragEnter(HWND hwndTarget,
     return S_OK;
 }
 
-#if DBG
-typedef struct _DROPFILES {
-   DWORD pFiles;                       // offset of file list
-   POINT pt;                           // drop point (client coords)
-   BOOL fNC;                           // is it on NonClient area
-                                       // and pt is in screen coords
-   BOOL fWide;                         // WIDE character switch
-} DROPFILES, *LPDROPFILES;
-#endif
-
 static HRESULT WINAPI DefaultDrop(HWND hwndAccepter,
                                   IDataObject* pDataObj,
                                   DWORD grfKeyState,
@@ -2258,20 +2248,6 @@ static HRESULT WINAPI DefaultDrop(HWND hwndAccepter,
         hGlobal = stgm.DUMMYUNIONNAME.hGlobal;
         if (hGlobal)
         {
-#if DBG
-            {
-                DROPFILES *pDropFiles = GlobalLock(hGlobal);
-                WCHAR sz[256];
-                wsprintfW(sz, L"%08X, %d, %d, %d, %d, %s",
-                    pDropFiles->pFiles,
-                    pDropFiles->pt.x, pDropFiles->pt.y,
-                    pDropFiles->fNC, pDropFiles->fWide,
-                    (LPWSTR)(pDropFiles + 1));
-                MessageBoxW(NULL, sz, NULL, 0);
-                GlobalUnlock(hGlobal);
-            }
-#endif
-            /* TODO: Fix WM_COPYGLOBALDATA */
             if (IsWindowUnicode(hwndAccepter))
                 PostMessageW(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
             else
