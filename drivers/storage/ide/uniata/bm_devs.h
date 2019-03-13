@@ -155,7 +155,7 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( 2920, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 2926, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( 2921, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),/* ??? */
+    PCI_DEV_HW_SPEC_BM( 2921, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH2 | UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2922, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2923, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2925, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
@@ -244,12 +244,12 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 23a6, 8086, 0x00, ATA_SA300, "COLETOCRK" , UNIATA_SATA | UNIATA_AHCI              ),
     
     PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI       ),
-    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_UDMA6, "JMB361"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2361, 197b, 0x00, ATA_SA300, "JMB361"           , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 2362, 197b, 0x00, ATA_SA300, "JMB362"           , UNIATA_SATA | UNIATA_AHCI       ),
-    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_UDMA6, "JMB363"           , 0                               ),
-    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_UDMA6, "JMB365"           , 0                               ),
-    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_UDMA6, "JMB366"           , 0                               ),
-    PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_UDMA6, "JMB368"           , 0                               ),
+    PCI_DEV_HW_SPEC_BM( 2363, 197b, 0x00, ATA_SA300, "JMB363"           , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 2365, 197b, 0x00, ATA_SA300, "JMB365"           , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 2366, 197b, 0x00, ATA_SA300, "JMB366"           , UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 2368, 197b, 0x00, ATA_SA300, "JMB368"           , UNIATA_SATA                     ),
 /*    
     PCI_DEV_HW_SPEC_BM( 5040, 11ab, 0x00, ATA_SA150, "Marvell 88SX5040" , UNIATA_SATA                     ),
     PCI_DEV_HW_SPEC_BM( 5041, 11ab, 0x00, ATA_SA150, "Marvell 88SX5041" , UNIATA_SATA                     ),

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2014 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2018 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bsmaster.h
@@ -93,6 +93,9 @@ Licence:
 // Hitachi 1 Tb HDD didn't allow LBA28 with BCount > 1 beyond this LBA
 #define ATA_MAX_IOLBA28                 DEF_U64(0x0fffff80)
 #define ATA_MAX_LBA28                   DEF_U64(0x0fffffff)
+
+#define ATA_MAX_IOLBA32                 DEF_U64(0xffffff80)
+#define ATA_MAX_LBA32                   DEF_U64(0xffffffff)
 
 #define ATA_DMA_ENTRIES			256     /* PAGESIZE/2/sizeof(BM_DMA_ENTRY)*/
 #define ATA_DMA_EOT			0x80000000
@@ -1588,11 +1591,7 @@ AtapiChipInit(
     IN ULONG c
     );
 
-#ifdef __REACTOS__
-extern ULONG_PTR
-#else
-extern ULONG
-#endif
+extern ULONGIO_PTR
 NTAPI
 AtapiGetIoRange(
     IN PVOID HwDeviceExtension,

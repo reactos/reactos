@@ -253,6 +253,7 @@ typedef union _IDE_REGISTERS_2 {
 #define DFLAGS_HIDDEN                0x8000    // Hidden device, available only with special IOCTLs
                                                // via communication virtual device
 #define DFLAGS_MANUAL_CHS            0x10000   // For devices those have no IDENTIFY commands
+#define DFLAGS_LBA32plus             0x20000   // Device is larger than LBA32
 //#define DFLAGS_            0x10000    // 
 //
 // Used to disable 'advanced' features.

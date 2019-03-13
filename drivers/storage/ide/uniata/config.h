@@ -103,6 +103,8 @@
  #define CRNT_ILK_TYPE   (PVOID)
  #define CRNT_ILK_PTYPE  (PVOID*)
  #define REGRTL_STR_PTYPE  (PWCHAR)
+ #define UlongToPtr(u)   ((PVOID)((ULONG)(u)))
+ #define PtrToUlong(u)   ((ULONG)((PVOID)(u)))
 #endif //USE_REACTOS_DDK
 
 /* Are we under GNU C (mingw) ??? */

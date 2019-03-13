@@ -903,11 +903,7 @@ UniataAhciDetect(
     ULONG v_Mn, v_Mj;
 #endif //_DEBUG
     ULONG NumberChannels;
-#ifdef __REACTOS__
     ULONG_PTR BaseMemAddress;
-#else
-    ULONG BaseMemAddress;
-#endif
     BOOLEAN MemIo = FALSE;
     BOOLEAN found = FALSE;
 

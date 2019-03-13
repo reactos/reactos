@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2004-2016 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2004-2018 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_init.cpp
@@ -279,19 +279,26 @@ UniataChipDetectChannels(
         }
         break;
 #endif // this code is removed from newer FreeBSD
+#if 0
     case ATA_JMICRON_ID:
         /* New JMicron PATA controllers */
         if(deviceExtension->DevID == ATA_JMB361 ||
            deviceExtension->DevID == ATA_JMB363 ||
+           deviceExtension->DevID == ATA_JMB365 ||
+           deviceExtension->DevID == ATA_JMB366 ||
            deviceExtension->DevID == ATA_JMB368) { 
-            if(BMList[deviceExtension->DevIndex].channel) {
-                KdPrint2((PRINT_PREFIX "New JMicron has no 2nd chan\n"));
-                return FALSE;
-            }
-            deviceExtension->NumberChannels = 1;
-            KdPrint2((PRINT_PREFIX "New JMicron PATA 1 chan\n"));
+
+            ULONG tmp32, port_mask;
+
+            port_mask = BMList[deviceExtension->DevIndex].channel;
+
+            GetPciConfig4(0x40, tmp32);
+
+            deviceExtension->NumberChannels = 2;
+            //KdPrint2((PRINT_PREFIX "New JMicron PATA 1 chan\n"));
         }
         break;
+#endif // this code is unnecessary since port mapping is implemented
     case ATA_CYRIX_ID:
         if(ChipType == CYRIX_OLD) {
             UCHAR tmp8;
@@ -350,17 +357,10 @@ UniataChipDetect(
     ULONG ChipFlags;
     ULONG tmp32;
     UCHAR tmp8;
-#ifdef __REACTOS__
     ULONG_PTR BaseMemAddress;
     ULONG_PTR BaseIoAddress1;
     ULONG_PTR BaseIoAddress2;
     ULONG_PTR BaseIoAddressBM;
-#else
-    ULONG BaseMemAddress;
-    ULONG BaseIoAddress1;
-    ULONG BaseIoAddress2;
-    ULONG BaseIoAddressBM;
-#endif
     BOOLEAN MemIo = FALSE;
     BOOLEAN IsPata = FALSE;
 
@@ -1210,11 +1210,7 @@ for_ugly_chips:
                     tmp8 = AtapiReadPortEx1(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressBM_0),IDX_BM_Status);
                     KdPrint2((PRINT_PREFIX "BM status: %x\n", tmp8));
                     /* cleanup */
-#ifdef __REACTOS__
                     ScsiPortFreeDeviceBase(HwDeviceExtension, (PCHAR)(ULONG_PTR)BaseIoAddressBM);
-#else
-                    ScsiPortFreeDeviceBase(HwDeviceExtension, (PCHAR)BaseIoAddressBM);
-#endif
                     UniataInitIoResEx(&deviceExtension->BaseIoAddressBM_0, 0, 0, FALSE);
 
                     if(tmp8 == 0xff) {
@@ -1334,7 +1330,7 @@ for_ugly_chips:
         }
         break;
     case ATA_JMICRON_ID:
-        /* New JMicron PATA controllers */
+        /* New JMicron PATA/SATA controllers */
         GetPciConfig1(0xdf, tmp8);
         if(tmp8 & 0x40) {
             KdPrint(("  Check JMicron AHCI\n"));
@@ -1342,13 +1338,16 @@ for_ugly_chips:
                 ChipFlags |= UNIATA_AHCI;
                 deviceExtension->HwFlags |= UNIATA_AHCI;
             } else {
-                KdPrint(("  JMicron PATA\n"));
+                KdPrint(("  JMicron PATA/SATA\n"));
             }
         } else {
+#if 0 // do not touch, see Linux sources
             /* set controller configuration to a combined setup we support */
             SetPciConfig4(0x40, 0x80c0a131);
             SetPciConfig4(0x80, 0x01200000);
-            //KdPrint(("  JMicron Combined (not supported yet)\n"));
+#endif
+            //GetPciConfig1(0x40, tmp32);
+            KdPrint(("  JMicron Combined\n"));
             //return STATUS_NOT_FOUND;
         }
         break;
@@ -2648,6 +2647,85 @@ AtapiChipInit(
             }
         }
         break;
+    case ATA_JMICRON_ID:
+        /* New JMicron PATA controllers */
+        if(deviceExtension->DevID == ATA_JMB361 ||
+           deviceExtension->DevID == ATA_JMB363 ||
+           deviceExtension->DevID == ATA_JMB365 ||
+           deviceExtension->DevID == ATA_JMB366 ||
+           deviceExtension->DevID == ATA_JMB368) { 
+            KdPrint2((PRINT_PREFIX "JMicron\n"));
+
+            ULONG c_swp = 0;
+            ULONG reg40, reg80;
+
+            GetPciConfig4(0x40, reg40);
+            KdPrint2((PRINT_PREFIX "reg 40: %x\n", reg40));
+
+            c_swp = (reg40 & (1<<22)) ? 1 : 0; // 1=swap, 0=keep
+            KdPrint2((PRINT_PREFIX "c_swp: %x\n", c_swp));
+
+            GetPciConfig4(0x80, reg80);
+            KdPrint2((PRINT_PREFIX "reg 80: %x\n", reg80));
+
+            if(c == CHAN_NOT_SPECIFIED) {
+                UCHAR P1mode;
+
+                P1mode = (reg80 & (1<<24)) ? ATA_UDMA6 : ATA_SA300;
+                KdPrint2((PRINT_PREFIX "p1 mode: %x\n", P1mode));
+
+                if(reg40 & (1 << 23)) {
+                    KdPrint2((PRINT_PREFIX "SATA+PATA0\n"));
+                    deviceExtension->chan[0 ^ c_swp].MaxTransferMode = P1mode;
+                    deviceExtension->chan[1 ^ c_swp].MaxTransferMode = ATA_UDMA6;
+                    deviceExtension->chan[1 ^ c_swp].ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
+
+                } else {
+                    KdPrint2((PRINT_PREFIX "SATA+SATA\n"));
+                    deviceExtension->chan[0 ^ c_swp].MaxTransferMode = P1mode;
+                    //deviceExtension->chan[0 ^ c_swp].ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
+                    deviceExtension->chan[1 ^ c_swp].MaxTransferMode = ATA_SA300;
+                    deviceExtension->chan[1 ^ c_swp].ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
+                }
+
+            } else {
+              /*
+                deviceExtension->chan[0 ^ c_swp].lun[0]->SATA_lun_map =
+                deviceExtension->chan[0 ^ c_swp].lun[0]->SATA_lun_map = 0;
+                deviceExtension->chan[1 ^ c_swp].lun[0]->SATA_lun_map =
+                deviceExtension->chan[1 ^ c_swp].lun[0]->SATA_lun_map = 1;
+                */
+                KdPrint2((PRINT_PREFIX "chan %d\n", c));
+                chan = &deviceExtension->chan[c];
+
+                UCHAR ph_channel = (UCHAR)(c ^ c_swp);
+                //c_swp = chan->lun[0]->SATA_lun_map;
+                if(chan->MaxTransferMode >= ATA_SA150) {
+                    KdPrint2((PRINT_PREFIX "SATA, map -> %x\n", ph_channel));
+                } else {
+                    KdPrint2((PRINT_PREFIX "PATA, map -> %x\n", ph_channel));
+                    if(!ph_channel) {
+                        if(!(reg40 & (1<<5))) {
+                            KdPrint2((PRINT_PREFIX "disabled\n", ph_channel));
+                        } else
+                        if(!(reg40 & (1<<3))) {
+                            KdPrint2((PRINT_PREFIX "40-pin\n"));
+                            chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA2);
+                        }
+                    } else {
+                        if(!(reg80 & (1<<21))) {
+                            KdPrint2((PRINT_PREFIX "disabled\n", ph_channel));
+                        } else
+                        if(!(reg80 & (1<<19))) {
+                            KdPrint2((PRINT_PREFIX "40-pin\n"));
+                            chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA2);
+                        }
+                    }
+                }
+            }
+
+        }
+        break;
     default:
         if(c != CHAN_NOT_SPECIFIED) {
             // We don't know how to check for 80-pin cable on unknown controllers.
@@ -2661,7 +2739,8 @@ AtapiChipInit(
 
     // In all places separate channels are inited after common controller init
     // The only exception is probe. But there we may need info about 40/80 pin and MaxTransferRate
-    if(CheckCable && !(ChipFlags & (UNIATA_NO80CHK | UNIATA_SATA))) {
+    // Do not check UNIATA_SATA here since we may have controller with mixed ports
+    if(CheckCable && !(ChipFlags & (UNIATA_NO80CHK/* | UNIATA_SATA*/))) {
         for(c=0; c<deviceExtension->NumberChannels; c++) {
             AtapiChipInit(HwDeviceExtension, DeviceNumber, c);
         }
