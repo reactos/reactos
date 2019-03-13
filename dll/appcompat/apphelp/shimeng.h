@@ -23,6 +23,8 @@ typedef struct _ARRAY
 typedef struct _SHIMINFO *PSHIMINFO;
 typedef struct _SHIMMODULE *PSHIMMODULE;
 
+typedef struct tagHOOKAPIEX *PHOOKAPIEX;
+
 /* Shims know this structure as HOOKAPI, with 2 reserved members (the last 2). */
 typedef struct tagHOOKAPIEX
 {
@@ -31,8 +33,8 @@ typedef struct tagHOOKAPIEX
     PVOID ReplacementFunction;
     PVOID OriginalFunction;
     PSHIMINFO pShimInfo;
-    PVOID Unused;
-} HOOKAPIEX, *PHOOKAPIEX;
+    PHOOKAPIEX ApiLink;
+} HOOKAPIEX;
 
 C_ASSERT(sizeof(HOOKAPIEX) == sizeof(HOOKAPI));
 C_ASSERT(offsetof(HOOKAPIEX, pShimInfo) == offsetof(HOOKAPI, Reserved));

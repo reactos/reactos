@@ -46,7 +46,7 @@ HOOKAPIEX g_IntHookEx[] =
         StubGetProcAddress, /* ReplacementFunction*/
         NULL,               /* OriginalFunction */
         NULL,               /* pShimInfo */
-        NULL                /* Unused */
+        NULL                /* ApiLink */
     },
 };
 
@@ -545,17 +545,7 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount, PSHIMINFO pShim)
         RtlInitAnsiString(&AnsiString, hook->FunctionName);
         if (NT_SUCCESS(LdrGetDllHandle(NULL, 0, &UnicodeModName, &DllHandle)))
         {
-            PVOID ProcAddress;
-
-
-            if (!NT_SUCCESS(LdrGetProcedureAddress(DllHandle, &AnsiString, 0, &ProcAddress)))
-            {
-                SHIMENG_FAIL("Unable to retrieve %s!%s\n", hook->LibraryName, hook->FunctionName);
-                continue;
-            }
-
             HookModuleInfo = SeiFindHookModuleInfo(NULL, DllHandle);
-            hook->OriginalFunction = ProcAddress;
         }
         else
         {
@@ -582,14 +572,22 @@ VOID SeiAddHooks(PHOOKAPIEX hooks, DWORD dwHookCount, PSHIMINFO pShim)
             int CmpResult = strcmp(hook->FunctionName, HookApi->FunctionName);
             if (CmpResult == 0)
             {
-                /* Multiple hooks on one function? --> use ApiLink */
-                SHIMENG_FAIL("Multiple hooks on one API is not yet supported!\n");
-                ASSERT(0);
+                while (HookApi->ApiLink)
+                {
+                    HookApi = HookApi->ApiLink;
+                }
+                HookApi->ApiLink = hook;
+                hook = NULL;
+                break;
             }
         }
-        pHookApi = ARRAY_Append(&HookModuleInfo->HookApis, PHOOKAPIEX);
-        if (pHookApi)
-            *pHookApi = hook;
+        /* No place found yet, append it */
+        if (hook)
+        {
+            pHookApi = ARRAY_Append(&HookModuleInfo->HookApis, PHOOKAPIEX);
+            if (pHookApi)
+                *pHookApi = hook;
+        }
     }
 }
 
@@ -641,8 +639,57 @@ FARPROC WINAPI StubGetProcAddress(HINSTANCE hModule, LPCSTR lpProcName)
     return proc;
 }
 
+VOID SeiResolveAPI(PHOOKMODULEINFO HookModuleInfo)
+{
+    DWORD n;
+    ANSI_STRING AnsiString;
+
+    ASSERT(HookModuleInfo->BaseAddress != NULL);
+
+    for (n = 0; n < ARRAY_Size(&HookModuleInfo->HookApis); ++n)
+    {
+        PVOID ProcAddress;
+        PHOOKAPIEX HookApi = *ARRAY_At(&HookModuleInfo->HookApis, PHOOKAPIEX, n);
+        RtlInitAnsiString(&AnsiString, HookApi->FunctionName);
+
+        if (!NT_SUCCESS(LdrGetProcedureAddress(HookModuleInfo->BaseAddress, &AnsiString, 0, &ProcAddress)))
+        {
+            SHIMENG_FAIL("Unable to retrieve %s!%s\n", HookApi->LibraryName, HookApi->FunctionName);
+            continue;
+        }
+
+        HookApi->OriginalFunction = ProcAddress;
+        if (HookApi->ApiLink)
+        {
+            SHIMENG_MSG("TODO: Figure out how to handle conflicting In/Exports with ApiLink!\n");
+        }
+        while (HookApi->ApiLink)
+        {
+            HookApi->ApiLink->OriginalFunction = HookApi->OriginalFunction;
+            HookApi->OriginalFunction = HookApi->ApiLink->ReplacementFunction;
+            HookApi = HookApi->ApiLink;
+        }
+    }
+}
+
 /* Walk all shim modules / enabled shims, and add their hooks */
 VOID SeiResolveAPIs(VOID)
+{
+    DWORD n;
+
+    for (n = 0; n < ARRAY_Size(&g_pHookArray); ++n)
+    {
+        PHOOKMODULEINFO pModuleInfo = ARRAY_At(&g_pHookArray, HOOKMODULEINFO, n);
+
+        /* Is this module loaded? */
+        if (pModuleInfo->BaseAddress)
+        {
+            SeiResolveAPI(pModuleInfo);
+        }
+    }
+}
+
+VOID SeiCombineHookInfo(VOID)
 {
     DWORD mod, n;
 
@@ -1249,6 +1296,7 @@ VOID SeiInit(PUNICODE_STRING ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery)
     }
 
     SeiAddInternalHooks(dwTotalHooks);
+    SeiCombineHookInfo();
     SeiResolveAPIs();
     PatchNewModules(Peb);
 
@@ -1347,7 +1395,16 @@ VOID NTAPI SE_ProcessDying(VOID)
 
 VOID WINAPI SE_DllLoaded(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
+    PHOOKMODULEINFO HookModuleInfo;
     SHIMENG_INFO("%sINIT. loading DLL \"%wZ\"\n", g_bShimDuringInit ? "" : "AFTER ", &LdrEntry->BaseDllName);
+
+    HookModuleInfo = SeiFindHookModuleInfo(&LdrEntry->BaseDllName, NULL);
+    if (HookModuleInfo)
+    {
+        ASSERT(HookModuleInfo->BaseAddress == NULL);
+        HookModuleInfo->BaseAddress = LdrEntry->DllBase;
+        SeiResolveAPI(HookModuleInfo);
+    }
 
     SeiHookImports(LdrEntry);
 
