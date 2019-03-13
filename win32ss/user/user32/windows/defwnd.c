@@ -748,6 +748,12 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
+        case WM_COPYGLOBALDATA:
+        {
+            TRACE("WM_COPYGLOBALDATA hGlobal %p Size %d Flags 0x%x\n",lParam,wParam,GlobalFlags((HGLOBAL)lParam));
+            return lParam;
+        }
+
 /* Move to Win32k !*/
         case WM_SHOWWINDOW:
             if (!lParam) break; // Call when it is necessary.

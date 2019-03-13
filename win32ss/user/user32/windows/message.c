@@ -392,6 +392,13 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
         }
         break;
 
+      case WM_COPYGLOBALDATA:
+        {
+           KMMsg->lParam = (LPARAM)GlobalLock((HGLOBAL)UMMsg->lParam);;
+           TRACE("WM_COPYGLOBALDATA get data ptr %p\n",KMMsg->lParam);
+        }
+        break;
+
       default:
         break;
     }
@@ -407,6 +414,11 @@ MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
     {
       case WM_COPYDATA:
         HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
+        break;
+      case WM_COPYGLOBALDATA:
+        TRACE("WM_COPYGLOBALDATA cleanup return\n");
+        GlobalUnlock((HGLOBAL)UMMsg->lParam);
+        GlobalFree((HGLOBAL)UMMsg->lParam);
         break;
       default:
         break;
@@ -452,6 +464,18 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
         }
         break;
 
+      case WM_COPYGLOBALDATA:
+        {
+           PVOID Data;
+           HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, KMMsg->wParam);
+           Data = GlobalLock(hGlobal);
+           if (Data) RtlCopyMemory(Data, (PVOID)KMMsg->lParam, KMMsg->wParam);
+           GlobalUnlock(hGlobal);
+           TRACE("WM_COPYGLOBALDATA to User hGlobal %p\n",hGlobal);
+           UMMsg->lParam = (LPARAM)hGlobal;
+        }
+        break;
+
       default:
         break;
     }
@@ -465,7 +489,7 @@ MsgiKMToUMCleanup(PMSG KMMsg, PMSG UMMsg)
   switch (KMMsg->message)
     {
       case WM_DDE_EXECUTE:
-#ifdef TODO
+#ifdef TODO // Kept as historic.
         HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
         GlobalUnlock((HGLOBAL) UMMsg->lParam);
 #endif
@@ -2933,6 +2957,11 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case WM_CREATE:
         {
             TRACE("WM_CREATE CB %p lParam %p\n",CallbackArgs, KMMsg.lParam);
+            break;
+        }
+        case WM_NCCREATE:
+        {
+            TRACE("WM_NCCREATE CB %p lParam %p\n",CallbackArgs, KMMsg.lParam);
             break;
         }
         case WM_SYSTIMER:
