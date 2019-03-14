@@ -1436,69 +1436,6 @@ LoadUserProfileW(
 
     DPRINT("UserName: %S\n", lpProfileInfo->lpUserName);
 
-    /* Don't load a profile twice */
-    if (CheckForLoadedProfile(hToken))
-    {
-        DPRINT ("Profile already loaded\n");
-        lpProfileInfo->hProfile = NULL;
-        return TRUE;
-    }
-
-    if (lpProfileInfo->lpProfilePath)
-    {
-        /* Use the caller's specified roaming user profile path */
-        StringCbCopyW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpProfilePath);
-    }
-    else
-    {
-        /* FIXME: check if MS Windows allows lpProfileInfo->lpProfilePath to be NULL */
-        if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
-        {
-            DPRINT1("GetProfilesDirectoryW() failed (error %ld)\n", GetLastError());
-            return FALSE;
-        }
-    }
-
-    /* Create user hive name */
-    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
-    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpUserName);
-    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\ntuser.dat");
-    DPRINT("szUserHivePath: %S\n", szUserHivePath);
-
-    /* Create user profile directory if needed */
-    if (GetFileAttributesW(szUserHivePath) == INVALID_FILE_ATTRIBUTES)
-    {
-        /* Get user sid */
-        if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwLength) ||
-            GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            DPRINT1 ("GetTokenInformation() failed\n");
-            return FALSE;
-        }
-
-        UserSid = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), 0, dwLength);
-        if (!UserSid)
-        {
-            DPRINT1("HeapAlloc() failed\n");
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-
-        if (!GetTokenInformation(hToken, TokenUser, UserSid, dwLength, &dwLength))
-        {
-            DPRINT1("GetTokenInformation() failed\n");
-            goto cleanup;
-        }
-
-        /* Create profile */
-        ret = CreateUserProfileW(UserSid->User.Sid, lpProfileInfo->lpUserName);
-        if (!ret)
-        {
-            DPRINT1("CreateUserProfileW() failed\n");
-            goto cleanup;
-        }
-    }
-
     /* Get the user SID string */
     ret = GetUserSidStringFromToken(hToken, &SidString);
     if (!ret)
@@ -1508,28 +1445,93 @@ LoadUserProfileW(
     }
     ret = FALSE;
 
-    /* Acquire restore privilege */
-    if (!AcquireRemoveRestorePrivilege(TRUE))
+    /* Don't load a profile twice */
+    if (CheckForLoadedProfile(hToken))
     {
-        DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
-        goto cleanup;
+        DPRINT1("Profile %S already loaded\n", SidString.Buffer);
     }
-
-    /* Load user registry hive */
-    Error = RegLoadKeyW(HKEY_USERS,
-                        SidString.Buffer,
-                        szUserHivePath);
-    AcquireRemoveRestorePrivilege(FALSE);
-
-    /* HACK: Do not fail if the profile has already been loaded! */
-    if (Error == ERROR_SHARING_VIOLATION)
-        Error = ERROR_SUCCESS;
-
-    if (Error != ERROR_SUCCESS)
+    else
     {
-        DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
-        SetLastError((DWORD)Error);
-        goto cleanup;
+        DPRINT1("Loading profile %S\n", SidString.Buffer);
+
+        if (lpProfileInfo->lpProfilePath)
+        {
+            /* Use the caller's specified roaming user profile path */
+            StringCbCopyW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpProfilePath);
+        }
+        else
+        {
+            /* FIXME: check if MS Windows allows lpProfileInfo->lpProfilePath to be NULL */
+            if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
+            {
+                DPRINT1("GetProfilesDirectoryW() failed (error %ld)\n", GetLastError());
+                goto cleanup;
+            }
+        }
+
+        /* Create user hive name */
+        StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
+        StringCbCatW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpUserName);
+        StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\ntuser.dat");
+        DPRINT("szUserHivePath: %S\n", szUserHivePath);
+
+        /* Create user profile directory if needed */
+        if (GetFileAttributesW(szUserHivePath) == INVALID_FILE_ATTRIBUTES)
+        {
+            /* Get user sid */
+            if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwLength) ||
+                GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            {
+                DPRINT1 ("GetTokenInformation() failed\n");
+                goto cleanup;
+            }
+
+            UserSid = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), 0, dwLength);
+            if (!UserSid)
+            {
+                DPRINT1("HeapAlloc() failed\n");
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto cleanup;
+            }
+
+            if (!GetTokenInformation(hToken, TokenUser, UserSid, dwLength, &dwLength))
+            {
+                DPRINT1("GetTokenInformation() failed\n");
+                goto cleanup;
+            }
+
+            /* Create profile */
+            ret = CreateUserProfileW(UserSid->User.Sid, lpProfileInfo->lpUserName);
+            if (!ret)
+            {
+                DPRINT1("CreateUserProfileW() failed\n");
+                goto cleanup;
+            }
+        }
+
+        /* Acquire restore privilege */
+        if (!AcquireRemoveRestorePrivilege(TRUE))
+        {
+            DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
+            goto cleanup;
+        }
+
+        /* Load user registry hive */
+        Error = RegLoadKeyW(HKEY_USERS,
+                            SidString.Buffer,
+                            szUserHivePath);
+        AcquireRemoveRestorePrivilege(FALSE);
+
+        /* HACK: Do not fail if the profile has already been loaded! */
+        if (Error == ERROR_SHARING_VIOLATION)
+            Error = ERROR_SUCCESS;
+
+        if (Error != ERROR_SUCCESS)
+        {
+            DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
+            SetLastError((DWORD)Error);
+            goto cleanup;
+        }
     }
 
     /* Open future HKEY_CURRENT_USER */
@@ -1548,7 +1550,8 @@ LoadUserProfileW(
     ret = TRUE;
 
 cleanup:
-    HeapFree(GetProcessHeap(), 0, UserSid);
+    if (UserSid != NULL)
+        HeapFree(GetProcessHeap(), 0, UserSid);
     RtlFreeUnicodeString(&SidString);
 
     DPRINT("LoadUserProfileW() done\n");
