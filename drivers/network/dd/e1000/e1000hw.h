@@ -163,9 +163,11 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 
 
 /* E1000_REG_EERD */
-#define E1000_EERD_START            (1 << 0)    /* Start Read*/
-#define E1000_EERD_DONE             (1 << 4)    /* Read Done */
-#define E1000_EERD_ADDR_SHIFT       8
+#define E1000_EERD_START            (1 << 0)    /* Start Read */
+#define E1000_EERD_DONE_8254x       (1 << 4)    /* Read Done - 8254x */
+#define E1000_EERD_ADDR_SHIFT_8254x 8           /* 8254x */
+#define E1000_EERD_DONE_8257x       (1 << 1)    /* Read Done - 8257x */
+#define E1000_EERD_ADDR_SHIFT_8257x 2           /* 8257x */
 #define E1000_EERD_DATA_SHIFT       16
 
 
@@ -226,6 +228,9 @@ C_ASSERT(sizeof(E1000_TRANSMIT_DESCRIPTOR) == 16);
 /* NVM */
 #define E1000_NVM_REG_CHECKSUM      0x03f
 #define NVM_MAGIC_SUM               0xBABA
+
+#define E1000_NVM_REG_VID           0x00e
+#define NVM_VID                     HW_VENDOR_INTEL
 
 
 

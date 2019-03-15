@@ -86,6 +86,11 @@ typedef struct _E1000_ADAPTER
     NDIS_PHYSICAL_ADDRESS ReceiveBufferPa;
     ULONG ReceiveBufferEntrySize;
 
+
+    /* EEPROM/nvm data */
+    ULONG EERDDoneBit;
+    UINT EERDAddrShift;
+
 } E1000_ADAPTER, *PE1000_ADAPTER;
 
 
