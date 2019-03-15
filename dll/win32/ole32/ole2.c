@@ -2263,29 +2263,35 @@ static HRESULT WINAPI DefaultDrop(HWND hwndAccepter,
 static void drag_enter( TrackerWindowInfo *info, HWND new_target )
 {
     HRESULT hr;
+#ifdef __REACTOS__
+    DWORD dwEffect = *info->pdwEffect;
+#endif
 
     info->curTargetHWND = new_target;
 
 #ifdef __REACTOS__
-    while (new_target && !is_droptarget( new_target ) && !is_acceptfiles(new_target))
-        new_target = GetParent( new_target );
-
-    if (is_acceptfiles(new_target))
+    info->accepterHWND = NULL;
+    while (new_target && !is_droptarget( new_target ))
     {
-        info->accepterHWND = new_target;
-        *info->pdwEffect = info->dwOKEffect;
-        hr = DefaultDragEnter(new_target, info->dataObject,
-                              info->dwKeyState, info->curMousePos,
-                              info->pdwEffect);
-        *info->pdwEffect &= info->dwOKEffect;
-
-        if (hr != S_OK)
+        if (is_acceptfiles(new_target))
         {
+            info->accepterHWND = new_target;
             info->curDragTarget = NULL;
-            info->curTargetHWND = NULL;
+            dwEffect = info->dwOKEffect;
+            hr = DefaultDragEnter(new_target, info->dataObject,
+                                  info->dwKeyState, info->curMousePos,
+                                  &dwEffect);
+            dwEffect &= info->dwOKEffect;
+
+            if (hr == S_OK)
+            {
+                *info->pdwEffect = dwEffect;
+                return;
+            }
+
             info->accepterHWND = NULL;
         }
-        return;
+        new_target = GetParent( new_target );
     }
 #else
     while (new_target && !is_droptarget( new_target ))
