@@ -143,6 +143,60 @@ CheckForLoadedProfile(HANDLE hToken)
 }
 
 
+static
+HANDLE
+CreateProfileMutex(
+    _In_ PWSTR pszSidString)
+{
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+    SECURITY_ATTRIBUTES SecurityAttributes;
+    PWSTR pszMutexName = NULL;
+    HANDLE hMutex = NULL;
+
+    pszMutexName = HeapAlloc(GetProcessHeap(),
+                             0,
+                             (wcslen(L"Global\\userenv:  User Profile Mutex for ") + wcslen(pszSidString) + 1) * sizeof(WCHAR));
+    if (pszMutexName == NULL)
+    {
+        DPRINT("Failed to allocate the mutex name buffer!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    /* Build the profile mutex name */
+    wcscpy(pszMutexName, L"Global\\userenv:  User Profile Mutex for ");
+    wcscat(pszMutexName, pszSidString);
+
+    /* Initialize the security descriptor */
+    InitializeSecurityDescriptor(&SecurityDescriptor,
+                                 SECURITY_DESCRIPTOR_REVISION);
+
+    /* Set a NULL-DACL (everyone has access) */
+    SetSecurityDescriptorDacl(&SecurityDescriptor,
+                              TRUE,
+                              NULL,
+                              FALSE);
+
+    /* Initialize the security attributes */
+    SecurityAttributes.nLength = sizeof(SecurityAttributes);
+    SecurityAttributes.lpSecurityDescriptor = &SecurityDescriptor;
+    SecurityAttributes.bInheritHandle = FALSE;
+
+    /* Create the profile mutex */
+    hMutex = CreateMutexW(&SecurityAttributes,
+                          FALSE,
+                          pszMutexName);
+    if (hMutex == NULL)
+    {
+        DPRINT1("Failed to create the profile mutex (Error %lu)\n", GetLastError());
+    }
+
+    HeapFree(GetProcessHeap(), 0, pszMutexName);
+
+    return hMutex;
+}
+
+
 /* PUBLIC FUNCTIONS ********************************************************/
 
 BOOL
@@ -1420,6 +1474,7 @@ LoadUserProfileW(
     WCHAR szUserHivePath[MAX_PATH];
     PTOKEN_USER UserSid = NULL;
     UNICODE_STRING SidString = { 0, 0, NULL };
+    HANDLE hProfileMutex = NULL;
     LONG Error;
     BOOL ret = FALSE;
     DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
@@ -1444,6 +1499,17 @@ LoadUserProfileW(
         goto cleanup;
     }
     ret = FALSE;
+
+    /* Create the profile mutex */
+    hProfileMutex = CreateProfileMutex(SidString.Buffer);
+    if (hProfileMutex == NULL)
+    {
+        DPRINT1("Failed to create the profile mutex\n");
+        goto cleanup;
+    }
+
+    /* Wait for the profile mutex */
+    WaitForSingleObject(hProfileMutex, INFINITE);
 
     /* Don't load a profile twice */
     if (CheckForLoadedProfile(hToken))
@@ -1552,6 +1618,13 @@ LoadUserProfileW(
 cleanup:
     if (UserSid != NULL)
         HeapFree(GetProcessHeap(), 0, UserSid);
+
+    if (hProfileMutex != NULL)
+    {
+        ReleaseMutex(hProfileMutex);
+        CloseHandle(hProfileMutex);
+    }
+
     RtlFreeUnicodeString(&SidString);
 
     DPRINT("LoadUserProfileW() done\n");
@@ -1565,8 +1638,10 @@ UnloadUserProfile(
     _In_ HANDLE hToken,
     _In_ HANDLE hProfile)
 {
-    UNICODE_STRING SidString;
+    UNICODE_STRING SidString = {0, 0, NULL};
+    HANDLE hProfileMutex = NULL;
     LONG Error;
+    BOOL bRet = FALSE;
 
     DPRINT("UnloadUserProfile() called\n");
 
@@ -1577,8 +1652,6 @@ UnloadUserProfile(
         return FALSE;
     }
 
-    RegCloseKey(hProfile);
-
     /* Get the user SID string */
     if (!GetUserSidStringFromToken(hToken, &SidString))
     {
@@ -1588,12 +1661,25 @@ UnloadUserProfile(
 
     DPRINT("SidString: '%wZ'\n", &SidString);
 
+    /* Create the profile mutex */
+    hProfileMutex = CreateProfileMutex(SidString.Buffer);
+    if (hProfileMutex == NULL)
+    {
+        DPRINT1("Failed to create the profile mutex\n");
+        goto cleanup;
+    }
+
+    /* Wait for the profile mutex */
+    WaitForSingleObject(hProfileMutex, INFINITE);
+
+    /* Close the profile handle */
+    RegCloseKey(hProfile);
+
     /* Acquire restore privilege */
     if (!AcquireRemoveRestorePrivilege(TRUE))
     {
         DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
-        RtlFreeUnicodeString(&SidString);
-        return FALSE;
+        goto cleanup;
     }
 
     /* HACK */
@@ -1625,16 +1711,24 @@ UnloadUserProfile(
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("RegUnLoadKeyW() failed (Error %ld)\n", Error);
-        RtlFreeUnicodeString(&SidString);
         SetLastError((DWORD)Error);
-        return FALSE;
+        goto cleanup;
+    }
+
+    bRet = TRUE;
+
+cleanup:
+    if (hProfileMutex != NULL)
+    {
+        ReleaseMutex(hProfileMutex);
+        CloseHandle(hProfileMutex);
     }
 
     RtlFreeUnicodeString(&SidString);
 
     DPRINT("UnloadUserProfile() done\n");
 
-    return TRUE;
+    return bRet;
 }
 
 /* EOF */
