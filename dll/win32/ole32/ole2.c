@@ -2275,8 +2275,6 @@ static void drag_enter( TrackerWindowInfo *info, HWND new_target )
     {
         if (is_acceptfiles(new_target))
         {
-            info->accepterHWND = new_target;
-            info->curDragTarget = NULL;
             dwEffect = info->dwOKEffect;
             hr = DefaultDragEnter(new_target, info->dataObject,
                                   info->dwKeyState, info->curMousePos,
@@ -2285,11 +2283,11 @@ static void drag_enter( TrackerWindowInfo *info, HWND new_target )
 
             if (hr == S_OK)
             {
+                info->accepterHWND = new_target;
+                info->curDragTarget = NULL;
                 *info->pdwEffect = dwEffect;
                 return;
             }
-
-            info->accepterHWND = NULL;
         }
         new_target = GetParent( new_target );
     }
