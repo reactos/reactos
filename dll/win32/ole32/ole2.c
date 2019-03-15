@@ -70,6 +70,9 @@ typedef struct tagTrackerWindowInfo
   BOOL       escPressed;
   HWND       curTargetHWND;	/* window the mouse is hovering over */
   IDropTarget* curDragTarget;
+#ifdef __REACTOS__
+  HWND       accepterHWND;
+#endif
   POINTL     curMousePos;       /* current position of the mouse in screen coordinates */
   DWORD      dwKeyState;        /* current state of the shift and ctrl keys and the mouse buttons */
 } TrackerWindowInfo;
@@ -293,6 +296,12 @@ static inline BOOL is_droptarget(HWND hwnd)
     return get_droptarget_handle(hwnd) != 0;
 }
 
+#ifdef __REACTOS__
+static inline BOOL is_acceptfiles(HWND hwnd)
+{
+    return !!(GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_ACCEPTFILES);
+}
+#endif
 /*************************************************************
  *           get_droptarget_local_handle
  *
@@ -772,6 +781,9 @@ HRESULT WINAPI DoDragDrop (
   trackerInfo.escPressed        = FALSE;
   trackerInfo.curTargetHWND     = 0;
   trackerInfo.curDragTarget     = 0;
+#ifdef __REACTOS__
+  trackerInfo.accepterHWND      = NULL;
+#endif
 
   hwndTrackWindow = CreateWindowW(OLEDD_DRAGTRACKERCLASS, trackerW,
                                   WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -2182,14 +2194,107 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
   return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 }
 
+#ifdef __REACTOS__
+static HRESULT WINAPI DefaultDragEnter(HWND hwndTarget,
+                                       IDataObject* pDataObj,
+                                       DWORD grfKeyState,
+                                       POINTL pt,
+                                       DWORD* pdwEffect)
+{
+    HRESULT hr;
+    FORMATETC fme;
+
+    ZeroMemory(&fme, sizeof(fme));
+    fme.cfFormat = CF_HDROP;
+    fme.ptd = NULL;
+    fme.dwAspect = DVASPECT_CONTENT;
+    fme.lindex = -1;
+    fme.tymed = TYMED_HGLOBAL;
+    hr = pDataObj->lpVtbl->QueryGetData(pDataObj, &fme);
+
+    *pdwEffect = SUCCEEDED(hr) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+
+    if (*pdwEffect == DROPEFFECT_NONE)
+        return DRAGDROP_S_CANCEL;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI DefaultDrop(HWND hwndAccepter,
+                                  IDataObject* pDataObj,
+                                  DWORD grfKeyState,
+                                  POINTL pt,
+                                  DWORD* pdwEffect)
+{
+    FORMATETC fme;
+    STGMEDIUM stgm;
+    HRESULT hr;
+    HGLOBAL hGlobal = NULL;
+
+    ZeroMemory(&fme, sizeof(fme));
+    fme.cfFormat = CF_HDROP;
+    fme.ptd = NULL;
+    fme.dwAspect = DVASPECT_CONTENT;
+    fme.lindex = -1;
+    fme.tymed = TYMED_HGLOBAL;
+    hr = pDataObj->lpVtbl->QueryGetData(pDataObj, &fme);
+    if (FAILED(hr))
+        return hr;
+
+    ZeroMemory(&stgm, sizeof(stgm));
+    hr = pDataObj->lpVtbl->GetData(pDataObj, &fme, &stgm);
+    if (SUCCEEDED(hr))
+    {
+        hGlobal = stgm.DUMMYUNIONNAME.hGlobal;
+        if (hGlobal)
+        {
+            if (IsWindowUnicode(hwndAccepter))
+                PostMessageW(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
+            else
+                PostMessageA(hwndAccepter, WM_DROPFILES, (WPARAM)hGlobal, 0);
+        }
+        ReleaseStgMedium(&stgm);
+    }
+
+    return hr;
+}
+#endif
+
 static void drag_enter( TrackerWindowInfo *info, HWND new_target )
 {
     HRESULT hr;
+#ifdef __REACTOS__
+    DWORD dwEffect = *info->pdwEffect;
+#endif
 
     info->curTargetHWND = new_target;
 
+#ifdef __REACTOS__
+    info->accepterHWND = NULL;
+    while (new_target && !is_droptarget( new_target ))
+    {
+        if (is_acceptfiles(new_target))
+        {
+            dwEffect = info->dwOKEffect;
+            hr = DefaultDragEnter(new_target, info->dataObject,
+                                  info->dwKeyState, info->curMousePos,
+                                  &dwEffect);
+            dwEffect &= info->dwOKEffect;
+
+            if (hr == S_OK)
+            {
+                info->accepterHWND = new_target;
+                info->curDragTarget = NULL;
+                *info->pdwEffect = dwEffect;
+                return;
+            }
+        }
+        new_target = GetParent( new_target );
+    }
+#else
     while (new_target && !is_droptarget( new_target ))
         new_target = GetParent( new_target );
+#endif
 
     info->curDragTarget = get_droptarget_pointer( new_target );
 
@@ -2207,6 +2312,9 @@ static void drag_enter( TrackerWindowInfo *info, HWND new_target )
             IDropTarget_Release( info->curDragTarget );
             info->curDragTarget = NULL;
             info->curTargetHWND = NULL;
+#ifdef __REACTOS__
+            info->accepterHWND = NULL;
+#endif
         }
     }
 }
@@ -2239,6 +2347,27 @@ static void drag_end( TrackerWindowInfo *info )
         IDropTarget_Release( info->curDragTarget );
         info->curDragTarget = NULL;
     }
+#ifdef __REACTOS__
+    else if (info->accepterHWND)
+    {
+        if (info->returnValue == DRAGDROP_S_DROP &&
+            *info->pdwEffect != DROPEFFECT_NONE)
+        {
+            *info->pdwEffect = info->dwOKEffect;
+            hr = DefaultDrop(info->accepterHWND, info->dataObject, info->dwKeyState,
+                             info->curMousePos, info->pdwEffect);
+            *info->pdwEffect &= info->dwOKEffect;
+
+            if (FAILED( hr ))
+                info->returnValue = hr;
+        }
+        else
+        {
+            *info->pdwEffect = DROPEFFECT_NONE;
+        }
+        info->accepterHWND = NULL;
+    }
+#endif
     else
         *info->pdwEffect = DROPEFFECT_NONE;
 }
@@ -2249,8 +2378,13 @@ static HRESULT give_feedback( TrackerWindowInfo *info )
     int res;
     HCURSOR cur;
 
+#ifdef __REACTOS__
+    if (info->curDragTarget == NULL && info->accepterHWND == NULL)
+        *info->pdwEffect = DROPEFFECT_NONE;
+#else
     if (info->curDragTarget == NULL)
         *info->pdwEffect = DROPEFFECT_NONE;
+#endif
 
     hr = IDropSource_GiveFeedback( info->dropSource, *info->pdwEffect );
 
@@ -2309,6 +2443,9 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
       trackerInfo->curDragTarget = NULL;
       trackerInfo->curTargetHWND = NULL;
     }
+#ifdef __REACTOS__
+    trackerInfo->accepterHWND = NULL;
+#endif
 
     if (hwndNewTarget)
       drag_enter( trackerInfo, hwndNewTarget );
@@ -2328,6 +2465,12 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
                            trackerInfo->pdwEffect);
       *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
     }
+#ifdef __REACTOS__
+    else if (trackerInfo->accepterHWND)
+    {
+      *trackerInfo->pdwEffect = trackerInfo->dwOKEffect;
+    }
+#endif
     give_feedback( trackerInfo );
   }
   else
