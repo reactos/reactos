@@ -348,6 +348,109 @@ done:
 }
 
 
+static
+DWORD
+SetProfileData(
+    _In_ PWSTR pszSidString,
+    _In_ DWORD dwFlags,
+    _In_ HANDLE hToken)
+{
+    HKEY hProfilesKey = NULL, hProfileKey = NULL;
+    FILETIME LoadTime;
+    DWORD dwLength, dwState = 0;
+    DWORD dwError;
+
+    DPRINT("SetProfileData(%S %p)\n",
+           pszSidString, hToken);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hProfilesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    dwError = RegOpenKeyExW(hProfilesKey,
+                            pszSidString,
+                            0,
+                            KEY_QUERY_VALUE | KEY_SET_VALUE,
+                            &hProfileKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    /* Set the profile load time */
+    GetSystemTimeAsFileTime(&LoadTime);
+
+    dwLength = sizeof(LoadTime.dwLowDateTime);
+    dwError = RegSetValueExW(hProfileKey,
+                             L"ProfileLoadTimeLow",
+                             0,
+                             REG_DWORD,
+                             (PBYTE)&LoadTime.dwLowDateTime,
+                             dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    dwLength = sizeof(LoadTime.dwHighDateTime);
+    dwError = RegSetValueExW(hProfileKey,
+                             L"ProfileLoadTimeHigh",
+                             0,
+                             REG_DWORD,
+                             (PBYTE)&LoadTime.dwHighDateTime,
+                             dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    dwLength = sizeof(dwFlags);
+    dwError = RegSetValueExW(hProfileKey,
+                             L"Flags",
+                             0,
+                             REG_DWORD,
+                             (PBYTE)&dwFlags,
+                             dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    dwLength = sizeof(dwState);
+    dwError = RegSetValueExW(hProfileKey,
+                             L"State",
+                             0,
+                             REG_DWORD,
+                             (PBYTE)&dwState,
+                             dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+done:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    if (hProfilesKey != NULL)
+        RegCloseKey(hProfilesKey);
+
+    return dwError;
+}
+
+
 /* PUBLIC FUNCTIONS ********************************************************/
 
 BOOL
@@ -1749,6 +1852,10 @@ LoadUserProfileW(
             SetLastError((DWORD)Error);
             goto cleanup;
         }
+
+        SetProfileData(SidString.Buffer,
+                       lpProfileInfo->dwFlags,
+                       hToken);
     }
 
     /* Open future HKEY_CURRENT_USER */
