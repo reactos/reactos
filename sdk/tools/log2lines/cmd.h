@@ -18,6 +18,6 @@
 #define KDBG_CONT       "---"                       //Also after this pattern (prompt with no line ending)
 #define KDBG_DISCARD    "Command '" KDBG_ESC_STR    //Discard responses at l2l escape commands
 
-char handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut);
+char handle_escape_cmd(FILE *outFile, char *Line);
 
 /* EOF */

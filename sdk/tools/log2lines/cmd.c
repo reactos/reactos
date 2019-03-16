@@ -177,7 +177,7 @@ handle_address_cmd(FILE *outFile, char *arg)
 }
 
 char
-handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
+handle_escape_cmd(FILE *outFile, char *Line)
 {
     char cmd;
     char sep = '\n';

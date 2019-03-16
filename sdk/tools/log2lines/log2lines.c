@@ -439,7 +439,7 @@ translate_files(FILE *inFile, FILE *outFile)
                     }
                     else
                     {
-                        Line[1] = handle_escape_cmd(outFile, Line, path, LineOut);
+                        Line[1] = handle_escape_cmd(outFile, Line);
                         if (Line[1] != KDBG_ESC_CHAR)
                         {
                             if (p == p_eos)
