@@ -18,10 +18,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * TODO:
- *   - ComboBox_[GS]etMinVisible()
- *   - CB_GETMINVISIBLE, CB_SETMINVISIBLE
- *   - CB_SETTOPINDEX
  */
 
 #include <stdarg.h>
@@ -458,6 +454,11 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
    * The first time we go through, we want to measure the ownerdraw item
    */
   lphc->wState |= CBF_MEASUREITEM;
+
+  /*
+   * Per default the comctl32 version of combo shows up to 30 items
+   */
+  lphc->visibleItems = 30;
 
   /* M$ IE 3.01 actually creates (and rapidly destroys) an ownerless combobox */
 
@@ -1010,23 +1011,18 @@ static void CBDropDown( LPHEADCOMBO lphc )
 
    if (nItems > 0)
    {
-      int nHeight;
-      int nIHeight;
+        int nIHeight = (int)SendMessageW(lphc->hWndLBox, LB_GETITEMHEIGHT, 0, 0);
 
-      nIHeight = (int)SendMessageW(lphc->hWndLBox, LB_GETITEMHEIGHT, 0, 0);
-
-      nHeight = nIHeight*nItems;
-
-      if (nHeight < nDroppedHeight - COMBO_YBORDERSIZE())
-         nDroppedHeight = nHeight + COMBO_YBORDERSIZE();
-
-      if (nDroppedHeight < nHeight)
-      {
-            if (nItems < 5)
-                nDroppedHeight = (nItems+1)*nIHeight;
-            else if (nDroppedHeight < 6*nIHeight)
-                nDroppedHeight = 6*nIHeight;
-      }
+        if (lphc->dwStyle & CBS_NOINTEGRALHEIGHT)
+        {
+            nDroppedHeight -= 1;
+        }
+        else
+        {
+            if (nItems > lphc->visibleItems)
+                nItems = lphc->visibleItems;
+            nDroppedHeight = nItems * nIHeight + COMBO_YBORDERSIZE();
+        }
    }
 
    r.left = rect.left;
@@ -2134,6 +2130,13 @@ static LRESULT CALLBACK COMBO_WindowProc( HWND hwnd, UINT message, WPARAM wParam
         if (lphc->wState & CBF_EDIT)
             return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
         return  TRUE;
+
+    case CB_GETMINVISIBLE:
+        return lphc->visibleItems;
+
+    case CB_SETMINVISIBLE:
+        lphc->visibleItems = (INT)wParam;
+        return TRUE;
 
     default:
         if (message >= WM_USER)

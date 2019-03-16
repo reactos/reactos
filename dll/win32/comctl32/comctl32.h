@@ -147,6 +147,7 @@ typedef struct
    INT            fixedOwnerDrawHeight;
    INT            droppedWidth;   /* last two are not used unless set */
    INT            editHeight;     /* explicitly */
+   INT            visibleItems;
 } HEADCOMBO, *LPHEADCOMBO;
 
 extern BOOL COMBO_FlipListbox(HEADCOMBO *lphc, BOOL ok, BOOL bRedrawButton) DECLSPEC_HIDDEN;
