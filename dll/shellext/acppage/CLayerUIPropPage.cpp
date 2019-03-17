@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CLayerUIPropPage implementation
- * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include "precomp.h"
@@ -16,7 +16,6 @@
 #include <sfc.h>
 
 const GUID CLSID_CLayerUIPropPage = { 0x513D916F, 0x2A8E, 0x4F51, { 0xAE, 0xAB, 0x0C, 0xBC, 0x76, 0xFB, 0x1A, 0xF8 } };
-#define ACP_WNDPROP L"{513D916F-2A8E-4F51-AEAB-0CBC76FB1AF8}.Prop"
 
 #define GPLK_USER 1
 #define GPLK_MACHINE 2
@@ -342,7 +341,7 @@ LRESULT CLayerUIPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         ComboBox_AddString(cboMode, g_CompatModes[n].Display);
     ComboBox_SetCurSel(cboMode, 5);
 
-    CComBSTR explanation;
+    CStringW explanation;
     if (!m_AllowPermLayer)
     {
         explanation.LoadString(g_hModule, IDS_FAILED_NETWORK);
@@ -407,7 +406,7 @@ LRESULT CLayerUIPropPage::OnCtrlCommand(WORD wNotifyCode, WORD wID, HWND hWndCtl
 
 LRESULT CLayerUIPropPage::OnEditModes(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    if (DialogBoxParamW(g_hModule, MAKEINTRESOURCEW(IDD_EDITCOMPATIBILITYMODES), m_hWnd, EditModesProc, (LPARAM)this) == IDOK)
+    if (ShowEditCompatModes(m_hWnd, this))
         UpdateControls();
     return 0;
 }
@@ -417,165 +416,6 @@ LRESULT CLayerUIPropPage::OnClickNotify(INT uCode, LPNMHDR hdr, BOOL& bHandled)
     if (hdr->idFrom == IDC_INFOLINK)
         ShellExecute(NULL, L"open", L"https://www.reactos.org/forum/viewforum.php?f=4", NULL, NULL, SW_SHOW);
     return 0;
-}
-
-static void ListboxChanged(HWND hWnd)
-{
-    int Sel = ListBox_GetCurSel(GetDlgItem(hWnd, IDC_COMPATIBILITYMODE));
-    EnableWindow(GetDlgItem(hWnd, IDC_EDIT), Sel >= 0);
-    EnableWindow(GetDlgItem(hWnd, IDC_DELETE), Sel >= 0);
-}
-
-static void OnAdd(HWND hWnd)
-{
-    HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-    
-    int Length = ComboBox_GetTextLength(Combo);
-    CComBSTR Str(Length);
-    ComboBox_GetText(Combo, Str, Length+1);
-    HWND List = GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-    int Index = ListBox_FindStringExact(List, -1, Str);
-    if (Index == LB_ERR)
-        Index = ListBox_AddString(List, Str);
-    ListBox_SetCurSel(List, Index);
-    ListboxChanged(hWnd);
-    ComboBox_SetCurSel(Combo, -1);
-    SetFocus(Combo);
-}
-
-static BOOL ComboHasData(HWND hWnd)
-{
-    HWND Combo = GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-    if (ComboBox_GetCurSel(Combo) >= 0)
-        return TRUE;
-    ULONG Len = ComboBox_GetTextLength(Combo);
-    return Len > 0;
-}
-
-INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    CLayerUIPropPage* page = NULL;
-
-    switch (uMsg)
-    {
-    case WM_INITDIALOG:
-        page = (CLayerUIPropPage*)lParam;
-        page->AddRef();
-        ::SetProp(hWnd, ACP_WNDPROP, page);
-        {
-            HWND Combo = ::GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-            CComObject<CLayerStringList> pList;
-
-            while (TRUE)
-            {
-                CComHeapPtr<OLECHAR> str;
-                HRESULT hr = pList.Next(1, &str, NULL);
-                if (hr != S_OK)
-                    break;
-                ComboBox_AddString(Combo, str);
-            }
-
-            HWND List = ::GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-            for (int n = 0; n < page->m_CustomLayers.GetSize(); ++n)
-            {
-                const WCHAR* Str = page->m_CustomLayers[n].GetString();
-                int Index = ListBox_FindStringExact(List, -1, Str);
-                if (Index == LB_ERR)
-                    Index = ListBox_AddString(List, Str);
-            }
-        }
-        break;
-    case WM_ENDSESSION:
-    case WM_DESTROY:
-        page = (CLayerUIPropPage*)::GetProp(hWnd, ACP_WNDPROP);
-        ::RemoveProp(hWnd, ACP_WNDPROP);
-        page->Release();
-        break;
-
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDC_ADD:
-            OnAdd(hWnd);
-            break;
-        case IDC_EDIT:
-        {
-            HWND List = ::GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-            int Cur = ListBox_GetCurSel(List);
-            int Length = ListBox_GetTextLen(List, Cur);
-            CComBSTR Str(Length);
-            ListBox_GetText(List, Cur, Str);
-            ListBox_DeleteString(List, Cur);
-            HWND Combo = ::GetDlgItem(hWnd, IDC_NEWCOMPATIBILITYMODE);
-            ComboBox_SetCurSel(Combo, -1);
-            ::SetWindowText(Combo,Str);
-            ListboxChanged(hWnd);
-            ComboBox_SetEditSel(Combo, 30000, 30000);
-            ::SetFocus(Combo);
-        }
-            break;
-        case IDC_DELETE:
-        {
-            HWND List = ::GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-            ListBox_DeleteString(List, ListBox_GetCurSel(List));
-            ListboxChanged(hWnd);
-        }
-            break;
-        case IDC_COMPATIBILITYMODE:
-            ListboxChanged(hWnd);
-            break;
-        case IDC_NEWCOMPATIBILITYMODE:
-        {
-            ::EnableWindow(::GetDlgItem(hWnd, IDC_ADD), ComboHasData(hWnd));
-        }
-            break;
-        case IDOK:
-            /* Copy from list! */
-        {
-            if (ComboHasData(hWnd))
-            {
-                CComBSTR question, title;
-                title.LoadString(g_hModule, IDS_COMPAT_TITLE);
-                question.LoadString(g_hModule, IDS_YOU_DID_NOT_ADD);
-                int result = ::MessageBoxW(hWnd, question, title, MB_YESNOCANCEL | MB_ICONQUESTION);
-                switch (result)
-                {
-                case IDYES:
-                    OnAdd(hWnd);
-                    break;
-                case IDNO:
-                    break;
-                case IDCANCEL:
-                    return FALSE;
-                }
-            }
-
-            page = (CLayerUIPropPage*)::GetProp(hWnd, ACP_WNDPROP);
-
-            HWND List = ::GetDlgItem(hWnd, IDC_COMPATIBILITYMODE);
-            int Count = ListBox_GetCount(List);
-            page->m_CustomLayers.RemoveAll();
-            for (int Cur = 0; Cur < Count; ++Cur)
-            {
-                int Length = ListBox_GetTextLen(List, Cur);
-                CString Str;
-                LPWSTR Buffer = Str.GetBuffer(Length + 1);
-                ListBox_GetText(List, Cur, Buffer);
-                Str.ReleaseBuffer(Length);
-                page->m_CustomLayers.Add(Str);
-            }
-        }
-        /* Fall trough */
-        case IDCANCEL:
-            ::EndDialog(hWnd, LOWORD(wParam));
-            break;
-        }
-        break;
-    case WM_CLOSE:
-        ::EndDialog(hWnd, IDCANCEL);
-        break;
-    }
-    return FALSE;
 }
 
 static BOOL DisableShellext()

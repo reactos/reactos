@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Compatibility Layer Shell Extension
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CLayerUIPropPage definition
- * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #pragma once
@@ -15,6 +15,8 @@ class CLayerUIPropPage :
     public IShellPropSheetExt
 {
 public:
+    CSimpleArray<CString> m_CustomLayers;
+
     CLayerUIPropPage();
     ~CLayerUIPropPage();
 
@@ -59,9 +61,6 @@ public:
     LRESULT OnEditModes(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnClickNotify(INT uCode, LPNMHDR hdr, BOOL& bHandled);
 
-    static INT_PTR CALLBACK PropDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static INT_PTR CALLBACK EditModesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 protected:
     CString m_Filename;
     BOOL m_IsSfcProtected;
@@ -69,7 +68,7 @@ protected:
     DWORD m_LayerQueryFlags;
     DWORD m_RegistryOSMode, m_OSMode;
     DWORD m_RegistryEnabledLayers, m_EnabledLayers;
-    CSimpleArray<CString> m_RegistryCustomLayers, m_CustomLayers;
+    CSimpleArray<CString> m_RegistryCustomLayers;
 
 public:
     enum { IDD = IDD_ACPPAGESHEET };

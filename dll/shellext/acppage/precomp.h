@@ -34,4 +34,6 @@ BOOL IsBuiltinLayer(PCWSTR Name);
 #include "CLayerStringList.hpp"
 #include "CLayerUIPropPage.hpp"
 
+BOOL ShowEditCompatModes(HWND hWnd, CLayerUIPropPage* page);
+
 #endif /* ACPPAGE_PRECOMP_H */

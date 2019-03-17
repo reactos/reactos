@@ -18,6 +18,7 @@ spec2def(acppage.dll acppage.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ACPPage.cpp
+    CEditCompatModes.cpp
     CLayerUIPropPage.cpp
     precomp.h)
 
