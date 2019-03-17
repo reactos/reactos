@@ -40,6 +40,10 @@ BOOL
 RemoveDirectoryPath(LPCWSTR lpPathName);
 
 /* misc.c */
+
+extern SID_IDENTIFIER_AUTHORITY LocalSystemAuthority;
+extern SID_IDENTIFIER_AUTHORITY WorldAuthority;
+
 typedef struct _DYN_FUNCS
 {
   HMODULE hModule;

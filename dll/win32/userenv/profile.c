@@ -350,6 +350,106 @@ done:
 
 static
 DWORD
+CheckForGuestsAndAdmins(
+    _In_ HANDLE hToken,
+    _Out_ PDWORD pdwState)
+{
+    PTOKEN_GROUPS pGroupInfo = NULL;
+    PSID pAdministratorsSID = NULL;
+    PSID pGuestsSID = NULL;
+    DWORD i, dwSize;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("CheckForGuestsAndAdmins(%p %p)\n", hToken, pdwState);
+
+    /* Get the buffer size */
+    if (!GetTokenInformation(hToken, TokenGroups, NULL, dwSize, &dwSize))
+    {
+        dwError = GetLastError();
+        if (dwError != ERROR_INSUFFICIENT_BUFFER)
+        {
+            DPRINT1("GetTokenInformation() failed (Error %lu)\n", dwError);
+            return dwError;
+        }
+
+        dwError = ERROR_SUCCESS;
+    }
+
+    /* Allocate the buffer */
+    pGroupInfo = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (pGroupInfo == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        DPRINT1("HeapAlloc() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Get the token groups */
+    if (!GetTokenInformation(hToken, TokenGroups, pGroupInfo, dwSize, &dwSize))
+    {
+        dwError = GetLastError();
+        DPRINT1("GetTokenInformation() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Build the Administrators Group SID */
+    if(!AllocateAndInitializeSid(&LocalSystemAuthority,
+                                 2,
+                                 SECURITY_BUILTIN_DOMAIN_RID,
+                                 DOMAIN_ALIAS_RID_ADMINS,
+                                 0, 0, 0, 0, 0, 0,
+                                 &pAdministratorsSID))
+    {
+        dwError = GetLastError();
+        DPRINT1("AllocateAndInitializeSid() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Build the Guests Group SID */
+    if(!AllocateAndInitializeSid(&LocalSystemAuthority,
+                                 2,
+                                 SECURITY_BUILTIN_DOMAIN_RID,
+                                 DOMAIN_ALIAS_RID_GUESTS,
+                                 0, 0, 0, 0, 0, 0,
+                                 &pGuestsSID))
+    {
+        dwError = GetLastError();
+        DPRINT1("AllocateAndInitializeSid() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Check for Administratos or Guests group memberships */
+    for (i = 0; i < pGroupInfo->GroupCount; i++)
+    {
+        if (EqualSid(pAdministratorsSID, pGroupInfo->Groups[i].Sid))
+        {
+            *pdwState |= 0x0100; // PROFILE_ADMIN_USER
+        }
+
+        if (EqualSid(pGuestsSID, pGroupInfo->Groups[i].Sid))
+        {
+            *pdwState |= 0x0080; // PROFILE_GUESTS_USER
+        }
+    }
+
+    dwError = ERROR_SUCCESS;
+
+done:
+    if (pGuestsSID != NULL)
+        FreeSid(pGuestsSID);
+
+    if (pAdministratorsSID != NULL)
+        FreeSid(pAdministratorsSID);
+
+    if (pGroupInfo != NULL)
+        HeapFree(GetProcessHeap(), 0, pGroupInfo);
+
+    return dwError;
+}
+
+
+static
+DWORD
 SetProfileData(
     _In_ PWSTR pszSidString,
     _In_ DWORD dwFlags,
@@ -360,8 +460,7 @@ SetProfileData(
     DWORD dwLength, dwState = 0;
     DWORD dwError;
 
-    DPRINT("SetProfileData(%S %p)\n",
-           pszSidString, hToken);
+    DPRINT("SetProfileData(%S %p)\n", pszSidString, hToken);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -421,6 +520,14 @@ SetProfileData(
                              REG_DWORD,
                              (PBYTE)&dwFlags,
                              dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        goto done;
+    }
+
+    dwError = CheckForGuestsAndAdmins(hToken,
+                                      &dwState);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", dwError);
@@ -1350,7 +1457,7 @@ GetProfilesDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
-    if (!lpcchSize)
+    if (!lpcchSize || !lpProfileDir)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -1474,7 +1581,7 @@ GetUserProfileDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
-    if (!lpcchSize)
+    if (!lpcchSize || !lpProfileDir)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
