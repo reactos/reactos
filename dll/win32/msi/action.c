@@ -7448,7 +7448,11 @@ UINT msi_validate_product_id( MSIPACKAGE *package )
     if (key && template)
     {
         FIXME( "partial stub: template %s key %s\n", debugstr_w(template), debugstr_w(key) );
+#ifdef __REACTOS__
+        WARN("Product key validation HACK, see CORE-14710\n");
+#else
         r = msi_set_property( package->db, szProductID, key, -1 );
+#endif
     }
     msi_free( template );
     msi_free( key );
