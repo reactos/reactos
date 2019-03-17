@@ -39,6 +39,7 @@ typedef struct _ENUM_CONTEXT
     SAM_HANDLE ServerHandle;
     SAM_HANDLE BuiltinDomainHandle;
     SAM_HANDLE AccountDomainHandle;
+    PSID BuiltinDomainSid;
     PSID AccountDomainSid;
 
     SAM_ENUMERATE_HANDLE EnumerationContext;
@@ -400,16 +401,159 @@ FreeUserInfo(PUSER_ALL_INFORMATION UserInfo)
 
 static
 NET_API_STATUS
-BuildUserInfoBuffer(SAM_HANDLE UserHandle,
-                    PSID AccountDomainSid,
-                    DWORD level,
-                    ULONG RelativeId,
-                    LPVOID *Buffer)
+GetUserPrivileges(
+    _In_ SAM_HANDLE BuiltinDomainHandle,
+    _In_ SAM_HANDLE UserHandle,
+    _In_ PSID AccountDomainSid,
+    _In_ ULONG RelativeId,
+    _Out_ PDWORD Priv,
+    _Out_ PDWORD AuthFlags)
+{
+    PGROUP_MEMBERSHIP GroupMembership = NULL;
+    ULONG GroupCount, SidCount, AliasCount, i;
+    PSID *SidArray = NULL;
+    PULONG AliasArray = NULL;
+    BOOL bAdmin = FALSE, bUser = FALSE;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status;
+
+    FIXME("GetUserPrivileges(%p)\n", UserHandle);
+
+    /* Get the users group memberships */
+    Status = SamGetGroupsForUser(UserHandle,
+                                 &GroupMembership,
+                                 &GroupCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetGroupsForUser() failed (Status 0x%08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Allocate the SID array */
+    ApiStatus = NetApiBufferAllocate((GroupCount + 1) * sizeof(PSID),
+                                     (PVOID*)&SidArray);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    /* Add the user to the SID array */
+    SidCount = 0;
+    ApiStatus = BuildSidFromSidAndRid(AccountDomainSid,
+                                      RelativeId,
+                                      &SidArray[0]);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    SidCount++;
+
+    /* Add the groups to the SID array */
+    for (i = 0; i < GroupCount; i++)
+    {
+        ApiStatus = BuildSidFromSidAndRid(AccountDomainSid,
+                                          GroupMembership[i].RelativeId,
+                                          &SidArray[i + 1]);
+        if (ApiStatus != NERR_Success)
+        {
+            goto done;
+        }
+
+        SidCount++;
+    }
+
+    /* Get aliases for the user and his groups */
+    Status = SamGetAliasMembership(BuiltinDomainHandle,
+                                   SidCount,
+                                   SidArray,
+                                   &AliasCount,
+                                   &AliasArray);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetAliasMembership() failed (Status 0x%08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    *AuthFlags = 0;
+
+    /* Set the AuthFlags */
+    for (i = 0; i < AliasCount; i++)
+    {
+        switch (AliasArray[i])
+        {
+            case DOMAIN_ALIAS_RID_ADMINS:
+                bAdmin = TRUE;
+                break;
+
+            case DOMAIN_ALIAS_RID_USERS:
+                bUser = TRUE;
+                break;
+
+            case DOMAIN_ALIAS_RID_ACCOUNT_OPS:
+                *AuthFlags |= AF_OP_ACCOUNTS;
+                break;
+
+            case DOMAIN_ALIAS_RID_SYSTEM_OPS:
+                *AuthFlags |= AF_OP_SERVER;
+                break;
+
+            case DOMAIN_ALIAS_RID_PRINT_OPS:
+                *AuthFlags |= AF_OP_PRINT;
+                break;
+        }
+    }
+
+    /* Set the prvileges */
+    if (bAdmin)
+    {
+        *Priv = USER_PRIV_ADMIN;
+    }
+    else if (bUser)
+    {
+        *Priv = USER_PRIV_USER;
+    }
+    else
+    {
+        *Priv = USER_PRIV_GUEST;
+    }
+
+done:
+    if (AliasArray != NULL)
+        SamFreeMemory(AliasArray);
+
+    if (SidArray != NULL)
+    {
+        for (i = 0; i < SidCount; i++)
+            NetApiBufferFree(SidArray[i]);
+
+        NetApiBufferFree(SidArray);
+    }
+
+    if (GroupMembership != NULL)
+        SamFreeMemory(GroupMembership);
+
+    return ApiStatus;
+}
+
+
+static
+NET_API_STATUS
+BuildUserInfoBuffer(
+    _In_ SAM_HANDLE BuiltinDomainHandle,
+    _In_ SAM_HANDLE UserHandle,
+    _In_ PSID AccountDomainSid,
+    _In_ ULONG RelativeId,
+    _In_ DWORD level,
+    _Out_ LPVOID *Buffer)
 {
     UNICODE_STRING LogonServer = RTL_CONSTANT_STRING(L"\\\\*");
     PUSER_ALL_INFORMATION UserInfo = NULL;
     LPVOID LocalBuffer = NULL;
     PACL Dacl = NULL;
+    DWORD Priv = 0, AuthFlags = 0;
     PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
     PUSER_INFO_2 UserInfo2;
@@ -440,6 +584,19 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
         (level == 4) || (level == 20) || (level == 23))
     {
         ApiStatus = GetUserDacl(UserHandle, &Dacl);
+        if (ApiStatus != NERR_Success)
+            goto done;
+    }
+
+    if ((level == 1) || (level == 2) || (level == 3) ||
+        (level == 4) || (level == 11))
+    {
+        ApiStatus = GetUserPrivileges(BuiltinDomainHandle,
+                                      UserHandle,
+                                      AccountDomainSid,
+                                      RelativeId,
+                                      &Priv,
+                                      &AuthFlags);
         if (ApiStatus != NERR_Success)
             goto done;
     }
@@ -595,7 +752,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo1->usri1_password = NULL;
             UserInfo1->usri1_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
-            /* FIXME: usri1_priv */
+            UserInfo1->usri1_priv = Priv;
 
             UserInfo1->usri1_home_dir = Ptr;
             memcpy(UserInfo1->usri1_home_dir,
@@ -638,7 +795,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo2->usri2_password = NULL;
             UserInfo2->usri2_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
-            /* FIXME: usri2_priv */
+            UserInfo2->usri2_priv = Priv;
 
             UserInfo2->usri2_home_dir = Ptr;
             memcpy(UserInfo2->usri2_home_dir,
@@ -664,7 +821,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo2->usri2_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->ScriptPath.Length + sizeof(WCHAR));
 
-            /* FIXME: usri2_auth_flags */
+            UserInfo2->usri2_auth_flags = AuthFlags;
 
             UserInfo2->usri2_full_name = Ptr;
             memcpy(UserInfo2->usri2_full_name,
@@ -757,7 +914,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo3->usri3_password = NULL;
             UserInfo3->usri3_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
-            /* FIXME: usri3_priv */
+            UserInfo3->usri3_priv = Priv;
 
             UserInfo3->usri3_home_dir = Ptr;
             memcpy(UserInfo3->usri3_home_dir,
@@ -783,7 +940,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo3->usri3_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->ScriptPath.Length + sizeof(WCHAR));
 
-            /* FIXME: usri3_auth_flags */
+            UserInfo3->usri3_auth_flags = AuthFlags;
 
             UserInfo3->usri3_full_name = Ptr;
             memcpy(UserInfo3->usri3_full_name,
@@ -894,7 +1051,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo4->usri4_password = NULL;
             UserInfo4->usri4_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
-            /* FIXME: usri4_priv */
+            UserInfo4->usri4_priv = Priv;
 
             UserInfo4->usri4_home_dir = Ptr;
             memcpy(UserInfo4->usri4_home_dir,
@@ -920,7 +1077,7 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo4->usri4_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->ScriptPath.Length + sizeof(WCHAR));
 
-            /* FIXME: usri4_auth_flags */
+            UserInfo4->usri4_auth_flags = AuthFlags;
 
             UserInfo4->usri4_full_name = Ptr;
             memcpy(UserInfo4->usri4_full_name,
@@ -1088,8 +1245,8 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo11->usri11_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
 
-            /* FIXME: usri11_priv */
-            /* FIXME: usri11_auth_flags */
+            UserInfo11->usri11_priv = Priv;
+            UserInfo11->usri11_auth_flags = AuthFlags;
 
             UserInfo11->usri11_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
 
@@ -2526,6 +2683,7 @@ NetUserEnum(LPCWSTR servername,
     LPVOID Buffer = NULL;
     ULONG i;
     SAM_HANDLE UserHandle = NULL;
+    ACCESS_MASK DesiredAccess;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2588,12 +2746,27 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        Status = OpenBuiltinDomain(EnumContext->ServerHandle,
-                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                                   &EnumContext->BuiltinDomainHandle);
+        /* Get the Builtin Domain SID */
+        Status = GetBuiltinDomainSid(&EnumContext->BuiltinDomainSid);
         if (!NT_SUCCESS(Status))
         {
-            ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+            ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        DesiredAccess = DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP;
+        if ((level == 1) || (level == 2) || (level == 3) || (level == 4) || (level == 11))
+            DesiredAccess |= DOMAIN_GET_ALIAS_MEMBERSHIP;
+
+        /* Open the Builtin Domain */
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DesiredAccess,
+                               EnumContext->BuiltinDomainSid,
+                               &EnumContext->BuiltinDomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
@@ -2648,8 +2821,12 @@ NetUserEnum(LPCWSTR servername,
 
         TRACE("RID: %lu\n", CurrentUser->RelativeId);
 
+        DesiredAccess = READ_CONTROL | USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT;
+        if ((level == 1) || (level == 2) || (level == 3) || (level == 4) || (level == 11))
+            DesiredAccess |= USER_LIST_GROUPS;
+
         Status = SamOpenUser(EnumContext->AccountDomainHandle, //BuiltinDomainHandle,
-                             READ_CONTROL | USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT,
+                             DesiredAccess,
                              CurrentUser->RelativeId,
                              &UserHandle);
         if (!NT_SUCCESS(Status))
@@ -2659,10 +2836,11 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        ApiStatus = BuildUserInfoBuffer(UserHandle,
+        ApiStatus = BuildUserInfoBuffer(EnumContext->BuiltinDomainHandle,
+                                        UserHandle,
                                         EnumContext->AccountDomainSid,
-                                        level,
                                         CurrentUser->RelativeId,
+                                        level,
                                         &Buffer);
         if (ApiStatus != NERR_Success)
         {
@@ -2694,6 +2872,9 @@ done:
 
             if (EnumContext->AccountDomainHandle != NULL)
                 SamCloseHandle(EnumContext->AccountDomainHandle);
+
+            if (EnumContext->BuiltinDomainSid != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, EnumContext->BuiltinDomainSid);
 
             if (EnumContext->AccountDomainSid != NULL)
                 RtlFreeHeap(RtlGetProcessHeap(), 0, EnumContext->AccountDomainSid);
@@ -2909,11 +3090,14 @@ NetUserGetInfo(LPCWSTR servername,
     UNICODE_STRING UserName;
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE AccountDomainHandle = NULL;
+    SAM_HANDLE BuiltinDomainHandle = NULL;
     SAM_HANDLE UserHandle = NULL;
     PULONG RelativeIds = NULL;
     PSID_NAME_USE Use = NULL;
     LPVOID Buffer = NULL;
     PSID AccountDomainSid = NULL;
+    PSID BuiltinDomainSid = NULL;
+    ACCESS_MASK DesiredAccess;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2933,6 +3117,31 @@ NetUserGetInfo(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Builtin Domain SID */
+    Status = GetBuiltinDomainSid(&BuiltinDomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    DesiredAccess = DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP;
+    if ((level == 1) || (level == 2) || (level == 3) || (level == 4) || (level == 11))
+        DesiredAccess |= DOMAIN_GET_ALIAS_MEMBERSHIP;
+
+    /* Open the Builtin Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DesiredAccess,
+                           BuiltinDomainSid,
+                           &BuiltinDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -2985,9 +3194,13 @@ NetUserGetInfo(LPCWSTR servername,
 
     TRACE("RID: %lu\n", RelativeIds[0]);
 
+    DesiredAccess = READ_CONTROL | USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT;
+    if ((level == 1) || (level == 2) || (level == 3) || (level == 4) || (level == 11))
+        DesiredAccess |= USER_LIST_GROUPS;
+
     /* Open the user object */
     Status = SamOpenUser(AccountDomainHandle,
-                         READ_CONTROL | USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT,
+                         DesiredAccess,
                          RelativeIds[0],
                          &UserHandle);
     if (!NT_SUCCESS(Status))
@@ -2997,10 +3210,11 @@ NetUserGetInfo(LPCWSTR servername,
         goto done;
     }
 
-    ApiStatus = BuildUserInfoBuffer(UserHandle,
+    ApiStatus = BuildUserInfoBuffer(BuiltinDomainHandle,
+                                    UserHandle,
                                     AccountDomainSid,
-                                    level,
                                     RelativeIds[0],
+                                    level,
                                     &Buffer);
     if (ApiStatus != NERR_Success)
     {
@@ -3023,6 +3237,12 @@ done:
 
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+
+    if (BuiltinDomainHandle != NULL)
+        SamCloseHandle(BuiltinDomainHandle);
+
+    if (BuiltinDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BuiltinDomainSid);
 
     if (ServerHandle != NULL)
         SamCloseHandle(ServerHandle);
