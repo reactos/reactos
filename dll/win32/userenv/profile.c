@@ -1566,8 +1566,99 @@ WINAPI
 GetProfileType(
     _Out_ PDWORD pdwFlags)
 {
-    DPRINT1("GetProfileType() not implemented!\n");
-    return FALSE;
+    UNICODE_STRING SidString = {0, 0, NULL};
+    HANDLE hToken;
+    HKEY hProfilesKey = NULL, hProfileKey = NULL;
+    DWORD dwType, dwLength, dwState = 0;
+    DWORD dwError;
+    BOOL bResult = FALSE;
+
+    DPRINT("GetProfileType(%p)\n", pdwFlags);
+
+    if (pdwFlags == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, TRUE, &hToken))
+    {
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        {
+            DPRINT1("Failed to open a token (Error %lu)\n", GetLastError());
+            return FALSE;
+        }
+    }
+
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
+    {
+        DPRINT1("GetUserSidStringFromToken() failed\n");
+        goto done;
+    }
+
+    DPRINT("SID: %wZ\n", &SidString);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hProfilesKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        SetLastError(dwError);
+        goto done;
+    }
+
+    dwError = RegOpenKeyExW(hProfilesKey,
+                            SidString.Buffer,
+                            0,
+                            KEY_QUERY_VALUE | KEY_SET_VALUE,
+                            &hProfileKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        SetLastError(dwError);
+        goto done;
+    }
+
+    /* Get the State value */
+    dwLength = sizeof(dwState);
+    dwError = RegQueryValueExW(hProfileKey,
+                               L"State",
+                               NULL,
+                               &dwType,
+                               (PBYTE)&dwState,
+                               &dwLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", dwError);
+        SetLastError(dwError);
+        goto done;
+    }
+
+    *pdwFlags = 0;
+
+    if (dwState & 0x80) /* PROFILE_GUEST_USER */
+        *pdwFlags |= PT_TEMPORARY;
+
+    /* FIXME: Add checks for PT_MANDATORY and PT_ROAMING */
+
+    bResult = TRUE;
+
+done:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    if (hProfilesKey != NULL)
+        RegCloseKey(hProfilesKey);
+
+    RtlFreeUnicodeString(&SidString);
+
+    CloseHandle(hToken);
+
+    return bResult;
 }
 
 
