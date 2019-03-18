@@ -1134,7 +1134,7 @@ DeleteProfileA(
     _In_opt_ LPCSTR lpComputerName)
 {
     BOOL bResult;
-    UNICODE_STRING SidString, ProfilePath, ComputerName;
+    UNICODE_STRING SidString = {0, 0, NULL}, ProfilePath = {0, 0, NULL}, ComputerName = {0, 0, NULL};
 
     DPRINT("DeleteProfileA() called\n");
 
@@ -1177,8 +1177,8 @@ DeleteProfileW(
     _In_opt_ LPCWSTR lpProfilePath,
     _In_opt_ LPCWSTR lpComputerName)
 {
-    DPRINT1("DeleteProfileW() not implemented!\n");
-    return FALSE;
+    DPRINT1("DeleteProfileW(%S %S %S) not implemented!\n", lpSidString, lpProfilePath, lpComputerName);
+    return TRUE; //FALSE;
 }
 
 
@@ -2104,8 +2104,9 @@ UnloadUserProfile(
 {
     UNICODE_STRING SidString = {0, 0, NULL};
     HANDLE hProfileMutex = NULL;
-    DWORD dwRefCount = 0;
-    LONG Error;
+    HKEY hProfilesKey = NULL, hProfileKey = NULL;
+    DWORD dwRefCount = 0, dwLength, dwType, dwState = 0;
+    DWORD dwError;
     BOOL bRet = FALSE;
 
     DPRINT("UnloadUserProfile() called\n");
@@ -2138,24 +2139,25 @@ UnloadUserProfile(
     WaitForSingleObject(hProfileMutex, INFINITE);
 
     /* Close the profile handle */
+    RegFlushKey(hProfile);
     RegCloseKey(hProfile);
 
-    Error = DecrementRefCount(SidString.Buffer, &dwRefCount);
-    if (Error != ERROR_SUCCESS)
+    dwError = DecrementRefCount(SidString.Buffer, &dwRefCount);
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("DecrementRefCount() failed (Error %ld)\n", Error);
-        SetLastError((DWORD)Error);
+        DPRINT1("DecrementRefCount() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
         goto cleanup;
     }
 
     if (dwRefCount == 0)
     {
-        DPRINT1("RefCount is 0: Unload the Hive!\n");
+        DPRINT("RefCount is 0: Unload the Hive!\n");
 
         /* Acquire restore privilege */
         if (!AcquireRemoveRestorePrivilege(TRUE))
         {
-            DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
+            DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %lu)\n", GetLastError());
             goto cleanup;
         }
 
@@ -2163,12 +2165,12 @@ UnloadUserProfile(
         {
             HKEY hUserKey;
 
-            Error = RegOpenKeyExW(HKEY_USERS,
-                                  SidString.Buffer,
-                                  0,
-                                  KEY_WRITE,
-                                  &hUserKey);
-            if (Error == ERROR_SUCCESS)
+            dwError = RegOpenKeyExW(HKEY_USERS,
+                                    SidString.Buffer,
+                                    0,
+                                    KEY_WRITE,
+                                    &hUserKey);
+            if (dwError == ERROR_SUCCESS)
             {
                 RegDeleteKeyW(hUserKey,
                               L"Volatile Environment");
@@ -2179,23 +2181,79 @@ UnloadUserProfile(
         /* End of HACK */
 
         /* Unload the hive */
-        Error = RegUnLoadKeyW(HKEY_USERS,
-                              SidString.Buffer);
+        dwError = RegUnLoadKeyW(HKEY_USERS,
+                                SidString.Buffer);
 
         /* Remove restore privilege */
         AcquireRemoveRestorePrivilege(FALSE);
 
-        if (Error != ERROR_SUCCESS)
+        if (dwError != ERROR_SUCCESS)
         {
-            DPRINT1("RegUnLoadKeyW() failed (Error %ld)\n", Error);
-            SetLastError((DWORD)Error);
+            DPRINT1("RegUnLoadKeyW() failed (Error %lu)\n", dwError);
+            SetLastError(dwError);
             goto cleanup;
+        }
+
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+                                0,
+                                KEY_QUERY_VALUE,
+                                &hProfilesKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+            SetLastError(dwError);
+            goto cleanup;
+        }
+
+        dwError = RegOpenKeyExW(hProfilesKey,
+                                SidString.Buffer,
+                                0,
+                                KEY_QUERY_VALUE,
+                                &hProfileKey);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+            SetLastError(dwError);
+            goto cleanup;
+        }
+
+        /* Get the State value */
+        dwLength = sizeof(dwState);
+        dwError = RegQueryValueExW(hProfileKey,
+                                   L"State",
+                                   NULL,
+                                   &dwType,
+                                   (PBYTE)&dwState,
+                                   &dwLength);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegQueryValueExW() failed (Error %lu)\n", dwError);
+            SetLastError(dwError);
+            goto cleanup;
+        }
+
+        /* Delete a guest profile */
+        if (dwState & 0x80) // PROFILE_GUEST_USER
+        {
+            if (!DeleteProfileW(SidString.Buffer, NULL, NULL))
+            {
+                DPRINT1("DeleteProfile(%S, NULL, NULL) failed (Error %lu)\n",
+                        SidString.Buffer, GetLastError());
+                goto cleanup;
+            }
         }
     }
 
     bRet = TRUE;
 
 cleanup:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    if (hProfilesKey != NULL)
+        RegCloseKey(hProfilesKey);
+
     if (hProfileMutex != NULL)
     {
         ReleaseMutex(hProfileMutex);
