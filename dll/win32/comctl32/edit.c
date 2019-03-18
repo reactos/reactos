@@ -1050,7 +1050,11 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 			x -= es->x_offset;
 		}
 		else
+#ifdef __REACTOS__ /* CORE-15780 */
+			x = (lw > 0 ? es->x_offset : x - es->x_offset);
+#else
 			x = es->x_offset;
+#endif
 
 		if (es->style & ES_RIGHT)
 			x = w - (lw - x);
