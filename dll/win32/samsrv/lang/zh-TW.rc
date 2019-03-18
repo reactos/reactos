@@ -1,4 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan 2019 <njlyf2011@hotmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -8,20 +9,20 @@ BEGIN
     IDS_GROUP_NONE_NAME "無"
     IDS_GROUP_NONE_COMMENT "普通使用者"
     IDS_ALIAS_ADMINISTRATORS_NAME "管理員"
-    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理員可以無限制地訪問電腦或域。"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "管理員可以無限制地訪問電腦或網域。"
     IDS_ALIAS_GUESTS_NAME "來賓"
-    IDS_ALIAS_GUESTS_COMMENT "來賓在默認情況下享有同樣的權利的使用者組的成員。"
-    IDS_ALIAS_POWER_USERS_NAME "超級使用者"
-    IDS_ALIAS_POWER_USERS_COMMENT "超級使用者有大多數行政權利有一些限制條件。"
+    IDS_ALIAS_GUESTS_COMMENT "來賓在預設情況下權限與[使用者]群組相同，"
+    IDS_ALIAS_POWER_USERS_NAME "進階使用者"
+    IDS_ALIAS_POWER_USERS_COMMENT "進階使用者擁有大多數管理權限，但存在一些限制。"
     IDS_ALIAS_USERS_NAME "使用者"
-    IDS_ALIAS_USERS_COMMENT "防止使用者進行全系統更改。"
+    IDS_ALIAS_USERS_COMMENT "防止使用者對系統進行全面變更。"
     /*
      * ATTENTION: 
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and
      *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
      */
     IDS_USER_ADMINISTRATOR_NAME "Administrator"
-    IDS_USER_ADMINISTRATOR_COMMENT "用於管理電腦或域的內建帳戶。"
+    IDS_USER_ADMINISTRATOR_COMMENT "用於管理電腦或網域的內建帳戶。"
     IDS_USER_GUEST_NAME "來賓"
-    IDS_USER_GUEST_COMMENT "來賓訪問電腦或域的內建帳戶。"
+    IDS_USER_GUEST_COMMENT "用於來賓存取電腦或網域的內建帳戶。"
 END
