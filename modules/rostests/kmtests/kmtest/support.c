@@ -52,6 +52,23 @@ KmtUserCallbackThread(
 
         switch (RequestPacket.OperationClass)
         {
+        	case FlushLogBuffer:
+        	{
+        		LONG Offset = 0;
+    			LONG OldLength;
+        		do
+        		{
+        			DWORD BytesWritten;
+
+        			OldLength = ResultBuffer->LogBufferLength;
+
+        			if (!WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), ResultBuffer->LogBuffer + Offset, OldLength - Offset, &BytesWritten, NULL))
+        				break;
+        			Offset = OldLength;
+        		} while (InterlockedCompareExchange(&ResultBuffer->LogBufferLength, 0, OldLength) != OldLength);
+
+        		break;
+        	}
             case QueryVirtualMemory:
             {
                 SIZE_T InfoBufferSize = VirtualQuery(RequestPacket.BaseAddress, &Response.MemInfo, sizeof(Response.MemInfo));

@@ -48,6 +48,7 @@ typedef struct
 /* list of supported operations */
 typedef enum _KMT_CALLBACK_INFORMATION_CLASS
 {
+	FlushLogBuffer,
     QueryVirtualMemory,
     StartDriver,
     StopDriver
@@ -133,6 +134,22 @@ KmtStopDriver(LPCWSTR DriverName)
         KmtFreeCallbackResponse(Response);
     }
     return Status;
+}
+
+static __inline
+void
+KmtFlushLogBuffer(void)
+{
+    KMT_CALLBACK_REQUEST_PACKET Request;
+    PKMT_RESPONSE Response;
+
+    Request.OperationClass = FlushLogBuffer;
+
+    Response = KmtUserModeCallback(&Request);
+    if (Response != NULL)
+    {
+        KmtFreeCallbackResponse(Response);
+    }
 }
 
 #endif
@@ -381,6 +398,9 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
     } while (InterlockedCompareExchange(&Buffer->LogBufferLength, NewLength, OldLength) != OldLength);
 
     memcpy(&Buffer->LogBuffer[OldLength], String, Length);
+#if defined(KMT_KERNEL_MODE) && !defined(KMT_STANDALONE_DRIVER)
+    KmtFlushLogBuffer();
+#endif
 }
 
 KMT_FORMAT(ms_printf, 5, 0)
