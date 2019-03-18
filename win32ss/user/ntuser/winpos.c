@@ -1950,7 +1950,7 @@ co_WinPosSetWindowPos(
             REGION_UnlockRgn(DcRgnObj);
             Dc = UserGetDCEx( Window,
                               DcRgn,
-                              DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN);
+                              DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN); // DCX_WINDOW will set first, go read WinDC.c.
             NtGdiBitBlt( Dc,
                          CopyRect.left, CopyRect.top,
                          CopyRect.right - CopyRect.left,
@@ -1971,19 +1971,43 @@ co_WinPosSetWindowPos(
       {
          CopyRgn = NULL;
       }
-#if 0
-      /////// Fixes NoPopup tests but breaks msg_paint tests.
-      if ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore)
+
+      if ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore )
       {
-         PWND Parent = Window->spwndParent;
-         ERR("SWP_FRAMECHANGED no chg\n");
-         if ( !(Window->style & WS_CHILD) && (Parent) && (Parent->style & WS_CLIPCHILDREN))
+         PWND pwnd = Window;
+         PWND Parent = pwnd->spwndParent;
+
+         TRACE("SWP_FRAMECHANGED no chg\n");
+
+         if ( pwnd->style & WS_CHILD ) // Fix ProgMan menu bar drawing.
          {
-            ERR("SWP_FRAMECHANGED Parent WS_CLIPCHILDREN\n");
-            //IntInvalidateWindows( Window, VisBefore, /*RDW_ERASE |*/ RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            TRACE("SWP_FRAMECHANGED win child %p Parent %p\n",pwnd,Parent);
+            pwnd = Parent ? Parent : pwnd;
+         }
+
+         if ( !(pwnd->style & WS_CHILD) )
+         {
+            HDC hdc;
+            HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+            PREGION DcRgnObj = REGION_LockRgn(DcRgn);
+
+            TRACE("SWP_FRAMECHANGED Draw\n");
+
+            IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
+            REGION_UnlockRgn(DcRgnObj);
+
+            hdc = UserGetDCEx( pwnd,
+                               DcRgn,
+                               DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN); // DCX_WINDOW, see note above....
+
+            NC_DoNCPaint(pwnd, hdc, -1); // Force full redraw of nonclient area.
+
+            UserReleaseDC(pwnd, hdc, FALSE);
+            IntValidateParent(pwnd, DcRgnObj);
+            GreDeleteObject(DcRgn);
          }
       }
-#endif
+
       /* We need to redraw what wasn't visible before */
       if (VisAfter != NULL)
       {
