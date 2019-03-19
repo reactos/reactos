@@ -720,7 +720,11 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		if ((es->style & ES_CENTER) || (es->style & ES_RIGHT))
 			rc.left = es->format_rect.left;
 		else
+#ifdef __REACTOS__ /* CORE-11475 */
+			rc.left = (short)LOWORD(EDIT_EM_PosFromChar(es, nstart_index, FALSE));
+#else
                         rc.left = LOWORD(EDIT_EM_PosFromChar(es, nstart_index, FALSE));
+#endif
 		rc.right = es->format_rect.right;
 		SetRectRgn(hrgn, rc.left, rc.top, rc.right, rc.bottom);
 
