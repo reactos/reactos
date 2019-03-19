@@ -1,10 +1,10 @@
-#define UNIATA_VER_STR         "46e8"
-#define UNIATA_VER_DOT         0.46.5.8
+#define UNIATA_VER_STR         "47"
+#define UNIATA_VER_DOT         0.47.0.0
 #define UNIATA_VER_MJ          0
-#define UNIATA_VER_MN          46
-#define UNIATA_VER_SUB_MJ      5
-#define UNIATA_VER_SUB_MN      8
-#define UNIATA_VER_DOT_COMMA   0,46,5,8
-#define UNIATA_VER_DOT_STR     "0.46.5.8"
+#define UNIATA_VER_MN          47
+#define UNIATA_VER_SUB_MJ      0
+#define UNIATA_VER_SUB_MN      0
+#define UNIATA_VER_DOT_COMMA   0,47,0,0
+#define UNIATA_VER_DOT_STR     "0.47.0.0"
 #define UNIATA_VER_YEAR        2019
 #define UNIATA_VER_YEAR_STR    "2019"

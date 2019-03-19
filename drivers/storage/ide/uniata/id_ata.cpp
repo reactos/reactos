@@ -7240,7 +7240,7 @@ IdeVerify(
     }
 
     KdPrint2((PRINT_PREFIX 
-                "IdeVerify: Total sectors %#x\n",
+                "IdeVerify: Total sectors %#I64x\n",
                 sectors));
 
     // Get starting sector number from CDB.
@@ -7304,6 +7304,7 @@ IdeVerify(
 
     if(!(statusByte & IDE_STATUS_ERROR)) {
         // Wait for interrupt.
+        UniataExpectChannelInterrupt(chan, TRUE);
         return SRB_STATUS_PENDING;
     }
     return SRB_STATUS_ERROR;
@@ -11245,6 +11246,7 @@ AtapiRegCheckDevValue(
     IN ULONG VendorID;
     IN ULONG DeviceID;
     IN ULONG SlotNumber;
+    IN ULONG HwFlags;
 
     ULONG val = Default;
 
@@ -11254,16 +11256,38 @@ AtapiRegCheckDevValue(
         VendorID   =  deviceExtension->DevID        & 0xffff;
         DeviceID   = (deviceExtension->DevID >> 16) & 0xffff;
         SlotNumber = deviceExtension->slotNumber;
+        HwFlags    = deviceExtension->HwFlags;
     } else {
         VendorID   = 0xffff;
         DeviceID   = 0xffff;
         SlotNumber = 0xffffffff;
+        HwFlags    = 0;
     }
 
     val = AtapiRegCheckDevLunValue(
         HwDeviceExtension, L"Parameters", chan, dev, Name, val);
 
     if(deviceExtension) {
+
+        if(HwFlags & UNIATA_SATA) {
+            swprintf(namev, L"\\SATA");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, chan, dev, Name, val);
+        }
+        if(HwFlags & UNIATA_AHCI) {
+            swprintf(namev, L"\\AHCI");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, chan, dev, Name, val);
+        }
+        if(!(HwFlags & (UNIATA_AHCI | UNIATA_AHCI))) {
+            swprintf(namev, L"\\PATA");
+            swprintf(namex, L"Parameters%s", namev);
+            val = AtapiRegCheckDevLunValue(
+                HwDeviceExtension, namex, chan, dev, Name, val);
+        }
+
         if(deviceExtension->AdapterInterfaceType == PCIBus) {
             // PCI
             swprintf(namev, L"\\IDE_%d", deviceExtension->DevIndex);

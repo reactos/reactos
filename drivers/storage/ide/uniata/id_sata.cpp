@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2008-2016 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2008-2019 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -895,6 +895,7 @@ UniataAhciDetect(
     ULONG version;
     ULONG i, n;
     ULONG PI;
+    //ULONG PI_ex_mask=0;
     ULONG CAP;
     ULONG CAP2;
     ULONG GHC, GHC0;
@@ -906,6 +907,7 @@ UniataAhciDetect(
     ULONG_PTR BaseMemAddress;
     BOOLEAN MemIo = FALSE;
     BOOLEAN found = FALSE;
+    ULONG BarId=5;
 
     KdPrint2((PRINT_PREFIX "  UniataAhciDetect:\n"));
 
@@ -913,13 +915,19 @@ UniataAhciDetect(
         KdPrint(("  AHCI excluded\n"));
         return FALSE;
     }
+    switch(deviceExtension->DevID) {
+    case 0xa01c0031:
+      KdPrint2((PRINT_PREFIX "  Cavium uses BAR(0)\n"));
+      BarId = 0;
+      break;
+    }
     BaseMemAddress = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
-                            5, 0, 0x10);
+                          BarId, 0, 0x10);
     if(!BaseMemAddress) {
         KdPrint2((PRINT_PREFIX "  AHCI init failed - no IoRange\n"));
         return FALSE;
     }
-    if((*ConfigInfo->AccessRanges)[5].RangeInMemory) {
+    if((*ConfigInfo->AccessRanges)[BarId].RangeInMemory) {
         KdPrint2((PRINT_PREFIX "MemIo\n"));
         MemIo = TRUE;
     }
@@ -1001,6 +1009,7 @@ UniataAhciDetect(
             KdPrint2((PRINT_PREFIX "Channel %d excluded\n", n));
             deviceExtension->AHCI_PI &= ~((ULONG)1 << n);
             deviceExtension->AHCI_PI_mask &= ~((ULONG)1 << n);
+            //PI_ex_mask |= ((ULONG)1 << n);
         }
     }
     deviceExtension->AHCI_PI_mask = 
@@ -1011,10 +1020,36 @@ UniataAhciDetect(
     NumberChannels =
         max((CAP & AHCI_CAP_NOP_MASK)+1, n);
 
+    if(!PI && ((CAP & AHCI_CAP_NOP_MASK)+1)) {
+        /* Enable ports. 
+         * The spec says that BIOS sets up bits corresponding to
+         * available ports. On platforms where this information
+         * is missing, the driver can define available ports on its own.
+         */
+        KdPrint2((PRINT_PREFIX "PI=0 -> Enable ports (mask) %#x\n", deviceExtension->AHCI_PI_mask));
+        n = NumberChannels;
+        deviceExtension->AHCI_PI = ((ULONG)1 << n)-1;
+
+        if(deviceExtension->AHCI_PI_mask) {
+            // we have some forced port mask
+            PI = deviceExtension->AHCI_PI_mask;
+        } else {
+            // construct mask
+            PI = deviceExtension->AHCI_PI = (((ULONG)1 << n)-1);
+            deviceExtension->AHCI_PI_mask = (((ULONG)1 << n)-1);
+        }
+        KdPrint2((PRINT_PREFIX "Enable ports final PI %#x\n", PI));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_PI, PI);
+    }
+
     KdPrint2((PRINT_PREFIX "  CommandSlots %d\n", (CAP & AHCI_CAP_NCS_MASK)>>8 ));
     KdPrint2((PRINT_PREFIX "  Detected Channels %d / %d\n", NumberChannels, n));
 
     switch(deviceExtension->DevID) {
+    case 0x2361197b:
+        KdPrint2((PRINT_PREFIX "  JMicron JMB361 -> 1\n"));
+        NumberChannels = 1;
+        break;
     case ATA_M88SE6111:
         KdPrint2((PRINT_PREFIX "  Marvell M88SE6111 -> 1\n"));
         NumberChannels = 1;
@@ -1798,6 +1833,13 @@ UniataAhciSoftReset(
 
     KdDump(RCV_FIS, sizeof(chan->AhciCtlBlock->rcv_fis.rfis));
 
+    if(deviceExtension->HwFlags & UNIATA_AHCI_ALT_SIG) {
+        ULONG signature;
+        signature = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_SIG);
+        KdPrint(("  alt sig: %#x\n", signature));
+        return signature;
+    }
+
     return UniataAhciUlongFromRFIS(RCV_FIS);
 
 } // end UniataAhciSoftReset()
@@ -2295,6 +2337,7 @@ UniataAhciEndTransaction(
                                 ((ULONGLONG)(RCV_FIS[7] & 0x0f) << 24);
     }
     AtaReq->WordsTransfered = AHCI_CL->bytecount/2;
+
 /*
     if(LunExt->DeviceFlags & DFLAGS_ATAPI_DEVICE) {
         KdPrint2(("RCV:\n"));

@@ -148,11 +148,7 @@ UniataEnableIoPCI(
 /*
     Get PCI address by ConfigInfo and RID
 */
-#ifdef __REACTOS__
 ULONGIO_PTR
-#else
-ULONG
-#endif
 NTAPI
 AtapiGetIoRange(
     IN PVOID HwDeviceExtension,
