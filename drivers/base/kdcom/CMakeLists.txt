@@ -7,7 +7,7 @@ list(APPEND SOURCE
     kdserial.c
     kddll.h)
 
-add_library(kdcom SHARED
+add_library(kdcom MODULE
     ${SOURCE}
     kdcom.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)

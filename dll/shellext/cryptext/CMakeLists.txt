@@ -5,7 +5,7 @@ list(APPEND SOURCE
     cryptext.c
     precomp.h)
 
-add_library(cryptext SHARED
+add_library(cryptext MODULE
     ${SOURCE}
     cryptext.spec
     cryptext.rc

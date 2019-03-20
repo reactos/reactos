@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ufat.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ufat.def)
 
-add_library(ufat SHARED ${SOURCE})
+add_library(ufat MODULE ${SOURCE})
 set_module_type(ufat nativedll)
 target_link_libraries(ufat vfatlib)
 add_importlibs(ufat ntdll)

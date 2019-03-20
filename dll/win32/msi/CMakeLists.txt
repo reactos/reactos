@@ -51,7 +51,7 @@ list(APPEND SOURCE
     where.c
     precomp.h)
 
-add_library(msi SHARED
+add_library(msi MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c

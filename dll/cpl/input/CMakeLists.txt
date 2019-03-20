@@ -19,7 +19,7 @@ list(APPEND SOURCE
 
 add_rc_deps(input.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/keyboard-shortcuts.ico)
 
-add_library(input SHARED
+add_library(input MODULE
     ${SOURCE}
     input.rc
     ${CMAKE_CURRENT_BINARY_DIR}/input.def)

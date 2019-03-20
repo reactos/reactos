@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg.def)
 
-add_library(cryptdlg SHARED ${SOURCE} cryptdlg.rc)
+add_library(cryptdlg MODULE ${SOURCE} cryptdlg.rc)
 set_module_type(cryptdlg win32dll)
 target_link_libraries(cryptdlg wine)
 add_importlibs(cryptdlg advapi32 user32 crypt32 cryptui wintrust msvcrt kernel32 ntdll)

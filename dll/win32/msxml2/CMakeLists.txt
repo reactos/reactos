@@ -14,7 +14,7 @@ list(APPEND SOURCE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml2.def)
 
-add_library(msxml2 SHARED ${SOURCE} msxml2.rc)
+add_library(msxml2 MODULE ${SOURCE} msxml2.rc)
 set_module_type(msxml2 win32dll)
 set_source_files_properties(msxml2.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml2_tlb.tlb)
 target_link_libraries(msxml2 wine)

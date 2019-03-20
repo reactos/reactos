@@ -7,7 +7,7 @@ list(APPEND SOURCE
     msg711.c
     ${CMAKE_CURRENT_BINARY_DIR}/msg711.def)
 
-add_library(msg711.acm SHARED ${SOURCE})
+add_library(msg711.acm MODULE ${SOURCE})
 set_module_type(msg711.acm win32dll)
 set_target_properties(msg711.acm PROPERTIES SUFFIX "")
 target_link_libraries(msg711.acm wine)

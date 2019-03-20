@@ -10,7 +10,7 @@ list(APPEND SOURCE
     mciwave.c
     ${CMAKE_CURRENT_BINARY_DIR}/mciwave.def)
 
-add_library(mciwave SHARED ${SOURCE})
+add_library(mciwave MODULE ${SOURCE})
 set_module_type(mciwave win32dll)
 target_link_libraries(mciwave wine)
 add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)

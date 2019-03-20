@@ -6,7 +6,7 @@ list(APPEND SOURCE
     regsvr.c
     fontext.h)
 
-add_library(fontext SHARED
+add_library(fontext MODULE
     ${SOURCE}
     fontext.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)

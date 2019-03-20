@@ -1,7 +1,7 @@
 
 spec2def(clb.dll clb.spec)
 
-add_library(clb SHARED
+add_library(clb MODULE
     clb.c
     clb.rc
     ${CMAKE_CURRENT_BINARY_DIR}/clb.def)

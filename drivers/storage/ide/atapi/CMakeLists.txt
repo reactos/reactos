@@ -1,5 +1,5 @@
 
-add_library(atapi SHARED atapi.c atapi.rc)
+add_library(atapi MODULE atapi.c atapi.rc)
 target_link_libraries(atapi libcntpr)
 set_module_type(atapi kernelmodedriver)
 add_importlibs(atapi scsiport)

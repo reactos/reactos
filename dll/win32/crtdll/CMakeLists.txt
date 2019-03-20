@@ -17,7 +17,7 @@ list(APPEND SOURCE
     crtdll.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def)
 
-add_library(crtdll SHARED ${SOURCE})
+add_library(crtdll MODULE ${SOURCE})
 set_module_type(crtdll win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(crtdll crt wine)
 

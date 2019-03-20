@@ -11,7 +11,7 @@ list(APPEND SOURCE
     dllmain.c
     bzlib_private.h)
 
-add_library(bzip2 SHARED
+add_library(bzip2 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/unbzip2.def)
 

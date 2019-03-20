@@ -7,7 +7,7 @@ list(APPEND SOURCE
     vbe.c
     vga.h)
 
-add_library(vga SHARED
+add_library(vga MODULE
     ${SOURCE}
     vga.rc)
 

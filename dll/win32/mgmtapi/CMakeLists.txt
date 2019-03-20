@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mgmtapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mgmtapi.def)
 
-add_library(mgmtapi SHARED ${SOURCE})
+add_library(mgmtapi MODULE ${SOURCE})
 set_module_type(mgmtapi win32dll)
 target_link_libraries(mgmtapi wine)
 add_importlibs(mgmtapi msvcrt kernel32 ntdll)

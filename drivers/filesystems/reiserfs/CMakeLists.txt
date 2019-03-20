@@ -76,7 +76,7 @@ list(APPEND SOURCE
     src/write.c
     inc/rfsd.h)
 
-add_library(reiserfs SHARED ${SOURCE} src/rfsd.rc)
+add_library(reiserfs MODULE ${SOURCE} src/rfsd.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(reiserfs "-Wno-missing-braces -Wno-pointer-sign")

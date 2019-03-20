@@ -5,7 +5,7 @@ list(APPEND SOURCE
     pdo.c
     pci.h)
 
-add_library(pci SHARED ${SOURCE} pci.rc)
+add_library(pci MODULE ${SOURCE} pci.rc)
 set_module_type(pci kernelmodedriver)
 add_importlibs(pci ntoskrnl hal)
 add_pch(pci pci.h SOURCE)

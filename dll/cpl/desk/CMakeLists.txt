@@ -26,7 +26,7 @@ list(APPEND SOURCE
 file(GLOB desk_rc_deps resources/*.*)
 add_rc_deps(desk.rc ${desk_rc_deps})
 
-add_library(desk SHARED
+add_library(desk MODULE
     ${SOURCE}
     guid.c
     desk.rc

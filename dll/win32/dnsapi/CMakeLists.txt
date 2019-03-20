@@ -17,7 +17,7 @@ list(APPEND SOURCE
     dnsapi/stubs.c
     dnsapi/precomp.h)
 
-add_library(dnsapi SHARED
+add_library(dnsapi MODULE
     ${SOURCE}
     dnsapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def)

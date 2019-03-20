@@ -11,7 +11,7 @@ list(APPEND SOURCE
 include_directories(
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs)
 
-add_library(nfs41_np SHARED
+add_library(nfs41_np MODULE
     ${SOURCE}
     nfsnp.rc
     ${CMAKE_CURRENT_BINARY_DIR}/nfs41_np.def)

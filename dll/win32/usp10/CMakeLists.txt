@@ -18,7 +18,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/usp10_stubs.c)
 
-add_library(usp10 SHARED
+add_library(usp10 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/usp10.def)
 

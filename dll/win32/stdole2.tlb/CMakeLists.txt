@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/stdole2.def)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/std_ole_v2.tlb)
-add_library(stdole2.tlb SHARED ${SOURCE})
+add_library(stdole2.tlb MODULE ${SOURCE})
 set_module_type(stdole2.tlb module)
 set_target_properties(stdole2.tlb PROPERTIES SUFFIX "")
 add_cd_file(TARGET stdole2.tlb DESTINATION reactos/system32 FOR all)

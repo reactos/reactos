@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/updspapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/updspapi.def)
 
-add_library(updspapi SHARED ${SOURCE})
+add_library(updspapi MODULE ${SOURCE})
 set_module_type(updspapi win32dll)
 target_link_libraries(updspapi wine)
 add_importlibs(updspapi setupapi msvcrt kernel32 ntdll)

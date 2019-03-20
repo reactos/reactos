@@ -7,7 +7,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msv1_0.def)
 
-add_library(msv1_0 SHARED ${SOURCE})
+add_library(msv1_0 MODULE ${SOURCE})
 set_module_type(msv1_0 win32dll UNICODE ENTRYPOINT 0)
 target_link_libraries(msv1_0 wine ${PSEH_LIB})
 add_delay_importlibs(msv1_0 samsrv lsasrv)

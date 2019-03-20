@@ -15,7 +15,7 @@ list(APPEND SOURCE
     registry.c
     i8042prt.h)
 
-add_library(i8042prt SHARED
+add_library(i8042prt MODULE
     ${SOURCE}
     guid.c
     i8042prt.rc)

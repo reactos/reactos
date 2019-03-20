@@ -1,5 +1,5 @@
 
-add_library(vcdrom SHARED vcdrom.c vcdrom.rc)
+add_library(vcdrom MODULE vcdrom.c vcdrom.rc)
 set_module_type(vcdrom kernelmodedriver)
 target_link_libraries(vcdrom ${PSEH_LIB})
 add_importlibs(vcdrom ntoskrnl hal)

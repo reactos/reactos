@@ -9,7 +9,7 @@ list(APPEND SOURCE
     rosglue.c
     ftfd.h)
 
-add_library(ftfd SHARED
+add_library(ftfd MODULE
     ${SOURCE}
     sprintf.c
     freetype.rc

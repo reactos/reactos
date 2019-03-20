@@ -5,7 +5,7 @@ list(APPEND FLTMGR_TEST_DRV_SOURCE
     ../../kmtest_drv/kmtest_fsminifilter.c
     fltmgr_create.c)
 
-add_library(fltmgr_create SHARED ${FLTMGR_TEST_DRV_SOURCE})
+add_library(fltmgr_create MODULE ${FLTMGR_TEST_DRV_SOURCE})
 set_module_type(fltmgr_create kernelmodedriver)
 target_link_libraries(fltmgr_create kmtest_printf ${PSEH_LIB})
 add_importlibs(fltmgr_create fltmgr ntoskrnl hal)

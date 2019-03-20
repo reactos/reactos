@@ -45,7 +45,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)
 
-add_library(netapi32 SHARED
+add_library(netapi32 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)

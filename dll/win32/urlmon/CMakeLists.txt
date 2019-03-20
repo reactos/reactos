@@ -45,7 +45,7 @@ list(APPEND SOURCE
     usrmarshal.c
     precomp.h)
 
-add_library(urlmon SHARED
+add_library(urlmon MODULE
     ${SOURCE}
     urlmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c

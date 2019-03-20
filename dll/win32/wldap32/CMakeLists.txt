@@ -26,7 +26,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/wldap32_stubs.c)
 
-add_library(wldap32 SHARED
+add_library(wldap32 MODULE
     ${SOURCE}
     ber.c
     wldap32.rc

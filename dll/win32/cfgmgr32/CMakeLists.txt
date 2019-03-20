@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cfgmgr32.def)
 
-add_library(cfgmgr32 SHARED ${SOURCE})
+add_library(cfgmgr32 MODULE ${SOURCE})
 
 set_module_type(cfgmgr32 win32dll)
 add_importlibs(cfgmgr32 setupapi msvcrt kernel32 ntdll)

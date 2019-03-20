@@ -38,7 +38,7 @@ endif()
 
 add_asm_files(ntdll_asm ${ASM_SOURCE})
 
-add_library(ntdll SHARED
+add_library(ntdll MODULE
     ${SOURCE}
     ${ntdll_asm}
     def/ntdll.rc

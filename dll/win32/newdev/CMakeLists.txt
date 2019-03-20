@@ -8,7 +8,7 @@ list(APPEND SOURCE
     newdev_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/newdev_stubs.c)
 
-add_library(newdev SHARED
+add_library(newdev MODULE
     ${SOURCE}
     newdev.rc
     ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)

@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(dplay.dll dplay.spec)
 
-add_library(dplay SHARED
+add_library(dplay MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dplay_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dplay.def)

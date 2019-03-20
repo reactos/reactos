@@ -9,7 +9,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp_stubs.c)
 
-add_library(rasadhlp SHARED
+add_library(rasadhlp MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp.def)
 

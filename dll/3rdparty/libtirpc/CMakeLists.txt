@@ -87,7 +87,7 @@ list(APPEND SOURCE
     src/xdr_stdio.c
     precomp.h)
 
-add_library(libtirpc SHARED
+add_library(libtirpc MODULE
     ${SOURCE}
 #    libtirpc/libtirpc.rc
     libtirpc/libtirpc_ros.rc

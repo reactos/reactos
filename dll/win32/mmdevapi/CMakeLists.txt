@@ -13,7 +13,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/mmdevapi_stubs.c)
 
-add_library(mmdevapi SHARED
+add_library(mmdevapi MODULE
     ${SOURCE}
     guid.c
     mmdevapi.rc

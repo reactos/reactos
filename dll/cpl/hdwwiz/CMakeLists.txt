@@ -3,7 +3,7 @@ spec2def(hdwwiz.cpl hdwwiz.spec)
 file(GLOB hdwwiz_rc_deps resources/*.*)
 add_rc_deps(hdwwiz.rc ${hdwwiz_rc_deps})
 
-add_library(hdwwiz SHARED
+add_library(hdwwiz MODULE
     hdwwiz.c
     hdwwiz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)

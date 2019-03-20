@@ -5,7 +5,7 @@ list(APPEND SOURCE
     usbehci.c
     usbehci.h)
 
-add_library(usbehci SHARED
+add_library(usbehci MODULE
     ${SOURCE}
     guid.c
     usbehci.rc)

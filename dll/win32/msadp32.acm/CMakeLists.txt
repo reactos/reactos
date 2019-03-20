@@ -7,7 +7,7 @@ list(APPEND SOURCE
     msadp32.c
     ${CMAKE_CURRENT_BINARY_DIR}/msadp32.def)
 
-add_library(msadp32.acm SHARED ${SOURCE})
+add_library(msadp32.acm MODULE ${SOURCE})
 set_module_type(msadp32.acm win32dll)
 set_target_properties(msadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(msadp32.acm wine)

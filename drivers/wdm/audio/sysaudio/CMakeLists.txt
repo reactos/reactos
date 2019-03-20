@@ -9,7 +9,7 @@ list(APPEND SOURCE
     pin.c
     sysaudio.h)
 
-add_library(sysaudio SHARED ${SOURCE} sysaudio.rc)
+add_library(sysaudio MODULE ${SOURCE} sysaudio.rc)
 set_module_type(sysaudio kernelmodedriver)
 target_link_libraries(sysaudio libcntpr)
 add_importlibs(sysaudio ntoskrnl ks hal)

@@ -16,7 +16,7 @@ list(APPEND SOURCE
     mouse.c
     precomp.h)
 
-add_library(dinput SHARED
+add_library(dinput MODULE
     ${SOURCE}
     data_formats.c
     dinput.rc

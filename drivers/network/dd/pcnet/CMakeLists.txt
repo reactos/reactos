@@ -10,7 +10,7 @@ list(APPEND SOURCE
     requests.c
     pcnet.h)
 
-add_library(pcnet SHARED ${SOURCE} pcnet.rc)
+add_library(pcnet MODULE ${SOURCE} pcnet.rc)
 add_pch(pcnet pcnet.h SOURCE)
 set_module_type(pcnet kernelmodedriver)
 add_importlibs(pcnet ndis ntoskrnl hal)

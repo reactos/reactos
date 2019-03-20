@@ -13,7 +13,7 @@ list(APPEND SOURCE
     nls.c
     basesrv.h)
 
-add_library(basesrv SHARED
+add_library(basesrv MODULE
     ${SOURCE}
     basesrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/basesrv.def)

@@ -30,7 +30,7 @@ set_source_files_properties(vbscript.rc PROPERTIES OBJECT_DEPENDS "${vbscript_rc
 add_idl_headers(vbscript_idlheader vbscript_classes.idl vbsglobal.idl vbsregexp55.idl)
 add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 
-add_library(vbscript SHARED
+add_library(vbscript MODULE
     ${SOURCE}
     vbscript.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vbscript.def)

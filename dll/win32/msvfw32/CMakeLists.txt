@@ -11,7 +11,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msvfw32_stubs.c)
 
-add_library(msvfw32 SHARED
+add_library(msvfw32 MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msvfw32.def)

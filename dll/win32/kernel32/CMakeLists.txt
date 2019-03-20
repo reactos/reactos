@@ -98,7 +98,7 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
-add_library(kernel32 SHARED
+add_library(kernel32 MODULE
     ${SOURCE}
     ${kernel32_asm}
     kernel32.rc

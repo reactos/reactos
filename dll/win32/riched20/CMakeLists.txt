@@ -30,7 +30,7 @@ list(APPEND riched20_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/riched_tom.tlb)
 set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${riched20_rc_deps}")
 
-add_library(riched20 SHARED
+add_library(riched20 MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)

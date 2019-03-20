@@ -9,7 +9,7 @@ if(MSVC_IDE)
 endif()
 
 spec2def(custom.dll custom.spec)
-add_library(custom SHARED custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
+add_library(custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 target_link_libraries(custom uuid)
 set_module_type(custom win32dll)
 add_importlibs(custom msi ole32 msvcrt kernel32)

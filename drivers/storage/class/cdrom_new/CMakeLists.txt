@@ -9,7 +9,7 @@ list(APPEND SOURCE
     sec.c
     cdrom.h)
 
-add_library(cdrom_new SHARED ${SOURCE})
+add_library(cdrom_new MODULE ${SOURCE})
 target_link_libraries(cdrom_new libcntpr wdmguid)
 
 if(USE_CLANG_CL OR (NOT MSVC))

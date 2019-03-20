@@ -20,7 +20,7 @@ list(APPEND SOURCE
     ros_glue/ros_glue.cpp
     stdafx.h)
 
-add_library(uniata SHARED ${SOURCE} idedma.rc)
+add_library(uniata MODULE ${SOURCE} idedma.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
     add_target_compile_flags(uniata "-Wno-narrowing")

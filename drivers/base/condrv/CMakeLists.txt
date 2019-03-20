@@ -7,7 +7,7 @@ list(APPEND SOURCE
     dispatch.c
     condrv.h)
 
-add_library(condrv SHARED
+add_library(condrv MODULE
     ${SOURCE}
     condrv.rc)
 

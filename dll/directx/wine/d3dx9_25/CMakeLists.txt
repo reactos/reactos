@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25.def)
 
-add_library(d3dx9_25 SHARED ${SOURCE} version.rc)
+add_library(d3dx9_25 MODULE ${SOURCE} version.rc)
 set_module_type(d3dx9_25 win32dll)
 target_link_libraries(d3dx9_25 wine)
 add_importlibs(d3dx9_25 d3dx9_30 msvcrt kernel32 ntdll)

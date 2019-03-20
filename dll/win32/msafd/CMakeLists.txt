@@ -12,7 +12,7 @@ list(APPEND SOURCE
     misc/stubs.c
     msafd.h)
 
-add_library(msafd SHARED
+add_library(msafd MODULE
     ${SOURCE}
     msafd.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msafd.def)

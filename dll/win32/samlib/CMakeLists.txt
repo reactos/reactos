@@ -14,7 +14,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sam_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/samlib_stubs.c)
 
-add_library(samlib SHARED
+add_library(samlib MODULE
     ${SOURCE}
     samlib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)

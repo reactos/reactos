@@ -10,7 +10,7 @@ list(APPEND SOURCE
     statuscode.c
     ${CMAKE_CURRENT_BINARY_DIR}/wmiutils.def)
 
-add_library(wmiutils SHARED ${SOURCE} wmiutils.rc)
+add_library(wmiutils MODULE ${SOURCE} wmiutils.rc)
 set_module_type(wmiutils win32dll)
 target_link_libraries(wmiutils wine)
 add_importlibs(wmiutils oleaut32 msvcrt kernel32 ntdll)

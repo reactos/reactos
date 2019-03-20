@@ -7,7 +7,7 @@ list(APPEND SOURCE
     drmk.rc
     ${CMAKE_CURRENT_BINARY_DIR}/drmk.def)
 
-add_library(drmk SHARED ${SOURCE})
+add_library(drmk MODULE ${SOURCE})
 set_module_type(drmk kernelmodedriver ENTRYPOINT 0)
 add_importlibs(drmk ntoskrnl)
 add_cd_file(TARGET drmk DESTINATION reactos/system32/drivers FOR all)

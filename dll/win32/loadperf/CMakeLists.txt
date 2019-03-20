@@ -8,7 +8,7 @@ list(APPEND SOURCE
     stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/loadperf.def)
 
-add_library(loadperf SHARED ${SOURCE})
+add_library(loadperf MODULE ${SOURCE})
 set_module_type(loadperf win32dll)
 target_link_libraries(loadperf wine)
 add_importlibs(loadperf msvcrt kernel32 ntdll)

@@ -15,7 +15,7 @@ list(APPEND SOURCE
 include_directories(
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
-add_library(dxg SHARED
+add_library(dxg MODULE
     ${SOURCE}
     dxg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dxg.def)

@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/xolehlp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/xolehlp.def)
 
-add_library(xolehlp SHARED ${SOURCE})
+add_library(xolehlp MODULE ${SOURCE})
 set_module_type(xolehlp win32dll)
 target_link_libraries(xolehlp adsiid uuid wine)
 add_importlibs(xolehlp msvcrt kernel32 ntdll)

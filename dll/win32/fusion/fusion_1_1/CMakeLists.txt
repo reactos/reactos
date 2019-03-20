@@ -2,7 +2,7 @@
 set(fusion_folder "${CMAKE_CURRENT_SOURCE_DIR}/..")
 spec2def(fusion.dll fusion.spec)
 
-add_library(fusion_1_1 SHARED
+add_library(fusion_1_1 MODULE
     ${fusion_folder}/version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 

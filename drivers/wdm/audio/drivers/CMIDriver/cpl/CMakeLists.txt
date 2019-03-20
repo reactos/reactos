@@ -1,7 +1,7 @@
 
 set_cpp()
 
-add_library(cmicpl SHARED
+add_library(cmicpl MODULE
     cmicpl.cpp
     cmicpl.rc)
 

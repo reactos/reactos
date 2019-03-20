@@ -21,7 +21,7 @@ list(APPEND SOURCE
 file(GLOB sysdm_rc_deps resources/*.*)
 add_rc_deps(sysdm.rc ${sysdm_rc_deps})
 
-add_library(sysdm SHARED
+add_library(sysdm MODULE
     ${SOURCE}
     sysdm.rc
     ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)

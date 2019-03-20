@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ubtrfs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ubtrfs.def)
 
-add_library(ubtrfs SHARED ${SOURCE})
+add_library(ubtrfs MODULE ${SOURCE})
 set_module_type(ubtrfs nativedll)
 target_link_libraries(ubtrfs btrfslib)
 add_importlibs(ubtrfs ntdll)

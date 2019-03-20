@@ -8,7 +8,7 @@ list(APPEND SOURCE
     streamci.c
     precomp.h)
 
-add_library(streamci SHARED
+add_library(streamci MODULE
     ${SOURCE}
     streamci.rc
     ${CMAKE_CURRENT_BINARY_DIR}/streamci.def)

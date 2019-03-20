@@ -15,7 +15,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy.def)
 
-add_library(qmgrprxy SHARED ${SOURCE})
+add_library(qmgrprxy MODULE ${SOURCE})
 set_module_type(qmgrprxy win32dll)
 target_link_libraries(qmgrprxy ${PSEH_LIB} wine)
 add_importlibs(qmgrprxy rpcrt4 msvcrt kernel32 ntdll)

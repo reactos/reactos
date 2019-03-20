@@ -100,7 +100,7 @@ list(APPEND KMTEST_DRV_SOURCE
 
     kmtest_drv/kmtest_drv.rc)
 
-add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
+add_library(kmtest_drv MODULE ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv kmtest_printf chkstk memcmp ntoskrnl_vista ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)

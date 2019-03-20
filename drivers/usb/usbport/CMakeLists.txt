@@ -18,7 +18,7 @@ list(APPEND SOURCE
     usbport.c
     usbport.h)
 
-add_library(usbport SHARED
+add_library(usbport MODULE
     ${SOURCE}
     guid.c
     usbport.rc

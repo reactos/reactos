@@ -14,7 +14,7 @@ list(APPEND SOURCE
     debug.c
     debug.h)
 
-add_library(e1000 SHARED ${SOURCE} e1000.rc)
+add_library(e1000 MODULE ${SOURCE} e1000.rc)
 add_pch(e1000 nic.h SOURCE)
 set_module_type(e1000 kernelmodedriver)
 add_importlibs(e1000 ndis ntoskrnl hal)

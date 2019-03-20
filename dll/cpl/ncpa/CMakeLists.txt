@@ -1,7 +1,7 @@
 
 spec2def(ncpa.cpl ncpa.spec)
 
-add_library(ncpa SHARED
+add_library(ncpa MODULE
     ncpa.c
     ${CMAKE_CURRENT_BINARY_DIR}/ncpa.def)
 

@@ -7,7 +7,7 @@ list(APPEND SOURCE
     pin.c
     kmixer.h)
 
-add_library(kmixer SHARED ${SOURCE})
+add_library(kmixer MODULE ${SOURCE})
 set_module_type(kmixer kernelmodedriver)
 target_link_libraries(kmixer libcntpr libsamplerate)
 add_pch(kmixer kmixer.h SOURCE)

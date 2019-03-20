@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ufatx.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def)
 
-add_library(ufatx SHARED ${SOURCE})
+add_library(ufatx MODULE ${SOURCE})
 set_module_type(ufatx nativedll)
 target_link_libraries(ufatx vfatxlib)
 add_importlibs(ufatx ntdll)

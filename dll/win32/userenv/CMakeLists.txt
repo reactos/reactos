@@ -14,7 +14,7 @@ list(APPEND SOURCE
     userenv.c
     precomp.h)
 
-add_library(userenv SHARED
+add_library(userenv MODULE
     ${SOURCE}
     userenv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/userenv_stubs.c

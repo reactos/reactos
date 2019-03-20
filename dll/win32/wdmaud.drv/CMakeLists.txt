@@ -14,7 +14,7 @@ list(APPEND SOURCE
     legacy.c
     wdmaud.h)
 
-add_library(wdmaud.drv SHARED
+add_library(wdmaud.drv MODULE
     ${SOURCE}
     wdmaud.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wdmaud.def)

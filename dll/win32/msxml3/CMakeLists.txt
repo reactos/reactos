@@ -60,7 +60,7 @@ list(APPEND msxml3_rc_deps
 
 set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${msxml3_rc_deps}")
 
-add_library(msxml3 SHARED
+add_library(msxml3 MODULE
     ${SOURCE}
     factory.c
     uuid.c

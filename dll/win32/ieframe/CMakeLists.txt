@@ -25,7 +25,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe_stubs.c)
 
-add_library(ieframe SHARED
+add_library(ieframe MODULE
     ${SOURCE}
     ieframe.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ieframe.def)

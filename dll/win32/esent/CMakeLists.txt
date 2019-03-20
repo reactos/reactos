@@ -4,7 +4,7 @@ spec2def(esent.dll esent.spec)
 list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/esent_stubs.c)
 
-add_library(esent SHARED
+add_library(esent MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/esent.def)
 

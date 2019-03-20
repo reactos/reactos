@@ -8,7 +8,7 @@ list(APPEND SOURCE
     rw.c
     msfs.h)
 
-add_library(msfs SHARED ${SOURCE} msfs.rc)
+add_library(msfs MODULE ${SOURCE} msfs.rc)
 set_module_type(msfs kernelmodedriver)
 add_importlibs(msfs ntoskrnl hal)
 add_pch(msfs msfs.h SOURCE)

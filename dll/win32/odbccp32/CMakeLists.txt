@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/odbccp32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/odbccp32.def)
 
-add_library(odbccp32 SHARED ${SOURCE})
+add_library(odbccp32 MODULE ${SOURCE})
 set_module_type(odbccp32 win32dll)
 target_link_libraries(odbccp32 uuid wine)
 add_importlibs(odbccp32 advapi32 msvcrt kernel32 ntdll)

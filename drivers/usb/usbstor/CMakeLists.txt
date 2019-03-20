@@ -14,7 +14,7 @@ list(APPEND SOURCE
     usbstor.c
     usbstor.h)
 
-add_library(usbstor SHARED
+add_library(usbstor MODULE
     ${SOURCE}
     guid.c
     usbstor.rc)

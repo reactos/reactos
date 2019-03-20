@@ -7,7 +7,7 @@ list(APPEND TCPIP_TEST_DRV_SOURCE
     tdi.c
     TcpIp_drv.c)
 
-add_library(tcpip_drv SHARED ${TCPIP_TEST_DRV_SOURCE})
+add_library(tcpip_drv MODULE ${TCPIP_TEST_DRV_SOURCE})
 set_module_type(tcpip_drv kernelmodedriver)
 target_link_libraries(tcpip_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(tcpip_drv ntoskrnl hal)

@@ -13,7 +13,7 @@ list(APPEND SOURCE
     sup.c
     wdmaud.h)
 
-add_library(wdmaud SHARED ${SOURCE} wdmaud.rc)
+add_library(wdmaud MODULE ${SOURCE} wdmaud.rc)
 set_module_type(wdmaud kernelmodedriver)
 target_link_libraries(wdmaud mmixer libcntpr)
 add_pch(wdmaud wdmaud.h SOURCE)

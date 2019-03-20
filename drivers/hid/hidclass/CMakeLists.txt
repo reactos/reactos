@@ -7,7 +7,7 @@ list(APPEND SOURCE
     pdo.c
     precomp.h)
 
-add_library(hidclass SHARED
+add_library(hidclass MODULE
     ${SOURCE}
     guid.c
     hidclass.rc

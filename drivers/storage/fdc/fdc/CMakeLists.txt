@@ -6,7 +6,7 @@ list(APPEND SOURCE
     pdo.c
     fdc.h)
 
-add_library(fdc SHARED ${SOURCE} fdc.rc)
+add_library(fdc MODULE ${SOURCE} fdc.rc)
 set_module_type(fdc kernelmodedriver)
 add_importlibs(fdc hal ntoskrnl)
 add_pch(fdc fdc.h SOURCE)

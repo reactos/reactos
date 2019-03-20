@@ -10,7 +10,7 @@ list(APPEND SOURCE
     modify.c
     precomp.h)
 
-add_library(imagehlp SHARED
+add_library(imagehlp MODULE
     ${SOURCE}
     imagehlp.rc
     ${CMAKE_CURRENT_BINARY_DIR}/imagehlp_stubs.c

@@ -34,7 +34,7 @@ if(MSVC)
     add_asm_files(ks_asm msvc.S)
 endif()
 
-add_library(ks SHARED
+add_library(ks MODULE
     ${SOURCE}
     ${ks_asm}
     ks.rc

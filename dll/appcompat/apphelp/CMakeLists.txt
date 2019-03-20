@@ -30,7 +30,7 @@ list(APPEND HEADERS
     sdbwrite.h
     shimeng.h)
 
-add_library(apphelp SHARED
+add_library(apphelp MODULE
     ${SOURCE}
     ${HEADERS}
     apphelp.rc

@@ -12,7 +12,7 @@ list(APPEND SOURCE
     util.c
     precomp.h)
 
-add_library(mapi32 SHARED
+add_library(mapi32 MODULE
     ${SOURCE}
     guid.c
     version.rc

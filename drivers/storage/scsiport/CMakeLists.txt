@@ -6,7 +6,7 @@ list(APPEND SOURCE
     stubs.c
     precomp.h)
 
-add_library(scsiport SHARED
+add_library(scsiport MODULE
     ${SOURCE}
     scsiport.rc
     ${CMAKE_CURRENT_BINARY_DIR}/scsiport.def)

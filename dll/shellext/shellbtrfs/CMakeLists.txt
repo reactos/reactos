@@ -26,7 +26,7 @@ list(APPEND SOURCE
     volpropsheet.cpp
     precomp.h)
 
-add_library(shellbtrfs SHARED
+add_library(shellbtrfs MODULE
     ${SOURCE}
     guid.c
     shellbtrfs.rc

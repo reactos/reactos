@@ -6,7 +6,7 @@ list(APPEND SOURCE
     testvdd.rc
     ${CMAKE_CURRENT_BINARY_DIR}/testvdd.def)
 
-add_library(testvdd SHARED ${SOURCE})
+add_library(testvdd MODULE ${SOURCE})
 #set_module_type(testvdd win32dll UNICODE ENTRYPOINT VDDInitialize)
 set_module_type(testvdd win32dll UNICODE)
 

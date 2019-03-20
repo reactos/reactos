@@ -9,7 +9,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msimtf_stubs.c)
 
-add_library(msimtf SHARED
+add_library(msimtf MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msimtf.def)

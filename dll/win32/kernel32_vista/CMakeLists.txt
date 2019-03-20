@@ -13,7 +13,7 @@ list(APPEND SOURCE
     sync.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_vista.def)
 
-add_library(kernel32_vista SHARED ${SOURCE})
+add_library(kernel32_vista MODULE ${SOURCE})
 set_module_type(kernel32_vista win32dll ENTRYPOINT DllMain 12)
 add_importlibs(kernel32_vista kernel32 ntdll)
 add_delay_importlibs(kernel32_vista ntdll_vista)

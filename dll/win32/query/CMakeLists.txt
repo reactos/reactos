@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/query_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/query.def)
 
-add_library(query SHARED ${SOURCE})
+add_library(query MODULE ${SOURCE})
 set_module_type(query win32dll)
 target_link_libraries(query wine)
 add_importlibs(query msvcrt kernel32 ntdll)

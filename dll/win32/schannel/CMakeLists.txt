@@ -18,7 +18,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/schannel_stubs.c)
 
-add_library(schannel SHARED
+add_library(schannel MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/schannel.def)

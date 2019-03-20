@@ -15,7 +15,7 @@ list(APPEND SOURCE
 file(GLOB usrmgr_rc_deps resources/*.*)
 add_rc_deps(usrmgr.rc ${usrmgr_rc_deps})
 
-add_library(usrmgr SHARED
+add_library(usrmgr MODULE
     ${SOURCE}
     usrmgr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)

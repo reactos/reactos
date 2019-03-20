@@ -72,7 +72,7 @@ else()
         type.c
         precomp.h)
 
-    add_library(dbghelp SHARED
+    add_library(dbghelp MODULE
         ${SOURCE}
         version.rc
         ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c

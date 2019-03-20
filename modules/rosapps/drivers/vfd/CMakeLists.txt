@@ -11,7 +11,7 @@ list(APPEND SOURCE
     vfdrdwr.c)
 
 include_directories(${REACTOS_SOURCE_DIR}/modules/rosapps/include/vfd)
-add_library(vfddrv SHARED ${SOURCE} vfddrv.rc)
+add_library(vfddrv MODULE ${SOURCE} vfddrv.rc)
 set_module_type(vfddrv kernelmodedriver)
 add_importlibs(vfddrv ntoskrnl hal)
 set_target_properties(vfddrv PROPERTIES OUTPUT_NAME "vfd")

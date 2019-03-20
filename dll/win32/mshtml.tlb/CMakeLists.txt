@@ -2,7 +2,7 @@
 add_typelib(mshtml_tlb.idl)
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_library(mshtml.tlb SHARED rsrc.rc)
+add_library(mshtml.tlb MODULE rsrc.rc)
 
 list(APPEND mshtml_tlb_rc_deps
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml_tlb.tlb

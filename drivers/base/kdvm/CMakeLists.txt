@@ -2,7 +2,7 @@
 spec2def(kdvbox.dll kdvm.spec)
 add_asm_files(kdvbox_asm kdvbox_asm.S)
 
-add_library(kdvbox SHARED
+add_library(kdvbox MODULE
     kdvm.c
     kdvbox.c
     kdvm.rc

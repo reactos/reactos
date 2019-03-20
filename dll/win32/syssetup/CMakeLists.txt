@@ -12,7 +12,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c)
 
-add_library(syssetup SHARED
+add_library(syssetup MODULE
     ${SOURCE}
     syssetup.rc
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)

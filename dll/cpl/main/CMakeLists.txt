@@ -10,7 +10,7 @@ list(APPEND SOURCE
 file(GLOB main_rc_deps resources/*.*)
 add_rc_deps(main.rc ${main_rc_deps})
 
-add_library(main SHARED
+add_library(main MODULE
     ${SOURCE}
     main.rc
     ${CMAKE_CURRENT_BINARY_DIR}/main.def)

@@ -13,7 +13,7 @@ list(APPEND SOURCE
     service.c
     precomp.h)
 
-add_library(hnetcfg SHARED
+add_library(hnetcfg MODULE
     ${SOURCE}
     hnetcfg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hnetcfg.def)

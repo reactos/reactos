@@ -8,7 +8,7 @@ list(APPEND POIRP_DRV_SOURCE
     ../kmtest_drv/kmtest_standalone.c
     PoIrp_drv.c)
 
-add_library(poirp_drv SHARED ${POIRP_DRV_SOURCE})
+add_library(poirp_drv MODULE ${POIRP_DRV_SOURCE})
 set_module_type(poirp_drv kernelmodedriver)
 target_link_libraries(poirp_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(poirp_drv ntoskrnl hal)

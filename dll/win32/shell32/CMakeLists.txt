@@ -86,7 +86,7 @@ file(GLOB_RECURSE shell32_rc_deps res/*.*)
 list(APPEND shell32_rc_deps ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
 add_rc_deps(shell32.rc ${shell32_rc_deps})
 
-add_library(shell32 SHARED
+add_library(shell32 MODULE
     ${SOURCE}
     wine/brsfolder.c
     wine/changenotify.c

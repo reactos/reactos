@@ -34,7 +34,7 @@ list(APPEND SOURCE
     xsltutils.c
     precomp.h)
 
-add_library(libxslt SHARED ${SOURCE})
+add_library(libxslt MODULE ${SOURCE})
 set_module_type(libxslt win32dll)
 target_link_libraries(libxslt libxml2 iconv-static zlib)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)

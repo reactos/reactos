@@ -7,7 +7,7 @@ list(APPEND SOURCE
     query.c
     precomp.h)
 
-add_library(smdll SHARED
+add_library(smdll MODULE
     ${SOURCE}
     smdll.rc
     ${CMAKE_CURRENT_BINARY_DIR}/smdll.def)

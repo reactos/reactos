@@ -13,7 +13,7 @@ list(APPEND SOURCE
     ws.c
     winsta.h)
 
-add_library(winsta SHARED
+add_library(winsta MODULE
     ${SOURCE}
     winsta.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winsta.def)

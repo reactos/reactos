@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/snmpapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/snmpapi.def)
 
-add_library(snmpapi SHARED ${SOURCE} snmpapi.rc)
+add_library(snmpapi MODULE ${SOURCE} snmpapi.rc)
 set_module_type(snmpapi win32dll)
 target_link_libraries(snmpapi wine)
 add_importlibs(snmpapi msvcrt kernel32_vista kernel32 ntdll)

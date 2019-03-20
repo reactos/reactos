@@ -22,7 +22,7 @@ list(APPEND SOURCE
     wql.tab.c
     precomp.h)
 
-add_library(wbemprox SHARED
+add_library(wbemprox MODULE
     ${SOURCE}
     guid.c
     wbemprox.rc

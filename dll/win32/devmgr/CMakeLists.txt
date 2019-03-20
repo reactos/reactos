@@ -29,7 +29,7 @@ list(APPEND SOURCE
     devmgmt/Node.cpp
     devmgmt/RootNode.cpp)
 
-add_library(devmgr SHARED
+add_library(devmgr MODULE
     ${SOURCE}
     devmgr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)

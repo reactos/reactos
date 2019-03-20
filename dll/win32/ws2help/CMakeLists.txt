@@ -10,7 +10,7 @@ list(APPEND SOURCE
     notify.c
     precomp.h)
 
-add_library(ws2help SHARED
+add_library(ws2help MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/ws2help.def)
 

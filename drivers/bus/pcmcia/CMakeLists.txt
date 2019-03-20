@@ -5,7 +5,7 @@ list(APPEND SOURCE
     pdo.c
     pcmcia.h)
 
-add_library(pcmcia SHARED ${SOURCE} pcmcia.rc)
+add_library(pcmcia MODULE ${SOURCE} pcmcia.rc)
 set_module_type(pcmcia kernelmodedriver)
 add_pch(pcmcia pcmcia.h SOURCE)
 add_importlibs(pcmcia ntoskrnl hal)

@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/url_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/url.def)
 
-add_library(url SHARED ${SOURCE})
+add_library(url MODULE ${SOURCE})
 set_module_type(url win32dll)
 target_link_libraries(url wine)
 add_importlibs(url shell32 shlwapi msvcrt kernel32 ntdll)

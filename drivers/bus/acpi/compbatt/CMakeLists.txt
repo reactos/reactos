@@ -5,7 +5,7 @@ list(APPEND SOURCE
     comppnp.c
     compbatt.h)
 
-add_library(compbatt SHARED
+add_library(compbatt MODULE
     ${SOURCE}
     guid.c
     compbatt.rc)

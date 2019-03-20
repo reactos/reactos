@@ -8,7 +8,7 @@ list(APPEND SOURCE
     dmort.c
     precomp.h)
 
-add_library(msdmo SHARED
+add_library(msdmo MODULE
     ${SOURCE}
     stubs.c
     rsrc.rc

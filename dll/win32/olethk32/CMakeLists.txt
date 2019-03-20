@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/olethk32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olethk32.def)
 
-add_library(olethk32 SHARED ${SOURCE})
+add_library(olethk32 MODULE ${SOURCE})
 set_module_type(olethk32 win32dll)
 target_link_libraries(olethk32 wine)
 add_importlibs(olethk32 msvcrt kernel32 ntdll)

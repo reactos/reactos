@@ -11,7 +11,7 @@ list(APPEND SOURCE
     interrupt.c
     nic.h)
 
-add_library(rtl8139 SHARED ${SOURCE} rtl8139.rc)
+add_library(rtl8139 MODULE ${SOURCE} rtl8139.rc)
 add_pch(rtl8139 nic.h SOURCE)
 set_module_type(rtl8139 kernelmodedriver)
 add_importlibs(rtl8139 ndis ntoskrnl hal)

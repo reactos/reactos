@@ -51,7 +51,7 @@ list(APPEND SOURCE
     updown.c
     precomp.h)
 
-add_library(comctl32 SHARED
+add_library(comctl32 MODULE
     ${SOURCE}
     stubs.c
     rsrc.rc

@@ -10,7 +10,7 @@ list(APPEND SOURCE
     tools.c
     xcv.c)
 
-add_library(localmon SHARED
+add_library(localmon MODULE
     ${SOURCE}
     localmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/localmon.def)

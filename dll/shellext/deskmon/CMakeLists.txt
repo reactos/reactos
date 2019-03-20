@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_rc_deps(deskmon.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/monitor.ico)
 
-add_library(deskmon SHARED
+add_library(deskmon MODULE
     ${SOURCE}
     deskmon.rc
     ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)

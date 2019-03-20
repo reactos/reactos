@@ -225,7 +225,7 @@ endif()
 
 add_asm_files(win32k_asm ${ASM_SOURCE})
 
-add_library(win32k SHARED
+add_library(win32k MODULE
     ${SOURCE}
     gdi/ntgdi/brush.cpp
     ${win32k_asm}

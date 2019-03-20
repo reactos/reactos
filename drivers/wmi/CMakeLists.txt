@@ -6,7 +6,7 @@ list(APPEND SOURCE
     wmilib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wmilib.def)
 
-add_library(wmilib SHARED ${SOURCE})
+add_library(wmilib MODULE ${SOURCE})
 set_module_type(wmilib kernelmodedriver ENTRYPOINT 0)
 add_importlibs(wmilib ntoskrnl)
 add_cd_file(TARGET wmilib DESTINATION reactos/system32/drivers NO_CAB FOR all)

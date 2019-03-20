@@ -10,7 +10,7 @@ list(APPEND SOURCE
     link.c
     precomp.h)
 
-add_library(hlink SHARED
+add_library(hlink MODULE
     ${SOURCE}
     hlink.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hlink_stubs.c

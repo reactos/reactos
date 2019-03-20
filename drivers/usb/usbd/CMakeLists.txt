@@ -1,7 +1,7 @@
 
 spec2def(usbd.sys usbd.spec ADD_IMPORTLIB)
 
-add_library(usbd SHARED
+add_library(usbd MODULE
     usbd.c
     usbd.rc
     ${CMAKE_CURRENT_BINARY_DIR}/usbd.def)

@@ -35,7 +35,7 @@ list(APPEND SOURCE
     write.c
     fatprocs.h)
 
-add_library(fastfat SHARED ${SOURCE} fastfat.rc)
+add_library(fastfat MODULE ${SOURCE} fastfat.rc)
 set_module_type(fastfat kernelmodedriver)
 target_link_libraries(fastfat ${PSEH_LIB} memcmp)
 add_importlibs(fastfat ntoskrnl hal)

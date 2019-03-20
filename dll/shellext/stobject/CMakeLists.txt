@@ -28,7 +28,7 @@ list(APPEND SOURCE
     volume.cpp
     precomp.h)
 
-add_library(stobject SHARED
+add_library(stobject MODULE
     ${SOURCE}
     stobject.rc
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)

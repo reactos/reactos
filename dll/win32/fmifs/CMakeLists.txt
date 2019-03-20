@@ -12,7 +12,7 @@ list(APPEND SOURCE
     query.c
     precomp.h)
 
-add_library(fmifs SHARED
+add_library(fmifs MODULE
     ${SOURCE}
     fmifs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs_stubs.c

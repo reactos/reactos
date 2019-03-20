@@ -4,7 +4,7 @@ list(APPEND SOURCE
     usbuhci.c
     usbuhci.h)
 
-add_library(usbuhci SHARED
+add_library(usbuhci MODULE
     ${SOURCE}
     guid.c
     usbuhci.rc)

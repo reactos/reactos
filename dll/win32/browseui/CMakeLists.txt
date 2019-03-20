@@ -39,7 +39,7 @@ list(APPEND SOURCE
     CProgressDialog.cpp
     precomp.h)
 
-add_library(browseui SHARED
+add_library(browseui MODULE
     ${SOURCE}
     dllinstall.c
     browseui.rc

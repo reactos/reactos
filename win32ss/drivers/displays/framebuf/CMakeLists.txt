@@ -7,7 +7,7 @@ list(APPEND SOURCE
     surface.c
     framebuf.h)
 
-add_library(framebuf SHARED
+add_library(framebuf MODULE
     ${SOURCE}
     framebuf.rc)
 

@@ -12,7 +12,7 @@ list(APPEND SOURCE
     main.c
     layer.spec)
 
-add_library(aclayers SHARED
+add_library(aclayers MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/aclayers.def)
 

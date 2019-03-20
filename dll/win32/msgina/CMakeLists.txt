@@ -19,7 +19,7 @@ list(APPEND C_SOURCE
 list(APPEND CPP_SOURCE
     dimmedwindow.cpp)
 
-add_library(msgina SHARED
+add_library(msgina MODULE
     ${C_SOURCE}
     ${CPP_SOURCE}
     msgina.rc

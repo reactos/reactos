@@ -20,7 +20,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c)
 
-add_library(msctf SHARED
+add_library(msctf MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)

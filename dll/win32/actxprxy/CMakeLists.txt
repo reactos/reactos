@@ -35,7 +35,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     precomp.h)
 
-add_library(actxprxy SHARED
+add_library(actxprxy MODULE
     ${SOURCE}
     actxprxy.rc
     ${CMAKE_CURRENT_BINARY_DIR}/actxprxy.def)

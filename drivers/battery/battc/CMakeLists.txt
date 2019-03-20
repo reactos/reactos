@@ -2,7 +2,7 @@
 add_definitions(-D_BATTERYCLASS_)
 spec2def(battc.sys battc.spec ADD_IMPORTLIB)
 
-add_library(battc SHARED
+add_library(battc MODULE
             battc.c
             battc.rc
             ${CMAKE_CURRENT_BINARY_DIR}/battc.def)

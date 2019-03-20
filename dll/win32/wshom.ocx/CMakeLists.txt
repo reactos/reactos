@@ -14,7 +14,7 @@ list(APPEND SOURCE
     wshom_main.c
     precomp.h)
 
-add_library(wshom SHARED
+add_library(wshom MODULE
     ${SOURCE}
     guid.c
     wshom.rc

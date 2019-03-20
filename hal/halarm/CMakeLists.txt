@@ -13,7 +13,7 @@ list(APPEND SOURCES
     omap3/halinit_up.c
     omap3/halup.rc)
 
-add_library(hal SHARED
+add_library(hal MODULE
     ${SOURCES})
 
 set_module_type(hal kerneldll ENTRYPOINT 0)

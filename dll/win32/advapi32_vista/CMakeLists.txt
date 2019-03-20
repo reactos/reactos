@@ -12,7 +12,7 @@ list(APPEND SOURCE
     RegLoadMUIString.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
 
-add_library(advapi32_vista SHARED ${SOURCE})
+add_library(advapi32_vista MODULE ${SOURCE})
 set_module_type(advapi32_vista win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(advapi32_vista wine)
 add_importlibs(advapi32_vista advapi32 kernel32 ntdll)

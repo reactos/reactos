@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_rc_deps(console.rc ${CMAKE_CURRENT_SOURCE_DIR}/res/terminal.ico)
 
-add_library(console SHARED
+add_library(console MODULE
     ${SOURCE}
     console.rc
     ${CMAKE_CURRENT_BINARY_DIR}/console.def)

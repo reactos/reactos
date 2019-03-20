@@ -9,7 +9,7 @@ list(APPEND SOURCE
     parsing.c
     precomp.h)
 
-add_library(d3dxof SHARED
+add_library(d3dxof MODULE
     ${SOURCE}
     mszip.c
     version.rc

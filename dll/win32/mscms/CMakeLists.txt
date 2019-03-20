@@ -13,7 +13,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mscms_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mscms.def)
 
-add_library(mscms SHARED ${SOURCE} version.rc)
+add_library(mscms MODULE ${SOURCE} version.rc)
 set_module_type(mscms win32dll)
 target_link_libraries(mscms wine)
 add_importlibs(mscms advapi32 msvcrt kernel32 ntdll)

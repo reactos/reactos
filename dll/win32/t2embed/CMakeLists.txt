@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/t2embed_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/t2embed.def)
 
-add_library(t2embed SHARED ${SOURCE} t2embed.rc)
+add_library(t2embed MODULE ${SOURCE} t2embed.rc)
 set_module_type(t2embed win32dll UNICODE)
 target_link_libraries(t2embed wine)
 add_importlibs(t2embed gdi32 user32 advapi32 version msvcrt kernel32 ntdll)

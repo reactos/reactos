@@ -27,7 +27,7 @@ list(APPEND SOURCE
     xferpkt.c
     classp.h)
 
-add_library(classpnp SHARED
+add_library(classpnp MODULE
     ${SOURCE}
     guid.c
     class.rc

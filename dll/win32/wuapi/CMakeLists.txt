@@ -19,7 +19,7 @@ list(APPEND SOURCE
 add_typelib(wuapi_tlb.idl)
 set_source_files_properties(wuapi.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/wuapi_tlb.tlb)
 
-add_library(wuapi SHARED
+add_library(wuapi MODULE
     ${SOURCE}
     wuapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)

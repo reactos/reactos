@@ -20,7 +20,7 @@ list(APPEND SOURCE
     volinfo.c
     ntfs.h)
 
-add_library(ntfs SHARED ${SOURCE} ntfs.rc)
+add_library(ntfs MODULE ${SOURCE} ntfs.rc)
 set_module_type(ntfs kernelmodedriver)
 target_link_libraries(ntfs ${PSEH_LIB})
 add_importlibs(ntfs ntoskrnl hal)

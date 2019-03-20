@@ -7,7 +7,7 @@ list(APPEND SOURCE
     imaadp32.c
     ${CMAKE_CURRENT_BINARY_DIR}/imaadp32.def)
 
-add_library(imaadp32.acm SHARED ${SOURCE})
+add_library(imaadp32.acm MODULE ${SOURCE})
 set_module_type(imaadp32.acm win32dll)
 set_target_properties(imaadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(imaadp32.acm wine)

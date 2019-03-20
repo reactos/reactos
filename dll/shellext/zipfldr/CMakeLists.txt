@@ -37,7 +37,7 @@ list(APPEND SOURCE
     precomp.h
     resource.h)
 
-add_library(zipfldr SHARED
+add_library(zipfldr MODULE
     ${SOURCE}
     ${ZLIB_SOURCE}
     zipfldr.rc

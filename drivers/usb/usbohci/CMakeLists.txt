@@ -13,7 +13,7 @@ list(APPEND SOURCE
     hardware.cpp
     usbohci.h)
 
-add_library(usbohci SHARED
+add_library(usbohci MODULE
     ${SOURCE}
     guid.cpp
     usbohci.rc)

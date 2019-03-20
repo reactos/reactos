@@ -46,7 +46,7 @@ if(MSVC AND NOT ARCH STREQUAL "arm")
     add_asm_files(rpcrt4_asm msvc.S)
 endif()
 
-add_library(rpcrt4 SHARED
+add_library(rpcrt4 MODULE
     ${SOURCE}
     ndr_typelib.c
     ${CMAKE_CURRENT_BINARY_DIR}/ndr_types_p.c

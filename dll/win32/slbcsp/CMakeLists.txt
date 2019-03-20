@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/slbcsp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/slbcsp.def)
 
-add_library(slbcsp SHARED ${SOURCE})
+add_library(slbcsp MODULE ${SOURCE})
 set_module_type(slbcsp win32dll)
 target_link_libraries(slbcsp wine)
 add_importlibs(slbcsp msvcrt kernel32 ntdll)

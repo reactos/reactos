@@ -18,7 +18,7 @@ list(APPEND SOURCE
     name_server.c
     precomp.h)
 
-add_library(dplayx SHARED
+add_library(dplayx MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dplayx.def)

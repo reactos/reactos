@@ -10,7 +10,7 @@ list(APPEND SOURCE
     provider.c
     precomp.h)
 
-add_library(dxdiagn SHARED
+add_library(dxdiagn MODULE
     ${SOURCE}
     guid.c
     dxdiagn.rc

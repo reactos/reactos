@@ -1,7 +1,7 @@
 
 spec2def(odbccp32i.cpl odbccp32.spec)
 
-add_library(odbccp32i SHARED
+add_library(odbccp32i MODULE
     odbccp32.c
     odbccp32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/odbccp32i.def)

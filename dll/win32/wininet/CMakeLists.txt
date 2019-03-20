@@ -24,7 +24,7 @@ list(APPEND SOURCE
     utility.c
     precomp.h)
 
-add_library(wininet SHARED
+add_library(wininet MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet_stubs.c

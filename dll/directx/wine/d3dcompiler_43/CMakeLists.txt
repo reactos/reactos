@@ -21,7 +21,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43_stubs.c)
 
-add_library(d3dcompiler_43 SHARED
+add_library(d3dcompiler_43 MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3dcompiler_43.def)

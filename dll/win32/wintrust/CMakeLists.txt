@@ -12,7 +12,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust_stubs.c)
 
-add_library(wintrust SHARED
+add_library(wintrust MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)

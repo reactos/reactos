@@ -18,6 +18,6 @@ foreach(_file ${TEXTFILES})
 endforeach()
 
 set_source_files_properties(blackshade.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
-add_library(blackshade.msstyles SHARED blackshade.rc)
+add_library(blackshade.msstyles MODULE blackshade.rc)
 set_module_type(blackshade.msstyles module)
 set_target_properties(blackshade.msstyles PROPERTIES SUFFIX "")

@@ -7,7 +7,7 @@ list(APPEND SOURCE
     msimg32_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/msimg32.def)
 
-add_library(msimg32 SHARED ${SOURCE})
+add_library(msimg32 MODULE ${SOURCE})
 set_module_type(msimg32 win32dll)
 target_link_libraries(msimg32 wine)
 add_importlibs(msimg32 gdi32 msvcrt kernel32 ntdll)

@@ -18,7 +18,7 @@ list(APPEND SOURCE
 
 add_rc_deps(intl.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
-add_library(intl SHARED
+add_library(intl MODULE
     ${SOURCE}
     intl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/intl.def)

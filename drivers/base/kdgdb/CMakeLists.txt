@@ -15,7 +15,7 @@ if(ARCH STREQUAL "i386")
     list(APPEND SOURCE i386_sup.c)
 endif()
 
-add_library(kdcom SHARED
+add_library(kdcom MODULE
     ${SOURCE}
     kdgdb.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)

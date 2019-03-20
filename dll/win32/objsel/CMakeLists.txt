@@ -11,7 +11,7 @@ list(APPEND SOURCE
     objsel.c
     precomp.h)
 
-add_library(objsel SHARED
+add_library(objsel MODULE
     ${SOURCE}
     objsel.rc
     ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)

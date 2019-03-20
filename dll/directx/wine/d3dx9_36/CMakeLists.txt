@@ -24,7 +24,7 @@ list(APPEND SOURCE
     xfile.c
     precomp.h)
 
-add_library(d3dx9_36 SHARED
+add_library(d3dx9_36 MODULE
     ${SOURCE}
     guid.c
     version.rc

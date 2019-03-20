@@ -6,7 +6,7 @@ list(APPEND SOURCE
     cmbwmi.c
     cmbatt.h)
 
-add_library(cmbatt SHARED
+add_library(cmbatt MODULE
     ${SOURCE}
     guid.c
     cmbatt.rc)

@@ -32,7 +32,7 @@ if(ARCH STREQUAL "i386")
     )
 endif()
 
-add_library(opengl32 SHARED
+add_library(opengl32 MODULE
     ${SOURCE}
     ${opengl32_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/opengl32.def)

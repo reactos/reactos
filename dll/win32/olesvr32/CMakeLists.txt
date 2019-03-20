@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/olesvr32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olesvr32.def)
 
-add_library(olesvr32 SHARED ${SOURCE})
+add_library(olesvr32 MODULE ${SOURCE})
 set_module_type(olesvr32 win32dll)
 target_link_libraries(olesvr32 wine)
 add_importlibs(olesvr32 msvcrt kernel32 ntdll)

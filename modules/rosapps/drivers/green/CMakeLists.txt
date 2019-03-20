@@ -10,7 +10,7 @@ list(APPEND SOURCE
     screen.c
     green.h)
 
-add_library(green SHARED ${SOURCE} green.rc)
+add_library(green MODULE ${SOURCE} green.rc)
 add_pch(green green.h SOURCE)
 set_module_type(green kernelmodedriver)
 add_importlibs(green ntoskrnl hal)

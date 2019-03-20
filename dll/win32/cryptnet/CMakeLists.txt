@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cryptnet_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptnet.def)
 
-add_library(cryptnet SHARED ${SOURCE})
+add_library(cryptnet MODULE ${SOURCE})
 set_module_type(cryptnet win32dll)
 target_link_libraries(cryptnet wine)
 add_delay_importlibs(cryptnet wininet)
