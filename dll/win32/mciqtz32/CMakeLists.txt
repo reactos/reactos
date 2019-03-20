@@ -7,7 +7,7 @@ list(APPEND SOURCE
     mciqtz.c
     ${CMAKE_CURRENT_BINARY_DIR}/mciqtz32.def)
 
-add_library(mciqtz32 SHARED ${SOURCE} mciavi_res.rc)
+add_library(mciqtz32 MODULE ${SOURCE} mciavi_res.rc)
 set_module_type(mciqtz32 win32dll)
 target_link_libraries(mciqtz32 wine strmiids)
 add_importlibs(mciqtz32 winmm ole32 user32 gdi32 msvcrt kernel32 ntdll)

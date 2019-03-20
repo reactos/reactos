@@ -14,7 +14,7 @@ list(APPEND SOURCE
     serial.c
     serial.h)
 
-add_library(serial SHARED
+add_library(serial MODULE
     ${SOURCE}
     guid.c
     serial.rc)

@@ -17,7 +17,7 @@ list(APPEND SOURCE
     webbrowser.c
     precomp.h)
 
-add_library(hhctrl SHARED
+add_library(hhctrl MODULE
     ${SOURCE}
     guid.c
     hhctrl.rc

@@ -19,7 +19,7 @@ list(APPEND SOURCE
     uxthemep.h
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme_stubs.c)
 
-add_library(uxtheme SHARED
+add_library(uxtheme MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)

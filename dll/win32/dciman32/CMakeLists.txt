@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/dciman32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dciman32.def)
 
-add_library(dciman32 SHARED ${SOURCE})
+add_library(dciman32 MODULE ${SOURCE})
 set_module_type(dciman32 win32dll)
 target_link_libraries(dciman32 wine)
 add_importlibs(dciman32 msvcrt kernel32 ntdll)

@@ -89,7 +89,7 @@ if(MSVC)
     add_asm_files(mshtml_asm msvc.S)
 endif()
 
-add_library(mshtml SHARED
+add_library(mshtml MODULE
     ${SOURCE}
     ${mshtml_asm}
     guid.c

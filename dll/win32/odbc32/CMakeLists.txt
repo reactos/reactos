@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/odbc32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/odbc32.def)
 
-add_library(odbc32 SHARED ${SOURCE})
+add_library(odbc32 MODULE ${SOURCE})
 set_module_type(odbc32 win32dll)
 target_link_libraries(odbc32 wine)
 add_importlibs(odbc32 advapi32 msvcrt kernel32 ntdll)

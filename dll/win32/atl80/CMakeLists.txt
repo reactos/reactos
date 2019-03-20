@@ -16,7 +16,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/atl80_stubs.c
     precomp.h)
 
-add_library(atl80 SHARED
+add_library(atl80 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/atl80.def)
 

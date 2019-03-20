@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_rc_deps(wined3dcfg.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/wined3dcfg.ico)
 
-add_library(wined3dcfg SHARED
+add_library(wined3dcfg MODULE
     ${SOURCE}
     wined3dcfg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wined3dcfg.def)

@@ -1,5 +1,5 @@
 
-add_library(mycomput SHARED
+add_library(mycomput MODULE
     mycomput.rc)
 
 set_module_type(mycomput win32dll UNICODE ENTRYPOINT 0)

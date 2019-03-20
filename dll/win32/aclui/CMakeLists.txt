@@ -9,7 +9,7 @@ list(APPEND SOURCE
     sidcache.c
     precomp.h)
 
-add_library(aclui SHARED
+add_library(aclui MODULE
     ${SOURCE}
     guid.c
     aclui.rc

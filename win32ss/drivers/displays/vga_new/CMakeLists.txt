@@ -5,7 +5,7 @@ list(APPEND SOURCE
     palette.c
     screen.c)
 
-add_library(vgaddi SHARED
+add_library(vgaddi MODULE
     ${SOURCE}
     vga_new.rc)
 

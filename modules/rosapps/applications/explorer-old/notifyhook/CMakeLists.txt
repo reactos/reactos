@@ -8,7 +8,7 @@ list(APPEND SOURCE
     notifyhook.rc
     ${CMAKE_CURRENT_BINARY_DIR}/notifyhook.def)
 
-add_library(notifyhook SHARED ${SOURCE})
+add_library(notifyhook MODULE ${SOURCE})
 
 set_module_type(notifyhook win32dll)
 

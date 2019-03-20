@@ -18,7 +18,7 @@ list(APPEND SOURCE
     Volume.c
     fltmgr.h)
 
-add_library(fltmgr SHARED
+add_library(fltmgr MODULE
     ${SOURCE}
     fltmgr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fltmgr.def)

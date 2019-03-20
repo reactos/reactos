@@ -4,7 +4,7 @@ list(APPEND SOURCE
     misc.c
     kbdclass.h)
 
-add_library(kbdclass SHARED
+add_library(kbdclass MODULE
     ${SOURCE}
     guid.c
     kbdclass.rc)

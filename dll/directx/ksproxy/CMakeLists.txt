@@ -22,7 +22,7 @@ list(APPEND SOURCE
     qualityforward.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
 
-add_library(ksproxy SHARED ${SOURCE} ksproxy.rc)
+add_library(ksproxy MODULE ${SOURCE} ksproxy.rc)
 set_module_type(ksproxy win32dll)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
 target_link_libraries(ksproxy strmiids)

@@ -22,7 +22,7 @@ list(APPEND SOURCE
     CLayerUIPropPage.cpp
     precomp.h)
 
-add_library(acppage SHARED
+add_library(acppage MODULE
     ${SOURCE}
     acppage.spec
     ACPPage.rc

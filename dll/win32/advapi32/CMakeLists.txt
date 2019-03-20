@@ -46,7 +46,7 @@ list(APPEND SOURCE
     wine/security.c
     advapi32.h)
 
-add_library(advapi32 SHARED
+add_library(advapi32 MODULE
     ${SOURCE}
     advapi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_stubs.c

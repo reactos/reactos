@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mlang_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mlang.def)
 
-add_library(mlang SHARED ${SOURCE} mlang.rc)
+add_library(mlang MODULE ${SOURCE} mlang.rc)
 set_module_type(mlang win32dll UNICODE)
 target_link_libraries(mlang uuid wine)
 add_delay_importlibs(mlang oleaut32)

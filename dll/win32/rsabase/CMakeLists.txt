@@ -7,7 +7,7 @@ list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def)
 
-add_library(rsabase SHARED ${SOURCE})
+add_library(rsabase MODULE ${SOURCE})
 set_module_type(rsabase win32dll ENTRYPOINT 0 )
 target_link_libraries(rsabase wine)
 add_importlibs(rsabase rsaenh ntdll)

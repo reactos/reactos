@@ -27,7 +27,7 @@ list(APPEND SOURCE
     pngwutil.c
     pngpriv.h)
 
-add_library(libpng SHARED ${SOURCE})
+add_library(libpng MODULE ${SOURCE})
 set_module_type(libpng win32dll)
 target_link_libraries(libpng zlib)
 add_importlibs(libpng msvcrt kernel32 ntdll)

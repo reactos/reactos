@@ -12,7 +12,7 @@ list(APPEND SOURCE
     vgavideo/vgavideo.c
     vgaddi.h)
 
-add_library(vgaddi SHARED
+add_library(vgaddi MODULE
     ${SOURCE}
     vgaddi.rc)
 

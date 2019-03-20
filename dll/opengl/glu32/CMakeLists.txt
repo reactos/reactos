@@ -110,7 +110,7 @@ list(APPEND LIBNURBS_SOURCE
     src/libnurbs/nurbtess/searchTree.cc
     precomp.h)
 
-add_library(glu32 SHARED
+add_library(glu32 MODULE
     ${LIBNURBS_SOURCE}
     src/libnurbs/nurbtess/polyDBG.cc
     ${SOURCE}

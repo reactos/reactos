@@ -12,7 +12,7 @@ list(APPEND SOURCE
     mediastreamfilter.c
     precomp.h)
 
-add_library(amstream SHARED
+add_library(amstream MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/amstream.def)

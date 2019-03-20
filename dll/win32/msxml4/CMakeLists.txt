@@ -15,7 +15,7 @@ list(APPEND SOURCE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml4.def)
 
-add_library(msxml4 SHARED ${SOURCE} rsrc.rc)
+add_library(msxml4 MODULE ${SOURCE} rsrc.rc)
 set_module_type(msxml4 win32dll)
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml4_tlb.tlb)
 target_link_libraries(msxml4 wine)

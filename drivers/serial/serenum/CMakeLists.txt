@@ -7,7 +7,7 @@ list(APPEND SOURCE
     serenum.c
     serenum.h)
 
-add_library(serenum SHARED
+add_library(serenum MODULE
     ${SOURCE}
     guid.c
     serenum.rc)

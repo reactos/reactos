@@ -6,7 +6,7 @@ list(APPEND SOURCE
     stubs.c
     acleditint.h)
 
-add_library(acledit SHARED
+add_library(acledit MODULE
     ${SOURCE}
     acledit.rc
     ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)

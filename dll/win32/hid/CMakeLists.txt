@@ -6,7 +6,7 @@ list(APPEND SOURCE
     stubs.c
     precomp.h)
 
-add_library(hid SHARED
+add_library(hid MODULE
     ${SOURCE}
     hid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hid.def)

@@ -19,7 +19,7 @@ list(APPEND SOURCE
     dhcpcsvc.c
     include/rosdhcp.h)
 
-add_library(dhcpcsvc SHARED
+add_library(dhcpcsvc MODULE
     ${SOURCE}
     dhcpcsvc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_stubs.c

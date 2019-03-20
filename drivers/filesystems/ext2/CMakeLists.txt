@@ -86,7 +86,7 @@ list(APPEND SOURCE
     src/write.c
     inc/ext2fs.h)
 
-add_library(ext2fs SHARED ${SOURCE} ext2fs.rc)
+add_library(ext2fs MODULE ${SOURCE} ext2fs.rc)
 
 if(USE_CLANG_CL)
     set_property(SOURCE src/create.c src/fileinfo.c src/memory.c src/read.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")

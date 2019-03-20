@@ -10,7 +10,7 @@ list(APPEND SOURCE
     stubs.c
     precomp.h)
 
-add_library(mswsock SHARED
+add_library(mswsock MODULE
     ${SOURCE}
     mswsock.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)

@@ -16,7 +16,7 @@ list(APPEND SOURCE
     MainWindow.cpp
 	)
 
-add_library(charmap SHARED
+add_library(charmap MODULE
     ${SOURCE}
     charmap.rc)
 

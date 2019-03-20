@@ -14,7 +14,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/mstask_stubs.c)
 
-add_library(mstask SHARED
+add_library(mstask MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)

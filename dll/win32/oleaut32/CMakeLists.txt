@@ -36,7 +36,7 @@ if(MSVC)
     add_asm_files(oleaut32_asm msvc.S)
 endif()
 
-add_library(oleaut32 SHARED
+add_library(oleaut32 MODULE
     ${SOURCE}
     ${oleaut32_asm}
     oleaut32.rc

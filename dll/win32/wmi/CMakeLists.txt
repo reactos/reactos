@@ -5,7 +5,7 @@ list(APPEND SOURCE
     wmi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wmi.def)
 
-add_library(wmi SHARED ${SOURCE})
+add_library(wmi MODULE ${SOURCE})
 set_module_type(wmi win32dll ENTRYPOINT 0 )
 add_importlibs(wmi advapi32)
 add_dependencies(wmi psdk)

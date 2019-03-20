@@ -6,7 +6,7 @@ list(APPEND SOURCE
     kdrosdbg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
-add_library(kdcom SHARED ${SOURCE})
+add_library(kdcom MODULE ${SOURCE})
 set_module_type(kdcom kerneldll ENTRYPOINT 0)
 add_importlibs(kdcom ntoskrnl hal)
 target_link_libraries(kdcom cportlib)

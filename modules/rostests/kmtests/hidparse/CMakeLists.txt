@@ -9,7 +9,7 @@ list(APPEND HIDP_DRV_SOURCE
     HidP_drv.c
     HidPDescription.c)
 
-add_library(hidp_drv SHARED ${HIDP_DRV_SOURCE})
+add_library(hidp_drv MODULE ${HIDP_DRV_SOURCE})
 set_module_type(hidp_drv kernelmodedriver)
 target_link_libraries(hidp_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(hidp_drv hidparse ntoskrnl hal)

@@ -5,7 +5,7 @@ list(APPEND SOURCE
      dfs.h
      mup.h)
 
-add_library(mup SHARED ${SOURCE} mup.rc)
+add_library(mup MODULE ${SOURCE} mup.rc)
 set_module_type(mup kernelmodedriver)
 target_link_libraries(mup ${PSEH_LIB})
 add_importlibs(mup ntoskrnl hal)

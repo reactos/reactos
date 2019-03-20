@@ -4,7 +4,7 @@
 ## link /dll /noentry /SUBSYSTEM:CONSOLE",5.0" /out:$(SolutionDir)$(Configuration)\MyEventProvider.dll $(IntDir)MyEventProvider.res
 
 add_message_headers(UNICODE MyEventProvider.mc)
-add_library(MyEventProvider_dll SHARED ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc)
+add_library(MyEventProvider_dll MODULE ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc)
 add_dependencies(MyEventProvider_dll MyEventProvider)
 set_module_type(MyEventProvider_dll module UNICODE)
 set_target_properties(MyEventProvider_dll PROPERTIES OUTPUT_NAME "MyEventProvider")

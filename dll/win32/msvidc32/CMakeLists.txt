@@ -10,7 +10,7 @@ list(APPEND SOURCE
     msvideo1.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvidc32.def)
 
-add_library(msvidc32 SHARED ${SOURCE} rsrc.rc)
+add_library(msvidc32 MODULE ${SOURCE} rsrc.rc)
 set_module_type(msvidc32 win32dll)
 target_link_libraries(msvidc32 wine)
 add_importlibs(msvidc32 user32 msvcrt kernel32 ntdll)

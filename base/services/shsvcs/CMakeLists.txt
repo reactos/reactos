@@ -1,7 +1,7 @@
 
 spec2def(shsvcs.dll shsvcs.spec ADD_IMPORTLIB)
 
-add_library(shsvcs SHARED
+add_library(shsvcs MODULE
     shsvcs.c
     thmsvc.c
     thmserver.c

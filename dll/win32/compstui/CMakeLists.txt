@@ -7,7 +7,7 @@ list(APPEND SOURCE
     compstui_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/compstui.def)
 
-add_library(compstui SHARED ${SOURCE})
+add_library(compstui MODULE ${SOURCE})
 set_module_type(compstui win32dll)
 target_link_libraries(compstui wine)
 add_importlibs(compstui msvcrt kernel32 ntdll)

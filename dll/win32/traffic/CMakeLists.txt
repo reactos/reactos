@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/traffic_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/traffic.def)
 
-add_library(traffic SHARED ${SOURCE})
+add_library(traffic MODULE ${SOURCE})
 set_module_type(traffic win32dll)
 target_link_libraries(traffic wine)
 add_importlibs(traffic msvcrt kernel32 ntdll)

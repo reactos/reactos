@@ -1,7 +1,7 @@
 
 spec2def(dxtn.dll dxtn.spec)
 
-add_library(dxtn SHARED
+add_library(dxtn MODULE
     txc_compress_dxtn.c
     txc_fetch_dxtn.c
     ${CMAKE_CURRENT_BINARY_DIR}/dxtn.def)

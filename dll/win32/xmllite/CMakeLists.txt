@@ -10,7 +10,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c)
 
-add_library(xmllite SHARED
+add_library(xmllite MODULE
     ${SOURCE}
     guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)

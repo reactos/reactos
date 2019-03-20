@@ -10,7 +10,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msports_stubs.c)
 
-add_library(msports SHARED
+add_library(msports MODULE
     ${SOURCE}
     msports.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msports.def)

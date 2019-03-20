@@ -4,7 +4,7 @@ list(APPEND SOURCE
     mouclass.c
     mouclass.h)
 
-add_library(mouclass SHARED
+add_library(mouclass MODULE
     ${SOURCE}
     guid.c
     mouclass.rc)

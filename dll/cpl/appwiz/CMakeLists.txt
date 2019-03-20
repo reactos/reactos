@@ -16,7 +16,7 @@ list(APPEND SOURCE
 file(GLOB appwiz_rc_deps resources/*.*)
 add_rc_deps(appwiz.rc ${appwiz_rc_deps})
 
-add_library(appwiz SHARED
+add_library(appwiz MODULE
     ${SOURCE}
     appwiz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def)

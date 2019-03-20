@@ -22,7 +22,7 @@ list(APPEND SOURCE
     videoprt.c
     videoprt.h)
 
-add_library(videoprt SHARED
+add_library(videoprt MODULE
     ${SOURCE}
     guid.c
     videoprt.rc

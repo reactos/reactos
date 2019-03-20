@@ -14,7 +14,7 @@ endif()
 
 list(APPEND SOURCE precomp.h)
 
-add_library(bootvid SHARED
+add_library(bootvid MODULE
     ${SOURCE}
     bootvid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)

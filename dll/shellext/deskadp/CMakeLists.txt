@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_rc_deps(deskadp.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/adapter.ico)
 
-add_library(deskadp SHARED
+add_library(deskadp MODULE
     ${SOURCE}
     deskadp.rc
     ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def)

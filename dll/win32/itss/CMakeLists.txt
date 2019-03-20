@@ -12,7 +12,7 @@ list(APPEND SOURCE
     storage.c
     precomp.h)
 
-add_library(itss SHARED
+add_library(itss MODULE
     ${SOURCE}
     guid.c
     rsrc.rc

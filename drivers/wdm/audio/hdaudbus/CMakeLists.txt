@@ -10,7 +10,7 @@ list(APPEND SOURCE
     pdo.cpp
     businterface.cpp)
 
-add_library(hdaudbus SHARED ${SOURCE})
+add_library(hdaudbus MODULE ${SOURCE})
 set_module_type(hdaudbus kernelmodedriver)
 target_link_libraries(hdaudbus libcntpr ${PSEH_LIB})
 add_importlibs(hdaudbus ntoskrnl hal)

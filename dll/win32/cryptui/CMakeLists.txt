@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptui.def)
 
-add_library(cryptui SHARED ${SOURCE} cryptui.rc)
+add_library(cryptui MODULE ${SOURCE} cryptui.rc)
 set_module_type(cryptui win32dll)
 target_link_libraries(cryptui uuid wine)
 add_delay_importlibs(cryptui urlmon wintrust)

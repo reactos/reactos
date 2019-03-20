@@ -1,7 +1,7 @@
 
 spec2def(bthci.dll bthci.spec)
 
-add_library(bthci SHARED
+add_library(bthci MODULE
     bthci.c
     bthci.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bthci.def)

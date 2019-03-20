@@ -15,7 +15,7 @@ list(APPEND COMMON_SOURCE
 add_library(fusion_common STATIC ${COMMON_SOURCE})
 add_dependencies(fusion_common psdk)
 
-add_library(fusion SHARED
+add_library(fusion MODULE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 

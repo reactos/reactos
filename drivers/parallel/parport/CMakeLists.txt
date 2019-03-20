@@ -6,7 +6,7 @@ list(APPEND SOURCE
     parport.c
     parport.h)
 
-add_library(parport SHARED
+add_library(parport MODULE
     ${SOURCE}
     parport.rc)
 

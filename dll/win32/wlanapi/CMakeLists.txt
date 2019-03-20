@@ -10,7 +10,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def
     ${CMAKE_CURRENT_BINARY_DIR}/wlansvc_c.c)
 
-add_library(wlanapi SHARED ${SOURCE})
+add_library(wlanapi MODULE ${SOURCE})
 set_module_type(wlanapi win32dll)
 target_link_libraries(wlanapi wine ${PSEH_LIB})
 add_importlibs(wlanapi rpcrt4 msvcrt kernel32 ntdll)

@@ -1,5 +1,5 @@
 
-add_library(genincdata SHARED genincdata.c)
+add_library(genincdata MODULE genincdata.c)
 
 set_entrypoint(genincdata 0)
 add_dependencies(genincdata bugcodes psdk xdk)

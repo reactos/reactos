@@ -15,7 +15,7 @@ list(APPEND SOURCE
     minwave.cpp
     precomp.h)
 
-add_library(cmipci SHARED
+add_library(cmipci MODULE
     ${SOURCE}
     guid.cpp
     cmipci.rc)

@@ -11,7 +11,7 @@ list(APPEND SOURCE
     udfs.c
     fs_rec.h)
 
-add_library(fs_rec SHARED ${SOURCE} fs_rec.rc)
+add_library(fs_rec MODULE ${SOURCE} fs_rec.rc)
 set_module_type(fs_rec kernelmodedriver)
 add_importlibs(fs_rec ntoskrnl hal)
 add_pch(fs_rec fs_rec.h SOURCE)

@@ -1,7 +1,7 @@
 
 spec2def(midimap.dll midimap.spec)
 
-add_library(midimap SHARED
+add_library(midimap MODULE
     midimap.c
     midimap.rc
     ${CMAKE_CURRENT_BINARY_DIR}/midimap.def)

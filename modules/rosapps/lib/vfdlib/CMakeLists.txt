@@ -23,7 +23,7 @@ if(DBG)
     add_definitions(-D_DEBUG)
 endif()
 
-add_library(vfd SHARED
+add_library(vfd MODULE
     ${SOURCE}
     vfdlib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vfd.def)

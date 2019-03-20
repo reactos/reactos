@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/nddeapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/nddeapi.def)
 
-add_library(nddeapi SHARED ${SOURCE})
+add_library(nddeapi MODULE ${SOURCE})
 set_module_type(nddeapi win32dll)
 target_link_libraries(nddeapi wine)
 add_importlibs(nddeapi msvcrt kernel32 ntdll)

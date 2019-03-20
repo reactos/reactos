@@ -7,7 +7,7 @@ list(APPEND SOURCE
     screen.c
     driver.h)
 
-add_library(framebuf_new SHARED
+add_library(framebuf_new MODULE
     ${SOURCE}
     framebuf_new.rc)
 

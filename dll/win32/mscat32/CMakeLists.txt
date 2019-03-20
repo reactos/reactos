@@ -7,7 +7,7 @@ list(APPEND SOURCE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/mscat32.def)
 
-add_library(mscat32 SHARED ${SOURCE})
+add_library(mscat32 MODULE ${SOURCE})
 set_module_type(mscat32 win32dll)
 target_link_libraries(mscat32 wine)
 add_importlibs(mscat32 wintrust msvcrt kernel32 ntdll)

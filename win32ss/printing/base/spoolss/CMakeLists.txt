@@ -15,7 +15,7 @@ list(APPEND SOURCE
     printprocessors.c
     tools.c)
 
-add_library(spoolss SHARED
+add_library(spoolss MODULE
     ${SOURCE}
     spoolss.rc
     ${CMAKE_CURRENT_BINARY_DIR}/spoolss_stubs.c

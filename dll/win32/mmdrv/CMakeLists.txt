@@ -11,7 +11,7 @@ list(APPEND SOURCE
     wave_io.c
     mmdrv.h)
 
-add_library(mmdrv SHARED
+add_library(mmdrv MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def)
 

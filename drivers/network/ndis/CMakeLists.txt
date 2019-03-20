@@ -33,7 +33,7 @@ list(APPEND SOURCE
     ndis/time.c
     include/ndissys.h)
 
-add_library(ndis SHARED
+add_library(ndis MODULE
     ${SOURCE}
     ndis.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ndis.def)

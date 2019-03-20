@@ -10,7 +10,7 @@ list(APPEND SOURCE
     wlnotify.c
     precomp.h)
 
-add_library(wlnotify SHARED
+add_library(wlnotify MODULE
     ${SOURCE}
     wlnotify.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wlnotify.def)

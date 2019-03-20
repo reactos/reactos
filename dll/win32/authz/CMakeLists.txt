@@ -8,7 +8,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/authz_stubs.c)
 
-add_library(authz SHARED
+add_library(authz MODULE
     ${SOURCE}
     authz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/authz.def)

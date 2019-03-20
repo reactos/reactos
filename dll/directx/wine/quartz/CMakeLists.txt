@@ -37,7 +37,7 @@ list(APPEND SOURCE
     waveparser.c
     precomp.h)
 
-add_library(quartz SHARED
+add_library(quartz MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c

@@ -10,7 +10,7 @@ list(APPEND SOURCE
     wnd.c
     precomp.h)
 
-add_library(mciavi32 SHARED
+add_library(mciavi32 MODULE
     ${SOURCE}
     mciavi_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mciavi32.def)

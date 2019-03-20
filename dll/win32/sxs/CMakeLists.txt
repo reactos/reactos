@@ -10,7 +10,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/sxs_stubs.c)
 
-add_library(sxs SHARED
+add_library(sxs MODULE
     ${SOURCE}
     guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)

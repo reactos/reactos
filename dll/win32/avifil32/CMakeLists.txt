@@ -21,7 +21,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     precomp.h)
 
-add_library(avifil32 SHARED
+add_library(avifil32 MODULE
     ${SOURCE}
     guid.c
     rsrc.rc

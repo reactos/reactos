@@ -54,7 +54,7 @@ list(APPEND SOURCE
     #tif_zstd.c
     precomp.h)
 
-add_library(libtiff SHARED ${SOURCE} libtiff.def)
+add_library(libtiff MODULE ${SOURCE} libtiff.def)
 set_module_type(libtiff win32dll)
 target_link_libraries(libtiff zlib getopt)
 add_importlibs(libtiff user32 msvcrt kernel32 ntdll)

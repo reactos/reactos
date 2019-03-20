@@ -16,7 +16,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/sti_wia_p.c)
 
-add_library(sti SHARED
+add_library(sti MODULE
     ${SOURCE}
     guid.c
     sti.rc

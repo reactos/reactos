@@ -6,7 +6,7 @@ list(APPEND SOURCE
     hardware.c
     isapnp.h)
 
-add_library(isapnp SHARED ${SOURCE} isapnp.rc)
+add_library(isapnp MODULE ${SOURCE} isapnp.rc)
 set_module_type(isapnp kernelmodedriver)
 add_importlibs(isapnp ntoskrnl hal)
 add_pch(isapnp isapnp.h SOURCE)

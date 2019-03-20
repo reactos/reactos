@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/initpki_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/initpki.def)
 
-add_library(initpki SHARED ${SOURCE})
+add_library(initpki MODULE ${SOURCE})
 set_module_type(initpki win32dll)
 target_link_libraries(initpki wine)
 add_importlibs(initpki msvcrt kernel32 ntdll)

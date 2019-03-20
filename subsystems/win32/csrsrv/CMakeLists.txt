@@ -14,7 +14,7 @@ list(APPEND SOURCE
     wait.c
     srv.h)
 
-add_library(csrsrv SHARED
+add_library(csrsrv MODULE
     ${SOURCE}
     csrsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)

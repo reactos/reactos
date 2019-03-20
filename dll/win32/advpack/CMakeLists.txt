@@ -10,7 +10,7 @@ list(APPEND SOURCE
     reg.c
     precomp.h)
 
-add_library(advpack SHARED
+add_library(advpack MODULE
     ${SOURCE}
     advpack.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)

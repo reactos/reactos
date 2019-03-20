@@ -24,7 +24,7 @@ list(APPEND SOURCE
     volume.c
     vfat.h)
 
-add_library(fastfat SHARED ${SOURCE} vfatfs.rc)
+add_library(fastfat MODULE ${SOURCE} vfatfs.rc)
 set_module_type(fastfat kernelmodedriver)
 target_link_libraries(fastfat ${PSEH_LIB})
 add_importlibs(fastfat ntoskrnl hal)

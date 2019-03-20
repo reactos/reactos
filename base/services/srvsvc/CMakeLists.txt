@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/srvsvc.idl)
 spec2def(srvsvc.dll srvsvc.spec ADD_IMPORTLIB)
 
-add_library(srvsvc SHARED
+add_library(srvsvc MODULE
     rpcserver.c
     srvsvc.c
     srvsvc.rc

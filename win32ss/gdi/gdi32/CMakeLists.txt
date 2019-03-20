@@ -45,7 +45,7 @@ list(APPEND SOURCE
     objects/path.c
     include/precomp.h)
 
-add_library(gdi32 SHARED
+add_library(gdi32 MODULE
     ${SOURCE}
     gdi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)

@@ -11,7 +11,7 @@ list(APPEND SOURCE
     usbhub.c
     usbhub.h)
 
-add_library(usbhub SHARED
+add_library(usbhub MODULE
     ${SOURCE}
     guid.c
     usbhub.rc)

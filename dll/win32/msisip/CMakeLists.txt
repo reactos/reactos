@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msisip_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msisip.def)
 
-add_library(msisip SHARED ${SOURCE})
+add_library(msisip MODULE ${SOURCE})
 set_module_type(msisip win32dll)
 target_link_libraries(msisip wine)
 add_importlibs(msisip crypt32 ole32 msvcrt kernel32 ntdll)

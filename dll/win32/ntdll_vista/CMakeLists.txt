@@ -13,7 +13,7 @@ list(APPEND SOURCE
     srw.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista.def)
 
-add_library(ntdll_vista SHARED ${SOURCE})
+add_library(ntdll_vista MODULE ${SOURCE})
 set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
 add_importlibs(ntdll_vista ntdll)
 add_dependencies(ntdll_vista psdk)

@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_rc_deps(openglcfg.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/openglcfg.ico)
 
-add_library(openglcfg SHARED
+add_library(openglcfg MODULE
     ${SOURCE}
     openglcfg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/openglcfg.def)

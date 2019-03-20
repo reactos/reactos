@@ -16,7 +16,7 @@ list(APPEND SOURCE
     mscoree_main.c
     mscoree_private.h)
 
-add_library(mscoree SHARED
+add_library(mscoree MODULE
     ${SOURCE}
     guid.c
     mscoree.rc

@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sccbase_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
 
-add_library(sccbase SHARED ${SOURCE})
+add_library(sccbase MODULE ${SOURCE})
 set_module_type(sccbase win32dll)
 target_link_libraries(sccbase wine)
 add_importlibs(sccbase msvcrt kernel32 ntdll)

@@ -21,7 +21,7 @@ foreach(_file ${TEXTFILES})
 endforeach()
 
 set_source_files_properties(modern.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
-add_library(modern.msstyles SHARED modern.rc)
+add_library(modern.msstyles MODULE modern.rc)
 set_module_type(modern.msstyles module)
 set_target_properties(modern.msstyles PROPERTIES SUFFIX "")
 add_cd_file(TARGET modern.msstyles DESTINATION reactos/Resources/Themes/Modern FOR all)

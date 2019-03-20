@@ -9,7 +9,7 @@ list(APPEND SOURCE
     pdo.c
     pciidex.h)
 
-add_library(pciidex SHARED
+add_library(pciidex MODULE
     ${SOURCE}
     pciidex.rc
     ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)

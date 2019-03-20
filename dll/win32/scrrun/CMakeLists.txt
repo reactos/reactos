@@ -19,7 +19,7 @@ list(APPEND scrrun_rc_deps
 
 set_source_files_properties(scrrun.rc PROPERTIES OBJECT_DEPENDS "${scrrun_rc_deps}")
 
-add_library(scrrun SHARED
+add_library(scrrun MODULE
     ${SOURCE}
     guid.c
     scrrun.rc

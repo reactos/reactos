@@ -6,7 +6,7 @@ list(APPEND SOURCE
     font.c
     blue.h)
 
-add_library(blue SHARED ${SOURCE} blue.rc)
+add_library(blue MODULE ${SOURCE} blue.rc)
 set_module_type(blue kernelmodedriver)
 add_importlibs(blue ntoskrnl hal)
 add_pch(blue blue.h SOURCE)

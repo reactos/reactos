@@ -15,7 +15,7 @@ list(APPEND SOURCE
     port.c
     precomp.h)
 
-add_library(dmusic SHARED
+add_library(dmusic MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)

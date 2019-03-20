@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32.def)
 
-add_library(olecli32 SHARED ${SOURCE})
+add_library(olecli32 MODULE ${SOURCE})
 set_module_type(olecli32 win32dll)
 target_link_libraries(olecli32 wine)
 add_importlibs(olecli32 ole32 gdi32 msvcrt kernel32 ntdll)

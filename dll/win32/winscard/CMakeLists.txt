@@ -9,7 +9,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/winscard_stubs.c)
 
-add_library(winscard SHARED
+add_library(winscard MODULE
     ${SOURCE}
     winscard.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winscard.def)

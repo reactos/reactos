@@ -6,7 +6,7 @@ list(APPEND SOURCE
     raw.c
     precomp.h)
 
-add_library(winprint SHARED
+add_library(winprint MODULE
     ${SOURCE}
     winprint.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winprint.def)

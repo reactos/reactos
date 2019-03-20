@@ -7,7 +7,7 @@ list(APPEND SOURCE
     mcimidi.c
     ${CMAKE_CURRENT_BINARY_DIR}/mciseq.def)
 
-add_library(mciseq SHARED ${SOURCE})
+add_library(mciseq MODULE ${SOURCE})
 set_module_type(mciseq win32dll)
 target_link_libraries(mciseq wine)
 add_importlibs(mciseq winmm user32 msvcrt kernel32 ntdll)

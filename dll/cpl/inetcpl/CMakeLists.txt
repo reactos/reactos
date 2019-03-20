@@ -14,7 +14,7 @@ list(APPEND SOURCE
 file(GLOB inetcpl_rc_deps resources/*.*)
 add_rc_deps(inetcpl.rc ${inetcpl_rc_deps})
 
-add_library(inetcpl SHARED
+add_library(inetcpl MODULE
     ${SOURCE}
     inetcpl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/inetcpl_stubs.c

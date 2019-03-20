@@ -14,7 +14,7 @@ list(APPEND SOURCE
     usbccgp.c
     usbccgp.h)
 
-add_library(usbccgp SHARED
+add_library(usbccgp MODULE
     ${SOURCE}
     guid.c
     usbccgp.rc)

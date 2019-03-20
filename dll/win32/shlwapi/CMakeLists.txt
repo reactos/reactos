@@ -28,7 +28,7 @@ list(APPEND SOURCE
     url.c
     precomp.h)
 
-add_library(shlwapi SHARED
+add_library(shlwapi MODULE
     ${SOURCE}
     shlwapi.rc
     wsprintf.c

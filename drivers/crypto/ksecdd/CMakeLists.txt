@@ -14,7 +14,7 @@ list(APPEND SOURCE
     ksecdd.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ksecdd.def)
 
-add_library(ksecdd SHARED ${SOURCE})
+add_library(ksecdd MODULE ${SOURCE})
 target_link_libraries(ksecdd cryptlib pseh)
 set_module_type(ksecdd kernelmodedriver)
 add_importlibs(ksecdd ntoskrnl hal)

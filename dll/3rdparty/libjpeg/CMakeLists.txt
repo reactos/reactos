@@ -59,7 +59,7 @@ list(APPEND SOURCE
     jmemnobs.c
     precomp.h)
 
-add_library(libjpeg SHARED ${SOURCE})
+add_library(libjpeg MODULE ${SOURCE})
 set_module_type(libjpeg win32dll)
 add_importlibs(libjpeg msvcrt kernel32)
 add_pch(libjpeg precomp.h SOURCE)

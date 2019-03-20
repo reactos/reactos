@@ -10,7 +10,7 @@ list(APPEND SOURCE
     timeline.c
     precomp.h)
 
-add_library(qedit SHARED
+add_library(qedit MODULE
     ${SOURCE}
     qedit.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qedit.def)

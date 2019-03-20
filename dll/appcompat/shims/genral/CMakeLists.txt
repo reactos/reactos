@@ -10,7 +10,7 @@ list(APPEND SOURCE
     themes.c
     genral.spec)
 
-add_library(acgenral SHARED
+add_library(acgenral MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/acgenral.def)
 

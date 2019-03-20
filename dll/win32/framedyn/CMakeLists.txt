@@ -12,7 +12,7 @@ if(MSVC)
     add_compile_flags("/Zc:wchar_t-")
 endif()
 
-add_library(framedyn SHARED ${SOURCE})
+add_library(framedyn MODULE ${SOURCE})
 set_module_type(framedyn win32dll UNICODE)
 add_importlibs(framedyn oleaut32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET framedyn DESTINATION reactos/system32/wbem FOR all)

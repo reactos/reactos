@@ -32,7 +32,7 @@ list(APPEND SOURCE
 file(GLOB netshell_rc_deps res/*.*)
 add_rc_deps(netshell.rc ${netshell_rc_deps})
 
-add_library(netshell SHARED
+add_library(netshell MODULE
     ${SOURCE}
     netshell.rc
     ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c

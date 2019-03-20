@@ -18,7 +18,7 @@ list(APPEND SOURCE
     afd/write.c
     include/afd.h)
 
-add_library(afd SHARED ${SOURCE} afd.rc)
+add_library(afd MODULE ${SOURCE} afd.rc)
 target_link_libraries(afd ${PSEH_LIB})
 set_module_type(afd kernelmodedriver)
 add_importlibs(afd ntoskrnl hal)

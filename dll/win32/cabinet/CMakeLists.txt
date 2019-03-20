@@ -15,7 +15,7 @@ list(APPEND SOURCE
     fdi.c
     precomp.h)
 
-add_library(cabinet SHARED
+add_library(cabinet MODULE
     ${SOURCE}
     stubs.c
     cabinet.rc

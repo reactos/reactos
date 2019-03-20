@@ -15,7 +15,7 @@ list(APPEND SOURCE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml6.def)
 
-add_library(msxml6 SHARED ${SOURCE} rsrc.rc)
+add_library(msxml6 MODULE ${SOURCE} rsrc.rc)
 set_module_type(msxml6 win32dll)
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msxml6_tlb.tlb)
 target_link_libraries(msxml6 wine)

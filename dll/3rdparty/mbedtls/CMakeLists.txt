@@ -79,7 +79,7 @@ list(APPEND SOURCE
     #xtea.c
     )
 
-add_library(mbedtls SHARED
+add_library(mbedtls MODULE
     ${SOURCE}
     mbedtls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mbedtls.def)

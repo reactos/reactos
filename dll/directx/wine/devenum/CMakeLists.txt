@@ -15,7 +15,7 @@ list(APPEND SOURCE
     parsedisplayname.c
     precomp.h)
 
-add_library(devenum SHARED
+add_library(devenum MODULE
     ${SOURCE}
     devenum.rc
     ${CMAKE_CURRENT_BINARY_DIR}/devenum.def)

@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/inetmib1_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
 
-add_library(inetmib1 SHARED ${SOURCE})
+add_library(inetmib1 MODULE ${SOURCE})
 set_module_type(inetmib1 win32dll)
 target_link_libraries(inetmib1 wine)
 add_delay_importlibs(inetmib1 iphlpapi)

@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(npptools.dll npptools.spec)
 
-add_library(npptools SHARED
+add_library(npptools MODULE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/npptools_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/npptools.def)

@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ureiserfs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ureiserfs.def)
 
-add_library(ureiserfs SHARED ${SOURCE})
+add_library(ureiserfs MODULE ${SOURCE})
 set_module_type(ureiserfs nativedll)
 target_link_libraries(ureiserfs reiserfslib)
 add_importlibs(ureiserfs ntdll)

@@ -12,7 +12,7 @@ list(APPEND SOURCE
     misc.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/rshell.def)
 
-add_library(rshell SHARED ${SOURCE})
+add_library(rshell MODULE ${SOURCE})
 
 set_module_type(rshell win32dll UNICODE)
 

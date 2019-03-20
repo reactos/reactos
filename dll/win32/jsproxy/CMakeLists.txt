@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/jsproxy_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/jsproxy.def)
 
-add_library(jsproxy SHARED ${SOURCE} rsrc.rc)
+add_library(jsproxy MODULE ${SOURCE} rsrc.rc)
 set_module_type(jsproxy win32dll)
 target_link_libraries(jsproxy uuid wine)
 add_importlibs(jsproxy oleaut32 ole32 ws2_32 msvcrt kernel32 ntdll)

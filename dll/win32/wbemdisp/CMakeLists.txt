@@ -18,7 +18,7 @@ list(APPEND wbemdisp_rc_deps
 
 set_source_files_properties(wbemdisp.rc PROPERTIES OBJECT_DEPENDS "${wbemdisp_rc_deps}")
 
-add_library(wbemdisp SHARED
+add_library(wbemdisp MODULE
     ${SOURCE}
     guid.c
     wbemdisp.rc

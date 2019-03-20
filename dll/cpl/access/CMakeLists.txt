@@ -12,7 +12,7 @@ list(APPEND SOURCE
 
 add_rc_deps(access.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/applet.ico)
 
-add_library(access SHARED
+add_library(access MODULE
     ${SOURCE}
     access.rc
     ${CMAKE_CURRENT_BINARY_DIR}/access.def)

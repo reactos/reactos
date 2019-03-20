@@ -9,7 +9,7 @@ list(APPEND SOURCE
     uniqueid.c
     mntmgr.h)
 
-add_library(mountmgr SHARED ${SOURCE} mountmgr.rc)
+add_library(mountmgr MODULE ${SOURCE} mountmgr.rc)
 target_link_libraries(mountmgr wdmguid ioevent memcmp)
 set_module_type(mountmgr kernelmodedriver)
 add_importlibs(mountmgr ntoskrnl hal)

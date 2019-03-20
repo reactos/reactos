@@ -1,5 +1,5 @@
 
-add_library(buslogic SHARED BusLogic958.c BusLogic958.rc)
+add_library(buslogic MODULE BusLogic958.c BusLogic958.rc)
 target_link_libraries(buslogic libcntpr)
 set_module_type(buslogic kernelmodedriver)
 add_importlibs(buslogic scsiport)

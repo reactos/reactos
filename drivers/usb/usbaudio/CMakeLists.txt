@@ -11,7 +11,7 @@ list(APPEND SOURCE
     pin.c
     guid.c)
 
-add_library(usbaudio SHARED
+add_library(usbaudio MODULE
     ${SOURCE}
     usbaudio.rc)
 

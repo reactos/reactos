@@ -72,7 +72,7 @@ endif()
 
 add_asm_files(user32_asm ${ASM_SOURCE})
 
-add_library(user32 SHARED
+add_library(user32 MODULE
     ${SOURCE}
     ${user32_asm}
     user32.rc

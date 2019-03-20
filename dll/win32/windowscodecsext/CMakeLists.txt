@@ -7,7 +7,7 @@ list(APPEND SOURCE
     main.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecsext.def)
 
-add_library(windowscodecsext SHARED ${SOURCE})
+add_library(windowscodecsext MODULE ${SOURCE})
 set_module_type(windowscodecsext win32dll)
 target_link_libraries(windowscodecsext wine)
 add_importlibs(windowscodecsext ole32 msvcrt kernel32 ntdll)

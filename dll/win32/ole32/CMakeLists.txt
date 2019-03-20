@@ -66,7 +66,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
     list(APPEND SOURCE msvc-thiscall.c)
 endif()
 
-add_library(ole32 SHARED
+add_library(ole32 MODULE
     ${SOURCE}
     guid.c
     ole32res.rc

@@ -1,6 +1,6 @@
 spec2def(dcomlaunch.dll dcomlaunch.spec ADD_IMPORTLIB)
 
-add_library(dcomlaunch SHARED
+add_library(dcomlaunch MODULE
     dcomlaunch.c
     network.c
     dcomlaunch.rc

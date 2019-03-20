@@ -16,7 +16,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr_local_i.c)
 
-add_library(qmgr SHARED
+add_library(qmgr MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr.def)

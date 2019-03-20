@@ -1,6 +1,6 @@
 spec2def(wmisvc.dll wmisvc.spec ADD_IMPORTLIB)
 
-add_library(wmisvc SHARED
+add_library(wmisvc MODULE
     wmisvc.c
     wmisvc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wmisvc.def)

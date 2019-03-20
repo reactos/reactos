@@ -16,7 +16,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/mpr_stubs.c)
 
-add_library(mpr SHARED
+add_library(mpr MODULE
     ${SOURCE}
     mpr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)

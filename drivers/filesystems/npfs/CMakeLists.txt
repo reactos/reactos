@@ -22,7 +22,7 @@ list(APPEND SOURCE
     writesup.c
     npfs.h)
 
-add_library(npfs SHARED ${SOURCE} npfs.rc)
+add_library(npfs MODULE ${SOURCE} npfs.rc)
 set_module_type(npfs kernelmodedriver)
 target_link_libraries(npfs ${PSEH_LIB})
 add_importlibs(npfs ntoskrnl hal)

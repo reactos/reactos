@@ -12,7 +12,7 @@ list(APPEND SOURCE
 file(GLOB powercfg_rc_deps resources/*.*)
 add_rc_deps(powercfg.rc ${powercfg_rc_deps})
 
-add_library(powercfg SHARED
+add_library(powercfg MODULE
     ${SOURCE}
     powercfg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)

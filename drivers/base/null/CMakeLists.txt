@@ -1,5 +1,5 @@
 
-add_library(null SHARED null.c null.rc)
+add_library(null MODULE null.c null.rc)
 target_link_libraries(null ${PSEH_LIB})
 set_module_type(null kernelmodedriver)
 add_importlibs(null ntoskrnl hal)

@@ -16,7 +16,7 @@ list(APPEND SOURCE
     readwrite.c
     ndisuio.h)
 
-add_library(ndisuio SHARED ${SOURCE} ndisuio.rc)
+add_library(ndisuio MODULE ${SOURCE} ndisuio.rc)
 set_module_type(ndisuio kernelmodedriver)
 add_importlibs(ndisuio ndis ntoskrnl hal)
 add_pch(ndisuio ndisuio.h SOURCE)

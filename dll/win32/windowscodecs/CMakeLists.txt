@@ -70,7 +70,7 @@ list(APPEND ADDITIONAL_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_wincodec_p.c)
 
-add_library(windowscodecs SHARED
+add_library(windowscodecs MODULE
     ${SOURCE}
     ${ADDITIONAL_SOURCE})
 

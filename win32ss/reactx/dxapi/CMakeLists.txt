@@ -2,7 +2,7 @@
 add_definitions(-D_DXAPI_)
 spec2def(dxapi.sys dxapi.spec)
 
-add_library(dxapi SHARED
+add_library(dxapi MODULE
     main.c
     dxapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dxapi.def)

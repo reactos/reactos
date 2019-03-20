@@ -6,7 +6,7 @@ list(APPEND SOURCE
     ucdfs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ucdfs.def)
 
-add_library(ucdfs SHARED ${SOURCE})
+add_library(ucdfs MODULE ${SOURCE})
 set_module_type(ucdfs nativedll)
 target_link_libraries(ucdfs cdfslib)
 add_importlibs(ucdfs ntdll)

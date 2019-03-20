@@ -33,7 +33,7 @@ list(APPEND SOURCE
     setupapi_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/pnp_c.c)
 
-add_library(setupapi SHARED
+add_library(setupapi MODULE
     ${SOURCE}
     setupapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi_stubs.c

@@ -16,7 +16,7 @@ list(APPEND SOURCE
     vtutf8chan.c
     sacdrv.h)
 
-add_library(sacdrv SHARED ${SOURCE} sacdrv.rc)
+add_library(sacdrv MODULE ${SOURCE} sacdrv.rc)
 set_module_type(sacdrv kernelmodedriver)
 add_importlibs(sacdrv ntoskrnl hal)
 add_dependencies(sacdrv sacmsg)

@@ -24,7 +24,7 @@ list(APPEND SOURCE
     regfolder.cpp
     precomp.h)
 
-add_library(ntobjshex SHARED
+add_library(ntobjshex MODULE
     ${SOURCE}
     ntobjshex.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)

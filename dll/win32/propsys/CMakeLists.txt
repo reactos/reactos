@@ -10,7 +10,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/propsys_stubs.c)
 
-add_library(propsys SHARED
+add_library(propsys MODULE
     ${SOURCE}
     propsys.rc
     ${CMAKE_CURRENT_BINARY_DIR}/propsys.def)

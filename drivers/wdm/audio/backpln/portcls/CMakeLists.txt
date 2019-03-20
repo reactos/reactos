@@ -49,7 +49,7 @@ list(APPEND SOURCE
     version.cpp
     private.hpp)
 
-add_library(portcls SHARED
+add_library(portcls MODULE
     ${SOURCE}
     guid.cpp
     portcls.rc

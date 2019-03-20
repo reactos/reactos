@@ -23,7 +23,7 @@ list(APPEND SOURCE
     stringformat.c
     precomp.h)
 
-add_library(gdiplus SHARED
+add_library(gdiplus MODULE
     ${SOURCE}
     guid.c
     gdiplus.rc

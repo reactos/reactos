@@ -11,7 +11,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/tapi32_stubs.c)
 
-add_library(tapi32 SHARED
+add_library(tapi32 MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/tapi32.def)
 

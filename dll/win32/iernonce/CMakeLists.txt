@@ -1,7 +1,7 @@
 
 spec2def(iernonce.dll iernonce.spec)
 
-add_library(iernonce SHARED
+add_library(iernonce MODULE
     iernonce.c
     iernonce.rc
     ${CMAKE_CURRENT_BINARY_DIR}/iernonce.def)

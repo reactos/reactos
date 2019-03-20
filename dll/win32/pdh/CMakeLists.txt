@@ -11,7 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/pdh_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
-add_library(pdh SHARED ${SOURCE})
+add_library(pdh MODULE ${SOURCE})
 set_module_type(pdh win32dll)
 target_link_libraries(pdh wine)
 add_importlibs(pdh msvcrt kernel32_vista kernel32 ntdll)

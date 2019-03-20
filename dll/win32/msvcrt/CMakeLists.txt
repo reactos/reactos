@@ -19,7 +19,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
-add_library(msvcrt SHARED ${SOURCE})
+add_library(msvcrt MODULE ${SOURCE})
 set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 add_dependencies(msvcrt psdk)
 target_link_libraries(msvcrt crt wine ${PSEH_LIB})

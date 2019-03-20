@@ -1,7 +1,7 @@
 
 spec2def(batt.dll batt.spec)
 
-add_library(batt SHARED
+add_library(batt MODULE
     batt.c
     batt.rc
     ${CMAKE_CURRENT_BINARY_DIR}/batt.def)

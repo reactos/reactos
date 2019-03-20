@@ -14,7 +14,7 @@ list(APPEND SOURCE
     smtptransport.c
     precomp.h)
 
-add_library(inetcomm SHARED
+add_library(inetcomm MODULE
     ${SOURCE}
     guid.c
     inetcomm.rc

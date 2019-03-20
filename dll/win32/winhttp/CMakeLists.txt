@@ -22,7 +22,7 @@ list(APPEND SOURCE
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/winhttp_tlb.tlb)
 add_typelib(winhttp_tlb.idl)
 
-add_library(winhttp SHARED
+add_library(winhttp MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)

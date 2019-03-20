@@ -8,7 +8,7 @@ list(APPEND SOURCE
 file(GLOB liccpa_rc_deps resources/*.*)
 add_rc_deps(liccpa.rc ${liccpa_rc_deps})
 
-add_library(liccpa SHARED
+add_library(liccpa MODULE
     ${SOURCE}
     liccpa.rc
     ${CMAKE_CURRENT_BINARY_DIR}/liccpa.def)

@@ -7,7 +7,7 @@ list(APPEND SOURCE
     fpSetJob.c
     main.c)
 
-add_library(localspl_apitest.dll SHARED ${SOURCE})
+add_library(localspl_apitest.dll MODULE ${SOURCE})
 target_link_libraries(localspl_apitest.dll wine ${PSEH_LIB})
 set_module_type(localspl_apitest.dll win32dll)
 add_importlibs(localspl_apitest.dll spoolss advapi32 msvcrt kernel32 ntdll)

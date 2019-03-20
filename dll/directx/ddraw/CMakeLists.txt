@@ -39,7 +39,7 @@ list(APPEND SOURCE
     Vtable/DirectDrawSurface4_Vtable.c
     Vtable/DirectDrawSurface7_Vtable.c)
 
-add_library(ddraw SHARED ${SOURCE})
+add_library(ddraw MODULE ${SOURCE})
 set_module_type(ddraw win32dll)
 target_link_libraries(ddraw uuid dxguid ${PSEH_LIB})
 add_importlibs(ddraw advapi32 gdi32 user32 msvcrt kernel32 ntdll)

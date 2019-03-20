@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl)
 spec2def(schedsvc.dll schedsvc.spec ADD_IMPORTLIB)
 
-add_library(schedsvc SHARED
+add_library(schedsvc MODULE
     job.c
     rpcserver.c
     schedsvc.c

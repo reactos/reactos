@@ -18,14 +18,14 @@ function(add_hal _halname)
         foreach(_component ${_haldata_COMPONENTS})
             list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
         endforeach()
-        add_library(${_halname} SHARED
+        add_library(${_halname} MODULE
             ${_haldata_SOURCES}
             ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
     else()
         foreach(_component ${_haldata_COMPONENTS})
             list(APPEND _haldata_LIBS "lib_hal_${_component}")
         endforeach()
-        add_library(${_halname} SHARED
+        add_library(${_halname} MODULE
             ${_haldata_SOURCES}
             ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
         target_link_libraries(${_halname} ${_haldata_LIBS})

@@ -11,7 +11,7 @@ list(APPEND SOURCE
     normalize.c
     ${CMAKE_CURRENT_BINARY_DIR}/normaliz.def)
     
-add_library(normaliz SHARED ${SOURCE})
+add_library(normaliz MODULE ${SOURCE})
 set_module_type(normaliz win32dll ENTRYPOINT 0)
 add_importlibs(normaliz msvcrt kernel32 ntdll)
 add_cd_file(TARGET normaliz DESTINATION reactos/system32 FOR all)

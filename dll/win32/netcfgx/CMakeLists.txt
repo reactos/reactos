@@ -15,7 +15,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/netcfgx_stubs.c)
 
-add_library(netcfgx SHARED
+add_library(netcfgx MODULE
     ${SOURCE}
     netcfgx.rc
     ${CMAKE_CURRENT_BINARY_DIR}/netcfgx.def)

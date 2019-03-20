@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/clusapi_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/clusapi.def)
 
-add_library(clusapi SHARED ${SOURCE})
+add_library(clusapi MODULE ${SOURCE})
 set_module_type(clusapi win32dll)
 target_link_libraries(clusapi wine)
 add_importlibs(clusapi msvcrt kernel32 ntdll)

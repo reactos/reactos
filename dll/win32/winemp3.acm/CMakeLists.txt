@@ -9,7 +9,7 @@ include_directories(
 
 spec2def(winemp3.acm winemp3.acm.spec)
 
-add_library(winemp3.acm SHARED
+add_library(winemp3.acm MODULE
     mpegl3.c
     ${CMAKE_CURRENT_BINARY_DIR}/winemp3.def)
 

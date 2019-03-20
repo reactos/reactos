@@ -25,7 +25,7 @@ list(APPEND atl_rc_deps
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${atl_rc_deps}")
 
-add_library(atl SHARED
+add_library(atl MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/atl.def)

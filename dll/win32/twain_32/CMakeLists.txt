@@ -8,7 +8,7 @@ list(APPEND SOURCE
     twain32_main.c
     precomp.h)
 
-add_library(twain_32 SHARED
+add_library(twain_32 MODULE
     ${SOURCE}
     twain_32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/twain_32.def)

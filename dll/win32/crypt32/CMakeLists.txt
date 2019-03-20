@@ -37,7 +37,7 @@ list(APPEND SOURCE
     str.c
     precomp.h)
 
-add_library(crypt32 SHARED
+add_library(crypt32 MODULE
     ${SOURCE}
     crypt32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c

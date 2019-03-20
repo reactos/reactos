@@ -1,6 +1,6 @@
 spec2def(bdasup.sys bdasup.spec ADD_IMPORTLIB)
 
-add_library(bdasup SHARED
+add_library(bdasup MODULE
             bdasup.c
             ${CMAKE_CURRENT_BINARY_DIR}/bdasup.def)
 

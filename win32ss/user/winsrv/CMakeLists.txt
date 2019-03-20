@@ -17,7 +17,7 @@ list(APPEND SOURCE
     winsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winsrv.def)
 
-add_library(winsrv SHARED ${SOURCE})
+add_library(winsrv MODULE ${SOURCE})
 set_module_type(winsrv win32dll UNICODE ENTRYPOINT DllMain 12)
 #############################################
 ## HACK FOR MSVC COMPILATION WITH win32dll ##

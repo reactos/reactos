@@ -41,7 +41,7 @@ list(APPEND SOURCE
     write.cpp
     udffs.h)
 
-add_library(udfs SHARED ${SOURCE} udffs.rc)
+add_library(udfs MODULE ${SOURCE} udffs.rc)
 
 if(MSVC)
     # FIXME: Make sure we marked all what needs to be marked with stdcall before removing this.

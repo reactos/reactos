@@ -51,7 +51,7 @@ list(APPEND SOURCE
     zstd/zstd_opt.c
     btrfs_drv.h)
 
-add_library(btrfs SHARED ${SOURCE} btrfs.rc)
+add_library(btrfs MODULE ${SOURCE} btrfs.rc)
 
 add_definitions(-D__KERNEL__)
 set_module_type(btrfs kernelmodedriver)

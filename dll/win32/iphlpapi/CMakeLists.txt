@@ -22,7 +22,7 @@ list(APPEND SOURCE
     iphlpapi_private.h
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi_stubs.c)
 
-add_library(iphlpapi SHARED
+add_library(iphlpapi MODULE
     ${SOURCE}
     iphlpapi.rc
     iphlpapi_fakestubs.c

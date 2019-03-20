@@ -4,7 +4,7 @@ spec2def(dllexport_test_dll2.dll dllexport_test_dll2.spec ADD_IMPORTLIB)
 
 set(baseaddress_dllexport_test_dll1 0x1000000)
 
-add_library(dllexport_test_dll1 SHARED
+add_library(dllexport_test_dll1 MODULE
     dllexport_test_dll1.c
     ${CMAKE_CURRENT_BINARY_DIR}/dllexport_test_dll1.def)
 
@@ -13,7 +13,7 @@ add_importlibs(dllexport_test_dll1 dllexport_test_dll2)
 
 set(baseaddress_dllexport_test_dll2 0x2000000)
 
-add_library(dllexport_test_dll2 SHARED
+add_library(dllexport_test_dll2 MODULE
     dllexport_test_dll2.c
     ${CMAKE_CURRENT_BINARY_DIR}/dllexport_test_dll2.def)
 
@@ -30,7 +30,7 @@ endif()
 # framedyn is skipped in the clang-cl build
 if(NOT USE_CLANG_CL)
 
-add_library(dllimport_test SHARED dllimport_framedyn.cpp)
+add_library(dllimport_test MODULE dllimport_framedyn.cpp)
 set_module_type(dllimport_test module)
 add_importlibs(dllimport_test framedyn)
 

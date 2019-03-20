@@ -1,4 +1,4 @@
-add_library(wuauserv SHARED
+add_library(wuauserv MODULE
     wuauserv.c
     wuauserv.rc)
 

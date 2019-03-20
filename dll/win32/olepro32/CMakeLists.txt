@@ -14,7 +14,7 @@ list(APPEND olepro32_rc_deps
 
 set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${olepro32_rc_deps}")
 
-add_library(olepro32 SHARED ${SOURCE} version.rc)
+add_library(olepro32 MODULE ${SOURCE} version.rc)
 add_dependencies(olepro32 stdole2)
 set_module_type(olepro32 win32dll)
 target_link_libraries(olepro32 wine)

@@ -43,7 +43,7 @@ list(APPEND jscript_rc_deps
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${jscript_rc_deps}")
 
-add_library(jscript SHARED
+add_library(jscript MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)

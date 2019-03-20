@@ -7,7 +7,7 @@ list(APPEND SOURCE
     d3dx9_41_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_41.def)
 
-add_library(d3dx9_41 SHARED ${SOURCE} version.rc)
+add_library(d3dx9_41 MODULE ${SOURCE} version.rc)
 set_module_type(d3dx9_41 win32dll)
 target_link_libraries(d3dx9_41 wine)
 add_importlibs(d3dx9_41 d3dx9_36 msvcrt kernel32 ntdll)

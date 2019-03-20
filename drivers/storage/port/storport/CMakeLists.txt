@@ -10,7 +10,7 @@ list(APPEND SOURCE
     stubs.c
     precomp.h)
 
-add_library(storport SHARED
+add_library(storport MODULE
     ${SOURCE}
     guid.c
     storport.rc

@@ -197,7 +197,7 @@ list(APPEND ACPI_SOURCE
     main.c
     precomp.h)
 
-add_library(acpi SHARED ${ACPI_SOURCE})
+add_library(acpi MODULE ${ACPI_SOURCE})
 set_module_type(acpi kernelmodedriver)
 target_link_libraries(acpi wdmguid acpica memcmp strtol ${PSEH_LIB})
 add_importlibs(acpi ntoskrnl hal)

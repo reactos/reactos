@@ -5,7 +5,7 @@ list(APPEND EXAMPLE_DRV_SOURCE
     ../kmtest_drv/kmtest_standalone.c
     Example_drv.c)
 
-add_library(example_drv SHARED ${EXAMPLE_DRV_SOURCE})
+add_library(example_drv MODULE ${EXAMPLE_DRV_SOURCE})
 set_module_type(example_drv kernelmodedriver)
 target_link_libraries(example_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(example_drv ntoskrnl hal)

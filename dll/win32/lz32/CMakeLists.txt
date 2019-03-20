@@ -7,7 +7,7 @@ list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/lz32.def)
 
-add_library(lz32 SHARED ${SOURCE})
+add_library(lz32 MODULE ${SOURCE})
 set_module_type(lz32 win32dll ENTRYPOINT 0 )
 target_link_libraries(lz32 wine)
 add_importlibs(lz32 kernel32 ntdll)

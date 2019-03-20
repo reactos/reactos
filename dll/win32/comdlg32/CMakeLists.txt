@@ -19,7 +19,7 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32_stubs.c)
 
-add_library(comdlg32 SHARED
+add_library(comdlg32 MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)

@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/itircl_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itircl.def)
 
-add_library(itircl SHARED ${SOURCE})
+add_library(itircl MODULE ${SOURCE})
 set_module_type(itircl win32dll)
 target_link_libraries(itircl wine)
 add_importlibs(itircl msvcrt kernel32 ntdll)

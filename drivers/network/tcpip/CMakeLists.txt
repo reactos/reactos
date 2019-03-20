@@ -27,7 +27,7 @@ list(APPEND SOURCE
     tcpip/wait.c
     include/precomp.h)
 
-add_library(tcpip SHARED
+add_library(tcpip MODULE
     ${SOURCE}
     tcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)

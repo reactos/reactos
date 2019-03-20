@@ -8,7 +8,7 @@ list(APPEND SOURCE
     stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def)
 
-add_library(cryptdll SHARED ${SOURCE})
+add_library(cryptdll MODULE ${SOURCE})
 set_module_type(cryptdll win32dll)
 target_link_libraries(cryptdll wine)
 add_importlibs(cryptdll advapi32 msvcrt kernel32 ntdll)

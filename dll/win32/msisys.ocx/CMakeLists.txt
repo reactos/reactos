@@ -7,7 +7,7 @@ list(APPEND SOURCE
     msisys.c
     ${CMAKE_CURRENT_BINARY_DIR}/msisys.def)
 
-add_library(msisys SHARED ${SOURCE})
+add_library(msisys MODULE ${SOURCE})
 set_module_type(msisys win32ocx)
 target_link_libraries(msisys wine)
 add_importlibs(msisys msvcrt kernel32 ntdll)

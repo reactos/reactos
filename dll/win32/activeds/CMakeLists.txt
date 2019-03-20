@@ -8,7 +8,7 @@ list(APPEND SOURCE
     stubs.c
     precomp.h)
 
-add_library(activeds SHARED
+add_library(activeds MODULE
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
 

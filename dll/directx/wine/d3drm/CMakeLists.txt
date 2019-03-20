@@ -17,7 +17,7 @@ list(APPEND SOURCE
     viewport.c
     precomp.h)
 
-add_library(d3drm SHARED
+add_library(d3drm MODULE
     ${SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3drm_stubs.c

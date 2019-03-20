@@ -14,7 +14,7 @@ list(APPEND SOURCE
 file(GLOB timedate_rc_deps resources/*.*)
 add_rc_deps(timedate.rc ${timedate_rc_deps})
 
-add_library(timedate SHARED
+add_library(timedate MODULE
     ${SOURCE}
     timedate.rc
     ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)

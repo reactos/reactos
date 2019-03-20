@@ -9,7 +9,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msftedit_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msftedit.def)
 
-add_library(msftedit SHARED ${SOURCE})
+add_library(msftedit MODULE ${SOURCE})
 set_module_type(msftedit win32dll)
 target_link_libraries(msftedit uuid wine)
 add_importlibs(msftedit riched20 msvcrt kernel32 ntdll)

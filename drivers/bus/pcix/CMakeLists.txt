@@ -35,7 +35,7 @@ list(APPEND SOURCE
     utils.c
     pci.h)
 
-add_library(pcix SHARED
+add_library(pcix MODULE
     ${SOURCE}
     guid.c
     pci.rc)

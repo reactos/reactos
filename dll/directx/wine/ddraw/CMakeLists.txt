@@ -29,7 +29,7 @@ if(MSVC)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
 endif()
 
-add_library(ddraw SHARED
+add_library(ddraw MODULE
     ${SOURCE}
     ddraw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)

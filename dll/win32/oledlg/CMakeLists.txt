@@ -9,7 +9,7 @@ list(APPEND SOURCE
     pastespl.c
     precomp.h)
 
-add_library(oledlg SHARED
+add_library(oledlg MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)

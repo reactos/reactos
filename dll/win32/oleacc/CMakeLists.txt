@@ -27,7 +27,7 @@ list(APPEND oleacc_rc_deps
 
 set_source_files_properties(oleacc.rc PROPERTIES OBJECT_DEPENDS "${oleacc_rc_deps}")
 
-add_library(oleacc SHARED
+add_library(oleacc MODULE
     ${SOURCE}
     guid.c
     oleacc.rc

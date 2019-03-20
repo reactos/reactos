@@ -17,7 +17,7 @@ list(APPEND SOURCE
     sha2.c
     tomcrypt.h)
 
-add_library(rsaenh SHARED
+add_library(rsaenh MODULE
     ${SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/rsaenh.def)

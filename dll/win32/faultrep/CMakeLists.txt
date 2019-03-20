@@ -8,7 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/faultrep_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/faultrep.def)
 
-add_library(faultrep SHARED ${SOURCE})
+add_library(faultrep MODULE ${SOURCE})
 set_module_type(faultrep win32dll)
 target_link_libraries(faultrep wine)
 add_importlibs(faultrep advapi32 msvcrt kernel32 ntdll)
