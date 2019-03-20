@@ -15,7 +15,7 @@ BEGIN
     CHECKBOX "Использовать 256 цветов", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Использовать разрешение экрана 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Отключить визуальное оформление", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    PUSHBUTTON "Настроить режимы совместимости...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    PUSHBUTTON "Настроить режимы совместимости...", IDC_EDITCOMPATIBILITYMODES, 82, 167, 135, 15
     LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
     CONTROL "Узнать больше о <A>совместимости программ</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
@@ -32,8 +32,8 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "&OK",IDOK,174,114,60,14
     PUSHBUTTON      "&Отмена",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "Доступные режимы",-1,6,6,68,8
+    LTEXT           "Выбранные режимы",-1,168,6,68,8
 END
 
 STRINGTABLE
