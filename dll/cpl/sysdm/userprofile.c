@@ -316,6 +316,55 @@ OnNotify(
 }
 
 
+static
+BOOL
+DeleteUserProfile(
+    HWND hwndDlg)
+{
+    WCHAR szTitle[64], szRawText[128], szCookedText[256];
+    HWND hwndListView;
+    LVITEM Item;
+    INT iSelected;
+    PPROFILEDATA pProfileData;
+
+    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    if (hwndListView == NULL)
+        return FALSE;
+
+    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+    if (iSelected == -1)
+        return FALSE;
+
+    ZeroMemory(&Item, sizeof(LVITEM));
+    Item.mask = LVIF_PARAM;
+    Item.iItem = iSelected;
+    Item.iSubItem = 0;
+    if (!ListView_GetItem(hwndListView, &Item))
+        return FALSE;
+
+    if (Item.lParam == 0)
+        return FALSE;
+
+    pProfileData = (PPROFILEDATA)Item.lParam;
+    if (pProfileData->bMyProfile)
+        return FALSE;
+
+    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
+    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE, szRawText, ARRAYSIZE(szRawText));
+    swprintf(szCookedText, szRawText, pProfileData->pszFullName);
+
+    if (MessageBoxW(hwndDlg,
+                    szCookedText,
+                    szTitle,
+                    MB_ICONQUESTION | MB_YESNO) == IDNO)
+        return FALSE;
+
+    /* FIXME: Delete the profile here! */
+
+    return TRUE;
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 UserProfileDlgProc(HWND hwndDlg,
@@ -342,7 +391,14 @@ UserProfileDlgProc(HWND hwndDlg,
                               LOWORD(wParam));
                     return TRUE;
 
+                case IDC_USERPROFILE_CHANGE:
+                    break;
+
                 case IDC_USERPROFILE_DELETE:
+                    DeleteUserProfile(hwndDlg);
+                    break;
+
+                case IDC_USERPROFILE_COPY:
                     break;
             }
             break;
