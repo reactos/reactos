@@ -159,7 +159,47 @@ done:
 
 
 static VOID
-AddUserProfiles(HWND hwndListView)
+UpdateButtonState(
+    _In_ HWND hwndDlg,
+    _In_ HWND hwndListView)
+{
+    LVITEM Item;
+    INT iSelected;
+    BOOL bMyProfile;
+
+    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+    if (iSelected != -1)
+    {
+        Item.mask = LVIF_PARAM;
+        Item.iItem = iSelected;
+        Item.iSubItem = 0;
+        if (ListView_GetItem(hwndListView, &Item))
+        {
+            if (Item.lParam != 0)
+            {
+                bMyProfile = ((PPROFILEDATA)Item.lParam)->bMyProfile;
+                if (/*IsUserAnAdmin() &&*/ !bMyProfile)
+                {
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), TRUE);
+                }
+            }
+        }
+        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), TRUE);
+    }
+    else
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), FALSE);
+    }
+}
+
+
+static VOID
+AddUserProfiles(
+    _In_ HWND hwndDlg,
+    _In_ HWND hwndListView)
 {
     HKEY hKeyUserProfiles = INVALID_HANDLE_VALUE;
     DWORD dwIndex;
@@ -210,6 +250,8 @@ AddUserProfiles(HWND hwndListView)
     if (ListView_GetItemCount(hwndListView) != 0)
         ListView_SetItemState(hwndListView, 0, LVIS_SELECTED, LVIS_SELECTED);
 
+    UpdateButtonState(hwndDlg, hwndListView);
+
 done:
     if (hKeyUserProfiles != INVALID_HANDLE_VALUE)
         RegCloseKey(hKeyUserProfiles);
@@ -228,14 +270,7 @@ OnInitUserProfileDialog(HWND hwndDlg)
     /* Initialize the list view control */
     SetListViewColumns(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
 
-    AddUserProfiles(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
-
-    /* Disable the "Delete" and "Copy To" buttons if the user is not an admin */
-    if (!IsUserAnAdmin())
-    {
-         EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), FALSE);
-         EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), FALSE);
-    }
+    AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
 }
 
 
@@ -276,39 +311,7 @@ OnNotify(
     }
     else if (nmhdr->idFrom == IDC_USERPROFILE_LIST && nmhdr->code == LVN_ITEMCHANGED)
     {
-        if (ListView_GetSelectedCount(nmhdr->hwndFrom) == 0)
-        {
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), FALSE);
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), FALSE);
-        }
-        else
-        {
-            LVITEM Item;
-            INT iSelected;
-            BOOL bMyProfile = FALSE;
-
-            iSelected = ListView_GetNextItem(nmhdr->hwndFrom, -1, LVNI_SELECTED);
-            if (iSelected != -1)
-            {
-                Item.iItem = iSelected;
-                Item.iSubItem = 0;
-                if (ListView_GetItem(nmhdr->hwndFrom, &Item))
-                {
-                    if (Item.lParam != 0)
-                    {
-                        bMyProfile = ((PPROFILEDATA)Item.lParam)->bMyProfile;
-                    }
-                }
-            }
-
-            EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_CHANGE), TRUE);
-            if (IsUserAnAdmin() && !bMyProfile)
-            {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_DELETE), TRUE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_COPY), TRUE);
-            }
-        }
+        UpdateButtonState(hwndDlg, nmhdr->hwndFrom);
     }
 }
 
@@ -324,7 +327,7 @@ UserProfileDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
-            break;
+            return TRUE;
 
         case WM_DESTROY:
             OnDestroy(hwndDlg);
