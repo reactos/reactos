@@ -3735,7 +3735,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
     ULONG i;
 
-    if (FileObject == NULL)
+    if (FileObject == NULL || FileObject->SectionObjectPointer == NULL)
         return STATUS_INVALID_FILE_FOR_SECTION;
 
 #ifndef NEWCC
