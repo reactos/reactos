@@ -372,7 +372,11 @@ BOOL WINAPI WTSQuerySessionInformationW(
         return FALSE;
     }
 
+#if (NTDDI_VERSION >= NTDDI_WS08)
     if (WTSInfoClass > WTSIsRemoteSession)
+#else
+    if (WTSInfoClass > WTSClientProtocolType)
+#endif
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -447,6 +451,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
             return TRUE;
         }
 
+#if (NTDDI_VERSION >= NTDDI_WS08)
         case WTSIdleTime:
         case WTSLogonTime:
         case WTSIncomingBytes:
@@ -457,6 +462,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
             SetLastError(ERROR_NOT_SUPPORTED);
             return FALSE;
         }
+#endif /* (NTDDI_VERSION >= NTDDI_WS08) */
 
         default:
         {
