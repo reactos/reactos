@@ -13,6 +13,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <wincon.h>
+#include <windowsx.h>
 #include <tchar.h>
 #include <shellapi.h>
 #include <shlobj.h>

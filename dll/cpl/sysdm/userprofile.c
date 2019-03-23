@@ -11,6 +11,7 @@
 #include "precomp.h"
 #include <sddl.h>
 
+#include <debug.h>
 
 typedef struct _PROFILEDATA
 {
@@ -19,8 +20,130 @@ typedef struct _PROFILEDATA
 } PROFILEDATA, *PPROFILEDATA;
 
 
+static
+BOOL
+OnProfileTypeInit(
+    HWND hwndDlg,
+    PPROFILEDATA pProfileData)
+{
+    PWSTR pszRawBuffer = NULL, pszCookedBuffer = NULL;
+    INT nLength;
+
+    nLength = LoadStringW(hApplet, IDS_USERPROFILE_TYPE_TEXT, (PWSTR)&pszRawBuffer, 0);
+    pszRawBuffer = NULL;
+    if (nLength == 0)
+        return FALSE;
+
+    pszRawBuffer = HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(WCHAR));
+    if (pszRawBuffer == NULL)
+        return FALSE;
+
+    LoadStringW(hApplet, IDS_USERPROFILE_TYPE_TEXT, pszRawBuffer, nLength + 1);
+
+    pszCookedBuffer = HeapAlloc(GetProcessHeap(), 0, (nLength + wcslen(pProfileData->pszFullName) + 1) * sizeof(WCHAR));
+    if (pszCookedBuffer == NULL)
+        goto done;
+
+    swprintf(pszCookedBuffer, pszRawBuffer, pProfileData->pszFullName);
+
+    /* Set the full text */
+    SetDlgItemText(hwndDlg, IDC_USERPROFILE_TYPE_TEXT, pszCookedBuffer);
+
+    /* FIXME: Right now, we support local user profiles only! */
+    EnableWindow(GetDlgItem(hwndDlg, IDC_USERPROFILE_TYPE_ROAMING), FALSE);
+    Button_SetCheck(GetDlgItem(hwndDlg, IDC_USERPROFILE_TYPE_LOCAL), BST_CHECKED);
+    EnableWindow(GetDlgItem(hwndDlg, IDOK), FALSE);
+
+done:
+    if (pszCookedBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, pszCookedBuffer);
+
+    if (pszRawBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, pszRawBuffer);
+
+    return TRUE;
+}
+
+
+static
+INT_PTR
+CALLBACK
+UserProfileTypeDlgProc(HWND hwndDlg,
+                       UINT uMsg,
+                       WPARAM wParam,
+                       LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            OnProfileTypeInit(hwndDlg, (PPROFILEDATA)lParam);
+            return TRUE;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hwndDlg,
+                              LOWORD(wParam));
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static
+BOOL
+ChangeUserProfileType(
+    _In_ HWND hwndDlg)
+{
+    HWND hwndListView;
+    LVITEM Item;
+    INT iSelected;
+
+    DPRINT("ChangeUserProfileType(%p)\n", hwndDlg);
+
+    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    if (hwndListView == NULL)
+        return FALSE;
+
+    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+    if (iSelected == -1)
+        return FALSE;
+
+    ZeroMemory(&Item, sizeof(LVITEM));
+    Item.mask = LVIF_PARAM;
+    Item.iItem = iSelected;
+    Item.iSubItem = 0;
+    if (!ListView_GetItem(hwndListView, &Item))
+        return FALSE;
+
+    if (Item.lParam == 0)
+        return FALSE;
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_USERPROFILE_TYPE),
+                       hwndDlg,
+                       UserProfileTypeDlgProc,
+                       (LPARAM)Item.lParam) == IDOK)
+    {
+        /* FIXME: Update the profile list view */
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
 static VOID
-SetListViewColumns(HWND hwndListView)
+SetListViewColumns(
+    _In_ HWND hwndListView)
 {
     LV_COLUMN column;
     RECT rect;
@@ -73,7 +196,8 @@ static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
     _In_ LPTSTR lpProfileSid,
-    _In_ PSID pMySid)
+    _In_ PSID pMySid,
+    _In_ HKEY hProfileKey)
 {
     PPROFILEDATA pProfileData = NULL;
     PWSTR pszAccountName = NULL;
@@ -202,6 +326,7 @@ AddUserProfiles(
     _In_ HWND hwndListView)
 {
     HKEY hKeyUserProfiles = INVALID_HANDLE_VALUE;
+    HKEY hProfileKey;
     DWORD dwIndex;
     WCHAR szProfileSid[64];
     DWORD dwSidLength;
@@ -244,7 +369,15 @@ AddUserProfiles(
                           &ftLastWrite))
             break;
 
-        AddUserProfile(hwndListView, szProfileSid, pTokenUser->User.Sid);
+        if (RegOpenKeyExW(hKeyUserProfiles,
+                          szProfileSid,
+                          0,
+                          KEY_READ,
+                          &hProfileKey) == ERROR_SUCCESS)
+        {
+            AddUserProfile(hwndListView, szProfileSid, pTokenUser->User.Sid, hProfileKey);
+            RegCloseKey(hProfileKey);
+        }
     }
 
     if (ListView_GetItemCount(hwndListView) != 0)
@@ -327,6 +460,8 @@ DeleteUserProfile(
     INT iSelected;
     PPROFILEDATA pProfileData;
 
+    DPRINT("DeleteUserProfile()\n");
+
     hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
     if (hwndListView == NULL)
         return FALSE;
@@ -392,6 +527,7 @@ UserProfileDlgProc(HWND hwndDlg,
                     return TRUE;
 
                 case IDC_USERPROFILE_CHANGE:
+                    ChangeUserProfileType(hwndDlg);
                     break;
 
                 case IDC_USERPROFILE_DELETE:

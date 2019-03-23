@@ -174,6 +174,18 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 196, 198, 54, 15
 END
 
+IDD_USERPROFILE_TYPE DIALOGEX 0, 0, 225, 103
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Profiltyp ändern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
+    AUTORADIOBUTTON "&Servergespeichertes Profil", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "&Lokales Profil", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 122, 82, 50, 14
+END
+
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Starten und Wiederherstellen"
@@ -309,6 +321,7 @@ BEGIN
     IDS_USERPROFILE_MANDATORY "Obligatorisch"
     IDS_USERPROFILE_CONFIRM_DELETE "Soll das Profil für folgenden Benutzer gelöscht werden: %s?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Löschen bestätigen"
+    IDS_USERPROFILE_TYPE_TEXT "Soll das servergespeicherte Profil oder die lokal gespeicherte Kopie davon vom Betriebssystem verwendet werden, wenn sich %s am Computer anmeldet?"
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
     IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
