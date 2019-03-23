@@ -321,6 +321,8 @@ BEGIN
     IDS_USERPROFILE_MANDATORY "Obligatorisch"
     IDS_USERPROFILE_CONFIRM_DELETE "Soll das Profil für folgenden Benutzer gelöscht werden: %s?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Löschen bestätigen"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Konto unbekannt"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Konto gelöscht"
     IDS_USERPROFILE_TYPE_TEXT "Soll das servergespeicherte Profil oder die lokal gespeicherte Kopie davon vom Betriebssystem verwendet werden, wenn sich %s am Computer anmeldet?"
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."

@@ -200,8 +200,8 @@ AddUserProfile(
     _In_ HKEY hProfileKey)
 {
     PPROFILEDATA pProfileData = NULL;
-    PWSTR pszAccountName = NULL;
-    PWSTR pszDomainName = NULL;
+    WCHAR szAccountName[128], szDomainName[128];
+    WCHAR szNameBuffer[256];
     SID_NAME_USE Use;
     DWORD dwAccountNameSize, dwDomainNameSize;
     DWORD dwProfileData;
@@ -213,43 +213,39 @@ AddUserProfile(
                                &pSid))
         return;
 
-    dwAccountNameSize = 0;
-    dwDomainNameSize = 0;
-    LookupAccountSidW(NULL,
-                      pSid,
-                      NULL,
-                      &dwAccountNameSize,
-                      NULL,
-                      &dwDomainNameSize,
-                      &Use);
-
-    pszDomainName = HeapAlloc(GetProcessHeap(),
-                              0,
-                              dwDomainNameSize * sizeof(WCHAR));
-    if (pszDomainName == NULL)
-        goto done;
-
-    pszAccountName = HeapAlloc(GetProcessHeap(),
-                               0,
-                               dwAccountNameSize * sizeof(WCHAR));
-    if (pszAccountName == NULL)
-        goto done;
-
+    dwAccountNameSize = ARRAYSIZE(szAccountName);
+    dwDomainNameSize = ARRAYSIZE(szDomainName);
     if (!LookupAccountSidW(NULL,
                            pSid,
-                           pszAccountName,
+                           szAccountName,
                            &dwAccountNameSize,
-                           pszDomainName,
+                           szDomainName,
                            &dwDomainNameSize,
                            &Use))
-        goto done;
+    {
+        /* Unknown account */
+        LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_UNKNOWN, szNameBuffer, ARRAYSIZE(szNameBuffer));
+    }
+    else
+    {
+        /* Show only the user accounts */
+        if (Use != SidTypeUser)
+            goto done;
 
-    /* Show only the user accounts */
-    if (Use != SidTypeUser)
-        goto done;
+        if (szAccountName[0] == UNICODE_NULL)
+        {
+            /* Deleted account */
+            LoadStringW(hApplet, IDS_USERPROFILE_ACCOUNT_DELETED, szNameBuffer, ARRAYSIZE(szNameBuffer));
+        }
+        else
+        {
+            /* Normal account */
+            wsprintf(szNameBuffer, L"%s\\%s", szDomainName, szAccountName);
+        }
+    }
 
     dwProfileData = sizeof(PROFILEDATA) +
-                    ((wcslen(pszDomainName) + wcslen(pszAccountName) + 2) * sizeof(WCHAR));
+                    ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
                              0,
                              dwProfileData);
@@ -261,7 +257,7 @@ AddUserProfile(
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
     pProfileData->pszFullName = ptr;
 
-    wsprintf(pProfileData->pszFullName, L"%s\\%s", pszDomainName, pszAccountName);
+    wcscpy(pProfileData->pszFullName, szNameBuffer);
 
     memset(&lvi, 0x00, sizeof(lvi));
     lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
@@ -271,12 +267,6 @@ AddUserProfile(
     ListView_InsertItem(hwndListView, &lvi);
 
 done:
-    if (pszDomainName != NULL)
-        HeapFree(GetProcessHeap(), 0, pszDomainName);
-
-    if (pszAccountName != NULL)
-        HeapFree(GetProcessHeap(), 0, pszAccountName);
-
     if (pSid != NULL)
         LocalFree(pSid);
 }

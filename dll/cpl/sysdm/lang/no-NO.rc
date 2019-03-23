@@ -312,6 +312,8 @@ BEGIN
     IDS_USERPROFILE_MANDATORY "Mandatory"
     IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
     IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
     IDS_MESSAGEBOXTITLE "System control panel applet"
     IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
