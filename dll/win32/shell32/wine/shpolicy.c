@@ -856,6 +856,7 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
 	}
 
 	lstrcpyA(regstr, strRegistryPolicyA);
+	lstrcatA(regstr, "\\");
 	lstrcatA(regstr, p->appstr);
 
 	/* return 0 and don't set the cache if any registry errors occur */
