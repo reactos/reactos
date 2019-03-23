@@ -120,11 +120,11 @@ BEGIN
     LTEXT "Queste impostazioni possono essere usate per fare regolazioni fini al tuo audio.", -1, 44, 7, 200, 32
     GROUPBOX "Controlli di tono", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
     LTEXT "Queste impostazioni controllano il modo in cui suona il tono del tuo audio.", -1, 17, 48, 200, 14
-    LTEXT "&Basso:", -1, 17, 62, 50, 8
+    LTEXT "&Bassi:", -1, 17, 62, 50, 8
     LTEXT "Basso", IDC_ADV_BASS_LOW, 77, 62, 20, 8
     LTEXT "Alto", IDC_ADV_BASS_HIGH, 182, 62, 20, 8
     CONTROL "", IDC_ADV_BASS_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 62, 80, 20
-    LTEXT "&Alto:", -1, 17, 90, 50, 8
+    LTEXT "&Alti:", -1, 17, 90, 50, 8
     LTEXT "Basso", IDC_ADV_TREBLE_LOW, 77, 90, 20, 8
     LTEXT "Alto", IDC_ADV_TREBLE_HIGH, 182, 90, 20, 8
     CONTROL "", IDC_ADV_TREBLE_SLIDER, "msctls_trackbar32", TBS_HORZ | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 97, 90, 80, 20
