@@ -1132,8 +1132,8 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     static DWORD   cxLogoBmp;
-    static DWORD   cyLogoBmp;
-    static HBITMAP hLogoBmp;
+    static DWORD   cyLogoBmp, cyLineBmp;
+    static HBITMAP hLogoBmp, hLineBmp;
     static HWND    hWndAuthors;
 
     switch(msg)
@@ -1153,8 +1153,9 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
                 // Preload the ROS bitmap
                 hLogoBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_REACTOS), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                hLineBmp = (HBITMAP)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_LINEBAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-                if(hLogoBmp)
+                if(hLogoBmp && hLineBmp)
                 {
                     BITMAP bmpLogo;
 
@@ -1162,6 +1163,9 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
                     cxLogoBmp = bmpLogo.bmWidth;
                     cyLogoBmp = bmpLogo.bmHeight;
+
+                    GetObject( hLineBmp, sizeof(BITMAP), &bmpLogo );
+                    cyLineBmp = bmpLogo.bmHeight;
                 }
 
                 // Set App-specific stuff (icon, app name, szOtherStuff string)
@@ -1258,20 +1262,25 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_PAINT:
         {
-            if(hLogoBmp)
+            if(hLogoBmp && hLineBmp)
             {
                 PAINTSTRUCT ps;
                 HDC hdc;
                 HDC hdcMem;
+                HGDIOBJ hOldObj;
 
                 hdc = BeginPaint(hWnd, &ps);
                 hdcMem = CreateCompatibleDC(hdc);
 
                 if(hdcMem)
                 {
-                    SelectObject(hdcMem, hLogoBmp);
+                    hOldObj = SelectObject(hdcMem, hLogoBmp);
                     BitBlt(hdc, 0, 0, cxLogoBmp, cyLogoBmp, hdcMem, 0, 0, SRCCOPY);
 
+                    SelectObject(hdcMem, hLineBmp);
+                    BitBlt(hdc, 0, cyLogoBmp, cxLogoBmp, cyLineBmp, hdcMem, 0, 0, SRCCOPY);
+
+                    SelectObject(hdcMem, hOldObj);
                     DeleteDC(hdcMem);
                 }
 
