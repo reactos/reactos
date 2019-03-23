@@ -97,7 +97,7 @@ private:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
 public:
 
@@ -136,7 +136,7 @@ public:
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
-        MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnNcLButtonDblClick)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClick)
     END_MSG_MAP()
 
     HRESULT Initialize(IN HWND hWndParent);
@@ -720,23 +720,12 @@ LRESULT CTrayClockWnd::OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM
     return 0;
 }
 
-LRESULT CTrayClockWnd::OnNcLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+LRESULT CTrayClockWnd::OnLButtonDblClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     if (IsWindowVisible())
     {
-        /* We get all WM_NCLBUTTONDBLCLK for the taskbar so we need to check if it is on the clock*/
-        RECT rcClock;
-        if (GetWindowRect(&rcClock))
-        {
-            POINT ptClick;
-            ptClick.x = MAKEPOINTS(lParam).x;
-            ptClick.y = MAKEPOINTS(lParam).y;
-            if (PtInRect(&rcClock, ptClick))
-            {
-                //FIXME: use SHRunControlPanel
-                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
-            }
-        }
+        //FIXME: use SHRunControlPanel
+        ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
     }
     return TRUE;
 }
