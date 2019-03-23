@@ -51,6 +51,7 @@ class CTrayClockWnd :
     COLORREF textColor;
     RECT rcText;
     SYSTEMTIME LocalTime;
+    CTooltips m_tooltip;
 
     union
     {
@@ -388,6 +389,31 @@ VOID CTrayClockWnd::UpdateWnd()
             GetParent().SendMessage(WM_NOTIFY, 0, (LPARAM) &nmh);
         }
     }
+
+    int iDateLength = GetDateFormat(LOCALE_USER_DEFAULT,
+                                          DATE_LONGDATE,
+                                          &LocalTime,
+                                          NULL,
+                                          NULL,
+                                          0);
+    if (iDateLength <= 0)
+    {
+        return;
+    }
+
+    WCHAR* szDate = new WCHAR[iDateLength];
+    if (GetDateFormat(LOCALE_USER_DEFAULT,
+                      DATE_LONGDATE,
+                      &LocalTime,
+                      NULL,
+                      szDate,
+                      iDateLength) > 0)
+    {
+        m_tooltip.UpdateTipText(m_hWnd,
+                                reinterpret_cast<UINT_PTR>(m_hWnd),
+                                szDate);
+    }
+    delete[] szDate;
 }
 
 VOID CTrayClockWnd::Update()
@@ -624,7 +650,8 @@ LRESULT CTrayClockWnd::OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CTrayClockWnd::OnNcHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    return HTTRANSPARENT;
+    // HTCLIENT is returned to receive WM_MOUSEMOVE messages for the tooltip
+    return HTCLIENT;
 }
 
 LRESULT CTrayClockWnd::OnSetFont(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -635,6 +662,18 @@ LRESULT CTrayClockWnd::OnSetFont(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 
 LRESULT CTrayClockWnd::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    m_tooltip.Create(m_hWnd, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP);
+
+    TOOLINFOW ti = { 0 };
+    ti.cbSize = TTTOOLINFOW_V1_SIZE;
+    ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+    ti.hwnd = m_hWnd;
+    ti.uId = reinterpret_cast<UINT_PTR>(m_hWnd);
+    ti.lpszText = NULL;
+    ti.lParam = NULL;
+
+    m_tooltip.AddTool(&ti);
+
     ResetTime();
     return TRUE;
 }
