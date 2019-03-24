@@ -643,14 +643,13 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-KiDisplayBlueScreen(IN ULONG MessageId,
-                    IN BOOLEAN IsHardError,
-                    IN PCHAR HardErrCaption OPTIONAL,
-                    IN PCHAR HardErrMessage OPTIONAL,
-                    IN PCHAR Message)
+KiPrepareBlueScreen()
 {
-    CHAR AnsiName[75];
-
+	ULONG PositionY = 75; // Tweak to specify vertical position
+	ULONG BmpHeight = 106; // Image height for padding
+	ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
+	PVOID BmpResource = NULL;
+	
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
     {
@@ -658,13 +657,35 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvAcquireDisplayOwnership();
         InbvResetDisplay();
 
-        /* Display blue screen */
-        InbvSolidColorFill(0, 0, 639, 479, 4);
-        InbvSetTextColor(15);
+        /* Fill screen with blue color */
+        InbvSolidColorFill(0, 0, 639, 479, 1);
+		
+		/* Load bitmap with emoji and text from resources */
+		BmpResource = InbvGetResourceAddress(IDB_BUGCHECK_TEXT);
+		
+		/* Check if bitmap is ok and draw it */
+		if(BmpResource)
+			InbvBitBlt(BmpResource, 0, PositionY);
+		
+		/* Prepare for drawing text */
+        InbvSetTextColor(11);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvSetScrollRegion(32, PositionY + Padding, 607, 479);
     }
+}
+
+VOID
+NTAPI
+KiDisplayBlueScreen(IN ULONG MessageId,
+                    IN BOOLEAN IsHardError,
+                    IN PCHAR HardErrCaption OPTIONAL,
+                    IN PCHAR HardErrMessage OPTIONAL,
+                    IN PCHAR Message)
+{
+    CHAR AnsiBuffer[75];
+
+	KiPrepareBlueScreen();
 
     /* Check if this is a hard error */
     if (IsHardError)
@@ -675,53 +696,57 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 
     /* Begin the display */
-    InbvDisplayString("\r\n");
+    // InbvDisplayString("\r\n");
 
     /* Print out initial message */
-    KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
-    InbvDisplayString("\r\n\r\n");
+    // KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
+    // InbvDisplayString("\r\n\r\n");
 
     /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
         /* Print out into to driver name */
-        KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
+        // KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
+		InbvDisplayString("The problem is caused by: ");
 
         /* Convert and print out driver name */
-        KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiName, sizeof(AnsiName));
-        InbvDisplayString(" ");
-        InbvDisplayString(AnsiName);
-        InbvDisplayString("\r\n\r\n");
+        KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiBuffer, sizeof(AnsiBuffer));
+        InbvDisplayString(AnsiBuffer);
+        InbvDisplayString("\r\n");
     }
 
     /* Check if this is the generic message */
     if (MessageId == BUGCODE_PSS_MESSAGE)
     {
         /* It is, so get the bug code string as well */
-        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
-        InbvDisplayString("\r\n\r\n");
+        // KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
+        // InbvDisplayString("\r\n\r\n");
     }
 
     /* Print second introduction message */
-    KeGetBugMessageText(PSS_MESSAGE_INTRO, NULL);
-    InbvDisplayString("\r\n\r\n");
+    // KeGetBugMessageText(PSS_MESSAGE_INTRO, NULL);
+    // InbvDisplayString("\r\n\r\n");
 
     /* Get the bug code string */
     KeGetBugMessageText(MessageId, NULL);
-    InbvDisplayString("\r\n\r\n");
+    // InbvDisplayString("\r\n\r\n");
+	
+	/* Show bug message code. TODO: Convert it to bug message NAME, not CODE (it's in bugcodes.mc) */
+	sprintf(AnsiBuffer, "Stop code: 0x%08X\r\n", (int)MessageId);
+	InbvDisplayString(AnsiBuffer);
 
-    /* Print message for technical information */
-    KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
+    /* Print message "Technical information:" */
+    // KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
 
     /* Show the technical Data */
-    sprintf(AnsiName,
-            "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
+    sprintf(AnsiBuffer,
+            "*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n",
             (ULONG)KiBugCheckData[0],
             (PVOID)KiBugCheckData[1],
             (PVOID)KiBugCheckData[2],
             (PVOID)KiBugCheckData[3],
             (PVOID)KiBugCheckData[4]);
-    InbvDisplayString(AnsiName);
+    InbvDisplayString(AnsiBuffer);
 
     /* Check if we have a driver*/
     if (KiBugCheckDriver)

@@ -6,6 +6,7 @@
 #define IDB_DEFAULT_LOGO    5
 #define IDB_WKSTA_HEADER    6
 #define IDB_WKSTA_FOOTER    7
+#define IDB_BUGCHECK_TEXT   20
 
 #define IDB_BAR_SERVER      4
 #define IDB_BAR_WKSTA       8
@@ -23,4 +24,4 @@
 #define IDB_STORAGE_SERVER  16
 #define IDB_CLUSTER_SERVER  17
 
-#define IDB_MAX_RESOURCE    IDB_ROTATING_LINE
+#define IDB_MAX_RESOURCE    IDB_BUGCHECK_TEXT
