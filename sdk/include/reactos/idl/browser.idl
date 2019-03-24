@@ -191,10 +191,11 @@ interface browser
     I_BrowserrResetStatistics(
         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
 
-    /* Function 7 (NetrBrowserStatisticsClear) */
+    /* Function 7 - Not used on wire */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum7NotUsedOnWire(void);
+    NetrBrowserStatisticsClear(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
 
     /* Function 8 */
     NET_API_STATUS
