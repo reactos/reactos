@@ -108,7 +108,7 @@ IopGetDriverObject(
     BOOLEAN FileSystem)
 {
     PDRIVER_OBJECT Object;
-    WCHAR NameBuffer[MAX_PATH];
+    UNICODE_STRING Prefix;
     UNICODE_STRING DriverName;
     NTSTATUS Status;
 
@@ -123,14 +123,20 @@ IopGetDriverObject(
         /* We don't know which DriverObject we have to open */
         return STATUS_INVALID_PARAMETER_2;
 
-    DriverName.Buffer = NameBuffer;
-    DriverName.Length = 0;
-    DriverName.MaximumLength = sizeof(NameBuffer);
-
     if (FileSystem != FALSE)
-        RtlAppendUnicodeToString(&DriverName, FILESYSTEM_ROOT_NAME);
+        RtlInitUnicodeString(&Prefix, FILESYSTEM_ROOT_NAME);
     else
-        RtlAppendUnicodeToString(&DriverName, DRIVER_ROOT_NAME);
+        RtlInitUnicodeString(&Prefix, DRIVER_ROOT_NAME);
+
+    DriverName.Length = 0;
+    DriverName.MaximumLength = Prefix.Length + ServiceName->Length + sizeof(UNICODE_NULL);
+    ASSERT(DriverName.MaximumLength > ServiceName->Length);
+    DriverName.Buffer = ExAllocatePoolWithTag(PagedPool, DriverName.MaximumLength, TAG_IO);
+    if (DriverName.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlAppendUnicodeStringToString(&DriverName, &Prefix);
     RtlAppendUnicodeStringToString(&DriverName, ServiceName);
 
     DPRINT("Driver name: '%wZ'\n", &DriverName);
@@ -144,6 +150,7 @@ IopGetDriverObject(
                                      KernelMode,
                                      NULL, /* ParseContext */
                                      (PVOID*)&Object);
+    ExFreePoolWithTag(DriverName.Buffer, TAG_IO);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed to reference driver object, status=0x%08x\n", Status);
