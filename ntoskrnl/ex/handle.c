@@ -1297,7 +1297,8 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
     PHANDLE_TABLE HandleTable;
     POBJECT_HEADER ObjectHeader;
     PHANDLE_TABLE_ENTRY TableEntry;
-    ULONG NeededLength, NameLength;
+    ULONG NeededLength = 0;
+    ULONG NameLength;
     PCM_KEY_CONTROL_BLOCK Kcb, CurrentKcb;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
 
