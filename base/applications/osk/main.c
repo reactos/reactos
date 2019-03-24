@@ -585,11 +585,35 @@ int WINAPI wWinMain(HINSTANCE hInstance,
                     int show)
 {
     HANDLE hMutex;
+    DWORD dwError;
     INT LayoutResource;
 
     UNREFERENCED_PARAMETER(prev);
     UNREFERENCED_PARAMETER(cmdline);
     UNREFERENCED_PARAMETER(show);
+
+    /*
+        Obtain a mutex for the program. This will ensure that
+        the program is launched only once.
+    */
+    hMutex = CreateMutexW(NULL, FALSE, L"OSKRunning");
+
+    if (hMutex)
+    {
+        /* Check if there's already a mutex for the program */
+        dwError = GetLastError();
+
+        if (dwError == ERROR_ALREADY_EXISTS)
+        {
+            /*
+                A mutex with the object name has been created previously.
+                Therefore, another instance is already running.
+            */
+            DPRINT("wWinMain(): Failed to create a mutex! The program instance is already running.\n");
+            CloseHandle(hMutex);
+            return 0;
+        }
+    }
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
@@ -613,31 +637,16 @@ int WINAPI wWinMain(HINSTANCE hInstance,
         LayoutResource = MAIN_DIALOG_STANDARD_KB;
     }
 
-    /* Rry to open a mutex for a single instance */
-    hMutex = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, L"osk");
+    /* Create the modal box based on the configuration registry */
+    DialogBoxW(hInstance,
+               MAKEINTRESOURCEW(LayoutResource),
+               GetDesktopWindow(),
+               OSK_DlgProc);
 
-    if (!hMutex)
+    /* Delete the mutex */
+    if (hMutex)
     {
-        /* Mutex doesn't exist. This is the first instance so create the mutex. */
-        hMutex = CreateMutexW(NULL, FALSE, L"osk");
-
-        /* Create the modal box based on the configuration registry */
-        DialogBoxW(hInstance,
-                   MAKEINTRESOURCEW(LayoutResource),
-                   GetDesktopWindow(),
-                   OSK_DlgProc);
-
-        /* Delete the mutex */
-        if (hMutex) CloseHandle(hMutex);
-    }
-    else
-    {
-        /* Programme already launched */
-
-        /* Delete the mutex */
         CloseHandle(hMutex);
-
-        ExitProcess(0);
     }
 
     return 0;
