@@ -69,10 +69,11 @@ done:
 static
 INT_PTR
 CALLBACK
-UserProfileTypeDlgProc(HWND hwndDlg,
-                       UINT uMsg,
-                       WPARAM wParam,
-                       LPARAM lParam)
+UserProfileTypeDlgProc(
+    _In_ HWND hwndDlg,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -132,6 +133,134 @@ ChangeUserProfileType(
                        MAKEINTRESOURCE(IDD_USERPROFILE_TYPE),
                        hwndDlg,
                        UserProfileTypeDlgProc,
+                       (LPARAM)Item.lParam) == IDOK)
+    {
+        /* FIXME: Update the profile list view */
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static
+BOOL
+DeleteUserProfile(
+    _In_ HWND hwndDlg)
+{
+    WCHAR szTitle[64], szRawText[128], szCookedText[256];
+    HWND hwndListView;
+    LVITEM Item;
+    INT iSelected;
+    PPROFILEDATA pProfileData;
+
+    DPRINT("DeleteUserProfile()\n");
+
+    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    if (hwndListView == NULL)
+        return FALSE;
+
+    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+    if (iSelected == -1)
+        return FALSE;
+
+    ZeroMemory(&Item, sizeof(LVITEM));
+    Item.mask = LVIF_PARAM;
+    Item.iItem = iSelected;
+    Item.iSubItem = 0;
+    if (!ListView_GetItem(hwndListView, &Item))
+        return FALSE;
+
+    if (Item.lParam == 0)
+        return FALSE;
+
+    pProfileData = (PPROFILEDATA)Item.lParam;
+    if (pProfileData->bMyProfile)
+        return FALSE;
+
+    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
+    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE, szRawText, ARRAYSIZE(szRawText));
+    swprintf(szCookedText, szRawText, pProfileData->pszFullName);
+
+    if (MessageBoxW(hwndDlg,
+                    szCookedText,
+                    szTitle,
+                    MB_ICONQUESTION | MB_YESNO) == IDYES)
+    {
+        /* FIXME: Delete the profile here! */
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static
+INT_PTR
+CALLBACK
+CopyUserProfileDlgProc(
+    _In_ HWND hwndDlg,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hwndDlg,
+                              LOWORD(wParam));
+                    return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static
+BOOL
+CopyUserProfile(
+    _In_ HWND hwndDlg)
+{
+    HWND hwndListView;
+    LVITEM Item;
+    INT iSelected;
+
+    DPRINT("CopyUserProfile()\n");
+
+    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
+    if (hwndListView == NULL)
+        return FALSE;
+
+    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+    if (iSelected == -1)
+        return FALSE;
+
+    ZeroMemory(&Item, sizeof(LVITEM));
+    Item.mask = LVIF_PARAM;
+    Item.iItem = iSelected;
+    Item.iSubItem = 0;
+    if (!ListView_GetItem(hwndListView, &Item))
+        return FALSE;
+
+    if (Item.lParam == 0)
+        return FALSE;
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_USERPROFILE_COPY),
+                       hwndDlg,
+                       CopyUserProfileDlgProc,
                        (LPARAM)Item.lParam) == IDOK)
     {
         /* FIXME: Update the profile list view */
@@ -258,6 +387,7 @@ AddUserProfile(
         dwState = 0;
     }
 
+    /* Create and fill the profile data entry */
     dwProfileData = sizeof(PROFILEDATA) +
                     ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
@@ -467,57 +597,6 @@ OnNotify(
 }
 
 
-static
-BOOL
-DeleteUserProfile(
-    HWND hwndDlg)
-{
-    WCHAR szTitle[64], szRawText[128], szCookedText[256];
-    HWND hwndListView;
-    LVITEM Item;
-    INT iSelected;
-    PPROFILEDATA pProfileData;
-
-    DPRINT("DeleteUserProfile()\n");
-
-    hwndListView = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
-    if (hwndListView == NULL)
-        return FALSE;
-
-    iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
-    if (iSelected == -1)
-        return FALSE;
-
-    ZeroMemory(&Item, sizeof(LVITEM));
-    Item.mask = LVIF_PARAM;
-    Item.iItem = iSelected;
-    Item.iSubItem = 0;
-    if (!ListView_GetItem(hwndListView, &Item))
-        return FALSE;
-
-    if (Item.lParam == 0)
-        return FALSE;
-
-    pProfileData = (PPROFILEDATA)Item.lParam;
-    if (pProfileData->bMyProfile)
-        return FALSE;
-
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE_TITLE, szTitle, ARRAYSIZE(szTitle));
-    LoadStringW(hApplet, IDS_USERPROFILE_CONFIRM_DELETE, szRawText, ARRAYSIZE(szRawText));
-    swprintf(szCookedText, szRawText, pProfileData->pszFullName);
-
-    if (MessageBoxW(hwndDlg,
-                    szCookedText,
-                    szTitle,
-                    MB_ICONQUESTION | MB_YESNO) == IDNO)
-        return FALSE;
-
-    /* FIXME: Delete the profile here! */
-
-    return TRUE;
-}
-
-
 /* Property page dialog callback */
 INT_PTR CALLBACK
 UserProfileDlgProc(HWND hwndDlg,
@@ -553,6 +632,7 @@ UserProfileDlgProc(HWND hwndDlg,
                     break;
 
                 case IDC_USERPROFILE_COPY:
+                    CopyUserProfile(hwndDlg);
                     break;
             }
             break;
