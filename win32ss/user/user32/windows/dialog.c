@@ -2556,8 +2556,16 @@ IsDialogMessageW(
              if (!(dlgCode & DLGC_WANTARROWS))
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
-                 HWND hwndNext = GetNextDlgGroupItem (hDlg, GetFocus(), fPrevious );
-                 SendMessageW( hDlg, WM_NEXTDLGCTL, (WPARAM)hwndNext, 1 );
+                 HWND hwndNext = GetNextDlgGroupItem( hDlg, lpMsg->hwnd, fPrevious );
+                 if (hwndNext && SendMessageW( hwndNext, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg ) == (DLGC_BUTTON | DLGC_RADIOBUTTON))
+                 {
+                     SetFocus( hwndNext );
+                     if ((GetWindowLongW( hwndNext, GWL_STYLE ) & BS_TYPEMASK) == BS_AUTORADIOBUTTON &&
+                         SendMessageW( hwndNext, BM_GETCHECK, 0, 0 ) != BST_CHECKED)
+                         SendMessageW( hwndNext, BM_CLICK, 1, 0 );
+                 }
+                 else
+                     SendMessageW( hDlg, WM_NEXTDLGCTL, (WPARAM)hwndNext, 1 );
                  return TRUE;
              }
              break;
