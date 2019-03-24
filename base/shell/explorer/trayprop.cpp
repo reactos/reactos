@@ -204,7 +204,7 @@ private:
         /* If NoSimpleStartMenu, disable ability to use Modern Start Menu */
         if (policyNoSimpleStartMenu)
         {
-            /* Swich to classic */
+            /* Switch to classic */
             CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
 
             /* Disable radio button */
