@@ -1292,7 +1292,7 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
     EXHANDLE ExHandle;
     PLIST_ENTRY Entry;
     PEPROCESS Process;
-    WCHAR KeyPath[MAX_PATH];
+    WCHAR KeyPath[256];
     PFILE_OBJECT FileObject;
     PHANDLE_TABLE HandleTable;
     POBJECT_HEADER ObjectHeader;
@@ -1418,7 +1418,7 @@ BOOLEAN ExpKdbgExtHandle(ULONG Argc, PCHAR Argv[])
                             CurrentKcb = CurrentKcb->ParentKcb;
                         }
 
-                        if (NeededLength < MAX_PATH * sizeof(WCHAR))
+                        if (NeededLength < sizeof(KeyPath))
                         {
                             CurrentKcb = Kcb;
 
