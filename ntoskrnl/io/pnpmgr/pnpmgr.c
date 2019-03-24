@@ -2854,15 +2854,10 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
 
    if (!(DeviceNode->Flags & (DNF_DISABLED | DNF_STARTED | DNF_ADDED)))
    {
-      WCHAR RegKeyBuffer[MAX_PATH];
       UNICODE_STRING RegKey;
 
       /* Install the service for this if it's in the CDDB */
       IopInstallCriticalDevice(DeviceNode);
-
-      RegKey.Length = 0;
-      RegKey.MaximumLength = sizeof(RegKeyBuffer);
-      RegKey.Buffer = RegKeyBuffer;
 
       /*
        * Retrieve configuration from Enum key
@@ -2885,11 +2880,24 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       QueryTable[1].DefaultData = L"";
       QueryTable[1].DefaultLength = 0;
 
-      RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+      RegKey.Length = 0;
+      RegKey.MaximumLength = sizeof(ENUM_ROOT) + sizeof(WCHAR) + DeviceNode->InstancePath.Length;
+      RegKey.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                            RegKey.MaximumLength,
+                                            TAG_IO);
+      if (RegKey.Buffer == NULL)
+      {
+          IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+          return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      RtlAppendUnicodeToString(&RegKey, ENUM_ROOT);
+      RtlAppendUnicodeToString(&RegKey, L"\\");
       RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
 
       Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
          RegKey.Buffer, QueryTable, NULL, NULL);
+      ExFreePoolWithTag(RegKey.Buffer, TAG_IO);
 
       if (!NT_SUCCESS(Status))
       {
