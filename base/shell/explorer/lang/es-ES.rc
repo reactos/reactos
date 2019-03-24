@@ -100,11 +100,11 @@ CAPTION "Menú Inicio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
 CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "&Menú inicio", IDC_TASKBARPROP_STARTMENU, 7,135,105,10, WS_DISABLED
-    LTEXT "Este estilo de menú proporciona un rápido acceso a las carpetas, programas favoritos, y búsquedas.", IDC_STATIC, 20,145,150,24, WS_DISABLED
-    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192,132,53,14, WS_DISABLED
+    AUTORADIOBUTTON "&Menú inicio", IDC_TASKBARPROP_STARTMENU, 7,135,105,10
+    LTEXT "Este estilo de menú proporciona un rápido acceso a las carpetas, programas favoritos, y búsquedas.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20,145,150,24
+    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192,132,53,14
     AUTORADIOBUTTON "Menú Inicio &clásico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,175,105,10
-    LTEXT "Este estilo de menú le proporciona el aspecto y funcionalidad clásicas.",IDC_STATIC,20,185,150,24
+    LTEXT "Este estilo de menú le proporciona el aspecto y funcionalidad clásicas.",IDC_TASKBARPROP_STARTMENUCLASSICTEXT,20,185,150,24
     PUSHBUTTON "P&ersonalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,172,53,14
 END
 

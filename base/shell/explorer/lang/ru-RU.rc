@@ -91,11 +91,11 @@ CAPTION "Меню ""Пуск"""
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "М&еню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
-    LTEXT "Этот стиль меню обеспечивает удобный доступ к папкам, часто используемым программам и поиску.", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Настроить...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "М&еню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10
+    LTEXT "Этот стиль меню обеспечивает удобный доступ к папкам, часто используемым программам и поиску.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
+    PUSHBUTTON "&Настроить...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "&Классическое меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Классический стиль отображения меню ""Пуск"".", IDC_STATIC, 20, 185, 150, 24
+    LTEXT "Классический стиль отображения меню ""Пуск"".", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "Н&астроить...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 

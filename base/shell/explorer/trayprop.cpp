@@ -196,8 +196,31 @@ private:
         HWND hwndCustomizeClassic = GetDlgItem(IDC_TASKBARPROP_STARTMENUCLASSICCUST);
         HWND hwndCustomizeModern = GetDlgItem(IDC_TASKBARPROP_STARTMENUCUST);
         HWND hwndStartBitmap = GetDlgItem(IDC_TASKBARPROP_STARTMENU_BITMAP);
+        HWND hwndModernRadioBtn = GetDlgItem(IDC_TASKBARPROP_STARTMENU);
+        HWND hwndModernText = GetDlgItem(IDC_TASKBARPROP_STARTMENUMODERNTEXT);
+        BOOL policyNoSimpleStartMenu = SHRestricted(REST_NOSTARTPANEL) != 0;
+        BOOL bModern = FALSE;
 
-        BOOL bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
+        /* If NoSimpleStartMenu, disable ability to use Modern Start Menu */
+        if (policyNoSimpleStartMenu)
+        {
+            /* Switch to classic */
+            CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+
+            /* Disable radio button */
+            ::EnableWindow(hwndModernRadioBtn, FALSE);
+
+            /* Hide controls related to modern menu */
+            ::ShowWindow(hwndModernRadioBtn, SW_HIDE);
+            ::ShowWindow(hwndModernText, SW_HIDE);
+            ::ShowWindow(hwndCustomizeModern, SW_HIDE);
+        }
+        /* If no restrictions, then get bModern from dialog */
+        else
+        {
+            bModern = IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENU);
+        }
+
         ::EnableWindow(hwndCustomizeModern, bModern);
         ::EnableWindow(hwndCustomizeClassic, !bModern);
 
@@ -227,8 +250,10 @@ public:
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);    // HACK: This has to be read from registry!
+        // fix me: start menu style (classic/modern) should be read somewhere from the registry.
+        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         UpdateDialog();
+    
         return TRUE;
     }
 
