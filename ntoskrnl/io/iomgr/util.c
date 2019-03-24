@@ -251,7 +251,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
         /* Compute the remaining bits */
         EaLength -= NextEntryOffset;
         /* We must have bits left */
-        if (EaLength < 0)
+        if ((LONG)EaLength < 0)
         {
             goto FailPath;
         }
