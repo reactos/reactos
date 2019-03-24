@@ -37,7 +37,6 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                     IN OPTIONAL PHANDLE InstanceKey)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    WCHAR PathBuffer[MAX_PATH];
     UNICODE_STRING BaseKeyU;
     UNICODE_STRING GuidString, SubKeyName, ReferenceString;
     PWCHAR StartPosition, EndPosition;
@@ -67,11 +66,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     *DeviceKeyRealP = NULL;
     *InstanceKeyRealP = NULL;
 
-    BaseKeyU.Buffer = PathBuffer;
-    BaseKeyU.Length = 0;
-    BaseKeyU.MaximumLength = MAX_PATH * sizeof(WCHAR);
-
-    RtlAppendUnicodeToString(&BaseKeyU, BaseKeyString);
+    RtlInitUnicodeString(&BaseKeyU, BaseKeyString);
 
     /* Open the DeviceClasses key */
     InitializeObjectAttributes(&ObjectAttributes,
