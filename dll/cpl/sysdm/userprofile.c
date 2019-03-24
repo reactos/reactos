@@ -16,6 +16,7 @@
 typedef struct _PROFILEDATA
 {
     BOOL bMyProfile;
+    DWORD dwState;
     PWSTR pszFullName;
 } PROFILEDATA, *PPROFILEDATA;
 
@@ -204,9 +205,10 @@ AddUserProfile(
     WCHAR szNameBuffer[256];
     SID_NAME_USE Use;
     DWORD dwAccountNameSize, dwDomainNameSize;
-    DWORD dwProfileData;
+    DWORD dwProfileData, dwSize, dwType, dwState = 0;
     PWSTR ptr;
     PSID pSid = NULL;
+    INT nId, iItem;
     LV_ITEM lvi;
 
     if (!ConvertStringSidToSid(lpProfileSid,
@@ -244,6 +246,18 @@ AddUserProfile(
         }
     }
 
+    /* Get the profile state value */
+    dwSize = sizeof(dwState);
+    if (RegQueryValueExW(hProfileKey,
+                         L"State",
+                         NULL,
+                         &dwType,
+                         (LPBYTE)&dwState,
+                         &dwSize) != ERROR_SUCCESS)
+    {
+        dwState = 0;
+    }
+
     dwProfileData = sizeof(PROFILEDATA) +
                     ((wcslen(szNameBuffer) + 1) * sizeof(WCHAR));
     pProfileData = HeapAlloc(GetProcessHeap(),
@@ -253,18 +267,32 @@ AddUserProfile(
         goto done;
 
     pProfileData->bMyProfile = EqualSid(pMySid, pSid);
+    pProfileData->dwState = dwState;
 
     ptr = (PWSTR)((ULONG_PTR)pProfileData + sizeof(PROFILEDATA));
     pProfileData->pszFullName = ptr;
 
     wcscpy(pProfileData->pszFullName, szNameBuffer);
 
+    /* Add the profile and set its name */
     memset(&lvi, 0x00, sizeof(lvi));
     lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
     lvi.pszText = pProfileData->pszFullName;
     lvi.state = 0;
     lvi.lParam = (LPARAM)pProfileData;
-    ListView_InsertItem(hwndListView, &lvi);
+    iItem = ListView_InsertItem(hwndListView, &lvi);
+
+    /* Set the profile type */
+    if (dwState & 0x0001) // PROFILE_MANDATORY
+        nId = IDS_USERPROFILE_MANDATORY;
+    else if (dwState & 0x0010) // PROFILE_UPDATE_CENTRAL
+        nId = IDS_USERPROFILE_ROAMING;
+    else
+        nId = IDS_USERPROFILE_LOCAL;
+
+    LoadStringW(hApplet, nId, szAccountName, ARRAYSIZE(szAccountName));
+
+    ListView_SetItemText(hwndListView, iItem, 2, szAccountName);
 
 done:
     if (pSid != NULL)
