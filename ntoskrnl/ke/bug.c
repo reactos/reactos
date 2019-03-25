@@ -216,7 +216,7 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
         Addr = Frames[i];
         if (!Addr)
         {
-        	break;
+            break;
         }
 
         /* Get the base for this file */
@@ -618,7 +618,7 @@ KiDumpParameterImages(IN PCHAR Message,
         /* Format driver name */
         sprintf(Message,
                 "%s** %12s Address %p base at %p DateStamp %08lx\r\n",
-				FirstRun ? "*" : " ",
+                FirstRun ? "*" : " ",
                 AnsiName,
                 (PVOID)Parameters[i],
                 ImageBase,
@@ -645,11 +645,11 @@ VOID
 NTAPI
 KiPrepareBlueScreen()
 {
-	ULONG PositionY = 107; // Tweak to specify vertical position
-	ULONG BmpHeight = 106; // Image height for padding
-	ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
-	PVOID BmpResource = NULL;
-	
+    ULONG PositionY = 107; // Tweak to specify vertical position
+    ULONG BmpHeight = 106; // Image height for padding
+    ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
+    PVOID BmpResource = NULL;
+    
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
     {
@@ -659,15 +659,15 @@ KiPrepareBlueScreen()
 
         /* Fill screen with blue color */
         InbvSolidColorFill(0, 0, 639, 479, 1);
-		
-		/* Load bitmap with emoji and text from resources */
-		BmpResource = InbvGetResourceAddress(IDB_BUGCHECK_TEXT);
-		
-		/* Check if bitmap is ok and draw it */
-		if(BmpResource)
-			InbvBitBlt(BmpResource, 0, PositionY);
-		
-		/* Prepare for drawing text */
+        
+        /* Load bitmap with emoji and text from resources */
+        BmpResource = InbvGetResourceAddress(IDB_BUGCHECK_TEXT);
+        
+        /* Check if bitmap is ok and draw it */
+        if(BmpResource)
+            InbvBitBlt(BmpResource, 0, PositionY);
+        
+        /* Prepare for drawing text */
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
@@ -685,7 +685,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 {
     CHAR AnsiBuffer[75];
 
-	KiPrepareBlueScreen();
+    KiPrepareBlueScreen();
 
     /* Check if this is a hard error */
     if (IsHardError)
@@ -712,7 +712,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Set text color to less distracting */
     InbvSetTextColor(9);
 
-	/* Check if we have a driver */
+    /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
         /* Print out into to driver name */
@@ -723,11 +723,11 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvDisplayString(AnsiBuffer);
         InbvDisplayString("\r\n");
     }
-	
+
     /* Print message "Technical information:" */
     KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
-	InbvDisplayString("\r\n");
-	
+    InbvDisplayString("\r\n");
+
     /* Show the technical Data */
     sprintf(AnsiBuffer,
             "*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n",
@@ -741,8 +741,8 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Check if we have a driver*/
     if (KiBugCheckDriver)
     {
-		/* Display technical driver data */
-		InbvDisplayString(Message);
+        /* Display technical driver data */
+        InbvDisplayString(Message);
     }
     else
     {
@@ -754,7 +754,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 
     /* Reset scrolling position for something like kdb */
-	InbvSetTextColor(15);
+    InbvSetTextColor(15);
     InbvSetScrollRegion(0, 0, 639, 479);
 }
 
