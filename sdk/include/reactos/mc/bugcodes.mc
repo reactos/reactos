@@ -88,8 +88,7 @@ Severity=Warning
 Facility=System
 SymbolicName=BUGCODE_ID_DRIVER
 Language=English
-The problem seems to be caused by the following file:
-
+The problem is caused by:
 .
 
 MessageId=0x81

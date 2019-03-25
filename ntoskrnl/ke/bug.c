@@ -617,8 +617,8 @@ KiDumpParameterImages(IN PCHAR Message,
 
         /* Format driver name */
         sprintf(Message,
-                "%s**  %12s - Address %p base at %p, DateStamp %08lx\r\n",
-                FirstRun ? "\r\n*":"*",
+                "%s** %12s Address %p base at %p DateStamp %08lx\r\n",
+				FirstRun ? "*" : " ",
                 AnsiName,
                 (PVOID)Parameters[i],
                 ImageBase,
@@ -645,7 +645,7 @@ VOID
 NTAPI
 KiPrepareBlueScreen()
 {
-	ULONG PositionY = 75; // Tweak to specify vertical position
+	ULONG PositionY = 112; // Tweak to specify vertical position
 	ULONG BmpHeight = 106; // Image height for padding
 	ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
 	PVOID BmpResource = NULL;
@@ -668,7 +668,7 @@ KiPrepareBlueScreen()
 			InbvBitBlt(BmpResource, 0, PositionY);
 		
 		/* Prepare for drawing text */
-        InbvSetTextColor(11);
+        InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
         InbvSetScrollRegion(32, PositionY + Padding, 607, 479);
@@ -695,49 +695,39 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         if (HardErrMessage) InbvDisplayString(HardErrMessage);
     }
 
-    /* Begin the display */
-    // InbvDisplayString("\r\n");
+    /* Check if this is the generic message */
+    if (MessageId == BUGCODE_PSS_MESSAGE)
+    {
+        /* It is, so get the bug code string as well */
+        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
+        InbvDisplayString("\r\n\r\n");
+    }
+    else
+    {
+        /* Get the bug code string */
+        KeGetBugMessageText(MessageId, NULL);
+        InbvDisplayString("\r\n\r\n");
+    }
 
-    /* Print out initial message */
-    // KeGetBugMessageText(BUGCHECK_MESSAGE_INTRO, NULL);
-    // InbvDisplayString("\r\n\r\n");
+    /* Set text color to less distracting */
+    InbvSetTextColor(9);
 
-    /* Check if we have a driver */
+	/* Check if we have a driver */
     if (KiBugCheckDriver)
     {
         /* Print out into to driver name */
-        // KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
-		InbvDisplayString("The problem is caused by: ");
+        KeGetBugMessageText(BUGCODE_ID_DRIVER, NULL);
 
         /* Convert and print out driver name */
         KeBugCheckUnicodeToAnsi(KiBugCheckDriver, AnsiBuffer, sizeof(AnsiBuffer));
         InbvDisplayString(AnsiBuffer);
         InbvDisplayString("\r\n");
     }
-
-    /* Check if this is the generic message */
-    if (MessageId == BUGCODE_PSS_MESSAGE)
-    {
-        /* It is, so get the bug code string as well */
-        // KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
-        // InbvDisplayString("\r\n\r\n");
-    }
-
-    /* Print second introduction message */
-    // KeGetBugMessageText(PSS_MESSAGE_INTRO, NULL);
-    // InbvDisplayString("\r\n\r\n");
-
-    /* Get the bug code string */
-    KeGetBugMessageText(MessageId, NULL);
-    // InbvDisplayString("\r\n\r\n");
 	
-	/* Show bug message code. TODO: Convert it to bug message NAME, not CODE (it's in bugcodes.mc) */
-	sprintf(AnsiBuffer, "Stop code: 0x%08X\r\n", (int)MessageId);
-	InbvDisplayString(AnsiBuffer);
-
     /* Print message "Technical information:" */
-    // KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
-
+    KeGetBugMessageText(BUGCHECK_TECH_INFO, NULL);
+	InbvDisplayString("\r\n");
+	
     /* Show the technical Data */
     sprintf(AnsiBuffer,
             "*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n",
@@ -751,8 +741,8 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     /* Check if we have a driver*/
     if (KiBugCheckDriver)
     {
-        /* Display technical driver data */
-        InbvDisplayString(Message);
+		/* Display technical driver data */
+		InbvDisplayString(Message);
     }
     else
     {
