@@ -526,7 +526,7 @@ FstubDbgGuidToString(IN PGUID Guid,
                      OUT PCHAR String)
 {
     sprintf(String,
-            "{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+            "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
             Guid->Data1,
             Guid->Data2,
             Guid->Data3,
