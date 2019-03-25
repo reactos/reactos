@@ -645,7 +645,7 @@ VOID
 NTAPI
 KiPrepareBlueScreen()
 {
-	ULONG PositionY = 112; // Tweak to specify vertical position
+	ULONG PositionY = 107; // Tweak to specify vertical position
 	ULONG BmpHeight = 106; // Image height for padding
 	ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
 	PVOID BmpResource = NULL;
@@ -752,6 +752,10 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
+
+    /* Reset scrolling position for something like kdb */
+	InbvSetTextColor(15);
+    InbvSetScrollRegion(0, 0, 639, 479);
 }
 
 VOID
