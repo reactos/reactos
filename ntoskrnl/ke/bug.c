@@ -643,9 +643,65 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
+KiStackBacktrace()
+{
+    CHAR Buffer[64];
+    PVOID *Frame;
+    PVOID *FramePc, *NextFrame;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InSystem;
+    CHAR AnsiName[64];
+	ULONG Column = 0;
+	ULONG Iteration = 0;
+ 
+    NextFrame = _AddressOfReturnAddress();
+    NextFrame--;
+    do
+    {
+        Frame = NextFrame;
+        FramePc = Frame[1];
+        NextFrame = Frame[0];
+
+        if ((ULONG_PTR)FramePc > (ULONG_PTR)MmHighestUserAddress &&
+            KiPcToFileHeader(FramePc, &LdrEntry, FALSE, &InSystem))
+            {
+                KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
+                                        AnsiName,
+                                        sizeof(AnsiName));
+                FramePc = (PVOID)((ULONG_PTR)FramePc - (ULONG_PTR)LdrEntry->DllBase);
+				
+                RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %s:%p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
+				InbvDisplayString(Buffer);
+				
+            }
+        else
+		{
+			RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
+			InbvDisplayString(Buffer);
+		}
+
+		if(Column == 1)
+			Column = 0;
+		else
+			Column ++;
+
+		Iteration ++;
+    } 
+	while ((ULONG_PTR)NextFrame > (ULONG_PTR)Frame &&
+           (ULONG_PTR)NextFrame < (ULONG_PTR)Frame + 4 * PAGE_SIZE);
+
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p", Column == 0 ? "\r\n" : "  ", Iteration + 1, NextFrame);
+	InbvDisplayString(Buffer);
+	
+	if(Column == 1)
+		InbvDisplayString("\r\n");
+}
+
+VOID
+NTAPI
 KiPrepareBlueScreen()
 {
-    ULONG PositionY = 107; // Tweak to specify vertical position
+    ULONG PositionY = 50; // Tweak to specify vertical position
     ULONG BmpHeight = 106; // Image height for padding
     ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
     PVOID BmpResource = NULL;
@@ -752,6 +808,9 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
+	
+	/* Display stack backtrace */
+	KiStackBacktrace();
 
     /* Reset scrolling position for something like kdb */
     InbvSetTextColor(15);
