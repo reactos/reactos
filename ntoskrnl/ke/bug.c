@@ -651,7 +651,7 @@ KiStackBacktrace()
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InSystem, Print = TRUE;
     CHAR AnsiName[64];
-	ULONG Column = 0, Iteration = 0, MaximumLines = 17;
+    ULONG Column = 0, Iteration = 0, MaximumLines = 20;
  
     NextFrame = _AddressOfReturnAddress();
     NextFrame--;
@@ -668,60 +668,60 @@ KiStackBacktrace()
                                         AnsiName,
                                         sizeof(AnsiName));
                 FramePc = (PVOID)((ULONG_PTR)FramePc - (ULONG_PTR)LdrEntry->DllBase);
-				
-				if (Print)
-				{
-					RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %s:%p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
-					InbvDisplayString(Buffer);
-				}
-				
+                
+                if (Print)
+                {
+                    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %s:%p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
+                    InbvDisplayString(Buffer);
+                }
+                
             }
         else
-		{
-			if (Print)
-			{
-				RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
-				InbvDisplayString(Buffer);
-			}
-		}
+        {
+            if (Print)
+            {
+                RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
+                InbvDisplayString(Buffer);
+            }
+        }
 
-		if (Column == 1)
-			Column = 0;
-		else
-			Column ++;
+        if (Column == 1)
+            Column = 0;
+        else
+            Column ++;
 
-		Iteration ++;
-		
-		/* We have not too much printing area, let's not print anymore if maximum lines reached */
-		if (Iteration / 2 >= MaximumLines && Print)
-		{
-			if(Column == 0)
-				InbvDisplayString("\r\n");
+        Iteration ++;
+        
+        /* We have not too much printing area, let's not print anymore if maximum lines reached */
+        if (Iteration / 2 >= MaximumLines && Print)
+        {
+            if(Column == 0)
+                InbvDisplayString("\r\n");
 
-			InbvDisplayString("(reached the maximum number of lines!)");
-			
-			Print = FALSE;
-		}
+            InbvDisplayString("(reached the maximum number of lines!)");
+            
+            Print = FALSE;
+        }
     } 
-	while ((ULONG_PTR)NextFrame > (ULONG_PTR)Frame &&
+    while ((ULONG_PTR)NextFrame > (ULONG_PTR)Frame &&
            (ULONG_PTR)NextFrame < (ULONG_PTR)Frame + 4 * PAGE_SIZE);
 
-	if (!Print)
-		Column = 0;
+    if (!Print)
+        Column = 0;
 
     RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p", Column == 0 ? "\r\n" : "  ", Iteration + 1, NextFrame);
-	InbvDisplayString(Buffer);
-	
-	if (Column == 1)
-		InbvDisplayString("\r\n");
+    InbvDisplayString(Buffer);
+    
+    if (Column == 1)
+        InbvDisplayString("\r\n");
 }
 
 VOID
 NTAPI
 KiPrepareBlueScreen()
 {
-    ULONG PositionY = 16; // Tweak to specify vertical position
-    ULONG BmpHeight = 106; // Image height for padding
+    ULONG PositionY = 32; // Tweak to specify vertical position
+    ULONG BmpHeight = 15; // Image height for padding
     ULONG Padding = BmpHeight + 10; // Padding between bitmap and printed text
     PVOID BmpResource = NULL;
     
@@ -735,7 +735,7 @@ KiPrepareBlueScreen()
         /* Fill screen with blue color */
         InbvSolidColorFill(0, 0, 639, 479, 1);
         
-        /* Load bitmap with emoji and text from resources */
+        /* Load bitmap with text */
         BmpResource = InbvGetResourceAddress(IDB_BUGCHECK_TEXT);
         
         /* Check if bitmap is ok and draw it */
@@ -827,9 +827,9 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               4,
                               KeBugCheckUnicodeToAnsi);
     }
-	
-	/* Display stack backtrace */
-	KiStackBacktrace();
+
+    /* Display stack backtrace */
+    KiStackBacktrace();
 
     /* Reset scrolling position for something like kdb */
     InbvSetTextColor(15);
