@@ -18,6 +18,32 @@ FAST_IO_DISPATCH FastIoDispatch;
 
 NTSTATUS
 NTAPI
+NullQueryVolumeInformation(OUT PVOID Buffer,
+                           IN PULONG Length,
+                           IN FS_INFORMATION_CLASS FsInformationClass)
+{
+    PFILE_FS_DEVICE_INFORMATION DeviceInformation = Buffer;
+
+    PAGED_CODE();
+
+    /* We only support one class */
+    if (FsInformationClass != FileFsDeviceInformation)
+    {
+        /* Fail */
+        return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Fill out the information */
+    RtlZeroMemory(DeviceInformation, sizeof(FILE_FS_DEVICE_INFORMATION));
+    DeviceInformation->DeviceType = FILE_DEVICE_NULL;
+
+    /* Return the length and success */
+    *Length = sizeof(FILE_FS_DEVICE_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 NullQueryFileInformation(OUT PVOID Buffer,
                          IN PULONG Length,
                          IN FILE_INFORMATION_CLASS InformationClass)
@@ -147,6 +173,22 @@ NullDispatch(IN PDEVICE_OBJECT DeviceObject,
             /* Return the actual length */
             Irp->IoStatus.Information = Length;
             break;
+
+        case IRP_MJ_QUERY_VOLUME_INFORMATION:
+
+            /* Get the length inputted and do the request */
+            Length = IoStack->Parameters.QueryVolume.Length;
+            Irp->IoStatus.Status = NullQueryVolumeInformation(Irp->AssociatedIrp.
+                                                              SystemBuffer,
+                                                              &Length,
+                                                              IoStack->
+                                                              Parameters.
+                                                              QueryVolume.
+                                                              FsInformationClass);
+
+            /* Return the actual length */
+            Irp->IoStatus.Information = Length;
+            break;
     }
 
     /* Complete the request */
@@ -199,6 +241,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = NullDispatch;
     DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = NullDispatch;
     DriverObject->DriverUnload = NullUnload;
 
     /* Initialize the fast I/O dispatch table */
