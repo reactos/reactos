@@ -651,7 +651,7 @@ KiStackBacktrace()
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InSystem, Print = TRUE;
     CHAR AnsiName[64];
-    ULONG Column = 0, Iteration = 0, MaximumLines = 20;
+    ULONG Column = 0, Iteration = 0, MaximumLines = 21;
  
     NextFrame = _AddressOfReturnAddress();
     NextFrame--;
@@ -671,7 +671,7 @@ KiStackBacktrace()
                 
                 if (Print)
                 {
-                    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %s:%p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
+                    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p %12s:%-8p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
                     InbvDisplayString(Buffer);
                 }
                 
@@ -680,7 +680,7 @@ KiStackBacktrace()
         {
             if (Print)
             {
-                RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p %p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
+                RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p %21p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
                 InbvDisplayString(Buffer);
             }
         }
@@ -709,7 +709,7 @@ KiStackBacktrace()
     if (!Print)
         Column = 0;
 
-    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %p", Column == 0 ? "\r\n" : "  ", Iteration + 1, NextFrame);
+    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p", Column == 0 ? "\r\n" : "  ", Iteration + 1, NextFrame);
     InbvDisplayString(Buffer);
     
     if (Column == 1)
