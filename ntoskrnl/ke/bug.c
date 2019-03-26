@@ -28,6 +28,8 @@ ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
+BACKTRACE_INFO KiStackBacktrace[64];
+ULONG KiStackBacktraceLen;
 
 PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead = NULL;
 KSPIN_LOCK KiNmiCallbackListLock;
@@ -643,77 +645,86 @@ KiDumpParameterImages(IN PCHAR Message,
 
 VOID
 NTAPI
-KiStackBacktrace()
+KiFormatStackBacktrace(IN INT32 Iteration,
+                       OUT CHAR *Buffer,
+                       IN INT32 BufferSize)
 {
-    CHAR Buffer[64];
-    PVOID *Frame;
-    PVOID *FramePc, *NextFrame;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    BOOLEAN InSystem, Print = TRUE;
     CHAR AnsiName[64];
-    ULONG Column = 0, Iteration = 0, MaximumLines = 21;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InSystem;
+    
+    if ((ULONG_PTR)KiStackBacktrace[Iteration].FramePc > (ULONG_PTR)MmHighestUserAddress &&
+        KiPcToFileHeader(KiStackBacktrace[Iteration].FramePc, &LdrEntry, FALSE, &InSystem))
+    {
+        KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
+                                AnsiName,
+                                sizeof(AnsiName));
+        KiStackBacktrace[Iteration].FramePc = (PVOID)((ULONG_PTR)KiStackBacktrace[Iteration].FramePc - (ULONG_PTR)LdrEntry->DllBase);
+
+        RtlStringCbPrintfA(Buffer,BufferSize, "%2d %-8p %12s:%-8p", Iteration, KiStackBacktrace[Iteration].Frame, AnsiName, KiStackBacktrace[Iteration].FramePc);
+    }
+    else
+        RtlStringCbPrintfA(Buffer, BufferSize, "%2d %-8p %21p", Iteration, KiStackBacktrace[Iteration].Frame, KiStackBacktrace[Iteration].FramePc);
+}
+
+VOID
+NTAPI
+KiDoStackBacktrace()
+{
+    PVOID *Frame, *NextFrame;
+    
+    KiStackBacktraceLen = 0;
  
     NextFrame = _AddressOfReturnAddress();
     NextFrame--;
     do
     {
         Frame = NextFrame;
-        FramePc = Frame[1];
         NextFrame = Frame[0];
-
-        if ((ULONG_PTR)FramePc > (ULONG_PTR)MmHighestUserAddress &&
-            KiPcToFileHeader(FramePc, &LdrEntry, FALSE, &InSystem))
-            {
-                KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
-                                        AnsiName,
-                                        sizeof(AnsiName));
-                FramePc = (PVOID)((ULONG_PTR)FramePc - (ULONG_PTR)LdrEntry->DllBase);
-                
-                if (Print)
-                {
-                    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p %12s:%-8p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, AnsiName, FramePc);
-                    InbvDisplayString(Buffer);
-                }
-                
-            }
-        else
-        {
-            if (Print)
-            {
-                RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p %21p", Column == 0 ? "\r\n" : "  ", Iteration, Frame, FramePc);
-                InbvDisplayString(Buffer);
-            }
-        }
-
-        if (Column == 1)
-            Column = 0;
-        else
-            Column ++;
-
-        Iteration ++;
         
-        /* We have not too much printing area, let's not print anymore if maximum lines reached */
-        if (Iteration / 2 >= MaximumLines && Print)
-        {
-            if(Column == 0)
-                InbvDisplayString("\r\n");
-
-            InbvDisplayString("(reached the maximum number of lines!)");
-            
-            Print = FALSE;
-        }
+        KiStackBacktrace[KiStackBacktraceLen].Frame = NextFrame;
+        KiStackBacktrace[KiStackBacktraceLen].FramePc = Frame[1];
+        KiStackBacktrace[KiStackBacktraceLen].NextFrame = Frame[0];
+        
+        KiStackBacktraceLen++;
     } 
     while ((ULONG_PTR)NextFrame > (ULONG_PTR)Frame &&
            (ULONG_PTR)NextFrame < (ULONG_PTR)Frame + 4 * PAGE_SIZE);
+}
 
-    if (!Print)
-        Column = 0;
-
-    RtlStringCbPrintfA(Buffer, sizeof(Buffer), "%s%2d %-8p", Column == 0 ? "\r\n" : "  ", Iteration + 1, NextFrame);
-    InbvDisplayString(Buffer);
+VOID
+NTAPI
+KiDisplayStackBacktrace()
+{
+    CHAR AnsiBuffer[128], AnsiBuffer2[64];
+    INT32 Iteration, MaximumLines = 22, ColumnMax;
     
-    if (Column == 1)
+    /* If count of stack backtrace lines is less than MaximumLines number so let's split it in two columns */
+    if (KiStackBacktraceLen < MaximumLines)
+        ColumnMax = KiStackBacktraceLen / 2;
+    else /* If it's more than possible to display, let's split in two columnts but as maximum as possible */
+        ColumnMax = MaximumLines;
+
+    for (Iteration = 0; Iteration < KiStackBacktraceLen; Iteration++)
+    {
+        if(Iteration >= ColumnMax)
+            break;
+        
+        /* Get text about item in 1st column */
+        KiFormatStackBacktrace(Iteration, AnsiBuffer, sizeof(AnsiBuffer));
+        
+        /* Get text about item in 2nd column */
+        KiFormatStackBacktrace(ColumnMax + Iteration, AnsiBuffer2, sizeof(AnsiBuffer2));
+            
+        /* Format it to show both outputs on one line */    
+        RtlStringCbPrintfA(AnsiBuffer, sizeof(AnsiBuffer), "%s  %s", AnsiBuffer, AnsiBuffer2);
+
         InbvDisplayString("\r\n");
+        InbvDisplayString(AnsiBuffer);
+    }
+
+    RtlStringCbPrintfA(AnsiBuffer, sizeof(AnsiBuffer), "\r\n%2d %-8p --------------------------------------------------------\r\n", KiStackBacktraceLen - 1, KiStackBacktrace[KiStackBacktraceLen - 1].NextFrame);
+    InbvDisplayString(AnsiBuffer);
 }
 
 VOID
@@ -828,8 +839,9 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                               KeBugCheckUnicodeToAnsi);
     }
 
-    /* Display stack backtrace */
-    KiStackBacktrace();
+    /* Generate & display stack backtrace */
+    KiDoStackBacktrace();
+    KiDisplayStackBacktrace();
 
     /* Reset scrolling position for something like kdb */
     InbvSetTextColor(15);

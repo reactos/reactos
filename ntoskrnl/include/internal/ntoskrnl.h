@@ -136,6 +136,13 @@ typedef struct _INFORMATION_CLASS_INFO
 
 #endif
 
+typedef struct _BACKTRACE_INFO
+{
+    PVOID *Frame;
+    PVOID *FramePc;
+    PVOID *NextFrame;
+} BACKTRACE_INFO, *PBACKTRACE_INFO;
+
 #ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 
