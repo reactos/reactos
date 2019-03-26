@@ -1251,6 +1251,7 @@ for_ugly_chips:
 
             for(c=0; c<deviceExtension->NumberChannels; c++) {
                 chan = &deviceExtension->chan[c];
+                AtapiSetupLunPtrs(chan, deviceExtension, c);
                 IsPata = FALSE;
                 if(ChipFlags & ICH5) {
                     KdPrint2((PRINT_PREFIX "ICH5\n"));
