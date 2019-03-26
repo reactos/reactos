@@ -291,7 +291,7 @@ Severity=Success
 Facility=System
 SymbolicName=CREATE_DELETE_LOCK_NOT_LOCKED
 Language=English
-The thread reaper was handed a thread to reap, but the thread's process'
+The thread reaper was handed a thread to reap, but the thread's process
 .
 
 MessageId=0x15
@@ -371,16 +371,7 @@ Severity=Success
 Facility=System
 SymbolicName=KMODE_EXCEPTION_NOT_HANDLED
 Language=English
-Check to be sure you have adequate disk space. If a driver is
-identified in the Stop message, disable the driver or check
-with the manufacturer for driver updates. Try changing video
-adapters.
-
-Check with your hardware vendor for any BIOS updates. Disable
-BIOS memory options such as caching or shadowing. If you need
-to use Safe Mode to remove or disable components, restart your
-computer, press F8 to select Advanced Startup Options, and then
-select Safe Mode.
+KMODE_EXCEPTION_NOT_HANDLED
 .
 
 MessageId=0x1F
@@ -420,10 +411,7 @@ Severity=Success
 Facility=System
 SymbolicName=FAT_FILE_SYSTEM
 Language=English
-Disable or uninstall any anti-virus, disk defragmentation
-or backup utilities. Check your hard drive configuration,
-and check for any updated drivers. Run CHKDSK /F to check
-for hard drive corruption, and then restart your computer.
+FAT_FILE_SYSTEM
 .
 
 MessageId=0x24
@@ -511,15 +499,7 @@ Severity=Success
 Facility=System
 SymbolicName=DATA_BUS_ERROR
 Language=English
-Run system diagnostics supplied by your hardware manufacturer.
-In particular, run a memory check, and check for faulty or
-mismatched memory. Try changing video adapters.
-
-Check with your hardware vendor for any BIOS updates. Disable
-BIOS memory options such as caching or shadowing. If you need
-to use Safe Mode to remove or disable components, restart your
-computer, press F8 to select Advanced Startup Options, and then
-select Safe Mode.
+DATA_BUS_ERROR
 .
 
 MessageId=0x2F
@@ -623,12 +603,7 @@ Severity=Success
 Facility=System
 SymbolicName=NO_MORE_SYSTEM_PTES
 Language=English
-Remove any recently installed software including backup
-utilities or disk-intensive applications.
-
-If you need to use Safe Mode to remove or disable components,
-restart your computer, press F8 to select Advanced Startup
-Options, and then select Safe Mode.
+NO_MORE_SYSTEM_PTES
 .
 
 MessageId=0x40
@@ -1084,11 +1059,7 @@ Severity=Success
 Facility=System
 SymbolicName=INACCESSIBLE_BOOT_DEVICE
 Language=English
-Check for viruses on your computer. Remove any newly installed
-hard drives or hard drive controllers. Check your hard drive
-to make sure it is properly configured and terminated.
-Run CHKDSK /F to check for hard drive corruption, and then
-restart your computer.
+INACCESSIBLE_BOOT_DEVICE
 .
 
 MessageId=0x7C
@@ -1120,14 +1091,7 @@ Severity=Success
 Facility=System
 SymbolicName=UNEXPECTED_KERNEL_MODE_TRAP
 Language=English
-Run a system diagnostic utility supplied by your hardware manufacturer.
-In particular, run a memory check, and check for faulty or mismatched
-memory. Try changing video adapters.
-
-Disable or remove any newly installed hardware and drivers. Disable or
-remove any newly installed software. If you need to use Safe Mode to
-remove or disable components, restart your computer, press F8 to select
-Advanced Startup Options, and then select Safe Mode.
+UNEXPECTED_KERNEL_MODE_TRAP
 .
 
 MessageId=0x80
@@ -1326,11 +1290,8 @@ Severity=Success
 Facility=System
 SymbolicName=BUGCODE_PSS_MESSAGE_SIGNATURE
 Language=English
-A system file that is owned by ReactOS was replaced by an application
-running on your system.  The operating system detected this and tried to
-verify the validity of the file's signature.  The operating system found that
-the file signature is not valid and put the original, correct file back
-so that your operating system will continue to function properly.
+A system file was replaced by an application on your system.
+File recovered.
 .
 
 MessageId=0xC4
@@ -1347,19 +1308,6 @@ Facility=System
 SymbolicName=DRIVER_CORRUPTED_EXPOOL
 Language=English
 A device driver has pool.
-
-Check to make sure any new hardware or software is properly installed.
-If this is a new installation, ask your hardware or software manufacturer
-for any ReactOS updates you might need.
-
-Run the driver verifier against any new (or suspect) drivers.
-If that doesn't reveal the corrupting driver, try enabling special pool.
-Both of these features are intended to catch the corruption at an earlier
-point where the offending driver can be identified.
-
-If you need to use Safe Mode to remove or disable components,
-restart your computer, press F8 to select Advanced Startup Options,
-and then select Safe Mode.
 .
 
 MessageId=0xC6
@@ -1368,8 +1316,6 @@ Facility=System
 SymbolicName=DRIVER_CAUGHT_MODIFYING_FREED_POOL
 Language=English
 A device driver attempting to corrupt the system has been caught.
-The faulty driver currently on the kernel stack must be replaced
-with a working version.
 .
 
 MessageId=0xC8
@@ -1377,10 +1323,7 @@ Severity=Success
 Facility=System
 SymbolicName=IRQL_UNEXPECTED_VALUE
 Language=English
-The processor's IRQL is not valid for the currently executing context.
-This is a software error condition and is usually caused by a device
-driver changing IRQL and not restoring it to its previous value when
-it has finished its task.
+IRQL_UNEXPECTED_VALUE
 .
 
 MessageId=0xCA
@@ -1541,14 +1484,7 @@ Severity=Success
 Facility=System
 SymbolicName=ACPI_BIOS_FATAL_ERROR
 Language=English
-
-Your computer (BIOS) has reported that a component in your system is faulty and
-has prevented ReactOS from operating.  You can determine which component is
-faulty by running the diagnostic disk or tool that came with your computer.
-
-If you do not have this tool, you must contact your system vendor and report
-this error message to them.  They will be able to assist you in correcting this
-hardware problem thereby allowing ReactOS to operate.
+ACPI_BIOS_FATAL_ERROR
 .
 
 MessageId=0xE1
@@ -1580,13 +1516,7 @@ Severity=Success
 Facility=System
 SymbolicName=WORKER_INVALID
 Language=English
-If Parameter1 == 0, an executive worker item was found in memory which
-must not contain such items.  Usually this is memory being freed.  This
-is usually caused by a device driver that has not cleaned up properly
-before freeing memory.
-
-If Parameter1 == 1, an attempt was made to queue an executive worker item
-with a usermode execution routine.
+WORKER_INVALID
 .
 
 MessageId=0xE5
@@ -1610,9 +1540,7 @@ Severity=Success
 Facility=System
 SymbolicName=ACTIVE_EX_WORKER_THREAD_TERMINATION
 Language=English
-An executive worker thread is being terminated without having gone through the worker thread rundown code.
-Work items queued to the Ex worker queue must not terminate their threads.
-A stack trace should indicate the culprit.
+ACTIVE_EX_WORKER_THREAD_TERMINATION
 .
 
 MessageId=0xEA
@@ -1620,12 +1548,7 @@ Severity=Success
 Facility=System
 SymbolicName=THREAD_STUCK_IN_DEVICE_DRIVER
 Language=English
-
-The device driver got stuck in an infinite loop. This usually indicates
-problem with the device itself or with the device driver programming the
-hardware incorrectly.
-
-Please check with your hardware device vendor for any driver updates.
+THREAD_STUCK_IN_DEVICE_DRIVER
 .
 
 MessageId=0xEF
@@ -1633,7 +1556,7 @@ Severity=Success
 Facility=System
 SymbolicName=CRITICAL_PROCESS_DIED
 Language=English
-The kernel attempted to ready a thread that was in an incorrect state such as terminated.
+A critical thread terminated.
 .
 
 MessageId=0xF4
@@ -1641,7 +1564,7 @@ Severity=Success
 Facility=System
 SymbolicName=CRITICAL_OBJECT_TERMINATION
 Language=English
-A process or thread crucial to system operation has unexpectedly exited or been terminated.
+A critical process terminated.
 .
 
 MessageId=0xF6
@@ -1657,8 +1580,7 @@ Severity=Success
 Facility=System
 SymbolicName=DRIVER_OVERRAN_STACK_BUFFER
 Language=English
-A driver has overrun a stack-based buffer.  This overrun could potentially
-allow a malicious user to gain control of this machine.
+DRIVER_OVERRAN_STACK_BUFFER
 .
 
 MessageId=0xF8
@@ -1666,7 +1588,7 @@ Severity=Success
 Facility=System
 SymbolicName=RAMDISK_BOOT_INITIALIZATION_FAILED
 Language=English
-An initialization failure occurred while attempting to boot from the RAM disk.
+Failed to boot from RAM disk.
 .
 
 MessageId=0xF9
