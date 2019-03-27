@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for dbghelp rsym functions
- * PROGRAMMER:      Mark Jansen
- *
- *                  These tests are based on the PDB tests.
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for dbghelp rsym functions
+ * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
+ * 
+ *              These tests are based on the PDB tests.
  */
 
 #include <ntstatus.h>
@@ -45,17 +45,17 @@
 
 // data.c
 void dump_rsym(const char* filename);
-int extract_gcc_exe(char szFile[MAX_PATH]);
-void cleanup_gcc_exe();
+int extract_gcc_dll(char szFile[MAX_PATH]);
+void cleanup_gcc_dll();
 
 static HANDLE proc()
 {
     return GetCurrentProcess();
 }
 
-static BOOL init_sym_imp(const char* file, int line)
+static BOOL init_sym_imp(BOOL fInvadeProcess, const char* file, int line)
 {
-    if (!SymInitialize(proc(), NULL, FALSE))
+    if (!SymInitialize(proc(), NULL, fInvadeProcess))
     {
         DWORD err = GetLastError();
         ok_(file, line)(0, "Failed to init: 0x%x\n", err);
@@ -68,6 +68,14 @@ static void deinit_sym()
 {
     SymCleanup(proc());
 }
+
+#define init_sym(fInvadeProcess)          init_sym_imp(fInvadeProcess, __FILE__, __LINE__)
+
+#define INIT_PSYM(buff) do { \
+    memset((buff), 0, sizeof((buff))); \
+    ((PSYMBOL_INFO)(buff))->SizeOfStruct = sizeof(SYMBOL_INFO); \
+    ((PSYMBOL_INFO)(buff))->MaxNameLen = MAX_SYM_NAME; \
+} while (0)
 
 static BOOL supports_rsym(HANDLE hProc, DWORD64 BaseAddress)
 {
@@ -83,36 +91,19 @@ static BOOL supports_rsym(HANDLE hProc, DWORD64 BaseAddress)
         ModuleInfo.CVSig == ('R' | ('S' << 8) | ('Y' << 16) | ('M' << 24));
 }
 
-#define init_sym()          init_sym_imp(__FILE__, __LINE__)
 
-#define INIT_PSYM(buff) do { \
-    memset((buff), 0, sizeof((buff))); \
-    ((PSYMBOL_INFO)(buff))->SizeOfStruct = sizeof(SYMBOL_INFO); \
-    ((PSYMBOL_INFO)(buff))->MaxNameLen = MAX_SYM_NAME; \
-} while (0)
-
-
-static void test_SymFromName(HANDLE hProc, const char* szModuleName)
+static void test_SymFromName(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
     char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
     PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
 
-    DWORD64 BaseAddress;
-    DWORD dwErr;
-
-    if (!init_sym())
-        return;
-
-    SetLastError(ERROR_SUCCESS);
-    BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
-
-    if (supports_rsym(hProc, BaseAddress))
+    if (!supports_rsym(hProc, BaseAddress))
     {
-        ok_ulonglong(BaseAddress, 0x600000);
-        ok_hex(dwErr, ERROR_SUCCESS);
-
+        skip("dbghelp.dll cannot parse rsym\n");
+    }
+    else
+    {
         INIT_PSYM(buffer);
         Ret = SymFromName(hProc, "DllMain", pSymbol);
         ok_int(Ret, TRUE);
@@ -140,35 +131,23 @@ static void test_SymFromName(HANDLE hProc, const char* szModuleName)
         ok_hex(pSymbol->Tag, SymTagFunction);
         ok_str(pSymbol->Name, "FfsFormat");
     }
-    else
-    {
-        skip("dbghelp.dll cannot parse rsym\n");
-    }
-
-    deinit_sym();
 }
 
-static void test_SymFromAddr(HANDLE hProc, const char* szModuleName)
+static void test_SymFromAddr(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
     char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
     PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
 
-    DWORD64 BaseAddress, Displacement;
+    DWORD64 Displacement;
     DWORD dwErr;
 
-    if (!init_sym())
-        return;
-
-    SetLastError(ERROR_SUCCESS);
-    BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
-
-    if (supports_rsym(hProc, BaseAddress))
+    if (!supports_rsym(hProc, BaseAddress))
     {
-        ok_ulonglong(BaseAddress, 0x600000);
-        ok_hex(dwErr, ERROR_SUCCESS);
-
+        skip("dbghelp.dll cannot parse rsym\n");
+    }
+    else
+    {
         /* No address found before load address of module */
         Displacement = 0;
         INIT_PSYM(buffer);
@@ -241,12 +220,6 @@ static void test_SymFromAddr(HANDLE hProc, const char* szModuleName)
         ok_hex(pSymbol->Tag, SymTagPublicSymbol);
         ok_str(pSymbol->Name, "_head_dll_ntdll_libntdll_a");
     }
-    else
-    {
-        skip("dbghelp.dll cannot parse rsym\n");
-    }
-
-    deinit_sym();
 }
 
 typedef struct _test_context
@@ -286,7 +259,7 @@ static struct _test_data {
     { 0x4000, 0, SymTagPublicSymbol, "_head_dll_ntdll_libntdll_a", __LINE__ },
 };
 
-BOOL CALLBACK EnumSymProc(PSYMBOL_INFO pSymInfo, ULONG SymbolSize, PVOID UserContext)
+static BOOL CALLBACK EnumSymProc(PSYMBOL_INFO pSymInfo, ULONG SymbolSize, PVOID UserContext)
 {
     test_context* ctx = UserContext;
 
@@ -310,60 +283,85 @@ BOOL CALLBACK EnumSymProc(PSYMBOL_INFO pSymInfo, ULONG SymbolSize, PVOID UserCon
     return TRUE;
 }
 
-static void test_SymEnumSymbols(HANDLE hProc, const char* szModuleName)
+static void test_SymEnumSymbols(HANDLE hProc, DWORD64 BaseAddress)
 {
     BOOL Ret;
-    DWORD dwErr;
-
     test_context ctx;
 
-    if (!init_sym())
-        return;
-
     ctx.Index = 0;
-    SetLastError(ERROR_SUCCESS);
-    ctx.BaseAddress = SymLoadModule64(hProc, NULL, szModuleName, NULL, 0x600000, 0);
-    dwErr = GetLastError();
+    ctx.BaseAddress = BaseAddress;
 
-    if (supports_rsym(hProc, ctx.BaseAddress))
+    if (!supports_rsym(hProc, ctx.BaseAddress))
     {
-        ok_ulonglong(ctx.BaseAddress, 0x600000);
-        ok_hex(dwErr, ERROR_SUCCESS);
-
+        skip("dbghelp.dll cannot parse rsym\n");
+    }
+    else
+    {
         Ret = SymEnumSymbols(hProc, ctx.BaseAddress, NULL, EnumSymProc, &ctx);
         ok_int(Ret, TRUE);
         ok_int(ctx.Index, ARRAYSIZE(test_data));
     }
-    else
-    {
-        skip("dbghelp.dll cannot parse rsym\n");
-    }
-
-    deinit_sym();
 }
-
-
 
 
 START_TEST(rsym)
 {
     char szDllName[MAX_PATH];
-    //dump_rsym("R:\\src\\trunk\\reactos\\modules\\rostests\\apitests\\dbghelp\\testdata\\gcc_uffs.dll");
+#ifdef _M_IX86
+    HMODULE hMod;
+#endif
+    DWORD64 BaseAddress;
+    DWORD dwErr, Options;
 
-    DWORD Options = SymGetOptions();
+    Options = SymGetOptions();
     Options &= ~(SYMOPT_UNDNAME);
     //Options |= SYMOPT_DEBUG;
     SymSetOptions(Options);
 
-    if (!extract_gcc_exe(szDllName))
+    if (!extract_gcc_dll(szDllName))
     {
         ok(0, "Failed extracting files\n");
         return;
     }
 
-    test_SymFromName(proc(), szDllName);
-    test_SymFromAddr(proc(), szDllName);
-    test_SymEnumSymbols(proc(), szDllName);
+    if (init_sym(FALSE))
+    {
+        SetLastError(ERROR_SUCCESS);
+        BaseAddress = SymLoadModule64(proc(), NULL, szDllName, NULL, 0x600000, 0);
+        dwErr = GetLastError();
 
-    cleanup_gcc_exe();
+        ok_ulonglong(BaseAddress, 0x600000);
+        ok_hex(dwErr, ERROR_SUCCESS);
+
+        if (BaseAddress == 0x600000)
+        {
+            trace("Module loaded by SymLoadModule64\n");
+            test_SymFromName(proc(), BaseAddress);
+            test_SymFromAddr(proc(), BaseAddress);
+            test_SymEnumSymbols(proc(), BaseAddress);
+        }
+
+        deinit_sym();
+    }
+
+#ifdef _M_IX86
+    hMod = LoadLibraryA(szDllName);
+    if (hMod)
+    {
+        BaseAddress = (DWORD64)(DWORD_PTR)hMod;
+        /* Invade process */
+        if (init_sym(TRUE))
+        {
+            trace("Module loaded by LoadLibraryA\n");
+            test_SymFromName(proc(), BaseAddress);
+            test_SymFromAddr(proc(), BaseAddress);
+            test_SymEnumSymbols(proc(), BaseAddress);
+
+            deinit_sym();
+        }
+
+        FreeLibrary(hMod);
+    }
+#endif
+    cleanup_gcc_dll();
 }
