@@ -33,9 +33,16 @@ NullQueryVolumeInformation(OUT PVOID Buffer,
         return STATUS_INVALID_INFO_CLASS;
     }
 
+    /* Check the buffer length */
+    if (*Length < sizeof(FILE_FS_DEVICE_INFORMATION))
+    {
+        *Length = sizeof(FILE_FS_DEVICE_INFORMATION);
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
     /* Fill out the information */
-    RtlZeroMemory(DeviceInformation, sizeof(FILE_FS_DEVICE_INFORMATION));
     DeviceInformation->DeviceType = FILE_DEVICE_NULL;
+    DeviceInformation->Characteristics = FILE_DEVICE_SECURE_OPEN;
 
     /* Return the length and success */
     *Length = sizeof(FILE_FS_DEVICE_INFORMATION);
@@ -57,6 +64,13 @@ NullQueryFileInformation(OUT PVOID Buffer,
     {
         /* Fail */
         return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Check the buffer length */
+    if (*Length < sizeof(FILE_STANDARD_INFORMATION))
+    {
+        *Length = sizeof(FILE_STANDARD_INFORMATION);
+        return STATUS_INFO_LENGTH_MISMATCH;
     }
 
     /* Fill out the information */
@@ -228,7 +242,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             &DeviceName,
                             FILE_DEVICE_NULL,
-                            0,
+                            FILE_DEVICE_SECURE_OPEN,
                             FALSE,
                             &DeviceObject);
     if (!NT_SUCCESS(Status))
