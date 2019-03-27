@@ -57,6 +57,7 @@ USBSTOR_AllocateIrpContext()
     return Context;
 }
 
+static
 BOOLEAN
 USBSTOR_IsCSWValid(
     PIRP_CONTEXT Context)
@@ -70,12 +71,6 @@ USBSTOR_IsCSWValid(
     if (Context->csw->Tag != (ULONG_PTR)Context->csw)
     {
         DPRINT1("[USBSTOR] Expected Tag %Ix but got %x\n", (ULONG_PTR)Context->csw, Context->csw->Tag);
-        return FALSE;
-    }
-
-    if (Context->csw->Status != 0x00)
-    {
-        DPRINT1("[USBSTOR] Expected Status 0x00 but got %x\n", Context->csw->Status);
         return FALSE;
     }
 
@@ -128,99 +123,99 @@ USBSTOR_CSWCompletionRoutine(
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
-    PCDB pCDB;
     PUFI_CAPACITY_RESPONSE Response;
     NTSTATUS Status;
 
     Context = (PIRP_CONTEXT)Ctx;
 
-    if (Context->TransferBufferMDL)
+    if (Context->TransferBufferMDL && Context->TransferBufferMDL != Context->Irp->MdlAddress)
     {
-        // is there an irp associated
-        if (Context->Irp)
+        IoFreeMdl(Context->TransferBufferMDL);
+    }
+
+    DPRINT("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
+
+    // first check for Irp errors
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
         {
-            // did we allocate the mdl
-            if (Context->TransferBufferMDL != Context->Irp->MdlAddress)
+            if (Context->ErrorIndex == 0)
             {
-                IoFreeMdl(Context->TransferBufferMDL);
+                Context->ErrorIndex = 1;
+
+                // clear stall and resend cbw
+                Status = USBSTOR_QueueWorkItem(Context, Irp);
+                ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+
+                return STATUS_MORE_PROCESSING_REQUIRED;
             }
         }
         else
         {
-            IoFreeMdl(Context->TransferBufferMDL);
-        }
-    }
-
-    DPRINT("USBSTOR_CSWCompletionRoutine Status %x\n", Irp->IoStatus.Status);
-
-    if (!NT_SUCCESS(Irp->IoStatus.Information))
-    {
-        if (Context->ErrorIndex == 0)
-        {
-            Context->ErrorIndex = 1;
-
-            // clear stall and resend cbw
-            Status = USBSTOR_QueueWorkItem(Context, Irp);
-            ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
-            return STATUS_MORE_PROCESSING_REQUIRED;
+            DPRINT1("USBSTOR_CSWCompletionRoutine: Urb.Hdr.Status - %x\n", Context->Urb.UrbHeader.Status);
         }
 
         // perform reset recovery
         Context->ErrorIndex = 2;
-        IoFreeIrp(Irp);
         Status = USBSTOR_QueueWorkItem(Context, NULL);
         ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
-    if (!USBSTOR_IsCSWValid(Context))
+    // now check the CSW packet validity
+    if (!USBSTOR_IsCSWValid(Context) || Context->csw->Status == CSW_STATUS_PHASE_ERROR)
     {
         // perform reset recovery
         Context->ErrorIndex = 2;
-        IoFreeIrp(Irp);
         Status = USBSTOR_QueueWorkItem(Context, NULL);
         ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
-
-    IoStack = IoGetCurrentIrpStackLocation(Context->Irp);
-
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Request = IoStack->Parameters.Scsi.Srb;
     ASSERT(Request);
 
     Status = Irp->IoStatus.Status;
 
-    pCDB = (PCDB)Request->Cdb;
-    Request->SrbStatus = SRB_STATUS_SUCCESS;
-
-    // read capacity needs special work
-    if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
+    // finally check for CSW errors
+    if (Context->csw->Status == CSW_STATUS_COMMAND_PASSED)
     {
-        // get output buffer
-        Response = (PUFI_CAPACITY_RESPONSE)Context->TransferData;
+        // read capacity needs special work
+        if (Request->Cdb[0] == SCSIOP_READ_CAPACITY)
+        {
+            // get output buffer
+            Response = (PUFI_CAPACITY_RESPONSE)Context->TransferData;
 
-        // store in pdo
-        Context->PDODeviceExtension->BlockLength = NTOHL(Response->BlockLength);
-        Context->PDODeviceExtension->LastLogicBlockAddress = NTOHL(Response->LastLogicalBlockAddress);
+            // store in pdo
+            Context->PDODeviceExtension->BlockLength = NTOHL(Response->BlockLength);
+            Context->PDODeviceExtension->LastLogicBlockAddress = NTOHL(Response->LastLogicalBlockAddress);
+        }
+
+        Status = STATUS_SUCCESS;
+        Request->SrbStatus = SRB_STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = Request->DataTransferLength;
+    }
+    else if (Context->csw->Status == CSW_STATUS_COMMAND_FAILED)
+    {
+        DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
+        // perform reset recovery
+        Context->ErrorIndex = 2;
+        Status = USBSTOR_QueueWorkItem(Context, NULL);
+        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+        return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
     FreeItem(Context->cbw);
 
-    // FIXME: check status
-    Context->Irp->IoStatus.Status = Irp->IoStatus.Status;
-    Context->Irp->IoStatus.Information = Context->TransferDataLength;
-
     // terminate current request
-    USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
-
-    IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
-
+    USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Irp);
     USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
 
-    IoFreeIrp(Irp);
     FreeItem(Context);
-    return STATUS_MORE_PROCESSING_REQUIRED;
+    return Status;
 }
 
 VOID
@@ -406,7 +401,6 @@ USBSTOR_SendRequest(
     PIRP_CONTEXT Context;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    PIRP Irp;
     PUCHAR MdlVirtualAddress;
 
     Context = USBSTOR_AllocateIrpContext();
@@ -450,50 +444,34 @@ USBSTOR_SendRequest(
     if (Context->TransferDataLength)
     {
         // check if the original request already does have an mdl associated
-        if (OriginalRequest)
+        if ((OriginalRequest->MdlAddress != NULL) &&
+            (Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
         {
-            if ((OriginalRequest->MdlAddress != NULL) &&
-                (Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
+            // Sanity check that the Mdl does describe the TransferData for read/write
+            if (CommandLength == UFI_READ_WRITE_CMD_LEN)
             {
-                // Sanity check that the Mdl does describe the TransferData for read/write
-                if (CommandLength == UFI_READ_WRITE_CMD_LEN)
-                {
-                    MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
+                MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
 
-                    // is there an offset
-                    if (MdlVirtualAddress != Context->TransferData)
+                // is there an offset
+                if (MdlVirtualAddress != Context->TransferData)
+                {
+                    // lets build an mdl
+                    Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
+                    if (!Context->TransferBufferMDL)
                     {
-                        // lets build an mdl
-                        Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
-                        if (!Context->TransferBufferMDL)
-                        {
-                            FreeItem(Context->cbw);
-                            FreeItem(Context);
-                            return STATUS_INSUFFICIENT_RESOURCES;
-                        }
-
-                        IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
+                        FreeItem(Context->cbw);
+                        FreeItem(Context);
+                        return STATUS_INSUFFICIENT_RESOURCES;
                     }
-                }
 
-                if (!Context->TransferBufferMDL)
-                {
-                    // I/O paging request
-                    Context->TransferBufferMDL = OriginalRequest->MdlAddress;
+                    IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
                 }
             }
-            else
-            {
-                // allocate mdl for buffer, buffer must be allocated from NonPagedPool
-                Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, Context->TransferDataLength, FALSE, FALSE, NULL);
-                if (!Context->TransferBufferMDL)
-                {
-                    FreeItem(Context->cbw);
-                    FreeItem(Context);
-                    return STATUS_INSUFFICIENT_RESOURCES;
-                }
 
-                MmBuildMdlForNonPagedPool(Context->TransferBufferMDL);
+            if (!Context->TransferBufferMDL)
+            {
+                // I/O paging request
+                Context->TransferBufferMDL = OriginalRequest->MdlAddress;
             }
         }
         else
@@ -511,22 +489,7 @@ USBSTOR_SendRequest(
         }
     }
 
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp)
-    {
-        FreeItem(Context->cbw);
-        FreeItem(Context);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    if (OriginalRequest)
-    {
-        IoMarkIrpPending(OriginalRequest);
-    }
-
-    USBSTOR_SendCBW(Context, Irp);
-
-    return STATUS_PENDING;
+    return USBSTOR_SendCBW(Context, OriginalRequest);
 }
 
 NTSTATUS

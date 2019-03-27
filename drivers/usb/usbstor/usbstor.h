@@ -105,6 +105,10 @@ C_ASSERT(sizeof(CBW) == 31);
 
 #define MAX_LUN 0xF
 
+#define CSW_STATUS_COMMAND_PASSED 0x00
+#define CSW_STATUS_COMMAND_FAILED 0x01
+#define CSW_STATUS_PHASE_ERROR    0x02
+
 typedef struct
 {
     ULONG Signature;                                                 // CSW signature
