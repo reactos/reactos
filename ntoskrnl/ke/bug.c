@@ -723,7 +723,12 @@ KiDisplayStackBacktrace()
         InbvDisplayString(AnsiBuffer);
     }
 
-    RtlStringCbPrintfA(AnsiBuffer, sizeof(AnsiBuffer), "\r\n%2d %-8p --------------------------------------------------------\r\n", KiStackBacktraceLen - 1, KiStackBacktrace[KiStackBacktraceLen - 1].NextFrame);
+    RtlStringCbPrintfA(AnsiBuffer,
+                       sizeof(AnsiBuffer),
+                       "\r\n%2d %-8p --------------------------------------------------------\r\n",
+                       KiStackBacktraceLen - 1,
+                       KiStackBacktrace[KiStackBacktraceLen - 1].NextFrame);
+
     InbvDisplayString(AnsiBuffer);
 }
 
