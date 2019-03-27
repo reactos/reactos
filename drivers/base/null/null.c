@@ -186,7 +186,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                             0,
                             &DeviceName,
                             FILE_DEVICE_NULL,
-                            0,
+                            FILE_DEVICE_SECURE_OPEN,
                             FALSE,
                             &DeviceObject);
     if (!NT_SUCCESS(Status))
