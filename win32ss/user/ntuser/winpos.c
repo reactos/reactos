@@ -958,6 +958,10 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
 
     adjust = IntGetWindowBorders(adjustedStyle, exstyle);
 
+    // Handle special case while maximized. CORE-15893
+    if ((adjustedStyle & WS_THICKFRAME) && !(adjustedStyle & WS_CHILD) && !(adjustedStyle & WS_MINIMIZE))
+         adjust += 2;
+
     xinc = yinc = adjust;
 
     if ((adjustedStyle & WS_THICKFRAME) && (adjustedStyle & WS_CHILD) && !(adjustedStyle & WS_MINIMIZE))
