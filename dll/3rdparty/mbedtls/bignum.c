@@ -502,26 +502,38 @@ cleanup:
 }
 
 /*
- * Helper to write the digits high-order first
+ * Helper to write the digits high-order first.
  */
-static int mpi_write_hlp( mbedtls_mpi *X, int radix, char **p )
+static int mpi_write_hlp( mbedtls_mpi *X, int radix,
+                          char **p, const size_t buflen )
 {
     int ret;
     mbedtls_mpi_uint r;
+    size_t length = 0;
+    char *p_end = *p + buflen;
 
-    if( radix < 2 || radix > 16 )
-        return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+    do
+    {
+        if( length >= buflen )
+        {
+            return( MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL );
+        }
 
-    MBEDTLS_MPI_CHK( mbedtls_mpi_mod_int( &r, X, radix ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_div_int( X, NULL, X, radix ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_mod_int( &r, X, radix ) );
+        MBEDTLS_MPI_CHK( mbedtls_mpi_div_int( X, NULL, X, radix ) );
+        /*
+         * Write the residue in the current position, as an ASCII character.
+         */
+        if( r < 0xA )
+            *(--p_end) = (char)( '0' + r );
+        else
+            *(--p_end) = (char)( 'A' + ( r - 0xA ) );
 
-    if( mbedtls_mpi_cmp_int( X, 0 ) != 0 )
-        MBEDTLS_MPI_CHK( mpi_write_hlp( X, radix, p ) );
+        length++;
+    } while( mbedtls_mpi_cmp_int( X, 0 ) != 0 );
 
-    if( r < 10 )
-        *(*p)++ = (char)( r + 0x30 );
-    else
-        *(*p)++ = (char)( r + 0x37 );
+    memmove( *p, p_end, length );
+    *p += length;
 
 cleanup:
 
@@ -591,7 +603,7 @@ int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
         if( T.s == -1 )
             T.s = 1;
 
-        MBEDTLS_MPI_CHK( mpi_write_hlp( &T, radix, &p ) );
+        MBEDTLS_MPI_CHK( mpi_write_hlp( &T, radix, &p, buflen ) );
     }
 
     *p++ = '\0';

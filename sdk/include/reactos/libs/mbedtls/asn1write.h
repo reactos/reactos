@@ -26,6 +26,12 @@
 #ifndef MBEDTLS_ASN1_WRITE_H
 #define MBEDTLS_ASN1_WRITE_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "asn1.h"
 
 #define MBEDTLS_ASN1_CHK_ADD(g, f) do { if( ( ret = f ) < 0 ) return( ret ); else   \
@@ -185,24 +191,27 @@ int mbedtls_asn1_write_ia5_string( unsigned char **p, unsigned char *start,
                            const char *text, size_t text_len );
 
 /**
- * \brief           Write a bitstring tag (MBEDTLS_ASN1_BIT_STRING) and
- *                  value in ASN.1 format
- *                  Note: function works backwards in data buffer
+ * \brief           Write a bitstring tag (#MBEDTLS_ASN1_BIT_STRING) and
+ *                  value in ASN.1 format.
  *
- * \param p         reference to current position pointer
- * \param start     start of the buffer (for bounds-checking)
- * \param buf       the bitstring
- * \param bits      the total number of bits in the bitstring
+ * \note            This function works backwards in data buffer.
  *
- * \return          the length written or a negative error code
+ * \param p         The reference to the current position pointer.
+ * \param start     The start of the buffer, for bounds-checking.
+ * \param buf       The bitstring to write.
+ * \param bits      The total number of bits in the bitstring.
+ *
+ * \return          The number of bytes written to \p p on success.
+ * \return          A negative error code on failure.
  */
 int mbedtls_asn1_write_bitstring( unsigned char **p, unsigned char *start,
                           const unsigned char *buf, size_t bits );
 
 /**
- * \brief           Write an octet string tag (MBEDTLS_ASN1_OCTET_STRING) and
- *                  value in ASN.1 format
- *                  Note: function works backwards in data buffer
+ * \brief           Write an octet string tag (#MBEDTLS_ASN1_OCTET_STRING)
+ *                  and value in ASN.1 format.
+ *
+ * \note            This function works backwards in data buffer.
  *
  * \param p         reference to current position pointer
  * \param start     start of the buffer (for bounds-checking)

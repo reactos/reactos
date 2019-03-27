@@ -33,6 +33,12 @@
 #ifndef MBEDTLS_ECDSA_H
 #define MBEDTLS_ECDSA_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "ecp.h"
 #include "md.h"
 

@@ -35,6 +35,12 @@
 #ifndef MBEDTLS_ECDH_H
 #define MBEDTLS_ECDH_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "ecp.h"
 
 #ifdef __cplusplus

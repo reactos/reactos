@@ -26,6 +26,12 @@
 #ifndef MBEDTLS_CERTS_H
 #define MBEDTLS_CERTS_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include <stddef.h>
 
 #ifdef __cplusplus
