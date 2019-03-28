@@ -4063,6 +4063,14 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Only allow direct device open for FileFsDeviceInformation */
+    if (BooleanFlagOn(FileObject->Flags, FO_DIRECT_DEVICE_OPEN) &&
+        FsInformationClass != FileFsDeviceInformation)
+    {
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
