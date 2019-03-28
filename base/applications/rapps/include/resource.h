@@ -31,6 +31,7 @@
 #define IDI_CAT_SCIENCE          62
 #define IDI_CAT_TOOLS            63
 #define IDI_CAT_VIDEO            64
+#define IDI_CAT_THEMES           65
 
 /* Bitmaps */
 
@@ -176,6 +177,7 @@
 #define IDS_CAT_SCIENCE          712
 #define IDS_CAT_TOOLS            713
 #define IDS_CAT_VIDEO            714
+#define IDS_CAT_THEMES           715
 
 /* App installation status */
 #define IDS_STATUS_INSTALLED          800

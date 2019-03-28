@@ -78,7 +78,8 @@ List of valid categories:
 12 - Tools
 13 - Drivers
 14 - Libraries
-15 - Other
+15 - Themes
+16 - Other
 
 The official list of downloadable programs is kept on a public ReactOS server
 and synced every time RAPPS is launched for the first time.

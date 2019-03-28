@@ -182,6 +182,7 @@ BEGIN
     IDS_CAT_SCIENCE "Skenca"
     IDS_CAT_TOOLS "Vegla"
     IDS_CAT_VIDEO "Video"
+    IDS_CAT_THEMES "Themes"
 END
 
 STRINGTABLE

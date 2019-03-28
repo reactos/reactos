@@ -186,6 +186,7 @@ BEGIN
     IDS_CAT_SCIENCE "Nauka"
     IDS_CAT_TOOLS "Narzędzia"
     IDS_CAT_VIDEO "Wideo"
+    IDS_CAT_THEMES "Themes"
 END
 
 STRINGTABLE
