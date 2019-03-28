@@ -169,10 +169,10 @@ main (int argc, char **argv)
 	        at_start = 1;
 	        break;
 			
-	      //case 'c':
-	      //case 'C':		/* Literal? */
-	      //  literal_search = 1;
-	      //  break;
+	        case 'c':
+	        case 'C':		/* Count the number of lines that contain string */
+	         count_lines = 1;
+	         break;
 
 	      case 'e':
 	      case 'E':		/* matches pattern if at end of line */
