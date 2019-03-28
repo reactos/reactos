@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include <windows.h>
+#include <commctrl.h>
 #include <debug.h>
 
 #include "main.h"

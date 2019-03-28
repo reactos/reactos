@@ -587,6 +587,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     HANDLE hMutex;
     DWORD dwError;
     INT LayoutResource;
+    INITCOMMONCONTROLSEX iccex;
 
     UNREFERENCED_PARAMETER(prev);
     UNREFERENCED_PARAMETER(cmdline);
@@ -614,6 +615,11 @@ int WINAPI wWinMain(HINSTANCE hInstance,
             return 0;
         }
     }
+
+    /* Load the common controls */
+    iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    iccex.dwICC = ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&iccex);
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
