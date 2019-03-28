@@ -802,6 +802,7 @@ private:
         AddCategory(hRootItemAvailable, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
         AddCategory(hRootItemAvailable, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
         AddCategory(hRootItemAvailable, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        AddCategory(hRootItemAvailable, IDS_CAT_THEMES, IDI_CAT_THEMES);
         AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList();
@@ -1134,6 +1135,10 @@ private:
 
                     case IDS_CAT_VIDEO:
                         UpdateApplicationsList(ENUM_CAT_VIDEO);
+                        break;
+
+                    case IDS_CAT_THEMES:
+                        UpdateApplicationsList(ENUM_CAT_THEMES);
                         break;
 
                     case IDS_SELECTEDFORINST:

@@ -183,6 +183,7 @@ BEGIN
     IDS_CAT_SCIENCE "Vedecké" // Science
     IDS_CAT_TOOLS "Nástroje" // Tools
     IDS_CAT_VIDEO "Video"
+    IDS_CAT_THEMES "Themes"
 END
 
 STRINGTABLE

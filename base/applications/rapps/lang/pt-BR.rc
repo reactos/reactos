@@ -180,6 +180,7 @@ BEGIN
     IDS_CAT_SCIENCE "Ciência"
     IDS_CAT_TOOLS "Ferramentas"
     IDS_CAT_VIDEO "Vídeo"
+    IDS_CAT_THEMES "Themes"
 END
 
 STRINGTABLE
