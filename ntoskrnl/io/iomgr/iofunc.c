@@ -1026,6 +1026,32 @@ IopGetFileMode(IN PFILE_OBJECT FileObject)
     return Mode;
 }
 
+static
+BOOLEAN
+IopGetMountFlag(IN PDEVICE_OBJECT DeviceObject)
+{
+    KIRQL OldIrql;
+    PVPB Vpb;
+    BOOLEAN Mounted;
+
+    /* Assume not mounted */
+    Mounted = FALSE;
+
+    /* Check whether we have the mount flag */
+    IoAcquireVpbSpinLock(&OldIrql);
+
+    Vpb = DeviceObject->Vpb;
+    if (Vpb != NULL &&
+        BooleanFlagOn(Vpb->Flags, VPB_MOUNTED))
+    {
+        Mounted = TRUE;
+    }
+
+    IoReleaseVpbSpinLock(OldIrql);
+
+    return Mounted;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -4059,6 +4085,59 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
+    }
+
+    /*
+     * Quick path for FileFsDeviceInformation - the kernel has enough
+     * info to reply instead of the driver, excepted for network file systems
+     */
+    if (FsInformationClass == FileFsDeviceInformation &&
+        (BooleanFlagOn(FileObject->Flags, FO_DIRECT_DEVICE_OPEN) || FileObject->DeviceObject->DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM))
+    {
+        PFILE_FS_DEVICE_INFORMATION FsDeviceInfo = FsInformation;
+        DeviceObject = FileObject->DeviceObject;
+
+        _SEH2_TRY
+        {
+            FsDeviceInfo->DeviceType = DeviceObject->DeviceType;
+
+            /* Complete characteristcs with mount status if relevant */
+            FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
+            if (IopGetMountFlag(DeviceObject))
+            {
+                SetFlag(FsDeviceInfo->Characteristics, FILE_DEVICE_IS_MOUNTED);
+            }
+
+            IoStatusBlock->Information = sizeof(FILE_FS_DEVICE_INFORMATION);
+            IoStatusBlock->Status = STATUS_SUCCESS;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Check if we had a file lock */
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                /* Release it */
+                IopUnlockFileObject(FileObject);
+            }
+
+            /* Dereference the FO */
+            ObDereferenceObject(FileObject);
+
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+
+        /* Check if we had a file lock */
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            /* Release it */
+            IopUnlockFileObject(FileObject);
+        }
+
+        /* Dereference the FO */
+        ObDereferenceObject(FileObject);
+
+        return STATUS_SUCCESS;
     }
 
     /* Get the device object */
