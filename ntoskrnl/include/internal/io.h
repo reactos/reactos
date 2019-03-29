@@ -934,6 +934,12 @@ IopUnloadDevice(
     IN PDEVICE_OBJECT DeviceObject
 );
 
+PDEVICE_OBJECT
+NTAPI
+IopGetDeviceAttachmentBase(
+    IN PDEVICE_OBJECT DeviceObject
+);
+
 //
 // IRP Routines
 //
