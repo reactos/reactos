@@ -67,6 +67,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoInterrupt.c
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
+    ntos_io/IoVolume.c
     ntos_ke/KeApc.c
     ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c

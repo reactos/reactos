@@ -1346,7 +1346,7 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         goto DereferenceFO;
     }
 
-    Status = IoCallDriver(VolumeDeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -1396,7 +1396,7 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         goto ReleaseMemory;
     }
 
-    Status = IoCallDriver(VolumeDeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
