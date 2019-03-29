@@ -1052,6 +1052,88 @@ IopGetMountFlag(IN PDEVICE_OBJECT DeviceObject)
     return Mounted;
 }
 
+static
+BOOLEAN
+IopVerifyDriverObjectOnStack(IN PDEVICE_OBJECT DeviceObject,
+                             IN PDRIVER_OBJECT DriverObject)
+{
+    PDEVICE_OBJECT StackDO;
+
+    /* Browse our whole device stack, trying to find the appropriate driver */
+    StackDO = IopGetDeviceAttachmentBase(DeviceObject);
+    while (StackDO != NULL)
+    {
+        /* We've found the driver, return success */
+        if (StackDO->DriverObject == DriverObject)
+        {
+            return TRUE;
+        }
+
+        /* Move to the next */
+        StackDO = StackDO->AttachedDevice;
+    }
+
+    /* We only reach there if driver was not found */
+    return FALSE;
+}
+
+static
+NTSTATUS
+IopGetDriverPathInformation(IN PFILE_OBJECT FileObject,
+                            IN PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo,
+                            IN ULONG Length)
+{
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    UNICODE_STRING DriverName;
+    PDRIVER_OBJECT DriverObject;
+
+    /* Make sure the structure is consistent (ie, driver name fits into the buffer) */
+    if (Length - FIELD_OFFSET(FILE_FS_DRIVER_PATH_INFORMATION, DriverName) < DriverPathInfo->DriverNameLength)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Setup the whole driver name */
+    DriverName.Length = DriverPathInfo->DriverNameLength;
+    DriverName.MaximumLength = DriverPathInfo->DriverNameLength;
+    DriverName.Buffer = &DriverPathInfo->DriverName[0];
+
+    /* Ask Ob for such driver */
+    Status = ObReferenceObjectByName(&DriverName,
+                                     OBJ_CASE_INSENSITIVE,
+                                     NULL,
+                                     0,
+                                     IoDriverObjectType,
+                                     KernelMode,
+                                     NULL,
+                                     (PVOID*)&DriverObject);
+    /* No such driver, bail out */
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Lock the devices database, we'll browse it */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    /* If we have a VPB, browse the stack from the volume */
+    if (FileObject->Vpb != NULL && FileObject->Vpb->DeviceObject != NULL)
+    {
+        DriverPathInfo->DriverInPath = IopVerifyDriverObjectOnStack(FileObject->Vpb->DeviceObject, DriverObject);
+    }
+    /* Otherwise, do it from the normal device */
+    else
+    {
+        DriverPathInfo->DriverInPath = IopVerifyDriverObjectOnStack(FileObject->DeviceObject, DriverObject);
+    }
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
+    /* No longer needed */
+    ObDereferenceObject(DriverObject);
+
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -4135,6 +4217,55 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         IopCleanupAfterException(FileObject, NULL, NULL, Event);
 
         return STATUS_SUCCESS;
+    }
+    /* This is to be handled by the kernel, not by FSD */
+    else if (FsInformationClass == FileFsDriverPathInformation)
+    {
+        PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo;
+
+        _SEH2_TRY
+        {
+            /* Allocate our local structure */
+            DriverPathInfo = ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_IO);
+
+            /* And copy back caller data */
+            RtlCopyMemory(DriverPathInfo, FsInformation, Length);
+
+            /* Is the driver in the IO path? */
+            Status = IopGetDriverPathInformation(FileObject, DriverPathInfo, Length);
+            /* We failed, don't continue execution */
+            if (!NT_SUCCESS(Status))
+            {
+                RtlRaiseStatus(Status);
+            }
+
+            /* We succeed, copy back info */
+            ((PFILE_FS_DRIVER_PATH_INFORMATION)FsInformation)->DriverInPath = DriverPathInfo->DriverInPath;
+
+            /* We're done */
+            IoStatusBlock->Information = sizeof(FILE_FS_DRIVER_PATH_INFORMATION);
+            IoStatusBlock->Status = STATUS_SUCCESS;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        /* Don't leak */
+        if (DriverPathInfo != NULL)
+        {
+            ExFreePoolWithTag(DriverPathInfo, TAG_IO);
+        }
+
+        /*
+         * We didn't have an exception, but we didn't issue an IRP
+         * to complete either, so avoid duplicating code and
+         * call appropriate helper
+         */
+        IopCleanupAfterException(FileObject, NULL, NULL, Event);
+
+        return Status;
     }
 
     /* Get the device object */
