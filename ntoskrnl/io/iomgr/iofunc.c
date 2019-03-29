@@ -4164,18 +4164,6 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             return Status;
         }
     }
-    else
-    {
-        /* Use local event */
-        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
-        if (!Event)
-        {
-            ObDereferenceObject(FileObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        KeInitializeEvent(Event, SynchronizationEvent, FALSE);
-        LocalEvent = TRUE;
-    }
 
     /*
      * Quick path for FileFsDeviceInformation - the kernel has enough
@@ -4203,18 +4191,29 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Cleanup */
-            IopCleanupAfterException(FileObject, NULL, NULL, Event);
+            /* Check if we had a file lock */
+            if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+            {
+                /* Release it */
+                IopUnlockFileObject(FileObject);
+            }
+
+            /* Dereference the FO */
+            ObDereferenceObject(FileObject);
+
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
 
-        /*
-         * We didn't have an exception, but we didn't issue an IRP
-         * to complete either, so avoid duplicating code and
-         * call appropriate helper
-         */
-        IopCleanupAfterException(FileObject, NULL, NULL, Event);
+        /* Check if we had a file lock */
+        if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            /* Release it */
+            IopUnlockFileObject(FileObject);
+        }
+
+        /* Dereference the FO */
+        ObDereferenceObject(FileObject);
 
         return STATUS_SUCCESS;
     }
@@ -4258,14 +4257,30 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             ExFreePoolWithTag(DriverPathInfo, TAG_IO);
         }
 
-        /*
-         * We didn't have an exception, but we didn't issue an IRP
-         * to complete either, so avoid duplicating code and
-         * call appropriate helper
-         */
-        IopCleanupAfterException(FileObject, NULL, NULL, Event);
+        /* Check if we had a file lock */
+        if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            /* Release it */
+            IopUnlockFileObject(FileObject);
+        }
+
+        /* Dereference the FO */
+        ObDereferenceObject(FileObject);
 
         return Status;
+    }
+
+    if (!BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+    {
+        /* Use local event */
+        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        KeInitializeEvent(Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
     }
 
     /* Get the device object */
