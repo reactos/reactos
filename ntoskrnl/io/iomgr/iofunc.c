@@ -4121,29 +4121,18 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Check if we had a file lock */
-            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-            {
-                /* Release it */
-                IopUnlockFileObject(FileObject);
-            }
-
-            /* Dereference the FO */
-            ObDereferenceObject(FileObject);
-
+            /* Cleanup */
+            IopCleanupAfterException(FileObject, NULL, NULL, Event);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
 
-        /* Check if we had a file lock */
-        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-        {
-            /* Release it */
-            IopUnlockFileObject(FileObject);
-        }
-
-        /* Dereference the FO */
-        ObDereferenceObject(FileObject);
+        /*
+         * We didn't have an exception, but we didn't issue an IRP
+         * to complete either, so avoid duplicating code and
+         * call appropriate helper
+         */
+        IopCleanupAfterException(FileObject, NULL, NULL, Event);
 
         return STATUS_SUCCESS;
     }
