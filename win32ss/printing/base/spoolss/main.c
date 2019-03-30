@@ -227,8 +227,13 @@ SplInitializeWinSpoolDrv(PVOID* pTable)
 
     // Verify that all calls succeeded.
     for (i = 0; i < 9; i++)
+    {
         if (!pTable[i])
+        {
+            FreeLibrary(hWinspool);
             return FALSE;
+        }
+    }
 
     return TRUE;
 }
