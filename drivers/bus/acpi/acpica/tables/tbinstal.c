@@ -166,7 +166,7 @@ AcpiTbInstallStandardTable (
      */
     if (!Reload &&
         AcpiGbl_DisableSsdtTableInstall &&
-        ACPI_COMPARE_NAME (&NewTableDesc.Signature, ACPI_SIG_SSDT))
+        ACPI_COMPARE_NAMESEG (&NewTableDesc.Signature, ACPI_SIG_SSDT))
     {
         ACPI_INFO ((
             "Ignoring installation of %4.4s at %8.8X%8.8X",

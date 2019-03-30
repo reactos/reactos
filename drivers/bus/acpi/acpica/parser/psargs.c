@@ -206,21 +206,21 @@ AcpiPsGetNextNamestring (
 
         /* Two name segments */
 
-        End += 1 + (2 * ACPI_NAME_SIZE);
+        End += 1 + (2 * ACPI_NAMESEG_SIZE);
         break;
 
     case AML_MULTI_NAME_PREFIX:
 
         /* Multiple name segments, 4 chars each, count in next byte */
 
-        End += 2 + (*(End + 1) * ACPI_NAME_SIZE);
+        End += 2 + (*(End + 1) * ACPI_NAMESEG_SIZE);
         break;
 
     default:
 
         /* Single name segment */
 
-        End += ACPI_NAME_SIZE;
+        End += ACPI_NAMESEG_SIZE;
         break;
     }
 
@@ -600,7 +600,7 @@ AcpiPsGetNextField (
 
         ACPI_MOVE_32_TO_32 (&Name, ParserState->Aml);
         AcpiPsSetName (Field, Name);
-        ParserState->Aml += ACPI_NAME_SIZE;
+        ParserState->Aml += ACPI_NAMESEG_SIZE;
 
 
         ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);

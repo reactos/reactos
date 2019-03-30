@@ -362,7 +362,7 @@ AcpiNsMatchSimpleRepair (
     ThisName = AcpiObjectRepairInfo;
     while (ThisName->ObjectConverter)
     {
-        if (ACPI_COMPARE_NAME (Node->Name.Ascii, ThisName->Name))
+        if (ACPI_COMPARE_NAMESEG (Node->Name.Ascii, ThisName->Name))
         {
             /* Check if we can actually repair this name/type combination */
 

@@ -167,7 +167,7 @@ AcpiTbLoadNamespace (
     Table = &AcpiGbl_RootTableList.Tables[AcpiGbl_DsdtIndex];
 
     if (!AcpiGbl_RootTableList.CurrentTableCount ||
-        !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_DSDT) ||
+        !ACPI_COMPARE_NAMESEG (Table->Signature.Ascii, ACPI_SIG_DSDT) ||
          ACPI_FAILURE (AcpiTbValidateTable (Table)))
     {
         Status = AE_NO_ACPI_TABLES;
@@ -226,9 +226,9 @@ AcpiTbLoadNamespace (
         Table = &AcpiGbl_RootTableList.Tables[i];
 
         if (!Table->Address ||
-            (!ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_SSDT) &&
-             !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_PSDT) &&
-             !ACPI_COMPARE_NAME (Table->Signature.Ascii, ACPI_SIG_OSDT)) ||
+            (!ACPI_COMPARE_NAMESEG (Table->Signature.Ascii, ACPI_SIG_SSDT) &&
+             !ACPI_COMPARE_NAMESEG (Table->Signature.Ascii, ACPI_SIG_PSDT) &&
+             !ACPI_COMPARE_NAMESEG (Table->Signature.Ascii, ACPI_SIG_OSDT)) ||
             ACPI_FAILURE (AcpiTbValidateTable (Table)))
         {
             continue;
@@ -448,7 +448,7 @@ AcpiUnloadParentTable (
          * only these types can contain AML and thus are the only types
          * that can create namespace objects.
          */
-        if (ACPI_COMPARE_NAME (
+        if (ACPI_COMPARE_NAMESEG (
                 AcpiGbl_RootTableList.Tables[i].Signature.Ascii,
                 ACPI_SIG_DSDT))
         {

@@ -743,7 +743,7 @@ AcpiNsLookup (
 
         /* Point to next name segment and make this node current */
 
-        Path += ACPI_NAME_SIZE;
+        Path += ACPI_NAMESEG_SIZE;
         CurrentNode = ThisNode;
     }
 

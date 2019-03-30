@@ -106,17 +106,17 @@ const UINT8                     AcpiGbl_NsProperties[ACPI_NUM_NS_TYPES] =
 
 const char        *AcpiGbl_RegionTypes[ACPI_NUM_PREDEFINED_REGIONS] =
 {
-    "SystemMemory",     /* 0x00 */
-    "SystemIO",         /* 0x01 */
-    "PCI_Config",       /* 0x02 */
-    "EmbeddedControl",  /* 0x03 */
-    "SMBus",            /* 0x04 */
-    "SystemCMOS",       /* 0x05 */
-    "PCIBARTarget",     /* 0x06 */
-    "IPMI",             /* 0x07 */
-    "GeneralPurposeIo", /* 0x08 */
-    "GenericSerialBus", /* 0x09 */
-    "PCC"               /* 0x0A */
+    "SystemMemory",      /* 0x00 */
+    "SystemIO",          /* 0x01 */
+    "PCI_Config",        /* 0x02 */
+    "EmbeddedControl",   /* 0x03 */
+    "SMBus",             /* 0x04 */
+    "SystemCMOS",        /* 0x05 */
+    "PCIBARTarget",      /* 0x06 */
+    "IPMI",              /* 0x07 */
+    "GeneralPurposeIo",  /* 0x08 */
+    "GenericSerialBus",  /* 0x09 */
+    "PlatformCommChannel"/* 0x0A */
 };
 
 
@@ -308,7 +308,7 @@ AcpiUtGetNodeName (
     ACPI_NAMESPACE_NODE     *Node = (ACPI_NAMESPACE_NODE *) Object;
 
 
-    /* Must return a string of exactly 4 characters == ACPI_NAME_SIZE */
+    /* Must return a string of exactly 4 characters == ACPI_NAMESEG_SIZE */
 
     if (!Object)
     {
@@ -524,7 +524,7 @@ static const char           *AcpiGbl_GenericNotify[ACPI_GENERIC_NOTIFY_MAX + 1] 
     /* 0B */ "System Locality Update",
     /* 0C */ "Reserved (was previously Shutdown Request)",  /* Reserved in ACPI 6.0 */
     /* 0D */ "System Resource Affinity Update",
-    /* 0E */ "Heterogeneous Memory Attributes Update"       /* ACPI 6.2 */
+    /* 0E */ "Heterogeneous Memory Attributes Update",      /* ACPI 6.2 */
     /* 0F */ "Error Disconnect Recover"                     /* ACPI 6.3 */
 };
 

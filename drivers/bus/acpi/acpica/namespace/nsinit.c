@@ -554,7 +554,7 @@ AcpiNsFindIniMethods (
 
     /* We are only looking for methods named _INI */
 
-    if (!ACPI_COMPARE_NAME (Node->Name.Ascii, METHOD_NAME__INI))
+    if (!ACPI_COMPARE_NAMESEG (Node->Name.Ascii, METHOD_NAME__INI))
     {
         return (AE_OK);
     }
@@ -731,7 +731,7 @@ AcpiNsInitOneDevice (
      * Note: We know there is an _INI within this subtree, but it may not be
      * under this particular device, it may be lower in the branch.
      */
-    if (!ACPI_COMPARE_NAME (DeviceNode->Name.Ascii, "_SB_") ||
+    if (!ACPI_COMPARE_NAMESEG (DeviceNode->Name.Ascii, "_SB_") ||
         DeviceNode->Parent != AcpiGbl_RootNode)
     {
         ACPI_DEBUG_EXEC (AcpiUtDisplayInitPathname (

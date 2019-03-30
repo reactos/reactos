@@ -99,11 +99,11 @@ AcpiExAllocateNameString (
     {
         /* Special case for root */
 
-        SizeNeeded = 1 + (ACPI_NAME_SIZE * NumNameSegs) + 2 + 1;
+        SizeNeeded = 1 + (ACPI_NAMESEG_SIZE * NumNameSegs) + 2 + 1;
     }
     else
     {
-        SizeNeeded = PrefixCount + (ACPI_NAME_SIZE * NumNameSegs) + 2 + 1;
+        SizeNeeded = PrefixCount + (ACPI_NAMESEG_SIZE * NumNameSegs) + 2 + 1;
     }
 
     /*
@@ -202,7 +202,7 @@ AcpiExNameSegment (
     }
 
     for (Index = 0;
-        (Index < ACPI_NAME_SIZE) && (AcpiUtValidNameChar (*AmlAddress, 0));
+        (Index < ACPI_NAMESEG_SIZE) && (AcpiUtValidNameChar (*AmlAddress, 0));
         Index++)
     {
         CharBuf[Index] = *AmlAddress++;

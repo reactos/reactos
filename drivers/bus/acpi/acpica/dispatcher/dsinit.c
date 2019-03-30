@@ -251,7 +251,7 @@ AcpiDsInitializeObjects (
 
     /* DSDT is always the first AML table */
 
-    if (ACPI_COMPARE_NAME (Table->Signature, ACPI_SIG_DSDT))
+    if (ACPI_COMPARE_NAMESEG (Table->Signature, ACPI_SIG_DSDT))
     {
         ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INIT,
             "\nInitializing Namespace objects:\n"));

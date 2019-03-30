@@ -127,7 +127,7 @@ AcpiNsPrintPathname (
                 AcpiOsPrintf ("?");
         }
 
-        Pathname += ACPI_NAME_SIZE;
+        Pathname += ACPI_NAMESEG_SIZE;
         NumSegments--;
         if (NumSegments)
         {

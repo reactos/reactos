@@ -244,6 +244,11 @@ AcpiNsDetachObject (
         }
     }
 
+    if (ObjDesc->Common.Type == ACPI_TYPE_REGION)
+    {
+        AcpiUtRemoveAddressRange(ObjDesc->Region.SpaceId, Node);
+    }
+
     /* Clear the Node entry in all cases */
 
     Node->Object = NULL;

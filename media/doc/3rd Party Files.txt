@@ -95,5 +95,5 @@ Used Version: 1.6.36
 Website: http://libpng.sourceforge.net/
 
 Title: ACPICA
-Used Version: 20190215
+Used Version: 20190329
 Website: https://acpica.org/

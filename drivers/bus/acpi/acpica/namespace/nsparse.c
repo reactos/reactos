@@ -257,7 +257,7 @@ AcpiNsOneCompleteParse (
 
     /* Found OSDT table, enable the namespace override feature */
 
-    if (ACPI_COMPARE_NAME(Table->Signature, ACPI_SIG_OSDT) &&
+    if (ACPI_COMPARE_NAMESEG (Table->Signature, ACPI_SIG_OSDT) &&
         PassNumber == ACPI_IMODE_LOAD_PASS1)
     {
         WalkState->NamespaceOverride = TRUE;

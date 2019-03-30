@@ -61,7 +61,7 @@ ACPI_STATUS (*ACPI_REPAIR_FUNCTION) (
 
 typedef struct acpi_repair_info
 {
-    char                    Name[ACPI_NAME_SIZE];
+    char                    Name[ACPI_NAMESEG_SIZE];
     ACPI_REPAIR_FUNCTION    RepairFunction;
 
 } ACPI_REPAIR_INFO;
@@ -250,7 +250,7 @@ AcpiNsMatchComplexRepair (
     ThisName = AcpiNsRepairableNames;
     while (ThisName->RepairFunction)
     {
-        if (ACPI_COMPARE_NAME (Node->Name.Ascii, ThisName->Name))
+        if (ACPI_COMPARE_NAMESEG (Node->Name.Ascii, ThisName->Name))
         {
             return (ThisName);
         }
