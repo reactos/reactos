@@ -4440,7 +4440,7 @@ SetupDiGetDeviceInfoListClass(
         SetLastError(ERROR_NO_ASSOCIATED_CLASS);
     else
     {
-        memcpy(&ClassGuid, &list->ClassGuid, sizeof(GUID));
+        *ClassGuid = list->ClassGuid;
 
         ret = TRUE;
     }
