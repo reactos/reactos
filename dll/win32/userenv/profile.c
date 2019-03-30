@@ -357,7 +357,7 @@ CheckForGuestsAndAdmins(
     PTOKEN_GROUPS pGroupInfo = NULL;
     PSID pAdministratorsSID = NULL;
     PSID pGuestsSID = NULL;
-    DWORD i, dwSize;
+    DWORD i, dwSize = 0;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("CheckForGuestsAndAdmins(%p %p)\n", hToken, pdwState);
