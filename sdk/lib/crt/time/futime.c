@@ -41,8 +41,8 @@
 #include "bitsfixup.h"
 #include <internal/wine/msvcrt.h>
 
-inline ioinfo* get_ioinfo(int fd);
-inline void release_ioinfo(ioinfo *info);
+ioinfo* get_ioinfo(int fd);
+void release_ioinfo(ioinfo *info);
 
 /******************************************************************************
  * \name _futime

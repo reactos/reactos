@@ -3,8 +3,8 @@
 #include <direct.h>
 #include <internal/wine/msvcrt.h>
 
-inline ioinfo* get_ioinfo(int fd);
-inline void release_ioinfo(ioinfo *info);
+ioinfo* get_ioinfo(int fd);
+void release_ioinfo(ioinfo *info);
 
 #define ALL_S_IREAD  (_S_IREAD  | (_S_IREAD  >> 3) | (_S_IREAD  >> 6))
 #define ALL_S_IWRITE (_S_IWRITE | (_S_IWRITE >> 3) | (_S_IWRITE >> 6))

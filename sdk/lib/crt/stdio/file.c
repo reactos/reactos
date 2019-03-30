@@ -178,7 +178,7 @@ static inline void init_ioinfo_cs(ioinfo *info)
     }
 }
 
-/*static*/ inline ioinfo* get_ioinfo(int fd)
+ioinfo* get_ioinfo(int fd)
 {
     ioinfo *ret = get_ioinfo_nolock(fd);
     if(ret == &__badioinfo)
@@ -260,7 +260,7 @@ static inline ioinfo* get_ioinfo_alloc(int *fd)
     return &__badioinfo;
 }
 
-/*static*/ inline void release_ioinfo(ioinfo *info)
+void release_ioinfo(ioinfo *info)
 {
     if(info!=&__badioinfo && info->exflag & EF_CRIT_INIT)
         LeaveCriticalSection(&info->crit);
