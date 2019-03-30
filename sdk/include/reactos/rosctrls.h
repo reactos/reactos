@@ -280,7 +280,7 @@ public: // Configuration methods
 
     DWORD SetTooltip(HWND hWndTooltip)
     {
-        return SendMessageW(TB_SETTOOLTIPS, hWndTooltip, 0);
+        return SendMessageW(TB_SETTOOLTIPS, reinterpret_cast<WPARAM>(hWndTooltip), 0);
     }
 
     INT GetHotItem()
