@@ -114,7 +114,7 @@ public:
 
     INT Search(T* item, INT iStart, UINT uFlags)
     {
-        return DPA_Search(m_hDpa, s_OnCompareItems, (LPARAM)this);
+        return DPA_Search(m_hDpa, item, 0, s_OnCompareItems, (LPARAM)this, 0);
     }
 };
 
