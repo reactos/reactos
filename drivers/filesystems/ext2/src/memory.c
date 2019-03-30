@@ -2072,9 +2072,9 @@ Ext2ParseRegistryVolumeParams(
 
     USHORT i, j, k;
 
-    RtlZeroMemory(Codepage, CODEPAGE_MAXLEN);
-    RtlZeroMemory(Prefix, HIDINGPAT_LEN);
-    RtlZeroMemory(Suffix, HIDINGPAT_LEN);
+    RtlZeroMemory(Codepage, sizeof(WCHAR) * CODEPAGE_MAXLEN);
+    RtlZeroMemory(Prefix, sizeof(WCHAR) * HIDINGPAT_LEN);
+    RtlZeroMemory(Suffix, sizeof(WCHAR) * HIDINGPAT_LEN);
     RtlZeroMemory(MountPoint, sizeof(USHORT) * 4);
     RtlZeroMemory(DrvLetter, sizeof(CHAR) * 4);
 
