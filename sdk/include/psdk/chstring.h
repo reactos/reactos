@@ -22,15 +22,15 @@ class CHString
 {
 public:
     CHString();
-    CHString(WCHAR ch, int nRepeat = 1) throw (CHeap_Exception);
-    CHString(LPCWSTR lpsz) throw (CHeap_Exception);
-    CHString(LPCWSTR lpch, int nLength) throw (CHeap_Exception);
-    CHString(LPCSTR lpsz) throw (CHeap_Exception);
+    CHString(WCHAR ch, int nRepeat = 1);
+    CHString(LPCWSTR lpsz);
+    CHString(LPCWSTR lpch, int nLength);
+    CHString(LPCSTR lpsz);
     CHString(const CHString& stringSrc);
     CHString(const unsigned char* lpsz);
     ~CHString();
 
-    BSTR AllocSysString() const throw (CHeap_Exception);
+    BSTR AllocSysString() const;
     int Collate(LPCWSTR lpsz) const;
     int Compare(LPCWSTR lpsz) const;
     int CompareNoCase(LPCWSTR lpsz) const;
@@ -38,72 +38,72 @@ public:
     int Find(WCHAR ch) const;
     int Find(LPCWSTR lpszSub) const;
     int FindOneOf(LPCWSTR lpszCharSet) const;
-    void Format(UINT nFormatID, ...) throw (CHeap_Exception);
-    void Format(LPCWSTR lpszFormat, ...) throw (CHeap_Exception);
-    void FormatMessageW(UINT nFormatID, ...) throw (CHeap_Exception);
-    void FormatMessageW(LPCWSTR lpszFormat, ...) throw (CHeap_Exception);
+    void Format(UINT nFormatID, ...);
+    void Format(LPCWSTR lpszFormat, ...);
+    void FormatMessageW(UINT nFormatID, ...);
+    void FormatMessageW(LPCWSTR lpszFormat, ...);
     void FormatV(LPCWSTR lpszFormat, va_list argList);
-    void FreeExtra() throw (CHeap_Exception);
+    void FreeExtra();
     int GetAllocLength() const;
     WCHAR GetAt(int nIndex) const;
-    LPWSTR GetBuffer(int nMinBufLength) throw (CHeap_Exception);
-    LPWSTR GetBufferSetLength(int nNewLength) throw (CHeap_Exception);
+    LPWSTR GetBuffer(int nMinBufLength);
+    LPWSTR GetBufferSetLength(int nNewLength);
     int GetLength() const;
     BOOL IsEmpty() const;
-    CHString Left(int nCount) const throw (CHeap_Exception);
-    int LoadStringW(UINT nID) throw (CHeap_Exception);
+    CHString Left(int nCount) const;
+    int LoadStringW(UINT nID);
     LPWSTR LockBuffer();
-    void MakeLower() throw (CHeap_Exception);
-    void MakeReverse() throw (CHeap_Exception);
-    void MakeUpper() throw (CHeap_Exception);
-    CHString Mid(int nFirst) const throw (CHeap_Exception);
-    CHString Mid(int nFirst, int nCount) const throw (CHeap_Exception);
-    void ReleaseBuffer(int nNewLength = -1) throw (CHeap_Exception);
+    void MakeLower();
+    void MakeReverse();
+    void MakeUpper();
+    CHString Mid(int nFirst) const;
+    CHString Mid(int nFirst, int nCount) const;
+    void ReleaseBuffer(int nNewLength = -1);
     int ReverseFind(WCHAR ch) const;
-    CHString Right(int nCount) const throw (CHeap_Exception);
-    void SetAt(int nIndex, WCHAR ch) throw (CHeap_Exception);
-    CHString SpanExcluding(LPCWSTR lpszCharSet) const throw (CHeap_Exception);
-    CHString SpanIncluding(LPCWSTR lpszCharSet) const throw (CHeap_Exception);
-    void TrimLeft() throw (CHeap_Exception);
-    void TrimRight() throw (CHeap_Exception);
+    CHString Right(int nCount) const;
+    void SetAt(int nIndex, WCHAR ch);
+    CHString SpanExcluding(LPCWSTR lpszCharSet) const;
+    CHString SpanIncluding(LPCWSTR lpszCharSet) const;
+    void TrimLeft();
+    void TrimRight();
     void UnlockBuffer();
 
-    const CHString& operator=(char ch) throw (CHeap_Exception);
-    const CHString& operator=(WCHAR ch) throw (CHeap_Exception);
-    const CHString& operator=(CHString *p) throw (CHeap_Exception);
-    const CHString& operator=(LPCSTR lpsz) throw (CHeap_Exception);
-    const CHString& operator=(LPCWSTR lpsz) throw (CHeap_Exception);
-    const CHString& operator=(const CHString& stringSrc) throw (CHeap_Exception);
-    const CHString& operator=(const unsigned char* lpsz) throw (CHeap_Exception);
+    const CHString& operator=(char ch);
+    const CHString& operator=(WCHAR ch);
+    const CHString& operator=(CHString *p);
+    const CHString& operator=(LPCSTR lpsz);
+    const CHString& operator=(LPCWSTR lpsz);
+    const CHString& operator=(const CHString& stringSrc);
+    const CHString& operator=(const unsigned char* lpsz);
 
-    const CHString& operator+=(char ch) throw (CHeap_Exception);
-    const CHString& operator+=(WCHAR ch) throw (CHeap_Exception);
-    const CHString& operator+=(LPCWSTR lpsz) throw (CHeap_Exception);
-    const CHString& operator+=(const CHString& string) throw (CHeap_Exception);
+    const CHString& operator+=(char ch);
+    const CHString& operator+=(WCHAR ch);
+    const CHString& operator+=(LPCWSTR lpsz);
+    const CHString& operator+=(const CHString& string);
 
     WCHAR operator[](int nIndex) const;
 
     operator LPCWSTR() const;
 
-    friend CHString WINAPI operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception);
-    friend CHString WINAPI operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception);
-    friend CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exception);
-    friend CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exception);
-    friend CHString WINAPI operator+(const CHString& string1, const CHString& string2) throw (CHeap_Exception);
+    friend CHString WINAPI operator+(WCHAR ch, const CHString& string);
+    friend CHString WINAPI operator+(const CHString& string, WCHAR ch);
+    friend CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz);
+    friend CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string);
+    friend CHString WINAPI operator+(const CHString& string1, const CHString& string2);
 
 protected:
     LPWSTR m_pchData;
 
-    void AllocBeforeWrite(int nLen) throw (CHeap_Exception);
-    void AllocBuffer(int nLen) throw (CHeap_Exception);
-    void AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtraLen) const throw (CHeap_Exception);
-    void AssignCopy(int nSrcLen, LPCWSTR lpszSrcData) throw (CHeap_Exception);
-    void ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCWSTR lpszSrc2Data) throw (CHeap_Exception);
+    void AllocBeforeWrite(int nLen);
+    void AllocBuffer(int nLen);
+    void AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtraLen) const;
+    void AssignCopy(int nSrcLen, LPCWSTR lpszSrcData);
+    void ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCWSTR lpszSrc2Data);
     void ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData);
-    void CopyBeforeWrite() throw (CHeap_Exception);
+    void CopyBeforeWrite();
     CHStringData* GetData() const;
     void Init();
-    int LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf) throw (CHeap_Exception);
+    int LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf);
     void Release();
     static void WINAPI Release(CHStringData* pData);
     static int WINAPI SafeStrlen(LPCWSTR lpsz);

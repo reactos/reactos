@@ -107,7 +107,7 @@ CHString::CHString()
 /*
  * @implemented
  */
-CHString::CHString(WCHAR ch, int nRepeat) throw (CHeap_Exception)
+CHString::CHString(WCHAR ch, int nRepeat)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -131,7 +131,7 @@ CHString::CHString(WCHAR ch, int nRepeat) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString::CHString(LPCWSTR lpsz) throw (CHeap_Exception)
+CHString::CHString(LPCWSTR lpsz)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -154,7 +154,7 @@ CHString::CHString(LPCWSTR lpsz) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString::CHString(LPCWSTR lpch, int nLength) throw (CHeap_Exception)
+CHString::CHString(LPCWSTR lpch, int nLength)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -171,7 +171,7 @@ CHString::CHString(LPCWSTR lpch, int nLength) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString::CHString(LPCSTR lpsz) throw (CHeap_Exception)
+CHString::CHString(LPCSTR lpsz)
 {
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
@@ -250,7 +250,7 @@ CHString::~CHString()
 /*
  * @implemented
  */
-void CHString::AllocBeforeWrite(int nLen) throw (CHeap_Exception)
+void CHString::AllocBeforeWrite(int nLen)
 {
     // In case we have several strings pointing to our memory zone
     // Or we need bigger buffer than actual
@@ -266,7 +266,7 @@ void CHString::AllocBeforeWrite(int nLen) throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::AllocBuffer(int nSize) throw (CHeap_Exception)
+void CHString::AllocBuffer(int nSize)
 {
     // Here we have to allocate a buffer for the string
     // It actually consists in: CHStringData structure
@@ -316,7 +316,7 @@ void CHString::AllocBuffer(int nSize) throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtraLen) const throw (CHeap_Exception)
+void CHString::AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtraLen) const
 {
     // Once again, we cannot deal with negative lens
     if (nCopyLen < 0)
@@ -354,7 +354,7 @@ void CHString::AllocCopy(CHString& dest, int nCopyLen, int nCopyIndex, int nExtr
 /*
  * @implemented
  */
-BSTR CHString::AllocSysString() const throw (CHeap_Exception)
+BSTR CHString::AllocSysString() const
 {
     BSTR SysString;
 
@@ -371,7 +371,7 @@ BSTR CHString::AllocSysString() const throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::AssignCopy(int nSrcLen, LPCWSTR lpszSrcData) throw (CHeap_Exception)
+void CHString::AssignCopy(int nSrcLen, LPCWSTR lpszSrcData)
 {
     // Don't allow negative len
     if (nSrcLen < 0)
@@ -476,7 +476,7 @@ void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
 /*
  * @implemented
  */
-void CHString::ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCWSTR lpszSrc2Data) throw (CHeap_Exception)
+void CHString::ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCWSTR lpszSrc2Data)
 {
     int TotalLen;
 
@@ -502,7 +502,7 @@ void CHString::ConcatCopy(int nSrc1Len, LPCWSTR lpszSrc1Data, int nSrc2Len, LPCW
 /*
  * @implemented
  */
-void CHString::CopyBeforeWrite() throw (CHeap_Exception)
+void CHString::CopyBeforeWrite()
 {
     CHStringData* Data;
 
@@ -609,7 +609,7 @@ int CHString::FindOneOf(LPCWSTR lpszCharSet) const
 /*
  * @implemented
  */
-void CHString::Format(UINT nFormatID, ...) throw (CHeap_Exception)
+void CHString::Format(UINT nFormatID, ...)
 {
     // Deprecated and not implemented any longer - well, this is its implementation
     return;
@@ -618,7 +618,7 @@ void CHString::Format(UINT nFormatID, ...) throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::Format(LPCWSTR lpszFormat, ...) throw (CHeap_Exception)
+void CHString::Format(LPCWSTR lpszFormat, ...)
 {
     // Forward to FormatV
     va_list ArgsList;
@@ -631,7 +631,7 @@ void CHString::Format(LPCWSTR lpszFormat, ...) throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::FormatMessageW(UINT nFormatID, ...) throw (CHeap_Exception)
+void CHString::FormatMessageW(UINT nFormatID, ...)
 {
     // Deprecated and not implemented any longer - well, this is its implementation
     return;
@@ -640,7 +640,7 @@ void CHString::FormatMessageW(UINT nFormatID, ...) throw (CHeap_Exception)
 /*
  * @unimplemented
  */
-void CHString::FormatMessageW(LPCWSTR lpszFormat, ...) throw (CHeap_Exception)
+void CHString::FormatMessageW(LPCWSTR lpszFormat, ...)
 {
     UNIMPLEMENTED;
 }
@@ -656,7 +656,7 @@ void CHString::FormatV(LPCWSTR lpszFormat, va_list argList)
 /*
  * @implemented
  */
-void CHString::FreeExtra() throw (CHeap_Exception)
+void CHString::FreeExtra()
 {
     CHStringData* OldData;
 
@@ -695,7 +695,7 @@ WCHAR CHString::GetAt(int nIndex) const
 /*
  * @implemented
  */
-LPWSTR CHString::GetBuffer(int nMinBufLength) throw (CHeap_Exception)
+LPWSTR CHString::GetBuffer(int nMinBufLength)
 {
     LPWSTR OldBuffer = m_pchData;
 
@@ -730,7 +730,7 @@ LPWSTR CHString::GetBuffer(int nMinBufLength) throw (CHeap_Exception)
 /*
  * @implemented
  */
-LPWSTR CHString::GetBufferSetLength(int nNewLength) throw (CHeap_Exception)
+LPWSTR CHString::GetBufferSetLength(int nNewLength)
 {
     // Get a buffer big enough
     // We don't care about the return, it will be set in the string
@@ -783,7 +783,7 @@ BOOL CHString::IsEmpty() const
 /*
  * @implemented
  */
-CHString CHString::Left(int nCount) const throw (CHeap_Exception)
+CHString CHString::Left(int nCount) const
 {
     CHString NewString;
 
@@ -804,7 +804,7 @@ CHString CHString::Left(int nCount) const throw (CHeap_Exception)
 /*
  * @implemented
  */
-int CHString::LoadStringW(UINT nID) throw (CHeap_Exception)
+int CHString::LoadStringW(UINT nID)
 {
     // Deprecated and not implemented any longer - well, this is its implementation
     return 0;
@@ -813,7 +813,7 @@ int CHString::LoadStringW(UINT nID) throw (CHeap_Exception)
 /*
  * @implemented
  */
-int CHString::LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf) throw (CHeap_Exception)
+int CHString::LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf)
 {
     // Deprecated and not implemented any longer - well, this is its implementation
     return 0;
@@ -836,7 +836,7 @@ LPWSTR CHString::LockBuffer()
 /*
  * @implemented
  */
-void CHString::MakeLower() throw (CHeap_Exception)
+void CHString::MakeLower()
 {
     // We'll modify string, duplicate it first if needed
     CopyBeforeWrite();
@@ -848,7 +848,7 @@ void CHString::MakeLower() throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::MakeReverse() throw (CHeap_Exception)
+void CHString::MakeReverse()
 {
     // We'll modify string, duplicate it first if needed
     CopyBeforeWrite();
@@ -860,7 +860,7 @@ void CHString::MakeReverse() throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::MakeUpper() throw (CHeap_Exception)
+void CHString::MakeUpper()
 {
     // We'll modify string, duplicate it first if needed
     CopyBeforeWrite();
@@ -872,7 +872,7 @@ void CHString::MakeUpper() throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString CHString::Mid(int nFirst) const throw (CHeap_Exception)
+CHString CHString::Mid(int nFirst) const
 {
     // Take string from nFirst up to the end
     return Mid(nFirst, GetData()->nDataLength - nFirst);
@@ -881,7 +881,7 @@ CHString CHString::Mid(int nFirst) const throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString CHString::Mid(int nFirst, int nCount) const throw (CHeap_Exception)
+CHString CHString::Mid(int nFirst, int nCount) const
 {
     CHString NewString;
 
@@ -958,7 +958,7 @@ void WINAPI CHString::Release(CHStringData* pData)
 /*
  * @implemented
  */
-void CHString::ReleaseBuffer(int nNewLength) throw (CHeap_Exception)
+void CHString::ReleaseBuffer(int nNewLength)
 {
     CHStringData* Data;
 
@@ -999,7 +999,7 @@ int CHString::ReverseFind(WCHAR ch) const
 /*
  * @implemented
  */
-CHString CHString::Right(int nCount) const throw (CHeap_Exception)
+CHString CHString::Right(int nCount) const
 {
     CHString NewString;
 
@@ -1037,7 +1037,7 @@ int CHString::SafeStrlen(LPCWSTR lpsz)
 /*
  * @implemented
  */
-void CHString::SetAt(int nIndex, WCHAR ch) throw (CHeap_Exception)
+void CHString::SetAt(int nIndex, WCHAR ch)
 {
     CopyBeforeWrite();
 
@@ -1047,7 +1047,7 @@ void CHString::SetAt(int nIndex, WCHAR ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString CHString::SpanExcluding(LPCWSTR lpszCharSet) const throw (CHeap_Exception)
+CHString CHString::SpanExcluding(LPCWSTR lpszCharSet) const
 {
     int Count;
 
@@ -1059,7 +1059,7 @@ CHString CHString::SpanExcluding(LPCWSTR lpszCharSet) const throw (CHeap_Excepti
 /*
  * @implemented
  */
-CHString CHString::SpanIncluding(LPCWSTR lpszCharSet) const throw (CHeap_Exception)
+CHString CHString::SpanIncluding(LPCWSTR lpszCharSet) const
 {
     int Count;
 
@@ -1071,7 +1071,7 @@ CHString CHString::SpanIncluding(LPCWSTR lpszCharSet) const throw (CHeap_Excepti
 /*
  * @implemented
  */
-void CHString::TrimLeft() throw (CHeap_Exception)
+void CHString::TrimLeft()
 {
     int NewBegin;
     int NewLength;
@@ -1104,7 +1104,7 @@ void CHString::TrimLeft() throw (CHeap_Exception)
 /*
  * @implemented
  */
-void CHString::TrimRight() throw (CHeap_Exception)
+void CHString::TrimRight()
 {
     WCHAR *CurrentChar;
     WCHAR *CanBeEaten;
@@ -1165,7 +1165,7 @@ void CHString::UnlockBuffer()
 /*
  * @implemented
  */
-const CHString& CHString::operator=(char ch) throw (CHeap_Exception)
+const CHString& CHString::operator=(char ch)
 {
     *this = (WCHAR)ch;
     return *this;
@@ -1174,7 +1174,7 @@ const CHString& CHString::operator=(char ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(WCHAR ch) throw (CHeap_Exception)
+const CHString& CHString::operator=(WCHAR ch)
 {
     AssignCopy(1, &ch);
     return *this;
@@ -1183,7 +1183,7 @@ const CHString& CHString::operator=(WCHAR ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(CHString *p) throw (CHeap_Exception)
+const CHString& CHString::operator=(CHString *p)
 {
     *this = *p;
     return *this;
@@ -1192,7 +1192,7 @@ const CHString& CHString::operator=(CHString *p) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(LPCSTR lpsz) throw (CHeap_Exception)
+const CHString& CHString::operator=(LPCSTR lpsz)
 {
     int Len;
 
@@ -1225,7 +1225,7 @@ const CHString& CHString::operator=(LPCSTR lpsz) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(LPCWSTR lpsz) throw (CHeap_Exception)
+const CHString& CHString::operator=(LPCWSTR lpsz)
 {
     int Len;
 
@@ -1238,7 +1238,7 @@ const CHString& CHString::operator=(LPCWSTR lpsz) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator=(const CHString& stringSrc) throw (CHeap_Exception)
+const CHString& CHString::operator=(const CHString& stringSrc)
 {
     // Don't copy string on itself
     if (&stringSrc == this)
@@ -1268,7 +1268,7 @@ const CHString& CHString::operator=(const CHString& stringSrc) throw (CHeap_Exce
 /*
  * @implemented
  */
-const CHString& CHString::operator=(const unsigned char* lpsz) throw (CHeap_Exception)
+const CHString& CHString::operator=(const unsigned char* lpsz)
 {
     *this = (LPCSTR)lpsz;
     return *this;
@@ -1277,7 +1277,7 @@ const CHString& CHString::operator=(const unsigned char* lpsz) throw (CHeap_Exce
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(char ch) throw (CHeap_Exception)
+const CHString& CHString::operator+=(char ch)
 {
     *this += (WCHAR)ch;
     return *this;
@@ -1286,7 +1286,7 @@ const CHString& CHString::operator+=(char ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(WCHAR ch) throw (CHeap_Exception)
+const CHString& CHString::operator+=(WCHAR ch)
 {
     ConcatInPlace(1, &ch);
     return *this;
@@ -1295,7 +1295,7 @@ const CHString& CHString::operator+=(WCHAR ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(LPCWSTR lpsz) throw (CHeap_Exception)
+const CHString& CHString::operator+=(LPCWSTR lpsz)
 {
     int Len;
 
@@ -1308,7 +1308,7 @@ const CHString& CHString::operator+=(LPCWSTR lpsz) throw (CHeap_Exception)
 /*
  * @implemented
  */
-const CHString& CHString::operator+=(const CHString& string) throw (CHeap_Exception)
+const CHString& CHString::operator+=(const CHString& string)
 {
     ConcatInPlace(string.GetData()->nDataLength, string.m_pchData);
 
@@ -1334,7 +1334,7 @@ CHString::operator LPCWSTR() const
 /*
  * @implemented
  */
-CHString WINAPI operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception)
+CHString WINAPI operator+(WCHAR ch, const CHString& string)
 {
     CHString NewString;
 
@@ -1347,7 +1347,7 @@ CHString WINAPI operator+(WCHAR ch, const CHString& string) throw (CHeap_Excepti
 /*
  * @implemented
  */
-CHString WINAPI operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string, WCHAR ch)
 {
     CHString NewString;
 
@@ -1360,7 +1360,7 @@ CHString WINAPI operator+(const CHString& string, WCHAR ch) throw (CHeap_Excepti
 /*
  * @implemented
  */
-CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz)
 {
     int Len;
     CHString NewString;
@@ -1376,7 +1376,7 @@ CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exc
 /*
  * @implemented
  */
-CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exception)
+CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string)
 {
     int Len;
     CHString NewString;
@@ -1392,7 +1392,7 @@ CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exc
 /*
  * @implemented
  */
-CHString WINAPI operator+(const CHString& string1, const CHString& string2) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string1, const CHString& string2)
 {
     CHString NewString;
 
