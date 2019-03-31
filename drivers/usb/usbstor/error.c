@@ -160,7 +160,7 @@ USBSTOR_ResetHandlerWorkItemRoutine(
     DPRINT1("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
 
     // now resend the csw as the stall got cleared
-    USBSTOR_SendCSW(WorkItemData->Context, WorkItemData->Irp);
+    USBSTOR_SendCSWRequest(WorkItemData->Context, WorkItemData->Irp);
 }
 
 VOID

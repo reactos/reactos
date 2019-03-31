@@ -413,19 +413,7 @@ USBSTOR_HandleExecuteSCSI(
     IN ULONG RetryCount);
 
 NTSTATUS
-NTAPI
-USBSTOR_CSWCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Ctx);
-
-NTSTATUS
-USBSTOR_SendCBW(
-    PIRP_CONTEXT Context,
-    PIRP Irp);
-
-VOID
-USBSTOR_SendCSW(
+USBSTOR_SendCSWRequest(
     PIRP_CONTEXT Context,
     PIRP Irp);
 

@@ -55,27 +55,45 @@ USBSTOR_SrbStatusToNtStatus(
     }
 }
 
+static
 NTSTATUS
-USBSTOR_BuildCBW(
-    IN ULONG Tag,
-    IN ULONG DataTransferLength,
-    IN UCHAR LUN,
-    IN UCHAR CommandBlockLength,
-    IN PUCHAR CommandBlock,
-    IN OUT PCBW Control)
+USBSTOR_IssueBulkOrInterruptRequest(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN USBD_PIPE_HANDLE PipeHandle,
+    IN ULONG TransferFlags,
+    IN ULONG TransferBufferLength,
+    IN PVOID TransferBuffer,
+    IN PMDL TransferBufferMDL,
+    IN PIO_COMPLETION_ROUTINE CompletionRoutine,
+    IN PIRP_CONTEXT Context)
 {
-    ASSERT(CommandBlockLength <= 16);
+    PIO_STACK_LOCATION NextStack;
 
-    Control->Signature = CBW_SIGNATURE;
-    Control->Tag = Tag;
-    Control->DataTransferLength = DataTransferLength;
-    Control->Flags = (CommandBlock[0] != SCSIOP_WRITE) ? 0x80 : 0x00;
-    Control->LUN = (LUN & MAX_LUN);
-    Control->CommandBlockLength = CommandBlockLength;
+    RtlZeroMemory(&Context->Urb, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
 
-    RtlCopyMemory(Control->CommandBlock, CommandBlock, CommandBlockLength);
+    Context->Urb.UrbHeader.Length = sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER);
+    Context->Urb.UrbHeader.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
 
-    return STATUS_SUCCESS;
+    Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle = PipeHandle;
+    Context->Urb.UrbBulkOrInterruptTransfer.TransferFlags = TransferFlags;
+    Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength = TransferBufferLength;
+    Context->Urb.UrbBulkOrInterruptTransfer.TransferBuffer = TransferBuffer;
+    Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL = TransferBufferMDL;
+
+    NextStack = IoGetNextIrpStackLocation(Irp); 
+    NextStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL; 
+    NextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB; 
+    NextStack->Parameters.Others.Argument1 = &Context->Urb; 
+
+    IoSetCompletionRoutine(Irp,
+                           CompletionRoutine,
+                           Context,
+                           TRUE,
+                           TRUE,
+                           TRUE); 
+
+    return IoCallDriver(FDODeviceExtension->LowerDeviceObject, Irp);
 }
 
 PIRP_CONTEXT
@@ -169,11 +187,6 @@ USBSTOR_CSWCompletionRoutine(
     NTSTATUS Status;
 
     Context = (PIRP_CONTEXT)Ctx;
-
-    if (Context->TransferBufferMDL && Context->TransferBufferMDL != Context->Irp->MdlAddress)
-    {
-        IoFreeMdl(Context->TransferBufferMDL);
-    }
 
     DPRINT("USBSTOR_CSWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
@@ -274,35 +287,20 @@ USBSTOR_CSWCompletionRoutine(
     return Status;
 }
 
-VOID
-USBSTOR_SendCSW(
+NTSTATUS
+USBSTOR_SendCSWRequest(
     PIRP_CONTEXT Context,
     PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
-
-    IoStack = IoGetNextIrpStackLocation(Irp);
-
-    // now initialize the urb for sending the csw
-    UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
-                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
-                                           Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
-                                           Context->csw,
-                                           NULL,
-                                           512, //FIXME
-                                           USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
-                                           NULL);
-
-    // initialize stack location
-    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
-    IoStack->Parameters.Others.Argument1 = (PVOID)&Context->Urb;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = Context->Urb.UrbHeader.Length;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-
-    IoSetCompletionRoutine(Irp, USBSTOR_CSWCompletionRoutine, Context, TRUE, TRUE, TRUE);
-
-    IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
+    return USBSTOR_IssueBulkOrInterruptRequest(Context->FDODeviceExtension,
+                                               Irp,
+                                               Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
+                                               USBD_TRANSFER_DIRECTION_IN,
+                                               sizeof(CSW),
+                                               Context->csw,
+                                               NULL,
+                                               USBSTOR_CSWCompletionRoutine,
+                                               Context);
 }
 
 IO_COMPLETION_ROUTINE USBSTOR_DataCompletionRoutine;
@@ -316,13 +314,19 @@ USBSTOR_DataCompletionRoutine(
 {
     PIRP_CONTEXT Context;
     NTSTATUS Status;
-
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
 
     DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     Context = (PIRP_CONTEXT)Ctx;
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-    PSCSI_REQUEST_BLOCK Request = IoStack->Parameters.Scsi.Srb;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Request = IoStack->Parameters.Scsi.Srb;
+
+    if (Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL != Irp->MdlAddress)
+    {
+        IoFreeMdl(Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL);
+    }
 
     if (NT_SUCCESS(Irp->IoStatus.Status))
     {
@@ -336,7 +340,7 @@ USBSTOR_DataCompletionRoutine(
         }
 
         Request->DataTransferLength = Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength;
-        USBSTOR_SendCSW(Context, Irp);
+        USBSTOR_SendCSWRequest(Context, Irp);
     }
     else if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
     {
@@ -373,8 +377,11 @@ USBSTOR_CBWCompletionRoutine(
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
-    UCHAR Code;
     USBD_PIPE_HANDLE PipeHandle;
+    ULONG TransferFlags;
+    PMDL Mdl = NULL;
+    PVOID TransferBuffer = NULL;
+    NTSTATUS Status;
 
     DPRINT("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
@@ -384,73 +391,79 @@ USBSTOR_CBWCompletionRoutine(
 
     if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
-        // perform reset recovery
-        Context->ErrorIndex = 2;
-        Status = USBSTOR_QueueWorkItem(Context, NULL);
-        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+        goto ResetRecovery;
+    }
+
+    // a request without the buffer
+    if (!Irp->MdlAddress)
+    {
+        Request->SrbStatus = SRB_STATUS_SUCCESS;
+        USBSTOR_SendCSWRequest(Context, Irp);
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 
-    // is there data to be submitted
-    if (Context->TransferDataLength)
+    // a request with the data buffer
+
+    if ((Request->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_DATA_IN)
     {
-        // get command code
-        Code = Context->cbw->CommandBlock[0];
-
-        if (Code == SCSIOP_WRITE)
-        {
-            // write request - use bulk out pipe
-            PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle;
-        }
-        else
-        {
-            // default bulk in pipe
-            PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
-        }
-
-        // now initialize the urb for sending data
-        UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
-                                               sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
-                                               PipeHandle,
-                                               NULL,
-                                               Context->TransferBufferMDL,
-                                               Context->TransferDataLength,
-                                               ((Code == SCSIOP_WRITE) ? USBD_TRANSFER_DIRECTION_OUT : (USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK)),
-                                               NULL);
-
-        IoSetCompletionRoutine(Irp, USBSTOR_DataCompletionRoutine, Context, TRUE, TRUE, TRUE);
+        PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle;
+        TransferFlags = USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK;
+    }
+    else if ((Request->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_DATA_OUT)
+    {
+        PipeHandle = Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle;
+        TransferFlags = USBD_TRANSFER_DIRECTION_OUT;
     }
     else
     {
-        if (NT_SUCCESS(Irp->IoStatus.Status))
-        {
-            Request->SrbStatus = SRB_STATUS_SUCCESS;
-        }
-
-        // now initialize the urb for sending the csw
-        UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
-                                               sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
-                                               Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle,
-                                               Context->csw,
-                                               NULL,
-                                               512, //FIXME
-                                               USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK,
-                                               NULL);
-
-        IoSetCompletionRoutine(Irp, USBSTOR_CSWCompletionRoutine, Context, TRUE, TRUE, TRUE);
+        // we check the validity of a request in disk.c so we should never be here
+        DPRINT1("Warning: shouldn't be here\n");
+        goto ResetRecovery;
     }
 
-    IoStack = IoGetNextIrpStackLocation(Irp);
+        if (MmGetMdlVirtualAddress(Irp->MdlAddress) == Request->DataBuffer)
+        {
+            Mdl = Irp->MdlAddress;
+        }
+        else
+        {
+            Mdl = IoAllocateMdl(Request->DataBuffer,
+                                Request->DataTransferLength,
+                                FALSE,
+                                FALSE,
+                                NULL);
+    
+            if (Mdl)
+            {
+                IoBuildPartialMdl(Irp->MdlAddress,
+                                  Mdl,
+                                  Request->DataBuffer,
+                                  Request->DataTransferLength);
+            }
+        }
 
-    // initialize stack location
-    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
-    IoStack->Parameters.Others.Argument1 = (PVOID)&Context->Urb;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = Context->Urb.UrbHeader.Length;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+        if (!Mdl)
+        {
+            DPRINT1("USBSTOR_DataTransfer: Mdl - %p\n", Mdl);
+            goto ResetRecovery;
+        }
 
-    IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
+    USBSTOR_IssueBulkOrInterruptRequest(Context->FDODeviceExtension,
+                                        Irp,
+                                        PipeHandle,
+                                        TransferFlags,
+                                        Request->DataTransferLength,
+                                        TransferBuffer,
+                                        Mdl,
+                                        USBSTOR_DataCompletionRoutine,
+                                        Context);
 
+    return STATUS_MORE_PROCESSING_REQUIRED;
+
+ResetRecovery:
+    Context->ErrorIndex = 2;
+    Status = USBSTOR_QueueWorkItem(Context, NULL);
+    ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -463,132 +476,67 @@ DumpCBW(
         Block[10] & 0xFF, Block[11] & 0xFF, Block[12] & 0xFF, Block[13] & 0xFF, Block[14] & 0xFF, Block[15] & 0xFF, Block[16] & 0xFF, Block[17] & 0xFF, Block[18] & 0xFF, Block[19] & 0xFF,
         Block[20] & 0xFF, Block[21] & 0xFF, Block[22] & 0xFF, Block[23] & 0xFF, Block[24] & 0xFF, Block[25] & 0xFF, Block[26] & 0xFF, Block[27] & 0xFF, Block[28] & 0xFF, Block[29] & 0xFF,
         Block[30] & 0xFF);
-
 }
 
+static
 NTSTATUS
-USBSTOR_SendCBW(
-    PIRP_CONTEXT Context,
-    PIRP Irp)
+USBSTOR_SendCBWRequest(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN PIRP_CONTEXT Context)
 {
-    PIO_STACK_LOCATION IoStack;
-
-    IoStack = IoGetNextIrpStackLocation(Irp);
-
-    // initialize stack location
-    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
-    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
-    IoStack->Parameters.Others.Argument1 = (PVOID)&Context->Urb;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = Context->Urb.UrbHeader.Length;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-
-    IoSetCompletionRoutine(Irp, USBSTOR_CBWCompletionRoutine, Context, TRUE, TRUE, TRUE);
-
-    return IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
-}
-
-NTSTATUS
-USBSTOR_SendRequest(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP OriginalRequest,
-    IN UCHAR CommandLength,
-    IN PUCHAR Command,
-    IN ULONG TransferDataLength,
-    IN PUCHAR TransferData,
-    IN ULONG RetryCount)
-{
-    PIRP_CONTEXT Context;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    PUCHAR MdlVirtualAddress;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
 
-    Context = USBSTOR_AllocateIrpContext();
     if (!Context)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Context = USBSTOR_AllocateIrpContext();
+        if (!Context)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
+    else
+    {
+        RtlZeroMemory(Context->cbw, sizeof(CBW));
+        RtlZeroMemory(&Context->Urb, sizeof(URB));
+    }    
 
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    PDODeviceExtension = IoStack->DeviceObject->DeviceExtension;
+    Request = IoStack->Parameters.Scsi.Srb;
 
-    USBSTOR_BuildCBW(PtrToUlong(Context->cbw),
-                     TransferDataLength,
-                     PDODeviceExtension->LUN,
-                     CommandLength,
-                     Command,
-                     Context->cbw);
+    Context->cbw->Signature = CBW_SIGNATURE;
+    Context->cbw->Tag = PtrToUlong(Context->cbw);
+    Context->cbw->DataTransferLength = Request->DataTransferLength;
+    Context->cbw->Flags = ((UCHAR)Request->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) << 1;
+    Context->cbw->LUN = PDODeviceExtension->LUN;
+    Context->cbw->CommandBlockLength = Request->CdbLength;
+
+    RtlCopyMemory(Context->cbw->CommandBlock, Request->Cdb, Request->CdbLength);
 
     DPRINT("CBW %p\n", Context->cbw);
     DumpCBW((PUCHAR)Context->cbw);
 
-    // now initialize the urb
-    UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
-                                           sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
-                                           FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle,
-                                           Context->cbw,
-                                           NULL,
-                                           sizeof(CBW),
-                                           USBD_TRANSFER_DIRECTION_OUT,
-                                           NULL);
-
     // initialize rest of context
-    Context->Irp = OriginalRequest;
-    Context->TransferData = TransferData;
-    Context->TransferDataLength = TransferDataLength;
+    Context->Irp = Irp;
+    Context->TransferData = Request->DataBuffer;
+    Context->TransferDataLength = Request->DataTransferLength;
     Context->FDODeviceExtension = FDODeviceExtension;
     Context->PDODeviceExtension = PDODeviceExtension;
-    Context->RetryCount = RetryCount;
+    Context->RetryCount = 0;
 
-    // is there transfer data
-    if (Context->TransferDataLength)
-    {
-        // check if the original request already does have an mdl associated
-        if ((OriginalRequest->MdlAddress != NULL) &&
-            (Context->TransferData == NULL || Command[0] == SCSIOP_READ || Command[0] == SCSIOP_WRITE))
-        {
-            // Sanity check that the Mdl does describe the TransferData for read/write
-            if (CommandLength == UFI_READ_WRITE_CMD_LEN)
-            {
-                MdlVirtualAddress = MmGetMdlVirtualAddress(OriginalRequest->MdlAddress);
-
-                // is there an offset
-                if (MdlVirtualAddress != Context->TransferData)
-                {
-                    // lets build an mdl
-                    Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, MmGetMdlByteCount(OriginalRequest->MdlAddress), FALSE, FALSE, NULL);
-                    if (!Context->TransferBufferMDL)
-                    {
-                        FreeItem(Context->cbw);
-                        FreeItem(Context);
-                        return STATUS_INSUFFICIENT_RESOURCES;
-                    }
-
-                    IoBuildPartialMdl(OriginalRequest->MdlAddress, Context->TransferBufferMDL, Context->TransferData, Context->TransferDataLength);
-                }
-            }
-
-            if (!Context->TransferBufferMDL)
-            {
-                // I/O paging request
-                Context->TransferBufferMDL = OriginalRequest->MdlAddress;
-            }
-        }
-        else
-        {
-            // allocate mdl for buffer, buffer must be allocated from NonPagedPool
-            Context->TransferBufferMDL = IoAllocateMdl(Context->TransferData, Context->TransferDataLength, FALSE, FALSE, NULL);
-            if (!Context->TransferBufferMDL)
-            {
-                FreeItem(Context->cbw);
-                FreeItem(Context);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            MmBuildMdlForNonPagedPool(Context->TransferBufferMDL);
-        }
-    }
-
-    return USBSTOR_SendCBW(Context, OriginalRequest);
+    return USBSTOR_IssueBulkOrInterruptRequest(
+        FDODeviceExtension,
+        Irp,
+        FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle,
+        USBD_TRANSFER_DIRECTION_OUT,
+        sizeof(CBW),
+        Context->cbw,
+        NULL,
+        USBSTOR_CBWCompletionRoutine,
+        Context);
 }
 
 NTSTATUS
@@ -614,7 +562,7 @@ USBSTOR_HandleExecuteSCSI(
 
     // check that we're sending to the right LUN
     ASSERT(pCDB->CDB10.LogicalUnitNumber == (PDODeviceExtension->LUN & MAX_LUN));
-    Status = USBSTOR_SendRequest(DeviceObject, Irp, Request->CdbLength, (PUCHAR)pCDB, Request->DataTransferLength, Request->DataBuffer, RetryCount);
+    Status = USBSTOR_SendCBWRequest(PDODeviceExtension->LowerDeviceObject->DeviceExtension, Irp, NULL);
 
     return Status;
 }
