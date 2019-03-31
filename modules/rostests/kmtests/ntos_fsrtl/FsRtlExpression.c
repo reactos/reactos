@@ -176,6 +176,9 @@ struct
     { L"*_MICROSOFT.WINDOWS.COMMON-CONTROLS_6595B64144CCF1DF_6.0.*.*_*_*.MANIFEST",
                                 L"X86_MICROSOFT.VC90.ATL_1FC8B3B9A1E18E3B_9.0.30729.6161_X-WW_92453BB7.CAT",
                                                                 FALSE,  FALSE,  FALSE },
+    { L"FI<<<<<<<<",            L"FILE",                        FALSE,  FALSE,  TRUE },
+    { L"<<<<<<<<<.<",           L".",                           FALSE,  FALSE,  TRUE },
+    { L"F<",                    L"FILE.TXT",                    FALSE,  FALSE,  FALSE },
 };
 
 static VOID FsRtlIsNameInExpressionTest()
