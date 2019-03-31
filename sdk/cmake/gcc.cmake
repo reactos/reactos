@@ -46,6 +46,7 @@ add_compile_flags("-nostdinc")
 
 if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
+    add_compile_flags("-fno-aggressive-loop-optimizations")
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
