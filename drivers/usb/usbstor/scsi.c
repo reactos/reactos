@@ -5,6 +5,8 @@
  * COPYRIGHT:   2005-2006 James Tabor
  *              2011-2012 Michael Martin (michael.martin@reactos.org)
  *              2011-2013 Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              2017 Vadim Galyant
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #include "usbstor.h"
@@ -12,6 +14,46 @@
 #define NDEBUG
 #include <debug.h>
 
+
+static
+NTSTATUS
+USBSTOR_SrbStatusToNtStatus(
+    IN PSCSI_REQUEST_BLOCK Srb)
+{
+    UCHAR SrbStatus;
+
+    SrbStatus = SRB_STATUS(Srb->SrbStatus);
+
+    switch (SrbStatus)
+    {
+        case SRB_STATUS_SUCCESS:
+            return STATUS_SUCCESS;
+
+        case SRB_STATUS_DATA_OVERRUN:
+            return STATUS_BUFFER_OVERFLOW;
+
+        case SRB_STATUS_BAD_FUNCTION:
+        case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
+            return STATUS_INVALID_DEVICE_REQUEST;
+
+        case SRB_STATUS_INVALID_LUN:
+        case SRB_STATUS_INVALID_TARGET_ID:
+        case SRB_STATUS_NO_HBA:
+        case SRB_STATUS_NO_DEVICE:
+            return STATUS_DEVICE_DOES_NOT_EXIST;
+
+        case SRB_STATUS_TIMEOUT:
+            return STATUS_IO_TIMEOUT;
+
+        case SRB_STATUS_BUS_RESET:
+        case SRB_STATUS_COMMAND_TIMEOUT:
+        case SRB_STATUS_SELECTION_TIMEOUT:
+            return STATUS_DEVICE_NOT_CONNECTED;
+
+        default:
+            return STATUS_IO_DEVICE_ERROR;
+    }
+}
 
 NTSTATUS
 USBSTOR_BuildCBW(
@@ -140,11 +182,12 @@ USBSTOR_CSWCompletionRoutine(
     {
         if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
         {
-            if (Context->ErrorIndex == 0)
+            if (Context->RetryCount < 2)
             {
-                Context->ErrorIndex = 1;
+                ++Context->RetryCount;
 
                 // clear stall and resend cbw
+                Context->ErrorIndex = 1;
                 Status = USBSTOR_QueueWorkItem(Context, Irp);
                 ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
 
@@ -177,8 +220,6 @@ USBSTOR_CSWCompletionRoutine(
     Request = IoStack->Parameters.Scsi.Srb;
     ASSERT(Request);
 
-    Status = Irp->IoStatus.Status;
-
     // finally check for CSW errors
     if (Context->csw->Status == CSW_STATUS_COMMAND_PASSED)
     {
@@ -193,20 +234,35 @@ USBSTOR_CSWCompletionRoutine(
             Context->PDODeviceExtension->LastLogicBlockAddress = NTOHL(Response->LastLogicalBlockAddress);
         }
 
-        Status = STATUS_SUCCESS;
-        Request->SrbStatus = SRB_STATUS_SUCCESS;
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = Request->DataTransferLength;
+        Status = USBSTOR_SrbStatusToNtStatus(Request);
     }
     else if (Context->csw->Status == CSW_STATUS_COMMAND_FAILED)
     {
+        // the command is correct but with failed status - issue request sense
         DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
-        // perform reset recovery
-        Context->ErrorIndex = 2;
-        Status = USBSTOR_QueueWorkItem(Context, NULL);
-        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
-        return STATUS_MORE_PROCESSING_REQUIRED;
+
+        ASSERT(Context->FDODeviceExtension->ActiveSrb == Request);
+        
+        // setting a generic error status, additional information
+        // should be read by higher-level driver from SenseInfoBuffer
+        Request->SrbStatus = SRB_STATUS_ERROR;
+        Request->ScsiStatus = 2;
+        Request->DataTransferLength = 0;
+
+        DPRINT("Flags: %x SBL: %x, buf: %p\n", Request->SrbFlags, Request->SenseInfoBufferLength, Request->SenseInfoBuffer);
+
+        if (!(Request->SrbFlags & SRB_FLAGS_DISABLE_AUTOSENSE) &&
+              Request->SenseInfoBufferLength &&
+              Request->SenseInfoBuffer)
+        {
+            // TODO: issue request sense
+        }
+
+        Status = STATUS_IO_DEVICE_ERROR;
     }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = Request->DataTransferLength;
 
     FreeItem(Context->cbw);
 
@@ -265,17 +321,42 @@ USBSTOR_DataCompletionRoutine(
     DPRINT("USBSTOR_DataCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     Context = (PIRP_CONTEXT)Ctx;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+    PSCSI_REQUEST_BLOCK Request = IoStack->Parameters.Scsi.Srb;
 
-    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    if (NT_SUCCESS(Irp->IoStatus.Status))
     {
+        if (Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength < Request->DataTransferLength)
+        {
+            Request->SrbStatus = SRB_STATUS_DATA_OVERRUN;
+        }
+        else
+        {
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+
+        Request->DataTransferLength = Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength;
+        USBSTOR_SendCSW(Context, Irp);
+    }
+    else if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
+    {
+        ++Context->RetryCount;
+
+        Request->SrbStatus = SRB_STATUS_DATA_OVERRUN;
+        Request->DataTransferLength = Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength;
+
         // clear stall and resend cbw
         Context->ErrorIndex = 1;
         Status = USBSTOR_QueueWorkItem(Context, Irp);
         ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
-        return STATUS_MORE_PROCESSING_REQUIRED;
     }
-
-    USBSTOR_SendCSW(Context, Irp);
+    else
+    {
+        // perform reset recovery
+        Context->ErrorIndex = 2;
+        Status = USBSTOR_QueueWorkItem(Context, NULL);
+        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+    }
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -291,13 +372,24 @@ USBSTOR_CBWCompletionRoutine(
 {
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
     UCHAR Code;
     USBD_PIPE_HANDLE PipeHandle;
 
     DPRINT("USBSTOR_CBWCompletionRoutine Irp %p Ctx %p Status %x\n", Irp, Ctx, Irp->IoStatus.Status);
 
     Context = (PIRP_CONTEXT)Ctx;
-    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Request = IoStack->Parameters.Scsi.Srb;
+
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        // perform reset recovery
+        Context->ErrorIndex = 2;
+        Status = USBSTOR_QueueWorkItem(Context, NULL);
+        ASSERT(Status == STATUS_MORE_PROCESSING_REQUIRED);
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
 
     // is there data to be submitted
     if (Context->TransferDataLength)
@@ -330,6 +422,11 @@ USBSTOR_CBWCompletionRoutine(
     }
     else
     {
+        if (NT_SUCCESS(Irp->IoStatus.Status))
+        {
+            Request->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+
         // now initialize the urb for sending the csw
         UsbBuildInterruptOrBulkTransferRequest(&Context->Urb,
                                                sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER),
@@ -342,6 +439,8 @@ USBSTOR_CBWCompletionRoutine(
 
         IoSetCompletionRoutine(Irp, USBSTOR_CSWCompletionRoutine, Context, TRUE, TRUE, TRUE);
     }
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
 
     // initialize stack location
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
