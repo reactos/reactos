@@ -5,6 +5,7 @@
  * COPYRIGHT:   2005-2006 James Tabor
  *              2011-2012 Michael Martin (michael.martin@reactos.org)
  *              2011-2013 Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              2017 Vadim Galyant
  */
 
 #include "usbstor.h"
@@ -12,6 +13,69 @@
 #define NDEBUG
 #include <debug.h>
 
+
+static
+BOOLEAN
+IsRequestValid(PIRP Irp)
+{
+    ULONG TransferLength;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Srb;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (Srb->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+    {
+        if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_UNSPECIFIED_DIRECTION)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->SrbFlags - %X\n", Srb->SrbFlags);
+            return FALSE;
+        }
+
+        TransferLength = Srb->DataTransferLength;
+
+        if (Irp->MdlAddress == NULL)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress == NULL\n");
+            return FALSE;
+        }
+
+        if (TransferLength == 0)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength == 0\n");
+            return FALSE;
+        }
+
+        if (TransferLength > USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. TransferLength > 0x10000\n");
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (Srb->DataTransferLength)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataTransferLength != 0\n");
+            return FALSE;
+        }
+
+        if (Srb->DataBuffer)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Srb->DataBuffer != NULL\n");
+            return FALSE;
+        }
+
+        if (Irp->MdlAddress)
+        {
+            DPRINT1("IsRequestValid: Invalid Srb. Irp->MdlAddress != NULL\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
 
 NTSTATUS
 USBSTOR_HandleInternalDeviceControl(
@@ -35,27 +99,22 @@ USBSTOR_HandleInternalDeviceControl(
         {
             DPRINT("SRB_FUNCTION_EXECUTE_SCSI\n");
 
-            // check if request is valid
-            if (Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+            if (!IsRequestValid(Irp))
             {
-                // data is transferred with this irp
-                if ((Request->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT)) == (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT) ||
-                    Request->DataTransferLength == 0 ||
-                    Irp->MdlAddress == NULL)
-                {
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
+                Status = STATUS_INVALID_PARAMETER;
+                break;
             }
-            else
+
+            if (Request->Cdb[0] == SCSIOP_MODE_SENSE)
             {
-                // sense buffer request
-                if (Request->DataTransferLength || Request->DataBuffer || Irp->MdlAddress)
-                {
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
+                DPRINT("USBSTOR_Scsi: SRB_FUNCTION_EXECUTE_SCSI - FIXME SCSIOP_MODE_SENSE\n");
+                // FIXME Get from registry WriteProtect for StorageDevicePolicies;
+                // L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\StorageDevicePolicies"
+                // QueryTable[0].Name = L"WriteProtect"
             }
+
+            IoMarkIrpPending(Irp);
+            Request->SrbStatus = SRB_STATUS_PENDING;
 
             // add the request
             if (!USBSTOR_QueueAddIrp(PDODeviceExtension->LowerDeviceObject, Irp))
@@ -337,8 +396,8 @@ USBSTOR_HandleQueryProperty(
         // fill out descriptor
         AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
         AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = MAXULONG; //FIXME compute some sane value
-        AdapterDescriptor->MaximumPhysicalPages = 25; //FIXME compute some sane value
+        AdapterDescriptor->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+        AdapterDescriptor->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
         AdapterDescriptor->AlignmentMask = 0;
         AdapterDescriptor->AdapterUsesPio = FALSE;
         AdapterDescriptor->AdapterScansDown = FALSE;
@@ -406,8 +465,8 @@ USBSTOR_HandleDeviceControl(
 
             if (Capabilities)
             {
-                Capabilities->MaximumTransferLength = MAXULONG;
-                Capabilities->MaximumPhysicalPages = 25;
+                Capabilities->MaximumTransferLength = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH;
+                Capabilities->MaximumPhysicalPages = USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH / PAGE_SIZE + 1; // See CORE-10515 and CORE-10755
                 Capabilities->SupportedAsynchronousEvents = 0;
                 Capabilities->AlignmentMask = 0;
                 Capabilities->TaggedQueuing = FALSE;
