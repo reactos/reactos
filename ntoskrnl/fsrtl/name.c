@@ -157,21 +157,21 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                         goto Exit;
                     }
 
-                    /* Backtracking is at the start of the buffer */
-                    BackTracking = AllocatedBuffer;
-
-                    /* Copy BackTrackingBuffer content */
-                    RtlCopyMemory(BackTracking,
-                                  BackTrackingBuffer,
+                    /* Copy BackTracking content. Note that it can point to either BackTrackingBuffer or OldBackTrackingBuffer */
+                    RtlCopyMemory(AllocatedBuffer,
+                                  BackTracking,
                                   RTL_NUMBER_OF(BackTrackingBuffer) * sizeof(USHORT));
 
-                    /* OldBackTracking is after BackTracking */
-                    OldBackTracking = &BackTracking[BackTrackingBufferSize];
+                    /* Place current Backtracking is at the start of the new buffer */
+                    BackTracking = AllocatedBuffer;
 
-                    /* Copy OldBackTrackingBuffer content */
-                    RtlCopyMemory(OldBackTracking,
-                                  OldBackTrackingBuffer,
+                    /* Copy OldBackTracking content */
+                    RtlCopyMemory(&BackTracking[BackTrackingBufferSize],
+                                  OldBackTracking,
                                   RTL_NUMBER_OF(OldBackTrackingBuffer) * sizeof(USHORT));
+
+                    /* Place current OldBackTracking after current BackTracking in the buffer */
+                    OldBackTracking = &BackTracking[BackTrackingBufferSize];
                 }
 
                 /* Basic check to test if chars are equal */
