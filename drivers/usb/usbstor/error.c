@@ -74,14 +74,13 @@ USBSTOR_HandleTransferError(
     PDEVICE_OBJECT DeviceObject,
     PIRP_CONTEXT Context)
 {
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION Stack;
     PSCSI_REQUEST_BLOCK Request;
     PCDB pCDB;
 
     ASSERT(Context);
-    ASSERT(Context->PDODeviceExtension);
-    ASSERT(Context->PDODeviceExtension->Self);
     ASSERT(Context->Irp);
 
     // first perform a mass storage reset step 1 in 5.3.4 USB Mass Storage Bulk Only Specification
@@ -98,6 +97,8 @@ USBSTOR_HandleTransferError(
     }
 
     Stack = IoGetCurrentIrpStackLocation(Context->Irp);
+    ASSERT(Stack->DeviceObject);
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)Stack->DeviceObject->DeviceExtension;
 
     Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
     ASSERT(Request);
@@ -111,11 +112,11 @@ USBSTOR_HandleTransferError(
         // Complete the master IRP
         Context->Irp->IoStatus.Status = Status;
         Context->Irp->IoStatus.Information = 0;
-        USBSTOR_QueueTerminateRequest(Context->PDODeviceExtension->LowerDeviceObject, Context->Irp);
+        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, Context->Irp);
         IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
 
         // Start the next request
-        USBSTOR_QueueNextRequest(Context->PDODeviceExtension->LowerDeviceObject);
+        USBSTOR_QueueNextRequest(PDODeviceExtension->LowerDeviceObject);
 
         // srb handling finished
         Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
@@ -125,10 +126,10 @@ USBSTOR_HandleTransferError(
     }
     else
     {
-        DPRINT1("Retrying Count %lu %p\n", Context->RetryCount, Context->PDODeviceExtension->Self);
+        DPRINT1("Retrying Count %lu %p\n", Context->RetryCount, Stack->DeviceObject);
 
         // re-schedule request
-        USBSTOR_HandleExecuteSCSI(Context->PDODeviceExtension->Self, Context->Irp, Context->RetryCount + 1);
+        USBSTOR_HandleExecuteSCSI(Stack->DeviceObject, Context->Irp, Context->RetryCount + 1);
 
         // srb error handling finished
         Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
@@ -140,7 +141,6 @@ USBSTOR_HandleTransferError(
         Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
     }
 
-    FreeItem(Context->cbw);
     FreeItem(Context);
 
     DPRINT1("USBSTOR_HandleTransferError returning with Status %x\n", Status);
