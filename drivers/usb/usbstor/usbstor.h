@@ -283,21 +283,17 @@ typedef struct
 
 typedef struct
 {
-    union
-    {
-        PCBW cbw;
-        PCSW csw;
-    };
-    URB Urb;
     PIRP Irp;
-    ULONG TransferDataLength;
-    PUCHAR TransferData;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PMDL TransferBufferMDL;
     ULONG ErrorIndex;
     ULONG RetryCount;
-}IRP_CONTEXT, *PIRP_CONTEXT;
+    union
+    {
+        CBW cbw;
+        CSW csw;
+    };
+    URB Urb;
+} IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
 {
