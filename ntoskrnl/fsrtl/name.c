@@ -143,7 +143,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                     ASSERT((OldBackTracking == BackTrackingBuffer) || (OldBackTracking == OldBackTrackingBuffer));
 
                     /* Calculate buffer size */
-                    BackTrackingBufferSize = Expression->Length + 1;
+                    BackTrackingBufferSize = Expression->Length / sizeof(WCHAR) * 2 + 1;
 
                     /* Allocate memory for both back-tracking buffers */
                     AllocatedBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,

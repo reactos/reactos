@@ -291,7 +291,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     ASSERT((OldBackTracking == BackTrackingBuffer) || (OldBackTracking == OldBackTrackingBuffer));
 
                     /* Calculate buffer size */
-                    BackTrackingBufferSize = (Expression->Length + 1) * 2;
+                    BackTrackingBufferSize = Expression->Length * 2 + 1;
 
                     /* Allocate memory for both back-tracking buffers */
                     AllocatedBuffer = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
@@ -386,7 +386,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     continue;
                 }
                 /* Check DOS_DOT */
-                else if (ExpressionChar == DOS_DOT)
+                else if (ExpressionChar == ANSI_DOS_DOT)
                 {
                     if (EndOfName) continue;
 
