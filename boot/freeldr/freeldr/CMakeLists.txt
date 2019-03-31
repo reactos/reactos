@@ -195,6 +195,10 @@ if(USE_CLANG_CL)
     # We need to reduce the binary size
     add_target_compile_flags(freeldr_common "/Os")
 endif()
+if(NOT MSVC AND ARCH STREQUAL "i386")
+  # Prevent a warning when doing a memcmp with address 0
+  set_source_files_properties(arch/i386/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
+endif()
 
 set(PCH_SOURCE
     ${FREELDR_BOOTLIB_SOURCE}
