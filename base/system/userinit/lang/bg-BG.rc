@@ -36,7 +36,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Приложението userinit не успя да пусне обвивката!"
-    IDS_INSTALLER_FAIL "Userinit failed to start the installer!"
+    IDS_INSTALLER_FAIL "Приложението userinit не успя да стартира инсталатор!"
     IDS_CANCEL_CONFIRM "Are you sure you want to quit the ReactOS LiveCD?\nIf you choose to do so, your computer might restart."
 END
 
