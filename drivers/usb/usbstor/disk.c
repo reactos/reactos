@@ -174,7 +174,7 @@ USBSTOR_HandleQueryProperty(
     PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
     ULONG FieldLengthVendor, FieldLengthProduct, FieldLengthRevision, TotalLength, FieldLengthSerialNumber;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    PUFI_INQUIRY_RESPONSE InquiryData;
+    PINQUIRYDATA InquiryData;
     PSTORAGE_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUCHAR Buffer;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
@@ -224,13 +224,13 @@ USBSTOR_HandleQueryProperty(
         ASSERT(FDODeviceExtension);
         ASSERT(FDODeviceExtension->Common.IsFDO);
 
-        InquiryData = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        InquiryData = PDODeviceExtension->InquiryData;
         ASSERT(InquiryData);
 
         // compute extra parameters length
-        FieldLengthVendor = USBSTOR_GetFieldLength(InquiryData->Vendor, 8);
-        FieldLengthProduct = USBSTOR_GetFieldLength(InquiryData->Product, 16);
-        FieldLengthRevision = USBSTOR_GetFieldLength(InquiryData->Revision, 4);
+        FieldLengthVendor = USBSTOR_GetFieldLength(InquiryData->VendorId, 8);
+        FieldLengthProduct = USBSTOR_GetFieldLength(InquiryData->ProductId, 16);
+        FieldLengthRevision = USBSTOR_GetFieldLength(InquiryData->ProductRevisionLevel, 4);
 
         if (FDODeviceExtension->SerialNumber)
         {
@@ -263,11 +263,11 @@ USBSTOR_HandleQueryProperty(
         // initialize the device descriptor
         DeviceDescriptor = (PSTORAGE_DEVICE_DESCRIPTOR)Irp->AssociatedIrp.SystemBuffer;
 
-        DeviceDescriptor->Version = TotalLength;
+        DeviceDescriptor->Version = sizeof(STORAGE_DEVICE_DESCRIPTOR);
         DeviceDescriptor->Size = TotalLength;
         DeviceDescriptor->DeviceType = InquiryData->DeviceType;
-        DeviceDescriptor->DeviceTypeModifier = (InquiryData->RMB & 0x7F);
-        DeviceDescriptor->RemovableMedia = (InquiryData->RMB & 0x80) ? TRUE : FALSE;
+        DeviceDescriptor->DeviceTypeModifier = InquiryData->DeviceTypeModifier;
+        DeviceDescriptor->RemovableMedia = InquiryData->RemovableMedia;
         DeviceDescriptor->CommandQueueing = FALSE;
         DeviceDescriptor->BusType = BusTypeUsb;
         DeviceDescriptor->VendorIdOffset = sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR);
@@ -279,15 +279,15 @@ USBSTOR_HandleQueryProperty(
         // copy descriptors
         Buffer = (PUCHAR)((ULONG_PTR)DeviceDescriptor + sizeof(STORAGE_DEVICE_DESCRIPTOR) - sizeof(UCHAR));
 
-        RtlCopyMemory(Buffer, InquiryData->Vendor, FieldLengthVendor);
+        RtlCopyMemory(Buffer, InquiryData->VendorId, FieldLengthVendor);
         Buffer[FieldLengthVendor] = '\0';
         Buffer += FieldLengthVendor + 1;
 
-        RtlCopyMemory(Buffer, InquiryData->Product, FieldLengthProduct);
+        RtlCopyMemory(Buffer, InquiryData->ProductId, FieldLengthProduct);
         Buffer[FieldLengthProduct] = '\0';
         Buffer += FieldLengthProduct + 1;
 
-        RtlCopyMemory(Buffer, InquiryData->Revision, FieldLengthRevision);
+        RtlCopyMemory(Buffer, InquiryData->ProductRevisionLevel, FieldLengthRevision);
         Buffer[FieldLengthRevision] = '\0';
         Buffer += FieldLengthRevision + 1;
 
@@ -364,9 +364,8 @@ USBSTOR_HandleDeviceControl(
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PSCSI_ADAPTER_BUS_INFO BusInfo;
-    PSCSI_INQUIRY_DATA InquiryData;
-    PINQUIRYDATA ScsiInquiryData;
-    PUFI_INQUIRY_RESPONSE UFIInquiryResponse;
+    PSCSI_INQUIRY_DATA ScsiInquiryData;
+    PINQUIRYDATA InquiryData;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -431,11 +430,8 @@ USBSTOR_HandleDeviceControl(
 
             // get parameters
             BusInfo = Irp->AssociatedIrp.SystemBuffer;
-            InquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
-            ScsiInquiryData = (PINQUIRYDATA)InquiryData->InquiryData;
-            
-            UFIInquiryResponse = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
-            ASSERT(UFIInquiryResponse);
+            ScsiInquiryData = (PSCSI_INQUIRY_DATA)(BusInfo + 1);
+            InquiryData = (PINQUIRYDATA)ScsiInquiryData->InquiryData;
 
 
             BusInfo->NumberOfBuses = 1;
@@ -443,30 +439,19 @@ USBSTOR_HandleDeviceControl(
             BusInfo->BusData[0].InitiatorBusId = 0;
             BusInfo->BusData[0].InquiryDataOffset = sizeof(SCSI_ADAPTER_BUS_INFO);
 
-            InquiryData->PathId = 0;
-            InquiryData->TargetId = 0;
-            InquiryData->Lun = PDODeviceExtension->LUN & MAX_LUN;
-            InquiryData->DeviceClaimed = PDODeviceExtension->Claimed;
-            InquiryData->InquiryDataLength = sizeof(INQUIRYDATA);
-            InquiryData->NextInquiryDataOffset = 0;
+            ScsiInquiryData->PathId = 0;
+            ScsiInquiryData->TargetId = 0;
+            ScsiInquiryData->Lun = PDODeviceExtension->LUN & MAX_LUN;
+            ScsiInquiryData->DeviceClaimed = PDODeviceExtension->Claimed;
+            ScsiInquiryData->InquiryDataLength = sizeof(INQUIRYDATA);
+            ScsiInquiryData->NextInquiryDataOffset = 0;
 
-            RtlZeroMemory(ScsiInquiryData, sizeof(INQUIRYDATA));
-            ScsiInquiryData->DeviceType = UFIInquiryResponse->DeviceType;
-            ScsiInquiryData->DeviceTypeQualifier = (UFIInquiryResponse->RMB & 0x7F);
+            // Note: INQUIRYDATA structure is larger than INQUIRYDATABUFFERSIZE
+            RtlZeroMemory(InquiryData, sizeof(INQUIRYDATA));
+            RtlCopyMemory(InquiryData, PDODeviceExtension->InquiryData, INQUIRYDATABUFFERSIZE);
 
-            // Hack for IoReadPartitionTable call in disk.sys
-            ScsiInquiryData->RemovableMedia = ((ScsiInquiryData->DeviceType == DIRECT_ACCESS_DEVICE) ? ((UFIInquiryResponse->RMB & 0x80) ? 1 : 0) : 0);
-
-            ScsiInquiryData->Versions = 0x04;
-            ScsiInquiryData->ResponseDataFormat = 0x02;
-            ScsiInquiryData->AdditionalLength = 31;
-            ScsiInquiryData->SoftReset = 0;
-            ScsiInquiryData->CommandQueue = 0;
-            ScsiInquiryData->LinkedCommands = 0;
-            ScsiInquiryData->RelativeAddressing = 0;
-
-            RtlCopyMemory(&ScsiInquiryData->VendorId, UFIInquiryResponse->Vendor, USBSTOR_GetFieldLength(UFIInquiryResponse->Vendor, 8));
-            RtlCopyMemory(&ScsiInquiryData->ProductId, UFIInquiryResponse->Product, USBSTOR_GetFieldLength(UFIInquiryResponse->Product, 16));
+            InquiryData->Versions = 0x04;
+            InquiryData->ResponseDataFormat = 0x02; // some devices set this to 1
 
             Irp->IoStatus.Information = sizeof(SCSI_ADAPTER_BUS_INFO) + sizeof(SCSI_INQUIRY_DATA) + sizeof(INQUIRYDATA) - 1;
             Status = STATUS_SUCCESS;

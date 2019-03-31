@@ -68,7 +68,7 @@ typedef struct
     USBSTOR_COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
-    PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    PINQUIRYDATA InquiryData;                                                            // USB SCSI inquiry data
     PUCHAR FormatData;                                                                   // USB SCSI Read Format Capacity Data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
@@ -116,42 +116,6 @@ typedef struct
     ULONG DataResidue;                                               // CSW data transfer diff
     UCHAR Status;                                                    // CSW status
 }CSW, *PCSW;
-
-//--------------------------------------------------------------------------------------------------------------------------------------------
-//
-// UFI INQUIRY command
-//
-typedef struct
-{
-    UCHAR Code;                                                      // operation code 0x12
-    UCHAR LUN;                                                       // lun address
-    UCHAR PageCode;                                                  // product data information, always 0x00
-    UCHAR Reserved;                                                  // reserved 0x00
-    UCHAR AllocationLength;                                          // length of inquiry data to be returned, default 36 bytes
-    UCHAR Reserved1[7];                                              //reserved bytes 0x00
-}UFI_INQUIRY_CMD, *PUFI_INQUIRY_CMD;
-
-C_ASSERT(sizeof(UFI_INQUIRY_CMD) == 12);
-
-#define UFI_INQUIRY_CMD_LEN 0x6
-
-//
-// UFI INQUIRY command response
-//
-typedef struct
-{
-    UCHAR DeviceType;                                                // device type
-    UCHAR RMB;                                                       // removable media bit
-    UCHAR Version;                                                   // contains version 0x00
-    UCHAR Format;                                                    // response format
-    UCHAR Length;                                                    // additional length
-    UCHAR Reserved[3];                                               // reserved
-    UCHAR Vendor[8];                                                 // vendor identification string
-    UCHAR Product[16];                                               // product identification string
-    UCHAR Revision[4];                                               // product revision code
-}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
-
-C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
