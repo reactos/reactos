@@ -3739,7 +3739,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
         return STATUS_INVALID_FILE_FOR_SECTION;
 
 #ifndef NEWCC
-    if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+    if (!CcIsFileCached(FileObject))
     {
         DPRINT1("Denying section creation due to missing cache initialization\n");
         return STATUS_INVALID_FILE_FOR_SECTION;
