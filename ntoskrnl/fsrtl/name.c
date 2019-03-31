@@ -200,7 +200,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                     DontSkipDot = TRUE;
                     if (!EndOfName && Name->Buffer[NamePosition] == '.')
                     {
-                        for (Position = NamePosition - 1; Position < Name->Length / sizeof(WCHAR); Position++)
+                        for (Position = NamePosition + 1; Position < Name->Length / sizeof(WCHAR); Position++)
                         {
                             if (Name->Buffer[Position] == L'.')
                             {
