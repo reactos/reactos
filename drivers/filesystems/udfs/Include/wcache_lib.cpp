@@ -1113,7 +1113,7 @@ WCacheUpdatePacket(
     // If we didn't read packet from media, we can't
     // perform comparison to assure that packet was really modified.
     // Thus, assume that it is modified in this case.
-    mod = !read | Cache->DoNotCompare;
+    mod = !read || Cache->DoNotCompare;
     Lba0 = Lba - firstLba;
     for(i=0; i<PSs; i++, Lba0++) {
         if( WCacheGetModFlag(block_array, Lba0) ||
