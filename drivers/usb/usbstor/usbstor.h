@@ -9,6 +9,7 @@
 
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
+#define USBSTOR_DEFAULT_MAX_TRANSFER_LENGTH 0x10000
 
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
