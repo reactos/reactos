@@ -121,6 +121,8 @@ set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
     add_target_compile_flags(glu32 "-Wno-write-strings -Wno-unused-but-set-variable")
+    # Prevent a warning when comparing 'this' against 0
+    set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_FLAGS "-Wno-nonnull-compare")
 elseif(USE_CLANG_CL)
     add_target_compile_flags(glu32 "-Wno-self-assign -Wno-unused-function -Wno-microsoft-include")
     add_target_compile_flags(glu32 "-Wno-deprecated-register -Wno-tautological-undefined-compare")
