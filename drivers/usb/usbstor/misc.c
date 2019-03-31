@@ -258,6 +258,7 @@ USBSTOR_ResetDevice(
     return Status;
 }
 
+#if 0
 BOOLEAN
 USBSTOR_IsFloppy(
     IN PUCHAR Buffer,
@@ -319,3 +320,4 @@ USBSTOR_IsFloppy(
 
     return FALSE;
 }
+#endif
