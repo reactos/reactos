@@ -135,7 +135,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 }
 
                 /* If buffer too small */
-                if (BackTrackingPosition > BackTrackingBufferSize - 2)
+                if (BackTrackingPosition > BackTrackingBufferSize - 3)
                 {
                     /* We should only ever get here once! */
                     ASSERT(AllocatedBuffer == NULL);
