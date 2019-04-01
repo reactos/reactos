@@ -3,6 +3,11 @@ add_definitions(-D_WINE)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winmm.dll winmm.spec ADD_IMPORTLIB)
 
+if(MSVC)
+    # error C4312: 'type cast': conversion from 'DWORD' to 'HTASK' of greater size
+    replace_compile_flags("/we4312" " ")
+endif()
+
 list(APPEND SOURCE
     driver.c
     joystick.c

@@ -1,6 +1,11 @@
 
 spec2def(midimap.dll midimap.spec)
 
+if(MSVC)
+    # error C4133: 'function': incompatible types - from 'LPDWORD' to 'DWORD_PTR *'
+    replace_compile_flags("/we4133" " ")
+endif()
+
 add_library(midimap MODULE
     midimap.c
     midimap.rc

@@ -8,6 +8,11 @@ add_definitions(
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+if(MSVC)
+    # error C4133: 'function': incompatible types - from 'WICPixelFormatNumericRepresentation *' to 'DWORD *'
+    replace_compile_flags("/we4133" " ")
+endif()
+
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
