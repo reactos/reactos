@@ -248,7 +248,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         if (NamePosition >= Name->Length)
         {
             EndOfName = TRUE;
-            if (OldBackTracking[MatchingChars - 1] == Expression->Length * 2)
+            if (MatchingChars && OldBackTracking[MatchingChars - 1] == Expression->Length * 2)
                 break;
         }
         else
@@ -422,7 +422,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
     }
 
     /* Store result value */
-    Result = (OldBackTracking[MatchingChars - 1] == Expression->Length * 2);
+    Result = MatchingChars && (OldBackTracking[MatchingChars - 1] == Expression->Length * 2);
 
 Exit:
 
