@@ -46,6 +46,8 @@ add_compile_flags("-nostdinc")
 
 if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
+endif()
+if(NOT GCC_VERSION VERSION_LESS 4.8)
     add_compile_flags("-fno-aggressive-loop-optimizations")
 endif()
 
