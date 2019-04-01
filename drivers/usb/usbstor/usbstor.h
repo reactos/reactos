@@ -293,6 +293,7 @@ typedef struct
         CSW csw;
     };
     URB Urb;
+    SCSI_REQUEST_BLOCK SenseSrb;
 } IRP_CONTEXT, *PIRP_CONTEXT;
 
 typedef struct _ERRORHANDLER_WORKITEM_DATA
