@@ -8,20 +8,6 @@
  *       15/10-2007   Magnus Olsen
  */
 
-#include <ntifs.h>
-
-/* Win32 Headers */
-#define WINBASEAPI
-#define STARTF_USESIZE 2
-#define STARTF_USEPOSITION 4
-#define INTERNAL_CALL NTAPI
-#define NT_BUILD_ENVIRONMENT
-
-#include <windef.h>
-#include <winerror.h>
-#include <wingdi.h>
-#include <winddi.h>
-#include <initguid.h>
 #include <dxg_int.h>
 #include "dxg_driver.h"
 

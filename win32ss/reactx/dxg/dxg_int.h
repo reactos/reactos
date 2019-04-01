@@ -19,6 +19,7 @@
 #include <wingdi.h>
 #include <winddi.h>
 #include <ddkernel.h>
+#include <initguid.h>
 #include <ddrawi.h>
 #include <ntgdityp.h>
 #include <psfuncs.h>
