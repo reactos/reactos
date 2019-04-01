@@ -2068,7 +2068,7 @@ USBH_RestoreDevice(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
     ASSERT(PortExtension->PortNumber > 0);
     PortData = &HubExtension->PortData[PortExtension->PortNumber - 1];
 
-    if (PortExtension->Common.SelfDevice == PortData->DeviceObject)
+    if (PortExtension->Common.SelfDevice != PortData->DeviceObject)
     {
         Status = STATUS_UNSUCCESSFUL;
         return Status;
