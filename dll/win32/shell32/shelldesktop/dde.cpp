@@ -106,7 +106,7 @@ static LPITEMIDLIST _ILReadFromSharedMemory(PCWSTR strField)
     if (*strField != L':')
         return NULL;
 
-    HANDLE hData = (HANDLE) StrToIntW(strField + 1);
+    HANDLE hData = UlongToHandle(StrToIntW(strField + 1));
     PWSTR strSecond = StrChrW(strField + 1, L':');
 
     if (strSecond)
