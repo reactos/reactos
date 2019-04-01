@@ -150,6 +150,13 @@ USBSTOR_QueueWorkItem(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+static
+NTSTATUS
+USBSTOR_IssueRequestSense(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN PIRP_CONTEXT Context);
+
 IO_COMPLETION_ROUTINE USBSTOR_CSWCompletionRoutine;
 
 NTSTATUS
@@ -162,6 +169,7 @@ USBSTOR_CSWCompletionRoutine(
     PIRP_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PSCSI_REQUEST_BLOCK Request;
     PUFI_CAPACITY_RESPONSE Response;
     NTSTATUS Status;
@@ -211,12 +219,23 @@ USBSTOR_CSWCompletionRoutine(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    FDODeviceExtension = Context->FDODeviceExtension;
     Request = IoStack->Parameters.Scsi.Srb;
     ASSERT(Request);
 
     // finally check for CSW errors
     if (Context->csw.Status == CSW_STATUS_COMMAND_PASSED)
     {
+        // should happen only when a sense request was sent
+        if (Request != FDODeviceExtension->ActiveSrb)
+        {
+            ASSERT(IoStack->Parameters.Scsi.Srb == &Context->SenseSrb);
+            FDODeviceExtension->ActiveSrb->SenseInfoBufferLength = Request->DataTransferLength;
+            Request = FDODeviceExtension->ActiveSrb;
+            IoStack->Parameters.Scsi.Srb = Request;
+            Request->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+        }
+
         // read capacity needs special work
         if (Request->Cdb[0] == SCSIOP_READ_CAPACITY)
         {
@@ -235,7 +254,7 @@ USBSTOR_CSWCompletionRoutine(
         // the command is correct but with failed status - issue request sense
         DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
 
-        ASSERT(Context->FDODeviceExtension->ActiveSrb == Request);
+        ASSERT(FDODeviceExtension->ActiveSrb == Request);
         
         // setting a generic error status, additional information
         // should be read by higher-level driver from SenseInfoBuffer
@@ -249,7 +268,8 @@ USBSTOR_CSWCompletionRoutine(
               Request->SenseInfoBufferLength &&
               Request->SenseInfoBuffer)
         {
-            // TODO: issue request sense
+            USBSTOR_IssueRequestSense(FDODeviceExtension, Irp, Context);
+            return STATUS_MORE_PROCESSING_REQUIRED;
         }
 
         Status = STATUS_IO_DEVICE_ERROR;
@@ -302,7 +322,9 @@ USBSTOR_DataCompletionRoutine(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Request = IoStack->Parameters.Scsi.Srb;
 
-    if (Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL != Irp->MdlAddress)
+    // for Sense Request a partial MDL was already freed (if existed)
+    if (Request == Context->FDODeviceExtension->ActiveSrb &&
+        Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL != Irp->MdlAddress)
     {
         IoFreeMdl(Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferMDL);
     }
@@ -373,8 +395,9 @@ USBSTOR_CBWCompletionRoutine(
         goto ResetRecovery;
     }
 
-    // a request without the buffer
-    if (!Irp->MdlAddress)
+    // a request without the buffer AND not a sense request
+    // for a sense request we provide just a TransferBuffer, an Mdl will be allocated by usbport (see below)
+    if (!Irp->MdlAddress && Request == Context->FDODeviceExtension->ActiveSrb)
     {
         Request->SrbStatus = SRB_STATUS_SUCCESS;
         USBSTOR_SendCSWRequest(Context, Irp);
@@ -400,6 +423,9 @@ USBSTOR_CBWCompletionRoutine(
         goto ResetRecovery;
     }
 
+    // if it is not a Sense Request
+    if (Request == Context->FDODeviceExtension->ActiveSrb)
+    {
         if (MmGetMdlVirtualAddress(Irp->MdlAddress) == Request->DataBuffer)
         {
             Mdl = Irp->MdlAddress;
@@ -423,9 +449,20 @@ USBSTOR_CBWCompletionRoutine(
 
         if (!Mdl)
         {
-            DPRINT1("USBSTOR_DataTransfer: Mdl - %p\n", Mdl);
+            DPRINT1("USBSTOR_CBWCompletionRoutine: Mdl - %p\n", Mdl);
             goto ResetRecovery;
         }
+    }
+    else
+    {
+        TransferBuffer = Request->DataBuffer;
+
+        if (!Request->DataBuffer)
+        {
+            DPRINT("USBSTOR_CBWCompletionRoutine: Request->DataBuffer == NULL!\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
     USBSTOR_IssueBulkOrInterruptRequest(Context->FDODeviceExtension,
                                         Irp,
@@ -502,6 +539,48 @@ USBSTOR_SendCBWRequest(
         NULL,
         USBSTOR_CBWCompletionRoutine,
         Context);
+}
+
+static
+NTSTATUS
+USBSTOR_IssueRequestSense(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN PIRP_CONTEXT Context)
+{
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK CurrentSrb;
+    PSCSI_REQUEST_BLOCK SenseSrb;
+    PCDB pCDB;
+
+    DPRINT("USBSTOR_IssueRequestSense: \n");
+
+    CurrentSrb = FDODeviceExtension->ActiveSrb;
+    SenseSrb = &Context->SenseSrb;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack->Parameters.Scsi.Srb = SenseSrb;
+
+    RtlZeroMemory(SenseSrb, sizeof(*SenseSrb));
+
+    SenseSrb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+    SenseSrb->Length = sizeof(*SenseSrb);
+    SenseSrb->CdbLength = CDB6GENERIC_LENGTH;
+    SenseSrb->SrbFlags = SRB_FLAGS_DATA_IN |
+                         SRB_FLAGS_NO_QUEUE_FREEZE |
+                         SRB_FLAGS_DISABLE_AUTOSENSE;
+
+    ASSERT(CurrentSrb->SenseInfoBufferLength);
+    ASSERT(CurrentSrb->SenseInfoBuffer);
+    DPRINT("SenseInfoBuffer %x, SenseInfoBufferLength %x\n", CurrentSrb->SenseInfoBuffer, CurrentSrb->SenseInfoBufferLength);
+
+    SenseSrb->DataTransferLength = CurrentSrb->SenseInfoBufferLength;
+    SenseSrb->DataBuffer = CurrentSrb->SenseInfoBuffer;
+
+    pCDB = (PCDB)SenseSrb->Cdb;
+    pCDB->CDB6GENERIC.OperationCode = SCSIOP_REQUEST_SENSE;
+    pCDB->AsByte[4] = CurrentSrb->SenseInfoBufferLength;
+
+    return USBSTOR_SendCBWRequest(FDODeviceExtension, Irp, Context);
 }
 
 NTSTATUS
