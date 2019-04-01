@@ -7,6 +7,14 @@ add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
 
+if(MSVC)
+    #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
+    replace_compile_flags("/we4133" " ")
+
+    # error C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
+    replace_compile_flags("/we4312" " ")
+endif()
+
 list(APPEND SOURCE
     action.c
     alter.c

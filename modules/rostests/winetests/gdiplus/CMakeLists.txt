@@ -1,6 +1,11 @@
 
 add_definitions(-DUSE_WINE_TODOS)
 
+if(MSVC)
+    # error C4133: 'function': incompatible types - from 'ImageFlags *' to 'UINT *'
+    replace_compile_flags("/we4133" " ")
+endif()
+
 list(APPEND SOURCE
     brush.c
     customlinecap.c

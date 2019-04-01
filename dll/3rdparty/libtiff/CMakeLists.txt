@@ -5,6 +5,14 @@ add_definitions(
     -DUSE_WIN32_FILEIO
     -DTIF_PLATFORM_CONSOLE)
 
+if(MSVC)
+    # error C4311: 'type cast': pointer truncation from 'thandle_t' to 'int'
+    replace_compile_flags("/we4311" " ")
+
+    # error C4312: 'type cast': conversion from 'int' to 'thandle_t' of greater size
+    replace_compile_flags("/we4312" " ")
+endif()
+
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)

@@ -3,6 +3,11 @@ add_definitions(
     -D__WINESRC__
     -DDIRECT3D_VERSION=0x0900)
 
+if(MSVC)
+    # error C4133: 'function': incompatible types - from 'D3D_CBUFFER_TYPE *' to 'DWORD *'
+    replace_compile_flags("/we4133" " ")
+endif()
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dcompiler_43.dll d3dcompiler_43.spec ADD_IMPORTLIB)
 

@@ -5,6 +5,11 @@ add_definitions(
 
 include_directories(include)
 
+if(MSVC)
+    # error C4312: 'type cast': conversion from 'unsigned long' to 'void *' of greater size
+    replace_compile_flags("/we4312" " ")
+endif()
+
 list(APPEND SOURCE
     src/autofit/autofit.c
     src/base/ftadvanc.c
