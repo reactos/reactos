@@ -109,8 +109,8 @@ DWORD WINAPI AllocateAndGetIfTableFromStack(PMIB_IFTABLE *ppIfTable,
 {
   DWORD ret;
 
-  TRACE("ppIfTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n", ppIfTable,
-   (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppIfTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n", ppIfTable,
+   (DWORD)bOrder, heap, flags);
   if (!ppIfTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -153,8 +153,8 @@ DWORD WINAPI AllocateAndGetIpAddrTableFromStack(PMIB_IPADDRTABLE *ppIpAddrTable,
 {
   DWORD ret;
 
-  TRACE("ppIpAddrTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n",
-   ppIpAddrTable, (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppIpAddrTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n",
+   ppIpAddrTable, (DWORD)bOrder, heap, flags);
   if (!ppIpAddrTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -195,8 +195,8 @@ DWORD WINAPI AllocateAndGetIpForwardTableFromStack(PMIB_IPFORWARDTABLE *
 {
   DWORD ret;
 
-  TRACE("ppIpForwardTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n",
-   ppIpForwardTable, (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppIpForwardTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n",
+   ppIpForwardTable, (DWORD)bOrder, heap, flags);
   if (!ppIpForwardTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -239,8 +239,8 @@ DWORD WINAPI AllocateAndGetIpNetTableFromStack(PMIB_IPNETTABLE *ppIpNetTable,
 {
   DWORD ret;
 
-  TRACE("ppIpNetTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n",
-   ppIpNetTable, (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppIpNetTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n",
+   ppIpNetTable, (DWORD)bOrder, heap, flags);
   if (!ppIpNetTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -283,8 +283,8 @@ DWORD WINAPI AllocateAndGetTcpTableFromStack(PMIB_TCPTABLE *ppTcpTable,
 {
   DWORD ret;
 
-  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n",
-   ppTcpTable, (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n",
+   ppTcpTable, (DWORD)bOrder, heap, flags);
   if (!ppTcpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -328,8 +328,8 @@ DWORD WINAPI AllocateAndGetTcpExTableFromStack(PVOID *ppTcpTable,
 {
   DWORD ret;
 
-  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family 0x%08lx\n",
-   ppTcpTable, (DWORD)bOrder, (DWORD)heap, flags, family);
+  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx, family 0x%08lx\n",
+   ppTcpTable, (DWORD)bOrder, heap, flags, family);
   if (!ppTcpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -374,8 +374,8 @@ DWORD WINAPI AllocateAndGetTcpExTable2FromStack(PVOID *ppTcpTable,
 {
   DWORD ret;
 
-  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family %ld, class %ld\n",
-   ppTcpTable, (DWORD)bOrder, (DWORD)heap, flags, family, class);
+  TRACE("ppTcpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx, family %ld, class %ld\n",
+   ppTcpTable, (DWORD)bOrder, heap, flags, family, class);
   if (!ppTcpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -418,8 +418,8 @@ DWORD WINAPI AllocateAndGetUdpTableFromStack(PMIB_UDPTABLE *ppUdpTable,
 {
   DWORD ret;
 
-  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx\n",
-   ppUdpTable, (DWORD)bOrder, (DWORD)heap, flags);
+  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx\n",
+   ppUdpTable, (DWORD)bOrder, heap, flags);
   if (!ppUdpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -463,8 +463,8 @@ DWORD WINAPI AllocateAndGetUdpExTableFromStack(PVOID *ppUdpTable,
 {
   DWORD ret;
 
-  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family 0x%08lx\n",
-   ppUdpTable, (DWORD)bOrder, (DWORD)heap, flags, family);
+  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx, family 0x%08lx\n",
+   ppUdpTable, (DWORD)bOrder, heap, flags, family);
   if (!ppUdpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {
@@ -509,8 +509,8 @@ DWORD WINAPI AllocateAndGetUdpExTable2FromStack(PVOID *ppUdpTable,
 {
   DWORD ret;
 
-  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%08lx, flags 0x%08lx, family %ld, class %ld\n",
-   ppUdpTable, (DWORD)bOrder, (DWORD)heap, flags, family, class);
+  TRACE("ppUdpTable %p, bOrder %ld, heap 0x%p, flags 0x%08lx, family %ld, class %ld\n",
+   ppUdpTable, (DWORD)bOrder, heap, flags, family, class);
   if (!ppUdpTable)
     ret = ERROR_INVALID_PARAMETER;
   else {

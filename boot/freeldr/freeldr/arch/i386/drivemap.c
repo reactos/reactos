@@ -172,8 +172,8 @@ UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
-    ULONG*  RealModeIVT = (ULONG*)0x00000000;
-    USHORT* BiosLowMemorySize = (USHORT*)0x00000413;
+    ULONG*  RealModeIVT = (ULONG*)UlongToPtr(0x00000000);
+    USHORT* BiosLowMemorySize = (USHORT*)ULongToPtr(0x00000413);
 
     if (!DriveMapInstalled)
     {
@@ -197,7 +197,9 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
     DriveMapOldInt13HandlerAddress = OldInt13HandlerAddress;
 
     // Copy the code to our reserved area
-    RtlCopyMemory((PVOID)DriveMapHandlerAddress, &DriveMapInt13HandlerStart, ((ULONG)&DriveMapInt13HandlerEnd - (ULONG)&DriveMapInt13HandlerStart));
+    RtlCopyMemory(UlongToPtr(DriveMapHandlerAddress),
+                  &DriveMapInt13HandlerStart,
+                  ((PUCHAR)&DriveMapInt13HandlerEnd - (PUCHAR)&DriveMapInt13HandlerStart));
 
     // Update the IVT
     RealModeIVT[0x13] = DriveMapHandlerSegOff;
