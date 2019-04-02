@@ -360,7 +360,7 @@
 @ stub -version=0x600+ GetCalendarDaysInMonth
 @ stub -version=0x600+ GetCalendarDifferenceInDays
 @ stdcall GetCalendarInfoA(long long long ptr long ptr)
-@ stdcall -version=0x600+ GetCalendarInfoEx(wstr, long, wstr, long, wstr, long, ptr)
+@ stdcall -version=0x600+ GetCalendarInfoEx(wstr long wstr long wstr long ptr)
 @ stdcall GetCalendarInfoW(long long long ptr long ptr)
 @ stub -version=0x600+ GetCalendarMonthsInYear
 @ stub -version=0x600+ GetCalendarSupportedDateRange
