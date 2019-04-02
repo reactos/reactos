@@ -1593,6 +1593,16 @@ DateTimePageDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static struct ThemeInfo
+{
+    LPCWSTR PreviewBitmap;
+    UINT DisplayName;
+    LPCWSTR ThemeFile;
+
+} Themes[] = {
+    { MAKEINTRESOURCE(IDB_CLASSIC), IDS_CLASSIC, NULL },
+    { MAKEINTRESOURCE(IDB_LAUTUS), IDS_LAUTUS, L"themes\\lautus\\lautus.msstyles" },
+};
 
 static INT_PTR CALLBACK
 ThemePageDlgProc(HWND hwndDlg,
@@ -1601,6 +1611,7 @@ ThemePageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
     PSETUPDATA SetupData;
+    LPNMLISTVIEW pnmv;
 
     /* Retrieve pointer to the global setup data */
     SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
@@ -1609,46 +1620,75 @@ ThemePageDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            BUTTON_IMAGELIST imldata = {0, {0,10,0,10}, BUTTON_IMAGELIST_ALIGN_TOP};
+            HWND hListView;
+            HIMAGELIST himl;
+            DWORD n;
+            LVITEM lvi = {0};
 
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
 
-            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_CLASSIC), 0, 0, 0x00FF00FF, IMAGE_BITMAP, LR_CREATEDIBSECTION);
-            SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
+            hListView = GetDlgItem(hwndDlg, IDC_THEMEPICKER);
 
-            imldata.himl = ImageList_LoadImage(hDllInstance, MAKEINTRESOURCE(IDB_LAUTUS), 0, 0, 0x00FF00FF , IMAGE_BITMAP, LR_CREATEDIBSECTION);
-            SendDlgItemMessage(hwndDlg, IDC_THEMEDSTYLE, BCM_SETIMAGELIST, 0, (LPARAM)&imldata);
+            /* Common */
+            himl = ImageList_Create(180, 163, ILC_COLOR32 | ILC_MASK, ARRAYSIZE(Themes), 1);
+            lvi.mask = LVIF_TEXT | LVIF_IMAGE |LVIF_STATE;
 
-            SendDlgItemMessage(hwndDlg, IDC_CLASSICSTYLE, BM_SETCHECK, BST_CHECKED, 0);
+            for (n = 0; n < ARRAYSIZE(Themes); ++n)
+            {
+                WCHAR DisplayName[100] = {0};
+                /* Load the bitmap */
+                HANDLE image = LoadImageW(hDllInstance, Themes[n].PreviewBitmap, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+                ImageList_AddMasked(himl, image, RGB(255,0,255));
+
+                /* Load the string */
+                LoadStringW(hDllInstance, Themes[n].DisplayName, DisplayName, ARRAYSIZE(DisplayName));
+                DisplayName[ARRAYSIZE(DisplayName)-1] = UNICODE_NULL;
+
+                /* Add the listview item */
+                lvi.iItem  = n;
+                lvi.iImage = n;
+                lvi.pszText = DisplayName;
+                ListView_InsertItem(hListView, &lvi);
+            }
+
+            /* Register the imagelist */
+            ListView_SetImageList(hListView, himl, LVSIL_NORMAL);
+            /* Transparant background */
+            ListView_SetBkColor(hListView, CLR_NONE);
+            ListView_SetTextBkColor(hListView, CLR_NONE);
+            /* Reduce the size between the items */
+            ListView_SetIconSpacing(hListView, 190, 173);
             break;
         }
-        case WM_COMMAND:
-            if (HIWORD(wParam) == BN_CLICKED)
-            {
-                switch (LOWORD(wParam))
-                {
-                    case IDC_THEMEDSTYLE:
-                    {
-                        WCHAR wszParams[1024];
-                        WCHAR wszTheme[MAX_PATH];
-                        WCHAR* format = L"desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:\"%s\"";
-
-                        SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, L"themes\\lautus\\lautus.msstyles", wszTheme);
-                        swprintf(wszParams, format, wszTheme);
-                        RunControlPanelApplet(hwndDlg, wszParams);
-                        break;
-                    }
-                    case IDC_CLASSICSTYLE:
-                        RunControlPanelApplet(hwndDlg, L"desk.cpl desk,@Appearance /Action:ActivateMSTheme");
-                        break;
-                }
-            }
-            break;
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
+                //case LVN_ITEMCHANGING:
+                case LVN_ITEMCHANGED:
+                    pnmv = (LPNMLISTVIEW)lParam;
+                    if ((pnmv->uChanged & LVIF_STATE) && (pnmv->uNewState & LVIS_SELECTED))
+                    {
+                        int iTheme = pnmv->iItem;
+                        DPRINT1("Selected theme: %S\n", Themes[iTheme].DisplayName);
+
+                        if (Themes[iTheme].ThemeFile)
+                        {
+                            WCHAR wszParams[1024];
+                            WCHAR wszTheme[MAX_PATH];
+                            WCHAR* format = L"desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:\"%s\"";
+
+                            SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, Themes[iTheme].ThemeFile, wszTheme);
+                            swprintf(wszParams, format, wszTheme);
+                            RunControlPanelApplet(hwndDlg, wszParams);
+                        }
+                        else
+                        {
+                            RunControlPanelApplet(hwndDlg, L"desk.cpl desk,@Appearance /Action:ActivateMSTheme");
+                        }
+                    }
+                    break;
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
