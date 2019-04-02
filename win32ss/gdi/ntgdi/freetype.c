@@ -5880,28 +5880,41 @@ IntExtTextOutW(
     // invert y axis
     IntEscapeMatrix(&matEscape, -lfEscapement);
 
+    matWorld.yx = -matWorld.yx;
+    matWorld.xy = -matWorld.xy;
+
     // convert vecs
     for (i = 0; i < 9; ++i)
     {
-        POINT pt;
         FT_Vector_Transform(&vecs[i], &matWidth);
         FT_Vector_Transform(&vecs[i], &matEscape);
-        vecs[i].x += (Start.x << 16) + (XStart64 << 10);
-        vecs[i].y += (Start.y << 16) + (YStart64 << 10);
-        pt.x = vecs[i].x >> 16;
-        pt.y = vecs[i].y >> 16;
-        IntLPtoDP(dc, &pt, 1);
-        vecs[i].x = pt.x + dc->ptlDCOrig.x;
-        vecs[i].y = pt.y + dc->ptlDCOrig.y;
+        FT_Vector_Transform(&vecs[i], &matWorld);
     }
-    vecs[2].x += DeltaX64 >> 6;
-    vecs[2].y += DeltaY64 >> 6;     // upper right
-    vecs[3].x += DeltaX64 >> 6;
-    vecs[3].y += DeltaY64 >> 6;     // lower right
-    vecs[6].x += DeltaX64 >> 6;
-    vecs[6].y += DeltaY64 >> 6;     // underline right
-    vecs[8].x += DeltaX64 >> 6;
-    vecs[8].y += DeltaY64 >> 6;     // strike through right
+    vecs[2].x += DeltaX64 << 10;
+    vecs[2].y += DeltaY64 << 10;     // upper right
+    vecs[3].x += DeltaX64 << 10;
+    vecs[3].y += DeltaY64 << 10;     // lower right
+    vecs[6].x += DeltaX64 << 10;
+    vecs[6].y += DeltaY64 << 10;     // underline right
+    vecs[8].x += DeltaX64 << 10;
+    vecs[8].y += DeltaY64 << 10;     // strike through right
+
+    {
+        POINT pt;
+        pt.x = Start.x + (XStart64 >> 6);
+        pt.y = Start.y + (YStart64 >> 6);
+        IntLPtoDP(dc, &pt, 1);
+
+        for (i = 0; i < 9; ++i)
+        {
+            vecs[i].x += pt.x << 16;
+            vecs[i].y += pt.y << 16;
+            vecs[i].x >>= 16;
+            vecs[i].y >>= 16;
+            vecs[i].x += dc->ptlDCOrig.x;
+            vecs[i].y += dc->ptlDCOrig.y;
+        }
+    }
 
     if (fuOptions & ETO_OPAQUE)
     {
