@@ -10,6 +10,9 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "syssetup.dll"
 #include <reactos/version.rc>
 
+/* Ask for common controls v6 (BCM_SETIMAGELIST) */
+#include <reactos/manifest_dll.rc>
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Bitmaps */
