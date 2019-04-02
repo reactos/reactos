@@ -23,7 +23,7 @@
 #ifndef __SYSSETUP_H_INCLUDED__
 #define __SYSSETUP_H_INCLUDED__
 
-
+// See also dll/cpl/timedate/timezone.c
 typedef struct _TZ_INFO
 {
     LONG Bias;

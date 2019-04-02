@@ -1645,6 +1645,7 @@ ThemePageDlgProc(HWND hwndDlg,
                         break;
                 }
             }
+            break;
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -2487,7 +2488,7 @@ ProcessSetupInf(
                              L"sourcepath",
                              &InfContext))
     {
-        DPRINT1("Error: Cannot find UnattendSetupEnabled Key! %d\n", GetLastError());
+        DPRINT1("Error: Cannot find sourcepath Key! %d\n", GetLastError());
         return;
     }
 

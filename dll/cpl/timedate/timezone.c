@@ -11,6 +11,7 @@
 
 #include "timedate.h"
 
+// See also sdk/include/reactos/libs/syssetup/syssetup.h
 typedef struct _TZ_INFO
 {
     LONG Bias;
