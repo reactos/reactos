@@ -80,7 +80,7 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
     if (!VerQueryValueW(m_pInfo, wszBuf, (LPVOID *)&pwszResult, &cBytes))
         pwszResult = NULL;
 
-    if (!m_wLang && !m_wCode)
+    if (!pwszResult)
     {
         /* Try US English */
         swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 1252, pwszName);
