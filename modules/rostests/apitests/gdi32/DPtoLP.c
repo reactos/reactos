@@ -87,6 +87,9 @@ void Test_DPtoLP()
     trace("lLogPixelsX: %ld\n", lLogPixelsX);
     trace("lLogPixelsY: %ld\n", lLogPixelsY);
 
+//#define MULDIV(a, b, c) (((a) * (b)) / (c))
+#define MULDIV(a, b, c) MulDiv((a), (b), (c))
+
     // MM_TEXT
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
     SetMapMode(hdc, MM_TEXT);
@@ -106,10 +109,10 @@ void Test_DPtoLP()
     SetMapMode(hdc, MM_LOMETRIC);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
     xLow = apt[0].x;
     yLow = apt[0].y;
 
@@ -118,10 +121,10 @@ void Test_DPtoLP()
     SetMapMode(hdc, MM_HIMETRIC);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
     xHigh = apt[0].x;
     yHigh = apt[0].y;
     ok(labs(xLow) * 9 < labs(xHigh) && labs(xHigh) < 11 * labs(xLow), "%ld, %ld\n", xLow, xHigh);
@@ -132,10 +135,10 @@ void Test_DPtoLP()
     SetMapMode(hdc, MM_LOENGLISH);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
     xLow = apt[0].x;
     yLow = apt[0].y;
 
@@ -144,10 +147,10 @@ void Test_DPtoLP()
     SetMapMode(hdc, MM_HIENGLISH);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
     xHigh = apt[0].x;
     yHigh = apt[0].y;
     ok(labs(xLow) * 9 < labs(xHigh) && labs(xHigh) < 11 * labs(xLow), "%ld, %ld\n", xLow, xHigh);
@@ -158,10 +161,10 @@ void Test_DPtoLP()
     SetMapMode(hdc, MM_TWIPS);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     SetGraphicsMode(hdc, GM_ADVANCED);
     SetMapMode(hdc, MM_ANISOTROPIC);
@@ -178,10 +181,10 @@ void Test_DPtoLP()
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100, sizWnd.cx, sizView.cx) - (LONG)xform.eDx);
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy) - (LONG)xform.eDy);
-    ok_long(apt[1].x, MulDiv(-1000, sizWnd.cx, sizView.cx) - (LONG)xform.eDx);
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy) - (LONG)xform.eDy);
+    ok_long(apt[0].x, MULDIV(100, sizWnd.cx, sizView.cx) - (LONG)xform.eDx);
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy) - (LONG)xform.eDy);
+    ok_long(apt[1].x, MULDIV(-1000, sizWnd.cx, sizView.cx) - (LONG)xform.eDx);
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy) - (LONG)xform.eDy);
 
     // eM11 == 10000000
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
@@ -192,9 +195,9 @@ void Test_DPtoLP()
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
     ok_long(apt[0].x, 0);
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
     ok_long(apt[1].x, 0);
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     // eM11 == 2
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
@@ -204,10 +207,10 @@ void Test_DPtoLP()
     ok_int(SetWorldTransform(hdc, &xform), 1);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    ok_long(apt[0].x, MulDiv(100 / 2, sizWnd.cx, sizView.cx));
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
-    ok_long(apt[1].x, MulDiv(-1000 / 2, sizWnd.cx, sizView.cx));
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].x, MULDIV(100 / 2, sizWnd.cx, sizView.cx));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].x, MULDIV(-1000 / 2, sizWnd.cx, sizView.cx));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     // eM11 == (FLOAT)0x1FFFFFFFF
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
@@ -218,9 +221,9 @@ void Test_DPtoLP()
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
     ok_long(apt[0].x, 0);
-    //ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
+    //ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
     ok_long(apt[1].x, 0);
-    //ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    //ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     // eM11 == (FLOAT)0xFFFFFFFFU
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
@@ -232,9 +235,9 @@ void Test_DPtoLP()
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
     ok_long(apt[0].x, 0);
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
     ok_long(apt[1].x, 0);
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     // eM22 == (FLOAT)0xFFFFFFFFU
     apt[0].x = 100; apt[0].y = 256; apt[1].x = -1000; apt[1].y = 1000;
@@ -245,9 +248,9 @@ void Test_DPtoLP()
     ok_int(SetWorldTransform(hdc, &xform), 1);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    //ok_long(apt[0].x, MulDiv(100, sizWnd.cy, sizView.cy));
+    //ok_long(apt[0].x, MULDIV(100, sizWnd.cy, sizView.cy));
     ok_long(apt[0].y, 0);
-    //ok_long(apt[1].x, MulDiv(-1000, sizWnd.cy, sizView.cy));
+    //ok_long(apt[1].x, MULDIV(-1000, sizWnd.cy, sizView.cy));
     ok_long(apt[1].y, 0);
 
     // eM22 == (FLOAT)0x1FFFFFFFFU
@@ -259,9 +262,9 @@ void Test_DPtoLP()
     ok_int(SetWorldTransform(hdc, &xform), 1);
     GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
-    //ok_long(apt[0].x, MulDiv(100, sizWnd.cy, sizView.cy));
+    //ok_long(apt[0].x, MULDIV(100, sizWnd.cy, sizView.cy));
     ok_long(apt[0].y, 0);
-    //ok_long(apt[1].x, MulDiv(-1000, sizWnd.cy, sizView.cy));
+    //ok_long(apt[1].x, MULDIV(-1000, sizWnd.cy, sizView.cy));
     ok_long(apt[1].y, 0);
 
     // eM11 == (FLOAT)0xFFFFFFFFU, eM22 == (FLOAT)0xFFFFFFFFU
@@ -297,19 +300,21 @@ void Test_DPtoLP()
     xform.eM11 = 10000000.;
     xform.eM22 = 1.0;
     ok_int(SetWorldTransform(hdc, &xform), 1);
+    GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
     ok_long(apt[0].x, 0);
-    ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
+    ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
     ok_long(apt[1].x, 0);
-    ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     xform.eM11 = 1000000.;
     ok_int(SetWorldTransform(hdc, &xform), 1);
+    GetExtent(hdc, &sizWnd, &sizView);
     ok_int(DPtoLP(hdc, apt, 2), 1);
     ok_long(apt[0].x, 0);
-    //ok_long(apt[0].y, MulDiv(256, sizWnd.cy, sizView.cy));
+    //ok_long(apt[0].y, MULDIV(256, sizWnd.cy, sizView.cy));
     ok_long(apt[1].x, 0);
-    //ok_long(apt[1].y, MulDiv(1000, sizWnd.cy, sizView.cy));
+    //ok_long(apt[1].y, MULDIV(1000, sizWnd.cy, sizView.cy));
 
     DeleteDC(hdc);
 }
