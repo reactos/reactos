@@ -3,6 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for GetRandomRgn
  * PROGRAMMERS:     Timo Kreuzer
+ *                  Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
