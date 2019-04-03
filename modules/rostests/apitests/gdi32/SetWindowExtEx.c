@@ -158,8 +158,8 @@ void Test_SetWindowExtEx()
     //TEST(pDC_Attr->flXform & PAGE_EXTENTS_CHANGED);
 
     /* Check the viewport from the dcattr, without going through gdi */
-    //TEST(pDC_Attr->szlViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES));
-    //TEST(pDC_Attr->szlViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
+    //ok_long(pDC_Attr->szlViewportExt.cx, GetDeviceCaps(GetDC(0), HORZRES));
+    //ok_long(pDC_Attr->szlViewportExt.cy, -GetDeviceCaps(GetDC(0), VERTRES));
 
     /* Check the viewport with gdi, should not be the same */
     GetViewportExtEx(hDC, &ViewportExt);
