@@ -633,7 +633,8 @@ void CDefView::UpdateListColors()
         SFVM_CUSTOMVIEWINFO_DATA data;
         data.cbSize = sizeof(data);
 
-        if (S_OK == _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&data))
+        HRESULT hr = _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&data);
+        if (SUCCEEDED(hr))
         {
             m_ListView.SetTextBkColor(CLR_NONE);
             m_ListView.SetTextColor(data.clrText);
