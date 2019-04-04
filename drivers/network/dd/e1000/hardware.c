@@ -51,6 +51,7 @@ static USHORT SupportedDevices[] =
     0x108A,     // Intel 82546GB PCI-E
     0x1099,     // Intel 82546GB Quad Copper
     0x10B5,     // Intel 82546GB Quad Copper KSP3
+    0x109A      // Intel 82573L
 };
 
 
@@ -189,13 +190,17 @@ static BOOLEAN E1000ReadMdic(IN PE1000_ADAPTER Adapter, IN ULONG Address, USHORT
 }
 #endif
 
-
 static BOOLEAN E1000ReadEeprom(IN PE1000_ADAPTER Adapter, IN UCHAR Address, USHORT *Result)
 {
     ULONG Value;
     UINT n;
 
-    E1000WriteUlong(Adapter, E1000_REG_EERD, E1000_EERD_START | ((UINT)Address << E1000_EERD_ADDR_SHIFT));
+    if (Adapter->EERDAddrShift == 0xffff)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("E1000DetermineAndSaveEERDLayout not run or wasn't successfull!\n"));
+        return FALSE;
+    }
+    E1000WriteUlong(Adapter, E1000_REG_EERD, E1000_EERD_START | ((UINT)Address << Adapter->EERDAddrShift));
 
     for (n = 0; n < MAX_EEPROM_READ_ATTEMPTS; ++n)
     {
@@ -203,16 +208,63 @@ static BOOLEAN E1000ReadEeprom(IN PE1000_ADAPTER Adapter, IN UCHAR Address, USHO
 
         E1000ReadUlong(Adapter, E1000_REG_EERD, &Value);
 
-        if (Value & E1000_EERD_DONE)
+        if (Value & Adapter->EERDDoneBit)
             break;
     }
-    if (!(Value & E1000_EERD_DONE))
+    if (!(Value & Adapter->EERDDoneBit))
     {
-        NDIS_DbgPrint(MIN_TRACE, ("EEPROM Read incomplete\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("EEPROM Read incomplete! %x \n", Value));
         return FALSE;
     }
     *Result = (USHORT)(Value >> E1000_EERD_DATA_SHIFT);
+    NDIS_DbgPrint(MIN_TRACE, ("Read: %02x %04x\n", Address, *Result));
     return TRUE;
+}
+
+/*
+ * 8254x and 8257x have different layouts of EERF
+ * Get it by trying to read the VID-field.
+ */
+static BOOLEAN E1000DetermineAndSaveEERDLayout(IN PE1000_ADAPTER Adapter)
+{
+    BOOLEAN Success;
+    USHORT Result = 0;
+
+    /* First, try the 8254x layout */
+    Adapter->EERDDoneBit = E1000_EERD_DONE_8254x;
+    Adapter->EERDAddrShift = E1000_EERD_ADDR_SHIFT_8254x;
+
+    Success = E1000ReadEeprom(Adapter, E1000_NVM_REG_VID, &Result);
+    if (Success && Result == NVM_VID)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Has the EERD layout (8254x) of done bit at %x and a addr shift of %x\n",
+                                  Adapter->EERDDoneBit, Adapter->EERDAddrShift));
+        return TRUE;
+    }
+    else
+    {
+        NDIS_DbgPrint(MAX_TRACE, ("8254x layout does not work - %x %x\n", Success, Result));
+    }
+
+    /* Second, try the 8257x layout */
+    Adapter->EERDDoneBit = E1000_EERD_DONE_8257x;
+    Adapter->EERDAddrShift = E1000_EERD_ADDR_SHIFT_8257x;
+
+    Success = E1000ReadEeprom(Adapter, E1000_NVM_REG_VID, &Result);
+    if (Success && Result == NVM_VID)
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Has the EERD layout (8257x) of done bit at %x and a addr shift of %x\n",
+                                  Adapter->EERDDoneBit, Adapter->EERDAddrShift));
+        return TRUE;
+    }
+    else
+    {
+        NDIS_DbgPrint(MAX_TRACE, ("8257x layout does not work - %x %x\n", Success, Result));
+    }
+
+    NDIS_DbgPrint(MIN_TRACE, ("Could not determine the EERD layout!\n"))
+    Adapter->EERDAddrShift = 0xffff;
+    return FALSE;
 }
 
 BOOLEAN E1000ValidateNvmChecksum(IN PE1000_ADAPTER Adapter)
@@ -238,7 +290,6 @@ BOOLEAN E1000ValidateNvmChecksum(IN PE1000_ADAPTER Adapter)
 
     return TRUE;
 }
-
 
 BOOLEAN
 NTAPI
@@ -549,9 +600,13 @@ NICPowerOn(
         return Status;
     }
 
-    if (!E1000ValidateNvmChecksum(Adapter))
+    Adapter->EERDAddrShift = 0xffff;
+    if (E1000DetermineAndSaveEERDLayout(Adapter))
     {
-        return NDIS_STATUS_INVALID_DATA;
+        if (!E1000ValidateNvmChecksum(Adapter))
+        {
+            return NDIS_STATUS_INVALID_DATA;
+        }
     }
 
     return NDIS_STATUS_SUCCESS;
@@ -696,15 +751,40 @@ NICGetPermanentMacAddress(
     USHORT AddrWord;
     UINT n;
 
+    ULONG Rah;
+    ULONG Ral;
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    /* Should we read from RAL/RAH first? */
-    for (n = 0; n < (IEEE_802_ADDR_LENGTH / 2); ++n)
+    /*
+     * First try to get the MAC via Ral/Rah. The first is read from NVM after a soft reset
+     * (which occurs in ndis.c just before calling this function)
+     */
+    E1000ReadUlong(Adapter, E1000_REG_RAH, &Rah);
+    if (Rah & E1000_RAH_AV)
     {
-        if (!E1000ReadEeprom(Adapter, (UCHAR)n, &AddrWord))
-            return NDIS_STATUS_FAILURE;
-        Adapter->PermanentMacAddress[n * 2 + 0] = AddrWord & 0xff;
-        Adapter->PermanentMacAddress[n * 2 + 1] = (AddrWord >> 8) & 0xff;
+        NDIS_DbgPrint(MIN_TRACE, ("MAC from RAH/RAL seems to be useable...\n"));
+        Rah &= 0xffff;
+        E1000ReadUlong(Adapter, E1000_REG_RAL, &Ral);
+
+        *(ULONG *)Adapter->PermanentMacAddress = Ral;
+        *(USHORT *)&Adapter->PermanentMacAddress[4] = (USHORT)Rah;
+    }
+    else
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("Try to get the MAC by directly reading from EEPROM...\n"));
+        /* Sometimes needed (on a 82573L...) */
+        if (!E1000ReadEeprom(Adapter, 0, &AddrWord))
+             return NDIS_STATUS_FAILURE;
+        for (n = 0; n < (IEEE_802_ADDR_LENGTH / 2); ++n)
+        {
+            if (!E1000ReadEeprom(Adapter, (UCHAR)n, &AddrWord))
+                return NDIS_STATUS_FAILURE;
+
+            NDIS_DbgPrint(MAX_TRACE, ("Read: %02x %04x\n", n, AddrWord));
+            Adapter->PermanentMacAddress[n * 2 + 0] = AddrWord & 0xff;
+            Adapter->PermanentMacAddress[n * 2 + 1] = (AddrWord >> 8) & 0xff;
+        }
     }
 
     NDIS_DbgPrint(MIN_TRACE, ("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n",
