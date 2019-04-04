@@ -110,6 +110,7 @@ class CDefView :
 
         CLSID m_Category;
         BOOL  m_Destroyed;
+        SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
     private:
         HRESULT _MergeToolbar();
@@ -386,12 +387,19 @@ CDefView::CDefView() :
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
     ZeroMemory(&m_ptLastMousePos, sizeof(m_ptLastMousePos));
     ZeroMemory(&m_Category, sizeof(m_Category));
+    m_viewinfo_data.hbmBack = NULL;
 }
 
 CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
 
+    if (m_viewinfo_data.hbmBack)
+    {
+        ::DeleteObject(m_viewinfo_data.hbmBack);
+        m_viewinfo_data.hbmBack = NULL;
+    }
+    
     if (m_hWnd)
     {
         DestroyViewWindow();
@@ -630,17 +638,11 @@ void CDefView::UpdateListColors()
     }
     else
     {
-        SFVM_CUSTOMVIEWINFO_DATA data;
-        data.cbSize = sizeof(data);
-
-        HRESULT hr = _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&data);
-        if (SUCCEEDED(hr))
+        if (m_viewinfo_data.clrText != CLR_INVALID)
         {
             m_ListView.SetTextBkColor(CLR_NONE);
-            m_ListView.SetTextColor(data.clrText);
+            m_ListView.SetTextColor(m_viewinfo_data.clrText);
             m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
-
-            DeleteObject(data.hbmBack);
         }
     }
 }
@@ -973,6 +975,15 @@ HRESULT CDefView::FillList()
     m_sortInfo.bIsAscending = TRUE;
     _Sort();
 
+    if (m_viewinfo_data.hbmBack)
+    {
+        ::DeleteObject(m_viewinfo_data.hbmBack);
+        m_viewinfo_data.hbmBack = NULL;
+    }
+
+    m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
+    _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
+
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
     m_ListView.InvalidateRect(NULL, TRUE);
@@ -1053,19 +1064,15 @@ LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     RECT rc;
     ::GetClientRect(m_ListView, &rc);
 
-    SFVM_CUSTOMVIEWINFO_DATA data;
-    data.cbSize = sizeof(data);
-    HRESULT hr = _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&data);
-    if (SUCCEEDED(hr) && data.hbmBack)
+    if (m_viewinfo_data.hbmBack)
     {
         BITMAP bm;
-        if (::GetObject(data.hbmBack, sizeof(BITMAP), &bm))
+        if (::GetObject(m_viewinfo_data.hbmBack, sizeof(BITMAP), &bm))
         {
             INT dx = -(::GetScrollPos(m_ListView, SB_HORZ) % bm.bmWidth);
             INT dy = -(::GetScrollPos(m_ListView, SB_VERT) % bm.bmHeight);
-            DrawTileBitmap(hDC, &rc, data.hbmBack, bm.bmWidth, bm.bmHeight, dx, dy);
+            DrawTileBitmap(hDC, &rc, m_viewinfo_data.hbmBack, bm.bmWidth, bm.bmHeight, dx, dy);
         }
-        ::DeleteObject(data.hbmBack);
     }
     else
     {
