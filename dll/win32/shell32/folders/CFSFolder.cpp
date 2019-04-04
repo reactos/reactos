@@ -1691,34 +1691,31 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
 
 	// get info from ini file
     WCHAR szImage[MAX_PATH], szText[64];
-    if (PathFileExists(szIniFile) && !PathIsDirectoryW(szIniFile))
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
+
+    // load the image
+    if (szImage[0])
     {
-        GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
-        GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
-
-        // load the image
-        if (szImage[0])
+        StrTrimW(szImage, Space);
+        if (PathIsRelativeW(szImage))
         {
-            StrTrimW(szImage, Space);
-            if (PathIsRelativeW(szImage))
-            {
-                PathAppendW(szPath, szImage);
-                StringCchCopyW(szImage, _countof(szImage), szPath);
-            }
-            data->hbmBack = DoLoadPicture(szImage);
+            PathAppendW(szPath, szImage);
+            StringCchCopyW(szImage, _countof(szImage), szPath);
         }
+        data->hbmBack = DoLoadPicture(szImage);
+    }
 
-        // load the text color
-        if (szText[0])
-        {
-            StrTrimW(szText, Space);
+    // load the text color
+    if (szText[0])
+    {
+        StrTrimW(szText, Space);
 
-            LPWSTR pchEnd = NULL;
-            COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+        LPWSTR pchEnd = NULL;
+        COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
 
-            if (pchEnd && !*pchEnd)
-                data->clrText = cr;
-        }
+        if (pchEnd && !*pchEnd)
+            data->clrText = cr;
     }
 
     if (data->hbmBack != NULL || data->clrText != CLR_INVALID)
