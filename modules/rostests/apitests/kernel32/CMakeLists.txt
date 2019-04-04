@@ -20,6 +20,7 @@ list(APPEND SOURCE
     GetVolumeInformation.c
     interlck.c
     IsDBCSLeadByteEx.c
+    JapaneseCalendar.c
     LoadLibraryExW.c
     lstrcpynW.c
     lstrlen.c
