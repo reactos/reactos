@@ -265,7 +265,7 @@ ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newle
             RtlCopyMemory(newaddr, addr, newlen);
         } else {
             RtlCopyMemory(newaddr, addr, len);
-            RtlZeroMemory(newaddr+len, newlen - len);
+            RtlZeroMemory(newaddr+len, _newlen - len);
         }
 #ifdef MY_MEM_BOUNDS_CHECK
         for(i=0; i<MY_HEAP_ALIGN+1; i++) {
