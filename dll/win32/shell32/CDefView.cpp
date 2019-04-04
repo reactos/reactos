@@ -632,11 +632,23 @@ void CDefView::UpdateListColors()
     }
     else
     {
-        if (m_viewinfo_data.clrText != CLR_INVALID)
+        if (m_viewinfo_data.hbmBack)
         {
             m_ListView.SetTextBkColor(CLR_NONE);
             m_ListView.SetTextColor(m_viewinfo_data.clrText);
             m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
+        }
+        else
+        {
+            COLORREF clrBack = GetSysColor(COLOR_WINDOW);
+            m_ListView.SetTextBkColor(clrBack);
+
+            if (GetRValue(clrBack) + GetGValue(clrBack) + GetBValue(clrBack) > 128 * 3)
+                m_ListView.SetTextColor(RGB(0, 0, 0));
+            else
+                m_ListView.SetTextColor(RGB(255, 255, 255));
+
+            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
     }
 }
@@ -969,24 +981,20 @@ HRESULT CDefView::FillList()
     m_sortInfo.bIsAscending = TRUE;
     _Sort();
 
-    // load custom background image and custom text color
     if (m_viewinfo_data.hbmBack)
     {
         ::DeleteObject(m_viewinfo_data.hbmBack);
         m_viewinfo_data.hbmBack = NULL;
     }
+
+    // load custom background image and custom text color
     m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
     _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
 
-    // make labels transparent if necessary
-    const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
-    if (!(m_FolderSettings.fFlags & FWF_DESKTOP) && m_viewinfo_data.hbmBack)
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
     {
+        const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
         ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
-    }
-    else
-    {
-        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, 0);
     }
 
     /*turn the listview's redrawing back on and force it to draw*/

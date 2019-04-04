@@ -1650,11 +1650,7 @@ static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
 
         // copy the bitmap handle
         hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-
-        pPicture->Release();
     }
-
-    pStream->Release();
 
     return hbm;
 }
@@ -1690,7 +1686,7 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     static LPCWSTR TheGUID = L"{BE098140-A513-11D0-A3A4-00C04FD706EC}";
     static LPCWSTR Space = L" \t\n\r\f\v";
 
-	// get info from ini file
+    // get info from ini file
     WCHAR szImage[MAX_PATH], szText[64];
 
     // load the image
