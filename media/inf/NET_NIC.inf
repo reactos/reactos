@@ -37,10 +37,6 @@ DisplayClassName = "Netzwerkadapter"
 [Strings.0408]
 DisplayClassName = "Προσαρμογείς δικτύου"
 
-[Strings.0415]
-ReactOS = "Ekipa ReactOS"
-DisplayClassName = "Adaptery sieciowe"
-
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
 DisplayClassName = "Adaptadores de red"
@@ -52,7 +48,7 @@ DisplayClassName = "Cartes réseau"
 DisplayClassName = "ネットワーク アダプタ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 DisplayClassName = "Karty sieciowe"
 
 [Strings.0416]

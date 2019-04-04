@@ -144,7 +144,7 @@ StdMfg = "(スタンダード キーボード)"
 *PNP0303.DeviceDesc = "IBM PC/AT キーボード"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 KeyboardClassName = "Klawiatury"
 HID.KeyboardDevice    = "Klawiatura HID"
 StdMfg = "(Klawiatury standardowe)"

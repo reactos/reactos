@@ -1036,7 +1036,7 @@ PCI\CC_0105.DeviceDesc  = "Controlador ATA genérico"
 PCI\CC_0106.DeviceDesc  = "Controlador Serial ATA genérico"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 HDCClassName = "Kontrolery IDE ATA/ATAPI"
 GenericMfg = "(Standardowe kontrolery IDE ATA/ATAPI)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Kontroler Acard ATP850 ATA-33"

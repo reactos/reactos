@@ -75,7 +75,7 @@ OpticalDisk.DeviceDesc = "Unidad de disco óptico"
 Disk.ServiceDesc = "Controlador de disco"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowy dysk twardy)"
 DiskClassName = "Dyski twarde"
 Disk.DeviceDesc = "Dysk twardy"

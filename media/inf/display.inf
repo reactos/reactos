@@ -111,7 +111,7 @@ StdMfg = "(標準ディスプレイ アダプタ)"
 VGA.DeviceDesc = "VGA互換 グラフィックカード"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 DisplayClassName = "Karty graficzne"
 StdMfg = "(Standardowe karty graficzne)"
 VGA.DeviceDesc = "Karta graficzna kompatybilna z VGA"

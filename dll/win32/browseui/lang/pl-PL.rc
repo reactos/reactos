@@ -47,7 +47,7 @@ BEGIN
         BEGIN
             MENUITEM "W&yszukaj\tCtrl+E", IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Ulubione\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Media", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Multimedia", IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Historia\tCtrl+H", IDM_EXPLORERBAR_HISTORY
             MENUITEM "&Katalogi", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
@@ -80,7 +80,7 @@ BEGIN
     END
     POPUP "Pomo&c", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&O ReactOS", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS - informacje", IDM_HELP_ABOUT
     END
 END
 
@@ -294,7 +294,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Powrót do %s"
     IDS_FORWARD "Naprzód do %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_FOLDER_OPTIONS "Opcje folderów"
 END
 
 STRINGTABLE

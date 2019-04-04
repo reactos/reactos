@@ -77,9 +77,9 @@ GenericMfg = "(標準 ネットワーク カード)"
 *PNP80D6.DeviceDesc = "NE2000 互換"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe karty sieciowe)"
-*PNP80D6.DeviceDesc = "Kompatybilna z NE2000"
+*PNP80D6.DeviceDesc = "Karta sieciowa kompatybilna z NE2000"
 
 [Strings.0416]
 GenericMfg = "(Adaptadores de rede padrão)"

@@ -10,7 +10,7 @@ BEGIN
         MENUITEM "P&ołącz", IDM_FILE_CONNECT
         MENUITEM "&Rozłącz", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Wyczyść wyświetlacz", IDM_FILE_CLEARDISPLAY
+        MENUITEM "W&yczyść wyświetlacz", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "Ro&zpocznij zrzut", IDM_FILE_STARTCAPTURE
         MENUITEM "Za&trzymaj zrzut", IDM_FILE_STOPCAPTURE, GRAYED
@@ -36,7 +36,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "O debuggerze FreeLoadera"
+CAPTION "O debugerze programu FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26

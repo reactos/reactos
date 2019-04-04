@@ -68,8 +68,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Lupa ma za zadanie dostarczyć podstawowy poziom funkcjonalności dla osób z niewielkimi problemami ze wzrokiem. Użytkownicy ze znaczniejszymi problemami ze wzrokiem mogą być zmuszeni użyć bardziej zaawansowanego narzędzia.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Nie pokazuj więcej tej wiadomości", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Lupa ma za zadanie zapewnić podstawowy poziom funkcjonalności dla osób z niewielkimi problemami ze wzrokiem. Użytkownicy ze znaczniejszymi problemami ze wzrokiem mogą potrzebować bardziej zaawansowanego narzędzia.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Nie pokazuj więcej tego komunikatu", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 

@@ -171,11 +171,11 @@ STRINGTABLE
     IDS_EXPORT_PASSWORD_MISMATCH "Niezgodność haseł."
     IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "Uwaga: Nie można otworzyć klucza prywatnego dla tego certyfikatu."
     IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Uwaga: Klucz prywatny dla tego certyfikatu jest oznaczony jako nie do eksportu."
-    IDS_INTENDED_USE_COLUMN "Intended Use"
-    IDS_LOCATION_COLUMN "Location"
-    IDS_SELECT_CERT_TITLE "Select Certificate"
-    IDS_SELECT_CERT "Select a certificate"
-    IDS_NO_IMPL "Not yet implemented"
+    IDS_INTENDED_USE_COLUMN "Przeznaczenie"
+    IDS_LOCATION_COLUMN "Lokalizacja"
+    IDS_SELECT_CERT_TITLE "Wybierz certyfikat"
+    IDS_SELECT_CERT "Wybierz certyfikat, którego chcesz użyć"
+    IDS_NO_IMPL "Jeszcze nie zaimplementowane"
 }
 
 IDD_GENERAL DIALOGEX 0, 0, 255, 236
@@ -464,13 +464,13 @@ BEGIN
 END
 
 IDD_SELECT_CERT DIALOG 0,0,278,157
-CAPTION "Select Certificate"
+CAPTION "Wybierz certyfikat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Select a certificate you want to use", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
+  LTEXT "Wybierz certyfikat, którego chcesz użyć", IDC_SELECT_DISPLAY_STRING, 7,7,264,26
   CONTROL "", IDC_SELECT_CERTS, "SysListView32",
     LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 7,40,264,89
   PUSHBUTTON "OK", IDOK, 91,136,51,14, BS_DEFPUSHBUTTON
-  PUSHBUTTON "Cancel", IDCANCEL, 149,136,51,14
-  PUSHBUTTON "&View Certificate", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
+  PUSHBUTTON "Anuluj", IDCANCEL, 149,136,51,14
+  PUSHBUTTON "&Wyświetl certyfikat", IDC_SELECT_VIEW_CERT, 207,136,65,14, WS_DISABLED
 END

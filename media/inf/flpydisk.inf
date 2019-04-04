@@ -79,7 +79,7 @@ GenericMfg = "(Disqueteras genéricas)"
 Floppy.DeviceDesc = "Disquetera genérica"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 
 FloppyClassName = "Stacje dyskietek"
 GenericMfg = "(Standardowe stacje dyskietek)"

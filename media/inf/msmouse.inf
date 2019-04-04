@@ -269,14 +269,15 @@ MSMfg = "Microsoft"
 *PNP0F03.DeviceDesc = "Microsoft PS/2接続マウス"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 MouseClassName = "Mysz i inne urządzenia wskazujące"
+LocationOverride = "podłączone do portu PS/2 dla myszy"
 
 StdMfg = "(Standardowa mysz)"
 SERIAL_MOUSE.DeviceDesc = "Standardowa mysz szeregowa"
 PS2_MOUSE.DeviceDesc = "Standardowa mysz PS/2"
 HID_MOUSE.DeviceDesc = "Mysz zgodna z HID"
-*PNP0F13.DeviceDesc = "Port PS/2 dla myszki"
+*PNP0F13.DeviceDesc = "Port PS/2 dla myszy"
 
 IbmMfg = "IBM"
 *IBM3780.DeviceDesc = "Trackpoint PS/2 IBM"

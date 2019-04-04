@@ -207,6 +207,20 @@ WDM_WDMAUD.DeviceDesc     = "Driver for ReactOS WINMM-WDM-Audio"
 WDM_WDMAUD.FriendlyName   = "Driver for ReactOS WINMM-WDM-Audio"
 wdmaud.SvcDesc            = "Driver for ReactOS WINMM-WDM-Audio"
 
+[Strings.0415]
+WDM_KMIXER.DeviceDesc     = "ReactOS Wave Audio Mixer"
+WDM_KMIXER.FriendlyName   = "ReactOS Wave Audio Mixer"
+kmixer.SvcDesc            = "ReactOS Wave Audio Mixer"
+WDM_SYSAUDIO.DeviceDesc   = "Urządzenie audio ReactOS System"
+WDM_SYSAUDIO.FriendlyName = "Urządzenie audio ReactOS System"
+sysaudio.SvcDesc          = "Urządzenie audio ReactOS System"
+WDM_DRMKAUD.DeviceDesc    = "Sterowniki ReactOS Trusted Audio"
+WDM_DRMKAUD.FriendlyName  = "Sterowniki ReactOS Trusted Audio"
+drmkaud.SvcDesc           = "Sterowniki ReactOS Trusted Audio"
+WDMAUDIO_CopyFilesOnlyId.DeviceDesc = "Sterowniki ReactOS WDM Audio"
+WDM_WDMAUD.DeviceDesc     = "Sterownik zgodności ReactOS WINMM-WDM-Audio"
+WDM_WDMAUD.FriendlyName   = "Sterownik zgodności ReactOS WINMM-WDM-Audio"
+wdmaud.SvcDesc            = "Sterownik zgodności ReactOS WINMM-WDM-Audio"
 
 [Strings.0418]
 WDM_KMIXER.DeviceDesc     = "Dispozitiv de mixaj audio Wave al ReactOS"

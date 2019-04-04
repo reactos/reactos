@@ -407,7 +407,7 @@ Node.Encoder="Codificador"
 Node.Multiplexer="Multiplexador"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 Category_CrossbarDevices="Urządzenia strumieniowe Crossbar WDM"
 Category_TvTunerDevices="Urządzenia strumieniowe odbiornika TV WDM"
 Category_TvAudioDevices="Urządzenia strumieniowe TV Audio WDM"

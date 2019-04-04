@@ -44,7 +44,7 @@ GenericMfg = "(Generische Systemgeräte)"
 *PNP0C14.DeviceDesc = "WMI für ACPI"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0C14.DeviceDesc = "WMI dla ACPI"
 

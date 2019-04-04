@@ -236,7 +236,7 @@ IntelProcessor.DeviceDesc = "Intel プロセッサ"
 Standard = "スタンダードプロセッサ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 ProcessorClassName = "Procesory"
 
 CyrixMfg = "Cyrix"

@@ -104,7 +104,7 @@ ACPI\PNP0C0A.DeviceDesc = "Batterie à méthode de contrôle compatible ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptateur secteur"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 BatteryClassName = "Baterie"
 GenericMfg = "(Standardowe baterie)"
 ACPI\PNP0C0A.DeviceDesc = "Bateria zgodna z ACPI"

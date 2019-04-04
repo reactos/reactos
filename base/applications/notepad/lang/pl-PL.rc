@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Tematy pomocy", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Notatnik - informacje", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

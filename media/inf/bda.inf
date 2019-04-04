@@ -195,7 +195,7 @@ Pin.Name.NABTS="NABTS"
 ReactOS = "Equipo de ReactOS"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 Category_BdaTuner=" Filtr źródła BDA"
 Category_BdaComponent="Komponent odbioru BDA"
 Category_BdaRenderer="Filtr odtwarzania BDA"

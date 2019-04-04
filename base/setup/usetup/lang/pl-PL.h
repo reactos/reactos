@@ -23,19 +23,19 @@ static MUI_ENTRY plPLSetupInitPageEntries[] =
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Poczekaj, a\276 uruchomi si\251 Instalator systemu ReactOS",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         21,
-        "and discovers your devices...",
+        "i wykryje wszystkie twoje urz\245dzenia...",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         0,
         0,
-        "Please wait...",
+        "Prosz\251 czeka\206...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -508,7 +508,7 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         0,
         0,
-        "ESC = Menu g\210\242wne  ENTER = Restart",
+        "ESC = Menu g\210\242wne  ENTER = Ponowne uruchomienie komputera",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -658,13 +658,13 @@ static MUI_ENTRY plPLFlushPageEntries[] =
     {
         10,
         8,
-        "To mo\276e zaj\245\206 kilka minut.",
+        "To mo\276e potrwa\206 kilka minut.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Po zako\344czeniu, system zrestartuje komputer automatycznie.",
+        "Po zako\344czeniu, komputer automatycznie zostanie ponownie uruchomiony.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1144,7 +1144,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         20,
         14,
-        "To mo\276e zaj\245\206 kilka minut.",
+        "To mo\276e potrwa\206 kilka minut.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
