@@ -584,12 +584,6 @@ BOOL CDefView::CreateList()
     if (!m_ListView)
         return FALSE;
 
-    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
-    {
-        const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
-        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
-    }
-
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nHeaderID = -1;
     m_sortInfo.nLastHeaderID = -1;
@@ -975,17 +969,30 @@ HRESULT CDefView::FillList()
     m_sortInfo.bIsAscending = TRUE;
     _Sort();
 
+    // load custom background image and custom text color
     if (m_viewinfo_data.hbmBack)
     {
         ::DeleteObject(m_viewinfo_data.hbmBack);
         m_viewinfo_data.hbmBack = NULL;
     }
-
     m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
     _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
 
+    // make labels transparent if necessary
+    const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP) && m_viewinfo_data.hbmBack)
+    {
+        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
+    }
+    else
+    {
+        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, 0);
+    }
+
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
+
+    // redraw now
     m_ListView.InvalidateRect(NULL, TRUE);
 
     _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
