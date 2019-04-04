@@ -590,8 +590,6 @@ BOOL CDefView::CreateList()
     m_sortInfo.nHeaderID = -1;
     m_sortInfo.nLastHeaderID = -1;
 
-    UpdateListColors();
-
     /*  UpdateShellSettings(); */
     return TRUE;
 }
@@ -992,13 +990,17 @@ HRESULT CDefView::FillList()
     // load custom background image and custom text color
     m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
     _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
-    UpdateListColors();
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
 
-    // redraw now
-    m_ListView.InvalidateRect(NULL, TRUE);
+    UpdateListColors();
+
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
+    {
+        // redraw now
+        m_ListView.InvalidateRect(NULL, TRUE);
+    }
 
     _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
 
