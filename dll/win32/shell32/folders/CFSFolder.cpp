@@ -1630,70 +1630,32 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
 
 static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
 {
-    // open the picture file
-    HANDLE hFile;
-    hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ,
-                        NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
+    // create stream from file
+    HRESULT hr;
+    IStream *pStream = NULL;
+    hr = SHCreateStreamOnFileEx(pszFileName, STGM_READ, FILE_ATTRIBUTE_NORMAL,
+                                FALSE, NULL, &pStream);
+    if (FAILED(hr))
         return NULL;
-
-    // get the file size
-    DWORD cbGlobal = GetFileSize(hFile, NULL);
-    if (cbGlobal == INVALID_FILE_SIZE)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    // allocate
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, cbGlobal);
-    if (hGlobal == NULL)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    // read it
-    LPVOID pvGlobal = GlobalLock(hGlobal);
-    DWORD cbRead;
-    if (!pvGlobal || !ReadFile(hFile, pvGlobal, cbGlobal, &cbRead, NULL) ||
-        cbRead != cbGlobal)
-    {
-        GlobalUnlock(hGlobal);
-        GlobalFree(hGlobal);
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    GlobalUnlock(hGlobal);
-
-    // close the file
-    CloseHandle(hFile);
 
     // load the picture
-
     HBITMAP hbm = NULL;
     IPicture *pPicture = NULL;
-    IStream *pStream = NULL;
-    if (CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) == S_OK)
+    OleLoadPicture(pStream, 0, FALSE, IID_IPicture, (LPVOID *)&pPicture);
+
+    // get the bitmap handle
+    if (pPicture)
     {
-        OleLoadPicture(pStream, cbGlobal, FALSE, IID_IPicture, (LPVOID *)&pPicture);
+        pPicture->get_Handle((OLE_HANDLE *)&hbm);
 
-        // get the bitmap handle
-        if (pPicture)
-        {
-            pPicture->get_Handle((OLE_HANDLE *)&hbm);
+        // copy the bitmap handle
+        hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
-            // copy the bitmap handle
-            hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-
-            pPicture->Release();
-        }
-
-        pStream->Release();
+        pPicture->Release();
     }
 
-    GlobalFree(hGlobal);
+    pStream->Release();
+
     return hbm;
 }
 
