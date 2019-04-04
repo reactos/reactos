@@ -1692,10 +1692,10 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
 
 	// get info from ini file
     WCHAR szImage[MAX_PATH], szText[64];
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
 
     // load the image
+    szImage[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
     if (szImage[0])
     {
         StrTrimW(szImage, Space);
@@ -1708,6 +1708,8 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     }
 
     // load the text color
+    szText[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
     if (szText[0])
     {
         StrTrimW(szText, Space);
