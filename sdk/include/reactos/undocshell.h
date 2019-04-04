@@ -1011,6 +1011,7 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
     ULONG cbSize;
     HBITMAP hbmBack;
     COLORREF clrText;
+    COLORREF clrTextBack;
 } SFVM_CUSTOMVIEWINFO_DATA, *LPSFVM_CUSTOMVIEWINFO_DATA;
 
 #include <poppack.h>

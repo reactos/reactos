@@ -387,6 +387,8 @@ CDefView::CDefView() :
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
     ZeroMemory(&m_ptLastMousePos, sizeof(m_ptLastMousePos));
     ZeroMemory(&m_Category, sizeof(m_Category));
+    m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
+    m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
 }
 
@@ -632,24 +634,24 @@ void CDefView::UpdateListColors()
     }
     else
     {
-        if (m_viewinfo_data.hbmBack)
+        // text background color
+        COLORREF clrTextBack = GetSysColor(COLOR_WINDOW);
+        if (m_viewinfo_data.clrTextBack != CLR_INVALID)
         {
-            m_ListView.SetTextBkColor(CLR_NONE);
-            m_ListView.SetTextColor(m_viewinfo_data.clrText);
-            m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
+            clrTextBack = m_viewinfo_data.clrTextBack;
         }
-        else
+        m_ListView.SetTextBkColor(clrTextBack);
+
+        // text color
+        COLORREF clrText = GetSysColor(COLOR_WINDOWTEXT);
+        if (m_viewinfo_data.clrText != CLR_INVALID)
         {
-            COLORREF clrBack = GetSysColor(COLOR_WINDOW);
-            m_ListView.SetTextBkColor(clrBack);
-
-            if (GetRValue(clrBack) + GetGValue(clrBack) + GetBValue(clrBack) > 128 * 3)
-                m_ListView.SetTextColor(RGB(0, 0, 0));
-            else
-                m_ListView.SetTextColor(RGB(255, 255, 255));
-
-            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
+            clrText = m_viewinfo_data.clrText;
         }
+        m_ListView.SetTextColor(clrText);
+
+        // Background is painted by the parent via WM_PRINTCLIENT.
+        m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTBKGND, LVS_EX_TRANSPARENTBKGND);
     }
 }
 
@@ -990,12 +992,7 @@ HRESULT CDefView::FillList()
     // load custom background image and custom text color
     m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
     _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
-
-    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
-    {
-        const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
-        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
-    }
+    UpdateListColors();
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);

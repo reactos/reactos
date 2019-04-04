@@ -1669,6 +1669,7 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
 
     data->hbmBack = NULL;
     data->clrText = CLR_INVALID;
+    data->clrTextBack = CLR_INVALID;
 
     WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
     SHGetPathFromIDListW(pidlRoot, szPath);
@@ -1723,7 +1724,21 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
             data->clrText = cr;
     }
 
-    if (data->hbmBack != NULL || data->clrText != CLR_INVALID)
+    // load the text background color
+    szText[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_TextBackground", L"", szText, _countof(szText), szIniFile);
+    if (szText[0])
+    {
+        StrTrimW(szText, Space);
+
+        LPWSTR pchEnd = NULL;
+        COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+        if (pchEnd && !*pchEnd)
+            data->clrTextBack = cr;
+    }
+
+    if (data->hbmBack != NULL || data->clrText != CLR_INVALID || data->clrTextBack != CLR_INVALID)
         return S_OK;
 
     return E_FAIL;
