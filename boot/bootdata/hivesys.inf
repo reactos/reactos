@@ -1280,6 +1280,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00021004",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00021404",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00030404",0x00000000,""
 
+; Japanese calendar support
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese","InitialEraYear",0x00000000,"元年"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese\Eras","1868 01 01",0x00000000,"明治_明_Meiji_M"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese\Eras","1912 07 30",0x00000000,"大正_大_Taisho_T"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese\Eras","1926 12 25",0x00000000,"昭和_昭_Showa_S"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese\Eras","1989 01 08",0x00000000,"平成_平_Heisei_H"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Calendars\Japanese\Eras","2019 05 01",0x00000000,"令和_令_Reiwa_R"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82441FX",0x00030003,\
 01,00,00,00,86,80,37,12,00,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82439HX",0x00030003,\
