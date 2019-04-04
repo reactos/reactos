@@ -1667,7 +1667,8 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     }
     if (data->cbSize != sizeof(*data))
     {
-        return E_FAIL;
+        // NOTE: You have to set the cbData member before SFVM_GET_CUSTOMVIEWINFO call.
+        return E_INVALIDARG;
     }
 
     data->hbmBack = NULL;
