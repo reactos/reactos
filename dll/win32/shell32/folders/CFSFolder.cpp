@@ -1676,7 +1676,13 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     // does the folder exists?
     if (!PathIsDirectoryW(szPath))
     {
-        return E_FAIL;
+        return E_INVALIDARG;
+    }
+
+    // don't use custom view in network path for security
+    if (PathIsNetworkPath(szPath))
+    {
+        return E_ACCESSDENIED;
     }
 
     // build the ini file path
