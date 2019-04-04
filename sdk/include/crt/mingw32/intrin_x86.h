@@ -82,11 +82,6 @@ __INTRIN_INLINE void* __cdecl memcpy(void* dest, const void* source, size_t num)
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
 /* TODO: __getcallerseflags but how??? */
 
-/* Maybe the same for x86? */
-#ifdef __x86_64__
-#define _alloca(s) __builtin_alloca(s)
-#endif
-
 /*** Memory barriers ***/
 
 #if !HAS_BUILTIN(_ReadWriteBarrier)
