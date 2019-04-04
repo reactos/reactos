@@ -83,6 +83,7 @@ Signature = "$Windows NT$"
 62 = Resources\Themes\Modern
 63 = 3rdParty
 64 = Resources\Themes\Lunar
+65 = Resources\Themes\Mizu
 
 .InfEnd
 

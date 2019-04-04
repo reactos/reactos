@@ -1,0 +1,40 @@
+/* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
+/* Improved by Luo Yufan (njlyf2011@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+{
+1000, "Light"
+}
+
+STRINGTABLE
+{
+2000, "Mizu Light"
+}
+
+STRINGTABLE
+{
+3000, "一般"
+3001, "大字体"
+3002, "特大字体"
+}
+
+STRINGTABLE
+{
+4000, "一般"
+4001, "大字体"
+4002, "特大字体"
+}
+
+STRINGTABLE
+{
+5000, "Mizu"
+5001, "视觉样式"
+5002, "ReactOS 基金会"
+5003, "Foxlet, 基于 Lautus 项目"
+5004, "基于 GNU/GPL 2.0，于 2019 年发行"
+5005, "http://www.reactos.org"
+5006, "版本 1.0"
+5007, "ReactOS 视觉样式"
+}

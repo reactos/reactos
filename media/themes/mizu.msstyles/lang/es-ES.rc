@@ -1,0 +1,37 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Light"
+}
+
+STRINGTABLE
+{
+2000, "Mizu Light"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Texto grande"
+3002, "Texto muy grande"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Texto grande"
+4002, "Texto muy grande"
+}
+
+STRINGTABLE
+{
+5000, "Mizu"
+5001, "Estilo visual"
+5002, "Fundación ReactOS"
+5003, "Foxlet, basado en Lautus"
+5004, "Bajo licencia GNU/GPL 2.0, 2019"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Estilo visual para ReactOS"
+}
