@@ -4,6 +4,7 @@
  *
  * Copyright 1997             Marcus Meissner
  * Copyright 1998, 1999, 2002 Juergen Schmied
+ * Copyright 2019             Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -878,7 +879,7 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
         }
         else if (IsEqualIID (riid, IID_IShellView))
         {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
             hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
         }
     }
@@ -1625,4 +1626,153 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
         return S_OK;
 
     return Shell_DefaultContextMenuCallBack(this, pdtobj);
+}
+
+static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
+{
+    // open the picture file
+    HANDLE hFile;
+    hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ,
+                        NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    // get the file size
+    DWORD cbGlobal = GetFileSize(hFile, NULL);
+    if (cbGlobal == INVALID_FILE_SIZE)
+    {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // allocate
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, cbGlobal);
+    if (hGlobal == NULL)
+    {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // read it
+    LPVOID pvGlobal = GlobalLock(hGlobal);
+    DWORD cbRead;
+    if (!pvGlobal || !ReadFile(hFile, pvGlobal, cbGlobal, &cbRead, NULL) ||
+        cbRead != cbGlobal)
+    {
+        GlobalUnlock(hGlobal);
+        GlobalFree(hGlobal);
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    GlobalUnlock(hGlobal);
+
+    // close the file
+    CloseHandle(hFile);
+
+    // load the picture
+
+    HBITMAP hbm = NULL;
+    IPicture *pPicture = NULL;
+    IStream *pStream = NULL;
+    if (CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) == S_OK)
+    {
+        OleLoadPicture(pStream, cbGlobal, FALSE, IID_IPicture, (LPVOID *)&pPicture);
+
+        // get the bitmap handle
+        if (pPicture)
+        {
+            pPicture->get_Handle((OLE_HANDLE *)&hbm);
+
+            // copy the bitmap handle
+            hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+
+            pPicture->Release();
+        }
+
+        pStream->Release();
+    }
+
+    GlobalFree(hGlobal);
+    return hbm;
+}
+
+HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_DATA *data)
+{
+    if (data == NULL)
+    {
+        return E_POINTER;
+    }
+    if (data->cbSize != sizeof(*data))
+    {
+        return E_FAIL;
+    }
+
+    data->hbmBack = NULL;
+    data->clrText = CLR_INVALID;
+
+    WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
+    SHGetPathFromIDListW(pidlRoot, szPath);
+
+    // does the folder exists?
+    if (!PathIsDirectoryW(szPath))
+    {
+        return E_FAIL;
+    }
+
+    // build the ini file path
+    StringCchCopyW(szIniFile, _countof(szIniFile), szPath);
+    PathAppend(szIniFile, L"desktop.ini");
+
+    static LPCWSTR TheGUID = L"{BE098140-A513-11D0-A3A4-00C04FD706EC}";
+    static LPCWSTR Space = L" \t\n\r\f\v";
+
+	// get info from ini file
+    WCHAR szImage[MAX_PATH], szText[64];
+    if (PathFileExists(szIniFile) && !PathIsDirectoryW(szIniFile))
+    {
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
+
+        // load the image
+        if (szImage[0])
+        {
+            StrTrimW(szImage, Space);
+            if (PathIsRelativeW(szImage))
+            {
+                PathAppendW(szPath, szImage);
+                StringCchCopyW(szImage, _countof(szImage), szPath);
+            }
+            data->hbmBack = DoLoadPicture(szImage);
+        }
+
+        // load the text color
+        if (szText[0])
+        {
+            StrTrimW(szText, Space);
+
+            LPWSTR pchEnd = NULL;
+            COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+            if (pchEnd && !*pchEnd)
+                data->clrText = cr;
+        }
+    }
+
+    if (data->hbmBack != NULL || data->clrText != CLR_INVALID)
+        return S_OK;
+
+    return E_FAIL;
+}
+
+HRESULT WINAPI CFSFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HRESULT hr = E_NOTIMPL;
+    switch (uMsg)
+    {
+    case SFVM_GET_CUSTOMVIEWINFO:
+        hr = GetCustomViewInfo((ULONG)wParam, (SFVM_CUSTOMVIEWINFO_DATA *)lParam);
+        break;
+    }
+    return hr;
 }
