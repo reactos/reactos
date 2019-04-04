@@ -1672,10 +1672,9 @@ HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_D
     data->clrTextBack = CLR_INVALID;
 
     WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
-    SHGetPathFromIDListW(pidlRoot, szPath);
 
     // does the folder exists?
-    if (!PathIsDirectoryW(szPath))
+    if (!SHGetPathFromIDListW(pidlRoot, szPath) || !PathIsDirectoryW(szPath))
     {
         return E_INVALIDARG;
     }
