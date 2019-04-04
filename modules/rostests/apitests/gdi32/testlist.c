@@ -55,6 +55,7 @@ extern void func_GetStockObject(void);
 extern void func_GetTextExtentExPoint(void);
 extern void func_GetTextFace(void);
 extern void func_GetTextMetrics(void);
+extern void func_LPtoDP(void);
 extern void func_MaskBlt(void);
 extern void func_NtGdiAddFontResource(void);
 extern void func_OffsetClipRgn(void);
@@ -130,6 +131,7 @@ const struct test winetest_testlist[] =
     { "GetTextExtentExPoint", func_GetTextExtentExPoint },
     { "GetTextMetrics", func_GetTextMetrics },
     { "GetTextFace", func_GetTextFace },
+    { "LPtoDP", func_LPtoDP },
     { "MaskBlt", func_MaskBlt },
     { "NtGdiAddFontResource", func_NtGdiAddFontResource},
     { "OffsetClipRgn", func_OffsetClipRgn },

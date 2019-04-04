@@ -54,6 +54,7 @@ list(APPEND SOURCE
     GetTextExtentExPoint.c
     GetTextFace.c
     GetTextMetrics.c
+    LPtoDP.c
     MaskBlt.c
     NtGdiAddFontResource.c
     OffsetClipRgn.c
