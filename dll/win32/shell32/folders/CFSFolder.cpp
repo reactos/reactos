@@ -4,6 +4,7 @@
  *
  * Copyright 1997             Marcus Meissner
  * Copyright 1998, 1999, 2002 Juergen Schmied
+ * Copyright 2019             Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -878,7 +879,7 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
         }
         else if (IsEqualIID (riid, IID_IShellView))
         {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this, NULL, this};
             hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
         }
     }
@@ -1625,4 +1626,131 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
         return S_OK;
 
     return Shell_DefaultContextMenuCallBack(this, pdtobj);
+}
+
+static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
+{
+    // create stream from file
+    HRESULT hr;
+    CComPtr<IStream> pStream;
+    hr = SHCreateStreamOnFileEx(pszFileName, STGM_READ, FILE_ATTRIBUTE_NORMAL,
+                                FALSE, NULL, &pStream);
+    if (FAILED(hr))
+        return NULL;
+
+    // load the picture
+    HBITMAP hbm = NULL;
+    CComPtr<IPicture> pPicture;
+    OleLoadPicture(pStream, 0, FALSE, IID_IPicture, (LPVOID *)&pPicture);
+
+    // get the bitmap handle
+    if (pPicture)
+    {
+        pPicture->get_Handle((OLE_HANDLE *)&hbm);
+
+        // copy the bitmap handle
+        hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+    }
+
+    return hbm;
+}
+
+HRESULT WINAPI CFSFolder::GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_DATA *data)
+{
+    if (data == NULL)
+    {
+        return E_POINTER;
+    }
+    if (data->cbSize != sizeof(*data))
+    {
+        // NOTE: You have to set the cbData member before SFVM_GET_CUSTOMVIEWINFO call.
+        return E_INVALIDARG;
+    }
+
+    data->hbmBack = NULL;
+    data->clrText = CLR_INVALID;
+    data->clrTextBack = CLR_INVALID;
+
+    WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
+
+    // does the folder exists?
+    if (!SHGetPathFromIDListW(pidlRoot, szPath) || !PathIsDirectoryW(szPath))
+    {
+        return E_INVALIDARG;
+    }
+
+    // don't use custom view in network path for security
+    if (PathIsNetworkPath(szPath))
+    {
+        return E_ACCESSDENIED;
+    }
+
+    // build the ini file path
+    StringCchCopyW(szIniFile, _countof(szIniFile), szPath);
+    PathAppend(szIniFile, L"desktop.ini");
+
+    static LPCWSTR TheGUID = L"{BE098140-A513-11D0-A3A4-00C04FD706EC}";
+    static LPCWSTR Space = L" \t\n\r\f\v";
+
+    // get info from ini file
+    WCHAR szImage[MAX_PATH], szText[64];
+
+    // load the image
+    szImage[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
+    if (szImage[0])
+    {
+        StrTrimW(szImage, Space);
+        if (PathIsRelativeW(szImage))
+        {
+            PathAppendW(szPath, szImage);
+            StringCchCopyW(szImage, _countof(szImage), szPath);
+        }
+        data->hbmBack = DoLoadPicture(szImage);
+    }
+
+    // load the text color
+    szText[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
+    if (szText[0])
+    {
+        StrTrimW(szText, Space);
+
+        LPWSTR pchEnd = NULL;
+        COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+        if (pchEnd && !*pchEnd)
+            data->clrText = cr;
+    }
+
+    // load the text background color
+    szText[0] = UNICODE_NULL;
+    GetPrivateProfileStringW(TheGUID, L"IconArea_TextBackground", L"", szText, _countof(szText), szIniFile);
+    if (szText[0])
+    {
+        StrTrimW(szText, Space);
+
+        LPWSTR pchEnd = NULL;
+        COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+        if (pchEnd && !*pchEnd)
+            data->clrTextBack = cr;
+    }
+
+    if (data->hbmBack != NULL || data->clrText != CLR_INVALID || data->clrTextBack != CLR_INVALID)
+        return S_OK;
+
+    return E_FAIL;
+}
+
+HRESULT WINAPI CFSFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HRESULT hr = E_NOTIMPL;
+    switch (uMsg)
+    {
+    case SFVM_GET_CUSTOMVIEWINFO:
+        hr = GetCustomViewInfo((ULONG)wParam, (SFVM_CUSTOMVIEWINFO_DATA *)lParam);
+        break;
+    }
+    return hr;
 }

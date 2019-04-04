@@ -28,7 +28,8 @@ class CFSFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder3,
-    public IContextMenuCB
+    public IContextMenuCB,
+    public IShellFolderViewCB
 {
     private:
         CLSID *pclsid;
@@ -84,6 +85,9 @@ class CFSFolder :
         // IContextMenuCB
         virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        // IShellFolderViewCB
+        virtual HRESULT WINAPI MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
 
@@ -96,7 +100,11 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
         END_COM_MAP()
+
+    protected:
+        HRESULT WINAPI GetCustomViewInfo(ULONG unknown, SFVM_CUSTOMVIEWINFO_DATA *data);
 };
 
 #endif /* _CFSFOLDER_H_ */

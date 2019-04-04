@@ -110,6 +110,7 @@ class CDefView :
 
         CLSID m_Category;
         BOOL  m_Destroyed;
+        SFVM_CUSTOMVIEWINFO_DATA  m_viewinfo_data;
 
     private:
         HRESULT _MergeToolbar();
@@ -257,6 +258,7 @@ class CDefView :
         LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -280,7 +282,7 @@ class CDefView :
             {
                 {   sizeof(WNDCLASSEX), CS_PARENTDC, StartWindowProc,
                     0, 0, NULL, NULL,
-                    LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_WINDOW + 1), NULL, SV_CLASS_NAME, NULL
+                    LoadCursor(NULL, IDC_ARROW), NULL, NULL, SV_CLASS_NAME, NULL
                 },
                 NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
             };
@@ -323,6 +325,7 @@ class CDefView :
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_PRINTCLIENT, OnPrintClient)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
@@ -384,12 +387,21 @@ CDefView::CDefView() :
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
     ZeroMemory(&m_ptLastMousePos, sizeof(m_ptLastMousePos));
     ZeroMemory(&m_Category, sizeof(m_Category));
+    m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
+    m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
+    m_viewinfo_data.hbmBack = NULL;
 }
 
 CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
 
+    if (m_viewinfo_data.hbmBack)
+    {
+        ::DeleteObject(m_viewinfo_data.hbmBack);
+        m_viewinfo_data.hbmBack = NULL;
+    }
+    
     if (m_hWnd)
     {
         DestroyViewWindow();
@@ -578,8 +590,6 @@ BOOL CDefView::CreateList()
     m_sortInfo.nHeaderID = -1;
     m_sortInfo.nLastHeaderID = -1;
 
-    UpdateListColors();
-
     /*  UpdateShellSettings(); */
     return TRUE;
 }
@@ -619,6 +629,27 @@ void CDefView::UpdateListColors()
                 m_ListView.SetTextColor(RGB(255, 255, 255));
             m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
+    }
+    else
+    {
+        // text background color
+        COLORREF clrTextBack = GetSysColor(COLOR_WINDOW);
+        if (m_viewinfo_data.clrTextBack != CLR_INVALID)
+        {
+            clrTextBack = m_viewinfo_data.clrTextBack;
+        }
+        m_ListView.SetTextBkColor(clrTextBack);
+
+        // text color
+        COLORREF clrText = GetSysColor(COLOR_WINDOWTEXT);
+        if (m_viewinfo_data.clrText != CLR_INVALID)
+        {
+            clrText = m_viewinfo_data.clrText;
+        }
+        m_ListView.SetTextColor(clrText);
+
+        // Background is painted by the parent via WM_PRINTCLIENT.
+        m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTBKGND, LVS_EX_TRANSPARENTBKGND);
     }
 }
 
@@ -950,8 +981,26 @@ HRESULT CDefView::FillList()
     m_sortInfo.bIsAscending = TRUE;
     _Sort();
 
+    if (m_viewinfo_data.hbmBack)
+    {
+        ::DeleteObject(m_viewinfo_data.hbmBack);
+        m_viewinfo_data.hbmBack = NULL;
+    }
+
+    // load custom background image and custom text color
+    m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
+    _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
+
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
+
+    UpdateListColors();
+
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
+    {
+        // redraw now
+        m_ListView.InvalidateRect(NULL, TRUE);
+    }
 
     _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
 
@@ -1000,6 +1049,55 @@ LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
+static VOID
+DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight, INT dx, INT dy)
+{
+    INT x0 = prc->left, y0 = prc->top, x1 = prc->right, y1 = prc->bottom;
+    x0 += dx;
+    y0 += dy;
+
+    HDC hMemDC = CreateCompatibleDC(hDC);
+    HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
+
+    for (INT y = y0; y < y1; y += nHeight)
+    {
+        for (INT x = x0; x < x1; x += nWidth)
+        {
+            BitBlt(hDC, x, y, nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
+        }
+    }
+
+    SelectObject(hMemDC, hbmOld);
+    DeleteDC(hMemDC);
+}
+
+LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HDC hDC = (HDC)wParam;
+
+    RECT rc;
+    ::GetClientRect(m_ListView, &rc);
+
+    if (m_viewinfo_data.hbmBack)
+    {
+        BITMAP bm;
+        if (::GetObject(m_viewinfo_data.hbmBack, sizeof(BITMAP), &bm))
+        {
+            INT dx = -(::GetScrollPos(m_ListView, SB_HORZ) % bm.bmWidth);
+            INT dy = -(::GetScrollPos(m_ListView, SB_VERT) % bm.bmHeight);
+            DrawTileBitmap(hDC, &rc, m_viewinfo_data.hbmBack, bm.bmWidth, bm.bmHeight, dx, dy);
+        }
+    }
+    else
+    {
+        FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
+    }
+
+    bHandled = TRUE;
+
+    return TRUE;
+}
+
 LRESULT CDefView::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     /* Update desktop labels color */
@@ -1039,14 +1137,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     TRACE("%p\n", this);
 
-    if (CreateList())
-    {
-        if (InitList())
-        {
-            FillList();
-        }
-    }
-
     if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
     {
         if (FAILED(RegisterDragDrop(m_hWnd, pdt)))
@@ -1061,6 +1151,14 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ntreg.fRecursive = TRUE;
         ntreg.pidl = m_pidlParent;
         m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
+    }
+
+    if (CreateList())
+    {
+        if (InitList())
+        {
+            FillList();
+        }
     }
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
