@@ -39,6 +39,9 @@ START_TEST(JapaneseCalendar)
     static const WCHAR s_szWareki[] = {0x548C, 0x66A6, 0};  // L"\u548C\u66A6"
     static const WCHAR s_szNen[] = {0x5E74, 0};             // L"\u5E74"
 
+    trace("lcid: 0x%08lX\n", lcid);
+    trace("langid: 0x%04lX\n", langid);
+
     ZeroMemory(&st, sizeof(st));
     st.wYear = 2019;
     st.wMonth = 4;
