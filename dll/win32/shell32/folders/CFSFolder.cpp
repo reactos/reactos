@@ -1632,7 +1632,7 @@ static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
 {
     // create stream from file
     HRESULT hr;
-    IStream *pStream = NULL;
+    CComPtr<IStream> pStream;
     hr = SHCreateStreamOnFileEx(pszFileName, STGM_READ, FILE_ATTRIBUTE_NORMAL,
                                 FALSE, NULL, &pStream);
     if (FAILED(hr))
@@ -1640,7 +1640,7 @@ static HBITMAP DoLoadPicture(LPCWSTR pszFileName)
 
     // load the picture
     HBITMAP hbm = NULL;
-    IPicture *pPicture = NULL;
+    CComPtr<IPicture> pPicture;
     OleLoadPicture(pStream, 0, FALSE, IID_IPicture, (LPVOID *)&pPicture);
 
     // get the bitmap handle
