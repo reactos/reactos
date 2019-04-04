@@ -81,7 +81,7 @@ CDROMClassName = "Lecteurs de DVD/CD-ROM"
 CDROMClassName = "DVD/CD-ROM mechaniky"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 CDROMClassName = "Stacje dysków DVD/CD-ROM"
 
 [Strings.0416]

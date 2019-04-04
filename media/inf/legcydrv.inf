@@ -33,7 +33,7 @@ ReactOS = "Equipo de ReactOS"
 LegacyDriverClassName = "Controladores incompatibles con PnP"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 LegacyDriverClassName = "Sterowniki niezgodne z Plug and Play"
 
 [Strings.0418]

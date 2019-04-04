@@ -67,7 +67,7 @@ GenericMfg = "(標準システム デバイス)"
 *PNP0C08.DeviceDesc = "ACPI ハードウェア"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe urządzenia systemowe)"
 *PNP0C08.DeviceDesc = "Sprzęt ACPI"
 

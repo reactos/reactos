@@ -1,0 +1,13 @@
+/*
+ * PROJECT:     ReactOS CryptExt Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Polish resource translation
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFILE "To nie jest prawidłowy plik certyfikatu."
+    IDS_CER_FILE "Plik certyfikatu"
+END

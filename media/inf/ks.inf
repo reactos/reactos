@@ -1103,7 +1103,7 @@ AudFName.VideoMute="Silenciar vídeo"
 AudFName.Video="Vídeo"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 StreamingClass="Urządzenia/filtry strumieniowe"
 Proxy.FilterDesc="Standardowy filtr WDM"
 Category_CaptureDevices="Urządzenia nagrywania strumieniowego WDM"

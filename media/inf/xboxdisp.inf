@@ -57,7 +57,7 @@ ReactOS = "Equipo de ReactOS"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Unidad de procesamiento de gráficos de Xbox NV2A"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Procesor graficzny Xbox NV2A"
 
 [Strings.0418]

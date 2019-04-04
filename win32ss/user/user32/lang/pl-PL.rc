@@ -63,9 +63,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Błąd"
-    IDS_NOT_RESPONDING " (Not Responding)"
-    IDS_ASK_TERMINATE "This application is hung up. May I terminate this app?"
-    IDS_HUNG_UP_TITLE "Hung up!"
+    IDS_NOT_RESPONDING " (Nie odpowiada)"
+    IDS_ASK_TERMINATE "Ta aplikacja się zawiesiła. Zakończyć tę aplikację?"
+    IDS_HUNG_UP_TITLE "Zawieszona!"
     IDS_OK "OK"
     IDS_CANCEL "Anuluj"
     IDS_ABORT "&Przerwij"

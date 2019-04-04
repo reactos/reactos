@@ -15,7 +15,7 @@ BEGIN
     IDS_PLUM "Śliwkowy"
     IDS_PUMPKIN "Dynia"
     IDS_RAIN "Deszczowy Dzień"
-    IDS_RWB "Red, White, and Blue"
+    IDS_RWB "Czerwony, Biały, i Niebieski"
     IDS_CLASSIC "Klasyczny ReactOS"
     IDS_STANDARD "Podstawowy ReactOS"
     IDS_ROSE "Róża"
@@ -29,7 +29,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "Normalna"
+    IDS_SIZE_LARGE "Duża"
+    IDS_SIZE_XLARGE "Bardzo duża"
 END

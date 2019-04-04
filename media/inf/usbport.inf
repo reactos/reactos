@@ -188,7 +188,7 @@ PCI\CC_0C0320.DeviceDesc = "EHCI USB コントローラ"
 USB\ROOT_HUB.DeviceDesc = "ルート ハブ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 USBClassName = "Kontrolery USB"
 
 GenericMfg = "(Standardowe urządzenia USB)"

@@ -98,7 +98,7 @@ GenericMfg = "(スタンダード SCSI および RAID コントローラ)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI コントローラ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 SCSIClassName = "Kontrolery SCSI i RAID"
 GenericMfg = "(Standardowe kontrolery SCSI i RAID)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "Kontroler SCSI BusLogic"

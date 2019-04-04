@@ -102,7 +102,7 @@ GenericMfg = "(標準フロッピー ディスク コントローラ)"
 *PNP0700.DeviceDesc = "標準フロッピー ディスク コントローラ"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 FDCClassName = "Kontrolery stacji dyskietek"
 GenericMfg = "(Standardowowe kontrolery stacji dyskietek)"
 *PNP0700.DeviceDesc = "Standardowy kontroler stacji dyskietek"

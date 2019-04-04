@@ -3,29 +3,29 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_USAGE "\nPrawidłowe polecenia:\n\
-               load        Ładuje sterownik filtra\n\
-               unload      Wyładowuje sterownik filtra\n\
+               load        Ładuje sterownik filtru\n\
+               unload      Zwalnia sterownik filtru\n\
                filters     Wyświetla listę aktualnie zarejestrowanych filtrów\n\n\
-               volumes     Lists all volumes\n\n"
+               volumes     Wyświetla listę wszystkich woluminów\n\n"
 
-    IDS_USAGE_LOAD      "Ładuje sterownik filtra\n"
-    IDS_USAGE_UNLOAD    "Wyładowuje sterownik filtra\n"
+    IDS_USAGE_LOAD      "Ładuje sterownik filtru\n"
+    IDS_USAGE_UNLOAD    "Zwalnia sterownik filtru\n"
     IDS_USAGE_FILTERS   "Wyświetla listę zarejestrowanych filtrów\n"
-    IDS_USAGE_VOLUMES   "Lists all volumes\n"
+    IDS_USAGE_VOLUMES   "Wyświetla listę wszystkich woluminów\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_FILTERS1    "Nazwa filtra                    Liczba wystąpień    Wysokość    Ramka\n"
-    IDS_DISPLAY_FILTERS2    "Nazwa filtra                    Liczba wystąpień   Ramka\n"
-    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
+    IDS_DISPLAY_FILTERS1    "Nazwa filtru                    Liczba wystąpień    Wysokość    Ramka\n"
+    IDS_DISPLAY_FILTERS2    "Nazwa filtru                    Liczba wystąpień   Ramka\n"
+    IDS_DISPLAY_VOLUMES     "Nazwa systemu DOS               Nazwa woluminu                           System plików   Stan\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ERROR_PRIV      "Nie udało się ustawić uprawnienia do załadowania sterownika (0x%X)\n"
     IDS_ERROR_FILTERS   "Nie udało się wyświetlić listy filtrów (0x%X)\n"
-    IDS_ERROR_LOAD      "Nie udało się załadować filtra (0x%X)\n"
-    IDS_ERROR_UNLOAD    "Nie udało się wyładować filtra (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
+    IDS_ERROR_LOAD      "Nie udało się załadować filtru (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Nie udało się zwolnić filtru (0x%X)\n"
+    IDS_ERROR_VOLUMES   "Nie udało się wyświetlić listy woluminów (0x%X)\n"
 END

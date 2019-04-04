@@ -77,7 +77,7 @@ DefaultMonitor.DeviceDesc = "Monitor predeterminado"
 PnPMonitor.DeviceDesc = "Monitor Plug and Play"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 
 MonitorClassName = "Monitory"
 

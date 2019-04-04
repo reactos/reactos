@@ -85,7 +85,13 @@ LevelOneFPC0106TX.DeviceDesc = "Adaptador Ethernet LevelOne FPC-0106Tx (RTL8139)
 CompaqHNE300.DeviceDesc = "Adaptador Ethernet Compaq HNE-300 (RTL8139C)"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
+
+Realtek8139.DeviceDesc = "Karta Realtek RTL8139 PCI Ethernet Adapter"
+AcctonEN1207D.DeviceDesc = "Karta Accton EN-1207D (RTL8139) PCI Ethernet Adapter"
+DLinkDFE538TX.DeviceDesc = "Karta D-Link DFE-538TX (RTL8139) PCI Ethernet Adapter"
+LevelOneFPC0106TX.DeviceDesc = "Karta LevelOne FPC-0106Tx (RTL8139) PCI Ethernet Adapter"
+CompaqHNE300.DeviceDesc = "Karta Compaq HNE-300 (RTL8139C) PCI Ethernet Adapter"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"

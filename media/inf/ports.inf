@@ -147,7 +147,7 @@ StdMfg = "(スタンダード ポート)"
 *PNP0401.DeviceDesc = "ECP プリンタ ポート"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 PortsClassName = "Porty (COM i LPT)"
 
 StdMfg = "(Standardowe porty)"

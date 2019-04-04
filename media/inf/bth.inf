@@ -76,7 +76,7 @@ BTUSB.DeviceDesc="Radio Bluetooth USB genérica"
 BluetoothClassName="Radios Bluetooth"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 BTUSB.DeviceDesc="Standardowy odbiornik radiowy Bluetooth na USB"
 BluetoothClassName="Odbiorniki radiowe Bluetooth"
 

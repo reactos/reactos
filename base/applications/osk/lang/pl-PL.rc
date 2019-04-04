@@ -128,7 +128,7 @@ BEGIN
 END
 
 MAIN_DIALOG_STANDARD_KB DIALOGEX DISCARDABLE 0, 0, 362, 115
-CAPTION "On screen keyboard"
+CAPTION "Klawiatura ekranowa"
 FONT 8, "MS Shell Dlg"
 MENU IDR_OSK_MENU
 STYLE WS_SYSMENU | WS_MINIMIZEBOX
@@ -248,58 +248,58 @@ END
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "File"
+    POPUP "Pl&ik"
     BEGIN
-        MENUITEM "&Exit", IDM_EXIT
+        MENUITEM "&Zakończ", IDM_EXIT
     END
 
-    POPUP "Keyboard"
+    POPUP "&Klawiatura"
     BEGIN
-        MENUITEM "Enhanced Keyboard", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Standard Keyboard", IDM_STANDARD_KB
+        MENUITEM "&Klawiatura rozszerzona", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Klawiatura &standardowa", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "&Układ regularny", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Układ &blokowy", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
-        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+        MENUITEM "10&1 klawiszy", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "10&2 klawiszy", IDM_102_KEYS, GRAYED
+        MENUITEM "10&6 klawiszy", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Settings"
+    POPUP "Ust&awienia"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED, GRAYED
+        MENUITEM "&Zawsze na wierzchu", IDM_ON_TOP, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
+        MENUITEM "&Użyj dźwięku kliknięcia", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Tryb wpisywania...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Font...", IDM_FONT, GRAYED
+        MENUITEM "&Czcionka...", IDM_FONT, GRAYED
     END
 
-    POPUP "Help"
+    POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "&Spis treści", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+        MENUITEM "&Klawiatura ekranowa - informacje...", IDM_ABOUT
     END
 END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "On-Screen Keyboard"
+CAPTION "Klawiatura ekranowa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Klawiatura ekranowa zapewnia podstawowy poziom funkcjonalności dla osób z upośledzeniem funkcji motorycznych. Takie osoby będą potrzebować bardziej zaawansowanego narzędzia dla codziennego użytku.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Nie pokazuj więcej tego komunikatu", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    STRING_OSK "On-Screen Keyboard"
+    STRING_OSK "Klawiatura ekranowa"
     STRING_AUTHORS "Copyright Denis Robert"
 END
 

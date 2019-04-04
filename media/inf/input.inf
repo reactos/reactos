@@ -107,7 +107,7 @@ HID_DEVICE            = "Dispositivo compatible con otros dispositivos de interf
 StdMfg                = "(Dispositivos de interfaz humana estándar)"
 
 [Strings.0415]
-ReactOS               = "Ekipa ReactOS"
+ReactOS               = "Zespół ReactOS"
 HID.ClassName         = "Urządzenia interfejsu HID"
 HID.DeviceDesc        = "Urządzenie USB interfejsu HID"
 

@@ -68,7 +68,7 @@ GenericMfg = "(標準 USB デバイス)"
 GenericBulkOnlyTransport.DeviceDesc = "USB ストレージ デバイス"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowe urządzenia USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Urządzenie pamięci masowej USB"
 

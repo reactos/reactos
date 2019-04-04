@@ -65,7 +65,9 @@ PCNET.DeviceDesc = "AMD PCnet Am79C970 PCI Ethernet Adapter"
 ReactOS = "Equipo de ReactOS"
 
 [Strings.0415]
-ReactOS = "Ekipa ReactOS"
+ReactOS = "Zespół ReactOS"
+
+PCNET.DeviceDesc = "Karta AMD PCnet Am79C970 PCI Ethernet Adapter"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
