@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/streamout.c
  * PURPOSE:         Implementation of streamout
- * PROGRAMMER:      Timo Kreuzer
+ * PROGRAMMERS:     Timo Kreuzer
+ *                  Katayama Hirofumi MZ
  */
 
 #include <stdio.h>
@@ -372,6 +373,11 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         /* Handle field width modifier */
         if (chr == _T('*'))
         {
+#ifdef _USER32_WSPRINTF
+            if ((written = streamout_char(stream, chr)) == 0) return -1;
+            written_all += written;
+            continue;
+#else
             fieldwidth = va_arg(argptr, int);
             if (fieldwidth < 0)
             {
@@ -379,6 +385,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 fieldwidth = -fieldwidth;
             }
             chr = *format++;
+#endif
         }
         else
         {
@@ -397,8 +404,14 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
             if (chr == _T('*'))
             {
+#ifdef _USER32_WSPRINTF
+                if ((written = streamout_char(stream, chr)) == 0) return -1;
+                written_all += written;
+                continue;
+#else
                 precision = va_arg(argptr, int);
                 chr = *format++;
+#endif
             }
             else
             {
