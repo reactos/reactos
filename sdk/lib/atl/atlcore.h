@@ -22,14 +22,18 @@
 
 #include <malloc.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <winnls.h>
+#ifdef __REACTOS__
+    #define WIN32_NO_STATUS
+    #define _INC_WINDOWS
+    #define COM_NO_WINDOWS_H
+    #include <stdarg.h>
+    #include <windef.h>
+    #include <winbase.h>
+    #include <winreg.h>
+    #include <winnls.h>
+#else
+    #include <windows.h>
+#endif
 #include <ole2.h>
 #include <olectl.h>
 #include <crtdbg.h>
