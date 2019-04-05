@@ -53,6 +53,12 @@
 namespace ATL
 {
 
+inline HRESULT AtlHresultFromLastError() throw()
+{
+    DWORD dwError = ::GetLastError();
+    return HRESULT_FROM_WIN32(dwError);
+}
+
 
 template<class T>
 class CComPtr

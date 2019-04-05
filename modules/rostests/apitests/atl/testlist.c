@@ -2,6 +2,7 @@
 #include <apitest.h>
 
 extern void func_atltypes(void);
+extern void func_CAtlFileMapping(void);
 extern void func_CComBSTR(void);
 extern void func_CComHeapPtr(void);
 extern void func_CComObject(void);
@@ -16,6 +17,7 @@ extern void func_CString(void);
 const struct test winetest_testlist[] =
 {
     { "atltypes", func_atltypes },
+    { "CAtlFileMapping", func_CAtlFileMapping },
     { "CComBSTR", func_CComBSTR },
     { "CComHeapPtr", func_CComHeapPtr },
     { "CComObject", func_CComObject },

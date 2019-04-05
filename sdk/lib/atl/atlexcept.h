@@ -9,6 +9,9 @@
 #endif
 #endif
 
+namespace ATL
+{
+
 
 //FIXME: Enable when RaiseException is marked as NORETURN
 //DECLSPEC_NORETURN
@@ -37,9 +40,11 @@ inline void AtlThrowImp(HRESULT hr)
 }
 
 
-
 #ifndef AtlThrow
 #define AtlThrow(x) AtlThrowImp(x)
 #endif
+
+
+}; // namespace ATL
 
 #endif

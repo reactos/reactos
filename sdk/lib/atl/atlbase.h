@@ -20,28 +20,18 @@
 
 #pragma once
 
+#include "atldef.h"
 #include "atlcore.h"
 #include "statreg.h"
 #include "atlcomcli.h"
 #include "atlalloc.h"
+#include "atlexcept.h"
 #include "comcat.h"
 #include "tchar.h"
 
 #ifdef _MSC_VER
 // It is common to use this in ATL constructors. They only store this for later use, so the usage is safe.
 #pragma warning(disable:4355)
-#endif
-
-#ifndef _ATL_PACKING
-#define _ATL_PACKING 8
-#endif
-
-#ifndef _ATL_FREE_THREADED
-#ifndef _ATL_APARTMENT_THREADED
-#ifndef _ATL_SINGLE_THREADED
-#define _ATL_FREE_THREADED
-#endif
-#endif
 #endif
 
 #ifndef ATLTRY
@@ -58,7 +48,6 @@
 #define ATL_DEPRECATED __declspec(deprecated)
 #endif
 
-#define offsetofclass(base, derived) (reinterpret_cast<DWORD_PTR>(static_cast<base *>(reinterpret_cast<derived *>(_ATL_PACKING))) - _ATL_PACKING)
 
 namespace ATL
 {
