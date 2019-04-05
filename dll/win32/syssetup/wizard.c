@@ -1602,6 +1602,7 @@ static struct ThemeInfo
 } Themes[] = {
     { MAKEINTRESOURCE(IDB_CLASSIC), IDS_CLASSIC, NULL },
     { MAKEINTRESOURCE(IDB_LAUTUS), IDS_LAUTUS, L"themes\\lautus\\lautus.msstyles" },
+    { MAKEINTRESOURCE(IDB_LUNAR), IDS_LUNAR, L"themes\\lunar\\lunar.msstyles" },
 };
 
 static INT_PTR CALLBACK

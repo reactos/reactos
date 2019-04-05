@@ -241,4 +241,5 @@ STRINGTABLE
 BEGIN
     IDS_CLASSIC "Classic"
     IDS_LAUTUS "Lautus"
+    IDS_LUNAR "Lunar"
 END
