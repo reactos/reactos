@@ -33,6 +33,7 @@ START_TEST(JapaneseCalendar)
     LCID lcid = MAKELCID(langid, SORT_DEFAULT);
     DWORD dwValue;
     CALTYPE type;
+    int ret;
     static const WCHAR s_szSeireki19[] = {0x897F, 0x66A6, '1', '9', 0}; // L"\u897F\u66A6" L"19"
     static const WCHAR s_szHeisei[] = {0x5E73, 0x6210, 0};  // L"\u5E73\u6210"
     static const WCHAR s_szHeisei31[] = {0x5E73, 0x6210, '3', '1', 0};  // L"\u5E73\u6210" L"31"
@@ -55,26 +56,30 @@ START_TEST(JapaneseCalendar)
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
-        GetDateFormatA(lcid, dwFlags, &st, "gyy", szTextA, ARRAYSIZE(szTextA));
+        ret = GetDateFormatA(lcid, dwFlags, &st, "gyy", szTextA, ARRAYSIZE(szTextA));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ lstrcmpiA(szTextA, "19") == 0 ||
            /* Win10 */ lstrcmpiA(szTextA, "\x90\xBC\x97\xEF" "19") == 0, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
-        GetDateFormatA(lcid, dwFlags, &st, "ggyy", szTextA, ARRAYSIZE(szTextA));
+        ret = GetDateFormatA(lcid, dwFlags, &st, "ggyy", szTextA, ARRAYSIZE(szTextA));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ lstrcmpiA(szTextA, "19") == 0 ||
            /* Win10 */ lstrcmpiA(szTextA, "\x90\xBC\x97\xEF" "19") == 0, "szTextA: %s\n", szTextA);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
-        GetDateFormatW(lcid, dwFlags, &st, L"gyy", szTextW, ARRAYSIZE(szTextW));
+        ret = GetDateFormatW(lcid, dwFlags, &st, L"gyy", szTextW, ARRAYSIZE(szTextW));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ lstrcmpiW(szTextW, L"19") == 0 ||
            /* Win10 */ lstrcmpiW(szTextW, s_szSeireki19) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
-        GetDateFormatW(lcid, dwFlags, &st, L"ggyy", szTextW, ARRAYSIZE(szTextW));
+        ret = GetDateFormatW(lcid, dwFlags, &st, L"ggyy", szTextW, ARRAYSIZE(szTextW));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ lstrcmpiW(szTextW, L"19") == 0 ||
            /* Win10 */ lstrcmpiW(szTextW, s_szSeireki19) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
@@ -86,23 +91,27 @@ START_TEST(JapaneseCalendar)
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
-        GetDateFormatA(lcid, dwFlags, &st, "gyy", szTextA, ARRAYSIZE(szTextA));
+        ret = GetDateFormatA(lcid, dwFlags, &st, "gyy", szTextA, ARRAYSIZE(szTextA));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC" "31") == 0, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
-        GetDateFormatA(lcid, dwFlags, &st, "ggyy", szTextA, ARRAYSIZE(szTextA));
+        ret = GetDateFormatA(lcid, dwFlags, &st, "ggyy", szTextA, ARRAYSIZE(szTextA));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC" "31") == 0, "szTextA: %s\n", szTextA);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
-        GetDateFormatW(lcid, dwFlags, &st, L"gyy", szTextW, ARRAYSIZE(szTextW));
+        ret = GetDateFormatW(lcid, dwFlags, &st, L"gyy", szTextW, ARRAYSIZE(szTextW));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiW(szTextW, s_szHeisei31) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
-        GetDateFormatW(lcid, dwFlags, &st, L"ggyy", szTextW, ARRAYSIZE(szTextW));
+        ret = GetDateFormatW(lcid, dwFlags, &st, L"ggyy", szTextW, ARRAYSIZE(szTextW));
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiW(szTextW, s_szHeisei31) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
     }
@@ -110,67 +119,78 @@ START_TEST(JapaneseCalendar)
     /* Japanese calendar-related locale info (MBCS) */
     {
         type = CAL_ICALINTVALUE | CAL_RETURN_NUMBER;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok_long(dwValue, 3);
 
         type = CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok_long(dwValue, 99);
 
         type = CAL_IYEAROFFSETRANGE | CAL_RETURN_NUMBER;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(dwValue == 1989 || dwValue == 2019, "dwValue was %ld\n", dwValue);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SABBREVERASTRING;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
-        //ok(lstrcmpiA(szTextA, "\x87\x7E") == 0 ||
-        //   lstrcmpiA(szTextA, "\x95\xBD\x90\xAC") == 0, "szTextA: %s\n", szTextA);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ok_int(ret, FALSE);
+        ok(lstrcmpiA(szTextA, "\x7F") == 0, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SCALNAME;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x98\x61\x97\xEF") == 0, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SERASTRING;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC") == 0, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SLONGDATE;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(strstr(szTextA, "\x94\x4E") != NULL, "szTextA: %s\n", szTextA);
 
         szTextA[0] = 0x7F;
         szTextA[1] = 0;
         type = CAL_SSHORTDATE;
-        GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ret = GetCalendarInfoA(lcid, CAL_JAPAN, type, szTextA, ARRAYSIZE(szTextA), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(strstr(szTextA, "/") != NULL, "szTextA: %s\n", szTextA);
     }
 
     /* Japanese calendar-related locale info (Unicode) */
     {
         type = CAL_ICALINTVALUE | CAL_RETURN_NUMBER;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok_long(dwValue, 3);
 
         type = CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok_long(dwValue, 99);
 
         type = CAL_IYEAROFFSETRANGE | CAL_RETURN_NUMBER;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, NULL, 0, &dwValue);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(dwValue == 1989 || dwValue == 2019, "dwValue was %ld\n", dwValue);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SABBREVERASTRING;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ok(/* WinXP */ ret == 0 || /* Win10 */ ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ (szTextW[0] == 0x7F && szTextW[1] == 0) ||
            /* Win10 */ lstrcmpiW(szTextW, s_szOneCharHeisei) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
@@ -178,25 +198,29 @@ START_TEST(JapaneseCalendar)
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SCALNAME;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(lstrcmpiW(szTextW, s_szWareki) == 0, "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SERASTRING;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(wcsstr(szTextW, s_szHeisei) != NULL, "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SLONGDATE;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(wcsstr(szTextW, s_szNen) != NULL, "\n");
 
         szTextW[0] = 0x7F;
         szTextW[1] = 0;
         type = CAL_SSHORTDATE;
-        GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ret = GetCalendarInfoW(lcid, CAL_JAPAN, type, szTextW, ARRAYSIZE(szTextW), NULL);
+        ok(ret != 0, "ret: %d\n", ret);
         ok(wcsstr(szTextW, L"/") != NULL, "\n");
     }
 }
