@@ -74,16 +74,18 @@ START_TEST(JapaneseCalendar)
     {
         DWORD dwFlags = DATE_USE_ALT_CALENDAR;
         GetDateFormatA(lcid, dwFlags, &st, "gg", szTextA, ARRAYSIZE(szTextA));
-        ok_int(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC"), 0);
+        ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC") == 0, "szTextA: %s\n", szTextA);
 
         GetDateFormatA(lcid, dwFlags, &st, "g", szTextA, ARRAYSIZE(szTextA));
-        ok_int(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC"), 0);
+        ok(lstrcmpiA(szTextA, "\x95\xBD\x90\xAC") == 0, "szTextA: %s\n", szTextA);
 
         GetDateFormatW(lcid, dwFlags, &st, L"gg", szTextW, ARRAYSIZE(szTextW));
-        ok_int(lstrcmpiW(szTextW, s_szHeisei), 0);
+        ok(lstrcmpiW(szTextW, s_szHeisei) == 0,
+           "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         GetDateFormatW(lcid, dwFlags, &st, L"g", szTextW, ARRAYSIZE(szTextW));
-        ok_int(lstrcmpiW(szTextW, s_szHeisei), 0);
+        ok(lstrcmpiW(szTextW, s_szHeisei) == 0,
+           "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
     }
 
     /* Japanese calendar-related locale info (MBCS) */
