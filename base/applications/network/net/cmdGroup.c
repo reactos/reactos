@@ -36,8 +36,8 @@ EnumerateGroups(VOID)
         return Status;
 
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_GROUP_GROUPS, pServer->sv100_name);
-    ConPuts(StdOut, L"\n\n");
+    PrintMessageStringV(4400, pServer->sv100_name);
+    ConPuts(StdOut, L"\n");
     PrintPadding(L'-', 79);
     ConPuts(StdOut, L"\n");
 
@@ -116,16 +116,16 @@ DisplayGroup(LPWSTR lpGroupName)
         pNames[i] = pUsers[i].grui0_name;
     }
 
-    PrintPaddedResourceString(IDS_GROUP_NAME, nPaddedLength);
+    PrintPaddedMessageString(4401, nPaddedLength);
     ConPrintf(StdOut, L"%s\n", pGroupInfo->grpi1_name);
 
-    PrintPaddedResourceString(IDS_GROUP_COMMENT, nPaddedLength);
+    PrintPaddedMessageString(4402, nPaddedLength);
     ConPrintf(StdOut, L"%s\n", pGroupInfo->grpi1_comment);
 
     ConPuts(StdOut, L"\n");
 
-    ConResPuts(StdOut, IDS_GROUP_MEMBERS);
-    ConPuts(StdOut, L"\n\n");
+    PrintMessageString(4403);
+    ConPuts(StdOut, L"\n");
 
     PrintPadding(L'-', 79);
     ConPuts(StdOut, L"\n");

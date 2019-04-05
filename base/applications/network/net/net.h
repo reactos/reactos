@@ -40,6 +40,20 @@ PrintPadding(
     INT nPaddedLength);
 
 VOID
+PrintMessageString(
+    DWORD dwMessage);
+
+VOID
+PrintMessageStringV(
+    DWORD dwMessage,
+    ...);
+
+VOID
+PrintPaddedMessageString(
+    DWORD dwMessage,
+    INT nPaddedLength);
+
+VOID
 PrintErrorMessage(
     DWORD dwError);
 

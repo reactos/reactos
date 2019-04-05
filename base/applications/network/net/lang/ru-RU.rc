@@ -6,14 +6,6 @@ STRINGTABLE
 BEGIN
     IDS_ACCOUNTS_FORCE_LOGOFF "Принудительный выход через"
     IDS_ACCOUNTS_LOGOFF_SECONDS "%lu секунд"
-    IDS_ACCOUNTS_MIN_PW_AGE "Минимальный срок действия пароля (дней)"
-    IDS_ACCOUNTS_MAX_PW_AGE "Максимальный срок действия пароля (дней)"
-    IDS_ACCOUNTS_MIN_PW_LENGTH "Минимальная длина пароля"
-    IDS_ACCOUNTS_PW_HIST_LENGTH "Длина истории паролей"
-    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Блокировка после ошибок ввода пароля"
-    IDS_ACCOUNTS_LOCKOUT_DURATION "Длительность блокировки (минут)"
-    IDS_ACCOUNTS_LOCKOUT_WINDOW "Сброс счетчика блокировок через (минут)"
-    IDS_ACCOUNTS_COMPUTER_ROLE "Роль компьютера"
     IDS_ACCOUNTS_PRIMARY_SERVER "Основной сервер"
     IDS_ACCOUNTS_BACKUP_SERVER "Резервный сервер"
     IDS_ACCOUNTS_STANDALONE_SERVER "Автономный сервер"
@@ -36,16 +28,6 @@ BEGIN
     IDS_CONFIG_WORKSTATION_VERSION "Версия программы"
     IDS_CONFIG_WORKSTATION_DOMAIN "Домен рабочей станции"
     IDS_CONFIG_WORKSTATION_LOGON "Домен входа"
-
-    IDS_GROUP_GROUPS "Учетные записи групп для \\\\%s"
-    IDS_GROUP_NAME "Имя группы"
-    IDS_GROUP_COMMENT "Комментарий"
-    IDS_GROUP_MEMBERS "Члены"
-
-    IDS_LOCALGROUP_ALIASES "Псевдонимы для \\\\%s"
-    IDS_LOCALGROUP_ALIAS_NAME "Имя псевдонима"
-    IDS_LOCALGROUP_COMMENT "Комментарий"
-    IDS_LOCALGROUP_MEMBERS "Члены"
 
     IDS_STATISTICS_TEXT "Статистика доступна для следующих выполняющихся служб:\n\n\
    Сервер\n   Рабочая станция\n\n"

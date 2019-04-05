@@ -3,14 +3,6 @@ STRINGTABLE
 BEGIN
     IDS_ACCOUNTS_FORCE_LOGOFF "Wymuś wylogowanie po upływie"
     IDS_ACCOUNTS_LOGOFF_SECONDS "%lu sekund"
-    IDS_ACCOUNTS_MIN_PW_AGE "Minimalny okres ważności hasła (dni)"
-    IDS_ACCOUNTS_MAX_PW_AGE "Maksymalny okres ważności hasła (dni)"
-    IDS_ACCOUNTS_MIN_PW_LENGTH "Minimalna długość hasła"
-    IDS_ACCOUNTS_PW_HIST_LENGTH "Długość zapamiętywanej historii haseł"
-    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Próg blokady"
-    IDS_ACCOUNTS_LOCKOUT_DURATION "Czas trwania blokady (minuty)"
-    IDS_ACCOUNTS_LOCKOUT_WINDOW "Okno obserwowania blokady (minuty)"
-    IDS_ACCOUNTS_COMPUTER_ROLE "Rola komputera"
     IDS_ACCOUNTS_PRIMARY_SERVER "Serwer podstawowy"
     IDS_ACCOUNTS_BACKUP_SERVER "Serwer zapasowy"
     IDS_ACCOUNTS_STANDALONE_SERVER "Serwer autonomiczny"
@@ -33,16 +25,6 @@ BEGIN
     IDS_CONFIG_WORKSTATION_VERSION "Wersja oprogramowania"
     IDS_CONFIG_WORKSTATION_DOMAIN "Domena stacji roboczej"
     IDS_CONFIG_WORKSTATION_LOGON "Domena logowania"
-
-    IDS_GROUP_GROUPS "Konta grupowe dla \\\\%s"
-    IDS_GROUP_NAME "Nazwa grupy"
-    IDS_GROUP_COMMENT "Komentarz"
-    IDS_GROUP_MEMBERS "Członkowie"
-
-    IDS_LOCALGROUP_ALIASES "Aliasy dla \\\\%s"
-    IDS_LOCALGROUP_ALIAS_NAME "Nazwa aliasu"
-    IDS_LOCALGROUP_COMMENT "Komentarz"
-    IDS_LOCALGROUP_MEMBERS "Członkowie"
 
     IDS_STATISTICS_TEXT "Dostępne są statystyki dla następujących uruchomionych obecnie usług:\n\n\
    Serwer\n   Stacja robocza\n\n"

@@ -10,14 +10,6 @@ STRINGTABLE
 BEGIN
     IDS_ACCOUNTS_FORCE_LOGOFF "Forțează deautentificarea după"
     IDS_ACCOUNTS_LOGOFF_SECONDS "%lu secunde"
-    IDS_ACCOUNTS_MIN_PW_AGE "Vârsta minimă a parolei (în zile)"
-    IDS_ACCOUNTS_MAX_PW_AGE "Vârsta maximă a parolei (în zile)"
-    IDS_ACCOUNTS_MIN_PW_LENGTH "Lungimea minimă a parolei"
-    IDS_ACCOUNTS_PW_HIST_LENGTH "Lungimea istoricului parolei"
-    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Pragul de blocare"
-    IDS_ACCOUNTS_LOCKOUT_DURATION "Durata de blocare (în minute)"
-    IDS_ACCOUNTS_LOCKOUT_WINDOW "Fereastra de observare a blocării (în minute)"
-    IDS_ACCOUNTS_COMPUTER_ROLE "Rolul calculatorului"
     IDS_ACCOUNTS_PRIMARY_SERVER "Server primar"
     IDS_ACCOUNTS_BACKUP_SERVER "Server de rezervă"
     IDS_ACCOUNTS_STANDALONE_SERVER "Server de sine stătător"
@@ -40,16 +32,6 @@ BEGIN
     IDS_CONFIG_WORKSTATION_VERSION "Versiune de program"
     IDS_CONFIG_WORKSTATION_DOMAIN "Domeniu de calculator"
     IDS_CONFIG_WORKSTATION_LOGON "Domeniu de autentificare"
-
-    IDS_GROUP_GROUPS "Conturile de grup pentru \\\\%s"
-    IDS_GROUP_NAME "Nume de grup"
-    IDS_GROUP_COMMENT "Comentariu"
-    IDS_GROUP_MEMBERS "Membri"
-
-    IDS_LOCALGROUP_ALIASES "Alias pentru \\\\%s"
-    IDS_LOCALGROUP_ALIAS_NAME "Nume alias"
-    IDS_LOCALGROUP_COMMENT "Comentariu"
-    IDS_LOCALGROUP_MEMBERS "Membri"
 
     IDS_STATISTICS_TEXT "Statistici disponibile pentru următoarele servicii:\n\n\
    Server\n   Stație de lucru\n\n"

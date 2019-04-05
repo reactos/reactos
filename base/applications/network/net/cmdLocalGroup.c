@@ -39,8 +39,8 @@ EnumerateLocalGroups(VOID)
         return Status;
 
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_LOCALGROUP_ALIASES, pServer->sv100_name);
-    ConPuts(StdOut, L"\n\n");
+    PrintMessageStringV(4405, pServer->sv100_name);
+    ConPuts(StdOut, L"\n");
     PrintPadding(L'-', 79);
     ConPuts(StdOut, L"\n");
 
@@ -131,16 +131,16 @@ DisplayLocalGroup(LPWSTR lpGroupName)
              pNames[i] = pMembers[i].lgrmi3_domainandname;
     }
 
-    PrintPaddedResourceString(IDS_LOCALGROUP_ALIAS_NAME, nPaddedLength);
+    PrintPaddedMessageString(4406, nPaddedLength);
     ConPrintf(StdOut, L"%s\n", pGroupInfo->lgrpi1_name);
 
-    PrintPaddedResourceString(IDS_LOCALGROUP_COMMENT, nPaddedLength);
+    PrintPaddedMessageString(4407, nPaddedLength);
     ConPrintf(StdOut, L"%s\n", pGroupInfo->lgrpi1_comment);
 
     ConPuts(StdOut, L"\n");
 
-    ConResPuts(StdOut, IDS_LOCALGROUP_MEMBERS);
-    ConPuts(StdOut, L"\n\n");
+    PrintMessageString(4408);
+    ConPuts(StdOut, L"\n");
 
     PrintPadding(L'-', 79);
     ConPuts(StdOut, L"\n");

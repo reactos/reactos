@@ -7,14 +7,6 @@ STRINGTABLE
 BEGIN
     IDS_ACCOUNTS_FORCE_LOGOFF "Forzar cierre de sesión tras"
     IDS_ACCOUNTS_LOGOFF_SECONDS "%lu segundos"
-    IDS_ACCOUNTS_MIN_PW_AGE "Validez mínima de contraseña (en días)"
-    IDS_ACCOUNTS_MAX_PW_AGE "Validez máxima de contraseña (en días)"
-    IDS_ACCOUNTS_MIN_PW_LENGTH "Tamaño mínimo de contraseña"
-    IDS_ACCOUNTS_PW_HIST_LENGTH "Duración del historial de contraseñas"
-    IDS_ACCOUNTS_LOCKOUT_THRESHOLD "Umbral de bloqueo"
-    IDS_ACCOUNTS_LOCKOUT_DURATION "Duración del bloqueo (en minutos)"
-    IDS_ACCOUNTS_LOCKOUT_WINDOW "Ventana de cumpl. de bloqueo (en minutos)"
-    IDS_ACCOUNTS_COMPUTER_ROLE "Rol del equipo"
     IDS_ACCOUNTS_PRIMARY_SERVER "Servidor primario"
     IDS_ACCOUNTS_BACKUP_SERVER "Servidor de respaldo"
     IDS_ACCOUNTS_STANDALONE_SERVER "Servidor independiente"
@@ -37,16 +29,6 @@ BEGIN
     IDS_CONFIG_WORKSTATION_VERSION "Software version"
     IDS_CONFIG_WORKSTATION_DOMAIN "Workstation domain"
     IDS_CONFIG_WORKSTATION_LOGON "Logon domain"
-
-    IDS_GROUP_GROUPS "Group Accounts for \\\\%s"
-    IDS_GROUP_NAME "Group name"
-    IDS_GROUP_COMMENT "Comment"
-    IDS_GROUP_MEMBERS "Members"
-
-    IDS_LOCALGROUP_ALIASES "Alias de \\\\%s"
-    IDS_LOCALGROUP_ALIAS_NAME "Nombre del alias"
-    IDS_LOCALGROUP_COMMENT "Comentario"
-    IDS_LOCALGROUP_MEMBERS "Miembros"
 
     IDS_STATISTICS_TEXT "Statistics are available for the following services:\n\n\
    Server\n   Workstation\n\n"

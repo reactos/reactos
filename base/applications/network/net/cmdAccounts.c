@@ -179,36 +179,36 @@ cmdAccounts(
             ConResPrintf(StdOut, IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
         ConPuts(StdOut, L"\n");
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_AGE, nPaddedLength);
+        PrintPaddedMessageString(4572, nPaddedLength);
         ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_min_passwd_age / 86400);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_MAX_PW_AGE, nPaddedLength);
+        PrintPaddedMessageString(4573, nPaddedLength);
         ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_max_passwd_age / 86400);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_MIN_PW_LENGTH, nPaddedLength);
+        PrintPaddedMessageString(4574, nPaddedLength);
         ConPrintf(StdOut, L"%lu\n", Info0->usrmod0_min_passwd_len);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_PW_HIST_LENGTH, nPaddedLength);
+        PrintPaddedMessageString(4575, nPaddedLength);
         if (Info0->usrmod0_password_hist_len == 0)
             ConResPuts(StdOut, IDS_GENERIC_NONE);
         else
             ConPrintf(StdOut, L"%lu", Info0->usrmod0_password_hist_len);
         ConPuts(StdOut, L"\n");
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_THRESHOLD, nPaddedLength);
+        PrintPaddedMessageString(4578, nPaddedLength);
         if (Info3->usrmod3_lockout_threshold == 0)
             ConResPuts(StdOut, IDS_GENERIC_NEVER);
         else
             ConPrintf(StdOut, L"%lu", Info3->usrmod3_lockout_threshold);
         ConPuts(StdOut, L"\n");
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_DURATION, nPaddedLength);
+        PrintPaddedMessageString(4579, nPaddedLength);
         ConPrintf(StdOut, L"%lu\n", Info3->usrmod3_lockout_duration / 60);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_LOCKOUT_WINDOW, nPaddedLength);
+        PrintPaddedMessageString(4580, nPaddedLength);
         ConPrintf(StdOut, L"%lu\n", Info3->usrmod3_lockout_observation_window / 60);
 
-        PrintPaddedResourceString(IDS_ACCOUNTS_COMPUTER_ROLE, nPaddedLength);
+        PrintPaddedMessageString(4576, nPaddedLength);
         if (Info1->usrmod1_role == UAS_ROLE_PRIMARY)
         {
             if (ProductType == NtProductLanManNt)

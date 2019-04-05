@@ -22428,13 +22428,13 @@ Language=English
 Group Accounts for \\\\%1
 .
 Language=Polish
-Group Accounts for \\\\%1
+Konta grupowe dla \\\\%1
 .
 Language=Romanian
-Group Accounts for \\\\%1
+Conturile de grup pentru \\\\%1
 .
 Language=Russian
-Group Accounts for \\\\%1
+Учетные записи групп для \\\\%1
 .
 Language=Spanish
 Group Accounts for \\\\%1
@@ -22457,13 +22457,13 @@ Language=English
 Group name%0
 .
 Language=Polish
-Group name%0
+Nazwa grupy%0
 .
 Language=Romanian
-Group name%0
+Nume de grup%0
 .
 Language=Russian
-Group name%0
+Имя группы%0
 .
 Language=Spanish
 Group name%0
@@ -22486,25 +22486,25 @@ Language=English
 Comment%0
 .
 Language=Polish
-Comment%0
+Komentarz%0
 .
 Language=Romanian
-Comment%0
+Comentariu%0
 .
 Language=Russian
-Comment%0
+Комментарий%0
 .
 Language=Spanish
-Comment%0
+Comentario%0
 .
 Language=Turkish
-Comment%0
+Açıklama%0
 .
 Language=Chinese
-Comment%0
+注释%0
 .
 Language=Taiwanese
-Comment%0
+評論%0
 .
 
 MessageId=4403
@@ -22515,25 +22515,25 @@ Language=English
 Members
 .
 Language=Polish
-Members
+Członkowie
 .
 Language=Romanian
-Members
+Membri
 .
 Language=Russian
-Members
+Члены
 .
 Language=Spanish
-Members
+Miembros
 .
 Language=Turkish
-Members
+Üyeler
 .
 Language=Chinese
-Members
+成员
 .
 Language=Taiwanese
-Members
+成員
 .
 
 MessageId=4405
@@ -22544,25 +22544,25 @@ Language=English
 Aliases for \\\\%1
 .
 Language=Polish
-Aliases for \\\\%1
+Aliasy dla \\\\%1
 .
 Language=Romanian
-Aliases for \\\\%1
+Alias pentru \\\\%1
 .
 Language=Russian
-Aliases for \\\\%1
+Псевдонимы для \\\\%1
 .
 Language=Spanish
-Aliases for \\\\%1
+Alias de \\\\%1
 .
 Language=Turkish
-Aliases for \\\\%1
+\\\\%s için başka adlar
 .
 Language=Chinese
-Aliases for \\\\%1
+\\\\%s 的别名
 .
 Language=Taiwanese
-Aliases for \\\\%1
+別名 \\\\%s
 .
 
 MessageId=4406
@@ -22573,25 +22573,25 @@ Language=English
 Alias name%0
 .
 Language=Polish
-Alias name%0
+Nazwa aliasu%0
 .
 Language=Romanian
-Alias name%0
+Nume alias%0
 .
 Language=Russian
-Alias name%0
+Имя псевдонима%0
 .
 Language=Spanish
-Alias name%0
+Nombre del alias%0
 .
 Language=Turkish
-Alias name%0
+Başka ad%0
 .
 Language=Chinese
-Alias name%0
+别名名称%0
 .
 Language=Taiwanese
-Alias name%0
+別名名稱%0
 .
 
 MessageId=4407
@@ -22602,25 +22602,25 @@ Language=English
 Comment%0
 .
 Language=Polish
-Comment%0
+Komentarz%0
 .
 Language=Romanian
-Comment%0
+Comentariu%0
 .
 Language=Russian
-Comment%0
+Комментарий%0
 .
 Language=Spanish
-Comment%0
+Comentario%0
 .
 Language=Turkish
-Comment%0
+Açıklama%0
 .
 Language=Chinese
-Comment%0
+注释%0
 .
 Language=Taiwanese
-Comment%0
+評論%0
 .
 
 MessageId=4408
@@ -22631,25 +22631,25 @@ Language=English
 Members
 .
 Language=Polish
-Members
+Członkowie
 .
 Language=Romanian
-Members
+Membri
 .
 Language=Russian
-Members
+Члены
 .
 Language=Spanish
-Members
+Miembros
 .
 Language=Turkish
-Members
+Üyeler
 .
 Language=Chinese
-Members
+成员
 .
 Language=Taiwanese
-Members
+成員
 .
 
 MessageId=4410
