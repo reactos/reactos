@@ -9049,7 +9049,31 @@ Language=English
 Drive %1 is nearly full. %2 bytes are available.\n
 Please warn users and delete unneeded files.
 .
+Language=Polish
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Romanian
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
 Language=Russian
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Spanish
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Turkish
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Chinese
+Drive %1 is nearly full. %2 bytes are available.\n
+Please warn users and delete unneeded files.
+.
+Language=Taiwanese
 Drive %1 is nearly full. %2 bytes are available.\n
 Please warn users and delete unneeded files.
 .
@@ -9062,7 +9086,31 @@ Language=English
 %1 errors were logged in the last %2 minutes.\n
 Please review the server's error log.
 .
+Language=Polish
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Romanian
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
 Language=Russian
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Spanish
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Turkish
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Chinese
+%1 errors were logged in the last %2 minutes.\n
+Please review the server's error log.
+.
+Language=Taiwanese
 %1 errors were logged in the last %2 minutes.\n
 Please review the server's error log.
 .
@@ -9076,7 +9124,37 @@ Language=English
 Please review the server's error log.  The server and/or\n
 network hardware may need service.
 .
+Language=Polish
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Romanian
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
 Language=Russian
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Spanish
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Turkish
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Chinese
+%1 network errors occurred in the last %2 minutes.\n
+Please review the server's error log.  The server and/or\n
+network hardware may need service.
+.
+Language=Taiwanese
 %1 network errors occurred in the last %2 minutes.\n
 Please review the server's error log.  The server and/or\n
 network hardware may need service.
@@ -9090,7 +9168,31 @@ Language=English
 There were %1 bad password attempts in the last %2 minutes.\n
 Please review the server's audit trail.
 .
+Language=Polish
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Romanian
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
 Language=Russian
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Spanish
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Turkish
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Chinese
+There were %1 bad password attempts in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Taiwanese
 There were %1 bad password attempts in the last %2 minutes.\n
 Please review the server's audit trail.
 .
@@ -9103,7 +9205,31 @@ Language=English
 There were %1 access-denied errors in the last %2 minutes.\n
 Please review the server's audit trail.
 .
+Language=Polish
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Romanian
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
 Language=Russian
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Spanish
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Turkish
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Chinese
+There were %1 access-denied errors in the last %2 minutes.\n
+Please review the server's audit trail.
+.
+Language=Taiwanese
 There were %1 access-denied errors in the last %2 minutes.\n
 Please review the server's audit trail.
 .
@@ -9116,7 +9242,31 @@ Language=English
 The error log is full.  No errors will be logged until\n
 the file is cleared or the limit is raised.
 .
+Language=Polish
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Romanian
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
 Language=Russian
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Spanish
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Turkish
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Chinese
+The error log is full.  No errors will be logged until\n
+the file is cleared or the limit is raised.
+.
+Language=Taiwanese
 The error log is full.  No errors will be logged until\n
 the file is cleared or the limit is raised.
 .
@@ -9158,7 +9308,31 @@ Language=English
 The audit log is full.  No audit entries will be logged\n
 until the file is cleared or the limit is raised.
 .
+Language=Polish
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Romanian
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
 Language=Russian
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Spanish
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Turkish
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Chinese
+The audit log is full.  No audit entries will be logged\n
+until the file is cleared or the limit is raised.
+.
+Language=Taiwanese
 The audit log is full.  No audit entries will be logged\n
 until the file is cleared or the limit is raised.
 .
@@ -9200,7 +9374,31 @@ Language=English
 An error occurred closing file %1.\n
 Please check the file to make sure it is not corrupted.
 .
+Language=Polish
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Romanian
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
 Language=Russian
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Spanish
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Turkish
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Chinese
+An error occurred closing file %1.\n
+Please check the file to make sure it is not corrupted.
+.
+Language=Taiwanese
 An error occurred closing file %1.\n
 Please check the file to make sure it is not corrupted.
 .
@@ -9358,7 +9556,31 @@ Language=English
 There is a problem with a configuration of user specified\n
 shut down command file.  The UPS service started anyway.
 .
+Language=Polish
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Romanian
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
 Language=Russian
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Spanish
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Turkish
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Chinese
+There is a problem with a configuration of user specified\n
+shut down command file.  The UPS service started anyway.
+.
+Language=Taiwanese
 There is a problem with a configuration of user specified\n
 shut down command file.  The UPS service started anyway.
 .
@@ -9373,7 +9595,43 @@ No data was lost.  You should run CHKDSK soon to restore full\n
 performance and replenish the volume's spare sector pool.\n\n
 The hotfix occurred while processing a remote request.
 .
+Language=Polish
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Romanian
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
 Language=Russian
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Spanish
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Turkish
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Chinese
+A defective sector on drive %1 has been replaced (hotfixed).\n
+No data was lost.  You should run CHKDSK soon to restore full\n
+performance and replenish the volume's spare sector pool.\n\n
+The hotfix occurred while processing a remote request.
+.
+Language=Taiwanese
 A defective sector on drive %1 has been replaced (hotfixed).\n
 No data was lost.  You should run CHKDSK soon to restore full\n
 performance and replenish the volume's spare sector pool.\n\n
@@ -9388,7 +9646,31 @@ Language=English
 A disk error occurred on the HPFS volume in drive %1.\n
 The error occurred while processing a remote request.
 .
+Language=Polish
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Romanian
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
 Language=Russian
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Spanish
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Turkish
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Chinese
+A disk error occurred on the HPFS volume in drive %1.\n
+The error occurred while processing a remote request.
+.
+Language=Taiwanese
 A disk error occurred on the HPFS volume in drive %1.\n
 The error occurred while processing a remote request.
 .
@@ -9403,7 +9685,43 @@ system is replacing the corrupted NET.ACC with the backup\n
 made on %1 at %2.\n
 Any updates made to the database after this time are lost.\n
 .
+Language=Polish
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Romanian
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
 Language=Russian
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Spanish
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Turkish
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Chinese
+The user accounts database (NET.ACC) is corrupted.  The local security\n
+system is replacing the corrupted NET.ACC with the backup\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Taiwanese
 The user accounts database (NET.ACC) is corrupted.  The local security\n
 system is replacing the corrupted NET.ACC with the backup\n
 made on %1 at %2.\n
@@ -9420,7 +9738,43 @@ security system is restoring the backup database\n
 made on %1 at %2.\n
 Any updates made to the database after this time are lost.\n
 .
+Language=Polish
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Romanian
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
 Language=Russian
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Spanish
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Turkish
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Chinese
+The user accounts database (NET.ACC) is missing. The local\n
+security system is restoring the backup database\n
+made on %1 at %2.\n
+Any updates made to the database after this time are lost.\n
+.
+Language=Taiwanese
 The user accounts database (NET.ACC) is missing. The local\n
 security system is restoring the backup database\n
 made on %1 at %2.\n
@@ -9437,7 +9791,43 @@ Local security could not be started because the user accounts database\n
 database was present.\n\n
 THE SYSTEM IS NOT SECURE.\n"
 .
+Language=Polish
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Romanian
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
 Language=Russian
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Spanish
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Turkish
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Chinese
+Local security could not be started because the user accounts database\n
+(NET.ACC) was missing or corrupted, and no usable backup\n
+database was present.\n\n
+THE SYSTEM IS NOT SECURE.\n"
+.
+Language=Taiwanese
 Local security could not be started because the user accounts database\n
 (NET.ACC) was missing or corrupted, and no usable backup\n
 database was present.\n\n
@@ -9452,7 +9842,31 @@ Language=English
 The server cannot export directory %1, to client %2.\n
 It is exported from another server.
 .
+Language=Polish
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
+Language=Romanian
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
 Language=Russian
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
+Language=Spanish
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
+Language=Turkish
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
+Language=Chinese
+The server cannot export directory %1, to client %2.\n
+It is exported from another server.
+.
+Language=Taiwanese
 The server cannot export directory %1, to client %2.\n
 It is exported from another server.
 .
@@ -9465,7 +9879,31 @@ Language=English
 The replication server could not update directory %2 from the source\n
 on %3 due to error %1.
 .
+Language=Polish
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Romanian
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
 Language=Russian
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Spanish
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Turkish
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Chinese
+The replication server could not update directory %2 from the source\n
+on %3 due to error %1.
+.
+Language=Taiwanese
 The replication server could not update directory %2 from the source\n
 on %3 due to error %1.
 .
@@ -9478,7 +9916,31 @@ Language=English
 Master %1 did not send an update notice for directory %2 at the expected\n
 time.
 .
+Language=Polish
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Romanian
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
 Language=Russian
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Spanish
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Turkish
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Chinese
+Master %1 did not send an update notice for directory %2 at the expected\n
+time.
+.
+Language=Taiwanese
 Master %1 did not send an update notice for directory %2 at the expected\n
 time.
 .
@@ -9549,7 +10011,31 @@ Language=English
 Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
 domain %1.
 .
+Language=Polish
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Romanian
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
 Language=Russian
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Spanish
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Turkish
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Chinese
+Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
+domain %1.
+.
+Language=Taiwanese
 Failed to authenticate with %2, a Windows NT or Windows 2000 Domain Controller for\n
 domain %1.
 .
@@ -9620,7 +10106,31 @@ Language=English
 Replicator could not access %2\n
 on %3 due to system error %1.
 .
+Language=Polish
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Romanian
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
 Language=Russian
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Spanish
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Turkish
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Chinese
+Replicator could not access %2\n
+on %3 due to system error %1.
+.
+Language=Taiwanese
 Replicator could not access %2\n
 on %3 due to system error %1.
 .
@@ -9691,7 +10201,31 @@ Language=English
 The replicator cannot update directory %1. It has tree integrity\n
 and is the current directory for some process.
 .
+Language=Polish
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Romanian
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
 Language=Russian
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Spanish
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Turkish
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Chinese
+The replicator cannot update directory %1. It has tree integrity\n
+and is the current directory for some process.
+.
+Language=Taiwanese
 The replicator cannot update directory %1. It has tree integrity\n
 and is the current directory for some process.
 .
@@ -9762,7 +10296,31 @@ Language=English
 Cannot log on. User is currently logged on and argument TRYUSER\n
 is set to NO.
 .
+Language=Polish
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Romanian
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
 Language=Russian
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Spanish
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Turkish
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Chinese
+Cannot log on. User is currently logged on and argument TRYUSER\n
+is set to NO.
+.
+Language=Taiwanese
 Cannot log on. User is currently logged on and argument TRYUSER\n
 is set to NO.
 .
@@ -9862,7 +10420,31 @@ Language=English
 Replicator failed to update signal file in directory %2 due to\n
 %1 system error.
 .
+Language=Polish
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Romanian
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
 Language=Russian
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Spanish
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Turkish
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Chinese
+Replicator failed to update signal file in directory %2 due to\n
+%1 system error.
+.
+Language=Taiwanese
 Replicator failed to update signal file in directory %2 due to\n
 %1 system error.
 .
@@ -9880,7 +10462,31 @@ Language=English
 The Registry or the information you just typed includes an illegal\n
 value for \"%1\".
 .
+Language=Polish
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Romanian
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
 Language=Russian
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Spanish
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Turkish
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Chinese
+The Registry or the information you just typed includes an illegal\n
+value for \"%1\".
+.
+Language=Taiwanese
 The Registry or the information you just typed includes an illegal\n
 value for \"%1\".
 .
@@ -10821,7 +11427,31 @@ Language=English
 ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
 and reapply all ADDPAKs.
 .
+Language=Polish
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Romanian
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
 Language=Russian
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Spanish
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Turkish
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Chinese
+ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
+and reapply all ADDPAKs.
+.
+Language=Taiwanese
 ADDPAK file is corrupted.  Delete LANMAN\\NETPROG\\ADDPAK.SER\n
 and reapply all ADDPAKs.
 .
@@ -10951,7 +11581,37 @@ This computer is configured as a member of a workgroup, not as\n
 a member of a domain. The Netlogon service does not need to run in this\n
 configuration.
 .
+Language=Polish
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Romanian
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
 Language=Russian
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Spanish
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Turkish
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Chinese
+This computer is configured as a member of a workgroup, not as\n
+a member of a domain. The Netlogon service does not need to run in this\n
+configuration.
+.
+Language=Taiwanese
 This computer is configured as a member of a workgroup, not as\n
 a member of a domain. The Netlogon service does not need to run in this\n
 configuration.
@@ -10995,7 +11655,37 @@ This computer is configured to be the primary domain controller of its domain.\n
 However, the computer %1 is currently claiming to be the primary domain controller\n
 of the domain.
 .
+Language=Polish
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Romanian
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
 Language=Russian
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Spanish
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Turkish
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Chinese
+This computer is configured to be the primary domain controller of its domain.\n
+However, the computer %1 is currently claiming to be the primary domain controller\n
+of the domain.
+.
+Language=Taiwanese
 This computer is configured to be the primary domain controller of its domain.\n
 However, the computer %1 is currently claiming to be the primary domain controller\n
 of the domain.
@@ -13164,7 +13854,55 @@ same network using the same name or the password for this computer account\n
 is not recognized. If this message appears again, contact your system\n
 administrator.
 .
+Language=Polish
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Romanian
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
 Language=Russian
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Spanish
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Turkish
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Chinese
+This computer could not authenticate with %2, a domain controller\n
+for domain %1, and therefore this computer might deny logon requests.\n
+This inability to authenticate might be caused by another computer on the\n
+same network using the same name or the password for this computer account\n
+is not recognized. If this message appears again, contact your system\n
+administrator.
+.
+Language=Taiwanese
 This computer could not authenticate with %2, a domain controller\n
 for domain %1, and therefore this computer might deny logon requests.\n
 This inability to authenticate might be caused by another computer on the\n
@@ -13647,7 +14385,43 @@ because %1 does not support signing or sealing the Netlogon session.\n\n
 Either upgrade the Domain Controller or set the RequireSignOrSeal\n
 registry entry on this machine to 0.
 .
+Language=Polish
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Romanian
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
 Language=Russian
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Spanish
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Turkish
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Chinese
+The session setup to the Domain Controller %1 for the domain %2 failed\n
+because %1 does not support signing or sealing the Netlogon session.\n\n
+Either upgrade the Domain Controller or set the RequireSignOrSeal\n
+registry entry on this machine to 0.
+.
+Language=Taiwanese
 The session setup to the Domain Controller %1 for the domain %2 failed\n
 because %1 does not support signing or sealing the Netlogon session.\n\n
 Either upgrade the Domain Controller or set the RequireSignOrSeal\n
@@ -14127,7 +14901,37 @@ The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
 update in progress bit set upon opening, which means that the\n
 system crashed while working on the error log.
 .
+Language=Polish
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Romanian
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
 Language=Russian
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Spanish
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Turkish
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Chinese
+The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
+update in progress bit set upon opening, which means that the\n
+system crashed while working on the error log.
+.
+Language=Taiwanese
 The fault-tolerance error-log file, LANROOT\\LOGS\\FT.LOG, had the\n
 update in progress bit set upon opening, which means that the\n
 system crashed while working on the error log.
@@ -14639,7 +15443,31 @@ Language=English
 There was an error installing NETWKSTA.SYS.\n\n
 Press ENTER to continue.
 .
+Language=Polish
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Romanian
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
 Language=Russian
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Spanish
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Turkish
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Chinese
+There was an error installing NETWKSTA.SYS.\n\n
+Press ENTER to continue.
+.
+Language=Taiwanese
 There was an error installing NETWKSTA.SYS.\n\n
 Press ENTER to continue.
 .
@@ -14681,7 +15509,31 @@ Language=English
 Your logon time at %1 ends at %2.\n
 Please clean up and log off.
 .
+Language=Polish
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Romanian
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
 Language=Russian
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Spanish
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Turkish
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Chinese
+Your logon time at %1 ends at %2.\n
+Please clean up and log off.
+.
+Language=Taiwanese
 Your logon time at %1 ends at %2.\n
 Please clean up and log off.
 .
@@ -14783,7 +15635,43 @@ have not logged off at this time, your session will be\n
 disconnected, and any open files or devices you\n
 have open may lose data.
 .
+Language=Polish
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
+Language=Romanian
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
 Language=Russian
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
+Language=Spanish
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
+Language=Turkish
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
+Language=Chinese
+WARNING: You have until %1 to logoff. If you\n
+have not logged off at this time, your session will be\n
+disconnected, and any open files or devices you\n
+have open may lose data.
+.
+Language=Taiwanese
 WARNING: You have until %1 to logoff. If you\n
 have not logged off at this time, your session will be\n
 disconnected, and any open files or devices you\n
@@ -14798,7 +15686,31 @@ Language=English
 WARNING: You must log off at %1 now.  You have\n
 two minutes to log off, or you will be disconnected.
 .
+Language=Polish
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Romanian
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
 Language=Russian
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Spanish
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Turkish
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Chinese
+WARNING: You must log off at %1 now.  You have\n
+two minutes to log off, or you will be disconnected.
+.
+Language=Taiwanese
 WARNING: You must log off at %1 now.  You have\n
 two minutes to log off, or you will be disconnected.
 .
@@ -14811,7 +15723,31 @@ Language=English
 You have open files or devices, and a forced\n
 disconnection may cause you to lose data.
 .
+Language=Polish
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Romanian
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
 Language=Russian
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Spanish
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Turkish
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Chinese
+You have open files or devices, and a forced\n
+disconnection may cause you to lose data.
+.
+Language=Taiwanese
 You have open files or devices, and a forced\n
 disconnection may cause you to lose data.
 .
@@ -17875,7 +18811,31 @@ Language=English
 Arguments to NET USER are invalid. Check the minimum password\n
 length and/or arguments supplied.
 .
+Language=Polish
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Romanian
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
 Language=Russian
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Spanish
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Turkish
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Chinese
+Arguments to NET USER are invalid. Check the minimum password\n
+length and/or arguments supplied.
+.
+Language=Taiwanese
 Arguments to NET USER are invalid. Check the minimum password\n
 length and/or arguments supplied.
 .
@@ -17946,7 +18906,31 @@ Language=English
 The user was successfully created but could not be added\n
 to the USERS local group.
 .
+Language=Polish
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Romanian
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
 Language=Russian
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Spanish
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Turkish
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Chinese
+The user was successfully created but could not be added\n
+to the USERS local group.
+.
+Language=Taiwanese
 The user was successfully created but could not be added\n
 to the USERS local group.
 .
@@ -17988,7 +18972,31 @@ Language=English
 The dynamic-link library %1 could not be loaded, or an error\n
 occurred while trying to use it.
 .
+Language=Polish
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Romanian
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
 Language=Russian
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Spanish
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Turkish
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Chinese
+The dynamic-link library %1 could not be loaded, or an error\n
+occurred while trying to use it.
+.
+Language=Taiwanese
 The dynamic-link library %1 could not be loaded, or an error\n
 occurred while trying to use it.
 .
@@ -18588,7 +19596,73 @@ You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
 for the day of the month.\n\n
 You can specify the time in the 24 hour HH:MM format.
 .
+Language=Polish
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Romanian
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
 Language=Russian
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Spanish
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Turkish
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Chinese
+The syntax of this command is:\n\n
+AT [id] [/DELETE]\n
+AT time [/EVERY:date | /NEXT:date] command\n\n
+The AT command schedules a program command to run at a\n
+later date and time on a server.  It also displays the\n
+list of programs and commands scheduled to be run.\n\n
+You can specify the date as M,T,W,Th,F,Sa,Su or 1-31\n
+for the day of the month.\n\n
+You can specify the time in the 24 hour HH:MM format.
+.
+Language=Taiwanese
 The syntax of this command is:\n\n
 AT [id] [/DELETE]\n
 AT time [/EVERY:date | /NEXT:date] command\n\n
@@ -18608,7 +19682,31 @@ Language=English
 The AT command has timed-out.\n
 Please try again later.
 .
+Language=Polish
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Romanian
+The AT command has timed-out.\n
+Please try again later.
+.
 Language=Russian
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Spanish
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Turkish
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Chinese
+The AT command has timed-out.\n
+Please try again later.
+.
+Language=Taiwanese
 The AT command has timed-out.\n
 Please try again later.
 .
@@ -18621,7 +19719,31 @@ Language=English
 The minimum password age for user accounts cannot be greater\n
 than the maximum password age.
 .
+Language=Polish
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Romanian
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
 Language=Russian
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Spanish
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Turkish
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Chinese
+The minimum password age for user accounts cannot be greater\n
+than the maximum password age.
+.
+Language=Taiwanese
 The minimum password age for user accounts cannot be greater\n
 than the maximum password age.
 .
@@ -18634,7 +19756,31 @@ Language=English
 You have specified a value that is incompatible\n
 with servers with down-level software. Please specify a lower value.
 .
+Language=Polish
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Romanian
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
 Language=Russian
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Spanish
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Turkish
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Chinese
+You have specified a value that is incompatible\n
+with servers with down-level software. Please specify a lower value.
+.
+Language=Taiwanese
 You have specified a value that is incompatible\n
 with servers with down-level software. Please specify a lower value.
 .
@@ -18820,7 +19966,25 @@ SymbolicName=APPERR_3906
 Language=English
 ...
 .
+Language=Polish
+...
+.
+Language=Romanian
+...
+.
 Language=Russian
+...
+.
+Language=Spanish
+...
+.
+Language=Turkish
+...
+.
+Language=Chinese
+...
+.
+Language=Taiwanese
 ...
 .
 
@@ -18862,7 +20026,37 @@ The current local clock is %1\n
 Do you want to set the local computer's time to match the\n
 time at %2? %3: %0
 .
+Language=Polish
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Romanian
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
 Language=Russian
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Spanish
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Turkish
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Chinese
+The current local clock is %1\n
+Do you want to set the local computer's time to match the\n
+time at %2? %3: %0
+.
+Language=Taiwanese
+The current local clock is %1\n
 Do you want to set the local computer's time to match the\n
 time at %2? %3: %0
 .
@@ -19426,7 +20620,31 @@ Language=English
 The user was added but could not be enabled for File and Print\n
 Services for NetWare.
 .
+Language=Polish
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Romanian
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
 Language=Russian
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Spanish
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Turkish
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Chinese
+The user was added but could not be enabled for File and Print\n
+Services for NetWare.
+.
+Language=Taiwanese
 The user was added but could not be enabled for File and Print\n
 Services for NetWare.
 .
@@ -21503,7 +22721,31 @@ Language=English
 Type the domain or server where you want to change a password, or\n
 press ENTER if it is for domain %1: %0.
 .
+Language=Polish
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Romanian
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
 Language=Russian
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Spanish
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Turkish
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Chinese
+Type the domain or server where you want to change a password, or\n
+press ENTER if it is for domain %1: %0.
+.
+Language=Taiwanese
 Type the domain or server where you want to change a password, or\n
 press ENTER if it is for domain %1: %0.
 .
@@ -21980,7 +23222,31 @@ Language=English
 The string you have entered is too long. The maximum\n
 is %1, please reenter. %0
 .
+Language=Polish
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Romanian
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
 Language=Russian
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Spanish
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Turkish
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Chinese
+The string you have entered is too long. The maximum\n
+is %1, please reenter. %0
+.
+Language=Taiwanese
 The string you have entered is too long. The maximum\n
 is %1, please reenter. %0
 .
@@ -26691,7 +27957,31 @@ Language=English
 %1 was successfully removed from the list of shares the Server creates\n
 on startup.
 .
+Language=Polish
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Romanian
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
 Language=Russian
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Spanish
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Turkish
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Chinese
+%1 was successfully removed from the list of shares the Server creates\n
+on startup.
+.
+Language=Taiwanese
 %1 was successfully removed from the list of shares the Server creates\n
 on startup.
 .
@@ -27109,7 +28399,25 @@ SymbolicName=APPERR2_4703
 Language=English
 ...%0
 .
+Language=Polish
+...%0
+.
+Language=Romanian
+...%0
+.
 Language=Russian
+...%0
+.
+Language=Spanish
+...%0
+.
+Language=Turkish
+...%0
+.
+Language=Chinese
+...%0
+.
+Language=Taiwanese
 ...%0
 .
 
@@ -27991,7 +29299,31 @@ Language=English
 The share name entered may not be accessible from some MS-DOS workstations.\n
 Are you sure you want to use this share name? %1: %0
 .
+Language=Polish
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Romanian
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
 Language=Russian
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Spanish
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Turkish
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Chinese
+The share name entered may not be accessible from some MS-DOS workstations.\n
+Are you sure you want to use this share name? %1: %0
+.
+Language=Taiwanese
 The share name entered may not be accessible from some MS-DOS workstations.\n
 Are you sure you want to use this share name? %1: %0
 .
@@ -32208,7 +33540,25 @@ SymbolicName=APPERR2_5009
 Language=English
 
 .
+Language=Polish
+
+.
+Language=Romanian
+
+.
 Language=Russian
+
+.
+Language=Spanish
+
+.
+Language=Turkish
+
+.
+Language=Chinese
+
+.
+Language=Taiwanese
 
 .
 
@@ -32391,6 +33741,14 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_5016
 Language=English
+Printing Complete\n\n
+%1 printed successfully on %2.
+.
+Language=Polish
+Printing Complete\n\n
+%1 printed successfully on %2.
+.
+Language=Romanian
 Printing Complete\n\n
 %1 printed successfully on %2.
 .
@@ -32825,7 +34183,37 @@ The error code is %1.\n
 There was an error retrieving the message. Make sure the file\n
 NET.MSG is available.
 .
+Language=Polish
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
+Language=Romanian
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
 Language=Russian
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
+Language=Spanish
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
+Language=Turkish
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
+Language=Chinese
+The error code is %1.\n
+There was an error retrieving the message. Make sure the file\n
+NET.MSG is available.
+.
+Language=Taiwanese
 The error code is %1.\n
 There was an error retrieving the message. Make sure the file\n
 NET.MSG is available.
@@ -32840,7 +34228,37 @@ Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.\n\n
 For more help use the print troubleshooter.
 .
+Language=Polish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
+Language=Romanian
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
 Language=Russian
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
+Language=Spanish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
+Language=Turkish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
+Language=Chinese
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.\n\n
+For more help use the print troubleshooter.
+.
+Language=Taiwanese
 Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.\n\n
 For more help use the print troubleshooter.
@@ -32855,7 +34273,37 @@ Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
 For more help use the print troubleshooter.
 .
+Language=Polish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
+Language=Romanian
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
 Language=Russian
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
+Language=Spanish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
+Language=Turkish
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
+Language=Chinese
+Printing Failed\n\n
+\"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
+For more help use the print troubleshooter.
+.
+Language=Taiwanese
 Printing Failed\n\n
 \"%1\" failed to print on %2 on %3.  The Printer is %4.\n\n
 For more help use the print troubleshooter.
@@ -32869,7 +34317,31 @@ Language=English
 Printing Complete\n\n
 \"%1\" printed successfully on %2 on %3.
 .
+Language=Polish
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
+Language=Romanian
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
 Language=Russian
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
+Language=Spanish
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
+Language=Turkish
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
+Language=Chinese
+Printing Complete\n\n
+\"%1\" printed successfully on %2 on %3.
+.
+Language=Taiwanese
 Printing Complete\n\n
 \"%1\" printed successfully on %2 on %3.
 .
@@ -34768,7 +36240,37 @@ The password entered is longer than 14 characters.  Computers\n
 with Windows prior to Windows 2000 will not be able to use\n
 this account. Do you want to continue this operation? %1: %0
 .
+Language=Polish
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Romanian
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
 Language=Russian
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Spanish
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Turkish
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Chinese
+The password entered is longer than 14 characters.  Computers\n
+with Windows prior to Windows 2000 will not be able to use\n
+this account. Do you want to continue this operation? %1: %0
+.
+Language=Taiwanese
 The password entered is longer than 14 characters.  Computers\n
 with Windows prior to Windows 2000 will not be able to use\n
 this account. Do you want to continue this operation? %1: %0
@@ -34782,7 +36284,31 @@ Language=English
 %1 has a remembered connection to %2. Do you\n
 want to overwrite the remembered connection? %3: %0
 .
+Language=Polish
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Romanian
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
 Language=Russian
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Spanish
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Turkish
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Chinese
+%1 has a remembered connection to %2. Do you\n
+want to overwrite the remembered connection? %3: %0
+.
+Language=Taiwanese
 %1 has a remembered connection to %2. Do you\n
 want to overwrite the remembered connection? %3: %0
 .
@@ -34795,7 +36321,31 @@ Language=English
 Do you want to resume loading the profile?  The command which\n
 caused the error will be ignored. %1: %0
 .
+Language=Polish
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Romanian
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
 Language=Russian
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Spanish
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Turkish
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Chinese
+Do you want to resume loading the profile?  The command which\n
+caused the error will be ignored. %1: %0
+.
+Language=Taiwanese
 Do you want to resume loading the profile?  The command which\n
 caused the error will be ignored. %1: %0
 .
@@ -35162,7 +36712,31 @@ Language=English
 The network control block (NCB) request completed successfully.\n
 The NCB is the data.
 .
+Language=Polish
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Romanian
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
 Language=Russian
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Spanish
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Turkish
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Chinese
+The network control block (NCB) request completed successfully.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The network control block (NCB) request completed successfully.\n
 The NCB is the data.
 .
@@ -35176,7 +36750,37 @@ Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
 SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
 The NCB is the data.
 .
+Language=Polish
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Romanian
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
 Language=Russian
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Spanish
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Turkish
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Chinese
+Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
+SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
+The NCB is the data.
+.
+Language=Taiwanese
 Illegal network control block (NCB) buffer length on SEND DATAGRAM,\n
 SEND BROADCAST, ADAPTER STATUS, or SESSION STATUS.\n
 The NCB is the data.
@@ -35190,7 +36794,31 @@ Language=English
 The data descriptor array specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
+Language=Polish
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Romanian
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
 Language=Russian
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Spanish
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Turkish
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Chinese
+The data descriptor array specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Taiwanese
 The data descriptor array specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
@@ -35203,7 +36831,31 @@ Language=English
 The command specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
+Language=Polish
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Romanian
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
 Language=Russian
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Spanish
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Turkish
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Chinese
+The command specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The command specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
@@ -35216,7 +36868,31 @@ Language=English
 The message correlator specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
+Language=Polish
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Romanian
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
 Language=Russian
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Spanish
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Turkish
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Chinese
+The message correlator specified in the network control block (NCB) is\n
+invalid.  The NCB is the data.
+.
+Language=Taiwanese
 The message correlator specified in the network control block (NCB) is\n
 invalid.  The NCB is the data.
 .
@@ -35229,7 +36905,31 @@ Language=English
 A network control block (NCB) command timed-out.  The session may have\n
 terminated abnormally.  The NCB is the data.
 .
+Language=Polish
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Romanian
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
 Language=Russian
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Spanish
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Turkish
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Chinese
+A network control block (NCB) command timed-out.  The session may have\n
+terminated abnormally.  The NCB is the data.
+.
+Language=Taiwanese
 A network control block (NCB) command timed-out.  The session may have\n
 terminated abnormally.  The NCB is the data.
 .
@@ -35242,7 +36942,31 @@ Language=English
 An incomplete network control block (NCB) message was received.\n
 The NCB is the data.
 .
+Language=Polish
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Romanian
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
 Language=Russian
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Spanish
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Turkish
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Chinese
+An incomplete network control block (NCB) message was received.\n
+The NCB is the data.
+.
+Language=Taiwanese
 An incomplete network control block (NCB) message was received.\n
 The NCB is the data.
 .
@@ -35255,7 +36979,31 @@ Language=English
 The buffer address specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
+Language=Polish
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Romanian
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
 Language=Russian
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Spanish
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Turkish
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Chinese
+The buffer address specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The buffer address specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
@@ -35268,7 +37016,31 @@ Language=English
 The session number specified in the network control block (NCB) is not active.\n
 The NCB is the data.
 .
+Language=Polish
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Romanian
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
 Language=Russian
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Spanish
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Turkish
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Chinese
+The session number specified in the network control block (NCB) is not active.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The session number specified in the network control block (NCB) is not active.\n
 The NCB is the data.
 .
@@ -35281,7 +37053,31 @@ Language=English
 No resource was available in the network adapter.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+No resource was available in the network adapter.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 No resource was available in the network adapter.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35294,7 +37090,31 @@ Language=English
 The session specified in the network control block (NCB) was closed.\n
 The NCB is the data.
 .
+Language=Polish
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Romanian
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
 Language=Russian
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Spanish
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Turkish
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Chinese
+The session specified in the network control block (NCB) was closed.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The session specified in the network control block (NCB) was closed.\n
 The NCB is the data.
 .
@@ -35307,7 +37127,31 @@ Language=English
 The network control block (NCB) command was canceled.\n
 The NCB is the data.
 .
+Language=Polish
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Romanian
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
 Language=Russian
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Spanish
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Turkish
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Chinese
+The network control block (NCB) command was canceled.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The network control block (NCB) command was canceled.\n
 The NCB is the data.
 .
@@ -35320,7 +37164,31 @@ Language=English
 The message segment specified in the network control block (NCB) is\n
 illogical.  The NCB is the data.
 .
+Language=Polish
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Romanian
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
 Language=Russian
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Spanish
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Turkish
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Chinese
+The message segment specified in the network control block (NCB) is\n
+illogical.  The NCB is the data.
+.
+Language=Taiwanese
 The message segment specified in the network control block (NCB) is\n
 illogical.  The NCB is the data.
 .
@@ -35333,7 +37201,31 @@ Language=English
 The name already exists in the local adapter name table.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+The name already exists in the local adapter name table.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 The name already exists in the local adapter name table.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35346,7 +37238,31 @@ Language=English
 The network adapter name table is full.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+The network adapter name table is full.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 The network adapter name table is full.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35359,7 +37275,31 @@ Language=English
 The network name has active sessions and is now de-registered.\n
 The network control block (NCB) command completed.  The NCB is the data.
 .
+Language=Polish
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Romanian
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
 Language=Russian
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Spanish
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Turkish
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Chinese
+The network name has active sessions and is now de-registered.\n
+The network control block (NCB) command completed.  The NCB is the data.
+.
+Language=Taiwanese
 The network name has active sessions and is now de-registered.\n
 The network control block (NCB) command completed.  The NCB is the data.
 .
@@ -35373,7 +37313,37 @@ A previously issued Receive Lookahead command is active\n
 for this session.  The network control block (NCB) command was rejected.\n
 The NCB is the data.
 .
+Language=Polish
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Romanian
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
 Language=Russian
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Spanish
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Turkish
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Chinese
+A previously issued Receive Lookahead command is active\n
+for this session.  The network control block (NCB) command was rejected.\n
+The NCB is the data.
+.
+Language=Taiwanese
 A previously issued Receive Lookahead command is active\n
 for this session.  The network control block (NCB) command was rejected.\n
 The NCB is the data.
@@ -35387,7 +37357,31 @@ Language=English
 The local session table is full. The network control block (NCB) request was refused.\n
 The NCB is the data.
 .
+Language=Polish
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Romanian
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
 Language=Russian
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Spanish
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Turkish
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Chinese
+The local session table is full. The network control block (NCB) request was refused.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The local session table is full. The network control block (NCB) request was refused.\n
 The NCB is the data.
 .
@@ -35400,7 +37394,31 @@ Language=English
 A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
 on the remote computer.  The NCB is the data.
 .
+Language=Polish
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Romanian
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
 Language=Russian
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Spanish
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Turkish
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Chinese
+A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
+on the remote computer.  The NCB is the data.
+.
+Language=Taiwanese
 A network control block (NCB) session open was rejected.  No LISTEN is outstanding\n
 on the remote computer.  The NCB is the data.
 .
@@ -35413,7 +37431,31 @@ Language=English
 The name number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
+Language=Polish
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Romanian
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
 Language=Russian
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Spanish
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Turkish
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Chinese
+The name number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The name number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
@@ -35426,7 +37468,31 @@ Language=English
 The call name specified in the network control block (NCB) cannot be found or\n
 did not answer.  The NCB is the data.
 .
+Language=Polish
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Romanian
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
 Language=Russian
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Spanish
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Turkish
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Chinese
+The call name specified in the network control block (NCB) cannot be found or\n
+did not answer.  The NCB is the data.
+.
+Language=Taiwanese
 The call name specified in the network control block (NCB) cannot be found or\n
 did not answer.  The NCB is the data.
 .
@@ -35439,7 +37505,31 @@ Language=English
 The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
 00h in the NCB name.  The NCB is the data.
 .
+Language=Polish
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Romanian
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
 Language=Russian
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Spanish
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Turkish
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Chinese
+The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
+00h in the NCB name.  The NCB is the data.
+.
+Language=Taiwanese
 The name specified in the network control block (NCB) was not found.  Cannot put '*' or\n
 00h in the NCB name.  The NCB is the data.
 .
@@ -35452,7 +37542,31 @@ Language=English
 The name specified in the network control block (NCB) is in use on a remote adapter.\n
 The NCB is the data.
 .
+Language=Polish
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Romanian
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
 Language=Russian
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Spanish
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Turkish
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Chinese
+The name specified in the network control block (NCB) is in use on a remote adapter.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The name specified in the network control block (NCB) is in use on a remote adapter.\n
 The NCB is the data.
 .
@@ -35465,7 +37579,31 @@ Language=English
 The name specified in the network control block (NCB) has been deleted.\n
 The NCB is the data.
 .
+Language=Polish
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Romanian
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
 Language=Russian
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Spanish
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Turkish
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Chinese
+The name specified in the network control block (NCB) has been deleted.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The name specified in the network control block (NCB) has been deleted.\n
 The NCB is the data.
 .
@@ -35478,7 +37616,31 @@ Language=English
 The session specified in the network control block (NCB) ended abnormally.\n
 The NCB is the data.
 .
+Language=Polish
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Romanian
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
 Language=Russian
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Spanish
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Turkish
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Chinese
+The session specified in the network control block (NCB) ended abnormally.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The session specified in the network control block (NCB) ended abnormally.\n
 The NCB is the data.
 .
@@ -35491,7 +37653,31 @@ Language=English
 The network protocol has detected two or more identical\n
 names on the network.\tThe network control block (NCB) is the data.
 .
+Language=Polish
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Romanian
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
 Language=Russian
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Spanish
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Turkish
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Chinese
+The network protocol has detected two or more identical\n
+names on the network.\tThe network control block (NCB) is the data.
+.
+Language=Taiwanese
 The network protocol has detected two or more identical\n
 names on the network.\tThe network control block (NCB) is the data.
 .
@@ -35504,7 +37690,31 @@ Language=English
 An unexpected protocol packet was received.  There may be an\n
 incompatible remote device.  The network control block (NCB) is the data.
 .
+Language=Polish
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
+Language=Romanian
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
 Language=Russian
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
+Language=Spanish
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
+Language=Turkish
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
+Language=Chinese
+An unexpected protocol packet was received.  There may be an\n
+incompatible remote device.  The network control block (NCB) is the data.
+.
+Language=Taiwanese
 An unexpected protocol packet was received.  There may be an\n
 incompatible remote device.  The network control block (NCB) is the data.
 .
@@ -35517,7 +37727,31 @@ Language=English
 The NetBIOS interface is busy.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+The NetBIOS interface is busy.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 The NetBIOS interface is busy.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35530,7 +37764,31 @@ Language=English
 There are too many network control block (NCB) commands outstanding.\n
 The NCB request was refused.  The NCB is the data.
 .
+Language=Polish
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Romanian
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
 Language=Russian
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Spanish
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Turkish
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Chinese
+There are too many network control block (NCB) commands outstanding.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 There are too many network control block (NCB) commands outstanding.\n
 The NCB request was refused.  The NCB is the data.
 .
@@ -35543,7 +37801,31 @@ Language=English
 The adapter number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
+Language=Polish
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Romanian
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
 Language=Russian
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Spanish
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Turkish
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Chinese
+The adapter number specified in the network control block (NCB) is illegal.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The adapter number specified in the network control block (NCB) is illegal.\n
 The NCB is the data.
 .
@@ -35556,7 +37838,31 @@ Language=English
 The network control block (NCB) command completed while a cancel was occurring.\n
 The NCB is the data.
 .
+Language=Polish
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Romanian
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
 Language=Russian
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Spanish
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Turkish
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Chinese
+The network control block (NCB) command completed while a cancel was occurring.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The network control block (NCB) command completed while a cancel was occurring.\n
 The NCB is the data.
 .
@@ -35569,7 +37875,31 @@ Language=English
 The name specified in the network control block (NCB) is reserved.\n
 The NCB is the data.
 .
+Language=Polish
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Romanian
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
 Language=Russian
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Spanish
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Turkish
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Chinese
+The name specified in the network control block (NCB) is reserved.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The name specified in the network control block (NCB) is reserved.\n
 The NCB is the data.
 .
@@ -35582,7 +37912,31 @@ Language=English
 The network control block (NCB) command is not valid to cancel.\n
 The NCB is the data.
 .
+Language=Polish
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Romanian
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
 Language=Russian
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Spanish
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Turkish
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Chinese
+The network control block (NCB) command is not valid to cancel.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The network control block (NCB) command is not valid to cancel.\n
 The NCB is the data.
 .
@@ -35595,7 +37949,31 @@ Language=English
 There are multiple network control block (NCB) requests for the same session.\n
 The NCB request was refused.  The NCB is the data.
 .
+Language=Polish
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Romanian
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
 Language=Russian
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Spanish
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Turkish
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Chinese
+There are multiple network control block (NCB) requests for the same session.\n
+The NCB request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 There are multiple network control block (NCB) requests for the same session.\n
 The NCB request was refused.  The NCB is the data.
 .
@@ -35609,7 +37987,37 @@ There has been a network adapter error. The only NetBIOS\n
 command that may be issued is an NCB RESET. The network control block (NCB) is\n
 the data.
 .
+Language=Polish
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Romanian
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
 Language=Russian
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Spanish
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Turkish
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Chinese
+There has been a network adapter error. The only NetBIOS\n
+command that may be issued is an NCB RESET. The network control block (NCB) is\n
+the data.
+.
+Language=Taiwanese
 There has been a network adapter error. The only NetBIOS\n
 command that may be issued is an NCB RESET. The network control block (NCB) is\n
 the data.
@@ -35623,7 +38031,31 @@ Language=English
 The maximum number of applications was exceeded.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+The maximum number of applications was exceeded.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 The maximum number of applications was exceeded.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35636,7 +38068,31 @@ Language=English
 The requested resources are not available.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+The requested resources are not available.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 The requested resources are not available.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35649,7 +38105,31 @@ Language=English
 A system error has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+A system error has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 A system error has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35662,7 +38142,31 @@ Language=English
 A ROM checksum failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+A ROM checksum failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 A ROM checksum failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35675,7 +38179,31 @@ Language=English
 A RAM test failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+A RAM test failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 A RAM test failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35688,7 +38216,31 @@ Language=English
 A digital loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+A digital loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 A digital loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35701,7 +38253,31 @@ Language=English
 An analog loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+An analog loopback failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 An analog loopback failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35714,7 +38290,31 @@ Language=English
 An interface failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+An interface failure has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 An interface failure has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35727,7 +38327,31 @@ Language=English
 An unrecognized network control block (NCB) return code was received.\n
 The NCB is the data.
 .
+Language=Polish
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Romanian
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
 Language=Russian
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Spanish
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Turkish
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Chinese
+An unrecognized network control block (NCB) return code was received.\n
+The NCB is the data.
+.
+Language=Taiwanese
 An unrecognized network control block (NCB) return code was received.\n
 The NCB is the data.
 .
@@ -35740,7 +38364,31 @@ Language=English
 A network adapter malfunction has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
+Language=Polish
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Romanian
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
 Language=Russian
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Spanish
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Turkish
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Chinese
+A network adapter malfunction has occurred.\n
+The network control block (NCB) request was refused.  The NCB is the data.
+.
+Language=Taiwanese
 A network adapter malfunction has occurred.\n
 The network control block (NCB) request was refused.  The NCB is the data.
 .
@@ -35753,7 +38401,31 @@ Language=English
 The network control block (NCB) command is still pending.\n
 The NCB is the data.
 .
+Language=Polish
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Romanian
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
 Language=Russian
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Spanish
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Turkish
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Chinese
+The network control block (NCB) command is still pending.\n
+The NCB is the data.
+.
+Language=Taiwanese
 The network control block (NCB) command is still pending.\n
 The NCB is the data.
 .
@@ -35771,7 +38443,31 @@ Language=English
 The update log on %1 is over 80%% capacity. The primary\n
 domain controller %2 is not retrieving the updates.
 .
+Language=Polish
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Romanian
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
 Language=Russian
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Spanish
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Turkish
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Chinese
+The update log on %1 is over 80%% capacity. The primary\n
+domain controller %2 is not retrieving the updates.
+.
+Language=Taiwanese
 The update log on %1 is over 80%% capacity. The primary\n
 domain controller %2 is not retrieving the updates.
 .
@@ -35785,7 +38481,37 @@ The update log on %1 is full, and no further updates\n
 can be added until the primary domain controller %2\n
 retrieves the updates.
 .
+Language=Polish
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Romanian
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
 Language=Russian
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Spanish
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Turkish
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Chinese
+The update log on %1 is full, and no further updates\n
+can be added until the primary domain controller %2\n
+retrieves the updates.
+.
+Language=Taiwanese
 The update log on %1 is full, and no further updates\n
 can be added until the primary domain controller %2\n
 retrieves the updates.
@@ -35799,7 +38525,31 @@ Language=English
 The time difference with the primary domain controller %1\n
 exceeds the maximum allowed skew of %2 seconds.
 .
+Language=Polish
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Romanian
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
 Language=Russian
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Spanish
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Turkish
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Chinese
+The time difference with the primary domain controller %1\n
+exceeds the maximum allowed skew of %2 seconds.
+.
+Language=Taiwanese
 The time difference with the primary domain controller %1\n
 exceeds the maximum allowed skew of %2 seconds.
 .
@@ -35812,7 +38562,31 @@ Language=English
 The account of user %1 has been locked out on %2\n
 due to %3 bad password attempts.
 .
+Language=Polish
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Romanian
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
 Language=Russian
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Spanish
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Turkish
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Chinese
+The account of user %1 has been locked out on %2\n
+due to %3 bad password attempts.
+.
+Language=Taiwanese
 The account of user %1 has been locked out on %2\n
 due to %3 bad password attempts.
 .
@@ -35883,7 +38657,31 @@ Language=English
 The Application log file could not be opened.  %1 will be used as the\n
 default log file.
 .
+Language=Polish
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Romanian
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
 Language=Russian
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Spanish
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Turkish
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Chinese
+The Application log file could not be opened.  %1 will be used as the\n
+default log file.
+.
+Language=Taiwanese
 The Application log file could not be opened.  %1 will be used as the\n
 default log file.
 .
@@ -35899,7 +38697,49 @@ message, take the following steps:%n\n
 2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
 If this dialog reappears, contact your helpdesk or system administrator.
 .
+Language=Polish
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Romanian
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
 Language=Russian
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Spanish
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Turkish
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Chinese
+The %1 Log is full.  If this is the first time you have seen this\n
+message, take the following steps:%n\n
+1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
+2. Click %1, click the Action menu, click Clear All Events, and then click No.\n%n\n
+If this dialog reappears, contact your helpdesk or system administrator.
+.
+Language=Taiwanese
 The %1 Log is full.  If this is the first time you have seen this\n
 message, take the following steps:%n\n
 1. Click Start, click Run, type \"eventvwr\", and then click OK.%n\n
@@ -35944,7 +38784,31 @@ Language=English
 The operating system could not be started as configured.\n
 A previous working configuration was used instead.
 .
+Language=Polish
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Romanian
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
 Language=Russian
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Spanish
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Turkish
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Chinese
+The operating system could not be started as configured.\n
+A previous working configuration was used instead.
+.
+Language=Taiwanese
 The operating system could not be started as configured.\n
 A previous working configuration was used instead.
 .
@@ -35988,7 +38852,43 @@ the %2 domain. One of the servers should be removed from the\n
 domain because the servers have different security identifiers\n
 (SID).
 .
+Language=Polish
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Romanian
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
 Language=Russian
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Spanish
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Turkish
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Chinese
+The servers %1 and  %3 both claim to be an NT Domain Controller for\n
+the %2 domain. One of the servers should be removed from the\n
+domain because the servers have different security identifiers\n
+(SID).
+.
+Language=Taiwanese
 The servers %1 and  %3 both claim to be an NT Domain Controller for\n
 the %2 domain. One of the servers should be removed from the\n
 domain because the servers have different security identifiers\n
@@ -36004,7 +38904,37 @@ The server %1 and %2 both claim to be the primary domain\n
 controller for the %3 domain. One of the servers should be\n
 demoted or removed from the domain.
 .
+Language=Polish
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Romanian
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
 Language=Russian
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Spanish
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Turkish
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Chinese
+The server %1 and %2 both claim to be the primary domain\n
+controller for the %3 domain. One of the servers should be\n
+demoted or removed from the domain.
+.
+Language=Taiwanese
 The server %1 and %2 both claim to be the primary domain\n
 controller for the %3 domain. One of the servers should be\n
 demoted or removed from the domain.
@@ -36021,7 +38951,49 @@ computer lost the correct security identifier (SID)\n
 when the domain was reconfigured. Reestablish the trust\n
 relationship.
 .
+Language=Polish
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Romanian
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
 Language=Russian
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Spanish
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Turkish
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Chinese
+The computer %1 tried to connect to the server %2 using\n
+the trust relationship established by the %3 domain. However, the\n
+computer lost the correct security identifier (SID)\n
+when the domain was reconfigured. Reestablish the trust\n
+relationship.
+.
+Language=Taiwanese
 The computer %1 tried to connect to the server %2 using\n
 the trust relationship established by the %3 domain. However, the\n
 computer lost the correct security identifier (SID)\n
@@ -36039,7 +39011,43 @@ The computer has rebooted from a bugcheck.  The bugcheck was:\n
 %2\n
 A full dump was not saved.
 .
+Language=Polish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Romanian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
 Language=Russian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Spanish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Turkish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Chinese
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A full dump was not saved.
+.
+Language=Taiwanese
 The computer has rebooted from a bugcheck.  The bugcheck was:\n
 %1.\n
 %2\n
@@ -36056,7 +39064,43 @@ The computer has rebooted from a bugcheck.  The bugcheck was:\n
 %2\n
 A dump was saved in: %3.
 .
+Language=Polish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Romanian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
 Language=Russian
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Spanish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Turkish
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Chinese
+The computer has rebooted from a bugcheck.  The bugcheck was:\n
+%1.\n
+%2\n
+A dump was saved in: %3.
+.
+Language=Taiwanese
 The computer has rebooted from a bugcheck.  The bugcheck was:\n
 %1.\n
 %2\n
@@ -36072,7 +39116,37 @@ The computer or domain %1 trusts domain %2.  (This may be an indirect\n
 trust.)  However, %1 and %2 have the same machine security identifier\n
 (SID).  The operating system should be re-installed on either %1 or %2.
 .
+Language=Polish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Romanian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
 Language=Russian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Spanish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Turkish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Chinese
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %1 and %2 have the same machine security identifier\n
+(SID).  The operating system should be re-installed on either %1 or %2.
+.
+Language=Taiwanese
 The computer or domain %1 trusts domain %2.  (This may be an indirect\n
 trust.)  However, %1 and %2 have the same machine security identifier\n
 (SID).  The operating system should be re-installed on either %1 or %2.
@@ -36087,7 +39161,37 @@ The computer or domain %1 trusts domain %2.  (This may be an indirect\n
 trust.)  However, %2 is not a valid name for a trusted domain.\n
 The name of the trusted domain should be changed to a valid name.
 .
+Language=Polish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Romanian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
 Language=Russian
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Spanish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Turkish
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Chinese
+The computer or domain %1 trusts domain %2.  (This may be an indirect\n
+trust.)  However, %2 is not a valid name for a trusted domain.\n
+The name of the trusted domain should be changed to a valid name.
+.
+Language=Taiwanese
 The computer or domain %1 trusts domain %2.  (This may be an indirect\n
 trust.)  However, %2 is not a valid name for a trusted domain.\n
 The name of the trusted domain should be changed to a valid name.
@@ -36199,7 +39303,37 @@ The Netlogon service could not initialize the replication data\n
 structures successfully. The service was terminated.  The following\n
 error occurred: %n%1
 .
+Language=Polish
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Romanian
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
 Language=Russian
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Spanish
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Turkish
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Chinese
+The Netlogon service could not initialize the replication data\n
+structures successfully. The service was terminated.  The following\n
+error occurred: %n%1
+.
+Language=Taiwanese
 The Netlogon service could not initialize the replication data\n
 structures successfully. The service was terminated.  The following\n
 error occurred: %n%1
@@ -36213,7 +39347,31 @@ Language=English
 The Netlogon service failed to update the domain trust list.  The\n
 following error occurred: %n%1
 .
+Language=Polish
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Romanian
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
 Language=Russian
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Spanish
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Turkish
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Chinese
+The Netlogon service failed to update the domain trust list.  The\n
+following error occurred: %n%1
+.
+Language=Taiwanese
 The Netlogon service failed to update the domain trust list.  The\n
 following error occurred: %n%1
 .
@@ -36226,7 +39384,31 @@ Language=English
 The Netlogon service could not add the RPC interface.  The\n
 service was terminated. The following error occurred: %n%1
 .
+Language=Polish
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Romanian
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
 Language=Russian
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Spanish
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Turkish
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Chinese
+The Netlogon service could not add the RPC interface.  The\n
+service was terminated. The following error occurred: %n%1
+.
+Language=Taiwanese
 The Netlogon service could not add the RPC interface.  The\n
 service was terminated. The following error occurred: %n%1
 .
@@ -36239,7 +39421,31 @@ Language=English
 The Netlogon service could not read a mailslot message from %1 due\n
 to the following error: %n%2
 .
+Language=Polish
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Romanian
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
 Language=Russian
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Spanish
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Turkish
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Chinese
+The Netlogon service could not read a mailslot message from %1 due\n
+to the following error: %n%2
+.
+Language=Taiwanese
 The Netlogon service could not read a mailslot message from %1 due\n
 to the following error: %n%2
 .
@@ -36253,7 +39459,37 @@ The Netlogon service failed to register the service with the\n
 service controller. The service was terminated. The following\n
 error occurred: %n%1
 .
+Language=Polish
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Romanian
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
 Language=Russian
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Spanish
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Turkish
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Chinese
+The Netlogon service failed to register the service with the\n
+service controller. The service was terminated. The following\n
+error occurred: %n%1
+.
+Language=Taiwanese
 The Netlogon service failed to register the service with the\n
 service controller. The service was terminated. The following\n
 error occurred: %n%1
@@ -36268,7 +39504,37 @@ The change log cache maintained by the Netlogon service for %1\n
 database changes is inconsistent. The Netlogon service is resetting\n
 the change log.
 .
+Language=Polish
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Romanian
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
 Language=Russian
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Spanish
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Turkish
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Chinese
+The change log cache maintained by the Netlogon service for %1\n
+database changes is inconsistent. The Netlogon service is resetting\n
+the change log.
+.
+Language=Taiwanese
 The change log cache maintained by the Netlogon service for %1\n
 database changes is inconsistent. The Netlogon service is resetting\n
 the change log.
@@ -36282,7 +39548,31 @@ Language=English
 The Netlogon service could not create server share %1.  The following\n
 error occurred: %n%2
 .
+Language=Polish
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Romanian
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
 Language=Russian
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Spanish
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Turkish
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Chinese
+The Netlogon service could not create server share %1.  The following\n
+error occurred: %n%2
+.
+Language=Taiwanese
 The Netlogon service could not create server share %1.  The following\n
 error occurred: %n%2
 .
@@ -36353,7 +39643,31 @@ Language=English
 The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
 failed.
 .
+Language=Polish
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Romanian
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
 Language=Russian
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Spanish
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Turkish
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Chinese
+The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
+failed.
+.
+Language=Taiwanese
 The Windows NT or Windows 2000 %1 logon request for the user %2\\%3 from %4 (via %5)\n
 failed.
 .
@@ -36366,7 +39680,31 @@ Language=English
 The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
 failed.
 .
+Language=Polish
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Romanian
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
 Language=Russian
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Spanish
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Turkish
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Chinese
+The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
+failed.
+.
+Language=Taiwanese
 The Windows NT or Windows 2000 %1 logoff request for the user %2\\%3 from %4\n
 failed.
 .
@@ -36380,7 +39718,37 @@ The partial synchronization request from the server %1 completed\n
 successfully. %2 changes(s) has(have) been returned to the\n
 caller.
 .
+Language=Polish
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Romanian
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
 Language=Russian
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Spanish
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Turkish
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Chinese
+The partial synchronization request from the server %1 completed\n
+successfully. %2 changes(s) has(have) been returned to the\n
+caller.
+.
+Language=Taiwanese
 The partial synchronization request from the server %1 completed\n
 successfully. %2 changes(s) has(have) been returned to the\n
 caller.
@@ -36394,7 +39762,31 @@ Language=English
 The partial synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
+Language=Polish
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Romanian
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
 Language=Russian
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Spanish
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Turkish
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Chinese
+The partial synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Taiwanese
 The partial synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
@@ -36408,7 +39800,37 @@ The full synchronization request from the server %1 completed\n
 successfully. %2 object(s) has(have) been returned to\n
 the caller.
 .
+Language=Polish
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Romanian
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
 Language=Russian
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Spanish
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Turkish
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Chinese
+The full synchronization request from the server %1 completed\n
+successfully. %2 object(s) has(have) been returned to\n
+the caller.
+.
+Language=Taiwanese
 The full synchronization request from the server %1 completed\n
 successfully. %2 object(s) has(have) been returned to\n
 the caller.
@@ -36422,7 +39844,31 @@ Language=English
 The full synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
+Language=Polish
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Romanian
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
 Language=Russian
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Spanish
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Turkish
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Chinese
+The full synchronization request from the server %1 failed with\n
+the following error: %n%2
+.
+Language=Taiwanese
 The full synchronization request from the server %1 failed with\n
 the following error: %n%2
 .
@@ -36436,7 +39882,37 @@ The partial synchronization replication of the %1 database from the\n
 primary domain controller %2 completed successfully. %3 change(s) is(are)\n
 applied to the database.
 .
+Language=Polish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Romanian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
 Language=Russian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Spanish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Turkish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Chinese
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully. %3 change(s) is(are)\n
+applied to the database.
+.
+Language=Taiwanese
 The partial synchronization replication of the %1 database from the\n
 primary domain controller %2 completed successfully. %3 change(s) is(are)\n
 applied to the database.
@@ -36450,7 +39926,31 @@ Language=English
 The partial synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
+Language=Polish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Romanian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
 Language=Russian
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Spanish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Turkish
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Chinese
+The partial synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Taiwanese
 The partial synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
@@ -36463,7 +39963,31 @@ Language=English
 The full synchronization replication of the %1 database from the\n
 primary domain controller %2 completed successfully.
 .
+Language=Polish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Romanian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
 Language=Russian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Spanish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Turkish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Chinese
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 completed successfully.
+.
+Language=Taiwanese
 The full synchronization replication of the %1 database from the\n
 primary domain controller %2 completed successfully.
 .
@@ -36476,7 +40000,31 @@ Language=English
 The full synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
+Language=Polish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Romanian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
 Language=Russian
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Spanish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Turkish
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Chinese
+The full synchronization replication of the %1 database from the\n
+primary domain controller %2 failed with the following error: %n%3
+.
+Language=Taiwanese
 The full synchronization replication of the %1 database from the\n
 primary domain controller %2 failed with the following error: %n%3
 .
@@ -36497,7 +40045,79 @@ sets up the secure session to the primary domain controller emulator in the spec
 domain. Otherwise, this computer sets up the secure session to any domain controller\n
 in the specified domain.
 .
+Language=Polish
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Romanian
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
 Language=Russian
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Spanish
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Turkish
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Chinese
+This computer was not able to set up a secure session with a domain\n
+controller in domain %1 due to the following: %n%2\n
+%nThis may lead to authentication problems. Make sure that this\n
+computer is connected to the network. If the problem persists,\n
+please contact your domain administrator.\n\n
+%n%nADDITIONAL INFO\n
+%nIf this computer is a domain controller for the specified domain, it\n
+sets up the secure session to the primary domain controller emulator in the specified\n
+domain. Otherwise, this computer sets up the secure session to any domain controller\n
+in the specified domain.
+.
+Language=Taiwanese
 This computer was not able to set up a secure session with a domain\n
 controller in domain %1 due to the following: %n%2\n
 %nThis may lead to authentication problems. Make sure that this\n
@@ -36518,7 +40138,31 @@ Language=English
 The session setup to the Domain Controller %1 for the domain %2\n
 failed because the computer %3 does not have a local security database account.
 .
+Language=Polish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Romanian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
 Language=Russian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Spanish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Turkish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Chinese
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the computer %3 does not have a local security database account.
+.
+Language=Taiwanese
 The session setup to the Domain Controller %1 for the domain %2\n
 failed because the computer %3 does not have a local security database account.
 .
@@ -36535,7 +40179,55 @@ needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
 aforementioned account is a computer account for this computer in the specified domain.\n
 Otherwise, the account is an interdomain trust account with the specified domain.
 .
+Language=Polish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Romanian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
 Language=Russian
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Spanish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Turkish
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Chinese
+The session setup to the Domain Controller %1 for the domain %2\n
+failed because the Domain Controller did not have an account %4\n
+needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
+%nIf this computer is a member of or a Domain Controller in the specified domain, the\n
+aforementioned account is a computer account for this computer in the specified domain.\n
+Otherwise, the account is an interdomain trust account with the specified domain.
+.
+Language=Taiwanese
 The session setup to the Domain Controller %1 for the domain %2\n
 failed because the Domain Controller did not have an account %4\n
 needed to set up the session by this computer %3.\n\n%n%nADDITIONAL DATA\n
@@ -36553,7 +40245,37 @@ The session setup from the computer %1 failed to authenticate.\n
 The name(s) of the account(s) referenced in the security database is\n
 %2.  The following error occurred: %n%3
 .
+Language=Polish
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Romanian
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
 Language=Russian
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Spanish
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Turkish
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Chinese
+The session setup from the computer %1 failed to authenticate.\n
+The name(s) of the account(s) referenced in the security database is\n
+%2.  The following error occurred: %n%3
+.
+Language=Taiwanese
 The session setup from the computer %1 failed to authenticate.\n
 The name(s) of the account(s) referenced in the security database is\n
 %2.  The following error occurred: %n%3
@@ -36579,7 +40301,103 @@ action should be taken on '%1':\n\n
 %n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
 %n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
 .
+Language=Polish
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Romanian
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
 Language=Russian
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Spanish
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Turkish
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Chinese
+The session setup from computer '%1' failed because the security database\n
+does not contain a trust account '%2' referenced by the specified computer.\n\n
+%n%nUSER ACTION\n\n
+%nIf this is the first occurrence of this event for the specified computer\n
+and account, this may be a transient issue that doesn't require any action\n
+at this time. Otherwise, the following steps may be taken to resolve this problem:\n\n
+%n%nIf '%2' is a legitimate machine account for the computer '%1', then '%1'\n
+should be rejoined to the domain.\n\n
+%n%nIf '%2' is a legitimate interdomain trust account, then the trust should\n
+be recreated.\n\n
+%n%nOtherwise, assuming that '%2' is not a legitimate account, the following\n
+action should be taken on '%1':\n\n
+%n%nIf '%1' is a Domain Controller, then the trust associated with '%2' should be deleted.\n\n
+%n%nIf '%1' is not a Domain Controller, it should be disjoined from the domain.
+.
+Language=Taiwanese
 The session setup from computer '%1' failed because the security database\n
 does not contain a trust account '%2' referenced by the specified computer.\n\n
 %n%nUSER ACTION\n\n
@@ -36749,7 +40567,31 @@ Language=English
 Replication of the %1 Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36762,7 +40604,31 @@ Language=English
 Replication of the %1 Global Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Global Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Global Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36775,7 +40641,31 @@ Language=English
 Replication of the %1 Local Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Local Group \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Local Group \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36788,7 +40678,31 @@ Language=English
 Replication of the %1 User \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 User \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 User \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36801,7 +40715,31 @@ Language=English
 Replication of the %1 Policy Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Policy Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Policy Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36814,7 +40752,31 @@ Language=English
 Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Trusted Domain Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36827,7 +40789,31 @@ Language=English
 Replication of the %1 Account Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Account Object \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Account Object \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36840,7 +40826,31 @@ Language=English
 Replication of the %1 Secret \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
+Language=Polish
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Romanian
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
 Language=Russian
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Spanish
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Turkish
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Chinese
+Replication of the %1 Secret \"%2\" from primary domain controller\n
+%3 failed with the following error: %n%4
+.
+Language=Taiwanese
 Replication of the %1 Secret \"%2\" from primary domain controller\n
 %3 failed with the following error: %n%4
 .
@@ -36884,7 +40894,43 @@ The server can be either a Windows 2000 Server that is a member of the\n
 domain or the server can be a LAN Manager server with an account in the\n
 SERVERS global group.  It cannot be both.
 .
+Language=Polish
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Romanian
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
 Language=Russian
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Spanish
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Turkish
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Chinese
+Netlogon has detected two machine accounts for server \"%1\".\n
+The server can be either a Windows 2000 Server that is a member of the\n
+domain or the server can be a LAN Manager server with an account in the\n
+SERVERS global group.  It cannot be both.
+.
+Language=Taiwanese
 Netlogon has detected two machine accounts for server \"%1\".\n
 The server can be either a Windows 2000 Server that is a member of the\n
 domain or the server can be a LAN Manager server with an account in the\n
@@ -36900,7 +40946,37 @@ This domain has more global groups than can be replicated to a LanMan\n
 BDC.  Either delete some of your global groups or remove the LanMan\n
 BDCs from the domain.
 .
+Language=Polish
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Romanian
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
 Language=Russian
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Spanish
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Turkish
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Chinese
+This domain has more global groups than can be replicated to a LanMan\n
+BDC.  Either delete some of your global groups or remove the LanMan\n
+BDCs from the domain.
+.
+Language=Taiwanese
 This domain has more global groups than can be replicated to a LanMan\n
 BDC.  Either delete some of your global groups or remove the LanMan\n
 BDCs from the domain.
@@ -37001,7 +41077,31 @@ Language=English
 Service experienced a severe error and can no longer provide remote boot\n
 for 3Com 3Start remote boot clients.
 .
+Language=Polish
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Romanian
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
 Language=Russian
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Spanish
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Turkish
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Chinese
+Service experienced a severe error and can no longer provide remote boot\n
+for 3Com 3Start remote boot clients.
+.
+Language=Taiwanese
 Service experienced a severe error and can no longer provide remote boot\n
 for 3Com 3Start remote boot clients.
 .
@@ -37043,7 +41143,31 @@ Language=English
 Client with computer name %1 failed to acknowledge receipt of the\n
 boot data.  Remote boot of this client was not completed.
 .
+Language=Polish
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Romanian
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
 Language=Russian
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Spanish
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Turkish
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Chinese
+Client with computer name %1 failed to acknowledge receipt of the\n
+boot data.  Remote boot of this client was not completed.
+.
+Language=Taiwanese
 Client with computer name %1 failed to acknowledge receipt of the\n
 boot data.  Remote boot of this client was not completed.
 .
@@ -37056,7 +41180,31 @@ Language=English
 Client with computer name %1 was not booted due to an error in opening\n
 file %2.
 .
+Language=Polish
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
 Language=Russian
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to an error in opening\n
+file %2.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to an error in opening\n
 file %2.
 .
@@ -37069,7 +41217,31 @@ Language=English
 Client with computer name %1 was not booted due to an error in reading\n
 file %2.
 .
+Language=Polish
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
 Language=Russian
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to an error in reading\n
+file %2.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to an error in reading\n
 file %2.
 .
@@ -37082,7 +41254,31 @@ Language=English
 Client with computer name %1 was not booted due to insufficient memory\n
 at the remote boot server.
 .
+Language=Polish
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
 Language=Russian
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to insufficient memory\n
+at the remote boot server.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to insufficient memory\n
 at the remote boot server.
 .
@@ -37095,7 +41291,31 @@ Language=English
 Client with computer name %1 will be booted without using checksums\n
 because checksum for file %2 could not be calculated.
 .
+Language=Polish
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Romanian
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
 Language=Russian
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Spanish
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Turkish
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Chinese
+Client with computer name %1 will be booted without using checksums\n
+because checksum for file %2 could not be calculated.
+.
+Language=Taiwanese
 Client with computer name %1 will be booted without using checksums\n
 because checksum for file %2 could not be calculated.
 .
@@ -37108,7 +41328,31 @@ Language=English
 Client with computer name %1 was not booted due to too many lines in\n
 file %2.
 .
+Language=Polish
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
 Language=Russian
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to too many lines in\n
+file %2.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to too many lines in\n
 file %2.
 .
@@ -37122,7 +41366,37 @@ Client with computer name %1 was not booted because the boot block\n
 configuration file %2 for this client does not contain boot block\n
 line and/or loader line.
 .
+Language=Polish
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Romanian
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
 Language=Russian
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Spanish
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Turkish
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Chinese
+Client with computer name %1 was not booted because the boot block\n
+configuration file %2 for this client does not contain boot block\n
+line and/or loader line.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted because the boot block\n
 configuration file %2 for this client does not contain boot block\n
 line and/or loader line.
@@ -37136,7 +41410,31 @@ Language=English
 Client with computer name %1 was not booted due to a bad size of\n
 file %2.
 .
+Language=Polish
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
 Language=Russian
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to a bad size of\n
+file %2.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to a bad size of\n
 file %2.
 .
@@ -37149,7 +41447,31 @@ Language=English
 Client with computer name %1 was not booted due to remote boot\n
 service internal error.
 .
+Language=Polish
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Romanian
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
 Language=Russian
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Spanish
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Turkish
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Chinese
+Client with computer name %1 was not booted due to remote boot\n
+service internal error.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted due to remote boot\n
 service internal error.
 .
@@ -37162,7 +41484,31 @@ Language=English
 Client with computer name %1 was not booted because file %2 has an\n
 invalid boot header.
 .
+Language=Polish
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Romanian
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
 Language=Russian
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Spanish
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Turkish
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Chinese
+Client with computer name %1 was not booted because file %2 has an\n
+invalid boot header.
+.
+Language=Taiwanese
 Client with computer name %1 was not booted because file %2 has an\n
 invalid boot header.
 .
@@ -37437,7 +41783,37 @@ Service experienced error adding security accounts or setting\n
 file permissions.  These accounts are the RPLUSER local group\n
 and the user accounts for the individual RPL workstations.
 .
+Language=Polish
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Romanian
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
 Language=Russian
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Spanish
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Turkish
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Chinese
+Service experienced error adding security accounts or setting\n
+file permissions.  These accounts are the RPLUSER local group\n
+and the user accounts for the individual RPL workstations.
+.
+Language=Taiwanese
 Service experienced error adding security accounts or setting\n
 file permissions.  These accounts are the RPLUSER local group\n
 and the user accounts for the individual RPL workstations.
@@ -37481,7 +41857,37 @@ Service failed to initialize from its database.  The database may be\n
 missing or corrupted.  Service will attempt restoring the database\n
 from the backup.
 .
+Language=Polish
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Romanian
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
 Language=Russian
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Spanish
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Turkish
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Chinese
+Service failed to initialize from its database.  The database may be\n
+missing or corrupted.  Service will attempt restoring the database\n
+from the backup.
+.
+Language=Taiwanese
 Service failed to initialize from its database.  The database may be\n
 missing or corrupted.  Service will attempt restoring the database\n
 from the backup.
@@ -37495,7 +41901,31 @@ Language=English
 Service failed to restore its database from the backup.  Service\n
 will not start.
 .
+Language=Polish
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Romanian
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
 Language=Russian
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Spanish
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Turkish
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Chinese
+Service failed to restore its database from the backup.  Service\n
+will not start.
+.
+Language=Taiwanese
 Service failed to restore its database from the backup.  Service\n
 will not start.
 .
@@ -37537,7 +41967,31 @@ Language=English
 Service failed to initialize from its restored database.  Service\n
 will not start.
 .
+Language=Polish
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Romanian
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
 Language=Russian
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Spanish
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Turkish
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Chinese
+Service failed to initialize from its restored database.  Service\n
+will not start.
+.
+Language=Taiwanese
 Service failed to initialize from its restored database.  Service\n
 will not start.
 .
@@ -37553,7 +42007,49 @@ However, %2 tried to connect as either a DC in a trusted domain,\n
 a member workstation in domain %3, or as a server in domain %3.\n
 Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
 .
+Language=Polish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Romanian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
 Language=Russian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Spanish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Turkish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Chinese
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
+%2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
+However, %2 tried to connect as either a DC in a trusted domain,\n
+a member workstation in domain %3, or as a server in domain %3.\n
+Use the Active Directory Users and Computers tool or Server Manager to remove the BDC account for %2.
+.
+Language=Taiwanese
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 from computer\n
 %2 using account %4 failed.  %2 is declared to be a BDC in domain %3.\n
 However, %2 tried to connect as either a DC in a trusted domain,\n
@@ -37570,7 +42066,37 @@ The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
 attempting to convert it to NT 4.0 format. The JETCONV converter\n
 will write to the Application event log when it is finished.
 .
+Language=Polish
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Romanian
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
 Language=Russian
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Spanish
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Turkish
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Chinese
+The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
+attempting to convert it to NT 4.0 format. The JETCONV converter\n
+will write to the Application event log when it is finished.
+.
+Language=Taiwanese
 The Remoteboot database was in NT 3.5 / NT 3.51 format and NT is\n
 attempting to convert it to NT 4.0 format. The JETCONV converter\n
 will write to the Application event log when it is finished.
@@ -37585,7 +42111,37 @@ Global group SERVERS exists in domain %1 and has members.\n
 This group defines Lan Manager BDCs in the domain.\n
 Lan Manager BDCs are not permitted in NT domains.
 .
+Language=Polish
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Romanian
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
 Language=Russian
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Spanish
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Turkish
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Chinese
+Global group SERVERS exists in domain %1 and has members.\n
+This group defines Lan Manager BDCs in the domain.\n
+Lan Manager BDCs are not permitted in NT domains.
+.
+Language=Taiwanese
 Global group SERVERS exists in domain %1 and has members.\n
 This group defines Lan Manager BDCs in the domain.\n
 Lan Manager BDCs are not permitted in NT domains.
@@ -37605,7 +42161,67 @@ locator records of this domain controller does not support dynamic DNS updates:\
 %nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
 records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
 .
+Language=Polish
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Romanian
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
 Language=Russian
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Spanish
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Turkish
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Chinese
+The following DNS server that is authoritative for the DNS domain controller\n
+locator records of this domain controller does not support dynamic DNS updates:\n\n
+%n%nDNS server IP address: %1\n
+%nReturned Response Code (RCODE): %2\n
+%nReturned Status Code: %3\n\n
+%n%nUSER ACTION\n\n
+%nConfigure the DNS server to allow dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Taiwanese
 The following DNS server that is authoritative for the DNS domain controller\n
 locator records of this domain controller does not support dynamic DNS updates:\n\n
 %n%nDNS server IP address: %1\n
@@ -37640,7 +42256,127 @@ recommended.\n\n
 %n%nADDITIONAL DATA\n
 %nError Value: %2
 .
+Language=Polish
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Romanian
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
 Language=Russian
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Spanish
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Turkish
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Chinese
+The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n
+%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nFor computers and users to locate this domain controller, this record must be\n
+registered in DNS.\n\n
+%n%nUSER ACTION\n\n
+%nDetermine what might have caused this failure, resolve the problem, and initiate\n
+registration of the DNS records by the domain controller. To determine what might\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
+Server installation CD in Support\\Tools\\support.cab. To learn more about \n
+DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by \n
+this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain \n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
+Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
+recommended.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Taiwanese
 The dynamic registration of the DNS record '%1' failed on the following DNS server:\n\n
 %n%nDNS server IP address: %3\n
 %nReturned Response Code (RCODE): %4\n
@@ -37676,7 +42412,73 @@ record. To learn more about debugging DNS, see Help and Support Center.\n\n
 %n%nADDITIONAL DATA\n
 %nError Value: %2
 .
+Language=Polish
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Romanian
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
 Language=Russian
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Spanish
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Turkish
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Chinese
+The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
+%n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
+%nReturned Status Code: %5\n\n
+%n%nUSER ACTION\n\n
+%nTo prevent remote computers from connecting unnecessarily to the domain controller,\n
+delete the record manually or troubleshoot the failure to dynamically delete the\n
+record. To learn more about debugging DNS, see Help and Support Center.\n\n
+%n%nADDITIONAL DATA\n
+%nError Value: %2
+.
+Language=Taiwanese
 The dynamic deletion of the DNS record '%1' failed on the following DNS server:\n\n
 %n%nDNS server IP address: %3\n%nReturned Response Code (RCODE): %4\n
 %nReturned Status Code: %5\n\n
@@ -37725,7 +42527,31 @@ Language=English
 Netlogon got the following error while trying to get the subnet to site\n
 mapping information from the DS: %n%1
 .
+Language=Polish
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Romanian
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
 Language=Russian
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Spanish
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Turkish
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Chinese
+Netlogon got the following error while trying to get the subnet to site\n
+mapping information from the DS: %n%1
+.
+Language=Taiwanese
 Netlogon got the following error while trying to get the subnet to site\n
 mapping information from the DS: %n%1
 .
@@ -37739,7 +42565,37 @@ Language=English
 in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
 the IP address.  Consider adding a subnet object for this IP address.
 .
+Language=Polish
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Romanian
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
 Language=Russian
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Spanish
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Turkish
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Chinese
+'%1' tried to determine its site by looking up its IP address ('%2')\n
+in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
+the IP address.  Consider adding a subnet object for this IP address.
+.
+Language=Taiwanese
 '%1' tried to determine its site by looking up its IP address ('%2')\n
 in the Configuration\\Sites\\Subnets container in the DS.  No subnet matched\n
 the IP address.  Consider adding a subnet object for this IP address.
@@ -37754,7 +42610,37 @@ The site name for this computer is '%1'.  That site name is not a valid\n
 site name.  A site name must be a valid DNS label.\n
 Rename the site to be a valid name.
 .
+Language=Polish
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Romanian
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
 Language=Russian
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Spanish
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Turkish
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Chinese
+The site name for this computer is '%1'.  That site name is not a valid\n
+site name.  A site name must be a valid DNS label.\n
+Rename the site to be a valid name.
+.
+Language=Taiwanese
 The site name for this computer is '%1'.  That site name is not a valid\n
 site name.  A site name must be a valid DNS label.\n
 Rename the site to be a valid name.
@@ -37771,7 +42657,49 @@ syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
 and yy is the number of bits in the subnet mask.\n\n
 Correct the name of the subnet object.
 .
+Language=Polish
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
+Language=Romanian
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
 Language=Russian
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
+Language=Spanish
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
+Language=Turkish
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
+Language=Chinese
+The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
+container in the DS.  The name is not syntactically valid.  The valid\n
+syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
+and yy is the number of bits in the subnet mask.\n\n
+Correct the name of the subnet object.
+.
+Language=Taiwanese
 The subnet object '%1' appears in the Configuration\\Sites\\Subnets\n
 container in the DS.  The name is not syntactically valid.  The valid\n
 syntax is xx.xx.xx.xx/yy where xx.xx.xx.xx is a valid IP subnet number\n
@@ -37799,7 +42727,103 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
 Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
+Language=Polish
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Romanian
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
 Language=Russian
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Spanish
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Turkish
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Chinese
+Dynamic registration or deletion of one or more DNS records associated with DNS\n
+domain '%1' failed.  These records are used by other computers to locate this\n
+server as a domain controller (if the specified domain is an Active Directory\n
+domain) or as an LDAP server (if the specified domain is an application partition).\n\n
+%n%nPossible causes of failure include:\n\n
+%n- TCP/IP properties of the network connections of this computer contain wrong IP address(es) of the preferred and alternate DNS servers\n
+%n- Specified preferred and alternate DNS servers are not running\n
+%n- DNS server(s) primary for the records to be registered is not running\n
+%n- Preferred or alternate DNS servers are configured with wrong root hints\n
+%n- Parent DNS zone contains incorrect delegation to the child zone authoritative for the DNS records that failed registration\n\n
+%n%nUSER ACTION\n\n
+%nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
+the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
+.
+Language=Taiwanese
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
 domain '%1' failed.  These records are used by other computers to locate this\n
 server as a domain controller (if the specified domain is an Active Directory\n
@@ -37853,7 +42877,31 @@ Language=English
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
 is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
 .
+Language=Polish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Romanian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
 Language=Russian
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Spanish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Turkish
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Chinese
+The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
+is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
+.
+Language=Taiwanese
 The session setup to the Windows NT or Windows 2000 Domain Controller %1 for the domain %2\n
 is not responsive.  The current RPC call from Netlogon on \\\\%3 to %1 has been cancelled.
 .
@@ -37868,7 +42916,43 @@ Domain Controllers in site '%1' have been automatically\n
 selected to cover site '%2' for domain '%3' based on configured\n
 Directory Server replication costs.
 .
+Language=Polish
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
 Language=Russian
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' does not have any Domain Controllers for domain '%3'.\n
 Domain Controllers in site '%1' have been automatically\n
 selected to cover site '%2' for domain '%3' based on configured\n
@@ -37914,7 +42998,43 @@ Global Catalog servers in site '%1' have been automatically\n
 selected to cover site '%2' for forest '%3' based on configured\n
 Directory Server replication costs.
 .
+Language=Polish
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
 Language=Russian
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' does not have any Global Catalog servers for forest '%3'.\n
 Global Catalog servers in site '%1' have been automatically\n
 selected to cover site '%2' for forest '%3' based on configured\n
@@ -37959,7 +43079,37 @@ Attempt to update HOST Service Principal Names (SPNs) of the computer\n
 object in Active Directory failed. The updated values were '%1' and '%2'.\n
 The following error occurred: %n%3
 .
+Language=Polish
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Romanian
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
 Language=Russian
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Spanish
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Turkish
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Chinese
+Attempt to update HOST Service Principal Names (SPNs) of the computer\n
+object in Active Directory failed. The updated values were '%1' and '%2'.\n
+The following error occurred: %n%3
+.
+Language=Taiwanese
 Attempt to update HOST Service Principal Names (SPNs) of the computer\n
 object in Active Directory failed. The updated values were '%1' and '%2'.\n
 The following error occurred: %n%3
@@ -37974,7 +43124,37 @@ Attempt to update DNS Host Name of the computer object\n
 in Active Directory failed. The updated value was '%1'.\n
 The following error occurred: %n%2
 .
+Language=Polish
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Romanian
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
 Language=Russian
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Spanish
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Turkish
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Chinese
+Attempt to update DNS Host Name of the computer object\n
+in Active Directory failed. The updated value was '%1'.\n
+The following error occurred: %n%2
+.
+Language=Taiwanese
 Attempt to update DNS Host Name of the computer object\n
 in Active Directory failed. The updated value was '%1'.\n
 The following error occurred: %n%2
@@ -37991,6 +43171,20 @@ be used for authentication purposes in the Windows 2000 or newer\n
 domain that this computer is a member of.\n
 The following error occurred:%n%2
 .
+Language=Polish
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+Language=Romanian
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
 Language=Russian
 No suitable Domain Controller is available for domain %1.\n
 An NT4 or older domain controller is available but it cannot\n
@@ -37998,7 +43192,34 @@ be used for authentication purposes in the Windows 2000 or newer\n
 domain that this computer is a member of.\n
 The following error occurred:%n%2
 .
-
+Language=Spanish
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+Language=Turkish
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+Language=Chinese
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
+Language=Taiwanese
+No suitable Domain Controller is available for domain %1.\n
+An NT4 or older domain controller is available but it cannot\n
+be used for authentication purposes in the Windows 2000 or newer\n
+domain that this computer is a member of.\n
+The following error occurred:%n%2
+.
 
 MessageId=5791
 Severity=Success
@@ -38011,7 +43232,49 @@ in this case for authentication purposes. This computer needs to rejoin\n
 the domain.\n
 The following error occurred:%n%2
 .
+Language=Polish
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Romanian
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
 Language=Russian
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Spanish
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Turkish
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Chinese
+The domain of this computer, %1 has been downgraded from Windows 2000\n
+or newer to Windows NT4 or older. The computer cannot function properly\n
+in this case for authentication purposes. This computer needs to rejoin\n
+the domain.\n
+The following error occurred:%n%2
+.
+Language=Taiwanese
 The domain of this computer, %1 has been downgraded from Windows 2000\n
 or newer to Windows NT4 or older. The computer cannot function properly\n
 in this case for authentication purposes. This computer needs to rejoin\n
@@ -38029,7 +43292,43 @@ LDAP servers in site '%1' have been automatically selected to\n
 cover site '%2' for non-domain NC '%3' based on configured\n
 Directory Server replication costs.
 .
+Language=Polish
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
 Language=Russian
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically selected to\n
+cover site '%2' for non-domain NC '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
 LDAP servers in site '%1' have been automatically selected to\n
 cover site '%2' for non-domain NC '%3' based on configured\n
@@ -38077,7 +43376,55 @@ Domain Controllers in site '%1' have been automatically\n
 selected to cover site '%2' for domain '%3' based on configured\n
 Directory Server replication costs.
 .
+Language=Polish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
 Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Domain Controller for domain '%3'. As a result,\n
+site '%2' does not have any Domain Controllers for domain '%3'.\n
+Domain Controllers in site '%1' have been automatically\n
+selected to cover site '%2' for domain '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' is no longer manually configured in the registry as\n
 covered by this Domain Controller for domain '%3'. As a result,\n
 site '%2' does not have any Domain Controllers for domain '%3'.\n
@@ -38095,7 +43442,37 @@ This Domain Controller no longer automatically covers site '%1' for domain '%2'.
 However, site '%1' is still (manually) covered by this Domain Controller for\n
 domain '%2' since this site has been manually configured in the registry.
 .
+Language=Polish
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Romanian
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
 Language=Russian
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Spanish
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Turkish
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Chinese
+This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
+However, site '%1' is still (manually) covered by this Domain Controller for\n
+domain '%2' since this site has been manually configured in the registry.
+.
+Language=Taiwanese
 This Domain Controller no longer automatically covers site '%1' for domain '%2'.\n
 However, site '%1' is still (manually) covered by this Domain Controller for\n
 domain '%2' since this site has been manually configured in the registry.
@@ -38113,7 +43490,55 @@ Global Catalog servers in site '%1' have been automatically\n
 selected to cover site '%2' for forest '%3' based on configured\n
 Directory Server replication costs.
 .
+Language=Polish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
 Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' is no longer manually configured in the registry as\n
+covered by this Global Catalog server for forest '%3'. As a result,\n
+site '%2' does not have any Global Catalog servers for forest '%3'.\n
+Global Catalog servers in site '%1' have been automatically\n
+selected to cover site '%2' for forest '%3' based on configured\n
+Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' is no longer manually configured in the registry as\n
 covered by this Global Catalog server for forest '%3'. As a result,\n
 site '%2' does not have any Global Catalog servers for forest '%3'.\n
@@ -38131,7 +43556,37 @@ This Global Catalog server no longer automatically covers site '%1' for forest '
 However, site '%1' is still (manually) covered by this Global catalog for\n
 forest '%2' since this site has been manually configured in the registry.
 .
+Language=Polish
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Romanian
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
 Language=Russian
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Spanish
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Turkish
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Chinese
+This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
+However, site '%1' is still (manually) covered by this Global catalog for\n
+forest '%2' since this site has been manually configured in the registry.
+.
+Language=Taiwanese
 This Global Catalog server no longer automatically covers site '%1' for forest '%2'.\n
 However, site '%1' is still (manually) covered by this Global catalog for\n
 forest '%2' since this site has been manually configured in the registry.
@@ -38149,7 +43604,55 @@ LDAP servers in site '%1' have been automatically\n
 selected to cover site '%2' for non-domain NC '%3' based on\n
 configured Directory Server replication costs.
 .
+Language=Polish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Romanian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
 Language=Russian
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Spanish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Turkish
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Chinese
+Site '%2' is no longer manually configured in the registry as\n
+covered by this LDAP server for non-domain NC '%3'. As a result,\n
+site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
+LDAP servers in site '%1' have been automatically\n
+selected to cover site '%2' for non-domain NC '%3' based on\n
+configured Directory Server replication costs.
+.
+Language=Taiwanese
 Site '%2' is no longer manually configured in the registry as\n
 covered by this LDAP server for non-domain NC '%3'. As a result,\n
 site '%2' does not have any LDAP servers for non-domain NC '%3'.\n
@@ -38167,7 +43670,37 @@ This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'
 However, site '%1' is still (manually) covered by this LDAP server for\n
 non-domain NC '%2' since this site has been manually configured in the registry.
 .
+Language=Polish
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Romanian
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
 Language=Russian
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Spanish
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Turkish
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Chinese
+This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
+However, site '%1' is still (manually) covered by this LDAP server for\n
+non-domain NC '%2' since this site has been manually configured in the registry.
+.
+Language=Taiwanese
 This LDAP server no longer automatically covers site '%1' for non-domain NC '%2'.\n
 However, site '%1' is still (manually) covered by this LDAP server for\n
 non-domain NC '%2' since this site has been manually configured in the registry.
@@ -38185,7 +43718,55 @@ Not having SPNs registered may result in authentication failures for this comput
 Contact your domain administrator who may need to manually resolve the account name\n
 collision.
 .
+Language=Polish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Romanian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
 Language=Russian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Spanish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Turkish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Chinese
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because the Domain Controller\n
+'%1' had more than one account with the name '%2' corresponding to this computer.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator who may need to manually resolve the account name\n
+collision.
+.
+Language=Taiwanese
 Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
 of the computer object in Active Directory failed because the Domain Controller\n
 '%1' had more than one account with the name '%2' corresponding to this computer.\n
@@ -38207,7 +43788,61 @@ Contact your domain administrator. The following technical information may be\n
 useful for the resolution of this failure:%n\n
 DsCrackNames status = 0x%3, crack error = 0x%4.
 .
+Language=Polish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Romanian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
 Language=Russian
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Spanish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Turkish
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Chinese
+Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
+of the computer object in Active Directory failed because this computer account\n
+name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
+Not having SPNs registered may result in authentication failures for this computer.\n
+Contact your domain administrator. The following technical information may be\n
+useful for the resolution of this failure:%n\n
+DsCrackNames status = 0x%3, crack error = 0x%4.
+.
+Language=Taiwanese
 Attempt to update DnsHostName and HOST Service Principal Name (SPN) attributes\n
 of the computer object in Active Directory failed because this computer account\n
 name, '%2' could not be mapped to the computer object on Domain Controller '%1'.\n
@@ -38231,7 +43866,67 @@ exist) such that the above IP address maps to the selected site. This may requir
 creation of a new subnet object (whose range includes the above IP address) which maps\n
 to the selected site object.
 .
+Language=Polish
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Romanian
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
 Language=Russian
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Spanish
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Turkish
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Chinese
+None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
+While this may be a temporary situation due to IP address changes, it is generally\n
+recommended that the IP address of the Domain Controller (accessible to machines in\n
+its domain) maps to the Site which it services. If the above list of IP addresses is\n
+stable, consider moving this server to a site (or create one if it does not already\n
+exist) such that the above IP address maps to the selected site. This may require the\n
+creation of a new subnet object (whose range includes the above IP address) which maps\n
+to the selected site object.
+.
+Language=Taiwanese
 None of the IP addresses (%2) of this Domain Controller map to the configured site '%1'.\n
 While this may be a temporary situation due to IP address changes, it is generally\n
 recommended that the IP address of the Domain Controller (accessible to machines in\n
@@ -38250,7 +43945,31 @@ Language=English
 The following error occurred while reading a parameter '%2' in the\n
 Netlogon %1 registry section:%n%3
 .
+Language=Polish
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Romanian
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
 Language=Russian
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Spanish
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Turkish
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Chinese
+The following error occurred while reading a parameter '%2' in the\n
+Netlogon %1 registry section:%n%3
+.
+Language=Taiwanese
 The following error occurred while reading a parameter '%2' in the\n
 Netlogon %1 registry section:%n%3
 .
@@ -38264,7 +43983,37 @@ The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\
 The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
 The value of 0x%6 has been assigned to this parameter.
 .
+Language=Polish
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Romanian
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
 Language=Russian
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Spanish
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Turkish
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Chinese
+The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
+The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
+The value of 0x%6 has been assigned to this parameter.
+.
+Language=Taiwanese
 The Netlogon %1 registry key contains an invalid value 0x%2 for parameter '%3'.\n
 The minimum and maximum values allowed for this parameter are 0x%4 and 0x%5, respectively.\n
 The value of 0x%6 has been assigned to this parameter.
@@ -38278,7 +44027,31 @@ Language=English
 The session setup from the computer %1 failed to authenticate.\n
 The following error occurred: %n%2
 .
+Language=Polish
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Romanian
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
 Language=Russian
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Spanish
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Turkish
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Chinese
+The session setup from the computer %1 failed to authenticate.\n
+The following error occurred: %n%2
+.
+Language=Taiwanese
 The session setup from the computer %1 failed to authenticate.\n
 The following error occurred: %n%2
 .
@@ -38293,7 +44066,43 @@ Dynamic DNS updates have been manually disabled on this domain controller.\n\n
 %nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
 records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
 .
+Language=Polish
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Romanian
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
 Language=Russian
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Spanish
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Turkish
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Chinese
+Dynamic DNS updates have been manually disabled on this domain controller.\n\n
+%n%nUSER ACTION\n\n
+%nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
+records from the file '%SystemRoot%\\System32\\Config\\Netlogon.dns' to the DNS database.
+.
+Language=Taiwanese
 Dynamic DNS updates have been manually disabled on this domain controller.\n\n
 %n%nUSER ACTION\n\n
 %nReconfigure this domain controller to use dynamic DNS updates or manually add the DNS\n
@@ -38327,7 +44136,145 @@ the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
 different maximum size, create the above registry value and set the desired\n
 maximum size in bytes.
 .
+Language=Polish
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Romanian
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
 Language=Russian
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Spanish
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Turkish
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Chinese
+During the past %1 hours there have been %2 connections to this Domain\n
+Controller from client machines whose IP addresses don't map to any of\n
+the existing sites in the enterprise. Those clients, therefore, have\n
+undefined sites and may connect to any Domain Controller including\n
+those that are in far distant locations from the clients. A client's site\n
+is determined by the mapping of its subnet to one of the existing sites.\n
+To move the above clients to one of the sites, please consider creating\n
+subnet object(s) covering the above IP addresses with mapping to one of the\n
+existing sites.  The names and IP addresses of the clients in question have\n
+been logged on this computer in the following log file\n
+'%SystemRoot%\\debug\\netlogon.log' and, potentially, in the log file\n
+'%SystemRoot%\\debug\\netlogon.bak' created if the former log becomes full.\n
+The log(s) may contain additional unrelated debugging information. To filter\n
+out the needed information, please search for lines which contain text\n
+'NO_CLIENT_SITE:'. The first word after this string is the client name and\n
+the second word is the client IP address. The maximum size of the log(s) is\n
+controlled by the following registry DWORD value\n
+'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters\\LogFileMaxSize';\n
+the default is %3 bytes.  The current maximum size is %4 bytes.  To set a\n
+different maximum size, create the above registry value and set the desired\n
+maximum size in bytes.
+.
+Language=Taiwanese
 During the past %1 hours there have been %2 connections to this Domain\n
 Controller from client machines whose IP addresses don't map to any of\n
 the existing sites in the enterprise. Those clients, therefore, have\n
@@ -38363,7 +44310,55 @@ took too long.\n\n
 %nManually delete the DNS records listed in the file\n
 '%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
 .
+Language=Polish
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Romanian
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
 Language=Russian
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Spanish
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Turkish
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Chinese
+The deregistration of some DNS domain controller locator records was aborted\n
+at the time of this domain controller demotion because the DNS deregistrations\n
+took too long.\n\n
+%n%nUSER ACTION\n\n
+%nManually delete the DNS records listed in the file\n
+'%SystemRoot%\\System32\\Config\\Netlogon.dns' from the DNS database.
+.
+Language=Taiwanese
 The deregistration of some DNS domain controller locator records was aborted\n
 at the time of this domain controller demotion because the DNS deregistrations\n
 took too long.\n\n
@@ -38393,7 +44388,109 @@ the endpoint mapper at the time the NetLogon service on remote machines makes RP
 to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
 service on this machine and verify that this event log no longer appears.
 .
+Language=Polish
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Romanian
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
 Language=Russian
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Spanish
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Turkish
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Chinese
+The NetLogon service on this domain controller has been configured to use port %1\n
+for incoming RPC connections over TCP/IP from remote machines. However, the\n
+following error occurred when Netlogon attempted to register this port with the RPC\n
+endpoint mapper service: %n%2 %nThis will prevent the NetLogon service on remote\n
+machines from connecting to this domain controller over TCP/IP that may result in\n
+authentication problems.\n\n
+%n%nUSER ACTION\n\n
+%nThe specified port is configured via the Group Policy or via a registry value 'DcTcpipPort'\n
+under the 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters'\n
+registry key; the value configured through the Group Policy takes precedence. If the\n
+port specified is in error, reset it to a correct value. You can also remove this\n
+configuration for the port in which case the port will be assigned dynamically by\n
+the endpoint mapper at the time the NetLogon service on remote machines makes RPC connections\n
+to this domain controller. After the misconfiguration is corrected, restart the NetLogon\n
+service on this machine and verify that this event log no longer appears.
+.
+Language=Taiwanese
 The NetLogon service on this domain controller has been configured to use port %1\n
 for incoming RPC connections over TCP/IP from remote machines. However, the\n
 following error occurred when Netlogon attempted to register this port with the RPC\n
