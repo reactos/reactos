@@ -19,6 +19,7 @@ extern void func_GetModuleFileName(void);
 extern void func_GetVolumeInformation(void);
 extern void func_interlck(void);
 extern void func_IsDBCSLeadByteEx(void);
+extern void func_JapaneseCalendar(void);
 extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
@@ -51,6 +52,7 @@ const struct test winetest_testlist[] =
     { "GetVolumeInformation",        func_GetVolumeInformation },
     { "interlck",                    func_interlck },
     { "IsDBCSLeadByteEx",            func_IsDBCSLeadByteEx },
+    { "JapaneseCalendar",            func_JapaneseCalendar },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },
