@@ -1661,8 +1661,12 @@ IntGetFontRenderMode(LOGFONTW *logfont)
         return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
         return FT_RENDER_MODE_LIGHT;
-        /*    case CLEARTYPE_QUALITY:
-                return FT_RENDER_MODE_LCD; */
+    case CLEARTYPE_QUALITY:
+        if (!gspv.bFontSmoothing)
+            break;
+        if (!gspv.uiFontSmoothingType)
+            break;
+        return FT_RENDER_MODE_LCD;
     }
     return FT_RENDER_MODE_NORMAL;
 }

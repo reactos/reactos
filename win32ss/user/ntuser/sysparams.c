@@ -65,7 +65,10 @@ static const WCHAR* VAL_GRID = L"GridGranularity";
 static const WCHAR* VAL_DRAG = L"DragFullWindows";
 static const WCHAR* VAL_DRAGHEIGHT = L"DragHeight";
 static const WCHAR* VAL_DRAGWIDTH = L"DragWidth";
-static const WCHAR* VAL_FNTSMOOTH = L"FontSmoothing";
+static const WCHAR* VAL_FONTSMOOTHING = L"FontSmoothing";
+static const WCHAR* VAL_FONTSMOOTHINGTYPE = L"FontSmoothingType";
+static const WCHAR* VAL_FONTSMOOTHINGCONTRAST = L"FontSmoothingGamma";
+static const WCHAR* VAL_FONTSMOOTHINGORIENTATION = L"FontSmoothingOrientation";
 static const WCHAR* VAL_SCRLLLINES = L"WheelScrollLines";
 static const WCHAR* VAL_CLICKLOCKTIME = L"ClickLockTime";
 static const WCHAR* VAL_PAINTDESKVER = L"PaintDesktopVersion";
@@ -284,6 +287,10 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
+    gspv.bFontSmoothing = SpiLoadInt(KEY_DESKTOP, VAL_FONTSMOOTHING, 0) == 2;
+    gspv.uiFontSmoothingType = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGTYPE, 1);
+    gspv.uiFontSmoothingContrast = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGCONTRAST, 1400);
+    gspv.uiFontSmoothingOrientation = SpiLoadDWord(KEY_DESKTOP, VAL_FONTSMOOTHINGORIENTATION, 1);
 #if (_WIN32_WINNT >= 0x0600)
     gspv.uiWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
@@ -1369,10 +1376,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.bFontSmoothing, fl);
 
         case SPI_SETFONTSMOOTHING:
-            gspv.bFontSmoothing = uiParam ? TRUE : FALSE;
+            gspv.bFontSmoothing = (uiParam == 2);
             if (fl & SPIF_UPDATEINIFILE)
             {
-                SpiStoreSzInt(KEY_DESKTOP, VAL_FNTSMOOTH, uiParam ? 2 : 0);
+                SpiStoreSz(KEY_DESKTOP, VAL_FONTSMOOTHING, (uiParam == 2) ? L"2" : L"0");
             }
             return (UINT_PTR)KEY_DESKTOP;
 
@@ -1721,13 +1728,13 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.uiFontSmoothingType, fl);
 
         case SPI_SETFONTSMOOTHINGTYPE:
-            return SpiSetInt(&gspv.uiFontSmoothingType, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.uiFontSmoothingType, PtrToUlong(pvParam), KEY_DESKTOP, VAL_FONTSMOOTHINGTYPE, fl);
 
         case SPI_GETFONTSMOOTHINGCONTRAST:
             return SpiGetInt(pvParam, &gspv.uiFontSmoothingContrast, fl);
 
         case SPI_SETFONTSMOOTHINGCONTRAST:
-            return SpiSetInt(&gspv.uiFontSmoothingContrast, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.uiFontSmoothingContrast, PtrToUlong(pvParam), KEY_DESKTOP, VAL_FONTSMOOTHINGCONTRAST, fl);
 
         case SPI_GETFOCUSBORDERWIDTH:
             return SpiGetInt(pvParam, &gspv.uiFocusBorderWidth, fl);
@@ -1745,7 +1752,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.uiFontSmoothingOrientation, fl);
 
         case SPI_SETFONTSMOOTHINGORIENTATION:
-            return SpiSetInt(&gspv.uiFontSmoothingOrientation, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetDWord(&gspv.uiFontSmoothingOrientation, PtrToUlong(pvParam), KEY_DESKTOP, VAL_FONTSMOOTHINGORIENTATION, fl);
 
         /* The following are undocumented, but valid SPI values */
         case 0x1010:
