@@ -23,6 +23,7 @@
 #define IDB_CLASSIC   102
 #define IDB_LAUTUS    103
 #define IDB_LUNAR     104
+#define IDB_MIZU      105
 
 #define IDI_ICON1 10
 #define IDI_ICON2 11
@@ -143,5 +144,6 @@
 #define IDS_CLASSIC 3800
 #define IDS_LAUTUS  3801
 #define IDS_LUNAR   3802
+#define IDS_MIZU    3803
 
 #define IDR_GPL 4000
