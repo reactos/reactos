@@ -7,6 +7,7 @@
  *                  Hartmut Birr
  *                  Gunnar Andre Dalsnes
  *                  Thomas Weidenmueller
+ *                  Katayama Hirofumi MZ
  * UPDATE HISTORY:
  *                  Created 24/08/2004
  */
@@ -35,6 +36,10 @@ static const char UTF8Length[128] =
 
 /* First byte mask depending on UTF-8 sequence length. */
 static const unsigned char UTF8Mask[6] = {0x7f, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+
+/* UTF-8 length to lower bound */
+static const unsigned long UTF8LBound[] =
+    {0, 0x80, 0x800, 0x10000, 0x200000, 0x2000000, 0xFFFFFFFF};
 
 /* FIXME: Change to HASH table or linear array. */
 static LIST_ENTRY CodePageListHead;
@@ -352,7 +357,6 @@ IntGetCodePageEntry(UINT CodePage)
  * Internal version of MultiByteToWideChar for UTF8.
  *
  * @see MultiByteToWideChar
- * @todo Add UTF8 validity checks.
  */
 
 static
@@ -364,10 +368,12 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
                            LPWSTR WideCharString,
                            INT WideCharCount)
 {
-    LPCSTR MbsEnd;
-    UCHAR Char, Length;
+    LPCSTR MbsEnd, MbsPtrSave;
+    UCHAR Char, TrailLength;
     WCHAR WideChar;
     LONG Count;
+    BOOL CharIsValid, StringIsValid = TRUE;
+    const WCHAR InvalidChar = 0xFFFD;
 
     if (Flags != 0 && Flags != MB_ERR_INVALID_CHARS)
     {
@@ -378,17 +384,61 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
     /* Does caller query for output buffer size? */
     if (WideCharCount == 0)
     {
+        /* validate and count the wide characters */
         MbsEnd = MultiByteString + MultiByteCount;
         for (; MultiByteString < MbsEnd; WideCharCount++)
         {
             Char = *MultiByteString++;
             if (Char < 0xC0)
+            {
+                TrailLength = 0;
                 continue;
-            MultiByteString += UTF8Length[Char - 0x80];
+            }
+            if (Char >= 0xF8 || (Char & 0xC0) == 0x80)
+            {
+                TrailLength = 0;
+                StringIsValid = FALSE;
+                continue;
+            }
+
+            CharIsValid = TRUE;
+            MbsPtrSave = MultiByteString;
+            TrailLength = UTF8Length[Char - 0x80];
+            WideChar = Char & UTF8Mask[TrailLength];
+
+            while (TrailLength && MultiByteString < MbsEnd)
+            {
+                if ((*MultiByteString & 0xC0) != 0x80)
+                {
+                    CharIsValid = StringIsValid = FALSE;
+                    break;
+                }
+
+                WideChar = (WideChar << 6) | (*MultiByteString++ & 0x7f);
+                TrailLength--;
+            }
+
+            if (!CharIsValid || WideChar < UTF8LBound[UTF8Length[Char - 0x80]])
+            {
+                MultiByteString = MbsPtrSave;
+            }
         }
+
+        if (TrailLength)
+        {
+            WideCharCount++;
+        }
+
+        if (Flags == MB_ERR_INVALID_CHARS && (!StringIsValid || TrailLength))
+        {
+            SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+            return 0;
+        }
+
         return WideCharCount;
     }
 
+    /* convert */
     MbsEnd = MultiByteString + MultiByteCount;
     for (Count = 0; Count < WideCharCount && MultiByteString < MbsEnd; Count++)
     {
@@ -396,20 +446,61 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         if (Char < 0x80)
         {
             *WideCharString++ = Char;
+            TrailLength = 0;
             continue;
         }
-        Length = UTF8Length[Char - 0x80];
-        WideChar = Char & UTF8Mask[Length];
-        while (Length && MultiByteString < MbsEnd)
+        if (Char >= 0xF8 || Char == 0x80 || (Char & 0xC0) == 0x80)
         {
-            WideChar = (WideChar << 6) | (*MultiByteString++ & 0x7f);
-            Length--;
+            *WideCharString++ = InvalidChar;
+            TrailLength = 0;
+            continue;
         }
-        *WideCharString++ = WideChar;
+
+        CharIsValid = TRUE;
+        MbsPtrSave = MultiByteString;
+        TrailLength = UTF8Length[Char - 0x80];
+        WideChar = Char & UTF8Mask[TrailLength];
+
+        while (TrailLength && MultiByteString < MbsEnd)
+        {
+            if ((*MultiByteString & 0xC0) != 0x80)
+            {
+                CharIsValid = StringIsValid = FALSE;
+                break;
+            }
+
+            WideChar = (WideChar << 6) | (*MultiByteString++ & 0x7f);
+            TrailLength--;
+        }
+
+        if (CharIsValid && UTF8LBound[UTF8Length[Char - 0x80]] <= WideChar)
+        {
+            *WideCharString++ = WideChar;
+        }
+        else
+        {
+            *WideCharString++ = InvalidChar;
+            MultiByteString = MbsPtrSave;
+        }
+    }
+
+    if (TrailLength && Count < WideCharCount && MultiByteString < MbsEnd)
+    {
+        *WideCharString = InvalidChar;
+        WideCharCount++;
     }
 
     if (MultiByteString < MbsEnd)
+    {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    if (Flags == MB_ERR_INVALID_CHARS && (!StringIsValid || TrailLength))
+    {
+        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+        return 0;
+    }
 
     return Count;
 }
@@ -549,7 +640,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
             if (MultiByteString == MbsEnd)
             {
-                *WideCharString++ = UNICODE_NULL;
+                *WideCharString++ = MultiByteTable[Char];
             }
             else if (*MultiByteString == 0)
             {
