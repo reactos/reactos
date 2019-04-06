@@ -189,6 +189,7 @@ static OSVERSIONINFOW *GetRealOSVersion()
                 return &osvi;
             }
         }
+        FreeLibrary(hNTDLL);
     }
     return NULL;
 }
