@@ -9,9 +9,6 @@ endif()
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 
-# Honor CMAKE_SHARED_LIBRARY_<Lang>_FLAGS variable.
-cmake_policy(SET CMP0018 OLD)
-
 if(POLICY CMP0058)
     # Ninja requires custom command byproducts to be explicit
     cmake_policy(SET CMP0058 OLD)
@@ -34,6 +31,7 @@ set(CMAKE_SHARED_MODULE_PREFIX "")
 set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 if(NOT DEFINED NEW_STYLE_BUILD)
