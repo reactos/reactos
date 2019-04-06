@@ -805,7 +805,7 @@ BEGIN
     
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatuj dysk lokalny"
-    IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.n\Naciśnij przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby pozostawić dysk bez zmian."
+    IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nNaciśnij przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby pozostawić dysk bez zmian."
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
 
     /* Run File dialog */
