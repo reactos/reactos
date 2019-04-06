@@ -173,7 +173,7 @@ static void TestEntry(const ENTRY *pEntry)
 
 typedef NTSTATUS (WINAPI* RTLGETVERSION)(PRTL_OSVERSIONINFOW);
 
-static OSVERSIONINFOW *GetRealOSVersion()
+static OSVERSIONINFOW *GetRealOSVersion(void)
 {
     static OSVERSIONINFOW osvi = { 0 };
     HINSTANCE hNTDLL = LoadLibraryW(L"ntdll.dll");
