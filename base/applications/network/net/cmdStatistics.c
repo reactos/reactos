@@ -34,7 +34,8 @@ DisplayServerStatistics(VOID)
     if (Status != NERR_Success)
         goto done;
 
-    ConResPrintf(StdOut, IDS_STATISTICS_SRV_NAME, ServerInfo->sv100_name);
+    PrintMessageStringV(4624, ServerInfo->sv100_name);
+    ConPrintf(StdOut, L"\n\n");
 
     RtlSecondsSince1970ToTime(StatisticsInfo->sts0_start,
                               &LargeValue);
@@ -53,57 +54,61 @@ DisplayServerStatistics(VOID)
         wHour = wHour - 12;
     }
 
-    ConResPrintf(StdOut, IDS_STATISTICS_SINCE,
-                 SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
-                 wHour, SystemTime.wMinute,
-                 (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
+    PrintMessageString(4600);
+    ConPrintf(StdOut, L" %d/%d/%d %d:%02d %s\n\n\n",
+              SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
+              wHour, SystemTime.wMinute,
+              (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESACCEPT, nPaddedLength);
+    PrintPaddedMessageString(4601, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_sopens);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESSTIME, nPaddedLength);
+    PrintPaddedMessageString(4602, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_stimedout);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_SESSERROR, nPaddedLength);
+    PrintPaddedMessageString(4603, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_serrorout);
 
     LargeValue.u.LowPart = StatisticsInfo->sts0_bytessent_low;
     LargeValue.u.HighPart = StatisticsInfo->sts0_bytessent_high;
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_KBSENT, nPaddedLength);
+    PrintPaddedMessageString(4604, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", LargeValue.QuadPart / 1024);
 
     LargeValue.u.LowPart = StatisticsInfo->sts0_bytesrcvd_low;
     LargeValue.u.HighPart = StatisticsInfo->sts0_bytesrcvd_high;
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_KBRCVD, nPaddedLength);
+    PrintPaddedMessageString(4605, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", LargeValue.QuadPart / 1024);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_MRESPTIME, nPaddedLength);
+    PrintPaddedMessageString(4606, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_avresponse);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_SYSERRORS, nPaddedLength);
+    PrintPaddedMessageString(4610, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_syserrors);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_PMERRORS, nPaddedLength);
+    PrintPaddedMessageString(4612, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_permerrors);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_PWERRORS, nPaddedLength);
+    PrintPaddedMessageString(4611, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_pwerrors);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_FILES, nPaddedLength);
+    PrintPaddedMessageString(4608, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_fopens);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_DEVICES, nPaddedLength);
+    PrintPaddedMessageString(4613, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_devopens);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_JOBS, nPaddedLength);
+    PrintPaddedMessageString(4609, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_jobsqueued);
 
-    ConResPuts(StdOut, IDS_STATISTICS_SRV_BUFFERS);
+    PrintMessageString(4620);
+    ConPrintf(StdOut, L"\n");
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_BIGBUFFERS, nPaddedLength);
+    ConPrintf(StdOut, L"  ");
+    PrintPaddedMessageString(4621, nPaddedLength - 2);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_bigbufneed);
 
-    PrintPaddedResourceString(IDS_STATISTICS_SRV_REQBUFFERS, nPaddedLength);
+    ConPrintf(StdOut, L"  ");
+    PrintPaddedMessageString(4622, nPaddedLength - 2);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->sts0_reqbufneed);
 
 done:

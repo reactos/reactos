@@ -26362,13 +26362,13 @@ Language=English
 Statistics since%0
 .
 Language=Polish
-Statistics since%0
+Statystyka od%0
 .
 Language=Romanian
-Statistics since%0
+Statistici începând din%0
 .
 Language=Russian
-Statistics since%0
+Статистика после%0
 .
 Language=Spanish
 Statistics since%0
@@ -26391,13 +26391,13 @@ Language=English
 Sessions accepted%0
 .
 Language=Polish
-Sessions accepted%0
+Zaakceptowane sesje%0
 .
 Language=Romanian
-Sessions accepted%0
+Sesiuni acceptate%0
 .
 Language=Russian
-Sessions accepted%0
+Принятые сеансы%0
 .
 Language=Spanish
 Sessions accepted%0
@@ -26420,13 +26420,13 @@ Language=English
 Sessions timed-out%0
 .
 Language=Polish
-Sessions timed-out%0
+Sesje przerwane z powodu upłynięcia limitu czasu%0
 .
 Language=Romanian
-Sessions timed-out%0
+Sesiuni expirate%0
 .
 Language=Russian
-Sessions timed-out%0
+Сеансы с истекшим интервалом%0
 .
 Language=Spanish
 Sessions timed-out%0
@@ -26449,13 +26449,13 @@ Language=English
 Sessions errored-out%0
 .
 Language=Polish
-Sessions errored-out%0
+Sesje przerwane z powodu wystąpienia błędu%0
 .
 Language=Romanian
-Sessions errored-out%0
+Sesiuni eșuate%0
 .
 Language=Russian
-Sessions errored-out%0
+Сеансы с ошибками%0
 .
 Language=Spanish
 Sessions errored-out%0
@@ -26478,13 +26478,13 @@ Language=English
 Kilobytes sent%0
 .
 Language=Polish
-Kilobytes sent%0
+Wysłano kilobajtów%0
 .
 Language=Romanian
-Kilobytes sent%0
+Kiloocteți transmiși%0
 .
 Language=Russian
-Kilobytes sent%0
+Послано КБ%0
 .
 Language=Spanish
 Kilobytes sent%0
@@ -26507,13 +26507,13 @@ Language=English
 Kilobytes received%0
 .
 Language=Polish
-Kilobytes received%0
+Odebrano kilobajtów%0
 .
 Language=Romanian
-Kilobytes received%0
+Kiloocteți receptați%0
 .
 Language=Russian
-Kilobytes received%0
+Принято КБ%0
 .
 Language=Spanish
 Kilobytes received%0
@@ -26536,13 +26536,13 @@ Language=English
 Mean response time (msec)%0
 .
 Language=Polish
-Mean response time (msec)%0
+Średni czas odpowiedzi (ms)%0
 .
 Language=Romanian
-Mean response time (msec)%0
+Timpul mediu de răspuns (msec)%0
 .
 Language=Russian
-Mean response time (msec)%0
+Среднее время отклика (мс)%0
 .
 Language=Spanish
 Mean response time (msec)%0
@@ -26594,13 +26594,13 @@ Language=English
 Files accessed%0
 .
 Language=Polish
-Files accessed%0
+Wykorzystane pliki%0
 .
 Language=Romanian
-Files accessed%0
+Fișiere accesate%0
 .
 Language=Russian
-Files accessed%0
+Доступ к файлам%0
 .
 Language=Spanish
 Files accessed%0
@@ -26623,13 +26623,13 @@ Language=English
 Print jobs spooled%0
 .
 Language=Polish
-Print jobs spooled%0
+Buforowane zadania drukowania%0
 .
 Language=Romanian
-Print jobs spooled%0
+Comenzi de imprimare cumulate%0
 .
 Language=Russian
-Print jobs spooled%0
+Задания печати в очереди%0
 .
 Language=Spanish
 Print jobs spooled%0
@@ -26652,13 +26652,13 @@ Language=English
 System errors%0
 .
 Language=Polish
-System errors%0
+Błędy systemu%0
 .
 Language=Romanian
-System errors%0
+Erori de sistem%0
 .
 Language=Russian
-System errors%0
+Системные ошибки%0
 .
 Language=Spanish
 System errors%0
@@ -26681,13 +26681,13 @@ Language=English
 Password violations%0
 .
 Language=Polish
-Password violations%0
+Naruszenia hasła%0
 .
 Language=Romanian
-Password violations%0
+Erori la parole%0
 .
 Language=Russian
-Password violations%0
+Нарушение паролей%0
 .
 Language=Spanish
 Password violations%0
@@ -26710,13 +26710,13 @@ Language=English
 Permission violations%0
 .
 Language=Polish
-Permission violations%0
+Naruszenia uprawnień%0
 .
 Language=Romanian
-Permission violations%0
+Erori la permisiuni%0
 .
 Language=Russian
-Permission violations%0
+Нарушение разрешений%0
 .
 Language=Spanish
 Permission violations%0
@@ -26739,13 +26739,13 @@ Language=English
 Communication devices accessed%0
 .
 Language=Polish
-Communication devices accessed%0
+Wykorzystane urządzenia komunikacyjne%0
 .
 Language=Romanian
-Communication devices accessed%0
+Dispozitive de comunicații accesate%0
 .
 Language=Russian
-Communication devices accessed%0
+Доступ к устройствам связи%0
 .
 Language=Spanish
 Communication devices accessed%0
@@ -26942,13 +26942,13 @@ Language=English
 Times buffers exhausted
 .
 Language=Polish
-Times buffers exhausted
+Wyczerpane bufory czasomierzy
 .
 Language=Romanian
-Times buffers exhausted
+Momente cu limită de memorie depășită
 .
 Language=Russian
-Times buffers exhausted
+Исчерпанные буферы времени
 .
 Language=Spanish
 Times buffers exhausted
@@ -26971,13 +26971,13 @@ Language=English
 Big buffers%0
 .
 Language=Polish
-Big buffers%0
+Duże bufory%0
 .
 Language=Romanian
-Big buffers%0
+memorii masive%0
 .
 Language=Russian
-Big buffers%0
+Большие буферы%0
 .
 Language=Spanish
 Big buffers%0
@@ -27000,13 +27000,13 @@ Language=English
 Request buffers%0
 .
 Language=Polish
-Request buffers%0
+Bufory żądań%0
 .
 Language=Romanian
-Request buffers%0
+memorii tranzitive%0
 .
 Language=Russian
-Request buffers%0
+Затребованные буферы%0
 .
 Language=Spanish
 Request buffers%0
@@ -27029,13 +27029,13 @@ Language=English
 Workstation Statistics for \\\\%1
 .
 Language=Polish
-Workstation Statistics for \\\\%1
+Statystyka stacji roboczej dla \\\\%1
 .
 Language=Romanian
-Workstation Statistics for \\\\%1
+Statistici pentru stația de lucru \\\\%1
 .
 Language=Russian
-Workstation Statistics for \\\\%1
+Статистика рабочей станции для \\\\%1
 .
 Language=Spanish
 Workstation Statistics for \\\\%1
@@ -27058,13 +27058,13 @@ Language=English
 Server Statistics for \\\\%1
 .
 Language=Polish
-Server Statistics for \\\\%1
+Statystyka serwera dla \\\\%1
 .
 Language=Romanian
-Server Statistics for \\\\%1
+Statistici de server pentru \\\\%1
 .
 Language=Russian
-Server Statistics for \\\\%1
+Статистика сервера для \\\\%1
 .
 Language=Spanish
 Server Statistics for \\\\%1
