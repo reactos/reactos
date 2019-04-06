@@ -217,7 +217,8 @@ public:
     HINSTANCE GetHInstanceAt(int i);
 };
 
-extern CAtlBaseModule _AtlBaseModule;
+__declspec(selectany) CAtlBaseModule _AtlBaseModule;
+__declspec(selectany) bool CAtlBaseModule::m_bInitFailed = false;
 
 
 ///

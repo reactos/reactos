@@ -23,5 +23,4 @@ if(NOT MSVC)
 endif()
 
 add_pch(shellbars shellbars.h SOURCE)
-target_link_libraries(shellbars atlnew)
 add_dependencies(shellbars xdk)

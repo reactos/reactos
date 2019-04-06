@@ -30,7 +30,7 @@ list(APPEND SOURCE
 file(GLOB explorer_rc_deps res/*.*)
 add_rc_deps(explorer.rc ${explorer_rc_deps})
 add_executable(explorer ${SOURCE} explorer.rc)
-target_link_libraries(explorer uuid atlnew wine)
+target_link_libraries(explorer uuid wine)
 set_module_type(explorer win32gui UNICODE)
 add_importlibs(explorer advapi32 gdi32 user32 comctl32 ole32 oleaut32 shell32 browseui shlwapi shdocvw version uxtheme msvcrt kernel32 ntdll)
 add_pch(explorer precomp.h SOURCE)

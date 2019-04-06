@@ -57,7 +57,6 @@ class CComModule;
 class CAtlComModule;
 __declspec(selectany) CAtlModule *_pAtlModule = NULL;
 __declspec(selectany) CComModule *_pModule = NULL;
-extern CAtlComModule _AtlComModule;
 
 
 struct _ATL_CATMAP_ENTRY
@@ -590,6 +589,9 @@ public:
     }
 };
 
+__declspec(selectany) CAtlComModule _AtlComModule;
+
+
 template <class T>
 HRESULT CAtlModuleT<T>::RegisterServer(BOOL bRegTypeLib, const CLSID *pCLSID)
 {
@@ -983,7 +985,8 @@ public:
     }
 };
 
-extern CAtlWinModule _AtlWinModule;
+__declspec(selectany) CAtlWinModule _AtlWinModule;
+
 
 class CComAllocator
 {

@@ -20,7 +20,6 @@ target_link_libraries(rshell
     shellbars
     shellmenu
     shelldesktop
-    atlnew
     uuid
     wine)
 
