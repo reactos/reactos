@@ -282,7 +282,7 @@ struct hash_table {
 
 /* options.c */
 int cons_options(struct packet *, struct dhcp_packet *, int,
-    struct tree_cache **, int, int, int, u_int8_t *, int);
+    struct tree_cache **);
 char *pretty_print_option(unsigned int,
     unsigned char *, int, int, int);
 void do_packet(struct interface_info *, struct dhcp_packet *,

@@ -1288,7 +1288,7 @@ make_discover(struct interface_info *ip, struct client_lease *lease)
 
 	/* Set up the option buffer... */
 	ip->client->packet_length = cons_options(NULL, &ip->client->packet, 0,
-	    options, 0, 0, 0, NULL, 0);
+	    options);
 	if (ip->client->packet_length < BOOTP_MIN_LEN)
 		ip->client->packet_length = BOOTP_MIN_LEN;
 
@@ -1380,7 +1380,7 @@ make_request(struct interface_info *ip, struct client_lease * lease)
 
 	/* Set up the option buffer... */
 	ip->client->packet_length = cons_options(NULL, &ip->client->packet, 0,
-	    options, 0, 0, 0, NULL, 0);
+	    options);
 	if (ip->client->packet_length < BOOTP_MIN_LEN)
 		ip->client->packet_length = BOOTP_MIN_LEN;
 
@@ -1464,7 +1464,7 @@ make_decline(struct interface_info *ip, struct client_lease *lease)
 
 	/* Set up the option buffer... */
 	ip->client->packet_length = cons_options(NULL, &ip->client->packet, 0,
-	    options, 0, 0, 0, NULL, 0);
+	    options);
 	if (ip->client->packet_length < BOOTP_MIN_LEN)
 		ip->client->packet_length = BOOTP_MIN_LEN;
 
