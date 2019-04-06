@@ -173,25 +173,26 @@ static void TestEntry(const ENTRY *pEntry)
 
 typedef NTSTATUS (WINAPI* RTLGETVERSION)(PRTL_OSVERSIONINFOW);
 
-static OSVERSIONINFOW *GetRealOSVersion(void)
+static RTL_OSVERSIONINFOW *GetRealOSVersion(void)
 {
-    static OSVERSIONINFOW osvi = { 0 };
+    static RTL_OSVERSIONINFOW osvi = { 0 };
+    RTL_OSVERSIONINFOW *ptr = NULL;
     HINSTANCE hNTDLL = LoadLibraryW(L"ntdll.dll");
+    RTLGETVERSION fn;
     if (hNTDLL)
     {
-        RTLGETVERSION fn;
         fn = (RTLGETVERSION)GetProcAddress(hNTDLL, "RtlGetVersion");
         if (fn)
         {
             osvi.dwOSVersionInfoSize = sizeof(osvi);
             if (fn(&osvi) == STATUS_SUCCESS)
             {
-                return &osvi;
+                ptr = &osvi;
             }
         }
         FreeLibrary(hNTDLL);
     }
-    return NULL;
+    return ptr;
 }
 
 static BOOL IsWin10Plus(void)
