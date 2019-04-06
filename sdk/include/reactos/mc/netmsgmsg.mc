@@ -23822,13 +23822,13 @@ Language=Spanish
 Alias de \\\\%1
 .
 Language=Turkish
-\\\\%s için başka adlar
+\\\\%1 için başka adlar
 .
 Language=Chinese
-\\\\%s 的别名
+\\\\%1 的别名
 .
 Language=Taiwanese
-別名 \\\\%s
+別名 \\\\%1
 .
 
 MessageId=4406
@@ -23926,25 +23926,25 @@ Language=English
 User Accounts for \\\\%1
 .
 Language=Polish
-User Accounts for \\\\%1
+Konta użytkowników dla \\\\%1
 .
 Language=Romanian
-User Accounts for \\\\%1
+Conturi de utilizator pentru \\\\%1
 .
 Language=Russian
-User Accounts for \\\\%1
+Учетные записи пользователей для \\\\%1
 .
 Language=Spanish
-User Accounts for \\\\%1
+Cuentas de usuario en \\\\%1
 .
 Language=Turkish
-User Accounts for \\\\%1
+\\\\%1 için kullanıcı hesapları
 .
 Language=Chinese
-User Accounts for \\\\%1
+\\\\%1 的用户帐户
 .
 Language=Taiwanese
-User Accounts for \\\\%1
+使用者帳戶 \\\\%1
 .
 
 MessageId=4411
@@ -23955,25 +23955,25 @@ Language=English
 User name%0
 .
 Language=Polish
-User name%0
+Nazwa użytkownika%0
 .
 Language=Romanian
-User name%0
+Nume utilizator%0
 .
 Language=Russian
-User name%0
+Имя пользователя%0
 .
 Language=Spanish
-User name%0
+Nombre de usuario%0
 .
 Language=Turkish
-User name%0
+Kullanıcı adı%0
 .
 Language=Chinese
-User name%0
+用户名%0
 .
 Language=Taiwanese
-User name%0
+使用者名稱%0
 .
 
 MessageId=4412
@@ -23984,25 +23984,25 @@ Language=English
 Full Name%0
 .
 Language=Polish
-Full Name%0
+Pełna nazwa%0
 .
 Language=Romanian
-Full Name%0
+Nume complet%0
 .
 Language=Russian
-Full Name%0
+Полное имя%0
 .
 Language=Spanish
-Full Name%0
+Nombre completo%0
 .
 Language=Turkish
-Full Name%0
+Tüm ad%0
 .
 Language=Chinese
-Full Name%0
+全名%0
 .
 Language=Taiwanese
-Full Name%0
+全名%0
 .
 
 MessageId=4413
@@ -24013,25 +24013,25 @@ Language=English
 Comment%0
 .
 Language=Polish
-Comment%0
+Komentarz%0
 .
 Language=Romanian
-Comment%0
+Comentariu%0
 .
 Language=Russian
-Comment%0
+Комментарий%0
 .
 Language=Spanish
-Comment%0
+Comentario%0
 .
 Language=Turkish
-Comment%0
+Açıklama%0
 .
 Language=Chinese
-Comment%0
+注释%0
 .
 Language=Taiwanese
-Comment%0
+評論%0
 .
 
 MessageId=4414
@@ -24042,25 +24042,25 @@ Language=English
 User's comment%0
 .
 Language=Polish
-User's comment%0
+Komentarz użytkownika%0
 .
 Language=Romanian
-User's comment%0
+Comentariu de utilizator%0
 .
 Language=Russian
-User's comment%0
+Комментарий пользователя%0
 .
 Language=Spanish
-User's comment%0
+Comentario de usuario%0
 .
 Language=Turkish
-User's comment%0
+Kullanıcı açıklaması%0
 .
 Language=Chinese
-User's comment%0
+用户注释%0
 .
 Language=Taiwanese
-User's comment%0
+使用者註釋%0
 .
 
 MessageId=4415
@@ -24100,25 +24100,25 @@ Language=English
 Country code%0
 .
 Language=Polish
-Country code%0
+Kod kraju%0
 .
 Language=Romanian
-Country code%0
+Cod de țară%0
 .
 Language=Russian
-Country code%0
+Код страны%0
 .
 Language=Spanish
-Country code%0
+Código de país%0
 .
 Language=Turkish
-Country code%0
+Ülke kodu%0
 .
 Language=Chinese
-Country code%0
+国家/地区代码%0
 .
 Language=Taiwanese
-Country code%0
+國家/地區程式碼%0
 .
 
 MessageId=4417
@@ -24187,25 +24187,25 @@ Language=English
 Account active%0
 .
 Language=Polish
-Account active%0
+Konto jest aktywne%0
 .
 Language=Romanian
-Account active%0
+Cont activ%0
 .
 Language=Russian
-Account active%0
+Учетная запись активна%0
 .
 Language=Spanish
-Account active%0
+Cuenta activa%0
 .
 Language=Turkish
-Account active%0
+Hesap etkin%0
 .
 Language=Chinese
-Account active%0
+帐户活动%0
 .
 Language=Taiwanese
-Account active%0
+帳戶活動%0
 .
 
 MessageId=4420
@@ -24216,25 +24216,25 @@ Language=English
 Account expires%0
 .
 Language=Polish
-Account expires%0
+Wygasanie konta%0
 .
 Language=Romanian
-Account expires%0
+Cont expiră%0
 .
 Language=Russian
-Account expires%0
+Учетная запись просрочена%0
 .
 Language=Spanish
-Account expires%0
+Fecha de expiración%0
 .
 Language=Turkish
-Account expires%0
+Hesap süresi bitimi%0
 .
 Language=Chinese
-Account expires%0
+帐户过期%0
 .
 Language=Taiwanese
-Account expires%0
+帳戶過期%0
 .
 
 MessageId=4421
@@ -24245,25 +24245,25 @@ Language=English
 Password last set%0
 .
 Language=Polish
-Password last set%0
+Hasło ostatnio ustawiano%0
 .
 Language=Romanian
-Password last set%0
+Parolă recent instituită%0
 .
 Language=Russian
-Password last set%0
+Последний пароль задан%0
 .
 Language=Spanish
-Password last set%0
+La contraseña se cambió por última vez%0
 .
 Language=Turkish
-Password last set%0
+Şifre son ayarlama%0
 .
 Language=Chinese
-Password last set%0
+上次设置的密码%0
 .
 Language=Taiwanese
-Password last set%0
+上次設定的密碼%0
 .
 
 MessageId=4422
@@ -24274,25 +24274,25 @@ Language=English
 Password expires%0
 .
 Language=Polish
-Password expires%0
+Ważność hasła wygasa%0
 .
 Language=Romanian
-Password expires%0
+Parolă expiră%0
 .
 Language=Russian
-Password expires%0
+Действие пароля завершается%0
 .
 Language=Spanish
-Password expires%0
+La contraseña expira%0
 .
 Language=Turkish
-Password expires%0
+Şifre süresi bitimi%0
 .
 Language=Chinese
-Password expires%0
+密码过期%0
 .
 Language=Taiwanese
-Password expires%0
+密碼過期%0
 .
 
 MessageId=4423
@@ -24303,25 +24303,25 @@ Language=English
 Password changeable%0
 .
 Language=Polish
-Password changeable%0
+Hasło może być zmieniane%0
 .
 Language=Romanian
-Password changeable%0
+Parolă modificabilă%0
 .
 Language=Russian
-Password changeable%0
+Пароль допускает изменение%0
 .
 Language=Spanish
-Password changeable%0
+La contraseña se puede cambiar%0
 .
 Language=Turkish
-Password changeable%0
+Şifre değiştirilebilir%0
 .
 Language=Chinese
-Password changeable%0
+密码可更改%0
 .
 Language=Taiwanese
-Password changeable%0
+密碼多變%0
 .
 
 MessageId=4424
@@ -24332,25 +24332,25 @@ Language=English
 Workstations allowed%0
 .
 Language=Polish
-Workstations allowed%0
+Dozwolone stacje robocze%0
 .
 Language=Romanian
-Workstations allowed%0
+Stații de lucru permise%0
 .
 Language=Russian
-Workstations allowed%0
+Разрешенные рабочие станции%0
 .
 Language=Spanish
-Workstations allowed%0
+Se permiten estaciones de trabajo%0
 .
 Language=Turkish
-Workstations allowed%0
+İzin verilen iş istsyonları%0
 .
 Language=Chinese
-Workstations allowed%0
+允许的工作站%0
 .
 Language=Taiwanese
-Workstations allowed%0
+允許的工作站%0
 .
 
 MessageId=4425
@@ -24419,25 +24419,25 @@ Language=English
 Local Group Memberships%0
 .
 Language=Polish
-Local Group Memberships%0
+Członkostwa grup lokalnych%0
 .
 Language=Romanian
-Local Group Memberships%0
+Apartenență grup local%0
 .
 Language=Russian
-Local Group Memberships%0
+Членство в локальных группах%0
 .
 Language=Spanish
-Local Group Memberships%0
+Miembro de los grupos locales%0
 .
 Language=Turkish
-Local Group Memberships%0
+Yerli takım üyelikleri%0
 .
 Language=Chinese
-Local Group Memberships%0
+本地组成员身份%0
 .
 Language=Taiwanese
-Local Group Memberships%0
+本地組成員身份%0
 .
 
 MessageId=4428
@@ -24477,25 +24477,25 @@ Language=English
 Logon script%0
 .
 Language=Polish
-Logon script%0
+Skrypt logowania%0
 .
 Language=Romanian
-Logon script%0
+Script de autentificare%0
 .
 Language=Russian
-Logon script%0
+Сценарий входа%0
 .
 Language=Spanish
-Logon script%0
+Script de inicio%0
 .
 Language=Turkish
-Logon script%0
+Oturum açma betiği%0
 .
 Language=Chinese
-Logon script%0
+登录脚本%0
 .
 Language=Taiwanese
-Logon script%0
+登入指令碼%0
 .
 
 MessageId=4430
@@ -24506,25 +24506,25 @@ Language=English
 Last logon%0
 .
 Language=Polish
-Last logon%0
+Ostatnie logowanie%0
 .
 Language=Romanian
-Last logon%0
+Ultimă autentificare%0
 .
 Language=Russian
-Last logon%0
+Последний вход%0
 .
 Language=Spanish
-Last logon%0
+Último inicio de sesión%0
 .
 Language=Turkish
-Last logon%0
+Son oturum açma%0
 .
 Language=Chinese
-Last logon%0
+最后一次登录%0
 .
 Language=Taiwanese
-Last logon%0
+最後一次登入%0
 .
 
 MessageId=4431
@@ -24535,25 +24535,25 @@ Language=English
 Global Group memberships%0
 .
 Language=Polish
-Global Group memberships%0
+Członkostwa grup globalnych%0
 .
 Language=Romanian
-Global Group memberships%0
+Apartenență grup global%0
 .
 Language=Russian
-Global Group memberships%0
+Членство в глобальных группах%0
 .
 Language=Spanish
-Global Group memberships%0
+Miembro de los grupos globales%0
 .
 Language=Turkish
-Global Group memberships%0
+Umûmî takım üyelikleri%0
 .
 Language=Chinese
-Global Group memberships%0
+全局组成员身份%0
 .
 Language=Taiwanese
-Global Group memberships%0
+全局組成員身份%0
 .
 
 MessageId=4432
@@ -24564,25 +24564,25 @@ Language=English
 Logon hours allowed%0
 .
 Language=Polish
-Logon hours allowed%0
+Dozwolone godziny logowania%0
 .
 Language=Romanian
-Logon hours allowed%0
+Ore de autentificare permise%0
 .
 Language=Russian
-Logon hours allowed%0
+Разрешенные часы входа%0
 .
 Language=Spanish
-Logon hours allowed%0
+Horas de inicio permitidas%0
 .
 Language=Turkish
-Logon hours allowed%0
+İzin verilen oturum açma saatleri%0
 .
 Language=Chinese
-Logon hours allowed%0
+允许的登录的时常 (以小时为单位)%0
 .
 Language=Taiwanese
-Logon hours allowed%0
+幾個小時允許的登入%0
 .
 
 MessageId=4433
@@ -24680,25 +24680,25 @@ Language=English
 Home directory%0
 .
 Language=Polish
-Home directory%0
+Katalog macierzysty%0
 .
 Language=Romanian
-Home directory%0
+Director personal%0
 .
 Language=Russian
-Home directory%0
+Основной каталог%0
 .
 Language=Spanish
-Home directory%0
+Carpeta raíz%0
 .
 Language=Turkish
-Home directory%0
+Ev dizini%0
 .
 Language=Chinese
-Home directory%0
+主目录%0
 .
 Language=Taiwanese
-Home directory%0
+主目錄%0
 .
 
 MessageId=4437
@@ -24709,25 +24709,25 @@ Language=English
 Password required%0
 .
 Language=Polish
-Password required%0
+Wymagane jest hasło%0
 .
 Language=Romanian
-Password required%0
+Parolă necesară%0
 .
 Language=Russian
-Password required%0
+Требуется пароль%0
 .
 Language=Spanish
-Password required%0
+Se necesita contraseña%0
 .
 Language=Turkish
-Password required%0
+Şifre gerekli%0
 .
 Language=Chinese
-Password required%0
+需要密码%0
 .
 Language=Taiwanese
-Password required%0
+需要密碼%0
 .
 
 MessageId=4438
@@ -24738,25 +24738,25 @@ Language=English
 User may change password%0
 .
 Language=Polish
-User may change password%0
+Użytkownik może zmieniać hasło%0
 .
 Language=Romanian
-User may change password%0
+Utilizatorul poate schimba parola%0
 .
 Language=Russian
-User may change password%0
+Пользователь может изменить пароль%0
 .
 Language=Spanish
-User may change password%0
+El usuario puede cambiar la contraseña%0
 .
 Language=Turkish
-User may change password%0
+Kullanıcı şifre değiştirebilir%0
 .
 Language=Chinese
-User may change password%0
+用户可以更改密码%0
 .
 Language=Taiwanese
-User may change password%0
+使用者可以更改密碼%0
 .
 
 MessageId=4439
@@ -24767,25 +24767,25 @@ Language=English
 User profile%0
 .
 Language=Polish
-User profile%0
+Profil użytkownika%0
 .
 Language=Romanian
-User profile%0
+Profil de utilizator%0
 .
 Language=Russian
-User profile%0
+Конфигурация пользователя%0
 .
 Language=Spanish
-User profile%0
+Perfil de usuario%0
 .
 Language=Turkish
-User profile%0
+Kullanıcı profili%0
 .
 Language=Chinese
-User profile%0
+用户配置文件%0
 .
 Language=Taiwanese
-User profile%0
+使用者配置檔案%0
 .
 
 MessageId=4440
@@ -24796,25 +24796,25 @@ Language=English
 Locked%0
 .
 Language=Polish
-Locked%0
+Zablokowane%0
 .
 Language=Romanian
-Locked%0
+Blocat%0
 .
 Language=Russian
-Locked%0
+Заблокировано%0
 .
 Language=Spanish
-Locked%0
+Bloqueado%0
 .
 Language=Turkish
-Locked%0
+Kilitli%0
 .
 Language=Chinese
-Locked%0
+锁定%0
 .
 Language=Taiwanese
-Locked%0
+鎖定%0
 .
 
 MessageId=4450
