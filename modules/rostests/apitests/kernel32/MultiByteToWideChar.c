@@ -20,7 +20,7 @@ static const char UTF8_Japanese[] = "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E";
 /* "Japanese" in Japanese Shift_JIS */
 static const char SJIS_Japanese[] = "\x93\xFA\x96\x7B\x8C\xEA";
 
-#define MAX_BUFFER  8
+#define MAX_BUFFER  10
 
 /* test entry */
 typedef struct ENTRY
@@ -112,39 +112,39 @@ static const ENTRY Entries[] =
     { __LINE__, 1, 0xBEAF, CP932, 0, SJIS_Japanese, 1, 4, {0x30FB, 0x7F7F}, 2 },
     { __LINE__, 0, ERROR_NO_UNICODE_TRANSLATION, CP932, MB_ERR_INVALID_CHARS, SJIS_Japanese, 1, 4, {0x7F7F, 0x7F7F}, 2 },
     /* invalid 5-byte UTF-8 sequences */
-    { __LINE__, 1, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 1, 4, {0xFFFD, 0x7F7F}, 2 },
-    { __LINE__, 2, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 2, 4, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
-    { __LINE__, 3, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 3, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
-    { __LINE__, 4, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 4, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
-    { __LINE__, 5, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 5, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 6, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 1, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 1, 8, {0xFFFD, 0x7F7F}, 2 },
+    { __LINE__, 2, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 2, 8, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
+    { __LINE__, 3, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 3, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
+    { __LINE__, 4, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 4, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
+    { __LINE__, 5, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 5, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 6, 48815, CP_UTF8, 0, "\xF8\xA3\xA3\xA3\xA3", 6, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0}, 6 },
     /* invalid 6-byte UTF-8 sequences */
-    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 1, 4, {0xFFFD, 0x7F7F}, 2 },
-    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 2, 4, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
-    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 3, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
-    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 4, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
-    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 5, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 6, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 7, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 1, 8, {0xFFFD, 0x7F7F}, 2 },
+    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 2, 8, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
+    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 3, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
+    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 4, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
+    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 5, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 6, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 6, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 7 },
+    { __LINE__, 7, 48815, CP_UTF8, 0, "\xFC\xA3\xA3\xA3\xA3\xA3", 7, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0}, 7 },
     /* invalid 7-byte UTF-8 sequences */
-    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 1, 4, {0xFFFD, 0x7F7F}, 2 },
-    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 2, 4, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
-    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 3, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
-    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 4, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
-    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 5, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 6, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 7, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 8, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 1, 8, {0xFFFD, 0x7F7F}, 2 },
+    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 2, 8, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
+    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 3, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
+    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 4, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
+    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 5, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 6, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 6, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 7 },
+    { __LINE__, 7, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 7, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 8 },
+    { __LINE__, 8, 48815, CP_UTF8, 0, "\xFE\xA3\xA3\xA3\xA3\xA3\xA3", 8, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0}, 8 },
     /* invalid UTF-8 sequences */
-    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 1, 4, {0xFFFD, 0x7F7F}, 2 },
-    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 2, 4, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
-    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 3, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
-    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 4, 4, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
-    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 5, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 6, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 7, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 8, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
-    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3", 9, 5, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 1, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 1, 8, {0xFFFD, 0x7F7F}, 2 },
+    { __LINE__, 2, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 2, 8, {0xFFFD, 0xFFFD, 0x7F7F}, 3 },
+    { __LINE__, 3, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 3, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 4 },
+    { __LINE__, 4, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 4, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 5 },
+    { __LINE__, 5, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 5, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 6 },
+    { __LINE__, 6, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 6, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 7 },
+    { __LINE__, 7, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 7, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 8 },
+    { __LINE__, 8, 48815, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 8, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 9 },
+    { __LINE__, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 9, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 9 },
 };
 
 static void TestEntry(const ENTRY *pEntry)
