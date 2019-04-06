@@ -2,6 +2,7 @@
 if(SEPARATE_DBG)
     # FIXME: http://sourceware.org/bugzilla/show_bug.cgi?id=11822
     set(CMAKE_LDR_PE_HELPER_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES_INIT "")
     set(CMAKE_LDR_PE_HELPER_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 endif()
 
@@ -236,8 +237,10 @@ endif()
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
-set_property(TARGET freeldr_pe PROPERTY ENABLE_EXPORTS TRUE)
-set_property(TARGET freeldr_pe_dbg PROPERTY ENABLE_EXPORTS TRUE)
+set_target_properties(freeldr_pe freeldr_pe_dbg 
+    PROPERTIES
+    ENABLE_EXPORTS TRUE
+    DEFINE_SYMBOL "")
 
 if(NOT MSVC AND SEPARATE_DBG)
     set_target_properties(freeldr_pe PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
