@@ -394,6 +394,12 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
                 TrailLength = 0;
                 continue;
             }
+            if (Char >= 0xF8 || (Char & 0xC0) == 0x80)
+            {
+                TrailLength = 0;
+                StringIsValid = FALSE;
+                continue;
+            }
 
             CharIsValid = TRUE;
             MbsPtrSave = MultiByteString;
@@ -443,7 +449,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
             TrailLength = 0;
             continue;
         }
-        if (Char == 0x80)
+        if (Char >= 0xF8 || Char == 0x80 || (Char & 0xC0) == 0x80)
         {
             *WideCharString++ = InvalidChar;
             TrailLength = 0;
