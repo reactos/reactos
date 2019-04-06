@@ -23048,13 +23048,13 @@ Language=English
 The following running services can be controlled:
 .
 Language=Polish
-The following running services can be controlled:
+Można sterować następującymi uruchomionymi obecnie usługami:
 .
 Language=Romanian
-The following running services can be controlled:
+Controlabile sunt următoarele servicii curente:
 .
 Language=Russian
-The following running services can be controlled:
+Можно управлять следующими выполняющимися службами:
 .
 Language=Spanish
 The following running services can be controlled:
@@ -23077,13 +23077,13 @@ Language=English
 Statistics are available for the following running services:
 .
 Language=Polish
-Statistics are available for the following running services:
+Dostępne są statystyki dla następujących uruchomionych obecnie usług:
 .
 Language=Romanian
-Statistics are available for the following running services:
+Statistici disponibile pentru următoarele servicii:
 .
 Language=Russian
-Statistics are available for the following running services:
+Статистика доступна для следующих выполняющихся служб:
 .
 Language=Spanish
 Statistics are available for the following running services:
@@ -24825,13 +24825,13 @@ Language=English
 Computer name%0
 .
 Language=Polish
-Computer name%0
+Nazwa komputera%0
 .
 Language=Romanian
-Computer name%0
+Nume de calculator%0
 .
 Language=Russian
-Computer name%0
+Имя компьютера%0
 .
 Language=Spanish
 Computer name%0
@@ -24854,13 +24854,13 @@ Language=English
 User name%0
 .
 Language=Polish
-User name%0
+Nazwa użytkownika%0
 .
 Language=Romanian
-User name%0
+Nume de utilizator%0
 .
 Language=Russian
-User name%0
+Имя пользователя%0
 .
 Language=Spanish
 User name%0
@@ -24883,13 +24883,13 @@ Language=English
 Software version%0
 .
 Language=Polish
-Software version%0
+Wersja oprogramowania%0
 .
 Language=Romanian
-Software version%0
+Versiune de program%0
 .
 Language=Russian
-Software version%0
+Версия программы%0
 .
 Language=Spanish
 Software version%0
@@ -24912,13 +24912,13 @@ Language=English
 Workstation active on%0
 .
 Language=Polish
-Workstation active on%0
+Stacja robocza jest aktywna na%0
 .
 Language=Romanian
-Workstation active on%0
+Stație de lucru activă pe%0
 .
 Language=Russian
-Workstation active on%0
+Активная рабочая станция на%0
 .
 Language=Spanish
 Workstation active on%0
@@ -24970,13 +24970,13 @@ Language=English
 Workstation domain%0
 .
 Language=Polish
-Workstation domain%0
+Domena stacji roboczej%0
 .
 Language=Romanian
-Workstation domain%0
+Domeniu de calculator%0
 .
 Language=Russian
-Workstation domain%0
+Домен рабочей станции%0
 .
 Language=Spanish
 Workstation domain%0
@@ -24999,13 +24999,13 @@ Language=English
 Logon domain%0
 .
 Language=Polish
-Logon domain%0
+Domena logowania%0
 .
 Language=Romanian
-Logon domain%0
+Domeniu de autentificare%0
 .
 Language=Russian
-Logon domain%0
+Домен входа%0
 .
 Language=Spanish
 Logon domain%0
@@ -25347,13 +25347,13 @@ Language=English
 Full Computer name%0
 .
 Language=Polish
-Full Computer name%0
+Pełna nazwa komputera%0
 .
 Language=Romanian
-Full Computer name%0
+Nume complet de calculator%0
 .
 Language=Russian
-Full Computer name%0
+Полное имя компьютера%0
 .
 Language=Spanish
 Full Computer name%0
@@ -25434,13 +25434,13 @@ Language=English
 Server Name%0
 .
 Language=Polish
-Server Name%0
+Nazwa serwera%0
 .
 Language=Romanian
-Server Name%0
+Nume de server%0
 .
 Language=Russian
-Server Name%0
+Имя сервера%0
 .
 Language=Spanish
 Server Name%0
@@ -25463,13 +25463,13 @@ Language=English
 Server Comment%0
 .
 Language=Polish
-Server Comment%0
+Komentarz serwera%0
 .
 Language=Romanian
-Server Comment%0
+Comentariu server%0
 .
 Language=Russian
-Server Comment%0
+Комментарий для сервера%0
 .
 Language=Spanish
 Server Comment%0
@@ -25521,13 +25521,13 @@ Language=English
 Software version%0
 .
 Language=Polish
-Software version%0
+Wersja oprogramowania%0
 .
 Language=Romanian
-Software version%0
+Versiune de program%0
 .
 Language=Russian
-Software version%0
+Версия программы%0
 .
 Language=Spanish
 Software version%0
@@ -25666,13 +25666,13 @@ Language=English
 Server is active on%0
 .
 Language=Polish
-Server is active on%0
+Serwer jest aktywny na%0
 .
 Language=Romanian
-Server is active on%0
+Server activ pe%0
 .
 Language=Russian
-Server is active on%0
+Активный сервер на%0
 .
 Language=Spanish
 Server is active on%0
@@ -25695,13 +25695,13 @@ Language=English
 Server hidden%0
 .
 Language=Polish
-Server hidden%0
+Serwer ukrykty%0
 .
 Language=Romanian
-Server hidden%0
+Server ascuns%0
 .
 Language=Russian
-Server hidden%0
+Скрытый сервер%0
 .
 Language=Spanish
 Server hidden%0
@@ -25724,13 +25724,13 @@ Language=English
 Maximum Logged On Users%0
 .
 Language=Polish
-Maximum Logged On Users%0
+Maksymalna liczba zalogowanych użytkowników%0
 .
 Language=Romanian
-Maximum Logged On Users%0
+Maxim utilizatori autentificați%0
 .
 Language=Russian
-Maximum Logged On Users%0
+Максимальное число пользователей%0
 .
 Language=Spanish
 Maximum Logged On Users%0
@@ -25869,13 +25869,13 @@ Language=English
 Maximum open files per session%0
 .
 Language=Polish
-Maximum open files per session%0
+Maksymalna liczba otwartych plików na sesję%0
 .
 Language=Romanian
-Maximum open files per session%0
+Maxim fișiere deschise pe sesiune%0
 .
 Language=Russian
-Maximum open files per session%0
+Максимальное число открытых файлов в сеансе%0
 .
 Language=Spanish
 Maximum open files per session%0
@@ -25927,13 +25927,13 @@ Language=English
 Idle session time (min)%0
 .
 Language=Polish
-Idle session time (min)%0
+Czas bezczynności sesji (min)%0
 .
 Language=Romanian
-Idle session time (min)%0
+Timpul sesiunii de inactivitate (min)%0
 .
 Language=Russian
-Idle session time (min)%0
+Время простоя сеанса (мин)%0
 .
 Language=Spanish
 Idle session time (min)%0

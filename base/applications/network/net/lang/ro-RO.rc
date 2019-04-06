@@ -15,24 +15,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Server de sine stătător"
     IDS_ACCOUNTS_WORKSTATION "Stație de lucru"
 
-    IDS_CONFIG_TEXT "Controlabile sunt următoarele servicii curente:\n\n\
-   Server\n   Stație de lucru\n\n"
-    IDS_CONFIG_SERVER_NAME "Nume de server"
-    IDS_CONFIG_SERVER_COMMENT "Comentariu server"
-    IDS_CONFIG_SERVER_VERSION "Versiune de program"
-    IDS_CONFIG_SERVER_ACTIVE "Server activ pe"
-    IDS_CONFIG_SERVER_HIDDEN "Server ascuns"
-    IDS_CONFIG_SERVER_USERS "Maxim utilizatori autentificați"
-    IDS_CONFIG_SERVER_FILES "Maxim fișiere deschise pe sesiune"
-    IDS_CONFIG_SERVER_IDLE "Timpul sesiunii de inactivitate (min)"
-    IDS_CONFIG_WORKSTATION_NAME "Nume de calculator"
-    IDS_CONFIG_WORKSTATION_FULLNAME "Nume complet de calculator"
-    IDS_CONFIG_WORKSTATION_USERNAME "Nume de utilizator"
-    IDS_CONFIG_WORKSTATION_ACTIVE "Stație de lucru activă pe"
-    IDS_CONFIG_WORKSTATION_VERSION "Versiune de program"
-    IDS_CONFIG_WORKSTATION_DOMAIN "Domeniu de calculator"
-    IDS_CONFIG_WORKSTATION_LOGON "Domeniu de autentificare"
-
     IDS_STATISTICS_TEXT "Statistici disponibile pentru următoarele servicii:\n\n\
    Server\n   Stație de lucru\n\n"
     IDS_STATISTICS_SINCE "Statistici începând din %d/%d/%d %d:%02d %s\n\n\n"

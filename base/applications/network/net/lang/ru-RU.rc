@@ -11,24 +11,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Автономный сервер"
     IDS_ACCOUNTS_WORKSTATION "Рабочая станция"
 
-    IDS_CONFIG_TEXT "Можно управлять следующими выполняющимися службами:\n\n\
-   Сервер\n   Рабочая станция\n\n"
-    IDS_CONFIG_SERVER_NAME "Имя сервера"
-    IDS_CONFIG_SERVER_COMMENT "Комментарий для сервера"
-    IDS_CONFIG_SERVER_VERSION "Версия программы"
-    IDS_CONFIG_SERVER_ACTIVE "Активный сервер на"
-    IDS_CONFIG_SERVER_HIDDEN "Скрытый сервер"
-    IDS_CONFIG_SERVER_USERS "Максимальное число пользователей"
-    IDS_CONFIG_SERVER_FILES "Максимальное число открытых файлов в сеансе"
-    IDS_CONFIG_SERVER_IDLE "Время простоя сеанса (мин)"
-    IDS_CONFIG_WORKSTATION_NAME "Имя компьютера"
-    IDS_CONFIG_WORKSTATION_FULLNAME "Полное имя компьютера"
-    IDS_CONFIG_WORKSTATION_USERNAME "Имя пользователя"
-    IDS_CONFIG_WORKSTATION_ACTIVE "Активная рабочая станция на"
-    IDS_CONFIG_WORKSTATION_VERSION "Версия программы"
-    IDS_CONFIG_WORKSTATION_DOMAIN "Домен рабочей станции"
-    IDS_CONFIG_WORKSTATION_LOGON "Домен входа"
-
     IDS_STATISTICS_TEXT "Статистика доступна для следующих выполняющихся служб:\n\n\
    Сервер\n   Рабочая станция\n\n"
     IDS_STATISTICS_SINCE "Статистика после %d/%d/%d %d:%02d %s\n\n\n"

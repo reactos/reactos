@@ -11,24 +11,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "独立服务器"
     IDS_ACCOUNTS_WORKSTATION "工作站"
 
-    IDS_CONFIG_TEXT "The following running services can be controlled:\n\n\
-   Server\n   Workstation\n\n"
-    IDS_CONFIG_SERVER_NAME "Server Name"
-    IDS_CONFIG_SERVER_COMMENT "Server Comment"
-    IDS_CONFIG_SERVER_VERSION "Software version"
-    IDS_CONFIG_SERVER_ACTIVE "Server is active on"
-    IDS_CONFIG_SERVER_HIDDEN "Server hidden"
-    IDS_CONFIG_SERVER_USERS "Maximum Logged On Users"
-    IDS_CONFIG_SERVER_FILES "Maximum open files per session"
-    IDS_CONFIG_SERVER_IDLE "Idle session time (min)"
-    IDS_CONFIG_WORKSTATION_NAME "Computer name"
-    IDS_CONFIG_WORKSTATION_FULLNAME "Full Computer name"
-    IDS_CONFIG_WORKSTATION_USERNAME "User name"
-    IDS_CONFIG_WORKSTATION_ACTIVE "Workstation is active on"
-    IDS_CONFIG_WORKSTATION_VERSION "Software version"
-    IDS_CONFIG_WORKSTATION_DOMAIN "Workstation domain"
-    IDS_CONFIG_WORKSTATION_LOGON "Logon domain"
-
     IDS_STATISTICS_TEXT "Statistics are available for the following services:\n\n\
    Server\n   Workstation\n\n"
     IDS_STATISTICS_SINCE "Statistics since %d/%d/%d %d:%02d %s\n\n\n"

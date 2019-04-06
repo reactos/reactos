@@ -8,24 +8,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Serwer autonomiczny"
     IDS_ACCOUNTS_WORKSTATION "Stacja robocza"
 
-    IDS_CONFIG_TEXT "Można sterować następującymi uruchomionymi obecnie usługami:\n\n\
-   Serwer\n   Stacja robocza\n\n"
-    IDS_CONFIG_SERVER_NAME "Nazwa serwera"
-    IDS_CONFIG_SERVER_COMMENT "Komentarz serwera"
-    IDS_CONFIG_SERVER_VERSION "Wersja oprogramowania"
-    IDS_CONFIG_SERVER_ACTIVE "Serwer jest aktywny na"
-    IDS_CONFIG_SERVER_HIDDEN "Serwer ukrykty"
-    IDS_CONFIG_SERVER_USERS "Maksymalna liczba zalogowanych użytkowników"
-    IDS_CONFIG_SERVER_FILES "Maksymalna liczba otwartych plików na sesję"
-    IDS_CONFIG_SERVER_IDLE "Czas bezczynności sesji (min)"
-    IDS_CONFIG_WORKSTATION_NAME "Nazwa komputera"
-    IDS_CONFIG_WORKSTATION_FULLNAME "Pełna nazwa komputera"
-    IDS_CONFIG_WORKSTATION_USERNAME "Nazwa użytkownika"
-    IDS_CONFIG_WORKSTATION_ACTIVE "Stacja robocza jest aktywna na"
-    IDS_CONFIG_WORKSTATION_VERSION "Wersja oprogramowania"
-    IDS_CONFIG_WORKSTATION_DOMAIN "Domena stacji roboczej"
-    IDS_CONFIG_WORKSTATION_LOGON "Domena logowania"
-
     IDS_STATISTICS_TEXT "Dostępne są statystyki dla następujących uruchomionych obecnie usług:\n\n\
    Serwer\n   Stacja robocza\n\n"
     IDS_STATISTICS_SINCE "Statystyka od %d/%d/%d %d:%02d %s\n\n\n"
