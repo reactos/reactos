@@ -171,9 +171,58 @@ static void TestEntry(const ENTRY *pEntry)
     }
 }
 
+typedef NTSTATUS (WINAPI* RTLGETVERSION)(PRTL_OSVERSIONINFOW);
+
+static OSVERSIONINFOW *GetRealOSVersion()
+{
+    static OSVERSIONINFOW osvi = { 0 };
+    HINSTANCE hNTDLL = LoadLibraryW(L"ntdll.dll");
+    if (hNTDLL)
+    {
+        RTLGETVERSION fn;
+        fn = (RTLGETVERSION)GetProcAddress(hNTDLL, "RtlGetVersion");
+        if (fn)
+        {
+            osvi.dwOSVersionInfoSize = sizeof(osvi);
+            if (fn(&osvi) == STATUS_SUCCESS)
+            {
+                return &osvi;
+            }
+        }
+    }
+    return NULL;
+}
+
+static BOOL IsWin10Plus(void)
+{
+    RTL_OSVERSIONINFOW *info = GetRealOSVersion();
+    if (!info)
+        return FALSE;
+
+    return info->dwMajorVersion >= 10;
+}
+
+static BOOL IsReactOS(void)
+{
+    WCHAR szWinDir[MAX_PATH];
+    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
+    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+}
+
 START_TEST(MultiByteToWideChar)
 {
     size_t i;
+
+    if (!IsWin10Plus() && !IsReactOS())
+    {
+        trace("This test is designed for Windows 10+ and ReactOS.\n"
+              "It is expected to report some failures on older Windows versions.\n");
+#if 0
+        skip("");
+        return;
+#endif
+    }
+
     for (i = 0; i < _countof(Entries); ++i)
     {
         TestEntry(&Entries[i]);
