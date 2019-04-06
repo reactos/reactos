@@ -242,4 +242,5 @@ BEGIN
     IDS_CLASSIC "Classic"
     IDS_LAUTUS "Lautus"
     IDS_LUNAR "Lunar"
+    IDS_MIZU "Mizu"
 END
