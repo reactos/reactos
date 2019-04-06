@@ -5,6 +5,7 @@ for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (if exist %%
 
 if not defined DRIVE (
     dbgprint "AHK Application testing suite not present, skipping."
+    dbgprint "Please insert ReactOS CD or copy AHK-Tests to the root."
     exit /b 0
 )
 
