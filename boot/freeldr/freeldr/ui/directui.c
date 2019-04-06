@@ -241,7 +241,7 @@ UiDrawProgressBar(IN ULONG Left,
     if (Position > Range) Position = Range;
 
     /* Draw the "Loading..." text */
-    UiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
+    UiDrawCenteredText(Left, Top + 1, Right, Top + 1, ProgressText, ATTR(7, 0));
 
     /* Draw the percent complete */
     for (i = 0; i < (Position * ProgressBarWidth) / Range; i++)
