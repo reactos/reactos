@@ -1458,7 +1458,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (Status == STATUS_TIMEOUT)
     {
-        if (MsqIsHung(ptiSendTo))
+        if (0 && MsqIsHung(ptiSendTo))
         {
             TRACE("Let's go Ghost!\n");
             IntMakeHungWindowGhosted(hWnd);
