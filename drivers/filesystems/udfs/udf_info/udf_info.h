@@ -1184,13 +1184,13 @@ UDFClrBits__(
 #define UDFSetBits(arr, bit, bc) \
 {uint32 j;                       \
     for(j=0;j<bc;j++) {          \
-        UDFSetBit(arr, bit+j);   \
+        UDFSetBit(arr, (bit)+j); \
 }}
 
 #define UDFClrBits(arr, bit, bc) \
 {uint32 j;                       \
     for(j=0;j<bc;j++) {          \
-        UDFClrBit(arr, bit+j);   \
+        UDFClrBit(arr, (bit)+j); \
 }}
 
 #endif // _X86_
