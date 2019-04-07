@@ -25,6 +25,7 @@
 #ifdef __REACTOS__
 
 #include <k32.h>
+#include "japanese.h"   /* Japanese eras */
 
 #define NDEBUG
 #include <debug.h>
@@ -33,6 +34,12 @@ DEBUG_CHANNEL(nls);
 #define CRITICAL_SECTION RTL_CRITICAL_SECTION
 #define CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG
 #define CALINFO_MAX_YEAR 2029
+
+#define IS_LCID_JAPANESE(lcid) PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_JAPANESE
+
+#ifndef CAL_SABBREVERASTRING
+    #define CAL_SABBREVERASTRING 0x00000039
+#endif
 
 #else /* __REACTOS__ */
 
@@ -372,7 +379,11 @@ BOOL NLS_IsUnicodeOnlyLcid(LCID lcid)
 #define IsTimeFmtChar(p)   (p == 'H'||p == 'h'||p == 'm'||p == 's'||p == 't')
 
 /* Only the following flags can be given if a date/time format is specified */
+#ifdef __REACTOS__
+#define DATE_FORMAT_FLAGS (DATE_DATEVARSONLY | DATE_USE_ALT_CALENDAR)
+#else
 #define DATE_FORMAT_FLAGS (DATE_DATEVARSONLY)
+#endif
 #define TIME_FORMAT_FLAGS (TIME_TIMEVARSONLY|TIME_FORCE24HOURFORMAT| \
                            TIME_NOMINUTESORSECONDS|TIME_NOSECONDS| \
                            TIME_NOTIMEMARKER)
@@ -604,6 +615,24 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
         break;
 
       case 'y':
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(lcid) && (dwFlags & DATE_USE_ALT_CALENDAR))
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
+            if (pEra)
+            {
+                if (count >= 2)
+                {
+                    count = 2;
+                }
+                dwVal = lpTime->wYear - pEra->wYear + 1;
+                szAdd = buff;
+                break;
+            }
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+#endif
         if (count >= 4)
         {
           count = 4;
@@ -618,6 +647,32 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
         break;
 
       case 'g':
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(lcid))
+        {
+            if (dwFlags & DATE_USE_ALT_CALENDAR)
+            {
+                PCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
+                if (pEra)
+                {
+                    RtlStringCbCopyW(buff, sizeof(buff), pEra->szEraName);
+                    szAdd = buff;
+                    break;
+                }
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+            else
+            {
+                /* Seireki */
+                buff[0] = 0x897F;
+                buff[1] = 0x66A6;
+                buff[2] = 0;
+                szAdd = buff;
+                break;
+            }
+        }
+#endif
         if (count == 2)
         {
           /* FIXME: Our GetCalendarInfo() does not yet support CAL_SERASTRING.
@@ -2367,6 +2422,26 @@ int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
 {
     int ret, cchDataW = cchData;
     LPWSTR lpCalDataW = NULL;
+#ifdef __REACTOS__
+    DWORD cp = CP_ACP;
+    if (!(CalType & CAL_USE_CP_ACP))
+    {
+        DWORD dwFlags = ((CalType & CAL_NOUSEROVERRIDE) ? LOCALE_NOUSEROVERRIDE : 0);
+        const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
+        if (!node)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+        cp = node->dwCodePage;
+    }
+    if ((CalType & 0xFFFF) == CAL_SABBREVERASTRING)
+    {
+        /* NOTE: CAL_SABBREVERASTRING is not supported in GetCalendarInfoA */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+#endif
 
     if (NLS_IsUnicodeOnlyLcid(lcid))
     {
@@ -2381,7 +2456,11 @@ int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
 
     ret = GetCalendarInfoW(lcid, Calendar, CalType, lpCalDataW, cchDataW, lpValue);
     if(ret && lpCalDataW && lpCalData)
+#ifdef __REACTOS__
+        ret = WideCharToMultiByte(cp, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
+#else
         ret = WideCharToMultiByte(CP_ACP, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
+#endif
     else if (CalType & CAL_RETURN_NUMBER)
         ret *= sizeof(WCHAR);
     HeapFree(GetProcessHeap(), 0, lpCalDataW);
@@ -2495,18 +2574,101 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 
     switch (calinfo) {
 	case CAL_ICALINTVALUE:
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(Locale))
+        {
+            if (CalType & CAL_RETURN_NUMBER)
+            {
+                *lpValue = CAL_JAPAN;
+                return sizeof(DWORD) / sizeof(WCHAR);
+            }
+            else
+            {
+                static const WCHAR fmtW[] = {'%','u',0};
+                WCHAR buffer[10];
+                int ret = snprintfW( buffer, 10, fmtW, CAL_JAPAN ) + 1;
+                if (!lpCalData) return ret;
+                if (ret <= cchData)
+                {
+                    strcpyW( lpCalData, buffer );
+                    return ret;
+                }
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return 0;
+            }
+        }
+#endif
             if (CalType & CAL_RETURN_NUMBER)
                 return GetLocaleInfoW(Locale, LOCALE_RETURN_NUMBER | LOCALE_ICALENDARTYPE,
                         (LPWSTR)lpValue, 2);
             return GetLocaleInfoW(Locale, LOCALE_ICALENDARTYPE, lpCalData, cchData);
 	case CAL_SCALNAME:
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            // Wareki
+            lpCalData[0] = 0x548C;
+            lpCalData[1] = 0x66A6;
+            lpCalData[2] = 0;
+            return 3;
+        }
+#endif
             FIXME("Unimplemented caltype %d\n", calinfo);
             if (lpCalData) *lpCalData = 0;
 	    return 1;
 	case CAL_IYEAROFFSETRANGE:
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                if (CalType & CAL_RETURN_NUMBER)
+                {
+                    *lpValue = pEra->wYear;
+                    return sizeof(DWORD) / sizeof(WCHAR);
+                }
+                else
+                {
+                    static const WCHAR fmtW[] = {'%','u',0};
+                    WCHAR buffer[10];
+                    int ret = snprintfW( buffer, 10, fmtW, pEra->wYear ) + 1;
+                    if (!lpCalData) return ret;
+                    if (ret <= cchData)
+                    {
+                        strcpyW( lpCalData, buffer );
+                        return ret;
+                    }
+                    SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                    return 0;
+                }
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+        }
+#endif
             FIXME("Unimplemented caltype %d\n", calinfo);
 	    return 0;
 	case CAL_SERASTRING:
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                RtlStringCchCopyW(lpCalData, cchData, pEra->szEraName);
+                return strlenW(lpCalData) + 1;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+        }
+#endif
             FIXME("Unimplemented caltype %d\n", calinfo);
 	    return 0;
 	case CAL_SSHORTDATE:
@@ -2554,6 +2716,30 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 	case CAL_SYEARMONTH:
             return GetLocaleInfoW(Locale, caltype_lctype_map[calinfo] | localeflags, lpCalData, cchData);
 	case CAL_ITWODIGITYEARMAX:
+#ifdef __REACTOS__
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            if (CalType & CAL_RETURN_NUMBER)
+            {
+                *lpValue = JAPANESE_MAX_TWODIGITYEAR;
+                return sizeof(DWORD) / sizeof(WCHAR);
+            }
+            else
+            {
+                static const WCHAR fmtW[] = {'%','u',0};
+                WCHAR buffer[10];
+                int ret = snprintfW( buffer, 10, fmtW, JAPANESE_MAX_TWODIGITYEAR ) + 1;
+                if (!lpCalData) return ret;
+                if (ret <= cchData)
+                {
+                    strcpyW( lpCalData, buffer );
+                    return ret;
+                }
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return 0;
+            }
+        }
+#endif
             if (CalType & CAL_RETURN_NUMBER)
             {
                 *lpValue = CALINFO_MAX_YEAR;
@@ -2574,6 +2760,20 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
                 return 0;
             }
 	    break;
+#ifdef __REACTOS__
+    case CAL_SABBREVERASTRING:
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                RtlStringCchCopyW(lpCalData, cchData, pEra->szEraAbbrev);
+                return strlenW(lpCalData) + 1;
+            }
+        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+#endif
 	default:
             FIXME("Unknown caltype %d\n", calinfo);
             SetLastError(ERROR_INVALID_FLAGS);
