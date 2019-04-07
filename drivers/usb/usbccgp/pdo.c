@@ -718,6 +718,14 @@ USBCCGP_PDOSelectConfiguration(
         return STATUS_SUCCESS;
     }
 
+    //
+    // if there is no configuration descriptor, unconfigure the device
+    //
+    if (Urb->UrbSelectConfiguration.ConfigurationDescriptor == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
     // sanity checks
     //C_ASSERT(sizeof(struct _URB_HEADER) == 16);
     //C_ASSERT(FIELD_OFFSET(struct _URB_SELECT_CONFIGURATION, Interface.Length) == 24);
