@@ -6,9 +6,6 @@ if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
 endif()
 
-# Don't escape preprocessor definition values added via add_definitions
-cmake_policy(SET CMP0005 OLD)
-
 if(POLICY CMP0058)
     # Ninja requires custom command byproducts to be explicit
     cmake_policy(SET CMP0058 OLD)
@@ -63,8 +60,8 @@ include(sdk/cmake/compilerflags.cmake)
 add_definitions(-D__REACTOS__)
 
 # Double escape, since CMake unescapes before putting it on the command-line, where it's unescaped again by GCC/CL.
-add_definitions(-DREACTOS_SOURCE_DIR="\\\"${REACTOS_SOURCE_DIR}\\\"")
-add_definitions(-DREACTOS_BINARY_DIR="\\\"${REACTOS_BINARY_DIR}\\\"")
+add_definitions(-DREACTOS_SOURCE_DIR="${REACTOS_SOURCE_DIR}")
+add_definitions(-DREACTOS_BINARY_DIR="${REACTOS_BINARY_DIR}")
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
