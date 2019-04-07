@@ -614,7 +614,7 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
 #ifdef __REACTOS__
         if (IS_LCID_JAPANESE(lcid) && (dwFlags & DATE_USE_ALT_CALENDAR))
         {
-            LPCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
             if (pEra)
             {
                 if (count >= 2)
@@ -625,6 +625,8 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
                 szAdd = buff;
                 break;
             }
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
         }
 #endif
         if (count >= 4)
@@ -646,13 +648,15 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
         {
             if (dwFlags & DATE_USE_ALT_CALENDAR)
             {
-                LPCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
+                PCJAPANESE_ERA pEra = JapaneseEra_Find(lpTime);
                 if (pEra)
                 {
                     RtlStringCbCopyW(buff, sizeof(buff), pEra->szEraName);
                     szAdd = buff;
                     break;
                 }
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
             }
             else
             {
@@ -2606,7 +2610,7 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 #ifdef __REACTOS__
         if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
         {
-            LPCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
             if (pEra)
             {
                 if (CalType & CAL_RETURN_NUMBER)
@@ -2629,6 +2633,11 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
                     return 0;
                 }
             }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
         }
 #endif
             FIXME("Unimplemented caltype %d\n", calinfo);
@@ -2637,11 +2646,16 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
 #ifdef __REACTOS__
         if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
         {
-            LPCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
             if (pEra)
             {
                 RtlStringCchCopyW(lpCalData, cchData, pEra->szEraName);
                 return strlenW(lpCalData) + 1;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
             }
         }
 #endif

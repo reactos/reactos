@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/winnls/string/japanese.h
- * PURPOSE:         Japanese era support
- * PROGRAMMER:      Katayama Hirofumi MZ
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Japanese era support
+ * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #define JAPANESE_MAX_TWODIGITYEAR 99
 
 typedef struct JAPANESE_ERA
@@ -17,12 +15,7 @@ typedef struct JAPANESE_ERA
     WCHAR szEraInitial[5];
     WCHAR szEnglishEraName[24];
     WCHAR szEnglishEraInitial[5];
-} JAPANESE_ERA, *LPJAPANESE_ERA;
-typedef const JAPANESE_ERA *LPCJAPANESE_ERA;
+} JAPANESE_ERA, *PJAPANESE_ERA;
+typedef const JAPANESE_ERA *PCJAPANESE_ERA;
 
-INT  JapaneseEra_Compare(LPCJAPANESE_ERA pEra1, LPCJAPANESE_ERA pEra2);
-INT  JapaneseEra_Compare0(const void *pEra1, const void *pEra2);
-BOOL JapaneseEra_ToSystemTime(LPCJAPANESE_ERA pEra, LPSYSTEMTIME pst);
-LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount);
-LPCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL);
-LPCJAPANESE_ERA JapaneseEra_ConvertYear(const SYSTEMTIME *pst OPTIONAL, LPWORD pwNengoYearOut);
+PCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL);

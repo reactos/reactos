@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/winnls/string/japanese.c
- * PURPOSE:         Japanese era support
- * PROGRAMMER:      Katayama Hirofumi MZ
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Japanese era support
+ * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include <k32.h>
 
 #define NDEBUG
@@ -14,7 +12,7 @@
 
 #define JAPANESE_ERA_MAX 16
 
-#define DONT_USE_REGISTRY
+/* #define DONT_USE_REGISTRY */
 
 static DWORD        s_JapaneseEraCount = 0;
 static JAPANESE_ERA s_JapaneseEraTable[JAPANESE_ERA_MAX]
@@ -36,8 +34,10 @@ BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
                       LPWSTR szValueName, ULONG valueNameSize,
                       LPWSTR szValueData, ULONG valueDataSize);
 
-INT JapaneseEra_Compare(LPCJAPANESE_ERA pEra1, LPCJAPANESE_ERA pEra2)
+static INT JapaneseEra_Compare(const void *e1, const void *e2)
 {
+    PCJAPANESE_ERA pEra1 = (PCJAPANESE_ERA)e1;
+    PCJAPANESE_ERA pEra2 = (PCJAPANESE_ERA)e2;
     if (pEra1->wYear < pEra2->wYear)
         return -1;
     if (pEra1->wYear > pEra2->wYear)
@@ -53,17 +53,12 @@ INT JapaneseEra_Compare(LPCJAPANESE_ERA pEra1, LPCJAPANESE_ERA pEra2)
     return 0;
 }
 
-INT JapaneseEra_Compare0(const void *pEra1, const void *pEra2)
-{
-    return JapaneseEra_Compare((LPCJAPANESE_ERA)pEra1, (LPCJAPANESE_ERA)pEra2);
-}
-
 /* 
  * SEE ALSO:
  * https://en.wikipedia.org/wiki/Japanese_era_name
  * https://docs.microsoft.com/en-us/windows/desktop/Intl/era-handling-for-the-japanese-calendar
  */
-LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
+static PCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
 {
 #ifndef DONT_USE_REGISTRY
     HANDLE KeyHandle = NULL;
@@ -90,8 +85,8 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
     RtlZeroMemory(&s_JapaneseEraTable, sizeof(s_JapaneseEraTable));
 
     /* open registry key */
-    KeyHandle = NLS_RegOpenKey(NULL, L"\\Registry\\Machine\\SYSTEM\\"
-        L"CurrentControlSet\\Control\\NLS\\Calendars\\Japanese\\Eras");
+    KeyHandle = NLS_RegOpenKey(NULL, L"\\Registry\\Machine\\System\\"
+        L"CurrentControlSet\\Control\\Nls\\Calendars\\Japanese\\Eras");
     if (!KeyHandle)
         return NULL;
 
@@ -112,7 +107,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pch2 = wcschr(pch1, L' ');
         if (pch2 == NULL)
         {
-            ASSERT(FALSE);
             break;
         }
         *pch2++ = UNICODE_NULL;
@@ -120,7 +114,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pch3 = wcschr(pch2, L' ');
         if (pch3 == NULL)
         {
-            ASSERT(FALSE);
             break;
         }
         *pch3++ = UNICODE_NULL;
@@ -130,7 +123,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pEntry->wDay = _wtoi(pch3);
         if (pEntry->wYear == 0 || pEntry->wMonth == 0 || pEntry->wDay == 0)
         {
-            ASSERT(FALSE);
             break;
         }
 
@@ -139,7 +131,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pch2 = wcschr(pch1, L'_');
         if (pch2 == NULL)
         {
-            ASSERT(FALSE);
             break;
         }
         *pch2++ = UNICODE_NULL;
@@ -147,7 +138,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pch3 = wcschr(pch2, L'_');
         if (pch3 == NULL)
         {
-            ASSERT(FALSE);
             break;
         }
         *pch3++ = UNICODE_NULL;
@@ -155,7 +145,6 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
         pch4 = wcschr(pch3, L'_');
         if (pch4 == NULL)
         {
-            ASSERT(FALSE);
             break;
         }
         *pch4++ = UNICODE_NULL;
@@ -172,10 +161,9 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
 
     /* sort */
     qsort(s_JapaneseEraTable, s_JapaneseEraCount, sizeof(JAPANESE_ERA),
-          JapaneseEra_Compare0);
+          JapaneseEra_Compare);
 
     /* make cache */
-    ASSERT(dwIndex > 0);
     s_JapaneseEraCount = dwIndex;
 #endif
 
@@ -184,7 +172,7 @@ LPCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
     return s_JapaneseEraTable;
 }
 
-BOOL JapaneseEra_ToSystemTime(LPCJAPANESE_ERA pEra, LPSYSTEMTIME pst)
+static BOOL JapaneseEra_ToSystemTime(PCJAPANESE_ERA pEra, LPSYSTEMTIME pst)
 {
     ASSERT(pEra != NULL);
     ASSERT(pst != NULL);
@@ -196,10 +184,10 @@ BOOL JapaneseEra_ToSystemTime(LPCJAPANESE_ERA pEra, LPSYSTEMTIME pst)
     return TRUE;
 }
 
-LPCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL)
+PCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL)
 {
     DWORD dwIndex, dwCount = 0;
-    LPCJAPANESE_ERA pTable, pEntry, pPrevEntry = NULL;
+    PCJAPANESE_ERA pTable, pEntry, pPrevEntry = NULL;
     SYSTEMTIME st1, st2;
     FILETIME ft1, ft2;
     LONG nCompare;
@@ -216,7 +204,6 @@ LPCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL)
     pTable = JapaneseEra_Load(&dwCount);
     if (pTable == NULL || dwCount == 0 || dwCount > JAPANESE_ERA_MAX)
     {
-        ASSERT(FALSE);
         return NULL;
     }
 
@@ -239,28 +226,4 @@ LPCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL)
     }
 
     return pPrevEntry;
-}
-
-LPCJAPANESE_ERA JapaneseEra_ConvertYear(const SYSTEMTIME *pst OPTIONAL, LPWORD pwNengoYearOut)
-{
-    SYSTEMTIME st;
-    LPCJAPANESE_ERA pEra;
-    ASSERT(pwNengoYearOut);
-
-    if (pst == NULL)
-    {
-        GetLocalTime(&st);
-        pst = &st;
-    }
-
-    pEra = JapaneseEra_Find(pst);
-    ASSERT(pEra != NULL);
-    if (pEra == NULL)
-    {
-        *pwNengoYearOut = 0;
-        return NULL;
-    }
-
-    *pwNengoYearOut = pst->wYear - pEra->wYear + 1;
-    return pEra;
 }
