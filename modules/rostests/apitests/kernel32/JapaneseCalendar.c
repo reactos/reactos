@@ -44,12 +44,6 @@ START_TEST(JapaneseCalendar)
     trace("lcid: 0x%08lX\n", lcid);
     trace("langid: 0x%04lX\n", langid);
 
-    if (GetACP() != 932)
-    {
-        skip("Codepage is not Japanese.\n");
-        return;
-    }
-
     ZeroMemory(&st, sizeof(st));
     st.wYear = 2019;
     st.wMonth = 4;
