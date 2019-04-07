@@ -25,25 +25,25 @@ typedef BOOL   (WINAPI* FREELIBRARYPROC)(HINSTANCE hLibModule);
 
 #define DSETUPERR_SUCCESS 0
 
-INT WINAPI DirectXSetup(HWND hWnd, LPSTR lpszRootPath, DWORD dwFlags)
+INT_PTR WINAPI DirectXSetup(HWND hWnd, LPSTR lpszRootPath, DWORD dwFlags)
 {
     SHIM_MSG("Returning DSETUPERR_SUCCESS\n");
     return DSETUPERR_SUCCESS;
 }
 
-INT WINAPI DirectXSetupA(HWND hWnd, LPSTR lpszRootPath, DWORD dwFlags)
+INT_PTR WINAPI DirectXSetupA(HWND hWnd, LPSTR lpszRootPath, DWORD dwFlags)
 {
     SHIM_MSG("Returning DSETUPERR_SUCCESS\n");
     return DSETUPERR_SUCCESS;
 }
 
-INT WINAPI DirectXSetupW(HWND hWnd, LPWSTR lpszRootPath, DWORD dwFlags)
+INT_PTR WINAPI DirectXSetupW(HWND hWnd, LPWSTR lpszRootPath, DWORD dwFlags)
 {
     SHIM_MSG("Returning DSETUPERR_SUCCESS\n");
     return DSETUPERR_SUCCESS;
 }
 
-INT WINAPI DirectXSetupGetVersion(DWORD *lpdwVersion, DWORD *lpdwMinorVersion)
+INT_PTR WINAPI DirectXSetupGetVersion(DWORD *lpdwVersion, DWORD *lpdwMinorVersion)
 {
     if (lpdwVersion)
         *lpdwVersion = MAKELONG(7, 4);     // DirectX 7.0
