@@ -655,7 +655,7 @@ ElfChangeNotify(IN HANDLE hEventLog,
 
     RpcTryExcept
     {
-        Status = ElfrChangeNotify(hEventLog, RpcClientId, (DWORD)hEvent);
+        Status = ElfrChangeNotify(hEventLog, RpcClientId, HandleToUlong(hEvent));
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
