@@ -151,7 +151,11 @@ struct location
 {
     unsigned            kind : 8,
                         reg;
+#ifndef __REACTOS__
     unsigned long       offset;
+#else
+    uintptr_t           offset;
+#endif
 };
 
 struct symt
