@@ -633,19 +633,16 @@ void CDefView::UpdateListColors()
     else
     {
         // text background color
-        COLORREF clrTextBack = GetSysColor(COLOR_WINDOW);
-        if (m_viewinfo_data.clrTextBack != CLR_INVALID)
-        {
-            clrTextBack = m_viewinfo_data.clrTextBack;
-        }
+        COLORREF clrTextBack = m_viewinfo_data.clrTextBack;
         m_ListView.SetTextBkColor(clrTextBack);
 
         // text color
-        COLORREF clrText = GetSysColor(COLOR_WINDOWTEXT);
+        COLORREF clrText;
         if (m_viewinfo_data.clrText != CLR_INVALID)
-        {
             clrText = m_viewinfo_data.clrText;
-        }
+        else
+            clrText = GetSysColor(COLOR_WINDOWTEXT);
+
         m_ListView.SetTextColor(clrText);
 
         // Background is painted by the parent via WM_PRINTCLIENT.
