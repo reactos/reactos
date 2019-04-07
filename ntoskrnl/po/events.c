@@ -242,13 +242,23 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        /* FIXME: What do do with the capabilities? */
+        DPRINT("Device capabilities: 0x%x\n", Caps);
+        if (Caps & SYS_BUTTON_POWER)
         {
-            DPRINT("Device capabilities: 0x%x (", Caps);
-            if (Caps & SYS_BUTTON_POWER) DPRINT(" POWER");
-            if (Caps & SYS_BUTTON_SLEEP) DPRINT(" SLEEP");
-            if (Caps & SYS_BUTTON_LID) DPRINT(" LID");
-            DPRINT(" )\n");
+            DPRINT("POWER button present\n");
+            PopCapabilities.PowerButtonPresent = TRUE;
+        }
+
+        if (Caps & SYS_BUTTON_SLEEP)
+        {
+            DPRINT("SLEEP button present\n");
+            PopCapabilities.SleepButtonPresent = TRUE;
+        }
+
+        if (Caps & SYS_BUTTON_LID)
+        {
+            DPRINT("LID present\n");
+            PopCapabilities.LidPresent = TRUE;
         }
 
         SysButtonContext = ExAllocatePoolWithTag(NonPagedPool,

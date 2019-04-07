@@ -26,6 +26,7 @@ PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
 POP_POWER_ACTION PopAction;
 WORK_QUEUE_ITEM PopShutdownWorkItem;
+SYSTEM_POWER_CAPABILITIES PopCapabilities;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -323,6 +324,9 @@ PoInitSystem(IN ULONG BootPhase)
         return TRUE;
     }
 
+    /* Initialize the power capabilities */
+    RtlZeroMemory(&PopCapabilities, sizeof(SYSTEM_POWER_CAPABILITIES));
+
     /* Get the Command Line */
     CommandLine = KeLoaderBlock->LoadOptions;
 
@@ -343,6 +347,9 @@ PoInitSystem(IN ULONG BootPhase)
         PopAcpiPresent = KeLoaderBlock->Extension->AcpiTable != NULL ? TRUE : FALSE;
     }
 
+    /* Enable shutdown by power button */
+    if (PopAcpiPresent)
+        PopCapabilities.SystemS5 = TRUE;
 
     /* Initialize volume support */
     InitializeListHead(&PopVolumeDevices);
@@ -720,9 +727,9 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 
             _SEH2_TRY
             {
-                /* Just zero the struct (and thus set PowerCapabilities->SystemBatteriesPresent = FALSE) */
-                RtlZeroMemory(PowerCapabilities, sizeof(SYSTEM_POWER_CAPABILITIES));
-                //PowerCapabilities->SystemBatteriesPresent = 0;
+                RtlCopyMemory(PowerCapabilities,
+                              &PopCapabilities,
+                              sizeof(SYSTEM_POWER_CAPABILITIES));
 
                 Status = STATUS_SUCCESS;
             }

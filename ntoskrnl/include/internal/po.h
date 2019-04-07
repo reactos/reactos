@@ -365,4 +365,5 @@ extern KGUARDED_MUTEX PopVolumeLock;
 extern LIST_ENTRY PopVolumeDevices;
 extern KSPIN_LOCK PopDopeGlobalLock;
 extern POP_POWER_ACTION PopAction;
+extern SYSTEM_POWER_CAPABILITIES PopCapabilities;
 
