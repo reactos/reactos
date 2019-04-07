@@ -76,5 +76,5 @@ add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32
     kernel32
     ntdll)
 
-add_pch(msi precomp.h SOURCE)
+#add_pch(msi precomp.h SOURCE)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
