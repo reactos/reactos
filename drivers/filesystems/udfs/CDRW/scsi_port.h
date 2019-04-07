@@ -22,8 +22,6 @@ Environment:
 #ifndef __SCSI_PORT_H__
 #define __SCSI_PORT_H__
 
-#ifndef WIN64
-
 #include "srb.h"
 
 #ifdef SCSIPORT_API
@@ -166,7 +164,6 @@ typedef struct _DUMP_POINTERS {
     ULONG CommonBufferSize;
 } DUMP_POINTERS, *PDUMP_POINTERS;
 
-#endif //WIN64
 
 
 // Define values for pass-through DataIn field.
