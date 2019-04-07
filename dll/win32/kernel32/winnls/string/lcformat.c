@@ -2761,7 +2761,7 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
             PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
             if (pEra)
             {
-                RtlStringCchCopyW(lpCalData, cchData, pEra->szEraInitial);
+                RtlStringCchCopyW(lpCalData, cchData, pEra->szEraAbbrev);
                 return strlenW(lpCalData) + 1;
             }
         }

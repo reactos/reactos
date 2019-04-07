@@ -12,9 +12,9 @@ typedef struct JAPANESE_ERA
     WORD wMonth;
     WORD wDay;
     WCHAR szEraName[16];
-    WCHAR szEraInitial[5];
+    WCHAR szEraAbbrev[5];
     WCHAR szEnglishEraName[24];
-    WCHAR szEnglishEraInitial[5];
+    WCHAR szEnglishEraAbbrev[5];
 } JAPANESE_ERA, *PJAPANESE_ERA;
 typedef const JAPANESE_ERA *PCJAPANESE_ERA;
 

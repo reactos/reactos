@@ -151,9 +151,9 @@ static PCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
 
         /* store */
         RtlStringCbCopyW(pEntry->szEraName, sizeof(pEntry->szEraName), pch1);
-        RtlStringCbCopyW(pEntry->szEraInitial, sizeof(pEntry->szEraInitial), pch2);
+        RtlStringCbCopyW(pEntry->szEraAbbrev, sizeof(pEntry->szEraAbbrev), pch2);
         RtlStringCbCopyW(pEntry->szEnglishEraName, sizeof(pEntry->szEnglishEraName), pch3);
-        RtlStringCbCopyW(pEntry->szEnglishEraInitial, sizeof(pEntry->szEnglishEraInitial), pch4);
+        RtlStringCbCopyW(pEntry->szEnglishEraAbbrev, sizeof(pEntry->szEnglishEraAbbrev), pch4);
     }
 
     /* close key */
