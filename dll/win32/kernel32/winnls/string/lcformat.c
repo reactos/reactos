@@ -2435,6 +2435,12 @@ int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
         }
         cp = node->dwCodePage;
     }
+    if ((CalType & 0xFFFF) == CAL_SABBREVERASTRING)
+    {
+        /* NOTE: CAL_SABBREVERASTRING is not supported in GetCalendarInfoA */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 #endif
 
     if (NLS_IsUnicodeOnlyLcid(lcid))
