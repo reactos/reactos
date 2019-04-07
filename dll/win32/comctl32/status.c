@@ -201,12 +201,17 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
     } else {
         r.left += x;
 #ifdef __REACTOS__
-        r.left += 3;
-        r.right -= 3;
         if (!theme)
+        {
+            r.left -= 2;
             DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
+        }
         else
+        {
+            r.left += 2;
+            r.right -= 2;
             DrawThemeText(theme, hdc, SP_PANE, 0, part->text, -1, DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX, 0, &r);
+        }
 #else
         DrawStatusTextW (hdc, &r, part->text, SBT_NOBORDERS);
 #endif
