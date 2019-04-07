@@ -566,7 +566,7 @@ FsRtlAllocateOplock(VOID)
     _SEH2_FINALLY
     {
         /* In case of abnormal termination, it means either OPLOCK or FAST_MUTEX allocation failed */
-        if (_abnormal_termination())
+        if (_SEH2_AbnormalTermination())
         {
             /* That FAST_MUTEX, free OPLOCK */
             if (Oplock != NULL)
