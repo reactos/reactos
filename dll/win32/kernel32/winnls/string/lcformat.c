@@ -37,6 +37,10 @@ DEBUG_CHANNEL(nls);
 
 #define IS_LCID_JAPANESE(lcid) PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_JAPANESE
 
+#ifndef CAL_SABBREVERASTRING
+    #define CAL_SABBREVERASTRING 0x00000039
+#endif
+
 #else /* __REACTOS__ */
 
 #include "config.h"
@@ -2750,6 +2754,20 @@ int WINAPI GetCalendarInfoW(LCID Locale, CALID Calendar, CALTYPE CalType,
                 return 0;
             }
 	    break;
+#ifdef __REACTOS__
+    case CAL_SABBREVERASTRING:
+        if (IS_LCID_JAPANESE(Locale) && Calendar == CAL_JAPAN)
+        {
+            PCJAPANESE_ERA pEra = JapaneseEra_Find(NULL);
+            if (pEra)
+            {
+                RtlStringCchCopyW(lpCalData, cchData, pEra->szEraInitial);
+                return strlenW(lpCalData) + 1;
+            }
+        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+#endif
 	default:
             FIXME("Unknown caltype %d\n", calinfo);
             SetLastError(ERROR_INVALID_FLAGS);
