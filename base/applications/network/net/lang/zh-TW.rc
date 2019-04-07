@@ -11,33 +11,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "獨立伺服器"
     IDS_ACCOUNTS_WORKSTATION "工作站"
 
-    IDS_STATISTICS_TEXT "Statistics are available for the following services:\n\n\
-   Server\n   Workstation\n\n"
-    IDS_STATISTICS_SINCE "Statistics since %d/%d/%d %d:%02d %s\n\n\n"
-    IDS_STATISTICS_WKS_NAME "Workstation statistics for \\\\%s\n\n\n"
-    IDS_STATISTICS_WKS_BYTESRCVD "Bytes received"
-    IDS_STATISTICS_WKS_SMBSRCVD "Server Message Blocks (SMBs) received"
-    IDS_STATISTICS_WKS_BYTESTRANS "Bytes transmitted"
-    IDS_STATISTICS_WKS_SMBSTRANS "Server Message Blocks (SMBs) transmitted"
-    IDS_STATISTICS_WKS_READOPS "Read operations"
-    IDS_STATISTICS_WKS_WRITEOPS "Write operations"
-    IDS_STATISTICS_WKS_READDENIED "Raw reads denied"
-    IDS_STATISTICS_WKS_WRITEDENIED "Raw writes denied"
-    IDS_STATISTICS_WKS_NETWORKERROR "Network errors"
-    IDS_STATISTICS_WKS_CONNECTS "Connections made"
-    IDS_STATISTICS_WKS_RECONNECTS "Reconnections made"
-    IDS_STATISTICS_WKS_DISCONNECTS "Server disconnects"
-    IDS_STATISTICS_WKS_SESSIONS "Sessions started"
-    IDS_STATISTICS_WKS_HUNGSESSIONS "Hung sessions"
-    IDS_STATISTICS_WKS_FAILSESSIONS "Failed sessions"
-    IDS_STATISTICS_WKS_FAILEDOPS "Failed operations"
-    IDS_STATISTICS_WKS_USECOUNT "Use count"
-    IDS_STATISTICS_WKS_FAILUSECOUNT "Failed use count"
-
-    IDS_USER_ENTER_PASSWORD1 "為使用者輸入新的密碼: "
-    IDS_USER_ENTER_PASSWORD2 "再次輸入密碼: "
-    IDS_USER_NO_PASSWORD_MATCH "密碼不匹配!"
-
     IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
 
     IDS_GENERIC_YES "是"

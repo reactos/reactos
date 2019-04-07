@@ -15,33 +15,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Server de sine stătător"
     IDS_ACCOUNTS_WORKSTATION "Stație de lucru"
 
-    IDS_STATISTICS_TEXT "Statistici disponibile pentru următoarele servicii:\n\n\
-   Server\n   Stație de lucru\n\n"
-    IDS_STATISTICS_SINCE "Statistici începând din %d/%d/%d %d:%02d %s\n\n\n"
-    IDS_STATISTICS_WKS_NAME "Statistici pentru stația de lucru \\\\%s\n\n\n"
-    IDS_STATISTICS_WKS_BYTESRCVD "Octeți receptați"
-    IDS_STATISTICS_WKS_SMBSRCVD "Blocuri Mesaje de Server (SMB) receptate"
-    IDS_STATISTICS_WKS_BYTESTRANS "Octeți transmiși"
-    IDS_STATISTICS_WKS_SMBSTRANS "Blocuri Mesaje de Server (SMB) transmise"
-    IDS_STATISTICS_WKS_READOPS "Operații de citire"
-    IDS_STATISTICS_WKS_WRITEOPS "Operații de scriere"
-    IDS_STATISTICS_WKS_READDENIED "Citiri brute respinse"
-    IDS_STATISTICS_WKS_WRITEDENIED "Scrieri brute respinse"
-    IDS_STATISTICS_WKS_NETWORKERROR "Erori de rețea"
-    IDS_STATISTICS_WKS_CONNECTS "Conexiuni realizate"
-    IDS_STATISTICS_WKS_RECONNECTS "Reconectări realizate"
-    IDS_STATISTICS_WKS_DISCONNECTS "Deconectări de server"
-    IDS_STATISTICS_WKS_SESSIONS "Sesiuni pornite"
-    IDS_STATISTICS_WKS_HUNGSESSIONS "Sesiuni suspendate"
-    IDS_STATISTICS_WKS_FAILSESSIONS "Sesiuni eșuate"
-    IDS_STATISTICS_WKS_FAILEDOPS "Operații eșuate"
-    IDS_STATISTICS_WKS_USECOUNT "Număr de utilizări"
-    IDS_STATISTICS_WKS_FAILUSECOUNT "Utilizări eșuate"
-
-    IDS_USER_ENTER_PASSWORD1 "Introduceți o parolă nouă pentru utilizatorul (curent): "
-    IDS_USER_ENTER_PASSWORD2 "Introduceți din nou parola: "
-    IDS_USER_NO_PASSWORD_MATCH "Parolele diferă!"
-
     IDS_USE_NOW_CONNECTED "Conectarea %s la %s a fost realizată.\n"
 
     IDS_GENERIC_YES "Da"

@@ -394,11 +394,11 @@ ReadPassword(
 
     while (TRUE)
     {
-        ConResPuts(StdOut, IDS_USER_ENTER_PASSWORD1);
+        PrintMessageString(4358);
         ReadFromConsole(szPassword1, PWLEN + 1, FALSE);
         ConPuts(StdOut, L"\n");
 
-        ConResPuts(StdOut, IDS_USER_ENTER_PASSWORD2);
+        PrintMessageString(4361);
         ReadFromConsole(szPassword2, PWLEN + 1, FALSE);
         ConPuts(StdOut, L"\n");
 
@@ -419,8 +419,7 @@ ReadPassword(
         else
         {
             ConPuts(StdOut, L"\n");
-            ConResPuts(StdOut, IDS_USER_NO_PASSWORD_MATCH);
-            ConPuts(StdOut, L"\n");
+            PrintMessageString(3728);
             *lpPassword = NULL;
         }
     }
@@ -973,7 +972,7 @@ cmdUser(
         lpPassword != NULL &&
         bRandomPassword == TRUE)
     {
-        ConPrintf(StdOut, L"The password for %s is: %s\n", lpUserName, lpPassword);
+        PrintMessageStringV(3968, lpUserName, lpPassword);
     }
 
 done:

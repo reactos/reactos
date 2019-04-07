@@ -17970,25 +17970,25 @@ Language=English
 The passwords do not match.
 .
 Language=Polish
-The passwords do not match.
+Hasła są niezgodne.
 .
 Language=Romanian
-The passwords do not match.
+Parolele diferă.
 .
 Language=Russian
-The passwords do not match.
+Пароли не совпадают.
 .
 Language=Spanish
-The passwords do not match.
+Las contraseñas no coinciden.
 .
 Language=Turkish
-The passwords do not match.
+Şifreler uyuşmuyor.
 .
 Language=Chinese
-The passwords do not match.
+密码不匹配！.
 .
 Language=Taiwanese
-The passwords do not match.
+密碼不匹配.
 .
 
 MessageId=3729
@@ -20767,7 +20767,7 @@ NetWare compatible logon
 
 
 ;
-; apperr2.h (non-public) message difinitions (4300 - 5299 APPERR2_BASE)
+; apperr2.h (non-public) message definitions (4300 - 5299 APPERR2_BASE)
 ;
 
 MessageId=4300
@@ -27174,13 +27174,13 @@ Language=English
 Bytes received%0
 .
 Language=Polish
-Bytes received%0
+Bajty odebrane%0
 .
 Language=Romanian
-Bytes received%0
+Octeți receptați%0
 .
 Language=Russian
-Bytes received%0
+Получено байт%0
 .
 Language=Spanish
 Bytes received%0
@@ -27203,13 +27203,13 @@ Language=English
 Server Message Blocks (SMBs) received%0
 .
 Language=Polish
-Server Message Blocks (SMBs) received%0
+Odebrane bloki komunikatów serwera (SMB)%0
 .
 Language=Romanian
-Server Message Blocks (SMBs) received%0
+Blocuri Mesaje de Server (SMB) receptate%0
 .
 Language=Russian
-Server Message Blocks (SMBs) received%0
+Принятые блоки сообщений сервера SMB%0
 .
 Language=Spanish
 Server Message Blocks (SMBs) received%0
@@ -27232,13 +27232,13 @@ Language=English
 Bytes transmitted%0
 .
 Language=Polish
-Bytes transmitted%0
+Bajty przesłane%0
 .
 Language=Romanian
-Bytes transmitted%0
+Octeți transmiși%0
 .
 Language=Russian
-Bytes transmitted%0
+Передано байт%0
 .
 Language=Spanish
 Bytes transmitted%0
@@ -27261,13 +27261,13 @@ Language=English
 Server Message Blocks (SMBs) transmitted%0
 .
 Language=Polish
-Server Message Blocks (SMBs) transmitted%0
+Przesłane bloki komunikatów serwera (SMB)%0
 .
 Language=Romanian
-Server Message Blocks (SMBs) transmitted%0
+Blocuri Mesaje de Server (SMB) transmise%0
 .
 Language=Russian
-Server Message Blocks (SMBs) transmitted%0
+Переданные блоки сообщений сервера SMB%0
 .
 Language=Spanish
 Server Message Blocks (SMBs) transmitted%0
@@ -27290,13 +27290,13 @@ Language=English
 Read operations%0
 .
 Language=Polish
-Read operations%0
+Operacje odczytu%0
 .
 Language=Romanian
-Read operations%0
+Operații de citire%0
 .
 Language=Russian
-Read operations%0
+Операции чтения%0
 .
 Language=Spanish
 Read operations%0
@@ -27319,13 +27319,13 @@ Language=English
 Write operations%0
 .
 Language=Polish
-Write operations%0
+Operacje zapisu%0
 .
 Language=Romanian
-Write operations%0
+Operații de scriere%0
 .
 Language=Russian
-Write operations%0
+Операции записи%0
 .
 Language=Spanish
 Write operations%0
@@ -27348,13 +27348,13 @@ Language=English
 Raw reads denied%0
 .
 Language=Polish
-Raw reads denied%0
+Odrzucone operacje odczytu bez przetwarzania%0
 .
 Language=Romanian
-Raw reads denied%0
+Citiri brute respinse%0
 .
 Language=Russian
-Raw reads denied%0
+Отказано в чтении%0
 .
 Language=Spanish
 Raw reads denied%0
@@ -27377,13 +27377,13 @@ Language=English
 Raw writes denied%0
 .
 Language=Polish
-Raw writes denied%0
+Odrzucone operacje zapisu bez przetwarzania%0
 .
 Language=Romanian
-Raw writes denied%0
+Scrieri brute respinse%0
 .
 Language=Russian
-Raw writes denied%0
+Отказано в записи%0
 .
 Language=Spanish
 Raw writes denied%0
@@ -27406,13 +27406,13 @@ Language=English
 Network errors%0
 .
 Language=Polish
-Network errors%0
+Błędy sieciowe%0
 .
 Language=Romanian
-Network errors%0
+Erori de rețea%0
 .
 Language=Russian
-Network errors%0
+Ошибки сети%0
 .
 Language=Spanish
 Network errors%0
@@ -27435,13 +27435,13 @@ Language=English
 Connections made%0
 .
 Language=Polish
-Connections made%0
+Wykonane połączenia%0
 .
 Language=Romanian
-Connections made%0
+Conexiuni realizate%0
 .
 Language=Russian
-Connections made%0
+Выполненные подключения%0
 .
 Language=Spanish
 Connections made%0
@@ -27464,13 +27464,13 @@ Language=English
 Reconnections made%0
 .
 Language=Polish
-Reconnections made%0
+Ponownie wykonane połączenia%0
 .
 Language=Romanian
-Reconnections made%0
+Reconectări realizate%0
 .
 Language=Russian
-Reconnections made%0
+Повторные подключения%0
 .
 Language=Spanish
 Reconnections made%0
@@ -27493,13 +27493,13 @@ Language=English
 Server disconnects%0
 .
 Language=Polish
-Server disconnects%0
+Rozłączenia serwera%0
 .
 Language=Romanian
-Server disconnects%0
+Deconectări de server%0
 .
 Language=Russian
-Server disconnects%0
+Отключений от сервера%0
 .
 Language=Spanish
 Server disconnects%0
@@ -27522,13 +27522,13 @@ Language=English
 Sessions started%0
 .
 Language=Polish
-Sessions started%0
+Sesje uruchomione%0
 .
 Language=Romanian
-Sessions started%0
+Sesiuni pornite%0
 .
 Language=Russian
-Sessions started%0
+Запущенные сеансы%0
 .
 Language=Spanish
 Sessions started%0
@@ -27551,13 +27551,13 @@ Language=English
 Hung sessions%0
 .
 Language=Polish
-Hung sessions%0
+Zawieszone sesje%0
 .
 Language=Romanian
-Hung sessions%0
+Sesiuni suspendate%0
 .
 Language=Russian
-Hung sessions%0
+Зависание сеансов%0
 .
 Language=Spanish
 Hung sessions%0
@@ -27580,13 +27580,13 @@ Language=English
 Failed sessions%0
 .
 Language=Polish
-Failed sessions%0
+Niepowodzenia sesji%0
 .
 Language=Romanian
-Failed sessions%0
+Sesiuni eșuate%0
 .
 Language=Russian
-Failed sessions%0
+Сбои в сеансах%0
 .
 Language=Spanish
 Failed sessions%0
@@ -27609,13 +27609,13 @@ Language=English
 Failed operations%0
 .
 Language=Polish
-Failed operations%0
+Niepowodzenia operacji%0
 .
 Language=Romanian
-Failed operations%0
+Operații eșuate%0
 .
 Language=Russian
-Failed operations%0
+Сбои в операциях%0
 .
 Language=Spanish
 Failed operations%0
@@ -27638,13 +27638,13 @@ Language=English
 Use count%0
 .
 Language=Polish
-Use count%0
+Liczba pomyślnych prób użycia%0
 .
 Language=Romanian
-Use count%0
+Număr de utilizări%0
 .
 Language=Russian
-Use count%0
+Счетчик использования%0
 .
 Language=Spanish
 Use count%0
@@ -27667,13 +27667,13 @@ Language=English
 Failed use count%0
 .
 Language=Polish
-Failed use count%0
+Liczba niepomyślnych prób użycia%0
 .
 Language=Romanian
-Failed use count%0
+Utilizări eșuate%0
 .
 Language=Russian
-Failed use count%0
+Счетчик сбоев при использовании%0
 .
 Language=Spanish
 Failed use count%0

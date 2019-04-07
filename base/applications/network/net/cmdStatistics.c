@@ -149,7 +149,8 @@ DisplayWorkstationStatistics(VOID)
     if (Status != NERR_Success)
         goto done;
 
-    ConResPrintf(StdOut, IDS_STATISTICS_WKS_NAME, WorkstationInfo->wki100_computername);
+    PrintMessageStringV(4623, WorkstationInfo->wki100_computername);
+    ConPrintf(StdOut, L"\n\n");
 
     RtlSecondsSince1970ToTime(StatisticsInfo->StatisticsStartTime.u.LowPart,
                               &LargeValue);
@@ -168,66 +169,68 @@ DisplayWorkstationStatistics(VOID)
         wHour = wHour - 12;
     }
 
-    ConResPrintf(StdOut, IDS_STATISTICS_SINCE,
-                 SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
-                 wHour, SystemTime.wMinute, (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
+    PrintMessageString(4600);
+    ConPrintf(StdOut, L" %d/%d/%d %d:%02d %s\n\n\n",
+              SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
+              wHour, SystemTime.wMinute,
+              (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_BYTESRCVD, nPaddedLength);
+    PrintPaddedMessageString(4630, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->BytesReceived.QuadPart);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_SMBSRCVD, nPaddedLength);
+    PrintPaddedMessageString(4631, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->SmbsReceived.QuadPart);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_BYTESTRANS, nPaddedLength);
+    PrintPaddedMessageString(4632, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->BytesTransmitted.QuadPart);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_SMBSTRANS, nPaddedLength);
+    PrintPaddedMessageString(4633, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->SmbsTransmitted.QuadPart);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_READOPS, nPaddedLength);
+    PrintPaddedMessageString(4634, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->ReadOperations);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_WRITEOPS, nPaddedLength);
+    PrintPaddedMessageString(4635, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->WriteOperations);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_READDENIED, nPaddedLength);
+    PrintPaddedMessageString(4636, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->RawReadsDenied);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_WRITEDENIED, nPaddedLength);
+    PrintPaddedMessageString(4637, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->RawWritesDenied);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_NETWORKERROR, nPaddedLength);
+    PrintPaddedMessageString(4638, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->NetworkErrors);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_CONNECTS, nPaddedLength);
+    PrintPaddedMessageString(4639, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->CoreConnects +
                                 StatisticsInfo->Lanman20Connects +
                                 StatisticsInfo->Lanman21Connects +
                                 StatisticsInfo->LanmanNtConnects);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_RECONNECTS, nPaddedLength);
+    PrintPaddedMessageString(4640, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->Reconnects);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_DISCONNECTS, nPaddedLength);
+    PrintPaddedMessageString(4641, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->ServerDisconnects);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_SESSIONS, nPaddedLength);
+    PrintPaddedMessageString(4642, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->Sessions);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_HUNGSESSIONS, nPaddedLength);
+    PrintPaddedMessageString(4643, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->HungSessions);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILSESSIONS, nPaddedLength);
+    PrintPaddedMessageString(4644, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->FailedSessions);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILEDOPS, nPaddedLength);
+    PrintPaddedMessageString(4645, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->InitiallyFailedOperations +
                                 StatisticsInfo->FailedCompletionOperations);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_USECOUNT, nPaddedLength);
+    PrintPaddedMessageString(4646, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->UseCount);
 
-    PrintPaddedResourceString(IDS_STATISTICS_WKS_FAILUSECOUNT, nPaddedLength);
+    PrintPaddedMessageString(4647, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n\n", StatisticsInfo->FailedUseCount);
 
 done:
@@ -294,7 +297,11 @@ cmdStatistics(
     }
     else
     {
-        ConResPuts(StdOut, IDS_STATISTICS_TEXT);
+        PrintMessageString(4379);
+        ConPuts(StdOut, L"\n");
+        ConPuts(StdOut, L"   Server\n");
+        ConPuts(StdOut, L"   Workstation\n");
+        ConPuts(StdOut, L"\n");
     }
 
     if (result == 0)

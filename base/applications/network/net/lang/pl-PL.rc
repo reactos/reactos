@@ -8,33 +8,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Serwer autonomiczny"
     IDS_ACCOUNTS_WORKSTATION "Stacja robocza"
 
-    IDS_STATISTICS_TEXT "Dostępne są statystyki dla następujących uruchomionych obecnie usług:\n\n\
-   Serwer\n   Stacja robocza\n\n"
-    IDS_STATISTICS_SINCE "Statystyka od %d/%d/%d %d:%02d %s\n\n\n"
-    IDS_STATISTICS_WKS_NAME "Statystyka stacji roboczej dla \\\\%s\n\n\n"
-    IDS_STATISTICS_WKS_BYTESRCVD "Bajty odebrane"
-    IDS_STATISTICS_WKS_SMBSRCVD "Odebrane bloki komunikatów serwera (SMB)"
-    IDS_STATISTICS_WKS_BYTESTRANS "Bajty przesłane"
-    IDS_STATISTICS_WKS_SMBSTRANS "Przesłane bloki komunikatów serwera (SMB)"
-    IDS_STATISTICS_WKS_READOPS "Operacje odczytu"
-    IDS_STATISTICS_WKS_WRITEOPS "Operacje zapisu"
-    IDS_STATISTICS_WKS_READDENIED "Odrzucone operacje odczytu bez przetwarzania"
-    IDS_STATISTICS_WKS_WRITEDENIED "Odrzucone operacje zapisu bez przetwarzania"
-    IDS_STATISTICS_WKS_NETWORKERROR "Błędy sieciowe"
-    IDS_STATISTICS_WKS_CONNECTS "Wykonane połączenia"
-    IDS_STATISTICS_WKS_RECONNECTS "Ponownie wykonane połączenia"
-    IDS_STATISTICS_WKS_DISCONNECTS "Rozłączenia serwera"
-    IDS_STATISTICS_WKS_SESSIONS "Sesje uruchomione"
-    IDS_STATISTICS_WKS_HUNGSESSIONS "Zawieszone sesje"
-    IDS_STATISTICS_WKS_FAILSESSIONS "Niepowodzenia sesji"
-    IDS_STATISTICS_WKS_FAILEDOPS "Niepowodzenia operacji"
-    IDS_STATISTICS_WKS_USECOUNT "Liczba pomyślnych prób użycia"
-    IDS_STATISTICS_WKS_FAILUSECOUNT "Liczba niepomyślnych prób użycia"
-
-    IDS_USER_ENTER_PASSWORD1 "Wpisz nowe hasło dla użytkownika: "
-    IDS_USER_ENTER_PASSWORD2 "Wpisz hasło ponownie w celu potwierdzenia: "
-    IDS_USER_NO_PASSWORD_MATCH "Hasła są niezgodne!"
-
     IDS_USE_NOW_CONNECTED "%s jest obecnie podłączony do %s\n"
 
     IDS_GENERIC_YES "Tak"

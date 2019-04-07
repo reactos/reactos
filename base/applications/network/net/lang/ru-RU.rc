@@ -11,33 +11,6 @@ BEGIN
     IDS_ACCOUNTS_STANDALONE_SERVER "Автономный сервер"
     IDS_ACCOUNTS_WORKSTATION "Рабочая станция"
 
-    IDS_STATISTICS_TEXT "Статистика доступна для следующих выполняющихся служб:\n\n\
-   Сервер\n   Рабочая станция\n\n"
-    IDS_STATISTICS_SINCE "Статистика после %d/%d/%d %d:%02d %s\n\n\n"
-    IDS_STATISTICS_WKS_NAME "Статистика рабочей станции для \\\\%s\n\n\n"
-    IDS_STATISTICS_WKS_BYTESRCVD "Получено байт"
-    IDS_STATISTICS_WKS_SMBSRCVD "Принятые блоки сообщений сервера SMB"
-    IDS_STATISTICS_WKS_BYTESTRANS "Передано байт"
-    IDS_STATISTICS_WKS_SMBSTRANS "Переданные блоки сообщений сервера SMB"
-    IDS_STATISTICS_WKS_READOPS "Операции чтения"
-    IDS_STATISTICS_WKS_WRITEOPS "Операции записи"
-    IDS_STATISTICS_WKS_READDENIED "Отказано в чтении"
-    IDS_STATISTICS_WKS_WRITEDENIED "Отказано в записи"
-    IDS_STATISTICS_WKS_NETWORKERROR "Ошибки сети"
-    IDS_STATISTICS_WKS_CONNECTS "Выполненные подключения"
-    IDS_STATISTICS_WKS_RECONNECTS "Повторные подключения"
-    IDS_STATISTICS_WKS_DISCONNECTS "Отключений от сервера"
-    IDS_STATISTICS_WKS_SESSIONS "Запущенные сеансы"
-    IDS_STATISTICS_WKS_HUNGSESSIONS "Зависание сеансов"
-    IDS_STATISTICS_WKS_FAILSESSIONS "Сбои в сеансах"
-    IDS_STATISTICS_WKS_FAILEDOPS "Сбои в операциях"
-    IDS_STATISTICS_WKS_USECOUNT "Счетчик использования"
-    IDS_STATISTICS_WKS_FAILUSECOUNT "Счетчик сбоев при использовании"
-
-    IDS_USER_ENTER_PASSWORD1 "Введите пароль для пользователя: "
-    IDS_USER_ENTER_PASSWORD2 "Повторите ввод пароля для подтверждения: "
-    IDS_USER_NO_PASSWORD_MATCH "Пароли не совпадают!"
-
     IDS_USE_NOW_CONNECTED "%s сейчас подключен к %s\n"
 
     IDS_GENERIC_YES "Да"
