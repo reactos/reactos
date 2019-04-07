@@ -2366,7 +2366,7 @@ INT WINAPI CompareStringA(LCID lcid, DWORD flags,
     return ret;
 }
 
-static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
+HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
 {
     UNICODE_STRING keyName;
     OBJECT_ATTRIBUTES attr;
@@ -2381,9 +2381,9 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     return hkey;
 }
 
-static BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
-                             LPWSTR szValueName, ULONG valueNameSize,
-                             LPWSTR szValueData, ULONG valueDataSize)
+BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
+                      LPWSTR szValueName, ULONG valueNameSize,
+                      LPWSTR szValueData, ULONG valueDataSize)
 {
     BYTE buffer[80];
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;

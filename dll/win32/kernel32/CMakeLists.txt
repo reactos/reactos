@@ -76,6 +76,7 @@ list(APPEND SOURCE
     winnls/string/digitmap.c
     winnls/string/fold.c
     winnls/string/format_msg.c
+    winnls/string/japanese.c
     winnls/string/lang.c
     winnls/string/lcformat.c
     winnls/string/lstring.c
