@@ -33,7 +33,7 @@ IntLastInputTick(BOOL bUpdate)
 {
     if (bUpdate)
     {
-        LastInputTick = (DWORD)EngGetTickCount();
+        LastInputTick = EngGetTickCount32();
         if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
     }
     return LastInputTick;
@@ -51,7 +51,7 @@ DoTheScreenSaver(VOID)
 
     if (gspv.iScrSaverTimeout > 0) // Zero means Off.
     {
-        Test = (DWORD)EngGetTickCount();
+        Test = EngGetTickCount32();
         Test = Test - LastInputTick;
         TO = 1000 * gspv.iScrSaverTimeout;
         if (Test > TO)

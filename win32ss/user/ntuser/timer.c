@@ -415,7 +415,7 @@ PostTimerMessages(PWND Window)
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
-           Msg.time    = (DWORD)EngGetTickCount();
+           Msg.time    = EngGetTickCount32();
            // Fix all wine win:test_GetMessagePos WM_TIMER tests. See CORE-10867.
            Msg.pt      = gpsi->ptCursor;
 
@@ -453,7 +453,7 @@ ProcessTimers(VOID)
 
   TimerEnterExclusive();
   pLE = TimersListHead.Flink;
-  Time = (DWORD)EngGetTickCount();
+  Time = EngGetTickCount32();
 
   DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 

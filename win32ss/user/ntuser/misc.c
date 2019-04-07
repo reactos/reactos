@@ -296,7 +296,7 @@ NtUserGetThreadState(
          {
            PTHREADINFO pti;
            pti = PsGetCurrentThreadWin32Thread();
-           pti->timeLast = (DWORD)EngGetTickCount();
+           pti->timeLast = EngGetTickCount32();
            pti->pcti->tickLastMsgChecked = pti->timeLast;
          }
          break;

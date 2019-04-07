@@ -210,7 +210,7 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
     Msg.time = pmi->time;
     if (!Msg.time)
     {
-        Msg.time = (DWORD)EngGetTickCount();
+        Msg.time = EngGetTickCount32();
     }
 
     /* Do GetMouseMovePointsEx FIFO. */

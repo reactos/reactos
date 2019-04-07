@@ -503,7 +503,7 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    ptiCurrent->timeLast = (DWORD)EngGetTickCount();
+    ptiCurrent->timeLast = EngGetTickCount32();
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if (ptiCurrent->MessageQueue == NULL)
     {

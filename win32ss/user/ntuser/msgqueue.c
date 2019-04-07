@@ -555,7 +555,7 @@ IntCoalesceMouseMove(PTHREADINFO pti)
     // Force time stamp to update, keeping message time in sync.
     if (gdwMouseMoveTimeStamp == 0)
     {
-        gdwMouseMoveTimeStamp = (DWORD)EngGetTickCount();
+        gdwMouseMoveTimeStamp = EngGetTickCount32();
     }
 
     // Build mouse move message.
@@ -587,7 +587,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    PUSER_MESSAGE_QUEUE MessageQueue;
    PSYSTEM_CURSORINFO CurInfo;
 
-   Msg->time = (DWORD)EngGetTickCount();
+   Msg->time = EngGetTickCount32();
 
    MouseHookData.pt.x = LOWORD(Msg->lParam);
    MouseHookData.pt.y = HIWORD(Msg->lParam);
@@ -2193,7 +2193,7 @@ co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
 BOOL FASTCALL
 MsqIsHung(PTHREADINFO pti)
 {
-    if ((DWORD)EngGetTickCount() - pti->timeLast > MSQ_HUNG &&
+    if (EngGetTickCount32() - pti->timeLast > MSQ_HUNG &&
        !(pti->pcti->fsWakeMask & QS_INPUT) &&
        !PsGetThreadFreezeCount(pti->pEThread) &&
        !(pti->ppi->W32PF_flags & W32PF_APPSTARTING))

@@ -709,7 +709,7 @@ IntDispatchMessage(PMSG pMsg)
         {
             if (ValidateTimerCallback(pti,pMsg->lParam))
             {
-                Time = (DWORD)EngGetTickCount();
+                Time = EngGetTickCount32();
                 retval = co_IntCallWindowProc((WNDPROC)pMsg->lParam,
                                               TRUE,
                                               pMsg->hwnd,
@@ -725,7 +725,7 @@ IntDispatchMessage(PMSG pMsg)
             PTIMER pTimer = FindSystemTimer(pMsg);
             if (pTimer && pTimer->pfn)
             {
-                Time = (DWORD)EngGetTickCount();
+                Time = EngGetTickCount32();
                 pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, Time);
             }
             return 0;
@@ -829,7 +829,7 @@ co_IntPeekMessage( PMSG Msg,
 
     do
     {
-        pti->timeLast = (DWORD)EngGetTickCount();
+        pti->timeLast = EngGetTickCount32();
         pti->pcti->tickLastMsgChecked = pti->timeLast;
 
         // Post mouse moves while looping through peek messages.
@@ -1158,7 +1158,7 @@ UserPostThreadMessage( PTHREADINFO pti,
     Message.wParam = wParam;
     Message.lParam = lParam;
     Message.pt = gpsi->ptCursor;
-    Message.time = (DWORD)EngGetTickCount();
+    Message.time = EngGetTickCount32();
     MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
     return TRUE;
 }
@@ -1192,7 +1192,7 @@ UserPostMessage( HWND Wnd,
     Message.wParam = wParam;
     Message.lParam = lParam;
     Message.pt = gpsi->ptCursor;
-    Message.time = (DWORD)EngGetTickCount();
+    Message.time = EngGetTickCount32();
 
     if (is_pointer_message(Message.message))
     {

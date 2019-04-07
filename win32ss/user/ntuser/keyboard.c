@@ -1029,7 +1029,7 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
         dwTime = pKbdInput->time;
     else
     {
-        dwTime = (DWORD)EngGetTickCount();
+        dwTime = EngGetTickCount32();
     }
 
     if (wVk == VK_RMENU && (pKbdTbl->fLocaleFlags & KLLF_ALTGR))
@@ -1173,7 +1173,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     /* Init pt, hwnd and time msg fields */
     NewMsg.pt = gpsi->ptCursor;
     NewMsg.hwnd = lpMsg->hwnd;
-    NewMsg.time = (DWORD)EngGetTickCount();
+    NewMsg.time = EngGetTickCount32();
 
     TRACE("Enter IntTranslateKbdMessage msg %s, vk %x\n",
         lpMsg->message == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN", lpMsg->wParam);
