@@ -948,7 +948,11 @@ static BOOL dwarf2_compute_location_attr(dwarf2_parse_context_t* ctx,
                                          sizeof(unsigned) + xloc.u.block.size);
             *ptr = xloc.u.block.size;
             memcpy(ptr + 1, xloc.u.block.ptr, xloc.u.block.size);
+#ifndef __REACTOS__
             loc->offset = (unsigned long)ptr;
+#else
+            loc->offset = (uintptr_t)ptr;
+#endif
         }
     }
     return TRUE;
