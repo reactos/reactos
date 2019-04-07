@@ -1248,7 +1248,7 @@ RegisterUncProvider(PDEVICE_OBJECT DeviceObject,
     }
     _SEH2_FINALLY
     {
-        if (_abnormal_termination())
+        if (_SEH2_AbnormalTermination())
         {
             Status = STATUS_INVALID_USER_BUFFER;
         }
@@ -2153,7 +2153,7 @@ CreateRedirectedFile(PIRP Irp,
         }
         _SEH2_FINALLY
         {
-            if (_abnormal_termination())
+            if (_SEH2_AbnormalTermination())
             {
                 MasterQueryContext->LatestStatus = STATUS_INSUFFICIENT_RESOURCES;
             }
