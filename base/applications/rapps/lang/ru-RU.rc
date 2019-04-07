@@ -178,7 +178,7 @@ BEGIN
     IDS_CAT_SCIENCE "Наука"
     IDS_CAT_TOOLS "Инструменты"
     IDS_CAT_VIDEO "Видео"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Темы"
 END
 
 STRINGTABLE
@@ -212,7 +212,7 @@ BEGIN
     IDS_SELECT_ALL "Выбрать все"
     IDS_INSTALL_SELECTED "Установить выбранное"
     IDS_SELECTEDFORINST "Выбрано для установки"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
 END
 
 STRINGTABLE
