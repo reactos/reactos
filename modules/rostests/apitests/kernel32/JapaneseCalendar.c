@@ -39,6 +39,7 @@ START_TEST(JapaneseCalendar)
     static const WCHAR s_szHeisei31[] = {0x5E73, 0x6210, '3', '1', 0};  // L"\u5E73\u6210" L"31"
     static const WCHAR s_szOneCharHeisei1[] = {0x337B, 0};   // L"\u337B"
     static const WCHAR s_szOneCharHeisei2[] = {0x5E73, 0};   // L"\u5E73"
+    static const WCHAR s_szOneCharReiwa[] = {0x32FF, 0};   // L"\u32FF"
     static const WCHAR s_szWareki[] = {0x548C, 0x66A6, 0};  // L"\u548C\u66A6"
     static const WCHAR s_szNen[] = {0x5E74, 0};             // L"\u5E74"
 
@@ -194,7 +195,8 @@ START_TEST(JapaneseCalendar)
         ok(/* WinXP */ ret == 0 || /* Win10 */ ret != 0, "ret: %d\n", ret);
         ok(/* WinXP */ (szTextW[0] == 0x7F && szTextW[1] == 0) ||
            /* Win10? */ lstrcmpiW(szTextW, s_szOneCharHeisei1) == 0 ||
-           /* Win10? */ lstrcmpiW(szTextW, s_szOneCharHeisei2) == 0,
+           /* Win10? */ lstrcmpiW(szTextW, s_szOneCharHeisei2) == 0 ||
+           /* Win10? */ lstrcmpiW(szTextW, s_szOneCharReiwa) == 0,
            "szTextW: %04X %04X %04X\n", szTextW[0], szTextW[1], szTextW[2]);
 
         szTextW[0] = 0x7F;
