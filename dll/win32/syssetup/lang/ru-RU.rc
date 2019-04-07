@@ -221,8 +221,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CLASSIC "Classic"
-    IDS_LAUTUS "Lautus"
-    IDS_LUNAR "Lunar"
-    IDS_MIZU "Mizu"
+    IDS_CLASSIC "Классическая"
+    IDS_LAUTUS "Тема ""Lautus"""
+    IDS_LUNAR "Тема ""Lunar"""
+    IDS_MIZU "Тема ""Mizu"""
 END
