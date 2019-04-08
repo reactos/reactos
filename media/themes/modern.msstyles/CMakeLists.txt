@@ -1,11 +1,5 @@
-file(GLOB_RECURSE rc_msstyles_bitmaps ${CMAKE_CURRENT_BINARY_DIR}/bitmaps/*)
-add_rc_deps(rapps.rc ${rc_msstyles_bitmaps})
-
-file(GLOB_RECURSE rc_msstyles_lang ${CMAKE_CURRENT_BINARY_DIR}/lang/*)
-add_rc_deps(rapps.rc ${rc_msstyles_lang})
-
-file(GLOB_RECURSE rc_msstyles_textfiles ${CMAKE_CURRENT_BINARY_DIR}/textfiles/*)
-add_rc_deps(rapps.rc ${rc_msstyles_textfiles})
+file(GLOB_RECURSE modern_rc_deps ${CMAKE_CURRENT_BINARY_DIR}/bitmaps/* ${CMAKE_CURRENT_BINARY_DIR}/lang/* ${CMAKE_CURRENT_BINARY_DIR}/textfiles/*)
+add_rc_deps(modern.rc ${modern_rc_deps})
 
 list(APPEND TEXTFILES
     textfiles/Light/ExtraLargeLight.INI
