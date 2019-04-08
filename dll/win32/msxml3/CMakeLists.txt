@@ -47,8 +47,6 @@ list(APPEND SOURCE
     xmlelem.c
     xmlparser.c
     xmlview.c
-    xslpattern.tab.c
-    xslpattern.yy.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c)
 
@@ -65,6 +63,8 @@ set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${msxml3_rc_de
 
 add_library(msxml3 MODULE
     ${SOURCE}
+    xslpattern.tab.c
+    xslpattern.yy.c
     factory.c
     uuid.c
     version.rc
@@ -75,5 +75,5 @@ set_module_type(msxml3 win32dll)
 target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
-#add_pch(msxml3 precomp.h SOURCE)
+add_pch(msxml3 precomp.h SOURCE)
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

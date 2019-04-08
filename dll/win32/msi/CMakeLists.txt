@@ -22,7 +22,6 @@ list(APPEND SOURCE
     assembly.c
     automation.c
     classes.c
-    cond.tab.c
     create.c
     custom.c
     database.c
@@ -47,7 +46,6 @@ list(APPEND SOURCE
     script.c
     select.c
     source.c
-    sql.tab.c
     storages.c
     streams.c
     string.c
@@ -64,6 +62,8 @@ set_source_files_properties(cond.tab.c sql.tab.c PROPERTIES COMPILE_FLAGS "-UREA
 
 add_library(msi MODULE
     ${SOURCE}
+    cond.tab.c
+    sql.tab.c
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c
     msi.rc
@@ -84,5 +84,5 @@ add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32
     kernel32
     ntdll)
 
-#add_pch(msi precomp.h SOURCE)
+add_pch(msi precomp.h SOURCE)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)

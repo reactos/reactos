@@ -10,7 +10,6 @@ list(APPEND SOURCE
     activex.c
     array.c
     bool.c
-    cc_parser.tab.c
     compile.c
     date.c
     decode.c
@@ -29,7 +28,6 @@ list(APPEND SOURCE
     math.c
     number.c
     object.c
-    parser.tab.c
     regexp.c
     string.c
     vbarray.c
@@ -48,6 +46,8 @@ set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${jscript_rc_deps
 
 add_library(jscript MODULE
     ${SOURCE}
+    cc_parser.tab.c
+    parser.tab.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
@@ -57,5 +57,5 @@ add_dependencies(jscript jscript_idlheader stdole2)
 set_module_type(jscript win32dll)
 target_link_libraries(jscript uuid wine)
 add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
-#add_pch(jscript precomp.h SOURCE)
+add_pch(jscript precomp.h SOURCE)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)

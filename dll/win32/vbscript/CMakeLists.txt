@@ -8,7 +8,6 @@ list(APPEND SOURCE
     global.c
     interp.c
     lex.c
-    parser.tab.c
     regexp.c
     utils.c
     vbdisp.c
@@ -35,6 +34,7 @@ add_typelib(vbsglobal.idl vbsregexp10.idl vbsregexp55.idl)
 
 add_library(vbscript MODULE
     ${SOURCE}
+    parser.tab.c
     vbscript.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vbscript.def)
 
@@ -42,5 +42,5 @@ set_module_type(vbscript win32dll)
 target_link_libraries(vbscript uuid wine)
 add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
-#add_pch(vbscript precomp.h SOURCE)
+add_pch(vbscript precomp.h SOURCE)
 add_cd_file(TARGET vbscript DESTINATION reactos/system32 FOR all)
