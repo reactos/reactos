@@ -1792,6 +1792,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     if (FAILED(ret))
         return ret;
 
+    lpFileOp->fAnyOperationsAborted = FALSE;
     check_flags(lpFileOp->fFlags);
 
     ZeroMemory(&flFrom, sizeof(FILE_LIST));
