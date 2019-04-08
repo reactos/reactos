@@ -5,6 +5,7 @@
  * Copyright 2002 Andriy Palamarchuk
  * Copyright 2004 Dietrich Teickner (from Odin)
  * Copyright 2004 Rolf Kalbermatter
+ * Copyright 2019 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1064,11 +1065,15 @@ static void add_file_to_entry(FILE_ENTRY *feFile, LPCWSTR szFile)
 {
     DWORD dwLen = lstrlenW(szFile) + 1;
     LPCWSTR ptr;
+    LPCWSTR ptr2;
 
     feFile->szFullPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
     lstrcpyW(feFile->szFullPath, szFile);
 
     ptr = StrRChrW(szFile, NULL, '\\');
+    ptr2 = StrRChrW(szFile, NULL, '/');
+    if (!ptr || ptr < ptr2)
+        ptr = ptr2;
     if (ptr)
     {
         dwLen = ptr - szFile + 1;
@@ -1085,10 +1090,14 @@ static void add_file_to_entry(FILE_ENTRY *feFile, LPCWSTR szFile)
 static LPWSTR wildcard_to_file(LPCWSTR szWildCard, LPCWSTR szFileName)
 {
     LPCWSTR ptr;
+    LPCWSTR ptr2;
     LPWSTR szFullPath;
     DWORD dwDirLen, dwFullLen;
 
     ptr = StrRChrW(szWildCard, NULL, '\\');
+    ptr2 = StrRChrW(szWildCard, NULL, '/');
+    if (!ptr || ptr < ptr2)
+        ptr = ptr2;
     dwDirLen = ptr - szWildCard + 1;
 
     dwFullLen = dwDirLen + lstrlenW(szFileName) + 1;
@@ -1630,6 +1639,8 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
 
     destroy_file_list(&flFromNew);
     destroy_file_list(&flToNew);
+
+    Win32RemoveDirectoryW(feFrom->szFullPath);
 }
 
 /* moves a file or directory to another directory */
@@ -1668,7 +1679,8 @@ static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flF
 
     if (!(multiDest) &&
         !flFrom->bAnyDirectories &&
-        flFrom->dwNumFiles > flTo->dwNumFiles)
+        flFrom->dwNumFiles > flTo->dwNumFiles &&
+        !(flTo->bAnyDirectories && flTo->dwNumFiles == 1))
     {
         return ERROR_CANCELLED;
     }
