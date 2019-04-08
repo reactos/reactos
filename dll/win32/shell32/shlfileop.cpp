@@ -1640,7 +1640,8 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     destroy_file_list(&flFromNew);
     destroy_file_list(&flToNew);
 
-    Win32RemoveDirectoryW(feFrom->szFullPath);
+    if (PathIsDirectoryEmptyW(feFrom->szFullPath))
+        Win32RemoveDirectoryW(feFrom->szFullPath);
 }
 
 /* moves a file or directory to another directory */
