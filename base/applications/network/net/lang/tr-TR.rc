@@ -13,13 +13,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "%s şuna bağlandı: %s\n"
 
-    IDS_GENERIC_YES "Evet"
-    IDS_GENERIC_NO "Hayır"
-    IDS_GENERIC_NEVER "Hiçbir Zaman"
-    IDS_GENERIC_NONE "Yok"
-    IDS_GENERIC_ALL "Tümü"
-    IDS_GENERIC_LOCKED "Kilitli"
-    IDS_GENERIC_UNLIMITED "Unlimited"
     IDS_GENERIC_SYNTAX "The syntax of this command is:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "%s seçeneği daha desteklenmiyor.\n"

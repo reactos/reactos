@@ -11,13 +11,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
 
-    IDS_GENERIC_YES "Yes"
-    IDS_GENERIC_NO "No"
-    IDS_GENERIC_NEVER "Never"
-    IDS_GENERIC_NONE "None"
-    IDS_GENERIC_ALL "All"
-    IDS_GENERIC_LOCKED "Locked"
-    IDS_GENERIC_UNLIMITED "Unlimited"
     IDS_GENERIC_SYNTAX "The syntax of this command is:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"

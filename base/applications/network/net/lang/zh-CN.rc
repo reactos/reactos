@@ -13,13 +13,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "%s 现在连接到 %s\n"
 
-    IDS_GENERIC_YES "是"
-    IDS_GENERIC_NO "否"
-    IDS_GENERIC_NEVER "永不"
-    IDS_GENERIC_NONE "无"
-    IDS_GENERIC_ALL "所有"
-    IDS_GENERIC_LOCKED "锁定"
-    IDS_GENERIC_UNLIMITED "Unlimited"
     IDS_GENERIC_SYNTAX "The syntax of this command is:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "尚不支持 %s 选项。\n"

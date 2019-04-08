@@ -266,16 +266,16 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintPaddedMessageString(4419, nPaddedLength);
     if (pUserInfo->usri4_flags & UF_ACCOUNTDISABLE)
-        ConResPuts(StdOut, IDS_GENERIC_NO);
+        PrintMessageString(4301);
     else if (pUserInfo->usri4_flags & UF_LOCKOUT)
         PrintMessageString(4440);
     else
-        ConResPuts(StdOut, IDS_GENERIC_YES);
+        PrintMessageString(4300);
     ConPuts(StdOut, L"\n");
 
     PrintPaddedMessageString(4420, nPaddedLength);
     if (pUserInfo->usri4_acct_expires == TIMEQ_FOREVER)
-        ConResPuts(StdOut, IDS_GENERIC_NEVER);
+        PrintMessageString(4305);
     else
         PrintDateTime(pUserInfo->usri4_acct_expires);
     ConPuts(StdOut, L"\n\n");
@@ -287,7 +287,7 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintPaddedMessageString(4422, nPaddedLength);
     if ((pUserInfo->usri4_flags & UF_DONT_EXPIRE_PASSWD) || pUserModals->usrmod0_max_passwd_age == TIMEQ_FOREVER)
-        ConResPuts(StdOut, IDS_GENERIC_NEVER);
+        PrintMessageString(4305);
     else
         PrintDateTime(dwLastSet + pUserModals->usrmod0_max_passwd_age);
     ConPuts(StdOut, L"\n");
@@ -297,16 +297,16 @@ DisplayUser(LPWSTR lpUserName)
     ConPuts(StdOut, L"\n");
 
     PrintPaddedMessageString(4437, nPaddedLength);
-    ConResPuts(StdOut, (pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
+    PrintMessageString((pUserInfo->usri4_flags & UF_PASSWD_NOTREQD) ? 4301 : 4300);
     ConPuts(StdOut, L"\n");
 
     PrintPaddedMessageString(4438, nPaddedLength);
-    ConResPuts(StdOut, (pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? IDS_GENERIC_NO : IDS_GENERIC_YES);
+    PrintMessageString((pUserInfo->usri4_flags & UF_PASSWD_CANT_CHANGE) ? 4301 : 4300);
     ConPuts(StdOut, L"\n\n");
 
     PrintPaddedMessageString(4424, nPaddedLength);
     if (pUserInfo->usri4_workstations == NULL || wcslen(pUserInfo->usri4_workstations) == 0)
-        ConResPuts(StdOut, IDS_GENERIC_ALL);
+        PrintMessageString(4302);
     else
         ConPrintf(StdOut, L"%s", pUserInfo->usri4_workstations);
     ConPuts(StdOut, L"\n");
@@ -322,14 +322,14 @@ DisplayUser(LPWSTR lpUserName)
 
     PrintPaddedMessageString(4430, nPaddedLength);
     if (pUserInfo->usri4_last_logon == 0)
-        ConResPuts(StdOut, IDS_GENERIC_NEVER);
+        PrintMessageString(4305);
     else
         PrintDateTime(pUserInfo->usri4_last_logon);
     ConPuts(StdOut, L"\n\n");
 
     PrintPaddedMessageString(4432, nPaddedLength);
     if (pUserInfo->usri4_logon_hours == NULL)
-        ConResPuts(StdOut, IDS_GENERIC_ALL);
+        PrintMessageString(4302);
     ConPuts(StdOut, L"\n\n");
 
     ConPuts(StdOut, L"\n");

@@ -17,13 +17,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "Conectarea %s la %s a fost realizată.\n"
 
-    IDS_GENERIC_YES "Da"
-    IDS_GENERIC_NO "Nu"
-    IDS_GENERIC_NEVER "Niciodată"
-    IDS_GENERIC_NONE "Nespecificat"
-    IDS_GENERIC_ALL "Toate"
-    IDS_GENERIC_LOCKED "Blocat"
-    IDS_GENERIC_UNLIMITED "Nelimitat"
     IDS_GENERIC_SYNTAX "Sintaxa acestei comenzi:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Opțiunea %s încă nu este admisă.\n"

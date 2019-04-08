@@ -174,7 +174,7 @@ cmdAccounts(
 
         PrintPaddedResourceString(IDS_ACCOUNTS_FORCE_LOGOFF, nPaddedLength);
         if (Info0->usrmod0_force_logoff == TIMEQ_FOREVER)
-            ConResPuts(StdOut, IDS_GENERIC_NEVER);
+            PrintMessageString(4305);
         else
             ConResPrintf(StdOut, IDS_ACCOUNTS_LOGOFF_SECONDS, Info0->usrmod0_force_logoff);
         ConPuts(StdOut, L"\n");
@@ -190,14 +190,14 @@ cmdAccounts(
 
         PrintPaddedMessageString(4575, nPaddedLength);
         if (Info0->usrmod0_password_hist_len == 0)
-            ConResPuts(StdOut, IDS_GENERIC_NONE);
+            PrintMessageString(4303);
         else
             ConPrintf(StdOut, L"%lu", Info0->usrmod0_password_hist_len);
         ConPuts(StdOut, L"\n");
 
         PrintPaddedMessageString(4578, nPaddedLength);
         if (Info3->usrmod3_lockout_threshold == 0)
-            ConResPuts(StdOut, IDS_GENERIC_NEVER);
+            PrintMessageString(4305);
         else
             ConPrintf(StdOut, L"%lu", Info3->usrmod3_lockout_threshold);
         ConPuts(StdOut, L"\n");

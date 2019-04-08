@@ -47,7 +47,7 @@ DisplayServerConfig(
     ConPuts(StdOut, L"\n");
 
     PrintPaddedMessageString(4492, nPaddedLength);
-    ConResPuts(StdOut, (ServerInfo->sv102_hidden == SV_HIDDEN) ? IDS_GENERIC_YES : IDS_GENERIC_NO);
+    PrintMessageString((ServerInfo->sv102_hidden == SV_HIDDEN) ? 4300 : 4301);
     ConPuts(StdOut, L"\n");
 
     PrintPaddedMessageString(4506, nPaddedLength);
@@ -58,7 +58,7 @@ DisplayServerConfig(
 
     PrintPaddedMessageString(4520, nPaddedLength);
     if (ServerInfo->sv102_disc == SV_NODISC)
-        ConResPuts(StdOut, IDS_GENERIC_UNLIMITED);
+        PrintMessageString(4306);
     else
         ConPrintf(StdOut, L"%lu\n", ServerInfo->sv102_disc);
 

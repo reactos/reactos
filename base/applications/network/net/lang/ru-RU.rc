@@ -13,13 +13,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "%s сейчас подключен к %s\n"
 
-    IDS_GENERIC_YES "Да"
-    IDS_GENERIC_NO "Нет"
-    IDS_GENERIC_NEVER "Никогда"
-    IDS_GENERIC_NONE "Нет"
-    IDS_GENERIC_ALL "Все"
-    IDS_GENERIC_LOCKED "Заблокировано"
-    IDS_GENERIC_UNLIMITED "Не ограничено"
     IDS_GENERIC_SYNTAX "Синтаксис данной команды:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Опция %s в данный момент не поддерживается.\n"

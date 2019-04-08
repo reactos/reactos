@@ -10,13 +10,6 @@ BEGIN
 
     IDS_USE_NOW_CONNECTED "%s jest obecnie podłączony do %s\n"
 
-    IDS_GENERIC_YES "Tak"
-    IDS_GENERIC_NO "Nie"
-    IDS_GENERIC_NEVER "Nigdy"
-    IDS_GENERIC_NONE "Brak"
-    IDS_GENERIC_ALL "Wszystkie"
-    IDS_GENERIC_LOCKED "Zablokowane"
-    IDS_GENERIC_UNLIMITED "Bez ograniczeń"
     IDS_GENERIC_SYNTAX "Składnia tego polecenia jest następująca:\n\n"
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Opcja %s nie jest jeszcze obsługiwana.\n"

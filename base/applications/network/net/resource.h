@@ -9,13 +9,6 @@
 
 #define IDS_USE_NOW_CONNECTED          500
 
-#define IDS_GENERIC_YES                600
-#define IDS_GENERIC_NO                 601
-#define IDS_GENERIC_NEVER              602
-#define IDS_GENERIC_NONE               603
-#define IDS_GENERIC_ALL                604
-#define IDS_GENERIC_LOCKED             605
-#define IDS_GENERIC_UNLIMITED          606
 #define IDS_GENERIC_SYNTAX             607
 
 #define IDS_ERROR_OPTION_NOT_SUPPORTED 700
