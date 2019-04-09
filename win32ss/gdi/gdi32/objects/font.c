@@ -12,7 +12,7 @@
 #include <math.h>
 #include <strsafe.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* Rounds a floating point number to integer. The world-to-viewport
