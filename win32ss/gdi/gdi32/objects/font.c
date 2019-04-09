@@ -12,7 +12,7 @@
 #include <math.h>
 #include <strsafe.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* Rounds a floating point number to integer. The world-to-viewport
@@ -264,18 +264,19 @@ IntFontFamilyListUnique(FONTFAMILYINFO *InfoList, INT nCount,
     if ((dwFlags & IEFF_EXTENDED) && plf->lfCharSet == DEFAULT_CHARSET)
         dwCompareFlags |= IFFCX_CHARSET;
 
+    first = InfoList;
+    last = &InfoList[nCount];
+
     // std::unique(first, last, IntFontFamilyCompareEx);
-    if (nCount == 0)
+    if (first == last)
         return 0;
 
-    result = first = InfoList;
-    last = &InfoList[nCount];
+    result = first;
     while (++first != last)
     {
-        if (IntFontFamilyCompareEx(result, first, dwCompareFlags) != 0 &&
-            ++result != first)
+        if (IntFontFamilyCompareEx(result, first, dwCompareFlags) != 0)
         {
-            *result = *first;
+            *(++result) = *first;
         }
     }
     nCount = (int)(++result - InfoList);
