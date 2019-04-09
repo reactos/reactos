@@ -173,7 +173,8 @@ cmdStart(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_START_SYNTAX);
             PrintNetMessage(MSG_START_HELP);
             return 1;

@@ -327,7 +327,8 @@ int wmain(int argc, WCHAR **argv)
 done:
     if (bRun == FALSE)
     {
-        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+        PrintMessageString(4381);
+        ConPuts(StdOut, L"\n");
         PrintNetMessage(MSG_NET_SYNTAX);
     }
 

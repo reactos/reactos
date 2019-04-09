@@ -67,9 +67,11 @@ static
 VOID
 PrintError(DWORD Status)
 {
+    WCHAR szStatusBuffer[16];
     LPWSTR Buffer;
 
-    ConResPrintf(StdErr, IDS_ERROR_SYSTEM_ERROR, Status);
+    swprintf(szStatusBuffer, L"%lu", Status);
+    PrintMessageStringV(3502, szStatusBuffer);
 
     if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))
     {
@@ -119,7 +121,7 @@ cmdUse(
     {
         if (!ValidateDeviceName(argv[2]))
         {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            PrintMessageStringV(3952, L"DeviceName");
             return 1;
         }
 
@@ -142,7 +144,7 @@ cmdUse(
         if ((argv[2][0] != '*' && argv[2][1] != 0) &&
             !ValidateDeviceName(argv[2]))
         {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            PrintMessageStringV(3952, L"DeviceName");
             return 1;
         }
     }
@@ -156,7 +158,7 @@ cmdUse(
     {
         if (!ValidateDeviceName(argv[Delete]) || argv[Delete][0] == L'*')
         {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            PrintMessageStringV(3952, L"DeviceName");
             return 1;
         }
 
@@ -176,13 +178,13 @@ cmdUse(
         Len = wcslen(argv[3]);
         if (Len < 4)
         {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
+            PrintMessageStringV(3952, L"Name");
             return 1;
         }
 
         if (argv[3][0] != L'\\' || argv[3][1] != L'\\')
         {
-            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
+            PrintMessageStringV(3952, L"Name");
             return 1;
         }
 
@@ -213,7 +215,7 @@ cmdUse(
                         else
                         {
                             HeapFree(GetProcessHeap(), 0, Cpy);
-                            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Persistent");
+                            PrintMessageStringV(3952, L"Persistent");
                             return 1;
                         }
                     }

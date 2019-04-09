@@ -49,7 +49,8 @@ cmdComputer(
         if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_COMPUTER_SYNTAX);
             return 0;
         }
@@ -57,7 +58,8 @@ cmdComputer(
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             /* Print full help text*/
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_COMPUTER_SYNTAX);
             PrintNetMessage(MSG_COMPUTER_HELP);
             return 0;
@@ -84,7 +86,8 @@ cmdComputer(
         (bAdd == FALSE && bDelete == FALSE) ||
         (bAdd == TRUE && bDelete == TRUE))
     {
-        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+        PrintMessageString(4381);
+        ConPuts(StdOut, L"\n");
         PrintNetMessage(MSG_COMPUTER_SYNTAX);
         return 1;
     }

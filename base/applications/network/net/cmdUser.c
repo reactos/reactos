@@ -736,7 +736,7 @@ cmdUser(
         }
         else if (_wcsicmp(argv[j], L"/domain") == 0)
         {
-            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
+            ConPuts(StdErr, L"The /DOMAIN option is not supported yet.\n");
 #if 0
             bDomain = TRUE;
 #endif
@@ -818,7 +818,7 @@ cmdUser(
             }
             else
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/ACTIVE");
+                PrintMessageStringV(3952, L"/ACTIVE");
                 result = 1;
                 goto done;
             }
@@ -833,7 +833,7 @@ cmdUser(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/COUNTRYCODE");
+                PrintMessageStringV(3952, L"/COUNTRYCODE");
                 result = 1;
                 goto done;
             }
@@ -851,7 +851,7 @@ cmdUser(
             }
             else if (!ParseDate(p, &pUserInfo->usri4_acct_expires))
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/EXPIRES");
+                PrintMessageStringV(3952, L"/EXPIRES");
                 result = 1;
                 goto done;
             }
@@ -877,7 +877,7 @@ cmdUser(
             }
             else
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDCHG");
+                PrintMessageStringV(3952, L"/PASSWORDCHG");
                 result = 1;
                 goto done;
             }
@@ -895,7 +895,7 @@ cmdUser(
             }
             else
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/PASSWORDREQ");
+                PrintMessageStringV(3952, L"/PASSWORDREQ");
                 result = 1;
                 goto done;
             }
@@ -911,7 +911,7 @@ cmdUser(
         else if (_wcsnicmp(argv[j], L"/times:", 7) == 0)
         {
             /* FIXME */
-            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/TIMES");
+            ConPuts(StdErr, L"The /TIMES option is not supported yet.\n");
         }
         else if (_wcsnicmp(argv[j], L"/usercomment:", 13) == 0)
         {
@@ -987,7 +987,8 @@ done:
 
     if (result != 0)
     {
-        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+        PrintMessageString(4381);
+        ConPuts(StdOut, L"\n");
         PrintNetMessage(MSG_USER_SYNTAX);
     }
 

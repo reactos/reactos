@@ -196,12 +196,14 @@ cmdConfig(
             /* Print short syntax help */
             if (bServer == TRUE)
             {
-                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                PrintMessageString(4381);
+                ConPuts(StdOut, L"\n");
                 PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
             }
             else
             {
-                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                PrintMessageString(4381);
+                ConPuts(StdOut, L"\n");
                 PrintNetMessage(MSG_CONFIG_SYNTAX);
             }
             return 0;
@@ -212,13 +214,15 @@ cmdConfig(
             /* Print full help text*/
             if (bServer == TRUE)
             {
-                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                PrintMessageString(4381);
+                ConPuts(StdOut, L"\n");
                 PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
                 PrintNetMessage(MSG_CONFIG_SERVER_HELP);
             }
             else
             {
-                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                PrintMessageString(4381);
+                ConPuts(StdOut, L"\n");
                 PrintNetMessage(MSG_CONFIG_SYNTAX);
                 PrintNetMessage(MSG_CONFIG_HELP);
             }
@@ -243,14 +247,14 @@ cmdConfig(
                 lValue = wcstol(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/AUTODISCONNECT");
+                    PrintMessageStringV(3952, L"/AUTODISCONNECT");
                     result = 1;
                     goto done;
                 }
 
                 if (lValue < -1 || lValue > 65535)
                 {
-                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/AUTODISCONNECT");
+                    PrintMessageStringV(3952, L"/AUTODISCONNECT");
                     result = 1;
                     goto done;
                 }
@@ -268,7 +272,7 @@ cmdConfig(
                 p = &argv[i][8];
                 if (_wcsicmp(p, L"yes") != 0 && _wcsicmp(p, L"no") != 0)
                 {
-                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/HIDDEN");
+                    PrintMessageStringV(3952, L"/HIDDEN");
                     result = 1;
                     goto done;
                 }
@@ -278,7 +282,8 @@ cmdConfig(
             }
             else
             {
-                ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+                PrintMessageString(4381);
+                ConPuts(StdOut, L"\n");
                 PrintNetMessage(MSG_CONFIG_SERVER_SYNTAX);
                 result = 1;
                 goto done;

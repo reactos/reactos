@@ -36,7 +36,8 @@ cmdAccounts(
         if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_ACCOUNTS_SYNTAX);
             return 0;
         }
@@ -44,7 +45,8 @@ cmdAccounts(
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             /* Print full help text*/
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_ACCOUNTS_SYNTAX);
             PrintNetMessage(MSG_ACCOUNTS_HELP);
             return 0;
@@ -52,7 +54,7 @@ cmdAccounts(
 
         if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
+            ConPuts(StdErr, L"The /DOMAIN option is not supported yet.\n");
 #if 0
             Domain = TRUE;
 #endif
@@ -68,7 +70,7 @@ cmdAccounts(
         if (_wcsnicmp(argv[i], L"/forcelogoff:", 13) == 0)
         {
             p = &argv[i][13];
-            if (wcsicmp(p, L"no"))
+            if (wcsicmp(p, L"no") == 0)
             {
                 Info0->usrmod0_force_logoff = TIMEQ_FOREVER;
                 Modified = TRUE;
@@ -78,7 +80,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/FORCELOGOFF");
+                    PrintMessageStringV(3952, L"/FORCELOGOFF");
                     result = 1;
                     goto done;
                 }
@@ -93,7 +95,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWLEN");
+                PrintMessageStringV(3952, L"/MINPWLEN");
                 result = 1;
                 goto done;
             }
@@ -115,7 +117,7 @@ cmdAccounts(
                 value = wcstoul(p, &endptr, 10);
                 if (*endptr != 0)
                 {
-                    ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MAXPWLEN");
+                    PrintMessageStringV(3952, L"/MAXPWLEN");
                     result = 1;
                     goto done;
                 }
@@ -130,7 +132,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/MINPWAGE");
+                PrintMessageStringV(3952, L"/MINPWAGE");
                 result = 1;
                 goto done;
             }
@@ -144,7 +146,7 @@ cmdAccounts(
             value = wcstoul(p, &endptr, 10);
             if (*endptr != 0)
             {
-                ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"/UNIQUEPW");
+                PrintMessageStringV(3952, L"/UNIQUEPW");
                 result = 1;
                 goto done;
             }

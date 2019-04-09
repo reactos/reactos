@@ -15823,22 +15823,22 @@ Language=English
 The command completed successfully.
 .
 Language=Polish
-The command completed successfully.
+Polecenie zostało wykonane pomyślnie.
 .
 Language=Romanian
-The command completed successfully.
+Comanda a fost executată cu succes.
 .
 Language=Russian
-The command completed successfully.
+Команда успешно выполнена.
 .
 Language=Spanish
 The command completed successfully.
 .
 Language=Turkish
-The command completed successfully.
+Komut başarılı bir şekilde çalıştırıldı.
 .
 Language=Chinese
-The command completed successfully.
+命令执行成功。
 .
 Language=Taiwanese
 The command completed successfully.
@@ -15881,22 +15881,22 @@ Language=English
 System error %1 has occurred.
 .
 Language=Polish
-System error %1 has occurred.
+Wystąpił błąd systemu %1.
 .
 Language=Romanian
-System error %1 has occurred.
+A survenit eroarea de sistem %1.
 .
 Language=Russian
-System error %1 has occurred.
+Произошла системная ошибка: %1.
 .
 Language=Spanish
 System error %1 has occurred.
 .
 Language=Turkish
-System error %1 has occurred.
+%1 dizge hatâsı oldu.
 .
 Language=Chinese
-System error %1 has occurred.
+发生了系统错误 %1。
 .
 Language=Taiwanese
 System error %1 has occurred.
@@ -20475,25 +20475,25 @@ Language=English
 You entered an invalid value for the %1 option.
 .
 Language=Polish
-You entered an invalid value for the %1 option.
+Wprowadzono nieprawidłową wartość dla opcji %1.
 .
 Language=Romanian
-You entered an invalid value for the %1 option.
+Ați introdus o valoare nevalidă pentru opțiunea %1.
 .
 Language=Russian
-You entered an invalid value for the %1 option.
+Вы ввели неверный данные для данной опции %1.
 .
 Language=Spanish
-You entered an invalid value for the %1 option.
+El valor para la opción %1 no es válido.
 .
 Language=Turkish
-You entered an invalid value for the %1 option.
+%1 seçeneği için geçersiz bir değer girdiniz.
 .
 Language=Chinese
-You entered an invalid value for the %1 option.
+您输入了 %1 选项的无效的值。
 .
 Language=Taiwanese
-You entered an invalid value for the %1 option.
+您輸入了無效的值為 %1 選項。
 .
 
 MessageId=3953
@@ -23135,13 +23135,13 @@ Language=English
 The syntax of this command is:
 .
 Language=Polish
-The syntax of this command is:
+Składnia tego polecenia jest następująca:
 .
 Language=Romanian
-The syntax of this command is:
+Sintaxa acestei comenzi:
 .
 Language=Russian
-The syntax of this command is:
+Синтаксис данной команды:
 .
 Language=Spanish
 The syntax of this command is:

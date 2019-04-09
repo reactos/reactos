@@ -11,7 +11,8 @@
 
 INT cmdHelp(INT argc, WCHAR **argv)
 {
-    ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+    PrintMessageString(4381);
+    ConPuts(StdOut, L"\n");
 
     if (argc != 3)
     {
@@ -199,7 +200,8 @@ INT cmdHelp(INT argc, WCHAR **argv)
 INT
 cmdSyntax(INT argc, WCHAR **argv)
 {
-    ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+    PrintMessageString(4381);
+    ConPuts(StdOut, L"\n");
     PrintNetMessage(MSG_SYNTAX_HELP);
     return 0;
 }

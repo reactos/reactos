@@ -242,7 +242,8 @@ cmdLocalGroup(
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_LOCALGROUP_SYNTAX);
             PrintNetMessage(MSG_LOCALGROUP_HELP);
             return 0;
@@ -261,7 +262,7 @@ cmdLocalGroup(
         }
         else if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
+            ConPuts(StdErr, L"The /DOMAIN option is not supported yet.\n");
 #if 0
             bDomain = TRUE;
 #endif
@@ -380,7 +381,8 @@ done:
 
     if (result != 0)
     {
-        ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+        PrintMessageString(4381);
+        ConPuts(StdOut, L"\n");
         PrintNetMessage(MSG_LOCALGROUP_SYNTAX);
     }
 

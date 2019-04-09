@@ -12,11 +12,4 @@ BEGIN
     IDS_ACCOUNTS_WORKSTATION "Рабочая станция"
 
     IDS_USE_NOW_CONNECTED "%s сейчас подключен к %s\n"
-
-    IDS_GENERIC_SYNTAX "Синтаксис данной команды:\n\n"
-
-    IDS_ERROR_OPTION_NOT_SUPPORTED "Опция %s в данный момент не поддерживается.\n"
-    IDS_ERROR_INVALID_OPTION_VALUE "Вы ввели неверный данные для данной опции %s.\n"
-    IDS_ERROR_SYSTEM_ERROR "Произошла системная ошибка: %d.\n"
-    IDS_ERROR_NO_ERROR "Команда успешно выполнена.\n\n"
 END

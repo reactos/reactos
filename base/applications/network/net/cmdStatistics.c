@@ -272,7 +272,8 @@ cmdStatistics(
         if (_wcsicmp(argv[i], L"help") == 0)
         {
             /* Print short syntax help */
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_STATISTICS_SYNTAX);
             return 0;
         }
@@ -280,7 +281,8 @@ cmdStatistics(
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
             /* Print full help text*/
-            ConResPuts(StdOut, IDS_GENERIC_SYNTAX);
+            PrintMessageString(4381);
+            ConPuts(StdOut, L"\n");
             PrintNetMessage(MSG_STATISTICS_SYNTAX);
             PrintNetMessage(MSG_STATISTICS_HELP);
             return 0;

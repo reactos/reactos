@@ -9,9 +9,4 @@
 
 #define IDS_USE_NOW_CONNECTED          500
 
-#define IDS_GENERIC_SYNTAX             607
 
-#define IDS_ERROR_OPTION_NOT_SUPPORTED 700
-#define IDS_ERROR_INVALID_OPTION_VALUE 701
-#define IDS_ERROR_SYSTEM_ERROR         702
-#define IDS_ERROR_NO_ERROR             703
