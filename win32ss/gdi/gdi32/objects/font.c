@@ -335,11 +335,8 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
         }
     }
 
-    DPRINT("qsort\n");
     qsort(Info, FontFamilyCount, sizeof(*Info), IntFontFamilyCompare);
-    DPRINT("qsort done\n");
     FontFamilyCount = IntFontFamilyListUnique(Info, FontFamilyCount, LogFont, dwFlags);
-    DPRINT("unique done\n");
 
     for (i = 0; i < FontFamilyCount; i++)
     {
@@ -384,6 +381,17 @@ int WINAPI
 EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamExProc,
                     LPARAM lParam, DWORD dwFlags)
 {
+    if (lpLogfont)
+    {
+        DPRINT("EnumFontFamiliesExW(%p, %p(%S, %u, %u), %p, %p, 0x%08lX)\n",
+               hdc, lpLogfont, lpLogfont->lfFaceName, lpLogfont->lfCharSet,
+               lpLogfont->lfPitchAndFamily, lpEnumFontFamExProc, lParam, dwFlags);
+    }
+    else
+    {
+        DPRINT("EnumFontFamiliesExW(%p, NULL, %p, %p, 0x%08lX)\n",
+               hdc, lpEnumFontFamExProc, lParam, dwFlags);
+    }
     return IntEnumFontFamilies(hdc, lpLogfont, lpEnumFontFamExProc, lParam,
                                IEFF_UNICODE | IEFF_EXTENDED);
 }
@@ -397,6 +405,9 @@ EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
                   LPARAM lParam)
 {
     LOGFONTW LogFont;
+
+    DPRINT("EnumFontFamiliesW(%p, %S, %p, %p)\n",
+           hdc, lpszFamily, lpEnumFontFamProc, lParam);
 
     ZeroMemory(&LogFont, sizeof(LOGFONTW));
     LogFont.lfCharSet = DEFAULT_CHARSET;
@@ -421,6 +432,18 @@ EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamE
 
     if (lpLogfont)
     {
+        DPRINT("EnumFontFamiliesExA(%p, %p(%s, %u, %u), %p, %p, 0x%08lX)\n",
+               hdc, lpLogfont, lpLogfont->lfFaceName, lpLogfont->lfCharSet,
+               lpLogfont->lfPitchAndFamily, lpEnumFontFamExProc, lParam, dwFlags);
+    }
+    else
+    {
+        DPRINT("EnumFontFamiliesExA(%p, NULL, %p, %p, 0x%08lX)\n",
+               hdc, lpEnumFontFamExProc, lParam, dwFlags);
+    }
+
+    if (lpLogfont)
+    {
         LogFontA2W(&LogFontW,lpLogfont);
         pLogFontW = &LogFontW;
     }
@@ -439,6 +462,9 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
                   LPARAM lParam)
 {
     LOGFONTW LogFont;
+
+    DPRINT("EnumFontFamiliesA(%p, %s, %p, %p)\n",
+           hdc, lpszFamily, lpEnumFontFamProc, lParam);
 
     ZeroMemory(&LogFont, sizeof(LOGFONTW));
     LogFont.lfCharSet = DEFAULT_CHARSET;
