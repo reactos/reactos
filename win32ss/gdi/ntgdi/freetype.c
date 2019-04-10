@@ -2678,15 +2678,15 @@ static BOOLEAN FASTCALL
 GetFontFamilyInfoForList(const LOGFONTW *LogFont,
                          PFONTFAMILYINFO Info,
                          LPCWSTR NominalName,
-                         DWORD *pCount,
-                         DWORD MaxCount,
+                         LONG *pCount,
+                         LONG MaxCount,
                          PLIST_ENTRY Head)
 {
     PLIST_ENTRY Entry;
     PFONT_ENTRY CurrentEntry;
     FONTGDI *FontGDI;
     FONTFAMILYINFO InfoEntry;
-    DWORD Count = *pCount;
+    LONG Count = *pCount;
 
     for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
@@ -2726,7 +2726,7 @@ GetFontFamilyInfoForList(const LOGFONTW *LogFont,
         }
 
         /* store one entry to Info */
-        if (Count < MaxCount)
+        if (0 <= Count && Count < MaxCount)
         {
             RtlCopyMemory(&Info[Count], &InfoEntry, sizeof(InfoEntry));
         }
@@ -2741,8 +2741,8 @@ GetFontFamilyInfoForList(const LOGFONTW *LogFont,
 static BOOLEAN FASTCALL
 GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
                                 PFONTFAMILYINFO Info,
-                                DWORD *pCount,
-                                DWORD MaxCount)
+                                LONG *pCount,
+                                LONG MaxCount)
 {
     PLIST_ENTRY pEntry, pHead = &g_FontSubstListHead;
     PFONTSUBST_ENTRY pCurrentEntry;
@@ -5412,14 +5412,15 @@ LONG FASTCALL
 IntGetFontFamilyInfo(HDC Dc,
                      const LOGFONTW *SafeLogFont,
                      PFONTFAMILYINFO SafeInfo,
-                     DWORD InfoCount)
+                     LONG InfoCount)
 {
-    DWORD AvailCount = 0;
+    LONG AvailCount = 0;
     PPROCESSINFO Win32Process;
 
     /* Enumerate font families in the global list */
     IntLockGlobalFonts();
-    if (!GetFontFamilyInfoForList(SafeLogFont, SafeInfo, NULL, &AvailCount, InfoCount, &g_FontListHead) )
+    if (!GetFontFamilyInfoForList(SafeLogFont, SafeInfo, NULL, &AvailCount,
+                                  InfoCount, &g_FontListHead))
     {
         IntUnLockGlobalFonts();
         return -1;
@@ -5450,16 +5451,16 @@ LONG NTAPI
 NtGdiGetFontFamilyInfo(HDC Dc,
                        const LOGFONTW *UnsafeLogFont,
                        PFONTFAMILYINFO UnsafeInfo,
-                       DWORD *InfoCount)
+                       LONG *InfoCount)
 {
     NTSTATUS Status;
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
-    DWORD GotCount, AvailCount;
-    DWORD DataSize;
+    LONG GotCount, AvailCount;
+    LONG DataSize;
 
     /* Check for validity */
-    if (InfoCount == NULL || (LONG)*InfoCount <= 0 || UnsafeInfo == NULL)
+    if (InfoCount == NULL || *InfoCount <= 0 || UnsafeInfo == NULL)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
@@ -5474,8 +5475,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Allocate space for a safe copy */
-    Status = RtlULongMult(*InfoCount, sizeof(FONTFAMILYINFO), &DataSize);
-    if (!NT_SUCCESS(Status))
+    DataSize = *InfoCount * sizeof(FONTFAMILYINFO);
+    if (DataSize <= 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
@@ -5489,14 +5490,14 @@ NtGdiGetFontFamilyInfo(HDC Dc,
 
     /* Retrieve the information */
     AvailCount = IntGetFontFamilyInfo(Dc, &LogFont, Info, *InfoCount);
-    GotCount = min((LONG)AvailCount, (LONG)*InfoCount);
+    GotCount = min(AvailCount, *InfoCount);
     *InfoCount = AvailCount;
 
     /* Return data to caller */
-    if ((LONG)GotCount > 0)
+    if (GotCount > 0)
     {
-        Status = RtlULongMult(GotCount, sizeof(FONTFAMILYINFO), &DataSize);
-        if (!NT_SUCCESS(Status))
+        DataSize = GotCount * sizeof(FONTFAMILYINFO);
+        if (DataSize <= 0)
         {
             ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -5513,7 +5514,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
 
     ExFreePoolWithTag(Info, GDITAG_TEXT);
 
-    return (LONG)GotCount;
+    return GotCount;
 }
 
 FORCEINLINE

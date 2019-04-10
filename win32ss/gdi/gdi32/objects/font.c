@@ -295,7 +295,7 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
     ENUMLOGFONTEXA EnumLogFontExA;
     NEWTEXTMETRICEXA NewTextMetricExA;
     LOGFONTW lfW;
-    DWORD DataSize, InfoCount;
+    LONG DataSize, InfoCount;
 
     DataSize = INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO);
     Info = RtlAllocateHeap(GetProcessHeap(), 0, DataSize);
@@ -1705,9 +1705,9 @@ CreateFontIndirectA(
 
 
 #if DBG
-VOID DumpFamilyInfo(const FONTFAMILYINFO *Info, INT Count)
+VOID DumpFamilyInfo(const FONTFAMILYINFO *Info, LONG Count)
 {
-    INT i;
+    LONG i;
     const LOGFONTW *plf;
 
     DPRINT1("---\n");
@@ -1725,9 +1725,8 @@ VOID DoFontSystemUnittest(VOID)
 {
     LOGFONTW LogFont;
     FONTFAMILYINFO Info[4];
-    INT ret;
     UNICODE_STRING Str1, Str2;
-    DWORD InfoCount;
+    LONG ret, InfoCount;
 
     //DumpFontInfo(TRUE);
 
@@ -1736,8 +1735,7 @@ VOID DoFontSystemUnittest(VOID)
 
     InfoCount = RTL_NUMBER_OF(Info);
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
-    DPRINT1("ret: %d\n", ret);
-    DPRINT1("InfoCount: %ld\n", InfoCount);
+    DPRINT("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
     ASSERT(ret == RTL_NUMBER_OF(Info));
     ASSERT(InfoCount > 32);
@@ -1748,8 +1746,7 @@ VOID DoFontSystemUnittest(VOID)
 
     InfoCount = RTL_NUMBER_OF(Info);
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
-    DPRINT1("ret: %d\n", ret);
-    DPRINT1("InfoCount: %ld\n", InfoCount);
+    DPRINT("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
     ASSERT(ret != -1);
     ASSERT(InfoCount > 0);
