@@ -218,6 +218,13 @@ IntFontFamilyCompareEx(const FONTFAMILYINFO *ffi1,
     int cmp = _wcsicmp(plf1->lfFaceName, plf2->lfFaceName);
     if (cmp)
         return cmp;
+    if (dwCompareFlags & IFFCX_CHARSET)
+    {
+        if (plf1->lfCharSet < plf2->lfCharSet)
+            return -1;
+        if (plf1->lfCharSet > plf2->lfCharSet)
+            return 1;
+    }
     if (dwCompareFlags & IFFCX_STYLE)
     {
         WeightDiff1 = labs(plf1->lfWeight - FW_NORMAL);
@@ -229,13 +236,6 @@ IntFontFamilyCompareEx(const FONTFAMILYINFO *ffi1,
         if (plf1->lfItalic < plf2->lfItalic)
             return -1;
         if (plf1->lfItalic > plf2->lfItalic)
-            return 1;
-    }
-    if (dwCompareFlags & IFFCX_CHARSET)
-    {
-        if (plf1->lfCharSet < plf2->lfCharSet)
-            return -1;
-        if (plf1->lfCharSet > plf2->lfCharSet)
             return 1;
     }
     return 0;
