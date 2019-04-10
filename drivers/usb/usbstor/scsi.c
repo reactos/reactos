@@ -183,9 +183,9 @@ USBSTOR_CSWCompletionRoutine(
     {
         if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
         {
-            if (Context->RetryCount < 2)
+            if (Context->StallRetryCount < 2)
             {
-                ++Context->RetryCount;
+                ++Context->StallRetryCount;
 
                 // clear stall and resend cbw
                 Context->ErrorIndex = 1;
@@ -345,7 +345,7 @@ USBSTOR_DataCompletionRoutine(
     }
     else if (USBD_STATUS(Context->Urb.UrbHeader.Status) == USBD_STATUS(USBD_STATUS_STALL_PID))
     {
-        ++Context->RetryCount;
+        ++Context->StallRetryCount;
 
         Request->SrbStatus = SRB_STATUS_DATA_OVERRUN;
         Request->DataTransferLength = Context->Urb.UrbBulkOrInterruptTransfer.TransferBufferLength;
@@ -527,7 +527,7 @@ USBSTOR_SendCBWRequest(
     // initialize rest of context
     Context->Irp = Irp;
     Context->FDODeviceExtension = FDODeviceExtension;
-    Context->RetryCount = 0;
+    Context->StallRetryCount = 0;
 
     return USBSTOR_IssueBulkOrInterruptRequest(
         FDODeviceExtension,
@@ -586,8 +586,7 @@ USBSTOR_IssueRequestSense(
 NTSTATUS
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN ULONG RetryCount)
+    IN PIRP Irp)
 {
     PCDB pCDB;
     NTSTATUS Status;
