@@ -1730,23 +1730,23 @@ VOID DoFontSystemUnittest(VOID)
 
     //DumpFontInfo(TRUE);
 
+    /* L"" DEFAULT_CHARSET */
     RtlZeroMemory(&LogFont, sizeof(LogFont));
     LogFont.lfCharSet = DEFAULT_CHARSET;
-
     InfoCount = RTL_NUMBER_OF(Info);
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
-    DPRINT("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
+    DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
     ASSERT(ret == RTL_NUMBER_OF(Info));
     ASSERT(InfoCount > 32);
 
+    /* L"Microsoft Sans Serif" ANSI_CHARSET */
     RtlZeroMemory(&LogFont, sizeof(LogFont));
     LogFont.lfCharSet = ANSI_CHARSET;
     StringCbCopyW(LogFont.lfFaceName, sizeof(LogFont.lfFaceName), L"Microsoft Sans Serif");
-
     InfoCount = RTL_NUMBER_OF(Info);
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
-    DPRINT("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
+    DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
     ASSERT(ret != -1);
     ASSERT(InfoCount > 0);
@@ -1761,6 +1761,17 @@ VOID DoFontSystemUnittest(VOID)
     RtlInitUnicodeString(&Str2, L"Tahoma");
     ret = RtlCompareUnicodeString(&Str1, &Str2, TRUE);
     ASSERT(ret == 0);
+
+    /* L"Non-Existent" DEFAULT_CHARSET */
+    RtlZeroMemory(&LogFont, sizeof(LogFont));
+    LogFont.lfCharSet = ANSI_CHARSET;
+    StringCbCopyW(LogFont.lfFaceName, sizeof(LogFont.lfFaceName), L"Non-Existent");
+    InfoCount = RTL_NUMBER_OF(Info);
+    ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
+    DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
+    DumpFamilyInfo(Info, ret);
+    ASSERT(ret == 0);
+    ASSERT(InfoCount == 0);
 }
 #endif
 
