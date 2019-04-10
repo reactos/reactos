@@ -2675,7 +2675,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 }
 
 static BOOLEAN FASTCALL
-GetFontFamilyInfoForList(LPLOGFONTW LogFont,
+GetFontFamilyInfoForList(const LOGFONTW *LogFont,
                          PFONTFAMILYINFO Info,
                          LPCWSTR NominalName,
                          DWORD *pCount,
@@ -2697,29 +2697,15 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         if (LogFont->lfCharSet != DEFAULT_CHARSET &&
             LogFont->lfCharSet != FontGDI->CharSet)
         {
-            continue;
+            continue;   /* charset mismatch */
         }
 
-        if (LogFont->lfFaceName[0] == UNICODE_NULL)
-        {
-            if (Count < MaxCount)
-            {
-                FontFamilyFillInfo(&Info[Count], NominalName, NULL, FontGDI);
-            }
-            Count++;
-            continue;
-        }
+        /* get one info entry */
+        FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
 
-        FontFamilyFillInfo(&InfoEntry, NominalName, NULL, FontGDI);
-
-        if (NominalName)
+        if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
-            RtlStringCchCopyW(InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName,
-                              RTL_NUMBER_OF(InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName),
-                              NominalName);
-        }
-        else
-        {
+            /* check name */
             if (_wcsnicmp(LogFont->lfFaceName,
                           InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName,
                           RTL_NUMBER_OF(LogFont->lfFaceName) - 1) != 0 &&
@@ -2731,6 +2717,15 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
             }
         }
 
+        if (NominalName)
+        {
+            /* store the nominal name */
+            RtlStringCbCopyW(InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName,
+                             sizeof(InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName),
+                             NominalName);
+        }
+
+        /* store one entry to Info */
         if (Count < MaxCount)
         {
             RtlCopyMemory(&Info[Count], &InfoEntry, sizeof(InfoEntry));
@@ -2744,7 +2739,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
 }
 
 static BOOLEAN FASTCALL
-GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
+GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
                                 PFONTFAMILYINFO Info,
                                 DWORD *pCount,
                                 DWORD MaxCount)
@@ -2762,6 +2757,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
         pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
+            /* check name */
             if (_wcsicmp(LogFont->lfFaceName, pFromW->Buffer) != 0)
                 continue;   /* mismatch */
         }
@@ -2771,18 +2767,22 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
             pCurrentEntry->CharSets[FONTSUBST_FROM] ==
             pCurrentEntry->CharSets[FONTSUBST_TO])
         {
+            /* identical mapping */
             continue;
         }
 
+        /* substitute and get the real name */
         IntUnicodeStringToBuffer(lf.lfFaceName, sizeof(lf.lfFaceName), pFromW);
         SubstituteFontRecurse(&lf);
         if (LogFont->lfCharSet != DEFAULT_CHARSET && LogFont->lfCharSet != lf.lfCharSet)
             continue;
 
+        /* search in global fonts */
         IntLockGlobalFonts();
         GetFontFamilyInfoForList(&lf, Info, pFromW->Buffer, pCount, MaxCount, &g_FontListHead);
         IntUnLockGlobalFonts();
 
+        /* search in private fonts */
         IntLockProcessPrivateFonts(Win32Process);
         GetFontFamilyInfoForList(&lf, Info, pFromW->Buffer, pCount, MaxCount,
                                  &Win32Process->PrivateFontListHead);
@@ -5407,41 +5407,21 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 // Functions needing sorting.
 //
 ///////////////////////////////////////////////////////////////////////////
-int APIENTRY
-NtGdiGetFontFamilyInfo(HDC Dc,
-                       LPLOGFONTW UnsafeLogFont,
-                       PFONTFAMILYINFO UnsafeInfo,
-                       DWORD Size)
+
+LONG FASTCALL
+IntGetFontFamilyInfo(HDC Dc,
+                     const LOGFONTW *SafeLogFont,
+                     PFONTFAMILYINFO SafeInfo,
+                     DWORD InfoCount)
 {
-    NTSTATUS Status;
-    LOGFONTW LogFont;
-    PFONTFAMILYINFO Info;
-    DWORD Count;
+    DWORD AvailCount = 0;
     PPROCESSINFO Win32Process;
-
-    /* Make a safe copy */
-    Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
-    if (! NT_SUCCESS(Status))
-    {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return -1;
-    }
-
-    /* Allocate space for a safe copy */
-    Info = ExAllocatePoolWithTag(PagedPool, Size * sizeof(FONTFAMILYINFO), GDITAG_TEXT);
-    if (NULL == Info)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return -1;
-    }
 
     /* Enumerate font families in the global list */
     IntLockGlobalFonts();
-    Count = 0;
-    if (! GetFontFamilyInfoForList(&LogFont, Info, NULL, &Count, Size, &g_FontListHead) )
+    if (!GetFontFamilyInfoForList(SafeLogFont, SafeInfo, NULL, &AvailCount, InfoCount, &g_FontListHead) )
     {
         IntUnLockGlobalFonts();
-        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
     IntUnLockGlobalFonts();
@@ -5449,28 +5429,81 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the process local list */
     Win32Process = PsGetCurrentProcessWin32Process();
     IntLockProcessPrivateFonts(Win32Process);
-    if (! GetFontFamilyInfoForList(&LogFont, Info, NULL, &Count, Size,
-                                   &Win32Process->PrivateFontListHead))
+    if (!GetFontFamilyInfoForList(SafeLogFont, SafeInfo, NULL, &AvailCount, InfoCount,
+                                  &Win32Process->PrivateFontListHead))
     {
         IntUnLockProcessPrivateFonts(Win32Process);
-        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
-    if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
+    if (!GetFontFamilyInfoForSubstitutes(SafeLogFont, SafeInfo, &AvailCount, InfoCount))
     {
-        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
 
-    /* Return data to caller */
-    if (0 != Count)
+    return AvailCount;
+}
+
+LONG NTAPI
+NtGdiGetFontFamilyInfo(HDC Dc,
+                       const LOGFONTW *UnsafeLogFont,
+                       PFONTFAMILYINFO UnsafeInfo,
+                       DWORD *InfoCount)
+{
+    NTSTATUS Status;
+    LOGFONTW LogFont;
+    PFONTFAMILYINFO Info;
+    DWORD GotCount, AvailCount;
+    DWORD DataSize;
+
+    /* Check for validity */
+    if (InfoCount == NULL || (LONG)*InfoCount <= 0 || UnsafeInfo == NULL)
     {
-        Status = MmCopyToCaller(UnsafeInfo, Info,
-                                (Count < Size ? Count : Size) * sizeof(FONTFAMILYINFO));
-        if (! NT_SUCCESS(Status))
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
+
+    /* Make a safe copy */
+    Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
+    if (!NT_SUCCESS(Status))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
+
+    /* Allocate space for a safe copy */
+    Status = RtlULongMult(*InfoCount, sizeof(FONTFAMILYINFO), &DataSize);
+    if (!NT_SUCCESS(Status))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
+    Info = ExAllocatePoolWithTag(PagedPool, DataSize, GDITAG_TEXT);
+    if (Info == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return -1;
+    }
+
+    /* Retrieve the information */
+    AvailCount = IntGetFontFamilyInfo(Dc, &LogFont, Info, *InfoCount);
+    GotCount = min((LONG)AvailCount, (LONG)*InfoCount);
+    *InfoCount = AvailCount;
+
+    /* Return data to caller */
+    if ((LONG)GotCount > 0)
+    {
+        Status = RtlULongMult(GotCount, sizeof(FONTFAMILYINFO), &DataSize);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Info, GDITAG_TEXT);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return -1;
+        }
+        Status = MmCopyToCaller(UnsafeInfo, Info, DataSize);
+        if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -5478,9 +5511,10 @@ NtGdiGetFontFamilyInfo(HDC Dc,
         }
     }
 
+    /* deallocate */
     ExFreePoolWithTag(Info, GDITAG_TEXT);
 
-    return Count;
+    return (LONG)GotCount;
 }
 
 FORCEINLINE
@@ -6618,7 +6652,7 @@ NtGdiGetCharABCWidthsW(
     if(Safepwch)
         ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
 
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
         return FALSE;

@@ -638,7 +638,15 @@ static INT CALLBACK is_font_installed_proc(const LOGFONTW *elf,
     if (type & RASTER_FONTTYPE)
         return 1;
 
+#ifdef __REACTOS__
+    /* NOTE: This elf is dirty. We have to sanitize it before CreateFontIndirect. */
+    lf->lfWeight = elf->lfWeight;
+    lf->lfItalic = elf->lfItalic;
+    lf->lfCharSet = elf->lfCharSet;
+    lf->lfPitchAndFamily = elf->lfPitchAndFamily;
+#else
     *lf = *elf;
+#endif
     /* replace substituted font name by a real one */
     lstrcpynW(lf->lfFaceName, elfW->elfFullName, LF_FACESIZE);
     return 0;
@@ -706,6 +714,10 @@ static GpStatus find_installed_font(const WCHAR *name, struct font_metrics *fm)
     HDC hdc = CreateCompatibleDC(0);
     GpStatus ret = FontFamilyNotFound;
 
+#ifdef __REACTOS__
+    ZeroMemory(&lf, sizeof(lf));
+    lf.lfCharSet = DEFAULT_CHARSET;
+#endif
     if(!EnumFontFamiliesW(hdc, name, is_font_installed_proc, (LPARAM)&lf))
     {
         HFONT hfont, old_font;
