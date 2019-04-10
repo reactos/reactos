@@ -57,15 +57,14 @@ struct FvfToDecl
 #define DDRAW_NO3D              0x00000008
 #define DDRAW_SCL_DDRAW1        0x00000010
 #define DDRAW_SCL_RECURSIVE     0x00000020
-#define DDRAW_SWAPPED           0x00000040
-#define DDRAW_GDI_FLIP          0x00000080
+#define DDRAW_GDI_FLIP          0x00000040
 
 #define DDRAW_STRIDE_ALIGNMENT  8
 
 #define DDRAW_WINED3D_FLAGS     (WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING \
         | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES | WINED3D_PIXEL_CENTER_INTEGER \
         | WINED3D_LEGACY_UNBOUND_RESOURCE_COLOR | WINED3D_NO_PRIMITIVE_RESTART \
-        | WINED3D_LEGACY_CUBEMAP_FILTERING)
+        | WINED3D_LEGACY_CUBEMAP_FILTERING | WINED3D_LIMIT_VIEWPORT)
 
 enum ddraw_device_state
 {
@@ -219,7 +218,7 @@ void ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
         struct wined3d_texture *wined3d_texture, unsigned int sub_resource_idx,
         const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_update_frontbuffer(struct ddraw_surface *surface,
-        const RECT *rect, BOOL read, unsigned int swap_interval) DECLSPEC_HIDDEN;
+        const RECT *rect, BOOL read) DECLSPEC_HIDDEN;
 
 static inline struct ddraw_surface *impl_from_IDirect3DTexture(IDirect3DTexture *iface)
 {

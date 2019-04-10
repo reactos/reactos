@@ -21,7 +21,7 @@ list(APPEND SOURCE
     volume.c
     precomp.h)
 
-add_library(d3d9 MODULE
+add_library(d3d9 SHARED
     ${SOURCE}
     guid.c
     version.rc
