@@ -5511,7 +5511,6 @@ NtGdiGetFontFamilyInfo(HDC Dc,
         }
     }
 
-    /* deallocate */
     ExFreePoolWithTag(Info, GDITAG_TEXT);
 
     return (LONG)GotCount;
