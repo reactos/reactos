@@ -56,7 +56,7 @@ NtGdiGetFontFamilyInfo(
     HDC Dc,
     const LOGFONTW *LogFont,
     PFONTFAMILYINFO Info,
-    LONG *InfoCount);
+    LPLONG UnsafeInfoCount);
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL APIENTRY  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);

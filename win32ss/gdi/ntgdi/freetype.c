@@ -5451,22 +5451,26 @@ LONG NTAPI
 NtGdiGetFontFamilyInfo(HDC Dc,
                        const LOGFONTW *UnsafeLogFont,
                        PFONTFAMILYINFO UnsafeInfo,
-                       LONG *InfoCount)
+                       LPLONG UnsafeInfoCount)
 {
     NTSTATUS Status;
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
-    LONG GotCount, AvailCount;
-    LONG DataSize;
+    LONG GotCount, AvailCount, DataSize, SafeInfoCount;
 
-    /* Check for validity */
-    if (InfoCount == NULL || *InfoCount <= 0 || UnsafeInfo == NULL)
+    if (UnsafeLogFont == NULL || UnsafeInfo == NULL || UnsafeInfoCount == NULL)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
 
     /* Make a safe copy */
+    Status = MmCopyFromCaller(&SafeInfoCount, UnsafeInfoCount, sizeof(SafeInfoCount));
+    if (!NT_SUCCESS(Status) || SafeInfoCount <= 0)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
     Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
     if (!NT_SUCCESS(Status))
     {
@@ -5475,7 +5479,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Allocate space for a safe copy */
-    DataSize = *InfoCount * sizeof(FONTFAMILYINFO);
+    DataSize = SafeInfoCount * sizeof(FONTFAMILYINFO);
     if (DataSize <= 0)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -5489,9 +5493,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Retrieve the information */
-    AvailCount = IntGetFontFamilyInfo(Dc, &LogFont, Info, *InfoCount);
-    GotCount = min(AvailCount, *InfoCount);
-    *InfoCount = AvailCount;
+    AvailCount = IntGetFontFamilyInfo(Dc, &LogFont, Info, SafeInfoCount);
+    GotCount = min(AvailCount, SafeInfoCount);
 
     /* Return data to caller */
     if (GotCount > 0)
@@ -5504,6 +5507,13 @@ NtGdiGetFontFamilyInfo(HDC Dc,
             return -1;
         }
         Status = MmCopyToCaller(UnsafeInfo, Info, DataSize);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Info, GDITAG_TEXT);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return -1;
+        }
+        Status = MmCopyToCaller(UnsafeInfoCount, &AvailCount, sizeof(*UnsafeInfoCount));
         if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(Info, GDITAG_TEXT);
