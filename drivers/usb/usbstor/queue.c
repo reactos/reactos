@@ -355,7 +355,7 @@ USBSTOR_StartIo(
         return;
     }
 
-    USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp, 0);
+    USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp);
 
     // FIXME: handle error
 }

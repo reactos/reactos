@@ -286,7 +286,7 @@ typedef struct
     PIRP Irp;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     ULONG ErrorIndex;
-    ULONG RetryCount;
+    ULONG StallRetryCount;                                            // the number of retries after receiving USBD_STATUS_STALL_PID status
     union
     {
         CBW cbw;
@@ -406,8 +406,7 @@ USBSTOR_GetPipeHandles(
 NTSTATUS
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN ULONG RetryCount);
+    IN PIRP Irp);
 
 NTSTATUS
 USBSTOR_SendCSWRequest(

@@ -107,7 +107,7 @@ USBSTOR_HandleTransferError(
     pCDB = (PCDB)Request->Cdb;
     ASSERT(pCDB);
 
-    if (Status != STATUS_SUCCESS || Context->RetryCount >= 1)
+    if (!NT_SUCCESS(Status))
     {
         // Complete the master IRP
         Context->Irp->IoStatus.Status = Status;
@@ -120,22 +120,6 @@ USBSTOR_HandleTransferError(
 
         // srb handling finished
         Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
-
-        // clear timer srb
-        Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
-    }
-    else
-    {
-        DPRINT1("Retrying Count %lu %p\n", Context->RetryCount, Stack->DeviceObject);
-
-        // re-schedule request
-        USBSTOR_HandleExecuteSCSI(Stack->DeviceObject, Context->Irp, Context->RetryCount + 1);
-
-        // srb error handling finished
-        Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
-
-        // srb error handling finished
-        Context->FDODeviceExtension->TimerWorkQueueEnabled = TRUE;
 
         // clear timer srb
         Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
