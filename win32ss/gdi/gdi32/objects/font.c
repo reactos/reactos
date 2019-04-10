@@ -380,7 +380,6 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
             break;
     }
 
-    /* deallocate Info */
     RtlFreeHeap(GetProcessHeap(), 0, Info);
 
     return Ret;
