@@ -5457,6 +5457,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
     LONG GotCount, AvailCount, DataSize, SafeInfoCount;
+    ULONGLONG DataSize64;
 
     if (UnsafeLogFont == NULL || UnsafeInfo == NULL || UnsafeInfoCount == NULL)
     {
@@ -5490,8 +5491,9 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Allocate space for a safe copy */
-    DataSize = SafeInfoCount * sizeof(FONTFAMILYINFO);
-    if (DataSize <= 0)
+    DataSize64 = UInt32x32To64(SafeInfoCount, sizeof(FONTFAMILYINFO));
+    DataSize = (LONG)DataSize64;
+    if (DataSize <= 0 || DataSize64 > LONG_MAX)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
@@ -5511,8 +5513,9 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Return data to caller */
     if (GotCount > 0)
     {
-        DataSize = GotCount * sizeof(FONTFAMILYINFO);
-        if (DataSize <= 0)
+        DataSize64 = UInt32x32To64(GotCount, sizeof(FONTFAMILYINFO));
+        DataSize = (LONG)DataSize64;
+        if (DataSize <= 0 || DataSize64 > LONG_MAX)
         {
             ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);

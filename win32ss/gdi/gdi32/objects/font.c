@@ -295,6 +295,7 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
     ENUMLOGFONTEXA EnumLogFontExA;
     NEWTEXTMETRICEXA NewTextMetricExA;
     LOGFONTW lfW;
+    ULONGLONG DataSize64;
     LONG DataSize, InfoCount;
 
     DataSize = INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO);
@@ -330,7 +331,12 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
     if (INITIAL_FAMILY_COUNT < InfoCount)
     {
         RtlFreeHeap(GetProcessHeap(), 0, Info);
-        DataSize = InfoCount * sizeof(FONTFAMILYINFO);
+        DataSize64 = UInt32x32To64(InfoCount, sizeof(FONTFAMILYINFO));
+        DataSize = (LONG)DataSize64;
+        if (DataSize <= 0 || DataSize64 > LONG_MAX)
+        {
+            return 1;
+        }
         Info = RtlAllocateHeap(GetProcessHeap(), 0, DataSize);
         if (Info == NULL)
         {
