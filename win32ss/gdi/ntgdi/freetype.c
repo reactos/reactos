@@ -5492,7 +5492,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
 
     /* Allocate space for a safe copy */
     Status = RtlULongMult(SafeInfoCount, sizeof(FONTFAMILYINFO), &DataSize);
-    if (!NT_SUCCESS(Status) || (ULONG)DataSize > LONG_MAX)
+    if (!NT_SUCCESS(Status) || DataSize > LONG_MAX)
     {
         DPRINT1("Overflowed.\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
