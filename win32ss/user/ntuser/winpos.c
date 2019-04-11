@@ -1053,16 +1053,8 @@ static
 BOOL
 IntValidateParent(PWND Child, PREGION ValidateRgn)
 {
-   PWND ParentWnd = Child;
+   PWND ParentWnd = Child->spwndParent;
 
-   if (ParentWnd->style & WS_CHILD)
-   {
-      do
-         ParentWnd = ParentWnd->spwndParent;
-      while (ParentWnd->style & WS_CHILD);
-   }
-
-   ParentWnd = Child->spwndParent;
    while (ParentWnd)
    {
       if (ParentWnd->style & WS_CLIPCHILDREN)
@@ -1898,8 +1890,7 @@ co_WinPosSetWindowPos(
              VisAfter != NULL &&
             !(WinPos.flags & SWP_NOCOPYBITS) &&
             ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
-            !(Window->ExStyle & WS_EX_TRANSPARENT) ) || 
-            ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore) )
+            !(Window->ExStyle & WS_EX_TRANSPARENT) ) )
       {
 
          /*
@@ -1987,43 +1978,7 @@ co_WinPosSetWindowPos(
          CopyRgn = NULL;
       }
 
-      if ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore )
-      {
-         PWND pwnd = Window;
-         PWND Parent = pwnd->spwndParent;
-
-         TRACE("SWP_FRAMECHANGED no chg\n");
-
-         if ( pwnd->style & WS_CHILD ) // Fix ProgMan menu bar drawing.
-         {
-            TRACE("SWP_FRAMECHANGED win child %p Parent %p\n",pwnd,Parent);
-            pwnd = Parent ? Parent : pwnd;
-         }
-
-         if ( !(pwnd->style & WS_CHILD) )
-         {
-            HDC hdc;
-            HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-            PREGION DcRgnObj = REGION_LockRgn(DcRgn);
-
-            TRACE("SWP_FRAMECHANGED Draw\n");
-
-            IntGdiCombineRgn(DcRgnObj, VisBefore, NULL, RGN_COPY);
-            REGION_UnlockRgn(DcRgnObj);
-
-            hdc = UserGetDCEx( pwnd,
-                               DcRgn,
-                               DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN); // DCX_WINDOW, see note above....
-
-            NC_DoNCPaint(pwnd, hdc, -1); // Force full redraw of nonclient area.
-
-            UserReleaseDC(pwnd, hdc, FALSE);
-            IntValidateParent(pwnd, DcRgnObj);
-            GreDeleteObject(DcRgn);
-         }
-      }
-
-      /* We need to redraw what wasn't visible before */
+      /* We need to redraw what wasn't visible before or force a redraw */
       if (VisAfter != NULL)
       {
          PREGION DirtyRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
@@ -2038,7 +1993,7 @@ co_WinPosSetWindowPos(
                 RgnType = IntGdiCombineRgn(DirtyRgn, VisAfter, 0, RGN_COPY);
              }
 
-             if (RgnType != ERROR && RgnType != NULLREGION)
+             if (RgnType != ERROR && RgnType != NULLREGION) // Regions moved.
              {
             /* old code
                 NtGdiOffsetRgn(DirtyRgn, Window->rcWindow.left, Window->rcWindow.top);
@@ -2063,6 +2018,27 @@ co_WinPosSetWindowPos(
                    IntInvalidateWindows( Window, DirtyRgn, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
                 }
              }
+             else if ( RgnType != ERROR && RgnType == NULLREGION ) // Must be the same. See CORE-7166 & CORE-15934
+             {
+                if ( !PosChanged &&
+                     !(WinPos.flags & SWP_DEFERERASE) &&
+                      (WinPos.flags & SWP_FRAMECHANGED) )
+                {
+                    PWND pwnd = Window;
+                    PWND Parent = Window->spwndParent;
+
+                    if ( pwnd->style & WS_CHILD ) // Fix ProgMan menu bar drawing.
+                    {
+                        TRACE("SWP_FRAMECHANGED win child %p Parent %p\n",pwnd,Parent);
+                        pwnd = Parent ? Parent : pwnd;
+                    }
+
+                    if ( !(pwnd->style & WS_CHILD) )
+                    {
+                        IntSendNCPaint(pwnd, HRGN_WINDOW); // Paint the whole frame.
+                    }
+                }
+             }
              REGION_Delete(DirtyRgn);
          }
       }
@@ -2073,7 +2049,7 @@ co_WinPosSetWindowPos(
       }
 
       /* Expose what was covered before but not covered anymore */
-      if (VisBefore != NULL)
+      if ( VisBefore != NULL )
       {
          PREGION ExposedRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
          if (ExposedRgn)
@@ -2083,7 +2059,7 @@ co_WinPosSetWindowPos(
                                OldWindowRect.left - NewWindowRect.left,
                                OldWindowRect.top  - NewWindowRect.top);
 
-             if (VisAfter != NULL)
+             if ( VisAfter != NULL )
                 RgnType = IntGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
 
              if (RgnType != ERROR && RgnType != NULLREGION)
