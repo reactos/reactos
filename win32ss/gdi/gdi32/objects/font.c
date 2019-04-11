@@ -335,6 +335,7 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
         DataSize = (LONG)DataSize64;
         if (DataSize <= 0 || DataSize64 > LONG_MAX)
         {
+            DPRINT1("Overflowed.\n");
             return 1;
         }
         Info = RtlAllocateHeap(GetProcessHeap(), 0, DataSize);

@@ -5495,6 +5495,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     DataSize = (LONG)DataSize64;
     if (DataSize <= 0 || DataSize64 > LONG_MAX)
     {
+        DPRINT1("Overflowed.\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
@@ -5517,6 +5518,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
         DataSize = (LONG)DataSize64;
         if (DataSize <= 0 || DataSize64 > LONG_MAX)
         {
+            DPRINT1("Overflowed.\n");
             ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return -1;
