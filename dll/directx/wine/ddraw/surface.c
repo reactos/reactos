@@ -2311,7 +2311,9 @@ static HRESULT WINAPI ddraw_surface7_ReleaseDC(IDirectDrawSurface7 *iface, HDC h
     HRESULT hr;
 
     TRACE("iface %p, dc %p.\n", iface, hdc);
-
+#ifdef __REACTOS__
+    GdiFlush();
+#endif
     wined3d_mutex_lock();
     if (!surface->dc)
     {
