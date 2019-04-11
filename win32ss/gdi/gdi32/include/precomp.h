@@ -58,5 +58,6 @@
 #include <ntgdibad.h>
 
 #include <undocgdi.h>
+#include <ntintsafe.h>
 
 #endif /* _GDI32_PCH_ */
