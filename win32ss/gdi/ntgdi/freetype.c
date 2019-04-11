@@ -5462,7 +5462,8 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     NTSTATUS Status;
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
-    LONG GotCount, AvailCount, DataSize, SafeInfoCount;
+    LONG GotCount, AvailCount, SafeInfoCount;
+    ULONG DataSize;
 
     if (UnsafeLogFont == NULL || UnsafeInfo == NULL || UnsafeInfoCount == NULL)
     {
@@ -5496,9 +5497,10 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     }
 
     /* Allocate space for a safe copy */
-    DataSize = SafeInfoCount * sizeof(FONTFAMILYINFO);
-    if (DataSize <= 0)
+    Status = RtlULongMult(SafeInfoCount, sizeof(FONTFAMILYINFO), &DataSize);
+    if (!NT_SUCCESS(Status) || (ULONG)DataSize > LONG_MAX)
     {
+        DPRINT1("Overflowed.\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return -1;
     }
@@ -5517,9 +5519,10 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Return data to caller */
     if (GotCount > 0)
     {
-        DataSize = GotCount * sizeof(FONTFAMILYINFO);
-        if (DataSize <= 0)
+        Status = RtlULongMult(GotCount, sizeof(FONTFAMILYINFO), &DataSize);
+        if (!NT_SUCCESS(Status) || DataSize > LONG_MAX)
         {
+            DPRINT1("Overflowed.\n");
             ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return -1;
