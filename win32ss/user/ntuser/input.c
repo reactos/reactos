@@ -33,9 +33,7 @@ IntLastInputTick(BOOL bUpdate)
 {
     if (bUpdate)
     {
-        LARGE_INTEGER TickCount;
-        KeQueryTickCount(&TickCount);
-        LastInputTick = MsqCalculateMessageTime(&TickCount);
+        LastInputTick = EngGetTickCount32();
         if (gpsi) gpsi->dwLastRITEventTickCount = LastInputTick;
     }
     return LastInputTick;
@@ -49,13 +47,11 @@ IntLastInputTick(BOOL bUpdate)
 VOID FASTCALL
 DoTheScreenSaver(VOID)
 {
-    LARGE_INTEGER TickCount;
     DWORD Test, TO;
 
     if (gspv.iScrSaverTimeout > 0) // Zero means Off.
     {
-        KeQueryTickCount(&TickCount);
-        Test = MsqCalculateMessageTime(&TickCount);
+        Test = EngGetTickCount32();
         Test = Test - LastInputTick;
         TO = 1000 * gspv.iScrSaverTimeout;
         if (Test > TO)

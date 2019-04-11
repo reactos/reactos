@@ -295,11 +295,9 @@ NtUserGetThreadState(
       case THREADSTATE_UPTIMELASTREAD:
          {
            PTHREADINFO pti;
-           LARGE_INTEGER LargeTickCount;
            pti = PsGetCurrentThreadWin32Thread();
-           KeQueryTickCount(&LargeTickCount);
-           pti->timeLast = LargeTickCount.u.LowPart;
-           pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+           pti->timeLast = EngGetTickCount32();
+           pti->pcti->tickLastMsgChecked = pti->timeLast;
          }
          break;
 

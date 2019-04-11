@@ -443,7 +443,6 @@ InitThreadCallback(PETHREAD Thread)
     int i;
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
-    LARGE_INTEGER LargeTickCount;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
     Process = Thread->ThreadsProcess;
@@ -504,9 +503,7 @@ InitThreadCallback(PETHREAD Thread)
         goto error;
     }
 
-    KeQueryTickCount(&LargeTickCount);
-    ptiCurrent->timeLast = LargeTickCount.u.LowPart;
-
+    ptiCurrent->timeLast = EngGetTickCount32();
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if (ptiCurrent->MessageQueue == NULL)
     {

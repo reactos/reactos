@@ -399,7 +399,6 @@ PostTimerMessages(PWND Window)
   PTHREADINFO pti;
   BOOL Hit = FALSE;
   PTIMER pTmr;
-  LARGE_INTEGER TickCount;
 
   pti = PsGetCurrentThreadWin32Thread();
 
@@ -412,13 +411,11 @@ PostTimerMessages(PWND Window)
           (pTmr->pti == pti) &&
           ((pTmr->pWnd == Window) || (Window == NULL)) )
         {
-           KeQueryTickCount(&TickCount);
-
            Msg.hwnd    = (pTmr->pWnd) ? pTmr->pWnd->head.h : 0;
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
-           Msg.time    = MsqCalculateMessageTime(&TickCount);
+           Msg.time    = EngGetTickCount32();
            // Fix all wine win:test_GetMessagePos WM_TIMER tests. See CORE-10867.
            Msg.pt      = gpsi->ptCursor;
 
@@ -448,7 +445,7 @@ VOID
 FASTCALL
 ProcessTimers(VOID)
 {
-  LARGE_INTEGER TickCount, DueTime;
+  LARGE_INTEGER DueTime;
   LONG Time;
   PLIST_ENTRY pLE;
   PTIMER pTmr;
@@ -456,8 +453,7 @@ ProcessTimers(VOID)
 
   TimerEnterExclusive();
   pLE = TimersListHead.Flink;
-  KeQueryTickCount(&TickCount);
-  Time = MsqCalculateMessageTime(&TickCount);
+  Time = EngGetTickCount32();
 
   DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 

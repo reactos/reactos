@@ -249,12 +249,6 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PWND pWindow);
 HANDLE FASTCALL IntMsqSetWakeMask(DWORD WakeMask);
 BOOL FASTCALL IntMsqClearWakeMask(VOID);
 
-static __inline LONG
-MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
-{
-    return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
-}
-
 VOID FASTCALL IdlePing(VOID);
 VOID FASTCALL IdlePong(VOID);
 BOOL FASTCALL co_MsqReplyMessage(LRESULT);

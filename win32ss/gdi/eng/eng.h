@@ -40,6 +40,8 @@ APIENTRY
 EngGetTickCount(
     VOID);
 
+#define EngGetTickCount32() (ULONG)EngGetTickCount()
+
 HANDLE
 APIENTRY
 EngSecureMemForRead(

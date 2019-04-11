@@ -210,9 +210,7 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
     Msg.time = pmi->time;
     if (!Msg.time)
     {
-        LARGE_INTEGER LargeTickCount;
-        KeQueryTickCount(&LargeTickCount);
-        Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+        Msg.time = EngGetTickCount32();
     }
 
     /* Do GetMouseMovePointsEx FIFO. */

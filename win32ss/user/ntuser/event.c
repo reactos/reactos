@@ -165,7 +165,7 @@ co_EVENT_CallEvents( DWORD event,
                                  pEP->idObject,
                                  pEP->idChild,
                                  pEP->idThread,
-                                (DWORD)EngGetTickCount(),
+                                 EngGetTickCount32(),
                                  pEH->Proc,
                                  pEH->ihmod,
                                  pEH->offPfn);
@@ -229,7 +229,7 @@ IntNotifyWinEvent(
                                    idObject,
                                    idChild,
                                    PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
-                                  (DWORD)EngGetTickCount(),
+                                   EngGetTickCount32(),
                                    pEH->Proc,
                                    pEH->ihmod,
                                    pEH->offPfn);
