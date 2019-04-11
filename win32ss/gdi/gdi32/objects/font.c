@@ -295,7 +295,8 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
     ENUMLOGFONTEXA EnumLogFontExA;
     NEWTEXTMETRICEXA NewTextMetricExA;
     LOGFONTW lfW;
-    LONG DataSize, InfoCount;
+    LONG InfoCount;
+    ULONG DataSize;
     NTSTATUS Status;
 
     DataSize = INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO);
@@ -332,8 +333,8 @@ IntEnumFontFamilies(HDC Dc, const LOGFONTW *LogFont, PVOID EnumProc, LPARAM lPar
     {
         RtlFreeHeap(GetProcessHeap(), 0, Info);
 
-        Status = RtlULongMult(InfoCount, sizeof(FONTFAMILYINFO), (ULONG *)&DataSize);
-        if (!NT_SUCCESS(Status) || (ULONG)DataSize > LONG_MAX)
+        Status = RtlULongMult(InfoCount, sizeof(FONTFAMILYINFO), &DataSize);
+        if (!NT_SUCCESS(Status) || DataSize > LONG_MAX)
         {
             DPRINT1("Overflowed.\n");
             return 1;
