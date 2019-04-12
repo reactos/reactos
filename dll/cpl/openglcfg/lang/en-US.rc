@@ -20,7 +20,7 @@ STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "System default"
     IDS_RENDERER_RSWR "ReactOS Software Implementation"
-    IDS_CPLNAME "OpenGL configuration"
+    IDS_CPLNAME "OpenGL Configuration"
     IDS_CPLDESCRIPTION "Configures OpenGL renderer."
     IDS_DEBUG_SET "Set"
     IDS_DEBUG_CLEAR "Clear"

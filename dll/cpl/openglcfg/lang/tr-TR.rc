@@ -22,7 +22,7 @@ STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "Dizge Ön Tanımlı"
     IDS_RENDERER_RSWR "ReactOS Yazılım Gerçekleştirmesi"
-    IDS_CPLNAME "OpenGL yapılandırması"
+    IDS_CPLNAME "OpenGL Yapılandırması"
     IDS_CPLDESCRIPTION "OpenGL işleyicisini yapılandırır."
     IDS_DEBUG_SET "Ayarla"
     IDS_DEBUG_CLEAR "Sil"
