@@ -1311,7 +1311,7 @@ GetOutlineTextMetricsA(
     else
         output->otmpFullName = 0;
 
-    assert(left == 0);
+    ASSERT(left == 0);
 
     if(output != lpOTM)
     {
@@ -1701,6 +1701,13 @@ VOID DumpFamilyInfo(const FONTFAMILYINFO *Info, LONG Count)
 
 VOID DoFontSystemUnittest(VOID)
 {
+#ifndef RTL_SOFT_ASSERT
+#define RTL_SOFT_ASSERT(exp) \
+  (void)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
+#define RTL_SOFT_ASSERT_defined
+#endif
+
     LOGFONTW LogFont;
     FONTFAMILYINFO Info[4];
     UNICODE_STRING Str1, Str2;
@@ -1715,8 +1722,8 @@ VOID DoFontSystemUnittest(VOID)
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
     DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
-    ASSERT(ret == RTL_NUMBER_OF(Info));
-    ASSERT(InfoCount > 32);
+    RTL_SOFT_ASSERT(ret == RTL_NUMBER_OF(Info));
+    RTL_SOFT_ASSERT(InfoCount > 32);
 
     /* L"Microsoft Sans Serif" ANSI_CHARSET */
     RtlZeroMemory(&LogFont, sizeof(LogFont));
@@ -1726,19 +1733,19 @@ VOID DoFontSystemUnittest(VOID)
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
     DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
-    ASSERT(ret != -1);
-    ASSERT(InfoCount > 0);
-    ASSERT(InfoCount < 16);
+    RTL_SOFT_ASSERT(ret != -1);
+    RTL_SOFT_ASSERT(InfoCount > 0);
+    RTL_SOFT_ASSERT(InfoCount < 16);
 
     RtlInitUnicodeString(&Str1, Info[0].EnumLogFontEx.elfLogFont.lfFaceName);
     RtlInitUnicodeString(&Str2, L"Microsoft Sans Serif");
     ret = RtlCompareUnicodeString(&Str1, &Str2, TRUE);
-    ASSERT(ret == 0);
+    RTL_SOFT_ASSERT(ret == 0);
 
     RtlInitUnicodeString(&Str1, Info[0].EnumLogFontEx.elfFullName);
     RtlInitUnicodeString(&Str2, L"Tahoma");
     ret = RtlCompareUnicodeString(&Str1, &Str2, TRUE);
-    ASSERT(ret == 0);
+    RTL_SOFT_ASSERT(ret == 0);
 
     /* L"Non-Existent" DEFAULT_CHARSET */
     RtlZeroMemory(&LogFont, sizeof(LogFont));
@@ -1748,8 +1755,13 @@ VOID DoFontSystemUnittest(VOID)
     ret = NtGdiGetFontFamilyInfo(NULL, &LogFont, Info, &InfoCount);
     DPRINT1("ret: %ld, InfoCount: %ld\n", ret, InfoCount);
     DumpFamilyInfo(Info, ret);
-    ASSERT(ret == 0);
-    ASSERT(InfoCount == 0);
+    RTL_SOFT_ASSERT(ret == 0);
+    RTL_SOFT_ASSERT(InfoCount == 0);
+
+#ifdef RTL_SOFT_ASSERT_defined
+#undef RTL_SOFT_ASSERT_defined
+#undef RTL_SOFT_ASSERT
+#endif
 }
 #endif
 
@@ -1767,8 +1779,8 @@ CreateFontIndirectW(
     static BOOL bDidTest = FALSE;
     if (!bDidTest)
     {
-        DoFontSystemUnittest();
         bDidTest = TRUE;
+        DoFontSystemUnittest();
     }
 #endif
     if (lplf)
