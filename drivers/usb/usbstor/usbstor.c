@@ -40,6 +40,8 @@ USBSTOR_AddDevice(
     DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
     DeviceExtension->LowerDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
 
+    KeInitializeSpinLock(&DeviceExtension->CommonLock);
+
     IoInitializeTimer(DeviceObject, USBSTOR_TimerRoutine, (PVOID)DeviceExtension);
 
     // did attaching fail

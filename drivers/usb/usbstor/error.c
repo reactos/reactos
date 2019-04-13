@@ -5,6 +5,7 @@
  * COPYRIGHT:   2005-2006 James Tabor
  *              2011-2012 Michael Martin (michael.martin@reactos.org)
  *              2011-2013 Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              2019 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #include "usbstor.h"
@@ -69,104 +70,97 @@ USBSTOR_ResetPipeWithHandle(
     return Status;
 }
 
-NTSTATUS
-USBSTOR_HandleTransferError(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP_CONTEXT Context)
-{
-    PPDO_DEVICE_EXTENSION PDODeviceExtension;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PIO_STACK_LOCATION Stack;
-    PSCSI_REQUEST_BLOCK Request;
-    PCDB pCDB;
-
-    ASSERT(Context);
-    ASSERT(Context->Irp);
-
-    // first perform a mass storage reset step 1 in 5.3.4 USB Mass Storage Bulk Only Specification
-    Status = USBSTOR_ResetDevice(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension);
-    if (NT_SUCCESS(Status))
-    {
-        // step 2 reset bulk in pipe section 5.3.4
-        Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle);
-        if (NT_SUCCESS(Status))
-        {
-            // finally reset bulk out pipe
-            Status = USBSTOR_ResetPipeWithHandle(Context->FDODeviceExtension->LowerDeviceObject, Context->FDODeviceExtension->InterfaceInformation->Pipes[Context->FDODeviceExtension->BulkOutPipeIndex].PipeHandle);
-        }
-    }
-
-    Stack = IoGetCurrentIrpStackLocation(Context->Irp);
-    ASSERT(Stack->DeviceObject);
-    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)Stack->DeviceObject->DeviceExtension;
-
-    Request = (PSCSI_REQUEST_BLOCK)Stack->Parameters.Others.Argument1;
-    ASSERT(Request);
-
-    // obtain request type
-    pCDB = (PCDB)Request->Cdb;
-    ASSERT(pCDB);
-
-    if (!NT_SUCCESS(Status))
-    {
-        // Complete the master IRP
-        Context->Irp->IoStatus.Status = Status;
-        Context->Irp->IoStatus.Information = 0;
-        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, Context->Irp);
-        IoCompleteRequest(Context->Irp, IO_NO_INCREMENT);
-
-        // Start the next request
-        USBSTOR_QueueNextRequest(PDODeviceExtension->LowerDeviceObject);
-
-        // srb handling finished
-        Context->FDODeviceExtension->SrbErrorHandlingActive = FALSE;
-
-        // clear timer srb
-        Context->FDODeviceExtension->LastTimerActiveSrb = NULL;
-    }
-
-    FreeItem(Context);
-
-    DPRINT1("USBSTOR_HandleTransferError returning with Status %x\n", Status);
-    return Status;
-}
-
 VOID
 NTAPI
-USBSTOR_ResetHandlerWorkItemRoutine(
-    PVOID Context)
+USBSTOR_ResetPipeWorkItemRoutine(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PVOID Ctx)
 {
     NTSTATUS Status;
-    PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
+    PIRP_CONTEXT Context = (PIRP_CONTEXT)Ctx;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
-    // clear stall on BulkIn pipe
-    Status = USBSTOR_ResetPipeWithHandle(WorkItemData->Context->FDODeviceExtension->LowerDeviceObject, WorkItemData->Context->FDODeviceExtension->InterfaceInformation->Pipes[WorkItemData->Context->FDODeviceExtension->BulkInPipeIndex].PipeHandle);
+    // clear stall on the corresponding pipe
+    Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, Context->Urb.UrbBulkOrInterruptTransfer.PipeHandle);
     DPRINT1("USBSTOR_ResetPipeWithHandle Status %x\n", Status);
 
     // now resend the csw as the stall got cleared
-    USBSTOR_SendCSWRequest(WorkItemData->Context, WorkItemData->Irp);
+    USBSTOR_SendCSWRequest(Context, Context->Irp);
 }
 
 VOID
 NTAPI
-ErrorHandlerWorkItemRoutine(
-    PVOID Context)
+USBSTOR_ResetDeviceWorkItemRoutine(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PVOID Context)
 {
-    PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    UINT32 ix;
+    NTSTATUS Status;
+    KIRQL OldIrql;
 
-    if (WorkItemData->Context->ErrorIndex == 2)
+    DPRINT("USBSTOR_ResetDeviceWorkItemRoutine\n");
+
+    FDODeviceExtension = FdoDevice->DeviceExtension;
+
+    for (ix = 0; ix < 3; ++ix)
     {
-        // reset device
-        USBSTOR_HandleTransferError(WorkItemData->DeviceObject, WorkItemData->Context);
-    }
-    else
-    {
-        // clear stall
-        USBSTOR_ResetHandlerWorkItemRoutine(WorkItemData);
+        // first perform a mass storage reset step 1 in 5.3.4 USB Mass Storage Bulk Only Specification
+        Status = USBSTOR_ResetDevice(FDODeviceExtension->LowerDeviceObject, FDODeviceExtension);
+        if (NT_SUCCESS(Status))
+        {
+            // step 2 reset bulk in pipe section 5.3.4
+            Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkInPipeIndex].PipeHandle);
+            if (NT_SUCCESS(Status))
+            {
+                // finally reset bulk out pipe
+                Status = USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject, FDODeviceExtension->InterfaceInformation->Pipes[FDODeviceExtension->BulkOutPipeIndex].PipeHandle);
+                if (NT_SUCCESS(Status))
+                {
+                    break;
+                }
+            }
+        }
     }
 
-    // Free Work Item Data
-    ExFreePoolWithTag(WorkItemData, USB_STOR_TAG);
+    KeAcquireSpinLock(&FDODeviceExtension->CommonLock, &OldIrql);
+    FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
+    KeReleaseSpinLock(&FDODeviceExtension->CommonLock, OldIrql);
+
+    USBSTOR_QueueNextRequest(FdoDevice);
+}
+
+VOID
+NTAPI
+USBSTOR_QueueResetPipe(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP_CONTEXT Context)
+{
+    DPRINT("USBSTOR_QueueResetPipe\n");
+
+    IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
+                    USBSTOR_ResetPipeWorkItemRoutine,
+                    CriticalWorkQueue,
+                    Context);
+}
+
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
+{
+    KIRQL OldIrql;
+
+    DPRINT("USBSTOR_QueueResetDevice\n");
+
+    KeAcquireSpinLock(&FDODeviceExtension->CommonLock, &OldIrql);
+    FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
+    KeReleaseSpinLock(&FDODeviceExtension->CommonLock, OldIrql);
+
+    IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
+                    USBSTOR_ResetDeviceWorkItemRoutine,
+                    CriticalWorkQueue,
+                    NULL);
 }
 
 VOID
@@ -219,12 +213,12 @@ USBSTOR_TimerRoutine(
 
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
     DPRINT1("[USBSTOR] TimerRoutine entered\n");
-    DPRINT1("[USBSTOR] ActiveSrb %p ResetInProgress %x LastTimerActiveSrb %p\n", FDODeviceExtension->ActiveSrb, FDODeviceExtension->ResetInProgress, FDODeviceExtension->LastTimerActiveSrb);
+    // DPRINT1("[USBSTOR] ActiveSrb %p ResetInProgress %x LastTimerActiveSrb %p\n", FDODeviceExtension->ActiveSrb, FDODeviceExtension->ResetInProgress, FDODeviceExtension->LastTimerActiveSrb);
 
     KeAcquireSpinLockAtDpcLevel(&FDODeviceExtension->IrpListLock);
 
     // is there an active srb and no global reset is in progress
-    if (FDODeviceExtension->ActiveSrb && FDODeviceExtension->ResetInProgress == FALSE && FDODeviceExtension->TimerWorkQueueEnabled)
+    if (FDODeviceExtension->ActiveSrb && /* FDODeviceExtension->ResetInProgress == FALSE && */ FDODeviceExtension->TimerWorkQueueEnabled)
     {
         if (FDODeviceExtension->LastTimerActiveSrb != NULL && FDODeviceExtension->LastTimerActiveSrb == FDODeviceExtension->ActiveSrb)
         {

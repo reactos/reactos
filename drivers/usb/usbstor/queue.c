@@ -103,7 +103,7 @@ USBSTOR_QueueAddIrp(
     KeClearEvent(&FDODeviceExtension->NoPendingRequests);
 
     // check if queue is freezed
-    IrpListFreeze = FDODeviceExtension->IrpListFreeze;
+    IrpListFreeze = BooleanFlagOn(FDODeviceExtension->Flags, USBSTOR_FDO_FLAGS_IRP_LIST_FREEZE);
 
     KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
 
@@ -230,7 +230,7 @@ USBSTOR_QueueNextRequest(
 
     // check first if there's already a request pending or the queue is frozen
     if (FDODeviceExtension->ActiveSrb != NULL ||
-        FDODeviceExtension->IrpListFreeze)
+        BooleanFlagOn(FDODeviceExtension->Flags, USBSTOR_FDO_FLAGS_IRP_LIST_FREEZE))
     {
         // no work to do yet
         return;
@@ -274,7 +274,7 @@ USBSTOR_QueueRelease(
     KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
 
     // clear freezed status
-    FDODeviceExtension->IrpListFreeze = FALSE;
+    FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_IRP_LIST_FREEZE;
 
     KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
 
@@ -302,6 +302,7 @@ USBSTOR_StartIo(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     KIRQL OldLevel;
@@ -332,26 +333,26 @@ USBSTOR_StartIo(
 
     IoReleaseCancelSpinLock(OldLevel);
 
-    KeAcquireSpinLock(&FDODeviceExtension->IrpListLock, &OldLevel);
-
-    ResetInProgress = FDODeviceExtension->ResetInProgress;
-    ASSERT(ResetInProgress == FALSE);
-
-    KeReleaseSpinLock(&FDODeviceExtension->IrpListLock, OldLevel);
+    KeAcquireSpinLock(&FDODeviceExtension->CommonLock, &OldLevel);
+    ResetInProgress = BooleanFlagOn(FDODeviceExtension->Flags, USBSTOR_FDO_FLAGS_DEVICE_RESETTING);
+    KeReleaseSpinLock(&FDODeviceExtension->CommonLock, OldLevel);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    Request = IoStack->Parameters.Scsi.Srb;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
-    // TODO: this condition is always false
     if (ResetInProgress)
     {
         // hard reset is in progress
+        Request->SrbStatus = SRB_STATUS_NO_DEVICE;
+        Request->DataTransferLength = 0;
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
         USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        USBSTOR_QueueNextRequest(DeviceObject);
         return;
     }
 

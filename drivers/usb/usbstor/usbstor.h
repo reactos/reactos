@@ -25,6 +25,10 @@
                   ((((unsigned long)(n) & 0xFF0000)) >> 8) | \
                   ((((unsigned long)(n) & 0xFF000000)) >> 24))
 
+#ifndef BooleanFlagOn
+#define BooleanFlagOn(Flags, SingleFlag) ((BOOLEAN)((((Flags) & (SingleFlag)) != 0)))
+#endif
+
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 
@@ -33,6 +37,9 @@ typedef struct __COMMON_DEVICE_EXTENSION__
     BOOLEAN IsFDO;
 
 }USBSTOR_COMMON_DEVICE_EXTENSION, *PUSBSTOR_COMMON_DEVICE_EXTENSION;
+
+#define USBSTOR_FDO_FLAGS_DEVICE_RESETTING   0x00000001 // hard reset is in progress
+#define USBSTOR_FDO_FLAGS_IRP_LIST_FREEZE    0x00000002 // the irp list is freezed
 
 typedef struct
 {
@@ -53,8 +60,6 @@ typedef struct
     PDEVICE_OBJECT ChildPDO[16];                                                         // max 16 child pdo devices
     KSPIN_LOCK IrpListLock;                                                              // irp list lock
     LIST_ENTRY IrpListHead;                                                              // irp list head
-    BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
-    BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
     PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
     KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
@@ -62,6 +67,9 @@ typedef struct
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
     ULONG InstanceCount;                                                                 // pdo instance count
+    KSPIN_LOCK CommonLock;
+    PIO_WORKITEM ResetDeviceWorkItem;
+    ULONG Flags;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -462,18 +470,6 @@ USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 VOID
-NTAPI
-ErrorHandlerWorkItemRoutine(
-	PVOID Context);
-
-VOID
-NTAPI
-ResetHandlerWorkItemRoutine(
-    PVOID Context);
-
-
-
-VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject);
 
@@ -499,5 +495,16 @@ NTAPI
 USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
      PVOID Context);
+
+VOID
+NTAPI
+USBSTOR_QueueResetPipe(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP_CONTEXT Context);
+
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 #endif /* _USBSTOR_H_ */
