@@ -134,7 +134,7 @@ IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
 
     CurrentTeb->glCurrentRC = hglrc;
     CurrentTeb->glReserved2 = hdc;
-    CurrentTeb->glContext = dc_data;
+    CurrentTeb->glSectionInfo = dc_data;
 }
 
 FORCEINLINE
@@ -155,21 +155,21 @@ static inline
 struct wgl_dc_data*
 IntGetCurrentDcData(void)
 {
-    return NtCurrentTeb()->glContext;
+    return NtCurrentTeb()->glSectionInfo;
 }
 
 FORCEINLINE
 void
 IntSetCurrentICDPrivate(void* value)
 {
-    NtCurrentTeb()->glReserved1[0] = (ULONG_PTR)value;
+    NtCurrentTeb()->glContext = value;
 }
 
 FORCEINLINE
 void*
 IntGetCurrentICDPrivate(void)
 {
-    return (void*)NtCurrentTeb()->glReserved1[0];
+    return (void*)NtCurrentTeb()->glContext;
 }
 
 FORCEINLINE
