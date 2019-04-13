@@ -129,6 +129,7 @@ USBSTOR_FdoHandleStartDevice(
     PUSB_INTERFACE_DESCRIPTOR InterfaceDesc;
     NTSTATUS Status;
     UCHAR Index = 0;
+    PIO_WORKITEM WorkItem;
 
     // forward irp to lower device
     Status = USBSTOR_SyncForwardIrp(DeviceExtension->LowerDeviceObject, Irp);
@@ -136,6 +137,17 @@ USBSTOR_FdoHandleStartDevice(
     {
         DPRINT1("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);
         return Status;
+    }
+
+    if (!DeviceExtension->ResetDeviceWorkItem)
+    {
+        WorkItem = IoAllocateWorkItem(DeviceObject);
+        DeviceExtension->ResetDeviceWorkItem = WorkItem;
+
+        if (!WorkItem)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
     // initialize irp queue
