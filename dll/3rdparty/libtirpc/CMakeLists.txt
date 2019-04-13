@@ -6,6 +6,11 @@ add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup -D_CRT_NONSTDC_NO_
 
 include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 
+if(MSVC)
+    # error C4133: '=': incompatible types - from 'char *' to 'int32_t *'
+    replace_compile_flags("/we4133" " ")
+endif()
+
 list(APPEND SOURCE
     src/asprintf.c
 #    src/auth_des.c
