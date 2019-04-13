@@ -602,9 +602,8 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
 
-; win32k GRE initialization
+; Win32k GRE initialization
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize","MS Shell Dlg",0x00000002,"Microsoft Sans Serif"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize","FIXEDFON.FON",0x00000002,"vgafix.fon"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize","FONTS.FON",0x00000002,"vgasys.fon"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize","OEMFONT.FON",0x00000002,"vgaoem.fon"
