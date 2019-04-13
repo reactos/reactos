@@ -336,6 +336,39 @@ SharedFace_Release(PSHARED_FACE Ptr)
     IntUnLockFreeType();
 }
 
+
+static __inline void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
+{
+    pt->x.value = vec->x >> 6;
+    pt->x.fract = (vec->x & 0x3f) << 10;
+    pt->x.fract |= ((pt->x.fract >> 6) | (pt->x.fract >> 12));
+    pt->y.value = vec->y >> 6;
+    pt->y.fract = (vec->y & 0x3f) << 10;
+    pt->y.fract |= ((pt->y.fract >> 6) | (pt->y.fract >> 12));
+}
+
+/*
+   This function builds an FT_Fixed from a float. It puts the integer part
+   in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
+   It fails if the integer part of the float number is greater than SHORT_MAX.
+*/
+static __inline FT_Fixed FT_FixedFromFloat(FLOAT f)
+{
+    short value = f;
+    unsigned short fract = (f - value) * 0xFFFF;
+    return (FT_Fixed)((long)value << 16 | (unsigned long)fract);
+}
+
+/*
+   This function builds an FT_Fixed from a FIXED. It simply put f.value
+   in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
+*/
+static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
+{
+    return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
+}
+
+
 #if DBG
 VOID DumpFontGDI(PFONTGDI FontGDI)
 {
@@ -685,10 +718,11 @@ VOID FASTCALL IntWidthMatrix(FT_Face face, FT_Matrix *pmat, LONG lfWidth)
 
 VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
-    double radian = (lfEscapement * M_PI) / 180 / 10;
-
-    pmat->xx = (FT_Fixed)(cos(radian) * (1 << 16));
-    pmat->xy = (FT_Fixed)(-sin(radian) * (1 << 16));
+    FT_Vector vecAngle;
+    FT_Angle angle = FT_FixedFromFloat((FLOAT)(lfEscapement * M_PI) / (FLOAT)(180 * 10));
+    FT_Vector_Unit(&vecAngle, angle);
+    pmat->xx = vecAngle.x;
+    pmat->xy = -vecAngle.y;
     pmat->yx = -pmat->xy;
     pmat->yy = pmat->xx;
 }
@@ -2970,37 +3004,6 @@ ftGdiGlyphCacheSet(
 }
 
 
-static void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
-{
-    pt->x.value = vec->x >> 6;
-    pt->x.fract = (vec->x & 0x3f) << 10;
-    pt->x.fract |= ((pt->x.fract >> 6) | (pt->x.fract >> 12));
-    pt->y.value = vec->y >> 6;
-    pt->y.fract = (vec->y & 0x3f) << 10;
-    pt->y.fract |= ((pt->y.fract >> 6) | (pt->y.fract >> 12));
-}
-
-/*
-   This function builds an FT_Fixed from a float. It puts the integer part
-   in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
-   It fails if the integer part of the float number is greater than SHORT_MAX.
-*/
-static __inline FT_Fixed FT_FixedFromFloat(float f)
-{
-    short value = f;
-    unsigned short fract = (f - value) * 0xFFFF;
-    return (FT_Fixed)((long)value << 16 | (unsigned long)fract);
-}
-
-/*
-   This function builds an FT_Fixed from a FIXED. It simply put f.value
-   in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
-*/
-static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
-{
-    return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
-}
-
 static unsigned int get_native_glyph_outline(FT_Outline *outline, unsigned int buflen, char *buf)
 {
     TTPOLYGONHEADER *pph;
@@ -3545,7 +3548,7 @@ ftGdiGetGlyphOutline(
     if (aveWidth && potm)
     {
         widthRatio = (FLOAT)aveWidth * eM11 /
-                     (FLOAT) potm->otmTextMetrics.tmAveCharWidth;
+                     (FLOAT)potm->otmTextMetrics.tmAveCharWidth;
     }
 
     left = (INT)(ft_face->glyph->metrics.horiBearingX * widthRatio) & -64;
@@ -3594,7 +3597,7 @@ ftGdiGetGlyphOutline(
         FT_Matrix rotationMat;
         FT_Vector vecAngle;
         DPRINT("Rotation Trans!\n");
-        angle = FT_FixedFromFloat((float)orientation / 10.0);
+        angle = FT_FixedFromFloat((FLOAT)orientation / 10.0);
         FT_Vector_Unit(&vecAngle, angle);
         rotationMat.xx = vecAngle.x;
         rotationMat.xy = -vecAngle.y;
