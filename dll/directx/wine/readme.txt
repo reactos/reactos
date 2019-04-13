@@ -2,7 +2,7 @@ This Is wine DirectX support.
 It works in reactos and windows
 When ReactOS own ReactX are inplace 
 this file will be remove from our SVN
-for now they stay as tempary sovlotions
+for now they stay as temporary solutions
 
 
 People that have help getting this thing 
