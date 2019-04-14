@@ -97,6 +97,13 @@ MACRO(EnterTrap, Flags)
         mov [rbp + KTRAP_FRAME_SegGs], gs
     endif
 
+#if DBG
+    mov ecx, MSR_GS_BASE
+    rdmsr
+    mov [rbp + KTRAP_FRAME_GsBase], eax
+    mov [rbp + KTRAP_FRAME_GsBase + 4], edx
+#endif
+
     /* Save previous mode and check if it was user mode */
     mov ax, [rbp + KTRAP_FRAME_SegCs]
     and al, 1
