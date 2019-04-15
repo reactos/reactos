@@ -134,11 +134,11 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     HANDLE KeyHandle;
     UNICODE_STRING HivePath;
     PWCHAR FilePath;
-    UCHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
-    ULONG Length = sizeof(Buffer);
-    POBJECT_NAME_INFORMATION FileNameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+    ULONG Length;
+    POBJECT_NAME_INFORMATION FileNameInfo;
 
     HivePath.Buffer = NULL;
+    FileNameInfo = NULL;
 
     /* Create or open the hive list key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -172,6 +172,27 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     /* Get the name of the corresponding file */
     if (!(Hive->Hive.HiveFlags & HIVE_VOLATILE))
     {
+        /* Determine the right buffer size and allocate */
+        Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
+                               ObjectNameInformation,
+                               NULL,
+                               0,
+                               &Length);
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            DPRINT1("CmpAddToHiveFileList: Hive file name size query failed, status = 0x%08lx\n", Status);
+            goto Quickie;
+        }
+
+        FileNameInfo = ExAllocatePoolWithTag(PagedPool,
+                                             Length + sizeof(UNICODE_NULL),
+                                             TAG_CM);
+        if (FileNameInfo == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quickie;
+        }
+    
         /* Try to get the value */
         Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
                                ObjectNameInformation,
@@ -215,7 +236,14 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
 
 Quickie:
     /* Cleanup and return status */
-    if (HivePath.Buffer) ExFreePoolWithTag(HivePath.Buffer, TAG_CM);
+    if (HivePath.Buffer)
+    {
+        ExFreePoolWithTag(HivePath.Buffer, TAG_CM);
+    }
+    if (FileNameInfo)
+    {
+        ExFreePoolWithTag(FileNameInfo, TAG_CM);
+    }
     ObCloseHandle(KeyHandle, KernelMode);
     return Status;
 }
