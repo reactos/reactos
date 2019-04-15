@@ -35,7 +35,8 @@ protected:
     err_types error;
     enc_types encoding;
     bom_types bom_type;
-    unsigned char buffer[4], fill, index; // need 4 char buffer for optional BOM handling
+    unsigned char buffer[4], index; // need 4 char buffer for optional BOM handling
+    std::streamsize fill;
     fstream inputfile,outputfile;
     static const unsigned char utf8table[64];
 public:
@@ -75,7 +76,7 @@ public:
         valid values are 0xef, 0xff, 0xfe, 0x00
         */
         inputfile.read(reinterpret_cast<char*>(&buffer),4);
-        fill =inputfile.gcount();
+        fill = inputfile.gcount();
         // stupid utf8 bom
         if ((fill > 2) &&
             (buffer[0] == 0xef) &&
@@ -135,7 +136,7 @@ public:
         }
         return utf8; // no valid bom so use utf8 as default
     }
-    int getByte(unsigned char &c)
+    std::streamsize getByte(unsigned char &c)
     {
         if (fill)
         {
@@ -149,7 +150,7 @@ public:
             return inputfile.gcount();
         }
     }
-    int getWord(unsigned short &w)
+    std::streamsize getWord(unsigned short &w)
     {
         unsigned char c[2];
         if (!getByte(c[0]))
@@ -162,7 +163,7 @@ public:
             w = c[1] | (c[0] << 8);
         return 2;
     }
-    int getDWord(wchar_t &d)
+    std::streamsize getDWord(wchar_t &d)
     {
         unsigned char c[4];
         for (int i=0;i<4;i++)

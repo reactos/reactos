@@ -132,7 +132,7 @@ BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format
     va_list ArgList;
     const char* LevelStr;
 
-    if (Level > g_ShimDebugLevel)
+    if ((ULONG)Level > g_ShimDebugLevel)
         return FALSE;
 
     switch (Level)

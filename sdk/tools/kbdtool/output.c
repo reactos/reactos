@@ -855,7 +855,7 @@ kbd_c(IN ULONG StateCount,
             if (i >= 1)
             {
                 /* J is the loop variable, K is the double */
-                for (NeedPlus = 0, j = 0, k = 1; (1 << j) <= i; j++, k = (1 << j))
+                for (NeedPlus = 0, j = 0, k = 1; (1u << j) <= i; j++, k = (1 << j))
                 {
                     /* Do we need to add a plus? */
                     if (NeedPlus)

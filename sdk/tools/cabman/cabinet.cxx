@@ -3106,7 +3106,7 @@ ULONG CCabinet::GetFileTimes(FILE* FileHandle, PCFFILE_NODE File)
 {
 #if defined(_WIN32)
     FILETIME FileTime;
-    HANDLE FileNo = (HANDLE)_fileno(FileHandle);
+    HANDLE FileNo = UlongToHandle(_fileno(FileHandle));
 
     if (GetFileTime(FileNo, NULL, NULL, &FileTime))
         FileTimeToDosDateTime(&FileTime,

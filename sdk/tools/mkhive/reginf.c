@@ -345,7 +345,7 @@ do_reg_operation(
                                0,
                                Type,
                                (PVOID)Str,
-                               Size * sizeof(WCHAR));
+                               (ULONG)(Size * sizeof(WCHAR)));
             }
             else
             {
@@ -372,7 +372,7 @@ do_reg_operation(
             if (Data == NULL)
                 return FALSE;
 
-            DPRINT("setting binary data '%S' len %d\n", ValueName, Size);
+            DPRINT("setting binary data '%S' len %d\n", ValueName, (ULONG)Size);
             InfHostGetBinaryField(Context, 5, Data, Size, NULL);
         }
 
@@ -381,7 +381,7 @@ do_reg_operation(
                        0,
                        Type,
                        (PVOID)Data,
-                       Size);
+                       (ULONG)Size);
 
         free(Data);
     }

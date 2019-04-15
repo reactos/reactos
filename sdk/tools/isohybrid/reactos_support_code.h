@@ -9,10 +9,14 @@
 #ifdef _WIN32
 #include <malloc.h>
 #include <windows.h>
+#include <process.h>
+#include <io.h>
 #else
 #include <alloca.h>
 #include <unistd.h>
 #endif
+
+#include "../port/port.h"
 
 // isotypes.h would provide these, but it's not available on MSVC < 2013.
 typedef unsigned char uint8_t;
@@ -28,30 +32,6 @@ void isohybrid_warning(const char* fmt, ...);
 #define warn(...)  isohybrid_warning(__VA_ARGS__)
 #define warnx(...) isohybrid_warning(__VA_ARGS__)
 
-
-/////////////////////////////////////////////////////////////////////////////
-// getopt code from mingw-w64
-/////////////////////////////////////////////////////////////////////////////
-extern int optopt;		/* single option character, as parsed     */
-extern char *optarg;		/* pointer to argument of current option  */
-
-struct option		/* specification for a long form option...	*/
-{
-    const char *name;		/* option name, without leading hyphens */
-    int         has_arg;		/* does it take an argument?		*/
-    int        *flag;		/* where to save its status, or NULL	*/
-    int         val;		/* its associated status value		*/
-};
-
-enum    		/* permitted values for its `has_arg' field...	*/
-{
-    no_argument = 0,      	/* option never takes an argument	*/
-    required_argument,		/* option always requires an argument	*/
-    optional_argument		/* option may take an argument		*/
-};
-
-int getopt_long_only(int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx);
-/////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
 int fsync(int fd);
