@@ -469,8 +469,7 @@ int vsnprintfW(WCHAR *str, size_t len, const WCHAR *format, va_list valist)
                 /* FIXME: for unrecognised types, should ignore % when printing */
                 char *bufaiter = bufa;
                 if (*iter == 'p')
-                    sprintf(bufaiter, "%0*lX", 2 * (int)sizeof(void*),
-                            (unsigned long)va_arg(valist, void *));
+                    sprintf(bufaiter, "%p", va_arg(valist, void*));
                 else
                 {
                     *fmta++ = *iter;

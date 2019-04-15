@@ -16,7 +16,7 @@ HvpAddBin(
 {
     PHMAP_ENTRY BlockList;
     PHBIN Bin;
-    SIZE_T BinSize;
+    ULONG BinSize;
     ULONG i;
     ULONG BitmapSize;
     ULONG BlockCount;

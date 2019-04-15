@@ -18,7 +18,7 @@ InfHostWriteFile(HINF InfHandle,
                  const CHAR *HeaderComment)
 {
   WCHAR *Buffer;
-  ULONG BufferSize;
+  SIZE_T BufferSize;
   INFSTATUS Status;
   FILE *File;
 

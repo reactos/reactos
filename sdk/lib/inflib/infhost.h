@@ -45,21 +45,21 @@ extern LONG InfHostGetFieldCount(PINFCONTEXT Context);
 extern int InfHostGetBinaryField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
                                  UCHAR *ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 ULONG *RequiredSize);
+                                 SIZE_T ReturnBufferSize,
+                                 PSIZE_T RequiredSize);
 extern int InfHostGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
                               INT *IntegerValue);
 extern int InfHostGetMultiSzField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
                                   WCHAR *ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  ULONG *RequiredSize);
+                                  SIZE_T ReturnBufferSize,
+                                  PSIZE_T RequiredSize);
 extern int InfHostGetStringField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
                                  WCHAR *ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 ULONG *RequiredSize);
+                                 SIZE_T ReturnBufferSize,
+                                 PSIZE_T RequiredSize);
 extern int InfHostGetData(PINFCONTEXT Context,
                           WCHAR **Key,
                           WCHAR **Data);

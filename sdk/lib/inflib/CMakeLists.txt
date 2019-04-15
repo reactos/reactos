@@ -21,7 +21,7 @@ else()
         infhostput.c
         infhostrtl.c)
 
-    add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST)
+    add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST -D_CRT_SECURE_NO_WARNINGS)
     add_library(inflibhost ${SOURCE})
 
     if(NOT MSVC)

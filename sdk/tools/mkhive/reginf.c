@@ -124,7 +124,7 @@ append_multi_sz_value(
     IN HKEY KeyHandle,
     IN PCWSTR ValueName,
     IN PCWSTR Strings,
-    IN ULONG StringSize) // In characters
+    IN SIZE_T StringSize) // In characters
 {
     ULONG Size, Total;   // In bytes
     ULONG Type;
@@ -204,7 +204,7 @@ do_reg_operation(
 {
     WCHAR EmptyStr = 0;
     ULONG Type;
-    ULONG Size;
+    SIZE_T Size;
     LONG Error;
 
     if (Flags & (FLG_ADDREG_DELREG_BIT | FLG_ADDREG_DELVAL))  /* deletion */
@@ -345,7 +345,7 @@ do_reg_operation(
                                0,
                                Type,
                                (PVOID)Str,
-                               Size * sizeof(WCHAR));
+                               (ULONG)(Size * sizeof(WCHAR)));
             }
             else
             {
@@ -372,7 +372,7 @@ do_reg_operation(
             if (Data == NULL)
                 return FALSE;
 
-            DPRINT("setting binary data '%S' len %d\n", ValueName, Size);
+            DPRINT("setting binary data '%S' len %d\n", ValueName, (ULONG)Size);
             InfHostGetBinaryField(Context, 5, Data, Size, NULL);
         }
 
@@ -381,7 +381,7 @@ do_reg_operation(
                        0,
                        Type,
                        (PVOID)Data,
-                       Size);
+                       (ULONG)Size);
 
         free(Data);
     }

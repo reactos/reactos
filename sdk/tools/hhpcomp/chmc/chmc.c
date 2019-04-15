@@ -30,6 +30,10 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __REACTOS__
+#include <io.h>
+int mkstemps(char* template, int suffix_len);
+#endif /* __REACTOS__ */
 #else
 #ifdef __REACTOS__
 #include <sys/types.h>

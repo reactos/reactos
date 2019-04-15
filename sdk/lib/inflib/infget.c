@@ -371,8 +371,8 @@ INFSTATUS
 InfpGetBinaryField(PINFCONTEXT Context,
                    ULONG FieldIndex,
                    PUCHAR ReturnBuffer,
-                   ULONG ReturnBufferSize,
-                   PULONG RequiredSize)
+                   SIZE_T ReturnBufferSize,
+                   PSIZE_T RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
@@ -470,8 +470,8 @@ INFSTATUS
 InfpGetMultiSzField(PINFCONTEXT Context,
                     ULONG FieldIndex,
                     PWSTR ReturnBuffer,
-                    ULONG ReturnBufferSize,
-                    PULONG RequiredSize)
+                    SIZE_T ReturnBufferSize,
+                    PSIZE_T RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
@@ -539,8 +539,8 @@ INFSTATUS
 InfpGetStringField(PINFCONTEXT Context,
                    ULONG FieldIndex,
                    PWSTR ReturnBuffer,
-                   ULONG ReturnBufferSize,
-                   PULONG RequiredSize)
+                   SIZE_T ReturnBufferSize,
+                   PSIZE_T RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
