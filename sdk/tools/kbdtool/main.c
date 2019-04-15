@@ -61,7 +61,8 @@ INT
 main(INT argc,
      PCHAR* argv)
 {
-    ULONG i, ErrorCode, FailureCode;
+    int i;
+    ULONG ErrorCode, FailureCode;
     CHAR Option;
     PCHAR OpenFlags;
     CHAR BuildOptions[16] = {0};

@@ -16,7 +16,7 @@ HvpAddBin(
 {
     PHMAP_ENTRY BlockList;
     PHBIN Bin;
-    SIZE_T BinSize;
+    ULONG BinSize;
     ULONG i;
     ULONG BitmapSize;
     ULONG BlockCount;
@@ -24,7 +24,7 @@ HvpAddBin(
     PHCELL Block;
 
     BinSize = ROUND_UP(Size + sizeof(HBIN), HBLOCK_SIZE);
-    BlockCount = (ULONG)(BinSize / HBLOCK_SIZE);
+    BlockCount = BinSize / HBLOCK_SIZE;
 
     Bin = RegistryHive->Allocate(BinSize, TRUE, TAG_CM);
     if (Bin == NULL)
@@ -34,7 +34,7 @@ HvpAddBin(
     Bin->Signature = HV_HBIN_SIGNATURE;
     Bin->FileOffset = RegistryHive->Storage[Storage].Length *
                       HBLOCK_SIZE;
-    Bin->Size = (ULONG)BinSize;
+    Bin->Size = BinSize;
 
     /* Allocate new block list */
     OldBlockListSize = RegistryHive->Storage[Storage].Length;
