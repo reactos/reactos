@@ -2793,7 +2793,9 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     }
 
     /* Allocate a buffer we'll use for names */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   MAXIMUM_FILENAME_LENGTH,
+                                   TAG_LDR_WSTR);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Check for a separator */

@@ -735,7 +735,9 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
     PVOID DriverBase = LdrEntry->DllBase;
 
     /* Allocate a buffer we'll use for names */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   MAXIMUM_FILENAME_LENGTH,
+                                   TAG_LDR_WSTR);
     if (!Buffer)
     {
         /* Fail */
