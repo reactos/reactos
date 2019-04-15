@@ -34,7 +34,7 @@ typedef struct tagKEYNAME
 typedef struct tagSCVK
 {
     USHORT ScanCode;
-    USHORT VirtualKey;
+    UCHAR VirtualKey;
     PCHAR Name;
     BOOLEAN Processed;
 } SCVK, *PSCVK;

@@ -26,16 +26,15 @@
 #include <string.h>
 #include <assert.h>
 
-#if defined(_WIN32) || defined(__APPLE__)
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "../../port/port.h"
+
+#ifdef _WIN32
+    #include <io.h>
 #else
-#ifdef __REACTOS__
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif /* __REACTOS__ */
-#include <unistd.h>
+    #include <unistd.h>
 #endif
 
 #include "err.h"

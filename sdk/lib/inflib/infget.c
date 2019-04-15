@@ -582,7 +582,7 @@ InfpGetStringField(PINFCONTEXT Context,
                               0);
 
   if (RequiredSize != NULL)
-    *RequiredSize = Size + 1;
+    *RequiredSize = (ULONG)Size + 1;
 
   if (ReturnBuffer != NULL)
     {

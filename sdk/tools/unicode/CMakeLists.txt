@@ -84,3 +84,14 @@ list(APPEND SOURCE
     wctype.c)
 
 add_library(unicode ${SOURCE})
+
+if(MSVC)
+    # Disable warning "'<': signed/unsigned mismatch"
+    add_target_compile_flags(unicode "/wd4018")
+
+    # Disable warning "unary minus operator applied to unsigned type, result still unsigned"
+    add_target_compile_flags(unicode "/wd4146")
+
+    # Disable warning "conversion from 'const WCHAR' to 'char', possible loss of data"
+    add_target_compile_flags(unicode "/wd4244")
+endif()
