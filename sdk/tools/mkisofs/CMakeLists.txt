@@ -88,7 +88,20 @@ if(MSVC)
     if (ARCH STREQUAL "amd64")
         # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
         add_target_compile_flags(mkisofs "/wd4267")
+
+        # Disable warning "'type cast': pointer truncation from 'const char *' to 'long'"
+        add_target_compile_flags(libschily "/wd4311")
     endif()
+
+    # Disable warning "'<': signed/unsigned mismatch"
+    add_target_compile_flags(mkisofs "/wd4018")
+
+    # Disable warning "'nchar': unreferenced local variable"
+    add_target_compile_flags(mkisofs "/wd4101")
+
+    # Disable warning "'+=': conversion from 'x' to 'y', possible loss of data"
+    add_target_compile_flags(libschily "/wd4244")
+    add_target_compile_flags(mkisofs "/wd4244")
 else()
     # libschily implements an own printf function with support for the %r formatter.
     # Silence compilers checking for invalid formatting sequences.

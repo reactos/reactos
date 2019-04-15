@@ -57,12 +57,12 @@ uint8_t mode = 0;
 enum { VERBOSE = 1 , EFI = 2 , MAC = 4};
 
 /* user options */
-uint16_t head = 64;             /* 1 <= head <= 256 */
-uint8_t sector = 32;            /* 1 <= sector <= 63  */
+uint32_t head = 64;             /* 1 <= head <= 256 */
+uint32_t sector = 32;           /* 1 <= sector <= 63  */
 
-uint8_t entry = 0;              /* partition number: 1 <= entry <= 4 */
-uint8_t offset = 0;             /* partition offset: 0 <= offset <= 64 */
-uint16_t type = 0x17;           /* partition type: 0 <= type <= 255 */
+uint32_t entry = 0;             /* partition number: 1 <= entry <= 4 */
+uint32_t offset = 0;            /* partition offset: 0 <= offset <= 64 */
+uint32_t type = 0x17;           /* partition type: 0 <= type <= 255 */
 uint32_t id = 0;                /* MBR: 0 <= id <= 0xFFFFFFFF(4294967296) */
 
 uint8_t hd0 = 0;                /* 0 <= hd0 <= 2 */
@@ -994,7 +994,7 @@ main(int argc, char *argv[])
 	errx(1, "%s: --offset is invalid with UEFI images\n", argv[0]);
 #endif
 
-    srand(time(NULL) << (getppid() << getpid()));
+    srand((unsigned int)time(NULL) << (getppid() << getpid()));
 
     if (!(fp = fopen(argv[0], "rb+")))
         err(1, "could not open file `%s'", argv[0]);

@@ -9,6 +9,8 @@
 #ifdef _WIN32
 #include <malloc.h>
 #include <windows.h>
+#include <process.h>
+#include <io.h>
 #else
 #include <alloca.h>
 #include <unistd.h>

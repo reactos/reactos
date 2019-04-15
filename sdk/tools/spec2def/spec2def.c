@@ -500,7 +500,7 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
         {
             /* Skip leading underscore and remove trailing decoration */
             pcName++;
-            nNameLength = pcAt - pcName;
+            nNameLength = (int)(pcAt - pcName);
         }
 
         /* Print the undecorated function name */
@@ -515,7 +515,7 @@ PrintName(FILE *fileDest, EXPORT *pexp, PSTRING pstr, int fDeco)
         if (pcDot)
         {
             /* First print the dll name, followed by a dot */
-            nNameLength = pcDot - pcName;
+            nNameLength = (int)(pcDot - pcName);
             fprintf(fileDest, "%.*s.", nNameLength, pcName);
 
             /* Now the actual function name */
