@@ -1,4 +1,7 @@
 
+add_definitions(
+    -D_ATL_NO_EXCEPTIONS)
+
 set_cpp(WITH_RUNTIME)
 
 spec2def(shell32_apitest.exe shell32_apitest.spec)

@@ -1,7 +1,7 @@
 #ifndef _SHELLTEST_H_
 #define _SHELLTEST_H_
 
-#define _INC_WINDOWS
+//#define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
 #include <ntstatus.h>
