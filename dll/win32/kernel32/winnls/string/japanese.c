@@ -82,10 +82,13 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
         if (lstrcmpiW(szName, L"InitialEraYear") == 0)
         {
             s_bFirstIsGannen = (szValue[0] == 0x5143);
-            s_bIsCached = TRUE;
             break;
         }
     }
+
+    NtClose(KeyHandle);
+
+    s_bIsCached = TRUE;
 
     return s_bFirstIsGannen;
 #endif
