@@ -1,3 +1,9 @@
+project(SHELL)
+
+add_definitions(
+    -DUNICODE
+    -D_UNICODE
+    -D_ATL_NO_EXCEPTIONS)
 
 list(APPEND SOURCE
     recyclebin.c
