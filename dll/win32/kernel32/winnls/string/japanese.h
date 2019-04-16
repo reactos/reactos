@@ -18,4 +18,5 @@ typedef struct JAPANESE_ERA
 } JAPANESE_ERA, *PJAPANESE_ERA;
 typedef const JAPANESE_ERA *PCJAPANESE_ERA;
 
+BOOL JapaneseEra_IsFirstYearGannen(void);
 PCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL);

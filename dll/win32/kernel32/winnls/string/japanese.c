@@ -53,6 +53,44 @@ static INT JapaneseEra_Compare(const void *e1, const void *e2)
     return 0;
 }
 
+BOOL JapaneseEra_IsFirstYearGannen(void)
+{
+#ifdef DONT_USE_REGISTRY
+    return TRUE;
+#else
+    HANDLE KeyHandle;
+    DWORD dwIndex;
+    WCHAR szName[32], szValue[32];
+    static BOOL s_bIsCached = FALSE, s_bFirstIsGannen = TRUE;
+
+    if (s_bIsCached)
+        return s_bFirstIsGannen;
+
+    KeyHandle = NLS_RegOpenKey(NULL, L"\\Registry\\Machine\\System\\"
+        L"CurrentControlSet\\Control\\Nls\\Calendars\\Japanese");
+    if (!KeyHandle)
+        return TRUE;
+
+    for (dwIndex = 0; dwIndex < 16; ++dwIndex)
+    {
+        if (!NLS_RegEnumValue(KeyHandle, dwIndex, szName, sizeof(szName),
+                              szValue, sizeof(szValue)))
+        {
+            break;
+        }
+
+        if (lstrcmpiW(szName, L"InitialEraYear") == 0)
+        {
+            s_bFirstIsGannen = (szValue[0] == 0x5143);
+            s_bIsCached = TRUE;
+            break;
+        }
+    }
+
+    return s_bFirstIsGannen;
+#endif
+}
+
 /* 
  * SEE ALSO:
  * https://en.wikipedia.org/wiki/Japanese_era_name
@@ -61,7 +99,7 @@ static INT JapaneseEra_Compare(const void *e1, const void *e2)
 static PCJAPANESE_ERA JapaneseEra_Load(DWORD *pdwCount)
 {
 #ifndef DONT_USE_REGISTRY
-    HANDLE KeyHandle = NULL;
+    HANDLE KeyHandle;
     DWORD dwIndex;
     WCHAR szName[128], szValue[128];
     JAPANESE_ERA *pEntry;

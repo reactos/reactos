@@ -625,7 +625,15 @@ static INT NLS_GetDateTimeFormatW(LCID lcid, DWORD dwFlags,
                 {
                     count = 2;
                 }
+
                 dwVal = lpTime->wYear - pEra->wYear + 1;
+
+                if (dwVal == 1 && JapaneseEra_IsFirstYearGannen())
+                {
+                    // Gan of 'Gannen'
+                    buff[0] = 0x5143;
+                    buff[1] = 0;
+                }
                 szAdd = buff;
                 break;
             }
