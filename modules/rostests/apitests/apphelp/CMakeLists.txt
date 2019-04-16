@@ -1,5 +1,12 @@
 project(appcompat)
-add_definitions(-D__ROS_LONG64__ -DWINETEST_USE_DBGSTR_LONGLONG -DUNICODE -D_UNICODE)
+
+add_definitions(
+    -D__ROS_LONG64__
+    -DWINETEST_USE_DBGSTR_LONGLONG
+    -DUNICODE
+    -D_UNICODE
+    -D_ATL_NO_EXCEPTIONS)
+
 set_cpp(WITH_RUNTIME)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl
