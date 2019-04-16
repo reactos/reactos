@@ -152,10 +152,10 @@ int __inline call_unwind_func( int (*func)(void), void *_ebp )
 #pragma warning(pop)
 #endif
 
-static DWORD MSVCRT_nested_handler(PEXCEPTION_RECORD rec,
-                                   EXCEPTION_REGISTRATION_RECORD* frame,
-                                   PCONTEXT context,
-                                   EXCEPTION_REGISTRATION_RECORD** dispatch)
+static DWORD NTAPI MSVCRT_nested_handler(PEXCEPTION_RECORD rec,
+                                         EXCEPTION_REGISTRATION_RECORD* frame,
+                                         PCONTEXT context,
+                                         EXCEPTION_REGISTRATION_RECORD** dispatch)
 {
   if (!(rec->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND)))
     return ExceptionContinueSearch;
@@ -171,7 +171,7 @@ void msvcrt_local_unwind4( ULONG *cookie, MSVCRT_EXCEPTION_FRAME* frame, int try
     TRACE("(%p,%d,%d)\n",frame, frame->trylevel, trylevel);
 
     /* Register a handler in case of a nested exception */
-    reg.Handler = (PEXCEPTION_ROUTINE)MSVCRT_nested_handler;
+    reg.Handler = MSVCRT_nested_handler;
     reg.Prev = NtCurrentTeb()->NtTib.ExceptionList;
     __wine_push_frame(&reg);
 
