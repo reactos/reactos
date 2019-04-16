@@ -28,6 +28,9 @@
 DEBUG_CHANNEL(nls);
 
 #include "lcformat_private.h"
+#ifdef __REACTOS__
+    #include "japanese.h"
+#endif
 
 #define REG_SZ 1
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
@@ -3326,8 +3329,13 @@ BOOL WINAPI EnumSystemGeoID(GEOCLASS geoclass, GEOID parent, GEO_ENUMPROC enumpr
  */
 BOOL WINAPI InvalidateNLSCache(void)
 {
+#ifdef __REACTOS__
+    JapaneseEra_ClearCache();
+    return TRUE;
+#else
   FIXME("() stub\n");
   return FALSE;
+#endif
 }
 
 /******************************************************************************

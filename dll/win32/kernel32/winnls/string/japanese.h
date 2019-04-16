@@ -20,3 +20,4 @@ typedef const JAPANESE_ERA *PCJAPANESE_ERA;
 
 BOOL JapaneseEra_IsFirstYearGannen(void);
 PCJAPANESE_ERA JapaneseEra_Find(const SYSTEMTIME *pst OPTIONAL);
+void JapaneseEra_ClearCache(void);

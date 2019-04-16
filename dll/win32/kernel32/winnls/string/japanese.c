@@ -14,6 +14,7 @@
 
 /* #define DONT_USE_REGISTRY */
 
+static BOOL         s_bIsGannenCached = FALSE;
 static DWORD        s_JapaneseEraCount = 0;
 static JAPANESE_ERA s_JapaneseEraTable[JAPANESE_ERA_MAX]
 #ifdef DONT_USE_REGISTRY
@@ -33,6 +34,12 @@ HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName);
 BOOL NLS_RegEnumValue(HANDLE hKey, UINT ulIndex,
                       LPWSTR szValueName, ULONG valueNameSize,
                       LPWSTR szValueData, ULONG valueDataSize);
+
+void JapaneseEra_ClearCache(void)
+{
+    s_bIsGannenCached = FALSE;
+    s_JapaneseEraCount = 0;
+}
 
 static INT JapaneseEra_Compare(const void *e1, const void *e2)
 {
@@ -61,9 +68,9 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
     HANDLE KeyHandle;
     DWORD dwIndex;
     WCHAR szName[32], szValue[32];
-    static BOOL s_bIsCached = FALSE, s_bFirstIsGannen = TRUE;
+    static BOOL s_bFirstIsGannen = TRUE;
 
-    if (s_bIsCached)
+    if (s_bIsGannenCached)
         return s_bFirstIsGannen;
 
     KeyHandle = NLS_RegOpenKey(NULL, L"\\Registry\\Machine\\System\\"
@@ -71,6 +78,7 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
     if (!KeyHandle)
         return TRUE;
 
+    s_bFirstIsGannen = TRUE;
     for (dwIndex = 0; dwIndex < 16; ++dwIndex)
     {
         if (!NLS_RegEnumValue(KeyHandle, dwIndex, szName, sizeof(szName),
@@ -88,7 +96,7 @@ BOOL JapaneseEra_IsFirstYearGannen(void)
 
     NtClose(KeyHandle);
 
-    s_bIsCached = TRUE;
+    s_bIsGannenCached = TRUE;
 
     return s_bFirstIsGannen;
 #endif
