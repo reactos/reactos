@@ -278,9 +278,8 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
     NTSTATUS Status;
     UNICODE_STRING FileName;
     PWCHAR FilePath;
-    UCHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
-    ULONG Length = sizeof(Buffer);
-    POBJECT_NAME_INFORMATION FileNameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+    ULONG Length;
+    POBJECT_NAME_INFORMATION FileNameInfo;
 
     PAGED_CODE();
 
@@ -297,6 +296,27 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
             return STATUS_OBJECT_PATH_SYNTAX_BAD;
         }
 
+        /* Determine the right buffer size and allocate */
+        Status = ZwQueryObject(FileAttributes->RootDirectory,
+                               ObjectNameInformation,
+                               NULL,
+                               0,
+                               &Length);
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            DPRINT1("CmpCmdHiveOpen(): Root directory handle object name size query failed, Status = 0x%08lx\n", Status);
+            return Status;
+        }
+
+        FileNameInfo = ExAllocatePoolWithTag(PagedPool,
+                                             Length + sizeof(UNICODE_NULL),
+                                             TAG_CM);
+        if (FileNameInfo == NULL)
+        {
+            DPRINT1("CmpCmdHiveOpen(): Unable to allocate memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
         /* Try to get the value */
         Status = ZwQueryObject(FileAttributes->RootDirectory,
                                ObjectNameInformation,
@@ -307,6 +327,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
         {
             /* Fail */
             DPRINT1("CmpCmdHiveOpen(): Root directory handle object name query failed, Status = 0x%08lx\n", Status);
+            ExFreePoolWithTag(FileNameInfo, TAG_CM);
             return Status;
         }
 
@@ -321,6 +342,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
         if (Length > MAXUSHORT)
         {
             /* Name size too long, bail out */
+            ExFreePoolWithTag(FileNameInfo, TAG_CM);
             return STATUS_OBJECT_PATH_INVALID;
         }
 
@@ -331,10 +353,12 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
         {
             /* Fail */
             DPRINT1("CmpCmdHiveOpen(): Unable to allocate memory\n");
+            ExFreePoolWithTag(FileNameInfo, TAG_CM);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         FileName.MaximumLength = Length;
         RtlCopyUnicodeString(&FileName, &FileNameInfo->Name);
+        ExFreePoolWithTag(FileNameInfo, TAG_CM);
 
         /*
          * Append a path terminator if needed (we have already accounted
