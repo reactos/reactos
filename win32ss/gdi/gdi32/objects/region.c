@@ -3,69 +3,26 @@
 #define NDEBUG
 #include <debug.h>
 
+//
+// "Windows Graphics Programming: Win32 GDI and DirectDraw",
+//   Chp 9 Areas, Region, Set Operations on Regions, hard copy pg 560.
+//   universal set's bounding box to be [-(1 << 27), -(1 << 27), (1 << 27) -1, (1 << 27) -1].
+//
+#define MIN_COORD (INT_MIN/16) // See also ntgdi/region.c
+#define MAX_COORD (INT_MAX/16)
+
 #define INRECT(r, x, y) \
       ( ( ((r).right >  x)) && \
       ( ((r).left <= x)) && \
       ( ((r).bottom >  y)) && \
       ( ((r).top <= y)) )
 
-#define OVERLAPPING_RGN 0
-#define INVERTED_RGN 1
-#define SAME_RGN 2
-#define DIFF_RGN 3
-/*
- From tests, there are four results based on normalized coordinates.
- If the rects are overlapping and normalized, it's OVERLAPPING_RGN.
- If the rects are overlapping in anyway or same in dimension and one is inverted,
- it's INVERTED_RGN.
- If the rects are same in dimension or NULL, it's SAME_RGN.
- If the rects are overlapping and not normalized or displace in different areas,
- it's DIFF_RGN.
- */
-INT
-FASTCALL
-ComplexityFromRects( PRECTL prc1, PRECTL prc2)
-{
-    if ( prc2->left >= prc1->left )
-    {
-        if ( ( prc1->right >= prc2->right) &&
-                ( prc1->top <= prc2->top ) &&
-                ( prc1->bottom >= prc2->bottom ) )
-            return SAME_RGN;
-
-        if ( prc2->left > prc1->left )
-        {
-            if ( ( prc1->left >= prc2->right ) ||
-                    ( prc1->right <= prc2->left ) ||
-                    ( prc1->top >= prc2->bottom ) ||
-                    ( prc1->bottom <= prc2->top ) )
-                return DIFF_RGN;
-        }
-    }
-
-    if ( ( prc2->right < prc1->right ) ||
-            ( prc2->top > prc1->top ) ||
-            ( prc2->bottom < prc1->bottom ) )
-    {
-        if ( ( prc1->left >= prc2->right ) ||
-                ( prc1->right <= prc2->left ) ||
-                ( prc1->top >= prc2->bottom ) ||
-                ( prc1->bottom <= prc2->top ) )
-            return DIFF_RGN;
-    }
-    else
-    {
-        return INVERTED_RGN;
-    }
-    return OVERLAPPING_RGN;
-}
-
 static
 VOID
 FASTCALL
 SortRects(PRECT pRect, INT nCount)
 {
-    INT i = 0, a = 0, b = 0, c, s;
+    INT i, a, b, c, s;
     RECT sRect;
 
     if (nCount > 0)
@@ -77,19 +34,19 @@ SortRects(PRECT pRect, INT nCount)
             s = i; // set sort count
             if ( i < nCount )
             {
-                a = i - 1;
-                b = i;
+                a = i - 1; // [0]
+                b = i;     // [1]
                 do
                 {
-                    if(pRect[b].top != pRect[i].bottom) break;
-                    if(pRect[b].left < pRect[a].left)
+                    if ( pRect[a].top != pRect[b].top ) break;
+                    if ( pRect[a].left > pRect[b].left )
                     {
                         sRect = pRect[a];
                         pRect[a] = pRect[b];
                         pRect[b] = sRect;
                     }
                     ++s;
-                    ++b;
+                    b++;
                 }
                 while ( s < nCount );
             }
@@ -108,10 +65,9 @@ DeleteRegion(
     _In_ HRGN hrgn)
 {
 #if 0
-    PRGN_ATTR Rgn_Attr;
+    PRGN_ATTR Rgn_Attr = GdiGetRgnAttr(hrgn);
 
-    if ((GdiGetHandleUserData(hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
-            ( Rgn_Attr != NULL ))
+    if ( Rgn_Attr )
     {
         PGDIBSOBJECT pgO;
 
@@ -140,7 +96,7 @@ MirrorRgnByWidth(
 
     if (cRgnDSize)
     {
-        pRgnData = LocalAlloc(LMEM_FIXED, cRgnDSize * sizeof(LONG));
+        pRgnData = HeapAlloc(GetProcessHeap(), 0, cRgnDSize * sizeof(LONG));
         if (pRgnData)
         {
             if ( GetRegionData(hrgn, cRgnDSize, pRgnData) )
@@ -173,7 +129,7 @@ MirrorRgnByWidth(
                     Ret = 1;
                 }
             }
-            LocalFree(pRgnData);
+            HeapFree( GetProcessHeap(), 0, pRgnData);
         }
     }
     return Ret;
@@ -202,6 +158,7 @@ IntSetNullRgn(
 {
     prgnattr->iComplexity = NULLREGION;
     prgnattr->AttrFlags |= ATTR_RGN_DIRTY;
+    prgnattr->Rect.left = prgnattr->Rect.top = prgnattr->Rect.right = prgnattr->Rect.bottom = 0;
     return NULLREGION;
 }
 
@@ -599,39 +556,39 @@ WINAPI
 CreateRectRgn(int x1, int y1, int x2, int y2)
 {
     PRGN_ATTR pRgn_Attr;
-    HRGN hrgn;
+    HRGN hrgn = NULL;
     int tmp;
 
-/// <-
-//// Remove when Brush/Pen/Rgn Attr is ready!
-    return NtGdiCreateRectRgn(x1,y1,x2,y2);
-////
-
-    /* Normalize points */
-    tmp = x1;
+    /* Normalize points, REGION_SetRectRgn does this too. */
     if ( x1 > x2 )
     {
+        tmp = x1;
         x1 = x2;
         x2 = tmp;
     }
 
-    tmp = y1;
     if ( y1 > y2 )
     {
+        tmp = y1;
         y1 = y2;
         y2 = tmp;
     }
-    /* Check outside 24 bit limit for universal set. Chp 9 Areas, pg 560.*/
-    if ( x1 < -(1<<27)  ||
-            y1 < -(1<<27)  ||
-            x2 > (1<<27)-1 ||
-            y2 > (1<<27)-1 )
+    /* Check outside 28 bit limit for universal set bound box. REGION_SetRectRgn doesn't do this! */
+    if ( x1 < MIN_COORD ||
+         y1 < MIN_COORD ||
+         x2 > MAX_COORD ||
+         y2 > MAX_COORD  )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
     hrgn = hGetPEBHandle(hctRegionHandle, 0);
+    if (hrgn)
+    {
+       DPRINT1("PEB Handle Cache Test return hrgn %p, should be NULL!\n",hrgn);
+       hrgn = NULL;
+    }
 
     if (!hrgn)
         hrgn = NtGdiCreateRectRgn(0, 0, 1, 1);
@@ -639,29 +596,16 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
     if (!hrgn)
         return hrgn;
 
-    if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+    if (!(pRgn_Attr = GdiGetRgnAttr(hrgn)) )
     {
         DPRINT1("No Attr for Region handle!!!\n");
         DeleteRegion(hrgn);
         return NULL;
     }
 
-    if (( x1 == x2) || (y1 == y2))
-    {
-        pRgn_Attr->iComplexity = NULLREGION;
-        pRgn_Attr->Rect.left = pRgn_Attr->Rect.top =
-                                   pRgn_Attr->Rect.right = pRgn_Attr->Rect.bottom = 0;
-    }
-    else
-    {
-        pRgn_Attr->iComplexity = SIMPLEREGION;
-        pRgn_Attr->Rect.left   = x1;
-        pRgn_Attr->Rect.top    = y1;
-        pRgn_Attr->Rect.right  = x2;
-        pRgn_Attr->Rect.bottom = y2;
-    }
+    pRgn_Attr->AttrFlags = ATTR_RGN_VALID;
 
-    pRgn_Attr->AttrFlags = (ATTR_RGN_DIRTY|ATTR_RGN_VALID);
+    IntSetRectRgn( pRgn_Attr, x1, y1, x2, y2 );
 
     return hrgn;
 }
@@ -751,67 +695,52 @@ ExtSelectClipRgn(
     /* Batch handles RGN_COPY only! */
     if (iMode == RGN_COPY)
     {
-#if 0
-        PDC_ATTR pDc_Attr;
+        PDC_ATTR pdcattr;
         PRGN_ATTR pRgn_Attr = NULL;
 
-        /* hrgn can be NULL unless the RGN_COPY mode is specified. */
-        if (hrgn)
-            GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr);
-
-        if ( GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr) &&
-                pDc_Attr )
+        /* Get the DC attribute */
+        pdcattr = GdiGetDcAttr(hdc);
+        if ( pdcattr )
         {
             PGDI_TABLE_ENTRY pEntry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hdc);
-            PTEB pTeb = NtCurrentTeb();
 
-            if ( pTeb->Win32ThreadInfo != NULL &&
-                    pTeb->GdiTebBatch.HDC == hdc &&
-                    !(pDc_Attr->ulDirty_ & DC_DIBSECTION) &&
-                    !(pEntry->Flags & GDI_ENTRY_VALIDATE_VIS) )
+            /* hrgn can be NULL unless the RGN_COPY mode is specified. */
+            if (hrgn) pRgn_Attr = GdiGetRgnAttr(hrgn);
+
+            if ( !(pdcattr->ulDirty_ & DC_DIBSECTION) &&
+                 !(pEntry->Flags & GDI_ENTRY_VALIDATE_VIS) )
             {
-                if (!hrgn ||
-                        (hrgn && pRgn_Attr && pRgn_Attr->iComplexity <= SIMPLEREGION) )
+                if (!hrgn || (hrgn && pRgn_Attr && pRgn_Attr->iComplexity <= SIMPLEREGION) )
                 {
-                    if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSEXTSELCLPRGN)) <= GDIBATCHBUFSIZE)
+                    PGDIBSEXTSELCLPRGN pgO = GdiAllocBatchCommand(hdc, GdiBCExtSelClipRgn);
+                    if (pgO)
                     {
-                        // FIXME: This is broken, use GdiAllocBatchCommand!
-                        PGDIBSEXTSELCLPRGN pgO = (PGDIBSEXTSELCLPRGN)(&pTeb->GdiTebBatch.Buffer[0] +
-                                                 pTeb->GdiTebBatch.Offset);
-                        pgO->gbHdr.Cmd = GdiBCExtSelClipRgn;
-                        pgO->gbHdr.Size = sizeof(GDIBSEXTSELCLPRGN);
                         pgO->fnMode = iMode;
 
                         if ( hrgn && pRgn_Attr )
                         {
                             Ret = pRgn_Attr->iComplexity;
-
-                            if ( pDc_Attr->VisRectRegion.Rect.left   >= pRgn_Attr->Rect.right  ||
-                                    pDc_Attr->VisRectRegion.Rect.top    >= pRgn_Attr->Rect.bottom ||
-                                    pDc_Attr->VisRectRegion.Rect.right  <= pRgn_Attr->Rect.left   ||
-                                    pDc_Attr->VisRectRegion.Rect.bottom <= pRgn_Attr->Rect.top )
+                            // Note from ntgdi/dcstate.c : "The VisRectRegion field needs to be set to a valid state."
+                            if ( pdcattr->VisRectRegion.Rect.left   >= pRgn_Attr->Rect.right  ||
+                                 pdcattr->VisRectRegion.Rect.top    >= pRgn_Attr->Rect.bottom ||
+                                 pdcattr->VisRectRegion.Rect.right  <= pRgn_Attr->Rect.left   ||
+                                 pdcattr->VisRectRegion.Rect.bottom <= pRgn_Attr->Rect.top )
                                 Ret = NULLREGION;
 
-                            pgO->left   = pRgn_Attr->Rect.left;
-                            pgO->top    = pRgn_Attr->Rect.top;
-                            pgO->right  = pRgn_Attr->Rect.right;
-                            pgO->bottom = pRgn_Attr->Rect.bottom;
+                            // Pass the rect since this region will go away.
+                            pgO->rcl = pRgn_Attr->Rect;
                         }
                         else
                         {
-                            Ret = pDc_Attr->VisRectRegion.Flags;
-                            pgO->fnMode |= 0x80000000; // Set no hrgn mode.
+                            Ret = pdcattr->VisRectRegion.iComplexity;
+                            pgO->fnMode |= GDIBS_NORECT; // Set no hrgn mode.
                         }
-                        pTeb->GdiTebBatch.Offset += sizeof(GDIBSEXTSELCLPRGN);
-                        pTeb->GdiBatchCount++;
-                        if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
                         if ( NewRgn ) DeleteObject(NewRgn);
                         return Ret;
                     }
                 }
             }
         }
-#endif
     }
     Ret = NtGdiExtSelectClipRgn(hdc, hrgn, iMode);
 
@@ -889,8 +818,8 @@ GetRgnBox(HRGN hrgn,
 {
     PRGN_ATTR Rgn_Attr;
 
-    //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
-    return NtGdiGetRgnBox(hrgn, prcOut);
+    if (!(Rgn_Attr = GdiGetRgnAttr(hrgn)))
+        return NtGdiGetRgnBox(hrgn, prcOut);
 
     if (Rgn_Attr->iComplexity == NULLREGION)
     {
@@ -932,9 +861,12 @@ BOOL
 WINAPI
 MirrorRgn(HWND hwnd, HRGN hrgn)
 {
+    INT l;
     RECT Rect;
     GetWindowRect(hwnd, &Rect);
-    return MirrorRgnByWidth(hrgn, Rect.right - Rect.left, NULL);
+    l = Rect.right - Rect.left;
+    Rect.right -= Rect.left;
+    return MirrorRgnByWidth(hrgn, l, NULL);
 }
 
 /*
@@ -962,11 +894,10 @@ OffsetRgn( HRGN hrgn,
            int nYOffset)
 {
     PRGN_ATTR pRgn_Attr;
-    int nLeftRect, nTopRect, nRightRect, nBottomRect;
+    RECTL rc;
 
-// HACKFIX
-//  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-    return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+    if (!(pRgn_Attr = GdiGetRgnAttr(hrgn)))
+        return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
     if ( pRgn_Attr->iComplexity == NULLREGION)
         return pRgn_Attr->iComplexity;
@@ -974,33 +905,28 @@ OffsetRgn( HRGN hrgn,
     if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
-    nLeftRect   = pRgn_Attr->Rect.left;
-    nTopRect    = pRgn_Attr->Rect.top;
-    nRightRect  = pRgn_Attr->Rect.right;
-    nBottomRect = pRgn_Attr->Rect.bottom;
+    rc = pRgn_Attr->Rect;
 
-    if (nLeftRect < nRightRect)
+    if (rc.left < rc.right)
     {
-        if (nTopRect < nBottomRect)
+        if (rc.top < rc.bottom)
         {
-            nLeftRect   = nXOffset + nLeftRect;
-            nTopRect    = nYOffset + nTopRect;
-            nRightRect  = nXOffset + nRightRect;
-            nBottomRect = nYOffset + nBottomRect;
+            rc.left   += nXOffset;
+            rc.top    += nYOffset;
+            rc.right  += nXOffset;
+            rc.bottom += nYOffset;
 
-            /* Check 28 bit limit. Chp 9 Areas, pg 560. */
-            if ( nLeftRect   < -(1<<27)  ||
-                    nTopRect    < -(1<<27)  ||
-                    nRightRect  > (1<<27)-1 ||
-                    nBottomRect > (1<<27)-1  )
+            /* Make sure the offset is within the legal range */
+            if ( (rc.left   & MIN_COORD && ((rc.left   & MIN_COORD) != MIN_COORD)) ||
+                 (rc.top    & MIN_COORD && ((rc.top    & MIN_COORD) != MIN_COORD)) ||
+                 (rc.right  & MIN_COORD && ((rc.right  & MIN_COORD) != MIN_COORD)) ||
+                 (rc.bottom & MIN_COORD && ((rc.bottom & MIN_COORD) != MIN_COORD))  )
             {
+                DPRINT("OffsetRgn ERROR\n");
                 return ERROR;
             }
 
-            pRgn_Attr->Rect.top    = nTopRect;
-            pRgn_Attr->Rect.left   = nLeftRect;
-            pRgn_Attr->Rect.right  = nRightRect;
-            pRgn_Attr->Rect.bottom = nBottomRect;
+            pRgn_Attr->Rect = rc;
             pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
         }
     }
@@ -1018,9 +944,8 @@ PtInRegion(IN HRGN hrgn,
 {
     PRGN_ATTR pRgn_Attr;
 
-    // HACKFIX
-    //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-    return NtGdiPtInRegion(hrgn,x,y);
+    if (!(pRgn_Attr = GdiGetRgnAttr(hrgn)))
+        return NtGdiPtInRegion(hrgn,x,y);
 
     if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
@@ -1042,9 +967,8 @@ RectInRegion(HRGN hrgn,
     PRGN_ATTR pRgn_Attr;
     RECTL rc;
 
-    // HACKFIX
-    //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
-    return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+    if (!(pRgn_Attr = GdiGetRgnAttr(hrgn)))
+        return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
     if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
@@ -1075,10 +999,15 @@ RectInRegion(HRGN hrgn,
         rc.left = prcl->left;
     }
 
-    if ( ComplexityFromRects( &pRgn_Attr->Rect, &rc) != DIFF_RGN )
-        return TRUE;
+    if ( ( pRgn_Attr->Rect.left   >= rc.right )  ||
+         ( pRgn_Attr->Rect.right  <= rc.left )   ||
+         ( pRgn_Attr->Rect.top    >= rc.bottom ) ||
+         ( pRgn_Attr->Rect.bottom <= rc.top ) )
+    {
+        return FALSE;
+    }
 
-    return FALSE;
+    return TRUE;
 }
 
 /*
