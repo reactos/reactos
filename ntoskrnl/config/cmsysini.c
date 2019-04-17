@@ -1191,7 +1191,7 @@ VOID
 NTAPI
 CmpLoadHiveThread(IN PVOID StartContext)
 {
-    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    WCHAR FileBuffer[64], RegBuffer[64];
     PCWSTR ConfigPath;
     UNICODE_STRING TempName, FileName, RegName;
     ULONG i, ErrorResponse, WorkerCount, Length;
@@ -1357,7 +1357,7 @@ VOID
 NTAPI
 CmpInitializeHiveList(VOID)
 {
-    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    WCHAR FileBuffer[64], RegBuffer[64];
     PCWSTR ConfigPath;
     UNICODE_STRING TempName, FileName, RegName;
     HANDLE Thread;
