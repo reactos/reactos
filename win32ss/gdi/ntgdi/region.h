@@ -25,7 +25,7 @@ extern HRGN hrgnDefault;
 
 PREGION FASTCALL REGION_AllocRgnWithHandle(INT n);
 PREGION FASTCALL REGION_AllocUserRgnWithHandle(INT n);
-VOID FASTCALL REGION_UnionRectWithRgn(PREGION rgn, const RECTL *rect);
+BOOL FASTCALL REGION_UnionRectWithRgn(PREGION rgn, const RECTL *rect);
 INT FASTCALL REGION_SubtractRectFromRgn(PREGION prgnDest, PREGION prgnSrc, const RECTL *prcl);
 INT FASTCALL REGION_GetRgnBox(PREGION Rgn, RECTL *pRect);
 BOOL FASTCALL REGION_RectInRegion(PREGION Rgn, const RECTL *rc);
@@ -92,6 +92,12 @@ GreCreateFrameRgn(
 
 #define IntSysCreateRectpRgnIndirect(prc) \
   IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
+
+#define GreCreateRectRgnIndirect(prc) \
+  NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
+
+#define GreSetRectRgnIndirect(hRgn, prc) \
+  NtGdiSetRectRgn(hRgn, (prc)->left, (prc)->top, (prc)->right, (prc)->bottom);
 
 PREGION
 FASTCALL

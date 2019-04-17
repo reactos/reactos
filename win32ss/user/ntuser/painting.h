@@ -15,12 +15,6 @@
 #define RDW_CLIPCHILDREN  4096
 #define RDW_NOUPDATEDIRTY 32768
 
-#define GreCreateRectRgnIndirect(prc) \
-  NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
-
-#define GreSetRectRgnIndirect(hRgn, prc) \
-  NtGdiSetRectRgn(hRgn, (prc)->left, (prc)->top, (prc)->right, (prc)->bottom);
-  
 BOOL FASTCALL co_UserRedrawWindow(PWND Wnd, const RECTL* UpdateRect, PREGION UpdateRgn, ULONG Flags);
 VOID FASTCALL IntInvalidateWindows(PWND Window, PREGION Rgn, ULONG Flags);
 BOOL FASTCALL IntGetPaintMessage(PWND Window, UINT MsgFilterMin, UINT MsgFilterMax, PTHREADINFO Thread, MSG *Message, BOOL Remove);
