@@ -169,10 +169,15 @@ CcpDereferenceBcb(
         KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
         ASSERT(Bcb->PinCount == 0);
+        /*
+         * Don't mark dirty, if it was dirty,
+         * the VACB was already marked as such
+         * following the call to CcSetDirtyPinnedData
+         */
         CcRosReleaseVacb(SharedCacheMap,
                          Bcb->Vacb,
                          TRUE,
-                         Bcb->Dirty,
+                         FALSE,
                          FALSE);
 
         ExDeleteResourceLite(&Bcb->Lock);
@@ -682,10 +687,15 @@ CcUnpinRepinnedBcb (
             ASSERT(iBcb->PinCount == 0);
         }
 
+        /*
+         * Don't mark dirty, if it was dirty,
+         * the VACB was already marked as such
+         * following the call to CcSetDirtyPinnedData
+         */
         CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
                          iBcb->Vacb,
                          TRUE,
-                         iBcb->Dirty,
+                         FALSE,
                          FALSE);
 
         ExDeleteResourceLite(&iBcb->Lock);
