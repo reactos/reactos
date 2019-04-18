@@ -998,6 +998,18 @@ typedef struct _UCALLOUT_FRAME
     MACHINE_FRAME MachineFrame;
 } UCALLOUT_FRAME, *PUCALLOUT_FRAME; // size = 0x0058
 
+//
+// Stack frame layout for KiUserExceptionDispatcher
+// The name is totally made up
+//
+typedef struct _KUSER_EXCEPTION_STACK
+{
+    CONTEXT Context;
+    EXCEPTION_RECORD ExceptionRecord;
+    ULONG64 Alignment;
+    MACHINE_FRAME MachineFrame;
+} KUSER_EXCEPTION_STACK, * PKUSER_EXCEPTION_STACK;
+
 typedef struct _DISPATCHER_CONTEXT
 {
     ULONG64 ControlPc;
