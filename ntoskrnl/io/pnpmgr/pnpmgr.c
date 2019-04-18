@@ -1853,7 +1853,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
     }
 
     /* 1. Try to retrieve ParentIdPrefix from registry */
-    KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
+    KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + sizeof(L"12345678&12345678");
     ParentIdPrefixInformation = ExAllocatePoolWithTag(PagedPool,
                                                       KeyNameBufferLength + sizeof(UNICODE_NULL),
                                                       TAG_IO);
