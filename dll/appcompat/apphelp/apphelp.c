@@ -314,7 +314,7 @@ BOOL WINAPI SdbRegisterDatabaseEx(
             UNICODE_STRING DatabaseDescriptionKey = RTL_CONSTANT_STRING(L"DatabaseDescription");
 
             Status = NtSetValueKey(DbKey, &DatabasePathKey, 0, REG_SZ,
-                                   (PVOID)pszDatabasePath, (wcslen(pszDatabasePath) + 1) * sizeof(WCHAR));
+                                   (PVOID)pszDatabasePath, ((ULONG)wcslen(pszDatabasePath) + 1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
                 SHIM_ERR("Unable to write %wZ\n", &DatabasePathKey);
 
@@ -349,7 +349,7 @@ BOOL WINAPI SdbRegisterDatabaseEx(
             if (NT_SUCCESS(Status) && Information.Description)
             {
                 Status = NtSetValueKey(DbKey, &DatabaseDescriptionKey, 0, REG_SZ,
-                                       (PVOID)Information.Description, (wcslen(Information.Description) + 1) * sizeof(WCHAR));
+                                       (PVOID)Information.Description, ((ULONG)wcslen(Information.Description) + 1) * sizeof(WCHAR));
                 if (!NT_SUCCESS(Status))
                     SHIM_ERR("Unable to write %wZ\n", &DatabaseDescriptionKey);
             }

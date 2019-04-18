@@ -111,12 +111,12 @@ PDB WINAPI SdbCreateDatabase(LPCWSTR path, PATH_TYPE type)
     if (!pdb)
         return NULL;
 
-    pdb->size = sizeof(DWORD) + sizeof(DWORD) + strlen(magic);
+    pdb->size = sizeof(DWORD) + sizeof(DWORD) + (DWORD)strlen(magic);
     pdb->data = SdbAlloc(pdb->size);
 
     SdbpWrite(pdb, &version_major, sizeof(DWORD));
     SdbpWrite(pdb, &version_minor, sizeof(DWORD));
-    SdbpWrite(pdb, magic, strlen(magic));
+    SdbpWrite(pdb, magic, (DWORD)strlen(magic));
 
     return pdb;
 }
