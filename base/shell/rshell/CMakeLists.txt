@@ -1,5 +1,8 @@
 PROJECT(SHELL)
 
+add_definitions(
+    -D_ATL_NO_EXCEPTIONS)
+
 set_cpp(WITH_RUNTIME)
 
 include_directories(
