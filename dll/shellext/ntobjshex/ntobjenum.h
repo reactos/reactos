@@ -15,12 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#pragma once
 
-extern "C" {
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <ndk/rtlfuncs.h>
-}
 
 // All the possible values are defined here because I want the type field to be
 // "persistable" and not change if more types are added in the future.

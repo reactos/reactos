@@ -10,6 +10,12 @@
 #define COM_NO_WINDOWS_H
 #define NTOS_MODE_USER
 
+extern "C"
+{
+#include <ndk/ntndk.h>
+#include <ndk/rtlfuncs.h>
+}
+
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
