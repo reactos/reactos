@@ -216,7 +216,6 @@ CcpGetAppropriateBcb(
     iBcb->PFCB.MappedLength = Length;
     iBcb->PFCB.MappedFileOffset = *FileOffset;
     iBcb->Vacb = Vacb;
-    iBcb->Dirty = FALSE;
     iBcb->PinCount = 0;
     iBcb->RefCount = 1;
     ExInitializeResourceLite(&iBcb->Lock);
@@ -579,7 +578,6 @@ CcSetDirtyPinnedData (
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n",
         Bcb, Lsn);
 
-    iBcb->Dirty = TRUE;
     if (!iBcb->Vacb->Dirty)
     {
         CcRosMarkDirtyVacb(iBcb->Vacb);

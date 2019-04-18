@@ -233,7 +233,6 @@ typedef struct _INTERNAL_BCB
     ERESOURCE Lock;
     PUBLIC_BCB PFCB;
     PROS_VACB Vacb;
-    BOOLEAN Dirty;
     ULONG PinCount;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
     LIST_ENTRY BcbEntry;
