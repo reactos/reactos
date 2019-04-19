@@ -52,9 +52,9 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
     Current = BattState.RemainingCapacity;
     if (Max)
     {
-        if (Current <= Max)
+        if (Current < Max)
         {
-            PowerStatus->BatteryLifePercent = (UCHAR)((100 * Current + Max / 2) / Max);
+            PowerStatus->BatteryLifePercent = (UCHAR)(100 * Current / Max);
         }
         else
         {
