@@ -61,6 +61,9 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
             PowerStatus->BatteryLifePercent = 100;
         }
 
+        if (PowerStatus->BatteryLifePercent <= 4)
+            PowerStatus->BatteryFlag |= BATTERY_FLAG_CRITICAL;
+
         if (PowerStatus->BatteryLifePercent <= 32)
             PowerStatus->BatteryFlag |= BATTERY_FLAG_LOW;
 
