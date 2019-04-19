@@ -7,6 +7,14 @@
 
 #pragma once
 
+#ifndef __REACTOS__
+    #ifdef __cplusplus
+        #include <cstddef>
+    #else
+        #include <stddef.h>
+    #endif
+    #include <pseh/pseh2.h>
+#endif
 
 #define _ATL_PACKING 8
 

@@ -5,7 +5,7 @@
  * PROGRAMMER:      Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -199,7 +199,7 @@ START_TEST(CSimpleMap)
     ok(!!map1.RemoveAt(0), "Expected RemoveAt(0) to succeed\n");
     ok(map1.GetSize() == 0, "Expected map1's size is 0, was %d\n", map1.GetSize());
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CSimpleMap: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
     return g_tests_failed;
 #endif

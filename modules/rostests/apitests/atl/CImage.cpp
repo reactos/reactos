@@ -8,7 +8,7 @@
 #include <atlimage.h>
 #include "resource.h"
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -332,7 +332,7 @@ START_TEST(CImage)
        "The exporter filter string is bad, was: %s\n", psz);
 #endif
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CImage: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
     return g_tests_failed;
 #endif

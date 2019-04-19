@@ -7,7 +7,7 @@
 
 #include <atlfile.h>
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -247,7 +247,7 @@ START_TEST(CAtlFileMapping)
     test_SharedMem();
     test_FileMapping();
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CAtlFile: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
     return g_tests_failed;
 #endif

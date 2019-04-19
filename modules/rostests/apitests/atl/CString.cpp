@@ -9,7 +9,7 @@
 #include <atlstr.h>
 #include "resource.h"
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -257,7 +257,7 @@ START_TEST(CString)
     test_bstrW();
     test_bstrA();
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CString: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
     return g_tests_failed;
 #endif
