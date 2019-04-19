@@ -8,6 +8,7 @@
 #pragma once
 
 #ifndef __REACTOS__
+    #include <cstddef>
     #include <pseh/pseh2.h>
 #endif
 

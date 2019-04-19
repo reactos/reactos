@@ -6,9 +6,6 @@
  */
 
 #include <atlfile.h>
-#ifndef __REACTOS__
-    #include <cstddef>
-#endif
 
 #ifdef HAVE_APITEST
     #include <apitest.h>
