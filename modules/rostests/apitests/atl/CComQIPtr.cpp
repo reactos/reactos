@@ -8,7 +8,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -98,6 +98,8 @@ public:
 // Yes this sucks, but we have to support GCC. (CORE-12710)
 #ifdef __REACTOS__
 #define DECLARE_QIPTR(type)     CComQIIDPtr<I_ID(type)>
+#elif defined(__GNUC__)
+#define DECLARE_QIPTR(type)     CComQIIDPtr<I_ID(type)>
 #else
 #define DECLARE_QIPTR(type)     CComQIPtr<type>
 #endif
@@ -153,7 +155,7 @@ START_TEST(CComQIPtr)
         ok(g_QI == 5, "Expected g_QI 5, got %lu\n", g_QI);
     }
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CComQIPtr: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
     return g_tests_failed;
 #endif

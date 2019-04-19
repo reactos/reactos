@@ -1074,11 +1074,11 @@ public:
         ATLASSERT(lpszKeyName);
 
         HKEY hKey = NULL;
-        LONG lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+        LONG lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, 0, samDesired, &hKey);
         if (lRes != ERROR_SUCCESS)
         {
             samDesired |= KEY_WOW64_64KEY;
-            lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+            lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, 0, samDesired, &hKey);
         }
         if (lRes == ERROR_SUCCESS)
         {
@@ -1099,13 +1099,13 @@ public:
         ATLASSERT(lpszKeyName);
 
         HKEY hKey = NULL;
-        LONG lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass,
+        LONG lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, 0, lpszClass,
                                      dwOptions, samDesired, lpSecAttr, &hKey,
                                      lpdwDisposition);
         if (lRes != ERROR_SUCCESS)
         {
             samDesired |= KEY_WOW64_64KEY;
-            lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass,
+            lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, 0, lpszClass,
                                     dwOptions, samDesired, lpSecAttr, &hKey,
                                     lpdwDisposition);
         }
@@ -1213,7 +1213,7 @@ public:
     LONG SetValue(LPCTSTR pszValueName, DWORD dwType, const void* pValue, ULONG nBytes) throw()
     {
         ATLASSERT(m_hKey);
-        return ::RegSetValueEx(m_hKey, pszValueName, NULL, dwType, (const BYTE*)pValue, nBytes);
+        return ::RegSetValueEx(m_hKey, pszValueName, 0, dwType, (const BYTE*)pValue, nBytes);
     }
 
     LONG SetDWORDValue(LPCTSTR pszValueName, DWORD dwValue) throw()

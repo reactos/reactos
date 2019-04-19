@@ -89,7 +89,7 @@ public:
         m_nOffset.QuadPart = orig.m_nOffset.QuadPart;
         m_dwViewDesiredAccess = orig.m_dwViewDesiredAccess;
 
-        if (::DuplicateHandle(GetCurrentProcess(), orig.m_hMapping, GetCurrentProcess(), &m_hMapping, NULL, TRUE, DUPLICATE_SAME_ACCESS))
+        if (::DuplicateHandle(GetCurrentProcess(), orig.m_hMapping, GetCurrentProcess(), &m_hMapping, 0, TRUE, DUPLICATE_SAME_ACCESS))
         {
             m_pData = ::MapViewOfFile(m_hMapping, m_dwViewDesiredAccess, m_nOffset.HighPart, m_nOffset.LowPart, m_nMappingSize);
             if (!m_pData)

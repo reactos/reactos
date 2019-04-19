@@ -9,7 +9,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -142,7 +142,7 @@ START_TEST(CComObject)
         ok(g_BLIND == 1, "Expected 1, got %lu\n", g_BLIND);
     }
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CComObject: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
     return g_tests_failed;
 #endif

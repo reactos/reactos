@@ -9,7 +9,7 @@
 #include <atlstr.h>
 #include "resource.h"
 
-#ifdef __REACTOS__
+#ifdef HAVE_APITEST
     #include <apitest.h>
 #else
     #include <stdlib.h>
@@ -171,7 +171,7 @@ static void test_basetypes()
 
 // Allocation strategy seems to differ a bit between us and MS's atl.
 // if someone cares enough to find out why, feel free to change the macro below.
-#ifdef __REACTOS__
+#ifdef __GNUC__
 #define ALLOC_EXPECT(a, b)  b
 #else
 #define ALLOC_EXPECT(a, b)  a
@@ -257,7 +257,7 @@ START_TEST(CString)
     test_bstrW();
     test_bstrA();
 
-#ifndef __REACTOS__
+#ifndef HAVE_APITEST
     printf("CString: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
     return g_tests_failed;
 #endif

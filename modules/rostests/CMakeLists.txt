@@ -1,6 +1,8 @@
 
 start_module_group(rostests)
 
+add_definitions(-DHAVE_APITEST)
+
 if(MSVC_IDE)
     add_definitions(-DWINETEST_MSVC_IDE_FORMATTING)
 endif()
