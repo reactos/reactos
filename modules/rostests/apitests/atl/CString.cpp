@@ -171,7 +171,7 @@ static void test_basetypes()
 
 // Allocation strategy seems to differ a bit between us and MS's atl.
 // if someone cares enough to find out why, feel free to change the macro below.
-#ifdef __REACTOS__
+#ifdef __GNUC__
 #define ALLOC_EXPECT(a, b)  b
 #else
 #define ALLOC_EXPECT(a, b)  a
