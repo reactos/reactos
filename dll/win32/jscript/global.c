@@ -113,13 +113,6 @@ static WCHAR int_to_char(int i)
     return 'A'+i-10;
 }
 
-static HRESULT JSGlobal_Enumerator(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT JSGlobal_escape(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
@@ -942,7 +935,6 @@ static HRESULT JSGlobal_decodeURIComponent(script_ctx_t *ctx, vdisp_t *jsthis, W
 
 static const builtin_prop_t JSGlobal_props[] = {
     {CollectGarbageW,            JSGlobal_CollectGarbage,            PROPF_METHOD},
-    {EnumeratorW,                JSGlobal_Enumerator,                PROPF_METHOD|7},
     {_GetObjectW,                JSGlobal_GetObject,                 PROPF_METHOD|2},
     {ScriptEngineW,              JSGlobal_ScriptEngine,              PROPF_METHOD},
     {ScriptEngineBuildVersionW,  JSGlobal_ScriptEngineBuildVersion,  PROPF_METHOD},
@@ -1016,6 +1008,15 @@ static HRESULT init_constructors(script_ctx_t *ctx, jsdisp_t *object_prototype)
 
     hres = jsdisp_define_data_property(ctx->global, DateW, PROPF_WRITABLE,
                                        jsval_obj(ctx->date_constr));
+    if(FAILED(hres))
+        return hres;
+
+    hres = create_enumerator_constr(ctx, object_prototype, &ctx->enumerator_constr);
+    if(FAILED(hres))
+        return hres;
+
+    hres = jsdisp_define_data_property(ctx->global, EnumeratorW, PROPF_WRITABLE,
+                                       jsval_obj(ctx->enumerator_constr));
     if(FAILED(hres))
         return hres;
 
