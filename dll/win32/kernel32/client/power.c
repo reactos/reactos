@@ -81,7 +81,15 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
         PowerStatus->ACLineStatus = AC_LINE_OFFLINE;
 
     if (BattState.EstimatedTime)
+    {
         PowerStatus->BatteryLifeTime = BattState.EstimatedTime;
+
+        if (PowerStatus->BatteryLifePercent != BATTERY_PERCENTAGE_UNKNOWN &&
+            PowerStatus->BatteryLifePercent != 0)
+        {
+            PowerStatus->BatteryFullLifeTime = 100 * PowerStatus->BatteryLifeTime / PowerStatus->BatteryLifePercent;
+        }
+    }
 
     return TRUE;
 }
