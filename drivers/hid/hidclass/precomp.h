@@ -213,4 +213,9 @@ HidClassPDO_GetReportDescription(
     PHIDP_DEVICE_DESC DeviceDescription,
     ULONG CollectionNumber);
 
+PHIDP_REPORT_IDS
+HidClassPDO_GetReportDescriptionByReportID(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    UCHAR ReportID);
+
 #endif /* _HIDCLASS_PCH_ */

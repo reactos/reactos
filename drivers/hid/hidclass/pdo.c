@@ -67,6 +67,32 @@ HidClassPDO_GetReportDescription(
     return NULL;
 }
 
+PHIDP_REPORT_IDS
+HidClassPDO_GetReportDescriptionByReportID(
+    PHIDP_DEVICE_DESC DeviceDescription,
+    UCHAR ReportID)
+{
+    ULONG Index;
+
+    for (Index = 0; Index < DeviceDescription->ReportIDsLength; Index++)
+    {
+        if (DeviceDescription->ReportIDs[Index].ReportID == ReportID)
+        {
+            //
+            // found report id
+            //
+            return &DeviceDescription->ReportIDs[Index];
+        }
+    }
+
+    //
+    // failed to find report id
+    //
+    DPRINT1("[HIDCLASS] GetReportDescriptionByReportID ReportID %x not found\n", ReportID);
+    ASSERT(FALSE);
+    return NULL;
+}
+
 NTSTATUS
 HidClassPDO_HandleQueryDeviceId(
     IN PDEVICE_OBJECT DeviceObject,

@@ -934,6 +934,120 @@ HidClass_DeviceControl(
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_SUCCESS;
         }
+        case IOCTL_HID_GET_FEATURE:
+        {
+            PIRP SubIrp;
+            KEVENT Event;
+            IO_STATUS_BLOCK IoStatusBlock;
+            HID_XFER_PACKET XferPacket;
+            NTSTATUS Status;
+            PHIDP_REPORT_IDS ReportDescription;
+
+            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < 1)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+            ReportDescription = HidClassPDO_GetReportDescriptionByReportID(&PDODeviceExtension->Common.DeviceDescription, ((PUCHAR)Irp->AssociatedIrp.SystemBuffer)[0]);
+            if (!ReportDescription || IoStack->Parameters.DeviceIoControl.OutputBufferLength < ReportDescription->FeatureLength)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            RtlZeroMemory(&XferPacket, sizeof(XferPacket));
+            XferPacket.reportBufferLen = ReportDescription->FeatureLength;
+            XferPacket.reportBuffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+            XferPacket.reportId = ((PUCHAR)Irp->AssociatedIrp.SystemBuffer)[0];
+            if (!XferPacket.reportBuffer)
+            {
+                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            SubIrp = IoBuildDeviceIoControlRequest(
+                IOCTL_HID_GET_FEATURE,
+                CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
+                NULL, 0,
+                NULL, 0,
+                TRUE,
+                &Event,
+                &IoStatusBlock);
+            if (!SubIrp)
+            {
+                Irp->IoStatus.Status = STATUS_NO_MEMORY;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_NOT_IMPLEMENTED;
+            }
+            SubIrp->UserBuffer = &XferPacket;
+            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+            Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
+            if (Status == STATUS_PENDING)
+            {
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = IoStatusBlock.Status;
+            }
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+        case IOCTL_HID_SET_FEATURE:
+        {
+            PIRP SubIrp;
+            KEVENT Event;
+            IO_STATUS_BLOCK IoStatusBlock;
+            HID_XFER_PACKET XferPacket;
+            NTSTATUS Status;
+            PHIDP_REPORT_IDS ReportDescription;
+
+            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < 1)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+            ReportDescription = HidClassPDO_GetReportDescriptionByReportID(&PDODeviceExtension->Common.DeviceDescription, ((PUCHAR)Irp->AssociatedIrp.SystemBuffer)[0]);
+            if (!ReportDescription || IoStack->Parameters.DeviceIoControl.InputBufferLength < ReportDescription->FeatureLength)
+            {
+                Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            RtlZeroMemory(&XferPacket, sizeof(XferPacket));
+            XferPacket.reportBufferLen = ReportDescription->FeatureLength;
+            XferPacket.reportBuffer = Irp->AssociatedIrp.SystemBuffer;
+            XferPacket.reportId = XferPacket.reportBuffer[0];
+
+            SubIrp = IoBuildDeviceIoControlRequest(
+                IOCTL_HID_SET_FEATURE,
+                CommonDeviceExtension->HidDeviceExtension.NextDeviceObject,
+                NULL, 0,
+                NULL, 0,
+                TRUE,
+                &Event,
+                &IoStatusBlock);
+            if (!SubIrp)
+            {
+                Irp->IoStatus.Status = STATUS_NO_MEMORY;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_NOT_IMPLEMENTED;
+            }
+            SubIrp->UserBuffer = &XferPacket;
+            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+            Status = IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, SubIrp);
+            if (Status == STATUS_PENDING)
+            {
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = IoStatusBlock.Status;
+            }
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
         default:
         {
             DPRINT1("[HIDCLASS] DeviceControl IoControlCode 0x%x not implemented\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
