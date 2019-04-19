@@ -6,6 +6,7 @@
  */
 
 #include <atlfile.h>
+#include <cstddef>
 
 #ifdef HAVE_APITEST
     #include <apitest.h>
