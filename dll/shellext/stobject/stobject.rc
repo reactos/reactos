@@ -25,6 +25,7 @@ IDI_BATTCHA3 ICON "resources/battery/charging3.ico"
 IDI_BATTCHA4 ICON "resources/battery/charging4.ico"
 
 IDI_BATTCAP_ERR ICON "resources/battery/error.ico"
+IDI_POWER_AC ICON "resources/battery/ac.ico"
 
 IDI_HOTPLUG_ERR ICON "resources/hotplug/0.ico"
 IDI_HOTPLUG_OK ICON  "resources/hotplug/1.ico"

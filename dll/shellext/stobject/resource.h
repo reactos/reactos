@@ -51,6 +51,7 @@
 #define IDI_BATTCHA3              409
 #define IDI_BATTCHA4              410
 #define IDI_BATTCAP_ERR           412
+#define IDI_POWER_AC              413
 
 #define IDI_HOTPLUG_ERR           420
 #define IDI_HOTPLUG_OK            421
