@@ -1,0 +1,22 @@
+ac.ico was taken from the Tango Patcher 2600 8.06 by the user vertigosity. https://www.deviantart.com/vertigosity/art/Tango-Patcher-2600-8-06-27940418
+
+This licensing information was taken directly from the software's EULA:
+
+1. The resources licensed under the Creation Commons Attribution Share-Alike (CC-by-SA) license may be freely distributed and re-modified, provided you acknowledge the creator of the resources, and maintain the CC-by-SA as their license.
+For a human readable summary of this license, visit:
+http://creativecommons.org/licenses/by-sa/2.5/
+For a legally precise version, visit:
+http://creativecommons.org/licenses/by-sa/2.5/legalcode
+
+2. The resources licensed under the GNU GPL may be freely distributed and re-modified, provided that you make source code available as well, and maintain the GNU GPL as their license. In the ordinary sense, the definition of source code is fuzzy in regards to resources, as they are both usuable in software and modifiable; however, when converted to the Windows ICO format there is a clear separation between the source PNG and SVG resources and the converted ICO resources. The author promises to provide the source PNG and SVG material if asked; however, there is typically little need to, as the versions of GPLed resources included were created using source material identical to that available from upstream providers; it is also largely possible to recreate the original source material from the included resources. The included versions can be interpreted both as modified source code and as compiled binaries.
+For a human readable summary of this license, visit:
+http://en.wikipedia.org/wiki/GNU_General_Public_License#License_terms
+For a legally precise version, visit:
+http://www.gnu.org/copyleft/gpl.html
+
+The Tango icon library was created by the Tango Desktop Project and is released under the Creative Commons Attribution Share-Alike license, and my converted material based on the Tango icons implicitly inherits this license.
+The Tangerine icon set was created by the Ubuntu Art Team and is assumed to be released under the same license as base Tango.
+Gnome-Icon-Theme 2 was created by the Gnome Desktop Project and is released under the GNU General Public license.
+Unless they contain portions of resources distributed under a specific license, my icon creations may be used under the terms of the CC-by-SA license, or the GNU GPL - whichever license is more convenient for you.
+The Industrial iconset was created by Jakub "Jimmac" Steiner for Novell/SUSE Linux Enterprise Desktop 10, and is released under the same license as base Tango.
+Some resources are not official Tango, are of unknown licensing, and are included for completeness; it is my opinion that they are appropriate and of very good quality, both visually and metaphorically. If you are the creator of any of those resources, consider their inclusion to be a compliment to your abilities and not an attack on your intellectual property rights.
