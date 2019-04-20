@@ -122,7 +122,7 @@ fail:
 
         --n;
     }
-    ShimLib_ShimFree(names);
+    ShimLib_ShimFree((PVOID)names);
 }
 
 BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason, PVOID ptr)
