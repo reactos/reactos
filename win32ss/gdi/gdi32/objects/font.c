@@ -1804,7 +1804,7 @@ CreateFontIndirectW(
     CONST LOGFONTW		*lplf
 )
 {
-#if DBG
+#if 0
     static BOOL bDidTest = FALSE;
     if (!bDidTest)
     {
