@@ -374,6 +374,7 @@ static void DoTestEntry(HDC hDC, const TEST_ENTRY *entry)
     {
         LONG x = MulDiv(entry->ptSrc.x - ptWnd.x, sizView.cx, sizWnd.cx) + ptView.x;
         LONG y = MulDiv(entry->ptSrc.y - ptWnd.y, sizView.cy, sizWnd.cy) + ptView.y;
+        // TODO: make more accurate
         ok(labs(pt.x - x) <= 1 && labs(pt.y - y) <= 1,
            "Line %d: Dest expected (%ld, %ld), was (%ld, %ld)\n",
            entry->lineno, x, y, pt.x, pt.y);
