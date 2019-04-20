@@ -461,7 +461,8 @@ EnumerateDevices(
     DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
-    KeyInfoSize = sizeof(KEY_BASIC_INFORMATION) + (MAX_PATH + 1) * sizeof(WCHAR);
+    /* Should hold most key names, but we reallocate below if it's too small */
+    KeyInfoSize = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name) + 64 * sizeof(WCHAR);
     KeyInfo = ExAllocatePoolWithTag(PagedPool,
                                     KeyInfoSize + sizeof(UNICODE_NULL),
                                     TAG_PNP_ROOT);
