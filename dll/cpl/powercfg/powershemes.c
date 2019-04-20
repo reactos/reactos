@@ -110,15 +110,15 @@ Pos_InitData(VOID)
 
     if (!spc.SystemBatteriesPresent)
     {
-        ShowWindow(GetDlgItem(hPos, IDC_SAT),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_IAC),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_SAC),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_IDC),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_SDC),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_MONITORDCLIST),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_DISKDCLIST),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_STANDBYDCLIST),FALSE);
-        ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEDCLIST),FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_SAT), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_IAC), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_SAC), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_IDC), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_SDC), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_MONITORDCLIST), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_DISKDCLIST), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_STANDBYDCLIST), FALSE);
+        ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEDCLIST), FALSE);
         ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEACLIST), spc.HiberFilePresent);
 
     }
@@ -145,7 +145,7 @@ Pos_InitData(VOID)
 static VOID
 LoadConfig(HWND hwndDlg)
 {
-    INT i=0, iCurSel=0;
+    INT i = 0, iCurSel = 0;
     UINT uiIndex;
     TCHAR szProfile[MAX_PATH];
     TCHAR szTemp[MAX_PATH];
@@ -162,19 +162,19 @@ LoadConfig(HWND hwndDlg)
     memcpy(&pp, &gPP[iCurSel], sizeof(POWER_POLICY));
 
     uiIndex = (UINT)SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST, CB_GETCURSEL, 0, 0);
-    if(uiIndex != (UINT)CB_ERR)
+    if (uiIndex != (UINT)CB_ERR)
     {
         SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST, CB_GETLBTEXT, uiIndex, (LPARAM)szProfile);
-        if(LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))
+        if (LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))
         {
             _stprintf(szConfig,szTemp,szProfile);
-            SetWindowText(GetDlgItem(hwndDlg, IDC_GRPDETAIL),szConfig);
+            SetWindowText(GetDlgItem(hwndDlg, IDC_GRPDETAIL), szConfig);
         }
     }
 
-    for(i=0;i<16;i++)
+    for (i = 0; i < 16; i++)
     {
-        if (Sec[i]==pp.user.VideoTimeoutAc)
+        if (Sec[i] == pp.user.VideoTimeoutAc)
         {
             SendDlgItemMessage(hwndDlg, IDC_MONITORACLIST,
                         CB_SETCURSEL,
@@ -182,35 +182,39 @@ LoadConfig(HWND hwndDlg)
                         (LPARAM)0);
         }
 
-        if (Sec[i]==pp.user.VideoTimeoutDc)
+        if (Sec[i] == pp.user.VideoTimeoutDc)
         {
             SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
                         CB_SETCURSEL,
                          i,
                          (LPARAM)0);
         }
-        if (Sec[i]==pp.user.SpindownTimeoutAc)
+
+        if (Sec[i] == pp.user.SpindownTimeoutAc)
         {
             SendDlgItemMessage(hwndDlg, IDC_DISKACLIST,
                        CB_SETCURSEL,
-                       i-2,
+                       i - 2,
                        (LPARAM)0);
         }
-        if (Sec[i]==pp.user.SpindownTimeoutDc) // IdleTimeoutDc)
+
+        if (Sec[i] == pp.user.SpindownTimeoutDc) // IdleTimeoutDc)
         {
             SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
                        CB_SETCURSEL,
-                       i-2,
+                       i - 2,
                        (LPARAM)0);
         }
-        if (Sec[i]==pp.user.IdleTimeoutAc)
+
+        if (Sec[i] == pp.user.IdleTimeoutAc)
         {
             SendDlgItemMessage(hwndDlg, IDC_STANDBYACLIST,
                        CB_SETCURSEL,
                        i,
                        (LPARAM)0);
         }
-        if (Sec[i]==pp.user.IdleTimeoutDc)
+
+        if (Sec[i] == pp.user.IdleTimeoutDc)
         {
             SendDlgItemMessage(hwndDlg, IDC_STANDBYDCLIST,
                        CB_SETCURSEL,
@@ -218,14 +222,15 @@ LoadConfig(HWND hwndDlg)
                        (LPARAM)0);
         }
 
-        if (Sec[i]==pp.mach.DozeS4TimeoutAc)
+        if (Sec[i] == pp.mach.DozeS4TimeoutAc)
         {
             SendDlgItemMessage(hwndDlg, IDC_HYBERNATEACLIST,
                        CB_SETCURSEL,
                        i,
                     (LPARAM)0);
         }
-        if (Sec[i]==pp.mach.DozeS4TimeoutDc)
+
+        if (Sec[i] == pp.mach.DozeS4TimeoutDc)
         {
             SendDlgItemMessage(hwndDlg, IDC_HYBERNATEDCLIST,
                        CB_SETCURSEL,
@@ -238,7 +243,7 @@ LoadConfig(HWND hwndDlg)
 
 BOOLEAN CALLBACK
 callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
-                       LPWSTR sDesc, PPOWER_POLICY pp,LPARAM lParam)
+                       LPWSTR sDesc, PPOWER_POLICY pp, LPARAM lParam)
 {
     int index;
 
@@ -247,7 +252,7 @@ callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
     UNREFERENCED_PARAMETER(dwDesc);
     UNREFERENCED_PARAMETER(dwName);
 
-    if (ValidatePowerPolicies(0,pp))
+    if (ValidatePowerPolicies(0, pp))
     {
         if (guiIndex >= MAX_POWER_POLICY)
         {
@@ -260,7 +265,7 @@ callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
         memcpy(&gPP[guiIndex], pp, sizeof(POWER_POLICY));
         guiIndex++;
 
-        index = (int) SendMessage(hList,
+        index = (int)SendMessage(hList,
                CB_ADDSTRING,
                0,
                (LPARAM)sName);
@@ -281,6 +286,7 @@ callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
             LoadConfig(GetParent(hList));
         }
     }
+
     return TRUE;
 }
 
@@ -288,51 +294,60 @@ callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
 static VOID
 Pos_InitPage(HWND hwndDlg)
 {
-    int ifrom=0,i=0,imin=0;
+    int ifrom = 0, i = 0, imin = 0;
     HWND hwnd = NULL;
     TCHAR szName[MAX_PATH];
     LRESULT index;
 
-    for(i=1;i<9;i++)
+    for (i = 1; i < 9; i++)
     {
-        switch(i)
+        switch (i)
         {
-        case 1:
-            hwnd=GetDlgItem(hwndDlg, IDC_MONITORACLIST);
-            imin=IDS_TIMEOUT1;
-            break;
-        case 2:
-            hwnd=GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
-            imin=IDS_TIMEOUT1;
-            break;
-        case 3:
-            hwnd=GetDlgItem(hwndDlg, IDC_DISKACLIST);
-            imin=IDS_TIMEOUT3;
-            break;
-        case 4:
-            hwnd=GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST);
-            imin=IDS_TIMEOUT3;
-            break;
-        case 5:
-            hwnd=GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
-            imin=IDS_TIMEOUT1;
-            break;
-        case 6:
-            hwnd=GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
-            imin=IDS_TIMEOUT1;
-            break;
-        case 7:
-            hwnd=GetDlgItem(hwndDlg, IDC_DISKDCLIST);
-            imin=IDS_TIMEOUT3;
-            break;
-        case 8:
-            hwnd=GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST);
-            imin=IDS_TIMEOUT3;
-            break;
-        default:
-            return;
+            case 1:
+                hwnd = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
+                imin = IDS_TIMEOUT1;
+                break;
+
+            case 2:
+                hwnd = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
+                imin = IDS_TIMEOUT1;
+                break;
+
+            case 3:
+                hwnd = GetDlgItem(hwndDlg, IDC_DISKACLIST);
+                imin = IDS_TIMEOUT3;
+                break;
+
+            case 4:
+                hwnd = GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST);
+                imin = IDS_TIMEOUT3;
+                break;
+
+            case 5:
+                hwnd = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
+                imin = IDS_TIMEOUT1;
+                break;
+
+            case 6:
+                hwnd = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
+                imin = IDS_TIMEOUT1;
+                break;
+
+            case 7:
+                hwnd = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
+                imin = IDS_TIMEOUT3;
+                break;
+
+            case 8:
+                hwnd = GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST);
+                imin = IDS_TIMEOUT3;
+                break;
+
+            default:
+                return;
         }
-        for (ifrom=imin;ifrom<(IDS_TIMEOUT15+1);ifrom++)
+
+        for (ifrom = imin; ifrom < (IDS_TIMEOUT15 + 1); ifrom++)
         {
             if (LoadString(hApplet, ifrom, szName, MAX_PATH))
             {
@@ -340,16 +355,16 @@ Pos_InitPage(HWND hwndDlg)
                                      CB_ADDSTRING,
                                      0,
                                     (LPARAM)szName);
-
                 if (index == CB_ERR)
                     return;
 
                 SendMessage(hwnd,
                              CB_SETITEMDATA,
                              index,
-                             (LPARAM)Sec[ifrom-IDS_TIMEOUT16]);
+                             (LPARAM)Sec[ifrom - IDS_TIMEOUT16]);
             }
         }
+
         if (LoadString(hApplet, IDS_TIMEOUT16, szName, MAX_PATH))
         {
             index = SendMessage(hwnd,
@@ -371,16 +386,16 @@ Pos_InitPage(HWND hwndDlg)
 static VOID
 Pos_SaveData(HWND hwndDlg)
 {
-    INT iCurSel=0,tmp=0;
+    INT iCurSel = 0, tmp = 0;
 
-    iCurSel = (INT) SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST,
+    iCurSel = (INT)SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST,
         CB_GETCURSEL,
         0,
         0);
     if (iCurSel == CB_ERR)
         return;
 
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -388,7 +403,8 @@ Pos_SaveData(HWND hwndDlg)
     {
         gPP[iCurSel].user.VideoTimeoutAc = Sec[tmp];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -396,23 +412,26 @@ Pos_SaveData(HWND hwndDlg)
     {
         gPP[iCurSel].user.VideoTimeoutDc = Sec[tmp];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_DISKACLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_DISKACLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
     if (tmp > 0 && tmp < 16)
     {
-        gPP[iCurSel].user.SpindownTimeoutAc = Sec[tmp+2];
+        gPP[iCurSel].user.SpindownTimeoutAc = Sec[tmp + 2];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_DISKDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
     if (tmp > 0 && tmp < 16)
     {
-        gPP[iCurSel].user.SpindownTimeoutDc = Sec[tmp+2];
+        gPP[iCurSel].user.SpindownTimeoutDc = Sec[tmp + 2];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_STANDBYACLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_STANDBYACLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -420,7 +439,8 @@ Pos_SaveData(HWND hwndDlg)
     {
         gPP[iCurSel].user.IdleTimeoutAc = Sec[tmp];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_STANDBYDCLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_STANDBYDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -428,7 +448,8 @@ Pos_SaveData(HWND hwndDlg)
     {
         gPP[iCurSel].user.IdleTimeoutDc = Sec[tmp];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_HYBERNATEACLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HYBERNATEACLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -436,7 +457,8 @@ Pos_SaveData(HWND hwndDlg)
     {
         gPP[iCurSel].mach.DozeS4TimeoutAc = Sec[tmp];
     }
-    tmp = (INT) SendDlgItemMessage(hwndDlg, IDC_HYBERNATEDCLIST,
+
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_HYBERNATEDCLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
@@ -445,7 +467,7 @@ Pos_SaveData(HWND hwndDlg)
         gPP[iCurSel].mach.DozeS4TimeoutDc = Sec[tmp];
     }
 
-    SetActivePwrScheme(iCurSel,NULL,&gPP[iCurSel]);
+    SetActivePwrScheme(iCurSel, NULL, &gPP[iCurSel]);
     LoadConfig(hwndDlg);
 }
 
@@ -461,12 +483,14 @@ DelScheme(HWND hwnd)
     hList = GetDlgItem(hwnd, IDC_ENERGYLIST);
 
     iCurSel = SendMessage(hList, CB_GETCURSEL, 0, 0);
-    if (iCurSel == CB_ERR) return FALSE;
+    if (iCurSel == CB_ERR)
+        return FALSE;
 
     SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
 
     DelScheme = SendMessage(hList, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
-    if (DelScheme == (UINT)CB_ERR) return FALSE;
+    if (DelScheme == (UINT)CB_ERR)
+        return FALSE;
 
     LoadString(hApplet, IDS_DEL_SCHEME_TITLE, szBufT, sizeof(szBufT) / sizeof(TCHAR));
     LoadString(hApplet, IDS_DEL_SCHEME, szBuf, sizeof(szBuf) / sizeof(TCHAR));
@@ -479,10 +503,12 @@ DelScheme(HWND hwnd)
         {
             SendMessage(hList, CB_SETCURSEL, (WPARAM)0, 0);
             SendMessage(hList, CB_DELETESTRING, (WPARAM)iCurSel, 0);
-            if (Current == DelScheme) Pos_SaveData(hwnd);
+            if (Current == DelScheme)
+                Pos_SaveData(hwnd);
         }
 
-        if (DeletePwrScheme(DelScheme) != 0) return TRUE;
+        if (DeletePwrScheme(DelScheme) != 0)
+            return TRUE;
     }
 
     return FALSE;
@@ -504,14 +530,14 @@ CreateEnergyList(HWND hwnd)
     if (!ReadGlobalPwrPolicy(&gGPP))
         return FALSE;
 
-    if (!ReadPwrScheme(aps,&pp))
+    if (!ReadPwrScheme(aps, &pp))
         return FALSE;
 
-    if (!ValidatePowerPolicies(&gGPP,0))
+    if (!ValidatePowerPolicies(&gGPP, 0))
         return FALSE;
 
 /*
-    if (!SetActivePwrScheme(aps,&gGPP,&pp))
+    if (!SetActivePwrScheme(aps, &gGPP, &pp))
         return FALSE;
 */
 
@@ -531,10 +557,10 @@ CreateEnergyList(HWND hwnd)
 
     retval = EnumPwrSchemes(callback_EnumPwrScheme, aps);
 
-    if(SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0)
+    if (SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0)
     {
-        EnableWindow(GetDlgItem(hwndDialog, IDC_DELETE_BTN),TRUE);
-        EnableWindow(GetDlgItem(hwndDialog, IDC_SAVEAS_BTN),TRUE);
+        EnableWindow(GetDlgItem(hwndDialog, IDC_DELETE_BTN), TRUE);
+        EnableWindow(GetDlgItem(hwndDialog, IDC_SAVEAS_BTN), TRUE);
     }
 
     return retval;
@@ -544,78 +570,78 @@ CreateEnergyList(HWND hwnd)
 /* Property page dialog callback */
 INT_PTR CALLBACK
 PowerSchemesDlgProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-        hPos = hwndDlg;
-        hwndDialog = hwndDlg;
-        if (!Pos_InitData())
-        {
-            // TODO:
-            // Initialization failed
-            // Handle error
-            MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
-
-        }
-        if (!CreateEnergyList(GetDlgItem(hwndDlg, IDC_ENERGYLIST)))
-        {
-            // TODO:
-            // Initialization failed
-            // Handle error
-            MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
-        }
-        return TRUE;
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDC_ENERGYLIST:
-            if (HIWORD(wParam) == CBN_SELCHANGE)
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            hPos = hwndDlg;
+            hwndDialog = hwndDlg;
+            if (!Pos_InitData())
             {
-                LoadConfig(hwndDlg);
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                // TODO:
+                // Initialization failed
+                // Handle error
+                MessageBox(hwndDlg,_T("Pos_InitData failed\n"), NULL, MB_OK);
             }
-            break;
-        case IDC_DELETE_BTN:
-        {
-            DelScheme(hwndDlg);
-        }
-        break;
-        case IDC_SAVEAS_BTN:
-        {
 
-        }
-        break;
-        case IDC_MONITORACLIST:
-        case IDC_MONITORDCLIST:
-        case IDC_DISKACLIST:
-        case IDC_DISKDCLIST:
-        case IDC_STANDBYACLIST:
-        case IDC_STANDBYDCLIST:
-        case IDC_HYBERNATEACLIST:
-        case IDC_HYBERNATEDCLIST:
-            if (HIWORD(wParam) == CBN_SELCHANGE)
+            if (!CreateEnergyList(GetDlgItem(hwndDlg, IDC_ENERGYLIST)))
             {
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            }
-            break;
-        }
-        break;
-    case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-            if (lpnm->code == (UINT)PSN_APPLY)
-            {
-                Pos_SaveData(hwndDlg);
+                // TODO:
+                // Initialization failed
+                // Handle error
+                MessageBox(hwndDlg,_T("CreateEnergyList failed\n"), NULL, MB_OK);
             }
             return TRUE;
-        }
-        break;
-  }
-  return FALSE;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDC_ENERGYLIST:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        LoadConfig(hwndDlg);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_DELETE_BTN:
+                    DelScheme(hwndDlg);
+                    break;
+
+                case IDC_SAVEAS_BTN:
+                    break;
+
+                case IDC_MONITORACLIST:
+                case IDC_MONITORDCLIST:
+                case IDC_DISKACLIST:
+                case IDC_DISKDCLIST:
+                case IDC_STANDBYACLIST:
+                case IDC_STANDBYDCLIST:
+                case IDC_HYBERNATEACLIST:
+                case IDC_HYBERNATEDCLIST:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            {
+                LPNMHDR lpnm = (LPNMHDR)lParam;
+                if (lpnm->code == (UINT)PSN_APPLY)
+                {
+                    Pos_SaveData(hwndDlg);
+                }
+                return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
 }
