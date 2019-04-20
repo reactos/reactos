@@ -395,7 +395,7 @@ Pos_SaveData(HWND hwndDlg)
     if (iCurSel == CB_ERR)
         return;
 
-    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORDCLIST,
+    tmp = (INT)SendDlgItemMessage(hwndDlg, IDC_MONITORACLIST,
                    CB_GETCURSEL,
                    0,
                    (LPARAM)0);
