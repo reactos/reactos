@@ -188,7 +188,6 @@ typedef struct _ROS_SHARED_CACHE_MAP
 
     /* ROS specific */
     LIST_ENTRY CacheMapVacbListHead;
-    ULONG TimeStamp;
     BOOLEAN PinAccess;
     KSPIN_LOCK CacheMapLock;
 #if DBG
