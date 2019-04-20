@@ -1138,7 +1138,7 @@ CcFlushCache (
                     }
                 }
 
-                CcRosReleaseVacb(SharedCacheMap, current, current->Valid, current->Dirty, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, current, current->Valid, FALSE, FALSE);
             }
 
             Offset.QuadPart += VACB_MAPPING_GRANULARITY;
