@@ -169,6 +169,16 @@ NTAPI
 KeRestoreFloatingPointState(
   _In_ PKFLOATING_SAVE FloatSave);
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+FORCEINLINE
+ULONG
+NTAPI
+KeGetCurrentProcessorIndex(VOID)
+{
+    return __readfsbyte(0x51);
+}
+#endif
+
 /* VOID
  * KeFlushIoBuffers(
  *   IN PMDL Mdl,
@@ -315,6 +325,9 @@ typedef struct _KPCR {
   ULONG HalReserved[16];
 } KPCR, *PKPCR;
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+_CRT_DEPRECATE_TEXT("KeGetCurrentProcessorNumber is deprecated. Use KeGetCurrentProcessorNumberEx or KeGetCurrentProcessorIndex instead.")
+#endif
 FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
