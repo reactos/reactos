@@ -10,8 +10,6 @@
 #include <commctrl.h>
 #include <undocuser.h>
 
-// TODO: FindMRUStringW
-
 typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
 typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
 
@@ -30,7 +28,7 @@ typedef struct tagMRUINFOW
     } u;
 } MRUINFOW, *LPMRUINFOW;
 
-// flags for MRUINFOW.fFlags
+/* flags for MRUINFOW.fFlags */
 #define MRU_BINARY 0x0001
 #define MRU_CACHEWRITE 0x0002
 
@@ -42,23 +40,23 @@ static const WCHAR s_szD[] = L"4th test data";
 static const WCHAR s_szNewItem[] = L"New Item";
 static const WCHAR s_szCADB[] = L"cadb";
 
-// comctl32.400: CreateMRUListW
+/* comctl32.400: CreateMRUListW */
 typedef HANDLE (WINAPI *CREATEMRULISTW)(const MRUINFOW *);
 static CREATEMRULISTW s_pCreateMRUListW = NULL;
 
-// comctl32.401: AddMRUStringW
+/* comctl32.401: AddMRUStringW */
 typedef INT (WINAPI *ADDMRUSTRINGW)(HANDLE, LPCWSTR);
 static ADDMRUSTRINGW s_pAddMRUStringW = NULL;
 
-// comctl32.402: FindMRUStringW
+/* comctl32.402: FindMRUStringW */
 typedef INT (WINAPI *FINDMRUSTRINGW)(HANDLE, LPCWSTR, LPINT);
 static FINDMRUSTRINGW s_pFindMRUStringW = NULL;
 
-// comctl32.403: EnumMRUListW
+/* comctl32.403: EnumMRUListW */
 typedef INT (WINAPI *ENUMMRULISTW)(HANDLE, INT, LPVOID, DWORD);
 static ENUMMRULISTW s_pEnumMRUListW = NULL;
 
-// comctl32.152: FreeMRUList
+/* comctl32.152: FreeMRUList */
 typedef void (WINAPI *FREEMRULIST)(HANDLE);
 static FREEMRULIST s_pFreeMRUList = NULL;
 
