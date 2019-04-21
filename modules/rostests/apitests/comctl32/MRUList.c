@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for Button window class v6
- * PROGRAMMERS:     Giannis Adamopoulos
+ * PURPOSE:         Test for MRUList functions
+ * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "wine/test.h"
