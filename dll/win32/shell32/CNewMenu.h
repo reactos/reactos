@@ -39,7 +39,8 @@ private:
         SHELLNEW_TYPE_COMMAND = 1,
         SHELLNEW_TYPE_DATA = 2,
         SHELLNEW_TYPE_FILENAME = 4,
-        SHELLNEW_TYPE_NULLFILE = 8
+        SHELLNEW_TYPE_NULLFILE = 8,
+        SHELLNEW_TYPE_LINK = 16
     };
 
     struct SHELLNEW_ITEM
@@ -71,7 +72,8 @@ private:
     SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
     HRESULT CreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi);
-    HRESULT SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName);
+    HRESULT SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bEdit);
+    BOOL NewLinkHere(LPCWSTR pszLnkFile);
 
 public:
     CNewMenu();

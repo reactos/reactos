@@ -104,6 +104,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
         {L"Command", SHELLNEW_TYPE_COMMAND, TRUE, TRUE},
         {L"Data", SHELLNEW_TYPE_DATA, TRUE, FALSE},
         {L"NullFile", SHELLNEW_TYPE_NULLFILE, FALSE},
+        {L"Link", SHELLNEW_TYPE_LINK, FALSE},
         {NULL}
     };
     UINT i;
@@ -310,7 +311,7 @@ CNewMenu::LoadAllItems()
         m_pLinkItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));
         if (m_pLinkItem)
         {
-            m_pLinkItem->Type = SHELLNEW_TYPE_NULLFILE;
+            m_pLinkItem->Type = SHELLNEW_TYPE_LINK;
             m_pLinkItem->pwszDesc = _wcsdup(L"Link");
             m_pLinkItem->pwszExt = _wcsdup(L".lnk");
         }
@@ -404,13 +405,18 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
     return pItem;
 }
 
-HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName)
+HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bEdit)
 {
     CComPtr<IShellBrowser> lpSB;
     CComPtr<IShellView> lpSV;
     HRESULT hr = E_FAIL;
     LPITEMIDLIST pidl;
     PITEMID_CHILD pidlNewItem;
+    UINT uSelectFlags;
+
+    uSelectFlags = SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
+    if (bEdit)
+        uSelectFlags |= SVSI_EDIT;
 
     /* Notify the view object about the new item */
     SHChangeNotify(wEventId, uFlags, (LPCVOID) pszName, NULL);
@@ -430,8 +436,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName)
 
     pidlNewItem = ILFindLastID(pidl);
 
-    hr = lpSV->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
-                                       SVSI_FOCUSED | SVSI_SELECT);
+    hr = lpSV->SelectItem(pidlNewItem, uSelectFlags);
 
     SHFree(pidl);
 
@@ -463,9 +468,19 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
         return E_FAIL;
 
     /* Show and select the new item in the def view */
-    SelectNewItem(SHCNE_MKDIR, SHCNF_PATHW, wszName);
+    SelectNewItem(SHCNE_MKDIR, SHCNF_PATHW, wszName, TRUE);
 
     return S_OK;
+}
+
+BOOL CNewMenu::NewLinkHere(LPCWSTR pszLnkFile)
+{
+    WCHAR szShortPath[MAX_PATH], szCmdLine[MAX_PATH + 32];
+    GetShortPathNameW(pszLnkFile, szShortPath, _countof(szShortPath));
+
+    StringCbPrintfW(szCmdLine, sizeof(szCmdLine),
+                    L"appwiz.cpl,NewLinkHere %s", szShortPath);
+    return (INT_PTR)ShellExecuteW(NULL, NULL, L"rundll32.exe", szCmdLine, NULL, SW_SHOWNORMAL) > 32;
 }
 
 HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi)
@@ -525,6 +540,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
         case SHELLNEW_TYPE_DATA:
         case SHELLNEW_TYPE_FILENAME:
         case SHELLNEW_TYPE_NULLFILE:
+        case SHELLNEW_TYPE_LINK:
         {
             BOOL bSuccess = TRUE;
             WCHAR wszName[MAX_PATH];
@@ -569,7 +585,15 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             if (bSuccess)
             {
                 TRACE("Notifying fs %s\n", debugstr_w(wszName));
-                SelectNewItem(SHCNE_CREATE, SHCNF_PATHW, wszName);
+                if (pItem->Type == SHELLNEW_TYPE_LINK)
+                {
+                    SelectNewItem(SHCNE_CREATE, SHCNF_PATHW, wszName, FALSE);
+                    NewLinkHere(wszName);
+                }
+                else
+                {
+                    SelectNewItem(SHCNE_CREATE, SHCNF_PATHW, wszName, TRUE);
+                }
             }
             else
             {
