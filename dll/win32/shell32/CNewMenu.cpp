@@ -405,7 +405,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::FindItemFromIdOffset(UINT IdOffset)
     return pItem;
 }
 
-HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bEdit)
+HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bRename)
 {
     CComPtr<IShellBrowser> lpSB;
     CComPtr<IShellView> lpSV;
@@ -415,7 +415,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
     UINT uSelectFlags;
 
     uSelectFlags = SVSI_DESELECTOTHERS | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
-    if (bEdit)
+    if (bRename)
         uSelectFlags |= SVSI_EDIT;
 
     /* Notify the view object about the new item */

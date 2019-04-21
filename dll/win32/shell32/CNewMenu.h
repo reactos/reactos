@@ -72,7 +72,7 @@ private:
     SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
     HRESULT CreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi);
-    HRESULT SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bEdit);
+    HRESULT SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL bRename);
     BOOL NewLinkHere(LPCWSTR pszLnkFile);
 
 public:
