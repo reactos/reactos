@@ -1,10 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for MRUList functions
- * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Test for undocumented MRUList functions
+ * COPYRIGHT:   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include "wine/test.h"
 #include <windows.h>
 
