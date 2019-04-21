@@ -7,8 +7,6 @@
 
 #include "wine/test.h"
 #include <windows.h>
-#include <commctrl.h>
-#include <undocuser.h>
 
 typedef INT (CALLBACK *MRUStringCmpFnW)(LPCWSTR lhs, LPCWSTR rhs);
 typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
