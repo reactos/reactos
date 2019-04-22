@@ -131,6 +131,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     //
     // Display progress
     //
+    UiDrawBackdrop();
     UiDrawProgressBarCenter(1, 100, MsgBuffer);
 
     //

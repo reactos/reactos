@@ -83,13 +83,12 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     PFILE LinuxKernel = 0;
     PFILE LinuxInitrdFile = 0;
 
-    UiDrawBackdrop();
-
     if (Description)
         sprintf(LinuxBootDescription, "Loading %s...", Description);
     else
         strcpy(LinuxBootDescription, "Loading Linux...");
 
+    UiDrawBackdrop();
     UiDrawStatusText(LinuxBootDescription);
     UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
 
