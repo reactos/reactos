@@ -457,7 +457,7 @@ SepAccessCheckAndAuditAlarm(
         if ((ResultListLength == 0) || (ResultListLength > 0x1000))
         {
             Status = STATUS_INVALID_PARAMETER;
-            DPRINT1("Invalud ResultListLength: 0x%lx\n", ResultListLength);
+            DPRINT1("Invalid ResultListLength: 0x%lx\n", ResultListLength);
             goto Cleanup;
         }
 

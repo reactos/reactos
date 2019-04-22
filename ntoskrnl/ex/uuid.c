@@ -26,7 +26,7 @@
 #define SECS_15_OCT_1582_TO_1601  ((17 + 30 + 31 + 365 * 18 + 5) * SECSPERDAY)
 #define TICKS_15_OCT_1582_TO_1601 ((ULONGLONG)SECS_15_OCT_1582_TO_1601 * TICKSPERSEC)
 
-/* 10000 in 100-ns model = 0,1 microsecond */
+/* 10000 in 100-ns model = 0.1 microsecond */
 #define TIME_FRAME 10000
 
 #if defined (ALLOC_PRAGMA)
@@ -247,7 +247,7 @@ ExpAllocateUuids(PULARGE_INTEGER Time,
         return STATUS_RETRY;
     }
 
-    /* If time diff > 0,1ms, squash it to reduce it to keep our clock resolution */
+    /* If time diff > 0.1ms, squash it to reduce it to keep our clock resolution */
     if (TimeDiff.HighPart > 0 || TimeDiff.QuadPart > TICKS_PER_CLOCK_TICK * TIME_FRAME)
     {
         TimeDiff.QuadPart = TICKS_PER_CLOCK_TICK * TIME_FRAME;
