@@ -24,6 +24,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl);
 BOOL OSK_ReleaseKey(WORD ScanCode);
 
 INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw);
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
 /* FUNCTIONS ******************************************************************/
@@ -430,6 +431,58 @@ BOOL OSK_ReleaseKey(WORD ScanCode)
 
 /***********************************************************************
  *
+ *           OSK_ThemeHandler
+ *
+ *  Function helper which handles theme drawing of controls
+ */
+LRESULT APIENTRY OSK_ThemeHandler(HWND hDlg, NMCUSTOMDRAW *pNmDraw)
+{
+    HTHEME hTheme;
+    HWND hDlgButtonCtrl;
+    INT iState = PBS_NORMAL;
+
+    /* Retrieve the theme handle for the button controls */
+    hDlgButtonCtrl = pNmDraw->hdr.hwndFrom;
+    hTheme = GetWindowTheme(hDlgButtonCtrl);
+
+    /*
+        Begin the painting procedures if we retrieved
+        the theme for control buttons of the dialog.
+    */
+    if (hTheme)
+    {
+        /*
+            The button could be either in normal state or pushed.
+            Retrieve its state and save to a variable.
+        */
+        if (pNmDraw->uItemState & CDIS_DEFAULT)
+        {
+            iState = PBS_DEFAULTED;
+        }
+        else if (pNmDraw->uItemState & CDIS_SELECTED)
+        {
+            iState = PBS_PRESSED;
+        }
+        else if (pNmDraw->uItemState & CDIS_HOT)
+        {
+            iState = PBS_HOT;
+        }
+
+        if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+        {
+            /* Draw the application if the theme is transparent */
+            DrawThemeParentBackground(hDlg, pNmDraw->hdc, &pNmDraw->rc);
+        }
+
+        /* Draw it */
+        DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+    }
+
+    return CDRF_SKIPDEFAULT;
+}
+
+/***********************************************************************
+ *
  *       OSK_DlgProc
  */
 INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -443,6 +496,9 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_TIMER:
             OSK_DlgTimer();
             return TRUE;
+
+        case WM_NOTIFY:
+            return OSK_ThemeHandler(hDlg, (LPNMCUSTOMDRAW)lParam);
 
         case WM_CTLCOLORSTATIC:
             if ((HWND)lParam == GetDlgItem(hDlg, IDC_LED_NUM))
@@ -565,6 +621,11 @@ INT_PTR APIENTRY OSK_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                     OSK_DlgCommand(wParam, (HWND)lParam);
                     break;
             }
+            break;
+
+        case WM_THEMECHANGED:
+            /* Redraw the dialog (and its control buttons) using the new theme */
+            InvalidateRect(hDlg, NULL, FALSE);
             break;
 
         case WM_CLOSE:
