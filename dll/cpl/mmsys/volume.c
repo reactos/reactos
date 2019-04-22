@@ -365,7 +365,7 @@ SaveData(HWND hwndDlg)
 
     bShowIcon = (IsDlgButtonChecked(hwndDlg, IDC_ICON_IN_TASKBAR) == BST_CHECKED);
 
-    SetSystrayVolumeIconState(!bShowIcon);
+    SetSystrayVolumeIconState(bShowIcon);
 }
 
 VOID

@@ -301,17 +301,20 @@ Adv_InitDialog(VOID)
     BOOLEAN bSuspend = FALSE;
     BOOLEAN bHibernate;
     BOOLEAN bShutdown;
+    BOOL bEnabled;
 
     SYSTEM_POWER_CAPABILITIES spc;
 
-    if (GetSystrayPowerIconState())
+    bEnabled = GetSystrayPowerIconState();
+
+    if (bEnabled)
         gGPP.user.GlobalFlags |= EnableSysTrayBatteryMeter;
     else
         gGPP.user.GlobalFlags &= ~EnableSysTrayBatteryMeter;
 
     CheckDlgButton(hAdv,
         IDC_SYSTRAYBATTERYMETER,
-        gGPP.user.GlobalFlags & EnableSysTrayBatteryMeter ? BST_CHECKED : BST_UNCHECKED);
+        bEnabled ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hAdv,
         IDC_PASSWORDLOGON,
         gGPP.user.GlobalFlags & EnablePasswordLogon ? BST_CHECKED : BST_UNCHECKED);
@@ -501,7 +504,7 @@ Adv_SaveData(HWND hwndDlg)
         MessageBox(hwndDlg, L"WriteGlobalPwrPolicy failed", NULL, MB_OK);
     }
 
-    SetSystrayPowerIconState(!bSystrayBatteryMeter);
+    SetSystrayPowerIconState(bSystrayBatteryMeter);
 
     Adv_InitDialog();
 }
