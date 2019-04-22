@@ -180,7 +180,8 @@ public:
     void Initialize(HWND hWndParent, CBalloonQueue * queue);
 };
 
-extern const WCHAR szSysPagerWndClass[];
+
+static const WCHAR szSysPagerWndClass[] = L"SysPager";
 
 class CSysPagerWnd :
     public CComCoClass<CSysPagerWnd>,
@@ -257,6 +258,10 @@ public:
 
     HRESULT Initialize(IN HWND hWndParent);
 };
+
+/*
+ * IconWatcher
+ */
 
 CIconWatcher::CIconWatcher() :
     m_hWatcherThread(NULL),
@@ -489,8 +494,8 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
 }
 
 /*
-* NotifyToolbar
-*/
+ * BalloonQueue
+ */
 
 CBalloonQueue::CBalloonQueue() :
     m_hwndParent(NULL),
@@ -1255,7 +1260,6 @@ void CNotifyToolbar::Initialize(HWND hWndParent, CBalloonQueue * queue)
 /*
  * SysPagerWnd
  */
-const WCHAR szSysPagerWndClass[] = L"SysPager";
 
 CSysPagerWnd::CSysPagerWnd() {}
 

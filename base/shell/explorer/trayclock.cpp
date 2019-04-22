@@ -39,7 +39,7 @@ const UINT ClockWndFormatsCount = _ARRAYSIZE(ClockWndFormats);
 
 #define CLOCKWND_FORMAT_COUNT ClockWndFormatsCount
 
-extern const WCHAR szTrayClockWndClass[];
+static const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 
 class CTrayClockWnd :
     public CComCoClass<CTrayClockWnd>,
@@ -141,8 +141,6 @@ public:
 
     HRESULT Initialize(IN HWND hWndParent);
 };
-
-const WCHAR szTrayClockWndClass[] = L"TrayClockWClass";
 
 #define ID_TRAYCLOCK_TIMER  0
 #define ID_TRAYCLOCK_TIMER_INIT 1
