@@ -99,7 +99,11 @@ typedef struct _LOADED_IMAGE
     PSTR                        ModuleName;
     HANDLE                      hFile;
     PUCHAR                      MappedAddress;
-    PIMAGE_NT_HEADERS           FileHeader;
+#ifdef _IMAGEHLP64
+    PIMAGE_NT_HEADERS64         FileHeader;
+#else
+    PIMAGE_NT_HEADERS32         FileHeader;
+#endif
     PIMAGE_SECTION_HEADER       LastRvaSection;
     ULONG                       NumberOfSections;
     PIMAGE_SECTION_HEADER       Sections;
