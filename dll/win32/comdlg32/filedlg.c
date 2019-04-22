@@ -212,7 +212,7 @@ static void FILEDLG95_MRU_load_filename(LPWSTR stored_path);
 static WCHAR FILEDLG95_MRU_get_slot(LPCWSTR module_name, LPWSTR stored_path, PHKEY hkey_ret);
 static void FILEDLG95_MRU_save_filename(LPCWSTR filename);
 #ifdef __REACTOS__
-static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext);
+static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR defext);
 static void FILEDLG95_MRU_save_ext(LPCWSTR filename);
 #endif
 
@@ -1762,15 +1762,15 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   if (!handledPath && (!fodInfos->initdir || !*fodInfos->initdir))
   {
       /* 2.5. Win2000+: Recently used defext */
-      if (!handledPath && win2000plus) {
+      if (win2000plus) {
           fodInfos->initdir = heap_alloc(MAX_PATH * sizeof(WCHAR));
           fodInfos->initdir[0] = '\0';
 
-          FILEDLG95_MRU_load_ext(fodInfos->initdir, fodInfos->defext);
+          FILEDLG95_MRU_load_ext(fodInfos->initdir, MAX_PATH, fodInfos->defext);
 
-          if (fodInfos->initdir[0] && PathIsDirectoryW(fodInfos->initdir)){
+          if (fodInfos->initdir[0] && PathIsDirectoryW(fodInfos->initdir)) {
              handledPath = TRUE;
-          }else{
+          } else {
              heap_free(fodInfos->initdir);
              fodInfos->initdir = NULL;
           }
@@ -2562,11 +2562,6 @@ static BOOL FILEDLG_InitMRUList(void)
     return TRUE;
 }
 
-static INT CALLBACK FILEDLG_CompareString(LPCWSTR lhs, LPCWSTR rhs)
-{
-    return lstrcmpiW(lhs, rhs);
-}
-
 static BOOL ExtIsPicture(LPCWSTR ext)
 {
     static const WCHAR s_image_exts[][6] =
@@ -2594,7 +2589,7 @@ static BOOL ExtIsPicture(LPCWSTR ext)
     return FALSE;
 }
 
-static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext)
+static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, size_t cchMax, LPCWSTR defext)
 {
     HKEY hOpenSaveMRT = NULL;
     LONG result;
@@ -2622,7 +2617,7 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext)
         mi.fFlags = 0;
         mi.hKey = hOpenSaveMRT;
         mi.lpszSubKey = (LPWSTR)defext;
-        mi.u.string_cmpfn = FILEDLG_CompareString;
+        mi.u.string_cmpfn = lstrcmpiW;
 
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
@@ -2630,7 +2625,7 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext)
             ret = (*s_pEnumMRUListW)(hList, 0, szText, sizeof(szText));
             if (ret > 0)
             {
-                lstrcpynW(stored_path, szText, MAX_PATH);
+                lstrcpynW(stored_path, szText, cchMax);
                 PathRemoveFileSpecW(stored_path);
             }
             (*s_pFreeMRUList)(hList);
@@ -2643,14 +2638,14 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext)
             mi.fFlags = 0;
             mi.hKey = hOpenSaveMRT;
             mi.lpszSubKey = (LPWSTR)s_szAst;
-            mi.u.string_cmpfn = FILEDLG_CompareString;
+            mi.u.string_cmpfn = lstrcmpiW;
             hList = (*s_pCreateMRUListW)(&mi);
             if (hList)
             {
                 ret = (*s_pEnumMRUListW)(hList, 0, szText, sizeof(szText));
                 if (ret > 0)
                 {
-                    lstrcpynW(stored_path, szText, MAX_PATH);
+                    lstrcpynW(stored_path, szText, cchMax);
                     PathRemoveFileSpecW(stored_path);
                 }
                 (*s_pFreeMRUList)(hList);
@@ -2665,11 +2660,11 @@ static void FILEDLG95_MRU_load_ext(LPWSTR stored_path, LPCWSTR defext)
         LPITEMIDLIST pidl;
         if (ExtIsPicture(defext))
         {
-            SHGetSpecialFolderLocation(0, CSIDL_MYPICTURES, &pidl);
+            SHGetSpecialFolderLocation(NULL, CSIDL_MYPICTURES, &pidl);
         }
         else
         {
-            SHGetSpecialFolderLocation(0, CSIDL_MYDOCUMENTS, &pidl);
+            SHGetSpecialFolderLocation(NULL, CSIDL_MYDOCUMENTS, &pidl);
         }
         SHGetPathFromIDListW(pidl, stored_path);
         ILFree(pidl);
@@ -2701,7 +2696,7 @@ static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
         mi.fFlags = 0;
         mi.hKey = hOpenSaveMRT;
         mi.lpszSubKey = (LPWSTR)defext;
-        mi.u.string_cmpfn = FILEDLG_CompareString;
+        mi.u.string_cmpfn = lstrcmpiW;
 
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
@@ -2715,7 +2710,7 @@ static void FILEDLG95_MRU_save_ext(LPCWSTR filename)
         mi.fFlags = 0;
         mi.hKey = hOpenSaveMRT;
         mi.lpszSubKey = (LPWSTR)s_szAst;
-        mi.u.string_cmpfn = FILEDLG_CompareString;
+        mi.u.string_cmpfn = lstrcmpiW;
         hList = (*s_pCreateMRUListW)(&mi);
         if (hList)
         {
