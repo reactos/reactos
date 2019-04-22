@@ -287,10 +287,11 @@ custom_end:
     DrvSetCallbackProcs = (void*)GetProcAddress(data->hModule, "DrvSetCallbackProcs");
     if(DrvSetCallbackProcs)
     {
-        PROC callbacks[] = {(PROC)wglGetCurrentValue,
+        PROC callbacks[] = {
             (PROC)wglSetCurrentValue,
+            (PROC)wglGetCurrentValue,
             (PROC)wglGetDHGLRC};
-        DrvSetCallbackProcs(3, callbacks);
+        DrvSetCallbackProcs(ARRAYSIZE(callbacks), callbacks);
     }
     
     /* Get the DLL exports */
