@@ -960,7 +960,7 @@ CmpHandleExitNode(IN OUT PHHIVE *Hive,
     {
         /* Release it */
         ASSERT(*ReleaseHive != NULL);
-        HvReleaseCell((*ReleaseHive), *ReleaseCell);
+        HvReleaseCell(*ReleaseHive, *ReleaseCell);
     }
 
     /* Get the link references */
@@ -968,7 +968,7 @@ CmpHandleExitNode(IN OUT PHHIVE *Hive,
     *Cell = (*KeyNode)->ChildHiveReference.KeyCell;
 
     /* Get the new node */
-    *KeyNode = (PCM_KEY_NODE)HvGetCell((*Hive), *Cell);
+    *KeyNode = (PCM_KEY_NODE)HvGetCell(*Hive, *Cell);
     if (*KeyNode)
     {
         /* Set the new release values */
@@ -1191,7 +1191,12 @@ CmpParseKey(IN PVOID ParseObject,
                                               &Node,
                                               &HiveToRelease,
                                               &CellToRelease);
-                            if (!Node) ASSERT(FALSE);
+                            if (!Node)
+                            {
+                                /* Fail */
+                                Status = STATUS_INSUFFICIENT_RESOURCES;
+                                break;
+                            }
                         }
 
                         /* Do the open */
@@ -1232,7 +1237,12 @@ CmpParseKey(IN PVOID ParseObject,
                                           &Node,
                                           &HiveToRelease,
                                           &CellToRelease);
-                        if (!Node) ASSERT(FALSE);
+                        if (!Node)
+                        {
+                            /* Fail */
+                            Status = STATUS_INSUFFICIENT_RESOURCES;
+                            break;
+                        }
                     }
 
                     /* Create a KCB for this key */
@@ -1242,7 +1252,12 @@ CmpParseKey(IN PVOID ParseObject,
                                                    ParentKcb,
                                                    0,
                                                    &NextName);
-                    if (!Kcb) ASSERT(FALSE);
+                    if (!Kcb)
+                    {
+                        /* Fail */
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        break;
+                    }
 
                     /* Dereference the parent and set the new one */
                     CmpDereferenceKeyControlBlock(ParentKcb);
@@ -1353,7 +1368,12 @@ CmpParseKey(IN PVOID ParseObject,
                                   &Node,
                                   &HiveToRelease,
                                   &CellToRelease);
-                if (!Node) ASSERT(FALSE);
+                if (!Node)
+                {
+                    /* Fail */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
             }
 
             /* Do the open */
@@ -1386,7 +1406,8 @@ CmpParseKey(IN PVOID ParseObject,
 
     /* Dereference the parent if it exists */
 Quickie:
-    if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
+    if (ParentKcb)
+        CmpDereferenceKeyControlBlock(ParentKcb);
 
     /* Unlock the registry */
     CmpUnlockRegistry();
