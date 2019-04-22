@@ -1,5 +1,5 @@
 
-// Build Version 0.46e8
+// Build Version 0.47a
 
 
 UCHAR const AtaCommands48[256] = {
