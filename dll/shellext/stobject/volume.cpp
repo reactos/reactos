@@ -21,7 +21,6 @@ DWORD  g_muteControlID;
 UINT g_mmDeviceChange;
 
 static BOOL g_IsMute = FALSE;
-static BOOL g_IsRunning = FALSE;
 
 static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 {
@@ -156,8 +155,6 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
     Volume_IsMute();
 
-    g_IsRunning = TRUE;
-
     HICON icon;
     if (g_IsMute)
         icon = g_hIconMute;
@@ -203,8 +200,6 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Volume_Shutdown\n");
-
-    g_IsRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_VOLUME, NULL, NULL);
 }
@@ -267,20 +262,26 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
     {
         case WM_USER + 220:
             TRACE("Volume_Message: WM_USER+220\n");
-            if (wParam == 4)
+            if (wParam == VOLUME_SERVICE_FLAG)
             {
-                if (lParam == FALSE)
+                if (lParam)
+                {
+                    pSysTray->EnableService(VOLUME_SERVICE_FLAG, TRUE);
                     return Volume_Init(pSysTray);
+                }
                 else
+                {
+                    pSysTray->EnableService(VOLUME_SERVICE_FLAG, FALSE);
                     return Volume_Shutdown(pSysTray);
+                }
             }
             return S_FALSE;
 
         case WM_USER + 221:
             TRACE("Volume_Message: WM_USER+221\n");
-            if (wParam == 4)
+            if (wParam == VOLUME_SERVICE_FLAG)
             {
-                lResult = (LRESULT)g_IsRunning;
+                lResult = (LRESULT)pSysTray->IsServiceEnabled(VOLUME_SERVICE_FLAG);
                 return S_OK;
             }
             return S_FALSE;

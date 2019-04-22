@@ -28,7 +28,6 @@ typedef struct _PWRSCHEMECONTEXT
 
 CString  g_strTooltip;
 static HICON g_hIconBattery = NULL;
-static BOOL g_IsRunning = FALSE;
 
 
 /*++
@@ -117,7 +116,6 @@ HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray)
 { 
     TRACE("Power_Init\n");
     g_hIconBattery = DynamicLoadIcon(g_hInstance);
-    g_IsRunning = TRUE;
 
     return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_POWER, g_hIconBattery, g_strTooltip);
 }
@@ -133,7 +131,6 @@ HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray)
 HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Power_Shutdown\n");
-    g_IsRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_POWER, NULL, NULL);
 }
@@ -238,20 +235,26 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
     {
         case WM_USER + 220:
             TRACE("Power_Message: WM_USER+220\n");
-            if (wParam == 1)
+            if (wParam == POWER_SERVICE_FLAG)
             {
-                if (lParam == FALSE)
+                if (lParam)
+                {
+                    pSysTray->EnableService(POWER_SERVICE_FLAG, TRUE);
                     return Power_Init(pSysTray);
+                }
                 else
+                {
+                    pSysTray->EnableService(POWER_SERVICE_FLAG, FALSE);
                     return Power_Shutdown(pSysTray);
+                }
             }
             return S_FALSE;
 
         case WM_USER + 221:
             TRACE("Power_Message: WM_USER+221\n");
-            if (wParam == 1)
+            if (wParam == POWER_SERVICE_FLAG)
             {
-                lResult = (LRESULT)g_IsRunning;
+                lResult = (LRESULT)pSysTray->IsServiceEnabled(POWER_SERVICE_FLAG);
                 return S_OK;
             }
             return S_FALSE;

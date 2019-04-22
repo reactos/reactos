@@ -22,7 +22,6 @@ CSimpleArray<DEVINST> g_devList;
 static HICON g_hIconHotplug = NULL;
 static LPCWSTR g_strTooltip = L"Safely Remove Hardware and Eject Media";
 static WCHAR g_strMenuSel[DISPLAY_NAME_LEN];
-static BOOL g_IsRunning = FALSE;
 static BOOL g_IsRemoving = FALSE;
 
 /*++
@@ -132,7 +131,6 @@ HRESULT STDMETHODCALLTYPE Hotplug_Init(_In_ CSysTray * pSysTray)
 { 
     TRACE("Hotplug_Init\n");
     g_hIconHotplug = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_HOTPLUG_OK));
-    g_IsRunning = TRUE;
     EnumHotpluggedDevices(g_devList);
 
     return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_HOTPLUG, g_hIconHotplug, g_strTooltip, NIS_HIDDEN);
@@ -151,8 +149,6 @@ HRESULT STDMETHODCALLTYPE Hotplug_Update(_In_ CSysTray * pSysTray)
 HRESULT STDMETHODCALLTYPE Hotplug_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Hotplug_Shutdown\n");
-
-    g_IsRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_HOTPLUG, NULL, NULL);
 }
@@ -263,20 +259,26 @@ HRESULT STDMETHODCALLTYPE Hotplug_Message(_In_ CSysTray * pSysTray, UINT uMsg, W
 
         case WM_USER + 220:
             TRACE("Hotplug_Message: WM_USER+220\n");
-            if (wParam == 1)
+            if (wParam == HOTPLUG_SERVICE_FLAG)
             {
-                if (lParam == FALSE)
+                if (lParam)
+                {
+                    pSysTray->EnableService(HOTPLUG_SERVICE_FLAG, TRUE);
                     return Hotplug_Init(pSysTray);
+                }
                 else
+                {
+                    pSysTray->EnableService(HOTPLUG_SERVICE_FLAG, FALSE);
                     return Hotplug_Shutdown(pSysTray);
+                }
             }
             return S_FALSE;
 
         case WM_USER + 221:
             TRACE("Hotplug_Message: WM_USER+221\n");
-            if (wParam == 1)
+            if (wParam == HOTPLUG_SERVICE_FLAG)
             {
-                lResult = (LRESULT)g_IsRunning;
+                lResult = (LRESULT)pSysTray->IsServiceEnabled(HOTPLUG_SERVICE_FLAG);
                 return S_OK;
             }
             return S_FALSE;

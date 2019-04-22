@@ -34,6 +34,10 @@ extern HINSTANCE g_hInstance;
 #define ID_ICON_HOTPLUG (WM_APP + 0x4CC)
 #define ID_ICON_POWER   (WM_APP + 0x4CD)
 
+#define POWER_SERVICE_FLAG    0x00000001
+#define HOTPLUG_SERVICE_FLAG  0x00000002
+#define VOLUME_SERVICE_FLAG   0x00000004
+
 #include "csystray.h"
 
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTINIT)     (_In_ CSysTray * pSysTray);
@@ -43,6 +47,7 @@ typedef HRESULT(STDMETHODCALLTYPE * PFNSTMESSAGE)  (_In_ CSysTray * pSysTray, UI
 
 struct SysTrayIconHandlers_t
 {
+    DWORD            dwServiceFlag;
     PFNSTINIT        pfnInit;
     PFNSTSHUTDOWN    pfnShutdown;
     PFNSTUPDATE      pfnUpdate;
