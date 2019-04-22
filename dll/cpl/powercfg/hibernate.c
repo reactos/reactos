@@ -73,7 +73,7 @@ Hib_SaveData(HWND hwndDlg)
 
     bHibernate = (BOOLEAN)(IsDlgButtonChecked(hwndDlg, IDC_HIBERNATEFILE) == BST_CHECKED);
 
-    if (CallNtPowerInformation(SystemReserveHiberFile,&bHibernate, sizeof(bHibernate), NULL, 0) == STATUS_SUCCESS)
+    if (CallNtPowerInformation(SystemReserveHiberFile, &bHibernate, sizeof(bHibernate), NULL, 0) == STATUS_SUCCESS)
     {
         Pos_InitData();
         Adv_InitDialog();
@@ -91,22 +91,25 @@ HibernateDlgProc(HWND hwndDlg,
                  WPARAM wParam,
                  LPARAM lParam)
 {
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-        Hib_InitDialog(hwndDlg);
-        return TRUE;
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDC_HIBERNATEFILE:
-            if (HIWORD(wParam) == BN_CLICKED)
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            Hib_InitDialog(hwndDlg);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
             {
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                case IDC_HIBERNATEFILE:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
             }
-        }
-        break;
-    case WM_NOTIFY:
+            break;
+
+        case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
             if (lpnm->code == (UINT)PSN_APPLY)
@@ -114,6 +117,7 @@ HibernateDlgProc(HWND hwndDlg,
                 return Hib_SaveData(hwndDlg);
             }
         }
-  }
-  return FALSE;
+    }
+
+    return FALSE;
 }

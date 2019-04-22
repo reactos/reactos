@@ -47,31 +47,32 @@ GetSystrayPowerIconState(VOID)
 static VOID
 AddItem(HWND hDlgCtrl, INT ResourceId, LPARAM lParam, POWER_ACTION * lpAction)
 {
-  TCHAR szBuffer[MAX_PATH];
-  LRESULT Index;
-  if (LoadString(hApplet, ResourceId, szBuffer, MAX_PATH) < MAX_PATH)
-  {
-    Index = SendMessage(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-    if (Index != CB_ERR)
+    TCHAR szBuffer[MAX_PATH];
+    LRESULT Index;
+
+    if (LoadString(hApplet, ResourceId, szBuffer, MAX_PATH) < MAX_PATH)
     {
-        SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)Index, lParam);
-        lpAction[Index] = (POWER_ACTION)lParam;
+        Index = SendMessage(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+        if (Index != CB_ERR)
+        {
+            SendMessage(hDlgCtrl, CB_SETITEMDATA, (WPARAM)Index, lParam);
+            lpAction[Index] = (POWER_ACTION)lParam;
+        }
     }
-  }
 }
 
 static INT
 FindActionIndex(POWER_ACTION * lpAction, DWORD dwActionSize, POWER_ACTION poAction)
 {
-  INT Index;
+    INT Index;
 
-  for (Index = 0; Index < (INT)dwActionSize; Index++)
-  {
-    if (lpAction[Index] == poAction)
-        return Index;
-  }
+    for (Index = 0; Index < (INT)dwActionSize; Index++)
+    {
+        if (lpAction[Index] == poAction)
+            return Index;
+    }
 
-  return -1;
+    return -1;
 }
 
 static BOOLEAN
@@ -175,26 +176,31 @@ SaveCurrentPowerActionPolicy(IN HWND hDlgCtrl,
 
     switch(ItemData)
     {
-    case PowerActionNone:
-        Policy->Action = PowerActionNone;
-        Policy->EventCode  = POWER_FORCE_TRIGGER_RESET;
-        break;
-    case PowerActionWarmEject:
-        Policy->Action = PowerActionNone;
-        Policy->EventCode  = POWER_USER_NOTIFY_BUTTON;
-        break;
-    case PowerActionShutdown:
-        Policy->Action = PowerActionNone;
-        Policy->EventCode = POWER_USER_NOTIFY_SHUTDOWN;
-        break;
-    case PowerActionSleep:
-    case PowerActionHibernate:
-        Policy->Action = (POWER_ACTION)ItemData;
-        Policy->EventCode = 0;
-        break;
-    default:
-        return FALSE;
+        case PowerActionNone:
+            Policy->Action = PowerActionNone;
+            Policy->EventCode  = POWER_FORCE_TRIGGER_RESET;
+            break;
+
+        case PowerActionWarmEject:
+            Policy->Action = PowerActionNone;
+            Policy->EventCode  = POWER_USER_NOTIFY_BUTTON;
+            break;
+
+        case PowerActionShutdown:
+            Policy->Action = PowerActionNone;
+            Policy->EventCode = POWER_USER_NOTIFY_SHUTDOWN;
+            break;
+
+        case PowerActionSleep:
+        case PowerActionHibernate:
+            Policy->Action = (POWER_ACTION)ItemData;
+            Policy->EventCode = 0;
+            break;
+
+        default:
+            return FALSE;
     }
+
     Policy->Flags = (POWER_ACTION_UI_ALLOWED | POWER_ACTION_QUERY_ALLOWED);
 
     return TRUE;
@@ -372,8 +378,8 @@ Adv_InitDialog(VOID)
         if (bHibernate)
         {
             AddItem(hList2, IDS_PowerActionHibernate, (LPARAM)PowerActionHibernate, g_PowerButton);
-
         }
+
         if (bShutdown)
         {
             AddItem(hList2, IDS_PowerActionShutdown, (LPARAM)PowerActionShutdown, g_PowerButton);
@@ -516,35 +522,37 @@ AdvancedDlgProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-        hAdv = hwndDlg;
-        Adv_InitDialog();
-        return TRUE;
-      break;
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDC_SYSTRAYBATTERYMETER:
-        case IDC_PASSWORDLOGON:
-        case IDC_VIDEODIMDISPLAY:
-            if (HIWORD(wParam) == BN_CLICKED)
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            hAdv = hwndDlg;
+            Adv_InitDialog();
+            return TRUE;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
             {
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                case IDC_SYSTRAYBATTERYMETER:
+                case IDC_PASSWORDLOGON:
+                case IDC_VIDEODIMDISPLAY:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_LIDCLOSE:
+                case IDC_POWERBUTTON:
+                case IDC_SLEEPBUTTON:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
             }
             break;
-        case IDC_LIDCLOSE:
-        case IDC_POWERBUTTON:
-        case IDC_SLEEPBUTTON:
-            if (HIWORD(wParam) == CBN_SELCHANGE)
-            {
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            }
-            break;
-        }
-        break;
-    case WM_NOTIFY:
+
+        case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
             if (lpnm->code == (UINT)PSN_APPLY)
@@ -553,6 +561,7 @@ AdvancedDlgProc(HWND hwndDlg,
             }
             return TRUE;
         }
-  }
-  return FALSE;
+    }
+
+    return FALSE;
 }
