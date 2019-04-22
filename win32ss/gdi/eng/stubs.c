@@ -583,14 +583,25 @@ EngPlgBlt(
 BOOL
 APIENTRY
 EngQueryDeviceAttribute(
-    IN HDEV Device,
-    IN ENG_DEVICE_ATTRIBUTE Attribute,
-    IN VOID *In,
-    IN ULONG InSize,
-    OUT VOID *Out,
-    OUT ULONG OutSize)
+    _In_ HDEV hdev,
+    _In_ ENG_DEVICE_ATTRIBUTE devAttr,
+    _In_reads_bytes_(cjInSize) PVOID pvIn,
+    _In_ ULONG cjInSize,
+    _Out_writes_bytes_(cjOutSize) PVOID pvOut,
+    _In_ ULONG cjOutSize)
 {
+    if (devAttr != QDA_ACCELERATION_LEVEL)
+        return FALSE;
+
     UNIMPLEMENTED;
+
+    if (cjOutSize >= sizeof(DWORD))
+    {
+        /* Set all accelerations to enabled */
+        *(DWORD*)pvOut = 0;
+        return TRUE;
+    }
+
     return FALSE;
 }
 
