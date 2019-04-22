@@ -234,6 +234,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     HMENU hPopup = CreatePopupMenu();
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_OPEN, strOpen);
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
+    SetMenuDefaultItem(hPopup, IDS_VOL_OPEN, FALSE);
 
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
     POINT pt;

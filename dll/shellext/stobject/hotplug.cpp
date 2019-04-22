@@ -219,6 +219,7 @@ static void _ShowContextMenuR(CSysTray * pSysTray)
     CString strMenu((LPWSTR)IDS_HOTPLUG_REMOVE_2);
     HMENU hPopup = CreatePopupMenu();
     AppendMenuW(hPopup, MF_STRING, IDS_HOTPLUG_REMOVE_2, strMenu);
+    SetMenuDefaultItem(hPopup, IDS_HOTPLUG_REMOVE_2, FALSE);
 
     SetForegroundWindow(pSysTray->GetHWnd());
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;

@@ -148,6 +148,7 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     CString strOpen((LPCSTR)IDS_PWR_PROPERTIES);
     HMENU hPopup = CreatePopupMenu();
     AppendMenuW(hPopup, MF_STRING, IDS_PWR_PROPERTIES, strOpen);
+    SetMenuDefaultItem(hPopup, IDS_PWR_PROPERTIES, FALSE);
 
     SetForegroundWindow(pSysTray->GetHWnd());
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
