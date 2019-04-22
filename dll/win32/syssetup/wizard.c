@@ -1673,7 +1673,7 @@ ThemePageDlgProc(HWND hwndDlg,
                     if ((pnmv->uChanged & LVIF_STATE) && (pnmv->uNewState & LVIS_SELECTED))
                     {
                         int iTheme = pnmv->iItem;
-                        DPRINT1("Selected theme: %S\n", Themes[iTheme].DisplayName);
+                        DPRINT1("Selected theme: %u\n", Themes[iTheme].DisplayName);
 
                         if (Themes[iTheme].ThemeFile)
                         {
